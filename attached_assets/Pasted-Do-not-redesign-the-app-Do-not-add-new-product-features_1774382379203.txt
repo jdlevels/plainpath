@@ -1,0 +1,57 @@
+Do not redesign the app.
+Do not add new product features.
+
+Theme support is complete. The next priority is mobile-first UX hardening so PlainPath is ready for iPhone/Android packaging later.
+
+Focus only on making the current product feel more native and stable on mobile.
+
+Implement these now:
+
+1. Mobile import UX
+- Make “Paste Text” and “Upload File” feel like first-class mobile actions
+- Increase touch target sizes where needed
+- Improve spacing for narrow phone screens
+- Make upload controls and demo cards easier to tap
+- Add mobile-friendly helper text only where needed
+
+2. Mobile keyboard and textarea behavior
+- Keep the textarea usable when the on-screen keyboard is open
+- Keep the primary action button accessible while typing/pasting
+- Prevent layout jumps and content being hidden behind the keyboard
+- Make the paste/analyze flow smooth on small screens
+
+3. Analyze page mobile polish
+- Ensure stat pills stay readable and aligned on narrow screens
+- Ensure badges, evidence text, and alert boxes do not wrap awkwardly
+- Make the “What’s Missing” section easy to scan on mobile
+- Keep the tab bar usable on phones, with horizontal scroll if needed
+- Make long sections readable without cramped spacing
+
+4. Safe-area and platform readiness
+- Improve top/bottom safe-area spacing where appropriate
+- Avoid browser-only layout assumptions that could cause issues later in Capacitor
+- Keep web behavior unchanged while making the app safer for mobile packaging
+
+5. Cross-platform cleanup
+- Review the current codebase for anything that will cause problems in iPhone/Android wrappers
+- Fix what can be fixed now without adding Capacitor yet
+- Note any remaining blockers for Capacitor integration
+
+6. Test after implementation on a narrow mobile viewport
+Verify:
+- home page
+- import page
+- paste text flow
+- upload file flow
+- analyze page
+- all tabs
+- all 3 demo documents
+
+When finished, return:
+A. files updated
+B. exactly what mobile UX issues were fixed
+C. any remaining blockers before Capacitor integration
+D. screenshots of key mobile screens after the improvements
+
+Do not switch to planning mode.
+Do not add unrelated features.

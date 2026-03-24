@@ -161,6 +161,22 @@
     scrollbar-width: none;
   }
 
+  /* Mobile touch optimizations */
+  button, a, [role="button"], [role="tab"] {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Prevent text size adjustment on orientation change (iOS) */
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  /* Smooth momentum scrolling on iOS */
+  .overflow-x-auto, .overflow-y-auto, .overflow-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+
   /* Priority border accent — used on action step cards */
   .priority-bar-high  { border-left: 4px solid hsl(350 60% 55%); }
   .priority-bar-med   { border-left: 4px solid hsl(35 70% 55%); }

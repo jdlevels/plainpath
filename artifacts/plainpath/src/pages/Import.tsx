@@ -124,19 +124,20 @@ export default function Import() {
     const f = e.dataTransfer.files?.[0]; if (f) handleFileUpload(f)
   }
   const isWorking = isPending || isUploading
+  const canAnalyze = !isWorking && text.trim().length >= 50
 
   return (
-    <div className="min-h-screen bg-background pb-28">
+    <div className="min-h-screen bg-background pb-safe-bottom" style={{ paddingBottom: "max(7rem, env(safe-area-inset-bottom) + 7rem)" }}>
       <div className="absolute top-0 inset-x-0 h-52 bg-gradient-to-b from-primary/[0.04] to-transparent pointer-events-none" />
 
-      <div className="max-w-2xl mx-auto px-4 pt-12 relative">
+      <div className="max-w-2xl mx-auto px-4 pt-4 sm:pt-12 relative">
 
         {/* ── Header ─────────────────────────────────── */}
-        <div className="text-center mb-10">
+        <div className="text-center mb-5 sm:mb-10">
           <motion.h1
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-3xl font-display font-bold tracking-tight mb-2"
+            className="text-2xl sm:text-3xl font-display font-bold tracking-tight mb-2"
           >
             Import Your Document
           </motion.h1>
@@ -144,7 +145,7 @@ export default function Import() {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.07 }}
-            className="text-muted-foreground"
+            className="text-muted-foreground text-sm sm:text-base"
           >
             PlainPath reads the content and returns a structured action plan — not a summary.
           </motion.p>
@@ -155,11 +156,11 @@ export default function Import() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="flex justify-center gap-2.5 mb-8"
+          className="flex justify-center gap-2 mb-5 sm:mb-8"
         >
           {FORMATS.map((f) => (
-            <div key={f.ext} className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-card border border-border/50 shadow-sm">
-              <f.icon className="w-3.5 h-3.5 text-muted-foreground" />
+            <div key={f.ext} className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-card border border-border/50 shadow-sm">
+              <f.icon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-muted-foreground" />
               <span className="text-xs font-bold text-foreground">{f.ext}</span>
               <span className="text-[10px] text-muted-foreground/60 hidden sm:inline">{f.note}</span>
             </div>
@@ -181,7 +182,8 @@ export default function Import() {
                   <button
                     key={tab}
                     onClick={() => { setMode(tab); setUploadError(null); setUploadedFile(null) }}
-                    className={`flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                    style={{ touchAction: "manipulation" }}
+                    className={`flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-semibold transition-all min-h-[48px] ${
                       mode === tab
                         ? "bg-card text-foreground shadow-sm shadow-black/[0.06]"
                         : "text-muted-foreground hover:text-foreground"
@@ -194,7 +196,7 @@ export default function Import() {
               </div>
             </div>
 
-            <div className="p-7">
+            <div className="p-4 sm:p-7">
               <AnimatePresence mode="wait">
 
                 {/* ── PASTE mode ─────────────────────── */}
@@ -219,7 +221,7 @@ export default function Import() {
                         value={text}
                         onChange={(e) => setText(e.target.value)}
                         placeholder="Paste the full text of your document here..."
-                        className="w-full min-h-[220px] p-4 rounded-xl border-2 border-border/50 bg-muted/20 focus:border-primary focus:ring-4 focus:ring-primary/8 resize-none transition-all placeholder:text-muted-foreground/35 text-sm leading-relaxed font-mono outline-none"
+                        className="w-full min-h-[140px] sm:min-h-[220px] p-4 rounded-xl border-2 border-border/50 bg-muted/20 focus:border-primary focus:ring-4 focus:ring-primary/8 resize-none transition-all placeholder:text-muted-foreground/35 text-sm leading-relaxed font-mono outline-none"
                         disabled={isWorking}
                       />
                       {text.length > 0 && (
@@ -237,7 +239,8 @@ export default function Import() {
                       size="lg"
                       onClick={handlePasteAnalyze}
                       disabled={isWorking || text.trim().length < 50}
-                      className="w-full h-12 text-base rounded-xl"
+                      style={{ touchAction: "manipulation" }}
+                      className="w-full h-14 text-base rounded-xl"
                     >
                       {isPending
                         ? <><Loader2 className="mr-2 w-4 h-4 animate-spin" /> Analyzing document…</>
@@ -261,12 +264,24 @@ export default function Import() {
                     transition={{ duration: 0.14 }}
                     className="space-y-4"
                   >
+                    {/* Mobile: prominent tap-to-upload button above the drop zone */}
+                    <button
+                      className="sm:hidden w-full flex items-center justify-center gap-3 py-4 rounded-xl border-2 border-primary/50 bg-primary/5 text-primary font-bold text-base active:bg-primary/10 transition-colors"
+                      style={{ touchAction: "manipulation", minHeight: "56px" }}
+                      onClick={() => !isUploading && fileInputRef.current?.click()}
+                      disabled={isUploading}
+                    >
+                      <UploadCloud className="w-5 h-5" />
+                      Choose a file from your device
+                    </button>
+
                     <div
                       onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
                       onDragLeave={() => setIsDragging(false)}
                       onDrop={onDrop}
                       onClick={() => !isUploading && fileInputRef.current?.click()}
-                      className={`min-h-[220px] rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all ${
+                      style={{ touchAction: "manipulation" }}
+                      className={`min-h-[180px] sm:min-h-[220px] rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all ${
                         isDragging
                           ? "border-primary bg-primary/5 scale-[1.01]"
                           : uploadedFile && !uploadError
@@ -277,7 +292,7 @@ export default function Import() {
                       <input ref={fileInputRef} type="file" accept={ACCEPTED} className="hidden" onChange={onFileChange} disabled={isUploading} />
 
                       {isUploading ? (
-                        <div className="text-center space-y-3 p-8">
+                        <div className="text-center space-y-3 p-6 sm:p-8">
                           <div className="w-14 h-14 rounded-2xl bg-primary/8 flex items-center justify-center mx-auto">
                             <Loader2 className="w-7 h-7 text-primary animate-spin" />
                           </div>
@@ -287,7 +302,7 @@ export default function Import() {
                           </div>
                         </div>
                       ) : uploadedFile && !uploadError ? (
-                        <div className="text-center space-y-3 p-8">
+                        <div className="text-center space-y-3 p-6 sm:p-8">
                           <CheckCircle2 className="w-12 h-12 text-emerald-500 dark:text-emerald-400 mx-auto" />
                           <div>
                             <p className="font-bold text-foreground text-sm">File received</p>
@@ -295,13 +310,13 @@ export default function Import() {
                           </div>
                         </div>
                       ) : (
-                        <div className="text-center space-y-4 p-8 pointer-events-none">
+                        <div className="text-center space-y-3 p-6 sm:p-8 pointer-events-none">
                           <div className="w-14 h-14 rounded-2xl bg-card border border-border shadow-md flex items-center justify-center mx-auto">
                             <UploadCloud className="w-7 h-7 text-primary" />
                           </div>
                           <div>
-                            <p className="font-bold text-foreground sm:hidden">Tap to choose a file</p>
                             <p className="font-bold text-foreground hidden sm:block">Drop file here or click to browse</p>
+                            <p className="font-bold text-foreground sm:hidden text-sm">Or drag & drop a file here</p>
                             <p className="text-sm text-muted-foreground mt-1">PDF, Word (.docx), or plain text (.txt)</p>
                           </div>
                           <div className="flex items-center justify-center gap-2">
@@ -331,14 +346,14 @@ export default function Import() {
         </motion.div>
 
         {/* ── Demo shortcuts ─────────────────────────── */}
-        <div className="mt-10 space-y-5">
+        <div className="mt-6 sm:mt-10 space-y-5">
           <div className="flex items-center gap-3">
             <div className="flex-1 h-px bg-border/50" />
             <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Or try a built-in demo</p>
             <div className="flex-1 h-px bg-border/50" />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
             {DEMOS.map((demo, i) => (
               <motion.button
                 key={demo.id}
@@ -347,15 +362,21 @@ export default function Import() {
                 transition={{ delay: i * 0.07 + 0.2 }}
                 whileHover={{ y: -3 }}
                 onClick={() => setLocation(`/analyze?demo=${demo.id}`)}
+                style={{ touchAction: "manipulation" }}
                 className="text-left group"
               >
-                <Card className="p-4 h-full border-border/40 hover:border-primary/40 hover:shadow-lg transition-all bg-card rounded-xl shadow-sm">
-                  <div className={`w-9 h-9 rounded-xl ${demo.bg} flex items-center justify-center mb-3`}>
-                    <demo.icon className={`w-4 h-4 ${demo.color}`} />
+                <Card className="p-3.5 sm:p-4 h-full border-border/40 hover:border-primary/40 active:border-primary/40 hover:shadow-lg transition-all bg-card rounded-xl shadow-sm">
+                  <div className="flex sm:block items-center gap-3 sm:gap-0">
+                    <div className={`w-9 h-9 rounded-xl ${demo.bg} flex items-center justify-center sm:mb-3 shrink-0`}>
+                      <demo.icon className={`w-4 h-4 ${demo.color}`} />
+                    </div>
+                    <div className="flex-1 min-w-0 sm:block">
+                      <p className="font-bold text-sm leading-snug group-hover:text-primary transition-colors mb-0.5 sm:mb-1">{demo.title}</p>
+                      <p className="text-[11px] text-muted-foreground">{demo.meta}</p>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-muted-foreground/40 sm:hidden shrink-0" />
                   </div>
-                  <p className="font-bold text-sm leading-snug group-hover:text-primary transition-colors mb-1">{demo.title}</p>
-                  <p className="text-[11px] text-muted-foreground">{demo.meta}</p>
-                  <div className="flex items-center gap-1 mt-2.5 text-[11px] font-semibold text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="hidden sm:flex items-center gap-1 mt-2.5 text-[11px] font-semibold text-primary opacity-0 group-hover:opacity-100 transition-opacity">
                     Open instantly <ArrowRight className="w-3 h-3" />
                   </div>
                 </Card>
@@ -365,6 +386,33 @@ export default function Import() {
         </div>
 
       </div>
+
+      {/* ── Sticky mobile CTA (paste mode, keyboard-safe) ── */}
+      <AnimatePresence>
+        {mode === "paste" && canAnalyze && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.18 }}
+            className="sm:hidden fixed bottom-0 inset-x-0 z-30 p-4 bg-background/95 backdrop-blur-xl border-t border-border/40"
+            style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
+          >
+            <Button
+              size="lg"
+              onClick={handlePasteAnalyze}
+              disabled={isWorking}
+              style={{ touchAction: "manipulation" }}
+              className="w-full h-14 text-base rounded-xl shadow-lg"
+            >
+              {isPending
+                ? <><Loader2 className="mr-2 w-4 h-4 animate-spin" /> Analyzing document…</>
+                : <>Generate Action Plan <ArrowRight className="ml-2 w-4 h-4" /></>
+              }
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

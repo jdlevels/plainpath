@@ -70,15 +70,16 @@ export default function Analyze() {
   const missingCount = incompleteHigh.length + analysis.requiredDocuments.filter(d => d.required && !d.obtained).length
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen bg-background" style={{ paddingBottom: "max(6rem, env(safe-area-inset-bottom) + 6rem)" }}>
 
       {/* ── Sticky header ───────────────────────────── */}
       <div className="no-print bg-background/95 backdrop-blur-md border-b border-border/50 sticky top-0 z-30">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-2.5 sm:py-4">
           <div className="flex items-center gap-4">
             <button
               onClick={() => setLocation("/import")}
-              className="w-9 h-9 flex items-center justify-center hover:bg-secondary rounded-xl transition-colors shrink-0"
+              style={{ touchAction: "manipulation" }}
+              className="w-10 h-10 sm:w-9 sm:h-9 flex items-center justify-center hover:bg-secondary active:bg-secondary rounded-xl transition-colors shrink-0"
             >
               <ArrowLeft className="w-4 h-4 text-muted-foreground" />
             </button>
@@ -117,15 +118,13 @@ export default function Analyze() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6">
 
         {/* ── At-a-glance strip ───────────────────────── */}
-        <div className="no-print mt-6 mb-7">
-          <div className="flex items-center justify-between gap-2 flex-wrap">
-            <div className="flex gap-2 flex-wrap">
-              <StatPill label="Steps" value={analysis.actionSteps.length} onClick={() => setActiveTab("checklist")} />
-              <StatPill label="Required docs" value={analysis.requiredDocuments.length} onClick={() => setActiveTab("documents")} />
-              <StatPill label="Hard deadlines" value={hardDeadlines.length} warn={hardDeadlines.length > 0} onClick={() => setActiveTab("deadlines")} />
-              <StatPill label="High risks" value={highRisks.length} warn={highRisks.length > 0} onClick={() => setActiveTab("risks")} />
-            </div>
-            <div className="flex items-center gap-1.5 shrink-0">
+        <div className="no-print mt-4 sm:mt-6 mb-5 sm:mb-7">
+          <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar pb-0.5">
+            <StatPill label="Steps" value={analysis.actionSteps.length} onClick={() => setActiveTab("checklist")} />
+            <StatPill label="Docs" value={analysis.requiredDocuments.length} onClick={() => setActiveTab("documents")} />
+            <StatPill label="Deadlines" value={hardDeadlines.length} warn={hardDeadlines.length > 0} onClick={() => setActiveTab("deadlines")} />
+            <StatPill label="Risks" value={highRisks.length} warn={highRisks.length > 0} onClick={() => setActiveTab("risks")} />
+            <div className="flex items-center gap-1.5 shrink-0 ml-auto pl-2">
               <ConfidenceBadge level={analysis.overallConfidence} />
               <span className="text-xs text-muted-foreground hidden sm:inline">overall confidence</span>
             </div>
@@ -134,7 +133,7 @@ export default function Analyze() {
 
         {/* ── Tab bar ──────────────────────────────────── */}
         <Tabs.Root value={activeTab} onValueChange={setActiveTab}>
-          <Tabs.List className="no-print flex overflow-x-auto hide-scrollbar gap-0.5 p-1 bg-card border border-border/40 rounded-2xl shadow-sm mb-6 scroll-smooth">
+          <Tabs.List className="no-print flex overflow-x-auto hide-scrollbar gap-0.5 p-1 bg-card border border-border/40 rounded-2xl shadow-sm mb-4 sm:mb-6 scroll-smooth">
             {TABS.map((tab) => {
               const count = (tab as any).countKey ? (analysis as any)[(tab as any).countKey]?.length : null
               const isMissing = tab.id === "missing"
@@ -142,7 +141,8 @@ export default function Analyze() {
                 <Tabs.Trigger
                   key={tab.id}
                   value={tab.id}
-                  className={`relative flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap outline-none flex-shrink-0 ${
+                  style={{ touchAction: "manipulation" }}
+                  className={`relative flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap outline-none flex-shrink-0 min-h-[44px] ${
                     activeTab === tab.id
                       ? "bg-foreground text-white shadow-sm"
                       : "text-muted-foreground hover:text-foreground hover:bg-secondary/70"
@@ -166,7 +166,7 @@ export default function Analyze() {
           </Tabs.List>
 
           {/* ── Content pane ────────────────────────────── */}
-          <div className="bg-card rounded-3xl border border-border/30 shadow-lg shadow-black/[0.04] dark:shadow-black/20 overflow-hidden min-h-[540px]">
+          <div className="bg-card rounded-3xl border border-border/30 shadow-lg shadow-black/[0.04] dark:shadow-black/20 overflow-hidden min-h-[400px] sm:min-h-[540px]">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}
@@ -174,7 +174,7 @@ export default function Analyze() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -5 }}
                 transition={{ duration: 0.14 }}
-                className="p-7 md:p-10"
+                className="p-4 sm:p-7 md:p-10"
               >
 
                 {activeTab === "summary"   && <SummaryTab   analysis={analysis} onTabChange={setActiveTab} />}
@@ -200,7 +200,8 @@ function StatPill({ label, value, warn = false, onClick }: { label: string; valu
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold border transition-all hover:shadow-sm ${
+      style={{ touchAction: "manipulation" }}
+      className={`flex items-center gap-2 px-3 sm:px-3.5 py-2 rounded-xl text-sm font-semibold border transition-all hover:shadow-sm flex-shrink-0 min-h-[40px] ${
         warn && value > 0
           ? "bg-red-50 dark:bg-red-950/40 border-red-200/60 dark:border-red-900/40 text-red-700 dark:text-red-400 hover:border-red-300 dark:hover:border-red-800"
           : "bg-card border-border/50 text-foreground hover:border-primary/30"
@@ -223,21 +224,21 @@ function SummaryTab({ analysis, onTabChange }: { analysis: DocumentAnalysis; onT
   return (
     <div className="space-y-8 max-w-3xl">
       <div>
-        <h2 className="text-2xl font-display font-bold mb-1">Document Overview</h2>
+        <h2 className="text-xl sm:text-2xl font-display font-bold mb-1">Document Overview</h2>
         <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold mb-4">{analysis.documentType}</p>
         <p className="text-base text-foreground/80 leading-relaxed">{analysis.summary}</p>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
         {[
           { label: "Action Steps",   value: analysis.actionSteps.length,        tab: "checklist",  warn: false },
           { label: "Required Docs",  value: analysis.requiredDocuments.length,   tab: "documents",  warn: false },
           { label: "Hard Deadlines", value: hardDeadlines.length,                tab: "deadlines",  warn: true  },
         ].map(({ label, value, tab, warn }) => (
-          <button key={tab} onClick={() => onTabChange(tab)} className="text-left group">
-            <div className={`p-4 rounded-2xl border transition-all group-hover:shadow-md ${warn ? "bg-red-50/60 dark:bg-red-950/30 border-red-200/50 dark:border-red-900/40 group-hover:border-red-300" : "bg-secondary/30 border-transparent group-hover:border-primary/20"}`}>
-              <p className={`text-xs font-semibold uppercase tracking-wide mb-2 ${warn ? "text-red-600/70 dark:text-red-400/80" : "text-muted-foreground"}`}>{label}</p>
-              <p className={`text-3xl font-display font-bold ${warn ? "text-red-600 dark:text-red-400" : "text-foreground"}`}>{value}</p>
+          <button key={tab} onClick={() => onTabChange(tab)} style={{ touchAction: "manipulation" }} className="text-left group">
+            <div className={`p-2.5 sm:p-4 rounded-2xl border transition-all group-hover:shadow-md ${warn ? "bg-red-50/60 dark:bg-red-950/30 border-red-200/50 dark:border-red-900/40 group-hover:border-red-300" : "bg-secondary/30 border-transparent group-hover:border-primary/20"}`}>
+              <p className={`text-[10px] sm:text-xs font-semibold uppercase tracking-wide mb-1 sm:mb-2 ${warn ? "text-red-600/70 dark:text-red-400/80" : "text-muted-foreground"}`}>{label}</p>
+              <p className={`text-2xl sm:text-3xl font-display font-bold ${warn ? "text-red-600 dark:text-red-400" : "text-foreground"}`}>{value}</p>
             </div>
           </button>
         ))}
@@ -332,7 +333,7 @@ function WhatsMissingTab({
     <div className="space-y-8 max-w-3xl">
 
       <div>
-        <h2 className="text-2xl font-display font-bold">What's Missing</h2>
+        <h2 className="text-xl sm:text-2xl font-display font-bold">What's Missing</h2>
         <p className="text-sm text-muted-foreground mt-1">
           {totalBlocking} blocking item{totalBlocking !== 1 ? "s" : ""} must be resolved before you can proceed.
         </p>
@@ -447,7 +448,7 @@ function ChecklistTab({ analysis, onToggle }: { analysis: DocumentAnalysis; onTo
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-display font-bold">Action Steps</h2>
+        <h2 className="text-xl sm:text-2xl font-display font-bold">Action Steps</h2>
         <p className="text-sm text-muted-foreground mt-1">
           {remaining === 0 ? "All steps complete." : `${remaining} of ${analysis.actionSteps.length} remaining — check off items as you complete them`}
         </p>
@@ -472,7 +473,7 @@ function DocumentsTab({ analysis, onToggle }: { analysis: DocumentAnalysis; onTo
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-display font-bold">Required Documents</h2>
+        <h2 className="text-xl sm:text-2xl font-display font-bold">Required Documents</h2>
         <p className="text-sm text-muted-foreground mt-1">
           {remaining === 0 ? "All documents obtained." : `${remaining} of ${analysis.requiredDocuments.length} still needed — gather these before submitting`}
         </p>
@@ -495,7 +496,7 @@ function DeadlinesTab({ analysis }: { analysis: DocumentAnalysis }) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-display font-bold">Timeline & Deadlines</h2>
+        <h2 className="text-xl sm:text-2xl font-display font-bold">Timeline & Deadlines</h2>
         <p className="text-sm text-muted-foreground mt-1">
           {hardCount > 0 ? `${hardCount} hard deadline${hardCount !== 1 ? "s" : ""} — missing these may disqualify your submission` : "No hard deadlines identified — treat all dates as approximate"}
         </p>
@@ -507,7 +508,7 @@ function DeadlinesTab({ analysis }: { analysis: DocumentAnalysis }) {
             <div className="absolute left-[1.35rem] top-4 bottom-4 w-px bg-gradient-to-b from-border via-border to-transparent" />
             <div className="space-y-3">
               {analysis.deadlines.map((dl) => (
-                <div key={dl.id} className="flex gap-4">
+                <div key={dl.id} className="flex gap-3 sm:gap-4">
                   <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 mt-2 z-10 ${
                     dl.isHard ? "bg-red-50 dark:bg-red-950/50 border-red-400 dark:border-red-700" : "bg-card border-border"
                   }`}>
@@ -543,7 +544,7 @@ function RisksTab({ analysis }: { analysis: DocumentAnalysis }) {
   return (
     <div className="space-y-10">
       <div>
-        <h2 className="text-2xl font-display font-bold">Risks & Warnings</h2>
+        <h2 className="text-xl sm:text-2xl font-display font-bold">Risks & Warnings</h2>
         <p className="text-sm text-muted-foreground mt-1">Potential issues that could delay, block, or invalidate your submission</p>
       </div>
 
@@ -765,19 +766,19 @@ function LoadingScreen() {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-6 pt-8 space-y-6">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-6 sm:pt-8 space-y-5 sm:space-y-6">
         {/* Stat pills skeleton */}
-        <div className="flex gap-2.5">
+        <div className="flex gap-2.5 overflow-x-auto hide-scrollbar">
           {[80, 100, 110, 90].map((w, i) => (
-            <div key={i} className="h-10 rounded-xl bg-card border border-border/30 animate-pulse" style={{ width: w }} />
+            <div key={i} className="h-10 rounded-xl bg-card border border-border/30 animate-pulse flex-shrink-0" style={{ width: w }} />
           ))}
         </div>
 
         {/* Tab bar skeleton */}
-        <div className="h-14 rounded-2xl bg-card border border-border/30 animate-pulse" />
+        <div className="h-12 sm:h-14 rounded-2xl bg-card border border-border/30 animate-pulse" />
 
         {/* Content skeleton */}
-        <div className="bg-card rounded-3xl border border-border/20 p-10 space-y-5">
+        <div className="bg-card rounded-3xl border border-border/20 p-4 sm:p-10 space-y-5">
           <div className="h-8 w-40 rounded-lg bg-secondary animate-pulse" />
           <div className="h-3 w-64 rounded-full bg-secondary animate-pulse" />
           <div className="space-y-3 pt-2">

@@ -26,9 +26,11 @@ export function Navbar() {
           <ThemeToggle />
 
           {isHome && (
-            <Button asChild size="sm" className="rounded-full shadow-sm hover:shadow-md gap-1.5 ml-1">
+            <Button asChild size="sm" className="rounded-full shadow-sm hover:shadow-md gap-1.5 ml-1" style={{ touchAction: "manipulation" }}>
               <Link href="/import">
-                Analyze a Document <ArrowRight className="w-3.5 h-3.5" />
+                <span className="sm:hidden">Analyze</span>
+                <span className="hidden sm:inline">Analyze a Document</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </Button>
           )}
