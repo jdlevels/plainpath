@@ -1,0 +1,76 @@
+Do not redesign the app.
+Do not add unrelated product features.
+
+We are now starting the iPhone/Android preparation phase for PlainPath.
+
+Goal:
+Make the current React/Vite codebase safe and ready for future Capacitor packaging while keeping the web app stable.
+
+Focus on implementation now.
+
+Do all of the following:
+
+1. Platform-awareness foundation
+- Add a small platform utility layer so the app can tell whether it is running on:
+  - web browser
+  - future Capacitor native shell
+- Keep this centralized and reusable
+
+2. API base URL hardening
+- Refactor API URL handling so:
+  - web can keep using same-origin behavior when appropriate
+  - native builds require an absolute VITE_API_BASE_URL
+- Add a safe fallback strategy for web
+- Add a clear runtime/dev warning if a native build is missing the required API base URL
+- Keep the code clean and future-proof for iPhone/Android
+
+3. Capacitor-safe behavior cleanup
+- Find any browser-only assumptions that will break or behave poorly in a native wrapper
+- Fix what can be fixed now without actually packaging yet
+- Especially review:
+  - print behavior
+  - window/document assumptions
+  - navigation assumptions
+  - file upload assumptions
+
+4. Print/export behavior for native readiness
+- Keep normal print behavior on web
+- Make print behavior platform-aware so it does not silently fail later in a native shell
+- If needed, hide or disable the Print action for native mode with a clear placeholder message like:
+  “PDF export for the mobile app is coming soon”
+- Do not break current web print behavior
+
+5. Server/API readiness for native clients
+- Prepare the API/server configuration so it can later accept requests from mobile app origins safely
+- Do not loosen security unnecessarily
+- Make the required changes in a clean, production-minded way
+- Note any environment/config values that will be required when the mobile app is connected to the deployed API
+
+6. Capacitor scaffolding readiness
+- Add only the safe groundwork needed before actual Capacitor init
+- If appropriate, add:
+  - required npm dependencies
+  - a clean app metadata plan for PlainPath
+  - a clear environment/config strategy for native builds
+- Do not generate iOS/Android folders yet unless the project is truly ready
+
+7. Keep the web app stable
+- After all changes, verify the current web app still works:
+  - home
+  - import
+  - analyze
+  - demos
+  - print on web
+- No visual redesigns unless required for platform safety
+
+When finished, return:
+
+A. files updated
+B. exactly what was changed for Capacitor readiness
+C. which known blockers are now resolved
+D. any blockers still remaining before actual Capacitor integration
+E. the exact next command/prompt I should use after this to start real Capacitor setup
+
+Do not switch to planning mode.
+Do not add random new features.
+Focus on architecture hardening for iPhone/Android readiness.

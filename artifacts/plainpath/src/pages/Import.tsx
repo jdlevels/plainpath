@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { useAnalyzeDocument } from "@workspace/api-client-react"
 import { useAnalysisContext } from "@/context/AnalysisContext"
+import { getApiBaseUrl } from "@/lib/api"
 
 const DEMOS = [
   {
@@ -94,7 +95,7 @@ export default function Import() {
     const formData = new FormData()
     formData.append("file", file)
     try {
-      const apiBase = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "")
+      const apiBase = getApiBaseUrl()
       const res = await fetch(`${apiBase}/api/documents/upload`, { method: "POST", body: formData })
       let data: any = {}
       try { data = await res.json() } catch { /* non-JSON response */ }

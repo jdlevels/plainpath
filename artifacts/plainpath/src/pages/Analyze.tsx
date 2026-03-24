@@ -18,6 +18,8 @@ import { PriorityBadge } from "@/components/shared/PriorityBadge"
 import { ConfidenceBadge } from "@/components/shared/ConfidenceBadge"
 import { EvidenceTooltip } from "@/components/shared/EvidenceTooltip"
 import type { DocumentAnalysis } from "@workspace/api-client-react"
+import { triggerPrint } from "@/lib/print"
+import { isNative } from "@/lib/platform"
 
 const TABS = [
   { id: "summary",   label: "Overview",       icon: FileText       },
@@ -106,9 +108,15 @@ export default function Analyze() {
                 <TrendingUp className="w-3 h-3 text-muted-foreground" />
                 <span className="text-xs font-bold text-foreground tabular-nums">{progress}%</span>
               </div>
-              <Button variant="outline" size="sm" className="gap-1.5 bg-card text-xs h-8 border-border/60" onClick={() => { if (typeof window !== "undefined" && typeof window.print === "function") window.print() }}>
+              <Button
+                variant="outline"
+                size="sm"
+                title={isNative() ? "PDF export coming soon on mobile" : "Print this action plan"}
+                className="gap-1.5 bg-card text-xs h-8 border-border/60"
+                onClick={() => triggerPrint()}
+              >
                 <Printer className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Print</span>
+                <span className="hidden sm:inline">{isNative() ? "PDF soon" : "Print"}</span>
               </Button>
             </div>
           </div>

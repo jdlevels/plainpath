@@ -26,7 +26,52 @@ app.use(
     },
   }),
 );
-app.use(cors());
+
+// ---------------------------------------------------------------------------
+// CORS
+//
+// Origins that Capacitor native apps always use, regardless of environment:
+//   - capacitor://localhost  → iOS Capacitor WebView
+//   - http://localhost       → Android Capacitor WebView
+//
+// In development (NODE_ENV !== "production") all origins are allowed so local
+// testing and hot-reload work without configuration.
+//
+// In production, allowed origins are restricted to:
+//   1. The above Capacitor origins (always included)
+//   2. Any comma-separated origins in the CORS_ORIGINS env var
+//      e.g. CORS_ORIGINS=https://plainpath.app,https://www.plainpath.app
+//
+// Required env var for production native builds:
+//   CORS_ORIGINS — add the deployed web domain(s) here
+// ---------------------------------------------------------------------------
+
+const CAPACITOR_ORIGINS = ["capacitor://localhost", "http://localhost"];
+
+const configuredOrigins: string[] = process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(",")
+      .map((o) => o.trim())
+      .filter(Boolean)
+  : [];
+
+const isProduction = process.env.NODE_ENV === "production";
+
+app.use(
+  cors({
+    origin: isProduction
+      ? (origin, callback) => {
+          // Allow requests with no origin header (same-origin, server-to-server, curl).
+          if (!origin) return callback(null, true);
+          const allowed = [...CAPACITOR_ORIGINS, ...configuredOrigins];
+          if (allowed.includes(origin)) return callback(null, true);
+          logger.warn({ origin }, "CORS: rejected disallowed origin");
+          callback(new Error("CORS: origin not allowed"));
+        }
+      : true, // Allow all origins in development
+    credentials: true,
+  }),
+);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

@@ -71,6 +71,36 @@ Uses Replit AI Integrations for OpenAI access (no API key required, billed to cr
 - Model: `gpt-5.2`
 - Returns structured JSON with all extraction fields
 
+## Platform & Native Readiness
+
+### Platform utilities (`artifacts/plainpath/src/lib/`)
+- **`platform.ts`** — `isNative()`, `isWeb()`, `getPlatform()` detect Capacitor shell vs browser at runtime
+- **`api.ts`** — `getApiBaseUrl()` centralizes API URL resolution; emits a clear console error in native builds missing `VITE_API_BASE_URL`
+- **`print.ts`** — `triggerPrint()` is platform-aware; returns `{ success: false }` in native shell instead of silently calling `window.print()`
+
+### Capacitor config stub (`artifacts/plainpath/capacitor.config.json`)
+- `appId`: `com.plainpath.app`
+- `appName`: PlainPath
+- `webDir`: `dist/public` (matches Vite build output)
+- `androidScheme`: `https`
+
+### CORS strategy (`artifacts/api-server/src/app.ts`)
+- Development (`NODE_ENV !== "production"`): allows all origins
+- Production: restricts to `capacitor://localhost` + `http://localhost` + any `CORS_ORIGINS` env var (comma-separated)
+
+### Required env vars for production native build
+| Variable | Where | Purpose |
+|---|---|---|
+| `VITE_API_BASE_URL` | Capacitor build | Absolute API URL (e.g. `https://api.plainpath.app`) |
+| `CORS_ORIGINS` | API server | Deployed web domain(s), e.g. `https://plainpath.app` |
+
+### Remaining steps before `npx cap init`
+1. Set `VITE_API_BASE_URL` in Capacitor build config
+2. Set `CORS_ORIGINS` on deployed API
+3. Run `npx cap init` inside `artifacts/plainpath/` (uses `capacitor.config.json`)
+4. Run `npx cap add ios` and/or `npx cap add android`
+5. Run `pnpm build` then `npx cap copy`
+
 ## Development
 
 ```bash
