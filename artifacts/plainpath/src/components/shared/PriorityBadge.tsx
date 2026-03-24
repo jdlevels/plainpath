@@ -1,25 +1,28 @@
-import { Badge } from "@/components/ui/badge"
-import type { ActionStepPriority } from "@workspace/api-client-react/src/generated/api.schemas"
-import { AlertCircle, Clock, CheckCircle2 } from "lucide-react"
+import { cn } from "@/lib/utils"
 
-export function PriorityBadge({ level }: { level: ActionStepPriority | string }) {
-  if (level === 'high') {
-    return (
-      <Badge variant="destructive" className="gap-1 px-2.5 py-1">
-        <AlertCircle className="w-3.5 h-3.5" /> High Priority
-      </Badge>
-    )
-  }
-  if (level === 'medium') {
-    return (
-      <Badge variant="warning" className="gap-1 px-2.5 py-1">
-        <Clock className="w-3.5 h-3.5" /> Medium Priority
-      </Badge>
-    )
-  }
+type Level = "high" | "medium" | "low" | string
+
+const CONFIG = {
+  high: {
+    bg: "bg-red-50 border-red-200/60 text-red-700",
+    label: "High",
+  },
+  medium: {
+    bg: "bg-amber-50 border-amber-200/60 text-amber-700",
+    label: "Medium",
+  },
+  low: {
+    bg: "bg-secondary border-border text-muted-foreground",
+    label: "Low",
+  },
+}
+
+export function PriorityBadge({ level, className }: { level: Level; className?: string }) {
+  const cfg = CONFIG[level as keyof typeof CONFIG] ?? CONFIG.low
+
   return (
-    <Badge variant="secondary" className="gap-1 px-2.5 py-1">
-      <CheckCircle2 className="w-3.5 h-3.5" /> Low Priority
-    </Badge>
+    <span className={cn("inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-wide", cfg.bg, className)}>
+      {cfg.label} priority
+    </span>
   )
 }
