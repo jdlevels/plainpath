@@ -73,7 +73,7 @@ export default function Analyze() {
     <div className="min-h-screen bg-[#F8F7F4] pb-24">
 
       {/* ── Sticky header ───────────────────────────── */}
-      <div className="bg-white/95 backdrop-blur-md border-b border-border/50 sticky top-0 z-30">
+      <div className="no-print bg-white/95 backdrop-blur-md border-b border-border/50 sticky top-0 z-30">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-center gap-4">
             <button
@@ -112,7 +112,7 @@ export default function Analyze() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6">
 
         {/* ── At-a-glance strip ───────────────────────── */}
-        <div className="flex gap-2.5 mt-6 mb-7 flex-wrap">
+        <div className="no-print flex gap-2.5 mt-6 mb-7 flex-wrap">
           <StatPill label="Steps" value={analysis.actionSteps.length} onClick={() => setActiveTab("checklist")} />
           <StatPill label="Required docs" value={analysis.requiredDocuments.length} onClick={() => setActiveTab("documents")} />
           <StatPill label="Hard deadlines" value={hardDeadlines.length} warn={hardDeadlines.length > 0} onClick={() => setActiveTab("deadlines")} />
@@ -125,7 +125,7 @@ export default function Analyze() {
 
         {/* ── Tab bar ──────────────────────────────────── */}
         <Tabs.Root value={activeTab} onValueChange={setActiveTab}>
-          <Tabs.List className="flex overflow-x-auto hide-scrollbar gap-0.5 p-1 bg-white border border-border/40 rounded-2xl shadow-sm mb-6">
+          <Tabs.List className="no-print flex overflow-x-auto hide-scrollbar gap-0.5 p-1 bg-white border border-border/40 rounded-2xl shadow-sm mb-6">
             {TABS.map((tab) => {
               const count = (tab as any).countKey ? (analysis as any)[(tab as any).countKey]?.length : null
               const isMissing = tab.id === "missing"
@@ -628,9 +628,9 @@ function MissingSection({
 }
 
 const PRIORITY_STYLES = {
-  high:   { border: "border-l-red-400",   bg: "bg-red-50/30"   },
-  medium: { border: "border-l-amber-400", bg: "bg-amber-50/20" },
-  low:    { border: "border-l-border",    bg: ""               },
+  high:   { bar: "priority-bar-high", bg: "bg-red-50/30"   },
+  medium: { bar: "priority-bar-med",  bg: "bg-amber-50/20" },
+  low:    { bar: "priority-bar-low",  bg: ""               },
 } as const
 
 function ActionStepRow({
@@ -644,12 +644,12 @@ function ActionStepRow({
   const style = PRIORITY_STYLES[step.priority as keyof typeof PRIORITY_STYLES] ?? PRIORITY_STYLES.low
 
   return (
-    <div className={`group flex items-start gap-3.5 rounded-xl border border-l-[3px] transition-all ${style.border} ${
+    <div className={`group flex items-start gap-3.5 rounded-xl border transition-all ${
       compact ? "p-3" : "p-4"
     } ${
       step.completed
-        ? "bg-secondary/20 border-border/20 border-l-border/20 opacity-55"
-        : `${style.bg} bg-white border-border/40 hover:border-primary/20 hover:shadow-sm`
+        ? "bg-secondary/20 border-border/20 opacity-55 priority-bar-low"
+        : `${style.bar} ${style.bg} bg-white border-border/40 hover:border-primary/20 hover:shadow-sm`
     }`}>
       <div className="shrink-0 mt-0.5">
         <Checkbox checked={step.completed} onCheckedChange={(c) => onToggle(step.id, c === true)} />
@@ -740,13 +740,43 @@ function EmptyState({ icon: Icon, title, desc }: { icon: React.ElementType; titl
 
 function LoadingScreen() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#F8F7F4] gap-5">
-      <div className="w-16 h-16 rounded-2xl bg-white border border-border shadow-lg flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+    <div className="min-h-screen bg-[#F8F7F4] pb-24">
+      {/* Skeleton header */}
+      <div className="bg-white/95 border-b border-border/50 sticky top-0 z-30">
+        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center gap-4">
+          <div className="w-9 h-9 rounded-xl bg-secondary animate-pulse" />
+          <div className="flex-1 space-y-2">
+            <div className="h-2.5 w-32 rounded-full bg-secondary animate-pulse" />
+            <div className="h-4 w-56 rounded-full bg-secondary animate-pulse" />
+          </div>
+          <div className="hidden sm:flex items-center gap-3">
+            <div className="h-3 w-24 rounded-full bg-secondary animate-pulse" />
+            <div className="h-8 w-16 rounded-lg bg-secondary animate-pulse" />
+          </div>
+        </div>
       </div>
-      <div className="text-center">
-        <h2 className="text-xl font-bold">Preparing your action plan…</h2>
-        <p className="text-muted-foreground text-sm mt-1.5">Extracting steps, documents, deadlines, and risks.</p>
+
+      <div className="max-w-5xl mx-auto px-6 pt-8 space-y-6">
+        {/* Stat pills skeleton */}
+        <div className="flex gap-2.5">
+          {[80, 100, 110, 90].map((w, i) => (
+            <div key={i} className="h-10 rounded-xl bg-white border border-border/30 animate-pulse" style={{ width: w }} />
+          ))}
+        </div>
+
+        {/* Tab bar skeleton */}
+        <div className="h-14 rounded-2xl bg-white border border-border/30 animate-pulse" />
+
+        {/* Content skeleton */}
+        <div className="bg-white rounded-3xl border border-border/20 p-10 space-y-5">
+          <div className="h-8 w-40 rounded-lg bg-secondary animate-pulse" />
+          <div className="h-3 w-64 rounded-full bg-secondary animate-pulse" />
+          <div className="space-y-3 pt-2">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="priority-bar-high h-20 rounded-xl bg-secondary/30 animate-pulse border border-border/20" />
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   )

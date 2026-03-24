@@ -152,4 +152,48 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  /* Priority border accent — used on action step cards */
+  .priority-bar-high  { border-left: 4px solid hsl(350 60% 55%); }
+  .priority-bar-med   { border-left: 4px solid hsl(35 70% 55%); }
+  .priority-bar-low   { border-left: 4px solid hsl(40 10% 85%); }
+}
+
+/* ─── Print styles ──────────────────────────────── */
+@media print {
+  /* Remove chrome */
+  nav,
+  header,
+  .no-print,
+  [data-radix-popper-content-wrapper] { display: none !important; }
+
+  body { background: white !important; font-size: 12pt; }
+
+  /* Full-width content */
+  .max-w-5xl,
+  .max-w-3xl { max-width: 100% !important; padding: 0 !important; }
+
+  /* Show all tab content at once (override Radix hidden state) */
+  [data-state="inactive"] { display: block !important; opacity: 1 !important; }
+
+  /* Stat pills row */
+  button { box-shadow: none !important; }
+
+  /* Page breaks between major sections */
+  .print-break { page-break-before: always; }
+
+  /* Hide tab bar navigation */
+  [role="tablist"] { display: none !important; }
+
+  /* Card flattening for print */
+  .rounded-3xl,
+  .rounded-2xl,
+  .rounded-xl { border-radius: 0 !important; }
+
+  .shadow-lg,
+  .shadow-xl,
+  .shadow-sm { box-shadow: none !important; }
+
+  /* Expand textareas / evidence that would be clipped */
+  .truncate { overflow: visible !important; white-space: normal !important; }
 }
