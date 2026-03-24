@@ -1,0 +1,18 @@
+packages:
+  "framer-motion": "For premium page transitions, tab animations, and list item staggered reveals."
+  "date-fns": "For formatting deadline dates nicely."
+  "clsx": "Utility for constructing className strings conditionally."
+  "tailwind-merge": "Utility to safely merge Tailwind classes."
+  "@radix-ui/react-tooltip": "For robust tooltips on source evidence."
+  "@radix-ui/react-popover": "For clickable source evidence popovers."
+  "@radix-ui/react-tabs": "For accessible results navigation."
+  "@radix-ui/react-progress": "For the completion progress bar."
+
+images:
+  - path: "artifacts/plainpath/public/images/hero-bg.png"
+    description: "Soft, premium, abstract gradient mesh in warm off-white and pale slate blue. Very minimal, calm, trustworthy SaaS aesthetic. Subtle light leaks, high key, high key lighting, no harsh lines."
+    aspect_ratio: "16:9"
+
+notes:
+  - Assumes @workspace/api-client-react is correctly configured and exports standard React Query hooks.
+  - Using optimistic UI updates for the checklist feature since local state provides the best UX.

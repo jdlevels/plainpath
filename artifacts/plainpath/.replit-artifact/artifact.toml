@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "PlainPath"
+version = "1.0.0"
+id = "artifacts/plainpath"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 21054
+
+[services.development]
+run = "pnpm --filter @workspace/plainpath run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/plainpath", "run", "build" ]
+publicDir = "artifacts/plainpath/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "21054"
+BASE_PATH = "/"

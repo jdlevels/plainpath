@@ -1,96 +1,82 @@
-# Workspace
+# PlainPath
 
-## Overview
+A polished full-stack web app that turns confusing paperwork (PDFs, pasted text) into structured, actionable plans.
 
-pnpm workspace monorepo using TypeScript. Each package manages its own dependencies.
+## Architecture
 
-## Stack
+**Monorepo** managed by pnpm workspaces.
 
-- **Monorepo tool**: pnpm workspaces
-- **Node.js version**: 24
-- **Package manager**: pnpm
-- **TypeScript version**: 5.9
-- **API framework**: Express 5
-- **Database**: PostgreSQL + Drizzle ORM
-- **Validation**: Zod (`zod/v4`), `drizzle-zod`
-- **API codegen**: Orval (from OpenAPI spec)
-- **Build**: esbuild (CJS bundle)
+### Artifacts
+- `artifacts/plainpath` — React + Vite frontend (port `$PORT`, preview path `/`)
+- `artifacts/api-server` — Express 5 backend API (port `8080`)
 
-## Structure
+### Shared Packages
+- `lib/api-spec` — OpenAPI spec + orval codegen config
+- `lib/api-client-react` — Auto-generated React Query hooks from OpenAPI spec
+- `lib/api-zod` — Auto-generated Zod schemas from OpenAPI spec
+- `lib/db` — Drizzle ORM + PostgreSQL schema
+- `lib/integrations-openai-ai-server` — OpenAI AI integration (Replit-managed, no API key needed)
 
-```text
-artifacts-monorepo/
-├── artifacts/              # Deployable applications
-│   └── api-server/         # Express API server
-├── lib/                    # Shared libraries
-│   ├── api-spec/           # OpenAPI spec + Orval codegen config
-│   ├── api-client-react/   # Generated React Query hooks
-│   ├── api-zod/            # Generated Zod schemas from OpenAPI
-│   └── db/                 # Drizzle ORM schema + DB connection
-├── scripts/                # Utility scripts (single workspace package)
-│   └── src/                # Individual .ts scripts, run via `pnpm --filter @workspace/scripts run <script>`
-├── pnpm-workspace.yaml     # pnpm workspace (artifacts/*, lib/*, lib/integrations/*, scripts)
-├── tsconfig.base.json      # Shared TS options (composite, bundler resolution, es2022)
-├── tsconfig.json           # Root TS project references
-└── package.json            # Root package with hoisted devDeps
+## Features
+
+- **Landing page** — Hero section, feature grid, 3 demo document cards
+- **Import page** — Paste text, PDF upload (simulated), 3 built-in demos
+- **Analysis results** — Tabbed view: Summary, Checklist, Required Docs, Deadlines, Risks & Notes
+- **Interactive checklist** — Check off action steps and required documents with progress bar
+- **AI extraction** — Uses `gpt-5.2` to extract action steps, required documents, deadlines, risks, and follow-up questions
+- **Confidence badges** — High/Medium/Low on every extracted item
+- **Source evidence** — Tooltips showing the exact document excerpt that supports each extracted item
+- **Priority badges** — High/Medium/Low on action steps
+- **Print export** — `window.print()` for clean printable output
+- **3 built-in demos** — event-permit, school-enrollment, grant-application with rich pre-analyzed data
+
+## API Endpoints
+
+All routes under `/api`:
+- `GET /api/healthz` — Health check
+- `POST /api/documents/analyze` — AI document analysis (body: `{ text, title? }`)
+- `GET /api/documents/demo/:demoId` — Pre-analyzed demo (event-permit | school-enrollment | grant-application)
+- `POST /api/documents/checklist` — Update checklist item status
+
+## Key Files
+
+- `lib/api-spec/openapi.yaml` — Full OpenAPI contract
+- `artifacts/plainpath/src/App.tsx` — Frontend entry with routing
+- `artifacts/plainpath/src/context/AnalysisContext.tsx` — Global analysis state
+- `artifacts/plainpath/src/pages/Home.tsx` — Landing page
+- `artifacts/plainpath/src/pages/Import.tsx` — Document import page
+- `artifacts/plainpath/src/pages/Analyze.tsx` — Results page with all tabs
+- `artifacts/api-server/src/routes/documents/index.ts` — Document analysis routes
+- `artifacts/api-server/src/lib/demoData.ts` — 3 rich demo document analyses
+- `artifacts/api-server/src/lib/types.ts` — TypeScript interfaces
+- `lib/db/src/schema/documents.ts` — Drizzle schema for documents table
+
+## Design
+
+- Off-white backgrounds (`#F8F7F4`)
+- Charcoal text (`#1C1C1C`)
+- Slate-blue primary (`#4F7CAC`)
+- Premium SaaS style with warm tones and high whitespace
+- Framer Motion animations, Radix UI primitives, Tailwind CSS
+
+## AI Integration
+
+Uses Replit AI Integrations for OpenAI access (no API key required, billed to credits):
+- Env vars auto-provisioned: `AI_INTEGRATIONS_OPENAI_BASE_URL`, `AI_INTEGRATIONS_OPENAI_API_KEY`
+- Model: `gpt-5.2`
+- Returns structured JSON with all extraction fields
+
+## Development
+
+```bash
+# Install packages
+pnpm install
+
+# Push DB schema
+pnpm --filter @workspace/db run push
+
+# Regenerate API client after openapi.yaml changes
+pnpm --filter @workspace/api-spec run codegen
 ```
 
-## TypeScript & Composite Projects
-
-Every package extends `tsconfig.base.json` which sets `composite: true`. The root `tsconfig.json` lists all packages as project references. This means:
-
-- **Always typecheck from the root** — run `pnpm run typecheck` (which runs `tsc --build --emitDeclarationOnly`). This builds the full dependency graph so that cross-package imports resolve correctly. Running `tsc` inside a single package will fail if its dependencies haven't been built yet.
-- **`emitDeclarationOnly`** — we only emit `.d.ts` files during typecheck; actual JS bundling is handled by esbuild/tsx/vite...etc, not `tsc`.
-- **Project references** — when package A depends on package B, A's `tsconfig.json` must list B in its `references` array. `tsc --build` uses this to determine build order and skip up-to-date packages.
-
-## Root Scripts
-
-- `pnpm run build` — runs `typecheck` first, then recursively runs `build` in all packages that define it
-- `pnpm run typecheck` — runs `tsc --build --emitDeclarationOnly` using project references
-
-## Packages
-
-### `artifacts/api-server` (`@workspace/api-server`)
-
-Express 5 API server. Routes live in `src/routes/` and use `@workspace/api-zod` for request and response validation and `@workspace/db` for persistence.
-
-- Entry: `src/index.ts` — reads `PORT`, starts Express
-- App setup: `src/app.ts` — mounts CORS, JSON/urlencoded parsing, routes at `/api`
-- Routes: `src/routes/index.ts` mounts sub-routers; `src/routes/health.ts` exposes `GET /health` (full path: `/api/health`)
-- Depends on: `@workspace/db`, `@workspace/api-zod`
-- `pnpm --filter @workspace/api-server run dev` — run the dev server
-- `pnpm --filter @workspace/api-server run build` — production esbuild bundle (`dist/index.cjs`)
-- Build bundles an allowlist of deps (express, cors, pg, drizzle-orm, zod, etc.) and externalizes the rest
-
-### `lib/db` (`@workspace/db`)
-
-Database layer using Drizzle ORM with PostgreSQL. Exports a Drizzle client instance and schema models.
-
-- `src/index.ts` — creates a `Pool` + Drizzle instance, exports schema
-- `src/schema/index.ts` — barrel re-export of all models
-- `src/schema/<modelname>.ts` — table definitions with `drizzle-zod` insert schemas (no models definitions exist right now)
-- `drizzle.config.ts` — Drizzle Kit config (requires `DATABASE_URL`, automatically provided by Replit)
-- Exports: `.` (pool, db, schema), `./schema` (schema only)
-
-Production migrations are handled by Replit when publishing. In development, we just use `pnpm --filter @workspace/db run push`, and we fallback to `pnpm --filter @workspace/db run push-force`.
-
-### `lib/api-spec` (`@workspace/api-spec`)
-
-Owns the OpenAPI 3.1 spec (`openapi.yaml`) and the Orval config (`orval.config.ts`). Running codegen produces output into two sibling packages:
-
-1. `lib/api-client-react/src/generated/` — React Query hooks + fetch client
-2. `lib/api-zod/src/generated/` — Zod schemas
-
-Run codegen: `pnpm --filter @workspace/api-spec run codegen`
-
-### `lib/api-zod` (`@workspace/api-zod`)
-
-Generated Zod schemas from the OpenAPI spec (e.g. `HealthCheckResponse`). Used by `api-server` for response validation.
-
-### `lib/api-client-react` (`@workspace/api-client-react`)
-
-Generated React Query hooks and fetch client from the OpenAPI spec (e.g. `useHealthCheck`, `healthCheck`).
-
-### `scripts` (`@workspace/scripts`)
-
-Utility scripts package. Each script is a `.ts` file in `src/` with a corresponding npm script in `package.json`. Run scripts via `pnpm --filter @workspace/scripts run <script>`. Scripts can import any workspace package (e.g., `@workspace/db`) by adding it as a dependency in `scripts/package.json`.
+Workflows started automatically by Replit for `api-server` and `plainpath`.

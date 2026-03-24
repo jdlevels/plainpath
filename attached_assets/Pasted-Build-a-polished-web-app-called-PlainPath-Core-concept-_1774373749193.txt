@@ -1,0 +1,66 @@
+Build a polished web app called PlainPath.
+
+Core concept:
+PlainPath turns confusing forms, packets, and instruction sets into a clear step-by-step action plan.
+
+Target users:
+People handling important paperwork without professional help, such as permits, applications, grant packets, school enrollment packets, onboarding docs, or benefit packets.
+
+Primary workflow:
+1. User uploads a text-based PDF or pastes document text.
+2. The app extracts and structures the document into:
+   - plain-English summary
+   - action steps
+   - required documents/information
+   - deadlines
+   - follow-up questions
+   - risks / items needing manual review
+3. The app asks a few simple yes/no questions so it can determine what the user already has.
+4. The app generates a “What’s Missing” view and a prioritized next-step plan.
+5. The user can export a clean action-plan summary.
+
+Product requirements:
+- Premium, calm, trustworthy UI
+- Next.js + TypeScript + Tailwind + shadcn/ui
+- Responsive desktop-first design
+- Clean landing page plus app in one project
+- Demo mode with 3 built-in sample documents:
+  1) Small business event permit packet
+  2) School enrollment packet
+  3) Grant application checklist
+- File upload for text-based PDFs
+- Text paste option
+- Structured JSON extraction on the server
+- Strong loading states, empty states, and error handling
+- Source evidence shown for extracted items
+- Confidence badges for extracted items
+- Export to print/PDF-friendly summary
+
+App pages / sections:
+- Landing page
+- Upload / import page
+- Summary overview
+- Action checklist
+- Requirements / missing items
+- Deadlines timeline
+- Export screen
+
+Design direction:
+- premium SaaS look
+- off-white, charcoal, slate/blue accents
+- high whitespace
+- subtle icons
+- no gimmicky AI visuals
+- strong typography
+- clear hierarchy
+
+Important:
+- Use strict typed schemas for extracted data
+- Do not build a chatbot-first experience
+- This is an action-plan product, not a PDF chat app
+- Make the app feel production-ready
+- Seed the built-in demo documents so the product can be demoed immediately
+- Create a strong homepage hero and product explanation
+- Include helpful mock data first so the interface is complete even before the AI extraction is fully wired
+
+Start by scaffolding the full app structure, landing page, navigation, demo data model, and the import-to-summary flow with mock structured results.

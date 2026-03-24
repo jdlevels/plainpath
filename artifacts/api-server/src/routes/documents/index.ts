@@ -1,0 +1,225 @@
+import { Router } from "express";
+import { v4 as uuidv4 } from "uuid";
+import { openai } from "@workspace/integrations-openai-ai-server";
+import { demoDocuments } from "../../lib/demoData.js";
+import type { DocumentAnalysis } from "../../lib/types.js";
+
+const router = Router();
+
+const SYSTEM_PROMPT = `You are PlainPath, an expert at analyzing complex documents and extracting structured action plans. 
+
+Your job is to read the given document text and extract a comprehensive, practical analysis that helps ordinary people understand what they need to do.
+
+Return ONLY a valid JSON object — no markdown, no code fences, just raw JSON.
+
+The JSON must have this exact structure:
+{
+  "title": "string - descriptive title for this document",
+  "summary": "string - 2-4 sentence plain-English summary of what this document requires",
+  "documentType": "string - type of document (e.g., 'Government Permit Application', 'Insurance Form', 'Legal Agreement')",
+  "overallConfidence": "high|medium|low",
+  "actionSteps": [
+    {
+      "id": "as-1",
+      "title": "string - short action title (imperative verb phrase)",
+      "description": "string - 1-3 sentence clear description of what to do",
+      "priority": "high|medium|low",
+      "category": "string - category label (e.g., 'Documentation', 'Applications', 'Fees')",
+      "completed": false,
+      "sourceEvidence": "string - direct quote or paraphrase from document",
+      "confidence": "high|medium|low"
+    }
+  ],
+  "requiredDocuments": [
+    {
+      "id": "rd-1",
+      "name": "string - document name",
+      "description": "string - what this document is and where to get it",
+      "required": true|false,
+      "obtained": false,
+      "sourceEvidence": "string - direct quote or paraphrase from document",
+      "confidence": "high|medium|low"
+    }
+  ],
+  "deadlines": [
+    {
+      "id": "dl-1",
+      "title": "string - deadline name",
+      "date": "string - date or timeframe (e.g., '30 days before event', 'March 15')",
+      "description": "string - what must be done by this deadline",
+      "isHard": true|false,
+      "sourceEvidence": "string",
+      "confidence": "high|medium|low"
+    }
+  ],
+  "followUpQuestions": [
+    {
+      "id": "fq-1",
+      "question": "string - question the user needs to answer",
+      "context": "string - why this question matters for their situation",
+      "answered": false
+    }
+  ],
+  "risks": [
+    {
+      "id": "risk-1",
+      "title": "string - risk name",
+      "description": "string - what could go wrong and why it matters",
+      "severity": "high|medium|low",
+      "sourceEvidence": "string"
+    }
+  ]
+}
+
+Guidelines:
+- Extract 4-10 action steps ordered by priority
+- List all documents required to complete the process
+- Identify ALL deadlines, including soft ones
+- Flag 2-5 questions the applicant needs to answer based on their specific situation
+- Identify 2-4 risks that could cause delays or rejections
+- Use "high" confidence when the document explicitly states something
+- Use "medium" confidence when you're inferring from context
+- Use "low" confidence when uncertain or the document is ambiguous
+- Mark isHard=true for deadlines with serious consequences (rejection, legal issues)
+- prioritize action steps: high = must do first or has dependencies, medium = important but flexible, low = optional or nice-to-have`;
+
+router.post("/analyze", async (req, res) => {
+  const { text, title } = req.body;
+
+  if (!text || typeof text !== "string" || text.trim().length < 50) {
+    return res.status(400).json({
+      error: "invalid_input",
+      message: "Please provide document text with at least 50 characters.",
+    });
+  }
+
+  if (text.length > 50000) {
+    return res.status(400).json({
+      error: "text_too_long",
+      message: "Document text is too long. Please limit to 50,000 characters.",
+    });
+  }
+
+  try {
+    const userMessage = title
+      ? `Document Title: ${title}\n\n---\n\n${text}`
+      : text;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-5.2",
+      max_completion_tokens: 8192,
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        {
+          role: "user",
+          content: `Please analyze the following document and extract a structured action plan:\n\n${userMessage}`,
+        },
+      ],
+    });
+
+    const rawContent = response.choices[0]?.message?.content;
+    if (!rawContent) {
+      throw new Error("No response from AI model");
+    }
+
+    let parsed: Partial<DocumentAnalysis>;
+    try {
+      const cleaned = rawContent.trim().replace(/^```json\s*/, "").replace(/\s*```$/, "");
+      parsed = JSON.parse(cleaned);
+    } catch {
+      throw new Error("Failed to parse AI response as JSON");
+    }
+
+    const analysis: DocumentAnalysis = {
+      id: uuidv4(),
+      title: parsed.title || title || "Analyzed Document",
+      summary: parsed.summary || "",
+      documentType: parsed.documentType || "Document",
+      actionSteps: (parsed.actionSteps || []).map((step, i) => ({
+        id: step.id || `as-${i + 1}`,
+        title: step.title || "",
+        description: step.description || "",
+        priority: step.priority || "medium",
+        category: step.category || "General",
+        completed: false,
+        sourceEvidence: step.sourceEvidence,
+        confidence: step.confidence || "medium",
+      })),
+      requiredDocuments: (parsed.requiredDocuments || []).map((doc, i) => ({
+        id: doc.id || `rd-${i + 1}`,
+        name: doc.name || "",
+        description: doc.description || "",
+        required: doc.required !== false,
+        obtained: false,
+        sourceEvidence: doc.sourceEvidence,
+        confidence: doc.confidence || "medium",
+      })),
+      deadlines: (parsed.deadlines || []).map((dl, i) => ({
+        id: dl.id || `dl-${i + 1}`,
+        title: dl.title || "",
+        date: dl.date || "",
+        description: dl.description || "",
+        isHard: dl.isHard !== false,
+        sourceEvidence: dl.sourceEvidence,
+        confidence: dl.confidence || "medium",
+      })),
+      followUpQuestions: (parsed.followUpQuestions || []).map((fq, i) => ({
+        id: fq.id || `fq-${i + 1}`,
+        question: fq.question || "",
+        context: fq.context || "",
+        answered: false,
+      })),
+      risks: (parsed.risks || []).map((risk, i) => ({
+        id: risk.id || `risk-${i + 1}`,
+        title: risk.title || "",
+        description: risk.description || "",
+        severity: risk.severity || "medium",
+        sourceEvidence: risk.sourceEvidence,
+      })),
+      overallConfidence: parsed.overallConfidence || "medium",
+      processedAt: new Date().toISOString(),
+    };
+
+    return res.json({ analysis });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Unknown error occurred";
+    return res.status(500).json({
+      error: "analysis_failed",
+      message: `Failed to analyze document: ${message}`,
+    });
+  }
+});
+
+router.get("/demo/:demoId", (req, res) => {
+  const { demoId } = req.params;
+  const demo = demoDocuments[demoId];
+
+  if (!demo) {
+    return res.status(404).json({
+      error: "not_found",
+      message: `Demo document '${demoId}' not found. Available demos: event-permit, school-enrollment, grant-application`,
+    });
+  }
+
+  return res.json({ analysis: demo });
+});
+
+router.post("/checklist", (req, res) => {
+  const { itemId, itemType, completed } = req.body;
+
+  if (!itemId || !itemType) {
+    return res.status(400).json({
+      error: "invalid_input",
+      message: "itemId and itemType are required",
+    });
+  }
+
+  return res.json({
+    success: true,
+    itemId,
+    completed: Boolean(completed),
+  });
+});
+
+export default router;
