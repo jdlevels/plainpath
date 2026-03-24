@@ -62,16 +62,45 @@ export default function Import() {
   }
 
   const handleFileUpload = async (file: File) => {
+    if (file.size > 20 * 1024 * 1024) {
+      setUploadError("File is too large. Maximum allowed size is 20 MB.")
+      return
+    }
+
+    const allowedTypes = [
+      "application/pdf",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "text/plain",
+    ]
+    const allowedExts = [".pdf", ".docx", ".txt"]
+    const ext = "." + file.name.split(".").pop()?.toLowerCase()
+    if (!allowedTypes.includes(file.type) && !allowedExts.includes(ext)) {
+      setUploadError("Unsupported file type. Please upload a PDF (.pdf), Word document (.docx), or plain text (.txt) file.")
+      return
+    }
+
     setUploadedFile(file); setUploadError(null); setIsUploading(true)
     const formData = new FormData()
     formData.append("file", file)
     try {
       const res = await fetch("/api/documents/upload", { method: "POST", body: formData })
-      const data = await res.json()
-      if (!res.ok) { setUploadError(data.message || "Upload failed."); setIsUploading(false); return }
+      let data: any = {}
+      try { data = await res.json() } catch { /* non-JSON response */ }
+
+      if (!res.ok) {
+        const msg = data?.message || (res.status === 413
+          ? "File is too large. Maximum allowed size is 20 MB."
+          : res.status === 422
+          ? "Could not extract text from this file. If it's a scanned PDF, please copy and paste the text instead."
+          : "Upload failed. Please try again.")
+        setUploadError(msg); setIsUploading(false); return
+      }
+      if (!data?.analysis) {
+        setUploadError("Analysis returned an unexpected result. Please try again."); setIsUploading(false); return
+      }
       setAnalysis(data.analysis); setLocation("/analyze")
     } catch {
-      setUploadError("Network error. Please try again."); setIsUploading(false)
+      setUploadError("Network error. Please check your connection and try again."); setIsUploading(false)
     }
   }
 
@@ -205,7 +234,7 @@ export default function Import() {
                     </Button>
 
                     <p className="text-[11px] text-center text-muted-foreground/50">
-                      Minimum 50 characters · PlainPath reads only — it never submits or stores your document
+                      Minimum 50 characters · Your text is processed by AI for analysis and not stored by PlainPath
                     </p>
                   </motion.div>
                 )}

@@ -7,6 +7,8 @@ import { AnalysisProvider } from "@/context/AnalysisContext";
 import Home from "@/pages/Home";
 import Import from "@/pages/Import";
 import Analyze from "@/pages/Analyze";
+import Privacy from "@/pages/Privacy";
+import Terms from "@/pages/Terms";
 import NotFound from "@/pages/not-found";
 
 import { Navbar } from "@/components/layout/Navbar";
@@ -16,7 +18,7 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,
-      staleTime: 1000 * 60 * 5, // 5 minutes
+      staleTime: 1000 * 60 * 5,
     }
   }
 });
@@ -30,6 +32,8 @@ function Router() {
           <Route path="/" component={Home} />
           <Route path="/import" component={Import} />
           <Route path="/analyze" component={Analyze} />
+          <Route path="/privacy" component={Privacy} />
+          <Route path="/terms" component={Terms} />
           <Route component={NotFound} />
         </Switch>
       </main>

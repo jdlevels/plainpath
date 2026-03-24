@@ -7,6 +7,7 @@ export function Navbar() {
   const isHome = location === "/"
   const isImport = location === "/import"
   const isAnalyze = location.startsWith("/analyze")
+  const isStaticPage = location === "/privacy" || location === "/terms"
 
   return (
     <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-background/90 border-b border-border/50 transition-all duration-300">
@@ -44,6 +45,15 @@ export function Navbar() {
                 <Plus className="w-3.5 h-3.5" /> New Analysis
               </Link>
             </Button>
+          )}
+
+          {isStaticPage && (
+            <Link
+              href="/"
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Home
+            </Link>
           )}
         </nav>
       </div>
