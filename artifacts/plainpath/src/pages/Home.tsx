@@ -1,6 +1,10 @@
 import { useLocation } from "wouter"
 import { motion } from "framer-motion"
-import { ArrowRight, FileCheck, Clock, ShieldCheck, Sparkles, Target, Zap } from "lucide-react"
+import {
+  ArrowRight, FileCheck, Clock, ShieldCheck,
+  Sparkles, Target, Zap,
+  Receipt, Scale, HeartPulse, FileSignature, MailWarning
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 
@@ -8,37 +12,87 @@ const DEMOS = [
   {
     id: "event-permit",
     title: "Small Business Event Permit",
-    desc: "A typical messy local government packet filled with vague requirements.",
+    desc: "A messy local government packet filled with vague requirements and buried conditions.",
     icon: Sparkles,
     color: "text-blue-500",
-    bg: "bg-blue-50"
+    bg: "bg-blue-50",
   },
   {
     id: "school-enrollment",
     title: "School Enrollment Packet",
-    desc: "Multi-page enrollment form with hidden deadlines and required proofs.",
+    desc: "Multi-page enrollment form with hidden deadlines and required proofs of address.",
     icon: Target,
     color: "text-emerald-500",
-    bg: "bg-emerald-50"
+    bg: "bg-emerald-50",
   },
   {
     id: "grant-application",
     title: "Grant Application Checklist",
-    desc: "Dense legalese requiring strict formatting and a dozen attachments.",
+    desc: "Dense legalese requiring strict formatting, eligibility attestations, and a dozen attachments.",
     icon: Zap,
     color: "text-amber-500",
-    bg: "bg-amber-50"
-  }
-];
+    bg: "bg-amber-50",
+  },
+]
 
 const FEATURES = [
-  { title: "Prioritized Checklist", desc: "Know exactly what steps to take first, ordered by urgency.", icon: FileCheck },
-  { title: "Hidden Deadlines", desc: "Never miss a hard deadline buried on page 14 of the fine print.", icon: Clock },
-  { title: "Required Documents", desc: "A clear list of every attachment, form, or proof you must provide.", icon: ShieldCheck },
-];
+  {
+    title: "Prioritized Action Steps",
+    desc: "Exactly what to do first — ordered by urgency, with category labels on every step.",
+    icon: FileCheck,
+  },
+  {
+    title: "Hidden Deadlines",
+    desc: "Never miss a hard deadline buried in the fine print or an ambiguous timeframe buried in section 9.",
+    icon: Clock,
+  },
+  {
+    title: "Required Documents",
+    desc: "A clear list of every attachment, form, or proof you must gather before submitting.",
+    icon: ShieldCheck,
+  },
+]
+
+const DOCUMENT_FAMILIES = [
+  {
+    icon: Receipt,
+    label: "Tax & Government Forms",
+    examples: "IRS notices, state tax correspondence, benefit applications, FAFSA instructions",
+    color: "text-violet-500",
+    bg: "bg-violet-50",
+  },
+  {
+    icon: Scale,
+    label: "Legal & Business Formation",
+    examples: "LLC operating agreements, partnership filings, compliance checklists, licensing requirements",
+    color: "text-blue-500",
+    bg: "bg-blue-50",
+  },
+  {
+    icon: HeartPulse,
+    label: "Healthcare & Insurance",
+    examples: "EOB explanations, prior authorization forms, Medicaid/Medicare packets, open enrollment guides",
+    color: "text-rose-500",
+    bg: "bg-rose-50",
+  },
+  {
+    icon: FileSignature,
+    label: "Contracts & Agreements",
+    examples: "Lease agreements, service contracts, NDAs, vendor terms — understand your obligations",
+    color: "text-amber-500",
+    bg: "bg-amber-50",
+  },
+  {
+    icon: MailWarning,
+    label: "Bills, Statements & Notices",
+    examples: "Utility shutoff notices, debt collection letters, court summons, HOA violation notices",
+    color: "text-emerald-500",
+    bg: "bg-emerald-50",
+  },
+]
 
 export default function Home() {
-  const [, setLocation] = useLocation();
+  const [, setLocation] = useLocation()
 
   return (
     <div className="flex flex-col min-h-screen bg-[#F8F7F4] relative overflow-hidden">
@@ -53,7 +107,7 @@ export default function Home() {
 
       <main className="flex-1 flex flex-col items-center pt-24 pb-20 px-4">
 
-        {/* Hero */}
+        {/* ── Hero ─────────────────────────────────────────── */}
         <div className="max-w-4xl w-full text-center space-y-8 mb-28">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
@@ -86,13 +140,22 @@ export default function Home() {
             transition={{ duration: 0.5, delay: 0.15 }}
             className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed text-balance"
           >
-            Upload a PDF, Word document, or paste text directly. PlainPath extracts exactly what you need to do, what documents you need, and when things are due — with confidence ratings on every item.
+            Upload any PDF, Word doc, or paste text. PlainPath reads the document for you — surfacing required steps, documents to gather, deadlines, and risks, all in plain English.
+          </motion.p>
+
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="text-sm text-muted-foreground/70 max-w-xl mx-auto"
+          >
+            Works with tax notices, insurance forms, government applications, contracts, legal filings, and more. PlainPath helps you understand what's being asked — it doesn't file, advise, or submit anything on your behalf.
           </motion.p>
 
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.22 }}
+            transition={{ duration: 0.5, delay: 0.25 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2"
           >
             <Button size="lg" className="w-full sm:w-auto text-base px-8" onClick={() => setLocation("/import")}>
@@ -109,8 +172,8 @@ export default function Home() {
           </motion.div>
         </div>
 
-        {/* Feature grid */}
-        <div className="max-w-6xl w-full grid grid-cols-1 md:grid-cols-3 gap-6 mb-32">
+        {/* ── Feature cards ────────────────────────────────── */}
+        <div className="max-w-6xl w-full grid grid-cols-1 md:grid-cols-3 gap-6 mb-24">
           {FEATURES.map((feature, i) => (
             <motion.div
               key={i}
@@ -132,12 +195,84 @@ export default function Home() {
           ))}
         </div>
 
-        {/* Demo section */}
+        {/* ── Document families ─────────────────────────────── */}
+        <div className="max-w-6xl w-full mb-32">
+          <div className="text-center mb-10">
+            <motion.h2
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-3xl md:text-4xl font-display font-bold mb-3"
+            >
+              Works with any confusing document
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              className="text-muted-foreground text-lg max-w-2xl mx-auto"
+            >
+              PlainPath doesn't file or advise — it reads, extracts, and organizes, so you know exactly where you stand.
+            </motion.p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {DOCUMENT_FAMILIES.map((family, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.07 }}
+              >
+                <Card className="h-full border-border/40 bg-white/80 hover:shadow-md transition-shadow">
+                  <div className="p-5 flex gap-4">
+                    <div className={`w-11 h-11 rounded-xl ${family.bg} flex items-center justify-center shrink-0 mt-0.5`}>
+                      <family.icon className={`w-5 h-5 ${family.color}`} />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-foreground mb-1">{family.label}</h3>
+                      <p className="text-xs text-muted-foreground leading-relaxed">{family.examples}</p>
+                    </div>
+                  </div>
+                </Card>
+              </motion.div>
+            ))}
+
+            {/* CTA card at end */}
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: DOCUMENT_FAMILIES.length * 0.07 }}
+            >
+              <button
+                onClick={() => setLocation("/import")}
+                className="w-full h-full group"
+              >
+                <Card className="h-full border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 hover:shadow-md transition-all">
+                  <div className="p-5 flex gap-4 items-center h-full">
+                    <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                      <ArrowRight className="w-5 h-5 text-primary" />
+                    </div>
+                    <div className="text-left">
+                      <h3 className="font-bold text-primary mb-1">Upload your own</h3>
+                      <p className="text-xs text-muted-foreground leading-relaxed">PDF, Word document, or paste text directly</p>
+                    </div>
+                  </div>
+                </Card>
+              </button>
+            </motion.div>
+          </div>
+        </div>
+
+        {/* ── Demos ────────────────────────────────────────── */}
         <div id="demos" className="max-w-6xl w-full scroll-mt-24">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">See it in action</h2>
             <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-              Try one of our pre-loaded examples — each opens instantly with realistic extracted results.
+              Three pre-loaded examples — each opens instantly with a full extracted action plan.
             </p>
           </div>
 
