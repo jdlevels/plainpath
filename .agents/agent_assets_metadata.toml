@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "o7YB8F3oFhJfMlxpy-hZz"
+uri = "file://PlainPath-Handoff.md"
+type = "text"
+title = "PlainPath — Complete Project Handoff"

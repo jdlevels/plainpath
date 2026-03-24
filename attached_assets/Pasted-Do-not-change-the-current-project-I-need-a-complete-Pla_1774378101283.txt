@@ -1,0 +1,79 @@
+Do not change the current project.
+
+I need a complete PlainPath rebuild handoff so I can recreate this app in a brand-new Replit project for Buildathon compliance.
+
+Output everything needed to rebuild the current app exactly, in clean copy/paste format.
+
+Include all of the following:
+
+1. PROJECT OVERVIEW
+- one-paragraph summary of what PlainPath does
+- current supported document types
+- current demo documents
+- current routes/pages
+
+2. TECH STACK
+- framework
+- package manager
+- main libraries used
+- parsing libraries used
+- styling system
+- any environment variables required
+
+3. FILE TREE
+- full relevant file/folder structure for the current app
+
+4. FULL CODE FILES
+Provide the complete current contents for every important file needed to rebuild the app, especially:
+- package.json
+- vite.config / config files
+- tailwind config if used
+- main entry files
+- app/router files
+- landing page files
+- import page files
+- analyze/results page files
+- components used across the app
+- upload/parsing API/server files
+- demo data files
+- stylesheets
+- utility/helper files
+
+5. BUILD ORDER
+Give the best order to recreate the project in a fresh Replit app:
+- first files to create
+- then routes/pages
+- then components
+- then API/server files
+- then polish
+
+6. REQUIRED FEATURES CHECKLIST
+List every feature currently implemented and visible, including:
+- landing page
+- demo cards
+- paste text
+- PDF/DOCX/TXT upload
+- checklist tab
+- required docs tab
+- deadlines tab
+- risks tab
+- what's missing tab
+- print/export view
+- loading states
+
+7. WORDING CONSTRAINTS
+List the exact product language rules currently being followed:
+- keep PlainPath naming
+- no tax filing / legal advice language
+- no generic GPT wording
+- emphasize action plans, deadlines, required docs, and what’s missing
+
+8. FINAL REBUILD PROMPT
+Write one clean master prompt I can paste into a brand-new Replit project so Agent can rebuild this app quickly and accurately.
+
+Important:
+- Output everything in clean sections
+- Use full code, not summaries, for required files
+- Do not omit files that are necessary for the app to run
+- Do not modify the current project
+- This is a migration/export handoff only
