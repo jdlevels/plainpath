@@ -20,15 +20,16 @@ A polished full-stack web app that turns confusing paperwork (PDFs, pasted text)
 ## Features
 
 - **Landing page** — Hero section, feature grid, 3 demo document cards
-- **Import page** — Paste text, PDF upload (simulated), 3 built-in demos
-- **Analysis results** — Tabbed view: Summary, Checklist, Required Docs, Deadlines, Risks & Notes
+- **Import page** — Paste text, PDF upload, 3 built-in demos
+- **Analysis results** — 6-tab view: Overview, What's Missing, Checklist, Required Docs, Deadlines, Risks & Notes
 - **Interactive checklist** — Check off action steps and required documents with progress bar
 - **AI extraction** — Uses `gpt-5.2` to extract action steps, required documents, deadlines, risks, and follow-up questions
-- **Confidence badges** — High/Medium/Low on every extracted item
+- **Confidence badges** — High/Medium/Low on every extracted item (dark-mode aware)
 - **Source evidence** — Tooltips showing the exact document excerpt that supports each extracted item
-- **Priority badges** — High/Medium/Low on action steps
-- **Print export** — `window.print()` for clean printable output
+- **Priority badges** — High/Medium/Low on action steps (dark-mode aware)
+- **Print export** — `window.print()` always renders in light mode regardless of active theme
 - **3 built-in demos** — event-permit, school-enrollment, grant-application with rich pre-analyzed data
+- **Dark / Light / System theme** — Persisted, FOUC-free, covers every page and component
 
 ## API Endpoints
 
@@ -51,11 +52,15 @@ All routes under `/api`:
 - `artifacts/api-server/src/lib/types.ts` — TypeScript interfaces
 - `lib/db/src/schema/documents.ts` — Drizzle schema for documents table
 
-## Design
+## Design & Theme System
 
-- Off-white backgrounds (`#F8F7F4`)
-- Charcoal text (`#1C1C1C`)
-- Slate-blue primary (`#4F7CAC`)
+- **Light mode**: warm off-white `hsl(40 20% 97%)`, charcoal text, slate-blue primary `#4F7CAC`
+- **Dark mode**: `hsl(0 0% 9%)` near-black background, elevated card at `hsl(0 0% 13%)`, lighter blue primary `hsl(211 45% 65%)`
+- **Theme switcher**: Light / Dark / System dropdown in Navbar (`ThemeToggle.tsx`), persisted in `localStorage` key `plainpath-theme`
+- **FOUC prevention**: Inline script in `index.html` reads `localStorage` and applies `.dark` class before React mounts
+- **Global tokens**: All colors use CSS vars (`--background`, `--card`, `--foreground`, `--border`, `--primary`, `--muted`, etc.) in `index.css`; `.dark` overrides them all in one block
+- **Print always light**: `@media print` block forces all CSS vars to light-mode values — dark theme never bleeds into printed output
+- **Cross-platform ready**: Token approach maps cleanly to Capacitor (iOS/Android) and Electron theming
 - Premium SaaS style with warm tones and high whitespace
 - Framer Motion animations, Radix UI primitives, Tailwind CSS
 
