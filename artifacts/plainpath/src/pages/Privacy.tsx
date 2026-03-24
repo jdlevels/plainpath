@@ -2,7 +2,7 @@ import { useEffect } from "react"
 import { Link } from "wouter"
 import { ArrowLeft, Shield, Lock, Eye, Server, RefreshCw, Mail } from "lucide-react"
 
-const LAST_UPDATED = "March 2026"
+const LAST_UPDATED = "March 24, 2026"
 
 export default function Privacy() {
   useEffect(() => {
@@ -59,7 +59,7 @@ export default function Privacy() {
 
           <Section icon={Server} title="2. Third-party AI processing">
             <p>PlainPath uses <strong>OpenAI</strong> to analyze document text and extract structured action plans. When you submit a document, the text content is sent to OpenAI's API.</p>
-            <p>OpenAI's data handling is governed by the <a href="https://openai.com/policies/api-data-usage-policies" target="_blank" rel="noopener noreferrer" className="text-primary underline">OpenAI API Usage Policies</a>. As of the date of this policy, OpenAI does not use API-submitted data to train its models by default.</p>
+            <p>OpenAI's data handling is governed by <a href="https://openai.com/policies/" target="_blank" rel="noopener noreferrer" className="text-primary underline">OpenAI's policies</a>. As of the date of this policy, OpenAI does not use API-submitted data to train its models by default.</p>
             <p><strong>We recommend you do not upload documents containing sensitive personal information</strong> such as Social Security Numbers, financial account numbers, medical records, or other highly sensitive data.</p>
           </Section>
 
@@ -85,7 +85,7 @@ export default function Privacy() {
           </Section>
 
           <Section icon={Mail} title="6. Contact">
-            <p>Questions about this privacy policy? Reach out at <a href="mailto:hello@plainpath.app" className="text-primary underline underline-offset-2">hello@plainpath.app</a>.</p>
+            <p>Questions about this privacy policy? Reach out at <a href="mailto:Test123@gmail.com" className="text-primary underline underline-offset-2">Test123@gmail.com</a>.</p>
             <p>We will update this policy as the product evolves. The "Last updated" date at the top reflects the most recent revision.</p>
           </Section>
 
