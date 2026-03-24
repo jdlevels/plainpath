@@ -2,7 +2,7 @@ import { useEffect } from "react"
 import { Link } from "wouter"
 import { ArrowLeft, Scale, AlertTriangle, FileText, ShieldCheck, Mail } from "lucide-react"
 
-const LAST_UPDATED = "March 2025"
+const LAST_UPDATED = "March 2026"
 
 export default function Terms() {
   useEffect(() => {
@@ -88,7 +88,7 @@ export default function Terms() {
           </Section>
 
           <Section icon={Mail} title="6. Contact">
-            <p>Questions about these terms? Contact us at <strong>hello@plainpath.app</strong> (placeholder — replace before launch).</p>
+            <p>Questions about these terms? Contact us at <a href="mailto:hello@plainpath.app" className="text-primary underline underline-offset-2">hello@plainpath.app</a>.</p>
           </Section>
 
         </div>

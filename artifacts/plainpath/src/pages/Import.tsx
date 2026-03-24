@@ -62,6 +62,11 @@ export default function Import() {
   }
 
   const handleFileUpload = async (file: File) => {
+    if (file.size === 0) {
+      setUploadError("This file appears to be empty. Please check the file and try again.")
+      return
+    }
+
     if (file.size > 20 * 1024 * 1024) {
       setUploadError("File is too large. Maximum allowed size is 20 MB.")
       return
