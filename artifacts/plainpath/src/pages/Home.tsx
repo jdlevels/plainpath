@@ -1,9 +1,10 @@
 import { useLocation } from "wouter"
 import { motion } from "framer-motion"
 import {
-  ArrowRight, FileCheck, Clock, ShieldCheck,
+  ArrowRight, FileCheck, Clock, ShieldCheck, Upload,
   Sparkles, Target, Zap,
-  Receipt, Scale, HeartPulse, FileSignature, MailWarning
+  Receipt, Scale, HeartPulse, FileSignature, MailWarning,
+  CheckCircle2
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -12,83 +13,60 @@ const DEMOS = [
   {
     id: "event-permit",
     title: "Small Business Event Permit",
-    desc: "A messy local government packet filled with vague requirements and buried conditions.",
+    desc: "Local government packet with buried requirements, multiple agency approvals, and hard deadlines.",
     icon: Sparkles,
     color: "text-blue-500",
     bg: "bg-blue-50",
+    tags: ["8 action steps", "6 required docs", "3 deadlines"],
   },
   {
     id: "school-enrollment",
     title: "School Enrollment Packet",
-    desc: "Multi-page enrollment form with hidden deadlines and required proofs of address.",
+    desc: "Multi-page form with proof-of-residency rules, immunization deadlines, and hidden conditional steps.",
     icon: Target,
     color: "text-emerald-500",
     bg: "bg-emerald-50",
+    tags: ["9 action steps", "7 required docs", "2 deadlines"],
   },
   {
     id: "grant-application",
     title: "Grant Application Checklist",
-    desc: "Dense legalese requiring strict formatting, eligibility attestations, and a dozen attachments.",
+    desc: "Dense funding instructions requiring eligibility attestations, strict formatting, and a dozen attachments.",
     icon: Zap,
     color: "text-amber-500",
     bg: "bg-amber-50",
+    tags: ["10 action steps", "8 required docs", "4 deadlines"],
   },
 ]
 
-const FEATURES = [
+const HOW_IT_WORKS = [
   {
-    title: "Prioritized Action Steps",
-    desc: "Exactly what to do first — ordered by urgency, with category labels on every step.",
+    step: "01",
+    title: "Upload or paste your document",
+    desc: "Drop in a PDF, Word file, or paste text directly. PlainPath reads the full content.",
+    icon: Upload,
+  },
+  {
+    step: "02",
+    title: "We extract every requirement",
+    desc: "Required steps, documents, deadlines, risks, and open questions — all pulled from the source.",
     icon: FileCheck,
   },
   {
-    title: "Hidden Deadlines",
-    desc: "Never miss a hard deadline buried in the fine print or an ambiguous timeframe buried in section 9.",
-    icon: Clock,
-  },
-  {
-    title: "Required Documents",
-    desc: "A clear list of every attachment, form, or proof you must gather before submitting.",
-    icon: ShieldCheck,
+    step: "03",
+    title: "Work through your action plan",
+    desc: "Check off items as you go. Track what's missing and see your progress in real time.",
+    icon: CheckCircle2,
   },
 ]
 
 const DOCUMENT_FAMILIES = [
-  {
-    icon: Receipt,
-    label: "Tax & Government Forms",
-    examples: "IRS notices, state tax correspondence, benefit applications, FAFSA instructions",
-    color: "text-violet-500",
-    bg: "bg-violet-50",
-  },
-  {
-    icon: Scale,
-    label: "Legal & Business Formation",
-    examples: "LLC operating agreements, partnership filings, compliance checklists, licensing requirements",
-    color: "text-blue-500",
-    bg: "bg-blue-50",
-  },
-  {
-    icon: HeartPulse,
-    label: "Healthcare & Insurance",
-    examples: "EOB explanations, prior authorization forms, Medicaid/Medicare packets, open enrollment guides",
-    color: "text-rose-500",
-    bg: "bg-rose-50",
-  },
-  {
-    icon: FileSignature,
-    label: "Contracts & Agreements",
-    examples: "Lease agreements, service contracts, NDAs, vendor terms — understand your obligations",
-    color: "text-amber-500",
-    bg: "bg-amber-50",
-  },
-  {
-    icon: MailWarning,
-    label: "Bills, Statements & Notices",
-    examples: "Utility shutoff notices, debt collection letters, court summons, HOA violation notices",
-    color: "text-emerald-500",
-    bg: "bg-emerald-50",
-  },
+  { icon: Receipt, label: "Tax & Government Forms", color: "text-violet-500", bg: "bg-violet-50" },
+  { icon: Scale, label: "Legal & Business Filings", color: "text-blue-500", bg: "bg-blue-50" },
+  { icon: HeartPulse, label: "Healthcare & Insurance", color: "text-rose-500", bg: "bg-rose-50" },
+  { icon: FileSignature, label: "Contracts & Agreements", color: "text-amber-500", bg: "bg-amber-50" },
+  { icon: MailWarning, label: "Bills, Notices & Summons", color: "text-emerald-500", bg: "bg-emerald-50" },
+  { icon: Sparkles, label: "Applications & Permits", color: "text-indigo-500", bg: "bg-indigo-50" },
 ]
 
 export default function Home() {
@@ -96,211 +74,277 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#F8F7F4] relative overflow-hidden">
-      <div className="absolute top-0 left-0 w-full h-[80vh] opacity-40 pointer-events-none -z-10">
-        <img
-          src={`${import.meta.env.BASE_URL}images/hero-bg.png`}
-          alt=""
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#F8F7F4]/60 to-[#F8F7F4]" />
+      {/* Background gradient */}
+      <div className="absolute top-0 left-0 right-0 h-[70vh] pointer-events-none -z-10 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent" />
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full bg-primary/5 blur-3xl transform translate-x-1/3 -translate-y-1/3" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-blue-100/40 blur-3xl transform -translate-x-1/4" />
       </div>
 
-      <main className="flex-1 flex flex-col items-center pt-24 pb-20 px-4">
+      <main className="flex-1 flex flex-col items-center pb-24 px-4">
 
         {/* ── Hero ─────────────────────────────────────────── */}
-        <div className="max-w-4xl w-full text-center space-y-8 mb-28">
+        <section className="max-w-4xl w-full text-center pt-24 pb-20 space-y-7">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-border/50 shadow-sm text-sm font-medium text-muted-foreground"
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-border shadow-sm text-xs font-semibold text-muted-foreground tracking-wide uppercase"
           >
-            <span className="flex h-2 w-2 rounded-full bg-primary animate-pulse" />
+            <span className="flex h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
             Structured document analysis
           </motion.div>
 
           <motion.h1
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.08 }}
-            className="text-5xl md:text-7xl font-display font-bold tracking-tight text-balance text-foreground leading-[1.1]"
+            transition={{ delay: 0.07 }}
+            className="text-5xl md:text-[4.5rem] lg:text-[5.5rem] font-display font-bold tracking-tight text-foreground leading-[1.05] text-balance"
           >
-            Turn confusing paperwork into a{" "}
-            <span className="text-primary relative whitespace-nowrap">
-              clear action plan
-              <svg className="absolute -bottom-2 left-0 w-full h-3 text-primary/30" viewBox="0 0 200 9" fill="none">
-                <path d="M2.00021 6.84039C52.7933 1.70135 142.348 -1.82136 198.36 6.84039" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-              </svg>
-            </span>
+            Stop guessing what<br />
+            <span className="text-primary">a document requires.</span>
           </motion.h1>
 
           <motion.p
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.15 }}
-            className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed text-balance"
+            transition={{ delay: 0.14 }}
+            className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed"
           >
-            Upload any PDF, Word doc, or paste text. PlainPath reads the document for you — surfacing required steps, documents to gather, deadlines, and risks, all in plain English.
-          </motion.p>
-
-          <motion.p
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="text-sm text-muted-foreground/70 max-w-xl mx-auto"
-          >
-            Works with tax notices, insurance forms, government applications, contracts, legal filings, and more. PlainPath helps you understand what's being asked — it doesn't file, advise, or submit anything on your behalf.
+            PlainPath reads your paperwork and gives you a clear, prioritized action plan — every required step, every document to gather, every deadline — in plain English.
           </motion.p>
 
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.25 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2"
+            transition={{ delay: 0.2 }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2"
           >
-            <Button size="lg" className="w-full sm:w-auto text-base px-8" onClick={() => setLocation("/import")}>
-              Analyze a Document <ArrowRight className="ml-2 w-5 h-5" />
+            <Button size="lg" className="w-full sm:w-auto h-13 text-base px-8 rounded-xl shadow-md shadow-primary/20" onClick={() => setLocation("/import")}>
+              Analyze a Document <ArrowRight className="ml-2 w-4 h-4" />
             </Button>
             <Button
               size="lg"
               variant="outline"
-              className="w-full sm:w-auto text-base bg-white"
+              className="w-full sm:w-auto h-13 text-base bg-white rounded-xl"
               onClick={() => document.getElementById("demos")?.scrollIntoView({ behavior: "smooth" })}
             >
-              Try a Demo
+              View demos
             </Button>
           </motion.div>
-        </div>
 
-        {/* ── Feature cards ────────────────────────────────── */}
-        <div className="max-w-6xl w-full grid grid-cols-1 md:grid-cols-3 gap-6 mb-24">
-          {FEATURES.map((feature, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 + 0.1 }}
-            >
-              <Card className="h-full border-none shadow-md hover:shadow-lg bg-white/70 backdrop-blur-sm transition-shadow">
-                <div className="p-6 space-y-4">
-                  <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center">
-                    <feature.icon className="w-6 h-6 text-primary" />
-                  </div>
-                  <h3 className="text-xl font-bold">{feature.title}</h3>
-                  <p className="text-muted-foreground">{feature.desc}</p>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="text-xs text-muted-foreground/60"
+          >
+            Works with PDF, Word, and plain text · PlainPath reads only — it never files, advises, or submits on your behalf
+          </motion.p>
+        </section>
+
+        {/* ── Document types strip ──────────────────────────── */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="w-full max-w-5xl mb-24"
+        >
+          <p className="text-center text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-6">Works with all kinds of confusing paperwork</p>
+          <div className="flex flex-wrap justify-center gap-3">
+            {DOCUMENT_FAMILIES.map((f, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.05 }}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-border/60 shadow-sm hover:shadow-md hover:border-primary/30 transition-all cursor-default"
+              >
+                <div className={`w-7 h-7 rounded-lg ${f.bg} flex items-center justify-center`}>
+                  <f.icon className={`w-3.5 h-3.5 ${f.color}`} />
                 </div>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
+                <span className="text-sm font-semibold text-foreground/80">{f.label}</span>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
 
-        {/* ── Document families ─────────────────────────────── */}
-        <div className="max-w-6xl w-full mb-32">
-          <div className="text-center mb-10">
-            <motion.h2
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="text-3xl md:text-4xl font-display font-bold mb-3"
-            >
-              Works with any confusing document
-            </motion.h2>
+        {/* ── How it works ──────────────────────────────────── */}
+        <section className="max-w-6xl w-full mb-28">
+          <div className="text-center mb-14">
             <motion.p
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3"
+            >
+              How it works
+            </motion.p>
+            <motion.h2
+              initial={{ opacity: 0, y: 12 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: 0.1 }}
-              className="text-muted-foreground text-lg max-w-2xl mx-auto"
+              className="text-3xl md:text-4xl font-display font-bold"
             >
-              PlainPath doesn't file or advise — it reads, extracts, and organizes, so you know exactly where you stand.
-            </motion.p>
+              From confusing to clear in seconds
+            </motion.h2>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {DOCUMENT_FAMILIES.map((family, i) => (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
+            {/* connector line */}
+            <div className="hidden md:block absolute top-10 left-[calc(16.67%+1rem)] right-[calc(16.67%+1rem)] h-px bg-gradient-to-r from-border via-primary/30 to-border" />
+
+            {HOW_IT_WORKS.map((step, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.12 }}
+              >
+                <Card className="h-full bg-white border-border/50 shadow-md hover:shadow-xl transition-shadow rounded-2xl overflow-hidden">
+                  <div className="p-7">
+                    <div className="flex items-center gap-4 mb-6">
+                      <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-sm shadow-primary/30 relative z-10">
+                        <step.icon className="w-5 h-5 text-white" />
+                      </div>
+                      <span className="text-4xl font-display font-bold text-foreground/10 leading-none select-none">{step.step}</span>
+                    </div>
+                    <h3 className="text-lg font-bold mb-2">{step.title}</h3>
+                    <p className="text-muted-foreground text-sm leading-relaxed">{step.desc}</p>
+                  </div>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── What you get ─────────────────────────────────── */}
+        <section className="max-w-6xl w-full mb-28">
+          <div className="text-center mb-14">
+            <motion.p
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3"
+            >
+              What you get
+            </motion.p>
+            <motion.h2
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-3xl md:text-4xl font-display font-bold"
+            >
+              Everything a document is asking for — organized
+            </motion.h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {[
+              {
+                icon: FileCheck,
+                title: "Prioritized Action Steps",
+                desc: "Every task extracted and ranked by urgency. High-priority items flagged first. Category labels on every step.",
+                color: "bg-primary/10",
+                iconColor: "text-primary",
+              },
+              {
+                icon: ShieldCheck,
+                title: "Required Documents",
+                desc: "A complete list of every attachment, form, ID, or proof you need to gather — with source quotes showing exactly where each was mentioned.",
+                color: "bg-emerald-50",
+                iconColor: "text-emerald-600",
+              },
+              {
+                icon: Clock,
+                title: "Deadlines & Risks",
+                desc: "Hard dates surfaced from fine print. High-severity risks flagged before they become problems. Confidence ratings on every item.",
+                color: "bg-rose-50",
+                iconColor: "text-rose-600",
+              },
+            ].map((card, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.07 }}
+                transition={{ delay: i * 0.1 }}
               >
-                <Card className="h-full border-border/40 bg-white/80 hover:shadow-md transition-shadow">
-                  <div className="p-5 flex gap-4">
-                    <div className={`w-11 h-11 rounded-xl ${family.bg} flex items-center justify-center shrink-0 mt-0.5`}>
-                      <family.icon className={`w-5 h-5 ${family.color}`} />
+                <Card className="h-full bg-white border-border/40 shadow-md hover:shadow-xl transition-shadow rounded-2xl">
+                  <div className="p-7 space-y-5">
+                    <div className={`w-12 h-12 rounded-2xl ${card.color} flex items-center justify-center`}>
+                      <card.icon className={`w-6 h-6 ${card.iconColor}`} />
                     </div>
                     <div>
-                      <h3 className="font-bold text-foreground mb-1">{family.label}</h3>
-                      <p className="text-xs text-muted-foreground leading-relaxed">{family.examples}</p>
+                      <h3 className="text-xl font-bold mb-2">{card.title}</h3>
+                      <p className="text-muted-foreground leading-relaxed">{card.desc}</p>
                     </div>
                   </div>
                 </Card>
               </motion.div>
             ))}
-
-            {/* CTA card at end */}
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: DOCUMENT_FAMILIES.length * 0.07 }}
-            >
-              <button
-                onClick={() => setLocation("/import")}
-                className="w-full h-full group"
-              >
-                <Card className="h-full border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 hover:shadow-md transition-all">
-                  <div className="p-5 flex gap-4 items-center h-full">
-                    <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                      <ArrowRight className="w-5 h-5 text-primary" />
-                    </div>
-                    <div className="text-left">
-                      <h3 className="font-bold text-primary mb-1">Upload your own</h3>
-                      <p className="text-xs text-muted-foreground leading-relaxed">PDF, Word document, or paste text directly</p>
-                    </div>
-                  </div>
-                </Card>
-              </button>
-            </motion.div>
           </div>
-        </div>
+        </section>
 
         {/* ── Demos ────────────────────────────────────────── */}
-        <div id="demos" className="max-w-6xl w-full scroll-mt-24">
+        <section id="demos" className="max-w-6xl w-full scroll-mt-24">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">See it in action</h2>
-            <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-              Three pre-loaded examples — each opens instantly with a full extracted action plan.
-            </p>
+            <motion.p
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3"
+            >
+              Live demos
+            </motion.p>
+            <motion.h2
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-3xl md:text-4xl font-display font-bold mb-3"
+            >
+              See a real result instantly
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0, y: 8 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              className="text-muted-foreground text-lg max-w-xl mx-auto"
+            >
+              Three pre-loaded examples — click any card to open a full structured action plan.
+            </motion.p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {DEMOS.map((demo, i) => (
               <motion.div
                 key={demo.id}
-                initial={{ opacity: 0, scale: 0.97 }}
-                whileInView={{ opacity: 1, scale: 1 }}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                whileHover={{ y: -4 }}
+                whileHover={{ y: -5, transition: { duration: 0.2 } }}
               >
                 <button
                   onClick={() => setLocation(`/analyze?demo=${demo.id}`)}
                   className="w-full text-left h-full group"
                 >
-                  <Card className="h-full border-border/50 hover:border-primary/30 hover:shadow-lg transition-all overflow-hidden bg-white">
-                    <div className="p-6 space-y-4">
-                      <div className={`w-12 h-12 rounded-xl ${demo.bg} flex items-center justify-center`}>
+                  <Card className="h-full border-border/40 hover:border-primary/40 hover:shadow-xl transition-all overflow-hidden bg-white rounded-2xl shadow-md">
+                    <div className="p-7 flex flex-col h-full">
+                      <div className={`w-13 h-13 rounded-xl ${demo.bg} flex items-center justify-center mb-5 w-12 h-12`}>
                         <demo.icon className={`w-6 h-6 ${demo.color}`} />
                       </div>
-                      <div>
-                        <h3 className="text-lg font-bold group-hover:text-primary transition-colors mb-1">{demo.title}</h3>
-                        <p className="text-sm text-muted-foreground leading-relaxed">{demo.desc}</p>
+                      <h3 className="text-lg font-bold group-hover:text-primary transition-colors mb-2 leading-snug">{demo.title}</h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed mb-5 flex-1">{demo.desc}</p>
+                      <div className="flex flex-wrap gap-1.5 mb-4">
+                        {demo.tags.map((tag) => (
+                          <span key={tag} className="inline-block px-2.5 py-1 rounded-full bg-secondary text-xs font-semibold text-muted-foreground">{tag}</span>
+                        ))}
                       </div>
-                      <div className="flex items-center gap-1.5 text-xs font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-                        View instant results <ArrowRight className="w-3.5 h-3.5" />
+                      <div className="flex items-center gap-1.5 text-sm font-semibold text-primary">
+                        Open action plan <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                       </div>
                     </div>
                   </Card>
@@ -308,7 +352,7 @@ export default function Home() {
               </motion.div>
             ))}
           </div>
-        </div>
+        </section>
 
       </main>
     </div>
