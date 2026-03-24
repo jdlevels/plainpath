@@ -259,7 +259,8 @@ export default function Import() {
                             <UploadCloud className="w-7 h-7 text-primary" />
                           </div>
                           <div>
-                            <p className="font-bold text-foreground">Drop file here or click to browse</p>
+                            <p className="font-bold text-foreground sm:hidden">Tap to choose a file</p>
+                            <p className="font-bold text-foreground hidden sm:block">Drop file here or click to browse</p>
                             <p className="text-sm text-muted-foreground mt-1">PDF, Word (.docx), or plain text (.txt)</p>
                           </div>
                           <div className="flex items-center justify-center gap-2">
@@ -267,7 +268,7 @@ export default function Import() {
                               <span key={fmt} className="px-3 py-1.5 rounded-lg bg-white border border-border text-xs font-bold text-muted-foreground shadow-sm">{fmt}</span>
                             ))}
                           </div>
-                          <p className="text-[11px] text-muted-foreground/50">Max 20 MB per file</p>
+                          <p className="text-[11px] text-muted-foreground/50">Max 20 MB · Text-based PDFs only</p>
                         </div>
                       )}
                     </div>

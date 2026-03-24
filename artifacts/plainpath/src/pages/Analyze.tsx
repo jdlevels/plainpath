@@ -90,8 +90,8 @@ export default function Analyze() {
               <h1 className="text-base font-bold truncate text-foreground leading-tight">{analysis.title}</h1>
             </div>
 
-            <div className="hidden sm:flex items-center gap-4 shrink-0">
-              <div className="text-right">
+            <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+              <div className="hidden sm:block text-right">
                 <div className="flex items-center justify-between gap-3 mb-1.5">
                   <div className="flex items-center gap-1.5">
                     <TrendingUp className="w-3 h-3 text-muted-foreground" />
@@ -101,8 +101,13 @@ export default function Analyze() {
                 </div>
                 <Progress value={progress} className="h-1.5 w-32" />
               </div>
+              <div className="sm:hidden flex items-center gap-1.5">
+                <TrendingUp className="w-3 h-3 text-muted-foreground" />
+                <span className="text-xs font-bold text-foreground tabular-nums">{progress}%</span>
+              </div>
               <Button variant="outline" size="sm" className="gap-1.5 bg-white text-xs h-8 border-border/60" onClick={() => window.print()}>
-                <Printer className="w-3.5 h-3.5" /> Print
+                <Printer className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Print</span>
               </Button>
             </div>
           </div>
@@ -112,20 +117,24 @@ export default function Analyze() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6">
 
         {/* ── At-a-glance strip ───────────────────────── */}
-        <div className="no-print flex gap-2.5 mt-6 mb-7 flex-wrap">
-          <StatPill label="Steps" value={analysis.actionSteps.length} onClick={() => setActiveTab("checklist")} />
-          <StatPill label="Required docs" value={analysis.requiredDocuments.length} onClick={() => setActiveTab("documents")} />
-          <StatPill label="Hard deadlines" value={hardDeadlines.length} warn={hardDeadlines.length > 0} onClick={() => setActiveTab("deadlines")} />
-          <StatPill label="High risks" value={highRisks.length} warn={highRisks.length > 0} onClick={() => setActiveTab("risks")} />
-          <div className="ml-auto flex items-center gap-1.5">
-            <ConfidenceBadge level={analysis.overallConfidence} />
-            <span className="text-xs text-muted-foreground hidden sm:inline">overall confidence</span>
+        <div className="no-print mt-6 mb-7">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex gap-2 flex-wrap">
+              <StatPill label="Steps" value={analysis.actionSteps.length} onClick={() => setActiveTab("checklist")} />
+              <StatPill label="Required docs" value={analysis.requiredDocuments.length} onClick={() => setActiveTab("documents")} />
+              <StatPill label="Hard deadlines" value={hardDeadlines.length} warn={hardDeadlines.length > 0} onClick={() => setActiveTab("deadlines")} />
+              <StatPill label="High risks" value={highRisks.length} warn={highRisks.length > 0} onClick={() => setActiveTab("risks")} />
+            </div>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <ConfidenceBadge level={analysis.overallConfidence} />
+              <span className="text-xs text-muted-foreground hidden sm:inline">overall confidence</span>
+            </div>
           </div>
         </div>
 
         {/* ── Tab bar ──────────────────────────────────── */}
         <Tabs.Root value={activeTab} onValueChange={setActiveTab}>
-          <Tabs.List className="no-print flex overflow-x-auto hide-scrollbar gap-0.5 p-1 bg-white border border-border/40 rounded-2xl shadow-sm mb-6">
+          <Tabs.List className="no-print flex overflow-x-auto hide-scrollbar gap-0.5 p-1 bg-white border border-border/40 rounded-2xl shadow-sm mb-6 scroll-smooth">
             {TABS.map((tab) => {
               const count = (tab as any).countKey ? (analysis as any)[(tab as any).countKey]?.length : null
               const isMissing = tab.id === "missing"

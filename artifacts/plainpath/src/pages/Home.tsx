@@ -119,27 +119,37 @@ export default function Home() {
             transition={{ delay: 0.2 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2"
           >
-            <Button size="lg" className="w-full sm:w-auto h-13 text-base px-8 rounded-xl shadow-md shadow-primary/20" onClick={() => setLocation("/import")}>
+            <Button size="lg" className="w-full sm:w-auto h-12 text-base px-8 rounded-xl shadow-md shadow-primary/20" onClick={() => setLocation("/import")}>
               Analyze a Document <ArrowRight className="ml-2 w-4 h-4" />
             </Button>
             <Button
               size="lg"
               variant="outline"
-              className="w-full sm:w-auto h-13 text-base bg-white rounded-xl"
+              className="w-full sm:w-auto h-12 text-base bg-white rounded-xl"
               onClick={() => document.getElementById("demos")?.scrollIntoView({ behavior: "smooth" })}
             >
               View demos
             </Button>
           </motion.div>
 
-          <motion.p
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="text-xs text-muted-foreground/60"
+            className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2"
           >
-            Works with PDF, Word, and plain text · PlainPath reads only — it never files, advises, or submits on your behalf
-          </motion.p>
+            {[
+              "Free to use",
+              "No account required",
+              "Documents are never stored",
+              "PlainPath reads only — never files or advises",
+            ].map((item) => (
+              <span key={item} className="flex items-center gap-1.5 text-xs text-muted-foreground/55">
+                <span className="w-1 h-1 rounded-full bg-muted-foreground/30 shrink-0" />
+                {item}
+              </span>
+            ))}
+          </motion.div>
         </section>
 
         {/* ── Document types strip ──────────────────────────── */}
