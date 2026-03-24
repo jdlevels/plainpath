@@ -1,14 +1,16 @@
 import { Router } from "express";
 import { v4 as uuidv4 } from "uuid";
+import multer from "multer";
 import { openai } from "@workspace/integrations-openai-ai-server";
 import { demoDocuments } from "../../lib/demoData.js";
 import type { DocumentAnalysis } from "../../lib/types.js";
 
 const router = Router();
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
 
-const SYSTEM_PROMPT = `You are PlainPath, an expert at analyzing complex documents and extracting structured action plans. 
+const SYSTEM_PROMPT = `You are PlainPath, a document analysis engine that transforms confusing paperwork into structured, actionable plans.
 
-Your job is to read the given document text and extract a comprehensive, practical analysis that helps ordinary people understand what they need to do.
+Your job is to read the given document text and extract a comprehensive, practical analysis that helps ordinary people understand exactly what they need to do.
 
 Return ONLY a valid JSON object — no markdown, no code fences, just raw JSON.
 
@@ -35,7 +37,7 @@ The JSON must have this exact structure:
       "id": "rd-1",
       "name": "string - document name",
       "description": "string - what this document is and where to get it",
-      "required": true|false,
+      "required": true,
       "obtained": false,
       "sourceEvidence": "string - direct quote or paraphrase from document",
       "confidence": "high|medium|low"
@@ -47,7 +49,7 @@ The JSON must have this exact structure:
       "title": "string - deadline name",
       "date": "string - date or timeframe (e.g., '30 days before event', 'March 15')",
       "description": "string - what must be done by this deadline",
-      "isHard": true|false,
+      "isHard": true,
       "sourceEvidence": "string",
       "confidence": "high|medium|low"
     }
@@ -81,7 +83,81 @@ Guidelines:
 - Use "medium" confidence when you're inferring from context
 - Use "low" confidence when uncertain or the document is ambiguous
 - Mark isHard=true for deadlines with serious consequences (rejection, legal issues)
-- prioritize action steps: high = must do first or has dependencies, medium = important but flexible, low = optional or nice-to-have`;
+- Priority: high = must do first or has dependencies, medium = important but flexible, low = optional`;
+
+async function runAnalysis(text: string, title?: string): Promise<DocumentAnalysis> {
+  const userMessage = title ? `Document Title: ${title}\n\n---\n\n${text}` : text;
+
+  const response = await openai.chat.completions.create({
+    model: "gpt-5.2",
+    max_completion_tokens: 8192,
+    messages: [
+      { role: "system", content: SYSTEM_PROMPT },
+      { role: "user", content: `Analyze the following document and extract a structured action plan:\n\n${userMessage}` },
+    ],
+  });
+
+  const rawContent = response.choices[0]?.message?.content;
+  if (!rawContent) throw new Error("No response from analysis engine");
+
+  let parsed: Partial<DocumentAnalysis>;
+  try {
+    const cleaned = rawContent.trim().replace(/^```json\s*/i, "").replace(/\s*```$/i, "");
+    parsed = JSON.parse(cleaned);
+  } catch {
+    throw new Error("Analysis engine returned an unparseable response");
+  }
+
+  return {
+    id: uuidv4(),
+    title: parsed.title || title || "Analyzed Document",
+    summary: parsed.summary || "",
+    documentType: parsed.documentType || "Document",
+    actionSteps: (parsed.actionSteps || []).map((step, i) => ({
+      id: step.id || `as-${i + 1}`,
+      title: step.title || "",
+      description: step.description || "",
+      priority: step.priority || "medium",
+      category: step.category || "General",
+      completed: false,
+      sourceEvidence: step.sourceEvidence,
+      confidence: step.confidence || "medium",
+    })),
+    requiredDocuments: (parsed.requiredDocuments || []).map((doc, i) => ({
+      id: doc.id || `rd-${i + 1}`,
+      name: doc.name || "",
+      description: doc.description || "",
+      required: doc.required !== false,
+      obtained: false,
+      sourceEvidence: doc.sourceEvidence,
+      confidence: doc.confidence || "medium",
+    })),
+    deadlines: (parsed.deadlines || []).map((dl, i) => ({
+      id: dl.id || `dl-${i + 1}`,
+      title: dl.title || "",
+      date: dl.date || "",
+      description: dl.description || "",
+      isHard: dl.isHard !== false,
+      sourceEvidence: dl.sourceEvidence,
+      confidence: dl.confidence || "medium",
+    })),
+    followUpQuestions: (parsed.followUpQuestions || []).map((fq, i) => ({
+      id: fq.id || `fq-${i + 1}`,
+      question: fq.question || "",
+      context: fq.context || "",
+      answered: false,
+    })),
+    risks: (parsed.risks || []).map((risk, i) => ({
+      id: risk.id || `risk-${i + 1}`,
+      title: risk.title || "",
+      description: risk.description || "",
+      severity: risk.severity || "medium",
+      sourceEvidence: risk.sourceEvidence,
+    })),
+    overallConfidence: parsed.overallConfidence || "medium",
+    processedAt: new Date().toISOString(),
+  };
+}
 
 router.post("/analyze", async (req, res) => {
   const { text, title } = req.body;
@@ -93,133 +169,96 @@ router.post("/analyze", async (req, res) => {
     });
   }
 
-  if (text.length > 50000) {
+  if (text.length > 60000) {
     return res.status(400).json({
       error: "text_too_long",
-      message: "Document text is too long. Please limit to 50,000 characters.",
+      message: "Document text is too long. Please limit to 60,000 characters.",
     });
   }
 
   try {
-    const userMessage = title
-      ? `Document Title: ${title}\n\n---\n\n${text}`
-      : text;
-
-    const response = await openai.chat.completions.create({
-      model: "gpt-5.2",
-      max_completion_tokens: 8192,
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        {
-          role: "user",
-          content: `Please analyze the following document and extract a structured action plan:\n\n${userMessage}`,
-        },
-      ],
-    });
-
-    const rawContent = response.choices[0]?.message?.content;
-    if (!rawContent) {
-      throw new Error("No response from AI model");
-    }
-
-    let parsed: Partial<DocumentAnalysis>;
-    try {
-      const cleaned = rawContent.trim().replace(/^```json\s*/, "").replace(/\s*```$/, "");
-      parsed = JSON.parse(cleaned);
-    } catch {
-      throw new Error("Failed to parse AI response as JSON");
-    }
-
-    const analysis: DocumentAnalysis = {
-      id: uuidv4(),
-      title: parsed.title || title || "Analyzed Document",
-      summary: parsed.summary || "",
-      documentType: parsed.documentType || "Document",
-      actionSteps: (parsed.actionSteps || []).map((step, i) => ({
-        id: step.id || `as-${i + 1}`,
-        title: step.title || "",
-        description: step.description || "",
-        priority: step.priority || "medium",
-        category: step.category || "General",
-        completed: false,
-        sourceEvidence: step.sourceEvidence,
-        confidence: step.confidence || "medium",
-      })),
-      requiredDocuments: (parsed.requiredDocuments || []).map((doc, i) => ({
-        id: doc.id || `rd-${i + 1}`,
-        name: doc.name || "",
-        description: doc.description || "",
-        required: doc.required !== false,
-        obtained: false,
-        sourceEvidence: doc.sourceEvidence,
-        confidence: doc.confidence || "medium",
-      })),
-      deadlines: (parsed.deadlines || []).map((dl, i) => ({
-        id: dl.id || `dl-${i + 1}`,
-        title: dl.title || "",
-        date: dl.date || "",
-        description: dl.description || "",
-        isHard: dl.isHard !== false,
-        sourceEvidence: dl.sourceEvidence,
-        confidence: dl.confidence || "medium",
-      })),
-      followUpQuestions: (parsed.followUpQuestions || []).map((fq, i) => ({
-        id: fq.id || `fq-${i + 1}`,
-        question: fq.question || "",
-        context: fq.context || "",
-        answered: false,
-      })),
-      risks: (parsed.risks || []).map((risk, i) => ({
-        id: risk.id || `risk-${i + 1}`,
-        title: risk.title || "",
-        description: risk.description || "",
-        severity: risk.severity || "medium",
-        sourceEvidence: risk.sourceEvidence,
-      })),
-      overallConfidence: parsed.overallConfidence || "medium",
-      processedAt: new Date().toISOString(),
-    };
-
+    const analysis = await runAnalysis(text, title);
     return res.json({ analysis });
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Unknown error occurred";
-    return res.status(500).json({
-      error: "analysis_failed",
-      message: `Failed to analyze document: ${message}`,
-    });
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return res.status(500).json({ error: "analysis_failed", message });
+  }
+});
+
+router.post("/upload", upload.single("file"), async (req, res) => {
+  const file = req.file;
+  if (!file) {
+    return res.status(400).json({ error: "no_file", message: "No file was uploaded." });
+  }
+
+  const mime = file.mimetype;
+  const originalName = file.originalname.toLowerCase();
+  let extractedText = "";
+  let detectedTitle = file.originalname.replace(/\.[^.]+$/, "");
+
+  try {
+    if (mime === "application/pdf" || originalName.endsWith(".pdf")) {
+      const pdfParse = (await import("pdf-parse")).default;
+      const result = await pdfParse(file.buffer);
+      extractedText = result.text;
+      if (!extractedText?.trim()) {
+        return res.status(422).json({
+          error: "unreadable_pdf",
+          message: "This PDF appears to be image-based or scanned. Please copy and paste the text instead.",
+        });
+      }
+    } else if (
+      mime === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+      originalName.endsWith(".docx")
+    ) {
+      const mammoth = await import("mammoth");
+      const result = await mammoth.extractRawText({ buffer: file.buffer });
+      extractedText = result.value;
+      if (!extractedText?.trim()) {
+        return res.status(422).json({
+          error: "unreadable_docx",
+          message: "Could not extract text from this Word document. Please paste the text instead.",
+        });
+      }
+    } else if (mime === "text/plain" || originalName.endsWith(".txt")) {
+      extractedText = file.buffer.toString("utf-8");
+    } else {
+      return res.status(400).json({
+        error: "unsupported_type",
+        message: "Unsupported file type. Please upload a PDF (.pdf), Word document (.docx), or plain text (.txt) file.",
+      });
+    }
+
+    if (extractedText.length > 60000) {
+      extractedText = extractedText.slice(0, 60000);
+    }
+
+    const analysis = await runAnalysis(extractedText, detectedTitle);
+    return res.json({ analysis });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return res.status(500).json({ error: "analysis_failed", message });
   }
 });
 
 router.get("/demo/:demoId", (req, res) => {
   const { demoId } = req.params;
   const demo = demoDocuments[demoId];
-
   if (!demo) {
     return res.status(404).json({
       error: "not_found",
-      message: `Demo document '${demoId}' not found. Available demos: event-permit, school-enrollment, grant-application`,
+      message: `Demo '${demoId}' not found. Available: event-permit, school-enrollment, grant-application`,
     });
   }
-
   return res.json({ analysis: demo });
 });
 
 router.post("/checklist", (req, res) => {
   const { itemId, itemType, completed } = req.body;
-
   if (!itemId || !itemType) {
-    return res.status(400).json({
-      error: "invalid_input",
-      message: "itemId and itemType are required",
-    });
+    return res.status(400).json({ error: "invalid_input", message: "itemId and itemType are required" });
   }
-
-  return res.json({
-    success: true,
-    itemId,
-    completed: Boolean(completed),
-  });
+  return res.json({ success: true, itemId, completed: Boolean(completed) });
 });
 
 export default router;

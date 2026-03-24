@@ -1,7 +1,7 @@
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { useLocation } from "wouter"
 import { motion, AnimatePresence } from "framer-motion"
-import { UploadCloud, FileText, ArrowRight, Loader2, AlertCircle, Sparkles, Target, Zap } from "lucide-react"
+import { UploadCloud, FileText, ArrowRight, Loader2, AlertCircle, Sparkles, Target, Zap, CheckCircle2, File } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { useAnalyzeDocument } from "@workspace/api-client-react"
@@ -26,7 +26,7 @@ const DEMOS = [
   },
   {
     id: "grant-application",
-    title: "Small Business Grant",
+    title: "Grant Application Checklist",
     desc: "Dense legalese requiring a dozen attachments.",
     icon: Zap,
     color: "text-amber-500",
@@ -34,147 +34,240 @@ const DEMOS = [
   },
 ]
 
+const ACCEPTED_TYPES = ".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+
 export default function Import() {
-  const [, setLocation] = useLocation();
-  const { setAnalysis } = useAnalysisContext();
-  const [mode, setMode] = useState<"upload" | "paste">("paste");
-  const [text, setText] = useState("");
-  const [isSimulatingUpload, setIsSimulatingUpload] = useState(false);
+  const [, setLocation] = useLocation()
+  const { setAnalysis } = useAnalysisContext()
+  const [mode, setMode] = useState<"paste" | "upload">("paste")
+  const [text, setText] = useState("")
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const { mutate, isPending, error } = useAnalyzeDocument();
+  const { mutate, isPending, error } = useAnalyzeDocument()
 
-  const handleAnalyze = (contentToAnalyze: string) => {
-    if (!contentToAnalyze.trim()) return;
-    
-    mutate({ data: { text: contentToAnalyze } }, {
-      onSuccess: (data) => {
-        setAnalysis(data.analysis);
-        setLocation("/analyze");
+  const handlePasteAnalyze = () => {
+    if (!text.trim()) return
+    mutate(
+      { data: { text } },
+      {
+        onSuccess: (data) => {
+          setAnalysis(data.analysis)
+          setLocation("/analyze")
+        },
       }
-    });
-  };
+    )
+  }
 
-  const handleSimulatedDrop = (e: React.DragEvent | React.ChangeEvent<HTMLInputElement>) => {
-    e.preventDefault();
-    setIsSimulatingUpload(true);
-    setTimeout(() => {
-      setIsSimulatingUpload(false);
-      setMode("paste");
-      setText("SAMPLE EXTRACTED TEXT\n\nThis is simulated extracted text from your PDF. In a production build, the backend would parse the actual PDF contents using a library like pdf-parse.\n\nFor this demo, paste your document text directly in the Paste Text tab to analyze it with AI.");
-    }, 1500);
-  };
+  const handleFileUpload = async (file: File) => {
+    setUploadedFile(file)
+    setUploadError(null)
+    setIsUploading(true)
+
+    const formData = new FormData()
+    formData.append("file", file)
+
+    try {
+      const res = await fetch("/api/documents/upload", {
+        method: "POST",
+        body: formData,
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setUploadError(data.message || "Upload failed. Please try again.")
+        setIsUploading(false)
+        return
+      }
+      setAnalysis(data.analysis)
+      setLocation("/analyze")
+    } catch {
+      setUploadError("Network error. Please check your connection and try again.")
+      setIsUploading(false)
+    }
+  }
+
+  const onFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) handleFileUpload(file)
+  }
+
+  const onDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+    const file = e.dataTransfer.files?.[0]
+    if (file) handleFileUpload(file)
+  }
+
+  const onDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(true)
+  }
+
+  const onDragLeave = () => setIsDragging(false)
+
+  const isWorking = isPending || isUploading
 
   return (
-    <div className="min-h-screen bg-secondary/30 pt-10 pb-20 px-4">
+    <div className="min-h-screen bg-[#F8F7F4] pt-10 pb-24 px-4">
       <div className="max-w-3xl mx-auto space-y-8">
-        
+
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-display font-bold">Import Document</h1>
-          <p className="text-muted-foreground">Upload a file or paste text to generate your action plan.</p>
+          <p className="text-muted-foreground">Upload a file or paste text to generate your structured action plan.</p>
         </div>
 
         <Card className="overflow-hidden bg-white shadow-xl shadow-black/5">
+          {/* Tabs */}
           <div className="flex border-b border-border">
-            <button
-              className={`flex-1 py-4 text-sm font-semibold transition-colors ${mode === 'paste' ? 'text-primary border-b-2 border-primary bg-primary/5' : 'text-muted-foreground hover:bg-secondary'}`}
-              onClick={() => setMode('paste')}
-            >
-              Paste Text
-            </button>
-            <button
-              className={`flex-1 py-4 text-sm font-semibold transition-colors ${mode === 'upload' ? 'text-primary border-b-2 border-primary bg-primary/5' : 'text-muted-foreground hover:bg-secondary'}`}
-              onClick={() => setMode('upload')}
-            >
-              Upload PDF
-            </button>
+            {(["paste", "upload"] as const).map((tab) => (
+              <button
+                key={tab}
+                className={`flex-1 py-4 text-sm font-semibold transition-colors ${
+                  mode === tab
+                    ? "text-primary border-b-2 border-primary bg-primary/5"
+                    : "text-muted-foreground hover:bg-secondary"
+                }`}
+                onClick={() => { setMode(tab); setUploadError(null); setUploadedFile(null) }}
+              >
+                {tab === "paste" ? "Paste Text" : "Upload File"}
+              </button>
+            ))}
           </div>
 
-          <div className="p-6 md:p-8 min-h-[400px] flex flex-col">
+          <div className="p-6 md:p-8 min-h-[380px] flex flex-col">
             <AnimatePresence mode="wait">
-              {mode === 'paste' ? (
-                <motion.div 
+              {mode === "paste" ? (
+                <motion.div
                   key="paste"
-                  initial={{ opacity: 0, x: -20 }}
+                  initial={{ opacity: 0, x: -16 }}
                   animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
+                  exit={{ opacity: 0, x: 16 }}
+                  transition={{ duration: 0.2 }}
                   className="flex-1 flex flex-col space-y-4"
                 >
                   <textarea
                     value={text}
                     onChange={(e) => setText(e.target.value)}
-                    placeholder="Paste the contents of your confusing document here..."
-                    className="flex-1 w-full min-h-[300px] p-4 rounded-xl border-2 border-border bg-background/50 focus:border-primary focus:ring-4 focus:ring-primary/10 resize-none transition-all placeholder:text-muted-foreground/50 text-base"
+                    placeholder="Paste the contents of your document here — permit applications, enrollment forms, grant instructions, legal agreements..."
+                    className="flex-1 w-full min-h-[280px] p-4 rounded-xl border-2 border-border bg-secondary/20 focus:border-primary focus:ring-4 focus:ring-primary/10 resize-none transition-all placeholder:text-muted-foreground/50 text-base leading-relaxed"
+                    disabled={isWorking}
                   />
-                  
+
                   {error && (
                     <div className="p-4 rounded-lg bg-destructive/10 text-destructive flex items-start gap-3">
                       <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
                       <div className="text-sm">
-                        <p className="font-bold">Analysis Failed</p>
+                        <p className="font-bold">Analysis failed</p>
                         <p>{(error as any)?.message || "An unexpected error occurred. Please try again."}</p>
                       </div>
                     </div>
                   )}
 
-                  <div className="flex justify-end pt-2">
-                    <Button 
-                      size="lg" 
-                      onClick={() => handleAnalyze(text)}
-                      disabled={isPending || text.trim().length < 10}
-                      className="w-full sm:w-auto"
+                  <div className="flex items-center justify-between pt-1">
+                    <p className="text-xs text-muted-foreground">{text.length > 0 ? `${text.length.toLocaleString()} characters` : "Minimum 50 characters"}</p>
+                    <Button
+                      size="lg"
+                      onClick={handlePasteAnalyze}
+                      disabled={isWorking || text.trim().length < 50}
                     >
                       {isPending ? (
-                        <><Loader2 className="mr-2 w-5 h-5 animate-spin" /> Analyzing...</>
+                        <><Loader2 className="mr-2 w-4 h-4 animate-spin" /> Analyzing…</>
                       ) : (
-                        <>Generate Action Plan <ArrowRight className="ml-2 w-5 h-5" /></>
+                        <>Analyze Document <ArrowRight className="ml-2 w-4 h-4" /></>
                       )}
                     </Button>
                   </div>
                 </motion.div>
               ) : (
-                <motion.div 
+                <motion.div
                   key="upload"
-                  initial={{ opacity: 0, x: 20 }}
+                  initial={{ opacity: 0, x: 16 }}
                   animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="flex-1 flex flex-col items-center justify-center border-3 border-dashed border-border rounded-2xl bg-secondary/30 relative hover:bg-secondary/50 transition-colors group"
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={handleSimulatedDrop}
+                  exit={{ opacity: 0, x: -16 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex-1 flex flex-col space-y-4"
                 >
-                  <input 
-                    type="file" 
-                    accept=".pdf,.txt,.doc,.docx"
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    onChange={handleSimulatedDrop}
-                    disabled={isSimulatingUpload}
-                  />
-                  
-                  {isSimulatingUpload ? (
-                    <div className="text-center space-y-4">
-                      <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto" />
-                      <p className="text-lg font-medium text-foreground">Extracting text...</p>
-                    </div>
-                  ) : (
-                    <div className="text-center space-y-4 pointer-events-none">
-                      <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto shadow-sm group-hover:scale-110 transition-transform">
-                        <UploadCloud className="w-10 h-10 text-primary" />
+                  {/* Drop zone */}
+                  <div
+                    className={`flex-1 flex flex-col items-center justify-center min-h-[260px] border-2 border-dashed rounded-2xl transition-all cursor-pointer relative ${
+                      isDragging
+                        ? "border-primary bg-primary/5 scale-[1.01]"
+                        : uploadedFile
+                        ? "border-green-400 bg-green-50"
+                        : "border-border bg-secondary/20 hover:border-primary/50 hover:bg-secondary/40"
+                    }`}
+                    onDragOver={onDragOver}
+                    onDragLeave={onDragLeave}
+                    onDrop={onDrop}
+                    onClick={() => !isUploading && fileInputRef.current?.click()}
+                  >
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept={ACCEPTED_TYPES}
+                      className="hidden"
+                      onChange={onFileInputChange}
+                      disabled={isUploading}
+                    />
+
+                    {isUploading ? (
+                      <div className="text-center space-y-3">
+                        <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto" />
+                        <div>
+                          <p className="font-semibold text-foreground">Extracting & analyzing…</p>
+                          <p className="text-sm text-muted-foreground mt-1">{uploadedFile?.name}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-xl font-semibold mb-1">Click to upload or drag & drop</p>
-                        <p className="text-sm text-muted-foreground">PDF, TXT, or DOCX (max. 10MB)</p>
+                    ) : uploadedFile && !uploadError ? (
+                      <div className="text-center space-y-3">
+                        <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto" />
+                        <div>
+                          <p className="font-semibold text-foreground">File ready</p>
+                          <p className="text-sm text-muted-foreground">{uploadedFile.name}</p>
+                        </div>
                       </div>
-                      <div className="inline-flex items-center gap-2 text-xs font-medium text-muted-foreground bg-white px-3 py-1.5 rounded-full border border-border mt-4">
-                        <FileText className="w-3.5 h-3.5" /> Text extraction demo
+                    ) : (
+                      <div className="text-center space-y-4 pointer-events-none px-6">
+                        <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto shadow-sm">
+                          <UploadCloud className="w-8 h-8 text-primary" />
+                        </div>
+                        <div>
+                          <p className="text-lg font-semibold">Click to upload or drag & drop</p>
+                          <p className="text-sm text-muted-foreground mt-1">PDF, Word (.docx), or plain text (.txt)</p>
+                        </div>
+                        <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1"><File className="w-3 h-3" /> PDF</span>
+                          <span className="flex items-center gap-1"><File className="w-3 h-3" /> DOCX</span>
+                          <span className="flex items-center gap-1"><File className="w-3 h-3" /> TXT</span>
+                          <span>· Max 20MB</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {uploadError && (
+                    <div className="p-4 rounded-lg bg-destructive/10 text-destructive flex items-start gap-3">
+                      <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                      <div className="text-sm">
+                        <p className="font-bold">Upload failed</p>
+                        <p>{uploadError}</p>
                       </div>
                     </div>
                   )}
+
+                  <p className="text-xs text-center text-muted-foreground">
+                    Text-based PDFs only. Scanned / image PDFs cannot be read — use Paste Text instead.
+                  </p>
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
         </Card>
 
-        {/* Demo Documents */}
+        {/* Demos */}
         <div className="space-y-4">
           <div className="flex items-center gap-3">
             <div className="flex-1 h-px bg-border" />
@@ -186,9 +279,9 @@ export default function Import() {
             {DEMOS.map((demo, i) => (
               <motion.button
                 key={demo.id}
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.08 }}
+                transition={{ delay: i * 0.07 }}
                 whileHover={{ y: -3 }}
                 onClick={() => setLocation(`/analyze?demo=${demo.id}`)}
                 className="text-left group"
@@ -197,7 +290,7 @@ export default function Import() {
                   <div className={`w-10 h-10 rounded-xl ${demo.bg} flex items-center justify-center mb-3`}>
                     <demo.icon className={`w-5 h-5 ${demo.color}`} />
                   </div>
-                  <h3 className="font-semibold text-sm mb-1 group-hover:text-primary transition-colors">{demo.title}</h3>
+                  <h3 className="font-semibold text-sm mb-1 group-hover:text-primary transition-colors leading-snug">{demo.title}</h3>
                   <p className="text-xs text-muted-foreground leading-relaxed">{demo.desc}</p>
                 </Card>
               </motion.button>
