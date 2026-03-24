@@ -15,8 +15,8 @@ const DEMOS = [
     title: "Small Business Event Permit",
     desc: "Local government packet with buried requirements, multiple agency approvals, and hard deadlines.",
     icon: Sparkles,
-    color: "text-blue-500",
-    bg: "bg-blue-50",
+    color: "text-blue-500 dark:text-blue-400",
+    bg: "bg-blue-50 dark:bg-blue-950/50",
     tags: ["8 action steps", "6 required docs", "3 deadlines"],
   },
   {
@@ -24,8 +24,8 @@ const DEMOS = [
     title: "School Enrollment Packet",
     desc: "Multi-page form with proof-of-residency rules, immunization deadlines, and hidden conditional steps.",
     icon: Target,
-    color: "text-emerald-500",
-    bg: "bg-emerald-50",
+    color: "text-emerald-500 dark:text-emerald-400",
+    bg: "bg-emerald-50 dark:bg-emerald-950/50",
     tags: ["9 action steps", "7 required docs", "2 deadlines"],
   },
   {
@@ -33,8 +33,8 @@ const DEMOS = [
     title: "Grant Application Checklist",
     desc: "Dense funding instructions requiring eligibility attestations, strict formatting, and a dozen attachments.",
     icon: Zap,
-    color: "text-amber-500",
-    bg: "bg-amber-50",
+    color: "text-amber-500 dark:text-amber-400",
+    bg: "bg-amber-50 dark:bg-amber-950/50",
     tags: ["10 action steps", "8 required docs", "4 deadlines"],
   },
 ]
@@ -61,24 +61,24 @@ const HOW_IT_WORKS = [
 ]
 
 const DOCUMENT_FAMILIES = [
-  { icon: Receipt, label: "Tax & Government Forms", color: "text-violet-500", bg: "bg-violet-50" },
-  { icon: Scale, label: "Legal & Business Filings", color: "text-blue-500", bg: "bg-blue-50" },
-  { icon: HeartPulse, label: "Healthcare & Insurance", color: "text-rose-500", bg: "bg-rose-50" },
-  { icon: FileSignature, label: "Contracts & Agreements", color: "text-amber-500", bg: "bg-amber-50" },
-  { icon: MailWarning, label: "Bills, Notices & Summons", color: "text-emerald-500", bg: "bg-emerald-50" },
-  { icon: Sparkles, label: "Applications & Permits", color: "text-indigo-500", bg: "bg-indigo-50" },
+  { icon: Receipt,       label: "Tax & Government Forms",    color: "text-violet-500 dark:text-violet-400",  bg: "bg-violet-50 dark:bg-violet-950/50"  },
+  { icon: Scale,         label: "Legal & Business Filings",  color: "text-blue-500 dark:text-blue-400",      bg: "bg-blue-50 dark:bg-blue-950/50"      },
+  { icon: HeartPulse,    label: "Healthcare & Insurance",     color: "text-rose-500 dark:text-rose-400",      bg: "bg-rose-50 dark:bg-rose-950/50"      },
+  { icon: FileSignature, label: "Contracts & Agreements",     color: "text-amber-500 dark:text-amber-400",    bg: "bg-amber-50 dark:bg-amber-950/50"    },
+  { icon: MailWarning,   label: "Bills, Notices & Summons",   color: "text-emerald-500 dark:text-emerald-400",bg: "bg-emerald-50 dark:bg-emerald-950/50"},
+  { icon: Sparkles,      label: "Applications & Permits",     color: "text-indigo-500 dark:text-indigo-400",  bg: "bg-indigo-50 dark:bg-indigo-950/50"  },
 ]
 
 export default function Home() {
   const [, setLocation] = useLocation()
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F8F7F4] relative overflow-hidden">
+    <div className="flex flex-col min-h-screen bg-background relative overflow-hidden">
       {/* Background gradient */}
       <div className="absolute top-0 left-0 right-0 h-[70vh] pointer-events-none -z-10 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent" />
         <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full bg-primary/5 blur-3xl transform translate-x-1/3 -translate-y-1/3" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-blue-100/40 blur-3xl transform -translate-x-1/4" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-blue-100/40 dark:bg-blue-900/20 blur-3xl transform -translate-x-1/4" />
       </div>
 
       <main className="flex-1 flex flex-col items-center pb-24 px-4">
@@ -88,7 +88,7 @@ export default function Home() {
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-border shadow-sm text-xs font-semibold text-muted-foreground tracking-wide uppercase"
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-card border border-border shadow-sm text-xs font-semibold text-muted-foreground tracking-wide uppercase"
           >
             <span className="flex h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
             Structured document analysis
@@ -125,7 +125,7 @@ export default function Home() {
             <Button
               size="lg"
               variant="outline"
-              className="w-full sm:w-auto h-12 text-base bg-white rounded-xl"
+              className="w-full sm:w-auto h-12 text-base bg-card rounded-xl"
               onClick={() => document.getElementById("demos")?.scrollIntoView({ behavior: "smooth" })}
             >
               View demos
@@ -168,7 +168,7 @@ export default function Home() {
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.05 }}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-border/60 shadow-sm hover:shadow-md hover:border-primary/30 transition-all cursor-default"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-card border border-border/60 shadow-sm hover:shadow-md hover:border-primary/30 transition-all cursor-default"
               >
                 <div className={`w-7 h-7 rounded-lg ${f.bg} flex items-center justify-center`}>
                   <f.icon className={`w-3.5 h-3.5 ${f.color}`} />
@@ -212,7 +212,7 @@ export default function Home() {
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.12 }}
               >
-                <Card className="h-full bg-white border-border/50 shadow-md hover:shadow-xl transition-shadow rounded-2xl overflow-hidden">
+                <Card className="h-full bg-card border-border/50 shadow-md hover:shadow-xl transition-shadow rounded-2xl overflow-hidden">
                   <div className="p-7">
                     <div className="flex items-center gap-4 mb-6">
                       <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-sm shadow-primary/30 relative z-10">
@@ -263,15 +263,15 @@ export default function Home() {
                 icon: ShieldCheck,
                 title: "Required Documents",
                 desc: "A complete list of every attachment, form, ID, or proof you need to gather — with source quotes showing exactly where each was mentioned.",
-                color: "bg-emerald-50",
-                iconColor: "text-emerald-600",
+                color: "bg-emerald-50 dark:bg-emerald-950/50",
+                iconColor: "text-emerald-600 dark:text-emerald-400",
               },
               {
                 icon: Clock,
                 title: "Deadlines & Risks",
                 desc: "Hard dates surfaced from fine print. High-severity risks flagged before they become problems. Confidence ratings on every item.",
-                color: "bg-rose-50",
-                iconColor: "text-rose-600",
+                color: "bg-rose-50 dark:bg-rose-950/50",
+                iconColor: "text-rose-600 dark:text-rose-400",
               },
             ].map((card, i) => (
               <motion.div
@@ -281,7 +281,7 @@ export default function Home() {
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
               >
-                <Card className="h-full bg-white border-border/40 shadow-md hover:shadow-xl transition-shadow rounded-2xl">
+                <Card className="h-full bg-card border-border/40 shadow-md hover:shadow-xl transition-shadow rounded-2xl">
                   <div className="p-7 space-y-5">
                     <div className={`w-12 h-12 rounded-2xl ${card.color} flex items-center justify-center`}>
                       <card.icon className={`w-6 h-6 ${card.iconColor}`} />
@@ -341,7 +341,7 @@ export default function Home() {
                   onClick={() => setLocation(`/analyze?demo=${demo.id}`)}
                   className="w-full text-left h-full group"
                 >
-                  <Card className="h-full border-border/40 hover:border-primary/40 hover:shadow-xl transition-all overflow-hidden bg-white rounded-2xl shadow-md">
+                  <Card className="h-full border-border/40 hover:border-primary/40 hover:shadow-xl transition-all overflow-hidden bg-card rounded-2xl shadow-md">
                     <div className="p-7 flex flex-col h-full">
                       <div className={`w-13 h-13 rounded-xl ${demo.bg} flex items-center justify-center mb-5 w-12 h-12`}>
                         <demo.icon className={`w-6 h-6 ${demo.color}`} />

@@ -15,19 +15,25 @@ const DEMOS = [
     id: "event-permit",
     title: "Small Business Event Permit",
     meta: "Government · 8 steps · 3 deadlines",
-    icon: Sparkles, color: "text-blue-500", bg: "bg-blue-50",
+    icon: Sparkles,
+    color: "text-blue-500 dark:text-blue-400",
+    bg: "bg-blue-50 dark:bg-blue-950/50",
   },
   {
     id: "school-enrollment",
     title: "School Enrollment Packet",
     meta: "Education · 9 steps · 2 deadlines",
-    icon: Target, color: "text-emerald-500", bg: "bg-emerald-50",
+    icon: Target,
+    color: "text-emerald-500 dark:text-emerald-400",
+    bg: "bg-emerald-50 dark:bg-emerald-950/50",
   },
   {
     id: "grant-application",
     title: "Grant Application Checklist",
     meta: "Funding · 10 steps · 4 deadlines",
-    icon: Zap, color: "text-amber-500", bg: "bg-amber-50",
+    icon: Zap,
+    color: "text-amber-500 dark:text-amber-400",
+    bg: "bg-amber-50 dark:bg-amber-950/50",
   },
 ]
 
@@ -120,7 +126,7 @@ export default function Import() {
   const isWorking = isPending || isUploading
 
   return (
-    <div className="min-h-screen bg-[#F8F7F4] pb-28">
+    <div className="min-h-screen bg-background pb-28">
       <div className="absolute top-0 inset-x-0 h-52 bg-gradient-to-b from-primary/[0.04] to-transparent pointer-events-none" />
 
       <div className="max-w-2xl mx-auto px-4 pt-12 relative">
@@ -152,7 +158,7 @@ export default function Import() {
           className="flex justify-center gap-2.5 mb-8"
         >
           {FORMATS.map((f) => (
-            <div key={f.ext} className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-border/50 shadow-sm">
+            <div key={f.ext} className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-card border border-border/50 shadow-sm">
               <f.icon className="w-3.5 h-3.5 text-muted-foreground" />
               <span className="text-xs font-bold text-foreground">{f.ext}</span>
               <span className="text-[10px] text-muted-foreground/60 hidden sm:inline">{f.note}</span>
@@ -166,10 +172,10 @@ export default function Import() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.14 }}
         >
-          <Card className="overflow-hidden bg-white shadow-xl shadow-black/[0.07] rounded-2xl border-border/40">
+          <Card className="overflow-hidden bg-card shadow-xl shadow-black/[0.07] dark:shadow-black/30 rounded-2xl border-border/40">
 
             {/* Tab switcher */}
-            <div className="p-2 border-b border-border/30 bg-[#FAFAF8]">
+            <div className="p-2 border-b border-border/30 bg-muted/30">
               <div className="grid grid-cols-2 rounded-xl bg-secondary/70 p-1 gap-1">
                 {(["paste", "upload"] as const).map((tab) => (
                   <button
@@ -177,7 +183,7 @@ export default function Import() {
                     onClick={() => { setMode(tab); setUploadError(null); setUploadedFile(null) }}
                     className={`flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all ${
                       mode === tab
-                        ? "bg-white text-foreground shadow-sm shadow-black/[0.06]"
+                        ? "bg-card text-foreground shadow-sm shadow-black/[0.06]"
                         : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
@@ -213,7 +219,7 @@ export default function Import() {
                         value={text}
                         onChange={(e) => setText(e.target.value)}
                         placeholder="Paste the full text of your document here..."
-                        className="w-full min-h-[220px] p-4 rounded-xl border-2 border-border/50 bg-[#FAFAF8] focus:border-primary focus:ring-4 focus:ring-primary/8 resize-none transition-all placeholder:text-muted-foreground/35 text-sm leading-relaxed font-mono outline-none"
+                        className="w-full min-h-[220px] p-4 rounded-xl border-2 border-border/50 bg-muted/20 focus:border-primary focus:ring-4 focus:ring-primary/8 resize-none transition-all placeholder:text-muted-foreground/35 text-sm leading-relaxed font-mono outline-none"
                         disabled={isWorking}
                       />
                       {text.length > 0 && (
@@ -264,8 +270,8 @@ export default function Import() {
                         isDragging
                           ? "border-primary bg-primary/5 scale-[1.01]"
                           : uploadedFile && !uploadError
-                          ? "border-emerald-400 bg-emerald-50/40"
-                          : "border-border/50 hover:border-primary/40 hover:bg-secondary/20 bg-[#FAFAF8]"
+                          ? "border-emerald-400 dark:border-emerald-600 bg-emerald-50/40 dark:bg-emerald-950/30"
+                          : "border-border/50 hover:border-primary/40 hover:bg-secondary/20 bg-muted/20"
                       }`}
                     >
                       <input ref={fileInputRef} type="file" accept={ACCEPTED} className="hidden" onChange={onFileChange} disabled={isUploading} />
@@ -282,7 +288,7 @@ export default function Import() {
                         </div>
                       ) : uploadedFile && !uploadError ? (
                         <div className="text-center space-y-3 p-8">
-                          <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto" />
+                          <CheckCircle2 className="w-12 h-12 text-emerald-500 dark:text-emerald-400 mx-auto" />
                           <div>
                             <p className="font-bold text-foreground text-sm">File received</p>
                             <p className="text-xs text-muted-foreground mt-1">{uploadedFile.name}</p>
@@ -290,7 +296,7 @@ export default function Import() {
                         </div>
                       ) : (
                         <div className="text-center space-y-4 p-8 pointer-events-none">
-                          <div className="w-14 h-14 rounded-2xl bg-white border border-border shadow-md flex items-center justify-center mx-auto">
+                          <div className="w-14 h-14 rounded-2xl bg-card border border-border shadow-md flex items-center justify-center mx-auto">
                             <UploadCloud className="w-7 h-7 text-primary" />
                           </div>
                           <div>
@@ -300,7 +306,7 @@ export default function Import() {
                           </div>
                           <div className="flex items-center justify-center gap-2">
                             {["PDF", "DOCX", "TXT"].map(fmt => (
-                              <span key={fmt} className="px-3 py-1.5 rounded-lg bg-white border border-border text-xs font-bold text-muted-foreground shadow-sm">{fmt}</span>
+                              <span key={fmt} className="px-3 py-1.5 rounded-lg bg-card border border-border text-xs font-bold text-muted-foreground shadow-sm">{fmt}</span>
                             ))}
                           </div>
                           <p className="text-[11px] text-muted-foreground/50">Max 20 MB · Text-based PDFs only</p>
@@ -310,9 +316,9 @@ export default function Import() {
 
                     {uploadError && <ErrorBanner message={uploadError} />}
 
-                    <div className="rounded-xl bg-amber-50/60 border border-amber-200/50 p-3.5 flex gap-2.5">
-                      <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                      <div className="text-xs text-amber-800/80 leading-relaxed">
+                    <div className="rounded-xl bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200/50 dark:border-amber-900/40 p-3.5 flex gap-2.5">
+                      <AlertCircle className="w-4 h-4 text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" />
+                      <div className="text-xs text-amber-800/80 dark:text-amber-300/90 leading-relaxed">
                         <span className="font-semibold">Scanned or image PDFs</span> cannot be read — the text must be selectable in your PDF viewer. Use Paste Text instead for scanned documents.
                       </div>
                     </div>
@@ -343,7 +349,7 @@ export default function Import() {
                 onClick={() => setLocation(`/analyze?demo=${demo.id}`)}
                 className="text-left group"
               >
-                <Card className="p-4 h-full border-border/40 hover:border-primary/40 hover:shadow-lg transition-all bg-white rounded-xl shadow-sm">
+                <Card className="p-4 h-full border-border/40 hover:border-primary/40 hover:shadow-lg transition-all bg-card rounded-xl shadow-sm">
                   <div className={`w-9 h-9 rounded-xl ${demo.bg} flex items-center justify-center mb-3`}>
                     <demo.icon className={`w-4 h-4 ${demo.color}`} />
                   </div>

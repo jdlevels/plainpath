@@ -2,6 +2,16 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("plainpath-theme") || "system";
+          if (t === "dark" || (t === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+            document.documentElement.classList.add("dark");
+          }
+        } catch (e) {}
+      })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>PlainPath — Turn any document into a clear action plan</title>
     <meta name="description" content="PlainPath reads your paperwork and gives you a prioritized action plan — every required step, document, deadline, and risk — in plain English. Free to use, no account required." />

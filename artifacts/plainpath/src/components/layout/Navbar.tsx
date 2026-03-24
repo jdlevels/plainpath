@@ -1,6 +1,7 @@
 import { Link, useLocation } from "wouter"
 import { Button } from "@/components/ui/button"
 import { FileText, ArrowRight, Plus } from "lucide-react"
+import { ThemeToggle } from "@/components/ui/ThemeToggle"
 
 export function Navbar() {
   const [location] = useLocation()
@@ -21,9 +22,11 @@ export function Navbar() {
           </span>
         </Link>
 
-        <nav className="flex items-center gap-3">
+        <nav className="flex items-center gap-1.5">
+          <ThemeToggle />
+
           {isHome && (
-            <Button asChild size="sm" className="rounded-full shadow-sm hover:shadow-md gap-1.5">
+            <Button asChild size="sm" className="rounded-full shadow-sm hover:shadow-md gap-1.5 ml-1">
               <Link href="/import">
                 Analyze a Document <ArrowRight className="w-3.5 h-3.5" />
               </Link>
@@ -33,14 +36,14 @@ export function Navbar() {
           {isImport && (
             <Link
               href="/"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors ml-1"
             >
               Home
             </Link>
           )}
 
           {isAnalyze && (
-            <Button asChild size="sm" variant="outline" className="rounded-full gap-1.5 bg-white border-border/60 text-sm">
+            <Button asChild size="sm" variant="outline" className="rounded-full gap-1.5 bg-card border-border/60 text-sm ml-1">
               <Link href="/import">
                 <Plus className="w-3.5 h-3.5" /> New Analysis
               </Link>
@@ -50,7 +53,7 @@ export function Navbar() {
           {isStaticPage && (
             <Link
               href="/"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors ml-1"
             >
               Home
             </Link>

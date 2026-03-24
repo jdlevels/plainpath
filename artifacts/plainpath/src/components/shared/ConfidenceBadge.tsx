@@ -10,18 +10,18 @@ interface ConfidenceBadgeProps {
 
 const CONFIG = {
   high: {
-    dot: "bg-emerald-500",
-    bg: "bg-emerald-50 border-emerald-200/60 text-emerald-700",
+    dot: "bg-emerald-500 dark:bg-emerald-400",
+    bg: "bg-emerald-50 dark:bg-emerald-950/50 border-emerald-200/60 dark:border-emerald-900/50 text-emerald-700 dark:text-emerald-400",
     label: "Confirmed",
   },
   medium: {
     dot: "bg-amber-400",
-    bg: "bg-amber-50 border-amber-200/60 text-amber-700",
+    bg: "bg-amber-50 dark:bg-amber-950/50 border-amber-200/60 dark:border-amber-900/50 text-amber-700 dark:text-amber-400",
     label: "Needs review",
   },
   low: {
-    dot: "bg-rose-400",
-    bg: "bg-rose-50 border-rose-200/60 text-rose-700",
+    dot: "bg-rose-400 dark:bg-rose-500",
+    bg: "bg-rose-50 dark:bg-rose-950/50 border-rose-200/60 dark:border-rose-900/50 text-rose-700 dark:text-rose-400",
     label: "Uncertain",
   },
 }

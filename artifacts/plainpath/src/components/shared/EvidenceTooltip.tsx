@@ -32,7 +32,7 @@ export function EvidenceTooltip({ text, className, inline = true }: EvidenceTool
         </TooltipPrimitive.Trigger>
         <TooltipPrimitive.Portal>
           <TooltipPrimitive.Content
-            className="z-50 w-[340px] overflow-hidden rounded-xl border border-border bg-white px-4 py-3.5 shadow-xl animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2"
+            className="z-50 w-[340px] overflow-hidden rounded-xl border border-border bg-card px-4 py-3.5 shadow-xl animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2"
             sideOffset={6}
           >
             <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-2">From the source document</p>
@@ -40,7 +40,7 @@ export function EvidenceTooltip({ text, className, inline = true }: EvidenceTool
               <Quote className="w-3.5 h-3.5 text-primary/40 mt-0.5 shrink-0" />
               <p className="text-sm text-foreground/80 leading-relaxed italic">"{text}"</p>
             </div>
-            <TooltipPrimitive.Arrow className="fill-white drop-shadow-sm" />
+            <TooltipPrimitive.Arrow className="fill-card drop-shadow-sm" />
           </TooltipPrimitive.Content>
         </TooltipPrimitive.Portal>
       </TooltipPrimitive.Root>

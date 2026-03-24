@@ -11,7 +11,7 @@ export default function Terms() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-[#F8F7F4]">
+    <div className="min-h-screen bg-background">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12 pb-24">
 
         <Link href="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-10">
@@ -31,11 +31,11 @@ export default function Terms() {
           </p>
         </div>
 
-        <div className="bg-amber-50 border border-amber-200/60 rounded-2xl p-5 mb-10">
-          <h2 className="font-bold text-amber-900 mb-2 flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-amber-600" /> Important: PlainPath is not professional advice
+        <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-900/40 rounded-2xl p-5 mb-10">
+          <h2 className="font-bold text-amber-900 dark:text-amber-200 mb-2 flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" /> Important: PlainPath is not professional advice
           </h2>
-          <p className="text-sm text-amber-800/80 leading-relaxed">
+          <p className="text-sm text-amber-800/80 dark:text-amber-300/90 leading-relaxed">
             PlainPath analyzes document text and generates structured summaries. It is an organizational tool only.
             It does not provide legal, tax, financial, medical, or any other professional advice.
             Always consult a qualified professional for decisions that affect your legal rights, finances, or health.

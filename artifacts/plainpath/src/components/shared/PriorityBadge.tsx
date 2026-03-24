@@ -4,11 +4,11 @@ type Level = "high" | "medium" | "low" | string
 
 const CONFIG = {
   high: {
-    bg: "bg-red-50 border-red-200/60 text-red-700",
+    bg: "bg-red-50 dark:bg-red-950/50 border-red-200/60 dark:border-red-900/50 text-red-700 dark:text-red-400",
     label: "High",
   },
   medium: {
-    bg: "bg-amber-50 border-amber-200/60 text-amber-700",
+    bg: "bg-amber-50 dark:bg-amber-950/50 border-amber-200/60 dark:border-amber-900/50 text-amber-700 dark:text-amber-400",
     label: "Medium",
   },
   low: {

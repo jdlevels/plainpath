@@ -165,10 +165,27 @@
   .priority-bar-high  { border-left: 4px solid hsl(350 60% 55%); }
   .priority-bar-med   { border-left: 4px solid hsl(35 70% 55%); }
   .priority-bar-low   { border-left: 4px solid hsl(40 10% 85%); }
+
+  .dark .priority-bar-low { border-left-color: hsl(40 10% 35%); }
 }
 
 /* ─── Print styles ──────────────────────────────── */
 @media print {
+  /* Force light-mode CSS variable values — printed output is always on white paper */
+  :root, .dark {
+    --background: 40 20% 97%;
+    --foreground: 0 0% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 11%;
+    --primary: 211 39% 49%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 20% 94%;
+    --secondary-foreground: 211 39% 30%;
+    --muted: 40 10% 92%;
+    --muted-foreground: 0 0% 45%;
+    --border: 40 10% 88%;
+    color-scheme: light;
+  }
   /* Remove chrome */
   nav,
   header,
