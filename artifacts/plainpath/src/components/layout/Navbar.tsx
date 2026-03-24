@@ -10,7 +10,7 @@ export function Navbar() {
   const isStaticPage = location === "/privacy" || location === "/terms"
 
   return (
-    <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-background/90 border-b border-border/50 transition-all duration-300">
+    <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-background/90 border-b border-border/50 transition-all duration-300 safe-top">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 group outline-none">
           <div className="bg-primary/10 p-2 rounded-xl group-hover:bg-primary/20 transition-colors">

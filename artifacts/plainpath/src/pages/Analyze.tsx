@@ -105,7 +105,7 @@ export default function Analyze() {
                 <TrendingUp className="w-3 h-3 text-muted-foreground" />
                 <span className="text-xs font-bold text-foreground tabular-nums">{progress}%</span>
               </div>
-              <Button variant="outline" size="sm" className="gap-1.5 bg-white text-xs h-8 border-border/60" onClick={() => window.print()}>
+              <Button variant="outline" size="sm" className="gap-1.5 bg-white text-xs h-8 border-border/60" onClick={() => { if (typeof window !== "undefined" && typeof window.print === "function") window.print() }}>
                 <Printer className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Print</span>
               </Button>

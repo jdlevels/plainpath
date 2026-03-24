@@ -88,7 +88,8 @@ export default function Import() {
     const formData = new FormData()
     formData.append("file", file)
     try {
-      const res = await fetch("/api/documents/upload", { method: "POST", body: formData })
+      const apiBase = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "")
+      const res = await fetch(`${apiBase}/api/documents/upload`, { method: "POST", body: formData })
       let data: any = {}
       try { data = await res.json() } catch { /* non-JSON response */ }
 

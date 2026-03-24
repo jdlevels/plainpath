@@ -133,6 +133,14 @@
 }
 
 @layer utilities {
+  /* ── Safe-area padding (Capacitor iOS notch + home bar) ── */
+  .safe-top    { padding-top:    env(safe-area-inset-top,    0px); }
+  .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+  .safe-left   { padding-left:   env(safe-area-inset-left,  0px); }
+  .safe-right  { padding-right:  env(safe-area-inset-right, 0px); }
+  /* Used on the main scrollable area to clear the bottom home bar */
+  .pb-safe { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1.5rem); }
+
   .glass-panel {
     @apply bg-white/70 backdrop-blur-xl border border-white/20 shadow-[0_8px_30px_rgb(0,0,0,0.04)];
   }
