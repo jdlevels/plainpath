@@ -1,0 +1,75 @@
+Do not redesign the app.
+Do not remove or replace any existing PlainPath features.
+
+We are continuing in direct build mode.
+
+Priority 1 — close the remaining ingestion gaps first:
+1. Run a true end-to-end DOCX upload smoke test against the live analysis flow
+2. Run a true scanned/image PDF test (not just malformed PDF) and verify it fails gracefully with the correct user-facing message
+3. Fix any ingestion issues found
+4. Return exactly what passed or failed
+
+Priority 2 — add PlainPath’s new document understanding layer without changing the existing action-plan features.
+
+New feature A: Plain English Overview
+For every analyzed document, add a new top-level results section/tab called:
+"Plain English"
+
+This should explain the entire document in the simplest useful language possible.
+
+For every document type, generate these sections:
+- What this document is
+- What it is saying
+- What it is asking from you
+- What you may be agreeing to or responsible for
+- What to pay close attention to
+- What to do next
+
+Requirements:
+- Keep this separate from the existing checklist/deadlines/risks flow
+- Do not remove existing tabs or current analysis outputs
+- Use the user-selected document type as a strong hint in the analysis prompt
+- Make the UI feel premium and trustworthy
+
+New feature B: Explain This Section
+Add a way for the user to get a simple explanation of a specific selected section of the document.
+
+Phase 1 implementation:
+- Do not build full PDF-page highlighting yet
+- Instead, support section-level explanation using extracted text / paragraph blocks / selected text
+- On desktop, show the explanation in a side panel if practical
+- On mobile, show it in a panel below or a drawer
+- Let the user choose a specific section or text chunk and click something like:
+  "Explain this section"
+
+The explanation should tell the user in plain English:
+- what that section means
+- what it could require from them
+- any risks, obligations, or hidden implications
+- why it matters
+
+Important:
+- This must work across all document families, especially:
+  - contracts / agreements
+  - tax and government forms
+  - legal and business filings
+  - healthcare / insurance
+  - bills / notices / summons
+  - school / enrollment
+- Keep the current document-type selection step in place
+- Pass the selected document type into both:
+  - full-document explanation
+  - section explanation
+
+Do not switch into long planning mode.
+Do not remove current features.
+Do not publish.
+
+When finished, return:
+A. DOCX test result
+B. real scanned PDF test result
+C. files updated
+D. how the new Plain English feature works
+E. how the new Explain This Section feature works
+F. screenshots of the updated results flow
+G. any remaining blockers

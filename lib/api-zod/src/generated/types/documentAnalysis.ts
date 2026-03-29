@@ -12,6 +12,15 @@ import type { FollowUpQuestion } from "./followUpQuestion";
 import type { RequiredDocument } from "./requiredDocument";
 import type { RiskItem } from "./riskItem";
 
+export interface PlainEnglishSections {
+  whatItIs: string;
+  whatItSays: string;
+  whatItAsks: string;
+  obligations: string;
+  payAttentionTo: string;
+  nextSteps: string;
+}
+
 export interface DocumentAnalysis {
   id: string;
   title: string;
@@ -25,4 +34,5 @@ export interface DocumentAnalysis {
   risks: RiskItem[];
   overallConfidence: DocumentAnalysisOverallConfidence;
   processedAt: string;
+  plainEnglish?: PlainEnglishSections;
 }

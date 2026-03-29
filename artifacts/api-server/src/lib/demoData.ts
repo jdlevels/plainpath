@@ -259,6 +259,20 @@ export const demoDocuments: Record<string, DocumentAnalysis> = {
         sourceEvidence: "Section 6.2",
       },
     ],
+    plainEnglish: {
+      whatItIs:
+        "This is a government permit application packet issued by the city to allow a small business to host a public event. It is used by the city to ensure events are safe, insured, and coordinated with relevant departments such as police, fire, and health.",
+      whatItSays:
+        "The packet explains the multi-step process required to get city approval for a public event. It covers required forms, insurance minimums, departmental sign-offs, and associated fees. It also outlines timelines and what happens if requirements are not met.",
+      whatItAsks:
+        "You are asked to fill out Form SE-100, obtain a certificate of general liability insurance, pay a permit fee, and coordinate approvals from the Police, Fire, and Health Departments. All materials must be submitted together at least 6–8 weeks before your event.",
+      obligations:
+        "By submitting this application, you agree to comply with all city ordinances and department requirements for the event. You are responsible for ensuring your event has adequate insurance coverage, proper safety measures, and all required sign-offs.",
+      payAttentionTo:
+        "The 6–8 week processing time is critical — submitting late may result in your permit being denied. Insurance coverage must meet the minimum thresholds, and the City must be named as an additional insured. Missing any required departmental sign-off will block approval.",
+      nextSteps:
+        "Start by completing Form SE-100 with your full event details. Immediately contact your insurer to obtain the required certificate of liability insurance. Then schedule appointments with the Police, Fire, and Health Departments for their sign-offs.",
+    },
   },
 
   "school-enrollment": {
@@ -497,6 +511,20 @@ export const demoDocuments: Record<string, DocumentAnalysis> = {
         sourceEvidence: "Section 4.1",
       },
     ],
+    plainEnglish: {
+      whatItIs:
+        "This is a school enrollment packet issued by the public school district. It is the formal paperwork required to register a child for classes at any district school. Without completing this packet, your child cannot be enrolled.",
+      whatItSays:
+        "The packet outlines all documents you must provide, the deadlines for submission, and the rules of enrollment. It specifies which documents are required versus optional, where to submit them, and what hours the enrollment office is open.",
+      whatItAsks:
+        "You are asked to provide proof of residency, the child's birth certificate, up-to-date immunization records, and records from any previous schools attended. All documents must be submitted in person at the enrollment office during office hours.",
+      obligations:
+        "You are responsible for ensuring all documents are current, complete, and accurate. The district may refuse enrollment if records are missing or forged. You must also provide the child's immunization records in compliance with state health laws.",
+      payAttentionTo:
+        "The April 15 priority enrollment deadline is critical — missing it may mean your child is placed at a school outside your neighborhood. Immunization records must be up to date, and the entire packet must be submitted together; partial submissions are not accepted.",
+      nextSteps:
+        "Gather all required documents: proof of residency, birth certificate, immunization records, and past school records. Visit the enrollment office during open hours before April 15 to submit everything in one complete packet.",
+    },
   },
 
   "grant-application": {
@@ -760,5 +788,19 @@ export const demoDocuments: Record<string, DocumentAnalysis> = {
         sourceEvidence: "Section 3.4",
       },
     ],
+    plainEnglish: {
+      whatItIs:
+        "This is a competitive grant application form used by small businesses to request community development funding. The program awards grants between $5,000 and $25,000 to eligible businesses for approved uses such as equipment purchases, facility improvements, or new hires.",
+      whatItSays:
+        "The application describes the grant's purpose, eligibility requirements, approved uses of funds, and the review process. It explains the scoring criteria, required supporting documents, and the timeline from application to award announcement 90 days later.",
+      whatItAsks:
+        "You are asked to submit a detailed business plan, current financial statements, a project description explaining how the funds will be used, and at least three business references. All materials must be submitted by the deadline in one complete package.",
+      obligations:
+        "If awarded, you agree to use the funds only for the approved purposes described in your application. You may be required to provide receipts or progress reports. Misuse of grant funds may require repayment and could disqualify you from future programs.",
+      payAttentionTo:
+        "This is a competitive program — the quality of your business plan and project narrative is the primary scoring factor. Financial statements must exactly match your tax returns; discrepancies can disqualify your application. Incomplete submissions are not accepted.",
+      nextSteps:
+        "Start by confirming you meet all eligibility requirements. Then gather your most recent financial statements and have them verified by an accountant. Draft your project description clearly explaining the specific use and expected impact of the grant funds.",
+    },
   },
 };

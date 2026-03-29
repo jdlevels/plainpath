@@ -124,6 +124,15 @@ export const DocumentAnalysisOverallConfidence = {
   low: "low",
 } as const;
 
+export interface PlainEnglishSections {
+  whatItIs: string;
+  whatItSays: string;
+  whatItAsks: string;
+  obligations: string;
+  payAttentionTo: string;
+  nextSteps: string;
+}
+
 export interface DocumentAnalysis {
   id: string;
   title: string;
@@ -137,6 +146,7 @@ export interface DocumentAnalysis {
   risks: RiskItem[];
   overallConfidence: DocumentAnalysisOverallConfidence;
   processedAt: string;
+  plainEnglish?: PlainEnglishSections;
 }
 
 export interface AnalyzeDocumentResponse {

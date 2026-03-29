@@ -45,6 +45,15 @@ export interface RiskItem {
   sourceEvidence?: string;
 }
 
+export interface PlainEnglishSections {
+  whatItIs: string;
+  whatItSays: string;
+  whatItAsks: string;
+  obligations: string;
+  payAttentionTo: string;
+  nextSteps: string;
+}
+
 export interface DocumentAnalysis {
   id: string;
   title: string;
@@ -57,4 +66,5 @@ export interface DocumentAnalysis {
   risks: RiskItem[];
   overallConfidence: "high" | "medium" | "low";
   processedAt: string;
+  plainEnglish?: PlainEnglishSections;
 }

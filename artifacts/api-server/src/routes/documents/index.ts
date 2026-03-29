@@ -70,7 +70,15 @@ The JSON must have this exact structure:
       "severity": "high|medium|low",
       "sourceEvidence": "string"
     }
-  ]
+  ],
+  "plainEnglish": {
+    "whatItIs": "string - 2-4 sentences: what kind of document this is and what it is used for, written for someone who has never seen it before",
+    "whatItSays": "string - 3-5 sentences: the main points the document communicates, avoiding jargon",
+    "whatItAsks": "string - 2-4 sentences: what the document specifically asks the reader to do, submit, sign, or pay",
+    "obligations": "string - 2-4 sentences: what the reader is agreeing to, is responsible for, or may become liable for",
+    "payAttentionTo": "string - 2-4 sentences: the most important clauses, dates, or conditions the reader must not overlook",
+    "nextSteps": "string - 2-4 sentences: the first concrete things the reader should do after reading this document"
+  }
 }
 
 Guidelines:
@@ -159,6 +167,14 @@ async function runAnalysis(text: string, title?: string, documentTypeHint?: stri
     })),
     overallConfidence: parsed.overallConfidence || "medium",
     processedAt: new Date().toISOString(),
+    plainEnglish: parsed.plainEnglish && typeof parsed.plainEnglish === "object" ? {
+      whatItIs: (parsed.plainEnglish as any).whatItIs || "",
+      whatItSays: (parsed.plainEnglish as any).whatItSays || "",
+      whatItAsks: (parsed.plainEnglish as any).whatItAsks || "",
+      obligations: (parsed.plainEnglish as any).obligations || "",
+      payAttentionTo: (parsed.plainEnglish as any).payAttentionTo || "",
+      nextSteps: (parsed.plainEnglish as any).nextSteps || "",
+    } : undefined,
   };
 }
 
@@ -265,6 +281,55 @@ router.get("/demo/:demoId", (req, res) => {
     });
   }
   return res.json({ analysis: demo });
+});
+
+router.post("/explain-section", async (req, res) => {
+  const { sectionTitle, sectionContent, documentTypeHint } = req.body;
+
+  if (!sectionContent || typeof sectionContent !== "string" || sectionContent.trim().length < 5) {
+    return res.status(400).json({ error: "invalid_input", message: "sectionContent is required." });
+  }
+
+  const hintLine = documentTypeHint ? `\nDocument category: ${documentTypeHint}` : "";
+  const prompt = `You are PlainPath, a document explanation engine.
+A user is reading an action step from their analyzed document and needs a plain-English breakdown.${hintLine}
+
+Action step: "${sectionTitle || "Step"}"
+Description: "${sectionContent}"
+
+Return ONLY a valid JSON object with this exact structure:
+{
+  "meaning": "string - 2-3 sentences explaining what this step means in everyday language",
+  "requires": "string - 1-3 sentences explaining exactly what the user needs to do or gather",
+  "risks": "string - 1-2 sentences on what could go wrong if this step is skipped or done incorrectly (or 'No specific risk identified.' if none)",
+  "whyItMatters": "string - 1-2 sentences on why completing this step matters for the overall process"
+}`;
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-5.2",
+      max_completion_tokens: 1024,
+      messages: [{ role: "user", content: prompt }],
+    });
+
+    const rawContent = response.choices[0]?.message?.content;
+    if (!rawContent) throw new Error("No response from explanation engine");
+
+    const cleaned = rawContent.trim().replace(/^```json\s*/i, "").replace(/\s*```$/i, "");
+    const parsed = JSON.parse(cleaned);
+
+    return res.json({
+      explanation: {
+        meaning: parsed.meaning || "",
+        requires: parsed.requires || "",
+        risks: parsed.risks || "",
+        whyItMatters: parsed.whyItMatters || "",
+      },
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return res.status(500).json({ error: "explain_failed", message });
+  }
 });
 
 router.post("/checklist", (req, res) => {

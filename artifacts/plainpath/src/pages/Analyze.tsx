@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useLocation, useSearch } from "wouter"
 import { useGetDemoDocument, useUpdateChecklist } from "@workspace/api-client-react"
 import { useAnalysisContext } from "@/context/AnalysisContext"
@@ -12,22 +12,25 @@ import { Button } from "@/components/ui/button"
 import {
   Loader2, FileText, ListTodo, Calendar, AlertTriangle,
   Printer, ArrowLeft, CheckCircle2, AlertCircle, XCircle,
-  ArrowRight, ShieldCheck, Clock, TrendingUp
+  ArrowRight, ShieldCheck, Clock, TrendingUp, BookOpen,
+  HelpCircle, ChevronDown, Lightbulb, Eye, Shield, Zap
 } from "lucide-react"
 import { PriorityBadge } from "@/components/shared/PriorityBadge"
 import { ConfidenceBadge } from "@/components/shared/ConfidenceBadge"
 import { EvidenceTooltip } from "@/components/shared/EvidenceTooltip"
-import type { DocumentAnalysis } from "@workspace/api-client-react"
+import type { DocumentAnalysis, PlainEnglishSections } from "@workspace/api-client-react"
 import { triggerPrint } from "@/lib/print"
 import { isNative } from "@/lib/platform"
+import { getApiBaseUrl } from "@/lib/api"
 
 const TABS = [
-  { id: "summary",   label: "Overview",       icon: FileText       },
-  { id: "missing",   label: "What's Missing", icon: XCircle        },
-  { id: "checklist", label: "Checklist",      icon: ListTodo,      countKey: "actionSteps"       },
-  { id: "documents", label: "Required Docs",  icon: ShieldCheck,   countKey: "requiredDocuments" },
-  { id: "deadlines", label: "Deadlines",      icon: Calendar,      countKey: "deadlines"         },
-  { id: "risks",     label: "Risks & Notes",  icon: AlertTriangle                                },
+  { id: "plain-english", label: "Plain English", icon: BookOpen                                    },
+  { id: "summary",       label: "Overview",       icon: FileText                                   },
+  { id: "missing",       label: "What's Missing", icon: XCircle                                   },
+  { id: "checklist",     label: "Checklist",      icon: ListTodo,    countKey: "actionSteps"       },
+  { id: "documents",     label: "Required Docs",  icon: ShieldCheck, countKey: "requiredDocuments" },
+  { id: "deadlines",     label: "Deadlines",      icon: Calendar,    countKey: "deadlines"         },
+  { id: "risks",         label: "Risks & Notes",  icon: AlertTriangle                              },
 ]
 
 export default function Analyze() {
@@ -36,7 +39,7 @@ export default function Analyze() {
   const demoId = new URLSearchParams(searchString).get("demo") as string | null
 
   const { analysis, documentTypeHint, setAnalysis, updateActionStep, updateRequiredDoc } = useAnalysisContext()
-  const [activeTab, setActiveTab] = useState("checklist")
+  const [activeTab, setActiveTab] = useState("plain-english")
 
   const { data: demoData, isLoading, error: demoError } = useGetDemoDocument(
     demoId as any,
@@ -190,12 +193,13 @@ export default function Analyze() {
                 className="p-4 sm:p-7 md:p-10"
               >
 
-                {activeTab === "summary"   && <SummaryTab   analysis={analysis} onTabChange={setActiveTab} />}
-                {activeTab === "missing"   && <WhatsMissingTab analysis={analysis} onActionToggle={handleActionToggle} onDocToggle={handleDocToggle} onTabChange={setActiveTab} />}
-                {activeTab === "checklist" && <ChecklistTab  analysis={analysis} onToggle={handleActionToggle} />}
-                {activeTab === "documents" && <DocumentsTab  analysis={analysis} onToggle={handleDocToggle} />}
-                {activeTab === "deadlines" && <DeadlinesTab  analysis={analysis} />}
-                {activeTab === "risks"     && <RisksTab      analysis={analysis} />}
+                {activeTab === "plain-english" && <PlainEnglishTab analysis={analysis} onTabChange={setActiveTab} />}
+                {activeTab === "summary"      && <SummaryTab   analysis={analysis} onTabChange={setActiveTab} />}
+                {activeTab === "missing"      && <WhatsMissingTab analysis={analysis} onActionToggle={handleActionToggle} onDocToggle={handleDocToggle} onTabChange={setActiveTab} />}
+                {activeTab === "checklist"    && <ChecklistTab  analysis={analysis} onToggle={handleActionToggle} documentTypeHint={documentTypeHint} />}
+                {activeTab === "documents"    && <DocumentsTab  analysis={analysis} onToggle={handleDocToggle} />}
+                {activeTab === "deadlines"    && <DeadlinesTab  analysis={analysis} />}
+                {activeTab === "risks"        && <RisksTab      analysis={analysis} />}
 
               </motion.div>
             </AnimatePresence>
@@ -304,6 +308,80 @@ function SummaryTab({ analysis, onTabChange }: { analysis: DocumentAnalysis; onT
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+/* ────────────────────────────────────────────────
+   PLAIN ENGLISH TAB
+──────────────────────────────────────────────── */
+const PE_CARDS: {
+  key: keyof PlainEnglishSections
+  label: string
+  desc: string
+  icon: React.ElementType
+  accent: string
+}[] = [
+  { key: "whatItIs",      label: "What this document is",         desc: "The type and purpose of this document",              icon: FileText,    accent: "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 border-blue-200/60 dark:border-blue-900/40" },
+  { key: "whatItSays",    label: "What it is saying",             desc: "The main points and message of the document",        icon: BookOpen,    accent: "text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/40 border-violet-200/60 dark:border-violet-900/40" },
+  { key: "whatItAsks",    label: "What it asks from you",         desc: "The actions, submissions, or payments required",     icon: ListTodo,    accent: "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200/60 dark:border-emerald-900/40" },
+  { key: "obligations",   label: "What you may be agreeing to",   desc: "Responsibilities, liabilities, or commitments",      icon: Shield,      accent: "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border-amber-200/60 dark:border-amber-900/40" },
+  { key: "payAttentionTo",label: "What to pay close attention to", desc: "Key clauses, dates, or conditions not to overlook", icon: Eye,         accent: "text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/40 border-orange-200/60 dark:border-orange-900/40" },
+  { key: "nextSteps",     label: "What to do next",               desc: "The first things you should do after reading this",  icon: ArrowRight,  accent: "text-primary bg-primary/5 border-primary/20" },
+]
+
+function PlainEnglishTab({ analysis, onTabChange }: { analysis: DocumentAnalysis; onTabChange: (t: string) => void }) {
+  const pe = analysis.plainEnglish
+
+  if (!pe) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-xl sm:text-2xl font-display font-bold">Plain English Overview</h2>
+          <p className="text-sm text-muted-foreground mt-1">A plain-English breakdown of what this document is, says, and requires.</p>
+        </div>
+        <div className="rounded-2xl border border-border/40 bg-secondary/20 p-8 text-center">
+          <BookOpen className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
+          <p className="text-sm text-muted-foreground">Plain English breakdown not available for this document.<br />Re-analyze the document to generate it.</p>
+          <Button variant="outline" size="sm" className="mt-4" onClick={() => onTabChange("summary")}>View Summary instead</Button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6 max-w-3xl">
+      <div>
+        <h2 className="text-xl sm:text-2xl font-display font-bold">Plain English Overview</h2>
+        <p className="text-sm text-muted-foreground mt-1">Everything you need to know about this document — in plain, jargon-free language.</p>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+        {PE_CARDS.map(({ key, label, icon: Icon, accent }) => {
+          const text = pe[key]
+          if (!text) return null
+          return (
+            <div key={key} className={`rounded-2xl border p-5 ${accent}`}>
+              <div className="flex items-center gap-2 mb-3">
+                <Icon className="w-4 h-4 shrink-0" />
+                <h3 className="text-xs font-bold uppercase tracking-widest">{label}</h3>
+              </div>
+              <p className="text-sm text-foreground/80 leading-relaxed">{text}</p>
+            </div>
+          )
+        })}
+      </div>
+
+      <div className="flex items-center gap-3 pt-2">
+        <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => onTabChange("checklist")}>
+          <ListTodo className="w-3.5 h-3.5" />
+          View Action Steps
+        </Button>
+        <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => onTabChange("missing")}>
+          <XCircle className="w-3.5 h-3.5" />
+          What's Missing
+        </Button>
+      </div>
     </div>
   )
 }
@@ -453,10 +531,96 @@ function WhatsMissingTab({
 }
 
 /* ────────────────────────────────────────────────
+   EXPLAIN PANEL
+──────────────────────────────────────────────── */
+interface ExplainResult {
+  meaning: string
+  requires: string
+  risks: string
+  whyItMatters: string
+}
+
+function ExplainPanel({ result, loading, onClose }: { result: ExplainResult | null; loading: boolean; onClose: () => void }) {
+  const cards: { label: string; icon: React.ElementType; text: string; color: string }[] = result ? [
+    { label: "What this means",        icon: Eye,      text: result.meaning,      color: "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40" },
+    { label: "What you need to do",    icon: ListTodo, text: result.requires,     color: "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40" },
+    { label: "Why it matters",         icon: Zap,      text: result.whyItMatters, color: "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40" },
+    { label: "Risk if skipped",        icon: Shield,   text: result.risks,        color: "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/40" },
+  ] : []
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -8 }}
+      transition={{ duration: 0.16 }}
+      className="mt-2 mb-1 rounded-2xl border border-primary/20 bg-primary/[0.03] overflow-hidden"
+    >
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-primary/15 bg-primary/[0.06]">
+        <div className="flex items-center gap-2">
+          <Lightbulb className="w-3.5 h-3.5 text-primary" />
+          <span className="text-xs font-bold text-primary uppercase tracking-widest">Plain-English Explanation</span>
+        </div>
+        <button onClick={onClose} className="text-xs text-muted-foreground hover:text-foreground font-medium transition-colors">Dismiss</button>
+      </div>
+      {loading ? (
+        <div className="p-5 flex items-center gap-3 text-sm text-muted-foreground">
+          <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+          <span>Generating explanation…</span>
+        </div>
+      ) : (
+        <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {cards.map(({ label, icon: Icon, text, color }) => (
+            <div key={label} className="rounded-xl p-3 border border-border/40 bg-card">
+              <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide mb-2 ${color}`}>
+                <Icon className="w-3 h-3" />
+                {label}
+              </div>
+              <p className="text-sm text-foreground/80 leading-relaxed">{text}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </motion.div>
+  )
+}
+
+/* ────────────────────────────────────────────────
    CHECKLIST TAB
 ──────────────────────────────────────────────── */
-function ChecklistTab({ analysis, onToggle }: { analysis: DocumentAnalysis; onToggle: (id: string, done: boolean) => void }) {
+function ChecklistTab({
+  analysis, onToggle, documentTypeHint,
+}: {
+  analysis: DocumentAnalysis
+  onToggle: (id: string, done: boolean) => void
+  documentTypeHint?: string | null
+}) {
   const remaining = analysis.actionSteps.filter(s => !s.completed).length
+  const [explainId, setExplainId] = useState<string | null>(null)
+  const [explainMap, setExplainMap] = useState<Record<string, ExplainResult | "loading">>({})
+
+  const handleExplain = useCallback(async (step: DocumentAnalysis["actionSteps"][0]) => {
+    if (explainId === step.id) { setExplainId(null); return }
+    setExplainId(step.id)
+    if (explainMap[step.id] && explainMap[step.id] !== "loading") return
+    setExplainMap(prev => ({ ...prev, [step.id]: "loading" }))
+    try {
+      const base = getApiBaseUrl()
+      const res = await fetch(`${base}/api/documents/explain-section`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sectionTitle: step.title, sectionContent: step.description, documentTypeHint }),
+      })
+      const data = await res.json()
+      if (data.explanation) {
+        setExplainMap(prev => ({ ...prev, [step.id]: data.explanation as ExplainResult }))
+      } else {
+        setExplainMap(prev => ({ ...prev, [step.id]: { meaning: "Could not load explanation.", requires: "", risks: "", whyItMatters: "" } }))
+      }
+    } catch {
+      setExplainMap(prev => ({ ...prev, [step.id]: { meaning: "Could not load explanation.", requires: "", risks: "", whyItMatters: "" } }))
+    }
+  }, [explainId, explainMap, documentTypeHint])
 
   return (
     <div className="space-y-6">
@@ -468,9 +632,20 @@ function ChecklistTab({ analysis, onToggle }: { analysis: DocumentAnalysis; onTo
       </div>
       {analysis.actionSteps.length === 0
         ? <EmptyState icon={CheckCircle2} title="No action steps found" desc="This document doesn't appear to require specific actions." />
-        : <div className="space-y-2.5">
+        : <div className="space-y-1">
             {analysis.actionSteps.map((step, i) => (
-              <ActionStepRow key={step.id} step={step} index={i + 1} onToggle={onToggle} />
+              <div key={step.id}>
+                <ActionStepRow step={step} index={i + 1} onToggle={onToggle} onExplain={() => handleExplain(step)} explainActive={explainId === step.id} />
+                <AnimatePresence>
+                  {explainId === step.id && (
+                    <ExplainPanel
+                      result={explainMap[step.id] === "loading" ? null : explainMap[step.id] as ExplainResult | null}
+                      loading={explainMap[step.id] === "loading"}
+                      onClose={() => setExplainId(null)}
+                    />
+                  )}
+                </AnimatePresence>
+              </div>
             ))}
           </div>
       }
@@ -657,12 +832,14 @@ const PRIORITY_STYLES = {
 } as const
 
 function ActionStepRow({
-  step, index, onToggle, compact = false,
+  step, index, onToggle, compact = false, onExplain, explainActive = false,
 }: {
   step: DocumentAnalysis["actionSteps"][0]
   index?: number
   onToggle: (id: string, done: boolean) => void
   compact?: boolean
+  onExplain?: () => void
+  explainActive?: boolean
 }) {
   const style = PRIORITY_STYLES[step.priority as keyof typeof PRIORITY_STYLES] ?? PRIORITY_STYLES.low
 
@@ -673,7 +850,7 @@ function ActionStepRow({
       step.completed
         ? "bg-secondary/20 border-border/20 opacity-55 priority-bar-low"
         : `${style.bar} ${style.bg} bg-card border-border/40 hover:border-primary/20 hover:shadow-sm`
-    }`}>
+    } ${explainActive && !compact ? "border-primary/30 shadow-sm" : ""}`}>
       <div className="shrink-0 mt-0.5">
         <Checkbox checked={step.completed} onCheckedChange={(c) => onToggle(step.id, c === true)} />
       </div>
@@ -707,6 +884,21 @@ function ActionStepRow({
             <div className="flex-1 min-w-0">
               <EvidenceTooltip text={step.sourceEvidence} />
             </div>
+          )}
+          {!compact && onExplain && (
+            <button
+              onClick={onExplain}
+              style={{ touchAction: "manipulation" }}
+              className={`ml-auto flex items-center gap-1 text-[11px] font-semibold transition-colors min-h-[32px] px-2 rounded-lg ${
+                explainActive
+                  ? "text-primary bg-primary/8"
+                  : "text-muted-foreground/60 hover:text-primary hover:bg-primary/5"
+              }`}
+            >
+              <HelpCircle className="w-3 h-3" />
+              <span>Explain this</span>
+              <ChevronDown className={`w-3 h-3 transition-transform ${explainActive ? "rotate-180" : ""}`} />
+            </button>
           )}
         </div>
       </div>
