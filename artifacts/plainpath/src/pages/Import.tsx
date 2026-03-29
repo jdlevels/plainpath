@@ -92,7 +92,13 @@ export default function Import() {
   }
 
   const handlePasteStage = () => {
-    if (!text.trim() || text.trim().length < 50) return
+    const trimmed = text.trim()
+    if (!trimmed || trimmed.length < 30) return
+    const wordCount = trimmed.split(/\s+/).filter(w => w.length > 0).length
+    if (wordCount < 15) {
+      setPasteError("Please paste more of the document so PlainPath can identify the requirements, deadlines, and obligations. A sentence or two isn't enough — paste a few paragraphs.")
+      return
+    }
     setPasteError(null)
     goToDocType({ kind: "text", text })
   }
@@ -278,7 +284,14 @@ export default function Import() {
                     <div className="flex items-center gap-3">
                       {step === "doctype" && (
                         <button
-                          onClick={() => { setStep("input"); setPending(null) }}
+                          onClick={() => {
+                            setStep("input")
+                            setPending(null)
+                            setUploadedFile(null)
+                            setUploadError(null)
+                            setPasteError(null)
+                            if (fileInputRef.current) fileInputRef.current.value = ""
+                          }}
                           style={{ touchAction: "manipulation" }}
                           className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-secondary active:bg-secondary transition-colors shrink-0"
                         >
@@ -406,7 +419,7 @@ export default function Import() {
                           <Button
                             size="lg"
                             onClick={handlePasteStage}
-                            disabled={isWorking || text.trim().length < 50}
+                            disabled={isWorking || text.trim().length < 30}
                             style={{ touchAction: "manipulation" }}
                             className="w-full h-14 text-base rounded-xl"
                           >
@@ -414,7 +427,7 @@ export default function Import() {
                           </Button>
 
                           <p className="text-[11px] text-center text-muted-foreground/50">
-                            Minimum 50 characters · Your text is processed by AI for analysis and not stored by PlainPath
+                            For best results, paste the full document text · Your text is processed by AI and not stored by PlainPath
                           </p>
                         </motion.div>
                       )}

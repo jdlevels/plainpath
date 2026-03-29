@@ -323,18 +323,18 @@ async function runAnalysis(text: string, title?: string, documentTypeHint?: stri
 router.post("/analyze", async (req, res) => {
   const { text, title, documentTypeHint } = req.body;
 
-  if (!text || typeof text !== "string" || text.trim().length < 50) {
+  if (!text || typeof text !== "string" || text.trim().length < 30) {
     return res.status(400).json({
-      error: "invalid_input",
-      message: "Please paste more text — at least 50 characters are needed to generate an action plan.",
+      error: "too_short",
+      message: "Please paste more of the document — PlainPath needs enough text to identify the requirements, deadlines, and obligations.",
     });
   }
 
   const wordCount = text.trim().split(/\s+/).filter((w: string) => w.length > 0).length;
-  if (wordCount < 8) {
+  if (wordCount < 15) {
     return res.status(400).json({
-      error: "invalid_input",
-      message: "The text you pasted is too short to analyze. Please paste the full document text — at least a few sentences.",
+      error: "too_short",
+      message: "Please paste more of the document so PlainPath can identify the requirements, deadlines, and obligations. A sentence or two isn't enough — paste a few paragraphs.",
     });
   }
 
@@ -370,7 +370,7 @@ router.post("/analyze", async (req, res) => {
     }
     return res.status(500).json({
       error: "analysis_failed",
-      message: "Analysis failed. Please try again. If the problem continues, try pasting a shorter section of your document.",
+      message: "Analysis failed. Please try again. If the problem continues, try pasting the document text instead of uploading.",
     });
   }
 });

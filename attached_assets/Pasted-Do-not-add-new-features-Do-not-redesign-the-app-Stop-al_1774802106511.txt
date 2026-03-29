@@ -1,0 +1,80 @@
+Do not add new features.
+Do not redesign the app.
+Stop all non-bug work.
+
+We still have 2 blocking intake reliability issues.
+
+ISSUE 1 — Paste Text messaging/behavior is still not correct
+Observed behavior:
+A short, valid instruction-style snippet such as:
+"Turn in the application for school and sign the document before 3/30/2026"
+returns:
+"Analysis failed. Please try again. If the problem continues, try pasting a shorter section of your document."
+
+This is not the correct UX.
+
+Fix requirements:
+1. Distinguish clearly between:
+- not enough context
+- valid short document-like text
+- upstream AI failure
+- timeout
+- rate limit / quota
+- generic server error
+
+2. Change Paste Text behavior so:
+- if the text is too short or lacks enough context, show a precise validation message such as:
+  "Please paste more of the document so PlainPath can identify the requirements, deadlines, and obligations."
+- if the input is valid and analyzable, proceed successfully
+- only show "Analysis failed" for true upstream/service failures
+
+3. The current message "try pasting a shorter section" is wrong for this case.
+Fix the message logic so the guidance matches the actual failure cause.
+
+ISSUE 2 — Upload File request is still being blocked incorrectly
+Observed behavior:
+The Upload tab shows:
+"Request blocked. Please refresh the page and try again."
+
+This appears to be a stale request guard / state lock / retry bug.
+
+Fix requirements:
+1. Reproduce the issue exactly
+2. Identify the exact root cause
+3. Fix any broken request-lock, duplicate submission guard, stale isUploading/isMutating state, or tab-state persistence bug
+4. Ensure Upload works correctly after:
+- fresh page load
+- previous failure
+- retry
+- selecting the same file again
+- switching between Paste Text and Upload File
+5. Do not show "Request blocked" unless there is a real intentional guard condition
+6. If a guard condition exists, make it self-resetting and user-safe
+
+Validation after fixes:
+1. Paste Text:
+- short but valid snippet -> correct behavior/message
+- longer real paragraph -> analyzes successfully
+- weak/non-document text -> precise validation message
+
+2. Upload:
+- valid PDF -> works
+- valid DOCX -> works
+- valid TXT -> works
+- retry after failure -> works
+- no stale "Request blocked" message
+- switching tabs resets state correctly
+
+3. Desktop and mobile both checked
+
+Return:
+A. root cause of Paste Text issue
+B. root cause of Upload issue
+C. files updated
+D. exact message logic now used for Paste Text
+E. exact request/reset logic now used for Upload
+F. screenshots of corrected flows
+G. any remaining blockers
+
+Do not switch to planning mode.
+Fix these intake bugs completely before anything else.
