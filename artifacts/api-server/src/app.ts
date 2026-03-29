@@ -84,7 +84,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/api", router);
 
-app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
+app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
   if (err instanceof multer.MulterError) {
     if (err.code === "LIMIT_FILE_SIZE") {
       return res.status(413).json({
@@ -92,15 +92,63 @@ app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
         message: "File is too large. Maximum allowed size is 20 MB.",
       });
     }
+    if (err.code === "LIMIT_UNEXPECTED_FILE") {
+      return res.status(400).json({
+        error: "upload_field_error",
+        message: "Upload error: unexpected file field. Please try again.",
+      });
+    }
     return res.status(400).json({
       error: "upload_error",
-      message: `Upload error: ${err.message}`,
+      message: "Upload failed due to a form error. Please try again.",
     });
   }
-  logger.error({ err }, "Unhandled error");
+
+  const errMsg = err instanceof Error ? err.message : String(err);
+  logger.error({ err: errMsg, url: req.url, method: req.method }, "Unhandled error reached global handler");
+
+  // Classify common error types that escape route handlers
+  if (typeof errMsg === "string") {
+    if (errMsg.toLowerCase().includes("cors")) {
+      return res.status(403).json({
+        error: "cors_error",
+        message: "Request blocked. Please refresh the page and try again.",
+      });
+    }
+    if (errMsg.toLowerCase().includes("timeout") || errMsg.toLowerCase().includes("timed out")) {
+      return res.status(504).json({
+        error: "timeout",
+        message: "The request timed out. Please try again.",
+      });
+    }
+    if (errMsg.toLowerCase().includes("rate limit") || errMsg.toLowerCase().includes("quota")) {
+      return res.status(503).json({
+        error: "service_unavailable",
+        message: "The service is temporarily busy. Please wait a moment and try again.",
+      });
+    }
+  }
+
+  // Determine if this is an upload or analysis request for a better fallback message
+  const isUploadRoute = req.url?.includes("/upload");
+  const isAnalyzeRoute = req.url?.includes("/analyze");
+
+  if (isUploadRoute) {
+    return res.status(500).json({
+      error: "upload_failed",
+      message: "Upload failed. Please try again. If the problem continues, try pasting the document text instead.",
+    });
+  }
+  if (isAnalyzeRoute) {
+    return res.status(500).json({
+      error: "analysis_failed",
+      message: "Analysis failed. Please try again. If the problem continues, try pasting a shorter section of your document.",
+    });
+  }
+
   return res.status(500).json({
     error: "internal_error",
-    message: "An unexpected error occurred. Please try again.",
+    message: "Something went wrong. Please try again.",
   });
 });
 

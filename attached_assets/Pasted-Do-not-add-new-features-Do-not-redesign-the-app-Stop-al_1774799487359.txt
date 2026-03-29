@@ -1,0 +1,77 @@
+Do not add new features.
+Do not redesign the app.
+Stop all non-bug work.
+
+We still have a blocking upload bug.
+
+Observed behavior from current testing:
+- User uploads a generic PDF and selects the Generic / Unsure document type
+- Upload flow fails with:
+  "An unexpected error occurred. Please try again."
+- At the same time, the scanned/image PDF warning is also visible
+
+This means the upload/parsing error handling is still not correct.
+
+Your task:
+Fully debug and fix the PDF upload path so errors are correctly classified and only the right message is shown.
+
+Requirements:
+
+1. Reproduce the exact issue with a generic uploaded PDF
+2. Identify the exact root cause:
+- parser failure
+- empty extracted text
+- malformed PDF
+- image/scanned PDF
+- stale error state
+- incorrect message mapping
+- multiple error states rendering at once
+
+3. Fix the logic so only one correct outcome is shown:
+A. Valid text-based PDF
+- parses successfully
+- proceeds to doc-type selection / analysis
+
+B. Real scanned/image-only PDF
+- shows only the specific scanned/image PDF warning
+- no generic error banner at the same time
+
+C. Malformed/corrupt PDF
+- shows a specific user-friendly malformed PDF message
+- no scanned-PDF warning unless it truly applies
+
+D. Unknown/internal failure
+- shows a clean generic error only if no better classification is possible
+
+4. Ensure error-state rendering is mutually exclusive:
+- no overlapping generic + scanned warnings
+- no stale upload banner after retry or tab switch
+- no stale uploaded file state
+
+5. Add temporary diagnostic logging if needed to determine:
+- whether text extraction returned empty text
+- whether parser threw
+- which error classification branch fired
+
+6. After the fix, test these cases explicitly:
+- valid text-based PDF
+- real scanned/image PDF
+- malformed/corrupt PDF
+- valid DOCX
+- valid TXT
+- retry same file after failure
+- switch tabs after failure
+- Generic / Unsure doc type selection
+
+Return:
+A. exact root cause of the current generic PDF failure
+B. files updated
+C. exact classification logic now used for uploaded PDFs
+D. screenshots of:
+   - successful valid PDF flow
+   - scanned PDF warning only
+   - malformed PDF message only
+E. any remaining ingestion blockers
+
+Do not switch to planning mode.
+Fix the upload path completely before anything else.

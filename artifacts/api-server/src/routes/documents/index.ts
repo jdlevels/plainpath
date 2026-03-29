@@ -375,53 +375,88 @@ router.post("/analyze", async (req, res) => {
   }
 });
 
-router.post("/upload", upload.single("file"), async (req, res) => {
-  const file = req.file;
-  if (!file) {
-    return res.status(400).json({ error: "no_file", message: "No file was uploaded." });
-  }
-
-  const mime = file.mimetype;
-  const originalName = file.originalname.toLowerCase();
-  let extractedText = "";
-  let detectedTitle = file.originalname.replace(/\.[^.]+$/, "");
-
+router.post("/upload", upload.single("file"), async (req, res, next) => {
+  // Top-level safety net: catches anything that escapes inner try/catch blocks
+  // so the global handler never fires for upload errors.
   try {
+    const file = req.file;
+    if (!file) {
+      return res.status(400).json({ error: "no_file", message: "No file was uploaded." });
+    }
+
+    const mime = file.mimetype ?? "";
+    const originalName = (file.originalname ?? "").toLowerCase();
+    let extractedText = "";
+    const detectedTitle = file.originalname.replace(/\.[^.]+$/, "");
+
+    // ── Text extraction ─────────────────────────────────────────────────────
     if (mime === "application/pdf" || originalName.endsWith(".pdf")) {
-      const pdfMod = await import("pdf-parse/lib/pdf-parse.js");
-      const pdfParse: (buf: Buffer) => Promise<{ text: string }> =
-        (pdfMod as any).default ?? (pdfMod as any);
-      let pdfResult: { text: string };
+      let pdfParseText: string | null = null;
+      let parseError: string | null = null;
+
       try {
-        pdfResult = await pdfParse(file.buffer);
-      } catch {
+        const pdfMod = await import("pdf-parse/lib/pdf-parse.js");
+        const pdfParse: (buf: Buffer) => Promise<{ text: string }> =
+          (pdfMod as any).default ?? (pdfMod as any);
+        const pdfResult = await pdfParse(file.buffer);
+        pdfParseText = pdfResult?.text ?? null;
+      } catch (err) {
+        const errMsg = err instanceof Error ? err.message : String(err);
+        console.error("[upload] pdf-parse threw:", errMsg, "| file:", file.originalname, "| size:", file.size);
+        parseError = errMsg;
+      }
+
+      if (parseError !== null) {
+        // Parser threw — likely corrupt, encrypted, or unsupported PDF structure
         return res.status(422).json({
-          error: "unreadable_pdf",
-          message: "This PDF could not be read. It may be corrupted, password-protected, or image-based. Please copy and paste the text instead.",
+          error: "corrupt_pdf",
+          message: "This PDF could not be read. It may be corrupted or password-protected. Please try a different file, or copy and paste the text instead.",
         });
       }
-      extractedText = pdfResult.text;
-      if (!extractedText?.trim()) {
+
+      if (!pdfParseText || !pdfParseText.trim()) {
+        // Parser succeeded but returned no text — scanned / image-only PDF
+        console.error("[upload] pdf-parse returned empty text | file:", file.originalname, "| size:", file.size);
         return res.status(422).json({
-          error: "unreadable_pdf",
-          message: "This PDF appears to be image-based or scanned. Please copy and paste the text instead.",
+          error: "scanned_pdf",
+          message: "This PDF appears to contain only images (scanned document). PlainPath cannot read image-based PDFs — please copy and paste the text instead.",
         });
       }
+
+      extractedText = pdfParseText;
+
     } else if (
       mime === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
       originalName.endsWith(".docx")
     ) {
-      const mammoth = await import("mammoth");
-      const result = await mammoth.extractRawText({ buffer: file.buffer });
-      extractedText = result.value;
-      if (!extractedText?.trim()) {
+      try {
+        const mammoth = await import("mammoth");
+        const result = await mammoth.extractRawText({ buffer: file.buffer });
+        extractedText = result.value ?? "";
+      } catch (err) {
+        const errMsg = err instanceof Error ? err.message : String(err);
+        console.error("[upload] mammoth threw:", errMsg, "| file:", file.originalname);
         return res.status(422).json({
           error: "unreadable_docx",
-          message: "Could not extract text from this Word document. Please paste the text instead.",
+          message: "Could not read this Word document. It may be corrupted. Please try re-saving it as a .docx or paste the text instead.",
         });
       }
+      if (!extractedText.trim()) {
+        return res.status(422).json({
+          error: "empty_docx",
+          message: "This Word document appears to be empty or contains no readable text. Please paste the text instead.",
+        });
+      }
+
     } else if (mime === "text/plain" || originalName.endsWith(".txt")) {
       extractedText = file.buffer.toString("utf-8");
+      if (!extractedText.trim()) {
+        return res.status(422).json({
+          error: "empty_txt",
+          message: "This text file appears to be empty. Please check the file and try again.",
+        });
+      }
+
     } else {
       return res.status(400).json({
         error: "unsupported_type",
@@ -429,18 +464,54 @@ router.post("/upload", upload.single("file"), async (req, res) => {
       });
     }
 
+    // ── Analysis ─────────────────────────────────────────────────────────────
     const rawTextForSections = extractedText;
     if (extractedText.length > 60000) {
       extractedText = extractedText.slice(0, 60000);
     }
 
+    console.log("[upload] extracted", extractedText.length, "chars from", file.originalname, "— starting analysis");
+
     const documentTypeHint = typeof req.body?.documentTypeHint === "string" ? req.body.documentTypeHint : undefined;
-    const analysis = await runAnalysis(extractedText, detectedTitle, documentTypeHint, rawTextForSections);
-    return res.json({ analysis });
-  } catch (error) {
+
+    try {
+      const analysis = await runAnalysis(extractedText, detectedTitle, documentTypeHint, rawTextForSections);
+      return res.json({ analysis });
+    } catch (analysisError) {
+      const msg = analysisError instanceof Error ? analysisError.message : String(analysisError);
+      console.error("[upload] runAnalysis threw:", msg, "| file:", file.originalname);
+
+      const isTimeout = analysisError instanceof Error && (
+        analysisError.name === "AbortError" ||
+        msg.toLowerCase().includes("timeout") ||
+        msg.toLowerCase().includes("timed out")
+      );
+      if (isTimeout) {
+        return res.status(504).json({
+          error: "analysis_timeout",
+          message: "Analysis is taking too long. Please try again — shorter documents process faster.",
+        });
+      }
+      const isServiceError = msg.toLowerCase().includes("rate limit") || msg.toLowerCase().includes("quota") || msg.toLowerCase().includes("overloaded");
+      if (isServiceError) {
+        return res.status(503).json({
+          error: "service_unavailable",
+          message: "The analysis service is temporarily busy. Please wait a moment and try again.",
+        });
+      }
+      return res.status(500).json({
+        error: "analysis_failed",
+        message: "Analysis failed. Please try again. If the problem continues, try pasting the document text instead.",
+      });
+    }
+
+  } catch (outerError) {
+    // Safety net for anything that escaped all inner try/catch blocks
+    const msg = outerError instanceof Error ? outerError.message : String(outerError);
+    console.error("[upload] unhandled error escaped route:", msg);
     return res.status(500).json({
-      error: "analysis_failed",
-      message: "Analysis failed. Please try again. If the problem continues, try pasting the document text instead.",
+      error: "upload_failed",
+      message: "Upload failed. Please try again. If the problem continues, try pasting the document text instead.",
     });
   }
 });

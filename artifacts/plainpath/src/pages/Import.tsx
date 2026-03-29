@@ -166,7 +166,11 @@ export default function Import() {
             ? "File is too large. Maximum allowed size is 20 MB."
             : res.status === 422
             ? "Could not extract text from this file. If it's a scanned PDF, please copy and paste the text instead."
-            : "Upload failed. Please try again.")
+            : res.status === 503
+            ? "The analysis service is temporarily busy. Please wait a moment and try again."
+            : res.status === 504
+            ? "Analysis is taking too long. Please try again — shorter documents process faster."
+            : "Upload failed. Please try again. If the problem continues, try pasting the document text instead.")
           setUploadError(msg)
           setUploadedFile(null)
           if (fileInputRef.current) fileInputRef.current.value = ""
