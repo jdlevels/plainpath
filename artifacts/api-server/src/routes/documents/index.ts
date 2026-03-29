@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import multer from "multer";
 import { openai } from "@workspace/integrations-openai-ai-server";
 import { demoDocuments } from "../../lib/demoData.js";
-import type { DocumentAnalysis, DocumentSection, KeyTerm } from "../../lib/types.js";
+import type { DocumentAnalysis, DocumentSection, KeyTerm, ActionPack } from "../../lib/types.js";
 
 function extractSections(text: string): DocumentSection[] {
   const normalized = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
@@ -141,6 +141,36 @@ The JSON must have this exact structure:
       "questionToAsk": "string - optional: a specific question the reader should ask before agreeing or signing (omit field entirely if not applicable)"
     }
   ],
+  "actionPack": {
+    "questionsToAsk": [
+      {
+        "id": "q-1",
+        "question": "string - a smart, specific clarification question the user should ask about this document",
+        "context": "string - 1 sentence: why this question matters for their situation"
+      }
+    ],
+    "whatToGather": [
+      {
+        "id": "g-1",
+        "item": "string - name of the record, form, ID, or document to gather",
+        "description": "string - 1 sentence: what this is and why it's needed",
+        "category": "string - optional: category like 'Financial Records', 'Identification', 'Legal Documents', 'Medical Records', 'Correspondence'"
+      }
+    ],
+    "whatToSay": [
+      {
+        "id": "s-1",
+        "label": "string - the communication situation (e.g., 'Asking for more time', 'Requesting clarification', 'Responding to a notice')",
+        "draft": "string - a neutral, practical draft message the user can adapt — keep it professional, factual, and jargon-free. Never frame as legal or professional advice."
+      }
+    ],
+    "beforeYouActChecklist": [
+      {
+        "id": "ba-1",
+        "text": "string - one important thing to confirm before signing or submitting"
+      }
+    ]
+  },
   "plainEnglish": {
     "whatItIs": "string - 2-4 sentences: what kind of document this is and what it is used for, written for someone who has never seen it before",
     "whatItSays": "string - 3-5 sentences: the main points the document communicates, avoiding jargon",
@@ -165,7 +195,12 @@ Guidelines:
 - Extract 4-8 key terms: clauses, provisions, or terms with significant impact on the reader
 - keyTerms severity: high = significant financial/legal/practical consequence; medium = important but manageable; low = worth noting
 - Focus keyTerms on: fees/penalties, non-refundable terms, termination/cancellation, auto-renewal, liability limits, repayment obligations, ownership/IP, indemnity, arbitration, exclusivity, appeal deadlines, submission requirements, disqualifiers, reporting obligations
-- Tailor keyTerms to document type: contracts→ownership/termination/renewal; tax/gov→penalties/deadlines/agency actions; healthcare→exclusions/prior auth/appeal windows; grants/applications→eligibility/disqualifiers/reporting; bills/notices→shutoff/legal deadlines/collections`;
+- Tailor keyTerms to document type: contracts→ownership/termination/renewal; tax/gov→penalties/deadlines/agency actions; healthcare→exclusions/prior auth/appeal windows; grants/applications→eligibility/disqualifiers/reporting; bills/notices→shutoff/legal deadlines/collections
+- actionPack.questionsToAsk: 4-5 smart clarification questions tailored to the document — specific, not generic
+- actionPack.whatToGather: 4-6 records, forms, IDs, or documents the user should have ready before responding or proceeding
+- actionPack.whatToSay: 2-3 neutral, practical draft messages for common communication scenarios (asking for time, requesting clarification, responding to a notice). NEVER frame as legal or professional advice — use phrasing like "You may want to ask..." and "You might consider saying..."
+- actionPack.beforeYouActChecklist: 4-6 concrete things to confirm before signing or submitting
+- Tailor actionPack to document type: contracts→negotiation questions, ownership/renewal concerns; tax/gov→deadline clarification, missing forms, agency response; healthcare→appeal questions, coverage clarification, missing records; bills/notices→payment proof, deadline response, collections; grants/applications→eligibility, attachments, submission completeness`;
 
 async function runAnalysis(text: string, title?: string, documentTypeHint?: string, rawText?: string): Promise<DocumentAnalysis> {
   const hintLine = documentTypeHint ? `\nUser-specified document category: ${documentTypeHint}` : "";
@@ -175,7 +210,7 @@ async function runAnalysis(text: string, title?: string, documentTypeHint?: stri
 
   const response = await openai.chat.completions.create({
     model: "gpt-5.2",
-    max_completion_tokens: 8192,
+    max_completion_tokens: 10240,
     messages: [
       { role: "system", content: SYSTEM_PROMPT },
       { role: "user", content: `Analyze the following document and extract a structured action plan:\n\n${userMessage}` },
@@ -249,6 +284,28 @@ async function runAnalysis(text: string, title?: string, documentTypeHint?: stri
       watchOut: (kt as any).watchOut || "",
       questionToAsk: (kt as any).questionToAsk,
     } as KeyTerm)),
+    actionPack: parsed.actionPack && typeof parsed.actionPack === "object" ? ({
+      questionsToAsk: ((parsed.actionPack as any).questionsToAsk || []).map((q: any, i: number) => ({
+        id: q.id || `q-${i + 1}`,
+        question: q.question || "",
+        context: q.context || "",
+      })),
+      whatToGather: ((parsed.actionPack as any).whatToGather || []).map((g: any, i: number) => ({
+        id: g.id || `g-${i + 1}`,
+        item: g.item || "",
+        description: g.description || "",
+        category: g.category,
+      })),
+      whatToSay: ((parsed.actionPack as any).whatToSay || []).map((s: any, i: number) => ({
+        id: s.id || `s-${i + 1}`,
+        label: s.label || "",
+        draft: s.draft || "",
+      })),
+      beforeYouActChecklist: ((parsed.actionPack as any).beforeYouActChecklist || []).map((c: any, i: number) => ({
+        id: c.id || `ba-${i + 1}`,
+        text: c.text || "",
+      })),
+    } as ActionPack) : undefined,
     overallConfidence: parsed.overallConfidence || "medium",
     processedAt: new Date().toISOString(),
     sections: extractSections(rawText ?? text),

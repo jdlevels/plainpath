@@ -14,12 +14,13 @@ import {
   Printer, ArrowLeft, CheckCircle2, AlertCircle, XCircle,
   ArrowRight, ShieldCheck, Clock, TrendingUp, BookOpen,
   HelpCircle, ChevronDown, Lightbulb, Eye, Shield, Zap,
-  AlignLeft, MessageSquare, X, Flag
+  AlignLeft, MessageSquare, X, Flag, Package,
+  FolderOpen, Mail, CheckSquare, Copy, Check
 } from "lucide-react"
 import { PriorityBadge } from "@/components/shared/PriorityBadge"
 import { ConfidenceBadge } from "@/components/shared/ConfidenceBadge"
 import { EvidenceTooltip } from "@/components/shared/EvidenceTooltip"
-import type { DocumentAnalysis, PlainEnglishSections, KeyTerm } from "@workspace/api-client-react"
+import type { DocumentAnalysis, PlainEnglishSections, KeyTerm, ActionPack } from "@workspace/api-client-react"
 import { triggerPrint } from "@/lib/print"
 import { isNative } from "@/lib/platform"
 import { getApiBaseUrl } from "@/lib/api"
@@ -34,6 +35,7 @@ const TABS = [
   { id: "deadlines",       label: "Deadlines",        icon: Calendar,    countKey: "deadlines"         },
   { id: "risks",           label: "Risks & Notes",    icon: AlertTriangle                              },
   { id: "key-terms",       label: "Key Terms",        icon: Flag,          countKey: "keyTerms"         },
+  { id: "action-pack",    label: "Action Pack",      icon: Package                                      },
 ]
 
 export default function Analyze() {
@@ -213,6 +215,7 @@ export default function Analyze() {
                 {activeTab === "deadlines"       && <DeadlinesTab  analysis={analysis} />}
                 {activeTab === "risks"           && <RisksTab      analysis={analysis} />}
                 {activeTab === "key-terms"       && <KeyTermsTab   analysis={analysis} />}
+                {activeTab === "action-pack"     && <ActionPackTab analysis={analysis} />}
 
               </motion.div>
             </AnimatePresence>
@@ -1397,6 +1400,202 @@ function KeyTermsTab({ analysis }: { analysis: DocumentAnalysis }) {
       </div>
       <div className="space-y-3">
         {sorted.map(kt => <KeyTermCard key={kt.id} term={kt} />)}
+      </div>
+    </div>
+  )
+}
+
+/* ────────────────────────────────────────────────
+   ACTION PACK TAB
+──────────────────────────────────────────────── */
+function ActionPackTab({ analysis }: { analysis: DocumentAnalysis }) {
+  const pack = analysis.actionPack
+  if (!pack) {
+    return (
+      <div className="text-center py-16 text-muted-foreground">
+        <Package className="w-10 h-10 mx-auto mb-3 opacity-30" />
+        <p className="text-sm font-medium">Action pack not available for this document.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-8">
+      {/* Header */}
+      <div>
+        <div className="flex items-center gap-2.5 mb-1.5">
+          <Package className="w-5 h-5 text-foreground" />
+          <h2 className="text-xl font-bold text-foreground">Action Pack</h2>
+        </div>
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          Everything you need to take smart, informed next steps — questions to ask, what to have ready, how to communicate, and what to confirm before you act.
+        </p>
+      </div>
+
+      {/* Questions to Ask */}
+      {pack.questionsToAsk && pack.questionsToAsk.length > 0 && (
+        <ActionPackSection
+          icon={<HelpCircle className="w-4 h-4" />}
+          title="Questions to Ask"
+          subtitle={`${pack.questionsToAsk.length} targeted questions for your situation`}
+          color="violet"
+        >
+          <div className="space-y-3">
+            {pack.questionsToAsk.map((q, i) => (
+              <div key={q.id} className="flex gap-3">
+                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-violet-100 dark:bg-violet-950/50 text-violet-700 dark:text-violet-300 flex items-center justify-center text-xs font-bold mt-0.5">
+                  {i + 1}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-foreground leading-snug mb-1">"{q.question}"</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{q.context}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </ActionPackSection>
+      )}
+
+      {/* What to Gather */}
+      {pack.whatToGather && pack.whatToGather.length > 0 && (
+        <ActionPackSection
+          icon={<FolderOpen className="w-4 h-4" />}
+          title="What to Gather"
+          subtitle={`${pack.whatToGather.length} records and documents to have ready`}
+          color="amber"
+        >
+          <div className="space-y-2.5">
+            {pack.whatToGather.map((g) => (
+              <div key={g.id} className="flex gap-3 p-3 rounded-xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/40">
+                <div className="flex-shrink-0 mt-0.5">
+                  <CheckSquare className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2 flex-wrap">
+                    <p className="text-sm font-semibold text-foreground leading-snug">{g.item}</p>
+                    {g.category && (
+                      <span className="text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 shrink-0">
+                        {g.category}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{g.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </ActionPackSection>
+      )}
+
+      {/* What to Say */}
+      {pack.whatToSay && pack.whatToSay.length > 0 && (
+        <ActionPackSection
+          icon={<Mail className="w-4 h-4" />}
+          title="What to Say"
+          subtitle="Draft messages you can adapt — not legal advice, just practical starting points"
+          color="blue"
+        >
+          <div className="space-y-4">
+            {pack.whatToSay.map((s) => (
+              <DraftMessageCard key={s.id} label={s.label} draft={s.draft} />
+            ))}
+          </div>
+        </ActionPackSection>
+      )}
+
+      {/* Before You Act Checklist */}
+      {pack.beforeYouActChecklist && pack.beforeYouActChecklist.length > 0 && (
+        <ActionPackSection
+          icon={<CheckSquare className="w-4 h-4" />}
+          title="Before You Act"
+          subtitle="Confirm each of these before signing or submitting"
+          color="green"
+        >
+          <div className="space-y-2">
+            {pack.beforeYouActChecklist.map((item, i) => (
+              <div key={item.id} className="flex gap-3 p-3 rounded-xl bg-green-50/60 dark:bg-green-950/20 border border-green-100 dark:border-green-900/40">
+                <div className="flex-shrink-0 w-5 h-5 rounded border-2 border-green-400 dark:border-green-600 mt-0.5 flex items-center justify-center">
+                  <span className="text-[9px] font-bold text-green-500 dark:text-green-400">{i + 1}</span>
+                </div>
+                <p className="text-sm text-foreground leading-snug">{item.text}</p>
+              </div>
+            ))}
+          </div>
+        </ActionPackSection>
+      )}
+    </div>
+  )
+}
+
+function ActionPackSection({
+  icon, title, subtitle, color, children
+}: {
+  icon: React.ReactNode
+  title: string
+  subtitle: string
+  color: "violet" | "amber" | "blue" | "green"
+  children: React.ReactNode
+}) {
+  const colorMap = {
+    violet: "text-violet-700 dark:text-violet-300 bg-violet-100 dark:bg-violet-950/50 border-violet-200 dark:border-violet-800/60",
+    amber:  "text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/50 border-amber-200 dark:border-amber-800/60",
+    blue:   "text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-950/50 border-blue-200 dark:border-blue-800/60",
+    green:  "text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-950/50 border-green-200 dark:border-green-800/60",
+  }
+  const iconClass = colorMap[color]
+  return (
+    <div>
+      <div className="flex items-center gap-2.5 mb-3">
+        <div className={`w-7 h-7 rounded-lg flex items-center justify-center border ${iconClass}`}>
+          {icon}
+        </div>
+        <div>
+          <h3 className="text-sm font-bold text-foreground leading-tight">{title}</h3>
+          <p className="text-[11px] text-muted-foreground leading-tight">{subtitle}</p>
+        </div>
+      </div>
+      {children}
+    </div>
+  )
+}
+
+function DraftMessageCard({ label, draft }: { label: string; draft: string }) {
+  const [copied, setCopied] = useState(false)
+  const handleCopy = () => {
+    const doSet = () => { setCopied(true); setTimeout(() => setCopied(false), 2000) }
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(draft).then(doSet).catch(() => {
+        const el = document.createElement("textarea")
+        el.value = draft
+        document.body.appendChild(el); el.select()
+        document.execCommand("copy"); document.body.removeChild(el)
+        doSet()
+      })
+    } else {
+      const el = document.createElement("textarea")
+      el.value = draft
+      document.body.appendChild(el); el.select()
+      document.execCommand("copy"); document.body.removeChild(el)
+      doSet()
+    }
+  }
+  return (
+    <div className="rounded-xl border border-blue-200 dark:border-blue-800/60 overflow-hidden">
+      <div className="flex items-center justify-between px-3.5 py-2.5 bg-blue-50 dark:bg-blue-950/30 border-b border-blue-200 dark:border-blue-800/60">
+        <div className="flex items-center gap-2">
+          <Mail className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+          <span className="text-xs font-semibold text-blue-800 dark:text-blue-200">{label}</span>
+        </div>
+        <button
+          onClick={handleCopy}
+          className="flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded-lg bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800/60 transition-colors"
+        >
+          {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+          {copied ? "Copied" : "Copy"}
+        </button>
+      </div>
+      <div className="p-3.5 bg-white dark:bg-card">
+        <pre className="text-xs text-foreground/80 leading-relaxed whitespace-pre-wrap font-sans">{draft}</pre>
       </div>
     </div>
   )

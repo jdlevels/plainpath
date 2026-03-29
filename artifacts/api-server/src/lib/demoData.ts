@@ -296,6 +296,112 @@ export const demoDocuments: Record<string, DocumentAnalysis> = {
         content: "After all departmental approvals and fees are received, the City Clerk's Office will review the complete application within 10 business days. You will receive written notification of approval, conditional approval, or denial. Denied applications may be appealed to the City Council within 14 days. Allow 6–8 weeks total from submission to permit issuance.",
       },
     ],
+    actionPack: {
+      questionsToAsk: [
+        {
+          id: "q-1",
+          question: "Can I submit to all four departments simultaneously, or must I go sequentially?",
+          context: "Parallel department submissions could cut weeks off your processing time — worth confirming before you start.",
+        },
+        {
+          id: "q-2",
+          question: "What happens if one department approves but another denies — is there any reconsideration process?",
+          context: "Knowing whether partial approvals hold any value helps you plan your response if one department pushes back.",
+        },
+        {
+          id: "q-3",
+          question: "Is there an expedited review option if my event timeline is tight?",
+          context: "Some jurisdictions offer fast-track review for an additional fee or under specific circumstances.",
+        },
+        {
+          id: "q-4",
+          question: "What documentation is required if my actual attendance exceeds the number I estimated on the application?",
+          context: "Attendance can grow — knowing what triggers a permit amendment prevents a potential violation on event day.",
+        },
+        {
+          id: "q-5",
+          question: "If my application is denied, will the City provide specific written reasons so I can address them in a resubmission?",
+          context: "A denial with stated reasons is a starting point for a successful resubmission — not necessarily a final answer.",
+        },
+      ],
+      whatToGather: [
+        {
+          id: "g-1",
+          item: "Completed Form SE-100 (Special Event Application)",
+          description: "Required for submission — every field must be filled in and signed before the City will process the application.",
+          category: "Applications",
+        },
+        {
+          id: "g-2",
+          item: "Certificate of General Liability Insurance naming the City as Additional Insured",
+          description: "Must explicitly list the City on the certificate — general proof of insurance alone is not accepted.",
+          category: "Insurance",
+        },
+        {
+          id: "g-3",
+          item: "Scaled site plan or event layout map",
+          description: "Must show all structures, vendor locations, emergency access routes, parking, and entry/exit points.",
+          category: "Documentation",
+        },
+        {
+          id: "g-4",
+          item: "Vendor and contractor list with contact information",
+          description: "Required by the Health and Fire Departments for food service and safety reviews.",
+          category: "Documentation",
+        },
+        {
+          id: "g-5",
+          item: "Proof of application fee payment ($150)",
+          description: "Keep the payment receipt — it confirms your submission date, which is needed to establish the 45-day timeline.",
+          category: "Financial Records",
+        },
+        {
+          id: "g-6",
+          item: "Previous City event permit approvals (if applicable)",
+          description: "Prior approved permits can help establish your track record with departments and may speed up review.",
+          category: "Correspondence",
+        },
+      ],
+      whatToSay: [
+        {
+          id: "s-1",
+          label: "Asking for a department review timeline",
+          draft: "Hello,\n\nMy name is [Your Name] and I submitted a special event permit application on [Date] for an event scheduled on [Event Date] at [Location]. I wanted to confirm the application was received and ask whether you can share a rough timeline for [Department Name]'s review.\n\nI'm also happy to provide any additional information that would help move things along. You can reach me at [Phone/Email].\n\nThank you,\n[Your Name]",
+        },
+        {
+          id: "s-2",
+          label: "Requesting clarification on the insurance requirement",
+          draft: "Hello,\n\nI'm completing my special event permit application and have a question about the insurance requirement. Could you confirm whether the City of [City] must be listed as an additional insured on the certificate itself, and whether there is a specific endorsement format or certificate language your office requires?\n\nI want to make sure the documentation meets your exact requirements before I submit.\n\nThank you,\n[Your Name]",
+        },
+        {
+          id: "s-3",
+          label: "Responding to a department request for more information",
+          draft: "Hello,\n\nThank you for reviewing my application. I received your request for [description of what was requested]. I'm gathering that information now and expect to have it to you by [Date].\n\nPlease let me know if there's anything else needed in the meantime. I can be reached at [Phone/Email].\n\nBest,\n[Your Name]",
+        },
+      ],
+      beforeYouActChecklist: [
+        {
+          id: "ba-1",
+          text: "Confirm today's date gives you at least 45 calendar days before the event — less than 45 days means automatic rejection with no exceptions.",
+        },
+        {
+          id: "ba-2",
+          text: "Verify your Certificate of Insurance explicitly names the City as an additional insured — not just shows you have general liability coverage.",
+        },
+        {
+          id: "ba-3",
+          text: "Check Form SE-100 is signed and every field is complete — incomplete applications are returned without being processed.",
+        },
+        {
+          id: "ba-4",
+          text: "Identify the contact name and office for each of the 4 departments before submitting so you can follow up with the right person.",
+        },
+        {
+          id: "ba-5",
+          text: "Make and keep a complete copy of everything you submit — including the date-stamped receipt — before handing over the packet.",
+        },
+      ],
+    },
     keyTerms: [
       {
         id: "kt-1",
@@ -651,6 +757,112 @@ export const demoDocuments: Record<string, DocumentAnalysis> = {
         content: "If your child has an Individualized Education Program (IEP), 504 Plan, or other documented educational support needs, please include a copy with your enrollment packet. The district's Special Education office will contact you within 10 business days to discuss placement and support services. Do not assume existing accommodations transfer automatically from another school.",
       },
     ],
+    actionPack: {
+      questionsToAsk: [
+        {
+          id: "q-1",
+          question: "Does our home address guarantee assignment to our neighborhood school, or could we be placed elsewhere in the zone?",
+          context: "Understanding exactly how neighborhood assignments work prevents surprises about which school your child is assigned to.",
+        },
+        {
+          id: "q-2",
+          question: "If we miss the June 30 deadline, how does the waitlist work and what is the typical wait time for a placement?",
+          context: "Knowing the waitlist mechanics helps you decide whether late submission is a viable option or if you need to prioritize the deadline.",
+        },
+        {
+          id: "q-3",
+          question: "My child has an active IEP — what is the process for the district to review it, and will accommodations be in place on the first day?",
+          context: "Special education services require a formal transfer review; starting early is critical to avoid gaps in support.",
+        },
+        {
+          id: "q-4",
+          question: "If one document in our packet is missing on the day we submit, will the application be held or returned?",
+          context: "This confirms the all-or-nothing rule and reinforces that you need a complete packet before visiting the enrollment office.",
+        },
+        {
+          id: "q-5",
+          question: "Are there any alternative residency documents accepted for families who recently moved and don't yet have a utility bill?",
+          context: "Recent movers often lack the required documentation — knowing alternatives prevents delays.",
+        },
+      ],
+      whatToGather: [
+        {
+          id: "g-1",
+          item: "Proof of residency (utility bill, bank statement, or lease — dated within 60 days)",
+          description: "Must confirm your current address and be dated within the 60-day window — older documents are not accepted.",
+          category: "Identification",
+        },
+        {
+          id: "g-2",
+          item: "Child's birth certificate or government-issued ID",
+          description: "Required for age verification and legal identity — original or certified copy.",
+          category: "Identification",
+        },
+        {
+          id: "g-3",
+          item: "Complete immunization records (current to this school year's requirements)",
+          description: "Records from a previous school may not meet current state requirements — verify with your pediatrician.",
+          category: "Medical Records",
+        },
+        {
+          id: "g-4",
+          item: "Previous school records (report cards and transcripts)",
+          description: "Required to confirm prior enrollment, academic level, and grade placement.",
+          category: "Academic Records",
+        },
+        {
+          id: "g-5",
+          item: "IEP or 504 plan documentation (if applicable)",
+          description: "Submit at enrollment to start the transfer review process as early as possible — do not wait.",
+          category: "Legal Documents",
+        },
+        {
+          id: "g-6",
+          item: "Custody or guardianship documents (if enrolling adult is not the biological parent)",
+          description: "Required to confirm legal authority to enroll the child.",
+          category: "Legal Documents",
+        },
+      ],
+      whatToSay: [
+        {
+          id: "s-1",
+          label: "Asking about the waitlist and late enrollment process",
+          draft: "Hello,\n\nI am registering my child for the [School Year] school year and wanted to ask a few questions about the enrollment timeline. If we are unable to submit by the June 30 deadline, how does the waitlist process work? Are placements made in the order applications are received, and roughly how long does waitlist placement typically take?\n\nWe want to make sure we plan around the right deadline. Thank you for any guidance.\n\n[Your Name]",
+        },
+        {
+          id: "s-2",
+          label: "Requesting a meeting about your child's IEP transfer",
+          draft: "Hello,\n\nI am enrolling my child at [School Name] for the upcoming school year. My child has an active IEP from [Previous School] and I would like to understand the process for reviewing and continuing the plan at your school.\n\nCould you let me know who I should speak with to get the transfer review started, and what information you need from me? I want to make sure there is no gap in services when the school year begins.\n\nThank you,\n[Your Name]",
+        },
+        {
+          id: "s-3",
+          label: "Asking about alternative residency documents",
+          draft: "Hello,\n\nI am preparing my enrollment packet and have a question about the residency requirement. We recently moved to the area on [Date] and our first utility bill has not yet arrived. Are there any alternative documents that can be accepted to confirm our address — such as a signed lease agreement, a bank statement showing our new address, or a letter from our landlord?\n\nThank you for letting me know what options may be available.\n\n[Your Name]",
+        },
+      ],
+      beforeYouActChecklist: [
+        {
+          id: "ba-1",
+          text: "Check the specific deadline for your child's grade level — kindergarten closes May 31, all other grades close June 30.",
+        },
+        {
+          id: "ba-2",
+          text: "Verify that your proof of residency document is dated within the last 60 days from the date you plan to submit.",
+        },
+        {
+          id: "ba-3",
+          text: "Confirm immunization records are current with this upcoming school year's state requirements, not a prior year's.",
+        },
+        {
+          id: "ba-4",
+          text: "Prepare the entire packet before going to the enrollment office — partial submissions are returned without processing.",
+        },
+        {
+          id: "ba-5",
+          text: "Write down the enrollment office hours and confirm they will be open on the day and time you plan to visit.",
+        },
+      ],
+    },
     keyTerms: [
       {
         id: "kt-1",
@@ -1033,6 +1245,112 @@ export const demoDocuments: Record<string, DocumentAnalysis> = {
         content: "Submit all materials in a single PDF or physical packet to the City Economic Development Office by the posted deadline at 5:00 PM. Late or partial submissions will not be accepted. Email submissions are not accepted. Award decisions will be communicated to all applicants within 90 days of the submission deadline.",
       },
     ],
+    actionPack: {
+      questionsToAsk: [
+        {
+          id: "q-1",
+          question: "Is there a pre-submission review session or feedback process available before the deadline?",
+          context: "Some programs offer pre-submission review — this can help you identify gaps before they disqualify your application.",
+        },
+        {
+          id: "q-2",
+          question: "Can you share the scoring rubric so I can understand how applications are evaluated?",
+          context: "Understanding the rubric lets you emphasize the highest-weighted elements in your narrative and budget.",
+        },
+        {
+          id: "q-3",
+          question: "If awarded, what is the process for requesting an amendment to the approved use of funds?",
+          context: "Circumstances change after award — knowing the amendment process prevents accidental misuse violations.",
+        },
+        {
+          id: "q-4",
+          question: "Are there any eligibility disqualifiers my business structure or history might trigger that aren't obvious from the form?",
+          context: "Ownership percentages, prior judgments, or business age requirements sometimes affect eligibility in ways applicants don't anticipate.",
+        },
+        {
+          id: "q-5",
+          question: "What happens to unused grant funds at the end of the project period — must unused amounts be returned?",
+          context: "Unspent funds are a common post-award complication that surprises many first-time grantees.",
+        },
+      ],
+      whatToGather: [
+        {
+          id: "g-1",
+          item: "Most recent two years of business tax returns",
+          description: "All financial figures in the application must match these exactly — any discrepancy can trigger disqualification.",
+          category: "Financial Records",
+        },
+        {
+          id: "g-2",
+          item: "Current business financial statements (income statement and balance sheet)",
+          description: "Must be current within the past 12 months and consistent with your tax returns.",
+          category: "Financial Records",
+        },
+        {
+          id: "g-3",
+          item: "Detailed project description with itemized budget",
+          description: "Must clearly describe how every dollar of the requested grant will be used — vague descriptions leave you exposed.",
+          category: "Applications",
+        },
+        {
+          id: "g-4",
+          item: "Three business references with current contact information",
+          description: "References should know your business well and be prepared to be contacted by the review committee.",
+          category: "Correspondence",
+        },
+        {
+          id: "g-5",
+          item: "Proof of business registration and any required licenses or permits",
+          description: "Demonstrates the business is legally operating in the jurisdiction as required by eligibility rules.",
+          category: "Legal Documents",
+        },
+        {
+          id: "g-6",
+          item: "Business plan or executive summary",
+          description: "The primary scoring factor — quality and clarity of your business plan are weighted most heavily in the review.",
+          category: "Applications",
+        },
+      ],
+      whatToSay: [
+        {
+          id: "s-1",
+          label: "Asking a clarifying question before the submission deadline",
+          draft: "Hello,\n\nI am preparing my application for the Small Business Community Grant and have a question I wanted to clarify before submitting. [Describe your specific question here.]\n\nCould you help me understand how to address this correctly in my application? I want to make sure I'm presenting everything as required before the deadline.\n\nThank you for any guidance,\n[Your Name]\n[Business Name]\n[Contact Information]",
+        },
+        {
+          id: "s-2",
+          label: "Following up on application status after the deadline",
+          draft: "Hello,\n\nI submitted my application for the Small Business Community Grant on [Date]. I wanted to confirm that the application was received in full and is complete.\n\nIf any information is missing or if there are follow-up items needed, please let me know as soon as possible so I can respond promptly. I can be reached at [Phone/Email].\n\nThank you,\n[Your Name]\n[Business Name]",
+        },
+        {
+          id: "s-3",
+          label: "Requesting information about the review timeline",
+          draft: "Hello,\n\nI submitted my application for the Small Business Community Grant on [Date]. I understand that award decisions are communicated within 90 days of the submission deadline.\n\nIs there any way to check on application status during the review period, or are applicants notified if there are issues with their submission?\n\nThank you,\n[Your Name]",
+        },
+      ],
+      beforeYouActChecklist: [
+        {
+          id: "ba-1",
+          text: "Cross-check every financial figure in the application against your most recently filed tax returns — every number must match exactly.",
+        },
+        {
+          id: "ba-2",
+          text: "Verify your business meets all stated eligibility requirements: years in operation, employee count, revenue range, location, and ownership structure.",
+        },
+        {
+          id: "ba-3",
+          text: "Confirm the packet is 100% complete — no blank fields, missing signatures, or missing attachments of any kind.",
+        },
+        {
+          id: "ba-4",
+          text: "Have a trusted colleague or advisor review your project narrative for clarity and completeness before submitting.",
+        },
+        {
+          id: "ba-5",
+          text: "Confirm the submission method (physical packet or single PDF) and exact deadline time — 5:00 PM on the due date.",
+        },
+      ],
+    },
     keyTerms: [
       {
         id: "kt-1",

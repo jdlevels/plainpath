@@ -1,0 +1,91 @@
+Do not redesign the app.
+Do not remove or replace any existing PlainPath features.
+
+The current analysis stack is strong:
+- Plain English
+- Source Sections
+- Checklist
+- Required Docs
+- Deadlines
+- Risks
+- What’s Missing
+- Key Terms
+
+Next feature:
+Add a new results tab called "Action Pack".
+
+Goal:
+Turn document understanding into practical preparation steps without giving legal, tax, medical, or professional advice.
+
+Build this in direct implementation mode.
+
+Requirements:
+
+1. Add a new results tab called:
+- Action Pack
+
+2. The Action Pack tab should generate 4 sections for every analyzed document:
+- Questions to Ask
+- What to Gather
+- What to Say
+- Before You Sign / Submit
+
+3. Section behavior:
+A. Questions to Ask
+- Give the user a list of smart clarification questions based on the document
+- Tailor to the selected document type
+
+B. What to Gather
+- List the records, forms, IDs, supporting docs, or evidence the user may need before responding or proceeding
+
+C. What to Say
+- Generate simple, editable draft language the user can use for:
+  - asking for clarification
+  - requesting more time
+  - responding to a notice
+  - asking a lawyer/advisor/school/agency the right question
+- Keep the tone neutral and practical
+- Do not present this as legal or professional advice
+
+D. Before You Sign / Submit
+- Generate a short guardrail checklist of the most important things to confirm before taking action
+
+4. Use the selected document type as a strong hint.
+Examples:
+- contracts: negotiation questions, termination/renewal/ownership concerns
+- tax/government: deadline clarification, missing forms, agency response prep
+- healthcare: appeal questions, missing records, insurer clarification
+- bills/notices: payment proof, deadline response, collections questions
+- grants/applications: eligibility, attachments, submission completeness
+
+5. Keep all current features untouched and visible.
+Do not remove tabs.
+Do not replace any current logic.
+
+6. UI requirements:
+- premium and scannable
+- easy to copy from
+- clear section hierarchy
+- mobile-friendly
+- dark/light mode compatible
+
+7. If demo data needs updating, add realistic Action Pack content for all 3 demos so the new tab shows content immediately.
+
+8. Keep wording safe:
+- no legal advice
+- no tax advice
+- no automatic filing/submission language
+- position it as preparation, clarification, and communication help
+
+9. Test after implementation:
+- all 3 demos
+- paste text flow
+- PDF upload flow
+- desktop and mobile
+
+When finished, return:
+A. files updated
+B. how the new Action Pack tab works
+C. example outputs for each of the 4 sections
+D. screenshots of the new tab
+E. any remaining blockers

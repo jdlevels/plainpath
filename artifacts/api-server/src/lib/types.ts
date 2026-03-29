@@ -56,6 +56,37 @@ export interface KeyTerm {
   questionToAsk?: string;
 }
 
+export interface ActionPackQuestion {
+  id: string;
+  question: string;
+  context: string;
+}
+
+export interface ActionPackGatherItem {
+  id: string;
+  item: string;
+  description: string;
+  category?: string;
+}
+
+export interface ActionPackDraft {
+  id: string;
+  label: string;
+  draft: string;
+}
+
+export interface ActionPackCheckItem {
+  id: string;
+  text: string;
+}
+
+export interface ActionPack {
+  questionsToAsk: ActionPackQuestion[];
+  whatToGather: ActionPackGatherItem[];
+  whatToSay: ActionPackDraft[];
+  beforeYouActChecklist: ActionPackCheckItem[];
+}
+
 export interface DocumentSection {
   id: string;
   title?: string;
@@ -86,4 +117,5 @@ export interface DocumentAnalysis {
   plainEnglish?: PlainEnglishSections;
   sections?: DocumentSection[];
   keyTerms?: KeyTerm[];
+  actionPack?: ActionPack;
 }
