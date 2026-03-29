@@ -1,0 +1,118 @@
+PLAINPATH FEATURE LOCK — DO NOT EXPAND SCOPE WITHOUT APPROVAL
+
+PlainPath has reached a strong core feature set. From this point forward, do not introduce new major systems, tabs, workflows, or broad redesigns unless explicitly requested.
+
+PRODUCT CORE:
+PlainPath helps users understand confusing documents, identify risks, and know what to do next.
+
+CORE LOOP:
+Import document → choose document type → analyze → understand → identify risks → prepare action
+
+LOCKED V1 FEATURES TO KEEP:
+1. Intake
+- PDF upload
+- DOCX upload
+- TXT upload
+- Paste text
+- document-type selection before analysis
+
+2. Understanding
+- Plain English tab
+- Source Sections tab
+- section-level explanation
+- checklist “Explain this” feature
+
+3. Action / Decision Support
+- Checklist
+- Required Docs
+- Deadlines
+- Risks
+- What’s Missing
+- Key Terms
+- Action Pack
+
+4. Session / Utility
+- Saved Analyses (local-first only)
+- Print/export behavior already present
+- Light / Dark / System theme
+- mobile responsiveness
+- privacy page
+- terms page
+- trust wording
+- graceful error states
+
+DO NOT REMOVE OR REPLACE:
+- current tab structure unless explicitly requested
+- document-type selection step
+- current demo system
+- current saved analyses model
+- privacy/trust constraints
+- local-first storage model
+
+DO NOT ADD RIGHT NOW:
+- accounts or login
+- cloud sync
+- server-side saved analyses
+- collaboration/sharing accounts
+- chatbot mode
+- full OCR system
+- true PDF line/page highlighting
+- e-signatures
+- auto-filing/submission
+- legal or tax advice engine
+- enterprise admin features
+- unrelated new tabs
+- major homepage redesigns
+- desktop/mobile wrappers before approved
+
+ALLOWED WORK FROM NOW ON:
+1. Stability fixes
+- parser reliability
+- demo correctness
+- stale-data bugs
+- save/reopen reliability
+- tab loading reliability
+- mobile layout fixes
+- theme contrast fixes
+- print/export fixes
+
+2. Accuracy fixes
+- counts, badges, labels, and metadata must match real underlying data
+- demo cards must reflect actual demos
+- document-type hint must correctly influence analysis
+
+3. Launch polish
+- improve spacing, consistency, copy clarity
+- improve empty/loading/error states
+- improve trust and privacy wording if needed
+- improve saved analysis usability
+- improve mobile usability
+- improve demo presentation
+
+NEXT APPROVED FEATURE PRIORITY:
+If a new feature is requested after this lock, prioritize in this order:
+1. Export / Share full analysis
+2. better organization of saved analyses
+3. compare two documents
+4. native packaging prep
+Everything else requires approval first.
+
+WORKING RULE:
+Before adding anything new, ask:
+“Does this directly strengthen the core PlainPath loop: understand the document, spot risks, and know what to do next?”
+If not, do not build it unless explicitly instructed.
+
+CURRENT MODE:
+We are in feature-lock mode.
+Prioritize:
+- stability
+- correctness
+- polish
+- readiness for launch
+Not feature sprawl.
+
+When making future changes:
+- preserve all existing V1 features
+- avoid redesign unless necessary
+- implement only the approved task
+- report only what changed, what was fixed, and what remains blocked
