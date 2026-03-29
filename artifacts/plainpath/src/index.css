@@ -185,9 +185,12 @@
   .dark .priority-bar-low { border-left-color: hsl(40 10% 35%); }
 }
 
+/* ─── Print-only: hidden on screen ─────────────── */
+.print-only { display: none !important; }
+
 /* ─── Print styles ──────────────────────────────── */
 @media print {
-  /* Force light-mode CSS variable values — printed output is always on white paper */
+  /* Force light-mode CSS variable values */
   :root, .dark {
     --background: 40 20% 97%;
     --foreground: 0 0% 11%;
@@ -202,39 +205,110 @@
     --border: 40 10% 88%;
     color-scheme: light;
   }
+
   /* Remove chrome */
   nav,
   header,
   .no-print,
   [data-radix-popper-content-wrapper] { display: none !important; }
 
-  body { background: white !important; font-size: 12pt; }
+  body { background: white !important; font-size: 11pt; color: #1a1a1a; }
 
   /* Full-width content */
   .max-w-5xl,
   .max-w-3xl { max-width: 100% !important; padding: 0 !important; }
 
-  /* Show all tab content at once (override Radix hidden state) */
-  [data-state="inactive"] { display: block !important; opacity: 1 !important; }
+  /* Show print-only report */
+  .print-only { display: block !important; padding: 0 !important; }
 
-  /* Stat pills row */
-  button { box-shadow: none !important; }
+  /* Page breaks */
+  .print-break { page-break-before: always; break-before: page; }
+  .print-avoid-break { page-break-inside: avoid; break-inside: avoid; }
 
-  /* Page breaks between major sections */
-  .print-break { page-break-before: always; }
+  /* ── Print report layout ── */
+  .print-header { margin-bottom: 18px; }
 
-  /* Hide tab bar navigation */
-  [role="tablist"] { display: none !important; }
+  .print-section {
+    margin-bottom: 18px;
+    page-break-inside: avoid;
+  }
 
-  /* Card flattening for print */
-  .rounded-3xl,
-  .rounded-2xl,
-  .rounded-xl { border-radius: 0 !important; }
+  .print-section-title {
+    font-size: 11pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #4F7CAC;
+    border-bottom: 1.5px solid #4F7CAC;
+    padding-bottom: 3px;
+    margin: 0 0 8px 0;
+  }
 
-  .shadow-lg,
-  .shadow-xl,
-  .shadow-sm { box-shadow: none !important; }
+  .print-subsection-title {
+    font-size: 9.5pt;
+    font-weight: 600;
+    color: #374151;
+    margin: 10px 0 5px 0;
+  }
 
-  /* Expand textareas / evidence that would be clipped */
-  .truncate { overflow: visible !important; white-space: normal !important; }
+  .print-body {
+    font-size: 9.5pt;
+    line-height: 1.55;
+    color: #374151;
+    margin: 0 0 8px 0;
+  }
+
+  .print-check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 7px;
+    page-break-inside: avoid;
+  }
+
+  .print-checkbox {
+    width: 10px;
+    height: 10px;
+    border: 1.5px solid #9ca3af;
+    border-radius: 2px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .print-item-title {
+    font-size: 9.5pt;
+    font-weight: 600;
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
+  }
+
+  .print-item-desc {
+    font-size: 9pt;
+    color: #4b5563;
+    margin: 2px 0 0 0;
+    line-height: 1.45;
+  }
+
+  .print-item-meta {
+    font-size: 8.5pt;
+    color: #6b7280;
+    margin: 2px 0 0 0;
+    font-style: italic;
+  }
+
+  .print-badge {
+    display: inline-block;
+    font-size: 7.5pt;
+    font-weight: 600;
+    padding: 1px 5px;
+    border-radius: 3px;
+    border: 1px solid #d1d5db;
+    background: #f3f4f6;
+    color: #374151;
+    margin-left: 4px;
+    vertical-align: middle;
+  }
 }

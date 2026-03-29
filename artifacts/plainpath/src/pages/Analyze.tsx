@@ -16,8 +16,17 @@ import {
   HelpCircle, ChevronDown, Lightbulb, Eye, Shield, Zap,
   AlignLeft, MessageSquare, X, Flag, Package,
   FolderOpen, Mail, CheckSquare, Copy, Check,
-  Bookmark, BookmarkCheck
+  Bookmark, BookmarkCheck, Share2, Download, Upload
 } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from "@/components/ui/dropdown-menu"
+import { buildExportText, downloadTextFile, canNativeShare, nativeShare } from "@/lib/exportAnalysis"
 import { PriorityBadge } from "@/components/shared/PriorityBadge"
 import { ConfidenceBadge } from "@/components/shared/ConfidenceBadge"
 import { EvidenceTooltip } from "@/components/shared/EvidenceTooltip"
@@ -173,16 +182,7 @@ export default function Analyze() {
                   {justSaved ? "Saved" : savedId ? "Update" : "Save"}
                 </span>
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                title={isNative() ? "PDF export coming soon on mobile" : "Print this action plan"}
-                className="gap-1.5 bg-card text-xs h-8 border-border/60"
-                onClick={() => triggerPrint()}
-              >
-                <Printer className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">{isNative() ? "PDF soon" : "Print"}</span>
-              </Button>
+              <ExportMenu analysis={analysis} />
             </div>
           </div>
         </div>
@@ -239,7 +239,7 @@ export default function Analyze() {
           </Tabs.List>
 
           {/* ── Content pane ────────────────────────────── */}
-          <div className="bg-card rounded-3xl border border-border/30 shadow-lg shadow-black/[0.04] dark:shadow-black/20 overflow-hidden min-h-[400px] sm:min-h-[540px]">
+          <div className="no-print bg-card rounded-3xl border border-border/30 shadow-lg shadow-black/[0.04] dark:shadow-black/20 overflow-hidden min-h-[400px] sm:min-h-[540px]">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}
@@ -265,6 +265,10 @@ export default function Analyze() {
             </AnimatePresence>
           </div>
         </Tabs.Root>
+
+        {/* ── Print-only report (hidden in screen, shown in print) ── */}
+        <PrintReport analysis={analysis} documentTypeHint={documentTypeHint} />
+
       </div>
     </div>
   )
@@ -1640,6 +1644,303 @@ function DraftMessageCard({ label, draft }: { label: string; draft: string }) {
       </div>
       <div className="p-3.5 bg-white dark:bg-card">
         <pre className="text-xs text-foreground/80 leading-relaxed whitespace-pre-wrap font-sans">{draft}</pre>
+      </div>
+    </div>
+  )
+}
+
+/* ────────────────────────────────────────────────
+   EXPORT MENU
+──────────────────────────────────────────────── */
+function ExportMenu({ analysis }: { analysis: DocumentAnalysis }) {
+  const [copiedText, setCopiedText] = useState(false)
+  const [shareErr, setShareErr] = useState(false)
+
+  const handleCopy = async () => {
+    const text = buildExportText(analysis)
+    try {
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(text)
+      } else {
+        const el = document.createElement("textarea")
+        el.value = text
+        document.body.appendChild(el); el.select()
+        document.execCommand("copy"); document.body.removeChild(el)
+      }
+      setCopiedText(true)
+      setTimeout(() => setCopiedText(false), 2000)
+    } catch {
+      setCopiedText(false)
+    }
+  }
+
+  const handleShare = async () => {
+    try {
+      await nativeShare(analysis)
+    } catch {
+      setShareErr(true)
+      setTimeout(() => setShareErr(false), 2500)
+    }
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-1.5 bg-card text-xs h-8 border-border/60"
+          style={{ touchAction: "manipulation" }}
+        >
+          <Upload className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">Export</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-52">
+        <DropdownMenuLabel className="text-[11px] uppercase tracking-wide text-muted-foreground font-semibold">
+          Export / Share
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          className="gap-2.5 cursor-pointer"
+          onSelect={() => { if (typeof window !== "undefined") window.print() }}
+        >
+          <Printer className="w-3.5 h-3.5 text-muted-foreground" />
+          <span>Print / Save as PDF</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="gap-2.5 cursor-pointer"
+          onSelect={(e) => { e.preventDefault(); handleCopy() }}
+        >
+          {copiedText
+            ? <Check className="w-3.5 h-3.5 text-green-600" />
+            : <Copy className="w-3.5 h-3.5 text-muted-foreground" />
+          }
+          <span>{copiedText ? "Copied!" : "Copy as text"}</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="gap-2.5 cursor-pointer"
+          onSelect={() => downloadTextFile(analysis)}
+        >
+          <Download className="w-3.5 h-3.5 text-muted-foreground" />
+          <span>Download .txt</span>
+        </DropdownMenuItem>
+        {canNativeShare() && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="gap-2.5 cursor-pointer"
+              onSelect={(e) => { e.preventDefault(); handleShare() }}
+            >
+              <Share2 className="w-3.5 h-3.5 text-muted-foreground" />
+              <span>{shareErr ? "Share not available" : "Share…"}</span>
+            </DropdownMenuItem>
+          </>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+/* ────────────────────────────────────────────────
+   PRINT REPORT (hidden on screen, shown in print)
+──────────────────────────────────────────────── */
+function PrintReport({ analysis, documentTypeHint }: { analysis: DocumentAnalysis; documentTypeHint: string | null }) {
+  const pe = analysis.plainEnglish
+  const pack = analysis.actionPack
+  const formatDate = (iso: string) => {
+    try { return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" }) }
+    catch { return iso }
+  }
+
+  return (
+    <div className="print-only">
+      {/* Cover */}
+      <div className="print-header">
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
+          <span style={{ fontWeight: 700, fontSize: "11pt", letterSpacing: "0.08em", textTransform: "uppercase", color: "#4F7CAC" }}>PlainPath</span>
+          <span style={{ color: "#aaa", fontSize: "10pt" }}>·</span>
+          <span style={{ fontSize: "9pt", color: "#888" }}>Analysis Report</span>
+        </div>
+        <h1 style={{ fontSize: "18pt", fontWeight: 800, margin: "0 0 6px 0", lineHeight: 1.2 }}>{analysis.title}</h1>
+        <div style={{ display: "flex", gap: "18px", fontSize: "9pt", color: "#555", marginBottom: "4px" }}>
+          <span><strong>Type:</strong> {analysis.documentType}</span>
+          {documentTypeHint && <span><strong>Category:</strong> {documentTypeHint}</span>}
+          <span><strong>Date:</strong> {formatDate(analysis.processedAt)}</span>
+          <span><strong>Confidence:</strong> {analysis.overallConfidence}</span>
+        </div>
+        <div style={{ borderTop: "2px solid #4F7CAC", marginTop: "12px" }} />
+      </div>
+
+      {/* Plain English */}
+      {pe && (
+        <div className="print-section">
+          <h2 className="print-section-title">Plain English Summary</h2>
+          {pe.whatItIs && <><h3 className="print-subsection-title">What this is</h3><p className="print-body">{pe.whatItIs}</p></>}
+          {pe.whatItSays && <><h3 className="print-subsection-title">What it says</h3><p className="print-body">{pe.whatItSays}</p></>}
+          {pe.whatItAsks && <><h3 className="print-subsection-title">What it asks from you</h3><p className="print-body">{pe.whatItAsks}</p></>}
+          {pe.obligations && <><h3 className="print-subsection-title">What you may be agreeing to</h3><p className="print-body">{pe.obligations}</p></>}
+          {pe.payAttentionTo && <><h3 className="print-subsection-title">What to pay attention to</h3><p className="print-body">{pe.payAttentionTo}</p></>}
+        </div>
+      )}
+
+      {/* Checklist */}
+      {analysis.actionSteps.length > 0 && (
+        <div className="print-section print-break">
+          <h2 className="print-section-title">Action Steps ({analysis.actionSteps.length})</h2>
+          {analysis.actionSteps.map((step, i) => (
+            <div key={step.id} className="print-check-item">
+              <div className="print-checkbox" />
+              <div>
+                <div className="print-item-title">{i + 1}. {step.title}
+                  <span className="print-badge">{step.priority.toUpperCase()}</span>
+                </div>
+                {step.description && <p className="print-item-desc">{step.description}</p>}
+                {step.deadline && <p className="print-item-meta">Deadline: {step.deadline}</p>}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Required Docs */}
+      {analysis.requiredDocuments.length > 0 && (
+        <div className="print-section">
+          <h2 className="print-section-title">Required Documents ({analysis.requiredDocuments.length})</h2>
+          {analysis.requiredDocuments.map(doc => (
+            <div key={doc.id} className="print-check-item">
+              <div className="print-checkbox" />
+              <div>
+                <div className="print-item-title">{doc.name}
+                  {doc.required && <span className="print-badge">REQUIRED</span>}
+                </div>
+                {doc.description && <p className="print-item-desc">{doc.description}</p>}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Deadlines */}
+      {analysis.deadlines.length > 0 && (
+        <div className="print-section">
+          <h2 className="print-section-title">Deadlines ({analysis.deadlines.length})</h2>
+          {analysis.deadlines.map(d => (
+            <div key={d.id} className="print-check-item">
+              <div>
+                <div className="print-item-title">{d.title}
+                  <span className="print-badge" style={{ background: d.isHard ? "#fef2f2" : "#f0fdf4", color: d.isHard ? "#dc2626" : "#16a34a", borderColor: d.isHard ? "#fecaca" : "#bbf7d0" }}>
+                    {d.isHard ? "HARD DEADLINE" : "FLEXIBLE"}
+                  </span>
+                </div>
+                {(d.date || d.description) && <p className="print-item-meta">{d.date ?? d.description}</p>}
+                {d.consequence && <p className="print-item-desc">Consequence: {d.consequence}</p>}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Risks */}
+      {analysis.risks.length > 0 && (
+        <div className="print-section print-break">
+          <h2 className="print-section-title">Risks & Notes ({analysis.risks.length})</h2>
+          {analysis.risks.map(r => (
+            <div key={r.id} className="print-check-item">
+              <div>
+                <div className="print-item-title">{r.title}
+                  <span className="print-badge" style={{ background: r.severity === "high" ? "#fef2f2" : r.severity === "medium" ? "#fffbeb" : "#eff6ff", color: r.severity === "high" ? "#dc2626" : r.severity === "medium" ? "#d97706" : "#2563eb", borderColor: r.severity === "high" ? "#fecaca" : r.severity === "medium" ? "#fde68a" : "#bfdbfe" }}>
+                    {r.severity.toUpperCase()}
+                  </span>
+                </div>
+                {r.description && <p className="print-item-desc">{r.description}</p>}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Key Terms */}
+      {analysis.keyTerms && analysis.keyTerms.length > 0 && (
+        <div className="print-section">
+          <h2 className="print-section-title">Key Terms ({analysis.keyTerms.length})</h2>
+          {analysis.keyTerms.map(kt => (
+            <div key={kt.id} className="print-check-item">
+              <div>
+                <div className="print-item-title">{kt.term}
+                  <span className="print-badge">{kt.severity.toUpperCase()}</span>
+                  {kt.category && <span className="print-badge" style={{ background: "#f0f9ff", color: "#0369a1", borderColor: "#bae6fd" }}>{kt.category}</span>}
+                </div>
+                {kt.explanation && <p className="print-item-desc">{kt.explanation}</p>}
+                {kt.watchOut && <p className="print-item-meta">Watch out: {kt.watchOut}</p>}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Action Pack */}
+      {pack && (
+        <div className="print-section print-break">
+          <h2 className="print-section-title">Action Pack</h2>
+          {pack.questionsToAsk && pack.questionsToAsk.length > 0 && (
+            <>
+              <h3 className="print-subsection-title">Questions to Ask</h3>
+              {pack.questionsToAsk.map((q, i) => (
+                <div key={q.id} className="print-check-item">
+                  <div>
+                    <div className="print-item-title">"{q.question}"</div>
+                    {q.context && <p className="print-item-desc">→ {q.context}</p>}
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
+          {pack.whatToGather && pack.whatToGather.length > 0 && (
+            <>
+              <h3 className="print-subsection-title">What to Gather</h3>
+              {pack.whatToGather.map(g => (
+                <div key={g.id} className="print-check-item">
+                  <div className="print-checkbox" />
+                  <div>
+                    <div className="print-item-title">{g.item}
+                      {g.category && <span className="print-badge">{g.category}</span>}
+                    </div>
+                    {g.description && <p className="print-item-desc">{g.description}</p>}
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
+          {pack.whatToSay && pack.whatToSay.length > 0 && (
+            <>
+              <h3 className="print-subsection-title">Draft Messages</h3>
+              {pack.whatToSay.map(s => (
+                <div key={s.id} style={{ marginBottom: "10px" }}>
+                  <div className="print-item-title">{s.label}</div>
+                  <pre style={{ fontSize: "8pt", lineHeight: 1.5, whiteSpace: "pre-wrap", fontFamily: "inherit", background: "#f8f9fa", padding: "8px", borderRadius: "4px", border: "1px solid #e5e7eb", margin: "4px 0 0 0" }}>{s.draft}</pre>
+                </div>
+              ))}
+            </>
+          )}
+          {pack.beforeYouActChecklist && pack.beforeYouActChecklist.length > 0 && (
+            <>
+              <h3 className="print-subsection-title">Before You Act</h3>
+              {pack.beforeYouActChecklist.map((c, i) => (
+                <div key={c.id} className="print-check-item">
+                  <div className="print-checkbox" />
+                  <div className="print-item-title">{i + 1}. {c.text}</div>
+                </div>
+              ))}
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Footer */}
+      <div style={{ borderTop: "1px solid #e5e7eb", marginTop: "20px", paddingTop: "10px", fontSize: "8pt", color: "#888", display: "flex", justifyContent: "space-between" }}>
+        <span>Generated by PlainPath · plainpath.replit.app</span>
+        <span>Not legal, financial, or professional advice.</span>
       </div>
     </div>
   )

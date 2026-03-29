@@ -1,0 +1,93 @@
+Feature lock remains active.
+Do not redesign the app.
+Do not add unrelated features or new major systems.
+
+V1 is stable. The next approved feature is:
+Export / Share full analysis.
+
+Goal:
+Let users take a completed PlainPath analysis and export or share it in a polished, useful format without adding cloud accounts or server-side sharing.
+
+Build this in direct implementation mode.
+
+Requirements:
+
+1. Add an Export / Share action on the analysis/results page
+- clear, production-ready placement
+- works for both fresh analyses and reopened saved analyses
+- keep current Save and Print actions intact unless improving them is necessary
+
+2. Export scope
+The exported output should include the core PlainPath analysis in a clean, organized report:
+- document title
+- selected document type
+- analysis date
+- Plain English
+- Checklist
+- Required Docs
+- Deadlines
+- Risks
+- What’s Missing
+- Key Terms
+- Action Pack
+
+Do not include noisy internal/debug data.
+
+3. Export formats
+Implement the most reliable web-first export/share options:
+A. Print / Save as PDF friendly report
+- polished export layout
+- light-friendly output
+- good spacing and hierarchy
+- no broken tabs/navigation in print view
+
+B. Copy summary/share text
+- allow copying a useful condensed version of the analysis
+- should be readable when pasted into email/notes/messages
+
+C. Native share where supported
+- use Web Share API when available
+- graceful fallback when not available
+
+D. Optional lightweight download format if appropriate
+- only if it can be done cleanly without overcomplicating the app
+- prefer a simple, reliable format over complexity
+
+4. No server-side sharing
+- do not create public share links
+- do not add accounts/auth
+- do not add cloud sync
+- keep export/share local to the current device/session model
+
+5. UX requirements
+- premium and trustworthy
+- mobile-friendly
+- light/dark mode compatible
+- export output should remain professional and easy to scan
+- if needed, force export/print output to a light report style for readability
+
+6. Saved Analyses compatibility
+- exported output must work when a user reopens a saved analysis from My Analyses
+- no reprocessing should be required just to export a saved result
+
+7. Keep all existing V1 features untouched
+Do not remove tabs.
+Do not replace current logic.
+Do not alter privacy behavior except where wording must be clarified.
+
+8. Test after implementation
+- all 3 demos
+- a real analysis flow
+- a reopened saved analysis
+- desktop export
+- mobile export/share behavior
+- copy fallback behavior
+- print/PDF output
+
+When finished, return:
+A. files updated
+B. exactly what export/share options now exist
+C. what content is included in the exported report
+D. how mobile vs desktop behavior differs
+E. screenshots of the export/share flow
+F. any remaining blockers

@@ -31,7 +31,7 @@ A polished full-stack web app that turns confusing paperwork (PDFs, pasted text)
 - **Confidence badges** — High/Medium/Low on every extracted item (dark-mode aware)
 - **Source evidence** — Tooltips showing the exact document excerpt that supports each extracted item
 - **Priority badges** — High/Medium/Low on action steps (dark-mode aware)
-- **Print export** — `window.print()` always renders in light mode regardless of active theme
+- **Export / Share** — "Export" dropdown button in analyze header (replaces old Print button): Print/PDF (`window.print()` with dedicated print-only report), Copy as text (full analysis as plain text to clipboard, shows "Copied!" feedback), Download .txt (blob download with slug filename), Share (Web Share API, shown only when `navigator.share` is available). A hidden `PrintReport` component renders all 10 sections in a clean print layout (shown only in `@media print`). The tab panels are hidden in print via `.no-print` class, and only `PrintReport` is shown via `.print-only` class.
 - **3 built-in demos** — event-permit, school-enrollment, grant-application with rich pre-analyzed data including Plain English sections
 - **Dark / Light / System theme** — Persisted, FOUC-free, covers every page and component
 
