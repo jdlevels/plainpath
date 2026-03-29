@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react"
+import React, { useEffect, useState, useCallback } from "react"
 import { useLocation, useSearch } from "wouter"
 import { useGetDemoDocument, useUpdateChecklist } from "@workspace/api-client-react"
 import { useAnalysisContext } from "@/context/AnalysisContext"
@@ -13,7 +13,8 @@ import {
   Loader2, FileText, ListTodo, Calendar, AlertTriangle,
   Printer, ArrowLeft, CheckCircle2, AlertCircle, XCircle,
   ArrowRight, ShieldCheck, Clock, TrendingUp, BookOpen,
-  HelpCircle, ChevronDown, Lightbulb, Eye, Shield, Zap
+  HelpCircle, ChevronDown, Lightbulb, Eye, Shield, Zap,
+  AlignLeft, MessageSquare, X
 } from "lucide-react"
 import { PriorityBadge } from "@/components/shared/PriorityBadge"
 import { ConfidenceBadge } from "@/components/shared/ConfidenceBadge"
@@ -24,13 +25,14 @@ import { isNative } from "@/lib/platform"
 import { getApiBaseUrl } from "@/lib/api"
 
 const TABS = [
-  { id: "plain-english", label: "Plain English", icon: BookOpen                                    },
-  { id: "summary",       label: "Overview",       icon: FileText                                   },
-  { id: "missing",       label: "What's Missing", icon: XCircle                                   },
-  { id: "checklist",     label: "Checklist",      icon: ListTodo,    countKey: "actionSteps"       },
-  { id: "documents",     label: "Required Docs",  icon: ShieldCheck, countKey: "requiredDocuments" },
-  { id: "deadlines",     label: "Deadlines",      icon: Calendar,    countKey: "deadlines"         },
-  { id: "risks",         label: "Risks & Notes",  icon: AlertTriangle                              },
+  { id: "plain-english",   label: "Plain English",   icon: BookOpen                                    },
+  { id: "source-sections", label: "Source Sections", icon: AlignLeft                                   },
+  { id: "summary",         label: "Overview",         icon: FileText                                   },
+  { id: "missing",         label: "What's Missing",   icon: XCircle                                   },
+  { id: "checklist",       label: "Checklist",        icon: ListTodo,    countKey: "actionSteps"       },
+  { id: "documents",       label: "Required Docs",    icon: ShieldCheck, countKey: "requiredDocuments" },
+  { id: "deadlines",       label: "Deadlines",        icon: Calendar,    countKey: "deadlines"         },
+  { id: "risks",           label: "Risks & Notes",    icon: AlertTriangle                              },
 ]
 
 export default function Analyze() {
@@ -193,13 +195,14 @@ export default function Analyze() {
                 className="p-4 sm:p-7 md:p-10"
               >
 
-                {activeTab === "plain-english" && <PlainEnglishTab analysis={analysis} onTabChange={setActiveTab} />}
-                {activeTab === "summary"      && <SummaryTab   analysis={analysis} onTabChange={setActiveTab} />}
-                {activeTab === "missing"      && <WhatsMissingTab analysis={analysis} onActionToggle={handleActionToggle} onDocToggle={handleDocToggle} onTabChange={setActiveTab} />}
-                {activeTab === "checklist"    && <ChecklistTab  analysis={analysis} onToggle={handleActionToggle} documentTypeHint={documentTypeHint} />}
-                {activeTab === "documents"    && <DocumentsTab  analysis={analysis} onToggle={handleDocToggle} />}
-                {activeTab === "deadlines"    && <DeadlinesTab  analysis={analysis} />}
-                {activeTab === "risks"        && <RisksTab      analysis={analysis} />}
+                {activeTab === "plain-english"   && <PlainEnglishTab analysis={analysis} onTabChange={setActiveTab} />}
+                {activeTab === "source-sections" && <SourceSectionsTab analysis={analysis} documentTypeHint={documentTypeHint} />}
+                {activeTab === "summary"         && <SummaryTab   analysis={analysis} onTabChange={setActiveTab} />}
+                {activeTab === "missing"         && <WhatsMissingTab analysis={analysis} onActionToggle={handleActionToggle} onDocToggle={handleDocToggle} onTabChange={setActiveTab} />}
+                {activeTab === "checklist"       && <ChecklistTab  analysis={analysis} onToggle={handleActionToggle} documentTypeHint={documentTypeHint} />}
+                {activeTab === "documents"       && <DocumentsTab  analysis={analysis} onToggle={handleDocToggle} />}
+                {activeTab === "deadlines"       && <DeadlinesTab  analysis={analysis} />}
+                {activeTab === "risks"           && <RisksTab      analysis={analysis} />}
 
               </motion.div>
             </AnimatePresence>
@@ -992,6 +995,274 @@ function LoadingScreen() {
             ))}
           </div>
         </div>
+      </div>
+    </div>
+  )
+}
+
+interface SourceExplainResult {
+  meaning: string
+  requires: string
+  whyItMatters: string
+  risks: string
+  questionsToAsk: string
+}
+
+interface SectionCardProps {
+  id: string
+  title?: string
+  content: string
+  isSelected: boolean
+  isLoadingExplain: boolean
+  expandedBelow: boolean
+  explainResult: SourceExplainResult | null
+  onSelect: () => void
+  onClose: () => void
+  documentTypeHint: string | null
+}
+
+function SourceExplainPanel({
+  title,
+  result,
+  isLoading,
+  onClose,
+  showClose,
+}: {
+  title?: string
+  result: SourceExplainResult | null
+  isLoading: boolean
+  onClose?: () => void
+  showClose?: boolean
+}) {
+  const panels = result
+    ? [
+        { icon: <BookOpen className="w-3.5 h-3.5" />, label: "What it means", text: result.meaning, color: "text-blue-600 dark:text-blue-400" },
+        { icon: <ListTodo className="w-3.5 h-3.5" />, label: "What it requires", text: result.requires, color: "text-purple-600 dark:text-purple-400" },
+        { icon: <Zap className="w-3.5 h-3.5" />, label: "Why it matters", text: result.whyItMatters, color: "text-amber-600 dark:text-amber-400" },
+        { icon: <Shield className="w-3.5 h-3.5" />, label: "Risks & implications", text: result.risks, color: "text-red-600 dark:text-red-400" },
+        { icon: <MessageSquare className="w-3.5 h-3.5" />, label: "Questions to ask", text: result.questionsToAsk, color: "text-green-600 dark:text-green-400" },
+      ]
+    : null
+
+  return (
+    <div className="rounded-2xl border border-border/40 bg-card shadow-sm overflow-hidden">
+      <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-border/30 bg-muted/30">
+        <div className="flex items-center gap-2 min-w-0">
+          <Lightbulb className="w-4 h-4 text-amber-500 shrink-0" />
+          <span className="text-xs font-semibold text-foreground truncate">
+            {title ? `"${title}"` : "Plain-English Breakdown"}
+          </span>
+        </div>
+        {showClose && onClose && (
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors shrink-0">
+            <X className="w-4 h-4" />
+          </button>
+        )}
+      </div>
+      <div className="p-4 space-y-3">
+        {isLoading ? (
+          <div className="space-y-3">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="space-y-1.5">
+                <div className="h-2.5 w-24 rounded-full bg-secondary animate-pulse" />
+                <div className="h-3 w-full rounded-full bg-secondary/70 animate-pulse" />
+                <div className="h-3 w-4/5 rounded-full bg-secondary/50 animate-pulse" />
+              </div>
+            ))}
+          </div>
+        ) : panels ? (
+          panels.map((p, i) => (
+            <div key={i} className="space-y-0.5">
+              <div className={`flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide ${p.color}`}>
+                {p.icon}
+                {p.label}
+              </div>
+              <p className="text-sm text-foreground leading-relaxed">{p.text}</p>
+            </div>
+          ))
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
+function SectionCard({
+  id, title, content, isSelected, isLoadingExplain, expandedBelow,
+  explainResult, onSelect, onClose, documentTypeHint,
+}: SectionCardProps) {
+  return (
+    <div className="flex flex-col">
+      <button
+        onClick={isSelected ? onClose : onSelect}
+        className={[
+          "w-full text-left rounded-xl border transition-all duration-150 p-4 group",
+          isSelected
+            ? "border-foreground/30 bg-foreground/[0.04] ring-1 ring-foreground/10"
+            : "border-border/30 bg-card hover:border-border/60 hover:bg-muted/20",
+        ].join(" ")}
+      >
+        {title && (
+          <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
+            {title}
+          </div>
+        )}
+        <p className="text-sm text-foreground/80 leading-relaxed line-clamp-3">{content}</p>
+        <div
+          className={[
+            "mt-2.5 flex items-center gap-1 text-xs font-medium transition-colors",
+            isSelected ? "text-foreground" : "text-muted-foreground group-hover:text-foreground",
+          ].join(" ")}
+        >
+          {isLoadingExplain ? (
+            <><Loader2 className="w-3.5 h-3.5 animate-spin" />Explaining…</>
+          ) : isSelected ? (
+            <><ChevronDown className="w-3.5 h-3.5 rotate-180 transition-transform duration-150" />Hide explanation</>
+          ) : (
+            <><Lightbulb className="w-3.5 h-3.5" />Explain this section</>
+          )}
+        </div>
+      </button>
+
+      <AnimatePresence>
+        {expandedBelow && (
+          <motion.div
+            key={`explain-${id}`}
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.18 }}
+            className="overflow-hidden mt-2"
+          >
+            <SourceExplainPanel
+              title={title}
+              result={explainResult}
+              isLoading={isLoadingExplain}
+              onClose={onClose}
+              showClose={true}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+function SourceSectionsTab({ analysis, documentTypeHint }: { analysis: DocumentAnalysis; documentTypeHint: string | null }) {
+  const sections = analysis.sections ?? []
+  const [selectedId, setSelectedId] = React.useState<string | null>(null)
+  const [loadingId, setLoadingId] = React.useState<string | null>(null)
+  const [explainCache, setExplainCache] = React.useState<Record<string, SourceExplainResult>>({})
+
+  const fetchExplain = React.useCallback(async (sectionId: string, content: string, title?: string) => {
+    if (explainCache[sectionId]) {
+      setSelectedId(sectionId)
+      return
+    }
+    setSelectedId(sectionId)
+    setLoadingId(sectionId)
+    try {
+      const body: Record<string, string> = { sectionContent: content }
+      if (title) body.sectionTitle = title
+      if (documentTypeHint) body.documentTypeHint = documentTypeHint
+      const res = await fetch(`${getApiBaseUrl()}/api/documents/explain-source-section`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setExplainCache((prev) => ({ ...prev, [sectionId]: data.explanation }))
+      }
+    } catch {
+    } finally {
+      setLoadingId(null)
+    }
+  }, [explainCache, documentTypeHint])
+
+  const handleClose = React.useCallback(() => {
+    setSelectedId(null)
+  }, [])
+
+  const desktopResult = selectedId ? (explainCache[selectedId] ?? null) : null
+  const desktopLoading = loadingId !== null && loadingId === selectedId
+  const desktopTitle = selectedId ? sections.find((s) => s.id === selectedId)?.title : undefined
+
+  if (sections.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
+        <AlignLeft className="w-10 h-10 text-muted-foreground/40" />
+        <p className="text-base font-medium text-muted-foreground">No source sections found</p>
+        <p className="text-sm text-muted-foreground/70 max-w-xs">
+          Source sections appear when the document contains readable text that can be broken into sections.
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-2 mb-1">
+        <AlignLeft className="w-4 h-4 text-muted-foreground" />
+        <span className="text-sm font-medium text-muted-foreground">
+          {sections.length} section{sections.length !== 1 ? "s" : ""} extracted — click any to get a plain-English breakdown
+        </span>
+      </div>
+
+      {/* Desktop: 2-column layout */}
+      <div className="hidden lg:grid lg:grid-cols-[1fr_360px] lg:gap-5">
+        <div className="max-h-[62vh] overflow-y-auto pr-1 space-y-2">
+          {sections.map((s) => (
+            <SectionCard
+              key={s.id}
+              id={s.id}
+              title={s.title}
+              content={s.content}
+              isSelected={selectedId === s.id}
+              isLoadingExplain={loadingId === s.id}
+              expandedBelow={false}
+              explainResult={null}
+              onSelect={() => fetchExplain(s.id, s.content, s.title)}
+              onClose={handleClose}
+              documentTypeHint={documentTypeHint}
+            />
+          ))}
+        </div>
+        <div className="max-h-[62vh] overflow-y-auto">
+          {selectedId ? (
+            <SourceExplainPanel
+              key={selectedId}
+              title={desktopTitle}
+              result={desktopResult}
+              isLoading={desktopLoading}
+              onClose={handleClose}
+              showClose={true}
+            />
+          ) : (
+            <div className="rounded-2xl border border-dashed border-border/40 p-8 flex flex-col items-center justify-center text-center gap-3 h-48">
+              <Lightbulb className="w-8 h-8 text-muted-foreground/30" />
+              <p className="text-sm text-muted-foreground">Select a section to get a plain-English breakdown</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Mobile: single column with inline expansion */}
+      <div className="lg:hidden space-y-2">
+        {sections.map((s) => (
+          <SectionCard
+            key={s.id}
+            id={s.id}
+            title={s.title}
+            content={s.content}
+            isSelected={selectedId === s.id}
+            isLoadingExplain={loadingId === s.id}
+            expandedBelow={selectedId === s.id}
+            explainResult={explainCache[s.id] ?? null}
+            onSelect={() => fetchExplain(s.id, s.content, s.title)}
+            onClose={handleClose}
+            documentTypeHint={documentTypeHint}
+          />
+        ))}
       </div>
     </div>
   )

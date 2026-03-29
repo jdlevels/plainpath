@@ -259,6 +259,43 @@ export const demoDocuments: Record<string, DocumentAnalysis> = {
         sourceEvidence: "Section 6.2",
       },
     ],
+    sections: [
+      {
+        id: "sec-1",
+        title: "PURPOSE AND SCOPE",
+        content: "This packet governs the application process for a Special Event Permit required for any public or semi-public event held on city property or public right-of-way. All events with expected attendance of 50 or more persons must obtain a permit prior to the event date. Failure to obtain a permit may result in the event being shut down by law enforcement.",
+      },
+      {
+        id: "sec-2",
+        title: "SECTION 1: ELIGIBILITY REQUIREMENTS",
+        content: "The applicant must be a registered business entity, nonprofit organization, or individual resident of the city. Applicants must not have any outstanding permit violations, unpaid city fines, or revoked permits within the preceding 24 months. Organizations applying on behalf of a business must provide proof of authorization from the business owner.",
+      },
+      {
+        id: "sec-3",
+        title: "SECTION 2: APPLICATION REQUIREMENTS",
+        content: "Applicants must submit Form SE-100 in its entirety at least 45 calendar days before the event date. Required attachments include a detailed site plan, event schedule, crowd management plan, and contact information for on-site coordinators. Applications submitted fewer than 30 days before the event date will not be accepted.",
+      },
+      {
+        id: "sec-4",
+        title: "SECTION 3: INSURANCE REQUIREMENTS",
+        content: "All applicants must provide a Certificate of General Liability Insurance with minimum coverage of $1,000,000 per occurrence and $2,000,000 aggregate. The City must be named as an additional insured on the policy. Proof of workers' compensation coverage is required if the event involves paid staff or contractors.",
+      },
+      {
+        id: "sec-5",
+        title: "SECTION 4: DEPARTMENTAL SIGN-OFFS",
+        content: "Before a permit is issued, applicants must obtain written approval from the Parks Department, Public Works, Fire Marshal, and Police Department. Each department may impose additional conditions. It is the applicant's responsibility to schedule inspections and secure all departmental approvals before the permit processing deadline.",
+      },
+      {
+        id: "sec-6",
+        title: "SECTION 5: PERMIT FEES",
+        content: "The non-refundable application fee is $150. Additional fees apply based on event size: $200 for 50–200 attendees, $500 for 201–1,000 attendees, $1,200 for events exceeding 1,000 attendees. Fees for temporary road closures, park usage, and additional police or fire personnel will be assessed separately by the relevant department.",
+      },
+      {
+        id: "sec-7",
+        title: "SECTION 6: APPROVAL PROCESS AND TIMELINE",
+        content: "After all departmental approvals and fees are received, the City Clerk's Office will review the complete application within 10 business days. You will receive written notification of approval, conditional approval, or denial. Denied applications may be appealed to the City Council within 14 days. Allow 6–8 weeks total from submission to permit issuance.",
+      },
+    ],
     plainEnglish: {
       whatItIs:
         "This is a government permit application packet issued by the city to allow a small business to host a public event. It is used by the city to ensure events are safe, insured, and coordinated with relevant departments such as police, fire, and health.",
@@ -509,6 +546,42 @@ export const demoDocuments: Record<string, DocumentAnalysis> = {
           "Missing the April 15 priority enrollment window may result in your child being placed at a school other than your neighborhood school.",
         severity: "medium",
         sourceEvidence: "Section 4.1",
+      },
+    ],
+    sections: [
+      {
+        id: "sec-1",
+        content: "Welcome to Springfield Unified School District. This enrollment packet contains all forms and information required to register your child for the upcoming school year. Please read all instructions carefully and submit completed forms to your assigned school's enrollment office.",
+      },
+      {
+        id: "sec-2",
+        title: "SECTION 1: RESIDENCY REQUIREMENTS",
+        content: "To enroll in the Springfield Unified School District, you must provide proof that your child resides within district boundaries. Acceptable proof of residency includes a current utility bill, mortgage statement, rental agreement, or official government mail dated within the last 60 days. A single document is sufficient if it includes both the parent/guardian name and service address.",
+      },
+      {
+        id: "sec-3",
+        title: "SECTION 2: REQUIRED DOCUMENTS",
+        content: "The following documents are required for all new enrollees: (1) original birth certificate or passport, (2) proof of residency as described in Section 1, (3) immunization records meeting state requirements, (4) most recent school records or transcripts for grades 1 and above, and (5) completed emergency contact form. Enrollment cannot be processed until all required documents are received.",
+      },
+      {
+        id: "sec-4",
+        title: "SECTION 3: IMMUNIZATION RECORDS",
+        content: "California state law requires all students to be fully immunized before attending school. Required vaccines include DTaP, Polio, MMR, Hepatitis B, and Varicella (chickenpox). Students without up-to-date records may be excluded from school until records are provided. Medical and religious exemptions must be accompanied by official documentation from a licensed physician.",
+      },
+      {
+        id: "sec-5",
+        title: "SECTION 4: ENROLLMENT DEADLINES",
+        content: "Enrollment for the fall semester opens March 1 and closes June 30. Late enrollments received after July 15 will be placed on a waitlist and processed based on availability. Kindergarten placement requires enrollment no later than May 31. After enrollment closes, families must contact the district office to request a late enrollment waiver.",
+      },
+      {
+        id: "sec-6",
+        title: "SECTION 5: SCHOOL PLACEMENT POLICY",
+        content: "Students will be assigned to their neighborhood school based on their home address. Requests for transfers to a different school within the district may be submitted using the Inter-District Transfer Request form. Transfers are not guaranteed and are subject to space availability and district approval. Transfer decisions are final and are communicated within 30 days of request.",
+      },
+      {
+        id: "sec-7",
+        title: "SECTION 6: SPECIAL NEEDS AND SUPPORT SERVICES",
+        content: "If your child has an Individualized Education Program (IEP), 504 Plan, or other documented educational support needs, please include a copy with your enrollment packet. The district's Special Education office will contact you within 10 business days to discuss placement and support services. Do not assume existing accommodations transfer automatically from another school.",
       },
     ],
     plainEnglish: {
@@ -786,6 +859,42 @@ export const demoDocuments: Record<string, DocumentAnalysis> = {
           "Financial statements must match your tax returns exactly. Discrepancies may disqualify your application or trigger additional review. Have a bookkeeper or accountant verify before submission.",
         severity: "medium",
         sourceEvidence: "Section 3.4",
+      },
+    ],
+    sections: [
+      {
+        id: "sec-1",
+        content: "The Springfield Community Development Grant Program provides financial assistance to qualifying small businesses within city limits. This application is your formal request for grant funding and will be evaluated by a review committee. Submitting this application does not guarantee an award.",
+      },
+      {
+        id: "sec-2",
+        title: "SECTION 1: ELIGIBILITY REQUIREMENTS",
+        content: "To qualify, your business must be located within Springfield city limits, have been in continuous operation for at least 12 months, employ 25 or fewer full-time equivalent employees, and demonstrate a net annual revenue below $2,000,000. Businesses currently in default on any government loan or with unresolved tax liens are not eligible.",
+      },
+      {
+        id: "sec-3",
+        title: "SECTION 2: APPROVED USES OF GRANT FUNDS",
+        content: "Grant funds may only be used for the following approved purposes: (a) purchase of equipment or machinery directly related to business operations, (b) exterior or interior facility improvements approved by the review committee, (c) costs associated with hiring new full-time employees within the grant period. Personal expenses, debt repayment, and working capital are not eligible uses.",
+      },
+      {
+        id: "sec-4",
+        title: "SECTION 3: REQUIRED APPLICATION MATERIALS",
+        content: "Your application must include: a completed application form, a current business plan (no more than 15 pages), the most recent two years of financial statements or tax returns, a specific project description detailing how grant funds will be used and measured, two vendor quotes for any equipment over $1,000, and three business or professional references. Incomplete packages will not be reviewed.",
+      },
+      {
+        id: "sec-5",
+        title: "SECTION 4: REVIEW PROCESS AND SCORING",
+        content: "Applications are reviewed by a five-member panel using a 100-point scoring rubric. The primary scoring categories are: business plan quality (35 points), community economic impact (25 points), project feasibility (25 points), and financial health (15 points). Applications are ranked by score; highest scores receive awards first until funds are exhausted.",
+      },
+      {
+        id: "sec-6",
+        title: "SECTION 5: OBLIGATIONS IF AWARDED",
+        content: "If you receive a grant, you are required to: use funds only for the approved purpose stated in your application, maintain receipts for all expenditures, submit a progress report at 6 months, and submit a final report within 30 days of project completion. Failure to meet reporting requirements or misuse of funds may require full repayment and disqualify you from future programs.",
+      },
+      {
+        id: "sec-7",
+        title: "SECTION 6: SUBMISSION INSTRUCTIONS",
+        content: "Submit all materials in a single PDF or physical packet to the City Economic Development Office by the posted deadline at 5:00 PM. Late or partial submissions will not be accepted. Email submissions are not accepted. Award decisions will be communicated to all applicants within 90 days of the submission deadline.",
       },
     ],
     plainEnglish: {

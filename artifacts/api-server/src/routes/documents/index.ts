@@ -3,7 +3,65 @@ import { v4 as uuidv4 } from "uuid";
 import multer from "multer";
 import { openai } from "@workspace/integrations-openai-ai-server";
 import { demoDocuments } from "../../lib/demoData.js";
-import type { DocumentAnalysis } from "../../lib/types.js";
+import type { DocumentAnalysis, DocumentSection } from "../../lib/types.js";
+
+function extractSections(text: string): DocumentSection[] {
+  const normalized = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  const rawBlocks = normalized.split(/\n{2,}/);
+  const sections: DocumentSection[] = [];
+  let idx = 0;
+
+  for (const block of rawBlocks) {
+    const lines = block.split("\n").map((l) => l.trim()).filter(Boolean);
+    if (!lines.length) continue;
+
+    const firstLine = lines[0];
+    const isHeading =
+      lines.length > 1 &&
+      firstLine.length < 100 &&
+      (
+        (firstLine === firstLine.toUpperCase() && /[A-Z]/.test(firstLine) && firstLine.length > 3) ||
+        /^(\d+[\.\)]\s*|\d+\.\d+\s*|[A-Z]\.\s*|section\s+\d+|article\s+\d+|part\s+\d+)/i.test(firstLine) ||
+        (firstLine.endsWith(":") && lines.length > 1 && firstLine.length < 80)
+      );
+
+    let title: string | undefined;
+    let content: string;
+
+    if (isHeading) {
+      title = firstLine;
+      content = lines.slice(1).join(" ").trim();
+    } else {
+      content = lines.join(" ").trim();
+    }
+
+    if (content.length < 40) continue;
+
+    if (content.length > 700) {
+      const sentences = content.match(/[^.!?]+[.!?]+(\s+|$)/g) || [content];
+      let sub = "";
+      let isFirst = true;
+      for (const s of sentences) {
+        if (sub.length + s.length > 650 && sub.length > 100) {
+          sections.push({ id: `sec-${++idx}`, title: isFirst ? title : undefined, content: sub.trim() });
+          sub = s;
+          isFirst = false;
+        } else {
+          sub += s;
+        }
+      }
+      if (sub.trim().length >= 40) {
+        sections.push({ id: `sec-${++idx}`, content: sub.trim() });
+      }
+    } else {
+      sections.push({ id: `sec-${++idx}`, title, content });
+    }
+
+    if (sections.length >= 40) break;
+  }
+
+  return sections;
+}
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
@@ -93,7 +151,7 @@ Guidelines:
 - Mark isHard=true for deadlines with serious consequences (rejection, legal issues)
 - Priority: high = must do first or has dependencies, medium = important but flexible, low = optional`;
 
-async function runAnalysis(text: string, title?: string, documentTypeHint?: string): Promise<DocumentAnalysis> {
+async function runAnalysis(text: string, title?: string, documentTypeHint?: string, rawText?: string): Promise<DocumentAnalysis> {
   const hintLine = documentTypeHint ? `\nUser-specified document category: ${documentTypeHint}` : "";
   const userMessage = title
     ? `Document Title: ${title}${hintLine}\n\n---\n\n${text}`
@@ -167,6 +225,7 @@ async function runAnalysis(text: string, title?: string, documentTypeHint?: stri
     })),
     overallConfidence: parsed.overallConfidence || "medium",
     processedAt: new Date().toISOString(),
+    sections: extractSections(rawText ?? text),
     plainEnglish: parsed.plainEnglish && typeof parsed.plainEnglish === "object" ? {
       whatItIs: (parsed.plainEnglish as any).whatItIs || "",
       whatItSays: (parsed.plainEnglish as any).whatItSays || "",
@@ -258,12 +317,13 @@ router.post("/upload", upload.single("file"), async (req, res) => {
       });
     }
 
+    const rawTextForSections = extractedText;
     if (extractedText.length > 60000) {
       extractedText = extractedText.slice(0, 60000);
     }
 
     const documentTypeHint = typeof req.body?.documentTypeHint === "string" ? req.body.documentTypeHint : undefined;
-    const analysis = await runAnalysis(extractedText, detectedTitle, documentTypeHint);
+    const analysis = await runAnalysis(extractedText, detectedTitle, documentTypeHint, rawTextForSections);
     return res.json({ analysis });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
@@ -281,6 +341,60 @@ router.get("/demo/:demoId", (req, res) => {
     });
   }
   return res.json({ analysis: demo });
+});
+
+router.post("/explain-source-section", async (req, res) => {
+  const { sectionContent, sectionTitle, documentTypeHint } = req.body;
+
+  if (!sectionContent || typeof sectionContent !== "string" || sectionContent.trim().length < 10) {
+    return res.status(400).json({ error: "invalid_input", message: "sectionContent is required." });
+  }
+
+  const hintLine = documentTypeHint ? `\nDocument category: ${documentTypeHint}` : "";
+  const titleLine = sectionTitle ? `\nSection heading: "${sectionTitle}"` : "";
+  const prompt = `You are PlainPath, a document explanation engine.
+A user is reading a section of a legal, government, or administrative document and needs a plain-English breakdown.${hintLine}${titleLine}
+
+Section text:
+"""
+${sectionContent.slice(0, 2000)}
+"""
+
+Return ONLY a valid JSON object with this exact structure:
+{
+  "meaning": "string - 2-3 sentences explaining what this section means in plain, everyday English",
+  "requires": "string - 1-3 sentences on what this section specifically asks or requires from the reader, or 'Nothing specific is required from you in this section.' if none",
+  "whyItMatters": "string - 1-2 sentences on why this section is important and what depends on it",
+  "risks": "string - 1-3 sentences on any risks, obligations, hidden implications, or things that could go wrong — be specific and honest",
+  "questionsToAsk": "string - 2-3 practical questions the reader should consider asking a professional or the issuing authority before agreeing to or signing anything"
+}`;
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-5.2",
+      max_completion_tokens: 1200,
+      messages: [{ role: "user", content: prompt }],
+    });
+
+    const rawContent = response.choices[0]?.message?.content;
+    if (!rawContent) throw new Error("No response from explanation engine");
+
+    const cleaned = rawContent.trim().replace(/^```json\s*/i, "").replace(/\s*```$/i, "");
+    const parsed = JSON.parse(cleaned);
+
+    return res.json({
+      explanation: {
+        meaning: parsed.meaning || "",
+        requires: parsed.requires || "",
+        whyItMatters: parsed.whyItMatters || "",
+        risks: parsed.risks || "",
+        questionsToAsk: parsed.questionsToAsk || "",
+      },
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return res.status(500).json({ error: "explain_failed", message });
+  }
 });
 
 router.post("/explain-section", async (req, res) => {
