@@ -136,12 +136,15 @@ export default function Import() {
             const serverMessage = err?.data?.message
             const status = err?.status ?? 0
             let friendly: string
-            if (status === 400 && serverMessage) {
+            if (serverMessage) {
+              // Always prefer the server's own message — it's already user-friendly
               friendly = serverMessage
             } else if (status === 503) {
               friendly = "The analysis service is temporarily busy. Please wait a moment and try again."
             } else if (status === 504) {
               friendly = "Analysis is taking too long. Please try again — shorter documents process faster."
+            } else if (status === 0) {
+              friendly = "Network error. Please check your connection and try again."
             } else {
               friendly = "Analysis failed. Please try again. If the problem continues, try pasting a shorter section of your document."
             }

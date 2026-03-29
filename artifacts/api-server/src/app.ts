@@ -55,9 +55,23 @@ const CAPACITOR_ORIGINS = [
   "https://localhost",
 ];
 
+// Hard-coded production domain for plain-path.replit.app
+const KNOWN_PRODUCTION_ORIGINS = [
+  "https://plain-path.replit.app",
+];
+
+// CORS_ORIGINS env var — comma-separated list of additional allowed origins
 const configuredOrigins: string[] = process.env.CORS_ORIGINS
   ? process.env.CORS_ORIGINS.split(",")
       .map((o) => o.trim())
+      .filter(Boolean)
+  : [];
+
+// REPLIT_DOMAINS — Replit injects the deployment domain(s) here (no protocol prefix).
+// e.g. "plain-path.replit.app" or "abc123.replit.dev"
+const replitDomainOrigins: string[] = process.env.REPLIT_DOMAINS
+  ? process.env.REPLIT_DOMAINS.split(",")
+      .map((d) => `https://${d.trim()}`)
       .filter(Boolean)
   : [];
 
@@ -69,8 +83,18 @@ app.use(
       ? (origin, callback) => {
           // Allow requests with no origin header (same-origin, server-to-server, curl).
           if (!origin) return callback(null, true);
-          const allowed = [...CAPACITOR_ORIGINS, ...configuredOrigins];
+          const allowed = [
+            ...CAPACITOR_ORIGINS,
+            ...KNOWN_PRODUCTION_ORIGINS,
+            ...configuredOrigins,
+            ...replitDomainOrigins,
+          ];
           if (allowed.includes(origin)) return callback(null, true);
+          // Also allow any *.replit.app or *.repl.co origin for Replit-hosted deployments
+          if (/^https:\/\/[a-zA-Z0-9-]+\.replit\.app$/.test(origin) ||
+              /^https:\/\/[a-zA-Z0-9-]+\.repl\.co$/.test(origin)) {
+            return callback(null, true);
+          }
           logger.warn({ origin }, "CORS: rejected disallowed origin");
           callback(new Error("CORS: origin not allowed"));
         }
@@ -109,12 +133,6 @@ app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
 
   // Classify common error types that escape route handlers
   if (typeof errMsg === "string") {
-    if (errMsg.toLowerCase().includes("cors")) {
-      return res.status(403).json({
-        error: "cors_error",
-        message: "Request blocked. Please refresh the page and try again.",
-      });
-    }
     if (errMsg.toLowerCase().includes("timeout") || errMsg.toLowerCase().includes("timed out")) {
       return res.status(504).json({
         error: "timeout",
