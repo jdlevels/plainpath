@@ -1,0 +1,67 @@
+Feature lock remains active.
+Do not redesign the app.
+Do not add new product features.
+
+PlainPath V1 web is live and stable.
+We are now starting actual iPhone/Android packaging setup with Capacitor.
+
+Use the live deployed app/API URL as the native API base:
+https://plain-path.replit.app
+
+Goal:
+Create the real Capacitor foundation for iPhone and Android while keeping the current web app unchanged.
+
+Do this in order:
+
+1. Capacitor installation
+- install @capacitor/core and @capacitor/cli in the PlainPath app
+- use the existing PlainPath app directory, not a new project
+
+2. Capacitor config finalization
+- use/finalize capacitor.config.json for PlainPath
+- app name: PlainPath
+- appId: com.plainpath.app
+- set the correct webDir for the current build output
+- configure native builds so they use an absolute API base URL:
+  VITE_API_BASE_URL=https://plain-path.replit.app
+
+3. iPhone + Android platform setup
+- run the real Capacitor init/setup steps
+- add both platforms:
+  - ios
+  - android
+- sync the project
+
+4. Native compatibility pass
+- keep current web behavior unchanged
+- make only minimal changes needed for Capacitor compatibility
+- ensure print/export behavior does not silently fail in native mode
+- ensure any native-specific fallbacks are clean and intentional
+
+5. Config / environment readiness
+- confirm what env/config is required for native builds
+- confirm what CORS setting is required on the deployed API for native app requests
+- do not loosen security unnecessarily
+
+6. Verification
+- verify the web app still builds and runs after Capacitor integration
+- verify the Capacitor project structure is created cleanly
+- verify there are no major blockers preventing opening:
+  - iOS in Xcode
+  - Android in Android Studio
+
+Important constraints:
+- do not add unrelated features
+- do not add cloud sync, accounts, or new tabs
+- do not redesign the UI
+- keep the current V1 feature set intact
+- use the live deployed URL above as the native API base
+- only make changes required for native packaging readiness
+
+When finished, return:
+A. files updated
+B. packages installed
+C. commands run
+D. whether ios and android platform folders were created successfully
+E. any remaining blockers before device testing
+F. the exact next command I should use to start real device/emulator testing
