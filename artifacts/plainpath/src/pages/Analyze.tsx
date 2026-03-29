@@ -35,7 +35,7 @@ export default function Analyze() {
   const searchString = useSearch()
   const demoId = new URLSearchParams(searchString).get("demo") as string | null
 
-  const { analysis, setAnalysis, updateActionStep, updateRequiredDoc } = useAnalysisContext()
+  const { analysis, documentTypeHint, setAnalysis, updateActionStep, updateRequiredDoc } = useAnalysisContext()
   const [activeTab, setActiveTab] = useState("checklist")
 
   const { data: demoData, isLoading, error: demoError } = useGetDemoDocument(
@@ -87,7 +87,12 @@ export default function Analyze() {
             </button>
 
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-0.5">
+              <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                {documentTypeHint && (
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-primary/70 bg-primary/8 px-1.5 py-0.5 rounded-md">
+                    {documentTypeHint}
+                  </span>
+                )}
                 <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">{analysis.documentType}</span>
               </div>
               <h1 className="text-base font-bold truncate text-foreground leading-tight">{analysis.title}</h1>

@@ -85,8 +85,11 @@ Guidelines:
 - Mark isHard=true for deadlines with serious consequences (rejection, legal issues)
 - Priority: high = must do first or has dependencies, medium = important but flexible, low = optional`;
 
-async function runAnalysis(text: string, title?: string): Promise<DocumentAnalysis> {
-  const userMessage = title ? `Document Title: ${title}\n\n---\n\n${text}` : text;
+async function runAnalysis(text: string, title?: string, documentTypeHint?: string): Promise<DocumentAnalysis> {
+  const hintLine = documentTypeHint ? `\nUser-specified document category: ${documentTypeHint}` : "";
+  const userMessage = title
+    ? `Document Title: ${title}${hintLine}\n\n---\n\n${text}`
+    : `${hintLine ? hintLine + "\n\n" : ""}${text}`;
 
   const response = await openai.chat.completions.create({
     model: "gpt-5.2",
@@ -160,7 +163,7 @@ async function runAnalysis(text: string, title?: string): Promise<DocumentAnalys
 }
 
 router.post("/analyze", async (req, res) => {
-  const { text, title } = req.body;
+  const { text, title, documentTypeHint } = req.body;
 
   if (!text || typeof text !== "string" || text.trim().length < 50) {
     return res.status(400).json({
@@ -177,7 +180,7 @@ router.post("/analyze", async (req, res) => {
   }
 
   try {
-    const analysis = await runAnalysis(text, title);
+    const analysis = await runAnalysis(text, title, typeof documentTypeHint === "string" ? documentTypeHint : undefined);
     return res.json({ analysis });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
@@ -198,9 +201,19 @@ router.post("/upload", upload.single("file"), async (req, res) => {
 
   try {
     if (mime === "application/pdf" || originalName.endsWith(".pdf")) {
-      const pdfParse = (await import("pdf-parse")).default;
-      const result = await pdfParse(file.buffer);
-      extractedText = result.text;
+      const pdfMod = await import("pdf-parse/lib/pdf-parse.js");
+      const pdfParse: (buf: Buffer) => Promise<{ text: string }> =
+        (pdfMod as any).default ?? (pdfMod as any);
+      let pdfResult: { text: string };
+      try {
+        pdfResult = await pdfParse(file.buffer);
+      } catch {
+        return res.status(422).json({
+          error: "unreadable_pdf",
+          message: "This PDF could not be read. It may be corrupted, password-protected, or image-based. Please copy and paste the text instead.",
+        });
+      }
+      extractedText = pdfResult.text;
       if (!extractedText?.trim()) {
         return res.status(422).json({
           error: "unreadable_pdf",
@@ -233,7 +246,8 @@ router.post("/upload", upload.single("file"), async (req, res) => {
       extractedText = extractedText.slice(0, 60000);
     }
 
-    const analysis = await runAnalysis(extractedText, detectedTitle);
+    const documentTypeHint = typeof req.body?.documentTypeHint === "string" ? req.body.documentTypeHint : undefined;
+    const analysis = await runAnalysis(extractedText, detectedTitle, documentTypeHint);
     return res.json({ analysis });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";

@@ -3,7 +3,9 @@ import { useLocation } from "wouter"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   UploadCloud, ArrowRight, Loader2, AlertCircle,
-  Sparkles, Target, Zap, CheckCircle2, FileText, Type, File
+  Sparkles, Target, Zap, CheckCircle2, FileText, Type, File,
+  ArrowLeft, Building2, Scale, Heart, FileSignature,
+  Mail, ClipboardList, GraduationCap, HelpCircle
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -49,36 +51,47 @@ const ACCEPTED = ".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats
 
 const EXAMPLES = ["IRS notice", "Lease agreement", "Insurance EOB", "Permit application", "Court summons", "Grant instructions", "HOA violation", "Medicare letter"]
 
+const DOC_TYPES = [
+  { id: "Tax & Government Form",     label: "Tax & Government Form",    icon: Building2,    color: "text-blue-500",    bg: "bg-blue-50 dark:bg-blue-950/60"    },
+  { id: "Legal / Business Filing",   label: "Legal / Business Filing",  icon: Scale,        color: "text-purple-500",  bg: "bg-purple-50 dark:bg-purple-950/60" },
+  { id: "Healthcare / Insurance",    label: "Healthcare / Insurance",   icon: Heart,        color: "text-red-500",     bg: "bg-red-50 dark:bg-red-950/60"      },
+  { id: "Contract / Agreement",      label: "Contract / Agreement",     icon: FileSignature, color: "text-amber-500",  bg: "bg-amber-50 dark:bg-amber-950/60"  },
+  { id: "Bill / Notice / Summons",   label: "Bill / Notice / Summons",  icon: Mail,         color: "text-orange-500",  bg: "bg-orange-50 dark:bg-orange-950/60" },
+  { id: "Application / Permit",      label: "Application / Permit",     icon: ClipboardList, color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-950/60" },
+  { id: "School / Enrollment",       label: "School / Enrollment",      icon: GraduationCap, color: "text-indigo-500", bg: "bg-indigo-50 dark:bg-indigo-950/60" },
+  { id: "General / Unsure",          label: "General / Unsure",         icon: HelpCircle,   color: "text-slate-500",   bg: "bg-slate-50 dark:bg-slate-900/60"  },
+]
+
+type Step = "input" | "doctype" | "analyzing"
+type Payload = { kind: "text"; text: string } | { kind: "file"; file: File }
+
 export default function Import() {
   const [, setLocation] = useLocation()
-  const { setAnalysis } = useAnalysisContext()
+  const { setAnalysis, setDocumentTypeHint } = useAnalysisContext()
   const [mode, setMode] = useState<"paste" | "upload">("paste")
   const [text, setText] = useState("")
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [isDragging, setIsDragging] = useState(false)
-  const [isUploading, setIsUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
+  const [step, setStep] = useState<Step>("input")
+  const [pending, setPending] = useState<Payload | null>(null)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { mutate, isPending, error } = useAnalyzeDocument()
 
-  const handlePasteAnalyze = () => {
-    if (!text.trim()) return
-    mutate({ data: { text } }, {
-      onSuccess: (data) => { setAnalysis(data.analysis); setLocation("/analyze") },
-    })
+  const goToDocType = (payload: Payload) => {
+    setPending(payload)
+    setStep("doctype")
   }
 
-  const handleFileUpload = async (file: File) => {
-    if (file.size === 0) {
-      setUploadError("This file appears to be empty. Please check the file and try again.")
-      return
-    }
+  const handlePasteStage = () => {
+    if (!text.trim() || text.trim().length < 50) return
+    goToDocType({ kind: "text", text })
+  }
 
-    if (file.size > 20 * 1024 * 1024) {
-      setUploadError("File is too large. Maximum allowed size is 20 MB.")
-      return
-    }
-
+  const validateFile = (file: File): string | null => {
+    if (file.size === 0) return "This file appears to be empty. Please check the file and try again."
+    if (file.size > 20 * 1024 * 1024) return "File is too large. Maximum allowed size is 20 MB."
     const allowedTypes = [
       "application/pdf",
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -87,44 +100,81 @@ export default function Import() {
     const allowedExts = [".pdf", ".docx", ".txt"]
     const ext = "." + file.name.split(".").pop()?.toLowerCase()
     if (!allowedTypes.includes(file.type) && !allowedExts.includes(ext)) {
-      setUploadError("Unsupported file type. Please upload a PDF (.pdf), Word document (.docx), or plain text (.txt) file.")
-      return
+      return "Unsupported file type. Please upload a PDF (.pdf), Word document (.docx), or plain text (.txt) file."
     }
+    return null
+  }
 
-    setUploadedFile(file); setUploadError(null); setIsUploading(true)
-    const formData = new FormData()
-    formData.append("file", file)
-    try {
-      const apiBase = getApiBaseUrl()
-      const res = await fetch(`${apiBase}/api/documents/upload`, { method: "POST", body: formData })
-      let data: any = {}
-      try { data = await res.json() } catch { /* non-JSON response */ }
+  const stageFile = (file: File) => {
+    const err = validateFile(file)
+    if (err) { setUploadError(err); return }
+    setUploadedFile(file)
+    setUploadError(null)
+    goToDocType({ kind: "file", file })
+  }
 
-      if (!res.ok) {
-        const msg = data?.message || (res.status === 413
-          ? "File is too large. Maximum allowed size is 20 MB."
-          : res.status === 422
-          ? "Could not extract text from this file. If it's a scanned PDF, please copy and paste the text instead."
-          : "Upload failed. Please try again.")
-        setUploadError(msg); setIsUploading(false); return
+  const handleDocTypeSelect = async (docTypeLabel: string) => {
+    if (!pending) return
+    setDocumentTypeHint(docTypeLabel)
+    setIsAnalyzing(true)
+    setStep("analyzing")
+
+    if (pending.kind === "text") {
+      mutate(
+        { data: { text: pending.text, documentTypeHint: docTypeLabel } as any },
+        {
+          onSuccess: (data) => { setAnalysis(data.analysis); setLocation("/analyze") },
+          onError: () => { setIsAnalyzing(false); setStep("doctype") },
+        }
+      )
+    } else {
+      const formData = new FormData()
+      formData.append("file", pending.file)
+      formData.append("documentTypeHint", docTypeLabel)
+      try {
+        const apiBase = getApiBaseUrl()
+        const res = await fetch(`${apiBase}/api/documents/upload`, { method: "POST", body: formData })
+        let data: any = {}
+        try { data = await res.json() } catch { /* non-JSON response */ }
+
+        if (!res.ok) {
+          const msg = data?.message || (res.status === 413
+            ? "File is too large. Maximum allowed size is 20 MB."
+            : res.status === 422
+            ? "Could not extract text from this file. If it's a scanned PDF, please copy and paste the text instead."
+            : "Upload failed. Please try again.")
+          setUploadError(msg)
+          setIsAnalyzing(false)
+          setStep("input")
+          setMode("upload")
+          return
+        }
+        if (!data?.analysis) {
+          setUploadError("Analysis returned an unexpected result. Please try again.")
+          setIsAnalyzing(false)
+          setStep("input")
+          setMode("upload")
+          return
+        }
+        setAnalysis(data.analysis)
+        setLocation("/analyze")
+      } catch {
+        setUploadError("Network error. Please check your connection and try again.")
+        setIsAnalyzing(false)
+        setStep("input")
+        setMode("upload")
       }
-      if (!data?.analysis) {
-        setUploadError("Analysis returned an unexpected result. Please try again."); setIsUploading(false); return
-      }
-      setAnalysis(data.analysis); setLocation("/analyze")
-    } catch {
-      setUploadError("Network error. Please check your connection and try again."); setIsUploading(false)
     }
   }
 
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0]; if (f) handleFileUpload(f)
+    const f = e.target.files?.[0]; if (f) stageFile(f)
   }
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault(); setIsDragging(false)
-    const f = e.dataTransfer.files?.[0]; if (f) handleFileUpload(f)
+    const f = e.dataTransfer.files?.[0]; if (f) stageFile(f)
   }
-  const isWorking = isPending || isUploading
+  const isWorking = isPending || isAnalyzing
   const canAnalyze = !isWorking && text.trim().length >= 50
 
   return (
@@ -176,221 +226,304 @@ export default function Import() {
         >
           <Card className="overflow-hidden bg-card shadow-xl shadow-black/[0.07] dark:shadow-black/30 rounded-2xl border-border/40">
 
-            {/* Tab switcher */}
-            <div className="p-2 border-b border-border/30 bg-muted/30">
-              <div className="grid grid-cols-2 rounded-xl bg-secondary/70 p-1 gap-1">
-                {(["paste", "upload"] as const).map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => { setMode(tab); setUploadError(null); setUploadedFile(null) }}
-                    style={{ touchAction: "manipulation" }}
-                    className={`flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-semibold transition-all min-h-[48px] ${
-                      mode === tab
-                        ? "bg-card text-foreground shadow-sm shadow-black/[0.06]"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {tab === "paste" ? <Type className="w-4 h-4" /> : <UploadCloud className="w-4 h-4" />}
-                    {tab === "paste" ? "Paste Text" : "Upload File"}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="p-4 sm:p-7">
-              <AnimatePresence mode="wait">
-
-                {/* ── PASTE mode ─────────────────────── */}
-                {mode === "paste" && (
-                  <motion.div
-                    key="paste"
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 10 }}
-                    transition={{ duration: 0.14 }}
-                    className="space-y-4"
-                  >
-                    <div className="flex flex-wrap gap-1.5 items-center">
-                      <span className="text-xs text-muted-foreground/50 font-medium mr-0.5">e.g.</span>
-                      {EXAMPLES.map(ex => (
-                        <span key={ex} className="px-2.5 py-1 rounded-full bg-secondary/60 border border-border/40 text-[11px] font-medium text-muted-foreground">{ex}</span>
-                      ))}
-                    </div>
-
-                    <div className="relative">
-                      <textarea
-                        value={text}
-                        onChange={(e) => setText(e.target.value)}
-                        placeholder="Paste the full text of your document here..."
-                        className="w-full min-h-[140px] sm:min-h-[220px] p-4 rounded-xl border-2 border-border/50 bg-muted/20 focus:border-primary focus:ring-4 focus:ring-primary/8 resize-none transition-all placeholder:text-muted-foreground/35 text-sm leading-relaxed font-mono outline-none"
-                        disabled={isWorking}
-                      />
-                      {text.length > 0 && (
-                        <span className="absolute bottom-3 right-3 text-[10px] text-muted-foreground/40 font-mono select-none">
-                          {text.length.toLocaleString()} / 60,000
-                        </span>
+            {/* ── DOCTYPE step ─────────────────────────── */}
+            <AnimatePresence mode="wait">
+              {step === "doctype" || step === "analyzing" ? (
+                <motion.div
+                  key="doctype"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.18 }}
+                >
+                  {/* doctype header */}
+                  <div className="p-4 sm:p-6 border-b border-border/30">
+                    <div className="flex items-center gap-3">
+                      {step === "doctype" && (
+                        <button
+                          onClick={() => { setStep("input"); setPending(null) }}
+                          style={{ touchAction: "manipulation" }}
+                          className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-secondary active:bg-secondary transition-colors shrink-0"
+                        >
+                          <ArrowLeft className="w-4 h-4 text-muted-foreground" />
+                        </button>
                       )}
-                    </div>
-
-                    {error && (
-                      <ErrorBanner message={(error as any)?.message || "An error occurred. Please try again."} />
-                    )}
-
-                    <Button
-                      size="lg"
-                      onClick={handlePasteAnalyze}
-                      disabled={isWorking || text.trim().length < 50}
-                      style={{ touchAction: "manipulation" }}
-                      className="w-full h-14 text-base rounded-xl"
-                    >
-                      {isPending
-                        ? <><Loader2 className="mr-2 w-4 h-4 animate-spin" /> Analyzing document…</>
-                        : <>Generate Action Plan <ArrowRight className="ml-2 w-4 h-4" /></>
-                      }
-                    </Button>
-
-                    <p className="text-[11px] text-center text-muted-foreground/50">
-                      Minimum 50 characters · Your text is processed by AI for analysis and not stored by PlainPath
-                    </p>
-                  </motion.div>
-                )}
-
-                {/* ── UPLOAD mode ────────────────────── */}
-                {mode === "upload" && (
-                  <motion.div
-                    key="upload"
-                    initial={{ opacity: 0, x: 10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -10 }}
-                    transition={{ duration: 0.14 }}
-                    className="space-y-4"
-                  >
-                    {/* Mobile: prominent tap-to-upload button above the drop zone */}
-                    <button
-                      className="sm:hidden w-full flex items-center justify-center gap-3 py-4 rounded-xl border-2 border-primary/50 bg-primary/5 text-primary font-bold text-base active:bg-primary/10 transition-colors"
-                      style={{ touchAction: "manipulation", minHeight: "56px" }}
-                      onClick={() => !isUploading && fileInputRef.current?.click()}
-                      disabled={isUploading}
-                    >
-                      <UploadCloud className="w-5 h-5" />
-                      Choose a file from your device
-                    </button>
-
-                    <div
-                      onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
-                      onDragLeave={() => setIsDragging(false)}
-                      onDrop={onDrop}
-                      onClick={() => !isUploading && fileInputRef.current?.click()}
-                      style={{ touchAction: "manipulation" }}
-                      className={`min-h-[180px] sm:min-h-[220px] rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all ${
-                        isDragging
-                          ? "border-primary bg-primary/5 scale-[1.01]"
-                          : uploadedFile && !uploadError
-                          ? "border-emerald-400 dark:border-emerald-600 bg-emerald-50/40 dark:bg-emerald-950/30"
-                          : "border-border/50 hover:border-primary/40 hover:bg-secondary/20 bg-muted/20"
-                      }`}
-                    >
-                      <input ref={fileInputRef} type="file" accept={ACCEPTED} className="hidden" onChange={onFileChange} disabled={isUploading} />
-
-                      {isUploading ? (
-                        <div className="text-center space-y-3 p-6 sm:p-8">
-                          <div className="w-14 h-14 rounded-2xl bg-primary/8 flex items-center justify-center mx-auto">
-                            <Loader2 className="w-7 h-7 text-primary animate-spin" />
-                          </div>
-                          <div>
-                            <p className="font-bold text-foreground text-sm">Extracting & analyzing…</p>
-                            <p className="text-xs text-muted-foreground mt-1 truncate max-w-[240px]">{uploadedFile?.name}</p>
-                          </div>
-                        </div>
-                      ) : uploadedFile && !uploadError ? (
-                        <div className="text-center space-y-3 p-6 sm:p-8">
-                          <CheckCircle2 className="w-12 h-12 text-emerald-500 dark:text-emerald-400 mx-auto" />
-                          <div>
-                            <p className="font-bold text-foreground text-sm">File received</p>
-                            <p className="text-xs text-muted-foreground mt-1">{uploadedFile.name}</p>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="text-center space-y-3 p-6 sm:p-8 pointer-events-none">
-                          <div className="w-14 h-14 rounded-2xl bg-card border border-border shadow-md flex items-center justify-center mx-auto">
-                            <UploadCloud className="w-7 h-7 text-primary" />
-                          </div>
-                          <div>
-                            <p className="font-bold text-foreground hidden sm:block">Drop file here or click to browse</p>
-                            <p className="font-bold text-foreground sm:hidden text-sm">Or drag & drop a file here</p>
-                            <p className="text-sm text-muted-foreground mt-1">PDF, Word (.docx), or plain text (.txt)</p>
-                          </div>
-                          <div className="flex items-center justify-center gap-2">
-                            {["PDF", "DOCX", "TXT"].map(fmt => (
-                              <span key={fmt} className="px-3 py-1.5 rounded-lg bg-card border border-border text-xs font-bold text-muted-foreground shadow-sm">{fmt}</span>
-                            ))}
-                          </div>
-                          <p className="text-[11px] text-muted-foreground/50">Max 20 MB · Text-based PDFs only</p>
-                        </div>
-                      )}
-                    </div>
-
-                    {uploadError && <ErrorBanner message={uploadError} />}
-
-                    <div className="rounded-xl bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200/50 dark:border-amber-900/40 p-3.5 flex gap-2.5">
-                      <AlertCircle className="w-4 h-4 text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" />
-                      <div className="text-xs text-amber-800/80 dark:text-amber-300/90 leading-relaxed">
-                        <span className="font-semibold">Scanned or image PDFs</span> cannot be read — the text must be selectable in your PDF viewer. Use Paste Text instead for scanned documents.
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60 mb-0.5">
+                          {step === "analyzing" ? "Analyzing…" : "Step 2 of 2"}
+                        </p>
+                        <h2 className="text-base font-bold text-foreground leading-tight">
+                          {step === "analyzing" ? "Generating your action plan" : "What type of document is this?"}
+                        </h2>
                       </div>
                     </div>
-                  </motion.div>
-                )}
+                    {step === "doctype" && (
+                      <p className="text-xs text-muted-foreground mt-2 ml-0 sm:ml-12">
+                        This helps PlainPath apply the right analysis — your choice doesn't limit what's extracted.
+                      </p>
+                    )}
+                  </div>
 
-              </AnimatePresence>
-            </div>
+                  {/* doctype grid or loading */}
+                  <div className="p-4 sm:p-6">
+                    {step === "analyzing" ? (
+                      <div className="flex flex-col items-center justify-center gap-4 py-12">
+                        <div className="w-14 h-14 rounded-2xl bg-primary/8 flex items-center justify-center">
+                          <Loader2 className="w-7 h-7 text-primary animate-spin" />
+                        </div>
+                        <div className="text-center">
+                          <p className="font-bold text-foreground text-sm">Analyzing your document…</p>
+                          <p className="text-xs text-muted-foreground mt-1">This usually takes 10–30 seconds</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+                        {DOC_TYPES.map((dt) => (
+                          <button
+                            key={dt.id}
+                            onClick={() => handleDocTypeSelect(dt.id)}
+                            style={{ touchAction: "manipulation" }}
+                            className="flex items-center gap-3 p-3 sm:p-4 rounded-xl border border-border/40 bg-card hover:border-primary/50 hover:bg-secondary/30 active:bg-secondary/50 transition-all text-left group min-h-[64px]"
+                          >
+                            <div className={`w-8 h-8 rounded-lg ${dt.bg} flex items-center justify-center shrink-0`}>
+                              <dt.icon className={`w-4 h-4 ${dt.color}`} />
+                            </div>
+                            <span className="text-xs font-semibold text-foreground leading-snug group-hover:text-primary transition-colors">
+                              {dt.label}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              ) : (
+                /* ── INPUT step ──────────────────────────── */
+                <motion.div
+                  key="input"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.18 }}
+                >
+                  {/* Tab switcher */}
+                  <div className="p-2 border-b border-border/30 bg-muted/30">
+                    <div className="grid grid-cols-2 rounded-xl bg-secondary/70 p-1 gap-1">
+                      {(["paste", "upload"] as const).map((tab) => (
+                        <button
+                          key={tab}
+                          onClick={() => { setMode(tab); setUploadError(null); setUploadedFile(null) }}
+                          style={{ touchAction: "manipulation" }}
+                          className={`flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-semibold transition-all min-h-[48px] ${
+                            mode === tab
+                              ? "bg-card text-foreground shadow-sm shadow-black/[0.06]"
+                              : "text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          {tab === "paste" ? <Type className="w-4 h-4" /> : <UploadCloud className="w-4 h-4" />}
+                          {tab === "paste" ? "Paste Text" : "Upload File"}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="p-4 sm:p-7">
+                    <AnimatePresence mode="wait">
+
+                      {/* ── PASTE mode ─────────────────────── */}
+                      {mode === "paste" && (
+                        <motion.div
+                          key="paste"
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: 10 }}
+                          transition={{ duration: 0.14 }}
+                          className="space-y-4"
+                        >
+                          <div className="flex flex-wrap gap-1.5 items-center">
+                            <span className="text-xs text-muted-foreground/50 font-medium mr-0.5">e.g.</span>
+                            {EXAMPLES.map(ex => (
+                              <span key={ex} className="px-2.5 py-1 rounded-full bg-secondary/60 border border-border/40 text-[11px] font-medium text-muted-foreground">{ex}</span>
+                            ))}
+                          </div>
+
+                          <div className="relative">
+                            <textarea
+                              value={text}
+                              onChange={(e) => setText(e.target.value)}
+                              placeholder="Paste the full text of your document here..."
+                              className="w-full min-h-[140px] sm:min-h-[220px] p-4 rounded-xl border-2 border-border/50 bg-muted/20 focus:border-primary focus:ring-4 focus:ring-primary/8 resize-none transition-all placeholder:text-muted-foreground/35 text-sm leading-relaxed font-mono outline-none"
+                              disabled={isWorking}
+                            />
+                            {text.length > 0 && (
+                              <span className="absolute bottom-3 right-3 text-[10px] text-muted-foreground/40 font-mono select-none">
+                                {text.length.toLocaleString()} / 60,000
+                              </span>
+                            )}
+                          </div>
+
+                          {error && (
+                            <ErrorBanner message={(error as any)?.message || "An error occurred. Please try again."} />
+                          )}
+
+                          <Button
+                            size="lg"
+                            onClick={handlePasteStage}
+                            disabled={isWorking || text.trim().length < 50}
+                            style={{ touchAction: "manipulation" }}
+                            className="w-full h-14 text-base rounded-xl"
+                          >
+                            Generate Action Plan <ArrowRight className="ml-2 w-4 h-4" />
+                          </Button>
+
+                          <p className="text-[11px] text-center text-muted-foreground/50">
+                            Minimum 50 characters · Your text is processed by AI for analysis and not stored by PlainPath
+                          </p>
+                        </motion.div>
+                      )}
+
+                      {/* ── UPLOAD mode ────────────────────── */}
+                      {mode === "upload" && (
+                        <motion.div
+                          key="upload"
+                          initial={{ opacity: 0, x: 10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -10 }}
+                          transition={{ duration: 0.14 }}
+                          className="space-y-4"
+                        >
+                          {/* Mobile: prominent tap-to-upload button above the drop zone */}
+                          <button
+                            className="sm:hidden w-full flex items-center justify-center gap-3 py-4 rounded-xl border-2 border-primary/50 bg-primary/5 text-primary font-bold text-base active:bg-primary/10 transition-colors"
+                            style={{ touchAction: "manipulation", minHeight: "56px" }}
+                            onClick={() => fileInputRef.current?.click()}
+                          >
+                            <UploadCloud className="w-5 h-5" />
+                            Choose a file from your device
+                          </button>
+
+                          <div
+                            onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
+                            onDragLeave={() => setIsDragging(false)}
+                            onDrop={onDrop}
+                            onClick={() => fileInputRef.current?.click()}
+                            style={{ touchAction: "manipulation" }}
+                            className={`min-h-[180px] sm:min-h-[220px] rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all ${
+                              isDragging
+                                ? "border-primary bg-primary/5 scale-[1.01]"
+                                : uploadedFile && !uploadError
+                                ? "border-emerald-400 dark:border-emerald-600 bg-emerald-50/40 dark:bg-emerald-950/30"
+                                : "border-border/50 hover:border-primary/40 hover:bg-secondary/20 bg-muted/20"
+                            }`}
+                          >
+                            <input ref={fileInputRef} type="file" accept={ACCEPTED} className="hidden" onChange={onFileChange} />
+
+                            {uploadedFile && !uploadError ? (
+                              <div className="text-center space-y-3 p-6 sm:p-8">
+                                <CheckCircle2 className="w-12 h-12 text-emerald-500 dark:text-emerald-400 mx-auto" />
+                                <div>
+                                  <p className="font-bold text-foreground text-sm">File ready</p>
+                                  <p className="text-xs text-muted-foreground mt-1">{uploadedFile.name}</p>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="text-center space-y-3 p-6 sm:p-8 pointer-events-none">
+                                <div className="w-14 h-14 rounded-2xl bg-card border border-border shadow-md flex items-center justify-center mx-auto">
+                                  <UploadCloud className="w-7 h-7 text-primary" />
+                                </div>
+                                <div>
+                                  <p className="font-bold text-foreground hidden sm:block">Drop file here or click to browse</p>
+                                  <p className="font-bold text-foreground sm:hidden text-sm">Or drag & drop a file here</p>
+                                  <p className="text-sm text-muted-foreground mt-1">PDF, Word (.docx), or plain text (.txt)</p>
+                                </div>
+                                <div className="flex items-center justify-center gap-2">
+                                  {["PDF", "DOCX", "TXT"].map(fmt => (
+                                    <span key={fmt} className="px-3 py-1.5 rounded-lg bg-card border border-border text-xs font-bold text-muted-foreground shadow-sm">{fmt}</span>
+                                  ))}
+                                </div>
+                                <p className="text-[11px] text-muted-foreground/50">Max 20 MB · Text-based PDFs only</p>
+                              </div>
+                            )}
+                          </div>
+
+                          {uploadError && <ErrorBanner message={uploadError} />}
+
+                          {uploadedFile && !uploadError && (
+                            <Button
+                              size="lg"
+                              onClick={() => goToDocType({ kind: "file", file: uploadedFile })}
+                              style={{ touchAction: "manipulation" }}
+                              className="w-full h-14 text-base rounded-xl"
+                            >
+                              Continue <ArrowRight className="ml-2 w-4 h-4" />
+                            </Button>
+                          )}
+
+                          <div className="rounded-xl bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200/50 dark:border-amber-900/40 p-3.5 flex gap-2.5">
+                            <AlertCircle className="w-4 h-4 text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" />
+                            <div className="text-xs text-amber-800/80 dark:text-amber-300/90 leading-relaxed">
+                              <span className="font-semibold">Scanned or image PDFs</span> cannot be read — the text must be selectable in your PDF viewer. Use Paste Text instead for scanned documents.
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+
+                    </AnimatePresence>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
           </Card>
         </motion.div>
 
         {/* ── Demo shortcuts ─────────────────────────── */}
-        <div className="mt-6 sm:mt-10 space-y-5">
-          <div className="flex items-center gap-3">
-            <div className="flex-1 h-px bg-border/50" />
-            <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Or try a built-in demo</p>
-            <div className="flex-1 h-px bg-border/50" />
-          </div>
+        {step === "input" && (
+          <div className="mt-6 sm:mt-10 space-y-5">
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-border/50" />
+              <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Or try a built-in demo</p>
+              <div className="flex-1 h-px bg-border/50" />
+            </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
-            {DEMOS.map((demo, i) => (
-              <motion.button
-                key={demo.id}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.07 + 0.2 }}
-                whileHover={{ y: -3 }}
-                onClick={() => setLocation(`/analyze?demo=${demo.id}`)}
-                style={{ touchAction: "manipulation" }}
-                className="text-left group"
-              >
-                <Card className="p-3.5 sm:p-4 h-full border-border/40 hover:border-primary/40 active:border-primary/40 hover:shadow-lg transition-all bg-card rounded-xl shadow-sm">
-                  <div className="flex sm:block items-center gap-3 sm:gap-0">
-                    <div className={`w-9 h-9 rounded-xl ${demo.bg} flex items-center justify-center sm:mb-3 shrink-0`}>
-                      <demo.icon className={`w-4 h-4 ${demo.color}`} />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
+              {DEMOS.map((demo, i) => (
+                <motion.button
+                  key={demo.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.07 + 0.2 }}
+                  whileHover={{ y: -3 }}
+                  onClick={() => setLocation(`/analyze?demo=${demo.id}`)}
+                  style={{ touchAction: "manipulation" }}
+                  className="text-left group"
+                >
+                  <Card className="p-3.5 sm:p-4 h-full border-border/40 hover:border-primary/40 active:border-primary/40 hover:shadow-lg transition-all bg-card rounded-xl shadow-sm">
+                    <div className="flex sm:block items-center gap-3 sm:gap-0">
+                      <div className={`w-9 h-9 rounded-xl ${demo.bg} flex items-center justify-center sm:mb-3 shrink-0`}>
+                        <demo.icon className={`w-4 h-4 ${demo.color}`} />
+                      </div>
+                      <div className="flex-1 min-w-0 sm:block">
+                        <p className="font-bold text-sm leading-snug group-hover:text-primary transition-colors mb-0.5 sm:mb-1">{demo.title}</p>
+                        <p className="text-[11px] text-muted-foreground">{demo.meta}</p>
+                      </div>
+                      <ArrowRight className="w-4 h-4 text-muted-foreground/40 sm:hidden shrink-0" />
                     </div>
-                    <div className="flex-1 min-w-0 sm:block">
-                      <p className="font-bold text-sm leading-snug group-hover:text-primary transition-colors mb-0.5 sm:mb-1">{demo.title}</p>
-                      <p className="text-[11px] text-muted-foreground">{demo.meta}</p>
+                    <div className="hidden sm:flex items-center gap-1 mt-2.5 text-[11px] font-semibold text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                      Open instantly <ArrowRight className="w-3 h-3" />
                     </div>
-                    <ArrowRight className="w-4 h-4 text-muted-foreground/40 sm:hidden shrink-0" />
-                  </div>
-                  <div className="hidden sm:flex items-center gap-1 mt-2.5 text-[11px] font-semibold text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-                    Open instantly <ArrowRight className="w-3 h-3" />
-                  </div>
-                </Card>
-              </motion.button>
-            ))}
+                  </Card>
+                </motion.button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
       </div>
 
-      {/* ── Sticky mobile CTA (paste mode, keyboard-safe) ── */}
+      {/* ── Sticky mobile CTA (paste mode, input step) ── */}
       <AnimatePresence>
-        {mode === "paste" && canAnalyze && (
+        {mode === "paste" && step === "input" && canAnalyze && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -401,15 +534,12 @@ export default function Import() {
           >
             <Button
               size="lg"
-              onClick={handlePasteAnalyze}
+              onClick={handlePasteStage}
               disabled={isWorking}
               style={{ touchAction: "manipulation" }}
               className="w-full h-14 text-base rounded-xl shadow-lg"
             >
-              {isPending
-                ? <><Loader2 className="mr-2 w-4 h-4 animate-spin" /> Analyzing document…</>
-                : <>Generate Action Plan <ArrowRight className="ml-2 w-4 h-4" /></>
-              }
+              Generate Action Plan <ArrowRight className="ml-2 w-4 h-4" />
             </Button>
           </motion.div>
         )}

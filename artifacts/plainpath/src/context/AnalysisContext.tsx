@@ -3,7 +3,9 @@ import type { DocumentAnalysis } from "@workspace/api-client-react";
 
 interface AnalysisContextType {
   analysis: DocumentAnalysis | null;
+  documentTypeHint: string | null;
   setAnalysis: (analysis: DocumentAnalysis | null) => void;
+  setDocumentTypeHint: (hint: string | null) => void;
   updateActionStep: (id: string, completed: boolean) => void;
   updateRequiredDoc: (id: string, obtained: boolean) => void;
   clearAnalysis: () => void;
@@ -13,13 +15,19 @@ const AnalysisContext = createContext<AnalysisContextType | undefined>(undefined
 
 export function AnalysisProvider({ children }: { children: React.ReactNode }) {
   const [analysis, setAnalysisState] = useState<DocumentAnalysis | null>(null);
+  const [documentTypeHint, setDocumentTypeHintState] = useState<string | null>(null);
 
   const setAnalysis = useCallback((newAnalysis: DocumentAnalysis | null) => {
     setAnalysisState(newAnalysis);
   }, []);
 
+  const setDocumentTypeHint = useCallback((hint: string | null) => {
+    setDocumentTypeHintState(hint);
+  }, []);
+
   const clearAnalysis = useCallback(() => {
     setAnalysisState(null);
+    setDocumentTypeHintState(null);
   }, []);
 
   const updateActionStep = useCallback((id: string, completed: boolean) => {
@@ -50,7 +58,9 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
     <AnalysisContext.Provider
       value={{
         analysis,
+        documentTypeHint,
         setAnalysis,
+        setDocumentTypeHint,
         updateActionStep,
         updateRequiredDoc,
         clearAnalysis,
