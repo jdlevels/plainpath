@@ -1,0 +1,90 @@
+Do not redesign the app.
+Do not remove or replace any existing PlainPath features.
+
+The current flow is in a good state.
+Next feature:
+Add a new "Red Flags" / "Key Terms" analysis layer to PlainPath.
+
+Goal:
+Help users quickly spot important clauses, risky language, hidden obligations, and critical terms in any document, especially:
+- contracts / agreements
+- legal and business filings
+- tax/government notices
+- healthcare / insurance paperwork
+- bills / notices / summons
+- permits / applications
+- school / enrollment packets
+
+Build this in direct implementation mode.
+
+Requirements:
+
+1. Add a new results tab called:
+- Red Flags
+or
+- Key Terms & Risks
+
+Choose the better product label, but keep it professional and easy to understand.
+
+2. For each analyzed document, extract and display important terms, clauses, or risk points such as:
+- fees / penalties
+- deadlines
+- termination
+- auto-renewal
+- exclusivity
+- ownership / IP
+- indemnity
+- arbitration
+- liability limits
+- repayment obligations
+- cancellation windows
+- required responses
+- other document-specific important clauses
+
+3. For each flagged item, show:
+- title / term name
+- severity level (low / medium / high)
+- plain-English explanation
+- why it matters
+- what the user should watch out for
+- optional “question to ask” if appropriate
+
+4. Use the selected document type as a strong hint when extracting red flags.
+Examples:
+- contracts: ownership, exclusivity, termination, renewal, royalties, 360-style obligations
+- tax/government: deadlines, penalties, missing filing requirements, agency actions
+- healthcare: denial language, exclusions, prior auth, appeal deadlines
+- bills/notices: shutoff risk, legal deadlines, collections, late fees
+- grants/applications: eligibility, disqualifiers, submission requirements
+
+5. Keep all current features untouched:
+- Plain English
+- Source Sections
+- Checklist
+- Required Docs
+- Deadlines
+- Risks
+- What’s Missing
+- section explanation
+- checklist explanation
+
+6. Make the new tab feel premium and scannable:
+- clear severity badges
+- readable cards
+- strong spacing and hierarchy
+- mobile-friendly layout
+
+7. If demo data needs updating, add realistic red-flag content for all 3 demos so the tab shows meaningful content immediately.
+
+8. Test after implementation:
+- all 3 demos
+- paste text flow
+- PDF upload flow
+- desktop and mobile
+
+When finished, return:
+A. files updated
+B. how the new Red Flags / Key Terms tab works
+C. what kinds of clauses/terms are now extracted
+D. screenshots of the new tab
+E. any remaining blockers

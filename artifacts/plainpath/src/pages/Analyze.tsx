@@ -14,12 +14,12 @@ import {
   Printer, ArrowLeft, CheckCircle2, AlertCircle, XCircle,
   ArrowRight, ShieldCheck, Clock, TrendingUp, BookOpen,
   HelpCircle, ChevronDown, Lightbulb, Eye, Shield, Zap,
-  AlignLeft, MessageSquare, X
+  AlignLeft, MessageSquare, X, Flag
 } from "lucide-react"
 import { PriorityBadge } from "@/components/shared/PriorityBadge"
 import { ConfidenceBadge } from "@/components/shared/ConfidenceBadge"
 import { EvidenceTooltip } from "@/components/shared/EvidenceTooltip"
-import type { DocumentAnalysis, PlainEnglishSections } from "@workspace/api-client-react"
+import type { DocumentAnalysis, PlainEnglishSections, KeyTerm } from "@workspace/api-client-react"
 import { triggerPrint } from "@/lib/print"
 import { isNative } from "@/lib/platform"
 import { getApiBaseUrl } from "@/lib/api"
@@ -33,6 +33,7 @@ const TABS = [
   { id: "documents",       label: "Required Docs",    icon: ShieldCheck, countKey: "requiredDocuments" },
   { id: "deadlines",       label: "Deadlines",        icon: Calendar,    countKey: "deadlines"         },
   { id: "risks",           label: "Risks & Notes",    icon: AlertTriangle                              },
+  { id: "key-terms",       label: "Key Terms",        icon: Flag,          countKey: "keyTerms"         },
 ]
 
 export default function Analyze() {
@@ -211,6 +212,7 @@ export default function Analyze() {
                 {activeTab === "documents"       && <DocumentsTab  analysis={analysis} onToggle={handleDocToggle} />}
                 {activeTab === "deadlines"       && <DeadlinesTab  analysis={analysis} />}
                 {activeTab === "risks"           && <RisksTab      analysis={analysis} />}
+                {activeTab === "key-terms"       && <KeyTermsTab   analysis={analysis} />}
 
               </motion.div>
             </AnimatePresence>
@@ -1271,6 +1273,130 @@ function SourceSectionsTab({ analysis, documentTypeHint }: { analysis: DocumentA
             documentTypeHint={documentTypeHint}
           />
         ))}
+      </div>
+    </div>
+  )
+}
+
+/* ────────────────────────────────────────────────
+   KEY TERMS TAB
+──────────────────────────────────────────────── */
+const SEVERITY_CONFIG = {
+  high: {
+    accentBg: "bg-red-500",
+    textColor: "text-red-500",
+    badge: "bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800",
+    label: "High",
+  },
+  medium: {
+    accentBg: "bg-amber-500",
+    textColor: "text-amber-500",
+    badge: "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800",
+    label: "Medium",
+  },
+  low: {
+    accentBg: "bg-blue-500",
+    textColor: "text-blue-500",
+    badge: "bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800",
+    label: "Low",
+  },
+} as const
+
+function KeyTermCard({ term }: { term: KeyTerm }) {
+  const cfg = SEVERITY_CONFIG[term.severity] ?? SEVERITY_CONFIG.medium
+  return (
+    <div className="rounded-xl border border-border/40 bg-card overflow-hidden flex">
+      <div className={`w-1 shrink-0 ${cfg.accentBg}`} />
+      <div className="flex-1 min-w-0">
+        <div className="flex items-start justify-between gap-3 px-4 py-3 bg-muted/20 border-b border-border/20">
+          <div className="flex items-start gap-2.5 min-w-0">
+            <Flag className={`w-4 h-4 mt-0.5 shrink-0 ${cfg.textColor}`} />
+            <div className="min-w-0">
+              <p className="font-semibold text-sm text-foreground leading-snug">{term.term}</p>
+              <span className="text-[11px] text-muted-foreground">{term.category}</span>
+            </div>
+          </div>
+          <span className={`shrink-0 text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${cfg.badge}`}>
+            {cfg.label}
+          </span>
+        </div>
+        <div className="px-4 py-3 space-y-3">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-1">What this means</p>
+            <p className="text-sm text-foreground/90 leading-relaxed">{term.explanation}</p>
+          </div>
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-1">Why it matters</p>
+            <p className="text-sm text-foreground/90 leading-relaxed">{term.whyItMatters}</p>
+          </div>
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-400 mb-1">Watch out for</p>
+            <p className="text-sm text-foreground/90 leading-relaxed">{term.watchOut}</p>
+          </div>
+          {term.questionToAsk && (
+            <div className="bg-muted/40 rounded-lg px-3 py-2.5 flex items-start gap-2 mt-1">
+              <HelpCircle className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" />
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-0.5">Question to ask</p>
+                <p className="text-sm text-foreground/90 leading-relaxed">{term.questionToAsk}</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function KeyTermsTab({ analysis }: { analysis: DocumentAnalysis }) {
+  const keyTerms = analysis.keyTerms ?? []
+  const sorted = [...keyTerms].sort((a, b) => {
+    const order: Record<string, number> = { high: 0, medium: 1, low: 2 }
+    return (order[a.severity] ?? 1) - (order[b.severity] ?? 1)
+  })
+  const highCount = sorted.filter(k => k.severity === "high").length
+  const medCount = sorted.filter(k => k.severity === "medium").length
+  const lowCount = sorted.filter(k => k.severity === "low").length
+
+  if (sorted.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
+        <Flag className="w-10 h-10 text-muted-foreground/40" />
+        <p className="text-base font-medium text-muted-foreground">No key terms found</p>
+        <p className="text-sm text-muted-foreground/70 max-w-xs">
+          Key terms and clauses appear after a document is analyzed. Try uploading a contract, permit, or legal document.
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-5 max-w-3xl">
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <h2 className="text-xl sm:text-2xl font-display font-bold">Key Terms & Clauses</h2>
+          <p className="text-sm text-muted-foreground mt-0.5">Important provisions and obligations — in plain English</p>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          {highCount > 0 && (
+            <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800">
+              {highCount} High
+            </span>
+          )}
+          {medCount > 0 && (
+            <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+              {medCount} Medium
+            </span>
+          )}
+          {lowCount > 0 && (
+            <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+              {lowCount} Low
+            </span>
+          )}
+        </div>
+      </div>
+      <div className="space-y-3">
+        {sorted.map(kt => <KeyTermCard key={kt.id} term={kt} />)}
       </div>
     </div>
   )

@@ -12,6 +12,17 @@ import type { FollowUpQuestion } from "./followUpQuestion";
 import type { RequiredDocument } from "./requiredDocument";
 import type { RiskItem } from "./riskItem";
 
+export interface KeyTerm {
+  id: string;
+  term: string;
+  severity: "high" | "medium" | "low";
+  category: string;
+  explanation: string;
+  whyItMatters: string;
+  watchOut: string;
+  questionToAsk?: string;
+}
+
 export interface DocumentSection {
   id: string;
   title?: string;
@@ -42,4 +53,5 @@ export interface DocumentAnalysis {
   processedAt: string;
   plainEnglish?: PlainEnglishSections;
   sections?: DocumentSection[];
+  keyTerms?: KeyTerm[];
 }

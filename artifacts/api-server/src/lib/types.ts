@@ -45,6 +45,17 @@ export interface RiskItem {
   sourceEvidence?: string;
 }
 
+export interface KeyTerm {
+  id: string;
+  term: string;
+  severity: "high" | "medium" | "low";
+  category: string;
+  explanation: string;
+  whyItMatters: string;
+  watchOut: string;
+  questionToAsk?: string;
+}
+
 export interface DocumentSection {
   id: string;
   title?: string;
@@ -74,4 +85,5 @@ export interface DocumentAnalysis {
   processedAt: string;
   plainEnglish?: PlainEnglishSections;
   sections?: DocumentSection[];
+  keyTerms?: KeyTerm[];
 }

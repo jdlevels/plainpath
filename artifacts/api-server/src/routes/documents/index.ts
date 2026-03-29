@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import multer from "multer";
 import { openai } from "@workspace/integrations-openai-ai-server";
 import { demoDocuments } from "../../lib/demoData.js";
-import type { DocumentAnalysis, DocumentSection } from "../../lib/types.js";
+import type { DocumentAnalysis, DocumentSection, KeyTerm } from "../../lib/types.js";
 
 function extractSections(text: string): DocumentSection[] {
   const normalized = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
@@ -129,6 +129,18 @@ The JSON must have this exact structure:
       "sourceEvidence": "string"
     }
   ],
+  "keyTerms": [
+    {
+      "id": "kt-1",
+      "term": "string - name of the clause, provision, or term (e.g., 'Non-Refundable Fee', 'Auto-Renewal Clause', 'Mandatory Arbitration')",
+      "severity": "high|medium|low",
+      "category": "string - category label (e.g., 'Fees & Penalties', 'Deadlines', 'Liability', 'Ownership / IP', 'Termination', 'Compliance', 'Repayment', 'Appeal Rights', 'Submission Rules')",
+      "explanation": "string - 1-2 sentences: what this term or clause means in plain English",
+      "whyItMatters": "string - 1-2 sentences: why this clause is important to the reader and what depends on it",
+      "watchOut": "string - 1-2 sentences: specific risk, hidden obligation, or consequence the reader might miss",
+      "questionToAsk": "string - optional: a specific question the reader should ask before agreeing or signing (omit field entirely if not applicable)"
+    }
+  ],
   "plainEnglish": {
     "whatItIs": "string - 2-4 sentences: what kind of document this is and what it is used for, written for someone who has never seen it before",
     "whatItSays": "string - 3-5 sentences: the main points the document communicates, avoiding jargon",
@@ -149,7 +161,11 @@ Guidelines:
 - Use "medium" confidence when you're inferring from context
 - Use "low" confidence when uncertain or the document is ambiguous
 - Mark isHard=true for deadlines with serious consequences (rejection, legal issues)
-- Priority: high = must do first or has dependencies, medium = important but flexible, low = optional`;
+- Priority: high = must do first or has dependencies, medium = important but flexible, low = optional
+- Extract 4-8 key terms: clauses, provisions, or terms with significant impact on the reader
+- keyTerms severity: high = significant financial/legal/practical consequence; medium = important but manageable; low = worth noting
+- Focus keyTerms on: fees/penalties, non-refundable terms, termination/cancellation, auto-renewal, liability limits, repayment obligations, ownership/IP, indemnity, arbitration, exclusivity, appeal deadlines, submission requirements, disqualifiers, reporting obligations
+- Tailor keyTerms to document type: contracts→ownership/termination/renewal; tax/gov→penalties/deadlines/agency actions; healthcare→exclusions/prior auth/appeal windows; grants/applications→eligibility/disqualifiers/reporting; bills/notices→shutoff/legal deadlines/collections`;
 
 async function runAnalysis(text: string, title?: string, documentTypeHint?: string, rawText?: string): Promise<DocumentAnalysis> {
   const hintLine = documentTypeHint ? `\nUser-specified document category: ${documentTypeHint}` : "";
@@ -223,6 +239,16 @@ async function runAnalysis(text: string, title?: string, documentTypeHint?: stri
       severity: risk.severity || "medium",
       sourceEvidence: risk.sourceEvidence,
     })),
+    keyTerms: (parsed.keyTerms || []).map((kt, i) => ({
+      id: (kt as any).id || `kt-${i + 1}`,
+      term: (kt as any).term || "",
+      severity: (kt as any).severity || "medium",
+      category: (kt as any).category || "General",
+      explanation: (kt as any).explanation || "",
+      whyItMatters: (kt as any).whyItMatters || "",
+      watchOut: (kt as any).watchOut || "",
+      questionToAsk: (kt as any).questionToAsk,
+    } as KeyTerm)),
     overallConfidence: parsed.overallConfidence || "medium",
     processedAt: new Date().toISOString(),
     sections: extractSections(rawText ?? text),
