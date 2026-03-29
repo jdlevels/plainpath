@@ -160,14 +160,14 @@ export default function Analyze() {
                   style={{ touchAction: "manipulation" }}
                   className={`relative flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap outline-none flex-shrink-0 min-h-[44px] ${
                     activeTab === tab.id
-                      ? "bg-foreground text-white shadow-sm"
+                      ? "bg-foreground text-background shadow-sm"
                       : "text-muted-foreground hover:text-foreground hover:bg-secondary/70"
                   }`}
                 >
                   <tab.icon className="w-3.5 h-3.5" />
                   <span>{tab.label}</span>
                   {count != null && count > 0 && (
-                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold leading-none ${activeTab === tab.id ? "bg-white/20 text-white" : "bg-border/50 text-muted-foreground"}`}>
+                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold leading-none ${activeTab === tab.id ? "bg-background/20 text-background" : "bg-border/50 text-muted-foreground"}`}>
                       {count}
                     </span>
                   )}

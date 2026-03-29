@@ -1,0 +1,66 @@
+Do not redesign the app.
+Do not remove or replace any existing PlainPath features.
+
+The current intake flow, document-type selection, Plain English tab, and Checklist "Explain this" feature should remain in place.
+
+Next feature:
+Add a document section exploration layer so users can understand any part of the uploaded document, not just action steps.
+
+Build this in direct implementation mode.
+
+Requirements:
+
+1. Add a new results tab called either:
+- Document Text
+or
+- Source Sections
+
+2. In this tab, show the extracted document content broken into readable chunks:
+- paragraph blocks
+- section cards
+- headings where possible
+- page/section reference where possible
+- keep it readable and scannable
+
+3. Each chunk/section must have an action like:
+- "Explain this section"
+
+4. When clicked, PlainPath should explain that exact selected section in simple English.
+
+Explanation output should include:
+- What this section means
+- What it may require from the user
+- Why it matters
+- Any risks, obligations, or hidden implications
+- Questions the user may want to ask before agreeing or signing
+
+5. UI behavior:
+- On desktop, show the explanation in a side panel if practical
+- On mobile, show it in a drawer or panel below
+- Keep the experience premium and easy to scan
+
+6. Analysis behavior:
+- Use the selected document type as a hint for section-level explanation too
+- Preserve the current full-document Plain English analysis
+- Preserve the existing Checklist "Explain this" feature
+
+7. Scope constraints:
+- Do not build a full PDF viewer yet
+- Do not build true page highlighting yet
+- Use extracted text chunks/sections for Phase 1
+- Do not add unrelated features
+
+8. Test after implementation:
+- PDF upload
+- DOCX upload
+- TXT upload
+- Paste text
+- all 3 demos
+- desktop and mobile
+
+When finished, return:
+A. files updated
+B. how the new Document Text / Source Sections tab works
+C. how section-level explanation works
+D. screenshots of the updated results flow
+E. any remaining blockers
