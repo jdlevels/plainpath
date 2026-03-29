@@ -15,7 +15,8 @@ import {
   ArrowRight, ShieldCheck, Clock, TrendingUp, BookOpen,
   HelpCircle, ChevronDown, Lightbulb, Eye, Shield, Zap,
   AlignLeft, MessageSquare, X, Flag, Package,
-  FolderOpen, Mail, CheckSquare, Copy, Check
+  FolderOpen, Mail, CheckSquare, Copy, Check,
+  Bookmark, BookmarkCheck
 } from "lucide-react"
 import { PriorityBadge } from "@/components/shared/PriorityBadge"
 import { ConfidenceBadge } from "@/components/shared/ConfidenceBadge"
@@ -24,6 +25,7 @@ import type { DocumentAnalysis, PlainEnglishSections, KeyTerm, ActionPack } from
 import { triggerPrint } from "@/lib/print"
 import { isNative } from "@/lib/platform"
 import { getApiBaseUrl } from "@/lib/api"
+import { saveAnalysis, updateSaved } from "@/lib/savedAnalyses"
 
 const TABS = [
   { id: "plain-english",   label: "Plain English",   icon: BookOpen                                    },
@@ -45,6 +47,8 @@ export default function Analyze() {
 
   const { analysis, documentTypeHint, setAnalysis, clearAnalysis, updateActionStep, updateRequiredDoc } = useAnalysisContext()
   const [activeTab, setActiveTab] = useState("plain-english")
+  const [savedId, setSavedId] = useState<string | null>(null)
+  const [justSaved, setJustSaved] = useState(false)
 
   const prevDemoIdRef = useRef<string | null>(null)
   useEffect(() => {
@@ -86,6 +90,27 @@ export default function Analyze() {
 
   // Missing count badge for the tab
   const missingCount = incompleteHigh.length + analysis.requiredDocuments.filter(d => d.required && !d.obtained).length
+
+  const handleSave = () => {
+    if (!analysis) return
+    const triggerFeedback = () => {
+      setJustSaved(true)
+      setTimeout(() => setJustSaved(false), 2200)
+    }
+    if (savedId) {
+      updateSaved(savedId, { analysis })
+      triggerFeedback()
+    } else {
+      const saved = saveAnalysis({
+        title: analysis.title,
+        sourceKind: demoId ? "demo" : "document",
+        documentTypeHint,
+        analysis,
+      })
+      setSavedId(saved.id)
+      triggerFeedback()
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background" style={{ paddingBottom: "max(6rem, env(safe-area-inset-bottom) + 6rem)" }}>
@@ -129,6 +154,25 @@ export default function Analyze() {
                 <TrendingUp className="w-3 h-3 text-muted-foreground" />
                 <span className="text-xs font-bold text-foreground tabular-nums">{progress}%</span>
               </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSave}
+                style={{ touchAction: "manipulation" }}
+                className={`gap-1.5 text-xs h-8 border-border/60 transition-all ${
+                  justSaved
+                    ? "bg-green-50 dark:bg-green-950/30 border-green-300 dark:border-green-700 text-green-700 dark:text-green-400"
+                    : "bg-card"
+                }`}
+              >
+                {justSaved
+                  ? <BookmarkCheck className="w-3.5 h-3.5" />
+                  : <Bookmark className="w-3.5 h-3.5" />
+                }
+                <span className="hidden sm:inline">
+                  {justSaved ? "Saved" : savedId ? "Update" : "Save"}
+                </span>
+              </Button>
               <Button
                 variant="outline"
                 size="sm"

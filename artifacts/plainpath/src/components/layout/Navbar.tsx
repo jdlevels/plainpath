@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter"
 import { Button } from "@/components/ui/button"
-import { FileText, ArrowRight, Plus } from "lucide-react"
+import { FileText, ArrowRight, Plus, BookMarked } from "lucide-react"
 import { ThemeToggle } from "@/components/ui/ThemeToggle"
 
 export function Navbar() {
@@ -8,6 +8,7 @@ export function Navbar() {
   const isHome = location === "/"
   const isImport = location === "/import"
   const isAnalyze = location.startsWith("/analyze")
+  const isMyAnalyses = location === "/my-analyses"
   const isStaticPage = location === "/privacy" || location === "/terms"
 
   return (
@@ -25,6 +26,17 @@ export function Navbar() {
         <nav className="flex items-center gap-1.5">
           <ThemeToggle />
 
+          {/* My Analyses link — always visible except on the My Analyses page itself */}
+          {!isMyAnalyses && (
+            <Link
+              href="/my-analyses"
+              className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-2 py-1.5 rounded-lg hover:bg-secondary"
+            >
+              <BookMarked className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">My Analyses</span>
+            </Link>
+          )}
+
           {isHome && (
             <Button asChild size="sm" className="rounded-full shadow-sm hover:shadow-md gap-1.5 ml-1" style={{ touchAction: "manipulation" }}>
               <Link href="/import">
@@ -35,7 +47,7 @@ export function Navbar() {
             </Button>
           )}
 
-          {isImport && (
+          {(isImport || isMyAnalyses || isStaticPage) && (
             <Link
               href="/"
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors ml-1"
@@ -50,15 +62,6 @@ export function Navbar() {
                 <Plus className="w-3.5 h-3.5" /> New Analysis
               </Link>
             </Button>
-          )}
-
-          {isStaticPage && (
-            <Link
-              href="/"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors ml-1"
-            >
-              Home
-            </Link>
           )}
         </nav>
       </div>

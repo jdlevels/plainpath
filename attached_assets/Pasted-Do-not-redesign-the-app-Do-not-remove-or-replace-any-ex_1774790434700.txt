@@ -1,0 +1,80 @@
+Do not redesign the app.
+Do not remove or replace any existing PlainPath features.
+
+The current analysis experience is strong.
+Next feature:
+Add local-first Saved Analyses so users can save and reopen document analyses later.
+
+Goal:
+Make PlainPath usable across multiple sessions without adding cloud accounts yet.
+
+Build this in direct implementation mode.
+
+Requirements:
+
+1. Add a Save Analysis action on the results page
+- clear, production-ready UI
+- works for both demo analyses and real uploaded/pasted analyses
+- user can save the current analysis intentionally
+
+2. Add a new page/section called:
+- Saved Analyses
+or
+- My Analyses
+
+Choose the better product label, but keep it professional.
+
+3. Saved analyses must be stored locally on the user’s device/browser only
+- do not add server persistence
+- do not add accounts/auth
+- keep this aligned with the current privacy model
+
+4. Save enough data to fully reopen an analysis later, including:
+- title
+- selected document type
+- source kind (PDF/DOCX/TXT/Paste/Demo)
+- saved timestamp
+- Plain English
+- Source Sections
+- Checklist
+- Required Docs
+- Deadlines
+- Risks
+- Key Terms
+- Action Pack
+- What’s Missing
+
+5. The Saved Analyses page should support:
+- open/review saved analysis
+- rename saved analysis
+- delete saved analysis
+- empty state if nothing is saved yet
+
+6. Privacy/trust requirements:
+- clearly state this is saved on the current device/browser
+- do not imply it is synced to PlainPath servers
+- update any trust/privacy wording if needed so nothing is misleading
+
+7. UX requirements:
+- premium and scannable
+- mobile-friendly
+- light/dark mode compatible
+- desktop and mobile both usable
+
+8. Keep all existing tabs/features untouched.
+
+9. Test after implementation:
+- save a real analysis
+- reopen it
+- rename it
+- delete it
+- verify it still works after refresh
+- desktop and mobile
+
+When finished, return:
+A. files updated
+B. how saved analyses work
+C. where data is stored
+D. any privacy wording updated
+E. screenshots of the Saved Analyses flow
+F. any remaining blockers

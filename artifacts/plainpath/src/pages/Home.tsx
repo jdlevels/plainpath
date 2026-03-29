@@ -142,7 +142,7 @@ export default function Home() {
               "Free to use",
               "No account required",
               "Documents not stored by PlainPath",
-              "Never files, advises, or submits",
+              "Analyses saved on your device only",
             ].map((item) => (
               <span key={item} className="flex items-center gap-1.5 text-xs text-muted-foreground/55">
                 <span className="w-1 h-1 rounded-full bg-muted-foreground/30 shrink-0" />

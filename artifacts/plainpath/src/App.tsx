@@ -7,6 +7,7 @@ import { AnalysisProvider } from "@/context/AnalysisContext";
 import Home from "@/pages/Home";
 import Import from "@/pages/Import";
 import Analyze from "@/pages/Analyze";
+import MyAnalyses from "@/pages/MyAnalyses";
 import Privacy from "@/pages/Privacy";
 import Terms from "@/pages/Terms";
 import NotFound from "@/pages/not-found";
@@ -32,6 +33,7 @@ function Router() {
           <Route path="/" component={Home} />
           <Route path="/import" component={Import} />
           <Route path="/analyze" component={Analyze} />
+          <Route path="/my-analyses" component={MyAnalyses} />
           <Route path="/privacy" component={Privacy} />
           <Route path="/terms" component={Terms} />
           <Route component={NotFound} />
