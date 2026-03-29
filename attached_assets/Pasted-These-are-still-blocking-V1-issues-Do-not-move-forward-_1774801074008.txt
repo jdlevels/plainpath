@@ -1,0 +1,150 @@
+These are still **blocking V1 issues**. Do not move forward until they’re fixed.
+
+# What your screenshots show
+
+## 1. Paste Text is still failing too easily
+
+You pasted:
+
+> “Turn in the application for school and sign the document before 3/30/2026”
+
+and got:
+
+> **“Analysis failed. Please try again. If the problem continues, try pasting a shorter section of your document.”**
+
+That is not acceptable behavior for a simple, readable instruction block. Even if the text is light, the app should do one of these:
+
+* analyze it successfully, or
+* clearly say it needs more context and tell the user exactly what kind of text to paste
+
+It should **not** feel random.
+
+## 2. Upload flow is still blocked
+
+The Upload tab now shows:
+
+> **“Request blocked. Please refresh the page and try again.”**
+
+That is worse than before because it sounds like:
+
+* a request guard is firing incorrectly
+* anti-duplicate / anti-repeat logic is blocking valid uploads
+* or a stale request state is never resetting
+
+This needs to be fixed before any more feature work.
+
+---
+
+# What I think is happening
+
+## Paste Text likely has one of these problems
+
+* analysis prompt is failing on short/simple text
+* backend is classifying low-context text as an AI/server failure instead of a validation case
+* doc-type step + analysis flow may still be brittle on minimal text
+
+## Upload likely has one of these problems
+
+* request lock / `isUploading` / `isMutating` state is stuck
+* stale request state persists after prior failures
+* tab switching is not fully resetting upload state
+* duplicate request prevention is firing when it should not
+
+---
+
+# Best next move
+
+Paste this into Replit exactly:
+
+```text
+Do not add new features.
+Do not redesign the app.
+Stop all non-bug work.
+
+We still have 2 blocking reliability bugs in the intake flow.
+
+BUG 1 — Paste Text is failing for simple valid input
+Observed behavior:
+A user pasted simple actionable text:
+"Turn in the application for school and sign the document before 3/30/2026"
+and got:
+"Analysis failed. Please try again. If the problem continues, try pasting a shorter section of your document."
+
+This behavior is not acceptable.
+
+Fix requirements:
+1. Reproduce this exact paste-text failure
+2. Identify the exact root cause
+3. Make paste-text handling more reliable for short/simple but valid document-like instructions
+4. If input is too weak or too short, return a precise validation message such as:
+   - "Please paste more of the document so PlainPath can identify the requirements, deadlines, and obligations."
+   Do not show a generic analysis-failed message unless it is truly an upstream failure.
+5. Ensure short but valid actionable text can still produce a useful result when possible
+6. Distinguish clearly between:
+   - weak input / not enough context
+   - upstream AI timeout / failure
+   - server error
+   - rate limit / quota issue
+
+BUG 2 — Upload File shows "Request blocked" incorrectly
+Observed behavior:
+The Upload File tab shows:
+"Request blocked. Please refresh the page and try again."
+
+This appears to be a request-state bug, not a valid user error.
+
+Fix requirements:
+1. Reproduce the issue
+2. Identify the exact root cause
+3. Fix any broken request lock / stale upload state / duplicate request guard
+4. Ensure Upload works cleanly after:
+   - page load
+   - prior failure
+   - retry
+   - tab switching
+5. Ensure no "Request blocked" message is shown unless there is a real, intentional request guard condition
+6. If a request guard truly exists, replace it with clearer logic and clearer reset behavior
+
+Validation after fixes:
+1. Paste Text:
+- short but valid actionable text behaves correctly
+- weak input gets a precise validation message
+- real document text analyzes successfully
+
+2. Upload:
+- valid PDF works
+- valid DOCX works
+- valid TXT works
+- retry after failure works
+- no stale "Request blocked" banner
+- tab switching resets state correctly
+
+3. Desktop + mobile both checked
+
+Return:
+A. root cause of Bug 1
+B. root cause of Bug 2
+C. files updated
+D. exactly what was fixed
+E. screenshots of the corrected Paste Text and Upload flows
+F. any remaining blockers
+
+Do not switch to planning mode.
+Fix these reliability bugs first before anything else.
+```
+
+---
+
+# My recommendation after that
+
+Retest in this exact order:
+
+1. Paste your same school/application sentence again
+2. Paste a longer real paragraph
+3. Upload a valid PDF
+4. Upload a valid DOCX
+5. Upload a valid TXT
+6. Switch tabs back and forth
+7. Retry upload after one failure
+
+Send me Replit’s fix report after that run.

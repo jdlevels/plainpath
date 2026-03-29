@@ -1,0 +1,74 @@
+Do not add new features.
+Do not redesign the app.
+Stop all non-bug work.
+
+We still have 2 blocking reliability bugs in the intake flow.
+
+BUG 1 — Paste Text is failing for simple valid input
+Observed behavior:
+A user pasted simple actionable text:
+"Turn in the application for school and sign the document before 3/30/2026"
+and got:
+"Analysis failed. Please try again. If the problem continues, try pasting a shorter section of your document."
+
+This behavior is not acceptable.
+
+Fix requirements:
+1. Reproduce this exact paste-text failure
+2. Identify the exact root cause
+3. Make paste-text handling more reliable for short/simple but valid document-like instructions
+4. If input is too weak or too short, return a precise validation message such as:
+   - "Please paste more of the document so PlainPath can identify the requirements, deadlines, and obligations."
+   Do not show a generic analysis-failed message unless it is truly an upstream failure.
+5. Ensure short but valid actionable text can still produce a useful result when possible
+6. Distinguish clearly between:
+   - weak input / not enough context
+   - upstream AI timeout / failure
+   - server error
+   - rate limit / quota issue
+
+BUG 2 — Upload File shows "Request blocked" incorrectly
+Observed behavior:
+The Upload File tab shows:
+"Request blocked. Please refresh the page and try again."
+
+This appears to be a request-state bug, not a valid user error.
+
+Fix requirements:
+1. Reproduce the issue
+2. Identify the exact root cause
+3. Fix any broken request lock / stale upload state / duplicate request guard
+4. Ensure Upload works cleanly after:
+   - page load
+   - prior failure
+   - retry
+   - tab switching
+5. Ensure no "Request blocked" message is shown unless there is a real, intentional request guard condition
+6. If a request guard truly exists, replace it with clearer logic and clearer reset behavior
+
+Validation after fixes:
+1. Paste Text:
+- short but valid actionable text behaves correctly
+- weak input gets a precise validation message
+- real document text analyzes successfully
+
+2. Upload:
+- valid PDF works
+- valid DOCX works
+- valid TXT works
+- retry after failure works
+- no stale "Request blocked" banner
+- tab switching resets state correctly
+
+3. Desktop + mobile both checked
+
+Return:
+A. root cause of Bug 1
+B. root cause of Bug 2
+C. files updated
+D. exactly what was fixed
+E. screenshots of the corrected Paste Text and Upload flows
+F. any remaining blockers
+
+Do not switch to planning mode.
+Fix these reliability bugs first before anything else.
