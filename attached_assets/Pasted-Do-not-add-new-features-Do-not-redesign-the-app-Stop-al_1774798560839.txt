@@ -1,0 +1,59 @@
+Do not add new features.
+Do not redesign the app.
+Stop all non-bug work.
+
+We have 2 blocking V1 ingestion bugs that must be fixed before anything else.
+
+BUG 1: Paste Text -> Generate Action Plan returns HTTP 500
+Observed behavior:
+- User enters valid text into Paste Text
+- Clicks Generate Action Plan
+- App returns: "HTTP 500: An unexpected error occurred. Please try again."
+
+Requirements:
+1. Reproduce the bug in the live/current flow
+2. Identify the exact root cause
+3. Fix it so pasted text never causes a raw 500 for normal user input
+4. If the text is too vague / too short / not document-like, return a clean user-facing validation message instead of a server error
+5. Verify the analysis still works for real document text
+
+BUG 2: Upload File tab shows incorrect/stale error state
+Observed behavior:
+- Upload tab shows a generic error banner
+- Scanned/image PDF warning may appear at the same time
+- Error state may persist incorrectly
+
+Requirements:
+1. Reproduce the upload tab issue
+2. Fix stale error/warning state handling
+3. Ensure no error banner is shown unless a real current upload/parsing error occurred
+4. Ensure scanned/image PDF warning appears only for an actual scanned/image PDF failure
+5. Clear old upload errors properly when:
+   - switching tabs
+   - retrying upload
+   - opening the page fresh
+   - selecting a valid new file
+
+Validation requirements after fixes:
+1. Paste Text:
+- valid document-like text -> analyzes successfully
+- weak/non-document text -> friendly validation message, no 500
+2. Upload:
+- valid PDF -> works
+- valid DOCX -> works
+- valid TXT -> works
+- scanned/image PDF -> correct specific warning only
+- no stale banners after retry/switch/reset
+3. Demo flows still work
+4. Mobile and desktop both checked
+
+Return:
+A. root cause of Bug 1
+B. root cause of Bug 2
+C. files updated
+D. exactly what was fixed
+E. screenshots of the corrected Paste Text and Upload flows
+F. any remaining blockers
+
+Do not switch to planning mode.
+Fix these bugs first before anything else.
