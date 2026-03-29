@@ -79,11 +79,12 @@ export default function Import() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
+  const [pasteError, setPasteError] = useState<string | null>(null)
   const [step, setStep] = useState<Step>("input")
   const [pending, setPending] = useState<Payload | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const { mutate, isPending, error } = useAnalyzeDocument()
+  const { mutate, isPending } = useAnalyzeDocument()
 
   const goToDocType = (payload: Payload) => {
     setPending(payload)
@@ -92,6 +93,7 @@ export default function Import() {
 
   const handlePasteStage = () => {
     if (!text.trim() || text.trim().length < 50) return
+    setPasteError(null)
     goToDocType({ kind: "text", text })
   }
 
@@ -130,7 +132,23 @@ export default function Import() {
         { data: { text: pending.text, documentTypeHint: docTypeLabel } as any },
         {
           onSuccess: (data) => { setAnalysis(data.analysis); setLocation("/analyze") },
-          onError: () => { setIsAnalyzing(false); setStep("doctype") },
+          onError: (err: any) => {
+            const serverMessage = err?.data?.message
+            const status = err?.status ?? 0
+            let friendly: string
+            if (status === 400 && serverMessage) {
+              friendly = serverMessage
+            } else if (status === 503) {
+              friendly = "The analysis service is temporarily busy. Please wait a moment and try again."
+            } else if (status === 504) {
+              friendly = "Analysis is taking too long. Please try again — shorter documents process faster."
+            } else {
+              friendly = "Analysis failed. Please try again. If the problem continues, try pasting a shorter section of your document."
+            }
+            setPasteError(friendly)
+            setIsAnalyzing(false)
+            setStep("input")
+          },
         }
       )
     } else {
@@ -150,6 +168,8 @@ export default function Import() {
             ? "Could not extract text from this file. If it's a scanned PDF, please copy and paste the text instead."
             : "Upload failed. Please try again.")
           setUploadError(msg)
+          setUploadedFile(null)
+          if (fileInputRef.current) fileInputRef.current.value = ""
           setIsAnalyzing(false)
           setStep("input")
           setMode("upload")
@@ -157,6 +177,8 @@ export default function Import() {
         }
         if (!data?.analysis) {
           setUploadError("Analysis returned an unexpected result. Please try again.")
+          setUploadedFile(null)
+          if (fileInputRef.current) fileInputRef.current.value = ""
           setIsAnalyzing(false)
           setStep("input")
           setMode("upload")
@@ -166,6 +188,8 @@ export default function Import() {
         setLocation("/analyze")
       } catch {
         setUploadError("Network error. Please check your connection and try again.")
+        setUploadedFile(null)
+        if (fileInputRef.current) fileInputRef.current.value = ""
         setIsAnalyzing(false)
         setStep("input")
         setMode("upload")
@@ -318,7 +342,7 @@ export default function Import() {
                       {(["paste", "upload"] as const).map((tab) => (
                         <button
                           key={tab}
-                          onClick={() => { setMode(tab); setUploadError(null); setUploadedFile(null) }}
+                          onClick={() => { setMode(tab); setUploadError(null); setUploadedFile(null); setPasteError(null); if (fileInputRef.current) fileInputRef.current.value = "" }}
                           style={{ touchAction: "manipulation" }}
                           className={`flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-semibold transition-all min-h-[48px] ${
                             mode === tab
@@ -368,8 +392,8 @@ export default function Import() {
                             )}
                           </div>
 
-                          {error && (
-                            <ErrorBanner message={(error as any)?.message || "An error occurred. Please try again."} />
+                          {pasteError && (
+                            <ErrorBanner message={pasteError} />
                           )}
 
                           <Button
@@ -465,12 +489,14 @@ export default function Import() {
                             </Button>
                           )}
 
-                          <div className="rounded-xl bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200/50 dark:border-amber-900/40 p-3.5 flex gap-2.5">
-                            <AlertCircle className="w-4 h-4 text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" />
-                            <div className="text-xs text-amber-800/80 dark:text-amber-300/90 leading-relaxed">
-                              <span className="font-semibold">Scanned or image PDFs</span> cannot be read — the text must be selectable in your PDF viewer. Use Paste Text instead for scanned documents.
+                          {!uploadError && (
+                            <div className="rounded-xl bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200/50 dark:border-amber-900/40 p-3.5 flex gap-2.5">
+                              <AlertCircle className="w-4 h-4 text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" />
+                              <div className="text-xs text-amber-800/80 dark:text-amber-300/90 leading-relaxed">
+                                <span className="font-semibold">Scanned or image PDFs</span> cannot be read — the text must be selectable in your PDF viewer. Use Paste Text instead for scanned documents.
+                              </div>
                             </div>
-                          </div>
+                          )}
                         </motion.div>
                       )}
 

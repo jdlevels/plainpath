@@ -326,7 +326,15 @@ router.post("/analyze", async (req, res) => {
   if (!text || typeof text !== "string" || text.trim().length < 50) {
     return res.status(400).json({
       error: "invalid_input",
-      message: "Please provide document text with at least 50 characters.",
+      message: "Please paste more text — at least 50 characters are needed to generate an action plan.",
+    });
+  }
+
+  const wordCount = text.trim().split(/\s+/).filter((w: string) => w.length > 0).length;
+  if (wordCount < 8) {
+    return res.status(400).json({
+      error: "invalid_input",
+      message: "The text you pasted is too short to analyze. Please paste the full document text — at least a few sentences.",
     });
   }
 
@@ -341,8 +349,29 @@ router.post("/analyze", async (req, res) => {
     const analysis = await runAnalysis(text, title, typeof documentTypeHint === "string" ? documentTypeHint : undefined);
     return res.json({ analysis });
   } catch (error) {
+    const isTimeout = error instanceof Error && (
+      error.name === "AbortError" ||
+      error.message.toLowerCase().includes("timeout") ||
+      error.message.toLowerCase().includes("timed out")
+    );
+    if (isTimeout) {
+      return res.status(504).json({
+        error: "analysis_timeout",
+        message: "Analysis is taking too long. Please try again — shorter documents process faster.",
+      });
+    }
     const message = error instanceof Error ? error.message : "Unknown error";
-    return res.status(500).json({ error: "analysis_failed", message });
+    const isServiceError = message.toLowerCase().includes("rate limit") || message.toLowerCase().includes("quota") || message.toLowerCase().includes("overloaded");
+    if (isServiceError) {
+      return res.status(503).json({
+        error: "service_unavailable",
+        message: "The analysis service is temporarily busy. Please wait a moment and try again.",
+      });
+    }
+    return res.status(500).json({
+      error: "analysis_failed",
+      message: "Analysis failed. Please try again. If the problem continues, try pasting a shorter section of your document.",
+    });
   }
 });
 
@@ -409,8 +438,10 @@ router.post("/upload", upload.single("file"), async (req, res) => {
     const analysis = await runAnalysis(extractedText, detectedTitle, documentTypeHint, rawTextForSections);
     return res.json({ analysis });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return res.status(500).json({ error: "analysis_failed", message });
+    return res.status(500).json({
+      error: "analysis_failed",
+      message: "Analysis failed. Please try again. If the problem continues, try pasting the document text instead.",
+    });
   }
 });
 
