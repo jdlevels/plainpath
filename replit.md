@@ -84,28 +84,40 @@ Uses Replit AI Integrations for OpenAI access (no API key required, billed to cr
 - **`api.ts`** — `getApiBaseUrl()` centralizes API URL resolution; emits a clear console error in native builds missing `VITE_API_BASE_URL`
 - **`print.ts`** — `triggerPrint()` is platform-aware; returns `{ success: false }` in native shell instead of silently calling `window.print()`
 
-### Capacitor config stub (`artifacts/plainpath/capacitor.config.json`)
+### Capacitor config (`artifacts/plainpath/capacitor.config.json`)
 - `appId`: `com.plainpath.app`
 - `appName`: PlainPath
 - `webDir`: `dist/public` (matches Vite build output)
 - `androidScheme`: `https`
+- SplashScreen: 800ms, warm background `#F8F7F4`, no spinner
+
+### Native platform projects (committed)
+- `artifacts/plainpath/ios/` — Xcode project (`App/App.xcodeproj`), ready to open in Xcode on macOS
+- `artifacts/plainpath/android/` — Gradle project, ready to open in Android Studio
+
+### Native API URL (`artifacts/plainpath/.env.production`)
+- `VITE_API_BASE_URL=https://plain-path.replit.app` — picked up at native build time
 
 ### CORS strategy (`artifacts/api-server/src/app.ts`)
 - Development (`NODE_ENV !== "production"`): allows all origins
-- Production: restricts to `capacitor://localhost` + `http://localhost` + any `CORS_ORIGINS` env var (comma-separated)
+- Production: restricts to `capacitor://localhost` (iOS) + `http://localhost` + `https://localhost` (Android with androidScheme https) + any `CORS_ORIGINS` env var (comma-separated)
 
 ### Required env vars for production native build
 | Variable | Where | Purpose |
 |---|---|---|
-| `VITE_API_BASE_URL` | Capacitor build | Absolute API URL (e.g. `https://api.plainpath.app`) |
-| `CORS_ORIGINS` | API server | Deployed web domain(s), e.g. `https://plainpath.app` |
+| `VITE_API_BASE_URL` | `.env.production` | Set to `https://plain-path.replit.app` |
+| `CORS_ORIGINS` | API server env | Add deployed web domain(s) if needed for external web hosts |
 
-### Remaining steps before `npx cap init`
-1. Set `VITE_API_BASE_URL` in Capacitor build config
-2. Set `CORS_ORIGINS` on deployed API
-3. Run `npx cap init` inside `artifacts/plainpath/` (uses `capacitor.config.json`)
-4. Run `npx cap add ios` and/or `npx cap add android`
-5. Run `pnpm build` then `npx cap copy`
+### Native sync workflow (after any web changes)
+```bash
+cd artifacts/plainpath
+pnpm run build        # rebuilds dist/public
+npx cap sync          # copies dist/public into ios/ and android/
+```
+
+### Print export on native
+- `triggerPrint()` in `print.ts` returns `{ success: false, reason: "not_supported_on_native" }` in Capacitor
+- ExportMenu's Print button shows "Not available on this device" for 3 s instead of silently failing
 
 ## Development
 

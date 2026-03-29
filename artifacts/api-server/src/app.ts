@@ -46,7 +46,14 @@ app.use(
 //   CORS_ORIGINS — add the deployed web domain(s) here
 // ---------------------------------------------------------------------------
 
-const CAPACITOR_ORIGINS = ["capacitor://localhost", "http://localhost"];
+// "capacitor://localhost"  → iOS Capacitor WebView
+// "http://localhost"       → Android Capacitor WebView (default scheme)
+// "https://localhost"      → Android when androidScheme is set to "https" (our config)
+const CAPACITOR_ORIGINS = [
+  "capacitor://localhost",
+  "http://localhost",
+  "https://localhost",
+];
 
 const configuredOrigins: string[] = process.env.CORS_ORIGINS
   ? process.env.CORS_ORIGINS.split(",")

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">PlainPath</string>
+    <string name="title_activity_main">PlainPath</string>
+    <string name="package_name">com.plainpath.app</string>
+    <string name="custom_url_scheme">com.plainpath.app</string>
+</resources>

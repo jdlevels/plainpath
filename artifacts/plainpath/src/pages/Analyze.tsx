@@ -1661,6 +1661,15 @@ function DraftMessageCard({ label, draft }: { label: string; draft: string }) {
 function ExportMenu({ analysis }: { analysis: DocumentAnalysis }) {
   const [copiedText, setCopiedText] = useState(false)
   const [shareErr, setShareErr] = useState(false)
+  const [printUnavailable, setPrintUnavailable] = useState(false)
+
+  const handlePrint = () => {
+    const result = triggerPrint()
+    if (!result.success) {
+      setPrintUnavailable(true)
+      setTimeout(() => setPrintUnavailable(false), 3000)
+    }
+  }
 
   const handleCopy = async () => {
     const text = buildExportText(analysis)
@@ -1709,10 +1718,10 @@ function ExportMenu({ analysis }: { analysis: DocumentAnalysis }) {
         <DropdownMenuSeparator />
         <DropdownMenuItem
           className="gap-2.5 cursor-pointer"
-          onSelect={() => { if (typeof window !== "undefined") window.print() }}
+          onSelect={(e) => { e.preventDefault(); handlePrint() }}
         >
           <Printer className="w-3.5 h-3.5 text-muted-foreground" />
-          <span>Print / Save as PDF</span>
+          <span>{printUnavailable ? "Not available on this device" : "Print / Save as PDF"}</span>
         </DropdownMenuItem>
         <DropdownMenuItem
           className="gap-2.5 cursor-pointer"
