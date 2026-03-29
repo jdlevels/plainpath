@@ -1,4 +1,4 @@
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { useLocation } from "wouter"
 import { motion, AnimatePresence } from "framer-motion"
 import {
@@ -68,6 +68,12 @@ type Payload = { kind: "text"; text: string } | { kind: "file"; file: File }
 export default function Import() {
   const [, setLocation] = useLocation()
   const { setAnalysis, setDocumentTypeHint } = useAnalysisContext()
+
+  useEffect(() => {
+    document.title = "Import Your Document — PlainPath"
+    return () => { document.title = "PlainPath" }
+  }, [])
+
   const [mode, setMode] = useState<"paste" | "upload">("paste")
   const [text, setText] = useState("")
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)

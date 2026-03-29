@@ -37,6 +37,11 @@ export default function MyAnalyses() {
   const editInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
+    document.title = "My Analyses — PlainPath"
+    return () => { document.title = "PlainPath" }
+  }, [])
+
+  useEffect(() => {
     setItems(getAll())
   }, [])
 

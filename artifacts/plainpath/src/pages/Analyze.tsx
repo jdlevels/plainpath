@@ -75,6 +75,12 @@ export default function Analyze() {
 
   useEffect(() => { if (demoData?.analysis && !analysis) setAnalysis(demoData.analysis) }, [demoData, analysis, setAnalysis])
   useEffect(() => { if (!demoId && !analysis) setLocation("/import") }, [demoId, analysis, setLocation])
+  useEffect(() => {
+    if (analysis?.title) {
+      document.title = `${analysis.title} — PlainPath`
+      return () => { document.title = "PlainPath" }
+    }
+  }, [analysis?.title])
 
   if (isLoading || (!analysis && demoId)) return <LoadingScreen />
   if (demoError) return <ErrorScreen onBack={() => setLocation("/import")} />

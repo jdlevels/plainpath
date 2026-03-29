@@ -50,7 +50,7 @@ export function Navbar() {
           {(isImport || isMyAnalyses || isStaticPage) && (
             <Link
               href="/"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors ml-1"
+              className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-2 py-1.5 rounded-lg hover:bg-secondary ml-1"
             >
               Home
             </Link>
