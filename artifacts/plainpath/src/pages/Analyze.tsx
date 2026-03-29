@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react"
+import React, { useEffect, useState, useCallback, useRef } from "react"
 import { useLocation, useSearch } from "wouter"
 import { useGetDemoDocument, useUpdateChecklist } from "@workspace/api-client-react"
 import { useAnalysisContext } from "@/context/AnalysisContext"
@@ -40,8 +40,16 @@ export default function Analyze() {
   const searchString = useSearch()
   const demoId = new URLSearchParams(searchString).get("demo") as string | null
 
-  const { analysis, documentTypeHint, setAnalysis, updateActionStep, updateRequiredDoc } = useAnalysisContext()
+  const { analysis, documentTypeHint, setAnalysis, clearAnalysis, updateActionStep, updateRequiredDoc } = useAnalysisContext()
   const [activeTab, setActiveTab] = useState("plain-english")
+
+  const prevDemoIdRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (demoId && prevDemoIdRef.current !== null && prevDemoIdRef.current !== demoId) {
+      clearAnalysis()
+    }
+    prevDemoIdRef.current = demoId
+  }, [demoId, clearAnalysis])
 
   const { data: demoData, isLoading, error: demoError } = useGetDemoDocument(
     demoId as any,

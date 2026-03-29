@@ -3,9 +3,9 @@ import { useLocation } from "wouter"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   UploadCloud, ArrowRight, Loader2, AlertCircle,
-  Sparkles, Target, Zap, CheckCircle2, FileText, Type, File,
+  ClipboardList, GraduationCap, Banknote, CheckCircle2, FileText, Type, File,
   ArrowLeft, Building2, Scale, Heart, FileSignature,
-  Mail, ClipboardList, GraduationCap, HelpCircle
+  Mail, HelpCircle
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -16,25 +16,25 @@ import { getApiBaseUrl } from "@/lib/api"
 const DEMOS = [
   {
     id: "event-permit",
-    title: "Small Business Event Permit",
-    meta: "Government · 8 steps · 3 deadlines",
-    icon: Sparkles,
+    title: "Small Business Event Permit Packet",
+    meta: "Government Permit · 8 steps · 6 docs · 3 deadlines",
+    icon: ClipboardList,
     color: "text-blue-500 dark:text-blue-400",
     bg: "bg-blue-50 dark:bg-blue-950/50",
   },
   {
     id: "school-enrollment",
     title: "School Enrollment Packet",
-    meta: "Education · 9 steps · 2 deadlines",
-    icon: Target,
+    meta: "School Enrollment · 7 steps · 6 docs · 2 deadlines",
+    icon: GraduationCap,
     color: "text-emerald-500 dark:text-emerald-400",
     bg: "bg-emerald-50 dark:bg-emerald-950/50",
   },
   {
     id: "grant-application",
-    title: "Grant Application Checklist",
-    meta: "Funding · 10 steps · 4 deadlines",
-    icon: Zap,
+    title: "Small Business Community Grant",
+    meta: "Funding Grant · 8 steps · 8 docs · 2 deadlines",
+    icon: Banknote,
     color: "text-amber-500 dark:text-amber-400",
     bg: "bg-amber-50 dark:bg-amber-950/50",
   },

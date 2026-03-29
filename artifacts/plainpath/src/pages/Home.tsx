@@ -2,7 +2,7 @@ import { useLocation } from "wouter"
 import { motion } from "framer-motion"
 import {
   ArrowRight, FileCheck, Clock, ShieldCheck, Upload,
-  Sparkles, Target, Zap,
+  Sparkles, ClipboardList, GraduationCap, Banknote,
   Receipt, Scale, HeartPulse, FileSignature, MailWarning,
   CheckCircle2
 } from "lucide-react"
@@ -12,9 +12,9 @@ import { Card } from "@/components/ui/card"
 const DEMOS = [
   {
     id: "event-permit",
-    title: "Small Business Event Permit",
-    desc: "Local government packet with buried requirements, multiple agency approvals, and hard deadlines.",
-    icon: Sparkles,
+    title: "Small Business Event Permit Packet",
+    desc: "City government permit to host a public event. Requires 4 departmental sign-offs, a $1M liability certificate, and a 45-day lead time before the event date.",
+    icon: ClipboardList,
     color: "text-blue-500 dark:text-blue-400",
     bg: "bg-blue-50 dark:bg-blue-950/50",
     tags: ["8 action steps", "6 required docs", "3 deadlines"],
@@ -22,20 +22,20 @@ const DEMOS = [
   {
     id: "school-enrollment",
     title: "School Enrollment Packet",
-    desc: "Multi-page form with proof-of-residency rules, immunization deadlines, and hidden conditional steps.",
-    icon: Target,
+    desc: "K–12 district enrollment requiring residency proof, immunization compliance, and prior school records. One missing document holds up the entire registration.",
+    icon: GraduationCap,
     color: "text-emerald-500 dark:text-emerald-400",
     bg: "bg-emerald-50 dark:bg-emerald-950/50",
-    tags: ["9 action steps", "7 required docs", "2 deadlines"],
+    tags: ["7 action steps", "6 required docs", "2 deadlines"],
   },
   {
     id: "grant-application",
-    title: "Grant Application Checklist",
-    desc: "Dense funding instructions requiring eligibility attestations, strict formatting, and a dozen attachments.",
-    icon: Zap,
+    title: "Small Business Community Grant",
+    desc: "Competitive city grant for $5,000–$25,000. Requires a business plan, 2 years of financials, vendor quotes, and references. Incomplete packages are not reviewed.",
+    icon: Banknote,
     color: "text-amber-500 dark:text-amber-400",
     bg: "bg-amber-50 dark:bg-amber-950/50",
-    tags: ["10 action steps", "8 required docs", "4 deadlines"],
+    tags: ["8 action steps", "8 required docs", "2 deadlines"],
   },
 ]
 
