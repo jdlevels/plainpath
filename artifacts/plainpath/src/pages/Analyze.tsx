@@ -86,8 +86,14 @@ export default function Analyze() {
   if (demoError) return <ErrorScreen onBack={() => setLocation("/import")} />
   if (!analysis) return null
 
-  const totalItems = analysis.actionSteps.length + analysis.requiredDocuments.length
-  const doneItems = analysis.actionSteps.filter(s => s.completed).length + analysis.requiredDocuments.filter(d => d.obtained).length
+  const actionSteps = analysis.actionSteps ?? []
+  const requiredDocuments = analysis.requiredDocuments ?? []
+  const deadlines = analysis.deadlines ?? []
+  const risks = analysis.risks ?? []
+  const followUpQuestions = analysis.followUpQuestions ?? []
+
+  const totalItems = actionSteps.length + requiredDocuments.length
+  const doneItems = actionSteps.filter(s => s.completed).length + requiredDocuments.filter(d => d.obtained).length
   const progress = totalItems === 0 ? 100 : Math.round((doneItems / totalItems) * 100)
 
   const handleActionToggle = (id: string, completed: boolean) => {
@@ -99,12 +105,12 @@ export default function Analyze() {
     updateChecklist({ data: { itemId: id, itemType: "requiredDocument", completed: obtained } })
   }
 
-  const hardDeadlines = analysis.deadlines.filter(d => d.isHard)
-  const highRisks = analysis.risks.filter(r => r.severity === "high")
-  const incompleteHigh = analysis.actionSteps.filter(s => s.priority === "high" && !s.completed)
+  const hardDeadlines = deadlines.filter(d => d.isHard)
+  const highRisks = risks.filter(r => r.severity === "high")
+  const incompleteHigh = actionSteps.filter(s => s.priority === "high" && !s.completed)
 
   // Missing count badge for the tab
-  const missingCount = incompleteHigh.length + analysis.requiredDocuments.filter(d => d.required && !d.obtained).length
+  const missingCount = incompleteHigh.length + requiredDocuments.filter(d => d.required && !d.obtained).length
 
   const handleSave = () => {
     if (!analysis) return
@@ -199,8 +205,8 @@ export default function Analyze() {
         {/* ── At-a-glance strip ───────────────────────── */}
         <div className="no-print mt-4 sm:mt-6 mb-5 sm:mb-7">
           <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar pb-0.5">
-            <StatPill label="Steps" value={analysis.actionSteps.length} onClick={() => setActiveTab("checklist")} />
-            <StatPill label="Docs" value={analysis.requiredDocuments.length} onClick={() => setActiveTab("documents")} />
+            <StatPill label="Steps" value={actionSteps.length} onClick={() => setActiveTab("checklist")} />
+            <StatPill label="Docs" value={requiredDocuments.length} onClick={() => setActiveTab("documents")} />
             <StatPill label="Deadlines" value={hardDeadlines.length} warn={hardDeadlines.length > 0} onClick={() => setActiveTab("deadlines")} />
             <StatPill label="Risks" value={highRisks.length} warn={highRisks.length > 0} onClick={() => setActiveTab("risks")} />
             <div className="flex items-center gap-1.5 shrink-0 ml-auto pl-2">
@@ -304,9 +310,9 @@ function StatPill({ label, value, warn = false, onClick }: { label: string; valu
    SUMMARY TAB
 ──────────────────────────────────────────────── */
 function SummaryTab({ analysis, onTabChange }: { analysis: DocumentAnalysis; onTabChange: (t: string) => void }) {
-  const highPriority = analysis.actionSteps.filter(s => s.priority === "high" && !s.completed)
-  const hardDeadlines = analysis.deadlines.filter(d => d.isHard)
-  const highRisks = analysis.risks.filter(r => r.severity === "high")
+  const highPriority = (analysis.actionSteps ?? []).filter(s => s.priority === "high" && !s.completed)
+  const hardDeadlines = (analysis.deadlines ?? []).filter(d => d.isHard)
+  const highRisks = (analysis.risks ?? []).filter(r => r.severity === "high")
 
   return (
     <div className="space-y-8 max-w-3xl">
@@ -318,8 +324,8 @@ function SummaryTab({ analysis, onTabChange }: { analysis: DocumentAnalysis; onT
 
       <div className="grid grid-cols-3 gap-2 sm:gap-3">
         {[
-          { label: "Action Steps",   value: analysis.actionSteps.length,        tab: "checklist",  warn: false },
-          { label: "Required Docs",  value: analysis.requiredDocuments.length,   tab: "documents",  warn: false },
+          { label: "Action Steps",   value: (analysis.actionSteps ?? []).length,        tab: "checklist",  warn: false },
+          { label: "Required Docs",  value: (analysis.requiredDocuments ?? []).length,   tab: "documents",  warn: false },
           { label: "Hard Deadlines", value: hardDeadlines.length,                tab: "deadlines",  warn: true  },
         ].map(({ label, value, tab, warn }) => (
           <button key={tab} onClick={() => onTabChange(tab)} style={{ touchAction: "manipulation" }} className="text-left group">
@@ -362,11 +368,11 @@ function SummaryTab({ analysis, onTabChange }: { analysis: DocumentAnalysis; onT
         </div>
       )}
 
-      {analysis.followUpQuestions.length > 0 && (
+      {(analysis.followUpQuestions ?? []).length > 0 && (
         <div>
           <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-3">Needs your input</h3>
           <div className="space-y-2">
-            {analysis.followUpQuestions.map(q => (
+            {(analysis.followUpQuestions ?? []).map(q => (
               <div key={q.id} className="flex gap-3 p-3.5 rounded-xl border border-border/50 bg-secondary/20">
                 <AlertCircle className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
                 <div>
