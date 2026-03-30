@@ -1,0 +1,58 @@
+[
+  {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "position": 1,
+    "filepath": "src/pages/slides/TitleSlide.tsx",
+    "title": "Title — Stop Guessing",
+    "description": "Opening slide: PlainPath hero with tagline and contact info.",
+    "speakerNotes": ""
+  },
+  {
+    "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+    "position": 2,
+    "filepath": "src/pages/slides/ProblemSlide.tsx",
+    "title": "The Problem",
+    "description": "Three pain points with stats: rejection rates, time spent, and cost of missed deadlines.",
+    "speakerNotes": ""
+  },
+  {
+    "id": "c3d4e5f6-a7b8-9012-cdef-123456789012",
+    "position": 3,
+    "filepath": "src/pages/slides/SolutionSlide.tsx",
+    "title": "The Solution",
+    "description": "How PlainPath works: upload, extract, and action plan. Split layout with product preview.",
+    "speakerNotes": ""
+  },
+  {
+    "id": "d4e5f6a7-b8c9-0123-defa-234567890123",
+    "position": 4,
+    "filepath": "src/pages/slides/ProductSlide.tsx",
+    "title": "The Product",
+    "description": "Six key analysis views: checklist, documents, deadlines, risks, plain English, and more.",
+    "speakerNotes": ""
+  },
+  {
+    "id": "e5f6a7b8-c9d0-1234-efab-345678901234",
+    "position": 5,
+    "filepath": "src/pages/slides/MarketSlide.tsx",
+    "title": "Market Opportunity",
+    "description": "330M Americans + global market. Tax returns, permits, legal filings.",
+    "speakerNotes": ""
+  },
+  {
+    "id": "f6a7b8c9-d0e1-2345-fabc-456789012345",
+    "position": 6,
+    "filepath": "src/pages/slides/BusinessModelSlide.tsx",
+    "title": "Business Model",
+    "description": "Three pricing tiers: Free, Pro ($9/mo), Team ($29/mo).",
+    "speakerNotes": ""
+  },
+  {
+    "id": "a7b8c9d0-e1f2-3456-abcd-567890123456",
+    "position": 7,
+    "filepath": "src/pages/slides/ClosingSlide.tsx",
+    "title": "Closing — Contact",
+    "description": "Tagline, contact email, and live URL.",
+    "speakerNotes": ""
+  }
+]
