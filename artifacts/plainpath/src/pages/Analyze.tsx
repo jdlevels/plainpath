@@ -350,7 +350,7 @@ function SummaryTab({ analysis, onTabChange }: { analysis: DocumentAnalysis; onT
                   <p className="font-semibold text-sm text-foreground truncate">{step.title}</p>
                   <p className="text-xs text-muted-foreground">{step.category}</p>
                 </div>
-                <button onClick={() => {}} className="text-xs text-primary font-semibold shrink-0 hover:underline">
+                <button onClick={() => onTabChange("checklist")} style={{ touchAction: "manipulation" }} className="text-xs text-primary font-semibold shrink-0 hover:underline">
                   Go →
                 </button>
               </div>
