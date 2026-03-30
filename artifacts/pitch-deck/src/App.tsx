@@ -94,6 +94,7 @@ function AllSlides() {
 // This component is used for the deployed view at `/`
 function SlideViewer() {
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [dims, setDims] = useState(() => ({
     width: Math.min(window.innerWidth, window.innerHeight * (16 / 9)),
     height: Math.min(window.innerHeight, window.innerWidth * (9 / 16)),
@@ -110,24 +111,43 @@ function SlideViewer() {
     return () => window.removeEventListener("resize", update);
   }, []);
 
+  const sendKey = (key: string, code: string) => {
+    iframeRef.current?.contentWindow?.dispatchEvent(
+      new KeyboardEvent("keydown", { key, code, bubbles: true }),
+    );
+  };
+
+  const goNext = () => {
+    if (currentIndex >= slides.length - 1) return;
+    setCurrentIndex((i) => i + 1);
+    sendKey("ArrowRight", "ArrowRight");
+  };
+
+  const goPrev = () => {
+    if (currentIndex <= 0) return;
+    setCurrentIndex((i) => i - 1);
+    sendKey("ArrowLeft", "ArrowLeft");
+  };
+
   useEffect(() => {
     const onKeyDown = (event: globalThis.KeyboardEvent) => {
-      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight" && event.key !== " ") return;
-      if (event.key === " ") event.preventDefault();
-      iframeRef.current?.contentWindow?.dispatchEvent(
-        new KeyboardEvent("keydown", { key: event.key, code: event.code, bubbles: true }),
-      );
+      if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+        goPrev();
+      } else if (event.key === "ArrowRight" || event.key === "ArrowDown" || event.key === " ") {
+        if (event.key === " ") event.preventDefault();
+        goNext();
+      }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
+  }, [currentIndex]);
 
   const base = import.meta.env.BASE_URL.replace(/\/$/, "");
   const firstPosition = slides.length > 0 ? slides[0].position : 1;
 
   return (
     <div
-      className="slide-viewer h-screen w-screen overflow-hidden bg-black flex items-center justify-center"
+      className="slide-viewer h-screen w-screen overflow-hidden bg-black flex items-center justify-center relative"
       onClick={() => iframeRef.current?.focus()}
     >
       <iframe
@@ -137,6 +157,112 @@ function SlideViewer() {
         onLoad={() => iframeRef.current?.focus()}
         title="Slide viewer"
       />
+
+      {/* Prev arrow */}
+      <button
+        onClick={(e) => { e.stopPropagation(); goPrev(); }}
+        disabled={currentIndex === 0}
+        style={{
+          position: "absolute",
+          left: "1.5vw",
+          top: "50%",
+          transform: "translateY(-50%)",
+          width: "3.2vw",
+          height: "3.2vw",
+          borderRadius: "50%",
+          background: "rgba(255,255,255,0.12)",
+          border: "1px solid rgba(255,255,255,0.18)",
+          color: "white",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: currentIndex === 0 ? "default" : "pointer",
+          opacity: currentIndex === 0 ? 0.2 : 0.85,
+          backdropFilter: "blur(8px)",
+          transition: "opacity 0.2s",
+          zIndex: 10,
+        }}
+        aria-label="Previous slide"
+      >
+        <svg viewBox="0 0 24 24" fill="none" style={{ width: "1.2vw", height: "1.2vw" }}>
+          <path d="M15 18l-6-6 6-6" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
+
+      {/* Next arrow */}
+      <button
+        onClick={(e) => { e.stopPropagation(); goNext(); }}
+        disabled={currentIndex === slides.length - 1}
+        style={{
+          position: "absolute",
+          right: "1.5vw",
+          top: "50%",
+          transform: "translateY(-50%)",
+          width: "3.2vw",
+          height: "3.2vw",
+          borderRadius: "50%",
+          background: "rgba(255,255,255,0.12)",
+          border: "1px solid rgba(255,255,255,0.18)",
+          color: "white",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: currentIndex === slides.length - 1 ? "default" : "pointer",
+          opacity: currentIndex === slides.length - 1 ? 0.2 : 0.85,
+          backdropFilter: "blur(8px)",
+          transition: "opacity 0.2s",
+          zIndex: 10,
+        }}
+        aria-label="Next slide"
+      >
+        <svg viewBox="0 0 24 24" fill="none" style={{ width: "1.2vw", height: "1.2vw" }}>
+          <path d="M9 18l6-6-6-6" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
+
+      {/* Slide counter */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: "1.8vh",
+          left: "50%",
+          transform: "translateX(-50%)",
+          display: "flex",
+          alignItems: "center",
+          gap: "0.5vw",
+          zIndex: 10,
+        }}
+      >
+        {slides.map((_, i) => (
+          <button
+            key={i}
+            onClick={(e) => {
+              e.stopPropagation();
+              const diff = i - currentIndex;
+              if (diff === 0) return;
+              const key = diff > 0 ? "ArrowRight" : "ArrowLeft";
+              const code = diff > 0 ? "ArrowRight" : "ArrowLeft";
+              for (let j = 0; j < Math.abs(diff); j++) {
+                iframeRef.current?.contentWindow?.dispatchEvent(
+                  new KeyboardEvent("keydown", { key, code, bubbles: true }),
+                );
+              }
+              setCurrentIndex(i);
+            }}
+            style={{
+              width: i === currentIndex ? "1.6vw" : "0.5vw",
+              height: "0.5vw",
+              borderRadius: "999px",
+              background: i === currentIndex ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.3)",
+              border: "none",
+              cursor: "pointer",
+              transition: "all 0.25s",
+              padding: 0,
+            }}
+            aria-label={`Go to slide ${i + 1}`}
+          />
+        ))}
+      </div>
     </div>
   );
 }
