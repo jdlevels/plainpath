@@ -6,3 +6,9 @@ id = "o7YB8F3oFhJfMlxpy-hZz"
 uri = "file://PlainPath-Handoff.md"
 type = "text"
 title = "PlainPath — Complete Project Handoff"
+
+[[outputs]]
+id = "Z2HPWGzUxRqI_eLxt2ECo"
+uri = "file://.local/outputs/Plain-Path.pdf"
+type = "pdf"
+title = "Plain Path.pdf"
