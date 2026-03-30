@@ -24,8 +24,24 @@
     "speakerNotes": ""
   },
   {
-    "id": "d4e5f6a7-b8c9-0123-defa-234567890123",
+    "id": "aa11bb22-cc33-dd44-ee55-ff6677889900",
     "position": 4,
+    "filepath": "src/pages/slides/HowItWorksSlide.tsx",
+    "title": "How It Works",
+    "description": "4-step walkthrough: Upload, AI extracts, receive action plan, work through checklist.",
+    "speakerNotes": ""
+  },
+  {
+    "id": "bb22cc33-dd44-ee55-ff66-778899001122",
+    "position": 5,
+    "filepath": "src/pages/slides/ExamplesSlide.tsx",
+    "title": "Real Examples",
+    "description": "Three live demo documents: event permit, school enrollment, and small business grant.",
+    "speakerNotes": ""
+  },
+  {
+    "id": "d4e5f6a7-b8c9-0123-defa-234567890123",
+    "position": 6,
     "filepath": "src/pages/slides/ProductSlide.tsx",
     "title": "The Product",
     "description": "Six key analysis views: checklist, documents, deadlines, risks, plain English, and more.",
@@ -33,15 +49,23 @@
   },
   {
     "id": "e5f6a7b8-c9d0-1234-efab-345678901234",
-    "position": 5,
+    "position": 7,
     "filepath": "src/pages/slides/MarketSlide.tsx",
     "title": "Market Opportunity",
     "description": "330M Americans + global market. Tax returns, permits, legal filings.",
     "speakerNotes": ""
   },
   {
+    "id": "cc33dd44-ee55-ff66-7788-990011223344",
+    "position": 8,
+    "filepath": "src/pages/slides/WhyNowSlide.tsx",
+    "title": "Why Now",
+    "description": "Three converging forces: AI capability, no existing solution, growing paperwork complexity.",
+    "speakerNotes": ""
+  },
+  {
     "id": "f6a7b8c9-d0e1-2345-fabc-456789012345",
-    "position": 6,
+    "position": 9,
     "filepath": "src/pages/slides/BusinessModelSlide.tsx",
     "title": "Business Model",
     "description": "Three pricing tiers: Free, Pro ($9/mo), Team ($29/mo).",
@@ -49,7 +73,7 @@
   },
   {
     "id": "a7b8c9d0-e1f2-3456-abcd-567890123456",
-    "position": 7,
+    "position": 10,
     "filepath": "src/pages/slides/ClosingSlide.tsx",
     "title": "Closing — Contact",
     "description": "Tagline, contact email, and live URL.",
