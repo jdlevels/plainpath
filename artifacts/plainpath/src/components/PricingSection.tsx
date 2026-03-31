@@ -2,6 +2,15 @@ import { Check, Sparkles } from "lucide-react"
 import { useLocation } from "wouter"
 import { PRICING_PLANS } from "@/data/pricingData"
 
+function handleCTA(plan: { ctaType: string; ctaHref?: string }, setLocation: (path: string) => void) {
+  if (!plan.ctaHref) return
+  if (plan.ctaType === "checkout" || plan.ctaType === "internal") {
+    setLocation(plan.ctaHref)
+  } else {
+    window.location.href = plan.ctaHref
+  }
+}
+
 export default function PricingSection() {
   const [, setLocation] = useLocation()
 
@@ -85,16 +94,14 @@ export default function PricingSection() {
 
               <button
                 type="button"
-                disabled={plan.planned}
-                onClick={() => !plan.planned && setLocation("/import")}
+                onClick={() => handleCTA(plan, setLocation)}
                 className={[
-                  "mt-8 inline-flex w-full items-center justify-center rounded-xl px-4 py-3 text-sm font-semibold transition-colors",
+                  "mt-8 inline-flex w-full items-center justify-center rounded-xl px-4 py-3 text-sm font-semibold transition-colors cursor-pointer",
                   plan.highlight
                     ? "bg-blue-600 text-white hover:bg-blue-700"
-                    : "bg-slate-100 text-slate-900 hover:bg-slate-200 dark:bg-slate-900 dark:text-white dark:hover:bg-slate-800",
-                  plan.planned
-                    ? "cursor-not-allowed opacity-70"
-                    : "cursor-pointer"
+                    : plan.planned
+                    ? "bg-amber-50 text-amber-800 hover:bg-amber-100 dark:bg-amber-900/20 dark:text-amber-300 dark:hover:bg-amber-900/40"
+                    : "bg-slate-100 text-slate-900 hover:bg-slate-200 dark:bg-slate-900 dark:text-white dark:hover:bg-slate-800"
                 ].join(" ")}
               >
                 {plan.ctaLabel}
