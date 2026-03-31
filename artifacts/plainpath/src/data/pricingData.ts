@@ -1,16 +1,13 @@
-export type PricingCTAType = "checkout" | "waitlist" | "contact" | "internal";
-
 export type PricingPlan = {
   name: string;
   price: string;
   period: string;
   description: string;
   features: string[];
+  ctaLabel: string;
+  planKey?: "starter" | "pro" | "team";
   highlight?: boolean;
   planned?: boolean;
-  ctaLabel: string;
-  ctaType: PricingCTAType;
-  ctaHref?: string;
 };
 
 export const PRICING_PLANS: PricingPlan[] = [
@@ -29,8 +26,7 @@ export const PRICING_PLANS: PricingPlan[] = [
       "Export / Share tools"
     ],
     ctaLabel: "Start Starter",
-    ctaType: "checkout",
-    ctaHref: "/subscribe?plan=starter"
+    planKey: "starter"
   },
   {
     name: "Pro",
@@ -49,8 +45,7 @@ export const PRICING_PLANS: PricingPlan[] = [
       "Export / Share tools"
     ],
     ctaLabel: "Upgrade to Pro",
-    ctaType: "checkout",
-    ctaHref: "/subscribe?plan=pro",
+    planKey: "pro",
     highlight: true
   },
   {
@@ -67,8 +62,6 @@ export const PRICING_PLANS: PricingPlan[] = [
       "Priority support"
     ],
     ctaLabel: "Join Team Waitlist",
-    ctaType: "waitlist",
-    ctaHref: "mailto:hello@plainpath.app?subject=PlainPath%20Team%20Waitlist",
     planned: true
   }
 ];

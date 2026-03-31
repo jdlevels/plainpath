@@ -1,5 +1,7 @@
 import { Check, Sparkles } from "lucide-react"
+import { useState } from "react"
 import { PRICING_PLANS, type PricingPlan } from "@/data/pricingData"
+import { startStripeCheckout } from "@/lib/stripe"
 
 function getButtonClasses(plan: PricingPlan) {
   const base =
@@ -13,22 +15,46 @@ function getButtonClasses(plan: PricingPlan) {
   return `${base} bg-slate-100 text-slate-900 hover:bg-slate-200 dark:bg-slate-900 dark:text-white dark:hover:bg-slate-800`
 }
 
-function renderCTA(plan: PricingPlan) {
+function PlanCTA({ plan }: { plan: PricingPlan }) {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const className = getButtonClasses(plan)
 
-  if (plan.ctaType === "checkout" || plan.ctaType === "internal") {
+  if (plan.planned) {
     return (
-      <a href={plan.ctaHref ?? "#"} className={className}>
+      <a
+        href="mailto:hello@plainpath.app?subject=PlainPath%20Team%20Waitlist"
+        className={className}
+      >
         {plan.ctaLabel}
       </a>
     )
   }
 
-  if (plan.ctaType === "waitlist" || plan.ctaType === "contact") {
+  if (plan.planKey) {
     return (
-      <a href={plan.ctaHref ?? "mailto:hello@plainpath.app"} className={className}>
-        {plan.ctaLabel}
-      </a>
+      <div>
+        <button
+          type="button"
+          disabled={loading}
+          onClick={async () => {
+            setError(null)
+            setLoading(true)
+            try {
+              await startStripeCheckout(plan.planKey!)
+            } catch (err) {
+              setError(err instanceof Error ? err.message : "Unable to start checkout")
+              setLoading(false)
+            }
+          }}
+          className={`${className} disabled:opacity-60 disabled:cursor-not-allowed`}
+        >
+          {loading ? "Redirecting…" : plan.ctaLabel}
+        </button>
+        {error && (
+          <p className="mt-2 text-xs text-red-500 text-center">{error}</p>
+        )}
+      </div>
     )
   }
 
@@ -115,7 +141,7 @@ export default function PricingSection() {
                 ))}
               </ul>
 
-              {renderCTA(plan)}
+              <PlanCTA plan={plan} />
             </div>
           </div>
         ))}
