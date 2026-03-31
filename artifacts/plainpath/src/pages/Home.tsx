@@ -8,7 +8,7 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import PricingSection from "@/components/shared/PricingSection"
+import PricingSection from "@/components/PricingSection"
 
 const DEMOS = [
   {
