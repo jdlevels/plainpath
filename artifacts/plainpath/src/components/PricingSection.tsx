@@ -13,16 +13,16 @@ export default function PricingSection() {
       <div className="mx-auto max-w-3xl text-center">
         <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-slate-300/70 bg-white/70 px-3 py-1 text-sm font-medium text-slate-700 backdrop-blur dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300">
           <Sparkles className="h-4 w-4" />
-          Simple pricing
+          Practical launch pricing
         </div>
 
         <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
-          Choose the plan that fits your document workload
+          Simple pricing for real document work
         </h2>
 
         <p className="mt-4 text-base leading-7 text-slate-600 dark:text-slate-300 sm:text-lg">
-          PlainPath helps you understand confusing documents, identify risks,
-          and know what to do next. Start free, then upgrade when you need more.
+          Start with a low monthly plan, then move up when you need more
+          analyses and the full PlainPath workflow.
         </p>
       </div>
 
@@ -46,8 +46,8 @@ export default function PricingSection() {
             )}
 
             {plan.planned && (
-              <div className="absolute -top-3 left-6 rounded-full bg-amber-500 px-3 py-1 text-xs font-semibold text-white shadow">
-                Planned
+              <div className="absolute -top-3 right-6 rounded-full bg-amber-500 px-3 py-1 text-xs font-semibold text-white shadow">
+                Coming Soon
               </div>
             )}
 
@@ -105,8 +105,8 @@ export default function PricingSection() {
       </div>
 
       <div className="mx-auto mt-8 max-w-3xl text-center text-sm leading-6 text-slate-500 dark:text-slate-400">
-        Team features are planned for a later release. Current V1 supports
-        single-user document analysis with local saved analyses on the current
+        Team pricing is shown as a forward-looking option. Current V1 is best
+        positioned for single-user use with local saved analyses on the current
         device/browser.
       </div>
     </section>
