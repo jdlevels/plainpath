@@ -11,6 +11,7 @@ import Analyze from "@/pages/Analyze";
 import MyAnalyses from "@/pages/MyAnalyses";
 import Privacy from "@/pages/Privacy";
 import Terms from "@/pages/Terms";
+import Subscribe from "@/pages/Subscribe";
 import NotFound from "@/pages/not-found";
 
 import { Navbar } from "@/components/layout/Navbar";
@@ -37,6 +38,7 @@ function Router() {
           <Route path="/my-analyses" component={MyAnalyses} />
           <Route path="/privacy" component={Privacy} />
           <Route path="/terms" component={Terms} />
+          <Route path="/subscribe" component={Subscribe} />
           <Route component={NotFound} />
         </Switch>
       </main>

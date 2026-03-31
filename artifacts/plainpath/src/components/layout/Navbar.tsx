@@ -9,7 +9,7 @@ export function Navbar() {
   const isImport = location === "/import"
   const isAnalyze = location.startsWith("/analyze")
   const isMyAnalyses = location === "/my-analyses"
-  const isStaticPage = location === "/privacy" || location === "/terms"
+  const isStaticPage = location === "/privacy" || location === "/terms" || location.startsWith("/subscribe")
 
   return (
     <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-background/90 border-b border-border/50 transition-all duration-300 safe-top">
