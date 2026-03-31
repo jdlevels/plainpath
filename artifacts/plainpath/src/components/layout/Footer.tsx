@@ -52,7 +52,7 @@ export function Footer() {
             <Link href="/terms" className="text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors">
               Terms of Use
             </Link>
-            <span className="text-xs text-muted-foreground/40">From $9/month · No account required</span>
+            <span className="text-xs text-muted-foreground/40">From $15/month · No account required</span>
           </div>
         </div>
 
