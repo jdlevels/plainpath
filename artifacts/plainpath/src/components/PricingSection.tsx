@@ -1,19 +1,45 @@
 import { Check, Sparkles } from "lucide-react"
-import { useLocation } from "wouter"
-import { PRICING_PLANS } from "@/data/pricingData"
+import { PRICING_PLANS, type PricingPlan } from "@/data/pricingData"
 
-function handleCTA(plan: { ctaType: string; ctaHref?: string }, setLocation: (path: string) => void) {
-  if (!plan.ctaHref) return
-  if (plan.ctaType === "checkout" || plan.ctaType === "internal") {
-    setLocation(plan.ctaHref)
-  } else {
-    window.location.href = plan.ctaHref
+function getButtonClasses(plan: PricingPlan) {
+  const base =
+    "mt-8 inline-flex w-full items-center justify-center rounded-xl px-4 py-3 text-sm font-semibold transition-colors"
+  if (plan.highlight) {
+    return `${base} bg-blue-600 text-white hover:bg-blue-700`
   }
+  if (plan.planned) {
+    return `${base} bg-amber-500 text-white hover:bg-amber-600`
+  }
+  return `${base} bg-slate-100 text-slate-900 hover:bg-slate-200 dark:bg-slate-900 dark:text-white dark:hover:bg-slate-800`
+}
+
+function renderCTA(plan: PricingPlan) {
+  const className = getButtonClasses(plan)
+
+  if (plan.ctaType === "checkout" || plan.ctaType === "internal") {
+    return (
+      <a href={plan.ctaHref ?? "#"} className={className}>
+        {plan.ctaLabel}
+      </a>
+    )
+  }
+
+  if (plan.ctaType === "waitlist" || plan.ctaType === "contact") {
+    return (
+      <a href={plan.ctaHref ?? "mailto:hello@plainpath.app"} className={className}>
+        {plan.ctaLabel}
+      </a>
+    )
+  }
+
+  return (
+    <button type="button" className={className}>
+      {plan.ctaLabel}
+    </button>
+  )
 }
 
 export default function PricingSection() {
-  const [, setLocation] = useLocation()
-
   return (
     <section
       id="pricing"
@@ -44,8 +70,7 @@ export default function PricingSection() {
               "bg-white text-slate-900 dark:bg-slate-950 dark:text-white",
               plan.highlight
                 ? "border-blue-500 ring-2 ring-blue-500/20"
-                : "border-slate-200 dark:border-slate-800",
-              plan.planned ? "opacity-95" : ""
+                : "border-slate-200 dark:border-slate-800"
             ].join(" ")}
           >
             {plan.highlight && (
@@ -67,11 +92,9 @@ export default function PricingSection() {
                 <span className="text-4xl font-bold tracking-tight">
                   {plan.price}
                 </span>
-                {plan.period ? (
-                  <span className="pb-1 text-sm text-slate-500 dark:text-slate-400">
-                    {plan.period}
-                  </span>
-                ) : null}
+                <span className="pb-1 text-sm text-slate-500 dark:text-slate-400">
+                  {plan.period}
+                </span>
               </div>
 
               <p className="mt-4 min-h-[72px] text-sm leading-6 text-slate-600 dark:text-slate-300">
@@ -92,20 +115,7 @@ export default function PricingSection() {
                 ))}
               </ul>
 
-              <button
-                type="button"
-                onClick={() => handleCTA(plan, setLocation)}
-                className={[
-                  "mt-8 inline-flex w-full items-center justify-center rounded-xl px-4 py-3 text-sm font-semibold transition-colors cursor-pointer",
-                  plan.highlight
-                    ? "bg-blue-600 text-white hover:bg-blue-700"
-                    : plan.planned
-                    ? "bg-amber-50 text-amber-800 hover:bg-amber-100 dark:bg-amber-900/20 dark:text-amber-300 dark:hover:bg-amber-900/40"
-                    : "bg-slate-100 text-slate-900 hover:bg-slate-200 dark:bg-slate-900 dark:text-white dark:hover:bg-slate-800"
-                ].join(" ")}
-              >
-                {plan.ctaLabel}
-              </button>
+              {renderCTA(plan)}
             </div>
           </div>
         ))}
