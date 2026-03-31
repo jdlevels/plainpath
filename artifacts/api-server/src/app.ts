@@ -3,6 +3,7 @@ import cors from "cors";
 import pinoHttp from "pino-http";
 import multer from "multer";
 import router from "./routes";
+import stripeRoutes from "./routes/stripe";
 import { logger } from "./lib/logger";
 
 const app: Express = express();
@@ -107,6 +108,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/api", router);
+app.use("/api/stripe", stripeRoutes);
 
 app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
   if (err instanceof multer.MulterError) {
