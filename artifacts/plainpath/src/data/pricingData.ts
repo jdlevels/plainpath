@@ -13,28 +13,33 @@ export type PricingPlan = {
 export const PRICING_PLANS: PricingPlan[] = [
   {
     name: "Starter",
-    price: "Free",
-    period: "",
-    description: "Try PlainPath and understand a few documents before upgrading.",
+    price: "$4.99",
+    period: "/month",
+    description:
+      "For light users who need occasional help understanding important documents.",
     features: [
-      "3 analyses per month",
-      "Built-in demo documents",
+      "Up to 10 analyses per month",
       "Plain English overview",
-      "Basic action-plan preview",
-      "Saved locally on your device"
+      "Key Terms",
+      "Basic Action Pack",
+      "Local Saved Analyses",
+      "Export / Share tools"
     ],
-    ctaLabel: "Start Free"
+    ctaLabel: "Choose Starter"
   },
   {
     name: "Pro",
-    price: "$15",
+    price: "$14.99",
     period: "/month",
-    description: "Best for individuals who regularly need help understanding important documents.",
+    description:
+      "Best for regular users who need the full PlainPath document-understanding workflow.",
     features: [
       "Up to 100 analyses per month",
       "Plain English explanations",
       "Source Sections + section explainers",
-      "Key Terms + Action Pack",
+      "Checklist + Required Docs",
+      "Deadlines + Risks + What's Missing",
+      "Key Terms + Full Action Pack",
       "Saved Analyses",
       "Export / Share tools"
     ],
@@ -43,14 +48,15 @@ export const PRICING_PLANS: PricingPlan[] = [
   },
   {
     name: "Team",
-    price: "$49",
+    price: "$39.99",
     period: "/month",
-    description: "For shared document workflows and higher volume use.",
+    description:
+      "For higher-volume or shared workflows. Planned for a later release.",
     features: [
-      "Planned multi-user access",
       "Higher monthly analysis limits",
-      "Shared analysis workflows",
-      "Admin / billing controls",
+      "Planned shared workflows",
+      "Planned multi-user access",
+      "Planned admin / billing controls",
       "Priority support"
     ],
     ctaLabel: "Coming Soon",

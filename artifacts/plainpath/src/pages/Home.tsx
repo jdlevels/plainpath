@@ -140,7 +140,7 @@ export default function Home() {
             className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2"
           >
             {[
-              "From $15/month",
+              "From $4.99/month",
               "No account required",
               "Documents not stored by PlainPath",
               "Analyses saved on your device only",
