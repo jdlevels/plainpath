@@ -1,10 +1,13 @@
-export async function startStripeCheckout(plan: "starter" | "pro" | "team") {
+export async function startStripeCheckout(
+  plan: "starter" | "pro" | "team",
+  email?: string
+) {
   const response = await fetch("/api/stripe/create-checkout-session", {
     method: "POST",
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
     },
-    body: JSON.stringify({ plan })
+    body: JSON.stringify({ plan, email }),
   })
 
   const data = await response.json()
