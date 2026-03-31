@@ -12,6 +12,7 @@ import { Card } from "@/components/ui/card"
 import { useAnalyzeDocument } from "@workspace/api-client-react"
 import { useAnalysisContext } from "@/context/AnalysisContext"
 import { getApiBaseUrl } from "@/lib/api"
+import { beforeRunAnalysis } from "@/lib/analysisGate"
 
 const DEMOS = [
   {
@@ -129,6 +130,14 @@ export default function Import() {
 
   const handleDocTypeSelect = async (docTypeLabel: string) => {
     if (!pending) return
+
+    try {
+      await beforeRunAnalysis()
+    } catch (err) {
+      setPasteError(err instanceof Error ? err.message : "Unable to start analysis.")
+      return
+    }
+
     setDocumentTypeHint(docTypeLabel)
     setIsAnalyzing(true)
     setStep("analyzing")
