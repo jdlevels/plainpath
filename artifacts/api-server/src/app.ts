@@ -4,6 +4,7 @@ import pinoHttp from "pino-http";
 import multer from "multer";
 import router from "./routes";
 import stripeRoutes from "./routes/stripe";
+import entitlementsRoutes from "./routes/entitlements";
 import { logger } from "./lib/logger";
 
 const app: Express = express();
@@ -117,6 +118,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/api", router);
 app.use("/api/stripe", stripeRoutes);
+app.use("/api/entitlements", entitlementsRoutes);
 
 app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
   if (err instanceof multer.MulterError) {
