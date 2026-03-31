@@ -104,6 +104,14 @@ app.use(
   }),
 );
 
+// Stripe webhook must receive the raw body (Buffer) so the signature can be
+// verified. Mount this path with express.raw() BEFORE the global json() parser
+// consumes and discards the raw stream.
+app.use(
+  "/api/stripe/webhook",
+  express.raw({ type: "application/json" }),
+);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
