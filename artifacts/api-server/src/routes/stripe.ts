@@ -1,5 +1,5 @@
 import { Router } from "express"
-import { getStripe } from "../lib/stripe"
+import { stripe } from "../lib/stripe"
 
 const router = Router()
 
@@ -47,7 +47,7 @@ router.post("/create-checkout-session", async (req, res) => {
 
     const selectedPlan = PLAN_CONFIG[plan]
 
-    const session = await getStripe().checkout.sessions.create({
+    const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       success_url: `${APP_BASE_URL}/subscribe/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${APP_BASE_URL}/subscribe/cancel`,
@@ -92,7 +92,7 @@ router.post("/create-billing-portal-session", async (req, res) => {
       return res.status(400).json({ error: "Missing customerId" })
     }
 
-    const session = await getStripe().billingPortal.sessions.create({
+    const session = await stripe.billingPortal.sessions.create({
       customer: customerId,
       return_url: `${APP_BASE_URL}/account`
     })
