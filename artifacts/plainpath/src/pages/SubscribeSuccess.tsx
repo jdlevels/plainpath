@@ -1,28 +1,38 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState } from "react";
+import { setStoredSubscriberEmail } from "../lib/subscriberStorage";
 
 type SessionStatus = {
-  customer_email: string | null
-  payment_status: string
-  status: string
-  metadata?: Record<string, string>
-}
+  customer_email: string | null;
+  payment_status: string;
+  status: string;
+  metadata?: Record<string, string>;
+};
 
 export default function SubscribeSuccess() {
-  const [sessionData, setSessionData] = useState<SessionStatus | null>(null)
+  const [sessionData, setSessionData] = useState<SessionStatus | null>(null);
 
   useEffect(() => {
-    const url = new URL(window.location.href)
-    const sessionId = url.searchParams.get("session_id")
+    const url = new URL(window.location.href);
+    const sessionId = url.searchParams.get("session_id");
 
-    if (!sessionId) return
+    if (!sessionId) return;
 
-    fetch(`/api/stripe/checkout-session-status?session_id=${encodeURIComponent(sessionId)}`)
+    fetch(
+      `/api/stripe/checkout-session-status?session_id=${encodeURIComponent(
+        sessionId
+      )}`
+    )
       .then((res) => res.json())
-      .then((data) => setSessionData(data))
-      .catch(() => {
-        // silent fail for now
+      .then((data) => {
+        setSessionData(data);
+        if (data?.customer_email) {
+          setStoredSubscriberEmail(data.customer_email);
+        }
       })
-  }, [])
+      .catch(() => {
+        // silent fail
+      });
+  }, []);
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-20 sm:px-6 lg:px-8">
@@ -41,9 +51,15 @@ export default function SubscribeSuccess() {
 
         {sessionData?.customer_email ? (
           <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200">
-            <div><strong>Email:</strong> {sessionData.customer_email}</div>
-            <div><strong>Plan:</strong> {sessionData.metadata?.plan || "starter"}</div>
-            <div><strong>Payment status:</strong> {sessionData.payment_status}</div>
+            <div>
+              <strong>Email:</strong> {sessionData.customer_email}
+            </div>
+            <div>
+              <strong>Plan:</strong> {sessionData.metadata?.plan || "starter"}
+            </div>
+            <div>
+              <strong>Payment status:</strong> {sessionData.payment_status}
+            </div>
           </div>
         ) : null}
 
@@ -57,5 +73,5 @@ export default function SubscribeSuccess() {
         </div>
       </div>
     </div>
-  )
+  );
 }
