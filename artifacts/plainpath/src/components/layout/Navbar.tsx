@@ -38,6 +38,15 @@ export function Navbar() {
           )}
 
           {isHome && (
+            <a
+              href="#pricing"
+              className="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+            >
+              View Pricing
+            </a>
+          )}
+
+          {isHome && (
             <Button asChild size="sm" className="rounded-full shadow-sm hover:shadow-md gap-1.5 ml-1" style={{ touchAction: "manipulation" }}>
               <Link href="/import">
                 <span className="sm:hidden">Analyze</span>
