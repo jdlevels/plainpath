@@ -15,57 +15,31 @@ function getButtonClasses(plan: PricingPlan) {
   return `${base} bg-slate-100 text-slate-900 hover:bg-slate-200 dark:bg-slate-900 dark:text-white dark:hover:bg-slate-800`
 }
 
-function PlanCTA({ plan }: { plan: PricingPlan }) {
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const className = getButtonClasses(plan)
-
-  if (plan.planned) {
-    return (
-      <a
-        href="mailto:hello@plainpath.app?subject=PlainPath%20Team%20Waitlist"
-        className={className}
-      >
-        {plan.ctaLabel}
-      </a>
-    )
-  }
-
-  if (plan.planKey) {
-    return (
-      <div>
-        <button
-          type="button"
-          disabled={loading}
-          onClick={async () => {
-            setError(null)
-            setLoading(true)
-            try {
-              await startStripeCheckout(plan.planKey!)
-            } catch (err) {
-              setError(err instanceof Error ? err.message : "Unable to start checkout")
-              setLoading(false)
-            }
-          }}
-          className={`${className} disabled:opacity-60 disabled:cursor-not-allowed`}
-        >
-          {loading ? "Redirecting…" : plan.ctaLabel}
-        </button>
-        {error && (
-          <p className="mt-2 text-xs text-red-500 text-center">{error}</p>
-        )}
-      </div>
-    )
-  }
-
-  return (
-    <button type="button" className={className}>
-      {plan.ctaLabel}
-    </button>
-  )
-}
-
 export default function PricingSection() {
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handlePlanClick(plan: PricingPlan) {
+    if (plan.planned) {
+      window.location.href =
+        "mailto:hello@plainpath.app?subject=PlainPath%20Team%20Waitlist"
+      return
+    }
+
+    if (!plan.planKey) return
+
+    try {
+      setError(null)
+      setLoadingPlan(plan.planKey)
+      await startStripeCheckout(plan.planKey)
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Unable to start checkout"
+      setError(message)
+      setLoadingPlan(null)
+    }
+  }
+
   return (
     <section
       id="pricing"
@@ -141,11 +115,24 @@ export default function PricingSection() {
                 ))}
               </ul>
 
-              <PlanCTA plan={plan} />
+              <button
+                type="button"
+                onClick={() => void handlePlanClick(plan)}
+                disabled={loadingPlan === plan.planKey}
+                className={getButtonClasses(plan)}
+              >
+                {loadingPlan === plan.planKey ? "Redirecting..." : plan.ctaLabel}
+              </button>
             </div>
           </div>
         ))}
       </div>
+
+      {error ? (
+        <div className="mx-auto mt-6 max-w-xl rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300">
+          {error}
+        </div>
+      ) : null}
 
       <div className="mx-auto mt-8 max-w-3xl text-center text-sm leading-6 text-slate-500 dark:text-slate-400">
         Team pricing is shown as a forward-looking option. Current V1 is best
