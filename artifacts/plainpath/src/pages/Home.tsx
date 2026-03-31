@@ -4,11 +4,11 @@ import {
   ArrowRight, FileCheck, Clock, ShieldCheck, Upload,
   Sparkles, ClipboardList, GraduationCap, Banknote,
   Receipt, Scale, HeartPulse, FileSignature, MailWarning,
-  CheckCircle2, Check
+  CheckCircle2
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { PRICING_PLANS } from "@/data/pricingData"
+import PricingSection from "@/components/shared/PricingSection"
 
 const DEMOS = [
   {
@@ -366,116 +366,7 @@ export default function Home() {
         </section>
 
         {/* ── Pricing ──────────────────────────────────────── */}
-        <section id="pricing" className="max-w-6xl w-full mt-28 scroll-mt-24">
-          <div className="text-center mb-14">
-            <motion.p
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3"
-            >
-              Pricing
-            </motion.p>
-            <motion.h2
-              initial={{ opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="text-3xl md:text-4xl font-display font-bold mb-3"
-            >
-              Simple pricing — start today
-            </motion.h2>
-            <motion.p
-              initial={{ opacity: 0, y: 8 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.1 }}
-              className="text-muted-foreground text-lg max-w-xl mx-auto"
-            >
-              No contracts. Cancel anytime.
-            </motion.p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
-            {PRICING_PLANS.map((plan, i) => (
-              <motion.div
-                key={plan.name}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className={plan.highlight ? "md:-mt-4" : ""}
-              >
-                <Card className={`relative h-full rounded-2xl overflow-hidden shadow-md flex flex-col ${
-                  plan.highlight
-                    ? "bg-primary text-primary-foreground border-primary shadow-xl shadow-primary/20"
-                    : "bg-card border-border/40"
-                }`}>
-                  {plan.highlight && (
-                    <div className="absolute top-0 inset-x-0 flex justify-center">
-                      <span className="bg-white/20 text-white text-xs font-bold tracking-wide px-4 py-1 rounded-b-lg">
-                        Most popular
-                      </span>
-                    </div>
-                  )}
-                  {plan.planned && (
-                    <div className="absolute top-0 inset-x-0 flex justify-center">
-                      <span className="bg-secondary text-muted-foreground text-xs font-bold tracking-wide px-4 py-1 rounded-b-lg">
-                        Coming soon
-                      </span>
-                    </div>
-                  )}
-
-                  <div className="p-8 pt-10 flex flex-col flex-1">
-                    <p className={`text-xs font-bold uppercase tracking-widest mb-3 ${plan.highlight ? "text-white/70" : "text-muted-foreground"}`}>
-                      {plan.name}
-                    </p>
-                    <div className="flex items-baseline gap-1 mb-2">
-                      <span className={`text-4xl font-display font-extrabold ${plan.highlight ? "text-white" : "text-foreground"}`}>
-                        {plan.price}
-                      </span>
-                      {plan.period && (
-                        <span className={`text-base ${plan.highlight ? "text-white/60" : "text-muted-foreground"}`}>
-                          {plan.period}
-                        </span>
-                      )}
-                    </div>
-                    <p className={`text-sm leading-relaxed mb-6 ${plan.highlight ? "text-white/75" : "text-muted-foreground"}`}>
-                      {plan.description}
-                    </p>
-
-                    <div className={`h-px mb-6 ${plan.highlight ? "bg-white/20" : "bg-border"}`} />
-
-                    <ul className="space-y-3 flex-1 mb-8">
-                      {plan.features.map((feature) => (
-                        <li key={feature} className="flex items-start gap-2.5">
-                          <Check className={`w-4 h-4 mt-0.5 shrink-0 ${plan.highlight ? "text-white/80" : "text-primary"}`} />
-                          <span className={`text-sm ${plan.highlight ? "text-white/80" : "text-muted-foreground"}`}>
-                            {feature}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-
-                    <Button
-                      onClick={() => !plan.planned && setLocation("/import")}
-                      disabled={plan.planned}
-                      variant={plan.highlight ? "secondary" : "outline"}
-                      className={`w-full rounded-xl h-11 font-semibold ${
-                        plan.highlight
-                          ? "bg-white text-primary hover:bg-white/90"
-                          : plan.planned
-                          ? "opacity-50 cursor-not-allowed"
-                          : ""
-                      }`}
-                    >
-                      {plan.ctaLabel}
-                    </Button>
-                  </div>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </section>
+        <PricingSection />
 
       </main>
     </div>
