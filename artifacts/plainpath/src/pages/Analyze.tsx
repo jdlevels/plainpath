@@ -55,9 +55,10 @@ export default function Analyze() {
   const [, setLocation] = useLocation()
   const searchString = useSearch()
   const demoId = new URLSearchParams(searchString).get("demo") as string | null
+  const tabParam = new URLSearchParams(searchString).get("tab")
 
   const { analysis, documentTypeHint, setAnalysis, clearAnalysis, updateActionStep, updateRequiredDoc } = useAnalysisContext()
-  const [activeTab, setActiveTab] = useState("plain-english")
+  const [activeTab, setActiveTab] = useState(tabParam ?? "plain-english")
   const [savedId, setSavedId] = useState<string | null>(null)
   const [justSaved, setJustSaved] = useState(false)
 
@@ -338,20 +339,30 @@ function SummaryTab({ analysis, onTabChange }: { analysis: DocumentAnalysis; onT
   const highPriority = (analysis.actionSteps ?? []).filter(s => s.priority === "high" && !s.completed)
   const hardDeadlines = (analysis.deadlines ?? []).filter(d => d.isHard)
   const highRisks = (analysis.risks ?? []).filter(r => r.severity === "high")
+  const urgentCount = highPriority.length + hardDeadlines.length + highRisks.length
 
   return (
-    <div className="space-y-8 max-w-3xl">
+    <div className="space-y-5 max-w-3xl">
       <div>
-        <h2 className="text-xl sm:text-2xl font-display font-bold mb-1">Document Overview</h2>
-        <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold mb-4">{analysis.documentType}</p>
-        <p className="text-base text-foreground/80 leading-relaxed">{analysis.summary}</p>
+        <h2 className="text-xl sm:text-2xl font-display font-bold mb-0.5">Document Overview</h2>
+        <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">{analysis.documentType}</p>
       </div>
 
+      {/* Blue: What this document is */}
+      <div className="rounded-2xl border p-5 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 border-blue-200/60 dark:border-blue-900/40">
+        <div className="flex items-center gap-2 mb-3">
+          <FileText className="w-4 h-4 shrink-0" />
+          <h3 className="text-xs font-bold uppercase tracking-widest">What this document is</h3>
+        </div>
+        <p className="text-sm text-foreground/80 leading-relaxed">{analysis.summary}</p>
+      </div>
+
+      {/* Stat grid */}
       <div className="grid grid-cols-3 gap-2 sm:gap-3">
         {[
-          { label: "Action Steps",   value: (analysis.actionSteps ?? []).length,        tab: "checklist",  warn: false },
-          { label: "Required Docs",  value: (analysis.requiredDocuments ?? []).length,   tab: "documents",  warn: false },
-          { label: "Hard Deadlines", value: hardDeadlines.length,                tab: "deadlines",  warn: true  },
+          { label: "Action Steps",   value: (analysis.actionSteps ?? []).length,       tab: "checklist", warn: false },
+          { label: "Required Docs",  value: (analysis.requiredDocuments ?? []).length,  tab: "documents", warn: false },
+          { label: "Hard Deadlines", value: hardDeadlines.length,               tab: "deadlines", warn: true  },
         ].map(({ label, value, tab, warn }) => (
           <button key={tab} onClick={() => onTabChange(tab)} style={{ touchAction: "manipulation" }} className="text-left group">
             <div className={`p-2.5 sm:p-4 rounded-2xl border transition-all group-hover:shadow-md ${warn ? "bg-red-50/60 dark:bg-red-950/30 border-red-200/50 dark:border-red-900/40 group-hover:border-red-300" : "bg-secondary/30 border-transparent group-hover:border-primary/20"}`}>
@@ -362,27 +373,38 @@ function SummaryTab({ analysis, onTabChange }: { analysis: DocumentAnalysis; onT
         ))}
       </div>
 
-      {(highPriority.length > 0 || highRisks.length > 0) && (
-        <div>
-          <h3 className="text-sm font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400 mb-3 flex items-center gap-2">
-            <AlertCircle className="w-4 h-4" /> Needs immediate attention
-          </h3>
-          <div className="space-y-2">
+      {/* Red: Immediate attention */}
+      {urgentCount > 0 && (
+        <div className="rounded-2xl border border-red-200/60 dark:border-red-900/40 bg-red-50/40 dark:bg-red-950/20 overflow-hidden">
+          <div className="px-5 py-3 border-b border-red-200/50 dark:border-red-900/30 bg-red-50/60 dark:bg-red-950/30 flex items-center gap-2">
+            <AlertCircle className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-red-700 dark:text-red-400">Needs immediate attention</span>
+            <span className="ml-auto px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-400">{urgentCount}</span>
+          </div>
+          <div className="p-4 space-y-2">
             {highPriority.slice(0, 3).map(step => (
-              <div key={step.id} className="flex items-center gap-3 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200/50 dark:border-amber-900/40">
-                <div className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+              <div key={step.id} className="flex items-center gap-3 p-3 rounded-xl bg-white/70 dark:bg-red-950/30 border border-red-200/40 dark:border-red-900/30">
+                <div className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-sm text-foreground truncate">{step.title}</p>
                   <p className="text-xs text-muted-foreground">{step.category}</p>
                 </div>
-                <button onClick={() => onTabChange("checklist")} style={{ touchAction: "manipulation" }} className="text-xs text-primary font-semibold shrink-0 hover:underline">
-                  Go →
-                </button>
+                <button onClick={() => onTabChange("checklist")} style={{ touchAction: "manipulation" }} className="text-xs text-primary font-semibold shrink-0 hover:underline">Go →</button>
+              </div>
+            ))}
+            {hardDeadlines.slice(0, 2).map(dl => (
+              <div key={dl.id} className="flex items-center gap-3 p-3 rounded-xl bg-white/70 dark:bg-red-950/30 border border-red-200/40 dark:border-red-900/30">
+                <Clock className="w-3.5 h-3.5 text-red-500 dark:text-red-400 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm text-foreground truncate">{dl.title}</p>
+                  <p className="text-xs font-semibold text-red-600 dark:text-red-400">{dl.date}</p>
+                </div>
+                <button onClick={() => onTabChange("deadlines")} style={{ touchAction: "manipulation" }} className="text-xs text-primary font-semibold shrink-0 hover:underline">Go →</button>
               </div>
             ))}
             {highRisks.slice(0, 2).map(risk => (
-              <div key={risk.id} className="flex items-center gap-3 p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200/50 dark:border-red-900/40">
-                <XCircle className="w-4 h-4 text-red-500 dark:text-red-400 shrink-0" />
+              <div key={risk.id} className="flex items-center gap-3 p-3 rounded-xl bg-white/70 dark:bg-red-950/30 border border-red-200/40 dark:border-red-900/30">
+                <XCircle className="w-3.5 h-3.5 text-red-500 dark:text-red-400 shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-sm text-foreground truncate">{risk.title}</p>
                   <p className="text-xs text-muted-foreground">High severity risk</p>
@@ -390,15 +412,24 @@ function SummaryTab({ analysis, onTabChange }: { analysis: DocumentAnalysis; onT
               </div>
             ))}
           </div>
+          <div className="px-5 pb-4 flex gap-3">
+            <button onClick={() => onTabChange("missing")} style={{ touchAction: "manipulation" }} className="text-xs text-primary font-semibold hover:underline flex items-center gap-1">
+              View what's missing <ArrowRight className="w-3 h-3" />
+            </button>
+          </div>
         </div>
       )}
 
+      {/* Amber: Needs your input */}
       {(analysis.followUpQuestions ?? []).length > 0 && (
-        <div>
-          <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground mb-3">Needs your input</h3>
-          <div className="space-y-2">
+        <div className="rounded-2xl border border-amber-200/60 dark:border-amber-900/40 bg-amber-50/40 dark:bg-amber-950/20 overflow-hidden">
+          <div className="px-5 py-3 border-b border-amber-200/50 dark:border-amber-900/30 bg-amber-50/60 dark:bg-amber-950/30 flex items-center gap-2">
+            <AlertCircle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-amber-700 dark:text-amber-400">Needs your input</span>
+          </div>
+          <div className="p-4 space-y-2">
             {(analysis.followUpQuestions ?? []).map(q => (
-              <div key={q.id} className="flex gap-3 p-3.5 rounded-xl border border-border/50 bg-secondary/20">
+              <div key={q.id} className="flex gap-3 p-3.5 rounded-xl bg-white/70 dark:bg-amber-950/30 border border-amber-200/40 dark:border-amber-900/30">
                 <AlertCircle className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
                 <div>
                   <p className="text-sm font-semibold text-foreground">{q.question}</p>
@@ -533,10 +564,10 @@ function WhatsMissingTab({
 
       {/* ── Next Best Action spotlight ─────────────── */}
       {nextAction && (
-        <div className="rounded-2xl bg-primary/5 border border-primary/20 overflow-hidden">
-          <div className="px-5 py-3 bg-primary/10 border-b border-primary/15 flex items-center gap-2">
-            <ArrowRight className="w-3.5 h-3.5 text-primary" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Next best action</span>
+        <div className="rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-900/40 overflow-hidden">
+          <div className="px-5 py-3 bg-blue-50/60 dark:bg-blue-950/30 border-b border-blue-200/50 dark:border-blue-900/30 flex items-center gap-2">
+            <ArrowRight className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-blue-700 dark:text-blue-400">Next best action</span>
           </div>
           <div className="p-5 flex items-start gap-4">
             <div className="mt-0.5">
@@ -557,8 +588,8 @@ function WhatsMissingTab({
             </div>
           </div>
           {pendingHigh.length > 1 && (
-            <div className="px-5 pb-3.5">
-              <button onClick={() => onTabChange("checklist")} className="text-xs text-primary font-semibold hover:underline flex items-center gap-1">
+            <div className="px-5 pb-4">
+              <button onClick={() => onTabChange("checklist")} className="text-xs text-blue-700 dark:text-blue-400 font-semibold hover:underline flex items-center gap-1">
                 +{pendingHigh.length - 1} more blocking step{pendingHigh.length - 1 !== 1 ? "s" : ""} in Checklist <ArrowRight className="w-3 h-3" />
               </button>
             </div>
@@ -568,7 +599,7 @@ function WhatsMissingTab({
 
       {/* ── Blocking steps (remaining) ────────────── */}
       {pendingHigh.length > 1 && (
-        <MissingSection title="Blocking — must complete first" badge={pendingHigh.length} badgeColor="red" icon={<XCircle className="w-3.5 h-3.5" />}>
+        <MissingSection title="Blocking — must complete first" badge={pendingHigh.length} badgeColor="red" sectionColor="red" icon={<XCircle className="w-3.5 h-3.5" />}>
           <div className="space-y-2">
             {pendingHigh.slice(1).map(step => (
               <ActionStepRow key={step.id} step={step} onToggle={onActionToggle} compact />
@@ -579,7 +610,7 @@ function WhatsMissingTab({
 
       {/* ── Required docs not obtained ────────────── */}
       {pendingDocs.length > 0 && (
-        <MissingSection title="Documents not yet gathered" badge={pendingDocs.length} badgeColor="amber" icon={<ShieldCheck className="w-3.5 h-3.5" />}>
+        <MissingSection title="Documents not yet gathered" badge={pendingDocs.length} badgeColor="amber" sectionColor="green" icon={<ShieldCheck className="w-3.5 h-3.5" />}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
             {pendingDocs.map(doc => <DocRow key={doc.id} doc={doc} onToggle={onDocToggle} compact />)}
           </div>
@@ -588,10 +619,10 @@ function WhatsMissingTab({
 
       {/* ── Hard deadlines ────────────────────────── */}
       {hardDls.length > 0 && (
-        <MissingSection title="Hard deadlines" icon={<Calendar className="w-3.5 h-3.5" />}>
+        <MissingSection title="Hard deadlines" sectionColor="red" icon={<Calendar className="w-3.5 h-3.5" />}>
           <div className="space-y-2">
             {hardDls.map(dl => (
-              <div key={dl.id} className="flex gap-3 p-3.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200/50 dark:border-red-900/40">
+              <div key={dl.id} className="flex gap-3 p-3.5 rounded-xl bg-white/70 dark:bg-red-950/30 border border-red-200/40 dark:border-red-900/30">
                 <Clock className="w-4 h-4 text-red-500 dark:text-red-400 mt-0.5 shrink-0" />
                 <div>
                   <p className="font-bold text-sm text-foreground">{dl.title}</p>
@@ -606,10 +637,10 @@ function WhatsMissingTab({
 
       {/* ── High risks ────────────────────────────── */}
       {highRisks.length > 0 && (
-        <MissingSection title="High-severity risks" icon={<AlertTriangle className="w-3.5 h-3.5" />}>
+        <MissingSection title="High-severity risks" sectionColor="red" icon={<AlertTriangle className="w-3.5 h-3.5" />}>
           <div className="space-y-2">
             {highRisks.map(risk => (
-              <div key={risk.id} className="p-3.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200/50 dark:border-red-900/40">
+              <div key={risk.id} className="p-3.5 rounded-xl bg-white/70 dark:bg-red-950/30 border border-red-200/40 dark:border-red-900/30">
                 <p className="font-bold text-sm text-foreground mb-1">{risk.title}</p>
                 <p className="text-xs text-muted-foreground leading-relaxed">{risk.description}</p>
               </div>
@@ -620,7 +651,7 @@ function WhatsMissingTab({
 
       {/* ── Medium-priority pending ───────────────── */}
       {pendingMed.length > 0 && (
-        <MissingSection title="Also pending (medium priority)" badge={pendingMed.length} icon={<ListTodo className="w-3.5 h-3.5" />}>
+        <MissingSection title="Also pending (medium priority)" badge={pendingMed.length} sectionColor="amber" icon={<ListTodo className="w-3.5 h-3.5" />}>
           <div className="space-y-2">
             {pendingMed.map(step => <ActionStepRow key={step.id} step={step} onToggle={onActionToggle} compact />)}
           </div>
@@ -723,8 +754,28 @@ function ChecklistTab({
     }
   }, [explainId, explainMap, documentTypeHint])
 
+  const highSteps = analysis.actionSteps.filter(s => s.priority === "high"   && !s.completed)
+  const medSteps  = analysis.actionSteps.filter(s => s.priority === "medium" && !s.completed)
+  const lowSteps  = analysis.actionSteps.filter(s => s.priority === "low"    && !s.completed)
+  const doneSteps = analysis.actionSteps.filter(s => s.completed)
+
+  const renderStep = (step: DocumentAnalysis["actionSteps"][0], i: number) => (
+    <div key={step.id}>
+      <ActionStepRow step={step} index={i + 1} onToggle={onToggle} onExplain={() => handleExplain(step)} explainActive={explainId === step.id} />
+      <AnimatePresence>
+        {explainId === step.id && (
+          <ExplainPanel
+            result={explainMap[step.id] === "loading" ? null : explainMap[step.id] as ExplainResult | null}
+            loading={explainMap[step.id] === "loading"}
+            onClose={() => setExplainId(null)}
+          />
+        )}
+      </AnimatePresence>
+    </div>
+  )
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div>
         <h2 className="text-xl sm:text-2xl font-display font-bold">Action Steps</h2>
         <p className="text-sm text-muted-foreground mt-1">
@@ -733,22 +784,73 @@ function ChecklistTab({
       </div>
       {analysis.actionSteps.length === 0
         ? <EmptyState icon={CheckCircle2} title="No action steps found" desc="This document doesn't appear to require specific actions." />
-        : <div className="space-y-1">
-            {analysis.actionSteps.map((step, i) => (
-              <div key={step.id}>
-                <ActionStepRow step={step} index={i + 1} onToggle={onToggle} onExplain={() => handleExplain(step)} explainActive={explainId === step.id} />
-                <AnimatePresence>
-                  {explainId === step.id && (
-                    <ExplainPanel
-                      result={explainMap[step.id] === "loading" ? null : explainMap[step.id] as ExplainResult | null}
-                      loading={explainMap[step.id] === "loading"}
-                      onClose={() => setExplainId(null)}
-                    />
-                  )}
-                </AnimatePresence>
+        : (
+          <div className="space-y-4">
+            {/* Blue intro helper */}
+            <div className="rounded-2xl border border-blue-200/60 dark:border-blue-900/40 bg-blue-50/40 dark:bg-blue-950/20 px-4 py-3 flex items-start gap-3">
+              <ListTodo className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+              <p className="text-xs text-blue-700 dark:text-blue-400 font-medium leading-relaxed">
+                All steps identified in this document — check them off as you complete them. Click <span className="font-bold">Explain this</span> on any step for a plain-English breakdown.
+              </p>
+            </div>
+
+            {/* Red: High priority */}
+            {highSteps.length > 0 && (
+              <div className="rounded-2xl border border-red-200/50 dark:border-red-900/40 bg-red-50/30 dark:bg-red-950/15 overflow-hidden">
+                <div className="flex items-center gap-2 px-4 py-3 border-b border-red-200/40 dark:border-red-900/30 bg-red-50/60 dark:bg-red-950/30">
+                  <AlertCircle className="w-3.5 h-3.5 text-red-500 dark:text-red-400" />
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-red-700 dark:text-red-400">High Priority</h3>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-400">{highSteps.length}</span>
+                </div>
+                <div className="p-3 space-y-1">
+                  {highSteps.map((step, i) => renderStep(step, i + 1))}
+                </div>
               </div>
-            ))}
+            )}
+
+            {/* Amber: Medium priority */}
+            {medSteps.length > 0 && (
+              <div className="rounded-2xl border border-amber-200/50 dark:border-amber-900/40 bg-amber-50/30 dark:bg-amber-950/15 overflow-hidden">
+                <div className="flex items-center gap-2 px-4 py-3 border-b border-amber-200/40 dark:border-amber-900/30 bg-amber-50/60 dark:bg-amber-950/30">
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-amber-700 dark:text-amber-400">Medium Priority</h3>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400">{medSteps.length}</span>
+                </div>
+                <div className="p-3 space-y-1">
+                  {medSteps.map((step, i) => renderStep(step, i + 1))}
+                </div>
+              </div>
+            )}
+
+            {/* Neutral: Low priority */}
+            {lowSteps.length > 0 && (
+              <div className="rounded-2xl border border-border/50 bg-card overflow-hidden">
+                <div className="flex items-center gap-2 px-4 py-3 border-b border-border/30 bg-secondary/20">
+                  <ListTodo className="w-3.5 h-3.5 text-muted-foreground/60" />
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Lower Priority</h3>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-secondary text-muted-foreground">{lowSteps.length}</span>
+                </div>
+                <div className="p-3 space-y-1">
+                  {lowSteps.map((step, i) => renderStep(step, i + 1))}
+                </div>
+              </div>
+            )}
+
+            {/* Green: Completed */}
+            {doneSteps.length > 0 && (
+              <div className="rounded-2xl border border-emerald-200/50 dark:border-emerald-900/40 bg-emerald-50/30 dark:bg-emerald-950/15 overflow-hidden">
+                <div className="flex items-center gap-2 px-4 py-3 border-b border-emerald-200/40 dark:border-emerald-900/30 bg-emerald-50/60 dark:bg-emerald-950/30">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-emerald-700 dark:text-emerald-400">Completed</h3>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">{doneSteps.length}</span>
+                </div>
+                <div className="p-3 space-y-1">
+                  {doneSteps.map((step, i) => renderStep(step, i + 1))}
+                </div>
+              </div>
+            )}
           </div>
+        )
       }
     </div>
   )
@@ -758,20 +860,65 @@ function ChecklistTab({
    DOCUMENTS TAB
 ──────────────────────────────────────────────── */
 function DocumentsTab({ analysis, onToggle }: { analysis: DocumentAnalysis; onToggle: (id: string, done: boolean) => void }) {
-  const remaining = analysis.requiredDocuments.filter(d => !d.obtained).length
+  const requiredPending  = analysis.requiredDocuments.filter(d => d.required && !d.obtained)
+  const requiredObtained = analysis.requiredDocuments.filter(d => d.required && d.obtained)
+  const optionalDocs     = analysis.requiredDocuments.filter(d => !d.required)
+  const remaining = requiredPending.length
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div>
         <h2 className="text-xl sm:text-2xl font-display font-bold">Required Documents</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          {remaining === 0 ? "All documents obtained." : `${remaining} of ${analysis.requiredDocuments.length} still needed — gather these before submitting`}
+          {remaining === 0 ? "All required documents obtained." : `${remaining} of ${analysis.requiredDocuments.filter(d => d.required).length} still needed — gather these before submitting`}
         </p>
       </div>
       {analysis.requiredDocuments.length === 0
         ? <EmptyState icon={ShieldCheck} title="No documents required" desc="No additional files are needed for this document." />
-        : <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {analysis.requiredDocuments.map(doc => <DocRow key={doc.id} doc={doc} onToggle={onToggle} />)}
+        : (
+          <div className="space-y-4">
+            {/* Amber/Red: Required, not yet obtained */}
+            {requiredPending.length > 0 && (
+              <div className="rounded-2xl border border-amber-200/50 dark:border-amber-900/40 bg-amber-50/30 dark:bg-amber-950/15 overflow-hidden">
+                <div className="flex items-center gap-2 px-4 py-3 border-b border-amber-200/40 dark:border-amber-900/30 bg-amber-50/60 dark:bg-amber-950/30">
+                  <ShieldCheck className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-amber-700 dark:text-amber-400">Still needed</h3>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400">{requiredPending.length}</span>
+                </div>
+                <div className="p-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {requiredPending.map(doc => <DocRow key={doc.id} doc={doc} onToggle={onToggle} />)}
+                </div>
+              </div>
+            )}
+
+            {/* Neutral: Optional documents */}
+            {optionalDocs.length > 0 && (
+              <div className="rounded-2xl border border-border/50 bg-card overflow-hidden">
+                <div className="flex items-center gap-2 px-4 py-3 border-b border-border/30 bg-secondary/20">
+                  <ShieldCheck className="w-3.5 h-3.5 text-muted-foreground/60" />
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Optional / Supporting</h3>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-secondary text-muted-foreground">{optionalDocs.length}</span>
+                </div>
+                <div className="p-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {optionalDocs.map(doc => <DocRow key={doc.id} doc={doc} onToggle={onToggle} />)}
+                </div>
+              </div>
+            )}
+
+            {/* Green: Required and obtained */}
+            {requiredObtained.length > 0 && (
+              <div className="rounded-2xl border border-emerald-200/50 dark:border-emerald-900/40 bg-emerald-50/30 dark:bg-emerald-950/15 overflow-hidden">
+                <div className="flex items-center gap-2 px-4 py-3 border-b border-emerald-200/40 dark:border-emerald-900/30 bg-emerald-50/60 dark:bg-emerald-950/30">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-emerald-700 dark:text-emerald-400">Gathered & confirmed</h3>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">{requiredObtained.length}</span>
+                </div>
+                <div className="p-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {requiredObtained.map(doc => <DocRow key={doc.id} doc={doc} onToggle={onToggle} />)}
+                </div>
+              </div>
+            )}
           </div>
+        )
       }
     </div>
   )
@@ -780,47 +927,69 @@ function DocumentsTab({ analysis, onToggle }: { analysis: DocumentAnalysis; onTo
 /* ────────────────────────────────────────────────
    DEADLINES TAB
 ──────────────────────────────────────────────── */
-function DeadlinesTab({ analysis }: { analysis: DocumentAnalysis }) {
-  const hardCount = analysis.deadlines.filter(d => d.isHard).length
+function DeadlineCard({ dl, accentRed }: { dl: DocumentAnalysis["deadlines"][0]; accentRed: boolean }) {
   return (
-    <div className="space-y-6">
+    <div className={`p-4 rounded-2xl border ${accentRed ? "bg-white/70 dark:bg-red-950/30 border-red-200/40 dark:border-red-900/30" : "bg-white/70 dark:bg-amber-950/30 border-amber-200/40 dark:border-amber-900/30"}`}>
+      <div className="flex items-start justify-between gap-3 mb-1">
+        <div>
+          <p className={`text-sm font-bold ${accentRed ? "text-red-700 dark:text-red-400" : "text-amber-700 dark:text-amber-400"}`}>{dl.date}</p>
+          <h4 className="font-bold text-foreground">{dl.title}</h4>
+        </div>
+        <div className="flex gap-2 shrink-0">
+          {dl.isHard && <Badge variant="destructive" className="text-[10px] uppercase tracking-wider">Hard</Badge>}
+          <ConfidenceBadge level={dl.confidence} />
+        </div>
+      </div>
+      <p className="text-sm text-muted-foreground mb-2.5">{dl.description}</p>
+      <EvidenceTooltip text={dl.sourceEvidence} />
+    </div>
+  )
+}
+
+function DeadlinesTab({ analysis }: { analysis: DocumentAnalysis }) {
+  const hardDls = analysis.deadlines.filter(d => d.isHard)
+  const softDls = analysis.deadlines.filter(d => !d.isHard)
+  return (
+    <div className="space-y-5">
       <div>
         <h2 className="text-xl sm:text-2xl font-display font-bold">Timeline & Deadlines</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          {hardCount > 0 ? `${hardCount} hard deadline${hardCount !== 1 ? "s" : ""} — missing these may disqualify your submission` : "No hard deadlines identified — treat all dates as approximate"}
+          {hardDls.length > 0 ? `${hardDls.length} hard deadline${hardDls.length !== 1 ? "s" : ""} — missing these may disqualify your submission` : "No hard deadlines identified — treat all dates as approximate"}
         </p>
       </div>
       {analysis.deadlines.length === 0
         ? <EmptyState icon={Calendar} title="No deadlines found" desc="No specific dates were mentioned in this document." />
-        : <div className="relative">
-            {/* Timeline line */}
-            <div className="absolute left-[1.35rem] top-4 bottom-4 w-px bg-gradient-to-b from-border via-border to-transparent" />
-            <div className="space-y-3">
-              {analysis.deadlines.map((dl) => (
-                <div key={dl.id} className="flex gap-3 sm:gap-4">
-                  <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 mt-2 z-10 ${
-                    dl.isHard ? "bg-red-50 dark:bg-red-950/50 border-red-400 dark:border-red-700" : "bg-card border-border"
-                  }`}>
-                    <div className={`w-2.5 h-2.5 rounded-full ${dl.isHard ? "bg-red-400" : "bg-muted-foreground/40"}`} />
-                  </div>
-                  <div className={`flex-1 p-4 rounded-2xl border mb-1 ${dl.isHard ? "bg-red-50/60 dark:bg-red-950/30 border-red-200/60 dark:border-red-900/40" : "bg-card border-border/50 shadow-sm"}`}>
-                    <div className="flex items-start justify-between gap-3 mb-1">
-                      <div>
-                        <p className={`text-sm font-bold ${dl.isHard ? "text-red-700 dark:text-red-400" : "text-primary"}`}>{dl.date}</p>
-                        <h4 className="font-bold text-foreground">{dl.title}</h4>
-                      </div>
-                      <div className="flex gap-2 shrink-0">
-                        {dl.isHard && <Badge variant="destructive" className="text-[10px] uppercase tracking-wider">Hard</Badge>}
-                        <ConfidenceBadge level={dl.confidence} />
-                      </div>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-2.5">{dl.description}</p>
-                    <EvidenceTooltip text={dl.sourceEvidence} />
-                  </div>
+        : (
+          <div className="space-y-4">
+            {/* Red: Hard deadlines */}
+            {hardDls.length > 0 && (
+              <div className="rounded-2xl border border-red-200/50 dark:border-red-900/40 bg-red-50/30 dark:bg-red-950/15 overflow-hidden">
+                <div className="flex items-center gap-2 px-4 py-3 border-b border-red-200/40 dark:border-red-900/30 bg-red-50/60 dark:bg-red-950/30">
+                  <Clock className="w-3.5 h-3.5 text-red-500 dark:text-red-400" />
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-red-700 dark:text-red-400">Hard Deadlines — do not miss</h3>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-400">{hardDls.length}</span>
                 </div>
-              ))}
-            </div>
+                <div className="p-3 space-y-2">
+                  {hardDls.map(dl => <DeadlineCard key={dl.id} dl={dl} accentRed />)}
+                </div>
+              </div>
+            )}
+
+            {/* Amber: Watch dates / soft deadlines */}
+            {softDls.length > 0 && (
+              <div className="rounded-2xl border border-amber-200/50 dark:border-amber-900/40 bg-amber-50/30 dark:bg-amber-950/15 overflow-hidden">
+                <div className="flex items-center gap-2 px-4 py-3 border-b border-amber-200/40 dark:border-amber-900/30 bg-amber-50/60 dark:bg-amber-950/30">
+                  <Calendar className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-amber-700 dark:text-amber-400">Watch Dates — review carefully</h3>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400">{softDls.length}</span>
+                </div>
+                <div className="p-3 space-y-2">
+                  {softDls.map(dl => <DeadlineCard key={dl.id} dl={dl} accentRed={false} />)}
+                </div>
+              </div>
+            )}
           </div>
+        )
       }
     </div>
   )
@@ -829,9 +998,43 @@ function DeadlinesTab({ analysis }: { analysis: DocumentAnalysis }) {
 /* ────────────────────────────────────────────────
    RISKS TAB
 ──────────────────────────────────────────────── */
-function RisksTab({ analysis }: { analysis: DocumentAnalysis }) {
+function RiskCard({ risk }: { risk: DocumentAnalysis["risks"][0] }) {
+  const isHigh   = risk.severity === "high"
+  const isMedium = risk.severity === "medium"
+  const cardCls = isHigh
+    ? "bg-white/70 dark:bg-red-950/30 border border-red-200/40 dark:border-red-900/30"
+    : isMedium
+      ? "bg-white/70 dark:bg-amber-950/30 border border-amber-200/40 dark:border-amber-900/30"
+      : "bg-card border border-border/50"
+  const iconCls = isHigh ? "bg-red-100 dark:bg-red-950/60" : isMedium ? "bg-amber-50 dark:bg-amber-950/50" : "bg-secondary"
+  const iconColor = isHigh ? "text-red-600 dark:text-red-400" : isMedium ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"
   return (
-    <div className="space-y-10">
+    <div className={`rounded-2xl p-5 ${cardCls}`}>
+      <div className="flex items-start gap-3">
+        <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${iconCls}`}>
+          <AlertTriangle className={`w-4 h-4 ${iconColor}`} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="font-bold text-foreground leading-snug">{risk.title}</h3>
+          <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{risk.description}</p>
+          {risk.sourceEvidence && (
+            <div className="mt-3">
+              <EvidenceTooltip text={risk.sourceEvidence} />
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function RisksTab({ analysis }: { analysis: DocumentAnalysis }) {
+  const highRisks   = analysis.risks.filter(r => r.severity === "high")
+  const medRisks    = analysis.risks.filter(r => r.severity === "medium")
+  const lowRisks    = analysis.risks.filter(r => r.severity === "low" || (r.severity !== "high" && r.severity !== "medium"))
+
+  return (
+    <div className="space-y-5">
       <div>
         <h2 className="text-xl sm:text-2xl font-display font-bold">Risks & Warnings</h2>
         <p className="text-sm text-muted-foreground mt-1">Potential issues that could delay, block, or invalidate your submission</p>
@@ -839,48 +1042,66 @@ function RisksTab({ analysis }: { analysis: DocumentAnalysis }) {
 
       {analysis.risks.length === 0
         ? <EmptyState icon={AlertTriangle} title="No major risks detected" desc="No significant risks were identified in this document." />
-        : <div className="space-y-3">
-            {analysis.risks.map((risk) => {
-              const isHigh = risk.severity === "high"
-              return (
-                <div key={risk.id} className={`rounded-2xl border p-5 ${isHigh ? "bg-red-50/60 dark:bg-red-950/30 border-red-200/50 dark:border-red-900/40" : "bg-card border-border/50 shadow-sm"}`}>
-                  <div className="flex items-start justify-between gap-3 mb-2">
-                    <div className="flex items-start gap-3">
-                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${isHigh ? "bg-red-100 dark:bg-red-950/60" : "bg-secondary"}`}>
-                        <AlertTriangle className={`w-4 h-4 ${isHigh ? "text-red-600 dark:text-red-400" : "text-muted-foreground"}`} />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-foreground leading-snug">{risk.title}</h3>
-                        <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{risk.description}</p>
-                      </div>
-                    </div>
-                    <span className={`inline-flex px-2.5 py-1 rounded-full border text-[10px] font-bold uppercase tracking-wide shrink-0 ${
-                      isHigh ? "bg-red-100 dark:bg-red-950/60 border-red-200 dark:border-red-900 text-red-700 dark:text-red-400"
-                      : risk.severity === "medium" ? "bg-amber-50 dark:bg-amber-950/50 border-amber-200 dark:border-amber-900 text-amber-700 dark:text-amber-400"
-                      : "bg-secondary border-border text-muted-foreground"
-                    }`}>
-                      {risk.severity}
-                    </span>
-                  </div>
-                  {risk.sourceEvidence && (
-                    <div className="mt-3 pl-11">
-                      <EvidenceTooltip text={risk.sourceEvidence} />
-                    </div>
-                  )}
+        : (
+          <div className="space-y-4">
+            {/* Red: High severity */}
+            {highRisks.length > 0 && (
+              <div className="rounded-2xl border border-red-200/50 dark:border-red-900/40 bg-red-50/30 dark:bg-red-950/15 overflow-hidden">
+                <div className="flex items-center gap-2 px-4 py-3 border-b border-red-200/40 dark:border-red-900/30 bg-red-50/60 dark:bg-red-950/30">
+                  <AlertTriangle className="w-3.5 h-3.5 text-red-500 dark:text-red-400" />
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-red-700 dark:text-red-400">High Severity — act now</h3>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-400">{highRisks.length}</span>
                 </div>
-              )
-            })}
+                <div className="p-3 space-y-2">
+                  {highRisks.map(r => <RiskCard key={r.id} risk={r} />)}
+                </div>
+              </div>
+            )}
+
+            {/* Amber: Medium severity */}
+            {medRisks.length > 0 && (
+              <div className="rounded-2xl border border-amber-200/50 dark:border-amber-900/40 bg-amber-50/30 dark:bg-amber-950/15 overflow-hidden">
+                <div className="flex items-center gap-2 px-4 py-3 border-b border-amber-200/40 dark:border-amber-900/30 bg-amber-50/60 dark:bg-amber-950/30">
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-amber-700 dark:text-amber-400">Medium Severity — review carefully</h3>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400">{medRisks.length}</span>
+                </div>
+                <div className="p-3 space-y-2">
+                  {medRisks.map(r => <RiskCard key={r.id} risk={r} />)}
+                </div>
+              </div>
+            )}
+
+            {/* Slate/neutral: Low severity */}
+            {lowRisks.length > 0 && (
+              <div className="rounded-2xl border border-border/50 bg-card overflow-hidden">
+                <div className="flex items-center gap-2 px-4 py-3 border-b border-border/30 bg-secondary/20">
+                  <AlertTriangle className="w-3.5 h-3.5 text-muted-foreground/60" />
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Lower Severity — for your awareness</h3>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-secondary text-muted-foreground">{lowRisks.length}</span>
+                </div>
+                <div className="p-3 space-y-2">
+                  {lowRisks.map(r => <RiskCard key={r.id} risk={r} />)}
+                </div>
+              </div>
+            )}
           </div>
+        )
       }
 
+      {/* Blue: Clarifications needed */}
       {analysis.followUpQuestions.length > 0 && (
-        <div>
-          <h2 className="text-xl font-display font-bold mb-1">Clarifications Needed</h2>
-          <p className="text-sm text-muted-foreground mb-5">These ambiguous areas may affect which steps or requirements apply to your situation.</p>
-          <div className="space-y-2.5">
+        <div className="rounded-2xl border border-blue-200/50 dark:border-blue-900/40 bg-blue-50/30 dark:bg-blue-950/15 overflow-hidden">
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-blue-200/40 dark:border-blue-900/30 bg-blue-50/60 dark:bg-blue-950/30">
+            <AlertCircle className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400" />
+            <h3 className="text-xs font-bold uppercase tracking-widest text-blue-700 dark:text-blue-400">Clarifications needed</h3>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400">{analysis.followUpQuestions.length}</span>
+          </div>
+          <div className="p-4 space-y-2.5">
+            <p className="text-xs text-blue-700/70 dark:text-blue-400/70">These ambiguous areas may affect which steps or requirements apply to your situation.</p>
             {analysis.followUpQuestions.map(q => (
-              <div key={q.id} className="flex gap-3 p-4 rounded-xl border border-amber-200/50 dark:border-amber-900/40 bg-amber-50/40 dark:bg-amber-950/30">
-                <AlertCircle className="w-4 h-4 text-amber-500 dark:text-amber-400 mt-0.5 shrink-0" />
+              <div key={q.id} className="flex gap-3 p-3.5 rounded-xl bg-white/70 dark:bg-blue-950/30 border border-blue-200/40 dark:border-blue-900/30">
+                <AlertCircle className="w-4 h-4 text-blue-500 dark:text-blue-400 mt-0.5 shrink-0" />
                 <div>
                   <p className="font-semibold text-sm text-foreground">{q.question}</p>
                   <p className="text-xs text-muted-foreground mt-1 italic">{q.context}</p>
@@ -899,29 +1120,41 @@ function RisksTab({ analysis }: { analysis: DocumentAnalysis }) {
 ──────────────────────────────────────────────── */
 
 function MissingSection({
-  title, badge, badgeColor = "default", icon, children,
+  title, badge, badgeColor = "default", sectionColor = "default", icon, children,
 }: {
   title: string
   badge?: number
-  badgeColor?: "red" | "amber" | "default"
+  badgeColor?: "red" | "amber" | "green" | "default"
+  sectionColor?: "red" | "amber" | "green" | "blue" | "default"
   icon?: React.ReactNode
   children: React.ReactNode
 }) {
   const badgeColors = {
     red:     "bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-400",
     amber:   "bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400",
+    green:   "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400",
     default: "bg-secondary text-muted-foreground",
   }
+  const sectionStyles = {
+    red:     { wrap: "rounded-2xl border border-red-200/50 dark:border-red-900/40 bg-red-50/30 dark:bg-red-950/15 overflow-hidden", header: "flex items-center gap-2 px-4 py-3 border-b border-red-200/40 dark:border-red-900/30 bg-red-50/60 dark:bg-red-950/30",     iconCls: "text-red-500 dark:text-red-400",     titleCls: "text-xs font-bold uppercase tracking-widest text-red-700 dark:text-red-400",     body: "p-4" },
+    amber:   { wrap: "rounded-2xl border border-amber-200/50 dark:border-amber-900/40 bg-amber-50/30 dark:bg-amber-950/15 overflow-hidden", header: "flex items-center gap-2 px-4 py-3 border-b border-amber-200/40 dark:border-amber-900/30 bg-amber-50/60 dark:bg-amber-950/30", iconCls: "text-amber-500 dark:text-amber-400",   titleCls: "text-xs font-bold uppercase tracking-widest text-amber-700 dark:text-amber-400",   body: "p-4" },
+    green:   { wrap: "rounded-2xl border border-emerald-200/50 dark:border-emerald-900/40 bg-emerald-50/30 dark:bg-emerald-950/15 overflow-hidden", header: "flex items-center gap-2 px-4 py-3 border-b border-emerald-200/40 dark:border-emerald-900/30 bg-emerald-50/60 dark:bg-emerald-950/30", iconCls: "text-emerald-500 dark:text-emerald-400", titleCls: "text-xs font-bold uppercase tracking-widest text-emerald-700 dark:text-emerald-400", body: "p-4" },
+    blue:    { wrap: "rounded-2xl border border-blue-200/50 dark:border-blue-900/40 bg-blue-50/30 dark:bg-blue-950/15 overflow-hidden",   header: "flex items-center gap-2 px-4 py-3 border-b border-blue-200/40 dark:border-blue-900/30 bg-blue-50/60 dark:bg-blue-950/30",     iconCls: "text-blue-500 dark:text-blue-400",   titleCls: "text-xs font-bold uppercase tracking-widest text-blue-700 dark:text-blue-400",   body: "p-4" },
+    default: { wrap: "",  header: "flex items-center gap-2 mb-3", iconCls: "text-muted-foreground/50", titleCls: "text-xs font-bold uppercase tracking-widest text-muted-foreground", body: "" },
+  }
+  const sc = sectionStyles[sectionColor]
   return (
-    <div>
-      <div className="flex items-center gap-2 mb-3">
-        <span className="text-muted-foreground/50">{icon}</span>
-        <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{title}</h3>
+    <div className={sc.wrap}>
+      <div className={sc.header}>
+        <span className={sc.iconCls}>{icon}</span>
+        <h3 className={sc.titleCls}>{title}</h3>
         {badge != null && (
           <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${badgeColors[badgeColor]}`}>{badge}</span>
         )}
       </div>
-      {children}
+      <div className={sc.body}>
+        {children}
+      </div>
     </div>
   )
 }

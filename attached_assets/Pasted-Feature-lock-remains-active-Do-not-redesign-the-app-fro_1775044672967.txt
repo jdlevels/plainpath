@@ -1,0 +1,166 @@
+Feature lock remains active.
+Do not redesign the app from scratch.
+Do not change core flows, routes, or analysis logic.
+This is a visual system consistency pass only.
+
+Goal:
+Apply the successful "Plain English" color-card design language across the other major analysis tabs so the product feels more cohesive, easier to scan, and better sectioned for screenshots, demos, and judges.
+
+Design intent:
+The Plain English tab is the visual benchmark.
+Its strengths:
+- clearly separated content blocks
+- strong but controlled color meaning
+- easy scanability
+- reduced wall-of-text feeling
+- premium SaaS feel
+
+We want the other tabs to follow this same visual philosophy without becoming noisy or inconsistent.
+
+Color system to use across the app:
+- Blue = explanation / overview / meaning / next-best-action
+- Purple = interpretation / clause meaning / contextual breakdown
+- Green = action / required from user / gathered / confirmed / done
+- Amber = caution / medium priority / review carefully / optional-but-important
+- Red = blockers / high severity / hard deadlines / urgent risk
+- Slate / charcoal = neutral containers / secondary context / background support
+
+Apply this design language to these tabs first:
+1. Overview
+2. What’s Missing
+3. Checklist
+4. Required Docs
+5. Deadlines
+6. Risks
+
+Secondary pass only if needed after those:
+7. Source Sections
+8. Key Terms
+9. Action Pack
+
+Implementation requirements by tab:
+
+1. Overview
+Current issue:
+- feels like a long summary with stat boxes, but not as visually sectioned as Plain English
+
+Update it to feel like a grouped summary dashboard using section cards.
+Recommended structure:
+- one top summary section
+- then separate colored cards/sections for:
+  - what this document is
+  - what matters most
+  - immediate attention
+  - open questions / needs your input
+  - financial/timing snapshot if relevant
+Keep stats, but make the full page feel more sectioned and less like one continuous output block.
+
+2. What’s Missing
+Current issue:
+- useful, but dense and list-heavy
+
+Update it to use stronger colored group containers:
+- Blue spotlight card for "Next Best Action"
+- Red grouped section for "Blocking / Must Complete First"
+- Green or slate grouped section for "Documents Not Yet Gathered"
+- Red section for "Hard Deadlines"
+- Red section for "High-Severity Risks"
+- Amber grouped section for "Also Pending / Medium Priority"
+Keep the logic intact, but visually section each category more clearly like Plain English does.
+
+3. Checklist
+Current issue:
+- rows are functional, but visually repetitive
+
+Update it so the list is more clearly grouped and sectioned:
+- red section/group for high priority
+- amber section/group for medium priority
+- green section/group for completed items if present
+- optional subtle blue helper/header card for what the checklist is meant to accomplish
+Do not lose the existing row functionality. Improve section readability.
+
+4. Required Docs
+Current issue:
+- card grid is fine, but could feel more intentionally grouped
+
+Update it to visually organize document cards by document role/category where possible:
+- signed/contract docs
+- payment docs
+- delivery docs
+- training/support docs
+- final handoff docs
+Use subtle category headers or grouped card containers.
+Keep it clean and not overly complicated.
+
+5. Deadlines
+Current issue:
+- should visually feel more important and easier to scan immediately
+
+Update it to follow the semantic color system:
+- red for hard deadlines
+- amber for watch dates / caution dates
+- slate/blue for timeline context or lower-severity schedule notes
+Goal:
+make this tab feel like a deadline dashboard, not just a list.
+
+6. Risks
+Current issue:
+- should feel more like a risk board/dashboard
+
+Update it to use clear grouped severity sections:
+- red = high severity
+- amber = medium severity
+- blue/slate = mitigation questions / follow-up items / context
+Goal:
+make severity instantly readable.
+
+7. Source Sections (secondary pass)
+Do not break the left-right layout.
+But improve it by:
+- giving the selected explanation panel a stronger category-card feel
+- making the active state visually consistent with the Plain English system
+- preserving readability and interaction
+
+8. Key Terms (secondary pass)
+Keep the core logic, but make each term card feel more aligned with the global color system based on severity/importance.
+
+9. Action Pack (secondary pass)
+Keep the existing structure, but tighten the color semantics so each section clearly matches the system above.
+
+Important visual rules:
+- do not make every card random colors
+- use color semantically and consistently
+- preserve the dark premium look
+- maintain strong contrast and readability
+- keep spacing and hierarchy clean
+- no clutter
+- no childish visual treatment
+- aim for premium SaaS / polished product demo quality
+
+Important functional rules:
+- do not break any existing data rendering
+- do not remove interaction behavior
+- do not change analysis logic
+- do not delete current content
+- do not hide tabs
+- this is a presentation/system pass, not a product scope change
+
+Screenshot readiness goal:
+After this pass, the major tabs should look like they belong to one unified design system and be easier to screenshot individually for competition/demo use.
+
+Deliverables:
+Return:
+A. files updated
+B. which tabs were visually updated in pass 1
+C. what visual system changes were made
+D. whether any tabs were deferred to pass 2
+E. fresh screenshots of:
+- Overview
+- What’s Missing
+- Checklist
+- Required Docs
+- Deadlines
+- Risks
+
+Do not switch to planning mode.
+Implement the visual consistency pass directly.
