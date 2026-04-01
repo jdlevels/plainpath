@@ -1,0 +1,96 @@
+Do not add new features.
+Do not redesign the app.
+Do not make cosmetic changes unless they fix a verified issue.
+
+The document-type selection regression is fixed.
+Now run the full regression QA pass across the entire current PlainPath product.
+
+Goal:
+Surface and fix any hidden issues not covered by the single regression fix.
+
+Test all core areas end-to-end:
+
+1. Intake
+- Paste Text
+- Upload PDF
+- Upload DOCX
+- Upload TXT
+- short-text validation
+- scanned/image PDF handling
+- malformed PDF handling
+- stale banner handling
+- retry after failure
+- same-file retry
+- tab switching
+- back button from doc-type step
+- document-type selection after paste
+- document-type selection after upload
+
+2. Analysis
+- all tabs render
+- counts/badges match actual data
+- selected doc type persists
+- no stale data from previous doc/demo
+- save/update works
+- reopened saved analyses render correctly
+- export works from reopened analyses
+
+3. Features
+- Plain English
+- Source Sections
+- section explanation
+- Checklist
+- checklist explain
+- Required Docs
+- Deadlines
+- Risks
+- What’s Missing
+- Key Terms
+- Action Pack
+- My Analyses
+- Export / Share
+
+4. Pricing / billing / entitlements
+- pricing section renders correctly
+- Starter / Pro / Team CTA behavior
+- Stripe checkout initiation path
+- success/cancel pages
+- restore subscription flow
+- plan status loading
+- Starter gating
+- Pro gating
+- usage limit logic
+- no entitlement logic breaks import/analyze
+
+5. UX integrity
+- desktop
+- mobile viewport
+- light mode
+- dark mode
+- navbar
+- footer
+- privacy
+- terms
+- no dead links
+- no placeholder text
+- no unclickable elements
+- no invisible text
+
+6. Live / deployment sanity
+- no console errors
+- no stale cache-sensitive bugs
+- no environment-specific regressions
+
+Instructions:
+- Fix any critical or high-severity issues found during the QA run
+- Do not switch to planning mode
+
+Return:
+A. Passed checks
+B. Bugs found
+C. Fixes applied
+D. Remaining blockers
+E. Final readiness verdict:
+   - Stable
+   - Stable with minor issues
+   - Not ready
