@@ -4,13 +4,16 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import {
   BookMarked, ArrowRight, Trash2, Pencil, Check, X,
-  FileText, Clock, HardDrive, AlertTriangle, Folders
+  FileText, Clock, HardDrive, AlertTriangle, Folders, CreditCard,
 } from "lucide-react"
 import {
   getAll, deleteAnalysis, renameAnalysis,
   estimateSizeKb, type SavedAnalysis,
 } from "@/lib/savedAnalyses"
 import { useAnalysisContext } from "@/context/AnalysisContext"
+import { useEntitlements } from "@/hooks/useEntitlements"
+import PlanStatusBanner from "@/components/PlanStatusBanner"
+import SubscriptionRestoreCard from "@/components/SubscriptionRestoreCard"
 
 function formatDate(iso: string): string {
   const d = new Date(iso)
@@ -30,10 +33,12 @@ function sourceLabel(kind: SavedAnalysis["sourceKind"]): string {
 export default function MyAnalyses() {
   const [, setLocation] = useLocation()
   const { setAnalysis, setDocumentTypeHint } = useAnalysisContext()
+  const { entitlements, reload: reloadEntitlements } = useEntitlements()
   const [items, setItems] = useState<SavedAnalysis[]>([])
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editValue, setEditValue] = useState("")
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [showSubscription, setShowSubscription] = useState(false)
   const editInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -114,6 +119,32 @@ export default function MyAnalyses() {
             <span className="sm:hidden">New</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </Button>
+        </div>
+
+        {/* ── Subscription section ── */}
+        <div className="mb-6">
+          <button
+            onClick={() => setShowSubscription(v => !v)}
+            className="flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors mb-3 w-full text-left"
+            style={{ touchAction: "manipulation" }}
+          >
+            <div className="bg-primary/10 p-1.5 rounded-lg">
+              <CreditCard className="w-4 h-4 text-primary" />
+            </div>
+            <span>Subscription</span>
+            {entitlements && (
+              <span className="ml-1 text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-md bg-primary/10 text-primary">
+                {entitlements.plan}
+              </span>
+            )}
+            <span className="ml-auto text-xs text-muted-foreground/50">{showSubscription ? "Hide" : "Show"}</span>
+          </button>
+          {showSubscription && (
+            <div className="space-y-3">
+              <PlanStatusBanner entitlements={entitlements} />
+              <SubscriptionRestoreCard onLoaded={() => void reloadEntitlements()} />
+            </div>
+          )}
         </div>
 
         {/* ── Privacy notice ── */}

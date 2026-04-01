@@ -14,7 +14,7 @@ import {
   Printer, ArrowLeft, CheckCircle2, AlertCircle, XCircle,
   ArrowRight, ShieldCheck, Clock, TrendingUp, BookOpen,
   HelpCircle, ChevronDown, Lightbulb, Eye, Shield, Zap,
-  AlignLeft, MessageSquare, X, Flag, Package,
+  AlignLeft, MessageSquare, X, Flag, Package, Lock,
   FolderOpen, Mail, CheckSquare, Copy, Check,
   Bookmark, BookmarkCheck, Share2, Download, Upload
 } from "lucide-react"
@@ -35,6 +35,8 @@ import { triggerPrint } from "@/lib/print"
 import { isNative } from "@/lib/platform"
 import { getApiBaseUrl } from "@/lib/api"
 import { saveAnalysis, updateSaved } from "@/lib/savedAnalyses"
+import { useEntitlements } from "@/hooks/useEntitlements"
+import UpgradeCard from "@/components/UpgradeCard"
 
 const TABS = [
   { id: "plain-english",   label: "Plain English",   icon: BookOpen                                    },
@@ -58,6 +60,11 @@ export default function Analyze() {
   const [activeTab, setActiveTab] = useState("plain-english")
   const [savedId, setSavedId] = useState<string | null>(null)
   const [justSaved, setJustSaved] = useState(false)
+
+  const { entitlements, loading: entitlementsLoading } = useEntitlements()
+  const isPro = entitlements?.plan === "pro" || entitlements?.plan === "team"
+  const PRO_ONLY_TABS = new Set(["source-sections", "missing", "checklist", "documents", "deadlines", "risks"])
+  const isTabLocked = (tabId: string) => PRO_ONLY_TABS.has(tabId) && !isPro && !entitlementsLoading
 
   const prevDemoIdRef = useRef<string | null>(null)
   useEffect(() => {
@@ -222,6 +229,7 @@ export default function Analyze() {
             {TABS.map((tab) => {
               const count = (tab as any).countKey ? (analysis as any)[(tab as any).countKey]?.length : null
               const isMissing = tab.id === "missing"
+              const isLocked = isTabLocked(tab.id)
               return (
                 <Tabs.Trigger
                   key={tab.id}
@@ -235,12 +243,15 @@ export default function Analyze() {
                 >
                   <tab.icon className="w-3.5 h-3.5" />
                   <span>{tab.label}</span>
-                  {count != null && count > 0 && (
+                  {isLocked && (
+                    <Lock className="w-3 h-3 text-amber-500 shrink-0" />
+                  )}
+                  {count != null && count > 0 && !isLocked && (
                     <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold leading-none ${activeTab === tab.id ? "bg-background/20 text-background" : "bg-border/50 text-muted-foreground"}`}>
                       {count}
                     </span>
                   )}
-                  {isMissing && missingCount > 0 && activeTab !== "missing" && (
+                  {isMissing && missingCount > 0 && activeTab !== "missing" && !isLocked && (
                     <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[9px] font-bold text-white flex items-center justify-center">
                       {missingCount > 9 ? "9+" : missingCount}
                     </span>
@@ -263,13 +274,25 @@ export default function Analyze() {
               >
 
                 {activeTab === "plain-english"   && <PlainEnglishTab analysis={analysis} onTabChange={setActiveTab} />}
-                {activeTab === "source-sections" && <SourceSectionsTab analysis={analysis} documentTypeHint={documentTypeHint} />}
+                {activeTab === "source-sections" && (isTabLocked("source-sections")
+                  ? <UpgradeCard title="Source Sections — Pro" description="See exactly which part of the original document backs every requirement, risk, and deadline." />
+                  : <SourceSectionsTab analysis={analysis} documentTypeHint={documentTypeHint} />)}
                 {activeTab === "summary"         && <SummaryTab   analysis={analysis} onTabChange={setActiveTab} />}
-                {activeTab === "missing"         && <WhatsMissingTab analysis={analysis} onActionToggle={handleActionToggle} onDocToggle={handleDocToggle} onTabChange={setActiveTab} />}
-                {activeTab === "checklist"       && <ChecklistTab  analysis={analysis} onToggle={handleActionToggle} documentTypeHint={documentTypeHint} />}
-                {activeTab === "documents"       && <DocumentsTab  analysis={analysis} onToggle={handleDocToggle} />}
-                {activeTab === "deadlines"       && <DeadlinesTab  analysis={analysis} />}
-                {activeTab === "risks"           && <RisksTab      analysis={analysis} />}
+                {activeTab === "missing"         && (isTabLocked("missing")
+                  ? <UpgradeCard title="What's Missing — Pro" description="Instantly spot what's incomplete, ambiguous, or absent so nothing slips through the cracks." />
+                  : <WhatsMissingTab analysis={analysis} onActionToggle={handleActionToggle} onDocToggle={handleDocToggle} onTabChange={setActiveTab} />)}
+                {activeTab === "checklist"       && (isTabLocked("checklist")
+                  ? <UpgradeCard title="Checklist — Pro" description="A prioritized to-do list of every action step, ranked high / medium / low." />
+                  : <ChecklistTab  analysis={analysis} onToggle={handleActionToggle} documentTypeHint={documentTypeHint} />)}
+                {activeTab === "documents"       && (isTabLocked("documents")
+                  ? <UpgradeCard title="Required Documents — Pro" description="Track every document you need to gather, with built-in completion tracking." />
+                  : <DocumentsTab  analysis={analysis} onToggle={handleDocToggle} />)}
+                {activeTab === "deadlines"       && (isTabLocked("deadlines")
+                  ? <UpgradeCard title="Deadlines — Pro" description="All hard deadlines in one place — formatted for easy calendar entry." />
+                  : <DeadlinesTab  analysis={analysis} />)}
+                {activeTab === "risks"           && (isTabLocked("risks")
+                  ? <UpgradeCard title="Risks & Notes — Pro" description="Understand what you're agreeing to and what could go wrong before you sign or submit." />
+                  : <RisksTab      analysis={analysis} />)}
                 {activeTab === "key-terms"       && <KeyTermsTab   analysis={analysis} />}
                 {activeTab === "action-pack"     && <ActionPackTab analysis={analysis} />}
 
