@@ -53,15 +53,28 @@ export default function HowItWorksSlide() {
                 Receive a color-coded, 10-tab action plan
               </div>
               <div className="text-[1.4vw] text-[#6b7a8d] font-body leading-snug">
-                Findings are organized across ten semantic tabs — <span className="text-[#f87171]/80">red</span> flags blockers and hard deadlines, <span className="text-[#fb923c]/80">amber</span> surfaces watch items, <span className="text-[#34d399]/80">green</span> confirms completed steps. The <span className="text-[#f0f4f8]/70">"What's Missing"</span> tab tells you exactly what will get your submission rejected before you submit.
+                Findings organized across ten semantic tabs — <span className="text-[#f87171]/80">red</span> flags blockers and hard deadlines, <span className="text-[#fb923c]/80">amber</span> surfaces risks, <span className="text-[#34d399]/80">green</span> confirms completed steps. The <span className="text-[#f0f4f8]/70">"What's Missing"</span> tab shows exactly what will get your submission rejected before you submit.
               </div>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-[2.5vw]">
+            <div className="shrink-0 flex flex-col items-center gap-0">
+              <div className="w-[3.8vw] h-[3.8vw] rounded-full bg-[#4f7cac] flex items-center justify-center">
+                <span className="text-[1.6vw] font-extrabold text-white font-display">4</span>
+              </div>
+              <div className="w-px h-[5vh] bg-gradient-to-b from-[#4f7cac]/40 to-transparent" />
+            </div>
+            <div className="flex-1 pb-[1vh]">
+              <div className="text-[1.9vw] font-bold text-[#f0f4f8] font-display mb-[0.6vh]">Use Guided Review to walk through every finding</div>
+              <div className="text-[1.4vw] text-[#6b7a8d] font-body leading-snug">Open Guided Review from any tab and step through each finding one by one. The panel highlights and scrolls to the exact sentence in the source document so you always know where a requirement came from.</div>
             </div>
           </div>
 
           <div className="flex items-start gap-[2.5vw]">
             <div className="shrink-0">
               <div className="w-[3.8vw] h-[3.8vw] rounded-full bg-[#4f7cac] flex items-center justify-center">
-                <span className="text-[1.6vw] font-extrabold text-white font-display">4</span>
+                <span className="text-[1.6vw] font-extrabold text-white font-display">5</span>
               </div>
             </div>
             <div className="flex-1">

@@ -28,7 +28,7 @@
     "position": 4,
     "filepath": "src/pages/slides/HowItWorksSlide.tsx",
     "title": "How It Works",
-    "description": "4-step walkthrough: Upload, AI extracts, receive action plan, work through checklist.",
+    "description": "5-step walkthrough: Upload, AI extracts, receive action plan, use Guided Review, work through checklist.",
     "speakerNotes": ""
   },
   {
@@ -44,7 +44,7 @@
     "position": 6,
     "filepath": "src/pages/slides/ProductSlide.tsx",
     "title": "The Product",
-    "description": "Six key analysis views: checklist, documents, deadlines, risks, plain English, and more.",
+    "description": "Six key features: Plain English, What's Missing, Checklist, Required Docs, Deadlines & Risks, and Guided Review.",
     "speakerNotes": ""
   },
   {
@@ -68,7 +68,7 @@
     "position": 9,
     "filepath": "src/pages/slides/BusinessModelSlide.tsx",
     "title": "Business Model",
-    "description": "Three pricing tiers: Free, Pro ($9/mo), Team ($29/mo).",
+    "description": "Three pricing tiers: Starter ($4.99/mo), Pro ($14.99/mo), Team ($39.99/mo, waitlist).",
     "speakerNotes": ""
   },
   {

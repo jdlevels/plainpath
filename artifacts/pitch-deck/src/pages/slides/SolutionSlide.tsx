@@ -53,6 +53,14 @@ export default function SolutionSlide() {
                   <path d="M3 8l3 3 7-7" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </div>
+              <span className="text-[1.5vw] text-[#f0f4f8]/80 font-body">Guided Review walks you through each finding, linked to its source</span>
+            </div>
+            <div className="flex items-center gap-[1.2vw]">
+              <div className="w-[1.6vw] h-[1.6vw] rounded-full bg-[#4f7cac] flex items-center justify-center shrink-0">
+                <svg viewBox="0 0 16 16" fill="none" className="w-[0.8vw] h-[0.8vw]">
+                  <path d="M3 8l3 3 7-7" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
               <span className="text-[1.5vw] text-[#f0f4f8]/80 font-body">No account required — results saved on your device</span>
             </div>
           </div>
