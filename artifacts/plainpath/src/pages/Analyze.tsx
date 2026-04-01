@@ -64,7 +64,9 @@ export default function Analyze() {
   const { entitlements, loading: entitlementsLoading } = useEntitlements()
   const isPro = entitlements?.plan === "pro" || entitlements?.plan === "team"
   const PRO_ONLY_TABS = new Set(["source-sections", "missing", "checklist", "documents", "deadlines", "risks"])
-  const isTabLocked = (tabId: string) => PRO_ONLY_TABS.has(tabId) && !isPro && !entitlementsLoading
+  // COMPETITION/TESTING MODE: gating bypassed — re-enable after competition by restoring the line below:
+  // const isTabLocked = (tabId: string) => PRO_ONLY_TABS.has(tabId) && !isPro && !entitlementsLoading
+  const isTabLocked = (_tabId: string) => false
 
   const prevDemoIdRef = useRef<string | null>(null)
   useEffect(() => {
