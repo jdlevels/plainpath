@@ -16,7 +16,7 @@ import {
   HelpCircle, ChevronDown, Lightbulb, Eye, Shield, Zap,
   AlignLeft, MessageSquare, X, Flag, Package, Lock,
   FolderOpen, Mail, CheckSquare, Copy, Check,
-  Bookmark, BookmarkCheck, Share2, Download, Upload
+  Bookmark, BookmarkCheck, Share2, Download, Upload, Layers
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -279,23 +279,23 @@ export default function Analyze() {
                 {activeTab === "plain-english"   && <PlainEnglishTab analysis={analysis} onTabChange={setActiveTab} />}
                 {activeTab === "source-sections" && (isTabLocked("source-sections")
                   ? <UpgradeCard title="Source Sections — Pro" description="See exactly which part of the original document backs every requirement, risk, and deadline." />
-                  : <SourceSectionsTab analysis={analysis} documentTypeHint={documentTypeHint} />)}
+                  : <><GuidedReviewBanner href={demoId ? `/guided-review?demo=${demoId}&tab=tasks` : "/guided-review?tab=tasks"} label="Review each document section alongside its linked tasks" /><SourceSectionsTab analysis={analysis} documentTypeHint={documentTypeHint} /></>)}
                 {activeTab === "summary"         && <SummaryTab   analysis={analysis} onTabChange={setActiveTab} />}
                 {activeTab === "missing"         && (isTabLocked("missing")
                   ? <UpgradeCard title="What's Missing — Pro" description="Instantly spot what's incomplete, ambiguous, or absent so nothing slips through the cracks." />
-                  : <WhatsMissingTab analysis={analysis} onActionToggle={handleActionToggle} onDocToggle={handleDocToggle} onTabChange={setActiveTab} />)}
+                  : <><GuidedReviewBanner href={demoId ? `/guided-review?demo=${demoId}&tab=tasks` : "/guided-review?tab=tasks"} label="Step through each blocking item with its source section alongside" /><WhatsMissingTab analysis={analysis} onActionToggle={handleActionToggle} onDocToggle={handleDocToggle} onTabChange={setActiveTab} /></>)}
                 {activeTab === "checklist"       && (isTabLocked("checklist")
                   ? <UpgradeCard title="Checklist — Pro" description="A prioritized to-do list of every action step, ranked high / medium / low." />
-                  : <ChecklistTab  analysis={analysis} onToggle={handleActionToggle} documentTypeHint={documentTypeHint} />)}
+                  : <><GuidedReviewBanner href={demoId ? `/guided-review?demo=${demoId}&tab=tasks` : "/guided-review?tab=tasks"} label="Walk through each action step linked back to its source section" /><ChecklistTab  analysis={analysis} onToggle={handleActionToggle} documentTypeHint={documentTypeHint} /></>)}
                 {activeTab === "documents"       && (isTabLocked("documents")
                   ? <UpgradeCard title="Required Documents — Pro" description="Track every document you need to gather, with built-in completion tracking." />
-                  : <DocumentsTab  analysis={analysis} onToggle={handleDocToggle} />)}
+                  : <><GuidedReviewBanner href={demoId ? `/guided-review?demo=${demoId}&tab=docs` : "/guided-review?tab=docs"} label="Review required documents traced to their source sections" /><DocumentsTab  analysis={analysis} onToggle={handleDocToggle} /></>)}
                 {activeTab === "deadlines"       && (isTabLocked("deadlines")
                   ? <UpgradeCard title="Deadlines — Pro" description="All hard deadlines in one place — formatted for easy calendar entry." />
                   : <DeadlinesTab  analysis={analysis} />)}
                 {activeTab === "risks"           && (isTabLocked("risks")
                   ? <UpgradeCard title="Risks & Notes — Pro" description="Understand what you're agreeing to and what could go wrong before you sign or submit." />
-                  : <RisksTab      analysis={analysis} />)}
+                  : <><GuidedReviewBanner href={demoId ? `/guided-review?demo=${demoId}&tab=risks` : "/guided-review?tab=risks"} label="See each risk traced back to the section it came from" /><RisksTab      analysis={analysis} /></>)}
                 {activeTab === "key-terms"       && <KeyTermsTab   analysis={analysis} />}
                 {activeTab === "action-pack"     && <ActionPackTab analysis={analysis} />}
 
@@ -309,6 +309,28 @@ export default function Analyze() {
 
       </div>
     </div>
+  )
+}
+
+/* ────────────────────────────────────────────────
+   GUIDED REVIEW BANNER
+──────────────────────────────────────────────── */
+function GuidedReviewBanner({ href, label }: { href: string; label: string }) {
+  return (
+    <a
+      href={href}
+      style={{ touchAction: "manipulation" }}
+      className="flex items-center gap-3 mb-6 px-4 py-3 rounded-xl border border-primary/20 bg-primary/5 hover:bg-primary/10 hover:border-primary/35 transition-all group"
+    >
+      <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 group-hover:bg-primary/15 transition-colors shrink-0">
+        <Layers className="w-4 h-4 text-primary" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-bold text-primary">Guided Review Mode</p>
+        <p className="text-xs text-muted-foreground/70 truncate">{label}</p>
+      </div>
+      <ArrowRight className="w-4 h-4 text-primary/60 group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0" />
+    </a>
   )
 }
 

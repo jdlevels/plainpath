@@ -1,0 +1,58 @@
+Do not remove the Guided Review feature.
+Do not redesign the app.
+This is a behavior correction pass.
+
+Problem:
+Guided Review was implemented as a top-level navigation/tab in the app header.
+That is not the intended UX.
+
+Correct UX:
+Guided Review should NOT be a primary top-nav destination.
+It should be a contextual review mode launched from within the existing analysis experience.
+
+What to change:
+
+1. Remove Guided Review from the global/top navigation
+- it should not appear beside My Analyses / New Analysis
+- it should not behave like a top-level app section
+
+2. Keep the Guided Review route/page and feature code intact
+- do not delete it
+- only change how users enter it
+
+3. Guided Review should be launched from inside relevant analysis tabs/pages only
+
+Add contextual entry buttons such as:
+- What’s Missing -> "Open Guided Review"
+- Checklist -> "Open Guided Review"
+- Source Sections -> "Open Guided Review"
+- optionally Overview -> "Open Guided Review"
+
+4. Guided Review should receive context from the launching tab
+Examples:
+- launched from What’s Missing -> right panel should prioritize blocking items / missing items
+- launched from Checklist -> right panel should prioritize checklist/action items
+- launched from Required Docs -> right panel should prioritize required docs
+- launched from Risks -> right panel should prioritize risks
+- launched from Source Sections -> right panel can show linked tasks or explanations
+
+5. Preserve current analysis tabs exactly as they are
+- do not convert Guided Review into a new tab in the top tab bar either
+- it should remain a separate contextual screen/view opened from inside the tab content
+
+6. Best UX target
+Guided Review should feel like:
+- a deeper follow-along mode
+- launched when the user wants source-linked review
+- not a first-class top-level navigation area
+
+7. Deliverables
+Return:
+A. files updated
+B. where Guided Review entry points were added
+C. confirmation it was removed from top navigation
+D. how launch context is passed into Guided Review
+E. screenshots of the corrected flow
+
+Do not switch to planning mode.
+Implement the correction directly.

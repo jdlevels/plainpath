@@ -123,7 +123,9 @@ export default function GuidedReview() {
   const { analysis, setAnalysis } = useAnalysisContext()
   const [, setLocation] = useLocation()
   const searchString = useSearch()
-  const demoId = new URLSearchParams(searchString).get("demo") as string | null
+  const params = new URLSearchParams(searchString)
+  const demoId = params.get("demo") as string | null
+  const launchTab = (params.get("tab") ?? "tasks") as RightTab
 
   const { data: demoData, isLoading } = useGetDemoDocument(
     demoId as any,
@@ -158,7 +160,7 @@ export default function GuidedReview() {
 
   if (!analysis) return null
   const backHref = demoId ? `/analyze?demo=${demoId}` : "/analyze"
-  return <GuidedReviewContent analysis={analysis} onBack={() => setLocation(backHref)} />
+  return <GuidedReviewContent analysis={analysis} launchTab={launchTab} onBack={() => setLocation(backHref)} />
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -166,9 +168,11 @@ export default function GuidedReview() {
 ───────────────────────────────────────────────────────────── */
 function GuidedReviewContent({
   analysis,
+  launchTab,
   onBack,
 }: {
   analysis: DocumentAnalysis
+  launchTab: RightTab
   onBack: () => void
 }) {
   const { updateActionStep, updateRequiredDoc } = useAnalysisContext()
@@ -183,7 +187,7 @@ function GuidedReviewContent({
   const [selectedSectionId,  setSelectedSectionId]  = useState<string | null>(null)
   const [selectedSectionIdx, setSelectedSectionIdx] = useState<number>(-1)
   const [selectedItemId,     setSelectedItemId]     = useState<string | null>(null)
-  const [rightTab,           setRightTab]           = useState<RightTab>("tasks")
+  const [rightTab,           setRightTab]           = useState<RightTab>(launchTab)
 
   const sectionRefs   = useRef<Map<string, HTMLDivElement>>(new Map())
   const itemRefs      = useRef<Map<string, HTMLDivElement>>(new Map())

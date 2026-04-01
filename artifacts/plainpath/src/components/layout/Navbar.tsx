@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter"
 import { Button } from "@/components/ui/button"
-import { FileText, ArrowRight, Plus, BookMarked, Layers } from "lucide-react"
+import { FileText, ArrowRight, Plus, BookMarked } from "lucide-react"
 import { ThemeToggle } from "@/components/ui/ThemeToggle"
 
 export function Navbar() {
@@ -10,7 +10,6 @@ export function Navbar() {
   const isAnalyze = location.startsWith("/analyze")
   const isMyAnalyses = location === "/my-analyses"
   const isStaticPage = location === "/privacy" || location === "/terms" || location === "/subscribe" || location === "/subscribe/success" || location === "/subscribe/cancel"
-  const isGuidedReview = location === "/guided-review"
 
   return (
     <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-background/90 border-b border-border/50 transition-all duration-300 safe-top">
@@ -64,15 +63,6 @@ export function Navbar() {
             >
               Home
             </Link>
-          )}
-
-          {isAnalyze && (
-            <Button asChild size="sm" variant="ghost" className="rounded-full gap-1.5 text-sm text-muted-foreground hover:text-foreground">
-              <Link href="/guided-review">
-                <Layers className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Guided Review</span>
-              </Link>
-            </Button>
           )}
 
           {isAnalyze && (
