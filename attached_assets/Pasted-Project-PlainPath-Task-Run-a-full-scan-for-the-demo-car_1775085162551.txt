@@ -1,0 +1,61 @@
+Project: PlainPath
+Task: Run a full scan for the demo card regression and fix it surgically.
+
+Problem:
+The demo cards are not reflecting accurate information.
+All 3 demo cards are currently showing the same card content/data.
+This was fixed previously, but the issue has returned.
+
+Goal:
+Restore unique, correct content for each demo card.
+Each demo card must display its own distinct:
+- title
+- description
+- document type
+- sample context
+- any linked preview/demo metadata
+
+Hard rules:
+- DO NOT redesign the UI
+- DO NOT change working flows
+- DO NOT touch Guided Review
+- DO NOT touch Loader
+- DO NOT touch Stripe / billing / post-competition systems
+- DO NOT refactor unrelated components
+- Make the smallest safe fix only
+
+Required process:
+1. Run a full scan of the demo-card implementation path
+2. Identify exact source of regression
+3. Check whether the issue is caused by:
+   - duplicated data objects
+   - incorrect array mapping
+   - shared prop/state reference
+   - fallback object being reused for all cards
+   - stale hardcoded mock data
+   - bad merge from a prior polish pass
+4. Confirm whether the visual cards and click behavior both use the same incorrect source
+5. Fix only the affected files/functions
+6. Verify all 3 demo cards now show distinct, accurate content
+
+Validation checklist:
+- Card 1 shows its own unique content
+- Card 2 shows its own unique content
+- Card 3 shows its own unique content
+- Clicking each card loads the correct corresponding demo path/data
+- No duplicated text across all 3 unless intentionally shared
+- Import page layout remains unchanged
+- No regressions in upload/paste/demo flow
+- No regressions elsewhere
+
+After fix, return:
+- exact root cause
+- exact files changed
+- exact lines/areas changed
+- what was corrected
+- before/after screenshots of the demo cards
+- confirmation that only this regression was touched
+- any remaining risk
+
+Extra instruction:
+If multiple demo-card data definitions exist in the codebase, find the active one actually used by the rendered import page and remove ambiguity.

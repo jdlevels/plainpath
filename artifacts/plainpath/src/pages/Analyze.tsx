@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef, useMemo } from "react"
+import React, { useEffect, useState, useCallback, useMemo } from "react"
 import { useLocation, useSearch } from "wouter"
 import { useGetDemoDocument, useUpdateChecklist } from "@workspace/api-client-react"
 import { useAnalysisContext } from "@/context/AnalysisContext"
@@ -70,13 +70,14 @@ export default function Analyze() {
   // const isTabLocked = (tabId: string) => PRO_ONLY_TABS.has(tabId) && !isPro && !entitlementsLoading
   const isTabLocked = (_tabId: string) => false
 
-  const prevDemoIdRef = useRef<string | null>(null)
+  // Clear stale context whenever demoId changes (including on first mount when context
+  // holds a previous demo's analysis — prevDemoIdRef approach misses the mount case).
   useEffect(() => {
-    if (demoId && prevDemoIdRef.current !== null && prevDemoIdRef.current !== demoId) {
+    if (demoId && analysis && analysis.id !== `demo-${demoId}`) {
       clearAnalysis()
     }
-    prevDemoIdRef.current = demoId
-  }, [demoId, clearAnalysis])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [demoId])
 
   const { data: demoData, isLoading, error: demoError } = useGetDemoDocument(
     demoId as any,
@@ -84,7 +85,11 @@ export default function Analyze() {
   )
   const { mutate: updateChecklist } = useUpdateChecklist()
 
-  useEffect(() => { if (demoData?.analysis && !analysis) setAnalysis(demoData.analysis) }, [demoData, analysis, setAnalysis])
+  useEffect(() => {
+    if (demoData?.analysis && !analysis && demoData.analysis.id === `demo-${demoId}`) {
+      setAnalysis(demoData.analysis)
+    }
+  }, [demoData, analysis, setAnalysis, demoId])
   useEffect(() => { if (!demoId && !analysis) setLocation("/import") }, [demoId, analysis, setLocation])
   useEffect(() => {
     if (analysis?.title) {
