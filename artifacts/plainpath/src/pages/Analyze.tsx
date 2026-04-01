@@ -1352,6 +1352,14 @@ interface SectionCardProps {
   documentTypeHint: string | null
 }
 
+const SOURCE_PANEL_CARDS = [
+  { key: "meaning",      label: "What it means",       icon: BookOpen,     accent: "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 border-blue-200/60 dark:border-blue-900/40" },
+  { key: "requires",     label: "What it requires",    icon: ListTodo,     accent: "text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/40 border-violet-200/60 dark:border-violet-900/40" },
+  { key: "whyItMatters", label: "Why it matters",      icon: Zap,          accent: "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border-amber-200/60 dark:border-amber-900/40" },
+  { key: "risks",        label: "Risks & implications", icon: Shield,       accent: "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/40 border-red-200/60 dark:border-red-900/40" },
+  { key: "questionsToAsk", label: "Questions to ask",  icon: MessageSquare, accent: "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200/60 dark:border-emerald-900/40" },
+] as const
+
 function SourceExplainPanel({
   title,
   result,
@@ -1365,52 +1373,46 @@ function SourceExplainPanel({
   onClose?: () => void
   showClose?: boolean
 }) {
-  const panels = result
-    ? [
-        { icon: <BookOpen className="w-3.5 h-3.5" />, label: "What it means", text: result.meaning, color: "text-blue-600 dark:text-blue-400" },
-        { icon: <ListTodo className="w-3.5 h-3.5" />, label: "What it requires", text: result.requires, color: "text-purple-600 dark:text-purple-400" },
-        { icon: <Zap className="w-3.5 h-3.5" />, label: "Why it matters", text: result.whyItMatters, color: "text-amber-600 dark:text-amber-400" },
-        { icon: <Shield className="w-3.5 h-3.5" />, label: "Risks & implications", text: result.risks, color: "text-red-600 dark:text-red-400" },
-        { icon: <MessageSquare className="w-3.5 h-3.5" />, label: "Questions to ask", text: result.questionsToAsk, color: "text-green-600 dark:text-green-400" },
-      ]
-    : null
-
   return (
-    <div className="rounded-2xl border border-border/40 bg-card shadow-sm overflow-hidden">
-      <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-border/30 bg-muted/30">
+    <div className="rounded-2xl border border-blue-200/50 dark:border-blue-900/40 bg-blue-50/20 dark:bg-blue-950/15 overflow-hidden">
+      <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-blue-200/40 dark:border-blue-900/30 bg-blue-50/50 dark:bg-blue-950/30">
         <div className="flex items-center gap-2 min-w-0">
-          <Lightbulb className="w-4 h-4 text-amber-500 shrink-0" />
-          <span className="text-xs font-semibold text-foreground truncate">
+          <Lightbulb className="w-4 h-4 text-blue-500 dark:text-blue-400 shrink-0" />
+          <span className="text-xs font-bold uppercase tracking-widest text-blue-700 dark:text-blue-400 truncate">
             {title ? `"${title}"` : "Plain-English Breakdown"}
           </span>
         </div>
         {showClose && onClose && (
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors shrink-0">
+          <button onClick={onClose} className="text-blue-400 dark:text-blue-500 hover:text-blue-600 dark:hover:text-blue-300 transition-colors shrink-0">
             <X className="w-4 h-4" />
           </button>
         )}
       </div>
-      <div className="p-4 space-y-3">
+      <div className="p-4 space-y-2.5">
         {isLoading ? (
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="space-y-1.5">
-                <div className="h-2.5 w-24 rounded-full bg-secondary animate-pulse" />
-                <div className="h-3 w-full rounded-full bg-secondary/70 animate-pulse" />
-                <div className="h-3 w-4/5 rounded-full bg-secondary/50 animate-pulse" />
+              <div key={i} className="rounded-2xl border border-border/30 bg-secondary/20 p-4 space-y-2 animate-pulse">
+                <div className="h-2.5 w-28 rounded-full bg-secondary" />
+                <div className="h-3 w-full rounded-full bg-secondary/70" />
+                <div className="h-3 w-4/5 rounded-full bg-secondary/50" />
               </div>
             ))}
           </div>
-        ) : panels ? (
-          panels.map((p, i) => (
-            <div key={i} className="space-y-0.5">
-              <div className={`flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide ${p.color}`}>
-                {p.icon}
-                {p.label}
+        ) : result ? (
+          SOURCE_PANEL_CARDS.map(({ key, label, icon: Icon, accent }) => {
+            const text = result[key as keyof SourceExplainResult]
+            if (!text) return null
+            return (
+              <div key={key} className={`rounded-2xl border p-4 ${accent}`}>
+                <div className="flex items-center gap-2 mb-2">
+                  <Icon className="w-3.5 h-3.5 shrink-0" />
+                  <h4 className="text-[11px] font-bold uppercase tracking-widest">{label}</h4>
+                </div>
+                <p className="text-sm text-foreground/80 leading-relaxed">{text}</p>
               </div>
-              <p className="text-sm text-foreground leading-relaxed">{p.text}</p>
-            </div>
-          ))
+            )
+          })
         ) : null}
       </div>
     </div>
@@ -1428,20 +1430,22 @@ function SectionCard({
         className={[
           "w-full text-left rounded-xl border transition-all duration-150 p-4 group",
           isSelected
-            ? "border-foreground/30 bg-foreground/[0.04] ring-1 ring-foreground/10"
-            : "border-border/30 bg-card hover:border-border/60 hover:bg-muted/20",
+            ? "border-blue-300/60 dark:border-blue-700/50 bg-blue-50/40 dark:bg-blue-950/25 ring-1 ring-blue-200/40 dark:ring-blue-800/30"
+            : "border-border/30 bg-card hover:border-blue-200/50 dark:hover:border-blue-800/40 hover:bg-blue-50/20 dark:hover:bg-blue-950/10",
         ].join(" ")}
       >
         {title && (
-          <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
+          <div className={`text-[11px] font-bold uppercase tracking-wider mb-1.5 ${isSelected ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground"}`}>
             {title}
           </div>
         )}
         <p className="text-sm text-foreground/80 leading-relaxed line-clamp-3">{content}</p>
         <div
           className={[
-            "mt-2.5 flex items-center gap-1 text-xs font-medium transition-colors",
-            isSelected ? "text-foreground" : "text-muted-foreground group-hover:text-foreground",
+            "mt-2.5 flex items-center gap-1 text-xs font-semibold transition-colors",
+            isSelected
+              ? "text-blue-600 dark:text-blue-400"
+              : "text-muted-foreground group-hover:text-blue-600 dark:group-hover:text-blue-400",
           ].join(" ")}
         >
           {isLoadingExplain ? (
@@ -1531,11 +1535,11 @@ function SourceSectionsTab({ analysis, documentTypeHint }: { analysis: DocumentA
   }
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-2 mb-1">
-        <AlignLeft className="w-4 h-4 text-muted-foreground" />
-        <span className="text-sm font-medium text-muted-foreground">
-          {sections.length} section{sections.length !== 1 ? "s" : ""} extracted — click any to get a plain-English breakdown
+    <div className="space-y-4">
+      <div className="flex items-center gap-3 rounded-2xl border border-blue-200/50 dark:border-blue-900/40 bg-blue-50/40 dark:bg-blue-950/20 px-5 py-3.5">
+        <AlignLeft className="w-4 h-4 text-blue-500 dark:text-blue-400 shrink-0" />
+        <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+          {sections.length} section{sections.length !== 1 ? "s" : ""} extracted from the document — select any section to get a plain-English breakdown
         </span>
       </div>
 
@@ -1569,9 +1573,9 @@ function SourceSectionsTab({ analysis, documentTypeHint }: { analysis: DocumentA
               showClose={true}
             />
           ) : (
-            <div className="rounded-2xl border border-dashed border-border/40 p-8 flex flex-col items-center justify-center text-center gap-3 h-48">
-              <Lightbulb className="w-8 h-8 text-muted-foreground/30" />
-              <p className="text-sm text-muted-foreground">Select a section to get a plain-English breakdown</p>
+            <div className="rounded-2xl border border-dashed border-blue-200/50 dark:border-blue-800/30 bg-blue-50/20 dark:bg-blue-950/15 p-8 flex flex-col items-center justify-center text-center gap-3 h-48">
+              <Lightbulb className="w-8 h-8 text-blue-300 dark:text-blue-700" />
+              <p className="text-sm font-medium text-blue-600/70 dark:text-blue-400/70">Select a section on the left to get a plain-English breakdown</p>
             </div>
           )}
         </div>
