@@ -1339,8 +1339,19 @@ interface SourceExplainResult {
   questionsToAsk: string
 }
 
+const SECTION_CARD_COLORS = [
+  { badge: "bg-blue-500",    label: "text-blue-600 dark:text-blue-400",    bar: "bg-blue-500",    hover: "hover:border-blue-200/60 dark:hover:border-blue-800/40 hover:bg-blue-50/20 dark:hover:bg-blue-950/10",    active: "border-blue-300/60 dark:border-blue-700/50 bg-blue-50/40 dark:bg-blue-950/25 ring-1 ring-blue-200/40 dark:ring-blue-800/30"    },
+  { badge: "bg-violet-500",  label: "text-violet-600 dark:text-violet-400", bar: "bg-violet-500",  hover: "hover:border-violet-200/60 dark:hover:border-violet-800/40 hover:bg-violet-50/20 dark:hover:bg-violet-950/10", active: "border-violet-300/60 dark:border-violet-700/50 bg-violet-50/40 dark:bg-violet-950/25 ring-1 ring-violet-200/40 dark:ring-violet-800/30" },
+  { badge: "bg-amber-500",   label: "text-amber-600 dark:text-amber-400",   bar: "bg-amber-500",   hover: "hover:border-amber-200/60 dark:hover:border-amber-800/40 hover:bg-amber-50/20 dark:hover:bg-amber-950/10",   active: "border-amber-300/60 dark:border-amber-700/50 bg-amber-50/40 dark:bg-amber-950/25 ring-1 ring-amber-200/40 dark:ring-amber-800/30"   },
+  { badge: "bg-emerald-500", label: "text-emerald-600 dark:text-emerald-400", bar: "bg-emerald-500", hover: "hover:border-emerald-200/60 dark:hover:border-emerald-800/40 hover:bg-emerald-50/20 dark:hover:bg-emerald-950/10", active: "border-emerald-300/60 dark:border-emerald-700/50 bg-emerald-50/40 dark:bg-emerald-950/25 ring-1 ring-emerald-200/40 dark:ring-emerald-800/30" },
+  { badge: "bg-red-500",     label: "text-red-600 dark:text-red-400",       bar: "bg-red-500",     hover: "hover:border-red-200/60 dark:hover:border-red-800/40 hover:bg-red-50/20 dark:hover:bg-red-950/10",         active: "border-red-300/60 dark:border-red-700/50 bg-red-50/40 dark:bg-red-950/25 ring-1 ring-red-200/40 dark:ring-red-800/30"         },
+  { badge: "bg-teal-500",    label: "text-teal-600 dark:text-teal-400",     bar: "bg-teal-500",    hover: "hover:border-teal-200/60 dark:hover:border-teal-800/40 hover:bg-teal-50/20 dark:hover:bg-teal-950/10",     active: "border-teal-300/60 dark:border-teal-700/50 bg-teal-50/40 dark:bg-teal-950/25 ring-1 ring-teal-200/40 dark:ring-teal-800/30"     },
+  { badge: "bg-orange-500",  label: "text-orange-600 dark:text-orange-400", bar: "bg-orange-500",  hover: "hover:border-orange-200/60 dark:hover:border-orange-800/40 hover:bg-orange-50/20 dark:hover:bg-orange-950/10", active: "border-orange-300/60 dark:border-orange-700/50 bg-orange-50/40 dark:bg-orange-950/25 ring-1 ring-orange-200/40 dark:ring-orange-800/30" },
+]
+
 interface SectionCardProps {
   id: string
+  index: number
   title?: string
   content: string
   isSelected: boolean
@@ -1420,41 +1431,53 @@ function SourceExplainPanel({
 }
 
 function SectionCard({
-  id, title, content, isSelected, isLoadingExplain, expandedBelow,
+  id, index, title, content, isSelected, isLoadingExplain, expandedBelow,
   explainResult, onSelect, onClose, documentTypeHint,
 }: SectionCardProps) {
+  const c = SECTION_CARD_COLORS[index % SECTION_CARD_COLORS.length]
   return (
     <div className="flex flex-col">
       <button
         onClick={isSelected ? onClose : onSelect}
         className={[
-          "w-full text-left rounded-xl border transition-all duration-150 p-4 group",
-          isSelected
-            ? "border-blue-300/60 dark:border-blue-700/50 bg-blue-50/40 dark:bg-blue-950/25 ring-1 ring-blue-200/40 dark:ring-blue-800/30"
-            : "border-border/30 bg-card hover:border-blue-200/50 dark:hover:border-blue-800/40 hover:bg-blue-50/20 dark:hover:bg-blue-950/10",
+          "w-full text-left rounded-xl border transition-all duration-150 overflow-hidden group",
+          isSelected ? c.active : `border-border/30 bg-card ${c.hover}`,
         ].join(" ")}
       >
-        {title && (
-          <div className={`text-[11px] font-bold uppercase tracking-wider mb-1.5 ${isSelected ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground"}`}>
-            {title}
+        <div className="flex items-stretch">
+          {/* Left color bar */}
+          <div className={`w-1 shrink-0 ${c.bar}`} />
+
+          <div className="flex-1 min-w-0 p-4">
+            <div className="flex items-start gap-3 mb-2">
+              {/* Number badge */}
+              <span className={`shrink-0 w-6 h-6 rounded-full ${c.badge} text-white text-[11px] font-bold flex items-center justify-center mt-0.5`}>
+                {index + 1}
+              </span>
+              <div className="flex-1 min-w-0">
+                {title && (
+                  <div className={`text-[11px] font-bold uppercase tracking-wider mb-1 ${isSelected ? c.label : "text-muted-foreground"}`}>
+                    {title}
+                  </div>
+                )}
+                <p className="text-sm text-foreground/80 leading-relaxed line-clamp-3">{content}</p>
+              </div>
+            </div>
+            <div
+              className={[
+                "ml-9 flex items-center gap-1 text-xs font-semibold transition-colors",
+                isSelected ? c.label : "text-muted-foreground/60 group-hover:text-foreground/80",
+              ].join(" ")}
+            >
+              {isLoadingExplain ? (
+                <><Loader2 className="w-3.5 h-3.5 animate-spin" />Explaining…</>
+              ) : isSelected ? (
+                <><ChevronDown className="w-3.5 h-3.5 rotate-180 transition-transform duration-150" />Hide explanation</>
+              ) : (
+                <><Lightbulb className="w-3.5 h-3.5" />Explain this section</>
+              )}
+            </div>
           </div>
-        )}
-        <p className="text-sm text-foreground/80 leading-relaxed line-clamp-3">{content}</p>
-        <div
-          className={[
-            "mt-2.5 flex items-center gap-1 text-xs font-semibold transition-colors",
-            isSelected
-              ? "text-blue-600 dark:text-blue-400"
-              : "text-muted-foreground group-hover:text-blue-600 dark:group-hover:text-blue-400",
-          ].join(" ")}
-        >
-          {isLoadingExplain ? (
-            <><Loader2 className="w-3.5 h-3.5 animate-spin" />Explaining…</>
-          ) : isSelected ? (
-            <><ChevronDown className="w-3.5 h-3.5 rotate-180 transition-transform duration-150" />Hide explanation</>
-          ) : (
-            <><Lightbulb className="w-3.5 h-3.5" />Explain this section</>
-          )}
         </div>
       </button>
 
@@ -1536,20 +1559,30 @@ function SourceSectionsTab({ analysis, documentTypeHint }: { analysis: DocumentA
 
   return (
     <div className="space-y-4">
+      {/* Tab header */}
+      <div className="mb-1">
+        <h2 className="text-2xl font-bold text-foreground mb-1">Source Sections</h2>
+        <p className="text-sm text-muted-foreground leading-relaxed max-w-2xl">
+          The raw text of your document, broken into numbered sections. Click any section to unlock a plain-English breakdown — what it means, what it requires from you, why it matters, and what risks it carries.
+        </p>
+      </div>
+
+      {/* Count + hint bar */}
       <div className="flex items-center gap-3 rounded-2xl border border-blue-200/50 dark:border-blue-900/40 bg-blue-50/40 dark:bg-blue-950/20 px-5 py-3.5">
         <AlignLeft className="w-4 h-4 text-blue-500 dark:text-blue-400 shrink-0" />
         <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
-          {sections.length} section{sections.length !== 1 ? "s" : ""} extracted from the document — select any section to get a plain-English breakdown
+          {sections.length} section{sections.length !== 1 ? "s" : ""} extracted — click a numbered section on the left, then read the breakdown on the right
         </span>
       </div>
 
       {/* Desktop: 2-column layout */}
       <div className="hidden lg:grid lg:grid-cols-[1fr_360px] lg:gap-5">
         <div className="max-h-[62vh] overflow-y-auto pr-1 space-y-2">
-          {sections.map((s) => (
+          {sections.map((s, i) => (
             <SectionCard
               key={s.id}
               id={s.id}
+              index={i}
               title={s.title}
               content={s.content}
               isSelected={selectedId === s.id}
@@ -1583,10 +1616,11 @@ function SourceSectionsTab({ analysis, documentTypeHint }: { analysis: DocumentA
 
       {/* Mobile: single column with inline expansion */}
       <div className="lg:hidden space-y-2">
-        {sections.map((s) => (
+        {sections.map((s, i) => (
           <SectionCard
             key={s.id}
             id={s.id}
+            index={i}
             title={s.title}
             content={s.content}
             isSelected={selectedId === s.id}
