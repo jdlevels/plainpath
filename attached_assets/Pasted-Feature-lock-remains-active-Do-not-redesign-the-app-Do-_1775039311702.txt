@@ -1,0 +1,116 @@
+Feature lock remains active.
+Do not redesign the app.
+Do not add new product features.
+Do not change pricing structure or Stripe plan amounts.
+
+We are now finishing billing readiness by exposing the existing subscription restore UI and running a Stripe-specific QA pass.
+
+Goal:
+Make paid users able to restore access on a new browser/device, see their current plan status, and verify the billing flow end-to-end.
+
+Tasks:
+
+1. Mount the existing subscription restore UI
+Expose these existing components somewhere visible and production-appropriate:
+- SubscriptionRestoreCard
+- PlanStatusBanner
+
+Best placement:
+- My Analyses page near the top
+OR
+- a clearly labeled Billing / Subscription section accessible from the app
+
+Requirements:
+- must be visible in normal navigation
+- must not feel hidden or unfinished
+- must fit current design
+- must work in light and dark mode
+- must work on mobile and desktop
+
+2. Restore flow behavior
+Make sure the restore flow works end-to-end:
+- user enters the billing email used during Stripe checkout
+- app fetches entitlements for that email
+- active subscription loads correctly
+- stored subscriber email is saved locally
+- clear error shown if no active subscription is found
+- user can clear the stored email and reset state
+
+3. Plan status visibility
+Make sure the mounted plan status UI clearly shows:
+- current plan
+- monthly usage count
+- monthly usage limit
+- remaining analyses
+- subscription loaded / not loaded state
+
+4. Starter vs Pro gating verification
+Verify that feature gating is actually working as intended:
+Starter allowed:
+- Plain English
+- Key Terms
+- basic Action Pack
+- Saved Analyses
+- Export / Share
+
+Starter locked:
+- Source Sections
+- section explainer
+- Checklist
+- Required Docs
+- Deadlines
+- Risks
+- What’s Missing
+
+Pro:
+- full current feature set
+
+Use clean upgrade cards or equivalent UI for locked Pro areas.
+Do not remove the tabs entirely unless current architecture requires a different clean implementation.
+
+5. Stripe QA pass
+After the restore UI is mounted, run a Stripe-specific QA pass covering:
+
+A. Pricing / checkout
+- Starter CTA
+- Pro CTA
+- Team waitlist CTA
+- checkout session creation path
+- success page
+- cancel page
+
+B. Subscriber restore
+- restore by billing email
+- invalid email / inactive subscription handling
+- clear stored email behavior
+
+C. Plan status
+- plan badge/status loads correctly
+- usage counts render correctly
+
+D. Feature gating
+- Starter restrictions visible and accurate
+- Pro access visible and accurate
+- no entitlement logic blocks normal navigation incorrectly
+
+E. Billing config blockers
+- confirm whether STRIPE_SECRET_KEY is set
+- confirm whether STRIPE_WEBHOOK_SECRET is set
+- confirm whether checkout and webhook are production-ready or still blocked by missing env vars
+
+6. Return a report with exactly these sections:
+A. Files updated
+B. Where the restore UI was mounted
+C. What the restore flow now does
+D. What Starter users can access vs what is gated
+E. Stripe QA results
+F. Remaining blockers
+G. Final billing readiness verdict:
+- Ready
+- Ready with minor issues
+- Not ready
+
+Important:
+- Do not switch into planning mode
+- Do not add unrelated billing features
+- Only mount the existing restore/status UI, verify gating, and run the Stripe QA pass
