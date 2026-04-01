@@ -1,0 +1,113 @@
+Project: PlainPath
+Task: Refine the existing Guided Review right-side panel with safer visual polish only. Do not redesign. Do not change app flow. Do not alter working analysis logic.
+
+Objective:
+Improve the Guided Review panel by enhancing:
+1. visual linking to source content
+2. spacing/readability
+3. panel hierarchy
+4. overlay behavior
+
+Rules:
+- Keep Guided Review as a RIGHT-SIDE PANEL
+- NOT a full-screen mode
+- DO NOT move it to a top tab
+- DO NOT redesign the analysis page
+- DO NOT break existing tab behavior
+- Make only surgical UI updates
+- Preserve all current flows and working logic
+
+Required changes:
+
+A. Overlay / backdrop refinement
+Current overlay is too heavy.
+Update:
+- change bg-black/50 → bg-black/[0.12]
+- change backdrop-blur-sm → backdrop-blur-[2px]
+
+Goal:
+The analysis page behind the panel must remain legible, color-coded, and visually present.
+The panel should feel like a companion layer, not a takeover.
+
+B. Panel sizing / spacing updates
+Apply these exact visual changes:
+- panel width: sm:w-[460px] → sm:w-[540px]
+- header padding: px-5 py-4 → px-6 py-4
+- body padding: p-5 → p-6
+- item gap: space-y-4 → space-y-5
+- main card padding: p-5 space-y-3 → p-6 space-y-4
+- title size: text-base → text-[1.05rem]
+- body text: leading-relaxed → leading-loose
+- header label: use text-primary/55 and add Eye icon prefix
+- context title: text-sm → text-[15px] font-bold
+
+C. Visual hierarchy improvements
+- Add subtle header background: bg-secondary/20
+- “Guided Review” supertitle should use primary color + Eye icon
+- Context title (What’s Missing / Checklist / Required Docs / etc.) should be more visually dominant
+- Progress counter should use a bg-secondary chip with bold current step and muted total
+- Evidence/source box should be visually distinct:
+  - left indigo accent bar
+  - AlignLeft icon label
+  - border-primary/20
+  - bg-primary/[0.035]
+- evidence body text should increase from text-foreground/70 to text-foreground/80
+
+D. Source highlighting / linkage
+Implement DOM-based highlighting only.
+Do NOT do a broad architecture rewrite.
+
+Every relevant item in the analysis page should carry a matching:
+- data-review-id="<item-id>"
+
+Apply data-review-id to:
+- WhatMissingTab:
+  - next best action card
+  - blocking steps
+  - pending docs
+  - inline risk cards
+  - medium-priority steps
+- ChecklistTab:
+  - every renderStep wrapper
+- DocumentsTab:
+  - pending
+  - optional
+  - obtained groups/items
+- RisksTab:
+  - all severity group items
+- SourceSectionsTab:
+  - desktop list
+  - mobile list
+
+When Guided Review opens and user navigates Prev/Next:
+- clear any prior [data-gr-hl] highlight state
+- find matching [data-review-id]
+- apply active highlight:
+  - outline: 2px solid rgba(99,102,241,0.55)
+  - subtle indigo glow box-shadow
+- call scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+- cleanup fully on close/unmount and on active item change
+
+E. Mobile behavior
+- keep mobile full width (w-full)
+- do not change stacked mobile behavior
+- only desktop panel width should expand to 540px
+
+Implementation requirements
+Before editing:
+1. inspect current Guided Review implementation
+2. identify exact files involved
+3. make minimal surgical updates only
+
+After edits return:
+- files changed
+- what improved
+- screenshots of the panel
+- any risks introduced
+
+Success criteria:
+- panel feels lighter and less intrusive
+- spacing is cleaner
+- source/task linkage is obvious
+- active guided item visibly maps to real content behind panel
+- no regressions in existing analysis tabs
