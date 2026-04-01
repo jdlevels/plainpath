@@ -24,7 +24,7 @@ export default function HowItWorksSlide() {
             </div>
             <div className="flex-1 pb-[1vh]">
               <div className="text-[1.9vw] font-bold text-[#f0f4f8] font-display mb-[0.6vh]">Upload or paste your document</div>
-              <div className="text-[1.4vw] text-[#6b7a8d] font-body leading-snug">Drop in a PDF, Word file, or paste text directly from any source — government forms, legal notices, insurance packets, grant applications, and more. PlainPath reads the full content.</div>
+              <div className="text-[1.4vw] text-[#6b7a8d] font-body leading-snug">Drop in a PDF, Word file, or paste text directly — government forms, legal notices, insurance packets, grant applications, and more. PlainPath reads the full content.</div>
             </div>
           </div>
 
@@ -49,8 +49,12 @@ export default function HowItWorksSlide() {
               <div className="w-px h-[5vh] bg-gradient-to-b from-[#4f7cac]/40 to-transparent" />
             </div>
             <div className="flex-1 pb-[1vh]">
-              <div className="text-[1.9vw] font-bold text-[#f0f4f8] font-display mb-[0.6vh]">Receive a structured, 10-tab action plan</div>
-              <div className="text-[1.4vw] text-[#6b7a8d] font-body leading-snug">Every finding is organized across ten purpose-built tabs: Overview, Checklist, Required Documents, Deadlines, Risks, Plain English summary, Costs, Parties, Follow-up Questions, and a full Q&A.</div>
+              <div className="text-[1.9vw] font-bold text-[#f0f4f8] font-display mb-[0.6vh]">
+                Receive a color-coded, 10-tab action plan
+              </div>
+              <div className="text-[1.4vw] text-[#6b7a8d] font-body leading-snug">
+                Findings are organized across ten semantic tabs — <span className="text-[#f87171]/80">red</span> flags blockers and hard deadlines, <span className="text-[#fb923c]/80">amber</span> surfaces watch items, <span className="text-[#34d399]/80">green</span> confirms completed steps. The <span className="text-[#f0f4f8]/70">"What's Missing"</span> tab tells you exactly what will get your submission rejected before you submit.
+              </div>
             </div>
           </div>
 
@@ -62,7 +66,7 @@ export default function HowItWorksSlide() {
             </div>
             <div className="flex-1">
               <div className="text-[1.9vw] font-bold text-[#f0f4f8] font-display mb-[0.6vh]">Work through your checklist — nothing falls through the cracks</div>
-              <div className="text-[1.4vw] text-[#6b7a8d] font-body leading-snug">Check off action steps as you complete them. Track progress in real time. Analyses are saved locally on your device — no account or upload required.</div>
+              <div className="text-[1.4vw] text-[#6b7a8d] font-body leading-snug">Check off action steps as you complete them. Progress tracked in real time. Save and export your analysis. No account required to get started.</div>
             </div>
           </div>
         </div>
