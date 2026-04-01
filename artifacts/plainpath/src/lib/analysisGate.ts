@@ -4,11 +4,11 @@ import { consumeAnalysis } from "../lib/entitlements";
 export async function beforeRunAnalysis() {
   const email = getStoredSubscriberEmail();
 
-  if (!email) {
-    throw new Error(
-      "Please restore your subscription email before running a paid analysis."
-    );
-  }
+  // No stored email means no active subscription.
+  // Allow the analysis to proceed — quota is only enforced for known subscribers.
+  if (!email) return;
 
+  // Subscriber found: enforce quota via the server.
+  // consumeAnalysis throws if the subscriber is over their limit.
   await consumeAnalysis(email);
 }
