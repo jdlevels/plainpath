@@ -585,7 +585,7 @@ function WhatsMissingTab({
 
       {/* ── Next Best Action spotlight ─────────────── */}
       {nextAction && (
-        <div className="rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-900/40 overflow-hidden">
+        <div data-review-id={nextAction.id} className="rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-900/40 overflow-hidden">
           <div className="px-5 py-3 bg-blue-50/60 dark:bg-blue-950/30 border-b border-blue-200/50 dark:border-blue-900/30 flex items-center gap-2">
             <ArrowRight className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
             <span className="text-[10px] font-bold uppercase tracking-widest text-blue-700 dark:text-blue-400">Next best action</span>
@@ -623,7 +623,9 @@ function WhatsMissingTab({
         <MissingSection title="Blocking — must complete first" badge={pendingHigh.length} badgeColor="red" sectionColor="red" icon={<XCircle className="w-3.5 h-3.5" />}>
           <div className="space-y-2">
             {pendingHigh.slice(1).map(step => (
-              <ActionStepRow key={step.id} step={step} onToggle={onActionToggle} compact />
+              <div key={step.id} data-review-id={step.id}>
+                <ActionStepRow step={step} onToggle={onActionToggle} compact />
+              </div>
             ))}
           </div>
         </MissingSection>
@@ -633,7 +635,11 @@ function WhatsMissingTab({
       {pendingDocs.length > 0 && (
         <MissingSection title="Documents not yet gathered" badge={pendingDocs.length} badgeColor="amber" sectionColor="green" icon={<ShieldCheck className="w-3.5 h-3.5" />}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-            {pendingDocs.map(doc => <DocRow key={doc.id} doc={doc} onToggle={onDocToggle} compact />)}
+            {pendingDocs.map(doc => (
+              <div key={doc.id} data-review-id={doc.id}>
+                <DocRow doc={doc} onToggle={onDocToggle} compact />
+              </div>
+            ))}
           </div>
         </MissingSection>
       )}
@@ -661,7 +667,7 @@ function WhatsMissingTab({
         <MissingSection title="High-severity risks" sectionColor="red" icon={<AlertTriangle className="w-3.5 h-3.5" />}>
           <div className="space-y-2">
             {highRisks.map(risk => (
-              <div key={risk.id} className="p-3.5 rounded-xl bg-white/70 dark:bg-red-950/30 border border-red-200/40 dark:border-red-900/30">
+              <div key={risk.id} data-review-id={risk.id} className="p-3.5 rounded-xl bg-white/70 dark:bg-red-950/30 border border-red-200/40 dark:border-red-900/30">
                 <p className="font-bold text-sm text-foreground mb-1">{risk.title}</p>
                 <p className="text-xs text-muted-foreground leading-relaxed">{risk.description}</p>
               </div>
@@ -674,7 +680,11 @@ function WhatsMissingTab({
       {pendingMed.length > 0 && (
         <MissingSection title="Also pending (medium priority)" badge={pendingMed.length} sectionColor="amber" icon={<ListTodo className="w-3.5 h-3.5" />}>
           <div className="space-y-2">
-            {pendingMed.map(step => <ActionStepRow key={step.id} step={step} onToggle={onActionToggle} compact />)}
+            {pendingMed.map(step => (
+              <div key={step.id} data-review-id={step.id}>
+                <ActionStepRow step={step} onToggle={onActionToggle} compact />
+              </div>
+            ))}
           </div>
         </MissingSection>
       )}
@@ -782,7 +792,7 @@ function ChecklistTab({
   const doneSteps = analysis.actionSteps.filter(s => s.completed)
 
   const renderStep = (step: DocumentAnalysis["actionSteps"][0], i: number) => (
-    <div key={step.id}>
+    <div key={step.id} data-review-id={step.id}>
       <ActionStepRow step={step} index={i + 1} onToggle={onToggle} onExplain={() => handleExplain(step)} explainActive={explainId === step.id} />
       <AnimatePresence>
         {explainId === step.id && (
@@ -913,7 +923,11 @@ function DocumentsTab({ analysis, onToggle, onOpenGuidedReview }: { analysis: Do
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400">{requiredPending.length}</span>
                 </div>
                 <div className="p-3 grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {requiredPending.map(doc => <DocRow key={doc.id} doc={doc} onToggle={onToggle} />)}
+                  {requiredPending.map(doc => (
+                    <div key={doc.id} data-review-id={doc.id}>
+                      <DocRow doc={doc} onToggle={onToggle} />
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
@@ -927,7 +941,11 @@ function DocumentsTab({ analysis, onToggle, onOpenGuidedReview }: { analysis: Do
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-secondary text-muted-foreground">{optionalDocs.length}</span>
                 </div>
                 <div className="p-3 grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {optionalDocs.map(doc => <DocRow key={doc.id} doc={doc} onToggle={onToggle} />)}
+                  {optionalDocs.map(doc => (
+                    <div key={doc.id} data-review-id={doc.id}>
+                      <DocRow doc={doc} onToggle={onToggle} />
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
@@ -941,7 +959,11 @@ function DocumentsTab({ analysis, onToggle, onOpenGuidedReview }: { analysis: Do
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">{requiredObtained.length}</span>
                 </div>
                 <div className="p-3 grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {requiredObtained.map(doc => <DocRow key={doc.id} doc={doc} onToggle={onToggle} />)}
+                  {requiredObtained.map(doc => (
+                    <div key={doc.id} data-review-id={doc.id}>
+                      <DocRow doc={doc} onToggle={onToggle} />
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
@@ -1084,7 +1106,11 @@ function RisksTab({ analysis, onOpenGuidedReview }: { analysis: DocumentAnalysis
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-400">{highRisks.length}</span>
                 </div>
                 <div className="p-3 space-y-2">
-                  {highRisks.map(r => <RiskCard key={r.id} risk={r} />)}
+                  {highRisks.map(r => (
+                    <div key={r.id} data-review-id={r.id}>
+                      <RiskCard risk={r} />
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
@@ -1098,7 +1124,11 @@ function RisksTab({ analysis, onOpenGuidedReview }: { analysis: DocumentAnalysis
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400">{medRisks.length}</span>
                 </div>
                 <div className="p-3 space-y-2">
-                  {medRisks.map(r => <RiskCard key={r.id} risk={r} />)}
+                  {medRisks.map(r => (
+                    <div key={r.id} data-review-id={r.id}>
+                      <RiskCard risk={r} />
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
@@ -1112,7 +1142,11 @@ function RisksTab({ analysis, onOpenGuidedReview }: { analysis: DocumentAnalysis
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-secondary text-muted-foreground">{lowRisks.length}</span>
                 </div>
                 <div className="p-3 space-y-2">
-                  {lowRisks.map(r => <RiskCard key={r.id} risk={r} />)}
+                  {lowRisks.map(r => (
+                    <div key={r.id} data-review-id={r.id}>
+                      <RiskCard risk={r} />
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
@@ -1613,20 +1647,21 @@ function SourceSectionsTab({ analysis, documentTypeHint, onOpenGuidedReview }: {
       <div className="hidden lg:grid lg:grid-cols-[1fr_360px] lg:gap-5">
         <div className="max-h-[62vh] overflow-y-auto pr-1 space-y-2">
           {sections.map((s, i) => (
-            <SectionCard
-              key={s.id}
-              id={s.id}
-              index={i}
-              title={s.title}
-              content={s.content}
-              isSelected={selectedId === s.id}
-              isLoadingExplain={loadingId === s.id}
-              expandedBelow={false}
-              explainResult={null}
-              onSelect={() => fetchExplain(s.id, s.content, s.title)}
-              onClose={handleClose}
-              documentTypeHint={documentTypeHint}
-            />
+            <div key={s.id} data-review-id={s.id}>
+              <SectionCard
+                id={s.id}
+                index={i}
+                title={s.title}
+                content={s.content}
+                isSelected={selectedId === s.id}
+                isLoadingExplain={loadingId === s.id}
+                expandedBelow={false}
+                explainResult={null}
+                onSelect={() => fetchExplain(s.id, s.content, s.title)}
+                onClose={handleClose}
+                documentTypeHint={documentTypeHint}
+              />
+            </div>
           ))}
         </div>
         <div className="max-h-[62vh] overflow-y-auto">
@@ -1651,20 +1686,21 @@ function SourceSectionsTab({ analysis, documentTypeHint, onOpenGuidedReview }: {
       {/* Mobile: single column with inline expansion */}
       <div className="lg:hidden space-y-2">
         {sections.map((s, i) => (
-          <SectionCard
-            key={s.id}
-            id={s.id}
-            index={i}
-            title={s.title}
-            content={s.content}
-            isSelected={selectedId === s.id}
-            isLoadingExplain={loadingId === s.id}
-            expandedBelow={selectedId === s.id}
-            explainResult={explainCache[s.id] ?? null}
-            onSelect={() => fetchExplain(s.id, s.content, s.title)}
-            onClose={handleClose}
-            documentTypeHint={documentTypeHint}
-          />
+          <div key={s.id} data-review-id={s.id}>
+            <SectionCard
+              id={s.id}
+              index={i}
+              title={s.title}
+              content={s.content}
+              isSelected={selectedId === s.id}
+              isLoadingExplain={loadingId === s.id}
+              expandedBelow={selectedId === s.id}
+              explainResult={explainCache[s.id] ?? null}
+              onSelect={() => fetchExplain(s.id, s.content, s.title)}
+              onClose={handleClose}
+              documentTypeHint={documentTypeHint}
+            />
+          </div>
         ))}
       </div>
     </div>
@@ -2405,6 +2441,46 @@ function GuidedReviewOverlay({
     return () => document.removeEventListener("keydown", onKey)
   }, [onClose, items.length])
 
+  // Source linkage: highlight + scroll to the matching item in the main page
+  const activeId = items[idx]?.id ?? null
+  useEffect(() => {
+    const clearAll = () => {
+      document.querySelectorAll("[data-gr-hl]").forEach(el => {
+        const h = el as HTMLElement
+        h.style.outline = ""
+        h.style.boxShadow = ""
+        h.style.borderRadius = ""
+        h.removeAttribute("data-gr-hl")
+      })
+    }
+    clearAll()
+    if (!activeId) return
+    const timer = setTimeout(() => {
+      const el = document.querySelector(`[data-review-id="${activeId}"]`) as HTMLElement | null
+      if (!el) return
+      el.setAttribute("data-gr-hl", "true")
+      el.style.outline = "2px solid rgba(99,102,241,0.55)"
+      el.style.boxShadow = "0 0 0 5px rgba(99,102,241,0.09), 0 4px 18px rgba(99,102,241,0.09)"
+      el.style.borderRadius = "0.75rem"
+      el.scrollIntoView({ behavior: "smooth", block: "nearest" })
+    }, 180)
+    return () => {
+      clearTimeout(timer)
+      clearAll()
+    }
+  }, [activeId])
+
+  // Clean up all highlights on unmount
+  useEffect(() => () => {
+    document.querySelectorAll("[data-gr-hl]").forEach(el => {
+      const h = el as HTMLElement
+      h.style.outline = ""
+      h.style.boxShadow = ""
+      h.style.borderRadius = ""
+      h.removeAttribute("data-gr-hl")
+    })
+  }, [])
+
   const item = items[idx] ?? null
   const total = items.length
   const styles = item ? GUIDED_COLOR_STYLES[item.color] : GUIDED_COLOR_STYLES.slate
@@ -2423,8 +2499,8 @@ function GuidedReviewOverlay({
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 flex items-stretch justify-end"
     >
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      {/* Backdrop — light dim so main content stays readable */}
+      <div className="absolute inset-0 bg-black/[0.12] backdrop-blur-[2px]" onClick={onClose} />
 
       {/* Slide-in panel */}
       <motion.div
@@ -2432,32 +2508,36 @@ function GuidedReviewOverlay({
         animate={{ x: 0 }}
         exit={{ x: "100%" }}
         transition={{ type: "spring", damping: 28, stiffness: 280 }}
-        className="relative z-10 w-full sm:w-[460px] bg-background border-l border-border/50 shadow-2xl flex flex-col"
+        className="relative z-10 w-full sm:w-[540px] bg-background border-l border-border/60 shadow-2xl flex flex-col"
         style={{ maxHeight: "100dvh" }}
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center gap-3 px-5 py-4 border-b border-border/40 shrink-0">
+        <div className="flex items-center gap-3 px-6 py-4 border-b border-border/40 shrink-0 bg-secondary/20">
           <button
             onClick={onClose}
             style={{ touchAction: "manipulation" }}
-            className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-secondary active:bg-secondary transition-colors"
+            className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-secondary active:bg-secondary transition-colors shrink-0"
           >
             <X className="w-4 h-4 text-muted-foreground" />
           </button>
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/55 mb-0.5">Guided Review</p>
-            <h2 className="text-sm font-bold text-foreground truncate">{GUIDED_CONTEXT_LABELS[context] ?? context}</h2>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-primary/55 mb-0.5 flex items-center gap-1.5">
+              <Eye className="w-3 h-3" />Guided Review
+            </p>
+            <h2 className="text-[15px] font-bold text-foreground truncate leading-tight">{GUIDED_CONTEXT_LABELS[context] ?? context}</h2>
           </div>
           {total > 0 && (
-            <span className="text-xs font-mono text-muted-foreground/55 bg-secondary/60 px-2 py-1 rounded-lg shrink-0">
-              {idx + 1} / {total}
-            </span>
+            <div className="shrink-0 text-right">
+              <span className="text-xs font-mono font-semibold text-foreground/70 bg-secondary px-2.5 py-1 rounded-lg">
+                {idx + 1} <span className="text-muted-foreground/50">/ {total}</span>
+              </span>
+            </div>
           )}
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto p-5">
+        <div className="flex-1 overflow-y-auto p-6">
           {total === 0 ? (
             <div className="flex flex-col items-center justify-center h-full py-16 text-center gap-3">
               <CheckCircle2 className="w-12 h-12 text-emerald-500 mb-1" />
@@ -2472,26 +2552,31 @@ function GuidedReviewOverlay({
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -24 }}
                 transition={{ duration: 0.2 }}
-                className="space-y-4"
+                className="space-y-5"
               >
                 {/* Category badge */}
-                <span className={`inline-flex items-center px-2.5 py-1 rounded-lg border text-[10px] font-bold uppercase tracking-widest ${styles.badge}`}>
+                <span className={`inline-flex items-center px-3 py-1 rounded-lg border text-[10px] font-bold uppercase tracking-widest ${styles.badge}`}>
                   {item.category}
                 </span>
 
                 {/* Main card */}
-                <div className={`rounded-2xl border p-5 space-y-3 ${styles.card}`}>
-                  <h3 className="text-base font-bold text-foreground leading-snug">{item.title}</h3>
+                <div className={`rounded-2xl border p-6 space-y-4 ${styles.card}`}>
+                  <h3 className="text-[1.05rem] font-bold text-foreground leading-snug">{item.title}</h3>
                   {item.body && (
-                    <p className="text-sm text-muted-foreground leading-relaxed">{item.body}</p>
+                    <p className="text-sm text-muted-foreground leading-loose">{item.body}</p>
                   )}
                 </div>
 
-                {/* Evidence */}
+                {/* Evidence — source linkage callout */}
                 {item.evidence && (
-                  <div className="rounded-xl border border-border/40 bg-secondary/30 p-4">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/55 mb-2">From the document</p>
-                    <p className="text-xs text-foreground/70 leading-relaxed italic">"{item.evidence}"</p>
+                  <div className="rounded-xl border border-primary/20 bg-primary/[0.035] p-4 flex gap-3">
+                    <div className="w-0.5 shrink-0 rounded-full bg-primary/35 self-stretch" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-primary/55 mb-2 flex items-center gap-1.5">
+                        <AlignLeft className="w-3 h-3" />Source reference
+                      </p>
+                      <p className="text-xs text-foreground/80 leading-relaxed italic">"{item.evidence}"</p>
+                    </div>
                   </div>
                 )}
 

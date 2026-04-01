@@ -1,0 +1,79 @@
+Do not redesign Guided Review.
+Do not change the core interaction model.
+Do not move it out of the current analysis page.
+This is the final refinement pass only.
+
+Goal:
+Keep the current right-side Guided Review panel approach, but polish it so it feels like a premium contextual companion instead of a blocking drawer.
+
+Current direction is correct.
+What still needs improvement:
+1. background blur/dim is too strong
+2. right panel is too narrow/cramped
+3. source-to-task linkage is not visually obvious enough
+4. panel still feels a bit like a utility drawer instead of a PlainPath-native review companion
+
+Implement only these refinements:
+
+1. Reduce background dim/blur strength
+- The main analysis page behind the panel should remain readable
+- Use a lighter overlay and less blur
+- The user should still feel connected to the underlying content while Guided Review is open
+- Avoid making the center page feel fully disabled
+
+2. Improve right panel width and internal spacing
+- Slightly widen the right-side panel if needed
+- Increase breathing room inside the panel
+- Improve spacing between:
+  - section header
+  - task title
+  - supporting description
+  - source quote
+  - action button
+- Make long text easier to read
+- Preserve mobile behavior
+
+3. Strengthen visual source linkage
+This is the most important functional refinement.
+
+When a Guided Review item is active:
+- visibly highlight the matching source content in the main analysis page
+- use a clear active state on the linked source item/card/section:
+  - border/ring
+  - subtle glow or tint
+  - matching accent color where possible
+- if appropriate, auto-scroll the main content to the relevant linked block
+- user should immediately understand: “this review item comes from this exact source area”
+
+4. Improve panel visual hierarchy
+Without redesigning the feature, make the panel feel more aligned with PlainPath’s existing card language:
+- stronger header hierarchy
+- cleaner grouped content blocks
+- slightly more card-like internal sections
+- maintain dark premium SaaS styling
+- preserve semantic color meaning
+
+5. Keep the experience feeling like guided focus, not interruption
+- it should feel like an intelligent contextual review companion
+- not a blocking modal
+- not a raw tool drawer
+
+6. Do not change:
+- routes
+- existing analysis tabs
+- current tab content
+- data model
+- overall Guided Review concept
+- button entry points
+- mobile stacking logic if already correct
+
+Return:
+A. files updated
+B. exact blur/dim changes made
+C. exact width/spacing changes made
+D. how source highlighting/linkage was improved
+E. screenshots of the refined result
+F. any small remaining issues
+
+Do not switch to planning mode.
+Implement this final refinement directly.
