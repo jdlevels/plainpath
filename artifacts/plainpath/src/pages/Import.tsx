@@ -33,8 +33,8 @@ const DEMOS = [
   },
   {
     id: "grant-application",
-    title: "Small Business Community Grant",
-    meta: "Funding Grant · 8 steps · 8 docs · 2 deadlines",
+    title: "Small Business Community Grant Application",
+    meta: "Grant Application · 8 steps · 8 docs · 2 deadlines",
     icon: Banknote,
     color: "text-amber-500 dark:text-amber-400",
     bg: "bg-amber-50 dark:bg-amber-950/50",

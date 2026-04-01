@@ -24,7 +24,7 @@ export default function ExamplesSlide() {
               </svg>
             </div>
             <div>
-              <div className="text-[1.6vw] font-bold text-[#f0f4f8] font-display leading-snug mb-[0.8vh]">Small Business Event Permit</div>
+              <div className="text-[1.6vw] font-bold text-[#f0f4f8] font-display leading-snug mb-[0.8vh]">Small Business Event Permit Packet</div>
               <div className="text-[1.2vw] text-[#6b7a8d] font-body leading-snug">City government permit to host a public event. Requires 4 departmental sign-offs, a $1M liability certificate, and a 45-day lead time before the event date.</div>
             </div>
             <div className="h-px bg-[#1e2d44]" />
@@ -56,7 +56,7 @@ export default function ExamplesSlide() {
               </svg>
             </div>
             <div>
-              <div className="text-[1.6vw] font-bold text-[#f0f4f8] font-display leading-snug mb-[0.8vh]">K–12 School Enrollment Packet</div>
+              <div className="text-[1.6vw] font-bold text-[#f0f4f8] font-display leading-snug mb-[0.8vh]">School Enrollment Packet</div>
               <div className="text-[1.2vw] text-[#6b7a8d] font-body leading-snug">District enrollment requiring residency proof, immunization compliance, and prior school records. One missing document holds up the entire registration.</div>
             </div>
             <div className="h-px bg-[#1e2d44]" />
@@ -87,7 +87,7 @@ export default function ExamplesSlide() {
               </svg>
             </div>
             <div>
-              <div className="text-[1.6vw] font-bold text-[#f0f4f8] font-display leading-snug mb-[0.8vh]">Small Business Community Grant</div>
+              <div className="text-[1.6vw] font-bold text-[#f0f4f8] font-display leading-snug mb-[0.8vh]">Small Business Community Grant Application</div>
               <div className="text-[1.2vw] text-[#6b7a8d] font-body leading-snug">Competitive city grant for $5,000–$25,000. Requires a business plan, 2 years of financials, vendor quotes, and references. Incomplete packages are not reviewed.</div>
             </div>
             <div className="h-px bg-[#1e2d44]" />
