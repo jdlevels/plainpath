@@ -134,7 +134,13 @@ export default function Import() {
     try {
       await beforeRunAnalysis()
     } catch (err) {
-      setPasteError(err instanceof Error ? err.message : "Unable to start analysis.")
+      const msg = err instanceof Error ? err.message : "Unable to start analysis."
+      if (mode === "upload") {
+        setUploadError(msg)
+      } else {
+        setPasteError(msg)
+      }
+      setStep("input")
       return
     }
 
