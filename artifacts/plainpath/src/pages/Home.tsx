@@ -31,7 +31,7 @@ const DEMOS = [
   },
   {
     id: "grant-application",
-    title: "Small Business Community Grant",
+    title: "Small Business Community Grant Application",
     desc: "Competitive city grant for $5,000–$25,000. Requires a business plan, 2 years of financials, vendor quotes, and references. Incomplete packages are not reviewed.",
     icon: Banknote,
     color: "text-amber-500 dark:text-amber-400",
