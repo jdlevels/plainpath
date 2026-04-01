@@ -291,12 +291,12 @@ function GuidedReviewContent({
       </div>
 
       {/* ── Split layout ────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col lg:flex-row min-h-0 overflow-hidden">
+      <div className="flex-1 flex flex-col sm:flex-row min-h-0 overflow-hidden">
 
         {/* ══ LEFT PANEL — Document Sections ══════════════════ */}
         <div
           ref={leftPanelRef}
-          className="lg:w-[42%] shrink-0 overflow-y-auto border-b lg:border-b-0 lg:border-r border-border/20 h-[38vh] lg:h-auto"
+          className="sm:w-[42%] shrink-0 overflow-y-auto border-b sm:border-b-0 sm:border-r border-border/20 h-[38vh] sm:h-auto"
         >
 
           <div className="p-4 pb-2 sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border/20">
