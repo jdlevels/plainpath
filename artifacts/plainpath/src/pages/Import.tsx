@@ -66,6 +66,92 @@ const DOC_TYPES = [
 type Step = "input" | "doctype" | "analyzing"
 type Payload = { kind: "text"; text: string } | { kind: "file"; file: File }
 
+const LOADER_STAGES = [
+  { at: 0,  msg: "Extracting document content…",       note: "Usually takes 10–30 seconds"     },
+  { at: 5,  msg: "Identifying requirements…",           note: "Estimated ~20 seconds remaining" },
+  { at: 10, msg: "Mapping deadlines and risks…",        note: "Estimated ~15 seconds remaining" },
+  { at: 16, msg: "Building your action plan…",          note: "Estimated ~10 seconds remaining" },
+  { at: 22, msg: "Organizing findings across tabs…",    note: "Estimated ~5 seconds remaining"  },
+  { at: 27, msg: "Finalizing your analysis…",           note: "Almost there…"                  },
+  { at: 35, msg: "Almost there — wrapping up…",         note: ""                               },
+] as const
+
+function AnalyzingLoader() {
+  const [elapsed, setElapsed] = useState(0)
+
+  useEffect(() => {
+    const start = Date.now()
+    const id = setInterval(() => {
+      setElapsed((Date.now() - start) / 1000)
+    }, 200)
+    return () => clearInterval(id)
+  }, [])
+
+  const stageIdx = LOADER_STAGES.reduce<number>(
+    (acc, s, i) => (s.at <= elapsed ? i : acc),
+    0
+  )
+  const stage = LOADER_STAGES[stageIdx]
+  const progress = Math.min((elapsed / 34) * 100, 90)
+
+  return (
+    <div className="flex flex-col items-center justify-center gap-5 py-10 px-4">
+      {/* Pulsing icon */}
+      <div className="relative">
+        <div className="absolute inset-0 rounded-2xl bg-primary/15 scale-125 animate-pulse" />
+        <div className="relative w-14 h-14 rounded-2xl bg-primary/8 flex items-center justify-center">
+          <Loader2 className="w-7 h-7 text-primary animate-spin" />
+        </div>
+      </div>
+
+      {/* Stage message — fades between stages */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={stageIdx}
+          initial={{ opacity: 0, y: 5 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -5 }}
+          transition={{ duration: 0.3 }}
+          className="text-center"
+        >
+          <p className="font-bold text-foreground text-sm leading-snug">{stage.msg}</p>
+          {stage.note && (
+            <p className="text-xs text-muted-foreground/65 mt-1">{stage.note}</p>
+          )}
+        </motion.div>
+      </AnimatePresence>
+
+      {/* Progress bar */}
+      <div className="w-full max-w-[13rem]">
+        <div className="h-1.5 bg-secondary/60 rounded-full overflow-hidden">
+          <motion.div
+            className="h-full bg-primary rounded-full"
+            style={{ width: `${progress}%` }}
+            animate={{ width: `${progress}%` }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+          />
+        </div>
+      </div>
+
+      {/* Stage dots */}
+      <div className="flex items-center gap-1.5">
+        {LOADER_STAGES.slice(0, 5).map((_, i) => (
+          <div
+            key={i}
+            className={`rounded-full transition-all duration-500 ${
+              i < stageIdx
+                ? "w-2 h-2 bg-primary"
+                : i === stageIdx
+                ? "w-2.5 h-2.5 bg-primary/70"
+                : "w-1.5 h-1.5 bg-secondary"
+            }`}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function Import() {
   const [, setLocation] = useLocation()
   const { setAnalysis, setDocumentTypeHint } = useAnalysisContext()
@@ -332,15 +418,7 @@ export default function Import() {
                   {/* doctype grid or loading */}
                   <div className="p-4 sm:p-6">
                     {step === "analyzing" ? (
-                      <div className="flex flex-col items-center justify-center gap-4 py-12">
-                        <div className="w-14 h-14 rounded-2xl bg-primary/8 flex items-center justify-center">
-                          <Loader2 className="w-7 h-7 text-primary animate-spin" />
-                        </div>
-                        <div className="text-center">
-                          <p className="font-bold text-foreground text-sm">Analyzing your document…</p>
-                          <p className="text-xs text-muted-foreground mt-1">This usually takes 10–30 seconds</p>
-                        </div>
-                      </div>
+                      <AnalyzingLoader />
                     ) : (
                       <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
                         {DOC_TYPES.map((dt) => (

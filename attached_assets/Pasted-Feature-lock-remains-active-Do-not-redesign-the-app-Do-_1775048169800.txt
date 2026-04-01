@@ -1,0 +1,69 @@
+Feature lock remains active.
+Do not redesign the app.
+Do not change routes, analysis logic, or core flow.
+This is a small loader polish pass only.
+
+Goal:
+Upgrade the current analysis loading state so it feels more polished and informative during the 10–30 second wait, without using a hard exact countdown that could become inaccurate.
+
+Important:
+Do NOT build a strict literal second-by-second timer that promises an exact finish time.
+Instead, implement an estimated/staged loader that feels premium and trustworthy.
+
+Requirements:
+
+1. Keep the current loading screen structure, but improve it with:
+- clearer staged progress messaging
+- optional estimated time language
+- better perceived progress during the wait
+
+2. Use rotating or staged status messages such as:
+- Extracting document content…
+- Identifying requirements…
+- Mapping deadlines and risks…
+- Building your action plan…
+- Finalizing your analysis…
+
+3. Show estimated timing language in a safe way.
+Good examples:
+- Usually takes 10–30 seconds
+- Estimated time remaining: ~20 seconds
+- Finalizing your analysis…
+Do NOT show a hard countdown that reaches zero while still loading.
+
+4. Best preferred behavior:
+- Start with a soft estimated value like ~25 seconds remaining
+- Decrease in broad steps, not exact promises
+- If the wait continues past the estimate, switch to:
+  - Finalizing your analysis…
+  - Almost there…
+This prevents trust issues.
+
+5. Preserve compatibility across:
+- paste text flow
+- upload flow
+- desktop
+- mobile
+- dark mode
+
+6. Do not introduce new loading bugs:
+- loading state must clear correctly
+- timeout/error behavior must still work
+- retry after failure must still work
+
+7. Keep the visual tone aligned with the current premium SaaS look:
+- calm
+- clean
+- informative
+- not gimmicky
+
+Deliverables:
+Return:
+A. files updated
+B. exactly how the staged loader works
+C. the final loading messages used
+D. screenshots of the upgraded loader
+E. any risk or edge case to watch
+
+Do not switch to planning mode.
+Implement the loader polish directly.
