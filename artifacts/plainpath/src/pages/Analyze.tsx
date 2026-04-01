@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from "react"
+import React, { useEffect, useState, useCallback, useRef, useMemo } from "react"
 import { useLocation, useSearch } from "wouter"
 import { useGetDemoDocument, useUpdateChecklist } from "@workspace/api-client-react"
 import { useAnalysisContext } from "@/context/AnalysisContext"
@@ -61,6 +61,7 @@ export default function Analyze() {
   const [activeTab, setActiveTab] = useState(tabParam ?? "plain-english")
   const [savedId, setSavedId] = useState<string | null>(null)
   const [justSaved, setJustSaved] = useState(false)
+  const [guidedReviewCtx, setGuidedReviewCtx] = useState<string | null>(null)
 
   const { entitlements, loading: entitlementsLoading } = useEntitlements()
   const isPro = entitlements?.plan === "pro" || entitlements?.plan === "team"
@@ -279,23 +280,23 @@ export default function Analyze() {
                 {activeTab === "plain-english"   && <PlainEnglishTab analysis={analysis} onTabChange={setActiveTab} />}
                 {activeTab === "source-sections" && (isTabLocked("source-sections")
                   ? <UpgradeCard title="Source Sections — Pro" description="See exactly which part of the original document backs every requirement, risk, and deadline." />
-                  : <SourceSectionsTab analysis={analysis} documentTypeHint={documentTypeHint} />)}
-                {activeTab === "summary"         && <SummaryTab   analysis={analysis} onTabChange={setActiveTab} />}
+                  : <SourceSectionsTab analysis={analysis} documentTypeHint={documentTypeHint} onOpenGuidedReview={() => setGuidedReviewCtx("source-sections")} />)}
+                {activeTab === "summary"         && <SummaryTab   analysis={analysis} onTabChange={setActiveTab} onOpenGuidedReview={() => setGuidedReviewCtx("summary")} />}
                 {activeTab === "missing"         && (isTabLocked("missing")
                   ? <UpgradeCard title="What's Missing — Pro" description="Instantly spot what's incomplete, ambiguous, or absent so nothing slips through the cracks." />
-                  : <WhatsMissingTab analysis={analysis} onActionToggle={handleActionToggle} onDocToggle={handleDocToggle} onTabChange={setActiveTab} />)}
+                  : <WhatsMissingTab analysis={analysis} onActionToggle={handleActionToggle} onDocToggle={handleDocToggle} onTabChange={setActiveTab} onOpenGuidedReview={() => setGuidedReviewCtx("missing")} />)}
                 {activeTab === "checklist"       && (isTabLocked("checklist")
                   ? <UpgradeCard title="Checklist — Pro" description="A prioritized to-do list of every action step, ranked high / medium / low." />
-                  : <ChecklistTab  analysis={analysis} onToggle={handleActionToggle} documentTypeHint={documentTypeHint} />)}
+                  : <ChecklistTab  analysis={analysis} onToggle={handleActionToggle} documentTypeHint={documentTypeHint} onOpenGuidedReview={() => setGuidedReviewCtx("checklist")} />)}
                 {activeTab === "documents"       && (isTabLocked("documents")
                   ? <UpgradeCard title="Required Documents — Pro" description="Track every document you need to gather, with built-in completion tracking." />
-                  : <DocumentsTab  analysis={analysis} onToggle={handleDocToggle} />)}
+                  : <DocumentsTab  analysis={analysis} onToggle={handleDocToggle} onOpenGuidedReview={() => setGuidedReviewCtx("documents")} />)}
                 {activeTab === "deadlines"       && (isTabLocked("deadlines")
                   ? <UpgradeCard title="Deadlines — Pro" description="All hard deadlines in one place — formatted for easy calendar entry." />
                   : <DeadlinesTab  analysis={analysis} />)}
                 {activeTab === "risks"           && (isTabLocked("risks")
                   ? <UpgradeCard title="Risks & Notes — Pro" description="Understand what you're agreeing to and what could go wrong before you sign or submit." />
-                  : <RisksTab      analysis={analysis} />)}
+                  : <RisksTab      analysis={analysis} onOpenGuidedReview={() => setGuidedReviewCtx("risks")} />)}
                 {activeTab === "key-terms"       && <KeyTermsTab   analysis={analysis} />}
                 {activeTab === "action-pack"     && <ActionPackTab analysis={analysis} />}
 
@@ -308,6 +309,19 @@ export default function Analyze() {
         <PrintReport analysis={analysis} documentTypeHint={documentTypeHint} />
 
       </div>
+
+      {/* ── Guided Review Overlay ────────────────────── */}
+      <AnimatePresence>
+        {guidedReviewCtx && (
+          <GuidedReviewOverlay
+            context={guidedReviewCtx}
+            analysis={analysis}
+            onClose={() => setGuidedReviewCtx(null)}
+            onActionToggle={handleActionToggle}
+            onDocToggle={handleDocToggle}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }
@@ -335,7 +349,7 @@ function StatPill({ label, value, warn = false, onClick }: { label: string; valu
 /* ────────────────────────────────────────────────
    SUMMARY TAB
 ──────────────────────────────────────────────── */
-function SummaryTab({ analysis, onTabChange }: { analysis: DocumentAnalysis; onTabChange: (t: string) => void }) {
+function SummaryTab({ analysis, onTabChange, onOpenGuidedReview }: { analysis: DocumentAnalysis; onTabChange: (t: string) => void; onOpenGuidedReview?: () => void }) {
   const highPriority = (analysis.actionSteps ?? []).filter(s => s.priority === "high" && !s.completed)
   const hardDeadlines = (analysis.deadlines ?? []).filter(d => d.isHard)
   const highRisks = (analysis.risks ?? []).filter(r => r.severity === "high")
@@ -343,9 +357,12 @@ function SummaryTab({ analysis, onTabChange }: { analysis: DocumentAnalysis; onT
 
   return (
     <div className="space-y-5 max-w-3xl">
-      <div>
-        <h2 className="text-xl sm:text-2xl font-display font-bold mb-0.5">Document Overview</h2>
-        <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">{analysis.documentType}</p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-xl sm:text-2xl font-display font-bold mb-0.5">Document Overview</h2>
+          <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">{analysis.documentType}</p>
+        </div>
+        {onOpenGuidedReview && <GuidedReviewButton onClick={onOpenGuidedReview} />}
       </div>
 
       {/* Blue: What this document is */}
@@ -522,12 +539,13 @@ function PlainEnglishTab({ analysis, onTabChange }: { analysis: DocumentAnalysis
    WHAT'S MISSING TAB
 ──────────────────────────────────────────────── */
 function WhatsMissingTab({
-  analysis, onActionToggle, onDocToggle, onTabChange,
+  analysis, onActionToggle, onDocToggle, onTabChange, onOpenGuidedReview,
 }: {
   analysis: DocumentAnalysis
   onActionToggle: (id: string, done: boolean) => void
   onDocToggle: (id: string, done: boolean) => void
   onTabChange: (t: string) => void
+  onOpenGuidedReview?: () => void
 }) {
   const pendingHigh = analysis.actionSteps.filter(s => s.priority === "high" && !s.completed)
   const pendingMed  = analysis.actionSteps.filter(s => s.priority === "medium" && !s.completed)
@@ -555,11 +573,14 @@ function WhatsMissingTab({
   return (
     <div className="space-y-8 max-w-3xl">
 
-      <div>
-        <h2 className="text-xl sm:text-2xl font-display font-bold">What's Missing</h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          {totalBlocking} blocking item{totalBlocking !== 1 ? "s" : ""} must be resolved before you can proceed.
-        </p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-xl sm:text-2xl font-display font-bold">What's Missing</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            {totalBlocking} blocking item{totalBlocking !== 1 ? "s" : ""} must be resolved before you can proceed.
+          </p>
+        </div>
+        {onOpenGuidedReview && <GuidedReviewButton onClick={onOpenGuidedReview} />}
       </div>
 
       {/* ── Next Best Action spotlight ─────────────── */}
@@ -721,11 +742,12 @@ function ExplainPanel({ result, loading, onClose }: { result: ExplainResult | nu
    CHECKLIST TAB
 ──────────────────────────────────────────────── */
 function ChecklistTab({
-  analysis, onToggle, documentTypeHint,
+  analysis, onToggle, documentTypeHint, onOpenGuidedReview,
 }: {
   analysis: DocumentAnalysis
   onToggle: (id: string, done: boolean) => void
   documentTypeHint?: string | null
+  onOpenGuidedReview?: () => void
 }) {
   const remaining = analysis.actionSteps.filter(s => !s.completed).length
   const [explainId, setExplainId] = useState<string | null>(null)
@@ -776,11 +798,14 @@ function ChecklistTab({
 
   return (
     <div className="space-y-5">
-      <div>
-        <h2 className="text-xl sm:text-2xl font-display font-bold">Action Steps</h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          {remaining === 0 ? "All steps complete." : `${remaining} of ${analysis.actionSteps.length} remaining — check off items as you complete them`}
-        </p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-xl sm:text-2xl font-display font-bold">Action Steps</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            {remaining === 0 ? "All steps complete." : `${remaining} of ${analysis.actionSteps.length} remaining — check off items as you complete them`}
+          </p>
+        </div>
+        {onOpenGuidedReview && <GuidedReviewButton onClick={onOpenGuidedReview} />}
       </div>
       {analysis.actionSteps.length === 0
         ? <EmptyState icon={CheckCircle2} title="No action steps found" desc="This document doesn't appear to require specific actions." />
@@ -859,18 +884,21 @@ function ChecklistTab({
 /* ────────────────────────────────────────────────
    DOCUMENTS TAB
 ──────────────────────────────────────────────── */
-function DocumentsTab({ analysis, onToggle }: { analysis: DocumentAnalysis; onToggle: (id: string, done: boolean) => void }) {
+function DocumentsTab({ analysis, onToggle, onOpenGuidedReview }: { analysis: DocumentAnalysis; onToggle: (id: string, done: boolean) => void; onOpenGuidedReview?: () => void }) {
   const requiredPending  = analysis.requiredDocuments.filter(d => d.required && !d.obtained)
   const requiredObtained = analysis.requiredDocuments.filter(d => d.required && d.obtained)
   const optionalDocs     = analysis.requiredDocuments.filter(d => !d.required)
   const remaining = requiredPending.length
   return (
     <div className="space-y-5">
-      <div>
-        <h2 className="text-xl sm:text-2xl font-display font-bold">Required Documents</h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          {remaining === 0 ? "All required documents obtained." : `${remaining} of ${analysis.requiredDocuments.filter(d => d.required).length} still needed — gather these before submitting`}
-        </p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-xl sm:text-2xl font-display font-bold">Required Documents</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            {remaining === 0 ? "All required documents obtained." : `${remaining} of ${analysis.requiredDocuments.filter(d => d.required).length} still needed — gather these before submitting`}
+          </p>
+        </div>
+        {onOpenGuidedReview && <GuidedReviewButton onClick={onOpenGuidedReview} />}
       </div>
       {analysis.requiredDocuments.length === 0
         ? <EmptyState icon={ShieldCheck} title="No documents required" desc="No additional files are needed for this document." />
@@ -1028,16 +1056,19 @@ function RiskCard({ risk }: { risk: DocumentAnalysis["risks"][0] }) {
   )
 }
 
-function RisksTab({ analysis }: { analysis: DocumentAnalysis }) {
+function RisksTab({ analysis, onOpenGuidedReview }: { analysis: DocumentAnalysis; onOpenGuidedReview?: () => void }) {
   const highRisks   = analysis.risks.filter(r => r.severity === "high")
   const medRisks    = analysis.risks.filter(r => r.severity === "medium")
   const lowRisks    = analysis.risks.filter(r => r.severity === "low" || (r.severity !== "high" && r.severity !== "medium"))
 
   return (
     <div className="space-y-5">
-      <div>
-        <h2 className="text-xl sm:text-2xl font-display font-bold">Risks & Warnings</h2>
-        <p className="text-sm text-muted-foreground mt-1">Potential issues that could delay, block, or invalidate your submission</p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-xl sm:text-2xl font-display font-bold">Risks & Warnings</h2>
+          <p className="text-sm text-muted-foreground mt-1">Potential issues that could delay, block, or invalidate your submission</p>
+        </div>
+        {onOpenGuidedReview && <GuidedReviewButton onClick={onOpenGuidedReview} />}
       </div>
 
       {analysis.risks.length === 0
@@ -1505,7 +1536,7 @@ function SectionCard({
   )
 }
 
-function SourceSectionsTab({ analysis, documentTypeHint }: { analysis: DocumentAnalysis; documentTypeHint: string | null }) {
+function SourceSectionsTab({ analysis, documentTypeHint, onOpenGuidedReview }: { analysis: DocumentAnalysis; documentTypeHint: string | null; onOpenGuidedReview?: () => void }) {
   const sections = analysis.sections ?? []
   const [selectedId, setSelectedId] = React.useState<string | null>(null)
   const [loadingId, setLoadingId] = React.useState<string | null>(null)
@@ -1560,11 +1591,14 @@ function SourceSectionsTab({ analysis, documentTypeHint }: { analysis: DocumentA
   return (
     <div className="space-y-4">
       {/* Tab header */}
-      <div className="mb-1">
-        <h2 className="text-2xl font-bold text-foreground mb-1">Source Sections</h2>
-        <p className="text-sm text-muted-foreground leading-relaxed max-w-2xl">
-          The raw text of your document, broken into numbered sections. Click any section to unlock a plain-English breakdown — what it means, what it requires from you, why it matters, and what risks it carries.
-        </p>
+      <div className="mb-1 flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-2xl font-bold text-foreground mb-1">Source Sections</h2>
+          <p className="text-sm text-muted-foreground leading-relaxed max-w-2xl">
+            The raw text of your document, broken into numbered sections. Click any section to unlock a plain-English breakdown — what it means, what it requires from you, why it matters, and what risks it carries.
+          </p>
+        </div>
+        {onOpenGuidedReview && <GuidedReviewButton onClick={onOpenGuidedReview} />}
       </div>
 
       {/* Count + hint bar */}
@@ -2260,6 +2294,280 @@ function PrintReport({ analysis, documentTypeHint }: { analysis: DocumentAnalysi
         <span>Not legal, financial, or professional advice.</span>
       </div>
     </div>
+  )
+}
+
+/* ────────────────────────────────────────────────
+   GUIDED REVIEW
+──────────────────────────────────────────────── */
+function GuidedReviewButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{ touchAction: "manipulation" }}
+      className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-primary/25 bg-primary/6 text-primary hover:bg-primary/12 active:bg-primary/18 transition-colors text-xs font-semibold shrink-0 whitespace-nowrap"
+    >
+      <Eye className="w-3.5 h-3.5" />
+      <span className="hidden sm:inline">Guided Review</span>
+      <span className="sm:hidden">Review</span>
+    </button>
+  )
+}
+
+type ReviewItem = {
+  id: string
+  category: string
+  title: string
+  body: string
+  evidence?: string
+  color: "red" | "amber" | "blue" | "violet" | "slate"
+  completed?: boolean
+  toggleType?: "action" | "doc"
+}
+
+const GUIDED_CONTEXT_LABELS: Record<string, string> = {
+  missing: "What's Missing",
+  checklist: "Action Checklist",
+  documents: "Required Documents",
+  risks: "Risks & Warnings",
+  "source-sections": "Source Sections",
+  summary: "Priority Overview",
+}
+
+const GUIDED_COLOR_STYLES: Record<string, { badge: string; card: string }> = {
+  red:    { badge: "bg-red-100 dark:bg-red-950/60 border-red-200/60 dark:border-red-800/40 text-red-700 dark:text-red-400",    card: "border-red-200/40 dark:border-red-900/30 bg-red-50/30 dark:bg-red-950/15" },
+  amber:  { badge: "bg-amber-100 dark:bg-amber-950/60 border-amber-200/60 dark:border-amber-800/40 text-amber-700 dark:text-amber-400", card: "border-amber-200/40 dark:border-amber-900/30 bg-amber-50/30 dark:bg-amber-950/15" },
+  blue:   { badge: "bg-blue-100 dark:bg-blue-950/60 border-blue-200/60 dark:border-blue-800/40 text-blue-700 dark:text-blue-400",   card: "border-blue-200/40 dark:border-blue-900/30 bg-blue-50/30 dark:bg-blue-950/15" },
+  violet: { badge: "bg-violet-100 dark:bg-violet-950/60 border-violet-200/60 dark:border-violet-800/40 text-violet-700 dark:text-violet-400", card: "border-violet-200/40 dark:border-violet-900/30 bg-violet-50/30 dark:bg-violet-950/15" },
+  slate:  { badge: "bg-secondary/60 border-border/40 text-muted-foreground", card: "border-border/30 bg-secondary/20" },
+}
+
+function GuidedReviewOverlay({
+  context, analysis, onClose, onActionToggle, onDocToggle,
+}: {
+  context: string
+  analysis: DocumentAnalysis
+  onClose: () => void
+  onActionToggle: (id: string, done: boolean) => void
+  onDocToggle: (id: string, done: boolean) => void
+}) {
+  const [idx, setIdx] = useState(0)
+
+  const items = useMemo((): ReviewItem[] => {
+    switch (context) {
+      case "missing":
+        return [
+          ...analysis.actionSteps.filter(s => s.priority === "high" && !s.completed).map(s => ({ id: s.id, category: "Blocking Step", title: s.title, body: s.description, evidence: s.sourceEvidence, color: "red" as const, completed: s.completed, toggleType: "action" as const })),
+          ...analysis.requiredDocuments.filter(d => d.required && !d.obtained).map(d => ({ id: d.id, category: "Required Document", title: d.name, body: (d as any).description ?? "", color: "amber" as const, completed: d.obtained, toggleType: "doc" as const })),
+          ...analysis.deadlines.filter(d => d.isHard).map(d => ({ id: d.id, category: "Hard Deadline", title: d.description, body: d.dueDate ?? "", color: "amber" as const })),
+          ...analysis.risks.filter(r => r.severity === "high").map(r => ({ id: r.id, category: "High Risk", title: r.title, body: r.description, evidence: r.sourceEvidence, color: "red" as const })),
+        ]
+      case "checklist":
+        return [
+          ...analysis.actionSteps.filter(s => s.priority === "high").map(s => ({ id: s.id, category: "High Priority", title: s.title, body: s.description, evidence: s.sourceEvidence, color: "red" as const, completed: s.completed, toggleType: "action" as const })),
+          ...analysis.actionSteps.filter(s => s.priority === "medium").map(s => ({ id: s.id, category: "Medium Priority", title: s.title, body: s.description, evidence: s.sourceEvidence, color: "amber" as const, completed: s.completed, toggleType: "action" as const })),
+          ...analysis.actionSteps.filter(s => s.priority === "low").map(s => ({ id: s.id, category: "Low Priority", title: s.title, body: s.description, evidence: s.sourceEvidence, color: "slate" as const, completed: s.completed, toggleType: "action" as const })),
+        ]
+      case "documents":
+        return [
+          ...analysis.requiredDocuments.filter(d => d.required && !d.obtained).map(d => ({ id: d.id, category: "Still Needed", title: d.name, body: (d as any).description ?? "", color: "amber" as const, completed: d.obtained, toggleType: "doc" as const })),
+          ...analysis.requiredDocuments.filter(d => d.required && d.obtained).map(d => ({ id: d.id, category: "Obtained", title: d.name, body: (d as any).description ?? "", color: "slate" as const, completed: d.obtained, toggleType: "doc" as const })),
+          ...analysis.requiredDocuments.filter(d => !d.required).map(d => ({ id: d.id, category: "Optional", title: d.name, body: (d as any).description ?? "", color: "blue" as const })),
+        ]
+      case "risks":
+        return [
+          ...analysis.risks.filter(r => r.severity === "high").map(r => ({ id: r.id, category: "High Risk", title: r.title, body: r.description, evidence: r.sourceEvidence, color: "red" as const })),
+          ...analysis.risks.filter(r => r.severity === "medium").map(r => ({ id: r.id, category: "Medium Risk", title: r.title, body: r.description, evidence: r.sourceEvidence, color: "amber" as const })),
+          ...analysis.risks.filter(r => r.severity !== "high" && r.severity !== "medium").map(r => ({ id: r.id, category: "Low Risk", title: r.title, body: r.description, evidence: r.sourceEvidence, color: "slate" as const })),
+        ]
+      case "source-sections":
+        return (analysis.sections ?? []).map((s, i) => ({ id: s.id, category: `Section ${i + 1}`, title: s.title ?? `Section ${i + 1}`, body: s.content, color: "blue" as const }))
+      case "summary":
+        return [
+          ...analysis.actionSteps.filter(s => s.priority === "high" && !s.completed).map(s => ({ id: s.id, category: "Urgent Step", title: s.title, body: s.description, evidence: s.sourceEvidence, color: "red" as const, completed: s.completed, toggleType: "action" as const })),
+          ...analysis.deadlines.filter(d => d.isHard).map(d => ({ id: d.id, category: "Hard Deadline", title: d.description, body: d.dueDate ?? "", color: "amber" as const })),
+          ...analysis.risks.filter(r => r.severity === "high").map(r => ({ id: r.id, category: "High Risk", title: r.title, body: r.description, evidence: r.sourceEvidence, color: "red" as const })),
+        ]
+      default:
+        return []
+    }
+  }, [context, analysis])
+
+  useEffect(() => { setIdx(0) }, [context])
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose()
+      if (e.key === "ArrowRight" || e.key === "ArrowDown") setIdx(i => Math.min(items.length - 1, i + 1))
+      if (e.key === "ArrowLeft"  || e.key === "ArrowUp")   setIdx(i => Math.max(0, i - 1))
+    }
+    document.addEventListener("keydown", onKey)
+    return () => document.removeEventListener("keydown", onKey)
+  }, [onClose, items.length])
+
+  const item = items[idx] ?? null
+  const total = items.length
+  const styles = item ? GUIDED_COLOR_STYLES[item.color] : GUIDED_COLOR_STYLES.slate
+
+  const handleToggle = () => {
+    if (!item?.toggleType) return
+    const newDone = !item.completed
+    if (item.toggleType === "action") onActionToggle(item.id, newDone)
+    else onDocToggle(item.id, newDone)
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-stretch justify-end"
+    >
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+
+      {/* Slide-in panel */}
+      <motion.div
+        initial={{ x: "100%" }}
+        animate={{ x: 0 }}
+        exit={{ x: "100%" }}
+        transition={{ type: "spring", damping: 28, stiffness: 280 }}
+        className="relative z-10 w-full sm:w-[460px] bg-background border-l border-border/50 shadow-2xl flex flex-col"
+        style={{ maxHeight: "100dvh" }}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-border/40 shrink-0">
+          <button
+            onClick={onClose}
+            style={{ touchAction: "manipulation" }}
+            className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-secondary active:bg-secondary transition-colors"
+          >
+            <X className="w-4 h-4 text-muted-foreground" />
+          </button>
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/55 mb-0.5">Guided Review</p>
+            <h2 className="text-sm font-bold text-foreground truncate">{GUIDED_CONTEXT_LABELS[context] ?? context}</h2>
+          </div>
+          {total > 0 && (
+            <span className="text-xs font-mono text-muted-foreground/55 bg-secondary/60 px-2 py-1 rounded-lg shrink-0">
+              {idx + 1} / {total}
+            </span>
+          )}
+        </div>
+
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto p-5">
+          {total === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full py-16 text-center gap-3">
+              <CheckCircle2 className="w-12 h-12 text-emerald-500 mb-1" />
+              <p className="font-bold text-foreground text-base">Nothing to review</p>
+              <p className="text-sm text-muted-foreground">No items available for this view.</p>
+            </div>
+          ) : item ? (
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={`${context}-${idx}`}
+                initial={{ opacity: 0, x: 24 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -24 }}
+                transition={{ duration: 0.2 }}
+                className="space-y-4"
+              >
+                {/* Category badge */}
+                <span className={`inline-flex items-center px-2.5 py-1 rounded-lg border text-[10px] font-bold uppercase tracking-widest ${styles.badge}`}>
+                  {item.category}
+                </span>
+
+                {/* Main card */}
+                <div className={`rounded-2xl border p-5 space-y-3 ${styles.card}`}>
+                  <h3 className="text-base font-bold text-foreground leading-snug">{item.title}</h3>
+                  {item.body && (
+                    <p className="text-sm text-muted-foreground leading-relaxed">{item.body}</p>
+                  )}
+                </div>
+
+                {/* Evidence */}
+                {item.evidence && (
+                  <div className="rounded-xl border border-border/40 bg-secondary/30 p-4">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/55 mb-2">From the document</p>
+                    <p className="text-xs text-foreground/70 leading-relaxed italic">"{item.evidence}"</p>
+                  </div>
+                )}
+
+                {/* Complete toggle */}
+                {item.toggleType && (
+                  <button
+                    onClick={handleToggle}
+                    style={{ touchAction: "manipulation" }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-all text-sm font-semibold ${
+                      item.completed
+                        ? "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200/60 dark:border-emerald-800/40 text-emerald-700 dark:text-emerald-400"
+                        : "bg-secondary/30 border-border/40 text-muted-foreground hover:bg-secondary/50"
+                    }`}
+                  >
+                    {item.completed
+                      ? <CheckCircle2 className="w-4 h-4 shrink-0" />
+                      : <div className="w-4 h-4 rounded border-2 border-current shrink-0" />
+                    }
+                    {item.completed ? "Marked complete — tap to undo" : "Mark as complete"}
+                  </button>
+                )}
+              </motion.div>
+            </AnimatePresence>
+          ) : null}
+        </div>
+
+        {/* Navigation footer */}
+        {total > 0 && (
+          <div className="shrink-0 border-t border-border/40 px-5 py-4 space-y-3">
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={idx === 0}
+                onClick={() => setIdx(i => Math.max(0, i - 1))}
+                style={{ touchAction: "manipulation" }}
+                className="flex-1 gap-1.5 h-11 text-sm"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" /> Previous
+              </Button>
+              {idx < total - 1 ? (
+                <Button
+                  size="sm"
+                  onClick={() => setIdx(i => Math.min(total - 1, i + 1))}
+                  style={{ touchAction: "manipulation" }}
+                  className="flex-1 gap-1.5 h-11 text-sm"
+                >
+                  Next <ArrowRight className="w-3.5 h-3.5" />
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  onClick={onClose}
+                  style={{ touchAction: "manipulation" }}
+                  className="flex-1 gap-1.5 h-11 text-sm bg-emerald-600 hover:bg-emerald-700 text-white"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Done
+                </Button>
+              )}
+            </div>
+            {total <= 14 && (
+              <div className="flex items-center justify-center gap-1.5">
+                {Array.from({ length: total }).map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setIdx(i)}
+                    style={{ touchAction: "manipulation" }}
+                    className={`rounded-full transition-all duration-200 ${i === idx ? "w-5 h-2 bg-primary" : "w-2 h-2 bg-border/60 hover:bg-border"}`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </motion.div>
+    </motion.div>
   )
 }
 
