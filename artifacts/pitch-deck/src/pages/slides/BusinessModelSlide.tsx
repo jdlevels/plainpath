@@ -12,31 +12,11 @@ export default function BusinessModelSlide() {
             Simple pricing. No contracts.
           </h2>
           <p className="mt-[1vh] text-[1.6vw] text-[#f0f4f8]/50 font-body">
-            Free to try. Paid plans unlock cloud sync, team sharing, and advanced features.
+            Three tiers. No contracts. Cancel any time.
           </p>
         </div>
 
-        <div className="grid grid-cols-4 gap-[2vw] flex-1 content-center">
-          {/* Free */}
-          <div className="bg-[#0f1929] border border-[#1e2d44] rounded-[1.5vw] p-[2vw] flex flex-col gap-[1.6vh]">
-            <div>
-              <div className="text-[1.1vw] font-bold tracking-widest uppercase text-[#6b7a8d] font-body mb-[1vh]">Free</div>
-              <div className="flex items-baseline gap-[0.3vw]">
-                <span className="text-[3.5vw] font-extrabold text-[#f0f4f8] font-display leading-none">$0</span>
-                <span className="text-[1.2vw] text-[#6b7a8d] font-body">/forever</span>
-              </div>
-            </div>
-            <div className="h-px bg-[#1e2d44]" />
-            <div className="flex flex-col gap-[1vh]">
-              {["Analyze any document","Plain English tab","No account required","Saved on device"].map(f => (
-                <div key={f} className="flex items-center gap-[0.7vw]">
-                  <div className="w-[0.9vw] h-[0.9vw] rounded-full bg-[#4f7cac]/40 shrink-0" />
-                  <span className="text-[1.15vw] text-[#f0f4f8]/70 font-body">{f}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
+        <div className="grid grid-cols-3 gap-[2.5vw] flex-1 content-center">
           {/* Starter */}
           <div className="bg-[#0f1929] border border-[#1e2d44] rounded-[1.5vw] p-[2vw] flex flex-col gap-[1.6vh]">
             <div>
@@ -48,7 +28,7 @@ export default function BusinessModelSlide() {
             </div>
             <div className="h-px bg-[#1e2d44]" />
             <div className="flex flex-col gap-[1vh]">
-              {["Everything in Free","All 10 analysis tabs","Save & export analyses","Progress tracking"].map(f => (
+              {["Analyze any document","All 10 analysis tabs","Save & export analyses","Progress tracking"].map(f => (
                 <div key={f} className="flex items-center gap-[0.7vw]">
                   <div className="w-[0.9vw] h-[0.9vw] rounded-full bg-[#4f7cac] shrink-0" />
                   <span className="text-[1.15vw] text-[#f0f4f8]/70 font-body">{f}</span>
