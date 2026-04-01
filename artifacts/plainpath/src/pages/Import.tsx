@@ -67,23 +67,37 @@ type Step = "input" | "doctype" | "analyzing"
 type Payload = { kind: "text"; text: string } | { kind: "file"; file: File }
 
 const LOADER_STAGES = [
-  { at: 0,  msg: "Extracting document content…",       note: "Usually takes 10–30 seconds"     },
-  { at: 5,  msg: "Identifying requirements…",           note: "Estimated ~20 seconds remaining" },
-  { at: 10, msg: "Mapping deadlines and risks…",        note: "Estimated ~15 seconds remaining" },
-  { at: 16, msg: "Building your action plan…",          note: "Estimated ~10 seconds remaining" },
-  { at: 22, msg: "Organizing findings across tabs…",    note: "Estimated ~5 seconds remaining"  },
-  { at: 27, msg: "Finalizing your analysis…",           note: "Almost there…"                  },
-  { at: 35, msg: "Almost there — wrapping up…",         note: ""                               },
+  { at: 0,  pct: 5,  label: "Preparing document",                  note: "Usually takes 10–30 seconds"     },
+  { at: 4,  pct: 18, label: "Reading content",                      note: "Estimated ~25 seconds remaining" },
+  { at: 9,  pct: 38, label: "Identifying sections",                  note: "Estimated ~18 seconds remaining" },
+  { at: 15, pct: 57, label: "Generating plain-English analysis",     note: "Estimated ~12 seconds remaining" },
+  { at: 22, pct: 76, label: "Building tasks, risks & deadlines",     note: "Estimated ~7 seconds remaining"  },
+  { at: 29, pct: 88, label: "Finalizing results",                    note: "Almost there…"                  },
+  { at: 36, pct: 92, label: "Wrapping up…",                          note: ""                               },
+] as const
+
+const HELPER_LINES = [
+  "Extracting the parts that matter most",
+  "Turning document language into clear actions",
+  "Mapping risks, deadlines, and required documents",
+  "Preparing structured guidance for review",
+  "Identifying what you need to do first",
 ] as const
 
 function AnalyzingLoader() {
   const [elapsed, setElapsed] = useState(0)
+  const [helperIdx, setHelperIdx] = useState(0)
 
+  // Elapsed counter — updates every 200ms, cleans up on unmount
   useEffect(() => {
     const start = Date.now()
-    const id = setInterval(() => {
-      setElapsed((Date.now() - start) / 1000)
-    }, 200)
+    const id = setInterval(() => setElapsed((Date.now() - start) / 1000), 200)
+    return () => clearInterval(id)
+  }, [])
+
+  // Rotate helper line every 4 seconds
+  useEffect(() => {
+    const id = setInterval(() => setHelperIdx(i => (i + 1) % HELPER_LINES.length), 4000)
     return () => clearInterval(id)
   }, [])
 
@@ -92,10 +106,15 @@ function AnalyzingLoader() {
     0
   )
   const stage = LOADER_STAGES[stageIdx]
-  const progress = Math.min((elapsed / 34) * 100, 90)
+  const progress = Math.min(stage.pct, 92)
+
+  // Elapsed display: "5s" or "1m 12s"
+  const elapsedDisplay = elapsed < 60
+    ? `${Math.floor(elapsed)}s`
+    : `${Math.floor(elapsed / 60)}m ${Math.floor(elapsed % 60)}s`
 
   return (
-    <div className="flex flex-col items-center justify-center gap-5 py-10 px-4">
+    <div className="flex flex-col items-center justify-center gap-4 py-8 px-4">
       {/* Pulsing icon */}
       <div className="relative">
         <div className="absolute inset-0 rounded-2xl bg-primary/15 scale-125 animate-pulse" />
@@ -104,7 +123,7 @@ function AnalyzingLoader() {
         </div>
       </div>
 
-      {/* Stage message — fades between stages */}
+      {/* Active stage label — fades between stages */}
       <AnimatePresence mode="wait">
         <motion.div
           key={stageIdx}
@@ -114,28 +133,47 @@ function AnalyzingLoader() {
           transition={{ duration: 0.3 }}
           className="text-center"
         >
-          <p className="font-bold text-foreground text-sm leading-snug">{stage.msg}</p>
+          <p className="font-bold text-foreground text-sm leading-snug">{stage.label}</p>
           {stage.note && (
-            <p className="text-xs text-muted-foreground/65 mt-1">{stage.note}</p>
+            <p className="text-xs text-muted-foreground/60 mt-1">{stage.note}</p>
           )}
         </motion.div>
       </AnimatePresence>
 
-      {/* Progress bar */}
-      <div className="w-full max-w-[13rem]">
-        <div className="h-1.5 bg-secondary/60 rounded-full overflow-hidden">
+      {/* Progress bar — widened, with elapsed timer row below */}
+      <div className="w-full max-w-xs space-y-2">
+        <div className="h-2 bg-secondary/60 rounded-full overflow-hidden">
           <motion.div
             className="h-full bg-primary rounded-full"
             style={{ width: `${progress}%` }}
             animate={{ width: `${progress}%` }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
           />
+        </div>
+        {/* Elapsed + soft estimate row */}
+        <div className="flex items-center justify-between text-[11px] text-muted-foreground/50 px-0.5">
+          <span className="font-mono tabular-nums">{elapsedDisplay} elapsed</span>
+          <span>Most finish under 30s</span>
         </div>
       </div>
 
+      {/* Rotating reassurance line */}
+      <AnimatePresence mode="wait">
+        <motion.p
+          key={helperIdx}
+          initial={{ opacity: 0, y: 3 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -3 }}
+          transition={{ duration: 0.4 }}
+          className="text-xs text-primary/50 text-center font-medium leading-snug max-w-[14rem]"
+        >
+          {HELPER_LINES[helperIdx]}
+        </motion.p>
+      </AnimatePresence>
+
       {/* Stage dots */}
       <div className="flex items-center gap-1.5">
-        {LOADER_STAGES.slice(0, 5).map((_, i) => (
+        {LOADER_STAGES.slice(0, 6).map((_, i) => (
           <div
             key={i}
             className={`rounded-full transition-all duration-500 ${

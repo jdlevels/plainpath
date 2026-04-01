@@ -1,0 +1,117 @@
+Project: PlainPath
+Task: Upgrade the existing analysis loader only. Guided Review is complete. Do not revisit it.
+
+Goal:
+Improve the analysis loading state so users get:
+- visible progress
+- stage-based status messaging
+- elapsed-time feedback
+- better confidence that analysis is actively running
+
+Hard rules:
+- DO NOT redesign the app
+- DO NOT change working upload, paste, demo, save, export, or analysis flows
+- DO NOT modify result structure
+- DO NOT touch Guided Review
+- DO NOT introduce blocking logic or instability
+- Make surgical UI-only or loader-state-only updates
+
+What to build:
+
+1. Add a staged loader progress system
+Use a safe simulated progress model while the analysis request is pending.
+
+Progress behavior:
+- 0–15% → Preparing document
+- 15–35% → Reading content
+- 35–55% → Identifying sections
+- 55–75% → Generating plain-English analysis
+- 75–90% → Building tasks, risks, and deadlines
+- 90–95% → Finalizing results
+- 100% only when the real API/analysis response has completed
+
+Rules:
+- Never show 100% before the actual response returns
+- Cap at 90–95% while pending
+- On success: animate quickly to 100%, then reveal results
+- On failure: stop cleanly and return to existing error handling
+
+2. Add elapsed-time feedback
+Show:
+- elapsed timer starting at 0s
+- helper text like:
+  - “Most analyses complete in under 30 seconds”
+  - “Larger files may take longer”
+
+Preferred:
+- elapsed timer only
+- optional soft estimate text
+Avoid fake exact countdowns unless backed by real timing data
+
+3. Add stage label + helper messaging
+Loader should include:
+- title: “Analyzing your document”
+- active stage label
+- progress bar
+- elapsed time row
+- rotating helper text
+
+Suggested helper lines:
+- “Extracting the parts that matter most”
+- “Turning document language into clear actions”
+- “Mapping risks, deadlines, and required documents”
+- “Preparing structured guidance for review”
+
+4. Styling
+Keep current design system:
+- dark premium SaaS
+- subtle borders
+- primary/indigo accent
+- restrained motion only
+- no flashy redesign
+
+Recommended UI:
+- rounded loader card/container
+- progress bar with smooth width transitions
+- muted support text
+- clean spacing and hierarchy
+
+5. Transition behavior
+On success:
+- animate to 100%
+- optional very short hold only if needed (150–300ms max)
+- show results immediately after
+
+On fast responses:
+- avoid flicker
+- if necessary, enforce a very short minimum visible loader time
+- maximum recommended minimum: 500–700ms
+
+6. Safe implementation pattern
+Before editing:
+- inspect current loader implementation
+- identify exact files involved
+- keep analysis logic intact
+- only upgrade the loader path
+
+Implementation guidance:
+- use local state for staged progress
+- use an interval for progress advancement
+- use an interval or timer for elapsed time
+- rotate helper text safely
+- clear all intervals/timeouts on unmount, success, and failure
+
+7. Output required after changes
+Return:
+- exact files changed
+- what improved
+- screenshots of upgraded loader
+- any risks introduced
+- confirmation that no existing flows changed
+
+Success criteria:
+- loader feels active and polished
+- user sees meaningful progress
+- no fake completion before real completion
+- no regressions
+- no redesign

@@ -1,0 +1,176 @@
+Project: PlainPath
+Task: Upgrade the existing analysis loader with better progress feedback and a visible countdown/timer — without changing working flows or introducing instability.
+
+Objective:
+Improve the loading experience during document analysis so the user gets:
+1. clear progress feedback
+2. stage-based status messaging
+3. elapsed-time / countdown style feedback
+4. reassurance that the system is actively processing
+
+Critical constraints:
+- DO NOT redesign the app
+- DO NOT alter working upload/paste/demo flows
+- DO NOT change document analysis output structure
+- DO NOT add anything that can block or delay successful analysis
+- DO NOT create fake completion states that imply analysis is done before it actually is
+- Make only incremental, safe UI changes
+- Maintain current dark premium SaaS design language
+
+Scope:
+This task applies ONLY to the analysis loading state.
+It should appear after the user submits a document for analysis and before structured results render.
+
+Required behavior:
+
+A. Loader goals
+The current loader needs to feel more alive, informative, and trustworthy.
+Add:
+- visible progress bar
+- stage label
+- short helper text
+- elapsed timer and/or estimated countdown presentation
+- subtle animated status behavior
+
+The loader must communicate:
+- document received
+- analysis in progress
+- extracting structure
+- generating action items
+- finalizing results
+
+B. Truthful progress model
+Do NOT use a misleading “100% complete” bar before the actual response returns.
+
+Implement a safe hybrid model:
+1. Use staged progress that advances gradually while request is pending
+2. Cap visual progress at ~90–95% until the real response resolves
+3. On success:
+   - quickly animate from current progress to 100%
+   - then transition into results
+4. On failure:
+   - stop loader cleanly
+   - show existing error handling
+   - no hanging states
+
+Suggested stage map:
+- 0–15% → Preparing document
+- 15–35% → Reading content
+- 35–55% → Identifying sections
+- 55–75% → Generating plain-English analysis
+- 75–90% → Building tasks, risks, and deadlines
+- 90–95% → Finalizing results
+- 100% only when actual response is complete
+
+C. Timer / countdown feedback
+Add one of these, whichever fits current architecture most safely:
+
+Preferred:
+- elapsed timer starting at 0s
+- optional companion text such as:
+  - “Most analyses complete in under 30 seconds”
+  - “Larger files may take longer”
+
+Optional enhancement:
+- estimated countdown text that is clearly approximate, for example:
+  - “About 20s remaining”
+  - “Estimated time remaining”
+Do not present countdown as exact unless it is backed by real timing logic.
+
+Safer recommendation:
+- show elapsed time + soft estimate text
+This is preferred over a hard countdown if real duration is not deterministic.
+
+D. Loader content hierarchy
+Keep structure simple and premium.
+Include:
+1. main loading title
+   - example: “Analyzing your document”
+2. active stage label
+   - example: “Generating plain-English analysis”
+3. progress bar
+4. elapsed time / estimated time row
+5. rotating reassurance/helper line
+
+Example helper lines:
+- “Extracting the parts that matter most”
+- “Turning document language into clear actions”
+- “Mapping risks, deadlines, and required documents”
+- “Preparing structured guidance for review”
+
+E. Visual style requirements
+Stay within the current UI system.
+Do not create a new visual language.
+
+Use:
+- dark premium styling
+- subtle borders
+- soft indigo/primary accents
+- clean spacing
+- readable hierarchy
+- restrained motion only
+
+Recommended visual treatments:
+- rounded progress container
+- indigo/primary fill with smooth width transitions
+- muted secondary text
+- subtle pulse/spinner only if already consistent with system
+- no loud animations
+- no flashy gradients unless already used elsewhere in app
+
+F. Transition behavior
+On successful completion:
+- complete bar to 100%
+- hold for a very short moment only if needed for smoothness (roughly 150–300ms)
+- immediately reveal results
+- no unnecessary delay
+
+On very fast responses:
+- avoid jarring flicker
+- ensure loader is still readable for a brief minimum display threshold only if needed and only if it does not hurt UX
+
+Recommended:
+- minimum visible loader time around 500–700ms max
+- do not artificially slow normal usage beyond that
+
+G. Safe implementation guidance
+Before editing:
+1. inspect current loading state implementation
+2. identify exact files involved
+3. upgrade only the existing loader path
+4. keep all analysis logic intact
+
+Prefer:
+- local UI state for progress display
+- cleanup intervals/timeouts on unmount
+- no global refactor unless absolutely necessary
+
+Likely implementation pattern:
+- when analysis request begins:
+  - start elapsed timer
+  - start staged progress interval
+  - rotate helper text every few seconds
+- when response resolves:
+  - clear intervals
+  - set progress to 100
+  - render results
+- when response fails:
+  - clear intervals
+  - reset loader state safely
+  - show existing error state
+
+H. File output requirements
+After edits return:
+- exact files changed
+- what was improved
+- screenshots of the upgraded loader
+- any risks introduced
+- confirmation that no existing flows were changed
+
+Success criteria:
+- loader feels active and polished
+- user sees meaningful progress, not a blank wait
+- timing feedback reduces uncertainty
+- no fake “done” state before actual completion
+- no regressions in upload, paste, demo, or analysis flows
+- no architecture redesign
