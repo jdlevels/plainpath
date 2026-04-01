@@ -14,6 +14,7 @@ import Terms from "@/pages/Terms";
 import Subscribe from "./pages/Subscribe";
 import SubscribeSuccess from "./pages/SubscribeSuccess";
 import SubscribeCancel from "./pages/SubscribeCancel";
+import GuidedReview from "@/pages/GuidedReview"
 import NotFound from "@/pages/not-found";
 
 import { Navbar } from "@/components/layout/Navbar";
@@ -43,6 +44,7 @@ function Router() {
           <Route path="/subscribe" component={Subscribe} />
           <Route path="/subscribe/success" component={SubscribeSuccess} />
           <Route path="/subscribe/cancel" component={SubscribeCancel} />
+          <Route path="/guided-review" component={GuidedReview} />
           <Route component={NotFound} />
         </Switch>
       </main>
