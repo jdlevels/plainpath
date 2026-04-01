@@ -1,0 +1,90 @@
+Project: PlainPath
+Task: Run final regression QA and capture competition-ready screenshots. Do not add features. Do not redesign anything. This is a stabilization and proof pass only.
+
+Goal:
+Verify that all current working flows remain stable after the Guided Review and Loader updates, and capture screenshots of the live product state for submission/demo use.
+
+Rules:
+- DO NOT build new features
+- DO NOT refactor working code
+- DO NOT redesign the UI
+- DO NOT touch Stripe, subscription logic, or post-competition systems
+- Only fix issues if a real regression is found
+- Keep all edits minimal and surgical
+
+QA checklist to verify:
+
+1. Import / Input flow
+- upload document works
+- paste document works
+- demo flow works
+- document type selection works for all 8 types
+- validation still works correctly
+
+2. Analysis flow
+- analysis starts correctly
+- upgraded loader appears during real analysis
+- stage label updates correctly
+- progress bar advances but does not hit 100% early
+- elapsed timer renders correctly
+- helper text rotates correctly
+- results render correctly after completion
+- no stuck loading states
+- failure path still exits cleanly
+
+3. Analysis tabs
+- Plain English
+- Source Sections
+- Overview
+- What’s Missing
+- Checklist
+- Required Docs / Documents
+- Deadlines
+Verify all tabs still render and switch cleanly.
+
+4. Guided Review
+- panel opens/closes correctly
+- right-side panel only
+- contextual to current tab
+- Prev/Next works
+- linked item highlights correctly
+- scrollIntoView still works
+- no leftover highlight after close
+- mobile behavior preserved
+
+5. Save / Export
+- save still works
+- export still works
+- no broken states after analysis completes
+
+6. UI stability
+- no console errors
+- no layout breakage
+- no spacing regressions
+- no tab regression
+- no overlay conflict
+- no broken mobile/desktop responsiveness in touched areas
+
+Screenshot capture requirements:
+Capture clean screenshots of these states:
+1. Import page
+2. Document type selection state
+3. Live loader during analysis
+4. Analysis result page overview
+5. Guided Review open on right-side panel with visible source linkage
+6. One color-coded tab example
+7. Mobile-width check if easy to capture
+
+If any regression is found:
+- fix only that regression
+- report exact file changed
+- describe exact fix
+- report any remaining risk
+
+Return:
+- QA result summary
+- pass/fail by flow
+- exact files changed (if any)
+- screenshots captured
+- any risks introduced
+- final recommendation: ready to freeze or needs one more pass

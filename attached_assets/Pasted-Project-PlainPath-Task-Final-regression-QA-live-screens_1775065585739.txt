@@ -1,0 +1,74 @@
+Project: PlainPath
+Task: Final regression QA + live screenshot capture only. Do not build anything new.
+
+Rules:
+- DO NOT add features
+- DO NOT redesign
+- DO NOT revisit Guided Review or Loader implementation unless a real bug is found
+- Only test, verify, and capture screenshots
+- If a regression is found, fix only that regression with the smallest safe edit
+
+Run this exact QA pass:
+
+1. Input flow
+- Verify upload works
+- Verify paste works
+- Verify demo flow works
+- Verify document type selection works across all 8 types
+- Verify validation still works
+
+2. Loader flow
+- Start a real analysis
+- Capture a screenshot while loader is actively visible
+- Verify stage label updates
+- Verify progress bar advances correctly
+- Verify elapsed timer appears correctly
+- Verify helper text rotates
+- Verify loader never falsely shows 100% before completion
+- Verify results render cleanly after completion
+
+3. Analysis results
+Verify all tabs still work:
+- Plain English
+- Source Sections
+- Overview
+- What’s Missing
+- Checklist
+- Required Docs / Documents
+- Deadlines
+
+4. Guided Review
+- Verify panel opens/closes correctly
+- Verify it remains a right-side panel
+- Verify Prev/Next works
+- Verify source highlight linkage works
+- Verify scrollIntoView works
+- Verify highlight clears on close
+- Verify mobile/full-width behavior remains correct
+
+5. Save / Export
+- Verify save works
+- Verify export works
+
+6. Stability
+- Check for console errors
+- Check for layout issues
+- Check for spacing regressions
+- Check for broken responsiveness in touched areas
+
+Capture these screenshots:
+1. Import page
+2. Doc type selection state
+3. Live loader during real analysis
+4. Analysis result overview
+5. Guided Review panel open with visible linkage
+6. One strong color-coded tab view
+7. Mobile-width view if easy
+
+Return:
+- QA summary
+- pass/fail by flow
+- exact files changed only if a bug was fixed
+- screenshots captured
+- any remaining risks
+- final statement: READY TO FREEZE or NEEDS ONE LAST FIX
