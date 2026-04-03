@@ -1,0 +1,140 @@
+Project: Document Action Plan
+Task: Prepare and support external pilot execution for Document Trust Check using the current pilot-ready baseline and the existing pilot feedback workflow.
+
+Goal:
+Move from internal validation into controlled external pilot use with real reviewers, while preserving the current stable Trust Check baseline and capturing structured feedback for future tuning.
+
+Current baseline to preserve:
+- Phase 2 Trust Check is complete
+- Tuning Round 1 is complete
+- Three-score model is active:
+  - Authenticity Risk
+  - Document Risk
+  - Verification Confidence
+- Pilot feedback capture is active
+- `/pilot-feedback` review page is active
+- Paid features remain inactive
+- Security-feature rollout remains deferred
+
+Critical constraints:
+- Do NOT add new major detection features
+- Do NOT redesign the UI
+- Do NOT activate paid features
+- Do NOT restore subscription gating
+- Do NOT start security-feature rollout
+- Do NOT build the trusted-entity verification layer yet
+- Only fix issues if a real pilot-blocking bug is found
+
+Primary objective:
+Prepare the app for controlled outside review, make sure the pilot workflow is smooth, and create a clear execution package for real testers.
+
+-----------------------------------
+EXTERNAL PILOT PREP TASKS
+-----------------------------------
+
+1. Pilot execution readiness check
+Verify all of the following before pilot use:
+- homepage routes work
+- `/import?mode=trust-check` works
+- upload works
+- paste works
+- demo mode works
+- Trust Check results render correctly
+- pilot feedback panel works on Trust Check results
+- feedback saves correctly
+- `/pilot-feedback` displays saved records
+- CSV export works
+- no paywall or tab restrictions interfere
+- no console errors are present
+- desktop and mobile touched areas remain stable
+
+2. Pilot reviewer flow confirmation
+Confirm the outside reviewer can complete this exact flow without friction:
+- open Document Trust Check
+- upload or paste document
+- review result
+- open “Log Pilot Feedback”
+- submit assessment and notes
+- confirm record appears in `/pilot-feedback`
+
+3. Pilot starter packet
+Prepare a clean pilot packet recommendation containing:
+- 2 obvious scam-style documents
+- 2 ambiguous suspicious documents
+- 2 harsh but likely legitimate documents
+- 2 ordinary legitimate documents
+- at least 1 pasted-text scam
+- at least 1 pasted-text legitimate sample
+
+If a built-in set already exists, organize/label it clearly for pilot use.
+
+4. Pilot reviewer instructions
+Create a short reviewer instruction set inside the product workflow or as a simple internal reference.
+
+Reviewer instructions should cover:
+- this tool gives risk-based guidance, not absolute proof
+- review the verdict, three scores, and findings together
+- log whether the result felt correct, too harsh, too soft, or incomplete
+- record false positives and false negatives explicitly
+- use the note fields for what felt right, weak, missing, or overstated
+
+5. Pilot review categories
+Make sure the existing feedback categories are sufficient for pilot reviewers.
+Only add or adjust a category if there is a clear gap blocking practical review.
+
+6. Pilot summary baseline
+Prepare a short internal pilot-use summary explaining that Trust Check currently evaluates:
+- scam/authenticity signals
+- harmful contract/document terms
+- verification confidence
+- metadata anomalies when available
+- structural inconsistencies when present
+- deadlines / pressure tactics
+- suspicious contact/payment instructions
+
+Also state clearly:
+- results are advisory and risk-based
+- low scam risk does not always mean low document risk
+- a document can appear genuine and still contain harmful terms
+- users should verify through official channels before acting on suspicious documents
+
+-----------------------------------
+PILOT EXECUTION OUTPUT REQUIRED
+-----------------------------------
+
+Return:
+
+1. Pilot readiness confirmation
+State whether the app is ready for controlled external pilot use right now.
+
+2. Exact files changed
+Only if any pilot-prep or bug-fix changes were needed.
+
+3. Pilot reviewer flow summary
+Describe the exact reviewer flow from document submission to feedback logging.
+
+4. Pilot packet summary
+List the recommended first-batch document set for reviewers.
+
+5. Reviewer instruction copy
+Provide the exact short reviewer guidance text that will be used.
+
+6. Screenshots
+Capture at least:
+- Trust Check upload/intake state
+- one Trust Check result ready for reviewer inspection
+- “Log Pilot Feedback” panel
+- `/pilot-feedback` review page
+
+7. Final status
+End with one of:
+- READY FOR CONTROLLED EXTERNAL PILOT
+- READY AFTER ONE SMALL FIX
+- NOT READY — BLOCKING ISSUE FOUND
+
+Success criteria:
+- external reviewers can use the app without friction
+- the current stable baseline is preserved
+- pilot feedback capture is fully usable
+- no new scope creep is introduced
+- the system is ready for controlled outside testing, including police department review
