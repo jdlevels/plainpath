@@ -1,0 +1,115 @@
+Project: Document Action Plan
+Task: Review the accumulated pilot feedback dataset and prepare a ranked tuning-priority decision for whether Tuning Round 2 is actually needed.
+
+Goal:
+Analyze the feedback already collected across pilot batches, identify which issues are recurring enough to justify another tuning round, and rank them by importance.
+
+Context:
+- Controlled Pilot Batch 1 is complete
+- Pilot feedback records are logged
+- No blocking issues were found
+- Baseline remains stable
+- Tuning Round 2 should only happen if the data shows repeated patterns worth acting on
+
+Critical constraints:
+- Do NOT add new features
+- Do NOT redesign the UI
+- Do NOT activate paid features
+- Do NOT restore subscription gating
+- Do NOT add security rollout
+- This pass is analysis and prioritization only unless a tiny reporting fix is required
+
+Primary objective:
+Review the pilot feedback data and determine:
+1. what issues are recurring
+2. which issues matter most
+3. whether they justify Tuning Round 2 now
+4. which issues should be deferred
+
+-----------------------------------
+REVIEW THE FULL PILOT FEEDBACK DATASET
+-----------------------------------
+
+Analyze all currently logged pilot feedback records and summarize:
+
+1. total records
+2. total documents reviewed
+3. assessment breakdown:
+- Correct
+- Mostly Correct
+- Needs Tuning
+- Incorrect
+
+4. false positive count
+5. false negative count
+6. most common issue categories
+7. repeated issue combinations
+8. repeated document classes associated with issues
+9. any score-dimension drift patterns:
+- authenticity risk too high
+- authenticity risk too low
+- document risk too high
+- document risk too low
+- verification confidence too high
+- verification confidence too low
+
+10. repeated weaknesses in:
+- scam indicators
+- contract/document risk terms
+- structural findings
+- metadata findings
+- contact verification guidance
+- deadlines / pressure tactics
+- safe next steps
+- readability / explanation clarity
+
+-----------------------------------
+PRIORITIZATION TASK
+-----------------------------------
+
+Create a ranked tuning-priority list using these levels:
+- High Priority
+- Medium Priority
+- Low Priority
+- Defer
+
+For each issue, explain:
+- how often it appeared
+- which documents it affected
+- whether it risks misleading users
+- whether it affects credibility
+- whether it should be tuned now or later
+
+Preferred outcome:
+Only recommend Tuning Round 2 if there are repeated issues strong enough to justify changing the pilot baseline.
+
+-----------------------------------
+SPECIAL FOCUS
+-----------------------------------
+
+Pay special attention to:
+- multi-term non-loan document risk detection
+- verification confidence on legitimate multi-identifier docs
+- false negative risk in low-to-medium priority patterns
+- whether any current issue is serious enough to affect police-department pilot use
+
+-----------------------------------
+OUTPUT REQUIRED
+-----------------------------------
+
+Return:
+
+1. Pilot feedback dataset summary
+2. Ranked issue-priority list
+3. Which issues are strong enough for Tuning Round 2
+4. Which issues should be deferred
+5. Whether the current baseline should remain unchanged for now
+6. Final decision:
+- NO TUNING ROUND 2 NEEDED YET
+- TUNING ROUND 2 RECOMMENDED
+- DEFER TUNING UNTIL MORE EXTERNAL DATA IS COLLECTED
+
+Success criteria:
+- tuning decisions are based on actual accumulated pilot data
+- low-frequency issues are not over-prioritized
+- baseline stability is preserved unless real evidence justifies change
