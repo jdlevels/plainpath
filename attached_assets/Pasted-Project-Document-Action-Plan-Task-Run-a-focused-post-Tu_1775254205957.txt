@@ -1,0 +1,147 @@
+Project: Document Action Plan
+Task: Run a focused post–Tuning Round 3 validation batch to confirm that the latest fixes hold and did not introduce regressions.
+
+Goal:
+Validate the four areas changed in Tuning Round 3 and confirm the pilot baseline is now more stable before expanding pilot use further.
+
+Context:
+- Tuning Round 3 is complete
+- This pass is validation only
+- Do not add new features
+- Do not redesign the UI
+- Do not activate paid features
+- Do not restore subscription gating
+- Do not add security rollout
+
+Critical constraints:
+- No new major feature work
+- Only fix something if a real regression or blocking issue is found
+- This pass is specifically for confidence-checking the latest tuning changes
+
+-----------------------------------
+VALIDATION TARGETS
+-----------------------------------
+
+1. Phishing / impersonation false-negative check
+Re-test:
+- fake PayPal phishing sample
+- one additional phishing-style or impersonation-style sample if available
+- one obvious scam-style government/utility notice
+
+Success criteria:
+- structural scam findings now materially affect Authenticity Risk
+- phishing-style documents no longer resolve to “Likely legitimate”
+- anti-verification + domain mismatch + suspicious payment language contribute appropriately
+
+2. Non-financing service-contract document-risk check
+Re-test:
+- Comcast/service contract example
+- one gym/subscription agreement
+- one additional service/subscription contract if available
+- one predatory title-loan or similar harmful nonstandard contract if available
+
+Success criteria:
+- non-financing service contracts with multiple harmful terms no longer under-score on Document Risk
+- harmful terms are clearly surfaced
+- authenticity risk remains reasonable unless actual scam indicators exist
+
+3. Verification Confidence check
+Re-test:
+- Planet Fitness / membership-style doc
+- Angi Pro / account-style doc
+- one lease renewal
+- one phone bill or EOB
+- one utility bill with multiple identifiers
+
+Success criteria:
+- legitimate structured records with coherent identifiers gain more realistic confidence
+- confidence does not become inflated where real trust issues remain
+
+4. Legitimate government-letter false-positive check
+Re-test:
+- the legitimate SSA benefit letter
+- one additional legitimate government-style or benefits-style notice if available
+
+Success criteria:
+- SSN-reference language alone no longer lifts authenticity risk inappropriately
+- legitimate institutional/government letters remain low-risk when otherwise coherent
+
+5. Regression controls
+Also verify:
+- one obvious high-authenticity scam still scores high
+- one high document-risk financing contract still scores high on Document Risk
+- one pasted scam sample remains suspicious/high risk
+- one pasted legitimate sample remains clean
+- no metadata section appears on pasted text
+- standard Analyze a Document mode remains untouched
+
+-----------------------------------
+FOR EACH DOCUMENT
+-----------------------------------
+
+Capture:
+- document label
+- source type
+- primary verdict
+- authenticity risk
+- document risk
+- verification confidence
+- reviewer assessment
+- false positive? yes/no
+- false negative? yes/no
+- top issue category if any
+- short reviewer note
+
+Use the existing pilot feedback workflow and confirm each record saves successfully.
+
+-----------------------------------
+OUTPUT REQUIRED
+-----------------------------------
+
+Return:
+
+1. Validation summary
+- total documents tested
+- total feedback records logged
+- whether all Tuning Round 3 target areas were covered
+
+2. Document-by-document table
+For each tested document include:
+- document name
+- source type
+- verdict
+- authenticity risk
+- document risk
+- verification confidence
+- reviewer assessment
+- false positive? yes/no
+- false negative? yes/no
+- top issue category if any
+- short reviewer note
+
+3. Area-by-area conclusion
+State whether each of these now appears stable:
+- phishing / impersonation detection
+- non-financing service-contract document risk
+- verification confidence for structured legitimate docs
+- legitimate government-letter handling
+
+4. Screenshots
+Capture at least:
+- one corrected phishing result
+- one improved service-contract document-risk result
+- one legitimate higher-confidence result
+- one legitimate government-style low-risk result
+- `/pilot-feedback` summary page after this validation batch
+
+5. Final status
+End with one of:
+- POST–TUNING ROUND 3 VALIDATION COMPLETE — BASELINE STABLE
+- POST–TUNING ROUND 3 VALIDATION COMPLETE — ONE MORE TARGETED FIX NEEDED
+- POST–TUNING ROUND 3 VALIDATION FOUND A BLOCKING REGRESSION
+
+Success criteria:
+- the Tuning Round 3 fixes hold up across fresh validation documents
+- no major new regressions appear
+- pilot feedback continues to log cleanly
+- the pilot baseline is stable enough to continue external use without immediate new tuning

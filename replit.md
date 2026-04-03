@@ -81,7 +81,23 @@ Second product mode: evaluates documents across three independent risk dimension
 - **P3 — Identifier regex expanded**: `calculateVerificationConfidence()` and `detectStructuralIssues()` `hasRefNumber` now match `Membership #`, `Account ID`, `Account Identifier`, `Subscriber ID`, `Contract #`. Tested: Planet Fitness Conf ~33 → ~55; Angi Pro Conf ~28 → ~40.
 - **P3 — Structured commercial agreement floor**: Named party (Member:, Customer:, etc.) + ≥1 identifier + no scam signals → +7 confidence bonus to compensate for no-contact-info penalty.
 - **P4 — SSN reference context guard**: SSN scoring (+22) skipped when SSN appears in masked/reference form (e.g. "XXX-XX-7831 last 4 shown", "Social Security Number on file"). Tested: SSA Benefit Letter Auth 27 → 2 (false positive eliminated).
-- Cumulative calibration DB: 44 records (Batches 1–3); review at `/pilot-feedback`
+- **Batch 4 Post-Tuning Validation (15 docs, all 15 ✅ Correct, 0 FP, 0 FN):**
+  - B4-01 Fake PayPal Phishing: Auth 58 → Suspicious ✓ (Round 3 fix: was 13)
+  - B4-02 Fake Apple Support Scam: Auth 52 → Suspicious ✓
+  - B4-03 Fake SSA Suspension Scam: Auth 100 → High scam risk ✓
+  - B4-04 Comcast Xfinity Agreement: DocRisk 62, Auth 23 → Likely legitimate ✓
+  - B4-05 Planet Fitness Agreement: DocRisk 28, Conf 69 → Likely legitimate ✓
+  - B4-06 Angi Pro Subscription: DocRisk 57, Conf 40 → Cannot verify ✓
+  - B4-07 FastCash Auto Title Loan: DocRisk 89, Auth 28 → Cannot verify ✓ (Round 3 fix: DocRisk was 23)
+  - B4-08 Apartment Lease Renewal: Conf 90, Auth 2 → Likely legitimate ✓
+  - B4-09 T-Mobile Bill: Conf 79, Auth 2 → Likely legitimate ✓
+  - B4-10 Con Edison Utility Bill: Conf 85, Auth 2 → Likely legitimate ✓
+  - B4-11 SSA Benefit Verification Letter: Auth 5 → Likely legitimate ✓ (Round 3 fix: was 27)
+  - B4-12 Medicare Part B EOB: Auth 2, Conf 82 → Likely legitimate ✓
+  - B4-13 Nigerian Lottery Prize Scam: Auth 83 → High scam risk ✓
+  - B4-14 Cook County Property Tax: Auth 2, Conf 55 → Likely legitimate ✓
+  - B4-15 QuikCash Predatory Payday Loan: DocRisk 100, Auth 28 → Cannot verify ✓
+- Cumulative calibration DB: 59 records (Batches 1–4); review at `/pilot-feedback`
 
 **Tuning Round 2 (completed):**
 - `calculateDocumentRiskScore()`: expanded `contractRiskPatterns` (class-action hyphenated, service suspension, equipment return fee, long cancellation notice, unilateral price adjustment, recurring renewal cycle); weight increases (ETF 12→14, auto-renewal 8→10, liquidated damages 10→12, unilateral termination 12→14)
