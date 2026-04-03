@@ -1,0 +1,71 @@
+Project: Document Action Plan
+Task: Move Document Trust Check from tuning mode into pilot operations mode using the now-stable validated baseline.
+
+Goal:
+Preserve the validated Trust Check engine exactly as it is and focus next work on pilot operations, reviewer usability, and pilot reporting support instead of more model tuning.
+
+Current validated baseline to preserve:
+- Tuning Round 3 complete and validated
+- Batch 4 validation complete
+- 15/15 correct
+- 0 false positives
+- 0 false negatives
+- 59 feedback records logged
+- scoring engine stable across phishing, contract risk, verification confidence, government letters, and regression controls
+
+Critical constraints:
+- Do NOT tune scoring further
+- Do NOT redesign the core UI
+- Do NOT activate paid features yet
+- Do NOT restore subscription gating yet
+- Do NOT start security rollout yet
+- Do NOT build trusted-entity verification yet
+- Preserve the current Trust Check baseline exactly unless a real bug is found
+
+Primary objective:
+Shift from model tuning into pilot operations support.
+
+Focus areas:
+1. Freeze current Trust Check scoring/rules/prompt baseline
+2. Improve pilot reviewer workflow where needed
+3. Improve pilot reporting/export support
+4. Improve internal pilot session organization
+5. Keep the app stable for continued outside review
+
+Requested implementation priorities:
+
+1. Baseline freeze
+- mark the current Trust Check logic as pilot baseline
+- do not modify detection/scoring unless a real regression is found
+
+2. Pilot operations support
+Improve practical pilot-use support such as:
+- clearer pilot session labeling
+- easier record grouping/review in `/pilot-feedback`
+- better export usability for pilot summaries
+- lightweight filtering/search if easy and safe
+- easier reviewer note review
+
+3. Pilot reporting support
+Make it easier to prepare pilot review packets:
+- exportable summaries
+- grouped issue patterns
+- reviewer notes visibility
+- document-by-document review output
+
+4. Stability check
+Reconfirm:
+- Trust Check still works
+- pilot feedback still works
+- `/pilot-feedback` still works
+- CSV export still works
+- no regressions
+- no unnecessary code changes to scoring engine
+
+Return:
+- exact files changed
+- what was improved for pilot operations
+- confirmation that the scoring baseline was preserved unchanged
+- screenshots of any improved pilot workflow/reporting views
+- any risks introduced
+- recommendation for the next post-pilot build priority
