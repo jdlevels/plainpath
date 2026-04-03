@@ -44,7 +44,7 @@ const HOW_IT_WORKS = [
   {
     step: "01",
     title: "Upload or paste your document",
-    desc: "Drop in a PDF, Word file, or paste text directly. PlainPath reads the full content.",
+    desc: "Drop in a PDF, Word file, or paste text directly. The full content is read and analyzed.",
     icon: Upload,
   },
   {
@@ -111,7 +111,7 @@ export default function Home() {
             transition={{ delay: 0.14 }}
             className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed"
           >
-            PlainPath reads your paperwork and gives you a clear, prioritized action plan — every required step, every document to gather, every deadline — in plain English.
+            Upload any confusing paperwork and get a clear, prioritized action plan — every required step, every document to gather, every deadline — in plain English.
           </motion.p>
 
           {/* Primary action cards */}
@@ -175,7 +175,7 @@ export default function Home() {
             className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2"
           >
             {[
-              "From $4.99/month",
+              "Free during pilot",
               "No account required",
               "Documents not stored by PlainPath",
               "Analyses saved on your device only",
