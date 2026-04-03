@@ -1,0 +1,80 @@
+Project: Document Action Plan
+Task: Run a focused QA + tuning pass on the newly implemented Document Trust Check flow.
+
+Goal:
+Validate that the first-pass Trust Check implementation is working correctly, produces believable trust/risk results, and is usable for pilot testing.
+
+Do NOT add major new features in this pass.
+Do NOT redesign the UI.
+Do NOT add billing/security work.
+This pass is for validation, tuning, and usability refinement only.
+
+Required checks:
+
+1. Route + mode flow
+- Verify homepage “Document Trust Check” button routes correctly
+- Verify `/import?mode=trust-check` consistently activates trust-check mode
+- Verify trust-check mode stays selected through paste/upload/analyze
+
+2. Demo/test-set validation
+Run and inspect all current trust-check demos:
+- fake-utility-shutoff
+- fake-irs-collection
+- debt-collection-letter
+- legitimate-utility-notice
+
+For each demo, verify:
+- score is reasonable
+- verdict is reasonable
+- extracted contact details are accurate
+- extracted deadlines/urgency are accurate
+- scam indicators are useful and not repetitive
+- safe next steps are useful and specific
+- wording does not overclaim certainty
+
+3. False-positive / false-negative tuning
+Review the current scoring and rule weighting.
+Adjust only if clearly needed so that:
+- the legitimate control stays low risk
+- clearly scammy docs score high
+- moderate suspicious docs do not get under-scored
+- ordinary legal/collection language alone does not automatically over-trigger fraud language unless supported by actual scam indicators
+
+4. UI/result clarity
+Review the TrustCheck results page for:
+- readability
+- section order
+- clarity of verdict banner
+- clarity of risk bar
+- usefulness of VERIFY flags
+- usefulness of THREAT/URGENCY labels
+
+Make only minimal wording/ordering refinements if needed.
+Do not redesign the page.
+
+5. Standard flow regression check
+Verify standard Analyze a Document mode still works:
+- import flow
+- paste flow
+- upload flow
+- normal analysis results
+- no routing collision with trust-check mode
+
+6. Output required
+Return:
+- QA findings by demo
+- any score changes made
+- any wording changes made
+- exact files changed
+- screenshots of at least:
+  - trust-check intake mode
+  - one high-risk result
+  - one likely legitimate result
+- any remaining weaknesses before pilot testing
+
+Success criteria:
+- Trust Check results are believable and useful
+- legitimate control remains low risk
+- obvious scam documents remain high risk
+- normal document analysis mode remains stable
+- no major UI or architecture changes were introduced
