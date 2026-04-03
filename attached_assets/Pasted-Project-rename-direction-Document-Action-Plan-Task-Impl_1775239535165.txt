@@ -1,0 +1,221 @@
+Project rename direction: Document Action Plan
+Task: Implement the real Document Trust Check analysis flow behind the existing homepage route `/import?mode=trust-check`.
+
+Goal:
+The homepage Trust Check button is already routing correctly.
+Now build the actual trust-check mode so that `/import?mode=trust-check` runs a real trust/risk analysis and returns a trust-check-specific result schema.
+
+Critical constraints:
+- Do NOT redesign the app
+- Do NOT add security features yet
+- Do NOT activate paid features yet
+- Do NOT re-enable subscription gating yet
+- Keep all current testing flows open
+- Reuse existing app infrastructure wherever possible
+- Make minimal, safe extensions to the current import/analyze/result flow
+- Do not break the standard Analyze a Document mode
+
+Mode name:
+Document Trust Check
+
+Required mode behavior:
+When the user lands on `/import?mode=trust-check`:
+1. the intake/import page should recognize this mode
+2. the mode should remain selected through upload/paste/analyze
+3. the analysis request should use a trust-check-specific prompt/schema
+4. the results page should render trust-check-specific sections
+5. the standard action-plan analysis flow must still continue to work unchanged for normal mode
+
+Implementation requirements:
+
+1. Import page mode detection
+- Inspect the existing mode-selection/intake logic
+- Make `/import?mode=trust-check` set the active mode to:
+  - Document Trust Check
+- If there is an internal mode key system, extend it cleanly rather than hacking a one-off condition
+- Ensure this mode survives the full intake flow through analysis submission
+
+2. Analysis dispatch
+- Extend the current analysis pipeline so trust-check mode uses a dedicated trust-check analysis path
+- Reuse existing request/response infrastructure where possible
+- Do not create a disconnected second analysis system unless absolutely necessary
+
+3. Trust-check result schema
+Create a dedicated result schema with these sections:
+
+A. Risk Verdict
+- one of:
+  - Likely legitimate
+  - Suspicious — verify before acting
+  - High scam risk
+  - Cannot verify authenticity
+- include a short explanation of why
+
+B. What This Letter Is Claiming
+- plain explanation of what the document says it is about
+
+C. Demanded Action
+- what the document is asking the user to do
+
+D. Scam Indicators
+- suspicious signals found in the content
+- pressure tactics
+- payment red flags
+- sender inconsistencies
+- risky fee/escalation language
+- sensitive information requests
+- impersonation-style wording if present
+
+E. Suspicious Contact Details
+- phone numbers found
+- email addresses found
+- URLs/domains found
+- mailing/return addresses if present
+- flag what needs verification
+
+F. Deadlines / Pressure Tactics
+- explicit dates
+- relative urgency phrases
+- shutdown / arrest / legal / repossession / collection / service interruption pressure language
+- fee hike / APR increase / late fee / cutoff windows if present
+
+G. What To Verify
+- what the user should independently verify before acting
+
+H. Safe Next Steps
+- concrete safe actions such as:
+  - do not call the number in the letter yet
+  - verify through the official website directly
+  - do not click payment links
+  - do not send money until independently verified
+  - preserve the document for reporting
+
+4. Rule-based extraction layer
+Before or alongside the trust-check AI response, add structured extraction for:
+- phone numbers
+- email addresses
+- URLs/domains
+- dates/deadlines
+- currency amounts
+- percentages / APR / fee hikes
+- payment instructions
+- urgency phrases
+- threat language
+- references to:
+  - final notice
+  - immediate action
+  - shutoff
+  - arrest
+  - lawsuit
+  - collections
+  - repossession
+  - service interruption
+
+5. Risk scoring
+Implement a first-pass weighted risk model.
+
+Suggested severity classes:
+
+High severity:
+- gift card / crypto / wire transfer demand
+- threat of arrest
+- suspicious payment link
+- request for SSN / banking / card details in a risky context
+- sender/payment mismatch
+- immediate shutoff threat with suspicious contact path
+
+Medium severity:
+- short deadline pressure
+- aggressive legal language without specific case/reference support
+- unusual fee escalation
+- mismatched branding/contact details
+- missing case/account/reference identifiers
+
+Low severity:
+- grammar/spelling issues
+- generic greeting
+- vague sender identity
+- formatting inconsistencies
+
+Map score to verdict:
+- 0–24: Likely legitimate
+- 25–49: Cannot verify authenticity
+- 50–74: Suspicious — verify before acting
+- 75–100: High scam risk
+
+If the existing code structure needs slightly different thresholds, keep the same 4 verdict outputs.
+
+6. Trust-check prompt behavior
+The trust-check mode must use risk-based wording only.
+
+Do NOT output:
+- definitely fake
+- proven fraud
+- legally invalid
+
+Allowed framing:
+- shows scam indicators
+- appears suspicious
+- cannot be independently verified from the provided content
+- should be verified through official channels before acting
+
+7. UI rendering
+- Reuse current result UI patterns where possible
+- Keep current dark premium design language
+- Do not redesign the app
+- Trust-check results should feel native to the existing product
+- If current tabs/cards can be adapted cleanly, do so
+- If a dedicated trust-check results view is cleaner, build it with minimal disruption and no regression to standard mode
+
+8. Test set
+Create or reuse at least these trust-check test documents:
+- fake utility shutoff notice
+- fake county/government-style warning
+- fake debt/lender escalation letter
+- one legitimate control letter
+
+Use them to verify:
+- verdict rendering
+- scam indicator extraction
+- contact extraction
+- deadline extraction
+- safe next steps
+- no overclaiming certainty
+
+9. Validation checklist
+Verify:
+- `/import?mode=trust-check` preselects trust-check mode
+- upload works in trust-check mode
+- paste works in trust-check mode
+- analysis runs in trust-check mode
+- trust-check results render correctly
+- verdict is visible
+- contact details are extracted
+- deadlines/pressure language are extracted
+- safe next steps render
+- normal Analyze a Document mode still works
+- no paywalls or tab locks interfere
+- no console errors are introduced
+
+10. Output required after completion
+Return:
+- exact files changed
+- new files created
+- how the route mode is detected and persisted
+- how the trust-check analysis path is wired
+- trust-check schema structure
+- scoring logic summary
+- test documents created/used
+- screenshots of:
+  - import page with trust-check mode active
+  - one completed trust-check result
+- any risks introduced
+- what remains for phase 2
+
+Success criteria:
+- Document Trust Check is a real, working mode
+- `/import?mode=trust-check` is functional end-to-end
+- the app returns a usable trust-check result
+- wording stays risk-based, not absolute
+- the normal document analysis mode remains stable
+- no security or paid-feature work is introduced in this phase
