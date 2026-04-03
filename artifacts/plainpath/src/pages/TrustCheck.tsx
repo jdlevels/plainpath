@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useLocation, useSearch } from "wouter"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import {
   ArrowLeft, ShieldCheck, AlertTriangle, XCircle, CheckCircle2,
   Phone, Mail, Globe, Calendar, Clock, Eye, CheckSquare,
   ArrowRight, AlertCircle, Flag, Shield, ExternalLink,
   Loader2, FileText, BarChart2, Info,
+  Clipboard, ChevronDown, ChevronUp, Send,
 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -98,6 +99,281 @@ function contactIcon(type: string) {
     case "url": return Globe
     default: return Flag
   }
+}
+
+const ISSUE_CATEGORIES = [
+  "Verdict too harsh", "Verdict too soft",
+  "Authenticity Risk too high", "Authenticity Risk too low",
+  "Document Risk too high", "Document Risk too low",
+  "Verification Confidence too high", "Verification Confidence too low",
+  "Scam indicators weak", "Scam indicators repetitive",
+  "Structural findings weak", "Metadata findings weak",
+  "Safe next steps weak", "Contact verification guidance weak",
+  "Deadline/pressure extraction issue", "UI readability issue", "Other",
+]
+
+const ASSESSMENT_OPTIONS = [
+  { value: "correct", label: "Correct", color: "border-green-400 bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300" },
+  { value: "mostly-correct", label: "Mostly Correct", color: "border-blue-400 bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300" },
+  { value: "needs-tuning", label: "Needs Tuning", color: "border-amber-400 bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300" },
+  { value: "incorrect", label: "Incorrect", color: "border-red-400 bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300" },
+]
+
+function PilotFeedbackPanel({
+  analysis,
+  sourceType,
+}: {
+  analysis: TrustCheckAnalysis
+  sourceType: "demo" | "upload" | "paste"
+}) {
+  const [open, setOpen] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [apiError, setApiError] = useState<string | null>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
+
+  const [documentLabel, setDocumentLabel] = useState("")
+  const [srcType, setSrcType] = useState<string>(sourceType)
+  const [assessment, setAssessment] = useState("")
+  const [isFP, setIsFP] = useState(false)
+  const [isFN, setIsFN] = useState(false)
+  const [selectedCats, setSelectedCats] = useState<string[]>([])
+  const [whatRight, setWhatRight] = useState("")
+  const [whatWeak, setWhatWeak] = useState("")
+  const [whatMissing, setWhatMissing] = useState("")
+  const [whatOverstated, setWhatOverstated] = useState("")
+  const [tuningNote, setTuningNote] = useState("")
+  const [reviewerRole, setReviewerRole] = useState("")
+
+  function toggleCat(cat: string) {
+    setSelectedCats((prev) => prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat])
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!documentLabel.trim()) { setApiError("Please enter a document label."); return }
+    if (!assessment) { setApiError("Please select a reviewer assessment."); return }
+    setSubmitting(true)
+    setApiError(null)
+    try {
+      const res = await fetch(`${getApiBaseUrl()}/api/pilot-feedback`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          document_label: documentLabel.trim(),
+          source_type: srcType,
+          verdict: analysis.verdict,
+          authenticity_risk: analysis.scores?.authenticityRisk,
+          document_risk: analysis.scores?.documentRisk,
+          verification_confidence: analysis.scores?.verificationConfidence,
+          reviewer_assessment: assessment,
+          is_false_positive: isFP,
+          is_false_negative: isFN,
+          issue_categories: selectedCats,
+          what_felt_right: whatRight || undefined,
+          what_felt_weak: whatWeak || undefined,
+          what_was_missing: whatMissing || undefined,
+          what_felt_overstated: whatOverstated || undefined,
+          tuning_note: tuningNote || undefined,
+          reviewer_role: reviewerRole || undefined,
+        }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || "Failed to save feedback")
+      }
+      setSubmitted(true)
+      setOpen(false)
+    } catch (err: any) {
+      setApiError(err.message ?? "Could not save feedback. Please try again.")
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div ref={panelRef} className="border border-border/40 rounded-2xl overflow-hidden bg-card">
+      <button
+        className="w-full flex items-center gap-3 px-5 py-4 hover:bg-muted/30 transition-colors text-left"
+        onClick={() => { if (!submitted) setOpen((v) => !v) }}
+        aria-expanded={open}
+      >
+        <div className="w-8 h-8 rounded-lg bg-primary/8 flex items-center justify-center shrink-0">
+          <Clipboard className="w-3.5 h-3.5 text-primary/70" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-bold text-foreground">
+            {submitted ? "Pilot Feedback Logged" : "Log Pilot Feedback"}
+          </p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {submitted
+              ? "Thank you — this result has been logged for tuning review."
+              : "Record whether this result was accurate and note any issues."}
+          </p>
+        </div>
+        {!submitted && (
+          open ? <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0" /> : <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />
+        )}
+        {submitted && <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />}
+      </button>
+
+      <AnimatePresence>
+        {open && !submitted && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <form onSubmit={handleSubmit} className="border-t border-border/30 px-5 py-5 space-y-5">
+              {/* Pre-populated score summary */}
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground bg-muted/30 rounded-lg px-3 py-2.5">
+                <span>Verdict: <span className="font-medium text-foreground/80">{analysis.verdict}</span></span>
+                {analysis.scores && (
+                  <>
+                    <span>Auth: <span className="font-medium tabular-nums">{analysis.scores.authenticityRisk}</span></span>
+                    <span>Doc: <span className="font-medium tabular-nums">{analysis.scores.documentRisk}</span></span>
+                    <span>Conf: <span className="font-medium tabular-nums">{analysis.scores.verificationConfidence}</span></span>
+                  </>
+                )}
+              </div>
+
+              {/* Document label */}
+              <div>
+                <label className="block text-xs font-semibold text-foreground/80 mb-1.5">Document Label <span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  value={documentLabel}
+                  onChange={(e) => setDocumentLabel(e.target.value)}
+                  placeholder="e.g. Fake utility shutoff, Client auto loan contract…"
+                  maxLength={120}
+                  className="w-full text-sm px-3 py-2 rounded-lg border border-border/60 bg-background focus:outline-none focus:ring-1 focus:ring-primary/40"
+                />
+              </div>
+
+              {/* Source type */}
+              <div>
+                <label className="block text-xs font-semibold text-foreground/80 mb-1.5">Source Type</label>
+                <select
+                  value={srcType}
+                  onChange={(e) => setSrcType(e.target.value)}
+                  className="text-sm px-3 py-2 rounded-lg border border-border/60 bg-background focus:outline-none focus:ring-1 focus:ring-primary/40"
+                >
+                  <option value="demo">Demo</option>
+                  <option value="paste">Pasted text</option>
+                  <option value="upload">Uploaded file</option>
+                </select>
+              </div>
+
+              {/* Assessment */}
+              <div>
+                <label className="block text-xs font-semibold text-foreground/80 mb-2">Reviewer Assessment <span className="text-red-500">*</span></label>
+                <div className="grid grid-cols-2 gap-2">
+                  {ASSESSMENT_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setAssessment(opt.value)}
+                      className={`text-xs font-semibold py-2 px-3 rounded-lg border-2 transition-colors text-center ${
+                        assessment === opt.value
+                          ? opt.color
+                          : "border-border/40 bg-secondary text-foreground/60 hover:border-border"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* FP / FN */}
+              <div className="flex gap-6">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={isFP} onChange={(e) => setIsFP(e.target.checked)} className="w-4 h-4 rounded border-border/60" />
+                  <span className="text-xs text-foreground/80">False positive <span className="text-muted-foreground">(result too alarming)</span></span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={isFN} onChange={(e) => setIsFN(e.target.checked)} className="w-4 h-4 rounded border-border/60" />
+                  <span className="text-xs text-foreground/80">False negative <span className="text-muted-foreground">(missed real risk)</span></span>
+                </label>
+              </div>
+
+              {/* Issue categories */}
+              <div>
+                <label className="block text-xs font-semibold text-foreground/80 mb-2">Issue Categories <span className="text-muted-foreground font-normal">(select all that apply)</span></label>
+                <div className="flex flex-wrap gap-1.5">
+                  {ISSUE_CATEGORIES.map((cat) => (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => toggleCat(cat)}
+                      className={`text-[11px] px-2.5 py-1 rounded-full border transition-colors ${
+                        selectedCats.includes(cat)
+                          ? "border-primary/60 bg-primary/10 text-primary font-medium"
+                          : "border-border/40 bg-secondary text-foreground/60 hover:border-border/60"
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Free-text fields */}
+              {[
+                { label: "What felt right", value: whatRight, setter: setWhatRight, hint: "Optional" },
+                { label: "What felt weak", value: whatWeak, setter: setWhatWeak, hint: "Optional" },
+                { label: "What was missing", value: whatMissing, setter: setWhatMissing, hint: "Optional" },
+                { label: "What felt overstated", value: whatOverstated, setter: setWhatOverstated, hint: "Optional" },
+                { label: "Tuning note", value: tuningNote, setter: setTuningNote, hint: "Suggested adjustment for this result" },
+              ].map(({ label, value, setter, hint }) => (
+                <div key={label}>
+                  <label className="block text-xs font-semibold text-foreground/80 mb-1.5">
+                    {label} <span className="text-muted-foreground font-normal">({hint})</span>
+                  </label>
+                  <textarea
+                    value={value}
+                    onChange={(e) => setter(e.target.value)}
+                    rows={2}
+                    maxLength={1000}
+                    className="w-full text-sm px-3 py-2 rounded-lg border border-border/60 bg-background focus:outline-none focus:ring-1 focus:ring-primary/40 resize-none"
+                  />
+                </div>
+              ))}
+
+              {/* Reviewer role */}
+              <div>
+                <label className="block text-xs font-semibold text-foreground/80 mb-1.5">Reviewer Role <span className="text-muted-foreground font-normal">(Optional)</span></label>
+                <input
+                  type="text"
+                  value={reviewerRole}
+                  onChange={(e) => setReviewerRole(e.target.value)}
+                  placeholder="e.g. Internal tester, Police department pilot, Consumer…"
+                  maxLength={100}
+                  className="w-full text-sm px-3 py-2 rounded-lg border border-border/60 bg-background focus:outline-none focus:ring-1 focus:ring-primary/40"
+                />
+              </div>
+
+              {apiError && (
+                <p className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20 px-3 py-2 rounded-lg">{apiError}</p>
+              )}
+
+              <div className="flex gap-3 pt-1">
+                <Button type="button" variant="ghost" size="sm" className="text-xs gap-1.5" onClick={() => setOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" size="sm" className="gap-1.5 text-xs" disabled={submitting}>
+                  {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                  {submitting ? "Saving…" : "Save Feedback"}
+                </Button>
+              </div>
+            </form>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
 }
 
 export default function TrustCheck() {
@@ -505,6 +781,12 @@ export default function TrustCheck() {
             </ul>
           </SectionCard>
         )}
+
+        {/* Pilot Feedback Panel */}
+        <PilotFeedbackPanel
+          analysis={analysis}
+          sourceType={demoId ? "demo" : "paste"}
+        />
 
         {/* Footer disclaimer */}
         <div className="text-center py-4">

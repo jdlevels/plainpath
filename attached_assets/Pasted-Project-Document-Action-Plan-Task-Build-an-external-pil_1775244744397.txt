@@ -1,0 +1,183 @@
+Project: Document Action Plan
+Task: Build an external pilot feedback and tuning workflow for Document Trust Check without adding new major detection features.
+
+Goal:
+Create a simple, structured workflow to support outside pilot testing of Document Trust Check, capture reviewer feedback, log issues by document, and organize future tuning decisions.
+
+Context:
+Document Trust Check is now ready for external pilot validation.
+This pass is NOT for adding new major detection capabilities.
+This pass is for:
+- pilot testing support
+- feedback capture
+- issue logging
+- tuning workflow organization
+- structured review of false positives / false negatives / weak explanations
+
+Critical constraints:
+- Do NOT redesign the app
+- Do NOT add major new Trust Check detection features
+- Do NOT activate paid features
+- Do NOT restore subscription gating
+- Do NOT add security-feature rollout
+- Keep all current testing flows open
+- Make this lightweight, internal, and pilot-focused
+
+Primary objective:
+Create a practical workflow so pilot reviewers (including police department reviewers and internal testers) can evaluate a document result, record whether it felt correct or incorrect, and note what needs tuning.
+
+-----------------------------------
+RECOMMENDED WORKFLOW TO BUILD
+-----------------------------------
+
+1. Pilot feedback capture structure
+For each tested document, the workflow should make it easy to log:
+
+- document name / test label
+- document type
+- uploaded or pasted
+- primary verdict
+- authenticity risk
+- document risk
+- verification confidence
+- reviewer assessment:
+  - correct
+  - mostly correct
+  - needs tuning
+  - incorrect
+- false positive? yes/no
+- false negative? yes/no
+- what felt right
+- what felt weak
+- what was missing
+- what felt overstated
+- recommended tuning note
+- reviewer name or reviewer role if useful
+- test date
+
+2. Pilot review categories
+Allow issues to be categorized under at least:
+- Verdict too harsh
+- Verdict too soft
+- Authenticity Risk too high
+- Authenticity Risk too low
+- Document Risk too high
+- Document Risk too low
+- Verification Confidence too high
+- Verification Confidence too low
+- Scam indicators weak
+- Scam indicators repetitive
+- Structural findings weak
+- Metadata findings weak
+- Safe next steps weak
+- Contact verification guidance weak
+- Deadline/pressure extraction issue
+- UI readability issue
+- Other
+
+3. Lightweight implementation approach
+Use the simplest safe method that fits the current app architecture.
+
+Preferred options:
+- an internal pilot feedback panel on Trust Check results
+or
+- a lightweight linked feedback form/state attached to each result
+or
+- a simple internal-only review/export logging mechanism
+
+Do NOT build a complex enterprise review system.
+Do NOT create a full admin platform.
+Keep this lightweight and usable.
+
+4. Pilot result review mode
+If practical, add a small internal-only control on Trust Check results such as:
+- “Log Pilot Feedback”
+or
+- “Mark for Tuning Review”
+
+This should allow a tester to quickly record:
+- whether the result was correct
+- what kind of issue it had
+- short notes
+
+If this is too invasive to the UI, a lightweight separate internal workflow is acceptable.
+The goal is function, not extra polish.
+
+5. Feedback storage
+Use the simplest reliable storage pattern available in the current stack:
+- database table
+or
+- local/internal persisted records
+or
+- structured exportable JSON/CSV log if that fits the current environment better
+
+Feedback records should be easy to review later by document.
+
+6. Tuning review output
+Create a view or export path that allows feedback to be summarized into tuning priorities, such as:
+- repeated false positives
+- repeated false negatives
+- recurring weak explanations
+- recurring weak safe-next-step guidance
+- score dimension drift patterns
+
+The system should help answer:
+- What issues are happening repeatedly?
+- Which score dimension is most often off?
+- Which document categories need tuning first?
+
+-----------------------------------
+MINIMUM FIELDS TO CAPTURE
+-----------------------------------
+
+At minimum, every pilot feedback record should include:
+- document label
+- trust-check result summary
+- reviewer assessment
+- issue category
+- free-text notes
+- timestamp
+
+Recommended additional fields:
+- verdict
+- authenticity risk
+- document risk
+- verification confidence
+- document class/type
+- source type (upload/paste/demo)
+- reviewer role
+
+-----------------------------------
+VALIDATION REQUIREMENTS
+-----------------------------------
+
+After implementation, verify:
+- feedback can be logged without breaking Trust Check
+- standard Analyze a Document mode remains untouched
+- no paid/gating/security flows are activated
+- no console errors are introduced
+- feedback records are actually saved/recoverable
+- duplicate empty feedback entries are prevented if possible
+- workflow is simple enough for real pilot use
+
+-----------------------------------
+OUTPUT REQUIRED AFTER COMPLETION
+-----------------------------------
+
+Return:
+- exact files changed
+- how pilot feedback is captured
+- how it is stored
+- what fields are logged
+- how tuning issues can be reviewed later
+- screenshots of:
+  - the pilot feedback capture UI/workflow
+  - a saved feedback record or summary view
+- any risks introduced
+- what remains for a later more advanced reviewer/admin workflow
+
+Success criteria:
+- external pilot reviewers can record structured feedback
+- tuning decisions can be based on actual logged pilot outcomes
+- the workflow stays lightweight and internal
+- no major feature or UI redesign is introduced
