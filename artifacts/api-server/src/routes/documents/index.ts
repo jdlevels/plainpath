@@ -593,6 +593,7 @@ function extractRuleData(text: string): ExtractedRuleData {
   const infoRequests = infoRequestTerms.filter((t) => lower.includes(t));
 
   const contractRiskPatterns: Array<[string, string]> = [
+    // ── Financing / loan-specific terms ─────────────────────────────────────
     ["default rate", "Default rate escalation"],
     ["default apr", "Default APR escalation"],
     ["penalty apr", "Penalty APR clause"],
@@ -619,6 +620,43 @@ function extractRuleData(text: string): ExtractedRuleData {
     ["negative amortization", "Negative amortization risk"],
     ["interest-only", "Interest-only payment period"],
     ["yield spread premium", "Yield spread premium"],
+    // ── Non-financing consumer-harm terms (Tuning Round 1) ──────────────────
+    // Cancellation and early-exit penalties
+    ["early termination fee", "Early termination fee"],
+    ["termination fee", "Early termination fee"],
+    ["cancellation fee", "Cancellation fee"],
+    // Auto-renewal and continuous billing traps
+    ["auto-renewal", "Auto-renewal clause"],
+    ["automatically renews", "Auto-renewal clause"],
+    ["automatically renewed", "Auto-renewal clause"],
+    ["automatic renewal", "Auto-renewal clause"],
+    ["until cancelled", "Continuous auto-renewal"],
+    ["until you cancel", "Continuous auto-renewal"],
+    // High-interest accrual outside of traditional loan contexts
+    ["accrues interest at", "Interest accrual clause"],
+    ["apr compounded", "Compounded APR interest accrual"],
+    ["compounded monthly", "Compounded interest accrual"],
+    ["compounded daily", "Compounded interest accrual"],
+    // Credit bureau reporting threats
+    ["reporting to equifax", "Credit bureau reporting threat"],
+    ["reporting to transunion", "Credit bureau reporting threat"],
+    ["reporting to experian", "Credit bureau reporting threat"],
+    ["report to equifax", "Credit bureau reporting threat"],
+    ["report to transunion", "Credit bureau reporting threat"],
+    ["report to experian", "Credit bureau reporting threat"],
+    ["the three major credit", "Credit bureau reporting threat"],
+    ["three credit bureaus", "Credit bureau reporting threat"],
+    // Collections referral
+    ["collections partner", "Collections referral clause"],
+    ["collection partner", "Collections referral clause"],
+    ["debt recovery", "Collections referral clause"],
+    ["referral of this account", "Collections referral clause"],
+    // One-sided or punitive terms
+    ["liquidated damages", "Liquidated damages clause"],
+    ["non-refundable", "Non-refundable clause"],
+    ["unilateral right to terminate", "Unilateral termination right"],
+    ["reserves the right to terminate", "Unilateral termination right"],
+    ["sole and absolute discretion", "Unilateral authority clause"],
   ];
   const seenContractLabels = new Set<string>();
   const contractRiskTerms: string[] = [];
@@ -682,9 +720,16 @@ function calculateRiskScore(data: ExtractedRuleData, lower: string): number {
   const secrecyTerms = ["do not share", "keep confidential", "tell no one", "prize transfers are confidential", "do not discuss with"];
   if (secrecyTerms.some((t) => lower.includes(t)) && data.paymentRedFlags.length > 0) score += 10;
 
-  // Anti-verification instruction — telling recipient not to contact official channels (strongest social engineering signal)
-  const antiVerification = /do\s+not\s+contact\s+the|do\s+not\s+call\s+the\s*(irs|fbi|police|main\s+office|official)|avoid\s+contacting|do\s+not\s+discuss\s+(this|the)|do\s+not\s+speak\s+with\s+(anyone|family)/i;
-  if (antiVerification.test(lower) && data.paymentRedFlags.length > 0) score += 12;
+  // Anti-verification instruction — telling recipient not to contact official channels or to use an exclusive hotline.
+  // Expanded (Tuning Round 1) to also catch "do not contact [brand/company] directly" and exclusive-channel demands.
+  const antiVerification = /do\s+not\s+contact\s+(the\b|our\b|amazon\b|microsoft\b|apple\b|google\b|irs\b|fbi\b|official\b|main\b)|do\s+not\s+call\s+the\s*(irs|fbi|police|main\s+office|official)|must\s+be\s+resolved\s+exclusively\s+through\s+our|avoid\s+contacting|do\s+not\s+discuss\s+(this|the)|do\s+not\s+speak\s+with\s+(anyone|family)/i;
+  // Fire when anti-verification is present AND there are either suspicious payment methods OR sensitive info requests.
+  // This ensures identity-theft scams (SSN + credit card requests without traditional payment red flags) are correctly scored.
+  if (antiVerification.test(lower) && (data.paymentRedFlags.length > 0 || data.infoRequests.length > 0)) score += 12;
+
+  // Compound signal: SSN demand + anti-verification = strong identity-theft pattern (Tuning Round 1)
+  const hasSsnDemand = data.infoRequests.some((r) => ["social security number", "ssn"].some((k) => r.includes(k)));
+  if (hasSsnDemand && antiVerification.test(lower)) score += 6;
 
   // Medium severity — language and pressure tactics
   const urgentTerms = ["within 24 hours", "act now", "immediately", "do not ignore"];
@@ -699,6 +744,13 @@ function calculateRiskScore(data: ExtractedRuleData, lower: string): number {
   if (data.threatPhrases.some((t) => repoTerms.some((k) => t.includes(k)))) score += 10;
   const peerPayTerms = ["zelle", "cash app", "cashapp", "venmo"];
   if (data.paymentRedFlags.some((f) => peerPayTerms.some((k) => f.includes(k)))) score += 12;
+
+  // Compound: Western Union/MoneyGram + collections claim (Tuning Round 1)
+  // Legitimate collection agencies never use Western Union — this combination is near-certain fraud.
+  const hasWireScam = data.paymentRedFlags.some((f) => ["western union", "moneygram"].some((k) => f.includes(k)));
+  const hasCollectionsClaim = data.threatPhrases.some((t) => ["collections", "collection agency", "debt collector"].some((k) => t.includes(k)));
+  if (hasWireScam && hasCollectionsClaim) score += 7;
+
   if (data.urgencyPhrases.length >= 3) score += 8;
   else if (data.urgencyPhrases.length >= 2) score += 4;
 
@@ -735,6 +787,7 @@ function resolveVerdict(authRisk: number, conf: number): TrustCheckVerdict {
 
 function calculateDocumentRiskScore(contractRiskTerms: string[]): number {
   const weights: Record<string, number> = {
+    // Financing / loan terms
     "Default rate escalation": 14,
     "Penalty APR clause": 12,
     "Penalty rate clause": 12,
@@ -752,6 +805,20 @@ function calculateDocumentRiskScore(contractRiskTerms: string[]): number {
     "Wage garnishment risk": 10,
     "Negative amortization risk": 14,
     "Prepayment penalty": 7,
+    // Non-financing consumer-harm terms (Tuning Round 1)
+    "Early termination fee": 12,
+    "Cancellation fee": 8,
+    "Auto-renewal clause": 8,
+    "Continuous auto-renewal": 9,
+    "Interest accrual clause": 10,
+    "Compounded APR interest accrual": 12,
+    "Compounded interest accrual": 10,
+    "Credit bureau reporting threat": 11,
+    "Collections referral clause": 10,
+    "Non-refundable clause": 7,
+    "Liquidated damages clause": 12,
+    "Unilateral termination right": 9,
+    "Unilateral authority clause": 8,
   };
   let total = 0;
   for (const term of contractRiskTerms) {
@@ -768,8 +835,12 @@ function calculateVerificationConfidence(
 ): number {
   let conf = 40;
 
-  // Positive: specific traceable reference identifier
-  if (/\b(account\s*(number|#|no\.?)|case\s*(number|#|no\.?)|reference\s*(number|#|no\.?)|invoice\s*(number|#|no\.?)|confirmation\s*(number|#|no\.?))\s*:?\s*[\w\-]+/i.test(text)) conf += 12;
+  // Positive: specific traceable reference identifier (broad pattern matches "Account: X", "Ref #X", etc.)
+  if (
+    /\b(account\s*(number|#|no\.?)|case\s*(number|#|no\.?)|reference\s*(number|#|no\.?)|invoice\s*(number|#|no\.?)|confirmation\s*(number|#|no\.?)|member\s*(account|number|#|id)|loan\s*(number|#|no\.?)|policy\s*(number|#|no\.?))\s*:?\s*[\w\-]+/i.test(text)
+    || /\bAccount\s*:\s*[\w\-]{3,}/i.test(text)
+    || /\bRef(?:erence)?\s*(?:no\.?|#|:)\s*[\w\-]{3,}/i.test(text)
+  ) conf += 12;
   // Positive: contract-specific identifier (VIN, loan #, policy #)
   if (/\b(VIN|vehicle\s+identification\s+number|loan\s*(number|#|no\.?)|policy\s*(number|#|no\.?))\s*:?\s*[\w\-]+/i.test(text)) conf += 10;
   // Positive: named recipient (specific person, not generic)
@@ -905,7 +976,14 @@ function detectStructuralIssues(
   }
 
   // 2. Payment demand with no traceable reference number
-  const hasRefNumber = /\b(account\s*(number|#|no\.?)|case\s*(number|#|no\.?)|reference\s*(number|#|no\.?)|invoice\s*(number|#|no\.?)|confirmation\s*(number|#|no\.?)|notice\s*(number|#|no\.?))\s*:?\s*[\w\-]+/i.test(text);
+  // Broad pattern covers: "Account Number: X", "Account: X", "Ref #X", "Case No. X", "Member Account #X", etc.
+  const hasRefNumber =
+    /\b(account\s*(number|#|no\.?)|case\s*(number|#|no\.?)|reference\s*(number|#|no\.?)|invoice\s*(number|#|no\.?)|confirmation\s*(number|#|no\.?)|notice\s*(number|#|no\.?)|member\s*(account|number|#|id)|loan\s*(number|#|no\.?)|policy\s*(number|#|no\.?))\s*:?\s*[\w\-]+/i.test(text)
+    // Also catch bare labels: "Account: 78-2934-16", "Ref: XYZ", "Acct #12345"
+    || /\bAccount\s*:\s*[\w\-]{3,}/i.test(text)
+    || /\bRef(?:erence)?\s*(?:no\.?|#|:)\s*[\w\-]{3,}/i.test(text)
+    || /\bMember\s+(?:Account|ID)\s*(?:no\.?|#|:)?\s*[\w\-]{3,}/i.test(text)
+    || /\bAcct\.?\s*(?:no\.?|#|:)?\s*[\w\-]{3,}/i.test(text);
   const hasMeaningfulAmount = ruleData.amounts.length > 0;
   const hasThreatOrPayment = ruleData.paymentRedFlags.length > 0 || ruleData.threatPhrases.some((t) => ["collections", "collection agency", "debt collector", "lawsuit", "legal action", "eviction"].includes(t));
   if (hasMeaningfulAmount && hasThreatOrPayment && !hasRefNumber) {
@@ -973,7 +1051,7 @@ Return ONLY a valid JSON object — no markdown, no code fences, just raw JSON.
     }
   ],
   "structuralFindings": [
-    "string - a text-observable structural or logical anomaly in this document. Examples: tone shift between sections, contradictory issuer identity across header/body/footer, missing identifiers for a payment demand, math/date inconsistency, abrupt change in formality. Only include findings you can support from the document text — do not fabricate. Leave array empty if no anomalies detected."
+    "string - a text-observable structural or logical anomaly in this document. Examples: tone shift between sections, contradictory issuer identity across header/body/footer, math/date inconsistency, abrupt change in formality, conflicting payment instructions. CRITICAL: Only include findings you can directly support from the document text. Never claim a document is missing an account number, reference number, contact detail, or physical address if the rule system has confirmed one is present — rule-confirmed facts take priority over AI inferences. Leave array empty if no genuine anomalies detected."
   ],
   "suspiciousContactNotes": [
     "string - a note ONLY for contacts with a specific reason to be flagged — wrong domain for claimed brand, non-standard number for a known institution, 555 placeholder number, short URL. Leave EMPTY for low-risk or legitimate-appearing documents. Do NOT include routine contacts or generate notes purely as generic caution."
@@ -984,7 +1062,7 @@ Return ONLY a valid JSON object — no markdown, no code fences, just raw JSON.
   "safeNextSteps": [
     "string - one concrete safe action"
   ],
-  "contractRiskNotes": "string or null — ONLY populate when the document is clearly a binding legal agreement (loan contract, lease, service agreement, employment contract, financing agreement) AND it contains potentially harmful consumer terms such as: high default/penalty APR, mandatory arbitration or class-action waiver, repossession or acceleration clauses, deficiency balance exposure, force-placed insurance, GPS/starter-interrupt devices, balloon payments, blanket liens, or prepayment penalties. Write 2-4 sentences in plain language explaining the specific risks. These are CONTRACT risks — distinct from scam/authenticity concerns. A contract can be entirely authentic yet contain provisions that could significantly harm the consumer. Return null if not a binding contract or no significant harmful consumer terms."
+  "contractRiskNotes": "string or null — ONLY populate when the document is a binding legal agreement (loan contract, lease, service agreement, employment contract, gym membership, subscription, financing agreement, or any commitment requiring payment or performance) AND it contains potentially harmful consumer terms. Harmful terms include: high default/penalty APR or compounded interest accrual, mandatory arbitration or class-action waiver, repossession or acceleration clauses, deficiency balance exposure, force-placed insurance, GPS/starter-interrupt devices, balloon payments, blanket liens, prepayment penalties, early termination or cancellation fees, auto-renewal or continuous billing traps, credit bureau reporting threats, collections referral, one-sided termination rights, liquidated damages, or non-refundable clause combinations. Write 2-4 sentences in plain language explaining the specific risks. These are CONTRACT risks — distinct from scam/authenticity concerns. A contract can be entirely authentic yet contain provisions that significantly harm the consumer. Return null if not a binding agreement or no significant harmful terms."
 }
 
 Guidelines:
@@ -1026,6 +1104,17 @@ async function runTrustCheckAnalysis(
     ? `- Rule-detected structural issues (ALREADY REPORTED — do NOT repeat these in structuralFindings):\n${ruleStructuralIssues.map((r) => `  • ${r}`).join("\n")}`
     : `- Rule-detected structural issues: none`;
 
+  // Build confirmed-identifier list so AI structural findings cannot contradict confirmed rule evidence (Tuning Round 1)
+  const confirmedIdentifiers: string[] = [];
+  if (ruleData.phones.length > 0) confirmedIdentifiers.push(`phone number(s): ${ruleData.phones.join(", ")}`);
+  if (ruleData.emails.length > 0) confirmedIdentifiers.push(`email address(es): ${ruleData.emails.join(", ")}`);
+  if (ruleData.urls.length > 0) confirmedIdentifiers.push(`URL(s): ${ruleData.urls.join(", ")}`);
+  if (/\b(account\s*(number|#|no\.?)|case\s*(number|#|no\.?)|reference\s*(number|#|no\.?)|invoice\s*(number|#|no\.?)|confirmation\s*(number|#|no\.?)|notice\s*(number|#|no\.?)|member\s*(number|#|id)|loan\s*(number|#|no\.?))\s*:?\s*[\w\-]+/i.test(text)) confirmedIdentifiers.push("account/reference/case/member number");
+  if (/\b\d{1,5}\s+[A-Za-z]+\s+(street|st|avenue|ave|boulevard|blvd|drive|dr|road|rd|lane|ln|way|court|ct|place|pl|suite|ste)\b/i.test(text)) confirmedIdentifiers.push("physical street address");
+  const confirmedIdContext = confirmedIdentifiers.length > 0
+    ? `- Rule-confirmed document identifiers (FACTS — do NOT claim these are absent in structuralFindings):\n${confirmedIdentifiers.map((id) => `  ✓ ${id}`).join("\n")}`
+    : `- Rule-confirmed document identifiers: none detected`;
+
   const ruleContext = [
     `Rule-extracted data:`,
     `- Phone numbers found: ${ruleData.phones.join(", ") || "none"}`,
@@ -1041,13 +1130,14 @@ async function runTrustCheckAnalysis(
     `- Rule-based authenticity risk score: ${riskScore}/100 → ${finalVerdict}`,
     `- Rule-based document risk score: ${documentRisk}/100`,
     `- Rule-based verification confidence score: ${verificationConfidence}/100`,
+    confirmedIdContext,
     ruleStructuralContext,
     metadataContext,
   ].join("\n");
 
   const structuralInstruction = ruleStructuralIssues.length > 0
-    ? `\n\nIMPORTANT for structuralFindings: The rule system has already detected ${ruleStructuralIssues.length} structural issue(s) listed above. Do NOT duplicate or paraphrase those. Your structuralFindings array should ONLY contain genuinely new observations not covered by the rule-detected list — such as tone shifts between sections, contradictory issuer names or dates across the document, math inconsistencies, conflicting payment instructions, or signature block anomalies. Leave structuralFindings empty if the rule system already covered everything significant.`
-    : "";
+    ? `\n\nIMPORTANT for structuralFindings: The rule system has already detected ${ruleStructuralIssues.length} structural issue(s) listed above. Do NOT duplicate or paraphrase those. Your structuralFindings array should ONLY contain genuinely new observations not covered by the rule-detected list — such as tone shifts between sections, contradictory issuer names or dates across the document, math inconsistencies, or conflicting payment instructions. NEVER claim a document lacks an identifier (account number, reference number, physical address, contact info) that the rule system has already confirmed is present. Leave structuralFindings empty if the rule system already covered everything significant.`
+    : `\n\nIMPORTANT for structuralFindings: NEVER claim a document lacks an identifier (account number, reference number, physical address, contact info) that the rule system has confirmed is present in the rule-confirmed identifiers section above. Only include structural observations you can directly support from the document text.`;
 
   const response = await openai.chat.completions.create({
     model: "gpt-5.2",
