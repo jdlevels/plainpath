@@ -1,0 +1,184 @@
+Project: Document Action Plan
+Task: Run Pilot Batch 1 for Document Trust Check using the new pilot feedback workflow and prepare the first tuning-ready review set.
+
+Goal:
+Execute the first controlled pilot batch using a mixed set of test documents, capture structured reviewer feedback for each result, and prepare a clear summary of what should be tuned next.
+
+Context:
+- Document Trust Check Phase 2 is locked for pilot use
+- Pilot feedback capture is already built
+- `/pilot-feedback` review page already exists
+- This pass is NOT for major feature building
+- This pass is for pilot execution, logging, and tuning preparation
+
+Critical constraints:
+- Do NOT add new major Trust Check features
+- Do NOT redesign the UI
+- Do NOT activate paid features
+- Do NOT restore subscription gating
+- Do NOT add security-feature rollout
+- Only fix something if a real bug blocks pilot execution
+
+Primary objective:
+Run a full Pilot Batch 1, ensure every document result is logged through the pilot feedback workflow, and summarize the first meaningful tuning patterns.
+
+-----------------------------------
+PILOT BATCH 1 DOCUMENT SET
+-----------------------------------
+
+Use a controlled mixed set of documents including at minimum:
+
+1. Fake utility shutoff notice
+2. Fake IRS/government-style warning
+3. Fake debt collection letter
+4. Realistic fictional auto loan contract
+5. Legitimate utility notice
+6. One ordinary low-risk legitimate document
+7. One harsh but likely legitimate document
+8. One pasted scam-style text sample
+9. One pasted legitimate text sample
+
+If more documents are available, they may be included, but these 9 are the required baseline.
+
+-----------------------------------
+FOR EACH DOCUMENT, COMPLETE THIS WORKFLOW
+-----------------------------------
+
+1. Run the document through Document Trust Check
+
+2. Capture or confirm:
+- primary verdict
+- authenticity risk
+- document risk
+- verification confidence
+- scam indicators
+- contract/document risk terms if applicable
+- metadata findings if applicable
+- structural findings if applicable
+- what to verify
+- safe next steps
+
+3. Log pilot feedback through the built-in pilot feedback workflow
+
+Each record should include:
+- document label
+- source type
+- reviewer assessment
+- false positive flag if applicable
+- false negative flag if applicable
+- issue category/categories if applicable
+- what felt right
+- what felt weak
+- what was missing
+- what felt overstated
+- tuning note
+- reviewer role if available
+
+4. Confirm feedback record is saved successfully
+
+-----------------------------------
+REVIEWER ASSESSMENT STANDARD
+-----------------------------------
+
+For Pilot Batch 1, use a consistent evaluation standard:
+
+- Correct
+- Mostly Correct
+- Needs Tuning
+- Incorrect
+
+Mark false positive when:
+- the result is too suspicious/harsh for the actual document
+
+Mark false negative when:
+- the result misses meaningful risk or under-reacts
+
+Preferred reviewer approach:
+- do not over-tune based on one borderline result
+- focus on repeatable patterns
+- record observations clearly, not emotionally
+
+-----------------------------------
+AFTER ALL DOCUMENTS ARE LOGGED
+-----------------------------------
+
+Use `/pilot-feedback` to review the first batch and prepare a tuning summary.
+
+Summarize at minimum:
+1. total feedback records
+2. count of Correct / Mostly Correct / Needs Tuning / Incorrect
+3. count of false positives
+4. count of false negatives
+5. most reported issue categories
+6. any repeated score-dimension drift patterns:
+   - authenticity risk too high
+   - authenticity risk too low
+   - document risk too high
+   - document risk too low
+   - verification confidence too high
+   - verification confidence too low
+7. repeated weaknesses in:
+   - scam indicators
+   - structural findings
+   - metadata findings
+   - deadlines / pressure tactics
+   - contact verification guidance
+   - safe next steps
+8. repeated strengths worth preserving
+
+-----------------------------------
+OUTPUT REQUIRED AFTER COMPLETION
+-----------------------------------
+
+Return:
+
+1. Pilot Batch 1 summary
+- total documents tested
+- total feedback records captured
+- whether all 9 baseline documents were completed
+
+2. Document-by-document table
+For each document include:
+- document name
+- source type
+- verdict
+- authenticity risk
+- document risk
+- verification confidence
+- reviewer assessment
+- false positive? yes/no
+- false negative? yes/no
+- top issue category if any
+- short tuning note if any
+
+3. Batch-level findings
+- what worked best
+- what recurring issues appeared
+- which score dimension needs the most attention
+- whether the current pilot baseline is holding up well
+
+4. Screenshots
+Capture at least:
+- one high-authenticity-risk result
+- one high-document-risk result
+- one low-risk / higher-confidence result
+- one pilot feedback form filled out
+- `/pilot-feedback` summary page after records are logged
+
+5. Tuning readiness decision
+End with one of:
+- READY FOR TUNING ROUND 1
+- BATCH LOOKS STRONG, MINIMAL TUNING NEEDED
+- NEEDS ONE BLOCKING FIX BEFORE CONTINUING
+
+-----------------------------------
+SUCCESS CRITERIA
+-----------------------------------
+
+Pilot Batch 1 is successful when:
+- all baseline documents are tested
+- feedback is logged for each document
+- `/pilot-feedback` contains a usable first review dataset
+- recurring issues (if any) are visible as patterns rather than guesses
+- the app remains stable throughout the batch
+- no new feature work was introduced unnecessarily
