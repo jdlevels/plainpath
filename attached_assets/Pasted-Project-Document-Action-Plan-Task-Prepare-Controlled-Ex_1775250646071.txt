@@ -1,0 +1,167 @@
+Project: Document Action Plan
+Task: Prepare Controlled External Pilot Batch 2 and make one limited demo-data correction only.
+
+Goal:
+Keep the current pilot baseline unchanged, correct the outdated debt-collection demo score so it reflects current live scoring behavior, and then run Controlled External Pilot Batch 2 using the existing feedback workflow.
+
+Context:
+- Tuning Round 2 is deferred
+- Current baseline remains unchanged
+- Controlled Pilot Batch 1 is complete
+- Pilot feedback workflow is live
+- One known cleanup remains:
+  - the debt-collection demo’s hardcoded Auth score of 55 is outdated relative to the current scoring logic
+
+Critical constraints:
+- Do NOT add new major features
+- Do NOT redesign the UI
+- Do NOT activate paid features
+- Do NOT restore subscription gating
+- Do NOT add security rollout
+- Do NOT change the live scoring engine unless a blocking bug is found
+- Only make the single demo-data correction, then proceed to Batch 2
+
+-----------------------------------
+PART 1 — DEMO DATA CORRECTION ONLY
+-----------------------------------
+
+1. Inspect the current debt-collection demo data/source
+2. Confirm whether the demo’s hardcoded Auth score/verdict/explanation is outdated relative to the current live Trust Check scoring logic
+3. Update the demo data only so it reflects the current expected scoring behavior
+4. Do NOT change the underlying Trust Check scoring engine for this task unless a true bug is discovered
+5. Verify the corrected demo now aligns with the current model
+
+Return after this correction:
+- exact file changed
+- old demo values
+- new demo values
+- confirmation that this was a demo-data correction only, not a tuning change
+
+-----------------------------------
+PART 2 — CONTROLLED EXTERNAL PILOT BATCH 2
+-----------------------------------
+
+Run Batch 2 using the current unchanged pilot baseline.
+
+Use a balanced second-batch document set including:
+1. obvious scam-style government/utility notice
+2. suspicious debt/collection-style document
+3. realistic fictional contract with harmful terms
+4. legitimate utility or billing notice
+5. harsh but likely legitimate contract/notice
+6. ordinary low-risk legitimate document
+7. pasted scam-style text
+8. pasted legitimate text
+9. at least one document from an outside reviewer source if available
+
+If the police department or other outside reviewers provide specific documents for review, include them where appropriate and label them clearly.
+
+-----------------------------------
+FOR EACH DOCUMENT
+-----------------------------------
+
+1. Run Document Trust Check
+2. Review the full result
+3. Log pilot feedback using the existing feedback workflow
+4. Confirm the feedback record appears in `/pilot-feedback`
+
+Capture for each:
+- document label
+- source type
+- primary verdict
+- authenticity risk
+- document risk
+- verification confidence
+- reviewer assessment
+- false positive? yes/no
+- false negative? yes/no
+- issue categories selected
+- short reviewer note
+
+-----------------------------------
+BATCH 2 REVIEW STANDARD
+-----------------------------------
+
+Use the same assessment labels:
+- Correct
+- Mostly Correct
+- Needs Tuning
+- Incorrect
+
+Only classify:
+- false positive if result was too suspicious/harsh
+- false negative if result missed real risk
+
+Do not overreact to single-document edge cases.
+Focus on repeated patterns.
+
+-----------------------------------
+AFTER BATCH 2
+-----------------------------------
+
+Review `/pilot-feedback` and summarize:
+1. total new records logged
+2. Batch 2 assessment breakdown
+3. false positive count
+4. false negative count
+5. most common issue categories in Batch 2
+6. repeated strengths
+7. repeated weaknesses
+8. whether any issue now recurs strongly enough to justify Tuning Round 2
+9. whether the baseline still appears stable for continued external pilot use
+
+-----------------------------------
+OUTPUT REQUIRED
+-----------------------------------
+
+Return:
+
+1. Demo correction summary
+- exact file changed
+- before/after values for debt-collection demo
+- confirmation that no scoring-engine tuning was performed
+
+2. Batch 2 summary
+- total documents tested
+- total new feedback records logged
+- whether all batch documents were completed
+
+3. Document-by-document table
+For each document include:
+- document name
+- source type
+- verdict
+- authenticity risk
+- document risk
+- verification confidence
+- reviewer assessment
+- false positive? yes/no
+- false negative? yes/no
+- top issue category if any
+- short reviewer note
+
+4. Batch-level findings
+- strongest outcomes
+- recurring issue patterns
+- whether current baseline still holds
+- whether Tuning Round 2 is now justified or still should be deferred
+
+5. Screenshots
+Capture at least:
+- corrected debt-collection demo result
+- one Batch 2 scam result
+- one Batch 2 legitimate result
+- `/pilot-feedback` summary page after Batch 2
+
+6. Final status
+End with one of:
+- BATCH 2 COMPLETE — DEFER TUNING ROUND 2
+- BATCH 2 COMPLETE — TUNING ROUND 2 NOW JUSTIFIED
+- BATCH 2 FOUND ONE BLOCKING ISSUE
+
+Success criteria:
+- only the debt-demo data is corrected
+- no unnecessary model changes are introduced
+- Batch 2 runs cleanly
+- feedback is logged successfully
+- the decision on whether to keep deferring Tuning Round 2 is based on real accumulated pilot data

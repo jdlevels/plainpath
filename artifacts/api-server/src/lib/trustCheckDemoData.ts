@@ -165,15 +165,15 @@ export const trustCheckDemoDocuments: Record<string, TrustCheckAnalysis> = {
   "debt-collection-letter": {
     id: "demo-tc-debt",
     processedAt: new Date().toISOString(),
-    riskScore: 55,
-    scores: { authenticityRisk: 55, documentRisk: 0, verificationConfidence: 22 },
+    riskScore: 79,
+    scores: { authenticityRisk: 79, documentRisk: 0, verificationConfidence: 8 },
     structuralFindings: [
       "Payment and legal action demanded without any original creditor reference number, original account number, or court case number — legitimate collection agencies are required to provide these under the FDCPA",
-      "Short-expiry settlement offer (5 days) combined with a Western Union payment demand — this pressure combination is a common pattern in fraudulent or non-compliant collection attempts",
+      "Document instructs recipient not to contact the original creditor directly and routes all communication exclusively through the collection agency — this isolation tactic is a known pattern in fraudulent collection attempts",
     ],
-    verdict: "Suspicious — verify before acting",
+    verdict: "High scam risk",
     verdictExplanation:
-      "This letter appears to be from a debt collection company but shows several indicators that warrant caution before taking action. The demand for Western Union payment, combined with missing account reference numbers and aggressive legal language, suggests this may not be from a legitimate collection agency — or the terms may be significantly different from what is legally owed. Verification through official channels is strongly recommended before making any payment.",
+      "This letter shows multiple high-severity characteristics of a fraudulent debt collection attempt. Legitimate debt collectors never demand Western Union or money order as the only accepted payment — these untraceable methods are used specifically to prevent victims from recovering funds. Combined with instructions not to contact the original creditor directly, missing FDCPA-required disclosures, no original account number, and aggressive legal threats with no court case number, the pattern strongly suggests this is not from a licensed collection agency.",
     whatItClaims:
       "The letter claims to be from National Credit Recovery Associates, asserting the recipient owes $1,847.32 to a former credit card issuer. It claims the account has been referred for legal processing and threatens a civil judgment.",
     demandedAction:
