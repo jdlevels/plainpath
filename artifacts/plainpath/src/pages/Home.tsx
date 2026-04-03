@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import PricingSection from "@/components/PricingSection"
+import GridPulseCanvas from "@/components/GridPulseCanvas"
 
 const DEMOS = [
   {
@@ -74,84 +75,86 @@ export default function Home() {
   const [, setLocation] = useLocation()
 
   return (
-    <div className="flex flex-col min-h-screen bg-background relative overflow-hidden">
-      {/* Background gradient */}
-      <div className="absolute top-0 left-0 right-0 h-[70vh] pointer-events-none -z-10 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent" />
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full bg-primary/5 blur-3xl transform translate-x-1/3 -translate-y-1/3" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-blue-100/40 dark:bg-blue-900/20 blur-3xl transform -translate-x-1/4" />
+    <div className="flex flex-col min-h-screen bg-background">
+
+      {/* ── Hero — Grid Pulse dark background ────────────── */}
+      <div className="relative w-full overflow-hidden bg-[#0f172a]" style={{ minHeight: "88vh" }}>
+        <GridPulseCanvas />
+        <div className="relative z-10 flex flex-col items-center px-4">
+          <section className="max-w-4xl w-full text-center pt-24 pb-24 space-y-7">
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-xs font-semibold text-indigo-300 tracking-wide uppercase backdrop-blur-sm"
+            >
+              <span className="flex h-1.5 w-1.5 rounded-full bg-indigo-400 animate-pulse" />
+              Structured document analysis
+            </motion.div>
+
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.07 }}
+              className="text-5xl md:text-[4.5rem] lg:text-[5.5rem] font-display font-bold tracking-tight text-white leading-[1.05] text-balance"
+            >
+              Stop guessing what<br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-indigo-500">a document requires.</span>
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.14 }}
+              className="text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed"
+            >
+              PlainPath reads your paperwork and gives you a clear, prioritized action plan — every required step, every document to gather, every deadline — in plain English.
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2"
+            >
+              <Button
+                size="lg"
+                className="w-full sm:w-auto h-12 text-base px-8 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-500/25 border-0"
+                onClick={() => setLocation("/import")}
+              >
+                Analyze a Document <ArrowRight className="ml-2 w-4 h-4" />
+              </Button>
+              <Button
+                size="lg"
+                className="w-full sm:w-auto h-12 text-base rounded-xl bg-white/10 hover:bg-white/15 text-white border border-white/20"
+                onClick={() => document.getElementById("demos")?.scrollIntoView({ behavior: "smooth" })}
+              >
+                View demos
+              </Button>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2"
+            >
+              {[
+                "From $4.99/month",
+                "No account required",
+                "Documents not stored by PlainPath",
+                "Analyses saved on your device only",
+              ].map((item) => (
+                <span key={item} className="flex items-center gap-1.5 text-xs text-slate-500">
+                  <span className="w-1 h-1 rounded-full bg-slate-600 shrink-0" />
+                  {item}
+                </span>
+              ))}
+            </motion.div>
+          </section>
+        </div>
       </div>
 
       <main className="flex-1 flex flex-col items-center pb-24 px-4">
-
-        {/* ── Hero ─────────────────────────────────────────── */}
-        <section className="max-w-4xl w-full text-center pt-24 pb-20 space-y-7">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-card border border-border shadow-sm text-xs font-semibold text-muted-foreground tracking-wide uppercase"
-          >
-            <span className="flex h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-            Structured document analysis
-          </motion.div>
-
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.07 }}
-            className="text-5xl md:text-[4.5rem] lg:text-[5.5rem] font-display font-bold tracking-tight text-foreground leading-[1.05] text-balance"
-          >
-            Stop guessing what<br />
-            <span className="text-primary">a document requires.</span>
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.14 }}
-            className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed"
-          >
-            PlainPath reads your paperwork and gives you a clear, prioritized action plan — every required step, every document to gather, every deadline — in plain English.
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2"
-          >
-            <Button size="lg" className="w-full sm:w-auto h-12 text-base px-8 rounded-xl shadow-md shadow-primary/20" onClick={() => setLocation("/import")}>
-              Analyze a Document <ArrowRight className="ml-2 w-4 h-4" />
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="w-full sm:w-auto h-12 text-base bg-card rounded-xl"
-              onClick={() => document.getElementById("demos")?.scrollIntoView({ behavior: "smooth" })}
-            >
-              View demos
-            </Button>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2"
-          >
-            {[
-              "From $4.99/month",
-              "No account required",
-              "Documents not stored by PlainPath",
-              "Analyses saved on your device only",
-            ].map((item) => (
-              <span key={item} className="flex items-center gap-1.5 text-xs text-muted-foreground/55">
-                <span className="w-1 h-1 rounded-full bg-muted-foreground/30 shrink-0" />
-                {item}
-              </span>
-            ))}
-          </motion.div>
-        </section>
 
         {/* ── Document types strip ──────────────────────────── */}
         <motion.div
