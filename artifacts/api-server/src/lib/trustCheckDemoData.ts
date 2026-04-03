@@ -270,4 +270,79 @@ export const trustCheckDemoDocuments: Record<string, TrustCheckAnalysis> = {
       "Keep a record of your payment confirmation number",
     ],
   },
+
+  "auto-loan-contract": {
+    id: "demo-tc-auto-loan",
+    processedAt: new Date().toISOString(),
+    riskScore: 38,
+    verdict: "Cannot verify authenticity",
+    verdictExplanation:
+      "This document appears to be a retail installment auto loan contract from a credit union, and its structure and terms resemble a real financing agreement. However, authenticity cannot be verified from the text alone, and the strong enforcement language (repossession, lawsuit, lien) plus unusually intrusive control provisions (GPS/starter-interrupt) raise elevated risk if the sender cannot be independently confirmed. The largest concerns here are less about payment-method scam patterns and more about potentially high-impact contract terms if signed.",
+    whatItClaims:
+      "The contract claims to be a retail installment sale agreement from Mid-State Federal Credit Union for a 2022 Chevrolet Equinox, with a principal of $22,450 at 7.49% APR over 60 months. It outlines the lender's enforcement rights, insurance requirements, and arbitration terms.",
+    demandedAction:
+      "The contract requires the borrower to make 60 monthly payments of $447.71, maintain comprehensive insurance, consent to GPS/starter-interrupt device installation, and agree to resolve all disputes through binding arbitration rather than court. Signing waives jury trial and class-action rights.",
+    scamIndicators: [
+      {
+        indicator: "Authenticity cannot be confirmed from the document alone — sender identity needs independent verification before signing or paying",
+        severity: "medium",
+      },
+      {
+        indicator: "Urgency/pressure wording that could be used to push quick action",
+        severity: "low",
+        sourceEvidence: "immediately due and payable",
+      },
+      {
+        indicator: "Threatening enforcement language that could be used for intimidation if the document were misused or impersonated",
+        severity: "low",
+        sourceEvidence: "repossession of the vehicle without prior notice",
+      },
+    ],
+    contactDetails: [
+      {
+        type: "phone",
+        value: "800-348-7700",
+        suspicious: false,
+        note: "Verify this number matches Mid-State Federal Credit Union's official contact using the NCUA credit union lookup or the institution's official website",
+      },
+      {
+        type: "email",
+        value: "loanservicing@midstatefcu.org",
+        suspicious: false,
+        note: "Verify this email domain belongs to the official credit union before sending any information",
+      },
+    ],
+    deadlines: [
+      { text: "May 1, 2024", type: "explicit_date", note: "First payment due date" },
+      { text: "immediately due and payable", type: "relative", note: "Acceleration clause — triggered by default" },
+    ],
+    whatToVerify: [
+      "Verify 'Mid-State Federal Credit Union' is a real, chartered credit union using the NCUA credit union lookup (mycreditunion.gov) and confirm the phone and address match",
+      "Log into the credit union's official online portal (typed manually) to confirm the loan account, principal amount, and monthly payment match this contract",
+      "Confirm the VIN (1GNAX4EV9NZ123456) and vehicle trim match your purchase documents from the dealership",
+      "Ask for the complete arbitration clause text and whether an opt-out procedure is available within your state's requirements",
+      "Verify whether a GPS/starter-interrupt device is actually installed, who the vendor is, and what advance notice is required before remote disablement",
+      "Consult a consumer attorney or HUD-approved housing/credit counselor if any term is unclear before signing",
+    ],
+    safeNextSteps: [
+      "Do not sign until you have independently verified the lender's identity through the NCUA lookup and their official website",
+      "Compare all numbers (principal, APR, payment amount, total of payments) against your Truth in Lending Act (TILA) disclosure, which should accompany any retail installment contract",
+      "Ask the lender for a written explanation of the GPS/starter-interrupt device terms, including what triggers disablement and how to re-enable",
+      "Request information on whether the arbitration clause has an opt-out window and the procedure to exercise it",
+      "Keep a signed copy of the contract and all disclosures in a secure location for the life of the loan",
+    ],
+    contractRiskNotes:
+      "CONTRACT risks: The agreement includes an acceleration clause and repossession without prior notice, which could make the full balance due and allow quick repossession if you default. It states a higher default rate (18.00% APR) and deficiency balance exposure, meaning you could still owe money after repossession and sale, plus fees. It allows force-placed insurance added to your balance if coverage lapses, and includes consent for GPS tracking and a starter-interrupt device that may disable the car when more than 10 days past due. It also requires binding arbitration with a jury-trial waiver and class-action waiver, which could limit how disputes can be pursued, and it grants a blanket lien that could secure other obligations you owe the credit union.",
+    contractTermsFound: [
+      "Default rate escalation",
+      "Repossession clause",
+      "Mandatory arbitration",
+      "Class-action waiver",
+      "Deficiency balance exposure",
+      "GPS / starter-interrupt device",
+      "Force-placed insurance",
+      "Blanket lien on collateral",
+      "Acceleration clause",
+    ],
+  },
 };

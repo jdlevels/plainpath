@@ -35,6 +35,39 @@ A polished full-stack web app that turns confusing paperwork (PDFs, pasted text)
 - **3 built-in demos** — event-permit, school-enrollment, grant-application with rich pre-analyzed data including Plain English sections
 - **Dark / Light / System theme** — Persisted, FOUC-free, covers every page and component
 
+## Document Trust Check
+
+Second product mode: checks documents for scam/fraud risk and contract-level consumer harm.
+
+### Two analytical dimensions (Phase 1):
+1. **Authenticity / Scam Risk** — rule-based score 0-100 + AI verdict (Likely legitimate / Cannot verify / Suspicious / High scam risk). Looks for payment method red flags, impersonation, urgency pressure, suspicious contacts.
+2. **Contract Risk** (new) — AI populates `contractRiskNotes` (plain-language summary) when contract-specific harmful terms are detected (default APR escalation, repossession, acceleration clause, mandatory arbitration, class-action waiver, deficiency balance, force-placed insurance, GPS/starter-interrupt device, blanket lien, balloon payment, etc.). Detected terms appear as amber pill badges under "Contract Terms to Review." This section only appears for contract-type documents.
+
+### Verdict thresholds:
+- 0-24: Likely legitimate
+- 25-49: Cannot verify authenticity
+- 50-74: Suspicious — verify before acting
+- 75-100: High scam risk
+
+### Trust Check demos (5 total):
+- `fake-utility-shutoff` — 87/100 High scam risk
+- `fake-irs-collection` — 96/100 High scam risk
+- `debt-collection-letter` — 55/100 Suspicious
+- `legitimate-utility-notice` — 8/100 Likely legitimate
+- `auto-loan-contract` — 38/100 Cannot verify (contract risk section visible)
+
+### Trust Check routes:
+- `POST /api/documents/trust-check` — text paste analysis
+- `POST /api/documents/trust-check-upload` — file upload analysis
+- `GET /api/documents/trust-check-demo/:demoId` — pre-computed demo
+
+### Key Trust Check files:
+- `artifacts/api-server/src/routes/documents/index.ts` — `extractRuleData()`, `calculateRiskScore()`, `runTrustCheckAnalysis()`, AI prompt with `contractRiskNotes` field
+- `artifacts/api-server/src/lib/trustCheckDemoData.ts` — 5 pre-computed demos
+- `artifacts/api-server/src/lib/types.ts` — `TrustCheckAnalysis` interface (includes `contractRiskNotes?`, `contractTermsFound?`)
+- `artifacts/plainpath/src/lib/trustCheckTypes.ts` — frontend types + `verdictColor()`, `severityColor()`
+- `artifacts/plainpath/src/pages/TrustCheck.tsx` — 8-section results page with Contract Terms callout
+
 ## API Endpoints
 
 All routes under `/api`:
@@ -44,6 +77,9 @@ All routes under `/api`:
 - `POST /api/documents/explain-section` — On-demand step explanation (body: `{ sectionTitle, sectionContent, documentTypeHint? }`)
 - `GET /api/documents/demo/:demoId` — Pre-analyzed demo (event-permit | school-enrollment | grant-application)
 - `POST /api/documents/checklist` — Update checklist item status
+- `POST /api/documents/trust-check` — Trust Check text analysis
+- `POST /api/documents/trust-check-upload` — Trust Check file upload
+- `GET /api/documents/trust-check-demo/:demoId` — Trust Check pre-computed demo
 
 ## Key Files
 

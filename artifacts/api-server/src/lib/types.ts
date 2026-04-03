@@ -160,4 +160,6 @@ export interface TrustCheckAnalysis {
   deadlines: TrustCheckDeadlineItem[];
   whatToVerify: string[];
   safeNextSteps: string[];
+  contractRiskNotes?: string;
+  contractTermsFound?: string[];
 }

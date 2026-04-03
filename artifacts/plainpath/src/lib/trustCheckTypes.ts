@@ -36,6 +36,8 @@ export interface TrustCheckAnalysis {
   deadlines: TrustCheckDeadlineItem[]
   whatToVerify: string[]
   safeNextSteps: string[]
+  contractRiskNotes?: string
+  contractTermsFound?: string[]
 }
 
 export function verdictColor(verdict: TrustCheckVerdict): {

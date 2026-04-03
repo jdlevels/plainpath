@@ -529,6 +529,7 @@ interface ExtractedRuleData {
   threatPhrases: string[];
   paymentRedFlags: string[];
   infoRequests: string[];
+  contractRiskTerms: string[];
 }
 
 function extractRuleData(text: string): ExtractedRuleData {
@@ -591,7 +592,49 @@ function extractRuleData(text: string): ExtractedRuleData {
   ];
   const infoRequests = infoRequestTerms.filter((t) => lower.includes(t));
 
-  return { phones, emails, urls, dates, amounts, urgencyPhrases, threatPhrases, paymentRedFlags, infoRequests };
+  const contractRiskPatterns: Array<[string, string]> = [
+    ["default rate", "Default rate escalation"],
+    ["default apr", "Default APR escalation"],
+    ["penalty apr", "Penalty APR clause"],
+    ["penalty rate", "Penalty rate clause"],
+    ["repossession", "Repossession clause"],
+    ["mandatory arbitration", "Mandatory arbitration"],
+    ["binding arbitration", "Mandatory arbitration"],
+    ["class action waiver", "Class-action waiver"],
+    ["class action", "Class-action waiver"],
+    ["deficiency balance", "Deficiency balance exposure"],
+    ["deficiency judgment", "Deficiency balance exposure"],
+    ["starter interrupt", "GPS / starter-interrupt device"],
+    ["payment assurance device", "GPS / starter-interrupt device"],
+    ["force-placed insurance", "Force-placed insurance"],
+    ["lender-placed insurance", "Force-placed insurance"],
+    ["balloon payment", "Balloon payment risk"],
+    ["blanket lien", "Blanket lien on collateral"],
+    ["acceleration clause", "Acceleration clause"],
+    ["accelerate the", "Acceleration clause"],
+    ["immediately due and payable", "Acceleration clause"],
+    ["all sums due", "Acceleration clause"],
+    ["wage garnishment", "Wage garnishment risk"],
+    ["garnish your wages", "Wage garnishment risk"],
+    ["negative amortization", "Negative amortization risk"],
+    ["interest-only", "Interest-only payment period"],
+    ["yield spread premium", "Yield spread premium"],
+  ];
+  const seenContractLabels = new Set<string>();
+  const contractRiskTerms: string[] = [];
+  for (const [pattern, label] of contractRiskPatterns) {
+    // Skip if the match appears in a clear negation context (e.g. "no prepayment penalty")
+    const idx = lower.indexOf(pattern);
+    if (idx === -1) continue;
+    const before = lower.slice(Math.max(0, idx - 20), idx);
+    if (/\b(no|without|waiving|waives|no such|does not include|there is no)\s*$/.test(before.trimEnd())) continue;
+    if (!seenContractLabels.has(label)) {
+      seenContractLabels.add(label);
+      contractRiskTerms.push(label);
+    }
+  }
+
+  return { phones, emails, urls, dates, amounts, urgencyPhrases, threatPhrases, paymentRedFlags, infoRequests, contractRiskTerms };
 }
 
 function calculateRiskScore(data: ExtractedRuleData, lower: string): number {
@@ -699,7 +742,8 @@ Return ONLY a valid JSON object — no markdown, no code fences, just raw JSON.
   ],
   "safeNextSteps": [
     "string - one concrete safe action"
-  ]
+  ],
+  "contractRiskNotes": "string or null — ONLY populate this when the document is clearly a binding legal agreement (loan contract, lease, service agreement, employment contract, financing agreement) AND it contains potentially harmful consumer terms such as: high default/penalty APR, mandatory arbitration or class-action waiver, repossession or acceleration clauses, deficiency balance exposure, force-placed insurance, GPS/starter-interrupt devices, balloon payments, blanket liens, or prepayment penalties. Write 2-4 sentences in plain language explaining the specific risks. Be explicit that these are CONTRACT risks — distinct from scam/authenticity concerns. A contract can be entirely authentic yet contain provisions that could significantly harm the consumer. If the document is not a binding contract, or contains no significant harmful consumer terms, return null."
 }
 
 Guidelines:
@@ -708,6 +752,7 @@ Guidelines:
 - suspiciousContactNotes: ONLY list contacts that have a specific reason to be flagged — wrong domain for claimed brand, non-standard number for a known institution, short URL, etc. If the document appears low-risk, leave this array EMPTY. Do not generate notes for every contact just as generic caution.
 - whatToVerify: 3-6 specific verification steps. Always include: verify sender identity through official public channels (not numbers in the letter)
 - safeNextSteps: 4-6 safe actions. Always include: verify through official website, do not call numbers in the letter until verified, do not pay until independently confirmed, preserve the document
+- contractRiskNotes: This is a separate analytical dimension from scam detection. Analyze the document for consumer-harmful contract terms regardless of whether it appears legitimate or fraudulent. A genuine contract can still contain provisions that are one-sided, risky, or punishing. Explain these in plain, non-alarming language. Keep it factual — do not say the contract is unfair, just identify what the specific clauses mean for the consumer.
 - Keep language practical and non-alarming. Help the person stay safe without causing unnecessary panic.`;
 
 async function runTrustCheckAnalysis(
@@ -727,6 +772,7 @@ async function runTrustCheckAnalysis(
     `- Threat phrases detected: ${ruleData.threatPhrases.join(", ") || "none"}`,
     `- Payment method red flags: ${ruleData.paymentRedFlags.join(", ") || "none"}`,
     `- Sensitive info requests: ${ruleData.infoRequests.join(", ") || "none"}`,
+    `- Contract risk terms detected: ${ruleData.contractRiskTerms.join(", ") || "none"}`,
     `- Rule-based risk score: ${riskScore}/100 → Verdict: ${verdict}`,
   ].join("\n");
 
@@ -818,6 +864,11 @@ async function runTrustCheckAnalysis(
       }))
     : [];
 
+  const contractRiskNotes =
+    typeof parsed.contractRiskNotes === "string" && parsed.contractRiskNotes.trim()
+      ? parsed.contractRiskNotes.trim()
+      : undefined;
+
   return {
     id: uuidv4(),
     processedAt: new Date().toISOString(),
@@ -831,6 +882,8 @@ async function runTrustCheckAnalysis(
     deadlines,
     whatToVerify: Array.isArray(parsed.whatToVerify) ? parsed.whatToVerify : [],
     safeNextSteps: Array.isArray(parsed.safeNextSteps) ? parsed.safeNextSteps : [],
+    contractRiskNotes,
+    contractTermsFound: ruleData.contractRiskTerms.length > 0 ? ruleData.contractRiskTerms : undefined,
   };
 }
 

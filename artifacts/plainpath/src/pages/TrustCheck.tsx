@@ -5,7 +5,7 @@ import {
   ArrowLeft, ShieldCheck, AlertTriangle, XCircle, CheckCircle2,
   Phone, Mail, Globe, Calendar, Clock, Eye, CheckSquare,
   ArrowRight, AlertCircle, Flag, Shield, ExternalLink,
-  Loader2,
+  Loader2, FileText,
 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -210,6 +210,40 @@ export default function TrustCheck() {
             </div>
           </div>
         </motion.div>
+
+        {/* Contract Risk Callout — shown only for contract-type documents */}
+        {(analysis.contractRiskNotes || (analysis.contractTermsFound && analysis.contractTermsFound.length > 0)) && (
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+            <Card className="p-5 border-amber-200/70 dark:border-amber-700/40 bg-amber-50/60 dark:bg-amber-950/20">
+              <div className="flex items-start gap-3">
+                <div className="w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-900/40 border border-amber-200 dark:border-amber-700 flex items-center justify-center shrink-0 mt-0.5">
+                  <FileText className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm font-bold text-amber-800 dark:text-amber-300 mb-1">Contract Terms to Review</h3>
+                  <p className="text-[11px] font-medium text-amber-700/70 dark:text-amber-400/60 mb-2.5">
+                    These are contract-risk findings — separate from any scam or authenticity concerns. A document can be genuine and still contain terms that deserve careful attention.
+                  </p>
+                  {analysis.contractRiskNotes && (
+                    <p className="text-sm text-foreground/80 leading-relaxed mb-3">{analysis.contractRiskNotes}</p>
+                  )}
+                  {analysis.contractTermsFound && analysis.contractTermsFound.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {analysis.contractTermsFound.map((term, i) => (
+                        <span
+                          key={i}
+                          className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-700"
+                        >
+                          {term}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </Card>
+          </motion.div>
+        )}
 
         {/* What This Letter Claims */}
         {analysis.whatItClaims && (
