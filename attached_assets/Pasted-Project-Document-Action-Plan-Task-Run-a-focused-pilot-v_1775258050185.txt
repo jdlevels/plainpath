@@ -1,0 +1,147 @@
+Project: Document Action Plan
+Task: Run a focused pilot-validation batch to determine whether issuer/company verification is now a repeated gap strong enough to justify building a lightweight trusted-entity verification layer.
+
+Goal:
+Collect a larger, targeted set of pilot records focused on utility, telecom, government-style, and institutional documents so we can determine whether weak issuer/contact verification is a recurring pattern or just a one-off case.
+
+Context:
+- Current pilot report has only 2 logged records
+- One utility-bill result was marked incorrect because the app did not sufficiently verify the company name / phone number
+- This is not enough data to justify retuning the scoring engine yet
+- Before building a trusted-entity verification layer, we need more evidence that issuer verification is a repeated weakness
+
+Critical constraints:
+- Do NOT tune the scoring engine in this pass
+- Do NOT redesign the UI
+- Do NOT activate paid features
+- Do NOT restore subscription gating
+- Do NOT add security rollout
+- Do NOT build the trusted-entity verification layer yet
+- This pass is data collection and pattern validation only unless a blocking bug appears
+
+Primary objective:
+Collect 5–10 additional pilot records, with emphasis on documents where issuer/company/contact verification matters most, and determine whether the same weakness repeats enough to justify a new verification layer.
+
+-----------------------------------
+TARGET DOCUMENT TYPES
+-----------------------------------
+
+Prioritize documents in these categories:
+
+1. Utility bills / shutoff notices
+2. Telecom / internet / cable bills or notices
+3. Government-style notices
+4. Insurance / EOB / benefits-style notices
+5. Lease / housing / property-management notices
+6. Lender / debt / collection notices if available
+7. One or two ordinary low-risk institutional statements for control
+
+If available, aim for at least:
+- 2 utility-related docs
+- 2 telecom/institutional billing docs
+- 2 government/institutional notices
+- 1–2 legitimate low-risk controls
+- 1 suspicious or scam-style issuer-impersonation document
+
+-----------------------------------
+FOR EACH DOCUMENT
+-----------------------------------
+
+1. Run Document Trust Check
+2. Review the result
+3. Log pilot feedback using the existing pilot feedback workflow
+4. Confirm the record appears in `/pilot-feedback`
+
+Capture:
+- document label
+- source type
+- primary verdict
+- authenticity risk
+- document risk
+- verification confidence
+- reviewer assessment
+- false positive? yes/no
+- false negative? yes/no
+- issue categories selected
+- short reviewer note
+
+-----------------------------------
+SPECIAL REVIEW FOCUS
+-----------------------------------
+
+For this batch, reviewers should pay special attention to issuer/contact verification quality.
+
+Specifically assess:
+- Did the app identify the company/issuer correctly?
+- Did the app recognize when the contact information seemed incomplete, placeholder-like, conflicting, or suspicious?
+- Did the app provide useful “what to verify” guidance?
+- Did the app give enough weight to weak or unverifiable issuer details?
+- Did the result feel too soft when the issuer/contact data was questionable?
+- Did the app miss an opportunity to tell the user to independently verify the company name, domain, or phone number?
+
+-----------------------------------
+PATTERN TEST
+-----------------------------------
+
+At the end of the batch, determine whether the following pattern is recurring:
+
+“Documents with questionable or unverified issuer/company/contact details are receiving results that are too soft because the app lacks stronger issuer verification support.”
+
+Only recommend building the lightweight verification layer if the pattern repeats clearly across multiple records.
+
+Suggested threshold:
+- same verification weakness appears in 3+ records
+or
+- issuer/contact verification is among the top issue categories in the batch
+or
+- at least 2 documents are marked incorrect/needs tuning primarily because company/contact validation was too weak
+
+-----------------------------------
+OUTPUT REQUIRED
+-----------------------------------
+
+Return:
+
+1. Batch summary
+- total documents tested
+- total feedback records logged
+- document categories covered
+
+2. Document-by-document table
+For each document include:
+- document name
+- category
+- verdict
+- authenticity risk
+- document risk
+- verification confidence
+- reviewer assessment
+- false positive? yes/no
+- false negative? yes/no
+- top issue category if any
+- short reviewer note
+
+3. Issuer-verification pattern review
+Summarize:
+- how often issuer/company/contact verification weakness appeared
+- which document types it affected
+- whether the weakness is recurring enough to justify a new build
+
+4. Final decision
+End with one of:
+- NOT ENOUGH EVIDENCE YET — KEEP BASELINE FROZEN
+- ISSUER VERIFICATION GAP IS RECURRING — LIGHTWEIGHT VERIFICATION LAYER NOW JUSTIFIED
+- BLOCKING BUG FOUND BEFORE PATTERN COULD BE ASSESSED
+
+5. Screenshots
+Capture at least:
+- one utility/telecom result
+- one government/institutional result
+- one low-risk control result
+- `/pilot-feedback` summary page after this batch
+
+Success criteria:
+- more evidence is collected before changing the product
+- issuer/company verification weakness is measured, not guessed
+- the scoring baseline remains frozen
+- the next build decision is based on repeated pilot evidence
