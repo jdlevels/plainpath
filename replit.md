@@ -68,7 +68,7 @@ Second product mode: evaluates documents across three independent risk dimension
 - `fake-irs-collection` — auth=96, doc=0, conf=12; 2 structural findings
 - `debt-collection-letter` — auth=55, doc=0, conf=22; 2 structural findings
 - `legitimate-utility-notice` — auth=8, doc=0, conf=75; no structural findings
-- `auto-loan-contract` — auth=38, doc=86, conf=55; 9 contract terms found
+- `auto-loan-contract` — auth=38, doc=86, conf=55; 9 contract terms found; 2 metadata findings (Photoshop-produced, modified 43 days post-creation)
 
 ### Trust Check routes:
 - `POST /api/documents/trust-check` — text paste analysis

@@ -360,6 +360,31 @@ export default function TrustCheck() {
           )}
         </SectionCard>
 
+        {/* Metadata Findings — only suspicious findings, only for uploaded PDFs */}
+        {hasMetadata && (
+          <SectionCard icon={Info} title={`File Metadata Findings (${analysis.metadataFindings!.length})`}>
+            <p className="text-[11px] text-muted-foreground/70 mb-3 font-medium">
+              These findings come from the PDF file's embedded metadata. Suspicious metadata may indicate the document was produced by unexpected software or modified after the fact.
+            </p>
+            <div className="space-y-2.5">
+              {analysis.metadataFindings!.map((finding, i) => (
+                <div key={i} className="flex items-start gap-3 p-3 rounded-xl border bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                      <span className="text-xs font-semibold text-foreground">{finding.field}</span>
+                      <code className="text-xs font-mono text-muted-foreground">{finding.value}</code>
+                      <span className="text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 shrink-0">
+                        Suspicious
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-snug">{finding.note}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </SectionCard>
+        )}
+
         {/* Structural Findings */}
         {hasStructural && (
           <SectionCard icon={AlertTriangle} title={`Structural Observations (${analysis.structuralFindings!.length})`}>
@@ -374,33 +399,6 @@ export default function TrustCheck() {
                 </li>
               ))}
             </ul>
-          </SectionCard>
-        )}
-
-        {/* Metadata Findings — only suspicious findings */}
-        {hasMetadata && (
-          <SectionCard icon={Info} title={`File Metadata Findings (${analysis.metadataFindings!.length})`}>
-            <p className="text-[11px] text-muted-foreground/70 mb-3 font-medium">
-              These findings come from the PDF file's embedded metadata. Suspicious metadata may indicate the document was created by unexpected software or modified after the fact.
-            </p>
-            <div className="space-y-2.5">
-              {analysis.metadataFindings!.map((finding, i) => (
-                <div key={i} className={`flex items-start gap-3 p-3 rounded-xl border ${finding.suspicious ? "bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800" : "bg-secondary/30 border-border/30"}`}>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                      <span className="text-xs font-semibold text-foreground">{finding.field}</span>
-                      <code className="text-xs font-mono text-muted-foreground">{finding.value}</code>
-                      {finding.suspicious && (
-                        <span className="text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 shrink-0">
-                          Suspicious
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground leading-snug">{finding.note}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
           </SectionCard>
         )}
 

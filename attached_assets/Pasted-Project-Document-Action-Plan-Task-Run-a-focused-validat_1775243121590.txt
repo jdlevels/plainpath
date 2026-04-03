@@ -1,0 +1,62 @@
+Project: Document Action Plan
+Task: Run a focused validation pass on the completed Phase 2 Trust Check upgrade.
+
+Goal:
+Confirm that the new three-score model, metadata findings, and structural observations behave correctly across both uploaded files and pasted-text inputs.
+
+Do not add new features in this pass.
+Do not redesign the UI.
+Do not add billing/security work.
+
+Validation scope:
+
+1. Uploaded PDF validation
+Test at least:
+- fake utility shutoff PDF
+- fake IRS/government-style PDF
+- auto loan contract PDF
+- legitimate utility notice PDF
+
+Verify:
+- metadata findings appear only when real metadata is available
+- metadata findings are specific and not over-triggered
+- structural observations are useful and evidence-based
+- Authenticity Risk / Document Risk / Verification Confidence behave logically
+
+2. Pasted text validation
+Test at least:
+- one scam-style pasted text
+- one legitimate pasted text
+
+Verify:
+- no empty or awkward metadata section appears
+- pasted text is not unfairly penalized for lacking file metadata
+- scores still behave logically using text/structure only
+
+3. Verification Confidence review
+Review how Verification Confidence is calculated and displayed.
+Ensure it reflects:
+- issuer identity completeness
+- contact consistency
+- internal document coherence
+- available metadata/structure support
+and is not simply a mirror of authenticity risk.
+
+4. Structural observations review
+Ensure structural findings are:
+- specific
+- non-repetitive
+- tied to actual document evidence
+- not generic filler warnings
+
+Return:
+- QA findings by document
+- any scoring issues found
+- any metadata over-triggering found
+- any structural-finding cleanup needed
+- exact files changed only if tuning was required
+- screenshots of:
+  - one uploaded PDF result with metadata findings
+  - one pasted-text result with no metadata section
+  - one result showing strong structural observations
+- summary of whether Phase 2 is locked for pilot use

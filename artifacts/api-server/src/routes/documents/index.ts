@@ -682,6 +682,10 @@ function calculateRiskScore(data: ExtractedRuleData, lower: string): number {
   const secrecyTerms = ["do not share", "keep confidential", "tell no one", "prize transfers are confidential", "do not discuss with"];
   if (secrecyTerms.some((t) => lower.includes(t)) && data.paymentRedFlags.length > 0) score += 10;
 
+  // Anti-verification instruction — telling recipient not to contact official channels (strongest social engineering signal)
+  const antiVerification = /do\s+not\s+contact\s+the|do\s+not\s+call\s+the\s*(irs|fbi|police|main\s+office|official)|avoid\s+contacting|do\s+not\s+discuss\s+(this|the)|do\s+not\s+speak\s+with\s+(anyone|family)/i;
+  if (antiVerification.test(lower) && data.paymentRedFlags.length > 0) score += 12;
+
   // Medium severity — language and pressure tactics
   const urgentTerms = ["within 24 hours", "act now", "immediately", "do not ignore"];
   if (data.urgencyPhrases.some((u) => urgentTerms.some((k) => u.includes(k)))) score += 10;
@@ -998,6 +1002,10 @@ async function runTrustCheckAnalysis(
     ? `\n- PDF Metadata findings:\n${metadataFindings.map((f) => `  [${f.suspicious ? "SUSPICIOUS" : "info"}] ${f.field}: ${f.value} — ${f.note}`).join("\n")}`
     : "\n- PDF metadata: not available (pasted text or metadata stripped)";
 
+  const ruleStructuralContext = ruleStructuralIssues.length > 0
+    ? `- Rule-detected structural issues (ALREADY REPORTED — do NOT repeat these in structuralFindings):\n${ruleStructuralIssues.map((r) => `  • ${r}`).join("\n")}`
+    : `- Rule-detected structural issues: none`;
+
   const ruleContext = [
     `Rule-extracted data:`,
     `- Phone numbers found: ${ruleData.phones.join(", ") || "none"}`,
@@ -1013,9 +1021,13 @@ async function runTrustCheckAnalysis(
     `- Rule-based authenticity risk score: ${riskScore}/100 → ${verdict}`,
     `- Rule-based document risk score: ${documentRisk}/100`,
     `- Rule-based verification confidence score: ${verificationConfidence}/100`,
-    `- Rule-detected structural issues: ${ruleStructuralIssues.length > 0 ? ruleStructuralIssues.join(" | ") : "none"}`,
+    ruleStructuralContext,
     metadataContext,
   ].join("\n");
+
+  const structuralInstruction = ruleStructuralIssues.length > 0
+    ? `\n\nIMPORTANT for structuralFindings: The rule system has already detected ${ruleStructuralIssues.length} structural issue(s) listed above. Do NOT duplicate or paraphrase those. Your structuralFindings array should ONLY contain genuinely new observations not covered by the rule-detected list — such as tone shifts between sections, contradictory issuer names or dates across the document, math inconsistencies, conflicting payment instructions, or signature block anomalies. Leave structuralFindings empty if the rule system already covered everything significant.`
+    : "";
 
   const response = await openai.chat.completions.create({
     model: "gpt-5.2",
@@ -1024,7 +1036,7 @@ async function runTrustCheckAnalysis(
       { role: "system", content: TRUST_CHECK_SYSTEM_PROMPT },
       {
         role: "user",
-        content: `Analyze this document for trust and risk:\n\n${ruleContext}\n\n---\n\nDocument text:\n${text}`,
+        content: `Analyze this document for trust and risk:\n\n${ruleContext}\n\n---\n\nDocument text:\n${text}${structuralInstruction}`,
       },
     ],
   });
@@ -1114,9 +1126,33 @@ async function runTrustCheckAnalysis(
     ? parsed.structuralFindings.filter((s: unknown) => typeof s === "string" && (s as string).trim().length > 0)
     : [];
 
+  // Deduplicate AI structural findings against rule-based ones using topic keyword matching.
+  // Each rule finding is tagged with keywords; if an AI finding shares 2+ keywords with a rule
+  // finding, it's considered a duplicate and excluded.
+  const STRUCTURAL_TOPIC_KEYWORDS: string[][] = [
+    ["generic greeting", "dear valued", "valued customer", "dear resident", "dear account holder"],
+    ["reference number", "account number", "case number", "traceable identifier", "verifiable identifier"],
+    ["email domain", "url domain", "domain mismatch", "domain does not match"],
+    ["area code", "phone area", "multiple.*phone"],
+    ["contact official", "do not contact", "contact authorities", "main office", "power company"],
+    ["wire transfer", "third-party", "third party bank", "first national"],
+    ["short-expiry", "settlement offer", "western union", "5 days", "7 days"],
+  ];
+
+  function aiOverlapsWithRule(ai: string): boolean {
+    const aiLower = ai.toLowerCase();
+    return STRUCTURAL_TOPIC_KEYWORDS.some((keywords) =>
+      keywords.filter((kw) => aiLower.includes(kw)).length >= 1 &&
+      ruleStructuralIssues.some((rule) => {
+        const ruleLower = rule.toLowerCase();
+        return keywords.filter((kw) => ruleLower.includes(kw)).length >= 1;
+      })
+    );
+  }
+
   const allStructuralFindings = [
     ...ruleStructuralIssues,
-    ...aiStructuralFindings.filter((ai) => !ruleStructuralIssues.some((r) => r.toLowerCase().slice(0, 30) === ai.toLowerCase().slice(0, 30))),
+    ...aiStructuralFindings.filter((ai) => !aiOverlapsWithRule(ai)),
   ];
 
   const significantMetadataFindings = metadataFindings?.filter((f) => f.suspicious) ?? [];
