@@ -119,3 +119,45 @@ export interface DocumentAnalysis {
   keyTerms?: KeyTerm[];
   actionPack?: ActionPack;
 }
+
+// ── Document Trust Check types ──────────────────────────────────────────────
+
+export type TrustCheckVerdict =
+  | "Likely legitimate"
+  | "Suspicious — verify before acting"
+  | "High scam risk"
+  | "Cannot verify authenticity";
+
+export interface TrustCheckContactDetail {
+  type: "phone" | "email" | "url" | "address";
+  value: string;
+  suspicious: boolean;
+  note?: string;
+}
+
+export interface TrustCheckDeadlineItem {
+  text: string;
+  type: "explicit_date" | "relative" | "threat" | "escalation";
+  note?: string;
+}
+
+export interface TrustCheckScamIndicator {
+  indicator: string;
+  severity: "high" | "medium" | "low";
+  sourceEvidence?: string;
+}
+
+export interface TrustCheckAnalysis {
+  id: string;
+  processedAt: string;
+  riskScore: number;
+  verdict: TrustCheckVerdict;
+  verdictExplanation: string;
+  whatItClaims: string;
+  demandedAction: string;
+  scamIndicators: TrustCheckScamIndicator[];
+  contactDetails: TrustCheckContactDetail[];
+  deadlines: TrustCheckDeadlineItem[];
+  whatToVerify: string[];
+  safeNextSteps: string[];
+}

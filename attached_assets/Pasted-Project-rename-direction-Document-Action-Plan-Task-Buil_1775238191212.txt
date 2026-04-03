@@ -1,0 +1,212 @@
+Project rename direction: Document Action Plan
+Task: Build the first working version of the new analysis mode: Document Trust Check.
+
+Goal:
+Create a real end-to-end trust-check flow for suspicious letters, fake notices, scam-style contracts, impersonation documents, and questionable mailed documents.
+
+Critical instructions:
+- This is a new feature build
+- Do NOT redesign the app
+- Do NOT add security features yet
+- Do NOT activate paid features yet
+- Do NOT re-enable subscription gating yet
+- Reuse existing app infrastructure wherever possible
+- Keep all current testing flows open
+- Build this as a new analysis mode inside the existing system, not as a separate app
+
+Primary feature name:
+Document Trust Check
+
+Required product behavior:
+The user should be able to:
+1. click “Document Trust Check” from the homepage
+2. enter the existing intake/upload/paste flow
+3. analyze a document using a trust-check-specific prompt/schema
+4. receive a trust/risk-focused result instead of the normal action-plan result
+
+Do NOT claim certainty.
+The result must use risk-based language only.
+
+Allowed verdicts:
+- Likely legitimate
+- Suspicious — verify before acting
+- High scam risk
+- Cannot verify authenticity
+
+Do NOT output language such as:
+- definitely fake
+- proven fraud
+- legally invalid
+
+Build requirements:
+
+1. Homepage/action entry
+- Ensure the new homepage action/card for “Document Trust Check” is live
+- Clicking it should route into the existing intake flow
+- Preselect the document mode as “Document Trust Check”
+- Do not create dead buttons or placeholder actions
+
+2. Add a new analysis mode
+Create a true analysis mode key/type for:
+- Document Trust Check
+
+Use current architecture patterns for mode selection and analysis dispatch.
+Inspect the existing mode system first and extend it cleanly.
+
+3. Trust-check analysis schema
+Build a dedicated result schema for Document Trust Check with these sections:
+
+A. Risk Verdict
+- one of the 4 allowed verdicts
+- short explanation of why
+
+B. What This Letter Is Claiming
+- plain explanation of what the document says it is about
+
+C. Demanded Action
+- what the letter/document is asking the recipient to do
+
+D. Scam Indicators
+- suspicious signals found in the content
+- pressure tactics
+- identity inconsistencies
+- payment red flags
+- suspicious requests
+- unusual penalties or escalation terms
+
+E. Suspicious Contact Details
+- phone numbers found
+- email addresses found
+- URLs/domains found
+- mailing/return addresses found if present
+- note which ones appear suspicious or need independent verification
+
+F. Deadlines / Pressure Tactics
+- explicit dates
+- relative urgency phrases
+- threat deadlines
+- cutoff/legal/escalation timing language
+
+G. What To Verify
+- what the user should independently confirm before acting
+
+H. Safe Next Steps
+- specific safe actions such as:
+  - do not call the number in the letter yet
+  - verify through the official public website
+  - do not pay until independently verified
+  - preserve the document for reporting
+  - contact the official agency/company directly
+
+4. Extraction + rule layer
+Before or alongside AI output shaping, add rule-based extraction for:
+- phone numbers
+- email addresses
+- URLs/domains
+- dates
+- currency amounts
+- percentages / APR / fee hikes
+- payment instructions
+- urgency phrases
+- threat language
+- legal/escalation terms
+- references to shutoff, arrest, repossession, lawsuit, collections, service interruption, final notice, immediate action
+
+5. First risk-scoring model
+Implement a simple weighted risk model.
+
+High-severity examples:
+- gift card / crypto / wire / unusual payment method requests
+- threat of arrest
+- immediate shutdown or service cutoff threat
+- suspicious payment link
+- request for SSN, banking, or card details in a risky context
+- sender/payment mismatch
+
+Medium-severity examples:
+- short deadline pressure
+- aggressive legal language without specifics
+- unusual fee escalation
+- mismatched branding/contact details
+- missing case/account/reference identifiers
+
+Low-severity examples:
+- formatting inconsistencies
+- generic greeting
+- grammar/spelling concerns
+- vague sender identity
+
+Map score to verdict:
+- 0–24: Likely legitimate
+- 25–49: Cannot verify authenticity
+- 50–74: Suspicious — verify before acting
+- 75–100: High scam risk
+
+If a better threshold model fits the current implementation, use it, but keep the same four verdicts.
+
+6. UI requirements
+- Reuse current analysis result patterns
+- Do NOT redesign the app
+- Keep current dark premium styling
+- Make the Trust Check result feel native to the existing product
+- Use current spacing/card/tab conventions where possible
+- If existing tabs are reusable, adapt them cleanly
+- If a dedicated trust-check result layout is cleaner, build it with minimal disruption
+
+7. Guided Review linkage
+If practical in this first pass, wire Guided Review-style linking for trust-check findings so flagged items can point back to the source paragraph/section.
+If not practical in phase 1, note it clearly and leave it for phase 2.
+Do not delay the core trust-check mode just for this.
+
+8. Test documents
+Create at least 4 testing documents for this feature:
+- fake utility shutoff notice
+- fake county/government-style warning
+- fake debt/lender escalation letter
+- one legitimate control letter
+
+These should be realistic enough to test:
+- pressure language
+- deadlines
+- fee hikes
+- contact extraction
+- risk verdict behavior
+
+9. Validation checklist
+Verify:
+- homepage Trust Check action works
+- mode is correctly preselected
+- upload flow works
+- paste flow works
+- trust-check analysis runs
+- trust-check schema renders correctly
+- verdict is shown correctly
+- contact details extract correctly
+- deadlines/pressure extract correctly
+- safe next steps appear
+- no regressions in standard Analyze a Document flow
+- no paywalls or tab locks interfere
+- no console errors introduced
+
+10. Output required after completion
+Return:
+- exact files changed
+- new files created
+- how the mode is wired
+- how the schema is structured
+- how the scoring works
+- what test documents were created
+- screenshots of:
+  - homepage with Trust Check action
+  - intake flow with Trust Check selected
+  - one trust-check result
+- any risks introduced
+- what remains for phase 2
+
+Success criteria:
+- Document Trust Check is a real working mode
+- it uses risk-based wording, not certainty claims
+- it detects suspicious indicators and verification gaps
+- it produces a usable trust-check result
+- existing app flows remain stable
+- no security or paid-feature work is added in this phase

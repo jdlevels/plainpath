@@ -1,0 +1,79 @@
+Task: Restore the homepage visual direction to the older centered hero layout style shown in the reference screenshot, and use that as the baseline going forward.
+
+Goal:
+Keep the homepage looking like the older polished version:
+- centered hero
+- strong headline
+- short supporting text
+- horizontal CTA row
+- category chips below
+- how-it-works section below
+- what-you-get section below
+
+Critical instruction:
+Do NOT use the newer two-card hero layout as the top-of-page structure.
+The older centered hero layout is the preferred direction and should be restored as the baseline.
+
+What to keep from the older layout:
+- overall spacing and hierarchy
+- hero composition
+- CTA row style
+- supporting chip rows
+- lower sections layout
+
+What to update:
+1. Product naming
+- transition homepage wording from PlainPath toward Document Action Plan where appropriate
+- if full rename is not yet complete, use neutral copy that avoids mismatch
+
+2. CTA row
+Use two primary actions in the hero button row:
+- Analyze a Document
+- Document Trust Check
+
+Do NOT reintroduce the large two-card hero layout at the top.
+
+3. Supporting text
+Update the hero paragraph so it reflects both product directions:
+- action planning
+- trust / verification
+
+Recommended supporting copy direction:
+Document Action Plan reads your paperwork and turns it into clear next steps, deadlines, risks, required documents, and trust-check guidance — in plain English.
+
+4. Pilot state messaging
+Under the CTA row, remove any paid messaging during testing.
+Use pilot-appropriate support text such as:
+- Free to use
+- No account required
+- Pilot testing mode
+- Analyses saved on your device only
+Only keep statements that are technically true.
+
+5. Preserve the polished landing-page feel
+- keep current dark premium SaaS design language
+- keep the centered hero
+- keep strong typography
+- keep visual simplicity
+- do not add clutter
+- do not redesign lower sections unless required for consistency
+
+6. Routing behavior
+- Analyze a Document → current standard intake flow
+- Document Trust Check → intake flow with trust-check mode selected
+
+7. Validation
+After implementation verify:
+- homepage matches the old visual direction
+- both CTA buttons work
+- no layout regressions on desktop
+- no layout regressions on mobile
+- no old pricing text remains during pilot mode
+- no console errors introduced
+
+Return:
+- exact files changed
+- exact copy updated
+- screenshot of the restored homepage
+- confirmation that the old centered layout is now the baseline again
+- any risks introduced

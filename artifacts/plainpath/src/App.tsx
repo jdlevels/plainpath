@@ -8,6 +8,7 @@ import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import Home from "@/pages/Home";
 import Import from "@/pages/Import";
 import Analyze from "@/pages/Analyze";
+import TrustCheck from "@/pages/TrustCheck";
 import MyAnalyses from "@/pages/MyAnalyses";
 import Privacy from "@/pages/Privacy";
 import Terms from "@/pages/Terms";
@@ -37,6 +38,7 @@ function Router() {
           <Route path="/" component={Home} />
           <Route path="/import" component={Import} />
           <Route path="/analyze" component={Analyze} />
+          <Route path="/trust-check" component={TrustCheck} />
           <Route path="/my-analyses" component={MyAnalyses} />
           <Route path="/privacy" component={Privacy} />
           <Route path="/terms" component={Terms} />

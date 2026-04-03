@@ -3,7 +3,8 @@ import { v4 as uuidv4 } from "uuid";
 import multer from "multer";
 import { openai } from "@workspace/integrations-openai-ai-server";
 import { demoDocuments } from "../../lib/demoData.js";
-import type { DocumentAnalysis, DocumentSection, KeyTerm, ActionPack } from "../../lib/types.js";
+import { trustCheckDemoDocuments } from "../../lib/trustCheckDemoData.js";
+import type { DocumentAnalysis, DocumentSection, KeyTerm, ActionPack, TrustCheckAnalysis, TrustCheckVerdict, TrustCheckContactDetail, TrustCheckDeadlineItem, TrustCheckScamIndicator } from "../../lib/types.js";
 
 function extractSections(text: string): DocumentSection[] {
   const normalized = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
@@ -516,6 +517,410 @@ router.post("/upload", upload.single("file"), async (req, res, next) => {
   }
 });
 
+// ── Document Trust Check ──────────────────────────────────────────────────────
+
+interface ExtractedRuleData {
+  phones: string[];
+  emails: string[];
+  urls: string[];
+  dates: string[];
+  amounts: string[];
+  urgencyPhrases: string[];
+  threatPhrases: string[];
+  paymentRedFlags: string[];
+  infoRequests: string[];
+}
+
+function extractRuleData(text: string): ExtractedRuleData {
+  const lower = text.toLowerCase();
+
+  const phoneRegex = /\b(\+1[\s.\-]?)?\(?\d{3}\)?[\s.\-]?\d{3}[\s.\-]?\d{4}\b/g;
+  const phones = [...new Set((text.match(phoneRegex) || []).map((p) => p.trim()))];
+
+  const emailRegex = /\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}\b/g;
+  const emails = [...new Set((text.match(emailRegex) || []).map((e) => e.trim()))];
+
+  const urlRegex = /https?:\/\/[^\s\)\]\>"\']+/g;
+  const urls = [...new Set((text.match(urlRegex) || []).map((u) => u.trim()))];
+
+  const dateRegex = /\b(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}|\w+ \d{1,2},?\s+\d{4}|\d{1,2} \w+ \d{4})\b/g;
+  const dates = [...new Set((text.match(dateRegex) || []).map((d) => d.trim()))].slice(0, 10);
+
+  const amountRegex = /\$[\d,]+(\.\d{2})?/g;
+  const amounts = [...new Set((text.match(amountRegex) || []).map((a) => a.trim()))];
+
+  const urgencyTerms = [
+    "immediately", "act now", "within 24 hours", "within 48 hours", "within 72 hours",
+    "today only", "time sensitive", "time-sensitive", "do not ignore", "must respond",
+    "respond immediately", "urgent", "emergency", "last chance", "final opportunity",
+    "do not delay", "prompt attention", "without delay",
+  ];
+  const urgencyPhrases = urgencyTerms.filter((t) => lower.includes(t));
+
+  const threatTerms = [
+    "arrest", "warrant", "prosecution", "criminal charges", "law enforcement",
+    "legal action", "lawsuit", "sue you", "take you to court",
+    "collections", "collection agency", "debt collector",
+    "repossession", "foreclose", "foreclosure", "lien",
+    "shutoff", "shut off", "service interruption", "disconnect", "suspension",
+    "final notice", "final warning", "last notice", "failure to respond",
+    "social security administration", "internal revenue service",
+    "attorney general", "sheriff", "marshal", "federal agent",
+    "contempt", "judgment", "garnish", "garnishment",
+  ];
+  const threatPhrases = threatTerms.filter((t) => lower.includes(t));
+
+  const paymentRedFlagTerms = [
+    "gift card", "itunes card", "google play card", "steam card", "amazon gift card",
+    "wire transfer", "western union", "moneygram",
+    "cryptocurrency", "bitcoin", "ethereum", "crypto", "usdt",
+    "zelle", "cash app", "cashapp", "venmo",
+    "prepaid card", "prepaid debit", "money order",
+    "payment link", "pay here", "click to pay", "pay online now",
+  ];
+  const paymentRedFlags = paymentRedFlagTerms.filter((t) => lower.includes(t));
+
+  const infoRequestTerms = [
+    "social security number", "social security no", "ssn",
+    "bank account number", "routing number", "account number",
+    "credit card number", "debit card", "card number", "cvv",
+    "date of birth", "mother's maiden name", "password", "pin number",
+    "drivers license", "driver's license",
+  ];
+  const infoRequests = infoRequestTerms.filter((t) => lower.includes(t));
+
+  return { phones, emails, urls, dates, amounts, urgencyPhrases, threatPhrases, paymentRedFlags, infoRequests };
+}
+
+function calculateRiskScore(data: ExtractedRuleData): number {
+  let score = 0;
+
+  // High severity
+  const giftCardTerms = ["gift card", "itunes card", "google play card", "steam card", "amazon gift card"];
+  if (data.paymentRedFlags.some((f) => giftCardTerms.some((k) => f.includes(k)))) score += 25;
+  const wireTerms = ["wire transfer", "western union", "moneygram"];
+  if (data.paymentRedFlags.some((f) => wireTerms.some((k) => f.includes(k)))) score += 20;
+  const cryptoTerms = ["cryptocurrency", "bitcoin", "ethereum", "crypto", "usdt"];
+  if (data.paymentRedFlags.some((f) => cryptoTerms.some((k) => f.includes(k)))) score += 22;
+  const ssnTerms = ["social security number", "ssn"];
+  if (data.infoRequests.some((r) => ssnTerms.some((k) => r.includes(k)))) score += 22;
+  const bankTerms = ["bank account number", "routing number", "credit card number", "cvv"];
+  if (data.infoRequests.some((r) => bankTerms.some((k) => r.includes(k)))) score += 20;
+  const arrestTerms = ["arrest", "warrant", "prosecution", "criminal charges", "federal agent"];
+  if (data.threatPhrases.some((t) => arrestTerms.some((k) => t.includes(k)))) score += 25;
+  const linkTerms = ["payment link", "pay here", "click to pay"];
+  if (data.paymentRedFlags.some((f) => linkTerms.some((k) => f.includes(k)))) score += 18;
+
+  // Medium severity
+  const urgentTerms = ["within 24 hours", "act now", "immediately", "do not ignore"];
+  if (data.urgencyPhrases.some((u) => urgentTerms.some((k) => u.includes(k)))) score += 10;
+  const legalTerms = ["legal action", "lawsuit", "collections", "collection agency", "debt collector"];
+  if (data.threatPhrases.some((t) => legalTerms.some((k) => t.includes(k)))) score += 10;
+  const shutoffTerms = ["shutoff", "shut off", "service interruption", "disconnect", "suspension"];
+  if (data.threatPhrases.some((t) => shutoffTerms.some((k) => t.includes(k)))) score += 8;
+  const finalTerms = ["final notice", "final warning", "last notice"];
+  if (data.threatPhrases.some((t) => finalTerms.some((k) => t.includes(k)))) score += 8;
+  const repoTerms = ["repossession", "foreclosure", "lien"];
+  if (data.threatPhrases.some((t) => repoTerms.some((k) => t.includes(k)))) score += 10;
+  const peerPayTerms = ["zelle", "cash app", "cashapp", "venmo"];
+  if (data.paymentRedFlags.some((f) => peerPayTerms.some((k) => f.includes(k)))) score += 12;
+  if (data.urgencyPhrases.length >= 3) score += 8;
+
+  // Low severity
+  if (data.urgencyPhrases.length >= 1) score += 3;
+  if (data.threatPhrases.length >= 1) score += 3;
+  if (data.amounts.length > 0) score += 2;
+
+  return Math.min(100, score);
+}
+
+function scoreToVerdict(score: number): TrustCheckVerdict {
+  if (score >= 75) return "High scam risk";
+  if (score >= 50) return "Suspicious — verify before acting";
+  if (score >= 25) return "Cannot verify authenticity";
+  return "Likely legitimate";
+}
+
+const TRUST_CHECK_SYSTEM_PROMPT = `You are PlainPath Trust Check, a document risk analysis engine that helps people evaluate suspicious letters, notices, and documents.
+
+Your task: Read the document text and identify whether it contains warning signs of fraud, scams, impersonation, or manipulation.
+
+CRITICAL — Use risk-based language only. Never claim certainty.
+ALLOWED language: "appears to", "may indicate", "suggests", "could be", "shows signs of", "likely", "suspicious", "cannot confirm", "cannot verify"
+FORBIDDEN language: "definitely fake", "is a scam", "is fraud", "proven fraud", "legally invalid", "certainly fraudulent"
+
+Return ONLY a valid JSON object — no markdown, no code fences, just raw JSON.
+
+{
+  "verdictExplanation": "string - 2-4 sentences explaining the risk level in cautious, risk-based language",
+  "whatItClaims": "string - 2-4 sentences: what organization or authority this document claims to be from, and what situation it describes",
+  "demandedAction": "string - 2-4 sentences: what the letter asks the recipient to do — pay, call, respond, provide information, etc.",
+  "scamIndicators": [
+    {
+      "indicator": "string - clear description of the suspicious signal",
+      "severity": "high|medium|low",
+      "sourceEvidence": "string - brief quote or paraphrase from the document"
+    }
+  ],
+  "suspiciousContactNotes": [
+    "string - a note about a specific contact detail (phone, email, URL) that should be independently verified"
+  ],
+  "whatToVerify": [
+    "string - one specific thing to independently verify before taking action"
+  ],
+  "safeNextSteps": [
+    "string - one concrete safe action"
+  ]
+}
+
+Guidelines:
+- scamIndicators: 2-8 warning signs. HIGH severity: payment red flags (gift card, wire, crypto), threats of arrest/shutdown, identity info requests, sender impersonation; MEDIUM: time pressure, missing case/account numbers, vague sender identity, threat language without specifics; LOW: generic greetings, formatting inconsistencies, grammar errors, vague references
+- If the document appears legitimate, scamIndicators may be empty or have only low-severity items
+- whatToVerify: 3-6 specific verification steps. Always include: verify sender identity through official public channels (not numbers in the letter)
+- safeNextSteps: 4-6 safe actions. Always include: verify through official website, do not call numbers in the letter until verified, do not pay until independently confirmed, preserve the document
+- Keep language practical and non-alarming. Help the person stay safe without causing unnecessary panic.`;
+
+async function runTrustCheckAnalysis(
+  text: string,
+  ruleData: ExtractedRuleData,
+  riskScore: number,
+  verdict: TrustCheckVerdict,
+): Promise<TrustCheckAnalysis> {
+  const ruleContext = [
+    `Rule-extracted data:`,
+    `- Phone numbers found: ${ruleData.phones.join(", ") || "none"}`,
+    `- Email addresses found: ${ruleData.emails.join(", ") || "none"}`,
+    `- URLs found: ${ruleData.urls.join(", ") || "none"}`,
+    `- Dates found: ${ruleData.dates.join(", ") || "none"}`,
+    `- Currency amounts found: ${ruleData.amounts.join(", ") || "none"}`,
+    `- Urgency phrases detected: ${ruleData.urgencyPhrases.join(", ") || "none"}`,
+    `- Threat phrases detected: ${ruleData.threatPhrases.join(", ") || "none"}`,
+    `- Payment method red flags: ${ruleData.paymentRedFlags.join(", ") || "none"}`,
+    `- Sensitive info requests: ${ruleData.infoRequests.join(", ") || "none"}`,
+    `- Rule-based risk score: ${riskScore}/100 → Verdict: ${verdict}`,
+  ].join("\n");
+
+  const response = await openai.chat.completions.create({
+    model: "gpt-5.2",
+    max_completion_tokens: 4096,
+    messages: [
+      { role: "system", content: TRUST_CHECK_SYSTEM_PROMPT },
+      {
+        role: "user",
+        content: `Analyze this document for trust and risk:\n\n${ruleContext}\n\n---\n\nDocument text:\n${text}`,
+      },
+    ],
+  });
+
+  const rawContent = response.choices[0]?.message?.content;
+  if (!rawContent) throw new Error("No response from trust-check engine");
+
+  let parsed: any;
+  try {
+    const cleaned = rawContent.trim().replace(/^```json\s*/i, "").replace(/\s*```$/i, "");
+    parsed = JSON.parse(cleaned);
+  } catch {
+    throw new Error("Trust-check engine returned an unparseable response");
+  }
+
+  const suspiciousNotes: string[] = Array.isArray(parsed.suspiciousContactNotes)
+    ? parsed.suspiciousContactNotes
+    : [];
+
+  const contactDetails: TrustCheckContactDetail[] = [];
+  for (const phone of ruleData.phones) {
+    contactDetails.push({
+      type: "phone",
+      value: phone,
+      suspicious: riskScore >= 50 || suspiciousNotes.some((n) => n.includes(phone)),
+      note: suspiciousNotes.find((n) => n.includes(phone)),
+    });
+  }
+  for (const email of ruleData.emails) {
+    contactDetails.push({
+      type: "email",
+      value: email,
+      suspicious: riskScore >= 50 || suspiciousNotes.some((n) => n.includes(email)),
+      note: suspiciousNotes.find((n) => n.includes(email)),
+    });
+  }
+  for (const url of ruleData.urls) {
+    const isShortUrl = /bit\.ly|tinyurl|goo\.gl|t\.co|rebrand\.ly/i.test(url);
+    contactDetails.push({
+      type: "url",
+      value: url,
+      suspicious: isShortUrl || riskScore >= 50 || suspiciousNotes.some((n) => n.includes(url)),
+      note: isShortUrl
+        ? "Short/redirected URL — verify the destination before visiting"
+        : suspiciousNotes.find((n) => n.includes(url)),
+    });
+  }
+
+  const deadlines: TrustCheckDeadlineItem[] = [];
+  for (const date of ruleData.dates) {
+    deadlines.push({ text: date, type: "explicit_date" });
+  }
+  for (const phrase of ruleData.urgencyPhrases) {
+    const isThreaten = ruleData.threatPhrases.length > 0;
+    deadlines.push({ text: phrase, type: isThreaten ? "threat" : "relative" });
+  }
+
+  const scamIndicators: TrustCheckScamIndicator[] = Array.isArray(parsed.scamIndicators)
+    ? parsed.scamIndicators.map((si: any) => ({
+        indicator: si.indicator || "",
+        severity: (si.severity as "high" | "medium" | "low") || "medium",
+        sourceEvidence: si.sourceEvidence,
+      }))
+    : [];
+
+  return {
+    id: uuidv4(),
+    processedAt: new Date().toISOString(),
+    riskScore,
+    verdict,
+    verdictExplanation: parsed.verdictExplanation || "",
+    whatItClaims: parsed.whatItClaims || "",
+    demandedAction: parsed.demandedAction || "",
+    scamIndicators,
+    contactDetails,
+    deadlines,
+    whatToVerify: Array.isArray(parsed.whatToVerify) ? parsed.whatToVerify : [],
+    safeNextSteps: Array.isArray(parsed.safeNextSteps) ? parsed.safeNextSteps : [],
+  };
+}
+
+async function extractTextFromBuffer(
+  file: Express.Multer.File,
+): Promise<{ text: string; title: string; error?: { status: number; body: object } }> {
+  const mime = file.mimetype ?? "";
+  const originalName = (file.originalname ?? "").toLowerCase();
+  const title = file.originalname.replace(/\.[^.]+$/, "");
+
+  if (mime === "application/pdf" || originalName.endsWith(".pdf")) {
+    let pdfText: string | null = null;
+    let parseErr: string | null = null;
+    try {
+      const pdfMod = await import("pdf-parse/lib/pdf-parse.js");
+      const pdfParse: (buf: Buffer) => Promise<{ text: string }> =
+        (pdfMod as any).default ?? (pdfMod as any);
+      const result = await pdfParse(file.buffer);
+      pdfText = result?.text ?? null;
+    } catch (err) {
+      parseErr = err instanceof Error ? err.message : String(err);
+    }
+    if (parseErr !== null) {
+      return { text: "", title, error: { status: 422, body: { error: "corrupt_pdf", message: "This PDF could not be read. It may be corrupted or password-protected. Please try a different file, or copy and paste the text instead." } } };
+    }
+    if (!pdfText || !pdfText.trim()) {
+      return { text: "", title, error: { status: 422, body: { error: "scanned_pdf", message: "This PDF appears to contain only images (scanned document). PlainPath cannot read image-based PDFs — please copy and paste the text instead." } } };
+    }
+    return { text: pdfText, title };
+  }
+
+  if (
+    mime === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+    originalName.endsWith(".docx")
+  ) {
+    try {
+      const mammoth = await import("mammoth");
+      const result = await mammoth.extractRawText({ buffer: file.buffer });
+      const text = result.value ?? "";
+      if (!text.trim()) {
+        return { text: "", title, error: { status: 422, body: { error: "empty_docx", message: "This Word document appears to be empty or contains no readable text. Please paste the text instead." } } };
+      }
+      return { text, title };
+    } catch {
+      return { text: "", title, error: { status: 422, body: { error: "unreadable_docx", message: "Could not read this Word document. It may be corrupted. Please try re-saving it as a .docx or paste the text instead." } } };
+    }
+  }
+
+  if (mime === "text/plain" || originalName.endsWith(".txt")) {
+    const text = file.buffer.toString("utf-8");
+    if (!text.trim()) {
+      return { text: "", title, error: { status: 422, body: { error: "empty_txt", message: "This text file appears to be empty. Please check the file and try again." } } };
+    }
+    return { text, title };
+  }
+
+  return { text: "", title, error: { status: 400, body: { error: "unsupported_type", message: "Unsupported file type. Please upload a PDF (.pdf), Word document (.docx), or plain text (.txt) file." } } };
+}
+
+router.post("/trust-check", async (req, res) => {
+  const { text } = req.body;
+
+  if (!text || typeof text !== "string" || text.trim().length < 30) {
+    return res.status(400).json({ error: "too_short", message: "Please paste more of the document — PlainPath needs enough text to analyze for risk indicators." });
+  }
+  const wordCount = text.trim().split(/\s+/).filter((w: string) => w.length > 0).length;
+  if (wordCount < 15) {
+    return res.status(400).json({ error: "too_short", message: "Please paste more of the document. A sentence or two isn't enough — paste several paragraphs for an accurate risk assessment." });
+  }
+  if (text.length > 60000) {
+    return res.status(400).json({ error: "text_too_long", message: "Document text is too long. Please limit to 60,000 characters." });
+  }
+
+  try {
+    const ruleData = extractRuleData(text);
+    const riskScore = calculateRiskScore(ruleData);
+    const verdict = scoreToVerdict(riskScore);
+    const analysis = await runTrustCheckAnalysis(text, ruleData, riskScore, verdict);
+    return res.json({ analysis });
+  } catch (error) {
+    const isTimeout = error instanceof Error && (
+      error.name === "AbortError" ||
+      error.message.toLowerCase().includes("timeout") ||
+      error.message.toLowerCase().includes("timed out")
+    );
+    if (isTimeout) return res.status(504).json({ error: "analysis_timeout", message: "Analysis is taking too long. Please try again — shorter documents process faster." });
+    const msg = error instanceof Error ? error.message : "Unknown error";
+    const isService = msg.toLowerCase().includes("rate limit") || msg.toLowerCase().includes("quota") || msg.toLowerCase().includes("overloaded");
+    if (isService) return res.status(503).json({ error: "service_unavailable", message: "The analysis service is temporarily busy. Please wait a moment and try again." });
+    return res.status(500).json({ error: "trust_check_failed", message: "Trust check failed. Please try again." });
+  }
+});
+
+router.post("/trust-check-upload", upload.single("file"), async (req, res) => {
+  try {
+    const file = req.file;
+    if (!file) return res.status(400).json({ error: "no_file", message: "No file was uploaded." });
+
+    const extracted = await extractTextFromBuffer(file);
+    if (extracted.error) {
+      const { status, body } = extracted.error;
+      return res.status(status).json(body);
+    }
+
+    let text = extracted.text;
+    if (text.length > 60000) text = text.slice(0, 60000);
+
+    console.log("[trust-check-upload] extracted", text.length, "chars from", file.originalname);
+
+    try {
+      const ruleData = extractRuleData(text);
+      const riskScore = calculateRiskScore(ruleData);
+      const verdict = scoreToVerdict(riskScore);
+      const analysis = await runTrustCheckAnalysis(text, ruleData, riskScore, verdict);
+      return res.json({ analysis });
+    } catch (analysisError) {
+      const msg = analysisError instanceof Error ? analysisError.message : String(analysisError);
+      console.error("[trust-check-upload] analysis threw:", msg);
+      const isTimeout = analysisError instanceof Error && (
+        analysisError.name === "AbortError" ||
+        msg.toLowerCase().includes("timeout") ||
+        msg.toLowerCase().includes("timed out")
+      );
+      if (isTimeout) return res.status(504).json({ error: "analysis_timeout", message: "Analysis is taking too long. Please try again — shorter documents process faster." });
+      const isService = msg.toLowerCase().includes("rate limit") || msg.toLowerCase().includes("quota") || msg.toLowerCase().includes("overloaded");
+      if (isService) return res.status(503).json({ error: "service_unavailable", message: "The analysis service is temporarily busy. Please wait a moment and try again." });
+      return res.status(500).json({ error: "trust_check_failed", message: "Trust check failed. Please try again. If the problem continues, try pasting the document text instead." });
+    }
+  } catch (outerError) {
+    const msg = outerError instanceof Error ? outerError.message : String(outerError);
+    console.error("[trust-check-upload] unhandled error:", msg);
+    return res.status(500).json({ error: "upload_failed", message: "Upload failed. Please try again." });
+  }
+});
+
 router.get("/demo/:demoId", (req, res) => {
   const { demoId } = req.params;
   const demo = demoDocuments[demoId];
@@ -523,6 +928,18 @@ router.get("/demo/:demoId", (req, res) => {
     return res.status(404).json({
       error: "not_found",
       message: `Demo '${demoId}' not found. Available: event-permit, school-enrollment, grant-application`,
+    });
+  }
+  return res.json({ analysis: demo });
+});
+
+router.get("/trust-check-demo/:demoId", (req, res) => {
+  const { demoId } = req.params;
+  const demo = trustCheckDemoDocuments[demoId];
+  if (!demo) {
+    return res.status(404).json({
+      error: "not_found",
+      message: `Trust check demo '${demoId}' not found. Available: fake-utility-shutoff, fake-irs-collection, debt-collection-letter, legitimate-utility-notice`,
     });
   }
   return res.json({ analysis: demo });

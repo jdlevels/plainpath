@@ -1,11 +1,14 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
 import type { DocumentAnalysis } from "@workspace/api-client-react";
+import type { TrustCheckAnalysis } from "@/lib/trustCheckTypes";
 
 interface AnalysisContextType {
   analysis: DocumentAnalysis | null;
   documentTypeHint: string | null;
+  trustCheckAnalysis: TrustCheckAnalysis | null;
   setAnalysis: (analysis: DocumentAnalysis | null) => void;
   setDocumentTypeHint: (hint: string | null) => void;
+  setTrustCheckAnalysis: (analysis: TrustCheckAnalysis | null) => void;
   updateActionStep: (id: string, completed: boolean) => void;
   updateRequiredDoc: (id: string, obtained: boolean) => void;
   clearAnalysis: () => void;
@@ -16,6 +19,7 @@ const AnalysisContext = createContext<AnalysisContextType | undefined>(undefined
 export function AnalysisProvider({ children }: { children: React.ReactNode }) {
   const [analysis, setAnalysisState] = useState<DocumentAnalysis | null>(null);
   const [documentTypeHint, setDocumentTypeHintState] = useState<string | null>(null);
+  const [trustCheckAnalysis, setTrustCheckAnalysisState] = useState<TrustCheckAnalysis | null>(null);
 
   const setAnalysis = useCallback((newAnalysis: DocumentAnalysis | null) => {
     setAnalysisState(newAnalysis);
@@ -25,9 +29,14 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
     setDocumentTypeHintState(hint);
   }, []);
 
+  const setTrustCheckAnalysis = useCallback((newAnalysis: TrustCheckAnalysis | null) => {
+    setTrustCheckAnalysisState(newAnalysis);
+  }, []);
+
   const clearAnalysis = useCallback(() => {
     setAnalysisState(null);
     setDocumentTypeHintState(null);
+    setTrustCheckAnalysisState(null);
   }, []);
 
   const updateActionStep = useCallback((id: string, completed: boolean) => {
@@ -59,8 +68,10 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
       value={{
         analysis,
         documentTypeHint,
+        trustCheckAnalysis,
         setAnalysis,
         setDocumentTypeHint,
+        setTrustCheckAnalysis,
         updateActionStep,
         updateRequiredDoc,
         clearAnalysis,

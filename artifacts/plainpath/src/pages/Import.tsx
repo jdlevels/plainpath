@@ -5,7 +5,7 @@ import {
   UploadCloud, ArrowRight, Loader2, AlertCircle,
   ClipboardList, GraduationCap, Banknote, CheckCircle2, FileText, Type, File,
   ArrowLeft, Building2, Scale, Heart, FileSignature,
-  Mail, HelpCircle, ShieldCheck
+  Mail, HelpCircle, ShieldCheck, AlertTriangle, XCircle
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -38,6 +38,41 @@ const DEMOS = [
     icon: Banknote,
     color: "text-amber-500 dark:text-amber-400",
     bg: "bg-amber-50 dark:bg-amber-950/50",
+  },
+]
+
+const TRUST_CHECK_DEMOS = [
+  {
+    id: "fake-utility-shutoff",
+    title: "Fake Utility Shutoff Notice",
+    meta: "Gift card demand · 48-hr threat · High scam risk",
+    icon: AlertTriangle,
+    color: "text-red-500 dark:text-red-400",
+    bg: "bg-red-50 dark:bg-red-950/50",
+  },
+  {
+    id: "fake-irs-collection",
+    title: "Fake IRS Collection Letter",
+    meta: "Arrest threat · Bitcoin demand · High scam risk",
+    icon: XCircle,
+    color: "text-red-500 dark:text-red-400",
+    bg: "bg-red-50 dark:bg-red-950/50",
+  },
+  {
+    id: "debt-collection-letter",
+    title: "Debt Collection Notice",
+    meta: "Missing details · Western Union · Suspicious",
+    icon: Scale,
+    color: "text-amber-500 dark:text-amber-400",
+    bg: "bg-amber-50 dark:bg-amber-950/50",
+  },
+  {
+    id: "legitimate-utility-notice",
+    title: "Legitimate Utility Notice",
+    meta: "Control document · Standard notice · Likely legitimate",
+    icon: CheckCircle2,
+    color: "text-green-500 dark:text-green-400",
+    bg: "bg-green-50 dark:bg-green-950/50",
   },
 ]
 
@@ -196,7 +231,7 @@ export default function Import() {
   const [, setLocation] = useLocation()
   const searchString = useSearch()
   const isTrustCheck = new URLSearchParams(searchString).get("mode") === "trust-check"
-  const { setAnalysis, setDocumentTypeHint } = useAnalysisContext()
+  const { setAnalysis, setDocumentTypeHint, setTrustCheckAnalysis } = useAnalysisContext()
 
   useEffect(() => {
     document.title = isTrustCheck
@@ -283,6 +318,86 @@ export default function Import() {
     setIsAnalyzing(true)
     setStep("analyzing")
 
+    // ── Trust Check mode: route to dedicated endpoints ──────────────────────
+    if (isTrustCheck) {
+      if (p.kind === "text") {
+        try {
+          const apiBase = getApiBaseUrl()
+          const res = await fetch(`${apiBase}/api/documents/trust-check`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: p.text }),
+          })
+          let data: any = {}
+          try { data = await res.json() } catch { /* non-JSON */ }
+          if (!res.ok) {
+            const msg = data?.message || (res.status === 503
+              ? "The analysis service is temporarily busy. Please wait a moment and try again."
+              : res.status === 504
+              ? "Analysis is taking too long. Please try again — shorter documents process faster."
+              : "Trust check failed. Please try again.")
+            setPasteError(msg)
+            setIsAnalyzing(false)
+            setStep("input")
+            return
+          }
+          setTrustCheckAnalysis(data.analysis)
+          setLocation("/trust-check")
+        } catch {
+          setPasteError("Network error. Please check your connection and try again.")
+          setIsAnalyzing(false)
+          setStep("input")
+        }
+      } else {
+        const formData = new FormData()
+        formData.append("file", p.file)
+        try {
+          const apiBase = getApiBaseUrl()
+          const res = await fetch(`${apiBase}/api/documents/trust-check-upload`, { method: "POST", body: formData })
+          let data: any = {}
+          try { data = await res.json() } catch { /* non-JSON */ }
+          if (!res.ok) {
+            const msg = data?.message || (res.status === 413
+              ? "File is too large. Maximum allowed size is 20 MB."
+              : res.status === 422
+              ? "Could not extract text from this file. If it's a scanned PDF, please copy and paste the text instead."
+              : res.status === 503
+              ? "The analysis service is temporarily busy. Please wait a moment and try again."
+              : res.status === 504
+              ? "Analysis is taking too long. Please try again — shorter documents process faster."
+              : "Upload failed. Please try again. If the problem continues, try pasting the document text instead.")
+            setUploadError(msg)
+            setUploadedFile(null)
+            if (fileInputRef.current) fileInputRef.current.value = ""
+            setIsAnalyzing(false)
+            setStep("input")
+            setMode("upload")
+            return
+          }
+          if (!data?.analysis) {
+            setUploadError("Trust check returned an unexpected result. Please try again.")
+            setUploadedFile(null)
+            if (fileInputRef.current) fileInputRef.current.value = ""
+            setIsAnalyzing(false)
+            setStep("input")
+            setMode("upload")
+            return
+          }
+          setTrustCheckAnalysis(data.analysis)
+          setLocation("/trust-check")
+        } catch {
+          setUploadError("Network error. Please check your connection and try again.")
+          setUploadedFile(null)
+          if (fileInputRef.current) fileInputRef.current.value = ""
+          setIsAnalyzing(false)
+          setStep("input")
+          setMode("upload")
+        }
+      }
+      return
+    }
+
+    // ── Standard analyze mode ────────────────────────────────────────────────
     if (p.kind === "text") {
       mutate(
         { data: { text: p.text, documentTypeHint: docTypeLabel } as any },
@@ -293,7 +408,6 @@ export default function Import() {
             const status = err?.status ?? 0
             let friendly: string
             if (serverMessage) {
-              // Always prefer the server's own message — it's already user-friendly
               friendly = serverMessage
             } else if (status === 503) {
               friendly = "The analysis service is temporarily busy. Please wait a moment and try again."
@@ -577,7 +691,7 @@ export default function Import() {
                             style={{ touchAction: "manipulation" }}
                             className="w-full h-14 text-base rounded-xl"
                           >
-                            Generate Action Plan <ArrowRight className="ml-2 w-4 h-4" />
+                            {isTrustCheck ? "Check Document" : "Generate Action Plan"} <ArrowRight className="ml-2 w-4 h-4" />
                           </Button>
 
                           <p className="text-[11px] text-center text-muted-foreground/50">
@@ -692,36 +806,66 @@ export default function Import() {
               <div className="flex-1 h-px bg-border/50" />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
-              {DEMOS.map((demo, i) => (
-                <motion.button
-                  key={demo.id}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.07 + 0.2 }}
-                  whileHover={{ y: -3 }}
-                  onClick={() => setLocation(`/analyze?demo=${demo.id}`)}
-                  style={{ touchAction: "manipulation" }}
-                  className="text-left group"
-                >
-                  <Card className="p-3.5 sm:p-4 h-full border-border/40 hover:border-primary/40 active:border-primary/40 hover:shadow-lg transition-all bg-card rounded-xl shadow-sm">
-                    <div className="flex sm:block items-center gap-3 sm:gap-0">
-                      <div className={`w-9 h-9 rounded-xl ${demo.bg} flex items-center justify-center sm:mb-3 shrink-0`}>
-                        <demo.icon className={`w-4 h-4 ${demo.color}`} />
+            {isTrustCheck ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
+                {TRUST_CHECK_DEMOS.map((demo, i) => (
+                  <motion.button
+                    key={demo.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.07 + 0.2 }}
+                    whileHover={{ y: -3 }}
+                    onClick={() => setLocation(`/trust-check?demo=${demo.id}`)}
+                    style={{ touchAction: "manipulation" }}
+                    className="text-left group"
+                  >
+                    <Card className="p-3.5 sm:p-4 h-full border-border/40 hover:border-primary/40 active:border-primary/40 hover:shadow-lg transition-all bg-card rounded-xl shadow-sm">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-9 h-9 rounded-xl ${demo.bg} flex items-center justify-center shrink-0`}>
+                          <demo.icon className={`w-4 h-4 ${demo.color}`} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-sm leading-snug group-hover:text-primary transition-colors mb-0.5">{demo.title}</p>
+                          <p className="text-[11px] text-muted-foreground">{demo.meta}</p>
+                        </div>
+                        <ArrowRight className="w-4 h-4 text-muted-foreground/40 shrink-0" />
                       </div>
-                      <div className="flex-1 min-w-0 sm:block">
-                        <p className="font-bold text-sm leading-snug group-hover:text-primary transition-colors mb-0.5 sm:mb-1">{demo.title}</p>
-                        <p className="text-[11px] text-muted-foreground">{demo.meta}</p>
+                    </Card>
+                  </motion.button>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
+                {DEMOS.map((demo, i) => (
+                  <motion.button
+                    key={demo.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.07 + 0.2 }}
+                    whileHover={{ y: -3 }}
+                    onClick={() => setLocation(`/analyze?demo=${demo.id}`)}
+                    style={{ touchAction: "manipulation" }}
+                    className="text-left group"
+                  >
+                    <Card className="p-3.5 sm:p-4 h-full border-border/40 hover:border-primary/40 active:border-primary/40 hover:shadow-lg transition-all bg-card rounded-xl shadow-sm">
+                      <div className="flex sm:block items-center gap-3 sm:gap-0">
+                        <div className={`w-9 h-9 rounded-xl ${demo.bg} flex items-center justify-center sm:mb-3 shrink-0`}>
+                          <demo.icon className={`w-4 h-4 ${demo.color}`} />
+                        </div>
+                        <div className="flex-1 min-w-0 sm:block">
+                          <p className="font-bold text-sm leading-snug group-hover:text-primary transition-colors mb-0.5 sm:mb-1">{demo.title}</p>
+                          <p className="text-[11px] text-muted-foreground">{demo.meta}</p>
+                        </div>
+                        <ArrowRight className="w-4 h-4 text-muted-foreground/40 sm:hidden shrink-0" />
                       </div>
-                      <ArrowRight className="w-4 h-4 text-muted-foreground/40 sm:hidden shrink-0" />
-                    </div>
-                    <div className="hidden sm:flex items-center gap-1 mt-2.5 text-[11px] font-semibold text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-                      Open instantly <ArrowRight className="w-3 h-3" />
-                    </div>
-                  </Card>
-                </motion.button>
-              ))}
-            </div>
+                      <div className="hidden sm:flex items-center gap-1 mt-2.5 text-[11px] font-semibold text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                        Open instantly <ArrowRight className="w-3 h-3" />
+                      </div>
+                    </Card>
+                  </motion.button>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -745,7 +889,7 @@ export default function Import() {
               style={{ touchAction: "manipulation" }}
               className="w-full h-14 text-base rounded-xl shadow-lg"
             >
-              Generate Action Plan <ArrowRight className="ml-2 w-4 h-4" />
+              {isTrustCheck ? "Check Document" : "Generate Action Plan"} <ArrowRight className="ml-2 w-4 h-4" />
             </Button>
           </motion.div>
         )}
