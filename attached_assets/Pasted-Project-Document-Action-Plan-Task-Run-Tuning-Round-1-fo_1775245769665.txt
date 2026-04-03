@@ -1,0 +1,141 @@
+Project: Document Action Plan
+Task: Run Tuning Round 1 for Document Trust Check based on Pilot Batch 1 findings.
+
+Goal:
+Improve the Trust Check pilot baseline using the recurring patterns identified in Pilot Batch 1, without adding new major features or redesigning the UI.
+
+Pilot Batch 1 findings to act on:
+1. Authenticity Risk is slightly conservative on some mid-tier scam combinations
+2. Document Risk is currently too loan/financing-specific
+3. AI structural findings can occasionally contradict rule-based evidence
+
+Critical constraints:
+- Do NOT add major new features
+- Do NOT redesign the UI
+- Do NOT activate paid features
+- Do NOT restore subscription gating
+- Do NOT add security rollout
+- Do NOT build the trusted-entity/business verification layer yet
+- Make only focused tuning changes tied directly to Pilot Batch 1 findings
+
+-----------------------------------
+TUNING PRIORITIES
+-----------------------------------
+
+1. Expand Document Risk scope beyond financing contracts
+Current issue:
+Document Risk performs well for loans/finance contracts but misses harmful terms in other consumer agreements such as gym memberships, subscriptions, service agreements, and cancellation-heavy contracts.
+
+Add/support Document Risk detection for:
+- early termination fees
+- administrative cancellation fees
+- recurring billing lock-ins
+- auto-renewal traps
+- notice-window traps
+- cancellation barriers
+- collection/reporting threats
+- one-sided termination remedies
+- high penalty clauses outside loan contexts
+- subscription/service contract coercive terms
+
+Goal:
+Document Risk should work across a broader range of consumer-harm documents, not only financing agreements.
+
+2. Slightly recalibrate mid-tier authenticity scoring
+Current issue:
+Some mid-tier scam combinations appear 5–10 points too conservative, especially where multiple suspicious signals combine.
+
+Review weighted combinations involving:
+- suspicious payment methods
+- anti-verification language
+- payment pressure
+- issuer inconsistency
+- missing or weak reference support
+- structural scam cues
+
+Goal:
+Slightly increase confidence for these combinations where justified, without causing legitimate documents to become false positives.
+
+Do NOT overcorrect.
+Preserve:
+- low false positives on legitimate documents
+- clean scam/legitimate separation
+
+3. Reduce AI structural contradiction against rule-based evidence
+Current issue:
+AI structural findings can occasionally contradict confirmed rule evidence (example: claiming no traceable reference number when one exists).
+
+Required tuning:
+- strengthen the prompt and/or post-processing so AI structural findings defer to rule-confirmed evidence
+- if rule-based checks confirm an account/reference number, clear sender/contact field, or similar traceable element, AI should not casually negate it
+- prefer evidence-grounded structural findings only
+
+Goal:
+Structural Findings should remain specific, useful, and non-contradictory.
+
+-----------------------------------
+VALIDATION SET FOR TUNING ROUND 1
+-----------------------------------
+
+Re-test at minimum:
+1. fake utility shutoff notice
+2. fake IRS/government-style warning
+3. fake debt collection letter
+4. realistic fictional auto loan contract
+5. legitimate utility notice
+6. harsh gym demand / membership contract
+7. one ordinary low-risk legitimate document
+8. one pasted scam-style text sample
+9. one pasted legitimate text sample
+
+-----------------------------------
+VALIDATE ALL OF THE FOLLOWING
+-----------------------------------
+
+For each document, review:
+- primary verdict
+- authenticity risk
+- document risk
+- verification confidence
+- scam indicators
+- contract/document risk terms
+- structural findings
+- metadata findings where applicable
+- safe next steps
+
+Specific success checks:
+- gym/subscription/service-style harmful terms now influence Document Risk meaningfully
+- mid-tier scam documents are not under-scored
+- legitimate documents remain clean
+- AI structural findings do not contradict rule-confirmed evidence
+- pasted-text behavior remains fair
+- no metadata section appears on pasted text
+- standard Analyze a Document mode remains untouched
+
+-----------------------------------
+OUTPUT REQUIRED AFTER COMPLETION
+-----------------------------------
+
+Return:
+1. exact files changed
+2. what was tuned in each of the 3 priority areas
+3. whether thresholds, rule weights, prompt wording, or post-processing changed
+4. before/after behavior for:
+   - debt collection letter
+   - Amazon scam / mid-tier scam sample
+   - harsh gym demand / membership contract
+5. screenshots of:
+   - one improved mid-tier scam result
+   - one improved non-loan document-risk result
+   - one legitimate low-risk result
+6. summary of whether:
+   - Tuning Round 1 is complete
+   - pilot baseline remains stable
+   - the app is still ready for external reviewer use
+
+Success criteria:
+- Document Risk is broader than loan/finance contracts
+- mid-tier scams are slightly better calibrated
+- structural findings respect rule-confirmed evidence
+- no meaningful increase in false positives
+- the app remains stable and pilot-friendly
