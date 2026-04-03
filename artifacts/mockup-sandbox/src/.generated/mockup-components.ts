@@ -2,6 +2,9 @@
 type ModuleMap = Record<string, () => Promise<Record<string, unknown>>>;
 export const modules: ModuleMap = {
   "./components/mockups/animated-bg/AuroraMesh.tsx": () => import("../components/mockups/animated-bg/AuroraMesh.tsx"),
+  "./components/mockups/animated-bg/AuroraMeshForest.tsx": () => import("../components/mockups/animated-bg/AuroraMeshForest.tsx"),
+  "./components/mockups/animated-bg/AuroraMeshGraphite.tsx": () => import("../components/mockups/animated-bg/AuroraMeshGraphite.tsx"),
+  "./components/mockups/animated-bg/AuroraMeshWarm.tsx": () => import("../components/mockups/animated-bg/AuroraMeshWarm.tsx"),
   "./components/mockups/animated-bg/GridPulse.tsx": () => import("../components/mockups/animated-bg/GridPulse.tsx"),
   "./components/mockups/animated-bg/ParticleFlow.tsx": () => import("../components/mockups/animated-bg/ParticleFlow.tsx")
 };
