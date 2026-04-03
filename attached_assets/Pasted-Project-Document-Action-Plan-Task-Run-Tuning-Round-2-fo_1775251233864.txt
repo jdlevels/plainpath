@@ -1,0 +1,142 @@
+Project: Document Action Plan
+Task: Run Tuning Round 2 for Document Trust Check based on repeated patterns confirmed in Controlled External Pilot Batch 2.
+
+Goal:
+Address the two recurring post-tuning patterns now strong enough to justify another tuning pass, while preserving the stable pilot baseline and avoiding unnecessary scope creep.
+
+Confirmed repeated patterns:
+1. Document Risk underscoring on non-financing service/subscription contracts
+2. Verification Confidence too conservative on legitimate multi-identifier records
+
+Critical constraints:
+- Do NOT add new major features
+- Do NOT redesign the UI
+- Do NOT activate paid features
+- Do NOT restore subscription gating
+- Do NOT add security rollout
+- Do NOT build trusted-entity verification yet
+- Keep the current three-score model intact
+- Make only targeted tuning changes tied directly to the confirmed repeated patterns
+
+-----------------------------------
+TUNING PRIORITY 1
+-----------------------------------
+
+Broaden Document Risk for non-financing service/subscription contracts.
+
+Current problem:
+Documents with multiple consumer-harm terms outside loan/finance contexts are still scoring too low on Document Risk.
+
+Examples already identified:
+- FitLife Gym Membership
+- ConnectPro Telecom
+
+Add/strengthen Document Risk handling for:
+- early termination fees
+- liquidated damages
+- auto-renewal clauses
+- long notice-window traps
+- cancellation barriers
+- administrative termination fees
+- suspension without notice
+- equipment/return fees
+- one-sided service remedies
+- arbitration/class-action waiver
+- recurring billing lock-ins
+
+Goal:
+These documents should no longer sit in LOW Document Risk when they contain 4–6 meaningful consumer-harm terms.
+
+-----------------------------------
+TUNING PRIORITY 2
+-----------------------------------
+
+Raise Verification Confidence for legitimate multi-identifier records when strong evidence is present.
+
+Current problem:
+Legitimate documents with multiple identifiers and coherent institutional details are remaining in PARTIAL confidence too often.
+
+Examples already identified:
+- Parkview Lease Renewal
+- Verizon Phone Bill
+- BCBS EOB
+
+Increase positive confidence weighting when the document contains:
+- multiple internal identifiers
+- consistent dates and amounts
+- institutional domain
+- office phone / standardized contact details
+- coherent sender/issuer identity
+- plausible document structure
+- no major contradictions
+
+Goal:
+Legitimate records with strong internal consistency should move from PARTIAL toward GOOD where justified.
+
+-----------------------------------
+VALIDATION SET
+-----------------------------------
+
+Re-test at minimum:
+1. FitLife Gym Membership
+2. ConnectPro Telecom
+3. Parkview Lease Renewal
+4. Verizon Phone Bill
+5. BCBS EOB
+6. one obvious scam result
+7. one financing contract with high document risk
+8. one low-risk legitimate utility/bill control
+9. one pasted scam text
+10. one pasted legitimate text
+
+-----------------------------------
+VALIDATION REQUIREMENTS
+-----------------------------------
+
+For each document, review:
+- primary verdict
+- authenticity risk
+- document risk
+- verification confidence
+- scam indicators
+- contract/document risk terms
+- structural findings
+- metadata findings where applicable
+
+Success checks:
+- non-financing service/subscription contracts no longer under-score on Document Risk
+- legitimate multi-identifier records no longer under-score on Verification Confidence
+- scam documents remain high on Authenticity Risk
+- financing contracts remain correctly high on Document Risk
+- no meaningful increase in false positives
+- no regression in pasted-text handling
+- no metadata section appears on pasted text
+- standard Analyze a Document mode remains untouched
+
+-----------------------------------
+OUTPUT REQUIRED
+-----------------------------------
+
+Return:
+1. exact files changed
+2. what was tuned for each of the 2 priority patterns
+3. whether thresholds, weights, prompts, or post-processing changed
+4. before/after behavior for:
+   - FitLife Gym Membership
+   - ConnectPro Telecom
+   - Parkview Lease Renewal
+   - Verizon Phone Bill
+   - BCBS EOB
+5. screenshots of:
+   - one improved non-financing high document-risk result
+   - one improved legitimate high-confidence result
+   - one scam result confirming no regression
+6. final statement:
+   - TUNING ROUND 2 COMPLETE
+   - or TUNING ROUND 2 NEEDS ONE FOLLOW-UP FIX
+
+Success criteria:
+- the two repeated pilot patterns are meaningfully improved
+- the pilot baseline remains stable
+- no new false-positive pattern is introduced
+- the three-score model remains intact

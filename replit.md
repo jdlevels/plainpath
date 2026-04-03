@@ -66,9 +66,16 @@ Second product mode: evaluates documents across three independent risk dimension
 ### Trust Check demos (5 total):
 - `fake-utility-shutoff` — auth=87, doc=0, conf=0; 3 structural findings
 - `fake-irs-collection` — auth=96, doc=0, conf=12; 2 structural findings
-- `debt-collection-letter` — auth=55, doc=0, conf=22; 2 structural findings
+- `debt-collection-letter` — auth=79, doc=0, conf=8; verdict: "High scam risk"; updated in Tuning Round 2
 - `legitimate-utility-notice` — auth=8, doc=0, conf=75; no structural findings
 - `auto-loan-contract` — auth=38, doc=86, conf=55; 9 contract terms found; 2 metadata findings (Photoshop-produced, modified 43 days post-creation)
+
+### Scoring Tuning History:
+**Tuning Round 2 (completed):**
+- `calculateDocumentRiskScore()`: expanded `contractRiskPatterns` (class-action hyphenated, service suspension, equipment return fee, long cancellation notice, unilateral price adjustment, recurring renewal cycle); weight increases (ETF 12→14, auto-renewal 8→10, liquidated damages 10→12, unilateral termination 12→14)
+- `calculateVerificationConfidence()`: expanded identifier regex (claim/group/statement #), multi-identifier compound bonus (+5/+10), bare domain detection (+5), institutional contact bonus (+5), "THIS IS NOT A BILL" institutional language bonus, wider payment channel matching
+- Validated improvements: FitLife Doc 43→59, ConnectPro Doc 24→66, Parkview Conf 68→88, Verizon Conf 52→72, BCBS EOB Conf 52→77; all scam controls stable (IRS Auth:96, Microsoft Auth:88)
+- Calibration DB: 29 records across Batches 1 & 2; review at `/pilot-feedback` (unlisted)
 
 ### Trust Check routes:
 - `POST /api/documents/trust-check` — text paste analysis

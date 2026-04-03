@@ -657,6 +657,29 @@ function extractRuleData(text: string): ExtractedRuleData {
     ["unilateral right to terminate", "Unilateral termination right"],
     ["reserves the right to terminate", "Unilateral termination right"],
     ["sole and absolute discretion", "Unilateral authority clause"],
+    // ── Non-financing consumer-harm terms (Tuning Round 2) ──────────────────
+    // Class-action waiver — hyphenated variant (Tuning Round 2)
+    ["class-action", "Class-action waiver"],
+    // Service suspension without notice — unilateral provider right
+    ["may suspend service", "Service suspension without notice"],
+    ["suspend service without notice", "Service suspension without notice"],
+    ["suspend without notice", "Service suspension without notice"],
+    // Equipment non-return / return fees
+    ["non-return fee", "Equipment non-return fee"],
+    ["equipment not returned", "Equipment return requirement"],
+    // Long advance cancellation notice requirements — renewal traps
+    ["days before renewal", "Long cancellation notice requirement"],
+    ["days prior to renewal", "Long cancellation notice requirement"],
+    ["prior written notice of cancellation", "Advance cancellation notice requirement"],
+    ["days written notice", "Advance cancellation notice requirement"],
+    // Unilateral price or term adjustment rights
+    ["reserves the right to adjust", "Unilateral price/term adjustment right"],
+    ["right to adjust pricing", "Unilateral price/term adjustment right"],
+    ["may adjust pricing", "Unilateral price/term adjustment right"],
+    // Recurring successive renewal cycles — lock-in structures
+    ["successive 12-month", "Recurring renewal cycle"],
+    ["successive one-year", "Recurring renewal cycle"],
+    ["successive annual", "Recurring renewal cycle"],
   ];
   const seenContractLabels = new Set<string>();
   const contractRiskTerms: string[] = [];
@@ -805,20 +828,28 @@ function calculateDocumentRiskScore(contractRiskTerms: string[]): number {
     "Wage garnishment risk": 10,
     "Negative amortization risk": 14,
     "Prepayment penalty": 7,
-    // Non-financing consumer-harm terms (Tuning Round 1)
-    "Early termination fee": 12,
+    // Non-financing consumer-harm terms (Tuning Round 1, weights updated in Round 2)
+    "Early termination fee": 14,
     "Cancellation fee": 8,
-    "Auto-renewal clause": 8,
-    "Continuous auto-renewal": 9,
+    "Auto-renewal clause": 10,
+    "Continuous auto-renewal": 11,
     "Interest accrual clause": 10,
     "Compounded APR interest accrual": 12,
     "Compounded interest accrual": 10,
     "Credit bureau reporting threat": 11,
     "Collections referral clause": 10,
     "Non-refundable clause": 7,
-    "Liquidated damages clause": 12,
-    "Unilateral termination right": 9,
+    "Liquidated damages clause": 13,
+    "Unilateral termination right": 11,
     "Unilateral authority clause": 8,
+    // Non-financing consumer-harm terms (Tuning Round 2)
+    "Service suspension without notice": 9,
+    "Equipment non-return fee": 7,
+    "Equipment return requirement": 6,
+    "Long cancellation notice requirement": 8,
+    "Advance cancellation notice requirement": 8,
+    "Unilateral price/term adjustment right": 8,
+    "Recurring renewal cycle": 7,
   };
   let total = 0;
   for (const term of contractRiskTerms) {
@@ -835,34 +866,89 @@ function calculateVerificationConfidence(
 ): number {
   let conf = 40;
 
-  // Positive: specific traceable reference identifier (broad pattern matches "Account: X", "Ref #X", etc.)
+  // Positive: specific traceable reference identifier.
+  // Expanded in Tuning Round 2 to include claim #, group #, statement #, record # (EOB/insurance/billing docs).
+  // Also tightened the trailing match from [\w\-]+ to [\w\-]{3,} to prevent short common words
+  // (e.g. "to", "at") from registering as false identifier values.
   if (
-    /\b(account\s*(number|#|no\.?)|case\s*(number|#|no\.?)|reference\s*(number|#|no\.?)|invoice\s*(number|#|no\.?)|confirmation\s*(number|#|no\.?)|member\s*(account|number|#|id)|loan\s*(number|#|no\.?)|policy\s*(number|#|no\.?))\s*:?\s*[\w\-]+/i.test(text)
+    /\b(account\s*(number|#|no\.?)|case\s*(number|#|no\.?)|reference\s*(number|#|no\.?)|invoice\s*(number|#|no\.?)|confirmation\s*(number|#|no\.?)|claim\s*(number|#|no\.?)|group\s*(number|#|no\.?)|statement\s*(number|#|no\.?)|record\s*(number|#|no\.?)|member\s*(account|number|#|id)|loan\s*(number|#|no\.?)|policy\s*(number|#|no\.?))\s*:?\s*[\w\-]{3,}/i.test(text)
     || /\bAccount\s*:\s*[\w\-]{3,}/i.test(text)
     || /\bRef(?:erence)?\s*(?:no\.?|#|:)\s*[\w\-]{3,}/i.test(text)
   ) conf += 12;
+
   // Positive: contract-specific identifier (VIN, loan #, policy #)
   if (/\b(VIN|vehicle\s+identification\s+number|loan\s*(number|#|no\.?)|policy\s*(number|#|no\.?))\s*:?\s*[\w\-]+/i.test(text)) conf += 10;
+
+  // Positive: multi-identifier compound bonus (Tuning Round 2).
+  // Genuine institutional records (EOBs, loan contracts, insurance policies) typically carry multiple
+  // distinct numbered identifiers. Counting distinct types rewards internal consistency.
+  const identifierTypeMatchers: RegExp[] = [
+    /\b(account|acct)\.?\s*(number|#|no\.?)\s*:?\s*[\w\-]{3,}/i,
+    /\b(claim|case)\s*(number|#|no\.?)\s*:?\s*[\w\-]{3,}/i,
+    /\b(member|plan)\s*(id|number|#|no\.?)\s*:?\s*[\w\-]{3,}/i,
+    /\b(group|policy)\s*(number|#|no\.?)\s*:?\s*[\w\-]{3,}/i,
+    /\b(reference|invoice|confirmation|statement|record)\s*(number|#|no\.?)\s*:?\s*[\w\-]{3,}/i,
+    /\b(loan|mortgage)\s*(number|#|no\.?)\s*:?\s*[\w\-]{3,}/i,
+    /\b(VIN|vehicle\s+identification\s+number)\b/i,
+  ];
+  const identifierTypeCount = identifierTypeMatchers.filter((r) => r.test(text)).length;
+  if (identifierTypeCount >= 3) conf += 10;
+  else if (identifierTypeCount >= 2) conf += 5;
+
   // Positive: named recipient (specific person, not generic)
   if (/\bdear\s+(?:(mr|ms|mrs|dr|prof)\.?\s+)?[A-Z][a-z]+\s+[A-Z][a-z]+/i.test(text)) conf += 8;
   // Positive: named individual in contract context (BORROWER: Name, TENANT: Name, etc.)
   if (/\b(borrower|buyer|purchaser|lessee|tenant|subscriber|client)\s*:\s*[A-Z][a-z]+\s+[A-Z][a-z]/i.test(text)) conf += 5;
+
   // Positive: government domain in email or URL
   if (ruleData.emails.some((e) => /\.gov$/i.test(e)) || ruleData.urls.some((u) => /\.gov\b/i.test(u))) conf += 20;
-  // Positive: URL present without payment red flags
+
+  // Positive: URL present (https://) without payment red flags
   if (ruleData.urls.length > 0 && ruleData.paymentRedFlags.length === 0) conf += 5;
+
+  // Positive: bare domain reference (Tuning Round 2).
+  // Many legitimate documents (phone bills, EOBs, utility notices) cite domains without https://.
+  // The URL extractor only captures https:// URLs, so bare domains were previously unrecognised.
+  const bareDomainsFound = (text.match(/\b[A-Za-z0-9\-]+\.(com|org|gov|net|edu)(\/[\w\-\/\.]+)?\b/g) || [])
+    .filter((d) => !d.includes("@"));
+  if (bareDomainsFound.length > 0 && ruleData.paymentRedFlags.length === 0) conf += 5;
+
+  // Positive: institutional contact structure — both a phone number and a URL/domain present (Tuning Round 2).
+  // Having two independent channels (phone + web) is characteristic of real institutions.
+  const hasDomain = ruleData.urls.length > 0 || bareDomainsFound.length > 0;
+  if (ruleData.phones.length > 0 && hasDomain && ruleData.paymentRedFlags.length === 0) conf += 5;
+
   // Positive: physical street address
   if (/\b\d{1,5}\s+[A-Za-z]+\s+(street|st|avenue|ave|boulevard|blvd|drive|dr|road|rd|lane|ln|way|court|ct|place|pl|suite|ste)\b/i.test(text)) conf += 8;
+
   // Positive: named signatory
   if (/\b(sincerely|regards|yours\s+truly)\b/i.test(lower) && /[A-Z][a-z]+\s+[A-Z][a-z]+/.test(text)) conf += 5;
-  // Positive: multiple standard payment channels
-  const standardChannels = (lower.match(/\b(online\s+portal|official\s+website|check|mail\s*(?:in|-in)?|in[\s\-]person|ach|automated\s+phone)\b/g) || []);
-  if (standardChannels.length >= 2) conf += 8;
+
+  // Positive: multiple standard payment / contact channels (Tuning Round 2).
+  // Wider set captures real billing documents (AutoPay, App, Online, automated phone, etc.)
+  const channelMatchers: RegExp[] = [
+    /\bonline\b/i,
+    /auto[\s\-]?pay\b/i,
+    /\bapp\b/i,
+    /in[\s\-]person\b/i,
+    /mail[\s\-]in\b|mail\s+a\s+check\b/i,
+    /\bACH\b/,
+    /automated\s+(phone|payment|line)\b/i,
+    /official\s+website\b/i,
+    /online\s+portal\b/i,
+  ];
+  const channelCount = channelMatchers.filter((r) => r.test(text)).length;
+  if (channelCount >= 3) conf += 10;
+  else if (channelCount >= 2) conf += 5;
+
+  // Positive: institutional self-identification language (Tuning Round 2).
+  // EOBs, statements, and official records often include explicit non-payment-demand language.
+  if (/this\s+is\s+not\s+a\s+bill|explanation\s+of\s+benefits|statement\s+of\s+account|official\s+record/i.test(lower)) conf += 5;
 
   // Negative: generic greeting
   if (/\bdear\s+(valued\s+)?(customer|resident|account\s+holder|homeowner|recipient)|to\s+whom\s+it\s+may\s+concern/i.test(lower)) conf -= 10;
   // Negative: no contact info at all
-  if (ruleData.phones.length === 0 && ruleData.emails.length === 0 && ruleData.urls.length === 0) conf -= 12;
+  if (ruleData.phones.length === 0 && ruleData.emails.length === 0 && ruleData.urls.length === 0 && bareDomainsFound.length === 0) conf -= 12;
   // Negative: suspicious payment methods
   if (ruleData.paymentRedFlags.length > 0) conf -= 15;
   // Negative: high authenticity risk
