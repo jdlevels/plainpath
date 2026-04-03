@@ -154,17 +154,17 @@ export default function Home() {
         </div>
       </div>
 
-      <main className="flex-1 flex flex-col items-center pb-24 px-4">
+      <main className="flex-1 flex flex-col items-center pb-36 px-4">
 
         {/* ── Document types strip ──────────────────────────── */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="w-full max-w-5xl mb-24"
+          className="w-full max-w-6xl mb-32 pt-16"
         >
-          <p className="text-center text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-6">Works with all kinds of confusing paperwork</p>
-          <div className="flex flex-wrap justify-center gap-3">
+          <p className="text-center text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-8">Works with all kinds of confusing paperwork</p>
+          <div className="flex flex-wrap justify-center gap-4">
             {DOCUMENT_FAMILIES.map((f, i) => (
               <motion.div
                 key={i}
@@ -172,25 +172,25 @@ export default function Home() {
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.05 }}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-card border border-border/60 shadow-sm hover:shadow-md hover:border-primary/30 transition-all cursor-default"
+                className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-card border border-border/60 shadow-sm hover:shadow-md hover:border-primary/30 transition-all cursor-default"
               >
-                <div className={`w-7 h-7 rounded-lg ${f.bg} flex items-center justify-center`}>
-                  <f.icon className={`w-3.5 h-3.5 ${f.color}`} />
+                <div className={`w-9 h-9 rounded-xl ${f.bg} flex items-center justify-center`}>
+                  <f.icon className={`w-4.5 h-4.5 ${f.color}`} />
                 </div>
-                <span className="text-sm font-semibold text-foreground/80">{f.label}</span>
+                <span className="text-base font-semibold text-foreground/80">{f.label}</span>
               </motion.div>
             ))}
           </div>
         </motion.div>
 
         {/* ── How it works ──────────────────────────────────── */}
-        <section className="max-w-6xl w-full mb-28">
-          <div className="text-center mb-14">
+        <section className="max-w-7xl w-full mb-36">
+          <div className="text-center mb-16">
             <motion.p
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
-              className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3"
+              className="text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-4"
             >
               How it works
             </motion.p>
@@ -198,15 +198,14 @@ export default function Home() {
               initial={{ opacity: 0, y: 12 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="text-3xl md:text-4xl font-display font-bold"
+              className="text-4xl md:text-5xl font-display font-bold"
             >
               From confusing to clear in seconds
             </motion.h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
-            {/* connector line */}
-            <div className="hidden md:block absolute top-10 left-[calc(16.67%+1rem)] right-[calc(16.67%+1rem)] h-px bg-gradient-to-r from-border via-primary/30 to-border" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+            <div className="hidden md:block absolute top-12 left-[calc(16.67%+1.5rem)] right-[calc(16.67%+1.5rem)] h-px bg-gradient-to-r from-border via-primary/30 to-border" />
 
             {HOW_IT_WORKS.map((step, i) => (
               <motion.div
@@ -217,15 +216,15 @@ export default function Home() {
                 transition={{ delay: i * 0.12 }}
               >
                 <Card className="h-full bg-card border-border/50 shadow-md hover:shadow-xl transition-shadow rounded-2xl overflow-hidden">
-                  <div className="p-7">
-                    <div className="flex items-center gap-4 mb-6">
-                      <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-sm shadow-primary/30 relative z-10">
-                        <step.icon className="w-5 h-5 text-white" />
+                  <div className="p-9">
+                    <div className="flex items-center gap-5 mb-8">
+                      <div className="w-13 h-13 rounded-2xl bg-primary flex items-center justify-center shadow-sm shadow-primary/30 relative z-10 w-[52px] h-[52px]">
+                        <step.icon className="w-6 h-6 text-white" />
                       </div>
-                      <span className="text-4xl font-display font-bold text-foreground/10 leading-none select-none">{step.step}</span>
+                      <span className="text-6xl font-display font-bold text-foreground/10 leading-none select-none">{step.step}</span>
                     </div>
-                    <h3 className="text-lg font-bold mb-2">{step.title}</h3>
-                    <p className="text-muted-foreground text-sm leading-relaxed">{step.desc}</p>
+                    <h3 className="text-xl font-bold mb-3">{step.title}</h3>
+                    <p className="text-muted-foreground text-base leading-relaxed">{step.desc}</p>
                   </div>
                 </Card>
               </motion.div>
@@ -234,13 +233,13 @@ export default function Home() {
         </section>
 
         {/* ── What you get ─────────────────────────────────── */}
-        <section className="max-w-6xl w-full mb-28">
-          <div className="text-center mb-14">
+        <section className="max-w-7xl w-full mb-36">
+          <div className="text-center mb-16">
             <motion.p
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
-              className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3"
+              className="text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-4"
             >
               What you get
             </motion.p>
@@ -248,13 +247,13 @@ export default function Home() {
               initial={{ opacity: 0, y: 12 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="text-3xl md:text-4xl font-display font-bold"
+              className="text-4xl md:text-5xl font-display font-bold"
             >
               Everything a document is asking for — organized
             </motion.h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               {
                 icon: FileCheck,
@@ -286,13 +285,13 @@ export default function Home() {
                 transition={{ delay: i * 0.1 }}
               >
                 <Card className="h-full bg-card border-border/40 shadow-md hover:shadow-xl transition-shadow rounded-2xl">
-                  <div className="p-7 space-y-5">
-                    <div className={`w-12 h-12 rounded-2xl ${card.color} flex items-center justify-center`}>
-                      <card.icon className={`w-6 h-6 ${card.iconColor}`} />
+                  <div className="p-9 space-y-6">
+                    <div className={`w-14 h-14 rounded-2xl ${card.color} flex items-center justify-center`}>
+                      <card.icon className={`w-7 h-7 ${card.iconColor}`} />
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold mb-2">{card.title}</h3>
-                      <p className="text-muted-foreground leading-relaxed">{card.desc}</p>
+                      <h3 className="text-2xl font-bold mb-3">{card.title}</h3>
+                      <p className="text-muted-foreground text-base leading-relaxed">{card.desc}</p>
                     </div>
                   </div>
                 </Card>
@@ -302,13 +301,13 @@ export default function Home() {
         </section>
 
         {/* ── Demos ────────────────────────────────────────── */}
-        <section id="demos" className="max-w-6xl w-full scroll-mt-24">
-          <div className="text-center mb-12">
+        <section id="demos" className="max-w-7xl w-full scroll-mt-24">
+          <div className="text-center mb-14">
             <motion.p
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
-              className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3"
+              className="text-sm font-semibold uppercase tracking-widest text-muted-foreground mb-4"
             >
               Live demos
             </motion.p>
@@ -316,7 +315,7 @@ export default function Home() {
               initial={{ opacity: 0, y: 12 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="text-3xl md:text-4xl font-display font-bold mb-3"
+              className="text-4xl md:text-5xl font-display font-bold mb-4"
             >
               See a real result instantly
             </motion.h2>
@@ -325,13 +324,13 @@ export default function Home() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
-              className="text-muted-foreground text-lg max-w-xl mx-auto"
+              className="text-muted-foreground text-xl max-w-xl mx-auto"
             >
               Three pre-loaded examples — click any card to open a full structured action plan.
             </motion.p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {DEMOS.map((demo, i) => (
               <motion.div
                 key={demo.id}
@@ -339,25 +338,25 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                whileHover={{ y: -5, transition: { duration: 0.2 } }}
+                whileHover={{ y: -6, transition: { duration: 0.2 } }}
               >
                 <button
                   onClick={() => setLocation(`/analyze?demo=${demo.id}`)}
                   className="w-full text-left h-full group"
                 >
                   <Card className="h-full border-border/40 hover:border-primary/40 hover:shadow-xl transition-all overflow-hidden bg-card rounded-2xl shadow-md">
-                    <div className="p-7 flex flex-col h-full">
-                      <div className={`w-13 h-13 rounded-xl ${demo.bg} flex items-center justify-center mb-5 w-12 h-12`}>
-                        <demo.icon className={`w-6 h-6 ${demo.color}`} />
+                    <div className="p-8 flex flex-col h-full">
+                      <div className={`w-14 h-14 rounded-2xl ${demo.bg} flex items-center justify-center mb-6`}>
+                        <demo.icon className={`w-7 h-7 ${demo.color}`} />
                       </div>
-                      <h3 className="text-lg font-bold group-hover:text-primary transition-colors mb-2 leading-snug">{demo.title}</h3>
-                      <p className="text-sm text-muted-foreground leading-relaxed mb-5 flex-1">{demo.desc}</p>
-                      <div className="flex flex-wrap gap-1.5 mb-4">
+                      <h3 className="text-xl font-bold group-hover:text-primary transition-colors mb-3 leading-snug">{demo.title}</h3>
+                      <p className="text-base text-muted-foreground leading-relaxed mb-6 flex-1">{demo.desc}</p>
+                      <div className="flex flex-wrap gap-2 mb-5">
                         {demo.tags.map((tag) => (
-                          <span key={tag} className="inline-block px-2.5 py-1 rounded-full bg-secondary text-xs font-semibold text-muted-foreground">{tag}</span>
+                          <span key={tag} className="inline-block px-3 py-1.5 rounded-full bg-secondary text-sm font-semibold text-muted-foreground">{tag}</span>
                         ))}
                       </div>
-                      <div className="flex items-center gap-1.5 text-sm font-semibold text-primary">
+                      <div className="flex items-center gap-2 text-base font-semibold text-primary">
                         Open action plan <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                       </div>
                     </div>
