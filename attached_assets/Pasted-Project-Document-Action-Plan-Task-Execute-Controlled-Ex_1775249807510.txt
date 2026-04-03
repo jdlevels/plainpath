@@ -1,0 +1,169 @@
+Project: Document Action Plan
+Task: Execute Controlled External Pilot Batch 1 for Document Trust Check using the current locked pilot baseline and live feedback workflow.
+
+Goal:
+Run the first real controlled external pilot session, capture reviewer feedback for each tested document, and produce a clean summary of what patterns emerged without adding new features.
+
+Current baseline to preserve:
+- Phase 2 Trust Check complete
+- Tuning Round 1 complete
+- Three-score model active
+- Pilot feedback logging active
+- `/pilot-feedback` active
+- Paid features inactive
+- Security rollout deferred
+
+Critical constraints:
+- Do NOT add new major features
+- Do NOT redesign the UI
+- Do NOT activate paid features
+- Do NOT restore subscription gating
+- Do NOT start security rollout
+- Do NOT build trusted-entity verification yet
+- Only fix something if a real pilot-blocking bug appears
+
+Primary objective:
+Use the app exactly as an outside reviewer would use it, collect structured feedback, and summarize the first controlled external pilot outcomes.
+
+-----------------------------------
+CONTROLLED PILOT BATCH
+-----------------------------------
+
+Run the pilot using a balanced document set covering:
+1. obvious scam-style utility/government notice
+2. obvious scam-style IRS/government warning
+3. suspicious debt collection letter
+4. realistic fictional auto loan contract
+5. legitimate utility notice
+6. ordinary low-risk legitimate document
+7. harsh but likely legitimate contract/notice
+8. pasted scam-style text
+9. pasted legitimate text
+
+If the current recommended pilot packet already exists, use that exact set.
+
+-----------------------------------
+FOR EACH DOCUMENT
+-----------------------------------
+
+1. Run Document Trust Check
+2. Review the full result
+3. Log pilot feedback using the existing feedback panel
+4. Confirm the feedback record appears in `/pilot-feedback`
+
+For each document, capture:
+- document label
+- source type
+- primary verdict
+- authenticity risk
+- document risk
+- verification confidence
+- reviewer assessment
+- false positive? yes/no
+- false negative? yes/no
+- issue categories selected
+- short reviewer notes
+
+-----------------------------------
+REVIEW STANDARD
+-----------------------------------
+
+Use the current reviewer assessment labels:
+- Correct
+- Mostly Correct
+- Needs Tuning
+- Incorrect
+
+Use false positive if:
+- the result was too suspicious/harsh for the document
+
+Use false negative if:
+- the result missed meaningful risk or under-reacted
+
+Keep reviewer notes specific:
+- what the system caught well
+- what it missed
+- what felt overstated
+- what should be tuned later
+
+-----------------------------------
+AFTER ALL DOCUMENTS ARE LOGGED
+-----------------------------------
+
+Review `/pilot-feedback` and summarize:
+
+1. total records logged
+2. assessment breakdown
+3. false positive count
+4. false negative count
+5. most common issue categories
+6. repeated strengths
+7. repeated weaknesses
+8. whether any score dimension appears off repeatedly
+9. whether any document class appears under-modeled
+10. whether any result was harmful or misleading
+
+-----------------------------------
+ONLY FIX IF BLOCKING
+-----------------------------------
+
+During this pass, only make a code change if:
+- feedback logging fails
+- reviewer flow breaks
+- a route is broken
+- a page fails to render
+- a result is clearly malformed
+- a console/runtime issue blocks pilot use
+
+If no blocking issue appears, do not change code.
+
+-----------------------------------
+OUTPUT REQUIRED AFTER COMPLETION
+-----------------------------------
+
+Return:
+
+1. Controlled pilot summary
+- total documents tested
+- total feedback records logged
+- whether all pilot documents were completed
+
+2. Document-by-document table
+For each document include:
+- document name
+- source type
+- verdict
+- authenticity risk
+- document risk
+- verification confidence
+- reviewer assessment
+- false positive? yes/no
+- false negative? yes/no
+- top issue category if any
+- short reviewer note
+
+3. Batch-level findings
+- strongest outcomes
+- recurring issue patterns
+- whether tuning is needed
+- whether the current pilot baseline is holding stable
+
+4. Screenshots
+Capture at least:
+- one obvious scam result
+- one high document-risk result
+- one legitimate low-risk result
+- one completed pilot feedback entry
+- `/pilot-feedback` summary page after this batch
+
+5. Final status
+End with one of:
+- CONTROLLED PILOT BATCH 1 COMPLETE — READY FOR FEEDBACK REVIEW
+- CONTROLLED PILOT FOUND ONE BLOCKING ISSUE
+- CONTROLLED PILOT COMPLETE — TUNING ROUND 2 RECOMMENDED
+
+Success criteria:
+- external-style pilot run is completed cleanly
+- feedback is logged for each document
+- no unnecessary code changes are introduced
+- the system produces a real first external pilot dataset for review
