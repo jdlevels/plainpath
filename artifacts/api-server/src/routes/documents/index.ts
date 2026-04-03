@@ -562,11 +562,13 @@ function extractRuleData(text: string): ExtractedRuleData {
     "legal action", "lawsuit", "sue you", "take you to court",
     "collections", "collection agency", "debt collector",
     "repossession", "foreclose", "foreclosure", "lien",
+    "eviction", "unlawful detainer", "asset seizure", "property seizure",
     "shutoff", "shut off", "service interruption", "disconnect", "suspension",
     "final notice", "final warning", "last notice", "failure to respond",
     "social security administration", "internal revenue service",
     "attorney general", "sheriff", "marshal", "federal agent",
     "contempt", "judgment", "garnish", "garnishment",
+    "remote access", "remotely access", "anydesk", "teamviewer",
   ];
   const threatPhrases = threatTerms.filter((t) => lower.includes(t));
 
@@ -592,10 +594,10 @@ function extractRuleData(text: string): ExtractedRuleData {
   return { phones, emails, urls, dates, amounts, urgencyPhrases, threatPhrases, paymentRedFlags, infoRequests };
 }
 
-function calculateRiskScore(data: ExtractedRuleData): number {
+function calculateRiskScore(data: ExtractedRuleData, lower: string): number {
   let score = 0;
 
-  // High severity
+  // High severity — payment method red flags
   const giftCardTerms = ["gift card", "itunes card", "google play card", "steam card", "amazon gift card"];
   if (data.paymentRedFlags.some((f) => giftCardTerms.some((k) => f.includes(k)))) score += 25;
   const wireTerms = ["wire transfer", "western union", "moneygram"];
@@ -611,7 +613,33 @@ function calculateRiskScore(data: ExtractedRuleData): number {
   const linkTerms = ["payment link", "pay here", "click to pay"];
   if (data.paymentRedFlags.some((f) => linkTerms.some((k) => f.includes(k)))) score += 18;
 
-  // Medium severity
+  // High severity — impersonation and pattern detection
+  // Well-known brand impersonation + payment demand is a strong scam signal
+  const impersonatedBrands = [
+    "microsoft", "apple support", "apple inc.", "google support", "amazon support",
+    "irs ", "internal revenue service", "fbi ", "dea ", "interpol",
+    "social security administration", "medicare fraud", "medicaid fraud",
+  ];
+  if (impersonatedBrands.some((b) => lower.includes(b)) && data.paymentRedFlags.length > 0) score += 18;
+
+  // Remote access request combined with payment demand — hallmark of tech support scam
+  const remoteAccessTerms = ["remote access", "remotely access", "anydesk", "teamviewer", "remote session", "remote control your"];
+  if (remoteAccessTerms.some((t) => lower.includes(t)) && data.paymentRedFlags.length > 0) score += 15;
+
+  // Advance-fee fraud: prize/lottery/inheritance + upfront fee requirement + payment method
+  const prizeClaims = ["prize", "winner", "lottery", "sweepstakes", "inheritance", "winnings", "jackpot", "grant award", "selected recipient"];
+  const feeRequirements = ["processing fee", "clearance fee", "release fee", "tax fee", "transfer fee", "administrative fee", "advance fee", "tax clearance"];
+  if (
+    prizeClaims.some((t) => lower.includes(t)) &&
+    feeRequirements.some((t) => lower.includes(t)) &&
+    data.paymentRedFlags.length > 0
+  ) score += 30;
+
+  // Secrecy/confidentiality instruction + payment demand — used to prevent victims from seeking advice
+  const secrecyTerms = ["do not share", "keep confidential", "tell no one", "prize transfers are confidential", "do not discuss with"];
+  if (secrecyTerms.some((t) => lower.includes(t)) && data.paymentRedFlags.length > 0) score += 10;
+
+  // Medium severity — language and pressure tactics
   const urgentTerms = ["within 24 hours", "act now", "immediately", "do not ignore"];
   if (data.urgencyPhrases.some((u) => urgentTerms.some((k) => u.includes(k)))) score += 10;
   const legalTerms = ["legal action", "lawsuit", "collections", "collection agency", "debt collector"];
@@ -620,13 +648,14 @@ function calculateRiskScore(data: ExtractedRuleData): number {
   if (data.threatPhrases.some((t) => shutoffTerms.some((k) => t.includes(k)))) score += 8;
   const finalTerms = ["final notice", "final warning", "last notice"];
   if (data.threatPhrases.some((t) => finalTerms.some((k) => t.includes(k)))) score += 8;
-  const repoTerms = ["repossession", "foreclosure", "lien"];
+  const repoTerms = ["repossession", "foreclosure", "lien", "eviction", "unlawful detainer", "asset seizure"];
   if (data.threatPhrases.some((t) => repoTerms.some((k) => t.includes(k)))) score += 10;
   const peerPayTerms = ["zelle", "cash app", "cashapp", "venmo"];
   if (data.paymentRedFlags.some((f) => peerPayTerms.some((k) => f.includes(k)))) score += 12;
   if (data.urgencyPhrases.length >= 3) score += 8;
+  else if (data.urgencyPhrases.length >= 2) score += 4;
 
-  // Low severity
+  // Low severity — contextual indicators
   if (data.urgencyPhrases.length >= 1) score += 3;
   if (data.threatPhrases.length >= 1) score += 3;
   if (data.amounts.length > 0) score += 2;
@@ -663,7 +692,7 @@ Return ONLY a valid JSON object — no markdown, no code fences, just raw JSON.
     }
   ],
   "suspiciousContactNotes": [
-    "string - a note about a specific contact detail (phone, email, URL) that should be independently verified"
+    "string - a note ONLY for contacts you have specific reason to flag as suspicious, spoofed, or unverifiable (e.g. non-official domain, mismatched brand, unregistered number). For documents that appear low-risk or legitimate, leave this EMPTY. Do NOT include routine contacts like known government agency lines or contacts that are easily verifiable."
   ],
   "whatToVerify": [
     "string - one specific thing to independently verify before taking action"
@@ -674,8 +703,9 @@ Return ONLY a valid JSON object — no markdown, no code fences, just raw JSON.
 }
 
 Guidelines:
-- scamIndicators: 2-8 warning signs. HIGH severity: payment red flags (gift card, wire, crypto), threats of arrest/shutdown, identity info requests, sender impersonation; MEDIUM: time pressure, missing case/account numbers, vague sender identity, threat language without specifics; LOW: generic greetings, formatting inconsistencies, grammar errors, vague references
+- scamIndicators: 2-8 warning signs. HIGH severity: payment red flags (gift card, wire, crypto), threats of arrest/shutdown, identity info requests, sender impersonation, remote access requests; MEDIUM: time pressure, missing case/account numbers, vague sender identity, threat language without specifics; LOW: generic greetings, formatting inconsistencies, grammar errors, vague references
 - If the document appears legitimate, scamIndicators may be empty or have only low-severity items
+- suspiciousContactNotes: ONLY list contacts that have a specific reason to be flagged — wrong domain for claimed brand, non-standard number for a known institution, short URL, etc. If the document appears low-risk, leave this array EMPTY. Do not generate notes for every contact just as generic caution.
 - whatToVerify: 3-6 specific verification steps. Always include: verify sender identity through official public channels (not numbers in the letter)
 - safeNextSteps: 4-6 safe actions. Always include: verify through official website, do not call numbers in the letter until verified, do not pay until independently confirmed, preserve the document
 - Keep language practical and non-alarming. Help the person stay safe without causing unnecessary panic.`;
@@ -875,8 +905,9 @@ router.post("/trust-check", async (req, res) => {
   }
 
   try {
+    const lower = text.toLowerCase();
     const ruleData = extractRuleData(text);
-    const riskScore = calculateRiskScore(ruleData);
+    const riskScore = calculateRiskScore(ruleData, lower);
     const verdict = scoreToVerdict(riskScore);
     const analysis = await runTrustCheckAnalysis(text, ruleData, riskScore, verdict);
     return res.json({ analysis });
@@ -911,8 +942,9 @@ router.post("/trust-check-upload", upload.single("file"), async (req, res) => {
     console.log("[trust-check-upload] extracted", text.length, "chars from", file.originalname);
 
     try {
+      const lower = text.toLowerCase();
       const ruleData = extractRuleData(text);
-      const riskScore = calculateRiskScore(ruleData);
+      const riskScore = calculateRiskScore(ruleData, lower);
       const verdict = scoreToVerdict(riskScore);
       const analysis = await runTrustCheckAnalysis(text, ruleData, riskScore, verdict);
       return res.json({ analysis });
