@@ -1,0 +1,45 @@
+Analyze this document for authenticity risk, document/contract risk, and verification confidence.
+
+Use a multi-layered fraud review framework:
+
+1. Digital Forensics / Metadata
+- Check for suspicious or missing metadata
+- Note creation/modification inconsistencies
+- Note suspicious producer/editor software if available
+- Note PDF/object/layer concerns if detectable
+- Do not invent metadata if unavailable
+
+2. Visual / Structural Consistency
+- Look for inconsistent structure, formatting, section patterns, sender identity blocks, contact blocks, repeated fields, or internal contradictions
+- Flag likely pasted, mismatched, or structurally inconsistent content where supported by the text/layout evidence provided
+- Do not claim pixel-level visual findings unless they are directly observable from the extracted content or file metadata
+
+3. Textual / Logical Validation
+- Identify tone shifts, inconsistent legal/business language, grammatical anomalies in sensitive clauses, mismatched references, contradictory dates, contradictory totals, or contradictory obligations
+- Recalculate or sanity-check amounts, totals, APRs, due dates, fee escalations, and payment logic where possible
+
+4. Behavioral / Contextual Red Flags
+- Flag urgent payment demands, coercive threats, suspicious payment methods, unverifiable contact information, missing issuer identifiers, and entity inconsistencies
+- Identify whether the document resembles a known scam pattern, an unverifiable notice, a harsh but potentially genuine contract, or a low-risk legitimate document
+
+Output:
+A. Primary verdict
+B. Authenticity Risk
+C. Document Risk
+D. Verification Confidence
+E. What the document claims
+F. Demanded action
+G. Scam indicators
+H. Contract/document risk terms
+I. Metadata findings
+J. Structural findings
+K. Contact/entity verification findings
+L. Deadlines / pressure tactics
+M. What to verify
+N. Safe next steps
+
+Rules:
+- Use risk-based wording only
+- Never claim certainty unless directly proven
+- Do not say “definitely fake,” “proven fraud,” or “legally invalid”
+- If evidence is incomplete, say authenticity cannot be fully verified from the provided material

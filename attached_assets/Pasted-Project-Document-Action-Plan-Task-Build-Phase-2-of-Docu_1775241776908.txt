@@ -1,0 +1,302 @@
+Project: Document Action Plan
+Task: Build Phase 2 of Document Trust Check by adding metadata inspection, structural consistency checks, and a multi-score trust model.
+
+Goal:
+Upgrade the existing Trust Check system so it evaluates documents across multiple dimensions instead of relying mainly on a single authenticity-oriented score.
+
+This phase should make the system better at detecting:
+- suspicious/fake/unverifiable documents
+- manipulated or structurally inconsistent files
+- harsh or high-risk contract terms
+- low-confidence verification situations
+
+Critical constraints:
+- Do NOT redesign the app
+- Do NOT add security features yet
+- Do NOT activate paid features yet
+- Do NOT re-enable subscription gating yet
+- Keep all current testing flows open
+- Reuse the current Trust Check architecture wherever possible
+- Extend the current model cleanly and minimally
+- Do not break standard Analyze a Document mode
+
+Primary objective:
+Add three upgrades:
+
+1. Metadata inspection
+2. Structural consistency checks
+3. Multi-score trust model
+
+-----------------------------------
+PHASE 2 FEATURE REQUIREMENTS
+-----------------------------------
+
+1. METADATA INSPECTION
+Add a metadata analysis layer for uploaded files where technically possible.
+
+Inspect and extract items such as:
+- file type
+- PDF producer / creator tool
+- creation timestamp
+- modification timestamp
+- suspicious timestamp relationships
+- missing metadata
+- embedded font presence if available
+- page count / file structure anomalies if easily available
+
+Flag examples such as:
+- creation and modification dates that are implausible
+- metadata showing editing/export software inconsistent with claimed issuer type
+- heavily stripped or missing metadata in documents that should normally have some source metadata
+- suspiciously generic producer strings if they suggest informal editing/re-export
+
+Output requirements:
+- metadata findings should feed into Trust Check scoring
+- metadata findings should also be visible in the result UI in a dedicated section if meaningful
+- if metadata is unavailable, handle gracefully and do not fabricate signals
+
+2. STRUCTURAL CONSISTENCY CHECKS
+Add a structural analysis layer focused on the visible document structure and extracted text patterns.
+
+Check for:
+- inconsistent header/footer repetition across pages
+- inconsistent font sizing/style patterns if derivable
+- strange spacing/alignment patterns in extracted text
+- inconsistent section labeling or formatting
+- suspicious signature block inconsistencies
+- abrupt tone/format shifts between sections
+- repeated fields that conflict with each other
+- issuer identity inconsistency across header/body/footer/contact blocks
+- contact inconsistency (different sender names, mismatched email/domain, conflicting addresses, conflicting phone formats)
+- due date / payment / fee / term contradictions across the document
+
+This does not need full computer vision for phase 2.
+Prefer text/layout-derived structure checks first.
+
+Output requirements:
+- structural findings should feed into scoring
+- structural anomalies should appear in results as readable findings, not only raw technical notes
+
+3. MULTI-SCORE TRUST MODEL
+Replace or extend the current single-score emphasis with a multi-score model.
+
+At minimum, calculate and expose:
+
+A. Authenticity Risk
+Measures:
+- scam indicators
+- unverifiable sender signals
+- suspicious payment instructions
+- metadata anomalies
+- structural inconsistencies
+- impersonation concerns
+- authenticity-confidence concerns
+
+B. Document / Contract Risk
+Measures:
+- harsh contract terms
+- fee escalation
+- default APR jumps
+- force-placed insurance
+- repossession/acceleration pressure
+- arbitration/class-action waiver
+- deficiency balance exposure
+- high-impact obligations or consumer-harm terms
+- other risky contractual or financial conditions
+
+C. Verification Confidence
+Measures:
+- how much sender/issuer information appears independently trustworthy or internally consistent
+- whether the document provides enough coherent, consistent, and verifiable identity/contact/reference data
+- whether metadata/structure increases or decreases confidence
+
+Allowed presentation formats:
+- 3 visible labeled scores
+or
+- 1 primary verdict + 2 supporting labeled scores
+Choose the cleanest UI approach that fits the existing product without redesigning it.
+
+Preferred labels:
+- Authenticity Risk
+- Document Risk
+- Verification Confidence
+
+Risk bands can be numeric or banded (Low / Medium / High), but they must be consistent and clearly explained.
+
+-----------------------------------
+SCORING / LOGIC REQUIREMENTS
+-----------------------------------
+
+4. SCORING MODEL UPDATE
+Refine the scoring logic so these dimensions are not collapsed into one number.
+
+Examples:
+- a document can have LOW/MEDIUM authenticity risk but HIGH document risk
+- a document can have LOW authenticity risk but LOW verification confidence
+- a document can have HIGH authenticity risk even if contract-risk terms are minimal
+- a document can be genuine-looking but still contain harmful terms
+
+Do not let contract-risk automatically inflate authenticity risk unless the signals actually justify that.
+
+5. SIGNAL CLASSES
+Continue to use weighted signals, but map them to the correct score dimension.
+
+Example signal mapping:
+
+Authenticity Risk:
+- suspicious payment links
+- unverifiable sender details
+- suspicious metadata
+- contact mismatch
+- urgency + coercive payment demand
+- conflicting issuer identity
+- manipulated structure signs
+
+Document Risk:
+- default APR hike
+- forced insurance
+- starter interruption / GPS
+- repossession without notice
+- arbitration/class waiver
+- balloon payment risk
+- deficiency balance
+- heavy penalty structure
+
+Verification Confidence:
+- clear company identity
+- consistent contact details
+- stable metadata
+- coherent references/case/account numbers
+- internally consistent issuer/contact blocks
+- known/public-looking identifiers
+- absence of contradictions
+
+6. RESULT LANGUAGE
+Keep all Trust Check language risk-based and non-absolute.
+
+Do NOT output:
+- definitely fake
+- proven fraud
+- legally invalid
+
+Use language such as:
+- shows scam indicators
+- contains authenticity concerns
+- cannot be fully verified from the provided information
+- appears structurally inconsistent
+- contains contract terms that deserve careful review
+
+-----------------------------------
+UI / RESULT REQUIREMENTS
+-----------------------------------
+
+7. RESULT UI
+Update the existing Trust Check results view to support the new phase 2 information cleanly.
+
+Requirements:
+- do not redesign the app
+- keep dark premium styling
+- preserve readability
+- make the multi-score model clear and useful
+- show metadata findings only when meaningful
+- show structural findings only when meaningful
+- keep contract-risk information clearly separated from authenticity risk
+- keep safe next steps present
+
+Recommended sections:
+- Primary Verdict
+- Score Summary (Authenticity Risk / Document Risk / Verification Confidence)
+- What This Letter / Document Claims
+- Demanded Action
+- Scam Indicators
+- Contract Risk Terms
+- Metadata Findings
+- Structural Findings
+- Suspicious Contact Details
+- Deadlines / Pressure Tactics
+- What To Verify
+- Safe Next Steps
+
+If some sections are empty, hide them gracefully rather than rendering blank boxes.
+
+-----------------------------------
+TECHNICAL IMPLEMENTATION
+-----------------------------------
+
+8. BACKEND / EXTRACTION
+Inspect current Trust Check implementation and extend it cleanly.
+
+Add new helper logic/functions for:
+- metadata extraction/normalization
+- structural consistency analysis
+- score calculation per dimension
+- score summary mapping to UI-safe output
+
+Do not introduce unnecessary duplicate logic if current trust-check helpers can be extended.
+
+9. FILE-SPECIFIC HANDLING
+For:
+- PDF uploads: inspect metadata where available
+- DOCX uploads: inspect basic document properties where available
+- pasted text: skip metadata analysis gracefully and rely on text/structure/logic only
+
+Do not fail the analysis just because metadata is unavailable.
+
+10. DEMO / TEST DOCUMENT VALIDATION
+Run this phase against at least:
+- fake utility shutoff notice
+- fake IRS/government-style letter
+- debt collection letter
+- legitimate utility notice
+- auto-loan contract
+- one additional low-risk control document if helpful
+
+Verify that:
+- fake notices score higher on authenticity risk
+- harsh contracts score higher on document risk
+- legitimate control docs keep lower authenticity risk
+- verification confidence behaves logically
+- metadata/structure findings do not generate nonsense on plain text inputs
+
+-----------------------------------
+VALIDATION CHECKLIST
+-----------------------------------
+
+11. VALIDATE ALL OF THE FOLLOWING
+- `/import?mode=trust-check` still works
+- upload still works
+- paste still works
+- demo mode still works
+- normal Analyze a Document mode still works
+- no paywalls or tab locks interfere
+- no console errors introduced
+- no blank/awkward sections render unnecessarily
+- metadata gracefully handles unavailable cases
+- standard analysis flow remains untouched
+
+-----------------------------------
+OUTPUT REQUIRED AFTER COMPLETION
+-----------------------------------
+
+12. RETURN:
+- exact files changed
+- new files created
+- how metadata is extracted
+- how structural consistency is assessed
+- how the multi-score model works
+- how the new scores are displayed in the UI
+- which demo/test docs were used for validation
+- screenshots of:
+  - one high-authenticity-risk result
+  - one high-document-risk result
+  - one low-risk / higher-confidence result
+- any risks introduced
+- what remains for phase 3
+
+Success criteria:
+- Trust Check now evaluates more than one kind of risk
+- metadata and structural checks materially improve detection quality
+- harmful contract terms do not get confused with classic scam signals
+- authenticity risk, document risk, and verification confidence are meaningfully separated
+- the app remains stable and pilot-friendly
+- no security or paid-feature work is added in this phase

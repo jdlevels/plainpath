@@ -553,7 +553,7 @@ function extractRuleData(text: string): ExtractedRuleData {
   const urgencyTerms = [
     "immediately", "act now", "within 24 hours", "within 48 hours", "within 72 hours",
     "today only", "time sensitive", "time-sensitive", "do not ignore", "must respond",
-    "respond immediately", "urgent", "emergency", "last chance", "final opportunity",
+    "respond immediately", "urgent", "last chance", "final opportunity",
     "do not delay", "prompt attention", "without delay",
   ];
   const urgencyPhrases = urgencyTerms.filter((t) => lower.includes(t));
