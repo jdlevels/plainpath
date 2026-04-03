@@ -1,0 +1,142 @@
+Project rename direction: Document Action Plan
+Task: Add a second primary homepage action for suspicious/fake/scam document review, using app-consistent language and minimal layout disruption.
+
+Goal:
+Add a homepage card/button next to the existing “Analyze a Document” action for a new mode called:
+
+Document Trust Check
+
+Purpose:
+This mode is for users who want to upload a letter, notice, contract, or document and check for scam indicators, suspicious demands, authenticity concerns, pressure tactics, and verification risks.
+
+Critical constraints:
+- DO NOT redesign the homepage
+- DO NOT break the existing Analyze a Document flow
+- DO NOT add visual clutter
+- DO NOT create a disconnected feature
+- This should feel like a natural second primary action inside the current product
+- Make minimal, surgical updates only
+- Preserve current dark premium SaaS design language
+
+Required implementation:
+
+1. Homepage primary actions
+Ensure the homepage clearly presents two primary actions/cards:
+
+A. Analyze a Document
+Description:
+Turn contracts, forms, notices, and other documents into clear action steps, deadlines, risks, and required next steps.
+
+B. Document Trust Check
+Description:
+Scan letters, notices, contracts, and uploaded files for scam indicators, pressure tactics, suspicious contact details, and verification risks.
+
+2. Labeling / hierarchy
+Use these exact labels:
+
+Card 1 title:
+Analyze a Document
+
+Card 1 subtitle/helper label:
+Action Planning
+
+Card 1 description:
+Turn contracts, forms, notices, and other documents into clear action steps, deadlines, risks, and required next steps.
+
+Card 2 title:
+Document Trust Check
+
+Card 2 subtitle/helper label:
+Trust & Verification
+
+Card 2 description:
+Scan letters, notices, contracts, and uploaded files for scam indicators, pressure tactics, suspicious contact details, and verification risks.
+
+3. Click behavior
+Implement the safest active behavior based on what already exists in the codebase:
+
+Preferred behavior:
+- Clicking “Analyze a Document” continues current default analysis flow
+- Clicking “Document Trust Check” routes the user into the same document intake/upload flow, but with the document mode preselected as:
+  Document Trust Check
+
+If the trust-check mode is not fully implemented yet:
+- still wire the card into the intake flow
+- preselect or carry forward a mode key/flag for Document Trust Check
+- do not leave the button dead
+- do not use fake behavior
+- if needed, show a lightweight in-flow placeholder state that makes clear this mode is being prepared, but only if the actual mode schema is not yet available
+
+Preferred route behavior:
+- reuse current upload/paste page
+- pass mode as state/query/param using existing routing patterns if possible
+- avoid creating a separate disconnected page unless clearly necessary
+
+4. Visual design
+Keep both homepage actions visually consistent.
+They should feel like two equal, intentional product entry points.
+
+Use:
+- existing card/button system
+- existing spacing and border language
+- existing typography scale
+- current accent colors
+- restrained motion only
+
+Suggested tone:
+- Analyze a Document = standard primary
+- Document Trust Check = equally strong, not secondary/hidden
+
+Do NOT:
+- add oversized badges
+- add warning-red styling unless already part of the design system
+- make Trust Check look like an error state
+- make it feel experimental
+
+5. Product framing
+This feature must not overpromise.
+Do not use homepage wording like:
+- detect fake contracts
+- prove a document is fake
+- fraud detector
+
+Use:
+- trust check
+- scam indicators
+- verification risks
+- suspicious contact details
+- pressure tactics
+
+6. Code hygiene
+Before editing:
+- inspect the current homepage/landing implementation
+- identify where the existing Analyze a Document card/button is defined
+- identify the cleanest place to add the second primary action
+- identify the current mode-selection flow and how to preselect a mode without breaking anything
+
+7. Validation checklist
+After implementation, verify:
+- homepage renders correctly
+- both primary cards/actions display correctly
+- existing Analyze flow still works unchanged
+- Document Trust Check action routes correctly
+- no layout breakage on desktop
+- no layout breakage on mobile
+- no regression in upload/paste/demo flows
+- no duplicate data/card bug introduced
+- no console errors
+
+8. Return after completion
+Return:
+- exact files changed
+- what was added
+- how the new card/action is wired
+- whether Document Trust Check now preselects a mode
+- screenshots desktop + mobile
+- any risks introduced
+
+Success criteria:
+- homepage now clearly shows two primary paths
+- the second path feels native to the product
+- wording is professional and credible
+- no redesign and no regressions

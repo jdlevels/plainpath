@@ -1,0 +1,86 @@
+Project rename direction: Document Action Plan
+Task: Move the app from frozen competition/demo mode into production build mode and prepare it for deployment.
+
+Goal:
+Convert the current app from competition-ready/demo-safe state into a production-ready SaaS product foundation.
+
+Critical instruction:
+Do not do a cosmetic redesign.
+Do not start with new UI experiments.
+Do not build optional split-screen features.
+Start with production architecture, access control, billing, and deployment readiness.
+
+Top priorities:
+1. Remove competition/demo-only bypass behavior
+2. Restore real subscription gating
+3. Restore Starter vs Pro feature gating
+4. Add admin/owner account access flow
+5. Finish Stripe production wiring
+6. Implement billing portal route
+7. Harden the app for deployment
+8. Then prepare for the new feature mode: Document Trust Check
+
+Required process:
+First inspect the current codebase and identify every area still using:
+- competition bypass logic
+- demo-safe shortcuts
+- temporary disabled gates
+- incomplete billing flow
+- missing owner/admin logic
+- placeholder production assumptions
+
+Then return:
+A. exact files involved
+B. what is already production-ready
+C. what is still demo-only
+D. what must be completed before deployment
+E. recommended implementation order
+
+Then begin implementation in the safest order.
+
+Implementation order:
+Phase 1 — Production foundation
+- remove competition bypasses
+- restore subscription/account gating
+- restore Starter vs Pro access rules
+- add admin/owner access structure
+- complete Stripe live wiring path
+- implement billing portal endpoint/flow
+- verify webhook handling
+- verify env/secrets usage
+- add production-safe error handling
+
+Phase 2 — Product hardening
+- full regression scan
+- verify upload/paste/demo flows
+- verify save/export
+- verify analysis state transitions
+- verify mobile/desktop
+- remove stale mock/demo data where inappropriate
+- confirm active data source paths are clean
+
+Phase 3 — Deployment preparation
+- staging-ready config
+- production-ready config
+- domain/env checklist
+- deploy checklist
+- smoke test checklist
+
+Constraints:
+- make minimal, safe changes
+- preserve existing working UX where possible
+- no broad refactor unless clearly necessary
+- return exact files changed after each pass
+- identify risks introduced
+- capture screenshots where UI changes occur
+
+Do not start Document Trust Check yet unless production foundation is stable.
+Prepare the system for that mode after the core app is production-ready.
+
+Output required after first pass:
+- exact file audit
+- production gap list
+- implementation plan by priority
+- first set of files changed
+- what was completed
+- what remains before deployment

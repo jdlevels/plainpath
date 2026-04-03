@@ -12,12 +12,43 @@ import {
 
 const router = Router()
 
+// Admin emails get full Pro access without a Stripe subscription.
+// Set ADMIN_EMAILS as a comma-separated list in the environment.
+const ADMIN_EMAILS: Set<string> = new Set(
+  (process.env.ADMIN_EMAILS || "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean)
+)
+
+function isAdminEmail(email: string): boolean {
+  return ADMIN_EMAILS.has(email.toLowerCase())
+}
+
 router.get("/status", (req, res) => {
   try {
     const email = String(req.query.email || "").trim().toLowerCase()
 
     if (!email) {
       return res.status(400).json({ error: "Missing email" })
+    }
+
+    // Admin bypass: treat as active Pro with unlimited usage
+    if (isAdminEmail(email)) {
+      const proEntitlements = PLAN_ENTITLEMENTS["pro"]
+      return res.json({
+        email,
+        found: true,
+        status: "active",
+        plan: "pro",
+        monthKey: getCurrentMonthKey(),
+        usageCount: 0,
+        usageLimit: proEntitlements.analysesPerMonth,
+        usageRemaining: proEntitlements.analysesPerMonth,
+        features: proEntitlements.features,
+        currentPeriodEnd: null,
+        cancelAtPeriodEnd: false,
+      })
     }
 
     const subscriber = getSubscriberByEmail(email)
@@ -51,6 +82,17 @@ router.post("/consume-analysis", (req, res) => {
 
     if (!email) {
       return res.status(400).json({ error: "Missing email" })
+    }
+
+    // Admin bypass: never consume quota
+    if (isAdminEmail(email)) {
+      return res.json({
+        ok: true,
+        plan: "pro",
+        usageCount: 0,
+        usageLimit: PLAN_ENTITLEMENTS["pro"].analysesPerMonth,
+        usageRemaining: PLAN_ENTITLEMENTS["pro"].analysesPerMonth,
+      })
     }
 
     const subscriber = getSubscriberByEmail(email)

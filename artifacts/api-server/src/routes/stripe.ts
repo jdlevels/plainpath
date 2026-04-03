@@ -126,6 +126,34 @@ router.get("/checkout-session-status", async (req, res) => {
   }
 })
 
+router.post("/billing-portal", async (req, res) => {
+  try {
+    const { email } = req.body as { email?: string }
+
+    if (!email || typeof email !== "string") {
+      return res.status(400).json({ error: "Missing email" })
+    }
+
+    const subscriber = getSubscriberByEmail(email.toLowerCase().trim())
+
+    if (!subscriber?.stripeCustomerId) {
+      return res.status(404).json({
+        error: "No Stripe customer found for this email. Please subscribe first.",
+      })
+    }
+
+    const session = await stripe.billingPortal.sessions.create({
+      customer: subscriber.stripeCustomerId,
+      return_url: `${APP_BASE_URL}/my-analyses`,
+    })
+
+    return res.json({ url: session.url })
+  } catch (error) {
+    console.error("Stripe billing portal error:", error)
+    return res.status(500).json({ error: "Unable to open billing portal" })
+  }
+})
+
 router.get("/subscriber-status", (req, res) => {
   try {
     const email = req.query.email
