@@ -1,11 +1,11 @@
 import { useState, useRef, useEffect } from "react"
-import { useLocation } from "wouter"
+import { useLocation, useSearch } from "wouter"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   UploadCloud, ArrowRight, Loader2, AlertCircle,
   ClipboardList, GraduationCap, Banknote, CheckCircle2, FileText, Type, File,
   ArrowLeft, Building2, Scale, Heart, FileSignature,
-  Mail, HelpCircle
+  Mail, HelpCircle, ShieldCheck
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -190,14 +190,20 @@ function AnalyzingLoader() {
   )
 }
 
+const TRUST_CHECK_HINT = "Document Trust Check — analyze for scam indicators, suspicious demands, pressure tactics, suspicious contact details, verification risks, and authenticity concerns"
+
 export default function Import() {
   const [, setLocation] = useLocation()
+  const searchString = useSearch()
+  const isTrustCheck = new URLSearchParams(searchString).get("mode") === "trust-check"
   const { setAnalysis, setDocumentTypeHint } = useAnalysisContext()
 
   useEffect(() => {
-    document.title = "Import Your Document — PlainPath"
+    document.title = isTrustCheck
+      ? "Document Trust Check — PlainPath"
+      : "Import Your Document — PlainPath"
     return () => { document.title = "PlainPath" }
-  }, [])
+  }, [isTrustCheck])
 
   const [mode, setMode] = useState<"paste" | "upload">("paste")
   const [text, setText] = useState("")
@@ -212,8 +218,12 @@ export default function Import() {
   const { mutate, isPending } = useAnalyzeDocument()
 
   const goToDocType = (payload: Payload) => {
-    setPending(payload)
-    setStep("doctype")
+    if (isTrustCheck) {
+      void handleDocTypeSelect(TRUST_CHECK_HINT, payload)
+    } else {
+      setPending(payload)
+      setStep("doctype")
+    }
   }
 
   const handlePasteStage = () => {
@@ -252,8 +262,9 @@ export default function Import() {
     goToDocType({ kind: "file", file })
   }
 
-  const handleDocTypeSelect = async (docTypeLabel: string) => {
-    if (!pending) return
+  const handleDocTypeSelect = async (docTypeLabel: string, payloadOverride?: Payload) => {
+    const p = payloadOverride ?? pending
+    if (!p) return
 
     try {
       await beforeRunAnalysis()
@@ -272,9 +283,9 @@ export default function Import() {
     setIsAnalyzing(true)
     setStep("analyzing")
 
-    if (pending.kind === "text") {
+    if (p.kind === "text") {
       mutate(
-        { data: { text: pending.text, documentTypeHint: docTypeLabel } as any },
+        { data: { text: p.text, documentTypeHint: docTypeLabel } as any },
         {
           onSuccess: (data) => { setAnalysis(data.analysis); setLocation("/analyze") },
           onError: (err: any) => {
@@ -301,7 +312,7 @@ export default function Import() {
       )
     } else {
       const formData = new FormData()
-      formData.append("file", pending.file)
+      formData.append("file", p.file)
       formData.append("documentTypeHint", docTypeLabel)
       try {
         const apiBase = getApiBaseUrl()
@@ -367,12 +378,22 @@ export default function Import() {
 
         {/* ── Header ─────────────────────────────────── */}
         <div className="text-center mb-5 sm:mb-10">
+          {isTrustCheck && (
+            <motion.div
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/8 border border-primary/20 text-xs font-semibold text-primary mb-3"
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              Trust &amp; Verification
+            </motion.div>
+          )}
           <motion.h1
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-2xl sm:text-3xl font-display font-bold tracking-tight mb-2"
           >
-            Import Your Document
+            {isTrustCheck ? "Document Trust Check" : "Import Your Document"}
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 8 }}
@@ -380,7 +401,9 @@ export default function Import() {
             transition={{ delay: 0.07 }}
             className="text-muted-foreground text-sm sm:text-base"
           >
-            PlainPath reads the content and returns a structured action plan — not a summary.
+            {isTrustCheck
+              ? "Upload or paste a document to scan for scam indicators, pressure tactics, suspicious contact details, and verification risks."
+              : "PlainPath reads the content and returns a structured action plan — not a summary."}
           </motion.p>
         </div>
 

@@ -1,0 +1,92 @@
+Project rename direction: Document Action Plan
+Task: Put the app into testing/pilot mode for the new Document Trust Check feature.
+
+Goal:
+Support active testing of Document Trust Check with real users and police-department review, without paid features or security-feature buildout getting in the way.
+
+Critical instructions:
+- DO NOT add security features yet
+- DO NOT activate paid features yet
+- DO NOT restore subscription gating yet
+- DO NOT enable Starter vs Pro lockouts yet
+- DO NOT add billing friction
+- Keep the system easy to access for testing and evaluation
+- Focus on feature accuracy, output quality, and test usability only
+
+Testing-mode requirements:
+
+1. Paid features inactive
+- keep all premium gating disabled
+- do not block any test flow behind paywalls
+- do not require paid plan logic during this phase
+- if billing code already exists, do not remove it entirely unless necessary; just keep it inactive/non-blocking for testing
+
+2. Security-feature buildout deferred
+For now, do not build:
+- advanced auth restrictions
+- owner/admin lock layers
+- production hardening security features
+- rate-limit enforcement layers intended for public launch
+- anti-abuse gating beyond what is already minimally required for app stability
+
+3. Product behavior during testing
+The app should remain easy to test:
+- upload works
+- paste works
+- Analyze a Document works
+- Document Trust Check works
+- save/export can remain available if already working
+- no paywall interruptions
+- no access-friction that slows testing
+
+4. Safety language for trust-check mode
+The app must not claim:
+- this is definitely fake
+- this is proven fraud
+- this is legally invalid
+
+Use risk-based language only:
+- likely legitimate
+- suspicious — verify before acting
+- high scam risk
+- cannot verify authenticity
+
+5. Build priority during this phase
+Prioritize:
+- detection quality
+- document parsing quality
+- risk extraction
+- scam-indicator detection
+- contact detail extraction
+- pressure/deadline extraction
+- stable UI flow for testing
+- pilot usability
+
+Deprioritize until later:
+- billing
+- subscription logic
+- advanced security
+- role restrictions
+- launch hardening
+
+6. Code/process requirement
+Inspect current implementation and identify:
+- where paid features are currently active or partially wired
+- where gating exists that should remain inactive for testing
+- what security-related work should be deferred
+- what minimum safeguards already exist and can stay untouched if they do not interfere with testing
+
+7. Return after this pass
+Return:
+- exact files changed
+- what was disabled or deferred
+- confirmation that paid features are inactive
+- confirmation that testing flows remain open
+- any risks introduced by this temporary testing mode
+- recommended trigger point for re-enabling production gating later
+
+Success criteria:
+- the app is easy to test
+- Document Trust Check can be evaluated without billing or lockouts
+- no unnecessary security-feature work is added yet
+- current testing is optimized for validation, not monetization

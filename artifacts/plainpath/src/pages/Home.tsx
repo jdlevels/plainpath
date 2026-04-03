@@ -114,22 +114,57 @@ export default function Home() {
             PlainPath reads your paperwork and gives you a clear, prioritized action plan — every required step, every document to gather, every deadline — in plain English.
           </motion.p>
 
+          {/* Primary action cards */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2"
+            className="w-full max-w-2xl grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2"
           >
-            <Button size="lg" className="w-full sm:w-auto h-12 text-base px-8 rounded-xl shadow-md shadow-primary/20" onClick={() => setLocation("/import")}>
-              Analyze a Document <ArrowRight className="ml-2 w-4 h-4" />
-            </Button>
+            <button
+              onClick={() => setLocation("/import")}
+              className="group text-left rounded-2xl border border-border/60 bg-card p-5 shadow-md hover:shadow-xl hover:border-primary/40 transition-all"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <FileCheck className="w-5 h-5 text-primary" />
+                </div>
+                <ArrowRight className="w-4 h-4 text-muted-foreground/30 group-hover:text-primary group-hover:translate-x-0.5 transition-all mt-1" />
+              </div>
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-1.5">Action Planning</p>
+              <h3 className="text-base font-bold text-foreground mb-2">Analyze a Document</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">Turn contracts, forms, notices, and other documents into clear action steps, deadlines, risks, and required next steps.</p>
+            </button>
+
+            <button
+              onClick={() => setLocation("/import?mode=trust-check")}
+              className="group text-left rounded-2xl border border-border/60 bg-card p-5 shadow-md hover:shadow-xl hover:border-primary/40 transition-all"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <ShieldCheck className="w-5 h-5 text-primary" />
+                </div>
+                <ArrowRight className="w-4 h-4 text-muted-foreground/30 group-hover:text-primary group-hover:translate-x-0.5 transition-all mt-1" />
+              </div>
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-1.5">Trust & Verification</p>
+              <h3 className="text-base font-bold text-foreground mb-2">Document Trust Check</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">Scan letters, notices, contracts, and uploaded files for scam indicators, pressure tactics, suspicious contact details, and verification risks.</p>
+            </button>
+          </motion.div>
+
+          {/* Secondary: view demos */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.26 }}
+          >
             <Button
-              size="lg"
-              variant="outline"
-              className="w-full sm:w-auto h-12 text-base bg-card rounded-xl"
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground hover:text-foreground"
               onClick={() => document.getElementById("demos")?.scrollIntoView({ behavior: "smooth" })}
             >
-              View demos
+              View demos <ArrowRight className="ml-1.5 w-3.5 h-3.5" />
             </Button>
           </motion.div>
 
