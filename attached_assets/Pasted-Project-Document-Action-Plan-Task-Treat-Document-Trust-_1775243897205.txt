@@ -1,0 +1,137 @@
+Project: Document Action Plan
+Task: Treat Document Trust Check Phase 2 as locked for pilot use and prepare the feature for real pilot validation without adding new major features.
+
+Goal:
+Freeze the current Phase 2 Trust Check implementation as the pilot baseline and shift work from feature-building to pilot validation, test-document execution, and usability confirmation.
+
+Current status to preserve:
+- Three-score model is working:
+  - Authenticity Risk
+  - Document Risk
+  - Verification Confidence
+- Metadata findings are working for uploaded files
+- Metadata section is hidden for pasted-text inputs
+- Structural findings are specific and non-repetitive
+- Anti-verification language contributes to authenticity risk
+- All 5 demos are regression-free
+- Standard Analyze a Document mode remains intact
+- Paid features remain inactive
+- Security-feature buildout remains deferred
+
+Critical instruction:
+Do NOT add new major features in this pass.
+Do NOT redesign the UI.
+Do NOT activate paid features.
+Do NOT restore subscription gating.
+Do NOT begin security-feature rollout.
+This pass is about locking the pilot build and validating it in realistic use.
+
+Primary objective:
+Mark the current Phase 2 Trust Check implementation as:
+LOCKED FOR PILOT USE
+
+Then complete the following pilot-readiness tasks:
+
+1. Pilot baseline confirmation
+Confirm and preserve the current Trust Check behavior as the pilot baseline:
+- three-score summary remains unchanged unless a real bug is found
+- result section order remains aligned to the final Phase 2 requirements
+- no new score dimensions are added
+- no cosmetic redesigns are introduced
+
+2. Pilot document pack validation
+Run the current Trust Check system against a pilot-style document pack including:
+- fake utility shutoff notice
+- fake IRS/government-style warning
+- fake debt collection letter
+- realistic fictional auto loan contract
+- legitimate utility notice
+- one additional ordinary low-risk legitimate document if helpful
+
+For each document, capture:
+- Primary verdict
+- Authenticity Risk
+- Document Risk
+- Verification Confidence
+- key scam indicators found
+- key contract/document risk terms found
+- metadata findings if applicable
+- structural findings if applicable
+- what to verify
+- safe next steps
+
+3. Pilot output review
+For each pilot document, confirm:
+- score behavior is reasonable
+- verdict behavior is reasonable
+- metadata behavior is appropriate
+- structural findings are specific and useful
+- no duplicated findings appear
+- no overclaiming certainty
+- the result is readable for a normal end user
+- the result would be useful in a police-department pilot review
+
+4. Stability check
+Reconfirm:
+- `/import?mode=trust-check` still works
+- upload works
+- paste works
+- demo mode works
+- standard Analyze a Document mode still works
+- no tab/paywall restrictions interfere
+- no console errors are present
+- no empty metadata section appears on pasted text
+- no broken layouts on desktop or mobile in touched areas
+
+5. Pilot-ready documentation output
+Prepare a compact pilot summary of what Trust Check currently does.
+
+The pilot summary should explain that the feature can currently assess:
+- scam / authenticity signals
+- risky contract/document terms
+- verification confidence
+- metadata anomalies where available
+- structural inconsistencies where present
+- deadlines / pressure tactics
+- suspicious contact/payment instructions
+
+The pilot summary should also make clear:
+- results are risk-based, not absolute proof
+- documents can be genuine-looking yet still contain harmful terms
+- the tool is intended to support review and verification, not replace official legal or forensic determination
+
+6. No-scope-creep rule
+In this pass, only fix issues if:
+- a real bug is found
+- a result is clearly broken
+- a section renders incorrectly
+- a validation issue proves the pilot baseline is unstable
+
+Do not:
+- add Phase 3 features
+- add barcode/MRZ logic
+- add image/pixel forensics
+- add live external database verification
+- add new pages or routes
+- redesign the score cards or result screens
+
+7. Output required after completion
+Return:
+- confirmation that Phase 2 is now locked for pilot use
+- document-by-document pilot validation summary
+- any small fixes made
+- exact files changed only if something required correction
+- screenshots of at least:
+  - one high authenticity-risk result
+  - one high document-risk result
+  - one low-risk / higher-confidence result
+- final statement:
+  - READY FOR PILOT TESTING
+  - or NEEDS ONE LAST FIX
+
+Success criteria:
+- the current Phase 2 build is treated as the pilot baseline
+- no new major feature work is introduced
+- pilot documents produce believable results
+- metadata and structural findings remain stable
+- the app is ready to be tested with outside reviewers, including the police department
