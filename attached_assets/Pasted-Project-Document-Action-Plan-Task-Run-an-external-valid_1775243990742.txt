@@ -1,0 +1,207 @@
+Project: Document Action Plan
+Task: Run an external validation and tuning pass for Document Trust Check using real pilot-style documents and feedback-oriented review criteria.
+
+Goal:
+Validate whether the current pilot-locked Phase 2 Trust Check system is accurate, readable, and useful in outside review scenarios, then make only minimal tuning changes if clearly needed.
+
+Context:
+Phase 2 is already locked for pilot use.
+This pass is NOT for new feature building.
+This pass is for:
+- external-style validation
+- result quality review
+- usability confirmation
+- small scoring/wording tuning only if justified
+
+Critical constraints:
+- Do NOT add new major features
+- Do NOT redesign the UI
+- Do NOT activate paid features
+- Do NOT restore subscription gating
+- Do NOT add security-feature rollout
+- Do NOT add Phase 3 items
+- Only tune if a real issue appears
+
+Primary objective:
+Test the pilot baseline against realistic documents and tune only where outputs are clearly too weak, too aggressive, too repetitive, or too confusing.
+
+-----------------------------------
+VALIDATION SET
+-----------------------------------
+
+Run the current Trust Check system against a mixed validation set including:
+
+1. Fake utility shutoff notice
+2. Fake IRS/government-style warning
+3. Fake debt collection letter
+4. Realistic fictional auto loan contract
+5. Legitimate utility notice
+6. One ordinary low-risk legitimate document
+7. One harsh but likely legitimate notice/contract
+8. One pasted scam-style text sample
+9. One pasted legitimate text sample
+
+If more documents are available, include them, but these 9 categories are the minimum target set.
+
+-----------------------------------
+FOR EACH DOCUMENT, REVIEW ALL OF THE FOLLOWING
+-----------------------------------
+
+1. Primary verdict reasonableness
+- Does the final verdict make sense?
+- Is it too harsh, too soft, or appropriate?
+
+2. Authenticity Risk
+- Is the score/band believable?
+- Does it reflect scam/authenticity concerns rather than general harshness?
+
+3. Document Risk
+- Does it reflect harmful contract terms, fee escalation, one-sided obligations, or coercive conditions when present?
+- Does it stay low when those terms are not present?
+
+4. Verification Confidence
+- Does it reflect issuer/contact completeness and internal consistency?
+- Is it behaving independently from authenticity risk rather than mirroring it?
+
+5. Scam Indicators quality
+- Are the indicators useful?
+- Are they specific?
+- Are they non-repetitive?
+- Are they tied to actual evidence in the document?
+
+6. Contract / Document Risk Terms quality
+- Are harmful terms captured where appropriate?
+- Are they explained in plain English?
+- Are they missing anything important?
+
+7. Metadata behavior
+- For uploads: are metadata findings real, specific, and not over-triggered?
+- For pasted text: is the metadata section hidden cleanly?
+
+8. Structural Findings quality
+- Are structural findings evidence-based?
+- Are they clear and not vague?
+- Do they avoid duplication with scam indicators?
+
+9. Contact / Verification guidance
+- Are contact findings useful?
+- Are VERIFY-type concerns or verification notes applied logically?
+- Is the user told what to independently verify?
+
+10. Deadlines / Pressure Tactics
+- Are deadlines correctly extracted?
+- Are urgency/threat labels reasonable?
+- Are legitimate dates separated from coercive deadlines appropriately?
+
+11. Safe Next Steps
+- Are the next steps useful for a normal user?
+- Are they specific and safety-oriented?
+- Do they avoid overclaiming certainty?
+
+12. Readability / Pilot usability
+- Would this result make sense to:
+  - a normal consumer
+  - an internal reviewer
+  - a police department pilot reviewer
+- Is any section too technical, too vague, or too repetitive?
+
+-----------------------------------
+TUNING RULES
+-----------------------------------
+
+Only make tuning changes if one of these is clearly happening:
+- false positive
+- false negative
+- score dimension is obviously misweighted
+- verification confidence is mirroring authenticity risk
+- metadata is over-triggering
+- structural findings are generic or repetitive
+- result wording is confusing or too absolute
+- safe next steps are weak or not actionable
+
+Allowed tuning types:
+- scoring weight adjustment
+- threshold adjustment
+- wording improvement
+- deduplication cleanup
+- section-order cleanup
+- label clarity improvement
+- result explanation refinement
+
+Do NOT:
+- add new major analysis dimensions
+- build new routes/pages
+- redesign the score cards
+- add image/pixel forensics
+- add live external verification systems
+- change standard Analyze a Document flow
+
+-----------------------------------
+SPECIAL FOCUS AREAS
+-----------------------------------
+
+1. Harsh but legitimate documents
+Ensure these do NOT automatically become high scam-risk unless the actual signals support that.
+They may be:
+- low/moderate authenticity risk
+- high document risk
+
+2. Pasted-text fairness
+Ensure pasted text is not unfairly penalized just for lacking metadata.
+
+3. Anti-verification language
+Confirm phrases like:
+- do not contact the main office
+- do not discuss this with anyone
+- respond only through this payment channel
+correctly raise concern when paired with payment pressure.
+
+4. Duplicate finding control
+Ensure the same concern is not repeated across:
+- Scam Indicators
+- Structural Findings
+- Contract Risk Terms
+unless the overlap is genuinely necessary and differently explained.
+
+-----------------------------------
+OUTPUT REQUIRED AFTER COMPLETION
+-----------------------------------
+
+Return:
+1. Document-by-document validation findings
+For each tested document include:
+- verdict
+- authenticity risk
+- document risk
+- verification confidence
+- what worked
+- what felt off
+- whether tuning was needed
+
+2. Tuning summary
+- what was changed
+- why it was changed
+- exact files changed
+- any thresholds or scoring logic adjusted
+- any wording adjusted
+
+3. Screenshots
+Capture at least:
+- one high authenticity-risk result
+- one high document-risk result
+- one high verification-confidence / low-risk result
+- one pasted-text result showing no metadata section
+
+4. Final readiness statement
+Choose one:
+- READY FOR EXTERNAL PILOT VALIDATION
+- READY WITH MINOR TUNING
+- NEEDS ONE LAST INTERNAL FIX
+
+Success criteria:
+- results feel believable across mixed document types
+- score dimensions remain meaningfully separated
+- harsh but legitimate docs are not mislabeled as scams
+- scam-style docs still score high on authenticity risk
+- pasted-text behavior remains fair
+- the system is suitable for outside pilot review and tuning feedback

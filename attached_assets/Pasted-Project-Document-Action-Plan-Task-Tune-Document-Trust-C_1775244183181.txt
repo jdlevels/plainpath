@@ -1,0 +1,101 @@
+Project: Document Action Plan
+Task: Tune Document Trust Check primary-verdict logic so low authenticity risk does not incorrectly produce “Likely legitimate” when verification confidence is weak and trust signals are mixed.
+
+Problem observed:
+The realistic fictional auto loan contract currently returns:
+- Primary verdict: Likely legitimate
+- Authenticity Risk: 18
+- Document Risk: 55
+- Verification Confidence: 48
+
+The result body itself says:
+- contact details may indicate templating / impersonation risk
+- authenticity cannot be verified from the text alone
+- contract-term risk is meaningful
+
+That combination is too soft for a “Likely legitimate” label.
+
+Goal:
+Refine the primary-verdict resolution so that “Likely legitimate” requires not just low authenticity risk, but also sufficiently strong verification confidence and no meaningful unresolved trust concerns.
+
+Critical constraints:
+- Do NOT redesign the UI
+- Do NOT add new feature dimensions
+- Do NOT activate paid features
+- Do NOT add security work
+- Keep the current three-score model
+- Make only minimal scoring / threshold / verdict-logic changes
+
+Requested tuning behavior:
+
+1. Strengthen the gate for “Likely legitimate”
+A document should generally NOT be labeled “Likely legitimate” if:
+- Verification Confidence is low or partial
+- the result text says authenticity cannot be verified
+- suspicious/placeholder contact details are present
+- metadata findings suggest templating, nonstandard generation, or suspicious producer history
+- unresolved issuer-verification concerns remain
+
+2. Suggested decision rule
+Adjust primary-verdict logic so “Likely legitimate” requires:
+- low Authenticity Risk
+AND
+- reasonably strong Verification Confidence
+AND
+- no significant unresolved authenticity flags
+
+If those are not all true, prefer:
+- Cannot verify authenticity
+or
+- Suspicious — verify before acting
+depending on severity
+
+3. Specific target for the auto loan contract
+Re-run the realistic fictional auto loan contract and tune the result so it no longer resolves to “Likely legitimate” if the verification/trust signals remain mixed.
+
+A more accurate result would likely be:
+- Cannot verify authenticity
+or
+- Suspicious — verify before acting
+
+while still preserving:
+- low/moderate authenticity risk relative to classic scam letters
+- meaningful document risk
+- partial verification confidence
+
+4. Preserve score independence
+Do NOT collapse the three scores into one.
+The tuning should affect the primary verdict resolution logic, not erase the separation between:
+- Authenticity Risk
+- Document Risk
+- Verification Confidence
+
+5. Validation set
+After tuning, verify these still behave logically:
+- fake utility shutoff notice
+- fake IRS/government-style warning
+- debt collection letter
+- legitimate utility notice
+- realistic fictional auto loan contract
+- one pasted legitimate text sample
+- one pasted scam text sample
+
+6. What to return
+Return:
+- exact logic changed
+- exact files changed
+- whether thresholds, conditions, or score interpretation changed
+- before/after verdict for the auto loan contract
+- screenshots of:
+  - updated auto loan contract result
+  - one low-risk legitimate result
+  - one high-authenticity-risk result
+- confirmation that the three-score model remains intact
+- any risks introduced
+
+Success criteria:
+- “Likely legitimate” becomes a stricter label
+- mixed-trust documents no longer get overly soft verdicts
+- obvious scams still score high
+- legitimate low-risk documents can still receive “Likely legitimate”
+- the UI remains unchanged
