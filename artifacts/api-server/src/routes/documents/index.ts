@@ -717,6 +717,22 @@ function scoreToVerdict(score: number): TrustCheckVerdict {
   return "Likely legitimate";
 }
 
+/**
+ * Multi-signal verdict resolution.
+ * "Likely legitimate" requires BOTH low authenticity risk AND reasonably strong verification
+ * confidence. If auth is low but confidence is weak/partial, we prefer "Cannot verify
+ * authenticity" to avoid giving false reassurance on mixed-trust documents.
+ */
+function resolveVerdict(authRisk: number, conf: number): TrustCheckVerdict {
+  if (authRisk >= 75) return "High scam risk";
+  if (authRisk >= 50) return "Suspicious — verify before acting";
+  if (authRisk >= 25) return "Cannot verify authenticity";
+  // Low authenticity risk — also require at least moderate verification confidence.
+  // Confidence < 50 means partial/low — prefer "Cannot verify authenticity" over a soft clearance.
+  if (conf < 50) return "Cannot verify authenticity";
+  return "Likely legitimate";
+}
+
 function calculateDocumentRiskScore(contractRiskTerms: string[]): number {
   const weights: Record<string, number> = {
     "Default rate escalation": 14,
@@ -991,6 +1007,10 @@ async function runTrustCheckAnalysis(
 
   const documentRisk = calculateDocumentRiskScore(ruleData.contractRiskTerms);
   const verificationConfidence = calculateVerificationConfidence(text, lower, ruleData, riskScore);
+  // Refine the verdict using both authenticity risk AND verification confidence.
+  // This prevents low-auth-risk documents with weak/partial confidence from being
+  // prematurely cleared as "Likely legitimate".
+  const finalVerdict = resolveVerdict(riskScore, verificationConfidence);
   const scores: TrustCheckScores = { authenticityRisk: riskScore, documentRisk, verificationConfidence };
 
   const metadataFindings: TrustCheckMetadataFinding[] | undefined =
@@ -1018,7 +1038,7 @@ async function runTrustCheckAnalysis(
     `- Payment method red flags: ${ruleData.paymentRedFlags.join(", ") || "none"}`,
     `- Sensitive info requests: ${ruleData.infoRequests.join(", ") || "none"}`,
     `- Contract risk terms detected: ${ruleData.contractRiskTerms.join(", ") || "none"}`,
-    `- Rule-based authenticity risk score: ${riskScore}/100 → ${verdict}`,
+    `- Rule-based authenticity risk score: ${riskScore}/100 → ${finalVerdict}`,
     `- Rule-based document risk score: ${documentRisk}/100`,
     `- Rule-based verification confidence score: ${verificationConfidence}/100`,
     ruleStructuralContext,
@@ -1161,7 +1181,7 @@ async function runTrustCheckAnalysis(
     id: uuidv4(),
     processedAt: new Date().toISOString(),
     riskScore,
-    verdict,
+    verdict: finalVerdict,
     verdictExplanation: parsed.verdictExplanation || "",
     whatItClaims: parsed.whatItClaims || "",
     demandedAction: parsed.demandedAction || "",
