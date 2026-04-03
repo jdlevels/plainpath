@@ -729,30 +729,42 @@ async function runTrustCheckAnalysis(
 
   const contactDetails: TrustCheckContactDetail[] = [];
   for (const phone of ruleData.phones) {
+    const isSuspicious = riskScore >= 50 || suspiciousNotes.some((n) => n.includes(phone));
+    const aiNote = suspiciousNotes.find((n) => n.includes(phone));
     contactDetails.push({
       type: "phone",
       value: phone,
-      suspicious: riskScore >= 50 || suspiciousNotes.some((n) => n.includes(phone)),
-      note: suspiciousNotes.find((n) => n.includes(phone)),
+      suspicious: isSuspicious,
+      note: aiNote ?? (isSuspicious
+        ? "Verify this number through the sender's official website before calling"
+        : "Confirm this number matches the sender's official contact information"),
     });
   }
   for (const email of ruleData.emails) {
+    const isSuspicious = riskScore >= 50 || suspiciousNotes.some((n) => n.includes(email));
+    const aiNote = suspiciousNotes.find((n) => n.includes(email));
     contactDetails.push({
       type: "email",
       value: email,
-      suspicious: riskScore >= 50 || suspiciousNotes.some((n) => n.includes(email)),
-      note: suspiciousNotes.find((n) => n.includes(email)),
+      suspicious: isSuspicious,
+      note: aiNote ?? (isSuspicious
+        ? "Verify this email domain belongs to the official sender before responding"
+        : "Confirm this email address matches the sender's official contact details"),
     });
   }
   for (const url of ruleData.urls) {
     const isShortUrl = /bit\.ly|tinyurl|goo\.gl|t\.co|rebrand\.ly/i.test(url);
+    const isSuspicious = isShortUrl || riskScore >= 50 || suspiciousNotes.some((n) => n.includes(url));
+    const aiNote = suspiciousNotes.find((n) => n.includes(url));
     contactDetails.push({
       type: "url",
       value: url,
-      suspicious: isShortUrl || riskScore >= 50 || suspiciousNotes.some((n) => n.includes(url)),
+      suspicious: isSuspicious,
       note: isShortUrl
         ? "Short/redirected URL — verify the destination before visiting"
-        : suspiciousNotes.find((n) => n.includes(url)),
+        : aiNote ?? (isSuspicious
+          ? "Verify this URL matches the sender's official website before clicking"
+          : "Confirm this is the sender's official website before entering any information"),
     });
   }
 
@@ -760,9 +772,12 @@ async function runTrustCheckAnalysis(
   for (const date of ruleData.dates) {
     deadlines.push({ text: date, type: "explicit_date" });
   }
+  // Only classify urgency phrases as "threat" when suspicious payment methods are
+  // also present — this prevents legitimate legal/collection language from being
+  // incorrectly labelled THREAT in the UI.
+  const hasSuspiciousPayment = ruleData.paymentRedFlags.length > 0;
   for (const phrase of ruleData.urgencyPhrases) {
-    const isThreaten = ruleData.threatPhrases.length > 0;
-    deadlines.push({ text: phrase, type: isThreaten ? "threat" : "relative" });
+    deadlines.push({ text: phrase, type: hasSuspiciousPayment ? "threat" : "relative" });
   }
 
   const scamIndicators: TrustCheckScamIndicator[] = Array.isArray(parsed.scamIndicators)

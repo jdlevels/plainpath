@@ -226,8 +226,8 @@ export default function TrustCheck() {
         )}
 
         {/* Scam Indicators */}
-        {analysis.scamIndicators.length > 0 && (
-          <SectionCard icon={Shield} title={`Scam Indicators (${analysis.scamIndicators.length})`}>
+        <SectionCard icon={Shield} title={`Scam Indicators${analysis.scamIndicators.length > 0 ? ` (${analysis.scamIndicators.length})` : ""}`}>
+          {analysis.scamIndicators.length > 0 ? (
             <div className="space-y-3">
               {[...highIndicators, ...medIndicators, ...lowIndicators].map((indicator, i) => (
                 <div key={i} className="flex items-start gap-3">
@@ -243,11 +243,10 @@ export default function TrustCheck() {
                 </div>
               ))}
             </div>
-            {analysis.scamIndicators.length === 0 && (
-              <p className="text-sm text-muted-foreground">No specific scam indicators detected.</p>
-            )}
-          </SectionCard>
-        )}
+          ) : (
+            <p className="text-sm text-muted-foreground">No significant scam indicators detected in this document.</p>
+          )}
+        </SectionCard>
 
         {/* Suspicious Contact Details */}
         {analysis.contactDetails.length > 0 && (

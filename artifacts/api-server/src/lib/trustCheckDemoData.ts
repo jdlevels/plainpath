@@ -55,7 +55,7 @@ export const trustCheckDemoDocuments: Record<string, TrustCheckAnalysis> = {
     ],
     deadlines: [
       { text: "48 hours", type: "threat", note: "Shutoff threat if payment not received" },
-      { text: "Immediately", type: "relative" },
+      { text: "Immediately", type: "threat", note: "Demand to call and provide gift card numbers now" },
     ],
     whatToVerify: [
       "Call your utility company at the number printed on your actual bill or their official website — not the number in this letter",
@@ -132,7 +132,7 @@ export const trustCheckDemoDocuments: Record<string, TrustCheckAnalysis> = {
     ],
     deadlines: [
       { text: "24 hours", type: "threat", note: "Claimed arrest warrant timing" },
-      { text: "Immediately", type: "relative" },
+      { text: "Immediately", type: "threat", note: "Demand to call with payment ready now" },
     ],
     whatToVerify: [
       "The IRS will always send a written notice by mail before contacting you — check your mail for any official IRS CP notices",
@@ -204,7 +204,7 @@ export const trustCheckDemoDocuments: Record<string, TrustCheckAnalysis> = {
       },
     ],
     deadlines: [
-      { text: "5 days", type: "relative", note: "Claimed settlement offer expiry" },
+      { text: "5 days", type: "threat", note: "Claimed settlement offer expiry — non-standard Western Union demand" },
       { text: "10 days", type: "threat", note: "Claimed judgment filing deadline" },
     ],
     whatToVerify: [
