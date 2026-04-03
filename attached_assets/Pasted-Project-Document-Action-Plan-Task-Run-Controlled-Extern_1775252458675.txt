@@ -1,0 +1,185 @@
+Project: Document Action Plan
+Task: Run Controlled External Pilot Batch 3 to validate the stability of Tuning Round 2 using the existing pilot baseline and feedback workflow.
+
+Goal:
+Test whether the Tuning Round 2 improvements hold up across a fresh mixed batch, especially in the two areas that were just adjusted:
+1. non-financing service/subscription contract Document Risk
+2. legitimate multi-identifier document Verification Confidence
+
+Context:
+- Phase 2 Trust Check is complete
+- Tuning Round 1 is complete
+- Tuning Round 2 is complete
+- pilot feedback capture is live
+- `/pilot-feedback` is live
+- the pilot baseline is stable
+- no new major feature should be introduced in this pass
+
+Critical constraints:
+- Do NOT add new major features
+- Do NOT redesign the UI
+- Do NOT activate paid features
+- Do NOT restore subscription gating
+- Do NOT add security rollout
+- Do NOT build trusted-entity verification yet
+- Only fix something if a real bug blocks validation
+- This pass is validation only unless a blocking bug appears
+
+Primary objective:
+Run a fresh controlled batch that stress-tests the two tuning targets from Round 2 and confirms whether the current pilot baseline is now stable enough to pause tuning.
+
+-----------------------------------
+BATCH 3 DOCUMENT SET
+-----------------------------------
+
+Use a focused mixed set including at minimum:
+
+A. Non-financing service/subscription contract stress set
+1. gym membership / cancellation-heavy agreement
+2. telecom/service contract
+3. subscription or recurring-billing agreement
+4. service agreement with equipment fees / return obligations
+5. one additional non-financing consumer contract if available
+
+B. Legitimate multi-identifier document confidence set
+6. lease renewal
+7. phone bill
+8. health insurance EOB
+9. utility bill or institutional billing statement
+10. one additional legitimate institutional notice if available
+
+C. Control / regression set
+11. one obvious scam-style government/utility notice
+12. one obvious scam-style tech/account impersonation notice
+13. one realistic high document-risk financing contract
+14. one pasted scam-style text
+15. one pasted legitimate text
+
+If some of these exact documents are already available, reuse them. Add new variants if needed to avoid overfitting to only the same examples.
+
+-----------------------------------
+FOR EACH DOCUMENT
+-----------------------------------
+
+1. Run Document Trust Check
+2. Review the full result
+3. Log pilot feedback using the existing feedback panel
+4. Confirm the feedback record appears in `/pilot-feedback`
+
+Capture for each:
+- document label
+- source type
+- primary verdict
+- authenticity risk
+- document risk
+- verification confidence
+- reviewer assessment
+- false positive? yes/no
+- false negative? yes/no
+- issue categories selected
+- short reviewer note
+
+-----------------------------------
+BATCH 3 SUCCESS CHECKS
+-----------------------------------
+
+Specifically verify:
+
+1. Non-financing service/subscription contracts
+- Document Risk is no longer under-scored
+- harmful non-loan terms are surfaced clearly
+- verdict remains reasonable
+- results do not incorrectly classify these as scams unless actual scam signals exist
+
+2. Legitimate multi-identifier documents
+- Verification Confidence improves where strong evidence is present
+- documents with many coherent identifiers do not sit too low without reason
+- institutional domains, office numbers, reference IDs, and coherent structure are helping confidence appropriately
+
+3. Regression controls
+- obvious scams still score high on Authenticity Risk
+- high-risk financing contracts still score high on Document Risk
+- pasted scam and pasted legitimate behavior remains fair
+- no metadata section appears on pasted text
+- no new false-positive pattern appears
+
+-----------------------------------
+AFTER ALL DOCUMENTS ARE LOGGED
+-----------------------------------
+
+Review `/pilot-feedback` and summarize:
+
+1. total new records logged
+2. Batch 3 assessment breakdown
+3. false positive count
+4. false negative count
+5. recurring strengths
+6. recurring weaknesses
+7. whether the two Round 2 target areas now appear stable
+8. whether any new recurring pattern appeared
+9. whether another tuning round is justified or whether tuning should pause
+
+-----------------------------------
+ONLY FIX IF BLOCKING
+-----------------------------------
+
+During this pass, only make a code change if:
+- a route breaks
+- feedback logging fails
+- a page fails to render
+- a result is malformed
+- a runtime/console issue blocks the batch
+
+If no blocking issue appears, do not change code.
+
+-----------------------------------
+OUTPUT REQUIRED
+-----------------------------------
+
+Return:
+
+1. Batch 3 summary
+- total documents tested
+- total new feedback records logged
+- whether all targeted document categories were covered
+
+2. Document-by-document table
+For each document include:
+- document name
+- source type
+- verdict
+- authenticity risk
+- document risk
+- verification confidence
+- reviewer assessment
+- false positive? yes/no
+- false negative? yes/no
+- top issue category if any
+- short reviewer note
+
+3. Batch-level findings
+- what held up well
+- what still needs attention
+- whether Round 2 tuning worked as intended
+- whether the pilot baseline now appears stable enough to pause tuning
+
+4. Screenshots
+Capture at least:
+- one non-financing high document-risk result
+- one legitimate high-confidence result
+- one obvious scam result
+- one pasted-text result
+- `/pilot-feedback` summary page after Batch 3
+
+5. Final status
+End with one of:
+- BATCH 3 COMPLETE — BASELINE STABLE, PAUSE TUNING
+- BATCH 3 COMPLETE — ONE MORE TUNING ROUND RECOMMENDED
+- BATCH 3 FOUND ONE BLOCKING ISSUE
+
+Success criteria:
+- Tuning Round 2 is properly validated
+- the two tuned areas behave better in fresh documents
+- no meaningful regression appears
+- pilot feedback continues to accumulate cleanly
+- the team can decide whether to pause tuning based on real Batch 3 data
