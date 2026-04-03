@@ -6,6 +6,12 @@ export const trustCheckDemoDocuments: Record<string, TrustCheckAnalysis> = {
     id: "demo-tc-utility",
     processedAt: new Date().toISOString(),
     riskScore: 87,
+    scores: { authenticityRisk: 87, documentRisk: 0, verificationConfidence: 0 },
+    structuralFindings: [
+      "Generic greeting ('Dear Valued Customer') combined with a specific dollar amount and payment demand — legitimate utility companies address customers by name and reference an account number",
+      "Payment demanded without any traceable account number, service reference, or case number — legitimate utility notices always include the customer account number",
+      "Wire transfer instructed to a third-party named financial entity (First National Holdings) — a legitimate utility would never route wire payments through a separately named holding company",
+    ],
     verdict: "High scam risk",
     verdictExplanation:
       "This notice shows multiple high-severity indicators of a utility scam. It demands payment exclusively via gift cards — a method no legitimate utility company would accept — and uses urgent threat language to pressure immediate action. The combination of gift-card payment demand, a 48-hour shutoff threat, and an unverified phone number suggests this is very likely not a legitimate utility notice.",
@@ -78,6 +84,11 @@ export const trustCheckDemoDocuments: Record<string, TrustCheckAnalysis> = {
     id: "demo-tc-irs",
     processedAt: new Date().toISOString(),
     riskScore: 96,
+    scores: { authenticityRisk: 96, documentRisk: 0, verificationConfidence: 12 },
+    structuralFindings: [
+      "Document explicitly instructs the recipient not to contact the IRS main office or discuss the matter with others — this is a known social engineering tactic used to isolate the recipient and prevent verification",
+      "Extreme urgency (4-hour and 24-hour deadlines) combined with cryptocurrency and gift-card payment demands — no genuine IRS enforcement action operates on these timelines or uses these payment methods",
+    ],
     verdict: "High scam risk",
     verdictExplanation:
       "This document contains multiple hallmarks of an IRS impersonation scam — one of the most common fraud schemes in the United States. The IRS never demands cryptocurrency or gift card payments, never threatens immediate arrest in a first notice, and never demands payment without first mailing an official bill. The combination of these factors indicates this is almost certainly not a legitimate IRS communication.",
@@ -155,6 +166,11 @@ export const trustCheckDemoDocuments: Record<string, TrustCheckAnalysis> = {
     id: "demo-tc-debt",
     processedAt: new Date().toISOString(),
     riskScore: 55,
+    scores: { authenticityRisk: 55, documentRisk: 0, verificationConfidence: 22 },
+    structuralFindings: [
+      "Payment and legal action demanded without any original creditor reference number, original account number, or court case number — legitimate collection agencies are required to provide these under the FDCPA",
+      "Short-expiry settlement offer (5 days) combined with a Western Union payment demand — this pressure combination is a common pattern in fraudulent or non-compliant collection attempts",
+    ],
     verdict: "Suspicious — verify before acting",
     verdictExplanation:
       "This letter appears to be from a debt collection company but shows several indicators that warrant caution before taking action. The demand for Western Union payment, combined with missing account reference numbers and aggressive legal language, suggests this may not be from a legitimate collection agency — or the terms may be significantly different from what is legally owed. Verification through official channels is strongly recommended before making any payment.",
@@ -228,6 +244,7 @@ export const trustCheckDemoDocuments: Record<string, TrustCheckAnalysis> = {
     id: "demo-tc-legit",
     processedAt: new Date().toISOString(),
     riskScore: 8,
+    scores: { authenticityRisk: 8, documentRisk: 0, verificationConfidence: 75 },
     verdict: "Likely legitimate",
     verdictExplanation:
       "This notice shows the characteristics of a standard, legitimate late payment reminder from a utility company. It references a specific account number, provides multiple official payment channels, does not demand unusual payment methods, and gives a reasonable response timeframe. While it should still be verified against your account, no significant scam indicators are present.",
@@ -275,6 +292,7 @@ export const trustCheckDemoDocuments: Record<string, TrustCheckAnalysis> = {
     id: "demo-tc-auto-loan",
     processedAt: new Date().toISOString(),
     riskScore: 38,
+    scores: { authenticityRisk: 38, documentRisk: 86, verificationConfidence: 55 },
     verdict: "Cannot verify authenticity",
     verdictExplanation:
       "This document appears to be a retail installment auto loan contract from a credit union, and its structure and terms resemble a real financing agreement. However, authenticity cannot be verified from the text alone, and the strong enforcement language (repossession, lawsuit, lien) plus unusually intrusive control provisions (GPS/starter-interrupt) raise elevated risk if the sender cannot be independently confirmed. The largest concerns here are less about payment-method scam patterns and more about potentially high-impact contract terms if signed.",

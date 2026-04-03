@@ -5,15 +5,16 @@ import {
   ArrowLeft, ShieldCheck, AlertTriangle, XCircle, CheckCircle2,
   Phone, Mail, Globe, Calendar, Clock, Eye, CheckSquare,
   ArrowRight, AlertCircle, Flag, Shield, ExternalLink,
-  Loader2, FileText,
+  Loader2, FileText, BarChart2, Info,
 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useAnalysisContext } from "@/context/AnalysisContext"
 import { getApiBaseUrl } from "@/lib/api"
 import {
-  type TrustCheckAnalysis, type TrustCheckVerdict,
+  type TrustCheckAnalysis, type TrustCheckVerdict, type TrustCheckScores,
   verdictColor, severityColor,
+  authenticityRiskColor, documentRiskColor, verificationConfidenceColor,
 } from "@/lib/trustCheckTypes"
 
 function VerdictIcon({ verdict }: { verdict: TrustCheckVerdict }) {
@@ -51,6 +52,42 @@ function SectionCard({
         {children}
       </Card>
     </motion.div>
+  )
+}
+
+function ScoreCard({
+  label,
+  score,
+  description,
+  colorFn,
+}: {
+  label: string
+  score: number
+  description: string
+  colorFn: (n: number) => { label: string; labelClass: string; barClass: string; textClass: string }
+}) {
+  const c = colorFn(score)
+  return (
+    <div className="flex-1 min-w-0 rounded-xl border border-border/40 bg-card p-4 flex flex-col gap-2.5">
+      <div>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 leading-none mb-1">{label}</p>
+        <p className={`text-xl font-bold tabular-nums leading-none ${c.textClass}`}>{score}<span className="text-xs font-medium text-muted-foreground/50">/100</span></p>
+      </div>
+      <div className="space-y-1">
+        <div className="h-1.5 rounded-full bg-black/8 dark:bg-white/10 overflow-hidden">
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${score}%` }}
+            transition={{ delay: 0.4, duration: 0.5, ease: "easeOut" }}
+            className={`h-full rounded-full ${c.barClass}`}
+          />
+        </div>
+      </div>
+      <div className="flex items-center gap-1.5">
+        <span className={`text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full ${c.labelClass}`}>{c.label}</span>
+        <span className="text-[10px] text-muted-foreground/60 leading-snug">{description}</span>
+      </div>
+    </div>
   )
 }
 
@@ -123,10 +160,14 @@ export default function TrustCheck() {
   }
 
   const vc = verdictColor(analysis.verdict)
+  const scores: TrustCheckScores | undefined = analysis.scores
 
   const highIndicators = analysis.scamIndicators.filter((i) => i.severity === "high")
   const medIndicators = analysis.scamIndicators.filter((i) => i.severity === "medium")
   const lowIndicators = analysis.scamIndicators.filter((i) => i.severity === "low")
+
+  const hasStructural = (analysis.structuralFindings?.length ?? 0) > 0
+  const hasMetadata = (analysis.metadataFindings?.length ?? 0) > 0
 
   return (
     <div
@@ -153,7 +194,7 @@ export default function TrustCheck() {
                 </span>
               </div>
               <p className="text-xs text-muted-foreground truncate hidden sm:block">
-                Risk score: {analysis.riskScore}/100
+                Authenticity risk: {analysis.riskScore}/100
               </p>
             </div>
 
@@ -176,7 +217,7 @@ export default function TrustCheck() {
       {/* ── Content ──────────────────────────────────────────────────────────── */}
       <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-5 sm:pt-8 space-y-4">
 
-        {/* Risk Verdict banner */}
+        {/* Primary Verdict banner */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -193,7 +234,7 @@ export default function TrustCheck() {
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs">
-              <span className="font-medium text-muted-foreground">Risk Score</span>
+              <span className="font-medium text-muted-foreground">Authenticity Risk Score</span>
               <span className={`font-bold tabular-nums ${vc.text}`}>{analysis.riskScore} / 100</span>
             </div>
             <div className="h-2 rounded-full bg-black/8 dark:bg-white/10 overflow-hidden">
@@ -210,6 +251,43 @@ export default function TrustCheck() {
             </div>
           </div>
         </motion.div>
+
+        {/* Score Summary — 3 dimensions */}
+        {scores && (
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+            <Card className="p-4 sm:p-5 border-border/40">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-7 h-7 rounded-lg bg-primary/8 flex items-center justify-center shrink-0">
+                  <BarChart2 className="w-3.5 h-3.5 text-primary/70" />
+                </div>
+                <h3 className="text-sm font-bold text-foreground">Risk Score Summary</h3>
+              </div>
+              <div className="flex gap-3 flex-col sm:flex-row">
+                <ScoreCard
+                  label="Authenticity Risk"
+                  score={scores.authenticityRisk}
+                  description="Scam / impersonation signals"
+                  colorFn={authenticityRiskColor}
+                />
+                <ScoreCard
+                  label="Document Risk"
+                  score={scores.documentRisk}
+                  description="Harsh contract terms"
+                  colorFn={documentRiskColor}
+                />
+                <ScoreCard
+                  label="Verification Confidence"
+                  score={scores.verificationConfidence}
+                  description="How verifiable the sender appears"
+                  colorFn={verificationConfidenceColor}
+                />
+              </div>
+              <p className="text-[10px] text-muted-foreground/50 mt-3 leading-relaxed">
+                These three scores are independent. A document can have low authenticity risk but high document risk, or vice versa.
+              </p>
+            </Card>
+          </motion.div>
+        )}
 
         {/* Contract Risk Callout — shown only for contract-type documents */}
         {(analysis.contractRiskNotes || (analysis.contractTermsFound && analysis.contractTermsFound.length > 0)) && (
@@ -281,6 +359,50 @@ export default function TrustCheck() {
             <p className="text-sm text-muted-foreground">No significant scam indicators detected in this document.</p>
           )}
         </SectionCard>
+
+        {/* Structural Findings */}
+        {hasStructural && (
+          <SectionCard icon={AlertTriangle} title={`Structural Observations (${analysis.structuralFindings!.length})`}>
+            <p className="text-[11px] text-muted-foreground/70 mb-3 font-medium">
+              These are text-pattern and logic inconsistencies found in the document structure — distinct from scam indicators and contract terms.
+            </p>
+            <ul className="space-y-2.5">
+              {analysis.structuralFindings!.map((finding, i) => (
+                <li key={i} className="flex items-start gap-3">
+                  <div className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0 mt-2" />
+                  <p className="text-sm text-foreground/80 leading-relaxed">{finding}</p>
+                </li>
+              ))}
+            </ul>
+          </SectionCard>
+        )}
+
+        {/* Metadata Findings — only suspicious findings */}
+        {hasMetadata && (
+          <SectionCard icon={Info} title={`File Metadata Findings (${analysis.metadataFindings!.length})`}>
+            <p className="text-[11px] text-muted-foreground/70 mb-3 font-medium">
+              These findings come from the PDF file's embedded metadata. Suspicious metadata may indicate the document was created by unexpected software or modified after the fact.
+            </p>
+            <div className="space-y-2.5">
+              {analysis.metadataFindings!.map((finding, i) => (
+                <div key={i} className={`flex items-start gap-3 p-3 rounded-xl border ${finding.suspicious ? "bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800" : "bg-secondary/30 border-border/30"}`}>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                      <span className="text-xs font-semibold text-foreground">{finding.field}</span>
+                      <code className="text-xs font-mono text-muted-foreground">{finding.value}</code>
+                      {finding.suspicious && (
+                        <span className="text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 shrink-0">
+                          Suspicious
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-snug">{finding.note}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </SectionCard>
+        )}
 
         {/* Suspicious Contact Details */}
         {analysis.contactDetails.length > 0 && (
@@ -389,7 +511,7 @@ export default function TrustCheck() {
         {/* Footer disclaimer */}
         <div className="text-center py-4">
           <p className="text-[11px] text-muted-foreground/60 max-w-sm mx-auto leading-relaxed">
-            PlainPath Trust Check uses AI and rule-based analysis to assess risk. Results are not legal or financial advice. When in doubt, consult an official agency or attorney.
+            PlainPath Trust Check uses AI and rule-based analysis to assess risk across three dimensions. Results are not legal or financial advice. When in doubt, consult an official agency or attorney.
           </p>
           <Button
             variant="ghost"

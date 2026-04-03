@@ -147,6 +147,19 @@ export interface TrustCheckScamIndicator {
   sourceEvidence?: string;
 }
 
+export interface TrustCheckScores {
+  authenticityRisk: number;
+  documentRisk: number;
+  verificationConfidence: number;
+}
+
+export interface TrustCheckMetadataFinding {
+  field: string;
+  value: string;
+  note: string;
+  suspicious: boolean;
+}
+
 export interface TrustCheckAnalysis {
   id: string;
   processedAt: string;
@@ -162,4 +175,7 @@ export interface TrustCheckAnalysis {
   safeNextSteps: string[];
   contractRiskNotes?: string;
   contractTermsFound?: string[];
+  scores?: TrustCheckScores;
+  metadataFindings?: TrustCheckMetadataFinding[];
+  structuralFindings?: string[];
 }

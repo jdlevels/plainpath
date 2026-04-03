@@ -1,0 +1,531 @@
+# Document Trust Check — Phase 2 Production Requirements
+
+## Product context
+
+Product name direction: **Document Action Plan**
+
+Feature name: **Document Trust Check**
+
+Current state:
+
+* Trust Check mode already exists
+* Authenticity-style scoring exists
+* Contract/document-risk handling has been added
+* Pilot/test mode is active
+* Paid features remain inactive
+* Security-feature buildout remains deferred for now
+
+This Phase 2 document defines the next production-grade upgrade for Trust Check.
+
+---
+
+## Phase 2 objective
+
+Upgrade Document Trust Check from a content-risk and authenticity-gap detector into a more complete **document fraud and document-risk evaluation system** by adding:
+
+1. **Metadata inspection**
+2. **Structural consistency analysis**
+3. **Math / logic validation**
+4. **Entity / issuer verification signals**
+5. **Multi-score evaluation model**
+
+This phase must improve the system’s ability to distinguish between:
+
+* suspicious or fake documents
+* unverifiable documents
+* harsh but potentially genuine contracts
+* low-risk legitimate documents
+
+---
+
+## Product goal
+
+For any uploaded or pasted document, the system should produce a result that answers:
+
+* How suspicious is this document from an authenticity standpoint?
+* How risky are the contractual or financial terms?
+* How confident are we that the sender/issuer appears real and internally consistent?
+* What specific signals caused the concern?
+* What should the user verify before taking action?
+* What is the safest next step?
+
+---
+
+## Core design principles
+
+* Use **risk-based wording only**
+* Do **not** claim forensic certainty without direct evidence
+* Do **not** say:
+
+  * definitely fake
+  * proven fraud
+  * legally invalid
+* Keep results readable for normal users, not just technical reviewers
+* Keep UI consistent with the current dark premium product style
+* Extend the current Trust Check system; do not build a second disconnected app
+* Do not activate paid features in this phase
+* Do not add security-feature buildout in this phase
+
+---
+
+## Primary output model
+
+Phase 2 should use a **multi-score trust model** with three dimensions.
+
+### 1. Authenticity Risk
+
+Measures whether the document appears suspicious, manipulated, impersonating, or otherwise difficult to trust.
+
+Should consider:
+
+* scam indicators
+* suspicious payment instructions
+* unverifiable sender signals
+* suspicious metadata
+* structural inconsistencies
+* internal contradictions
+* issuer/contact mismatch
+* impersonation concerns
+
+### 2. Document Risk
+
+Measures whether the document contains harsh, coercive, abusive, or high-impact contractual/financial terms even if the document may be genuine.
+
+Should consider:
+
+* default APR jumps
+* fee escalation
+* force-placed insurance
+* repossession / acceleration clauses
+* starter interruption / GPS tracking
+* arbitration / class-action waiver
+* balloon payment risk
+* deficiency balance exposure
+* blanket liens
+* unusually one-sided obligations
+
+### 3. Verification Confidence
+
+Measures how much the issuer/sender information appears coherent, complete, and independently trustworthy based on the material provided.
+
+Should consider:
+
+* complete sender identity
+* internally consistent addresses / phones / emails / domains
+* reference/account/case identifiers
+* stable metadata
+* consistent issuer identity across document sections
+* absence of contradictory details
+* plausibility of business / agency identity signals
+
+---
+
+## Score presentation requirements
+
+The UI should clearly present:
+
+* **Primary verdict**
+* **Authenticity Risk**
+* **Document Risk**
+* **Verification Confidence**
+
+Allowed display formats:
+
+* numeric scores
+* Low / Medium / High bands
+* or numeric + labeled band
+
+Recommended:
+
+* Keep the primary verdict prominent
+* Show the three supporting dimensions directly below it
+* Use short explanatory text for each dimension
+
+---
+
+## Primary verdict model
+
+The primary verdict should continue using risk-based language such as:
+
+* Likely legitimate
+* Suspicious — verify before acting
+* High scam risk
+* Cannot verify authenticity
+
+Important:
+
+* Primary verdict should lean most heavily on **Authenticity Risk** and **Verification Confidence**
+* **Document Risk** should not automatically inflate the primary verdict unless the document also has authenticity concerns
+* A document may be genuine-looking but still dangerous or unfavorable
+
+---
+
+## Phase 2 detection layers
+
+# 1. Metadata inspection layer
+
+## Purpose
+
+Look beyond the visible text and evaluate file-level trust signals where technically possible.
+
+## Inputs by file type
+
+### PDF uploads
+
+Inspect where available:
+
+* file type
+* PDF creator / producer
+* creation date
+* modification date
+* embedded font presence if accessible
+* page count
+* basic document property anomalies
+
+### DOCX uploads
+
+Inspect where available:
+
+* document properties
+* creator / application
+* creation / modification timestamps
+* revision or saved-by properties if accessible
+
+### Pasted text
+
+* no file metadata available
+* system should skip metadata analysis gracefully
+* do not fabricate metadata findings
+
+## Metadata findings to detect
+
+* creation date later than the document’s claimed issue date in a suspicious way
+* modification patterns suggesting after-the-fact editing
+* suspicious or generic producer software strings when the issuer claims to be a formal institution
+* missing or stripped metadata in documents that would normally be expected to contain some creation trail
+* inconsistencies between document type and creation software profile
+
+## Metadata output requirements
+
+* findings must influence scoring where justified
+* findings must appear in a readable **Metadata Findings** section if meaningful
+* if no metadata exists, say that metadata was unavailable or insufficient for review
+
+---
+
+# 2. Structural consistency layer
+
+## Purpose
+
+Evaluate the document’s internal structure for coherence and consistency using extracted text/layout-derived patterns.
+
+## Scope for Phase 2
+
+This phase should focus on **text/layout-derived structure**, not full pixel-level image forensics.
+
+## Structural checks to implement
+
+* repeated header/footer consistency across pages
+* sender name consistency across header/body/footer/signature/contact blocks
+* email/domain consistency with sender identity
+* phone/address consistency across sections
+* inconsistent section titles or formatting conventions
+* abrupt tone shifts between sections
+* contradictory dates, obligations, payment instructions, or references
+* repeated field conflicts (different due dates, different balances, different sender identities)
+* suspicious signature block inconsistencies
+* formatting patterns that suggest sections were merged or inserted from another source, where this can be inferred from the extracted structure
+
+## Structural output requirements
+
+* findings must affect scoring where justified
+* findings must be readable in a **Structural Findings** section
+* do not output vague or speculative structural warnings without evidence
+
+---
+
+# 3. Textual and logical validation layer
+
+## Purpose
+
+Evaluate whether the document’s words, logic, dates, amounts, and obligations make sense together.
+
+## Checks to implement
+
+* tone shifts between formal and informal sections
+* grammatical anomalies in critical clauses
+* contradictory payment instructions
+* contradictory dates or timelines
+* contradictory issuer names
+* contradictory account, invoice, or case identifiers
+* implausible due-date sequences
+* implausible notice periods
+* conflicting obligations
+
+## Math checks where applicable
+
+For invoices, bills, loan-related documents, and notices:
+
+* recalculate totals where line items exist
+* validate tax calculations where possible
+* validate APR / payment plausibility where possible
+* validate fee escalation logic where possible
+* validate grace-period / late-fee / due-date flow where possible
+
+## Output requirements
+
+* logic findings should influence relevant scores
+* if math is unavailable or incomplete, handle gracefully
+* output should identify whether a mismatch is confirmed, probable, or not assessable
+
+---
+
+# 4. Entity / issuer verification signals
+
+## Purpose
+
+Estimate whether the sender/issuer identity appears complete, coherent, and plausibly real from the provided document alone.
+
+## Checks to implement
+
+* sender identity completeness
+* domain consistency with issuer name
+* email consistency with issuer name
+* phone formatting consistency
+* address completeness and plausibility
+* presence or absence of business identifiers, account identifiers, case numbers, license-like references, or other expected traceability markers
+* mismatches between payment destination and claimed sender
+
+## Important note
+
+Phase 2 does **not** require live external database verification if that is not yet implemented.
+
+This phase may begin with:
+
+* internal plausibility checks
+* consistency scoring
+* completeness scoring
+* pattern-based verification guidance
+
+External live verification can remain a later phase.
+
+---
+
+## Signal mapping by score dimension
+
+### Authenticity Risk signals
+
+Examples:
+
+* suspicious payment links
+* gift card / crypto / wire transfer demands
+* sender/payment mismatch
+* unverifiable or inconsistent contact details
+* suspicious metadata
+* creation/modification anomalies
+* structural inconsistencies
+* missing issuer details in documents that normally require them
+* coercive urgency plus suspicious payment path
+
+### Document Risk signals
+
+Examples:
+
+* default APR increase
+* heavy late fees / fee escalation
+* force-placed insurance
+* repossession without notice
+* acceleration clauses
+* deficiency balance exposure
+* starter interruption / GPS tracking
+* arbitration / class-action waiver
+* balloon payments
+* broad lien language
+* highly one-sided contractual obligations
+
+### Verification Confidence signals
+
+Positive or negative examples:
+
+* complete sender identity
+* consistent contact details
+* stable references and identifiers
+* plausible issuer naming
+* internally consistent header/footer/contact blocks
+* metadata that is stable rather than suspicious
+* absence of contradictions
+* clear traceability of the purported sender
+
+---
+
+## Result UI requirements
+
+The existing Trust Check results experience should be extended, not redesigned.
+
+## Recommended section order
+
+1. Primary Verdict
+2. Score Summary
+
+   * Authenticity Risk
+   * Document Risk
+   * Verification Confidence
+3. What This Letter / Document Claims
+4. Demanded Action
+5. Scam Indicators
+6. Contract / Document Risk Terms
+7. Metadata Findings
+8. Structural Findings
+9. Suspicious Contact Details
+10. Deadlines / Pressure Tactics
+11. What To Verify
+12. Safe Next Steps
+
+## UI behavior rules
+
+* Hide empty sections gracefully
+* Do not render blank technical boxes
+* Keep readability high
+* Keep labels understandable for non-experts
+* Keep contract-risk content visually separate from scam/authenticity risk
+
+---
+
+## Technical implementation requirements
+
+## Extend existing architecture
+
+Re-use and extend the current Trust Check system where possible:
+
+* current trust-check route
+* current intake mode handling
+* current upload/paste/demo flow
+* current result rendering model
+* current extraction utilities
+* current scoring system
+
+Do not create redundant parallel systems if the current helpers can be extended.
+
+## New helper responsibilities likely needed
+
+* metadata extraction / normalization helper
+* structural consistency analysis helper
+* logic / math validation helper
+* multi-score calculation helper
+* verdict resolution helper that distinguishes primary verdict from supporting dimensions
+
+## File-type handling requirements
+
+* PDF: inspect metadata where available
+* DOCX: inspect metadata where available
+* pasted text: skip metadata gracefully
+* image-based documents: use whatever extracted text/structure is currently available; do not block if image metadata is minimal
+
+---
+
+## Demo and validation requirements
+
+Phase 2 must be validated against a mixed set of documents including:
+
+* fake utility shutoff notice
+* fake IRS/government-style letter
+* debt collection letter
+* legitimate utility notice
+* auto-loan contract
+* at least one additional low-risk legitimate control document if useful
+
+## Expected validation outcomes
+
+* fake notices should score higher on **Authenticity Risk**
+* harsh contracts should score higher on **Document Risk**
+* legitimate controls should remain lower on **Authenticity Risk**
+* **Verification Confidence** should behave logically across all types
+* metadata findings should not create nonsense on pasted-text inputs
+* standard Analyze a Document mode must remain stable
+
+---
+
+## Safety and privacy note
+
+For pilot testing and future prompts:
+
+* avoid uploading real documents containing unnecessary sensitive information where possible
+* prefer anonymized or fictionalized test data during tuning
+* do not overstate the system as a forensic certainty engine in early pilot stages
+
+---
+
+## Out of scope for Phase 2
+
+Do not build these yet unless already trivial from the current codebase:
+
+* pixel-level image forensics
+* full logo authenticity comparison
+* barcode / MRZ decoding pipelines
+* template matching against official issuer databases
+* behavioral/IP/device fraud analytics
+* security-feature rollout
+* paid feature activation
+* subscription gating restoration
+
+These belong to later phases.
+
+---
+
+## Success criteria
+
+Phase 2 is successful when:
+
+* Trust Check evaluates more than one kind of risk
+* metadata findings meaningfully contribute when available
+* structural inconsistencies are surfaced clearly
+* harmful contract terms do not get confused with classic scam signals
+* Authenticity Risk, Document Risk, and Verification Confidence are clearly separated
+* the app remains stable and pilot-friendly
+* standard document analysis mode remains untouched
+
+---
+
+## Recommended implementation order
+
+1. Multi-score model
+2. Metadata extraction
+3. Structural consistency checks
+4. Logic / math validation
+5. Entity / issuer verification signals
+6. UI exposure / section cleanup
+7. Validation pass across mixed document types
+
+---
+
+## Required completion output from engineering
+
+After implementation, engineering should return:
+
+* exact files changed
+* new files created
+* metadata extraction method summary
+* structural analysis method summary
+* multi-score calculation summary
+* screenshots of:
+
+  * one high-authenticity-risk result
+  * one high-document-risk result
+  * one low-risk / higher-confidence result
+* validation notes across the mixed test set
+* remaining risks
+* what belongs to Phase 3
+
+---
+
+## Phase 3 preview (not part of this build)
+
+Possible future upgrades:
+
+* hidden PDF layer/object checks
+* logo/stamp image integrity
+* barcode/QR consistency checks
+* template comparison against known issuers
+* live sender/business verification
+* cross-document fraud pattern detection
+* deeper document forensic pipelines

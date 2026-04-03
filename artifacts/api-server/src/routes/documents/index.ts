@@ -4,7 +4,7 @@ import multer from "multer";
 import { openai } from "@workspace/integrations-openai-ai-server";
 import { demoDocuments } from "../../lib/demoData.js";
 import { trustCheckDemoDocuments } from "../../lib/trustCheckDemoData.js";
-import type { DocumentAnalysis, DocumentSection, KeyTerm, ActionPack, TrustCheckAnalysis, TrustCheckVerdict, TrustCheckContactDetail, TrustCheckDeadlineItem, TrustCheckScamIndicator } from "../../lib/types.js";
+import type { DocumentAnalysis, DocumentSection, KeyTerm, ActionPack, TrustCheckAnalysis, TrustCheckVerdict, TrustCheckContactDetail, TrustCheckDeadlineItem, TrustCheckScamIndicator, TrustCheckScores, TrustCheckMetadataFinding } from "../../lib/types.js";
 
 function extractSections(text: string): DocumentSection[] {
   const normalized = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
@@ -713,29 +713,250 @@ function scoreToVerdict(score: number): TrustCheckVerdict {
   return "Likely legitimate";
 }
 
-const TRUST_CHECK_SYSTEM_PROMPT = `You are PlainPath Trust Check, a document risk analysis engine that helps people evaluate suspicious letters, notices, and documents.
+function calculateDocumentRiskScore(contractRiskTerms: string[]): number {
+  const weights: Record<string, number> = {
+    "Default rate escalation": 14,
+    "Penalty APR clause": 12,
+    "Penalty rate clause": 12,
+    "Repossession clause": 16,
+    "Voluntary repossession option": 8,
+    "Acceleration clause": 13,
+    "GPS / starter-interrupt device": 15,
+    "Mandatory arbitration": 11,
+    "Binding arbitration clause": 11,
+    "Class-action waiver": 10,
+    "Deficiency balance exposure": 13,
+    "Force-placed insurance": 9,
+    "Blanket lien on collateral": 9,
+    "Balloon payment risk": 13,
+    "Wage garnishment risk": 10,
+    "Negative amortization risk": 14,
+    "Prepayment penalty": 7,
+  };
+  let total = 0;
+  for (const term of contractRiskTerms) {
+    total += weights[term] ?? 8;
+  }
+  return Math.round(Math.min(100, total * 0.78));
+}
 
-Your task: Read the document text and identify whether it contains warning signs of fraud, scams, impersonation, or manipulation.
+function calculateVerificationConfidence(
+  text: string,
+  lower: string,
+  ruleData: ExtractedRuleData,
+  riskScore: number,
+): number {
+  let conf = 40;
+
+  // Positive: specific traceable reference identifier
+  if (/\b(account\s*(number|#|no\.?)|case\s*(number|#|no\.?)|reference\s*(number|#|no\.?)|invoice\s*(number|#|no\.?)|confirmation\s*(number|#|no\.?))\s*:?\s*[\w\-]+/i.test(text)) conf += 12;
+  // Positive: contract-specific identifier (VIN, loan #, policy #)
+  if (/\b(VIN|vehicle\s+identification\s+number|loan\s*(number|#|no\.?)|policy\s*(number|#|no\.?))\s*:?\s*[\w\-]+/i.test(text)) conf += 10;
+  // Positive: named recipient (specific person, not generic)
+  if (/\bdear\s+(?:(mr|ms|mrs|dr|prof)\.?\s+)?[A-Z][a-z]+\s+[A-Z][a-z]+/i.test(text)) conf += 8;
+  // Positive: named individual in contract context (BORROWER: Name, TENANT: Name, etc.)
+  if (/\b(borrower|buyer|purchaser|lessee|tenant|subscriber|client)\s*:\s*[A-Z][a-z]+\s+[A-Z][a-z]/i.test(text)) conf += 5;
+  // Positive: government domain in email or URL
+  if (ruleData.emails.some((e) => /\.gov$/i.test(e)) || ruleData.urls.some((u) => /\.gov\b/i.test(u))) conf += 20;
+  // Positive: URL present without payment red flags
+  if (ruleData.urls.length > 0 && ruleData.paymentRedFlags.length === 0) conf += 5;
+  // Positive: physical street address
+  if (/\b\d{1,5}\s+[A-Za-z]+\s+(street|st|avenue|ave|boulevard|blvd|drive|dr|road|rd|lane|ln|way|court|ct|place|pl|suite|ste)\b/i.test(text)) conf += 8;
+  // Positive: named signatory
+  if (/\b(sincerely|regards|yours\s+truly)\b/i.test(lower) && /[A-Z][a-z]+\s+[A-Z][a-z]+/.test(text)) conf += 5;
+  // Positive: multiple standard payment channels
+  const standardChannels = (lower.match(/\b(online\s+portal|official\s+website|check|mail\s*(?:in|-in)?|in[\s\-]person|ach|automated\s+phone)\b/g) || []);
+  if (standardChannels.length >= 2) conf += 8;
+
+  // Negative: generic greeting
+  if (/\bdear\s+(valued\s+)?(customer|resident|account\s+holder|homeowner|recipient)|to\s+whom\s+it\s+may\s+concern/i.test(lower)) conf -= 10;
+  // Negative: no contact info at all
+  if (ruleData.phones.length === 0 && ruleData.emails.length === 0 && ruleData.urls.length === 0) conf -= 12;
+  // Negative: suspicious payment methods
+  if (ruleData.paymentRedFlags.length > 0) conf -= 15;
+  // Negative: high authenticity risk
+  if (riskScore >= 75) conf -= 25;
+  else if (riskScore >= 50) conf -= 15;
+  else if (riskScore >= 25) conf -= 5;
+
+  return Math.round(Math.max(0, Math.min(100, conf)));
+}
+
+function parsePdfDate(raw: string): Date | null {
+  const m = raw.match(/D:(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/);
+  if (!m) return null;
+  return new Date(`${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:${m[6]}Z`);
+}
+
+function inspectPdfMetadata(info: Record<string, string>): TrustCheckMetadataFinding[] {
+  const findings: TrustCheckMetadataFinding[] = [];
+
+  const producer = (info.Producer || "").trim();
+  const creator = (info.Creator || "").trim();
+  const author = (info.Author || "").trim();
+  const creationDate = parsePdfDate(info.CreationDate || "");
+  const modDate = parsePdfDate(info.ModDate || "");
+  const now = new Date();
+
+  // Flag graphics/image-editing software as producer for a document
+  const editingSoftware = /gimp|photoshop|inkscape|canva|paint/i;
+  if (editingSoftware.test(producer) || editingSoftware.test(creator)) {
+    findings.push({
+      field: "PDF Producer",
+      value: producer || creator,
+      note: "This PDF was produced by image-editing or design software, which is unusual for an official notice or contract. Legitimate documents are typically produced by word processors or official document systems.",
+      suspicious: true,
+    });
+  } else if (producer) {
+    findings.push({
+      field: "PDF Producer",
+      value: producer,
+      note: editingSoftware.test(producer) ? "Produced by graphics software — unusual for an official document" : "Software that generated this PDF",
+      suspicious: false,
+    });
+  }
+
+  if (creator && creator !== producer) {
+    findings.push({ field: "Authoring Tool", value: creator, note: "Application used to create the original document", suspicious: false });
+  }
+
+  if (creationDate) {
+    const yearDiff = now.getFullYear() - creationDate.getFullYear();
+    const isFuture = creationDate > now;
+    const isTooOld = yearDiff > 10;
+    const createdStr = creationDate.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+    if (isFuture) {
+      findings.push({ field: "Creation Date", value: createdStr, note: "Creation date is set in the future, which is implausible and may suggest metadata manipulation.", suspicious: true });
+    } else if (isTooOld) {
+      findings.push({ field: "Creation Date", value: createdStr, note: "Creation date is unusually old — verify whether this matches the document's claimed date.", suspicious: true });
+    } else {
+      findings.push({ field: "Creation Date", value: createdStr, note: "Date this PDF was first created", suspicious: false });
+    }
+  }
+
+  if (modDate && creationDate) {
+    const gapMs = modDate.getTime() - creationDate.getTime();
+    const gapDays = Math.round(gapMs / (1000 * 60 * 60 * 24));
+    const modStr = modDate.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+    if (gapDays > 30) {
+      findings.push({
+        field: "Last Modified",
+        value: `${modStr} (${gapDays} days after creation)`,
+        note: `This PDF was modified ${gapDays} days after it was originally created. Significant post-creation modification may indicate the document was altered — verify against an original source if possible.`,
+        suspicious: true,
+      });
+    } else if (gapDays > 0) {
+      findings.push({ field: "Last Modified", value: modStr, note: "PDF was modified shortly after creation, which is normal during document preparation.", suspicious: false });
+    }
+  } else if (modDate && !creationDate) {
+    const modStr = modDate.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+    findings.push({ field: "Last Modified", value: modStr, note: "Modification date present but no creation date found.", suspicious: false });
+  }
+
+  if (author) {
+    findings.push({ field: "Author", value: author, note: "Person or system recorded as the document author", suspicious: false });
+  }
+
+  // Flag entirely empty metadata for a document that claims to be institutional
+  const hasAnyMeta = producer || creator || author || creationDate;
+  if (!hasAnyMeta) {
+    findings.push({
+      field: "Metadata",
+      value: "None present",
+      note: "This PDF has no embedded metadata (no producer, author, or creation date). While this can occur with some PDF generators, it may also indicate the metadata was deliberately stripped — unusual for official institutional documents.",
+      suspicious: true,
+    });
+  }
+
+  return findings;
+}
+
+function detectStructuralIssues(
+  text: string,
+  lower: string,
+  ruleData: ExtractedRuleData,
+): string[] {
+  const issues: string[] = [];
+
+  // 1. Generic greeting + specific dollar amount + payment red flag
+  const hasGenericGreeting = /\bdear\s+(valued\s+)?(customer|resident|account\s+holder|homeowner|recipient)|to\s+whom\s+it\s+may\s+concern/i.test(lower);
+  if (hasGenericGreeting && ruleData.amounts.length > 0 && ruleData.paymentRedFlags.length > 0) {
+    issues.push("Generic greeting ('Dear Valued Customer' or similar) combined with a specific dollar amount and payment demand — legitimate institutions typically address customers by name");
+  }
+
+  // 2. Payment demand with no traceable reference number
+  const hasRefNumber = /\b(account\s*(number|#|no\.?)|case\s*(number|#|no\.?)|reference\s*(number|#|no\.?)|invoice\s*(number|#|no\.?)|confirmation\s*(number|#|no\.?)|notice\s*(number|#|no\.?))\s*:?\s*[\w\-]+/i.test(text);
+  const hasMeaningfulAmount = ruleData.amounts.length > 0;
+  const hasThreatOrPayment = ruleData.paymentRedFlags.length > 0 || ruleData.threatPhrases.some((t) => ["collections", "collection agency", "debt collector", "lawsuit", "legal action", "eviction"].includes(t));
+  if (hasMeaningfulAmount && hasThreatOrPayment && !hasRefNumber) {
+    issues.push("Payment or legal action demanded without any traceable reference number, account number, or case number — legitimate institutions typically include at least one verifiable identifier");
+  }
+
+  // 3. Email domain / URL domain mismatch
+  if (ruleData.emails.length > 0 && ruleData.urls.length > 0) {
+    const emailDomains = ruleData.emails.map((e) => (e.split("@")[1] || "").toLowerCase().replace(/^www\./, "")).filter(Boolean);
+    const urlDomains = ruleData.urls.map((u) => { try { return new URL(u).hostname.replace(/^www\./, ""); } catch { return ""; } }).filter(Boolean);
+    const hasMatch = emailDomains.some((ed) => urlDomains.some((ud) => ud.includes(ed) || ed.includes(ud)));
+    if (!hasMatch && emailDomains.length > 0 && urlDomains.length > 0) {
+      issues.push(`Contact email domain (${emailDomains[0]}) does not appear to match the URL domain referenced in the document (${urlDomains[0]}) — verify both belong to the same organization before acting`);
+    }
+  }
+
+  // 4. Three or more distinct area codes claiming to be from one organization
+  if (ruleData.phones.length >= 3) {
+    const areaCodes = ruleData.phones.map((p) => p.replace(/\D/g, "").slice(0, 3));
+    const unique = [...new Set(areaCodes)];
+    if (unique.length >= 3) {
+      issues.push(`Multiple different phone area codes found (${unique.slice(0, 3).join(", ")}) — unusual if all numbers belong to the same organization's contact block`);
+    }
+  }
+
+  // 5. Instruction to not contact official channels (social engineering)
+  if (/do\s+not\s+contact\s+the|do\s+not\s+call\s+the\s*(irs|fbi|police|main\s+office|official)|avoid\s+contacting|do\s+not\s+discuss\s+(this|the)/i.test(lower)) {
+    issues.push("Document instructs the recipient not to contact official authorities or the organization's main office — this is a known social engineering tactic used to prevent independent verification");
+  }
+
+  // 6. Wire transfer to a named third-party bank
+  if (/wire\s+(funds|transfer|payment|money)\s+(to|immediately)/i.test(lower)) {
+    const bankMatch = text.match(/at\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,3}\s+(?:Bank|Holdings|Financial|Trust|Credit\s+Union))/);
+    if (bankMatch) {
+      issues.push(`Wire transfer instructed to what may be a third-party financial entity (${bankMatch[1]}) — verify the wire destination belongs to the claimed sender before transferring any funds`);
+    }
+  }
+
+  // 7. Settlement offer with a very short expiry (≤ 5 days) combined with a payment red flag
+  if (/\bsettle\b.*\b(offer|amount)\b|\b(settlement|reduced|discounted)\s+(offer|amount|payment)\b/i.test(lower) &&
+      /\b[1-5]\s*days?\b/i.test(lower) && ruleData.paymentRedFlags.length > 0) {
+    issues.push("Short-expiry settlement offer (5 days or fewer) combined with a non-standard payment method — this pressure combination is common in fraudulent collection attempts");
+  }
+
+  return issues;
+}
+
+const TRUST_CHECK_SYSTEM_PROMPT = `You are PlainPath Trust Check, a document risk analysis engine that helps people evaluate suspicious letters, notices, and contracts across three dimensions: authenticity risk, document/contract risk, and verification confidence.
 
 CRITICAL — Use risk-based language only. Never claim certainty.
-ALLOWED language: "appears to", "may indicate", "suggests", "could be", "shows signs of", "likely", "suspicious", "cannot confirm", "cannot verify"
-FORBIDDEN language: "definitely fake", "is a scam", "is fraud", "proven fraud", "legally invalid", "certainly fraudulent"
+ALLOWED: "appears to", "may indicate", "suggests", "could be", "shows signs of", "likely", "suspicious", "cannot confirm", "cannot verify", "appears structurally inconsistent"
+FORBIDDEN: "definitely fake", "is a scam", "is fraud", "proven fraud", "legally invalid", "certainly fraudulent"
 
 Return ONLY a valid JSON object — no markdown, no code fences, just raw JSON.
 
 {
-  "verdictExplanation": "string - 2-4 sentences explaining the risk level in cautious, risk-based language",
+  "verdictExplanation": "string - 2-4 sentences explaining the primary risk level using risk-based language. Distinguish between authenticity concerns (scam/impersonation risk) and contract-term concerns — do not conflate the two.",
   "whatItClaims": "string - 2-4 sentences: what organization or authority this document claims to be from, and what situation it describes",
-  "demandedAction": "string - 2-4 sentences: what the letter asks the recipient to do — pay, call, respond, provide information, etc.",
+  "demandedAction": "string - 2-4 sentences: what the letter/contract asks the recipient to do — pay, call, respond, sign, provide information, etc.",
   "scamIndicators": [
     {
-      "indicator": "string - clear description of the suspicious signal",
+      "indicator": "string - clear description of the authenticity or scam-risk signal",
       "severity": "high|medium|low",
-      "sourceEvidence": "string - brief quote or paraphrase from the document"
+      "sourceEvidence": "string - brief quote or paraphrase from the document supporting this indicator"
     }
   ],
+  "structuralFindings": [
+    "string - a text-observable structural or logical anomaly in this document. Examples: tone shift between sections, contradictory issuer identity across header/body/footer, missing identifiers for a payment demand, math/date inconsistency, abrupt change in formality. Only include findings you can support from the document text — do not fabricate. Leave array empty if no anomalies detected."
+  ],
   "suspiciousContactNotes": [
-    "string - a note ONLY for contacts you have specific reason to flag as suspicious, spoofed, or unverifiable (e.g. non-official domain, mismatched brand, unregistered number). For documents that appear low-risk or legitimate, leave this EMPTY. Do NOT include routine contacts like known government agency lines or contacts that are easily verifiable."
+    "string - a note ONLY for contacts with a specific reason to be flagged — wrong domain for claimed brand, non-standard number for a known institution, 555 placeholder number, short URL. Leave EMPTY for low-risk or legitimate-appearing documents. Do NOT include routine contacts or generate notes purely as generic caution."
   ],
   "whatToVerify": [
     "string - one specific thing to independently verify before taking action"
@@ -743,24 +964,40 @@ Return ONLY a valid JSON object — no markdown, no code fences, just raw JSON.
   "safeNextSteps": [
     "string - one concrete safe action"
   ],
-  "contractRiskNotes": "string or null — ONLY populate this when the document is clearly a binding legal agreement (loan contract, lease, service agreement, employment contract, financing agreement) AND it contains potentially harmful consumer terms such as: high default/penalty APR, mandatory arbitration or class-action waiver, repossession or acceleration clauses, deficiency balance exposure, force-placed insurance, GPS/starter-interrupt devices, balloon payments, blanket liens, or prepayment penalties. Write 2-4 sentences in plain language explaining the specific risks. Be explicit that these are CONTRACT risks — distinct from scam/authenticity concerns. A contract can be entirely authentic yet contain provisions that could significantly harm the consumer. If the document is not a binding contract, or contains no significant harmful consumer terms, return null."
+  "contractRiskNotes": "string or null — ONLY populate when the document is clearly a binding legal agreement (loan contract, lease, service agreement, employment contract, financing agreement) AND it contains potentially harmful consumer terms such as: high default/penalty APR, mandatory arbitration or class-action waiver, repossession or acceleration clauses, deficiency balance exposure, force-placed insurance, GPS/starter-interrupt devices, balloon payments, blanket liens, or prepayment penalties. Write 2-4 sentences in plain language explaining the specific risks. These are CONTRACT risks — distinct from scam/authenticity concerns. A contract can be entirely authentic yet contain provisions that could significantly harm the consumer. Return null if not a binding contract or no significant harmful consumer terms."
 }
 
 Guidelines:
-- scamIndicators: 2-8 warning signs. HIGH severity: payment red flags (gift card, wire, crypto), threats of arrest/shutdown, identity info requests, sender impersonation, remote access requests; MEDIUM: time pressure, missing case/account numbers, vague sender identity, threat language without specifics; LOW: generic greetings, formatting inconsistencies, grammar errors, vague references
-- If the document appears legitimate, scamIndicators may be empty or have only low-severity items
-- suspiciousContactNotes: ONLY list contacts that have a specific reason to be flagged — wrong domain for claimed brand, non-standard number for a known institution, short URL, etc. If the document appears low-risk, leave this array EMPTY. Do not generate notes for every contact just as generic caution.
+- scamIndicators: 0-8 warning signs mapped to authenticity/scam risk only (not contract terms). HIGH: gift card/wire/crypto payment demand, threats of arrest, identity info requests, impersonation signals, instructions to not contact authorities; MEDIUM: time pressure, missing case/account numbers for a payment demand, vague sender identity; LOW: generic greetings, formatting inconsistencies, grammar errors
+- structuralFindings: only include text-provable anomalies. Typical findings: sender name in header doesn't match signature block, email domain differs from URL domain, a payment is demanded but no account/case/reference number exists, dates are inconsistent or illogical, abrupt formality shift between sections, a wire transfer to a third-party named bank
+- suspiciousContactNotes: only flag contacts with a specific evidentiary reason
 - whatToVerify: 3-6 specific verification steps. Always include: verify sender identity through official public channels (not numbers in the letter)
 - safeNextSteps: 4-6 safe actions. Always include: verify through official website, do not call numbers in the letter until verified, do not pay until independently confirmed, preserve the document
-- contractRiskNotes: This is a separate analytical dimension from scam detection. Analyze the document for consumer-harmful contract terms regardless of whether it appears legitimate or fraudulent. A genuine contract can still contain provisions that are one-sided, risky, or punishing. Explain these in plain, non-alarming language. Keep it factual — do not say the contract is unfair, just identify what the specific clauses mean for the consumer.
-- Keep language practical and non-alarming. Help the person stay safe without causing unnecessary panic.`;
+- contractRiskNotes: separate analytical dimension from scam detection. Analyze for consumer-harmful contract terms regardless of whether the document appears legitimate or fraudulent. Keep factual and non-alarming.
+- Keep language practical. Help the person stay safe without causing unnecessary panic.`;
 
 async function runTrustCheckAnalysis(
   text: string,
   ruleData: ExtractedRuleData,
   riskScore: number,
   verdict: TrustCheckVerdict,
+  pdfMetadata?: Record<string, string>,
 ): Promise<TrustCheckAnalysis> {
+  const lower = text.toLowerCase();
+
+  const documentRisk = calculateDocumentRiskScore(ruleData.contractRiskTerms);
+  const verificationConfidence = calculateVerificationConfidence(text, lower, ruleData, riskScore);
+  const scores: TrustCheckScores = { authenticityRisk: riskScore, documentRisk, verificationConfidence };
+
+  const metadataFindings: TrustCheckMetadataFinding[] | undefined =
+    pdfMetadata ? inspectPdfMetadata(pdfMetadata) : undefined;
+
+  const ruleStructuralIssues = detectStructuralIssues(text, lower, ruleData);
+
+  const metadataContext = metadataFindings && metadataFindings.length > 0
+    ? `\n- PDF Metadata findings:\n${metadataFindings.map((f) => `  [${f.suspicious ? "SUSPICIOUS" : "info"}] ${f.field}: ${f.value} — ${f.note}`).join("\n")}`
+    : "\n- PDF metadata: not available (pasted text or metadata stripped)";
+
   const ruleContext = [
     `Rule-extracted data:`,
     `- Phone numbers found: ${ruleData.phones.join(", ") || "none"}`,
@@ -773,7 +1010,11 @@ async function runTrustCheckAnalysis(
     `- Payment method red flags: ${ruleData.paymentRedFlags.join(", ") || "none"}`,
     `- Sensitive info requests: ${ruleData.infoRequests.join(", ") || "none"}`,
     `- Contract risk terms detected: ${ruleData.contractRiskTerms.join(", ") || "none"}`,
-    `- Rule-based risk score: ${riskScore}/100 → Verdict: ${verdict}`,
+    `- Rule-based authenticity risk score: ${riskScore}/100 → ${verdict}`,
+    `- Rule-based document risk score: ${documentRisk}/100`,
+    `- Rule-based verification confidence score: ${verificationConfidence}/100`,
+    `- Rule-detected structural issues: ${ruleStructuralIssues.length > 0 ? ruleStructuralIssues.join(" | ") : "none"}`,
+    metadataContext,
   ].join("\n");
 
   const response = await openai.chat.completions.create({
@@ -869,6 +1110,17 @@ async function runTrustCheckAnalysis(
       ? parsed.contractRiskNotes.trim()
       : undefined;
 
+  const aiStructuralFindings: string[] = Array.isArray(parsed.structuralFindings)
+    ? parsed.structuralFindings.filter((s: unknown) => typeof s === "string" && (s as string).trim().length > 0)
+    : [];
+
+  const allStructuralFindings = [
+    ...ruleStructuralIssues,
+    ...aiStructuralFindings.filter((ai) => !ruleStructuralIssues.some((r) => r.toLowerCase().slice(0, 30) === ai.toLowerCase().slice(0, 30))),
+  ];
+
+  const significantMetadataFindings = metadataFindings?.filter((f) => f.suspicious) ?? [];
+
   return {
     id: uuidv4(),
     processedAt: new Date().toISOString(),
@@ -884,25 +1136,32 @@ async function runTrustCheckAnalysis(
     safeNextSteps: Array.isArray(parsed.safeNextSteps) ? parsed.safeNextSteps : [],
     contractRiskNotes,
     contractTermsFound: ruleData.contractRiskTerms.length > 0 ? ruleData.contractRiskTerms : undefined,
+    scores,
+    metadataFindings: significantMetadataFindings.length > 0 ? significantMetadataFindings : undefined,
+    structuralFindings: allStructuralFindings.length > 0 ? allStructuralFindings : undefined,
   };
 }
 
 async function extractTextFromBuffer(
   file: Express.Multer.File,
-): Promise<{ text: string; title: string; error?: { status: number; body: object } }> {
+): Promise<{ text: string; title: string; pdfMetadata?: Record<string, string>; error?: { status: number; body: object } }> {
   const mime = file.mimetype ?? "";
   const originalName = (file.originalname ?? "").toLowerCase();
   const title = file.originalname.replace(/\.[^.]+$/, "");
 
   if (mime === "application/pdf" || originalName.endsWith(".pdf")) {
     let pdfText: string | null = null;
+    let pdfMeta: Record<string, string> | undefined;
     let parseErr: string | null = null;
     try {
       const pdfMod = await import("pdf-parse/lib/pdf-parse.js");
-      const pdfParse: (buf: Buffer) => Promise<{ text: string }> =
+      const pdfParse: (buf: Buffer) => Promise<{ text: string; info?: Record<string, string> }> =
         (pdfMod as any).default ?? (pdfMod as any);
       const result = await pdfParse(file.buffer);
       pdfText = result?.text ?? null;
+      if (result?.info && typeof result.info === "object") {
+        pdfMeta = result.info as Record<string, string>;
+      }
     } catch (err) {
       parseErr = err instanceof Error ? err.message : String(err);
     }
@@ -912,7 +1171,7 @@ async function extractTextFromBuffer(
     if (!pdfText || !pdfText.trim()) {
       return { text: "", title, error: { status: 422, body: { error: "scanned_pdf", message: "This PDF appears to contain only images (scanned document). PlainPath cannot read image-based PDFs — please copy and paste the text instead." } } };
     }
-    return { text: pdfText, title };
+    return { text: pdfText, title, pdfMetadata: pdfMeta };
   }
 
   if (
@@ -962,7 +1221,7 @@ router.post("/trust-check", async (req, res) => {
     const ruleData = extractRuleData(text);
     const riskScore = calculateRiskScore(ruleData, lower);
     const verdict = scoreToVerdict(riskScore);
-    const analysis = await runTrustCheckAnalysis(text, ruleData, riskScore, verdict);
+    const analysis = await runTrustCheckAnalysis(text, ruleData, riskScore, verdict, undefined);
     return res.json({ analysis });
   } catch (error) {
     const isTimeout = error instanceof Error && (
@@ -999,7 +1258,7 @@ router.post("/trust-check-upload", upload.single("file"), async (req, res) => {
       const ruleData = extractRuleData(text);
       const riskScore = calculateRiskScore(ruleData, lower);
       const verdict = scoreToVerdict(riskScore);
-      const analysis = await runTrustCheckAnalysis(text, ruleData, riskScore, verdict);
+      const analysis = await runTrustCheckAnalysis(text, ruleData, riskScore, verdict, extracted.pdfMetadata);
       return res.json({ analysis });
     } catch (analysisError) {
       const msg = analysisError instanceof Error ? analysisError.message : String(analysisError);

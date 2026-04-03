@@ -20,7 +20,7 @@ A polished full-stack web app that turns confusing paperwork (PDFs, pasted text)
 ## Features
 
 - **Landing page** — Hero section, feature grid, 3 demo document cards
-- **Import page** — Paste text, PDF upload, 3 built-in demos
+- **Import page** — Paste text, PDF upload, 3 built-in demos; Trust Check mode switches demo set to 5 trust-check documents
 - **Analysis results** — 10-tab view: Plain English, Source Sections, Overview, What's Missing, Checklist, Required Docs, Deadlines, Risks & Notes, Key Terms, Action Pack
 - **Save analysis** — "Save" button in the analyze header (Bookmark icon); saves full analysis snapshot to localStorage; changes to "Saved ✓" with green feedback; subsequent clicks say "Update" and overwrite the saved snapshot
 - **My Analyses page** — `/my-analyses`; lists all saved analyses with title, type, date, step/doc/deadline counts; supports Open (loads into context → navigates to /analyze), Rename (inline text edit), Delete (inline confirm); empty state with CTA; privacy notice: "Saved on this device only · not uploaded to PlainPath"; storage size shown in KB; warns clearing browser data removes saves
@@ -35,38 +35,52 @@ A polished full-stack web app that turns confusing paperwork (PDFs, pasted text)
 - **3 built-in demos** — event-permit, school-enrollment, grant-application with rich pre-analyzed data including Plain English sections
 - **Dark / Light / System theme** — Persisted, FOUC-free, covers every page and component
 
-## Document Trust Check
+## Document Trust Check (Phase 2 — Complete)
 
-Second product mode: checks documents for scam/fraud risk and contract-level consumer harm.
+Second product mode: evaluates documents across three independent risk dimensions.
 
-### Two analytical dimensions (Phase 1):
-1. **Authenticity / Scam Risk** — rule-based score 0-100 + AI verdict (Likely legitimate / Cannot verify / Suspicious / High scam risk). Looks for payment method red flags, impersonation, urgency pressure, suspicious contacts.
-2. **Contract Risk** (new) — AI populates `contractRiskNotes` (plain-language summary) when contract-specific harmful terms are detected (default APR escalation, repossession, acceleration clause, mandatory arbitration, class-action waiver, deficiency balance, force-placed insurance, GPS/starter-interrupt device, blanket lien, balloon payment, etc.). Detected terms appear as amber pill badges under "Contract Terms to Review." This section only appears for contract-type documents.
+### Three-score model (Phase 2):
+1. **Authenticity Risk** (0-100) — Scam/impersonation signals; rule-based + AI. Drives the primary verdict and top banner bar.
+2. **Document Risk** (0-100) — Contract-term harm potential, weighted scoring across 17 contract-term categories. Only meaningful for contract-type documents.
+3. **Verification Confidence** (0-100) — How verifiable the issuer identity is based on text signals (official domain refs, reference numbers, etc.).
 
-### Verdict thresholds:
+### Score color bands:
+- Authenticity Risk: 75+ High (red), 50+ Elevated (orange), 25+ Moderate (yellow), <25 Low (green)
+- Document Risk: 70+ High (red), 40+ Moderate (amber), 15+ Low (yellow), <15 None (grey)
+- Verification Confidence: 70+ Good (green), 40+ Partial (yellow), <40 Low (red)
+
+### Verdict thresholds (authenticity score):
 - 0-24: Likely legitimate
 - 25-49: Cannot verify authenticity
 - 50-74: Suspicious — verify before acting
 - 75-100: High scam risk
 
+### Additional Phase 2 capabilities:
+- **Structural Findings** — 7 rule-pattern checks (generic greeting + payment demand, missing reference numbers, domain mismatch, area code dispersion, anti-verification instructions, wire to third-party bank, short-expiry settlement); displayed as bullet list only when findings exist
+- **Metadata Findings** — PDF metadata inspection (creation/mod dates, producer, author); flags future dates, editing software in production docs, stripped metadata; displayed only for PDF uploads with suspicious metadata
+- **`calculateDocumentRiskScore()`** — weighted contract-term scoring function (17 term weights, max 100)
+- **`calculateVerificationConfidence()`** — text-signal confidence function (gov domain +20, reference numbers +15, etc.)
+- **`inspectPdfMetadata()`** — extracts and evaluates PDF embedded metadata
+- **`detectStructuralIssues()`** — 7 structural rule patterns
+
 ### Trust Check demos (5 total):
-- `fake-utility-shutoff` — 87/100 High scam risk
-- `fake-irs-collection` — 96/100 High scam risk
-- `debt-collection-letter` — 55/100 Suspicious
-- `legitimate-utility-notice` — 8/100 Likely legitimate
-- `auto-loan-contract` — 38/100 Cannot verify (contract risk section visible)
+- `fake-utility-shutoff` — auth=87, doc=0, conf=0; 3 structural findings
+- `fake-irs-collection` — auth=96, doc=0, conf=12; 2 structural findings
+- `debt-collection-letter` — auth=55, doc=0, conf=22; 2 structural findings
+- `legitimate-utility-notice` — auth=8, doc=0, conf=75; no structural findings
+- `auto-loan-contract` — auth=38, doc=86, conf=55; 9 contract terms found
 
 ### Trust Check routes:
 - `POST /api/documents/trust-check` — text paste analysis
-- `POST /api/documents/trust-check-upload` — file upload analysis
+- `POST /api/documents/trust-check-upload` — file upload analysis (extracts PDF metadata)
 - `GET /api/documents/trust-check-demo/:demoId` — pre-computed demo
 
 ### Key Trust Check files:
-- `artifacts/api-server/src/routes/documents/index.ts` — `extractRuleData()`, `calculateRiskScore()`, `runTrustCheckAnalysis()`, AI prompt with `contractRiskNotes` field
-- `artifacts/api-server/src/lib/trustCheckDemoData.ts` — 5 pre-computed demos
-- `artifacts/api-server/src/lib/types.ts` — `TrustCheckAnalysis` interface (includes `contractRiskNotes?`, `contractTermsFound?`)
-- `artifacts/plainpath/src/lib/trustCheckTypes.ts` — frontend types + `verdictColor()`, `severityColor()`
-- `artifacts/plainpath/src/pages/TrustCheck.tsx` — 8-section results page with Contract Terms callout
+- `artifacts/api-server/src/routes/documents/index.ts` — all rule functions + 4 Phase 2 functions + `runTrustCheckAnalysis()`
+- `artifacts/api-server/src/lib/trustCheckDemoData.ts` — 5 pre-computed demos with scores + structuralFindings
+- `artifacts/api-server/src/lib/types.ts` — `TrustCheckAnalysis` (includes `scores?`, `metadataFindings?`, `structuralFindings?`)
+- `artifacts/plainpath/src/lib/trustCheckTypes.ts` — frontend types + color helpers for all 3 scores
+- `artifacts/plainpath/src/pages/TrustCheck.tsx` — results page with Score Summary, Structural Findings, Metadata Findings sections
 
 ## API Endpoints
 
