@@ -580,6 +580,9 @@ function extractRuleData(text: string): ExtractedRuleData {
     "zelle", "cash app", "cashapp", "venmo",
     "prepaid card", "prepaid debit", "money order",
     "payment link", "pay here", "click to pay", "pay online now",
+    // Account-takeover / fund-isolation signals (Tuning Round 3):
+    // Scammers instruct victims to move money to "holding", "safe", or "protected" accounts.
+    "holding account", "safe account", "protected account",
   ];
   const paymentRedFlags = paymentRedFlagTerms.filter((t) => lower.includes(t));
 
@@ -664,9 +667,12 @@ function extractRuleData(text: string): ExtractedRuleData {
     ["may suspend service", "Service suspension without notice"],
     ["suspend service without notice", "Service suspension without notice"],
     ["suspend without notice", "Service suspension without notice"],
+    ["right to suspend", "Service suspension without notice"],
     // Equipment non-return / return fees
     ["non-return fee", "Equipment non-return fee"],
     ["equipment not returned", "Equipment return requirement"],
+    ["unreturned equipment", "Equipment non-return fee"],
+    ["full replacement cost", "Equipment non-return fee"],
     // Long advance cancellation notice requirements — renewal traps
     ["days before renewal", "Long cancellation notice requirement"],
     ["days prior to renewal", "Long cancellation notice requirement"],
@@ -676,10 +682,36 @@ function extractRuleData(text: string): ExtractedRuleData {
     ["reserves the right to adjust", "Unilateral price/term adjustment right"],
     ["right to adjust pricing", "Unilateral price/term adjustment right"],
     ["may adjust pricing", "Unilateral price/term adjustment right"],
+    ["may adjust rates", "Unilateral price/term adjustment right"],
+    ["may adjust fees", "Unilateral price/term adjustment right"],
     // Recurring successive renewal cycles — lock-in structures
     ["successive 12-month", "Recurring renewal cycle"],
     ["successive one-year", "Recurring renewal cycle"],
     ["successive annual", "Recurring renewal cycle"],
+    // ── Non-financing consumer-harm terms (Tuning Round 3) ──────────────────
+    // Data-cap overage billing traps (ISP / telecom contracts)
+    ["overage", "Data overage billing"],
+    ["data cap", "Data cap with overage billing"],
+    ["data usage allowance", "Data cap with overage billing"],
+    // Service reinstatement / reconnection fees
+    ["reinstatement fee", "Service reinstatement fee"],
+    ["reconnection fee", "Service reinstatement fee"],
+    // GPS tracking device in loan contexts (installment / title loan)
+    ["gps tracking device", "GPS / starter-interrupt device"],
+    ["gps tracker", "GPS / starter-interrupt device"],
+    ["gps tracking", "GPS / starter-interrupt device"],
+    // Rollover provisions — predatory lending / title loan traps
+    // Use specific "roll over the loan/balance" phrasing to avoid matching retirement 401k rollovers.
+    ["roll over the loan", "Rollover provision"],
+    ["roll over the balance", "Rollover provision"],
+    ["roll the loan over", "Rollover provision"],
+    ["rollovers permitted", "Rollover provision"],
+    ["no limit on the number of rollover", "Unlimited rollover provision"],
+    ["number of rollovers permitted", "Unlimited rollover provision"],
+    // No right of rescission — removes the buyer's cooling-off period
+    ["no right of rescission", "No right of rescission"],
+    ["there is no right of rescission", "No right of rescission"],
+    ["no cooling-off period", "No right of rescission"],
   ];
   const seenContractLabels = new Set<string>();
   const contractRiskTerms: string[] = [];
@@ -692,6 +724,21 @@ function extractRuleData(text: string): ExtractedRuleData {
     if (!seenContractLabels.has(label)) {
       seenContractLabels.add(label);
       contractRiskTerms.push(label);
+    }
+  }
+
+  // Tuning Round 3: detect predatory APR (≥ 100%) — hallmark of title loans, payday loans, rent-to-own.
+  // The pattern loop only matches exact strings; a regex search is needed to catch specific numeric APR values.
+  if (!seenContractLabels.has("Predatory APR (≥100%)")) {
+    const aprNumericMatch =
+      lower.match(/annual percentage rate[^%\n]{0,40}(\d{3,}(?:\.\d+)?)\s*%/) ||
+      lower.match(/\bapr[^%\n]{0,30}?(\d{3,}(?:\.\d+)?)\s*%/);
+    if (aprNumericMatch) {
+      const aprVal = parseFloat(aprNumericMatch[1]);
+      if (aprVal >= 100) {
+        seenContractLabels.add("Predatory APR (≥100%)");
+        contractRiskTerms.push("Predatory APR (≥100%)");
+      }
     }
   }
 
@@ -709,7 +756,13 @@ function calculateRiskScore(data: ExtractedRuleData, lower: string): number {
   const cryptoTerms = ["cryptocurrency", "bitcoin", "ethereum", "crypto", "usdt"];
   if (data.paymentRedFlags.some((f) => cryptoTerms.some((k) => f.includes(k)))) score += 22;
   const ssnTerms = ["social security number", "ssn"];
-  if (data.infoRequests.some((r) => ssnTerms.some((k) => r.includes(k)))) score += 22;
+  // Tuning Round 3 — Priority 4: Guard against SSN scoring spuriously elevating legitimate government docs.
+  // Legitimate SSA/government letters reference the recipient's SSN in masked form (e.g. "XXX-XX-7831") or
+  // as a records field ("Social Security Number: ...on file"). Only add score when the SSN appears in a
+  // demand/verification context rather than a mere record-reference context.
+  const ssnIsReferenceOnly =
+    /\b(ssn|social\s+security\s+(?:number|no\.?))\s*:?\s*x{2,}|social\s+security\s+(?:number|no\.?).*last\s*\d+\s*(?:digit|shown)|social\s+security.*on\s+(?:file|record)/i.test(lower);
+  if (!ssnIsReferenceOnly && data.infoRequests.some((r) => ssnTerms.some((k) => r.includes(k)))) score += 22;
   const bankTerms = ["bank account number", "routing number", "credit card number", "cvv"];
   if (data.infoRequests.some((r) => bankTerms.some((k) => r.includes(k)))) score += 20;
   const arrestTerms = ["arrest", "warrant", "prosecution", "criminal charges", "federal agent"];
@@ -744,15 +797,42 @@ function calculateRiskScore(data: ExtractedRuleData, lower: string): number {
   if (secrecyTerms.some((t) => lower.includes(t)) && data.paymentRedFlags.length > 0) score += 10;
 
   // Anti-verification instruction — telling recipient not to contact official channels or to use an exclusive hotline.
-  // Expanded (Tuning Round 1) to also catch "do not contact [brand/company] directly" and exclusive-channel demands.
-  const antiVerification = /do\s+not\s+contact\s+(the\b|our\b|amazon\b|microsoft\b|apple\b|google\b|irs\b|fbi\b|official\b|main\b)|do\s+not\s+call\s+the\s*(irs|fbi|police|main\s+office|official)|must\s+be\s+resolved\s+exclusively\s+through\s+our|avoid\s+contacting|do\s+not\s+discuss\s+(this|the)|do\s+not\s+speak\s+with\s+(anyone|family)/i;
-  // Fire when anti-verification is present AND there are either suspicious payment methods OR sensitive info requests.
-  // This ensures identity-theft scams (SSN + credit card requests without traditional payment red flags) are correctly scored.
-  if (antiVerification.test(lower) && (data.paymentRedFlags.length > 0 || data.infoRequests.length > 0)) score += 12;
+  // Expanded (Tuning Round 1): catches "do not contact [brand/company] directly" and exclusive-channel demands.
+  // Expanded (Tuning Round 3): added paypal, ebay, bank, support, "us" targets; added "do not contact \w+ directly" catch-all.
+  const antiVerification = /do\s+not\s+contact\s+(the\b|our\b|us\b|amazon\b|microsoft\b|apple\b|google\b|irs\b|fbi\b|official\b|main\b|paypal\b|ebay\b|bank\b|support\b)|do\s+not\s+contact\s+\w+\s+directly|do\s+not\s+call\s+the\s*(irs|fbi|police|main\s+office|official)|must\s+be\s+resolved\s+exclusively\s+through\s+our|avoid\s+contacting|do\s+not\s+discuss\s+(this|the)|do\s+not\s+speak\s+with\s+(anyone|family)/i;
+  // Tuning Round 3: expanded trigger condition — also fires when urgency phrases are present.
+  // This catches phishing emails that isolate victims from official channels without using traditional payment red flags.
+  if (antiVerification.test(lower) && (data.paymentRedFlags.length > 0 || data.infoRequests.length > 0 || data.urgencyPhrases.length > 0)) score += 12;
 
   // Compound signal: SSN demand + anti-verification = strong identity-theft pattern (Tuning Round 1)
   const hasSsnDemand = data.infoRequests.some((r) => ["social security number", "ssn"].some((k) => r.includes(k)));
   if (hasSsnDemand && antiVerification.test(lower)) score += 6;
+
+  // Tuning Round 3 — Priority 1: Phishing domain detection.
+  // Lookalike domains (brand + suspicious suffix: -secure, -accounts-secure, -verify, -helpdesk, etc.)
+  // are a hallmark of phishing attacks. Check email domains and URL hostnames independently.
+  const extractHostname = (url: string): string => {
+    try { return new URL(url).hostname.toLowerCase(); } catch { return url.toLowerCase(); }
+  };
+  const phishingDomainSuffixes = /-(secure|accounts?secure|alert|helpdesk|verif|verify|verification|limited|suspended|restore|recover|unlock|login|signin)\b/i;
+  const allContactDomains = [
+    ...data.emails.map((e) => (e.split("@")[1] || "").toLowerCase()),
+    ...data.urls.map(extractHostname),
+  ];
+  if (allContactDomains.some((d) => phishingDomainSuffixes.test(d))) score += 18;
+
+  // Tuning Round 3 — Priority 1: Email/URL domain mismatch with suspicious context.
+  // A legitimate organisation uses consistent domains across its email and web addresses.
+  // Mismatch combined with urgency, payment demand, or info request is a strong phishing signal.
+  if (data.emails.length > 0 && data.urls.length > 0) {
+    const emailDomains = data.emails.map((e) => (e.split("@")[1] || "").toLowerCase().replace(/^www\./, "")).filter(Boolean);
+    const urlDomains = data.urls.map(extractHostname).map((h) => h.replace(/^www\./, "")).filter(Boolean);
+    const hasMatch = emailDomains.some((ed) => urlDomains.some((ud) => ud.includes(ed) || ed.includes(ud)));
+    if (!hasMatch && emailDomains.length > 0 && urlDomains.length > 0) {
+      const hasSuspiciousContext = data.urgencyPhrases.length > 0 || data.paymentRedFlags.length > 0 || data.infoRequests.length > 0;
+      if (hasSuspiciousContext) score += 15;
+    }
+  }
 
   // Medium severity — language and pressure tactics
   const urgentTerms = ["within 24 hours", "act now", "immediately", "do not ignore"];
@@ -850,6 +930,14 @@ function calculateDocumentRiskScore(contractRiskTerms: string[]): number {
     "Advance cancellation notice requirement": 8,
     "Unilateral price/term adjustment right": 8,
     "Recurring renewal cycle": 7,
+    // Non-financing and predatory lending terms (Tuning Round 3)
+    "Data overage billing": 6,
+    "Data cap with overage billing": 7,
+    "Service reinstatement fee": 7,
+    "Rollover provision": 10,
+    "Unlimited rollover provision": 16,
+    "No right of rescission": 11,
+    "Predatory APR (≥100%)": 20,
   };
   let total = 0;
   for (const term of contractRiskTerms) {
@@ -868,10 +956,11 @@ function calculateVerificationConfidence(
 
   // Positive: specific traceable reference identifier.
   // Expanded in Tuning Round 2 to include claim #, group #, statement #, record # (EOB/insurance/billing docs).
-  // Also tightened the trailing match from [\w\-]+ to [\w\-]{3,} to prevent short common words
-  // (e.g. "to", "at") from registering as false identifier values.
+  // Expanded in Tuning Round 3 to include membership #, account ID, subscriber #, and contract # patterns
+  // that appear in gym memberships, subscription agreements, and consumer services.
+  // Also tightened the trailing match from [\w\-]+ to [\w\-]{3,} to prevent short common words from matching.
   if (
-    /\b(account\s*(number|#|no\.?)|case\s*(number|#|no\.?)|reference\s*(number|#|no\.?)|invoice\s*(number|#|no\.?)|confirmation\s*(number|#|no\.?)|claim\s*(number|#|no\.?)|group\s*(number|#|no\.?)|statement\s*(number|#|no\.?)|record\s*(number|#|no\.?)|member\s*(account|number|#|id)|loan\s*(number|#|no\.?)|policy\s*(number|#|no\.?))\s*:?\s*[\w\-]{3,}/i.test(text)
+    /\b(account\s*(number|#|no\.?|id|identifier)|case\s*(number|#|no\.?)|reference\s*(number|#|no\.?)|invoice\s*(number|#|no\.?)|confirmation\s*(number|#|no\.?)|claim\s*(number|#|no\.?)|group\s*(number|#|no\.?)|statement\s*(number|#|no\.?)|record\s*(number|#|no\.?)|member\s*(account|number|#|id)|membership\s*(number|#|no\.?)|subscriber\s*(id|number|#)|loan\s*(number|#|no\.?)|policy\s*(number|#|no\.?)|contract\s*(number|#|no\.?))\s*:?\s*[\w\-]{3,}/i.test(text)
     || /\bAccount\s*:\s*[\w\-]{3,}/i.test(text)
     || /\bRef(?:erence)?\s*(?:no\.?|#|:)\s*[\w\-]{3,}/i.test(text)
   ) conf += 12;
@@ -879,15 +968,17 @@ function calculateVerificationConfidence(
   // Positive: contract-specific identifier (VIN, loan #, policy #)
   if (/\b(VIN|vehicle\s+identification\s+number|loan\s*(number|#|no\.?)|policy\s*(number|#|no\.?))\s*:?\s*[\w\-]+/i.test(text)) conf += 10;
 
-  // Positive: multi-identifier compound bonus (Tuning Round 2).
+  // Positive: multi-identifier compound bonus (Tuning Round 2 + 3).
   // Genuine institutional records (EOBs, loan contracts, insurance policies) typically carry multiple
   // distinct numbered identifiers. Counting distinct types rewards internal consistency.
   const identifierTypeMatchers: RegExp[] = [
-    /\b(account|acct)\.?\s*(number|#|no\.?)\s*:?\s*[\w\-]{3,}/i,
+    /\b(account|acct)\.?\s*(number|#|no\.?|id)\s*:?\s*[\w\-]{3,}/i,
     /\b(claim|case)\s*(number|#|no\.?)\s*:?\s*[\w\-]{3,}/i,
     /\b(member|plan)\s*(id|number|#|no\.?)\s*:?\s*[\w\-]{3,}/i,
+    /\b(membership)\s*(number|#|no\.?)\s*:?\s*[\w\-]{3,}/i,
+    /\b(subscriber)\s*(id|number|#)\s*:?\s*[\w\-]{3,}/i,
     /\b(group|policy)\s*(number|#|no\.?)\s*:?\s*[\w\-]{3,}/i,
-    /\b(reference|invoice|confirmation|statement|record)\s*(number|#|no\.?)\s*:?\s*[\w\-]{3,}/i,
+    /\b(reference|invoice|confirmation|statement|record|contract)\s*(number|#|no\.?)\s*:?\s*[\w\-]{3,}/i,
     /\b(loan|mortgage)\s*(number|#|no\.?)\s*:?\s*[\w\-]{3,}/i,
     /\b(VIN|vehicle\s+identification\s+number)\b/i,
   ];
@@ -944,6 +1035,17 @@ function calculateVerificationConfidence(
   // Positive: institutional self-identification language (Tuning Round 2).
   // EOBs, statements, and official records often include explicit non-payment-demand language.
   if (/this\s+is\s+not\s+a\s+bill|explanation\s+of\s+benefits|statement\s+of\s+account|official\s+record/i.test(lower)) conf += 5;
+
+  // Positive (Tuning Round 3): structured commercial agreement confidence floor.
+  // Agreements with a named party + at least one institutional identifier + no scam signals tend to be
+  // authentic contracts regardless of whether they provide a phone number or website.
+  // Grant a small confidence bonus so legitimate gym memberships, subscription contracts, and professional
+  // service agreements aren't unfairly penalised by the no-contact-info deduction.
+  const hasNamedContractParty = /\b(borrower|buyer|purchaser|lessee|tenant|subscriber|client|member|customer|account\s+holder)\s*:\s*[A-Z][a-z]/i.test(text)
+    || /\bdear\s+(mr|ms|mrs|dr)\.?\s+[A-Z][a-z]+/i.test(text);
+  if (hasNamedContractParty && identifierTypeCount >= 1 && ruleData.paymentRedFlags.length === 0 && riskScore < 25) {
+    conf += 7;
+  }
 
   // Negative: generic greeting
   if (/\bdear\s+(valued\s+)?(customer|resident|account\s+holder|homeowner|recipient)|to\s+whom\s+it\s+may\s+concern/i.test(lower)) conf -= 10;
@@ -1062,9 +1164,11 @@ function detectStructuralIssues(
   }
 
   // 2. Payment demand with no traceable reference number
-  // Broad pattern covers: "Account Number: X", "Account: X", "Ref #X", "Case No. X", "Member Account #X", etc.
+  // Broad pattern covers: "Account Number: X", "Account: X", "Ref #X", "Case No. X", "Member Account #X",
+  // "Membership #: X", "Account ID: X", "Subscriber ID: X", etc.
+  // Expanded in Tuning Round 3 to match identifier patterns common in consumer agreements.
   const hasRefNumber =
-    /\b(account\s*(number|#|no\.?)|case\s*(number|#|no\.?)|reference\s*(number|#|no\.?)|invoice\s*(number|#|no\.?)|confirmation\s*(number|#|no\.?)|notice\s*(number|#|no\.?)|member\s*(account|number|#|id)|loan\s*(number|#|no\.?)|policy\s*(number|#|no\.?))\s*:?\s*[\w\-]+/i.test(text)
+    /\b(account\s*(number|#|no\.?|id|identifier)|case\s*(number|#|no\.?)|reference\s*(number|#|no\.?)|invoice\s*(number|#|no\.?)|confirmation\s*(number|#|no\.?)|notice\s*(number|#|no\.?)|member\s*(account|number|#|id)|membership\s*(number|#|no\.?)|subscriber\s*(id|number|#)|loan\s*(number|#|no\.?)|policy\s*(number|#|no\.?)|contract\s*(number|#|no\.?))\s*:?\s*[\w\-]+/i.test(text)
     // Also catch bare labels: "Account: 78-2934-16", "Ref: XYZ", "Acct #12345"
     || /\bAccount\s*:\s*[\w\-]{3,}/i.test(text)
     || /\bRef(?:erence)?\s*(?:no\.?|#|:)\s*[\w\-]{3,}/i.test(text)

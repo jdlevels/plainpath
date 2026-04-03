@@ -1,0 +1,169 @@
+Project: Document Action Plan
+Task: Run Tuning Round 3 for Document Trust Check based on the blocking gaps confirmed in Controlled Pilot Batch 3.
+
+Goal:
+Fix the pilot-blocking false-negative pattern and the remaining repeated scoring gaps, while preserving the current stable strengths of the Trust Check system.
+
+Reason this round is justified:
+Batch 3 found a serious issue:
+- a fake PayPal phishing email received a clean / “Likely legitimate” style outcome despite structural scam findings being correctly identified
+
+Batch 3 also confirmed:
+- non-financing service-contract Document Risk still has missing pattern coverage
+- some legitimate structured documents may still sit too low on Verification Confidence
+- SSN-reference language may be inflating authenticity risk in some legitimate government-style documents
+
+Critical constraints:
+- Do NOT add new major features
+- Do NOT redesign the UI
+- Do NOT activate paid features
+- Do NOT restore subscription gating
+- Do NOT add security rollout
+- Do NOT build trusted-entity verification yet
+- Keep the three-score model intact
+- Make only targeted tuning changes tied directly to Batch 3 findings
+
+-----------------------------------
+PRIORITY 1 — BLOCKING FALSE NEGATIVE FIX
+-----------------------------------
+
+Problem:
+Structural scam findings can be detected correctly but still fail to materially affect the primary verdict / authenticity score.
+
+Required fix:
+Wire the following structural scam findings into Authenticity Risk with meaningful score impact when present in suspicious contexts:
+- domain mismatch detected
+- anti-verification instruction
+- payment-channel isolation
+- impersonation-style sender mismatch
+- “contact only this number/email/link” style isolation when paired with urgency/payment requests
+
+Target behavior:
+A phishing-style document/email with these findings should not remain “Likely legitimate” merely because it lacks classic invoice/contract red flags.
+
+Recommended weight guidance:
+- domain mismatch detected: +15 to +20 authenticity contribution
+- anti-verification instruction: +10 to +15 authenticity contribution
+- payment isolation / do-not-contact-official-channel pattern: meaningful authenticity contribution
+- sender/domain impersonation mismatch: meaningful authenticity contribution
+
+Do not overfire on benign structural quirks; only elevate where suspicious context exists.
+
+-----------------------------------
+PRIORITY 2 — DOCUMENT RISK EXPANSION
+-----------------------------------
+
+Problem:
+Document Risk improved for non-financing service contracts but still misses some repeated harmful-term patterns.
+
+Add/strengthen detection for:
+- data-cap overage billing traps
+- service reinstatement fees
+- unlimited rollover / rollover lock language
+- no right of rescission
+- title-loan style coercive terms if present
+- additional service-provider penalty patterns surfaced in Batch 3
+
+Goal:
+Non-financing harmful contracts should no longer under-score when they contain multiple consumer-harm terms.
+
+-----------------------------------
+PRIORITY 3 — VERIFICATION CONFIDENCE FLOOR
+-----------------------------------
+
+Problem:
+Some structured legitimate commercial/institutional documents still land too low on Verification Confidence despite coherent issuer details and identifiers.
+
+Add a cautious confidence floor or positive weighting when all of the following are substantially present:
+- known/coherent company or institutional name
+- account/reference identifier
+- coherent dates/amounts
+- office contact information or institutional-style contact block
+- internally consistent structure
+- no major contradictions
+
+Do NOT let this override real suspicious signals.
+This is a floor for clean/coherent docs, not a blanket boost.
+
+-----------------------------------
+PRIORITY 4 — SSN-REFERENCE REVIEW
+-----------------------------------
+
+Problem:
+Investigate whether SSN-reference language is spuriously increasing Authenticity Risk on legitimate government-style documents.
+
+Task:
+- inspect where SSN-reference wording contributes to scoring
+- determine whether the current weight is too broad
+- refine only if evidence supports it
+
+Do not weaken valid scam detection involving SSN/payment coercion.
+Only narrow the contribution if legitimate institutional contexts are being unfairly elevated.
+
+-----------------------------------
+VALIDATION SET
+-----------------------------------
+
+Re-test at minimum:
+1. fake PayPal phishing email/text (blocking false-negative case)
+2. obvious IRS/government scam
+3. obvious utility scam
+4. Comcast/service contract example
+5. predatory title-loan / harmful finance-style contract if available
+6. one legitimate institutional multi-identifier document
+7. one legitimate government-style document mentioning SSN/reference context
+8. one low-risk legitimate control
+9. one pasted scam sample
+10. one pasted legitimate sample
+
+-----------------------------------
+VALIDATION REQUIREMENTS
+-----------------------------------
+
+For each document, review:
+- primary verdict
+- authenticity risk
+- document risk
+- verification confidence
+- scam indicators
+- structural findings
+- contract/document risk terms
+- metadata findings where applicable
+
+Success checks:
+- fake PayPal / phishing-style sample no longer gets a clean “Likely legitimate” outcome
+- structural scam findings now influence authenticity meaningfully
+- non-financing harmful contracts score higher on Document Risk where justified
+- legitimate multi-identifier documents gain appropriate confidence without masking real risk
+- government-style docs are not unfairly elevated by SSN-reference wording alone
+- no major increase in false positives
+- standard Analyze a Document mode remains untouched
+- pasted-text behavior remains fair
+
+-----------------------------------
+OUTPUT REQUIRED
+-----------------------------------
+
+Return:
+1. exact files changed
+2. what was tuned in each of the 4 priority areas
+3. whether thresholds, rule weights, prompt wording, or post-processing changed
+4. before/after behavior for:
+   - fake PayPal phishing sample
+   - Comcast/service contract sample
+   - one legitimate multi-identifier document
+   - one legitimate government-style document with SSN/reference language
+5. screenshots of:
+   - corrected phishing/scam result
+   - improved non-financing document-risk result
+   - legitimate higher-confidence result
+6. final statement:
+   - TUNING ROUND 3 COMPLETE
+   - or TUNING ROUND 3 NEEDS ONE FOLLOW-UP FIX
+
+Success criteria:
+- the false-negative phishing gap is closed
+- structural scam findings materially affect authenticity when appropriate
+- document-risk coverage expands further for service contracts
+- confidence handling improves without creating new false positives
+- the pilot baseline becomes materially more stable after Batch 3

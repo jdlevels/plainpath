@@ -71,6 +71,18 @@ Second product mode: evaluates documents across three independent risk dimension
 - `auto-loan-contract` — auth=38, doc=86, conf=55; 9 contract terms found; 2 metadata findings (Photoshop-produced, modified 43 days post-creation)
 
 ### Scoring Tuning History:
+**Tuning Round 3 (completed):**
+- **P1 — Phishing domain detection (NEW)**: `calculateRiskScore()` now adds +18 for emails/URLs with brand+suspicious-suffix domains (e.g. `paypal-accounts-secure.net`, `support-center-secure.net`). Tested: Fake PayPal Auth 13 → 61 (critical false negative fixed).
+- **P1 — Domain mismatch wired into auth score**: When email domain ≠ URL domain AND urgency/payment/info context present, adds +15 to auth risk. Previously only reported as structural finding (no score impact).
+- **P1 — antiVerification expanded**: Regex now catches "do not contact [brand] directly" (PayPal, eBay, bank, support, us). Trigger condition expanded to fire on urgency phrases (not just payment flags/info requests).
+- **P1 — Fund-isolation payment flags**: "holding account", "safe account", "protected account" added to `paymentRedFlagTerms`.
+- **P2 — Contract patterns expanded**: Added patterns for `unreturned equipment`, `full replacement cost`, `right to suspend`, `may adjust rates/fees`, `overage`, `data cap`, `reinstatement fee`, `reconnection fee`, GPS tracking device variants, rollover provisions (loan-specific), no right of rescission, no cooling-off period. Weight table extended with: Rollover (10), Unlimited rollover (16), No right of rescission (11), Predatory APR (20), Data overage (6), Reinstatement fee (7).
+- **P2 — Predatory APR detection**: Regex scan after contract pattern loop detects APR ≥ 100% numerically (e.g. "Annual Percentage Rate: 280.45%"). Tested: Auto Title Loan DocRisk 23 → 76.
+- **P3 — Identifier regex expanded**: `calculateVerificationConfidence()` and `detectStructuralIssues()` `hasRefNumber` now match `Membership #`, `Account ID`, `Account Identifier`, `Subscriber ID`, `Contract #`. Tested: Planet Fitness Conf ~33 → ~55; Angi Pro Conf ~28 → ~40.
+- **P3 — Structured commercial agreement floor**: Named party (Member:, Customer:, etc.) + ≥1 identifier + no scam signals → +7 confidence bonus to compensate for no-contact-info penalty.
+- **P4 — SSN reference context guard**: SSN scoring (+22) skipped when SSN appears in masked/reference form (e.g. "XXX-XX-7831 last 4 shown", "Social Security Number on file"). Tested: SSA Benefit Letter Auth 27 → 2 (false positive eliminated).
+- Cumulative calibration DB: 44 records (Batches 1–3); review at `/pilot-feedback`
+
 **Tuning Round 2 (completed):**
 - `calculateDocumentRiskScore()`: expanded `contractRiskPatterns` (class-action hyphenated, service suspension, equipment return fee, long cancellation notice, unilateral price adjustment, recurring renewal cycle); weight increases (ETF 12→14, auto-renewal 8→10, liquidated damages 10→12, unilateral termination 12→14)
 - `calculateVerificationConfidence()`: expanded identifier regex (claim/group/statement #), multi-identifier compound bonus (+5/+10), bare domain detection (+5), institutional contact bonus (+5), "THIS IS NOT A BILL" institutional language bonus, wider payment channel matching
