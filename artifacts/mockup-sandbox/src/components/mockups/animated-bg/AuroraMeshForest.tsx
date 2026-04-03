@@ -2,51 +2,33 @@ import React from 'react';
 
 export function AuroraMeshForest() {
   return (
-    <div className="relative min-h-[100dvh] w-full overflow-hidden flex flex-col items-center justify-center font-sans" style={{ background: '#f5f7f4' }}>
+    <div className="relative min-h-[100dvh] w-full overflow-hidden flex flex-col items-center justify-center font-sans" style={{ background: '#f4f7f4' }}>
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div
-          className="absolute rounded-full"
+          className="absolute top-[-10%] left-[-8%] w-[540px] h-[540px] rounded-full mix-blend-multiply filter blur-[100px] opacity-45"
           style={{
-            top: '-8%',
-            left: '-6%',
-            width: '540px',
-            height: '540px',
-            background: 'radial-gradient(circle, rgba(34,197,94,0.38) 0%, rgba(34,197,94,0) 70%)',
-            filter: 'blur(100px)',
-            opacity: 0.75,
-            animation: 'forest-float-1 24s ease-in-out infinite alternate',
+            background: 'radial-gradient(circle, rgba(34,197,94,0.75) 0%, rgba(34,197,94,0) 70%)',
+            animation: 'forest-1 9s ease-in-out infinite alternate',
           }}
         />
         <div
-          className="absolute rounded-full"
+          className="absolute top-[-5%] right-[-10%] w-[580px] h-[580px] rounded-full mix-blend-multiply filter blur-[115px] opacity-40"
           style={{
-            top: '-4%',
-            right: '-8%',
-            width: '580px',
-            height: '580px',
-            background: 'radial-gradient(circle, rgba(20,184,166,0.42) 0%, rgba(20,184,166,0) 70%)',
-            filter: 'blur(115px)',
-            opacity: 0.65,
-            animation: 'forest-float-2 30s ease-in-out infinite alternate',
+            background: 'radial-gradient(circle, rgba(20,184,166,0.8) 0%, rgba(20,184,166,0) 70%)',
+            animation: 'forest-2 12s ease-in-out infinite alternate',
           }}
         />
         <div
-          className="absolute rounded-full"
+          className="absolute bottom-[-10%] left-[20%] w-[510px] h-[510px] rounded-full mix-blend-multiply filter blur-[105px] opacity-40"
           style={{
-            bottom: '-10%',
-            left: '22%',
-            width: '510px',
-            height: '510px',
-            background: 'radial-gradient(circle, rgba(101,163,13,0.35) 0%, rgba(101,163,13,0) 70%)',
-            filter: 'blur(105px)',
-            opacity: 0.7,
-            animation: 'forest-float-3 21s ease-in-out infinite alternate',
+            background: 'radial-gradient(circle, rgba(101,163,13,0.75) 0%, rgba(101,163,13,0) 70%)',
+            animation: 'forest-3 10s ease-in-out infinite alternate',
           }}
         />
       </div>
 
       <div className="relative z-10 max-w-4xl mx-auto px-6 py-24 text-center">
-        <div className="inline-flex items-center px-4 py-1.5 mb-8 rounded-full border shadow-sm" style={{ background: 'rgba(34,197,94,0.08)', borderColor: 'rgba(34,197,94,0.22)' }}>
+        <div className="inline-flex items-center px-4 py-1.5 mb-8 rounded-full shadow-sm" style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.22)' }}>
           <span className="text-xs font-bold tracking-widest uppercase" style={{ color: '#15803d' }}>
             Structured Document Analysis
           </span>
@@ -56,7 +38,7 @@ export function AuroraMeshForest() {
           Stop guessing what a document requires.
         </h1>
 
-        <p className="text-xl md:text-2xl mb-10 max-w-2xl mx-auto leading-relaxed" style={{ color: '#365240', fontWeight: 300 }}>
+        <p className="text-xl md:text-2xl mb-10 max-w-2xl mx-auto leading-relaxed font-light" style={{ color: '#365240' }}>
           PlainPath reads your paperwork and gives you a clear, prioritized action plan.
         </p>
 
@@ -86,17 +68,17 @@ export function AuroraMeshForest() {
       </div>
 
       <style>{`
-        @keyframes forest-float-1 {
+        @keyframes forest-1 {
           0% { transform: translate(0, 0) scale(1); }
           50% { transform: translate(50px, 80px) scale(1.06); }
           100% { transform: translate(-40px, 35px) scale(0.93); }
         }
-        @keyframes forest-float-2 {
+        @keyframes forest-2 {
           0% { transform: translate(0, 0) scale(1); }
           50% { transform: translate(-85px, 45px) scale(0.92); }
           100% { transform: translate(50px, -70px) scale(1.08); }
         }
-        @keyframes forest-float-3 {
+        @keyframes forest-3 {
           0% { transform: translate(0, 0) scale(1); }
           50% { transform: translate(70px, -75px) scale(1.05); }
           100% { transform: translate(-55px, -20px) scale(0.96); }

@@ -2,51 +2,33 @@ import React from 'react';
 
 export function AuroraMeshGraphite() {
   return (
-    <div className="relative min-h-[100dvh] w-full overflow-hidden flex flex-col items-center justify-center font-sans" style={{ background: '#f9fafb' }}>
+    <div className="relative min-h-[100dvh] w-full overflow-hidden flex flex-col items-center justify-center font-sans bg-gray-50">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div
-          className="absolute rounded-full"
+          className="absolute top-[-12%] left-[-10%] w-[600px] h-[600px] rounded-full filter blur-[110px] opacity-70"
           style={{
-            top: '-12%',
-            left: '-10%',
-            width: '600px',
-            height: '600px',
-            background: 'radial-gradient(circle, rgba(148,163,184,0.5) 0%, rgba(148,163,184,0) 70%)',
-            filter: 'blur(110px)',
-            opacity: 0.6,
-            animation: 'graphite-float-1 26s ease-in-out infinite alternate',
+            background: 'radial-gradient(circle, rgba(148,163,184,0.65) 0%, rgba(148,163,184,0) 70%)',
+            animation: 'graphite-1 10s ease-in-out infinite alternate',
           }}
         />
         <div
-          className="absolute rounded-full"
+          className="absolute top-[-6%] right-[-12%] w-[650px] h-[650px] rounded-full filter blur-[130px] opacity-60"
           style={{
-            top: '-6%',
-            right: '-12%',
-            width: '650px',
-            height: '650px',
-            background: 'radial-gradient(circle, rgba(203,213,225,0.6) 0%, rgba(203,213,225,0) 70%)',
-            filter: 'blur(130px)',
-            opacity: 0.55,
-            animation: 'graphite-float-2 32s ease-in-out infinite alternate',
+            background: 'radial-gradient(circle, rgba(203,213,225,0.8) 0%, rgba(203,213,225,0) 70%)',
+            animation: 'graphite-2 13s ease-in-out infinite alternate',
           }}
         />
         <div
-          className="absolute rounded-full"
+          className="absolute bottom-[-12%] left-[18%] w-[560px] h-[560px] rounded-full filter blur-[120px] opacity-55"
           style={{
-            bottom: '-12%',
-            left: '18%',
-            width: '560px',
-            height: '560px',
-            background: 'radial-gradient(circle, rgba(100,116,139,0.35) 0%, rgba(100,116,139,0) 70%)',
-            filter: 'blur(120px)',
-            opacity: 0.5,
-            animation: 'graphite-float-3 22s ease-in-out infinite alternate',
+            background: 'radial-gradient(circle, rgba(100,116,139,0.6) 0%, rgba(100,116,139,0) 70%)',
+            animation: 'graphite-3 9s ease-in-out infinite alternate',
           }}
         />
       </div>
 
       <div className="relative z-10 max-w-4xl mx-auto px-6 py-24 text-center">
-        <div className="inline-flex items-center px-4 py-1.5 mb-8 rounded-full border" style={{ background: 'rgba(15,23,42,0.04)', borderColor: 'rgba(15,23,42,0.1)' }}>
+        <div className="inline-flex items-center px-4 py-1.5 mb-8 rounded-full" style={{ background: 'rgba(15,23,42,0.05)', border: '1px solid rgba(15,23,42,0.1)' }}>
           <span className="text-xs font-semibold tracking-widest uppercase" style={{ color: '#475569', letterSpacing: '0.15em' }}>
             Structured Document Analysis
           </span>
@@ -71,32 +53,32 @@ export function AuroraMeshGraphite() {
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 text-sm" style={{ color: '#94a3b8' }}>
           <div className="flex items-center gap-2">
-            <span className="w-1 h-1 rounded-full" style={{ background: '#94a3b8' }}></span>
+            <span className="w-1 h-1 rounded-full bg-slate-400"></span>
             From $4.99/month
           </div>
           <div className="flex items-center gap-2">
-            <span className="w-1 h-1 rounded-full" style={{ background: '#94a3b8' }}></span>
+            <span className="w-1 h-1 rounded-full bg-slate-400"></span>
             No account required
           </div>
           <div className="flex items-center gap-2">
-            <span className="w-1 h-1 rounded-full" style={{ background: '#94a3b8' }}></span>
+            <span className="w-1 h-1 rounded-full bg-slate-400"></span>
             Documents not stored by PlainPath
           </div>
         </div>
       </div>
 
       <style>{`
-        @keyframes graphite-float-1 {
+        @keyframes graphite-1 {
           0% { transform: translate(0, 0) scale(1); }
           50% { transform: translate(60px, 85px) scale(1.07); }
           100% { transform: translate(-30px, 40px) scale(0.94); }
         }
-        @keyframes graphite-float-2 {
+        @keyframes graphite-2 {
           0% { transform: translate(0, 0) scale(1); }
           50% { transform: translate(-90px, 50px) scale(0.93); }
           100% { transform: translate(55px, -75px) scale(1.07); }
         }
-        @keyframes graphite-float-3 {
+        @keyframes graphite-3 {
           0% { transform: translate(0, 0) scale(1); }
           50% { transform: translate(75px, -80px) scale(1.06); }
           100% { transform: translate(-60px, -30px) scale(0.95); }

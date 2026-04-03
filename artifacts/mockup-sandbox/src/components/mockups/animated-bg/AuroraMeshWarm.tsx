@@ -5,48 +5,30 @@ export function AuroraMeshWarm() {
     <div className="relative min-h-[100dvh] w-full overflow-hidden flex flex-col items-center justify-center font-sans" style={{ background: '#fdf8f3' }}>
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div
-          className="absolute rounded-full"
+          className="absolute top-[-10%] left-[-10%] w-[520px] h-[520px] rounded-full mix-blend-multiply filter blur-[90px] opacity-60"
           style={{
-            top: '-5%',
-            left: '-8%',
-            width: '520px',
-            height: '520px',
-            background: 'radial-gradient(circle, rgba(251,146,60,0.55) 0%, rgba(251,146,60,0) 70%)',
-            filter: 'blur(90px)',
-            opacity: 0.7,
-            animation: 'warm-float-1 22s ease-in-out infinite alternate',
+            background: 'radial-gradient(circle, rgba(251,146,60,0.85) 0%, rgba(251,146,60,0) 70%)',
+            animation: 'warm-1 8s ease-in-out infinite alternate',
           }}
         />
         <div
-          className="absolute rounded-full"
+          className="absolute top-[-5%] right-[-10%] w-[580px] h-[580px] rounded-full mix-blend-multiply filter blur-[110px] opacity-45"
           style={{
-            top: '-8%',
-            right: '-5%',
-            width: '580px',
-            height: '580px',
-            background: 'radial-gradient(circle, rgba(244,63,94,0.4) 0%, rgba(244,63,94,0) 70%)',
-            filter: 'blur(110px)',
-            opacity: 0.55,
-            animation: 'warm-float-2 28s ease-in-out infinite alternate',
+            background: 'radial-gradient(circle, rgba(244,63,94,0.75) 0%, rgba(244,63,94,0) 70%)',
+            animation: 'warm-2 11s ease-in-out infinite alternate',
           }}
         />
         <div
-          className="absolute rounded-full"
+          className="absolute bottom-[-10%] left-[20%] w-[510px] h-[510px] rounded-full mix-blend-multiply filter blur-[100px] opacity-50"
           style={{
-            bottom: '-8%',
-            left: '25%',
-            width: '500px',
-            height: '500px',
-            background: 'radial-gradient(circle, rgba(234,179,8,0.45) 0%, rgba(234,179,8,0) 70%)',
-            filter: 'blur(100px)',
-            opacity: 0.6,
-            animation: 'warm-float-3 19s ease-in-out infinite alternate',
+            background: 'radial-gradient(circle, rgba(234,179,8,0.8) 0%, rgba(234,179,8,0) 70%)',
+            animation: 'warm-3 9s ease-in-out infinite alternate',
           }}
         />
       </div>
 
       <div className="relative z-10 max-w-4xl mx-auto px-6 py-24 text-center">
-        <div className="inline-flex items-center px-4 py-1.5 mb-8 rounded-full border shadow-sm" style={{ background: 'rgba(251,146,60,0.1)', borderColor: 'rgba(251,146,60,0.25)' }}>
+        <div className="inline-flex items-center px-4 py-1.5 mb-8 rounded-full shadow-sm" style={{ background: 'rgba(251,146,60,0.12)', border: '1px solid rgba(251,146,60,0.28)' }}>
           <span className="text-xs font-bold tracking-widest uppercase" style={{ color: '#c2410c' }}>
             Structured Document Analysis
           </span>
@@ -64,7 +46,7 @@ export function AuroraMeshWarm() {
           <button className="px-8 py-4 rounded-xl font-medium text-lg transition-all shadow-lg w-full sm:w-auto text-white" style={{ background: '#ea580c' }}>
             Analyze a Document
           </button>
-          <button className="px-8 py-4 rounded-xl font-medium text-lg transition-all shadow-sm w-full sm:w-auto border" style={{ background: 'rgba(255,255,255,0.7)', borderColor: 'rgba(194,120,90,0.3)', color: '#7c3b1e', backdropFilter: 'blur(8px)' }}>
+          <button className="px-8 py-4 rounded-xl font-medium text-lg transition-all shadow-sm w-full sm:w-auto border" style={{ background: 'rgba(255,255,255,0.65)', borderColor: 'rgba(194,120,90,0.3)', color: '#7c3b1e', backdropFilter: 'blur(8px)' }}>
             View demos
           </button>
         </div>
@@ -86,17 +68,17 @@ export function AuroraMeshWarm() {
       </div>
 
       <style>{`
-        @keyframes warm-float-1 {
+        @keyframes warm-1 {
           0% { transform: translate(0, 0) scale(1); }
-          50% { transform: translate(55px, 75px) scale(1.08); }
-          100% { transform: translate(-35px, 45px) scale(0.92); }
+          50% { transform: translate(55px, 75px) scale(1.1); }
+          100% { transform: translate(-35px, 45px) scale(0.9); }
         }
-        @keyframes warm-float-2 {
+        @keyframes warm-2 {
           0% { transform: translate(0, 0) scale(1); }
           50% { transform: translate(-75px, 55px) scale(0.91); }
           100% { transform: translate(45px, -65px) scale(1.09); }
         }
-        @keyframes warm-float-3 {
+        @keyframes warm-3 {
           0% { transform: translate(0, 0) scale(1); }
           50% { transform: translate(65px, -65px) scale(1.07); }
           100% { transform: translate(-45px, -25px) scale(0.94); }
