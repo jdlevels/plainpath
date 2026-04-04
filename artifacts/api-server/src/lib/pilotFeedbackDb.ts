@@ -1,18 +1,8 @@
-import Database from "better-sqlite3"
-import fs from "fs"
-import path from "path"
+import { pool } from "@workspace/db"
 
-const dataDir = path.resolve(process.cwd(), "data")
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true })
-}
-
-const dbPath = path.join(dataDir, "plainpath-pilot-feedback.sqlite")
-export const pilotFeedbackDb = new Database(dbPath)
-
-pilotFeedbackDb.exec(`
+const initPromise = pool.query(`
   CREATE TABLE IF NOT EXISTS pilot_feedback (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     document_label TEXT NOT NULL,
     document_type TEXT,
     source_type TEXT NOT NULL,
@@ -31,8 +21,12 @@ pilotFeedbackDb.exec(`
     tuning_note TEXT,
     reviewer_role TEXT,
     created_at TEXT NOT NULL
-  );
+  )
 `)
+
+export async function ensureTable() {
+  await initPromise
+}
 
 export interface PilotFeedbackRecord {
   id: number
@@ -76,19 +70,19 @@ export interface PilotFeedbackInput {
   reviewer_role?: string
 }
 
-export function savePilotFeedback(input: PilotFeedbackInput): number {
-  const result = pilotFeedbackDb
-    .prepare(`
-      INSERT INTO pilot_feedback (
-        document_label, document_type, source_type, verdict,
-        authenticity_risk, document_risk, verification_confidence,
-        reviewer_assessment, is_false_positive, is_false_negative,
-        issue_categories, what_felt_right, what_felt_weak,
-        what_was_missing, what_felt_overstated, tuning_note,
-        reviewer_role, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `)
-    .run(
+export async function savePilotFeedback(input: PilotFeedbackInput): Promise<number> {
+  await initPromise
+  const res = await pool.query<{ id: number }>(
+    `INSERT INTO pilot_feedback (
+      document_label, document_type, source_type, verdict,
+      authenticity_risk, document_risk, verification_confidence,
+      reviewer_assessment, is_false_positive, is_false_negative,
+      issue_categories, what_felt_right, what_felt_weak,
+      what_was_missing, what_felt_overstated, tuning_note,
+      reviewer_role, created_at
+    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
+    RETURNING id`,
+    [
       input.document_label.trim(),
       input.document_type ?? null,
       input.source_type,
@@ -107,43 +101,65 @@ export function savePilotFeedback(input: PilotFeedbackInput): number {
       input.tuning_note?.trim() || null,
       input.reviewer_role?.trim() || null,
       new Date().toISOString(),
-    )
-  return result.lastInsertRowid as number
+    ],
+  )
+  return res.rows[0].id
 }
 
-export function listPilotFeedback(): PilotFeedbackRecord[] {
-  return pilotFeedbackDb
-    .prepare(`SELECT * FROM pilot_feedback ORDER BY created_at DESC`)
-    .all() as PilotFeedbackRecord[]
+export async function listPilotFeedback(): Promise<PilotFeedbackRecord[]> {
+  await initPromise
+  const res = await pool.query<PilotFeedbackRecord>(
+    `SELECT * FROM pilot_feedback ORDER BY created_at DESC`,
+  )
+  return res.rows
 }
 
-export function getPilotFeedbackSummary() {
-  const total = (pilotFeedbackDb
-    .prepare(`SELECT COUNT(*) as count FROM pilot_feedback`)
-    .get() as { count: number }).count
+export async function getPilotFeedbackSummary() {
+  await initPromise
 
-  const byAssessment = pilotFeedbackDb
-    .prepare(`SELECT reviewer_assessment, COUNT(*) as count FROM pilot_feedback GROUP BY reviewer_assessment ORDER BY count DESC`)
-    .all() as { reviewer_assessment: string; count: number }[]
+  const totalRes = await pool.query<{ count: string }>(
+    `SELECT COUNT(*) as count FROM pilot_feedback`,
+  )
+  const total = parseInt(totalRes.rows[0].count, 10)
 
-  const byVerdict = pilotFeedbackDb
-    .prepare(`SELECT verdict, COUNT(*) as count FROM pilot_feedback GROUP BY verdict ORDER BY count DESC`)
-    .all() as { verdict: string; count: number }[]
+  const byAssessmentRes = await pool.query<{ reviewer_assessment: string; count: string }>(
+    `SELECT reviewer_assessment, COUNT(*) as count FROM pilot_feedback
+     GROUP BY reviewer_assessment ORDER BY count DESC`,
+  )
+  const byAssessment = byAssessmentRes.rows.map((r) => ({
+    reviewer_assessment: r.reviewer_assessment,
+    count: parseInt(r.count, 10),
+  }))
 
-  const falsePosCount = (pilotFeedbackDb
-    .prepare(`SELECT COUNT(*) as count FROM pilot_feedback WHERE is_false_positive = 1`)
-    .get() as { count: number }).count
+  const byVerdictRes = await pool.query<{ verdict: string; count: string }>(
+    `SELECT verdict, COUNT(*) as count FROM pilot_feedback
+     GROUP BY verdict ORDER BY count DESC`,
+  )
+  const byVerdict = byVerdictRes.rows.map((r) => ({
+    verdict: r.verdict,
+    count: parseInt(r.count, 10),
+  }))
 
-  const falseNegCount = (pilotFeedbackDb
-    .prepare(`SELECT COUNT(*) as count FROM pilot_feedback WHERE is_false_negative = 1`)
-    .get() as { count: number }).count
+  const fpRes = await pool.query<{ count: string }>(
+    `SELECT COUNT(*) as count FROM pilot_feedback WHERE is_false_positive = 1`,
+  )
+  const falsePosCount = parseInt(fpRes.rows[0].count, 10)
 
-  const allCategories = (pilotFeedbackDb
-    .prepare(`SELECT issue_categories FROM pilot_feedback WHERE issue_categories != '[]'`)
-    .all() as { issue_categories: string }[])
-    .flatMap((row) => {
-      try { return JSON.parse(row.issue_categories) as string[] } catch { return [] }
-    })
+  const fnRes = await pool.query<{ count: string }>(
+    `SELECT COUNT(*) as count FROM pilot_feedback WHERE is_false_negative = 1`,
+  )
+  const falseNegCount = parseInt(fnRes.rows[0].count, 10)
+
+  const catRes = await pool.query<{ issue_categories: string }>(
+    `SELECT issue_categories FROM pilot_feedback WHERE issue_categories != '[]'`,
+  )
+  const allCategories = catRes.rows.flatMap((row) => {
+    try {
+      return JSON.parse(row.issue_categories) as string[]
+    } catch {
+      return []
+    }
+  })
 
   const categoryCounts: Record<string, number> = {}
   for (const cat of allCategories) {
