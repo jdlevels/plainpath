@@ -1,0 +1,180 @@
+Project: Document Action Plan
+Task: Run Tuning Round 5 based on the confirmed Batch 7 false-negative and regression patterns.
+
+Goal:
+Fix the repeated Authenticity Risk underscoring on scam/government-impersonation documents and repair the apparent Document Risk regression on service-contract documents, while preserving the current stable baseline elsewhere.
+
+Reason this round is justified:
+Batch 7 produced:
+- 2 confirmed false negatives
+- repeated “Authenticity Risk too low” and “Scam indicators weak” patterns
+- confirmed contract-risk underscoring on gym and telecom agreements
+- repeated structural misfire on unrecognized identifier formats
+
+Critical constraints:
+- Do NOT add new major features
+- Do NOT redesign the UI
+- Do NOT activate paid features
+- Do NOT restore subscription gating
+- Do NOT add security rollout
+- Do NOT build trusted-entity verification yet
+- Keep the three-score model intact
+- Make only targeted tuning changes tied directly to Batch 7 findings
+
+-----------------------------------
+PRIORITY 1 — IRS / FEDERAL IMPERSONATION DOMAIN PATTERN
+-----------------------------------
+
+Problem:
+The engine is still under-scoring certain IRS/federal impersonation documents when they use constructed private `.com` payment/contact domains.
+
+Required tuning:
+Generalize the public-issuer/private-domain mismatch logic so it also covers IRS/federal/tax/revenue/resolution-center phrasing.
+
+Examples:
+- irs-tax-resolution-center.com
+- domains that combine federal/tax authority language with a private `.com`
+- names containing IRS, tax, revenue, treasury, resolution, collections, enforcement, payment center, etc., without `.gov`
+
+Target behavior:
+If a document claims to be from a federal/tax authority but the primary contact/payment domain is a private `.com`, Authenticity Risk should materially increase.
+
+Recommended effect:
+These should usually move into a clearly suspicious/high-scam band when paired with payment pressure.
+
+-----------------------------------
+PRIORITY 2 — CRYPTO / DIGITAL ASSET PAYMENT SIGNAL
+-----------------------------------
+
+Problem:
+Government-style scam notices listing crypto / digital asset transfer as an approved payment method are not being scored harshly enough.
+
+Required tuning:
+Add cryptocurrency / digital asset payment as a standalone high-risk authenticity signal.
+
+Examples to catch:
+- verified digital asset transfer
+- crypto payment
+- bitcoin / ethereum / USDT payment
+- wallet transfer
+- digital asset authorization as payment
+
+Goal:
+This signal should materially raise Authenticity Risk even before other scam signals are compounded.
+
+Recommended effect:
++20 to +25 authenticity contribution when present in suspicious/government-style payment contexts.
+
+-----------------------------------
+PRIORITY 3 — REFERENCE IDENTIFIER DETECTION FIX
+-----------------------------------
+
+Problem:
+Structural findings are incorrectly claiming “no traceable reference number” when valid identifiers are present.
+
+Required tuning:
+Extend identifier detection to recognize:
+- Case ID
+- File No.
+- File Number
+
+Target behavior:
+If one of these identifiers is present, structural findings should not say there is no traceable reference number.
+
+Apply to:
+- IRS/federal-style notices
+- debt collection notices
+- any similar document with case/file references
+
+-----------------------------------
+PRIORITY 4 — DOCUMENT RISK REGRESSION DIAGNOSIS
+-----------------------------------
+
+Problem:
+Gym and telecom contracts are scoring too low on Document Risk compared with earlier batches.
+
+Required approach:
+First verify whether previously working service-contract patterns are still firing correctly:
+- ETF / early termination fee
+- arbitration waiver
+- class-action waiver
+- unreturned equipment fee
+- suspension without notice
+- auto-renewal / renewal cycle
+- cancellation notice trap
+- price adjustment rights
+
+Do NOT immediately add new logic if the issue is actually regression of old patterns.
+First isolate whether existing patterns stopped contributing.
+
+Goal:
+Restore Document Risk on service contracts to the expected range without unnecessary new complexity.
+
+-----------------------------------
+VALIDATION SET
+-----------------------------------
+
+Re-test at minimum:
+1. Fake IRS Levy Warning
+2. Fake PayPal Security Email
+3. Fake Utility Shutoff Notice
+4. Fake County Tax Notice
+5. Debt Collection Notice
+6. Gym Membership Agreement
+7. Telecom Service Agreement
+8. one legitimate government/institutional control
+9. one legitimate low-risk private/institutional control
+10. one phishing/control scam if available
+
+-----------------------------------
+VALIDATION REQUIREMENTS
+-----------------------------------
+
+For each document, review:
+- primary verdict
+- authenticity risk
+- document risk
+- verification confidence
+- scam indicators
+- structural findings
+- contact verification guidance
+- metadata findings where applicable
+
+Success checks:
+- IRS/federal impersonation docs no longer under-score
+- crypto/digital-asset payment materially increases Authenticity Risk
+- Case ID / File No. / File Number suppress false “no traceable reference” findings
+- gym and telecom contracts regain meaningful Document Risk
+- legitimate controls remain clean
+- no meaningful new false positives are introduced
+
+-----------------------------------
+OUTPUT REQUIRED
+-----------------------------------
+
+Return:
+1. exact files changed
+2. what was tuned in each of the 4 priority areas
+3. whether thresholds, rule weights, regexes, prompts, or post-processing changed
+4. before/after behavior for:
+   - Fake IRS Levy Warning
+   - Fake PayPal Security Email
+   - Debt Collection Notice
+   - Gym Membership Agreement
+   - Telecom Service Agreement
+5. screenshots of:
+   - corrected IRS/federal scam result
+   - corrected phishing result
+   - improved gym or telecom document-risk result
+   - one legitimate control result
+6. final statement:
+   - TUNING ROUND 5 COMPLETE
+   - or TUNING ROUND 5 NEEDS ONE FOLLOW-UP FIX
+
+Success criteria:
+- Batch 7 false negatives are corrected
+- government/federal impersonation scoring is stronger
+- digital-asset payment is treated as a high-risk scam signal
+- reference-number structural false fires are removed
+- service-contract Document Risk regression is repaired
+- the baseline becomes more stable without introducing new false positives
