@@ -99,6 +99,37 @@ Second product mode: evaluates documents across three independent risk dimension
   - B4-15 QuikCash Predatory Payday Loan: DocRisk 100, Auth 28 → Cannot verify ✓
 - Cumulative calibration DB: 59 records (Batches 1–4); review at `/pilot-feedback`
 
+---
+
+**Batch 5 — Issuer Verification Focus (10 docs, IDs 60–69):**
+- **Result: 9/10 correct, 1 mostly-correct, 0 FP, 0 FN**
+- Focus: utility, telecom, government-style, and institutional documents where issuer/contact verification matters
+- Tuning trigger thresholds NOT MET → Pilot Baseline v1.0 stays frozen
+- Total cumulative records: 69
+
+---
+
+**Batch 6 — Adversarial Fake Document Set (5 docs, IDs 70–74):**
+- **Result: 2/5 correct, 1 mostly-correct, 2 needs-tuning, 0 FP, 2 FN**
+- Documents tested: ChatGPT-generated fake utility shutoff, fake county tax notice, debt collection notice, gym membership agreement (control), legitimate EOB (control)
+- ✅ Doc 73 — Gym membership agreement: AR=2, DR=19 — correctly identified as legitimate contract
+- ✅ Doc 74 — Legitimate EOB (control): AR=2, VC=79 — correctly scored near-zero risk, no false alarm
+- 🔶 Doc 72 — Debt collection (FDCPA language): AR=15, verdict "Likely legitimate" — mostly-correct; FDCPA language is genuinely used by real collectors; suspicious payment domain (hra-resolution-pay.com) not flagged, but direction is defensible
+- ❌ Doc 70 — Fake utility shutoff (Red River): AR=36, verdict "Cannot verify" — needs-tuning; **FALSE NEGATIVE** — expected AR 75+; private .com payment domain (redriver-utilities-pay.com) posing as municipal utility not penalized; prepaid card + debit-by-phone + 6 PM deadline ignored
+- ❌ Doc 71 — Fake county tax notice (Easton): AR=28, verdict "Cannot verify" — needs-tuning; **FALSE NEGATIVE** — expected AR 80+; private portal domain (tax-portal-easton.com) posing as government not penalized; 2.95% convenience charge on government payment ignored; Recovery File isolation tactic not flagged
+- Total cumulative records: 74
+
+**Batch 6 — Tuning Round 4 Trigger Analysis:**
+- **TRIGGER MET**: 2 false negatives in the same weakness category — government/utility impersonation + private `.com` payment domain
+- Pattern: When a document claims to be from a government/municipal entity but lists a private `.com` payment URL or email domain (not `.gov`, not a recognized county/state/utility domain), Authenticity Risk is not penalized proportionally
+- Specific gap: `redriver-utilities-pay.com` and `tax-portal-easton.com` — both private `.com` domains posing as public-sector issuers — scored as if they were neutral
+- Secondary gap: government impersonation signals (prepaid card accepted, 2.95% phone convenience charge) not flagged
+- **Recommended Tuning Round 4 target**: Add government-impersonation pattern — when claimed issuer is a utility/county/government entity AND payment URL/email domain is a private `.com` without verifiable public-sector association → add +25–35 to Authenticity Risk
+
+**Scoring Engine Status: FROZEN at Tuning Round 3 (Pilot Baseline v1.0)**
+- Do NOT modify `artifacts/api-server/src/routes/documents/index.ts` without explicit tuning approval
+- Tuning Round 4 is queued pending user decision
+
 **Tuning Round 2 (completed):**
 - `calculateDocumentRiskScore()`: expanded `contractRiskPatterns` (class-action hyphenated, service suspension, equipment return fee, long cancellation notice, unilateral price adjustment, recurring renewal cycle); weight increases (ETF 12→14, auto-renewal 8→10, liquidated damages 10→12, unilateral termination 12→14)
 - `calculateVerificationConfidence()`: expanded identifier regex (claim/group/statement #), multi-identifier compound bonus (+5/+10), bare domain detection (+5), institutional contact bonus (+5), "THIS IS NOT A BILL" institutional language bonus, wider payment channel matching
