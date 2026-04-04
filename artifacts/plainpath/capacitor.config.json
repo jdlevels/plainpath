@@ -9,7 +9,21 @@
     "SplashScreen": {
       "launchShowDuration": 800,
       "backgroundColor": "#F8F7F4",
-      "showSpinner": false
+      "showSpinner": false,
+      "androidSplashResourceName": "splash",
+      "iosSplashResourceName": "Splash"
+    },
+    "StatusBar": {
+      "style": "Light",
+      "backgroundColor": "#F8F7F4",
+      "overlaysWebView": true
+    },
+    "Keyboard": {
+      "resize": "body",
+      "resizeOnFullScreen": true
+    },
+    "CapacitorHttp": {
+      "enabled": true
     }
   }
 }

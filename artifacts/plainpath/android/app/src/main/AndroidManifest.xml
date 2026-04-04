@@ -35,7 +35,31 @@
         </provider>
     </application>
 
-    <!-- Permissions -->
-
+    <!-- ─── Network ─────────────────────────────────────────────────────── -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!-- ─── File / Document Access ──────────────────────────────────────── -->
+    <!--
+        READ_EXTERNAL_STORAGE covers Android 9–12 (API 28–32).
+        On Android 13+ (API 33+) the Storage Access Framework (SAF) handles
+        document picker access without requiring explicit permissions.
+        maxSdkVersion="32" prevents the permission prompt on Android 13+.
+    -->
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+
+    <!--
+        On Android 13+ (API 33+) granular media permissions replace
+        READ_EXTERNAL_STORAGE for images and video.
+        PlainPath uses these if the user picks a document photo from their
+        gallery.
+    -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+
+    <!-- ─── Haptic Feedback ──────────────────────────────────────────────── -->
+    <!-- Required by @capacitor/haptics for vibration feedback on Android.   -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+
 </manifest>

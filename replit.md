@@ -196,13 +196,35 @@ Uses Replit AI Integrations for OpenAI access (no API key required, billed to cr
 ### Native sync workflow (after any web changes)
 ```bash
 cd artifacts/plainpath
-pnpm run build        # rebuilds dist/public
-npx cap sync          # copies dist/public into ios/ and android/
+pnpm run cap:sync     # builds dist/public + syncs to ios/ and android/
+pnpm run cap:ios      # builds + syncs + opens in Xcode
+pnpm run cap:android  # builds + syncs + opens in Android Studio
 ```
 
 ### Print export on native
 - `triggerPrint()` in `print.ts` returns `{ success: false, reason: "not_supported_on_native" }` in Capacitor
 - ExportMenu's Print button shows "Not available on this device" for 3 s instead of silently failing
+
+### Native Platform Services (`src/lib/native.ts`)
+Centralised wrapper for all Capacitor plugin calls. All functions are safe on web (no-ops):
+- `haptic(style)` — `@capacitor/haptics` impact/notification. Called on: paste-stage submit (medium), validation error (warning), doc-type select (medium), analysis success (success), file picker open (light)
+- `initStatusBar()` — `@capacitor/status-bar` — overlays web view, sets light style. Called once in App.tsx on mount
+- `pickFileNative()` — `@capawesome/capacitor-file-picker` — opens system file picker (PDF/DOCX/TXT), returns a standard `File` object for upload
+
+### Native File Picker (`Import.tsx`)
+- `triggerFilePicker()` — calls `pickFileNative()` on native, `fileInputRef.current?.click()` on web
+- Wired to both the mobile "Choose a file" button and the drag-drop zone `onClick`
+- File is returned as a standard `File` object → passes into existing `stageFile()` / upload flow unchanged
+
+### iOS App Store Readiness
+- **Info.plist**: `NSPhotoLibraryUsageDescription`, `NSPhotoLibraryAddUsageDescription`, `NSDocumentsFolderUsageDescription`, `ITSAppUsesNonExemptEncryption = NO`, App Transport Security exception for `plain-path.replit.app`
+- **capacitor.config.json**: StatusBar (Light + overlay), Keyboard resize, CapacitorHttp enabled
+
+### Android Play Store Readiness
+- **AndroidManifest.xml**: `READ_EXTERNAL_STORAGE` (maxSdkVersion=32), `READ_MEDIA_IMAGES`, `VIBRATE`, `ACCESS_NETWORK_STATE`
+
+### App Store Listing
+- `artifacts/plainpath/APP_STORE_METADATA.md` — ready-to-paste name, subtitle, full description, keywords, category, age rating, privacy/terms URLs, reviewer notes for both Apple App Store Connect and Google Play Console
 
 ## Development
 

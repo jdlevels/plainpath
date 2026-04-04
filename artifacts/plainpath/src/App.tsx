@@ -1,9 +1,11 @@
+import { useEffect } from "react";
 import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AnalysisProvider } from "@/context/AnalysisContext";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
+import { initStatusBar } from "@/lib/native";
 
 import Home from "@/pages/Home";
 import Import from "@/pages/Import";
@@ -56,6 +58,10 @@ function Router() {
 }
 
 function App() {
+  useEffect(() => {
+    void initStatusBar()
+  }, [])
+
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>

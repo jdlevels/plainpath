@@ -13,6 +13,8 @@ import { useAnalyzeDocument } from "@workspace/api-client-react"
 import { useAnalysisContext } from "@/context/AnalysisContext"
 import { getApiBaseUrl } from "@/lib/api"
 import { beforeRunAnalysis } from "@/lib/analysisGate"
+import { isNative } from "@/lib/platform"
+import { haptic, pickFileNative } from "@/lib/native"
 
 const DEMOS = [
   {
@@ -266,9 +268,11 @@ export default function Import() {
     if (!trimmed || trimmed.length < 30) return
     const wordCount = trimmed.split(/\s+/).filter(w => w.length > 0).length
     if (wordCount < 15) {
+      void haptic("warning")
       setPasteError("Please paste more of the document so PlainPath can identify the requirements, deadlines, and obligations. A sentence or two isn't enough — paste a few paragraphs.")
       return
     }
+    void haptic("medium")
     setPasteError(null)
     goToDocType({ kind: "text", text })
   }
@@ -297,9 +301,33 @@ export default function Import() {
     goToDocType({ kind: "file", file })
   }
 
+  // Native-only: open the system file picker via Capacitor plugin
+  const handleNativePick = async () => {
+    try {
+      await haptic("light")
+      const picked = await pickFileNative()
+      if (!picked) return // user cancelled
+      stageFile(picked.file)
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Could not open file picker. Please try again."
+      setUploadError(msg)
+    }
+  }
+
+  // Unified handler: native picker on device, HTML input on web
+  const triggerFilePicker = () => {
+    if (isNative()) {
+      void handleNativePick()
+    } else {
+      fileInputRef.current?.click()
+    }
+  }
+
   const handleDocTypeSelect = async (docTypeLabel: string, payloadOverride?: Payload) => {
     const p = payloadOverride ?? pending
     if (!p) return
+
+    void haptic("medium")
 
     try {
       await beforeRunAnalysis()
@@ -341,6 +369,7 @@ export default function Import() {
             setStep("input")
             return
           }
+          await haptic("success")
           setTrustCheckAnalysis(data.analysis)
           setLocation("/trust-check")
         } catch {
@@ -383,6 +412,7 @@ export default function Import() {
             setMode("upload")
             return
           }
+          await haptic("success")
           setTrustCheckAnalysis(data.analysis)
           setLocation("/trust-check")
         } catch {
@@ -402,7 +432,7 @@ export default function Import() {
       mutate(
         { data: { text: p.text, documentTypeHint: docTypeLabel } as any },
         {
-          onSuccess: (data) => { setAnalysis(data.analysis); setLocation("/analyze") },
+          onSuccess: (data) => { void haptic("success"); setAnalysis(data.analysis); setLocation("/analyze") },
           onError: (err: any) => {
             const serverMessage = err?.data?.message
             const status = err?.status ?? 0
@@ -461,6 +491,7 @@ export default function Import() {
           setMode("upload")
           return
         }
+        await haptic("success")
         setAnalysis(data.analysis)
         setLocation("/analyze")
       } catch {
@@ -714,7 +745,7 @@ export default function Import() {
                           <button
                             className="sm:hidden w-full flex items-center justify-center gap-3 py-4 rounded-xl border-2 border-primary/50 bg-primary/5 text-primary font-bold text-base active:bg-primary/10 transition-colors"
                             style={{ touchAction: "manipulation", minHeight: "56px" }}
-                            onClick={() => fileInputRef.current?.click()}
+                            onClick={triggerFilePicker}
                           >
                             <UploadCloud className="w-5 h-5" />
                             Choose a file from your device
@@ -724,7 +755,7 @@ export default function Import() {
                             onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
                             onDragLeave={() => setIsDragging(false)}
                             onDrop={onDrop}
-                            onClick={() => fileInputRef.current?.click()}
+                            onClick={triggerFilePicker}
                             style={{ touchAction: "manipulation" }}
                             className={`min-h-[180px] sm:min-h-[220px] rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all ${
                               isDragging
