@@ -126,9 +126,27 @@ Second product mode: evaluates documents across three independent risk dimension
 - Secondary gap: government impersonation signals (prepaid card accepted, 2.95% phone convenience charge) not flagged
 - **Recommended Tuning Round 4 target**: Add government-impersonation pattern — when claimed issuer is a utility/county/government entity AND payment URL/email domain is a private `.com` without verifiable public-sector association → add +25–35 to Authenticity Risk
 
-**Scoring Engine Status: FROZEN at Tuning Round 3 (Pilot Baseline v1.0)**
-- Do NOT modify `artifacts/api-server/src/routes/documents/index.ts` without explicit tuning approval
-- Tuning Round 4 is queued pending user decision
+**Tuning Round 4 (completed):**
+- **Trigger**: 2 FN in Batch 6 — government/utility impersonation + private `.com` payment domain
+- **Fix applied to `calculateRiskScore(data, lower, text)`** (signature now takes 3 args):
+  - When `claimsPublicIssuer` (utility/county/tax/city/municipality keywords) AND no .gov/.org domain found:
+    - +35 if payment URL is a "constructed" private .com portal (util/tax/payment/portal keyword + pay/portal/payment suffix, e.g. `redriver-utilities-pay.com`, `tax-portal-easton.com`)
+    - +20 if generic .com-only domain mismatch (government entity claiming .com payment)
+  - Pressure-tactic boosts (compound with above): +10 shutoff+urgent, +5 final notice+urgent, +8 phone payment, +5 recovery language
+- **Both call sites updated**: lines 1641 and 1678 now pass `text` as the 3rd argument
+- **Validation: 8/8 passed, 0 regressions** (all Batch 5 controls stable)
+  - T1 Fake Red River Utilities (shutoff): AR 36 → **96** ✅
+  - T2 Fake Easton County Tax (portal): AR 28 → **100** ✅
+  - T3 Legitimate Dominion Energy (.com): AR **2** — no false positive ✅
+  - T4 Gym membership (.com): AR **2** — no false positive ✅
+  - T5 IRS gift card phishing: AR **100** — stable ✅
+  - T6 School enrollment: AR **0** — stable ✅
+  - T7 Fitness Depot (Batch 5 control): AR **2** — stable ✅
+  - T8 Blue Shield EOB (Batch 5 control): AR **2** — stable ✅
+
+**Scoring Engine Status: ACTIVE — Tuning Round 4 (post-Pilot Baseline v1.0)**
+- Scoring engine at Tuning Round 4; `calculateRiskScore` signature: `(data, lower, text)`
+- Pilot Baseline v1.0: 74 records; 50 correct, 16 mostly-correct, 7 needs-tuning, 1 incorrect; 1 FP, 4 FN
 
 **Tuning Round 2 (completed):**
 - `calculateDocumentRiskScore()`: expanded `contractRiskPatterns` (class-action hyphenated, service suspension, equipment return fee, long cancellation notice, unilateral price adjustment, recurring renewal cycle); weight increases (ETF 12→14, auto-renewal 8→10, liquidated damages 10→12, unilateral termination 12→14)

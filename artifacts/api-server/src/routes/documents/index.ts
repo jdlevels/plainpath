@@ -1675,7 +1675,7 @@ router.post("/trust-check-upload", upload.single("file"), async (req, res) => {
     try {
       const lower = text.toLowerCase();
       const ruleData = extractRuleData(text);
-      const riskScore = calculateRiskScore(ruleData, lower);
+      const riskScore = calculateRiskScore(ruleData, lower, text);
       const verdict = scoreToVerdict(riskScore);
       const analysis = await runTrustCheckAnalysis(text, ruleData, riskScore, verdict, extracted.pdfMetadata);
       return res.json({ analysis });
