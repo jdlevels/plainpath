@@ -144,8 +144,8 @@ Second product mode: evaluates documents across three independent risk dimension
   - T7 Fitness Depot (Batch 5 control): AR **2** — stable ✅
   - T8 Blue Shield EOB (Batch 5 control): AR **2** — stable ✅
 
-**Scoring Engine Status: ACTIVE — Tuning Round 4 (post-Pilot Baseline v1.0)**
-- Scoring engine at Tuning Round 4; `calculateRiskScore` signature: `(data, lower, text)`
+**Scoring Engine Status: ACTIVE — Tuning Round 5 (post-Pilot Baseline v1.0)**
+- Scoring engine at Tuning Round 5; `calculateRiskScore` signature: `(data, lower, text)`
 - Pilot Baseline v1.0: 74 records; 50 correct, 16 mostly-correct, 7 needs-tuning, 1 incorrect; 1 FP, 4 FN
 
 ---
@@ -178,6 +178,15 @@ Second product mode: evaluates documents across three independent risk dimension
 **Batch 7 — Tuning Round 5 Triggers:**
 - TRIGGER MET: 2 FNs in Batch 7 (Docs 78 and 79)
 - Priority gaps: IRS-domain impersonation detection, crypto payment flag, reference-number regex expansion (File No./Case ID), Document Risk regression investigation (Docs 81-82)
+
+**Tuning Round 5 (completed — 10/10 validation passed):**
+- **P1 — IRS/federal impersonation**: Extended `claimsGovernmentEntity` with IRS/federal/levy/enforcement patterns; expanded `hasConstructedPaymentPortal` keyword set to catch "irs-tax-resolution-center.com"-style domains
+- **P2 — Crypto/digital asset payment**: Added "digital asset", "digital wallet", "wallet transfer", "crypto transfer", "digital currency" as standalone AR signal (+22 standalone scam payment method); already had bitcoin/crypto terms
+- **P3 — Reference number regex**: Expanded `hasRefNumber` to catch "Case ID", "File No.", "Parcel Ref/No/#", "Claim #" — eliminates false "no traceable reference number" structural findings on legitimate FDCPA notices and EOBs
+- **P4 — Document Risk regression (ConnectPro)**: Added ~20 new contract-risk patterns: arbitration/class-action waiver, ETF per-remaining-month, suspension without notice, equipment non-return fees, 60-day cancellation notice, license suspension/revocation, auto-acceleration, binding terms
+- **PayPal brand addition**: Added "paypal", "paypal security", "paypal support" to `impersonatedBrands` list → +18 when impersonation + payment demand present
+- **Fund-isolation compound**: New compound check — "holding account"/"safe account"/"protected account" in paymentRedFlags + anti-verification instruction → +15 (covers two-step PayPal/bank phishing pattern)
+- **Validation results**: Doc 01 IRS AR=100 ✅, Doc 02 PayPal AR=80 ✅, Doc 03 Red River AR=86 ✅, Doc 04 Easton AR=50 ✅, Doc 05 Harbor FDCPA AR=2 (ref suppressed) ✅, Doc 06 FitForge AR=2/DR=51 ✅, Doc 07 ConnectPro AR=2/DR=51 ✅, Doc 08 EOB AR=2 ✅, Doc 09 Lease AR=2 ✅, Doc 10 Verizon AR=2 ✅
 
 **Tuning Round 2 (completed):**
 - `calculateDocumentRiskScore()`: expanded `contractRiskPatterns` (class-action hyphenated, service suspension, equipment return fee, long cancellation notice, unilateral price adjustment, recurring renewal cycle); weight increases (ETF 12→14, auto-renewal 8→10, liquidated damages 10→12, unilateral termination 12→14)

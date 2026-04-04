@@ -583,6 +583,9 @@ function extractRuleData(text: string): ExtractedRuleData {
     // Account-takeover / fund-isolation signals (Tuning Round 3):
     // Scammers instruct victims to move money to "holding", "safe", or "protected" accounts.
     "holding account", "safe account", "protected account",
+    // Tuning Round 5 — P2: Cryptocurrency / digital asset payments as a standalone scam signal.
+    // Government agencies and legitimate institutions never accept digital asset transfers.
+    "digital asset", "digital asset transfer", "digital wallet", "wallet transfer", "digital currency",
   ];
   const paymentRedFlags = paymentRedFlagTerms.filter((t) => lower.includes(t));
 
@@ -712,6 +715,31 @@ function extractRuleData(text: string): ExtractedRuleData {
     ["no right of rescission", "No right of rescission"],
     ["there is no right of rescission", "No right of rescission"],
     ["no cooling-off period", "No right of rescission"],
+    // ── Tuning Round 5 — P4: Regression repair for service contracts (gym / telecom) ────────────
+    // Arbitration clauses phrased without "mandatory" or "binding" keywords
+    ["agrees to arbitration", "Mandatory arbitration"],
+    ["arbitration on an individual", "Mandatory arbitration"],
+    // Class-action waivers phrased without "class action" as a direct substring
+    ["class or representative action", "Class-action waiver"],
+    ["waives participation in class", "Class-action waiver"],
+    ["representative action", "Class-action waiver"],
+    // Early termination phrasing without the word "fee" immediately adjacent
+    ["early termination", "Early termination fee"],
+    // Auto-renewal phrasing using "unless cancelled" instead of "until cancelled"
+    ["unless cancelled", "Continuous auto-renewal"],
+    // Charge acceleration clauses phrased differently from "accelerate the"
+    ["accelerate all", "Acceleration clause"],
+    ["accelerate unpaid", "Acceleration clause"],
+    // Service suspension phrased as passive voice or with discretionary target
+    ["suspended without notice", "Service suspension without notice"],
+    ["may suspend", "Service suspension without notice"],
+    ["suspend access", "Service suspension without notice"],
+    ["suspend club access", "Service suspension without notice"],
+    // Collections referral phrased as "refer the account for collection"
+    ["account for collection", "Collections referral clause"],
+    // Unilateral price adjustment phrased as "price adjustments" (no "may adjust X" verb form)
+    ["price adjustment", "Unilateral price/term adjustment right"],
+    ["promotional expiration", "Unilateral price/term adjustment right"],
   ];
   const seenContractLabels = new Set<string>();
   const contractRiskTerms: string[] = [];
@@ -753,7 +781,9 @@ function calculateRiskScore(data: ExtractedRuleData, lower: string, text: string
   if (data.paymentRedFlags.some((f) => giftCardTerms.some((k) => f.includes(k)))) score += 25;
   const wireTerms = ["wire transfer", "western union", "moneygram"];
   if (data.paymentRedFlags.some((f) => wireTerms.some((k) => f.includes(k)))) score += 20;
-  const cryptoTerms = ["cryptocurrency", "bitcoin", "ethereum", "crypto", "usdt"];
+  // Tuning Round 5 — P2: expanded to catch "digital asset", "digital wallet", "wallet transfer"
+  // These are never accepted by legitimate government agencies or financial institutions.
+  const cryptoTerms = ["cryptocurrency", "bitcoin", "ethereum", "crypto", "usdt", "digital asset", "digital wallet", "wallet transfer", "digital currency"];
   if (data.paymentRedFlags.some((f) => cryptoTerms.some((k) => f.includes(k)))) score += 22;
   const ssnTerms = ["social security number", "ssn"];
   // Tuning Round 3 — Priority 4: Guard against SSN scoring spuriously elevating legitimate government docs.
@@ -771,11 +801,14 @@ function calculateRiskScore(data: ExtractedRuleData, lower: string, text: string
   if (data.paymentRedFlags.some((f) => linkTerms.some((k) => f.includes(k)))) score += 18;
 
   // High severity — impersonation and pattern detection
-  // Well-known brand impersonation + payment demand is a strong scam signal
+  // Well-known brand impersonation + payment demand is a strong scam signal.
+  // Tuning Round 5: added "paypal", "amazon.com", "venmo", "zelle" — common phishing targets that
+  // send urgent security/account notices directing victims to holding accounts or lookalike sites.
   const impersonatedBrands = [
     "microsoft", "apple support", "apple inc.", "google support", "amazon support",
     "irs ", "internal revenue service", "fbi ", "dea ", "interpol",
     "social security administration", "medicare fraud", "medicaid fraud",
+    "paypal", "paypal security", "paypal support",
   ];
   if (impersonatedBrands.some((b) => lower.includes(b)) && data.paymentRedFlags.length > 0) score += 18;
 
@@ -807,6 +840,13 @@ function calculateRiskScore(data: ExtractedRuleData, lower: string, text: string
   // Compound signal: SSN demand + anti-verification = strong identity-theft pattern (Tuning Round 1)
   const hasSsnDemand = data.infoRequests.some((r) => ["social security number", "ssn"].some((k) => r.includes(k)));
   if (hasSsnDemand && antiVerification.test(lower)) score += 6;
+
+  // Tuning Round 5: Fund-isolation + anti-verification compound.
+  // Directing a victim to transfer funds to a "holding account" while simultaneously telling them
+  // not to contact the brand's official support is the two-step PayPal / bank phishing pattern.
+  // This combination almost never appears in legitimate communications.
+  const hasFundIsolation = data.paymentRedFlags.some((f) => ["holding account", "safe account", "protected account"].some((k) => f.includes(k)));
+  if (hasFundIsolation && antiVerification.test(lower)) score += 15;
 
   // Tuning Round 3 — Priority 1: Phishing domain detection.
   // Lookalike domains (brand + suspicious suffix: -secure, -accounts-secure, -verify, -helpdesk, etc.)
@@ -873,9 +913,14 @@ function calculateRiskScore(data: ExtractedRuleData, lower: string, text: string
   // penalised if the domain is clearly constructed as a payment portal (not their company name).
 
   // Step 1 — Does the document claim to be from a government / municipal / public-utility entity?
+  // Tuning Round 5 — P1: extended to also catch IRS / federal / revenue-enforcement impersonation.
+  // Pattern covers Internal Revenue, IRS-branded units, levy/enforcement notices, and Treasury-level
+  // federal entities — all of which must use .gov domains for legitimate contact.
   const claimsGovernmentEntity =
     /\b(county|township|municipality|municipal\s+(government|service|court|authority|office)|city\s+of\b|village\s+of\b|town\s+of\b|borough\s+of\b|public\s+works\s+(department|office))\b/i.test(text) ||
-    /\b(tax\s+(collector|office|department|authority|division|bureau|portal)|county\s+treasurer|city\s+treasurer|treasurer'?s?\s+office|revenue\s+(office|department|division|bureau)|assessor'?s?\s+office|treasury\s+department|department\s+of\s+(revenue|taxation|finance)|property\s+tax|delinquent\s+tax|back\s+taxes?)\b/i.test(lower);
+    /\b(tax\s+(collector|office|department|authority|division|bureau|portal)|county\s+treasurer|city\s+treasurer|treasurer'?s?\s+office|revenue\s+(office|department|division|bureau)|assessor'?s?\s+office|treasury\s+department|department\s+of\s+(revenue|taxation|finance)|property\s+tax|delinquent\s+tax|back\s+taxes?)\b/i.test(lower) ||
+    // Tuning Round 5 — P1: IRS / federal tax authority impersonation
+    /\b(internal\s+revenue\s+(service|collections?\s*(unit|desk|center|division)?)?|revenue\s+collections?\s*(unit|division|center|desk)?|irs\s+(enforcement|levy|notice|collections?|resolution|division|compliance|unit)|federal\s+(tax|revenue|levy|enforcement|collections?|bureau)\b|intent\s+to\s+levy|notice\s+of\s+(levy|intent\s+to\s+levy)|tax\s+(enforcement|levy|collections?|resolution)\s*(unit|center|division|desk|bureau)?)\b/i.test(lower);
 
   const claimsPublicUtility =
     /\b(public\s+(utility|utilities)|utility\s+(district|authority|board|service|department)|utilities\s+(department|authority|district|board)|water\s+(authority|district|utility|department|service|board)|electric\s+(authority|district|utility|cooperative)|gas\s+(authority|district|utility)|power\s+(authority|district|utility))\b/i.test(lower);
@@ -905,9 +950,11 @@ function calculateRiskScore(data: ExtractedRuleData, lower: string, text: string
       // These have BOTH a utility/tax/government keyword AND a payment/portal keyword in the
       // domain name — e.g. "redriver-utilities-pay.com", "tax-portal-easton.com".
       const comDomains = allDocDomains.filter((d) => /\.com(\/|$)/.test(d) || d.endsWith(".com"));
+      // Tuning Round 5 — P1: expanded keyword sets to catch IRS/federal-style constructed domains.
+      // e.g. "irs-tax-resolution-center.com" has "tax"+"irs" (gov) and "resolution"+"center" (portal).
       const hasConstructedPaymentPortal = comDomains.some((d) => {
-        const hasGovUtilWord = /(utilities?|electric|water|gas|tax|county|municipal|city|township|treasury|revenue|assessor)/i.test(d);
-        const hasPaymentWord = /(pay|portal|payment|bill|collect|account)/i.test(d);
+        const hasGovUtilWord = /(utilities?|electric|water|gas|tax|county|municipal|city|township|treasury|revenue|assessor|irs|federal|levy|enforcement|clearance)/i.test(d);
+        const hasPaymentWord = /(pay|portal|payment|bill|collect|account|resolution|center|clearance|enforcement|collections)/i.test(d);
         return hasGovUtilWord && hasPaymentWord;
       });
 
@@ -1250,13 +1297,21 @@ function detectStructuralIssues(
   // Broad pattern covers: "Account Number: X", "Account: X", "Ref #X", "Case No. X", "Member Account #X",
   // "Membership #: X", "Account ID: X", "Subscriber ID: X", etc.
   // Expanded in Tuning Round 3 to match identifier patterns common in consumer agreements.
+  // Tuning Round 5 — P3: Expanded identifier detection to eliminate false "no reference number"
+  // structural findings. Added recognition for: Case ID (IRS/federal notices), File No. / File Number
+  // (debt collection), Parcel Ref / Parcel No. / Parcel # (tax/county notices), and Claim #.
   const hasRefNumber =
-    /\b(account\s*(number|#|no\.?|id|identifier)|case\s*(number|#|no\.?)|reference\s*(number|#|no\.?)|invoice\s*(number|#|no\.?)|confirmation\s*(number|#|no\.?)|notice\s*(number|#|no\.?)|member\s*(account|number|#|id)|membership\s*(number|#|no\.?)|subscriber\s*(id|number|#)|loan\s*(number|#|no\.?)|policy\s*(number|#|no\.?)|contract\s*(number|#|no\.?))\s*:?\s*[\w\-]+/i.test(text)
-    // Also catch bare labels: "Account: 78-2934-16", "Ref: XYZ", "Acct #12345"
+    /\b(account\s*(number|#|no\.?|id|identifier)|case\s*(number|#|no\.?|id|identifier)|file\s*(number|#|no\.?)|reference\s*(number|#|no\.?)|invoice\s*(number|#|no\.?)|confirmation\s*(number|#|no\.?)|notice\s*(number|#|no\.?)|member\s*(account|number|#|id)|membership\s*(number|#|no\.?)|subscriber\s*(id|number|#)|loan\s*(number|#|no\.?)|policy\s*(number|#|no\.?)|contract\s*(number|#|no\.?)|claim\s*(number|#|no\.?)|parcel\s*(number|#|no\.?|ref|id))\s*:?\s*[\w\-]+/i.test(text)
+    // Also catch bare labels: "Account: 78-2934-16", "Ref: XYZ", "Acct #12345", "File No.: HRS-882014"
     || /\bAccount\s*:\s*[\w\-]{3,}/i.test(text)
     || /\bRef(?:erence)?\s*(?:no\.?|#|:)\s*[\w\-]{3,}/i.test(text)
     || /\bMember\s+(?:Account|ID)\s*(?:no\.?|#|:)?\s*[\w\-]{3,}/i.test(text)
-    || /\bAcct\.?\s*(?:no\.?|#|:)?\s*[\w\-]{3,}/i.test(text);
+    || /\bAcct\.?\s*(?:no\.?|#|:)?\s*[\w\-]{3,}/i.test(text)
+    // Tuning Round 5 — P3: catch "Case ID: XYZ", "File No.: ABC", "Parcel Ref: 123", "Claim #: 456"
+    || /\bCase\s+ID\s*:?\s*[\w\-]{3,}/i.test(text)
+    || /\bFile\s+No\.?\s*:?\s*[\w\-]{3,}/i.test(text)
+    || /\bParcel\s+(?:Ref|No\.?|#|ID)\s*:?\s*[\w\-]{3,}/i.test(text)
+    || /\bClaim\s+(?:#|No\.?|Number)\s*:?\s*[\w\-]{3,}/i.test(text);
   const hasMeaningfulAmount = ruleData.amounts.length > 0;
   const hasThreatOrPayment = ruleData.paymentRedFlags.length > 0 || ruleData.threatPhrases.some((t) => ["collections", "collection agency", "debt collector", "lawsuit", "legal action", "eviction"].includes(t));
   if (hasMeaningfulAmount && hasThreatOrPayment && !hasRefNumber) {
