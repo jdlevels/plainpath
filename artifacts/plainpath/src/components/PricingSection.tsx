@@ -21,8 +21,11 @@ export default function PricingSection() {
 
   async function handlePlanClick(plan: PricingPlan) {
     if (plan.planned) {
-      window.location.href =
-        "mailto:hello@plainpath.app?subject=PlainPath%20Team%20Waitlist"
+      window.open(
+        "https://mail.google.com/mail/?view=cm&fs=1&to=hello@plainpath.app&su=PlainPath%20Team%20Waitlist",
+        "_blank",
+        "noopener,noreferrer"
+      )
       return
     }
 
