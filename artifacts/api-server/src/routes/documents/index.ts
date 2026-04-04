@@ -745,7 +745,7 @@ function extractRuleData(text: string): ExtractedRuleData {
   return { phones, emails, urls, dates, amounts, urgencyPhrases, threatPhrases, paymentRedFlags, infoRequests, contractRiskTerms };
 }
 
-function calculateRiskScore(data: ExtractedRuleData, lower: string): number {
+function calculateRiskScore(data: ExtractedRuleData, lower: string, text: string): number {
   let score = 0;
 
   // High severity — payment method red flags
@@ -861,6 +861,89 @@ function calculateRiskScore(data: ExtractedRuleData, lower: string): number {
   if (data.urgencyPhrases.length >= 1) score += 3;
   if (data.threatPhrases.length >= 1) score += 3;
   if (data.amounts.length > 0) score += 2;
+
+  // ── Tuning Round 4: Government / Utility impersonation via private .com domain ──────────────
+  // Batch-6 false negatives (Red River Utilities shutoff, Easton County Tax) both exhibited this
+  // pattern: document claims a public/municipal/utility issuer but directs payment/contact to a
+  // private .com portal, with no .gov or institutional domain present.
+  //
+  // Priority 3 safeguard: this rule ONLY fires when the issuer explicitly claims to be a
+  // government, municipal, or public-utility entity. Normal private businesses using .com are
+  // not affected. Established utility companies whose .com is their actual brand domain are only
+  // penalised if the domain is clearly constructed as a payment portal (not their company name).
+
+  // Step 1 — Does the document claim to be from a government / municipal / public-utility entity?
+  const claimsGovernmentEntity =
+    /\b(county|township|municipality|municipal\s+(government|service|court|authority|office)|city\s+of\b|village\s+of\b|town\s+of\b|borough\s+of\b|public\s+works\s+(department|office))\b/i.test(text) ||
+    /\b(tax\s+(collector|office|department|authority|division|bureau|portal)|county\s+treasurer|city\s+treasurer|treasurer'?s?\s+office|revenue\s+(office|department|division|bureau)|assessor'?s?\s+office|treasury\s+department|department\s+of\s+(revenue|taxation|finance)|property\s+tax|delinquent\s+tax|back\s+taxes?)\b/i.test(lower);
+
+  const claimsPublicUtility =
+    /\b(public\s+(utility|utilities)|utility\s+(district|authority|board|service|department)|utilities\s+(department|authority|district|board)|water\s+(authority|district|utility|department|service|board)|electric\s+(authority|district|utility|cooperative)|gas\s+(authority|district|utility)|power\s+(authority|district|utility))\b/i.test(lower);
+
+  const claimsPublicIssuer = claimsGovernmentEntity || claimsPublicUtility;
+
+  if (claimsPublicIssuer) {
+    // Step 2 — Collect all domains present in the document (URLs + bare domains)
+    const extractHostnameR4 = (u: string): string => {
+      try { return new URL(u).hostname.toLowerCase(); } catch { return u.toLowerCase(); }
+    };
+    const allDocDomains = [
+      ...data.urls.map(extractHostnameR4),
+      ...(text.match(/\b[A-Za-z0-9\-]+\.(com|org|gov|net|edu)(\/[\w\-\/\.]+)?\b/g) || [])
+        .filter((d) => !d.includes("@"))
+        .map((d) => d.toLowerCase()),
+    ];
+
+    // Step 3 — Check for authoritative public-sector domains (reduces suspicion)
+    const hasGovDomain = allDocDomains.some((d) => d.includes(".gov"));
+    const hasInstitutionalOrg = allDocDomains.some((d) => d.includes(".org") && !/pay|portal|payment|collect/i.test(d));
+
+    if (!hasGovDomain && !hasInstitutionalOrg) {
+      // No .gov and no institutional .org — contact/payment channels are all private
+
+      // Step 4a — Strong signal: a .com domain that looks like a constructed payment portal.
+      // These have BOTH a utility/tax/government keyword AND a payment/portal keyword in the
+      // domain name — e.g. "redriver-utilities-pay.com", "tax-portal-easton.com".
+      const comDomains = allDocDomains.filter((d) => /\.com(\/|$)/.test(d) || d.endsWith(".com"));
+      const hasConstructedPaymentPortal = comDomains.some((d) => {
+        const hasGovUtilWord = /(utilities?|electric|water|gas|tax|county|municipal|city|township|treasury|revenue|assessor)/i.test(d);
+        const hasPaymentWord = /(pay|portal|payment|bill|collect|account)/i.test(d);
+        return hasGovUtilWord && hasPaymentWord;
+      });
+
+      if (hasConstructedPaymentPortal) {
+        // Strongest signal: clearly constructed payment-portal domain for a claimed public issuer.
+        // Real utilities/agencies do not register "<entity>-pay.com" or "tax-portal-<city>.com".
+        score += 35;
+      } else if (claimsGovernmentEntity && comDomains.length > 0) {
+        // Government/municipal entities (county, tax office, treasury) must use .gov.
+        // A .com-only contact structure for a claimed government entity is highly suspicious.
+        score += 20;
+      }
+      // Note: established utility companies legitimately use their company .com domain —
+      // only penalise when the portal is clearly constructed (handled above).
+
+      // Step 5 — Priority 2: Payment-pressure combination boost.
+      // When the public-issuer/private-domain pattern appears alongside social-engineering
+      // pressure tactics, the combined weight should materially elevate the score.
+      const hasShutoffOrSeizureThreat = data.threatPhrases.some((t) =>
+        ["shutoff", "shut off", "service interruption", "disconnect", "suspension",
+          "seizure", "asset seizure", "property seizure", "lien"].some((k) => t.includes(k)),
+      );
+      const hasUrgentPaymentDemand = data.urgencyPhrases.length > 0 && data.amounts.length > 0;
+      const hasFinalNoticeThreat = data.threatPhrases.some((t) =>
+        ["final notice", "final warning", "last notice"].some((k) => t.includes(k)),
+      );
+      const hasPhonePaymentDemand = /\b(pay\s+by\s+phone|payment\s+by\s+phone|pay\s+(?:over|via)\s+(?:the\s+)?phone|convenience\s+fee|debit\s+by\s+phone)\b/i.test(lower);
+      const hasRecoveryOrIsolationLanguage = /\b(recovery\s+file|account\s+isolation|notice\s+of\s+(seizure|lien|assessment|levy)|final\s+demand\s+for\s+payment)\b/i.test(lower);
+
+      if (hasShutoffOrSeizureThreat && hasUrgentPaymentDemand) score += 10;
+      if (hasFinalNoticeThreat && hasUrgentPaymentDemand) score += 5;
+      if (hasPhonePaymentDemand && claimsPublicIssuer) score += 8;
+      if (hasRecoveryOrIsolationLanguage) score += 5;
+    }
+  }
+  // ── End Tuning Round 4 ───────────────────────────────────────────────────────────────────────
 
   return Math.min(100, score);
 }
@@ -1555,7 +1638,7 @@ router.post("/trust-check", async (req, res) => {
   try {
     const lower = text.toLowerCase();
     const ruleData = extractRuleData(text);
-    const riskScore = calculateRiskScore(ruleData, lower);
+    const riskScore = calculateRiskScore(ruleData, lower, text);
     const verdict = scoreToVerdict(riskScore);
     const analysis = await runTrustCheckAnalysis(text, ruleData, riskScore, verdict, undefined);
     return res.json({ analysis });

@@ -1,0 +1,138 @@
+Project: Document Action Plan
+Task: Run Tuning Round 4 focused specifically on government/utility impersonation false negatives caused by private .com payment/contact domains.
+
+Goal:
+Correct the repeated false-negative pattern confirmed in Batch 6, where fake government/utility documents were under-scored because the engine is not strongly penalizing private .com payment/contact domains when the claimed issuer is a public or municipal entity.
+
+Reason this round is justified:
+Batch 6 introduced 2 new false negatives in the same weakness category:
+- Fake Utility Shutoff (Red River)
+- Fake County Tax (Easton Treasury)
+
+Both documents:
+- claimed a public/municipal issuer
+- used private .com payment/contact domains
+- relied on payment-pressure/social-engineering flows
+- were under-scored on Authenticity Risk
+
+Critical constraints:
+- Do NOT add new major features
+- Do NOT redesign the UI
+- Do NOT activate paid features
+- Do NOT restore subscription gating
+- Do NOT add security rollout
+- Do NOT build trusted-entity verification yet
+- Keep the three-score model intact
+- Make only targeted tuning changes tied directly to this repeated false-negative pattern
+
+-----------------------------------
+PRIORITY 1 — GOVERNMENT / UTILITY DOMAIN MISMATCH PENALTY
+-----------------------------------
+
+Required tuning:
+Increase Authenticity Risk when all or most of the following are true:
+1. the document claims to be from:
+   - a county
+   - a tax office / treasury
+   - a city / municipal agency
+   - a public utility
+   - a government office
+2. the primary payment/contact portal is a private `.com` domain
+3. the domain does not clearly appear to be an official public-entity domain or an obviously disclosed authorized processor relationship
+4. the document pushes urgent payment or action
+
+Examples from Batch 6:
+- redriver-utilities-pay.com
+- tax-portal-easton.com
+
+Target behavior:
+These should materially raise Authenticity Risk and push fake public-issuer/payment-demand documents into a clearly suspicious band.
+
+-----------------------------------
+PRIORITY 2 — PAYMENT-PRESSURE COMBINATION BOOST
+-----------------------------------
+
+Add or strengthen combined weighting when the public-issuer/private-domain pattern appears alongside:
+- same-day payment deadlines
+- shutoff / seizure / collection threats
+- debit-by-phone requests
+- prepaid-card style payment options
+- convenience fees by phone
+- “Recovery File” / “Final Notice” / urgent account isolation language
+
+Goal:
+The score should reflect not just the domain mismatch, but the social-engineering payment pattern around it.
+
+-----------------------------------
+PRIORITY 3 — SAFEGUARDS AGAINST OVERFIRING
+-----------------------------------
+
+Do NOT broadly penalize every `.com` domain.
+Keep the penalty focused to documents that are specifically presenting themselves as public/government/municipal issuers.
+
+Safeguards:
+- normal private businesses using `.com` should not be affected by this rule alone
+- only escalate strongly when the issuer identity is public/municipal/government-style
+- preserve the current clean behavior for legitimate institutional/private docs
+
+-----------------------------------
+VALIDATION SET
+-----------------------------------
+
+Re-test at minimum:
+1. Fake Utility Shutoff (Red River)
+2. Fake County Tax (Easton Treasury)
+3. one legitimate utility or municipal-style notice if available
+4. one legitimate institutional/private bill using a `.com` domain
+5. one obvious phishing/control scam
+6. one legitimate low-risk control
+7. gym membership control
+8. EOB control
+
+-----------------------------------
+VALIDATION REQUIREMENTS
+-----------------------------------
+
+For each document, review:
+- primary verdict
+- authenticity risk
+- document risk
+- verification confidence
+- scam indicators
+- structural findings
+- contact verification guidance
+- safe next steps
+
+Success checks:
+- the two fake public-issuer docs no longer under-score
+- private `.com` domains are meaningfully penalized when paired with claimed government/public issuers
+- legitimate private businesses using `.com` are not incorrectly escalated
+- the working gym/EOB controls remain clean
+- no significant new false positives are introduced
+
+-----------------------------------
+OUTPUT REQUIRED
+-----------------------------------
+
+Return:
+1. exact files changed
+2. what was tuned in the government/utility impersonation logic
+3. whether thresholds, weights, or prompt logic changed
+4. before/after behavior for:
+   - Fake Utility Shutoff (Red River)
+   - Fake County Tax (Easton Treasury)
+   - one legitimate private `.com` control
+   - one legitimate utility/municipal-style control if available
+5. screenshots of:
+   - corrected fake utility result
+   - corrected fake county tax result
+   - one legitimate control result
+6. final statement:
+   - TUNING ROUND 4 COMPLETE
+   - or TUNING ROUND 4 NEEDS ONE FOLLOW-UP FIX
+
+Success criteria:
+- the repeated false-negative public-issuer/private-domain pattern is corrected
+- government/utility impersonation docs score much higher on Authenticity Risk
+- legitimate private `.com` documents are not unintentionally penalized
+- the pilot baseline becomes more stable after Batch 6
