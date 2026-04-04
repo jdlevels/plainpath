@@ -148,6 +148,37 @@ Second product mode: evaluates documents across three independent risk dimension
 - Scoring engine at Tuning Round 4; `calculateRiskScore` signature: `(data, lower, text)`
 - Pilot Baseline v1.0: 74 records; 50 correct, 16 mostly-correct, 7 needs-tuning, 1 incorrect; 1 FP, 4 FN
 
+---
+
+**Batch 7 — Mixed Realistic Document Set (10 docs, IDs 76–85):**
+- **Result: 3 correct, 3 mostly-correct, 4 needs-tuning, 0 incorrect, 0 FP, 2 FN**
+- Total cumulative records: 85 (IDs 76–85 saved April 4, 2026)
+
+| ID | Document | AR | DR | VC | Verdict | Assessment |
+|----|---|---|---|---|---|---|
+| 76 | Fake Utility Shutoff (Red River) | 86 | 0 | 17 | High scam risk | Correct ✅ |
+| 77 | Fake County Tax (Easton Treasury) | 50 | 0 | 47 | Suspicious | Needs Tuning ⚠️ |
+| 78 | Fake IRS Levy (IR Collections) | 40 | 5 | 45 | Cannot verify | Needs Tuning ❌ FN |
+| 79 | Fake PayPal Email (paypal-accounts-secure) | 47 | 0 | 20 | Cannot verify | Needs Tuning ❌ FN |
+| 80 | Debt Collection (Harbor Recovery / FDCPA) | 2 | 0 | 25 | Cannot verify | Mostly Correct |
+| 81 | Gym Membership (FitForge 36-month) | 2 | 6 | 47 | Cannot verify | Needs Tuning ⚠️ |
+| 82 | Telecom Agreement (ConnectPro Fiber) | 2 | 11 | 47 | Cannot verify | Needs Tuning ⚠️ |
+| 83 | Lease Renewal (Parkview Commons) | 2 | 0 | 62 | Likely legitimate | Mostly Correct |
+| 84 | EOB Notice (Blue River Health) | 2 | 0 | 79 | Likely legitimate | Correct ✅ |
+| 85 | Phone Bill (Verizon Mobile) | 2 | 0 | 67 | Likely legitimate | Correct ✅ |
+
+**Batch 7 — Key Findings:**
+- **Tuning Round 4 utility shutoff logic works** (Doc 76, AR=86) — Red River pattern now correctly fires
+- **FN #1 — Fake IRS Levy (Doc 78)**: irs-tax-resolution-center.com not caught by gov-domain impersonation logic; cryptocurrency payment acceptance not flagged; "Case ID" not recognized as reference number → structural finding wrong
+- **FN #2 — Fake PayPal (Doc 79)**: phishing domain (paypal-accounts-secure.net) + holding account + anti-verification should compound to 75+; previously scored 61 in validation, now scoring 47 (possible regression)
+- **Doc 82 Document Risk regression**: ConnectPro Telecom scored DR=57 in Batch 4, now scoring DR=11 — investigate contract term detection regression
+- **Doc 81 Document Risk gap**: FitForge 36-month membership DR=6 — percentage-based ETF, 60-day cancel notice, and charge acceleration clause not captured
+- **Reference number detection bug**: "File No.", "Case ID" not recognized; structural finding incorrectly fires on docs that do have identifiers (Docs 78, 80)
+
+**Batch 7 — Tuning Round 5 Triggers:**
+- TRIGGER MET: 2 FNs in Batch 7 (Docs 78 and 79)
+- Priority gaps: IRS-domain impersonation detection, crypto payment flag, reference-number regex expansion (File No./Case ID), Document Risk regression investigation (Docs 81-82)
+
 **Tuning Round 2 (completed):**
 - `calculateDocumentRiskScore()`: expanded `contractRiskPatterns` (class-action hyphenated, service suspension, equipment return fee, long cancellation notice, unilateral price adjustment, recurring renewal cycle); weight increases (ETF 12→14, auto-renewal 8→10, liquidated damages 10→12, unilateral termination 12→14)
 - `calculateVerificationConfidence()`: expanded identifier regex (claim/group/statement #), multi-identifier compound bonus (+5/+10), bare domain detection (+5), institutional contact bonus (+5), "THIS IS NOT A BILL" institutional language bonus, wider payment channel matching
