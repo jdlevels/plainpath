@@ -16,11 +16,15 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-background/90 border-b border-border/50 transition-all duration-300 safe-top">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 group outline-none">
+        <Link
+          href="/"
+          aria-label="PlainPath — go to home"
+          className="flex items-center gap-2 group cursor-pointer rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2"
+        >
           <div className="bg-primary/10 p-2 rounded-xl group-hover:bg-primary/20 transition-colors">
             <FileText className="w-5 h-5 text-primary" strokeWidth={2.5} />
           </div>
-          <span className="font-display font-bold text-xl tracking-tight text-foreground">
+          <span className="font-display font-bold text-xl tracking-tight text-foreground group-hover:text-primary transition-colors">
             PlainPath
           </span>
         </Link>
