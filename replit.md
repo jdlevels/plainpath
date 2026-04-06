@@ -126,6 +126,11 @@ The homepage hero contains three visually uniform CTAs designed as one product-a
 
 All three share: `h-12 px-8 text-base rounded-xl font-semibold`. The two outline buttons are intentionally identical in className. Do not add special border, hover, or icon coloring overrides to either outline button that the other does not share.
 
+## Pending Integration Connections (not yet authorized)
+
+- **Stripe** (`connector:ccfg_stripe_01K611P4YQR0SZM11XFRQJC44Y`): All backend code is built (`/api/stripe/*` routes, billing SQLite DB, webhook handler). Needs `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET` env vars — either connect via Replit integration or add secrets manually.
+- **Resend** (`connector:ccfg_resend_01K69QKYK789WN202XSE3QS17V`): Email reminder route is built (`/api/reminders/email`). Needs `RESEND_API_KEY` env var — either connect via Replit integration or add secret manually. The `resend` npm package is already installed in `@workspace/api-server`.
+
 ## External Dependencies
 
 - **OpenAI**: Utilized via Replit AI Integrations (`gpt-5.2` model) for document analysis and extraction.
