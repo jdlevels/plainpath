@@ -80,7 +80,7 @@ export default function UpgradeModal({ open, onClose, reason, used, limit }: Pro
                   Upgrade required
                 </span>
               </div>
-              {used !== undefined && limit !== undefined && limit !== Infinity && (
+              {used !== undefined && limit !== undefined && limit > 0 && limit !== Infinity && (
                 <p className="text-xs text-muted-foreground">
                   {used} of {limit} used this month
                 </p>
@@ -135,7 +135,7 @@ export default function UpgradeModal({ open, onClose, reason, used, limit }: Pro
             onClick={onClose}
             className="text-center text-sm text-muted-foreground hover:text-foreground transition-colors py-1"
           >
-            Continue with free tier
+            Maybe later
           </button>
         </div>
       </DialogContent>
