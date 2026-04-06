@@ -163,8 +163,8 @@ export default function Home() {
               transition={{ delay: 0.2 }}
               className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2 flex-wrap"
             >
-              <Button size="lg" onClick={() => setLocation("/import")}
-                className="h-12 px-8 text-base rounded-xl font-semibold shadow-md shadow-primary/20">
+              <Button size="lg" variant="outline" onClick={() => setLocation("/import")}
+                className="h-12 px-8 text-base rounded-xl font-semibold border-blue-200 text-blue-600 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-950/30 dark:hover:text-blue-300 dark:hover:border-blue-700">
                 <FileScan className="mr-2 w-4 h-4" /> Analyze a Document <ArrowRight className="ml-2 w-4 h-4" />
               </Button>
               <Button size="lg" variant="outline" onClick={() => setLocation("/import?mode=trust-check")}
