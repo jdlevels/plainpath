@@ -4,7 +4,7 @@ import {
   ArrowRight, FileCheck, Clock, ShieldCheck, Upload,
   Sparkles, ClipboardList, GraduationCap, Banknote,
   Receipt, Scale, HeartPulse, FileSignature, MailWarning,
-  CheckCircle2, PenLine
+  CheckCircle2, PenLine, AlertTriangle, Eye, CalendarX, FileScan
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -129,7 +129,7 @@ export default function Home() {
             transition={{ delay: 0.14 }}
             className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed"
           >
-            Reads your paperwork and turns it into clear next steps, deadlines, risks, required documents, and trust-check guidance — in plain English.
+            Documents are drafted by experts to protect their interests — not yours. PlainPath reads every clause, surfaces every deadline, and turns confusing paperwork into a clear action plan in plain English.
           </motion.p>
 
           {/* Primary CTA row */}
@@ -231,6 +231,98 @@ export default function Home() {
             ))}
           </div>
         </motion.div>
+
+        {/* ── THE PROBLEM — dark narrative section ──────────────── */}
+        <motion.section
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true, margin: "-80px" }}
+          className="w-full max-w-none -mx-4 px-4 mb-28"
+        >
+          <div className="rounded-3xl bg-slate-950 dark:bg-slate-900 text-white px-6 py-16 sm:px-12 sm:py-20 max-w-6xl mx-auto overflow-hidden relative">
+            {/* Background texture */}
+            <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 opacity-80 pointer-events-none" />
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full bg-primary/10 blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-violet-500/8 blur-3xl pointer-events-none" />
+
+            <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+              {/* Left — headline */}
+              <div>
+                <motion.p
+                  initial={{ opacity: 0, y: 8 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  className="text-xs font-bold uppercase tracking-[0.2em] text-primary/80 mb-5"
+                >
+                  The problem
+                </motion.p>
+                <motion.h2
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.06 }}
+                  className="text-4xl sm:text-5xl font-display font-bold leading-[1.08] tracking-tight text-white mb-6"
+                >
+                  They wrote<br />
+                  every clause.<br />
+                  <span className="text-slate-400">You have to live<br />with every one.</span>
+                </motion.h2>
+                <motion.p
+                  initial={{ opacity: 0, y: 12 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.12 }}
+                  className="text-slate-400 leading-relaxed text-base sm:text-lg max-w-md"
+                >
+                  Contracts, notices, and government forms are written by specialists with one goal: protecting the organization that issued them. Nobody writes them for you.
+                </motion.p>
+              </div>
+
+              {/* Right — pain points */}
+              <div className="space-y-4">
+                {[
+                  {
+                    icon: CalendarX,
+                    title: "Deadlines buried in fine print",
+                    desc: "A 30-day window in paragraph 8 that nobody told you about. Once it passes, your options disappear.",
+                  },
+                  {
+                    icon: Eye,
+                    title: "Obligations you unknowingly accepted",
+                    desc: "One signature transfers liability. One clause waives your right to dispute. Standard language — but not in your favor.",
+                  },
+                  {
+                    icon: AlertTriangle,
+                    title: "Requirements that blindside you",
+                    desc: "Missing one document in an 8-item checklist holds everything up. They're all listed — just not clearly.",
+                  },
+                  {
+                    icon: FileScan,
+                    title: "Fake documents designed to pressure you",
+                    desc: "Scam notices that look official enough to act on. The real ones and the fake ones use the same formatting.",
+                  },
+                ].map((item, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, x: 20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.08 }}
+                    className="flex items-start gap-4 bg-white/5 hover:bg-white/8 transition-colors rounded-2xl px-5 py-4"
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-primary/15 flex items-center justify-center shrink-0 mt-0.5">
+                      <item.icon className="w-4.5 h-4.5 text-primary" style={{ width: 18, height: 18 }} />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-white text-sm mb-0.5">{item.title}</p>
+                      <p className="text-slate-400 text-sm leading-relaxed">{item.desc}</p>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </motion.section>
 
         {/* ── Three tools showcase ───────────────────────────────── */}
         <ToolsShowcase />
