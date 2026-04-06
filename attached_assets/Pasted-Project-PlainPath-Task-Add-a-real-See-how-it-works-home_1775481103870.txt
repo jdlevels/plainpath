@@ -1,0 +1,113 @@
+Project: PlainPath
+Task: Add a real “See how it works” homepage video section that supports a narrated product demo for all three core features.
+
+Goal:
+Create a premium homepage product-demo section with a real video player so users can quickly understand how PlainPath works across:
+1. Analyze a Document
+2. Document Trust Check
+3. Build a Contract
+
+Critical constraints:
+- Do NOT redesign the whole homepage
+- Do NOT use a fake/static mock video card only
+- Build a real video section ready for a real demo asset
+- Keep the current dark premium SaaS design language
+- Do NOT break existing CTA routing or layout
+
+Primary objective:
+Add a visually strong “See how it works” section with a real embedded video player and supporting text.
+
+-----------------------------------
+SECTION REQUIREMENTS
+-----------------------------------
+
+Add a homepage section titled around:
+- See how PlainPath works
+or a very close equivalent
+
+Supporting copy should clearly explain that the video demonstrates the three main product lanes:
+- analyzing documents
+- checking suspicious documents
+- building contracts
+
+The section should feel premium and centered, not like an afterthought.
+
+-----------------------------------
+VIDEO PLAYER REQUIREMENTS
+-----------------------------------
+
+Build a real video player section that supports:
+- poster thumbnail
+- play button
+- MP4/video embed support
+- responsive scaling
+- desktop and mobile support
+- easy replacement of the demo asset later
+
+If the final production video asset is not yet ready, use a clean placeholder/poster structure that is already wired for a real video file.
+
+The player should be implemented as real media support, not a fake card.
+
+-----------------------------------
+CONTENT / MESSAGING
+-----------------------------------
+
+Use supporting language that matches the real product:
+
+Suggested structure:
+Headline:
+See how PlainPath works
+
+Supporting text:
+Watch how PlainPath analyzes documents, checks suspicious paperwork, and helps build cleaner contracts.
+
+Optional supporting bullets or labels:
+- Analyze a Document
+- Document Trust Check
+- Build a Contract
+
+-----------------------------------
+VISUAL STYLE
+-----------------------------------
+
+The video section should:
+- feel like a homepage centerpiece
+- have stronger visual presence than a normal card row
+- use a polished framed player surface
+- fit the current dark premium style
+- include subtle depth/glow only if tasteful
+- not copy any competitor layout directly
+
+-----------------------------------
+VIDEO-READY NOTES
+-----------------------------------
+
+Prepare the section so we can later drop in a narrated walkthrough video with:
+- screen recording of the app
+- AI voiceover
+- captions if desired
+
+No autoplay with sound by default.
+Keep it user-initiated.
+
+-----------------------------------
+PLACEMENT
+-----------------------------------
+
+Place it in a strong mid-page position where it improves credibility and product understanding.
+It should sit naturally in the homepage flow, likely after the hero/how-it-works explanation and before deeper feature sections.
+
+-----------------------------------
+OUTPUT REQUIRED
+-----------------------------------
+
+Return:
+1. exact files changed
+2. where the section was placed
+3. whether the player is fully wired for a real video file
+4. what placeholder/poster was used if final video asset is not yet added
+5. screenshots of:
+   - desktop video section
+   - mobile video section
+   - close-up of the player area
+6. any risks introduced

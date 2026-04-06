@@ -14,6 +14,7 @@ import TestimonialsSection from "@/components/TestimonialsSection"
 import FAQSection from "@/components/FAQSection"
 import ToolsShowcase from "@/components/ToolsShowcase"
 import DemoSection from "@/components/DemoSection"
+import VideoWalkthrough from "@/components/VideoWalkthrough"
 
 const DEMOS = [
   {
@@ -336,6 +337,15 @@ export default function Home() {
                 </motion.div>
               ))}
             </div>
+          </Band>
+        </div>
+
+        {/* ═══════════════════════════════════════════════════
+            BAND 7 — VIDEO WALKTHROUGH  (dark cinematic)
+        ════════════════════════════════════════════════════ */}
+        <div className="w-full bg-gradient-to-b from-slate-950 via-[#0d1526] to-slate-950">
+          <Band innerClassName="py-20">
+            <VideoWalkthrough />
           </Band>
         </div>
 
