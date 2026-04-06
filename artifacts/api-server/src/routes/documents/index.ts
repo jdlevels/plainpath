@@ -594,6 +594,9 @@ function extractRuleData(text: string): ExtractedRuleData {
     "payment link", "pay here", "click to pay", "pay online now",
     // Account-takeover / fund-isolation signals (Tuning Round 3):
     "holding account", "safe account", "protected account",
+    // Tuning Round 6: added "holding status" — PayPal/bank phishing often places accounts in
+    // "holding status" rather than directing to a "holding account"; semantically identical.
+    "holding status", "funds on hold", "account on hold", "account placed on hold",
     // Tuning Round 5 — P2: Cryptocurrency / digital asset payments as a standalone scam signal.
     "digital asset", "digital asset transfer", "digital wallet", "wallet transfer", "digital currency",
     // Expanded — advance fee / processing fee / fake check signals
@@ -902,7 +905,10 @@ function calculateRiskScore(data: ExtractedRuleData, lower: string, text: string
     "social security administration", "medicare fraud", "medicaid fraud",
     "paypal", "paypal security", "paypal support",
   ];
-  if (impersonatedBrands.some((b) => lower.includes(b)) && data.paymentRedFlags.length > 0) score += 18;
+  // Tuning Round 6: also fires when infoRequests.length > 0 (not just payment red flags).
+  // Credential-harvesting phishing impersonates a brand and requests identity info without a direct
+  // payment link — the victim is directed to a fake site instead of being asked for money directly.
+  if (impersonatedBrands.some((b) => lower.includes(b)) && (data.paymentRedFlags.length > 0 || data.infoRequests.length > 0)) score += 18;
 
   // Remote access request combined with payment demand — hallmark of tech support scam
   const remoteAccessTerms = ["remote access", "remotely access", "anydesk", "teamviewer", "remote session", "remote control your"];
@@ -924,7 +930,9 @@ function calculateRiskScore(data: ExtractedRuleData, lower: string, text: string
   // Anti-verification instruction — telling recipient not to contact official channels or to use an exclusive hotline.
   // Expanded (Tuning Round 1): catches "do not contact [brand/company] directly" and exclusive-channel demands.
   // Expanded (Tuning Round 3): added paypal, ebay, bank, support, "us" targets; added "do not contact \w+ directly" catch-all.
-  const antiVerification = /do\s+not\s+contact\s+(the\b|our\b|us\b|amazon\b|microsoft\b|apple\b|google\b|irs\b|fbi\b|official\b|main\b|paypal\b|ebay\b|bank\b|support\b)|do\s+not\s+contact\s+\w+\s+directly|do\s+not\s+call\s+the\s*(irs|fbi|police|main\s+office|official)|must\s+be\s+resolved\s+exclusively\s+through\s+our|avoid\s+contacting|do\s+not\s+discuss\s+(this|the)|do\s+not\s+speak\s+with\s+(anyone|family)/i;
+  // Tuning Round 6: added "do not attempt to log in directly" and "do not sign in directly"
+  // — PayPal/bank phishing uses "do not attempt to log in" rather than "do not contact X".
+  const antiVerification = /do\s+not\s+contact\s+(the\b|our\b|us\b|amazon\b|microsoft\b|apple\b|google\b|irs\b|fbi\b|official\b|main\b|paypal\b|ebay\b|bank\b|support\b)|do\s+not\s+contact\s+\w+\s+directly|do\s+not\s+call\s+the\s*(irs|fbi|police|main\s+office|official)|must\s+be\s+resolved\s+exclusively\s+through\s+our|avoid\s+contacting|do\s+not\s+discuss\s+(this|the)|do\s+not\s+speak\s+with\s+(anyone|family)|do\s+not\s+attempt\s+to\s+(log\s+in|sign\s+in|access\s+(your\s+account|the\s+account)|login)\s+directly|use\s+only\s+the\s+(secure\s+)?(link|portal|page)\s+(above|provided|below)/i;
   // Tuning Round 3: expanded trigger condition — also fires when urgency phrases are present.
   // This catches phishing emails that isolate victims from official channels without using traditional payment red flags.
   if (antiVerification.test(lower) && (data.paymentRedFlags.length > 0 || data.infoRequests.length > 0 || data.urgencyPhrases.length > 0)) score += 12;

@@ -385,6 +385,7 @@ export default function TrustCheck() {
   const [demoAnalysis, setDemoAnalysis] = useState<TrustCheckAnalysis | null>(null)
   const [demoLoading, setDemoLoading] = useState(false)
   const [demoError, setDemoError] = useState<string | null>(null)
+  const [copyDone, setCopyDone] = useState(false)
 
   useEffect(() => {
     document.title = "Document Trust Check — PlainPath"
@@ -446,7 +447,6 @@ export default function TrustCheck() {
   const hasStructural = (analysis.structuralFindings?.length ?? 0) > 0
   const hasMetadata = (analysis.metadataFindings?.length ?? 0) > 0
 
-  const [copyDone, setCopyDone] = useState(false)
   function copyResults() {
     const lines: string[] = [
       `PLAINPATH — DOCUMENT TRUST CHECK`,

@@ -1,0 +1,152 @@
+Project: Document Action Plan
+Task: Run a fresh post–Tuning Round 5 validation batch using new or variant documents to confirm the latest fixes generalize beyond the exact regression cases already tested.
+
+Goal:
+Validate that the Tuning Round 5 improvements hold up across fresh scam, contract, and legitimate document variants without introducing new regressions.
+
+Context:
+- Tuning Round 5 is complete
+- 10/10 targeted validation tests passed
+- The latest fixes addressed:
+  - IRS/federal impersonation domain patterns
+  - PayPal phishing compound detection
+  - reference-number false positives
+  - service-contract Document Risk regression
+
+Critical constraints:
+- Do NOT add new major features
+- Do NOT redesign the UI
+- Do NOT activate paid features
+- Do NOT restore subscription gating
+- Do NOT add security rollout
+- Do NOT build trusted-entity verification yet
+- Only fix something if a real regression or blocking issue is found
+- This pass is validation only
+
+Primary objective:
+Test whether the Tuning Round 5 fixes generalize to fresh examples rather than only the exact documents used in the tuning round.
+
+-----------------------------------
+FRESH VALIDATION SET
+-----------------------------------
+
+Use 6–8 fresh or variant documents covering:
+
+1. one new IRS/federal-style impersonation notice
+2. one new PayPal or brand-account phishing message
+3. one new fake county/utility/government payment-demand notice
+4. one debt collection or FDCPA-style document with valid identifiers
+5. one non-financing service contract (gym / telecom / subscription / service agreement)
+6. one legitimate institutional notice
+7. one legitimate low-risk control
+8. optionally one pasted scam-style or pasted legitimate sample
+
+Important:
+Prefer new variants or lightly modified fresh examples, not the exact same documents already used in the Round 5 validation set.
+
+-----------------------------------
+FOR EACH DOCUMENT
+-----------------------------------
+
+1. Run Document Trust Check
+2. Review the full result
+3. Log pilot feedback using the existing pilot feedback workflow
+4. Confirm the record appears in `/pilot-feedback`
+
+Capture:
+- document label
+- source type
+- primary verdict
+- authenticity risk
+- document risk
+- verification confidence
+- reviewer assessment
+- false positive? yes/no
+- false negative? yes/no
+- issue categories selected
+- short reviewer note
+
+-----------------------------------
+SPECIAL VALIDATION TARGETS
+-----------------------------------
+
+1. IRS/federal impersonation
+Confirm that fresh IRS/federal variants with private `.com` domains now receive materially higher Authenticity Risk and no longer under-score.
+
+2. PayPal / brand phishing
+Confirm that the phishing-domain + holding-account / isolation / anti-verification pattern still compounds strongly enough on fresh phrasing.
+
+3. Reference identifiers
+Confirm that valid identifiers such as:
+- Case ID
+- File No.
+- File Number
+- Claim #
+continue to suppress false “no traceable reference number” findings.
+
+4. Service-contract Document Risk
+Confirm that gym / telecom / subscription / service contracts with multiple harmful terms still receive meaningful Document Risk on fresh variants.
+
+5. Regression controls
+Confirm that legitimate controls remain clean and low-risk.
+
+-----------------------------------
+SUCCESS CHECKS
+-----------------------------------
+
+The batch should confirm:
+- no new false negatives in the IRS/federal/phishing family
+- no new false structural “missing reference number” findings when valid identifiers exist
+- no fresh service-contract under-scoring pattern
+- legitimate low-risk documents remain low-risk
+- no major false-positive increase appears
+
+-----------------------------------
+OUTPUT REQUIRED
+-----------------------------------
+
+Return:
+
+1. Batch summary
+- total documents tested
+- total feedback records logged
+- document categories covered
+
+2. Document-by-document table
+For each document include:
+- document name
+- category
+- verdict
+- authenticity risk
+- document risk
+- verification confidence
+- reviewer assessment
+- false positive? yes/no
+- false negative? yes/no
+- top issue category if any
+- short reviewer note
+
+3. Fresh-validation findings
+Summarize:
+- whether the Round 5 fixes generalized successfully
+- whether any new regression appeared
+- whether the baseline remains stable
+
+4. Screenshots
+Capture at least:
+- one corrected IRS/federal-style scam result
+- one corrected brand-phishing result
+- one service-contract result
+- one legitimate control result
+- `/pilot-feedback` summary page after the batch
+
+5. Final status
+End with one of:
+- POST–TUNING ROUND 5 VALIDATION COMPLETE — BASELINE STABLE
+- POST–TUNING ROUND 5 VALIDATION COMPLETE — ONE FOLLOW-UP FIX NEEDED
+- POST–TUNING ROUND 5 VALIDATION FOUND A BLOCKING REGRESSION
+
+Success criteria:
+- the Tuning Round 5 fixes hold on fresh examples
+- no major new false-positive or false-negative pattern appears
+- the baseline is stable enough to continue pilot operations without immediate Tuning Round 6
