@@ -124,7 +124,7 @@ export default function Home() {
             <Button
               size="lg"
               onClick={() => setLocation("/import")}
-              className="h-12 px-7 text-base rounded-xl shadow-md shadow-primary/20"
+              className="h-12 px-8 text-base rounded-xl font-semibold shadow-md shadow-primary/20"
             >
               Analyze a Document <ArrowRight className="ml-2 w-4 h-4" />
             </Button>
@@ -132,7 +132,7 @@ export default function Home() {
               size="lg"
               variant="outline"
               onClick={() => setLocation("/import?mode=trust-check")}
-              className="h-12 px-7 text-base rounded-xl"
+              className="h-12 px-8 text-base rounded-xl font-semibold"
             >
               <ShieldCheck className="mr-2 w-4 h-4" />
               Document Trust Check
@@ -141,9 +141,9 @@ export default function Home() {
               size="lg"
               variant="outline"
               onClick={() => setLocation("/contract-builder")}
-              className="h-12 px-7 text-base rounded-xl border-primary/40 hover:border-primary/70 hover:bg-primary/5"
+              className="h-12 px-8 text-base rounded-xl font-semibold"
             >
-              <PenLine className="mr-2 w-4 h-4 text-primary" />
+              <PenLine className="mr-2 w-4 h-4" />
               Build a Contract
             </Button>
           </motion.div>

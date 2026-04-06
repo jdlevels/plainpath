@@ -72,6 +72,41 @@ PlainPath is structured as a monorepo using pnpm workspaces.
 - **Findings**: Includes structural findings (e.g., generic greetings, domain mismatches, anti-verification instructions) and metadata findings (PDF metadata inspection).
 - **Scoring Engine**: Utilizes a sophisticated rule-based and AI-enhanced engine with continuous tuning and validation against various document types and adversarial examples.
 
+## Shared Product Patterns
+
+### "Check for Gaps & Fill"
+
+A cross-app concept where each product lane scans its own structured output for missing, incomplete, or risky items and surfaces them with clear recommendations before the user finalises or generates anything. The pattern always separates:
+
+- **Actionable gaps** — items the user must review (warning) or should consider (suggestion), with inline quick-fill or a link to the relevant step
+- **Auto-added defaults** — neutral legal/structural scaffolding added automatically without user confirmation, displayed in green as reassurance
+
+**Contract Builder** (fully implemented, Phase 1):
+- Gaps: no late fee, no kill fee, no client feedback deadline, no revision limit, no governing state, no delivery deadline, no invoice payment window, no termination notice, no deposit, IP transferring before payment
+- Quick-fill: inline input for most money/protection/people gaps, "Edit" link for scope-based gaps
+- Defaults shown: Severability, Force Majeure, Limitation of Liability, Entire Agreement, Notices
+- Key file: `artifacts/plainpath/src/pages/ContractBuilder.tsx` — `computeGaps()` function + `GapRow` component + `ReviewStep` section "Check for Gaps & Fill Recommendations"
+- Fill callbacks: `onFillMoney`, `onFillProtection`, `onFillPeople` passed from ContractBuilder into ReviewStep
+
+**Analyze a Document** (planned, Phase 2):
+- Gaps will cover: missing required documents, missing action steps, unresolved deadlines, missing supporting information, incomplete process steps
+- Will appear in the Analysis Results view before export/share, in a dedicated "Gaps" tab or section
+
+**Document Trust Check** (planned, Phase 2):
+- Gaps will cover: missing issuer verification, unverified contact details, missing identifiers (registration numbers, licence IDs), missing authenticity signals, low-confidence findings needing manual review
+- Will appear on the Trust Check results page, surfaced alongside the three-score model
+
+**Design rule**: Do NOT silently add major business terms. Auto-add only neutral legal scaffolding. Business-impacting terms must be surfaced as recommendations and require user confirmation or input.
+
+### Hero CTA Cluster
+
+The homepage hero contains three visually uniform CTAs designed as one product-action group:
+1. **Analyze a Document** — primary filled button (solid, shadow), trailing arrow icon
+2. **Document Trust Check** — outline button, leading ShieldCheck icon
+3. **Build a Contract** — outline button, leading PenLine icon
+
+All three share: `h-12 px-8 text-base rounded-xl font-semibold`. The two outline buttons are intentionally identical in className. Do not add special border, hover, or icon coloring overrides to either outline button that the other does not share.
+
 ## External Dependencies
 
 - **OpenAI**: Utilized via Replit AI Integrations (`gpt-5.2` model) for document analysis and extraction.
