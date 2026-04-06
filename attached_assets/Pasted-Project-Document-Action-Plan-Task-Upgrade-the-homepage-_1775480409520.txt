@@ -1,0 +1,204 @@
+Project: Document Action Plan
+Task: Upgrade the homepage visual presentation so it feels more premium, structured, and launch-ready, without changing the product architecture or breaking any current flows.
+
+Goal:
+Make the homepage look more like a polished, professional SaaS product landing page while preserving the current product identity and messaging.
+
+Critical constraints:
+- Do NOT redesign the app from scratch
+- Do NOT change core routing or working product flows
+- Do NOT break the current hero CTA behavior
+- Do NOT replace the product identity with a competitor-like look
+- Do NOT weaken readability
+- This is a visual polish and presentation pass only
+
+Primary objective:
+Increase homepage professionalism, structure, and visual depth.
+
+-----------------------------------
+DESIGN DIRECTION
+-----------------------------------
+
+Keep the current PlainPath / Document Action Plan identity:
+- dark premium SaaS
+- blue accent
+- clean and readable
+- structured and modern
+
+But upgrade the page so it feels:
+- more intentional
+- more premium
+- more visually segmented
+- more like a finished launch product
+- less flat / same-surface throughout
+
+-----------------------------------
+PRIORITY IMPROVEMENTS
+-----------------------------------
+
+1. Stronger section contrast
+The current homepage needs more visual separation between major sections.
+
+Improve the homepage with clearer alternating section treatments such as:
+- hero on dark base
+- next section on subtly different dark/slate tone
+- another section on slightly lighter or elevated surface
+- alternating bands that keep the page visually moving
+
+Goal:
+The page should not feel like one long continuous dark surface.
+
+2. Better content width and layout rhythm
+Tighten text containers where needed so content feels more focused and editorial.
+
+Improve:
+- max-widths
+- left/right breathing room
+- alignment consistency
+- spacing between eyebrow, headline, subtext, and content blocks
+
+Goal:
+Reduce visual drift and make each section feel deliberate.
+
+3. More premium cards
+Upgrade homepage cards and panels with:
+- cleaner border treatment
+- stronger hierarchy
+- slightly more refined background layering
+- better icon containers
+- improved title/body spacing
+- subtle depth/shadow/glow where appropriate
+
+Goal:
+Cards should feel more polished and less generic.
+
+4. Standardize section structure
+Across major homepage sections, use a more consistent pattern:
+- eyebrow label
+- strong section headline
+- short supporting sentence
+- then cards/content
+
+Goal:
+Each section should feel designed as part of one system.
+
+5. Add / improve a stronger product-preview centerpiece
+The homepage should have at least one section that makes the product feel real and substantial.
+
+Use one of the strongest product experiences as a centerpiece, such as:
+- Document Trust Check preview
+- Analyze a Document action-plan preview
+- Contract Builder preview
+- split-view or polished product mockup section
+
+This should feel like a premium showcase block, not just another row of cards.
+
+Goal:
+Help the page feel like a serious software product, not just a feature list.
+
+-----------------------------------
+AREAS TO POLISH
+-----------------------------------
+
+Review and improve at minimum:
+- hero section
+- “works with all kinds of confusing paperwork” area
+- “how it works” section
+- “what you get” / benefits section
+- any product preview or demo section
+- footer/closing CTA area if present
+
+If a section is visually weak, reorganize spacing and card layout as needed — but do not rewrite the product.
+
+-----------------------------------
+HERO REQUIREMENTS
+-----------------------------------
+
+Keep the homepage hero messaging structure intact, but visually polish:
+- headline width/line breaks
+- supporting copy spacing
+- CTA row spacing/alignment
+- badge pill / eyebrow styling
+- whitespace balance
+
+Keep the 3 CTAs unified and polished:
+- Analyze a Document
+- Document Trust Check
+- Build a Contract
+
+They should feel like one intentional CTA cluster.
+
+-----------------------------------
+VISUAL RHYTHM GOAL
+-----------------------------------
+
+The homepage should feel like:
+1. Strong opening statement
+2. Product credibility
+3. How it works
+4. Product proof / preview
+5. Benefits / capabilities
+6. Closing confidence
+
+Not just repeated rows of dark cards.
+
+-----------------------------------
+DO NOT COPY COMPETITORS
+-----------------------------------
+
+Do NOT imitate another product’s exact:
+- colors
+- layout
+- headline structure
+- cream/light theme
+- card styling
+- section order
+
+Instead, raise the level of polish while preserving PlainPath’s own look and positioning.
+
+-----------------------------------
+RESPONSIVENESS
+-----------------------------------
+
+Ensure the polished homepage still works cleanly on:
+- desktop
+- tablet
+- mobile
+
+No broken spacing, collapsed CTA rows, or over-wide content blocks.
+
+-----------------------------------
+VALIDATION REQUIREMENTS
+-----------------------------------
+
+After the polish pass, verify:
+- homepage loads cleanly
+- no CTA routes broke
+- no console errors
+- section spacing is consistent
+- CTA row remains aligned
+- mobile layout still works
+- product preview section is visually stronger than before
+
+-----------------------------------
+OUTPUT REQUIRED
+-----------------------------------
+
+Return:
+1. exact files changed
+2. what sections were visually upgraded
+3. what changed in spacing/layout/cards/contrast
+4. screenshots of:
+   - updated hero
+   - updated mid-page section
+   - updated product-preview section
+   - mobile homepage
+5. any risks introduced
+
+Success criteria:
+- homepage feels more premium and launch-ready
+- stronger visual section contrast exists
+- cards feel more polished
+- one product-preview section feels like a centerpiece
+- the page reads as a professional SaaS landing page
+- no functional regressions were introduced

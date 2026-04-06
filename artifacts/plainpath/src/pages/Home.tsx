@@ -105,10 +105,10 @@ export default function Home() {
 
       {/* ── Hero background decoration ─────────────────────── */}
       <div className="absolute top-0 left-0 right-0 h-[90vh] pointer-events-none -z-10 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/6 via-transparent to-violet-500/4" />
-        <div className="absolute top-0 right-0 w-[700px] h-[700px] rounded-full bg-primary/5 blur-3xl translate-x-1/3 -translate-y-1/4" />
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] rounded-full bg-blue-200/25 dark:bg-blue-900/15 blur-3xl -translate-x-1/4 translate-y-1/4" />
-        <div className="absolute top-1/2 left-1/2 w-[400px] h-[400px] rounded-full bg-violet-100/15 dark:bg-violet-900/10 blur-3xl -translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-blue-50/20 to-violet-500/8 dark:from-primary/8 dark:via-transparent dark:to-violet-500/5" />
+        <div className="absolute top-0 right-0 w-[700px] h-[700px] rounded-full bg-primary/10 dark:bg-primary/8 blur-3xl translate-x-1/3 -translate-y-1/4" />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] rounded-full bg-blue-200/45 dark:bg-blue-900/20 blur-3xl -translate-x-1/4 translate-y-1/4" />
+        <div className="absolute top-1/2 left-1/2 w-[400px] h-[400px] rounded-full bg-violet-200/30 dark:bg-violet-900/15 blur-3xl -translate-x-1/2 -translate-y-1/2" />
         <svg className="absolute inset-0 w-full h-full opacity-[0.018] dark:opacity-[0.035]" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <pattern id="dot-grid" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
@@ -200,7 +200,7 @@ export default function Home() {
         {/* ═══════════════════════════════════════════════════
             BAND 2 — STATS + DOC TYPES  (muted/tinted)
         ════════════════════════════════════════════════════ */}
-        <div className="w-full bg-slate-100 dark:bg-muted/25 border-y border-border/60">
+        <div className="w-full bg-gradient-to-b from-slate-50 via-blue-50/30 to-white dark:from-slate-900 dark:via-blue-950/20 dark:to-slate-900 border-y border-border/50">
           <Band innerClassName="py-16">
             <StatsBar />
             <motion.div
@@ -236,7 +236,7 @@ export default function Home() {
         {/* ═══════════════════════════════════════════════════
             BAND 3 — THE PROBLEM  (neutral band, dark card inside)
         ════════════════════════════════════════════════════ */}
-        <Band innerClassName="py-20">
+        <Band className="bg-gradient-to-br from-white to-violet-50/20 dark:from-slate-950 dark:to-slate-900/90" innerClassName="py-20">
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
@@ -291,14 +291,14 @@ export default function Home() {
         {/* ═══════════════════════════════════════════════════
             BAND 3b — DOCUMENT ANNOTATION  (neutral, dark card)
         ════════════════════════════════════════════════════ */}
-        <Band innerClassName="pb-20">
+        <Band className="bg-gradient-to-b from-violet-50/15 to-white dark:from-slate-900/90 dark:to-slate-950" innerClassName="pb-20">
           <DocumentAnnotationSection />
         </Band>
 
         {/* ═══════════════════════════════════════════════════
             BAND 4 — TOOLS SHOWCASE  (muted/tinted)
         ════════════════════════════════════════════════════ */}
-        <div className="w-full bg-slate-100 dark:bg-muted/20 border-y border-border/60">
+        <div className="w-full bg-gradient-to-br from-indigo-50/55 via-violet-50/25 to-white dark:from-violet-950/22 dark:via-slate-900 dark:to-slate-900 border-y border-border/50">
           <Band innerClassName="py-20">
             <ToolsShowcase />
           </Band>
@@ -307,15 +307,15 @@ export default function Home() {
         {/* ═══════════════════════════════════════════════════
             BAND 5 — SEE IT IN ACTION  (neutral, dark card inside)
         ════════════════════════════════════════════════════ */}
-        <Band innerClassName="py-20">
+        <Band className="bg-gradient-to-b from-white via-sky-50/15 to-white dark:from-slate-950 dark:via-sky-950/10 dark:to-slate-950" innerClassName="py-20">
           <DemoSection />
         </Band>
 
         {/* ═══════════════════════════════════════════════════
             BAND 6 — HOW IT WORKS  (muted/tinted)
         ════════════════════════════════════════════════════ */}
-        <div className="w-full bg-slate-100 dark:bg-muted/20 border-y border-border/60">
-          <Band innerClassName="py-20">
+        <div className="w-full bg-gradient-to-b from-slate-50/80 via-white to-blue-50/40 dark:from-slate-900 dark:via-slate-800/40 dark:to-slate-900 border-y border-border/50">
+          <Band innerClassName="py-16">
             <div className="text-center mb-14">
               <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
                 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">How it works</motion.p>
@@ -350,7 +350,7 @@ export default function Home() {
         {/* ═══════════════════════════════════════════════════
             BAND 7 — WHAT YOU GET  (clean white/dark)
         ════════════════════════════════════════════════════ */}
-        <Band innerClassName="py-20">
+        <Band className="bg-gradient-to-br from-white via-emerald-50/12 to-white dark:from-slate-950 dark:via-emerald-950/8 dark:to-slate-950" innerClassName="py-16">
           <div className="text-center mb-14">
             <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
               className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">What you get</motion.p>
@@ -386,7 +386,7 @@ export default function Home() {
         {/* ═══════════════════════════════════════════════════
             BAND 8 — LIVE DEMOS  (primary-tinted)
         ════════════════════════════════════════════════════ */}
-        <div className="w-full bg-blue-50 dark:bg-primary/[0.07] border-y border-primary/20">
+        <div className="w-full bg-gradient-to-br from-blue-50/80 via-indigo-50/35 to-white dark:from-blue-950/35 dark:via-slate-900 dark:to-slate-900 border-y border-primary/15">
           <Band id="demos" innerClassName="py-20 scroll-mt-24">
             <div className="text-center mb-12">
               <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
@@ -430,7 +430,7 @@ export default function Home() {
         {/* ═══════════════════════════════════════════════════
             BAND 9 — TESTIMONIALS  (muted)
         ════════════════════════════════════════════════════ */}
-        <div className="w-full bg-slate-100 dark:bg-muted/25 border-b border-border/60">
+        <div className="w-full bg-gradient-to-br from-violet-50/45 via-slate-50/30 to-white dark:from-violet-950/20 dark:via-slate-900 dark:to-slate-900 border-b border-border/50">
           <Band innerClassName="py-20">
             <TestimonialsSection />
           </Band>
@@ -446,7 +446,7 @@ export default function Home() {
         {/* ═══════════════════════════════════════════════════
             BAND 11 — FAQ  (muted, last section)
         ════════════════════════════════════════════════════ */}
-        <div className="w-full bg-slate-100 dark:bg-muted/20 border-t border-border/60">
+        <div className="w-full bg-gradient-to-b from-slate-50/70 to-blue-50/45 dark:from-slate-900 dark:to-blue-950/25 border-t border-border/50">
           <Band innerClassName="py-20 pb-28">
             <FAQSection />
           </Band>
