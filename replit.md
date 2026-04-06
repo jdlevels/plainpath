@@ -91,6 +91,17 @@ PlainPath is structured as a monorepo using pnpm workspaces.
 - **Findings**: Includes structural findings (e.g., generic greetings, domain mismatches, anti-verification instructions) and metadata findings (PDF metadata inspection).
 - **Scoring Engine**: Utilizes a sophisticated rule-based and AI-enhanced engine with continuous tuning and validation against various document types and adversarial examples.
 
+### AI Help Assistant (HelpWidget)
+- **Purpose**: In-app chat assistant that answers questions about PlainPath features, helping users understand how to use each tool and interpret their results.
+- **Access**: Available to all users on every page — no plan restriction, no message limit
+- **UI**: Floating chat bubble (bottom-right corner) that expands to a compact chat panel. Includes 4 quick-start suggested questions shown before first message.
+- **Tone**: Warm, direct, plain-spoken — redirects legal/financial advice questions to professionals while offering to help with PlainPath features
+- **Backend**: `POST /api/help/chat` — accepts `messages[]` array (last 20 messages), system prompt instructs GPT-4o-mini as a PlainPath expert
+- **Frontend**: `artifacts/plainpath/src/components/HelpWidget.tsx` — renders inside `Router` in `App.tsx`, above `<Footer />`
+- **API Route**: `artifacts/api-server/src/routes/help/index.ts`
+- **Model**: `gpt-4o-mini` with `max_completion_tokens: 600`
+- **Limits**: Conversation history capped at last 20 messages, each message content capped at 2000 chars server-side
+
 ## Shared Product Patterns
 
 ### "Check for Gaps & Fill"

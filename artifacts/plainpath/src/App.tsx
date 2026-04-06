@@ -23,6 +23,7 @@ import NotFound from "@/pages/not-found";
 
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { HelpWidget } from "@/components/HelpWidget";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -57,6 +58,7 @@ function Router() {
         </Switch>
       </main>
       <Footer />
+      <HelpWidget />
     </div>
   );
 }
