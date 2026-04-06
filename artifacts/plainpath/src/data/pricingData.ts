@@ -5,12 +5,30 @@ export type PricingPlan = {
   description: string;
   features: string[];
   ctaLabel: string;
-  planKey?: "pro" | "team";
+  planKey?: "starter" | "pro" | "team";
   highlight?: boolean;
   planned?: boolean;
 };
 
 export const PRICING_PLANS: PricingPlan[] = [
+  {
+    name: "Starter",
+    price: "$4.99",
+    period: "/month",
+    description:
+      "For individuals who occasionally need help understanding documents and building simple agreements.",
+    features: [
+      "Up to 10 document analyses / month",
+      "Plain English overview",
+      "Key Terms + Basic Action Pack",
+      "Document Trust Check — up to 5 / month",
+      "Contract Builder — up to 2 drafts / month",
+      "Local saved analyses",
+      "Export / Share tools"
+    ],
+    ctaLabel: "Start with Starter",
+    planKey: "starter"
+  },
   {
     name: "Pro",
     price: "$24.99",
@@ -19,7 +37,7 @@ export const PRICING_PLANS: PricingPlan[] = [
       "The full PlainPath toolkit for individuals who need to read, verify, and build real documents.",
     features: [
       "Up to 100 document analyses / month",
-      "Plain English overview + source explainers",
+      "Plain English + source explainers",
       "Checklist, Required Docs, Deadlines, Risks",
       "Key Terms + Full Action Pack",
       "Document Trust Check — up to 30 / month",
