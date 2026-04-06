@@ -77,12 +77,15 @@ Utilities
 ---
 
 ## Privacy Policy URL
-https://plain-path.replit.app/plainpath/privacy
+https://plain-path.replit.app/privacy
 
 ## Terms of Service URL
-https://plain-path.replit.app/plainpath/terms
+https://plain-path.replit.app/terms
 
-## Support URL / Email
+## Support URL
+https://plain-path.replit.app/support
+
+## Support Email
 hello@plainpath.app
 
 ---
