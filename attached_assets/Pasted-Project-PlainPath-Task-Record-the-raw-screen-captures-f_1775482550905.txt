@@ -1,0 +1,176 @@
+Project: PlainPath
+Task: Record the raw screen captures for the homepage narrated product demo first, before finalizing voiceover timing.
+
+Goal:
+Capture clean, polished raw footage from the real app so the final voiceover timing can be adjusted to actual product behavior instead of guessing from a script alone.
+
+Important:
+Do NOT jump straight to final video editing.
+Do NOT finalize the narration timing before the footage is captured.
+The correct sequence is:
+1. capture real app footage
+2. review footage length and pacing
+3. then tighten the voiceover to the real visuals
+
+Primary objective:
+Produce a complete raw capture set for the product demo covering the three core product lanes:
+- Analyze a Document
+- Document Trust Check
+- Build a Contract
+
+-----------------------------------
+CAPTURE PRINCIPLES
+-----------------------------------
+
+All footage should be:
+- recorded from the real app
+- clean and stable
+- free of debug/pilot/internal-only UI
+- cursor movement smooth and intentional
+- no rushed clicking
+- no unnecessary pauses
+- no visible code/editor panels
+- no browser clutter if avoidable
+- suitable for a premium homepage product demo
+
+Use the cleanest environment possible:
+- full browser/app view of the product only
+- no distracting tabs/toolbars if possible
+- consistent viewport
+- smooth interactions
+
+-----------------------------------
+REQUIRED CAPTURE SET
+-----------------------------------
+
+Record separate clips for each of the following:
+
+1. Homepage hero
+- load homepage
+- show hero area cleanly
+- brief pause on CTA row
+- optional smooth scroll into next section if useful
+
+2. Analyze a Document entry
+- click “Analyze a Document”
+- show import screen
+- select/upload a demo document
+- begin analysis flow
+
+3. Analyze result walkthrough
+Capture clean clips of:
+- plain-English summary
+- action steps
+- required documents
+- deadlines
+- risks
+- any strong tab transition if visually useful
+
+4. Document Trust Check entry
+- return to home or enter via proper route
+- click “Document Trust Check”
+- show import/start flow
+- select a demo/suspicious document
+- begin trust check
+
+5. Trust Check result walkthrough
+Capture clean clips of:
+- verdict banner
+- authenticity risk
+- document risk
+- verification confidence
+- scam indicators / findings
+- what to verify before acting
+- safe next steps if shown
+
+6. Build a Contract entry
+- click “Build a Contract”
+- show contract type selection
+- select Freelance or strongest fully working template
+
+7. Contract Builder wizard
+Capture clean clips of:
+- contract type selection
+- People step
+- Work / Scope step
+- Money / Timing step
+- Rights / Protection step
+- AI insight panel/drawer if present
+- any smart suggestions/gap nudges if visible
+
+8. Review Summary / Gap Check
+- show plain-English review summary
+- show “Check for Gaps & Fill” recommendations if present
+- show missing protection warnings / defaults added
+
+9. Draft output shell
+- click Generate Draft
+- show resulting structured draft output / payload view
+- hold on strongest final result view
+
+10. Closing/home return if useful
+- optional return to a strong branded screen or CTA moment
+
+-----------------------------------
+CAPTURE STYLE
+-----------------------------------
+
+For each clip:
+- keep duration natural
+- hold each important state for 2–4 seconds minimum
+- avoid frantic mouse movement
+- avoid over-scrolling
+- if an animation is present, let it complete
+- if a result loads, wait for it to settle before moving
+
+Where appropriate, also capture:
+- one static clean hold shot
+- one slightly interactive walkthrough version
+
+This gives flexibility in editing.
+
+-----------------------------------
+TECHNICAL REQUIREMENTS
+-----------------------------------
+
+Return:
+1. the list of clips recorded
+2. approximate duration of each clip
+3. total raw footage duration
+4. which scenes felt strongest visually
+5. whether any feature/state was too visually weak and should be re-recorded
+6. whether the homepage video script timing now needs shortening or lengthening based on actual footage
+
+If possible, also export or identify:
+- the best takes
+- backup takes
+- any re-record recommendations
+
+-----------------------------------
+QUALITY CHECK
+-----------------------------------
+
+Before finishing, verify:
+- no broken UI appears in captures
+- no pilot/admin/debug panels appear
+- no external pricing/payment UI is shown if we are preparing for public-facing demo
+- no distracting browser/editor chrome dominates the frame
+- all three product lanes are represented
+- the footage actually looks launch-ready
+
+-----------------------------------
+NEXT STEP AFTER CAPTURE
+-----------------------------------
+
+After the raw capture pass is complete, do NOT fully edit the final video yet.
+Instead, return with:
+- the actual footage inventory
+- real timing observations
+- any scenes that run too long or too short
+- recommended script timing adjustments based on the footage
+
+Success criteria:
+- we have a real raw capture set for the full product story
+- the footage reflects the real app
+- the clips are clean enough for homepage demo editing
+- the final narration can be adjusted to actual screen timing instead of assumptions

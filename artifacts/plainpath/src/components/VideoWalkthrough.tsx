@@ -2,13 +2,13 @@ import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   Play, X, FileText, ShieldCheck, PenLine,
-  Clock, AlertTriangle, Calendar, CheckCircle2,
+  Clock, AlertTriangle, Calendar, CheckCircle2, ChevronDown,
 } from "lucide-react"
 
 /* ── Drop in EITHER a YouTube embed URL or a direct MP4/WebM path ──────────
    YouTube:  "https://www.youtube.com/embed/XXXX"
    MP4 file: "/assets/demo.mp4"  or  "https://cdn.example.com/demo.mp4"
-   Leave empty → play button scrolls to the interactive demos section below. */
+   Leave empty → thumbnail shows "Try it live" CTA instead of a play button. */
 const DEMO_VIDEO_URL = ""
 
 const CHAPTERS = [
@@ -54,7 +54,7 @@ const CHAPTERS = [
 ]
 
 /* ── Simulated PlainPath UI thumbnail shown before play ── */
-function ThumbnailPreview({ onPlay }: { onPlay: () => void }) {
+function ThumbnailPreview({ onPlay, hasVideo }: { onPlay: () => void; hasVideo: boolean }) {
   return (
     <div
       className="relative w-full aspect-video bg-slate-950 overflow-hidden cursor-pointer select-none group"
@@ -122,31 +122,57 @@ function ThumbnailPreview({ onPlay }: { onPlay: () => void }) {
         <span className="text-white text-xs font-bold tracking-tight">PlainPath</span>
       </div>
 
-      {/* Top right: duration badge */}
-      <div className="absolute top-4 right-5 px-2 py-1 rounded-md bg-black/60 text-white text-[11px] font-semibold opacity-75">
-        2:18
-      </div>
+      {/* Top right: duration badge — only shown when video is ready */}
+      {hasVideo && (
+        <div className="absolute top-4 right-5 px-2 py-1 rounded-md bg-black/60 text-white text-[11px] font-semibold opacity-75">
+          2:18
+        </div>
+      )}
 
-      {/* Center: play button */}
+      {/* Center: play button (video ready) OR "Try it live" CTA (no video yet) */}
       <div className="absolute inset-0 flex items-center justify-center">
-        <motion.div
-          whileHover={{ scale: 1.08 }}
-          whileTap={{ scale: 0.94 }}
-          className="relative"
-        >
-          <div className="absolute inset-0 rounded-full bg-white/15 animate-ping scale-[1.6]" />
-          <div className="relative w-18 h-18 w-[72px] h-[72px] rounded-full bg-white/95 shadow-[0_0_60px_rgba(255,255,255,0.25)] flex items-center justify-center">
-            <Play className="w-7 h-7 text-slate-900 fill-slate-900 ml-1" />
-          </div>
-        </motion.div>
+        {hasVideo ? (
+          <motion.div
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.94 }}
+            className="relative"
+          >
+            <div className="absolute inset-0 rounded-full bg-white/15 animate-ping scale-[1.6]" />
+            <div className="relative w-[72px] h-[72px] rounded-full bg-white/95 shadow-[0_0_60px_rgba(255,255,255,0.25)] flex items-center justify-center">
+              <Play className="w-7 h-7 text-slate-900 fill-slate-900 ml-1" />
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div
+            whileHover={{ scale: 1.04, y: -2 }}
+            whileTap={{ scale: 0.97 }}
+            className="flex flex-col items-center gap-3"
+          >
+            <div className="px-6 py-3 rounded-2xl bg-white/95 shadow-[0_0_40px_rgba(255,255,255,0.20)] flex items-center gap-2.5">
+              <Play className="w-4 h-4 text-slate-700 fill-slate-700 shrink-0" />
+              <span className="text-slate-900 font-semibold text-sm">Try it yourself</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-white/50 text-[11px]">
+              <ChevronDown className="w-3.5 h-3.5 animate-bounce" />
+              <span>Interactive demos below</span>
+            </div>
+          </motion.div>
+        )}
       </div>
 
-      {/* Bottom: AI narrated badge */}
+      {/* Bottom badge */}
       <div className="absolute bottom-5 inset-x-0 flex justify-center">
-        <span className="px-3.5 py-1.5 rounded-full bg-black/55 backdrop-blur-sm text-white text-[11px] font-medium flex items-center gap-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shrink-0" />
-          AI narrated walkthrough · 2 min 18 sec
-        </span>
+        {hasVideo ? (
+          <span className="px-3.5 py-1.5 rounded-full bg-black/55 backdrop-blur-sm text-white text-[11px] font-medium flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shrink-0" />
+            AI narrated walkthrough · 2 min 18 sec
+          </span>
+        ) : (
+          <span className="px-3.5 py-1.5 rounded-full bg-black/55 backdrop-blur-sm text-white/70 text-[11px] font-medium flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400/80 shrink-0" />
+            Demo video coming soon — try it live in the meantime
+          </span>
+        )}
       </div>
     </div>
   )
@@ -190,9 +216,10 @@ function VideoEmbed({ onClose }: { onClose: () => void }) {
 export default function VideoWalkthrough() {
   const [playing, setPlaying] = useState(false)
   const [activeChapter, setActiveChapter] = useState(0)
+  const hasVideo = Boolean(DEMO_VIDEO_URL)
 
   function handlePlay() {
-    if (DEMO_VIDEO_URL) {
+    if (hasVideo) {
       setPlaying(true)
     } else {
       document.getElementById("demos")?.scrollIntoView({ behavior: "smooth" })
@@ -257,7 +284,7 @@ export default function VideoWalkthrough() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
               >
-                <ThumbnailPreview onPlay={handlePlay} />
+                <ThumbnailPreview onPlay={handlePlay} hasVideo={hasVideo} />
               </motion.div>
             )}
           </AnimatePresence>
