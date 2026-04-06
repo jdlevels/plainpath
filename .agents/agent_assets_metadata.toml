@@ -18,6 +18,24 @@ uri = "file://attached_assets/generated_images/logo-concept-c-waypoint.png"
 type = "image"
 title = "logo concept C waypoint pin"
 
+[[generated]]
+id = "kvWihGo7jVVQY9ytUvpaL"
+uri = "file://attached_assets/generated_images/logo-v2-concept-a.png"
+type = "image"
+title = "logo v2 A gradient path"
+
+[[generated]]
+id = "xTfavTpmnBKEdlhud2BKZ"
+uri = "file://attached_assets/generated_images/logo-v2-concept-b.png"
+type = "image"
+title = "logo v2 B teal coral document P"
+
+[[generated]]
+id = "C1ktyC046vDrRTERabAzi"
+uri = "file://attached_assets/generated_images/logo-v2-concept-c.png"
+type = "image"
+title = "logo v2 C shield gradient"
+
 [[outputs]]
 id = "o7YB8F3oFhJfMlxpy-hZz"
 uri = "file://PlainPath-Handoff.md"
