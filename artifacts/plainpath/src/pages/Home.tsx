@@ -13,6 +13,7 @@ import StatsBar from "@/components/StatsBar"
 import TestimonialsSection from "@/components/TestimonialsSection"
 import FAQSection from "@/components/FAQSection"
 import ToolsShowcase from "@/components/ToolsShowcase"
+import DemoSection from "@/components/DemoSection"
 
 const DEMOS = [
   {
@@ -326,6 +327,9 @@ export default function Home() {
 
         {/* ── Three tools showcase ───────────────────────────────── */}
         <ToolsShowcase />
+
+        {/* ── Animated demo ─────────────────────────────────────── */}
+        <DemoSection />
 
         {/* ── How it works ──────────────────────────────────────── */}
         <section className="max-w-6xl w-full mb-28">
