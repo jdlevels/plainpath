@@ -5,60 +5,45 @@ export type PricingPlan = {
   description: string;
   features: string[];
   ctaLabel: string;
-  planKey?: "starter" | "pro" | "team";
+  planKey?: "pro" | "team";
   highlight?: boolean;
   planned?: boolean;
 };
 
 export const PRICING_PLANS: PricingPlan[] = [
   {
-    name: "Starter",
-    price: "$4.99",
-    period: "/month",
-    description:
-      "For light users who need occasional help understanding important documents.",
-    features: [
-      "Up to 10 analyses per month",
-      "Plain English overview",
-      "Key Terms",
-      "Basic Action Pack",
-      "Local Saved Analyses",
-      "Export / Share tools"
-    ],
-    ctaLabel: "Start Starter",
-    planKey: "starter"
-  },
-  {
     name: "Pro",
-    price: "$14.99",
+    price: "$24.99",
     period: "/month",
     description:
-      "Best for regular users who need the full PlainPath document-understanding workflow.",
+      "The full PlainPath toolkit for individuals who need to read, verify, and build real documents.",
     features: [
-      "Up to 100 analyses per month",
-      "Plain English explanations",
-      "Source Sections + section explainers",
-      "Checklist + Required Docs",
-      "Deadlines + Risks + What's Missing",
+      "Up to 100 document analyses / month",
+      "Plain English overview + source explainers",
+      "Checklist, Required Docs, Deadlines, Risks",
       "Key Terms + Full Action Pack",
-      "Saved Analyses",
-      "Export / Share tools"
+      "Document Trust Check — up to 30 / month",
+      "Contract Builder — up to 10 drafts / month",
+      "AI Insight panel across all tools",
+      "Saved analyses + Export / Share tools"
     ],
-    ctaLabel: "Upgrade to Pro",
+    ctaLabel: "Get Pro",
     planKey: "pro",
     highlight: true
   },
   {
     name: "Team",
-    price: "$39.99",
+    price: "$49.99",
     period: "/month",
     description:
-      "For higher-volume or shared workflows. Planned for a later release.",
+      "Higher limits and shared workflows for teams. Planned for a later release.",
     features: [
-      "Higher monthly analysis limits",
-      "Planned shared workflows",
+      "Everything in Pro",
+      "Unlimited document analyses",
+      "Unlimited Trust Checks",
+      "Unlimited contract drafts",
       "Planned multi-user access",
-      "Planned admin / billing controls",
+      "Planned shared workflows + admin controls",
       "Priority support"
     ],
     ctaLabel: "Join Team Waitlist",
