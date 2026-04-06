@@ -6,7 +6,7 @@ import {
   ArrowRight, ArrowLeft, Sparkles, AlertTriangle, CheckCircle2,
   Info, ChevronDown, ChevronUp, Save, FileText, RotateCcw,
   Shield, Clock, DollarSign, Users, BookOpen, ClipboardCheck,
-  Loader2, Download, TriangleAlert,
+  Loader2, Download, TriangleAlert, Search, Pencil,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -1089,6 +1089,262 @@ function ProtectionStep({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// GAP ANALYSIS — types, computation, sub-component
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface GapItem {
+  id: string
+  label: string
+  description: string
+  severity: "warning" | "suggestion"
+  group?: "money" | "protection" | "people" | "scope"
+  editStep?: number
+  quickFillKey?: string
+  quickFillType?: "text" | "number" | "date"
+  quickFillLabel?: string
+  quickFillPlaceholder?: string
+  canQuickFill: boolean
+}
+
+function computeGaps(
+  contractType: ContractType,
+  people: Partial<PeopleData>,
+  scope: Partial<ScopeData>,
+  money: Partial<MoneyData>,
+  protection: Partial<ProtectionData>
+): GapItem[] {
+  const gaps: GapItem[] = []
+
+  if (contractType === "freelance" || contractType === "service-agreement") {
+    if (!money.lateFee) {
+      gaps.push({
+        id: "late-fee",
+        label: "No late payment fee included",
+        description: "Without one, overdue invoices have no automatic penalty. 1.5%/month is standard.",
+        severity: "warning",
+        group: "money",
+        quickFillKey: "lateFeeAmount",
+        quickFillType: "text",
+        quickFillLabel: "Late fee rate",
+        quickFillPlaceholder: "e.g. 1.5% per month or $50 flat",
+        canQuickFill: true,
+      })
+    }
+    if (!protection.killFee) {
+      gaps.push({
+        id: "kill-fee",
+        label: "No kill fee for project cancellations",
+        description: "If the client cancels mid-project you may receive nothing. A kill fee protects your lost time.",
+        severity: "warning",
+        group: "protection",
+        quickFillKey: "killFeeAmount",
+        quickFillType: "text",
+        quickFillLabel: "Kill fee amount",
+        quickFillPlaceholder: "e.g. 50% of remaining balance",
+        canQuickFill: true,
+      })
+    }
+    if (!protection.clientFeedbackDeadlineDays) {
+      gaps.push({
+        id: "feedback-deadline",
+        label: "No client feedback deadline",
+        description: "Without one, clients can delay feedback indefinitely — stalling your timeline.",
+        severity: "suggestion",
+        group: "protection",
+        quickFillKey: "clientFeedbackDeadlineDays",
+        quickFillType: "number",
+        quickFillLabel: "Days to respond",
+        quickFillPlaceholder: "e.g. 5",
+        canQuickFill: true,
+      })
+    }
+    if (!scope.revisionLimit) {
+      gaps.push({
+        id: "revision-limit",
+        label: "No revision limit — unlimited revisions allowed",
+        description: "Without a cap, clients can request revisions indefinitely. 2–3 rounds is standard.",
+        severity: "suggestion",
+        editStep: 2,
+        group: "scope",
+        canQuickFill: false,
+      })
+    }
+    if (protection.ipTiming === "on-creation") {
+      gaps.push({
+        id: "ip-timing",
+        label: "IP transfers on creation — before full payment",
+        description: "The client legally owns the work before the final balance is paid. Consider switching to On Final Payment.",
+        severity: "warning",
+        editStep: 4,
+        group: "protection",
+        canQuickFill: false,
+      })
+    }
+    if (!money.depositRequired) {
+      gaps.push({
+        id: "deposit",
+        label: "No upfront deposit required",
+        description: "A 25–50% deposit reduces non-payment risk before work begins. Common for projects over $500.",
+        severity: "suggestion",
+        editStep: 3,
+        group: "money",
+        canQuickFill: false,
+      })
+    }
+  }
+
+  if (!people.governingLaw) {
+    gaps.push({
+      id: "governing-law",
+      label: "No governing state specified",
+      description: "Which state's law applies is important for any legal dispute.",
+      severity: "warning",
+      group: "people",
+      quickFillKey: "governingLaw",
+      quickFillType: "text",
+      quickFillLabel: "Governing state",
+      quickFillPlaceholder: "e.g. California",
+      canQuickFill: true,
+    })
+  }
+
+  if (!money.deadline) {
+    gaps.push({
+      id: "deadline",
+      label: "No delivery deadline set",
+      description: "Without a final deadline there is no binding timeline for project completion.",
+      severity: "suggestion",
+      group: "money",
+      quickFillKey: "deadline",
+      quickFillType: "date",
+      quickFillLabel: "Final deadline",
+      quickFillPlaceholder: "",
+      canQuickFill: true,
+    })
+  }
+
+  if (!money.invoiceDueDays) {
+    gaps.push({
+      id: "invoice-due",
+      label: "No invoice payment window",
+      description: "NET 14 or NET 30 sets clear expectations for when invoices must be paid.",
+      severity: "suggestion",
+      group: "money",
+      quickFillKey: "invoiceDueDays",
+      quickFillType: "text",
+      quickFillLabel: "Invoice due period",
+      quickFillPlaceholder: "e.g. NET 14",
+      canQuickFill: true,
+    })
+  }
+
+  if (!protection.terminationNoticeDays) {
+    gaps.push({
+      id: "termination-notice",
+      label: "No termination notice period",
+      description: "A notice period (e.g. 14 days) gives both parties time to wrap up the engagement.",
+      severity: "suggestion",
+      group: "protection",
+      quickFillKey: "terminationNoticeDays",
+      quickFillType: "number",
+      quickFillLabel: "Notice period (days)",
+      quickFillPlaceholder: "e.g. 14",
+      canQuickFill: true,
+    })
+  }
+
+  return gaps
+}
+
+function GapRow({
+  gap,
+  isExpanded,
+  inputValue,
+  onToggle,
+  onInputChange,
+  onApply,
+  onEdit,
+}: {
+  gap: GapItem
+  isExpanded: boolean
+  inputValue: string
+  onToggle: () => void
+  onInputChange: (v: string) => void
+  onApply: () => void
+  onEdit: (step: number) => void
+}) {
+  return (
+    <div className={`rounded-lg border overflow-hidden transition-colors ${gap.severity === "warning" ? "border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/20" : "border-border/40 bg-background"}`}>
+      <div className="flex items-start gap-3 p-3">
+        {gap.severity === "warning"
+          ? <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+          : <Info className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />}
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium leading-tight">{gap.label}</p>
+          <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{gap.description}</p>
+        </div>
+        <div className="flex gap-1 flex-shrink-0 ml-2">
+          {gap.canQuickFill && (
+            <Button
+              size="sm"
+              variant={isExpanded ? "secondary" : "outline"}
+              className="h-7 px-2.5 text-xs"
+              onClick={onToggle}
+            >
+              {isExpanded ? "Cancel" : "Add"}
+            </Button>
+          )}
+          {!gap.canQuickFill && gap.editStep !== undefined && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 px-2.5 text-xs gap-1 text-muted-foreground"
+              onClick={() => onEdit(gap.editStep!)}
+            >
+              <Pencil className="w-3 h-3" /> Edit
+            </Button>
+          )}
+        </div>
+      </div>
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.18 }}
+            className="overflow-hidden"
+          >
+            <div className="px-3 pb-3 flex gap-2 border-t border-border/30 pt-2.5">
+              {gap.quickFillLabel && (
+                <Label className="sr-only">{gap.quickFillLabel}</Label>
+              )}
+              <Input
+                type={gap.quickFillType === "date" ? "date" : gap.quickFillType === "number" ? "number" : "text"}
+                placeholder={gap.quickFillPlaceholder}
+                value={inputValue}
+                onChange={(e) => onInputChange(e.target.value)}
+                className="flex-1 h-8 text-sm"
+                min={gap.quickFillType === "number" ? "0" : undefined}
+                autoFocus
+              />
+              <Button
+                size="sm"
+                className="h-8 px-3 text-xs"
+                onClick={onApply}
+                disabled={!inputValue.trim()}
+              >
+                Apply
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // STEP 5 — REVIEW SUMMARY
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -1118,6 +1374,9 @@ function ReviewStep({
   onSave,
   generating,
   error,
+  onFillMoney,
+  onFillProtection,
+  onFillPeople,
 }: {
   contractType: ContractType
   people: Partial<PeopleData>
@@ -1129,18 +1388,48 @@ function ReviewStep({
   onSave: () => void
   generating: boolean
   error: string | null
+  onFillMoney: (u: Partial<MoneyData>) => void
+  onFillProtection: (u: Partial<ProtectionData>) => void
+  onFillPeople: (u: Partial<PeopleData>) => void
 }) {
+  const [expandedGap, setExpandedGap] = useState<string | null>(null)
+  const [gapInputValue, setGapInputValue] = useState("")
+
   const isFreelance = contractType === "freelance"
   const clientName = people.clientName || people.clientEntityName || "—"
   const freelancerName = people.freelancerName || people.freelancerEntityName || "—"
   const totalFee = money.totalFee ? `$${money.totalFee}` : money.hourlyRate ? `$${money.hourlyRate}/hr` : "—"
-  const warnings: string[] = []
 
-  if (isFreelance) {
-    if (!money.lateFee) warnings.push("No late fee clause")
-    if (!protection.killFee) warnings.push("No kill fee clause")
-    if (!protection.clientFeedbackDeadlineDays) warnings.push("No client feedback deadline")
-    if (protection.ipTiming === "on-creation") warnings.push("IP transfers on creation — before full payment")
+  const gaps = computeGaps(contractType, people, scope, money, protection)
+  const warningGaps = gaps.filter((g) => g.severity === "warning")
+  const suggestionGaps = gaps.filter((g) => g.severity === "suggestion")
+
+  function applyGapFill(gap: GapItem) {
+    const v = gapInputValue.trim()
+    if (!v || !gap.canQuickFill) return
+    if (gap.group === "money") {
+      if (gap.id === "late-fee") onFillMoney({ lateFee: true, lateFeeAmount: v })
+      else if (gap.id === "deadline") onFillMoney({ deadline: v })
+      else if (gap.id === "invoice-due") onFillMoney({ invoiceDueDays: v })
+    } else if (gap.group === "protection") {
+      if (gap.id === "kill-fee") onFillProtection({ killFee: true, killFeeAmount: v })
+      else if (gap.id === "feedback-deadline") onFillProtection({ clientFeedbackDeadlineDays: v })
+      else if (gap.id === "termination-notice") onFillProtection({ terminationNoticeDays: v })
+    } else if (gap.group === "people") {
+      if (gap.id === "governing-law") onFillPeople({ governingLaw: v })
+    }
+    setExpandedGap(null)
+    setGapInputValue("")
+  }
+
+  function toggleGap(id: string) {
+    if (expandedGap === id) {
+      setExpandedGap(null)
+      setGapInputValue("")
+    } else {
+      setExpandedGap(id)
+      setGapInputValue("")
+    }
   }
 
   return (
@@ -1148,7 +1437,7 @@ function ReviewStep({
       <div>
         <Badge variant="outline" className="mb-3">{contractLabel(contractType)}</Badge>
         <h2 className="text-2xl font-display font-bold mb-1">Review Summary</h2>
-        <p className="text-muted-foreground text-sm">Check that everything looks right before generating your draft.</p>
+        <p className="text-muted-foreground text-sm">Review your answers and fill any gaps before generating your draft.</p>
       </div>
 
       <div className="space-y-3">
@@ -1193,17 +1482,68 @@ function ReviewStep({
           </div>
         )}
 
-        <div className="rounded-xl border border-border/50 p-4 bg-card/50 space-y-0.5">
-          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-1.5"><ClipboardCheck className="w-3.5 h-3.5" /> Default Clauses Added</p>
-          {DEFAULT_CLAUSES.map((c) => <SummaryItem key={c} ok={true} label={c} />)}
-        </div>
-
-        {warnings.length > 0 && (
-          <div className="rounded-xl border border-amber-500/30 bg-amber-50 dark:bg-amber-950/20 p-4 space-y-0.5">
-            <p className="text-xs font-semibold uppercase tracking-widest text-amber-500 mb-2 flex items-center gap-1.5"><AlertTriangle className="w-3.5 h-3.5" /> Missing Protections</p>
-            {warnings.map((w) => <SummaryItem key={w} ok="warn" label={w} />)}
+        {/* ── Check for Gaps & Fill ─────────────────────────── */}
+        <div className="rounded-xl border border-border/60 bg-card/30 overflow-hidden">
+          <div className="px-4 py-3 bg-muted/20 border-b border-border/30 flex items-start gap-2.5">
+            <Search className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-semibold">Check for Gaps &amp; Fill Recommendations</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {gaps.length === 0
+                  ? "No gaps found — your contract looks well-covered."
+                  : `${gaps.length} item${gaps.length !== 1 ? "s" : ""} found. Review before generating.`}
+              </p>
+            </div>
           </div>
-        )}
+
+          <div className="p-4 space-y-4">
+            {warningGaps.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-amber-500">Business Protections</p>
+                {warningGaps.map((gap) => (
+                  <GapRow
+                    key={gap.id}
+                    gap={gap}
+                    isExpanded={expandedGap === gap.id}
+                    inputValue={expandedGap === gap.id ? gapInputValue : ""}
+                    onToggle={() => toggleGap(gap.id)}
+                    onInputChange={setGapInputValue}
+                    onApply={() => applyGapFill(gap)}
+                    onEdit={onEdit}
+                  />
+                ))}
+              </div>
+            )}
+
+            {suggestionGaps.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Suggested Additions</p>
+                {suggestionGaps.map((gap) => (
+                  <GapRow
+                    key={gap.id}
+                    gap={gap}
+                    isExpanded={expandedGap === gap.id}
+                    inputValue={expandedGap === gap.id ? gapInputValue : ""}
+                    onToggle={() => toggleGap(gap.id)}
+                    onInputChange={setGapInputValue}
+                    onApply={() => applyGapFill(gap)}
+                    onEdit={onEdit}
+                  />
+                ))}
+              </div>
+            )}
+
+            <div className={`space-y-1.5 ${gaps.length > 0 ? "pt-3 border-t border-border/30" : ""}`}>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-emerald-500">Default Legal Protections (auto-added)</p>
+              {DEFAULT_CLAUSES.map((c) => (
+                <div key={c} className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
+                  {c}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
 
       {error && <p className="text-sm text-red-500 text-center">{error}</p>}
@@ -1505,6 +1845,9 @@ export default function ContractBuilder() {
       onSave={saveDraft}
       generating={generating}
       error={draftError}
+      onFillMoney={(u) => setMoney((m) => ({ ...m, ...u }))}
+      onFillProtection={(u) => setProtection((p) => ({ ...p, ...u }))}
+      onFillPeople={(u) => setPeople((p) => ({ ...p, ...u }))}
     />,
   ]
 

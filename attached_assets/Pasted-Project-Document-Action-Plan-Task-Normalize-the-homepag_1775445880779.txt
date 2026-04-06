@@ -1,0 +1,123 @@
+Project: Document Action Plan
+Task: Normalize the homepage hero CTA buttons and define “Check for Gaps & Fill” as a shared cross-app pattern, while implementing it first in Contract Builder.
+
+Goals:
+1. Make the three homepage hero CTAs feel visually uniform and intentionally designed as one action set.
+2. Define “Check for Gaps & Fill” as a reusable product pattern across the app.
+3. Implement the full working version first inside Contract Builder, while keeping the concept extensible to Analyze and Trust Check later.
+
+-----------------------------------
+PART 1 — HERO CTA UNIFORMITY
+-----------------------------------
+
+Update the homepage hero CTA row so these three buttons feel consistent and aligned:
+
+- Analyze a Document
+- Document Trust Check
+- Build a Contract
+
+Requirements:
+- keep Analyze a Document as the primary filled CTA
+- keep the other two as secondary/outlined CTAs unless a better equivalent exists in the current design system
+- make all three uniform in:
+  - height
+  - border radius
+  - horizontal padding
+  - icon alignment
+  - text size
+  - font weight
+  - internal spacing
+  - vertical alignment
+- ensure spacing between buttons is consistent
+- preserve responsive/mobile behavior
+- do not redesign the hero beyond the CTA row cleanup
+
+Goal:
+The row should feel like one product-action cluster with clear hierarchy, not three mismatched button styles.
+
+-----------------------------------
+PART 2 — SHARED GAP-CHECK PRODUCT PATTERN
+-----------------------------------
+
+Define a reusable cross-app concept for gap detection and recommendation.
+
+Recommended shared concept:
+- “Check for Gaps & Fill”
+or a closely related consistent product label if something cleaner fits the current UX
+
+This concept should mean different things in each product lane:
+
+1. Analyze a Document
+- missing required documents
+- missing action steps
+- missing dates/deadlines
+- missing supporting info
+- unresolved process gaps
+
+2. Document Trust Check
+- missing issuer verification
+- missing contact verification
+- missing identifiers
+- missing authenticity/provenance signals
+- confidence gaps
+
+3. Contract Builder
+- missing protections
+- missing business terms
+- missing deadlines
+- missing payment terms
+- missing ownership / dispute / termination logic
+- missing default legal scaffolding
+
+Important:
+Do NOT fully build the feature in every lane right now.
+Define the shared pattern now, but implement the full working version first in Contract Builder.
+
+-----------------------------------
+PART 3 — CONTRACT BUILDER FIRST IMPLEMENTATION
+-----------------------------------
+
+Inside the Contract Builder Review step, implement the working “Check for Gaps & Fill” section.
+
+Behavior:
+- scan intake answers
+- surface missing protections and incomplete business terms
+- separate:
+  - recommended business protections
+  - default legal protections already added
+
+Examples:
+- ⚠ No late fee included
+- ⚠ No kill fee selected
+- ⚠ No client feedback delay rule
+- ⚠ No revision cap
+- ⚠ No payment due window
+- ✅ Default severability clause added
+- ✅ Default force majeure clause added
+- ✅ Default notices clause added
+
+For each actionable gap, allow:
+- Keep as-is
+- Add recommended protection
+- Answer quick follow-up
+- Use standard default where appropriate
+
+Important rule:
+- Do NOT silently add major business terms
+- It is acceptable to auto-add neutral legal scaffolding
+- Major business-impacting terms must be surfaced and confirmed
+
+-----------------------------------
+OUTPUT REQUIRED
+-----------------------------------
+
+Return:
+1. exact files changed
+2. what changed in the homepage CTA row
+3. what shared gap-check pattern was defined
+4. how it is planned to apply later to Analyze and Trust Check
+5. what is fully implemented now in Contract Builder
+6. screenshots of:
+   - updated hero CTA row
+   - Contract Builder review step with gap recommendations
+7. any risks introduced
