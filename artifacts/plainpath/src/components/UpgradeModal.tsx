@@ -55,7 +55,7 @@ export default function UpgradeModal({ open, onClose, reason, used, limit }: Pro
 
   const handleUpgrade = () => {
     onClose()
-    setLocation("/pricing")
+    setLocation("/subscribe")
   }
 
   return (
