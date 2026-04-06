@@ -26,12 +26,12 @@ const PLAN_CONFIG: Record<
   starter: {
     name: "PlainPath Starter",
     amount: 499,
-    description: "Up to 10 analyses per month",
+    description: "Unlimited document analyses",
   },
   pro: {
     name: "PlainPath Pro",
-    amount: 1499,
-    description: "Up to 100 analyses per month",
+    amount: 2499,
+    description: "Unlimited analyses, trust checks, and contract drafts",
   },
   team: {
     name: "PlainPath Team",

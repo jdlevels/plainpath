@@ -12,8 +12,9 @@ import { Card } from "@/components/ui/card"
 import { useAnalyzeDocument } from "@workspace/api-client-react"
 import { useAnalysisContext } from "@/context/AnalysisContext"
 import { getApiBaseUrl } from "@/lib/api"
-import { beforeRunAnalysis, UsageLimitError } from "@/lib/analysisGate"
+import { beforeRunAnalysis, beforeRunTrustCheck, UsageLimitError } from "@/lib/analysisGate"
 import { incrementAnalysis, incrementTrustCheck } from "@/lib/usageMeter"
+import { useEntitlements } from "@/hooks/useEntitlements"
 import UpgradeModal from "@/components/UpgradeModal"
 import { isNative } from "@/lib/platform"
 import { haptic, pickFileNative } from "@/lib/native"
@@ -269,9 +270,10 @@ export default function Import() {
   const [step, setStep] = useState<Step>("input")
   const [pending, setPending] = useState<Payload | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [upgradeModal, setUpgradeModal] = useState<{ open: boolean; used: number; limit: number }>({ open: false, used: 0, limit: 3 })
+  const [upgradeModal, setUpgradeModal] = useState<{ open: boolean; reason: "analyses" | "trustCheck" | "contractDraft"; used: number; limit: number }>({ open: false, reason: "analyses", used: 0, limit: 2 })
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { mutate, isPending } = useAnalyzeDocument()
+  const { entitlements } = useEntitlements()
 
   const goToDocType = (payload: Payload) => {
     if (isTrustCheck) {
@@ -349,10 +351,14 @@ export default function Import() {
     void haptic("medium")
 
     try {
-      await beforeRunAnalysis()
+      if (isTrustCheck) {
+        beforeRunTrustCheck(entitlements?.plan ?? null)
+      } else {
+        await beforeRunAnalysis()
+      }
     } catch (err) {
       if (err instanceof UsageLimitError) {
-        setUpgradeModal({ open: true, used: err.used, limit: err.limit })
+        setUpgradeModal({ open: true, reason: err.reason, used: err.used, limit: err.limit })
         setStep("input")
         return
       }
@@ -547,7 +553,7 @@ export default function Import() {
       <UpgradeModal
         open={upgradeModal.open}
         onClose={() => setUpgradeModal((u) => ({ ...u, open: false }))}
-        reason="analyses"
+        reason={upgradeModal.reason}
         used={upgradeModal.used}
         limit={upgradeModal.limit}
       />

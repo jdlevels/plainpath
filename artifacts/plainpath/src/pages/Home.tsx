@@ -14,6 +14,7 @@ import TestimonialsSection from "@/components/TestimonialsSection"
 import FAQSection from "@/components/FAQSection"
 import ToolsShowcase from "@/components/ToolsShowcase"
 import DemoSection from "@/components/DemoSection"
+import DocumentAnnotationSection from "@/components/DocumentAnnotationSection"
 
 const DEMOS = [
   {
@@ -285,6 +286,13 @@ export default function Home() {
               </div>
             </div>
           </motion.div>
+        </Band>
+
+        {/* ═══════════════════════════════════════════════════
+            BAND 3b — DOCUMENT ANNOTATION  (neutral, dark card)
+        ════════════════════════════════════════════════════ */}
+        <Band innerClassName="pb-20">
+          <DocumentAnnotationSection />
         </Band>
 
         {/* ═══════════════════════════════════════════════════

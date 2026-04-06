@@ -15,20 +15,20 @@ interface Props {
 
 const REASON_COPY = {
   analyses: {
-    title: "You've reached your free analysis limit",
-    sub: "Upgrade to Starter for 10 analyses/month — or Pro for 100.",
+    title: "You've used your 2 free analyses this month",
+    sub: "Upgrade to Starter for unlimited document analyses — or Pro for all three tools.",
     icon: <BarChart3 className="w-6 h-6 text-primary" />,
     planRequired: "starter" as const,
   },
   trustCheck: {
-    title: "Document Trust Check is a Pro feature",
-    sub: "Upgrade to Pro to run up to 30 trust checks per month.",
+    title: "Document Trust Check requires Pro",
+    sub: "Upgrade to Pro to run unlimited trust checks on any document.",
     icon: <ShieldCheck className="w-6 h-6 text-violet-500" />,
     planRequired: "pro" as const,
   },
   contractDraft: {
-    title: "Contract Builder is a Pro feature",
-    sub: "Upgrade to Pro to generate up to 10 contract drafts per month.",
+    title: "Contract Builder requires Pro",
+    sub: "Upgrade to Pro to generate unlimited AI-drafted contracts.",
     icon: <PenLine className="w-6 h-6 text-amber-500" />,
     planRequired: "pro" as const,
   },
@@ -36,15 +36,15 @@ const REASON_COPY = {
 
 const PLAN_HIGHLIGHTS = {
   starter: [
-    "10 document analyses / month",
+    "Unlimited document analyses",
     "Plain English summary & full Action Pack",
     "Key Terms, Deadlines, Risks",
     "Shareable analysis links",
   ],
   pro: [
-    "100 document analyses / month",
-    "Document Trust Check (30 / month)",
-    "Contract Builder (10 drafts / month)",
+    "Everything in Starter",
+    "Unlimited Document Trust Checks",
+    "Unlimited Contract Builder drafts",
     "AI Insight panel across all tools",
   ],
 }

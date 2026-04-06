@@ -1045,7 +1045,7 @@ function DeadlineCard({ dl, accentRed, docTitle }: { dl: DocumentAnalysis["deadl
     setEmailSending(true)
     setEmailError(null)
     try {
-      const res = await fetch("/api/reminders/email", {
+      const res = await fetch(`${getApiBaseUrl()}/api/reminders/email`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

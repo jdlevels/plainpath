@@ -42,9 +42,9 @@ export function getUsage(): UsageRecord {
 }
 
 const LIMITS: Record<string, { analyses: number; trustChecks: number; contractDrafts: number }> = {
-  free:    { analyses: 3,        trustChecks: 0,        contractDrafts: 0 },
-  starter: { analyses: 10,       trustChecks: 0,        contractDrafts: 0 },
-  pro:     { analyses: 100,      trustChecks: 30,       contractDrafts: 10 },
+  free:    { analyses: 2,        trustChecks: 0,        contractDrafts: 0 },
+  starter: { analyses: Infinity, trustChecks: 0,        contractDrafts: 0 },
+  pro:     { analyses: Infinity, trustChecks: Infinity, contractDrafts: Infinity },
   team:    { analyses: Infinity, trustChecks: Infinity, contractDrafts: Infinity },
 }
 

@@ -17,6 +17,9 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { useToast } from "@/hooks/use-toast"
 import { getApiBaseUrl } from "@/lib/api"
+import { beforeRunContractDraft, UsageLimitError } from "@/lib/analysisGate"
+import { useEntitlements } from "@/hooks/useEntitlements"
+import UpgradeModal from "@/components/UpgradeModal"
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -2104,6 +2107,8 @@ export default function ContractBuilder() {
   const [draft, setDraft] = useState<DraftPayload | null>(null)
   const [generating, setGenerating] = useState(false)
   const [draftError, setDraftError] = useState<string | null>(null)
+  const [upgradeModal, setUpgradeModal] = useState(false)
+  const { entitlements } = useEntitlements()
 
   useEffect(() => {
     document.title = "Contract Builder — PlainPath"
@@ -2168,6 +2173,11 @@ export default function ContractBuilder() {
   }
 
   async function generateDraft() {
+    try {
+      beforeRunContractDraft(entitlements?.plan ?? null)
+    } catch (err) {
+      if (err instanceof UsageLimitError) { setUpgradeModal(true); return }
+    }
     setGenerating(true)
     setDraftError(null)
     try {
@@ -2244,6 +2254,11 @@ export default function ContractBuilder() {
 
   return (
     <div className="min-h-screen bg-background">
+      <UpgradeModal
+        open={upgradeModal}
+        onClose={() => setUpgradeModal(false)}
+        reason="contractDraft"
+      />
       <WizardProgressBar step={step} />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">

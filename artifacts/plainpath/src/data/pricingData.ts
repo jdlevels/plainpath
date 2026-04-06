@@ -16,11 +16,12 @@ export const PRICING_PLANS: PricingPlan[] = [
     price: "$4.99",
     period: "/month",
     description:
-      "For individuals who occasionally need help understanding documents.",
+      "Unlimited document analysis — plain English breakdowns of any document, any time.",
     features: [
-      "Up to 10 document analyses / month",
+      "Unlimited document analyses",
       "Plain English overview",
       "Key Terms + Basic Action Pack",
+      "Deadlines, Required Docs",
       "Local saved analyses",
       "Export / Share tools"
     ],
@@ -34,14 +35,13 @@ export const PRICING_PLANS: PricingPlan[] = [
     description:
       "Everything in Starter, plus Document Trust Check and Contract Builder — the full PlainPath toolkit.",
     features: [
-      "Up to 100 document analyses / month",
-      "Plain English + source explainers",
-      "Checklist, Required Docs, Deadlines, Risks",
-      "Key Terms + Full Action Pack",
-      "Document Trust Check — up to 30 / month",
-      "Contract Builder — up to 10 drafts / month",
-      "AI Insight panel across all tools",
-      "Saved analyses + Export / Share tools"
+      "Everything in Starter",
+      "Unlimited Document Trust Checks",
+      "Unlimited Contract Builder drafts",
+      "Source section explainers",
+      "Checklist, Risks & What's Missing",
+      "Full Action Pack",
+      "AI Insight panel across all tools"
     ],
     ctaLabel: "Get Pro",
     planKey: "pro",
@@ -55,9 +55,6 @@ export const PRICING_PLANS: PricingPlan[] = [
       "Higher limits and shared workflows for teams. Planned for a later release.",
     features: [
       "Everything in Pro",
-      "Unlimited document analyses",
-      "Unlimited Trust Checks",
-      "Unlimited contract drafts",
       "Planned multi-user access",
       "Planned shared workflows + admin controls",
       "Priority support"
