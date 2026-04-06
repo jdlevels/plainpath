@@ -19,6 +19,7 @@ import Subscribe from "./pages/Subscribe";
 import SubscribeSuccess from "./pages/SubscribeSuccess";
 import SubscribeCancel from "./pages/SubscribeCancel";
 import ContractBuilder from "@/pages/ContractBuilder";
+import SharedAnalysis from "@/pages/SharedAnalysis";
 import NotFound from "@/pages/not-found";
 
 import { Navbar } from "@/components/layout/Navbar";
@@ -51,6 +52,9 @@ function Router() {
           <Route path="/subscribe/success" component={SubscribeSuccess} />
           <Route path="/subscribe/cancel" component={SubscribeCancel} />
           <Route path="/contract-builder" component={ContractBuilder} />
+          <Route path="/shared/:token">
+            {(params) => <SharedAnalysis token={(params as { token: string }).token} />}
+          </Route>
           <Route component={NotFound} />
         </Switch>
       </main>

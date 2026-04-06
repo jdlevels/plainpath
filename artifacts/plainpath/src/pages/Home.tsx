@@ -9,6 +9,10 @@ import {
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import PricingSection from "@/components/PricingSection"
+import StatsBar from "@/components/StatsBar"
+import TestimonialsSection from "@/components/TestimonialsSection"
+import FAQSection from "@/components/FAQSection"
+import ToolsShowcase from "@/components/ToolsShowcase"
 
 const DEMOS = [
   {
@@ -75,16 +79,28 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background relative overflow-hidden">
-      {/* Background gradient */}
-      <div className="absolute top-0 left-0 right-0 h-[70vh] pointer-events-none -z-10 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent" />
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full bg-primary/5 blur-3xl transform translate-x-1/3 -translate-y-1/3" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-blue-100/40 dark:bg-blue-900/20 blur-3xl transform -translate-x-1/4" />
+      {/* ── Layered hero background ─────────────────────────── */}
+      <div className="absolute top-0 left-0 right-0 h-[85vh] pointer-events-none -z-10 overflow-hidden">
+        {/* Base gradient sweep */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/8 via-transparent to-violet-500/5" />
+        {/* Large soft orbs */}
+        <div className="absolute top-0 right-0 w-[700px] h-[700px] rounded-full bg-primary/6 blur-3xl transform translate-x-1/3 -translate-y-1/4" />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] rounded-full bg-blue-200/30 dark:bg-blue-900/20 blur-3xl transform -translate-x-1/4 translate-y-1/4" />
+        <div className="absolute top-1/2 left-1/2 w-[400px] h-[400px] rounded-full bg-violet-100/20 dark:bg-violet-900/10 blur-3xl transform -translate-x-1/2 -translate-y-1/2" />
+        {/* Subtle dot grid */}
+        <svg className="absolute inset-0 w-full h-full opacity-[0.025] dark:opacity-[0.04]" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <pattern id="dot-grid" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
+              <circle cx="1" cy="1" r="1" fill="currentColor" className="text-slate-700" />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#dot-grid)" />
+        </svg>
       </div>
 
       <main className="flex-1 flex flex-col items-center pb-24 px-4">
 
-        {/* ── Hero ─────────────────────────────────────────── */}
+        {/* ── Hero ─────────────────────────────────────────────── */}
         <section className="max-w-4xl w-full text-center pt-24 pb-20 space-y-7">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
@@ -102,7 +118,9 @@ export default function Home() {
             className="text-5xl md:text-[4.5rem] lg:text-[5.5rem] font-display font-bold tracking-tight text-foreground leading-[1.05] text-balance"
           >
             Stop guessing what<br />
-            <span className="text-primary">a document requires.</span>
+            <span className="bg-gradient-to-r from-primary via-blue-500 to-violet-500 bg-clip-text text-transparent">
+              a document requires.
+            </span>
           </motion.h1>
 
           <motion.p
@@ -184,7 +202,10 @@ export default function Home() {
           </motion.div>
         </section>
 
-        {/* ── Document types strip ──────────────────────────── */}
+        {/* ── Stats bar ─────────────────────────────────────────── */}
+        <StatsBar />
+
+        {/* ── Document types strip ──────────────────────────────── */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -211,7 +232,10 @@ export default function Home() {
           </div>
         </motion.div>
 
-        {/* ── How it works ──────────────────────────────────── */}
+        {/* ── Three tools showcase ───────────────────────────────── */}
+        <ToolsShowcase />
+
+        {/* ── How it works ──────────────────────────────────────── */}
         <section className="max-w-6xl w-full mb-28">
           <div className="text-center mb-14">
             <motion.p
@@ -261,7 +285,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── What you get ─────────────────────────────────── */}
+        {/* ── What you get ─────────────────────────────────────── */}
         <section className="max-w-6xl w-full mb-28">
           <div className="text-center mb-14">
             <motion.p
@@ -290,6 +314,7 @@ export default function Home() {
                 desc: "Every task extracted and ranked by urgency. High-priority items flagged first. Category labels on every step.",
                 color: "bg-primary/10",
                 iconColor: "text-primary",
+                accent: "border-t-2 border-t-primary/30",
               },
               {
                 icon: ShieldCheck,
@@ -297,6 +322,7 @@ export default function Home() {
                 desc: "A complete list of every attachment, form, ID, or proof you need to gather — with source quotes showing exactly where each was mentioned.",
                 color: "bg-emerald-50 dark:bg-emerald-950/50",
                 iconColor: "text-emerald-600 dark:text-emerald-400",
+                accent: "border-t-2 border-t-emerald-400/40",
               },
               {
                 icon: Clock,
@@ -304,6 +330,7 @@ export default function Home() {
                 desc: "Hard dates surfaced from fine print. High-severity risks flagged before they become problems. Confidence ratings on every item.",
                 color: "bg-rose-50 dark:bg-rose-950/50",
                 iconColor: "text-rose-600 dark:text-rose-400",
+                accent: "border-t-2 border-t-rose-400/40",
               },
             ].map((card, i) => (
               <motion.div
@@ -313,7 +340,7 @@ export default function Home() {
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
               >
-                <Card className="h-full bg-card border-border/40 shadow-md hover:shadow-xl transition-shadow rounded-2xl">
+                <Card className={`h-full bg-card border-border/40 shadow-md hover:shadow-xl transition-shadow rounded-2xl ${card.accent}`}>
                   <div className="p-7 space-y-5">
                     <div className={`w-12 h-12 rounded-2xl ${card.color} flex items-center justify-center`}>
                       <card.icon className={`w-6 h-6 ${card.iconColor}`} />
@@ -329,8 +356,8 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── Demos ────────────────────────────────────────── */}
-        <section id="demos" className="max-w-6xl w-full scroll-mt-24">
+        {/* ── Demos ────────────────────────────────────────────── */}
+        <section id="demos" className="max-w-6xl w-full scroll-mt-24 mb-28">
           <div className="text-center mb-12">
             <motion.p
               initial={{ opacity: 0 }}
@@ -396,8 +423,14 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── Pricing ──────────────────────────────────────── */}
+        {/* ── Testimonials ─────────────────────────────────────── */}
+        <TestimonialsSection />
+
+        {/* ── Pricing ──────────────────────────────────────────── */}
         <PricingSection />
+
+        {/* ── FAQ ──────────────────────────────────────────────── */}
+        <FAQSection />
 
       </main>
     </div>

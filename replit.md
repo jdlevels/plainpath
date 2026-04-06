@@ -48,6 +48,24 @@ PlainPath is structured as a monorepo using pnpm workspaces.
 - **Export/Share**: Options to print/PDF, copy as text, download .txt, and share via Web Share API.
 - **Key Terms Glossary**: A client-side legal glossary with fuzzy matching to enrich AI-generated key terms, linking to external legal resources.
 - **Add to Calendar**: Integrates with deadlines to generate `.ics` files for calendar applications.
+- **Deadline Reminders**: Bell/BellDot buttons on every DeadlineCard; uses browser Notification API via `reminderStorage.ts` to schedule in-browser reminder notifications. Key file: `artifacts/plainpath/src/lib/reminderStorage.ts`
+- **Shareable Analysis Links**: "Copy share link" in ExportMenu posts analysis JSON to `/api/shares` (PostgreSQL-backed), returns a `/shared/:token` URL. `SharedAnalysis.tsx` renders read-only shared view. Key API: `artifacts/api-server/src/routes/shares/index.ts`
+
+### Pricing Tiers
+- **Starter** ($4.99/month): Analyze a Document only
+- **Pro** ($24.99/month): All 3 tools — Document Analysis, Trust Check, Contract Builder
+- **Team** ($49.99/month): Pro + team features (planned)
+- Trust Check and Contract Builder are Pro/Team gated (lock icon shown to Starter users)
+- Key file: `artifacts/plainpath/src/data/pricingData.ts`
+
+### Homepage Aesthetic (Full Overhaul)
+- **Hero**: Layered gradient + dot-grid SVG background, gradient headline text (blue → violet)
+- **StatsBar**: 4 animated stat counters (analyses, rating, trust checks, contracts)
+- **ToolsShowcase**: 3 tool cards with colored gradient backgrounds and tier badges
+- **TestimonialsSection**: 6 user testimonials in a 3-column grid
+- **FAQSection**: 8-item accordion FAQ
+- Key file: `artifacts/plainpath/src/pages/Home.tsx`
+- Component files: `src/components/home/StatsBar.tsx`, `ToolsShowcase.tsx`, `TestimonialsSection.tsx`, `FAQSection.tsx`
 
 ### Contract Builder (Phase 1 — Complete)
 - **Route**: `/contract-builder` (frontend), `/api/contracts/*` (API)
@@ -61,6 +79,7 @@ PlainPath is structured as a monorepo using pnpm workspaces.
 - **Draft Output**: Includes parties, 5 contract sections with clauses, payment summary, protection summary, default clauses, review flags, missing protection warnings, plain-English summary
 - **Persistence**: Draft state saved to `localStorage` under `plainpath-contract-draft-latest`
 - **Key file**: `artifacts/plainpath/src/pages/ContractBuilder.tsx`, `artifacts/api-server/src/routes/contracts/index.ts`
+- **PDF Export**: "Download PDF" button opens a formatted HTML contract in a print dialog via `downloadPDF()` helper
 - **Note**: Uses `max_completion_tokens` (not `max_tokens`) for gpt-5.2 compatibility
 
 ### Document Trust Check

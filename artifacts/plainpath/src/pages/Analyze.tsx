@@ -16,7 +16,7 @@ import {
   HelpCircle, ChevronDown, Lightbulb, Eye, Shield, Zap,
   AlignLeft, MessageSquare, X, Flag, Package, Lock,
   FolderOpen, Mail, CheckSquare, Copy, Check,
-  Bookmark, BookmarkCheck, Share2, Download, Upload
+  Bookmark, BookmarkCheck, Share2, Download, Upload, Bell, BellDot, Link2
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -38,6 +38,7 @@ import { saveAnalysis, updateSaved } from "@/lib/savedAnalyses"
 import { useEntitlements } from "@/hooks/useEntitlements"
 import UpgradeCard from "@/components/UpgradeCard"
 import { findGlossaryEntry } from "@/lib/legalGlossary"
+import { addReminder, requestNotificationPermission } from "@/lib/reminderStorage"
 
 const TABS = [
   { id: "plain-english",   label: "Plain English",   icon: BookOpen                                    },
@@ -1021,6 +1022,18 @@ function addToCalendar(dl: DocumentAnalysis["deadlines"][0], docTitle: string) {
 function DeadlineCard({ dl, accentRed, docTitle }: { dl: DocumentAnalysis["deadlines"][0]; accentRed: boolean; docTitle: string }) {
   const parsedDate = dl.date ? new Date(dl.date) : null
   const hasCalendarDate = parsedDate && !isNaN(parsedDate.getTime()) && parsedDate.getFullYear() > 2000
+  const [reminded, setReminded] = useState(false)
+
+  async function handleReminder() {
+    const granted = await requestNotificationPermission()
+    if (!granted) {
+      alert("Enable browser notifications to set reminders for this deadline.")
+      return
+    }
+    addReminder({ title: dl.title, date: dl.date ?? "", docTitle })
+    setReminded(true)
+  }
+
   return (
     <div className={`p-4 rounded-2xl border ${accentRed ? "bg-white/70 dark:bg-red-950/30 border-red-200/40 dark:border-red-900/30" : "bg-white/70 dark:bg-amber-950/30 border-amber-200/40 dark:border-amber-900/30"}`}>
       <div className="flex items-start justify-between gap-3 mb-1">
@@ -1028,18 +1041,25 @@ function DeadlineCard({ dl, accentRed, docTitle }: { dl: DocumentAnalysis["deadl
           <p className={`text-sm font-bold ${accentRed ? "text-red-700 dark:text-red-400" : "text-amber-700 dark:text-amber-400"}`}>{dl.date}</p>
           <h4 className="font-bold text-foreground">{dl.title}</h4>
         </div>
-        <div className="flex gap-2 shrink-0 items-start">
+        <div className="flex gap-1.5 shrink-0 items-start">
           {dl.isHard && <Badge variant="destructive" className="text-[10px] uppercase tracking-wider">Hard</Badge>}
           <ConfidenceBadge level={dl.confidence} />
           {hasCalendarDate && (
             <button
               onClick={() => addToCalendar(dl, docTitle)}
               title="Add to calendar (.ics)"
-              className="ml-1 p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+              className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
             >
               <Calendar className="w-3.5 h-3.5" />
             </button>
           )}
+          <button
+            onClick={() => void handleReminder()}
+            title={reminded ? "Reminder set" : "Set browser reminder"}
+            className={`p-1 rounded-lg transition-colors ${reminded ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}
+          >
+            {reminded ? <BellDot className="w-3.5 h-3.5" /> : <Bell className="w-3.5 h-3.5" />}
+          </button>
         </div>
       </div>
       <p className="text-sm text-muted-foreground mb-2.5">{dl.description}</p>
@@ -2146,6 +2166,9 @@ function ExportMenu({ analysis }: { analysis: DocumentAnalysis }) {
   const [copiedText, setCopiedText] = useState(false)
   const [shareErr, setShareErr] = useState(false)
   const [printUnavailable, setPrintUnavailable] = useState(false)
+  const [shareLink, setShareLink] = useState<string | null>(null)
+  const [shareLoading, setShareLoading] = useState(false)
+  const [copiedLink, setCopiedLink] = useState(false)
 
   const handlePrint = () => {
     const result = triggerPrint()
@@ -2179,6 +2202,37 @@ function ExportMenu({ analysis }: { analysis: DocumentAnalysis }) {
     } catch {
       setShareErr(true)
       setTimeout(() => setShareErr(false), 2500)
+    }
+  }
+
+  const handleShareLink = async (e: Event) => {
+    e.preventDefault()
+    if (shareLink) {
+      await navigator.clipboard.writeText(shareLink)
+      setCopiedLink(true)
+      setTimeout(() => setCopiedLink(false), 2500)
+      return
+    }
+    setShareLoading(true)
+    try {
+      const base = getApiBaseUrl()
+      const res = await fetch(`${base}/api/shares`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ analysis }),
+      })
+      const data = await res.json() as { token?: string }
+      if (!data.token) throw new Error("No token")
+      const fullUrl = `${window.location.origin}/shared/${data.token}`
+      setShareLink(fullUrl)
+      await navigator.clipboard.writeText(fullUrl)
+      setCopiedLink(true)
+      setTimeout(() => setCopiedLink(false), 2500)
+    } catch {
+      setShareErr(true)
+      setTimeout(() => setShareErr(false), 2500)
+    } finally {
+      setShareLoading(false)
     }
   }
 
@@ -2223,6 +2277,21 @@ function ExportMenu({ analysis }: { analysis: DocumentAnalysis }) {
         >
           <Download className="w-3.5 h-3.5 text-muted-foreground" />
           <span>Download .txt</span>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          className="gap-2.5 cursor-pointer"
+          onSelect={(e) => { void handleShareLink(e) }}
+        >
+          {copiedLink
+            ? <Check className="w-3.5 h-3.5 text-green-600" />
+            : shareLoading
+            ? <Loader2 className="w-3.5 h-3.5 text-muted-foreground animate-spin" />
+            : <Link2 className="w-3.5 h-3.5 text-muted-foreground" />
+          }
+          <span>
+            {copiedLink ? "Link copied!" : shareLoading ? "Creating link…" : shareLink ? "Copy link again" : "Copy share link"}
+          </span>
         </DropdownMenuItem>
         {canNativeShare() && (
           <>

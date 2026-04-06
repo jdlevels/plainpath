@@ -1587,6 +1587,104 @@ function DraftResultView({ draft, contractType, onBack, onRestart }: {
     toast({ title: "Draft exported", description: "JSON file downloaded." })
   }
 
+  function downloadPDF() {
+    const partiesHtml = Object.values(draft.parties)
+      .map(p => `<div class="party"><span class="party-label">${p.label}</span> <strong>${p.name || "TBD"}</strong>${p.type ? ` <span class="party-type">(${p.type})</span>` : ""}</div>`)
+      .join("")
+
+    const summaryHtml = (draft.plainEnglishSummary ?? [])
+      .map(line => `<li>&#10003; ${line}</li>`)
+      .join("")
+
+    const sectionsHtml = (draft.sections ?? [])
+      .map(section => `
+        <div class="section">
+          <h3>${section.title}</h3>
+          <ol>${section.clauses.map(c => `<li>${c}</li>`).join("")}</ol>
+        </div>`)
+      .join("")
+
+    const defaultClausesHtml = (draft.defaultClauses ?? [])
+      .map(c => `<li>&#10003; ${c}</li>`)
+      .join("")
+
+    const flagsHtml = [
+      ...(draft.reviewFlags ?? []).map(f => `<li>&#9651; ${f}</li>`),
+      ...(draft.missingProtections ?? []).map(m => `<li>&#9432; ${m}</li>`),
+    ].join("")
+
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>${draft.contractType} — PlainPath Draft</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Georgia, serif; font-size: 11pt; color: #111; line-height: 1.65; padding: 60px 80px; max-width: 860px; margin: 0 auto; }
+    .header { text-align: center; margin-bottom: 40px; border-bottom: 2px solid #111; padding-bottom: 20px; }
+    .header h1 { font-size: 18pt; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+    .header .subtitle { font-size: 10pt; color: #555; }
+    .block { margin-bottom: 28px; }
+    .block-title { font-size: 8.5pt; font-family: Arial, sans-serif; text-transform: uppercase; letter-spacing: 0.1em; color: #666; border-bottom: 1px solid #ddd; padding-bottom: 4px; margin-bottom: 10px; }
+    .party { margin-bottom: 5px; font-size: 10.5pt; }
+    .party-label { font-size: 8pt; background: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-family: Arial, sans-serif; margin-right: 4px; }
+    .party-type { color: #666; font-size: 9pt; }
+    ul, ol { padding-left: 20px; }
+    li { margin-bottom: 5px; font-size: 10.5pt; }
+    .section { margin-bottom: 22px; }
+    .section h3 { font-size: 11pt; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; color: #222; }
+    .flags li { color: #b45309; }
+    .footer { margin-top: 60px; border-top: 1px solid #ddd; padding-top: 16px; font-size: 8.5pt; color: #888; font-family: Arial, sans-serif; text-align: center; }
+    .sig-block { margin-top: 60px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+    .sig-line { border-top: 1px solid #333; padding-top: 6px; font-size: 9pt; color: #444; }
+    @media print { body { padding: 40px 60px; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>${draft.contractType}</h1>
+    <div class="subtitle">Draft prepared with PlainPath · ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</div>
+  </div>
+
+  <div class="block">
+    <div class="block-title">Parties</div>
+    ${partiesHtml}
+  </div>
+
+  ${summaryHtml ? `<div class="block"><div class="block-title">Plain English Summary</div><ul>${summaryHtml}</ul></div>` : ""}
+
+  ${sectionsHtml}
+
+  ${defaultClausesHtml ? `<div class="block"><div class="block-title">Standard Clauses</div><ul>${defaultClausesHtml}</ul></div>` : ""}
+
+  ${flagsHtml ? `<div class="block flags"><div class="block-title">Items Needing Review</div><ul>${flagsHtml}</ul></div>` : ""}
+
+  <div class="sig-block">
+    ${Object.values(draft.parties).map(p => `
+      <div>
+        <div class="sig-line">Signature — ${p.name || p.label}</div>
+        <div class="sig-line" style="margin-top:24px">Date</div>
+      </div>`).join("")}
+  </div>
+
+  <div class="footer">
+    This is a draft document prepared for review purposes only. It is not legal advice. Have a qualified attorney review any contract before signing.
+  </div>
+</body>
+</html>`
+
+    const w = window.open("", "_blank")
+    if (!w) {
+      toast({ title: "Popup blocked", description: "Allow popups for this site and try again.", variant: "destructive" })
+      return
+    }
+    w.document.write(html)
+    w.document.close()
+    w.focus()
+    setTimeout(() => { w.print() }, 400)
+    toast({ title: "Contract ready", description: "Use 'Save as PDF' in the print dialog." })
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
@@ -1595,8 +1693,9 @@ function DraftResultView({ draft, contractType, onBack, onRestart }: {
           <h2 className="text-2xl font-display font-bold">Draft Payload Ready</h2>
           <p className="text-sm text-muted-foreground mt-1">Review the structured draft. This is ready for the next phase — clause assembly and final legal text.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Button variant="outline" size="sm" onClick={onBack} className="gap-1.5"><ArrowLeft className="w-3.5 h-3.5" /> Back to Review</Button>
+          <Button size="sm" onClick={downloadPDF} className="gap-1.5 bg-primary text-white hover:bg-primary/90"><Download className="w-3.5 h-3.5" /> Download PDF</Button>
           <Button variant="outline" size="sm" onClick={exportJSON} className="gap-1.5"><Download className="w-3.5 h-3.5" /> Export JSON</Button>
           <Button variant="ghost" size="sm" onClick={onRestart} className="gap-1.5"><RotateCcw className="w-3.5 h-3.5" /> Start Over</Button>
         </div>
