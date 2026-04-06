@@ -20,7 +20,7 @@ A polished full-stack web app that turns confusing paperwork (PDFs, pasted text)
 ## Features
 
 - **Landing page** — Hero section, feature grid, 3 demo document cards
-- **Import page** — Paste text, PDF upload, 3 built-in demos; Trust Check mode switches demo set to 5 trust-check documents
+- **Import page** — Paste text, PDF upload, 3 built-in demos; Trust Check mode switches demo set to 7 trust-check documents (fake-utility-shutoff, fake-irs-collection, debt-collection-notice, legitimate-utility-notice, auto-loan-contract, advance-fee-fraud)
 - **Analysis results** — 10-tab view: Plain English, Source Sections, Overview, What's Missing, Checklist, Required Docs, Deadlines, Risks & Notes, Key Terms, Action Pack
 - **Save analysis** — "Save" button in the analyze header (Bookmark icon); saves full analysis snapshot to localStorage; changes to "Saved ✓" with green feedback; subsequent clicks say "Update" and overwrite the saved snapshot
 - **My Analyses page** — `/my-analyses`; lists all saved analyses with title, type, date, step/doc/deadline counts; supports Open (loads into context → navigates to /analyze), Rename (inline text edit), Delete (inline confirm); empty state with CTA; privacy notice: "Saved on this device only · not uploaded to PlainPath"; storage size shown in KB; warns clearing browser data removes saves
@@ -31,7 +31,10 @@ A polished full-stack web app that turns confusing paperwork (PDFs, pasted text)
 - **Confidence badges** — High/Medium/Low on every extracted item (dark-mode aware)
 - **Source evidence** — Tooltips showing the exact document excerpt that supports each extracted item
 - **Priority badges** — High/Medium/Low on action steps (dark-mode aware)
-- **Export / Share** — "Export" dropdown button in analyze header (replaces old Print button): Print/PDF (`window.print()` with dedicated print-only report), Copy as text (full analysis as plain text to clipboard, shows "Copied!" feedback), Download .txt (blob download with slug filename), Share (Web Share API, shown only when `navigator.share` is available). A hidden `PrintReport` component renders all 10 sections in a clean print layout (shown only in `@media print`). The tab panels are hidden in print via `.no-print` class, and only `PrintReport` is shown via `.print-only` class.
+- **Export / Share** — "Export" dropdown button in analyze header: Print/PDF, Copy as text, Download .txt, Share (Web Share API). A hidden `PrintReport` renders all 10 sections for `@media print`.
+- **Key Terms search** — Search box in the Key Terms tab (visible when >4 terms); filters by term name, explanation text, and category in real time; clears via X button; shows "no results" fallback.
+- **Add to Calendar** — Calendar icon button on each deadline card (only shown when the date is parseable and post-2000); downloads a standards-compliant `.ics` file importable by any calendar app.
+- **TrustCheck Copy button** — Copy icon in the Trust Check results header; serializes verdict, scores, scam indicators, structural findings, what to verify, and safe next steps into plain text; shows a green check for 2 seconds on success.
 - **3 built-in demos** — event-permit, school-enrollment, grant-application with rich pre-analyzed data including Plain English sections
 - **Dark / Light / System theme** — Persisted, FOUC-free, covers every page and component
 
@@ -202,7 +205,7 @@ Second product mode: evaluates documents across three independent risk dimension
 - `GET /api/documents/trust-check-demo/:demoId` — pre-computed demo
 
 ### Legal Glossary (Key Terms enrichment):
-- `artifacts/plainpath/src/lib/legalGlossary.ts` — 37-entry plain-English legal definitions library
+- `artifacts/plainpath/src/lib/legalGlossary.ts` — 46-entry plain-English legal definitions library (expanded with price escalation, data sharing, at-will account termination, small claims exception, assignment of inventions, convenience fees, biometric data, as-is warranty, unilateral modification)
 - Definitions cover: arbitration, class-action waiver, acceleration clause, confession of judgment, personal guarantee, cross-collateralization, dragnet/future advances, jury trial waiver, indemnification, hold harmless, limitation of liability, consequential damages exclusion, right of setoff, deficiency judgment, repossession, force-placed insurance, balloon payment, negative amortization, liquidated damages, prepayment penalty, wage garnishment, wage assignment, blanket lien, security interest, auto-renewal, non-disparagement, non-compete, forum selection, choice of law, assignment, unilateral modification, attorneys' fees, force majeure, evergreen clause, right of rescission, penalty APR, rollover provision
 - Sources: Cornell LII (law.cornell.edu) and CFPB consumer guidance — all open-licensed
 - `findGlossaryEntry(termName, category)` — fuzzy substring matcher; called in `KeyTermCard` to show a "Legal definition" panel below AI-generated content

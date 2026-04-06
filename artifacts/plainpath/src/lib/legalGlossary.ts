@@ -343,6 +343,87 @@ export const LEGAL_GLOSSARY: Array<{ keys: string[]; entry: LegalGlossaryEntry }
       learnMoreUrl: "https://www.law.cornell.edu/wex/contract",
     },
   },
+  {
+    keys: ["price escalator", "price escalation", "rate escalation", "cost of living adjustment", "cola adjustment", "annual increase"],
+    entry: {
+      formalName: "Price Escalation Clause",
+      definition:
+        "Allows the company to increase your price automatically over time — often tied to a percentage, an index like CPI, or simply 'at our discretion.' You may not receive direct notice before each increase.",
+      learnMoreUrl: "https://www.consumerfinance.gov/ask-cfpb/what-is-a-price-escalation-clause-en-1043/",
+    },
+  },
+  {
+    keys: ["data sharing", "sell your data", "third-party data", "share your information", "transfer your data"],
+    entry: {
+      formalName: "Data Sharing / Data Sale Clause",
+      definition:
+        "Permits the company to share or sell your personal information to third parties, including advertisers, data brokers, or affiliates. Under CCPA and GDPR, you may have the right to opt out of the sale of your data.",
+      learnMoreUrl: "https://www.consumerfinance.gov/consumer-tools/privacy/",
+    },
+  },
+  {
+    keys: ["at-will", "at will termination", "account suspension", "terminate your account", "account closure at", "reserves the right to terminate"],
+    entry: {
+      formalName: "At-Will Account Termination",
+      definition:
+        "Allows the company to suspend or permanently close your account, delete your data, or terminate service at any time without cause or advance notice. Any content or credits may be forfeited upon termination.",
+      learnMoreUrl: "https://www.law.cornell.edu/wex/at-will_employment",
+    },
+  },
+  {
+    keys: ["small claims", "small claims court exception", "small claims carve-out"],
+    entry: {
+      formalName: "Small Claims Court Exception",
+      definition:
+        "An exception to a mandatory arbitration clause that preserves your right to bring claims in small claims court for disputes below a dollar threshold (typically $2,500–$10,000). This is one of the few ways to avoid forced arbitration.",
+      learnMoreUrl: "https://www.law.cornell.edu/wex/small_claims_court",
+    },
+  },
+  {
+    keys: ["assignment of inventions", "work for hire", "intellectual property assignment", "ip ownership", "work made for hire"],
+    entry: {
+      formalName: "Assignment of Inventions / IP Clause",
+      definition:
+        "Transfers ownership of any work product, inventions, or intellectual property you create — often including personal projects created on your own time — to the company. Commonly found in employment and freelance contracts.",
+      learnMoreUrl: "https://www.law.cornell.edu/wex/work_for_hire",
+    },
+  },
+  {
+    keys: ["convenience fee", "restocking fee", "administrative fee", "processing fee"],
+    entry: {
+      formalName: "Convenience / Administrative Fee",
+      definition:
+        "An additional charge for using a particular payment method, returning a product, or processing an administrative request. These fees are often buried in terms and may apply even when no genuine cost exists for the company.",
+      learnMoreUrl: "https://www.consumerfinance.gov/ask-cfpb/what-is-a-convenience-fee-en-1048/",
+    },
+  },
+  {
+    keys: ["biometric", "facial recognition", "fingerprint", "voice recognition", "biometric data"],
+    entry: {
+      formalName: "Biometric Data Collection Clause",
+      definition:
+        "Authorizes collection and storage of physical or behavioral biometric identifiers such as fingerprints, face geometry, or voiceprints. Biometric data is highly sensitive and typically cannot be changed if compromised.",
+      learnMoreUrl: "https://www.law.cornell.edu/wex/biometric_information",
+    },
+  },
+  {
+    keys: ["as-is", "as is", "no warranty", "without warranty", "disclaimer of warranties", "implied warranty"],
+    entry: {
+      formalName: "As-Is / Warranty Disclaimer",
+      definition:
+        "States that the product or service is provided without any guarantees of quality, fitness for purpose, or merchantability. If the product fails or is defective, the company may disclaim all responsibility. Courts sometimes limit the scope of 'as-is' disclaimers for consumers.",
+      learnMoreUrl: "https://www.law.cornell.edu/wex/warranty",
+    },
+  },
+  {
+    keys: ["right to modify", "right to change", "reserves the right to change", "we may update", "terms may change"],
+    entry: {
+      formalName: "Unilateral Right to Modify Terms",
+      definition:
+        "Grants the company the ability to change prices, features, or terms of service at any time, sometimes with only online notice (e.g., posting to a website). Continuing to use the service after the change is treated as acceptance.",
+      learnMoreUrl: "https://www.law.cornell.edu/wex/contract_modification",
+    },
+  },
 ];
 
 /**

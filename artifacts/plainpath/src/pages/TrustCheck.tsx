@@ -7,6 +7,7 @@ import {
   ArrowRight, AlertCircle, Flag, Shield, ExternalLink,
   Loader2, FileText, BarChart2, Info,
   Clipboard, ChevronDown, ChevronUp, Send,
+  Copy, Check,
 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -445,6 +446,48 @@ export default function TrustCheck() {
   const hasStructural = (analysis.structuralFindings?.length ?? 0) > 0
   const hasMetadata = (analysis.metadataFindings?.length ?? 0) > 0
 
+  const [copyDone, setCopyDone] = useState(false)
+  function copyResults() {
+    const lines: string[] = [
+      `PLAINPATH — DOCUMENT TRUST CHECK`,
+      `Verdict: ${analysis.verdict}`,
+      `Authenticity Risk Score: ${analysis.riskScore}/100`,
+      ``,
+      `─── VERDICT EXPLANATION ───`,
+      analysis.verdictExplanation ?? "",
+      ``,
+      `─── WHAT THIS DOCUMENT CLAIMS ───`,
+      analysis.whatItClaims ?? "",
+      ``,
+    ]
+    if (analysis.demandedAction) {
+      lines.push(`─── WHAT IT DEMANDS ───`, analysis.demandedAction, ``)
+    }
+    if (analysis.scamIndicators?.length) {
+      lines.push(`─── SCAM INDICATORS (${analysis.scamIndicators.length}) ───`)
+      analysis.scamIndicators.forEach(i => lines.push(`[${i.severity.toUpperCase()}] ${i.indicator}`))
+      lines.push(``)
+    }
+    if (analysis.structuralFindings?.length) {
+      lines.push(`─── STRUCTURAL FINDINGS ───`)
+      analysis.structuralFindings.forEach((f, n) => lines.push(`${n + 1}. ${f}`))
+      lines.push(``)
+    }
+    if (analysis.whatToVerify?.length) {
+      lines.push(`─── WHAT TO VERIFY ───`)
+      analysis.whatToVerify.forEach((s, n) => lines.push(`${n + 1}. ${s}`))
+      lines.push(``)
+    }
+    if (analysis.safeNextSteps?.length) {
+      lines.push(`─── SAFE NEXT STEPS ───`)
+      analysis.safeNextSteps.forEach((s, n) => lines.push(`${n + 1}. ${s}`))
+    }
+    navigator.clipboard.writeText(lines.join("\n")).then(() => {
+      setCopyDone(true)
+      setTimeout(() => setCopyDone(false), 2000)
+    })
+  }
+
   return (
     <div
       className="min-h-screen bg-background"
@@ -477,6 +520,15 @@ export default function TrustCheck() {
             <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border shrink-0 ${vc.badge}`}>
               {analysis.verdict}
             </span>
+
+            <button
+              onClick={copyResults}
+              title="Copy results as text"
+              className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors shrink-0"
+              aria-label="Copy results"
+            >
+              {copyDone ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+            </button>
 
             <Button
               size="sm"

@@ -377,4 +377,95 @@ export const trustCheckDemoDocuments: Record<string, TrustCheckAnalysis> = {
       "Acceleration clause",
     ],
   },
+
+  "advance-fee-fraud": {
+    id: "demo-tc-advfee",
+    processedAt: new Date().toISOString(),
+    riskScore: 92,
+    scores: { authenticityRisk: 92, documentRisk: 0, verificationConfidence: 2 },
+    structuralFindings: [
+      "Document promises a large inheritance ($4.2 million) but requires a 'release and transfer fee' of $850 before funds can be disbursed — this is the defining structure of advance-fee (419) fraud. Legitimate inheritances never require fees from beneficiaries.",
+      "Sender contact (barrister.johnson.chambers@gmail.com) uses a free personal Gmail address — no legitimate barrister, law firm, or financial institution uses Gmail for formal estate proceedings.",
+      "No probate case number, court reference, will registration number, or verifiable legal identifier is provided — genuine estate notices always include verifiable case references.",
+      "Document contains four urgency phrases ('respond within 48 hours', 'failure to act', 'offer expires', 'must respond immediately') — excessive urgency stacking is a social engineering pattern used to prevent independent verification.",
+    ],
+    verdict: "High scam risk",
+    verdictExplanation:
+      "This letter shows the defining hallmarks of advance-fee (419) fraud: a promise of a large inheritance combined with an upfront fee demand, a Gmail-based 'barrister' contact, no verifiable legal identifiers, and aggressive urgency pressure. No legitimate inheritance process ever requires a beneficiary to pay a fee before receiving funds — this is universally a scam structure. Do not send any payment or share personal or banking information.",
+    whatItClaims:
+      "The letter claims to be from a London-based barrister, Philip R. Johnson of Johnson & Associates Chambers, representing the estate of a deceased billionaire client. It claims the recipient has been named as a sole beneficiary in the deceased's will and stands to inherit $4.2 million USD currently held in Standard Trust Bank of Lagos, Nigeria.",
+    demandedAction:
+      "The letter demands the recipient pay an $850 'release and transfer fee' via Western Union or money order within 48 hours to initiate the transfer of funds. It also requests the recipient's full legal name, home address, phone number, and bank account and routing numbers to 'facilitate the transfer'.",
+    scamIndicators: [
+      {
+        indicator: "Advance fee demand — must pay $850 to 'release' $4.2 million inheritance",
+        severity: "high",
+        sourceEvidence: "You are required to remit a Release and Transfer Fee of $850 USD via Western Union within 48 hours to initiate processing of your entitled funds.",
+      },
+      {
+        indicator: "Free personal email (Gmail) used as official barrister contact",
+        severity: "high",
+        sourceEvidence: "Contact: barrister.johnson.chambers@gmail.com",
+      },
+      {
+        indicator: "Bank account and routing number requested alongside fee payment",
+        severity: "high",
+        sourceEvidence: "Kindly furnish your full banking details including account number and routing/sort code to facilitate the final transfer.",
+      },
+      {
+        indicator: "Western Union payment demand — a channel with no fraud protections",
+        severity: "high",
+        sourceEvidence: "Payment should be made via Western Union money transfer or money order payable to Philip R. Johnson.",
+      },
+      {
+        indicator: "Unsolicited inheritance from unknown deceased stranger",
+        severity: "high",
+        sourceEvidence: "Our late client, Mr. Reginald H. Ashworth, has named you as sole beneficiary despite having no prior direct contact with you.",
+      },
+      {
+        indicator: "Excessive urgency — 48-hour deadline to prevent 'inheritance reallocation'",
+        severity: "medium",
+        sourceEvidence: "Failure to respond within 48 hours will result in the unconditional reallocation of your entitlement to a secondary beneficiary.",
+      },
+      {
+        indicator: "No verifiable legal identifiers — no case number, probate reference, or will registration",
+        severity: "medium",
+        sourceEvidence: "No probate court reference, docket number, or will registration cited in the letter.",
+      },
+    ],
+    contactDetails: [
+      {
+        type: "email",
+        value: "barrister.johnson.chambers@gmail.com",
+        suspicious: true,
+        note: "Free Gmail address — no legitimate barrister or law firm uses Gmail for formal estate proceedings; verify against the UK Law Society solicitor register (solicitors.lawsociety.org.uk)",
+      },
+      {
+        type: "phone",
+        value: "+44 7911 234567",
+        suspicious: true,
+        note: "UK mobile number format — verify this number against the official Law Society register; unregistered mobile numbers are not used by legitimate legal offices for estate communications",
+      },
+    ],
+    deadlines: [
+      { text: "48 hours", type: "threat", note: "Artificial urgency — manufactured deadline for fee payment before claimed 'inheritance reallocation'" },
+    ],
+    whatToVerify: [
+      "Search the UK Law Society Solicitor Register (solicitors.lawsociety.org.uk) for 'Johnson & Associates Chambers' — it will not appear as a registered firm",
+      "Contact Standard Trust Bank of Lagos directly using contact information found via independent research (not the letter) — any claim of held funds on your behalf is fraudulent",
+      "Confirm that legitimate inheritances never require upfront fee payments from beneficiaries — this is a universal fact across all legal jurisdictions",
+      "Report this to the FTC at reportfraud.ftc.gov and Action Fraud UK at actionfraud.police.uk",
+      "Forward the letter to your email provider's abuse team to help protect other potential victims",
+    ],
+    safeNextSteps: [
+      "Do not pay any fee — no legitimate inheritance or estate process requires upfront payment from a beneficiary",
+      "Do not provide your bank account details, routing number, or any personal identification documents",
+      "Do not respond to the sender or call the phone number listed",
+      "Report this to the FTC (reportfraud.ftc.gov) and Action Fraud UK (actionfraud.police.uk)",
+      "Block the sender's email address and phone number immediately",
+      "Preserve the email or document as evidence if you choose to report it to authorities",
+    ],
+    contractRiskNotes: null,
+    contractTermsFound: [],
+  },
 };

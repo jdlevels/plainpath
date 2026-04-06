@@ -37,7 +37,7 @@ export default function HowItWorksSlide() {
             </div>
             <div className="flex-1 pb-[1vh]">
               <div className="text-[1.9vw] font-bold text-[#f0f4f8] font-display mb-[0.6vh]">AI extracts every hidden requirement</div>
-              <div className="text-[1.4vw] text-[#6b7a8d] font-body leading-snug">GPT-5 reads the full document and pulls out action steps, required documents, deadlines buried in fine print, risks, costs, and open questions — all with source citations from the original text.</div>
+              <div className="text-[1.4vw] text-[#6b7a8d] font-body leading-snug">GPT-5.2 reads the full document and pulls out action steps, required documents, deadlines buried in fine print, risks, costs, and open questions — all with source citations from the original text.</div>
             </div>
           </div>
 

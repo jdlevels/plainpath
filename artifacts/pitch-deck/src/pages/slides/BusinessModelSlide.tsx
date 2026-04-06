@@ -52,7 +52,7 @@ export default function BusinessModelSlide() {
             </div>
             <div className="h-px bg-white/20" />
             <div className="flex flex-col gap-[1vh]">
-              {["Everything in Starter","Cloud sync across devices","Export to PDF & text","Priority AI processing"].map(f => (
+              {["Everything in Starter","Full Action Pack + key term glossary","Export to PDF & text","Priority AI processing"].map(f => (
                 <div key={f} className="flex items-center gap-[0.7vw]">
                   <div className="w-[0.9vw] h-[0.9vw] rounded-full bg-white shrink-0" />
                   <span className="text-[1.15vw] text-white font-body">{f}</span>

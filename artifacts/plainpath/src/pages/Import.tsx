@@ -76,6 +76,22 @@ const TRUST_CHECK_DEMOS = [
     color: "text-green-500 dark:text-green-400",
     bg: "bg-green-50 dark:bg-green-950/50",
   },
+  {
+    id: "auto-loan-contract",
+    title: "Auto Loan Contract",
+    meta: "Metadata flags · High contract risk · Cannot verify",
+    icon: FileText,
+    color: "text-amber-500 dark:text-amber-400",
+    bg: "bg-amber-50 dark:bg-amber-950/50",
+  },
+  {
+    id: "advance-fee-fraud",
+    title: "Inheritance Notification Letter",
+    meta: "Advance fee fraud · Gmail sender · High scam risk",
+    icon: AlertTriangle,
+    color: "text-red-500 dark:text-red-400",
+    bg: "bg-red-50 dark:bg-red-950/50",
+  },
 ]
 
 const FORMATS = [

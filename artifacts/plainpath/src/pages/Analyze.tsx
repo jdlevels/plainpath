@@ -984,7 +984,43 @@ function DocumentsTab({ analysis, onToggle, onOpenGuidedReview }: { analysis: Do
 /* ────────────────────────────────────────────────
    DEADLINES TAB
 ──────────────────────────────────────────────── */
-function DeadlineCard({ dl, accentRed }: { dl: DocumentAnalysis["deadlines"][0]; accentRed: boolean }) {
+function addToCalendar(dl: DocumentAnalysis["deadlines"][0], docTitle: string) {
+  const parsedDate = dl.date ? new Date(dl.date) : null
+  const isValidDate = parsedDate && !isNaN(parsedDate.getTime()) && parsedDate.getFullYear() > 2000
+  const formatIcsDate = (d: Date) =>
+    d.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z"
+  const start = isValidDate ? formatIcsDate(parsedDate!) : formatIcsDate(new Date())
+  const end   = isValidDate
+    ? formatIcsDate(new Date(parsedDate!.getTime() + 60 * 60 * 1000))
+    : formatIcsDate(new Date(Date.now() + 60 * 60 * 1000))
+  const summary = `[PlainPath] ${dl.title}`
+  const description = `From: ${docTitle}\\n\\n${dl.description || ""}${dl.sourceEvidence ? "\\n\\nSource: " + dl.sourceEvidence : ""}`
+  const ics = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//PlainPath//Deadline//EN",
+    "BEGIN:VEVENT",
+    `UID:${Date.now()}@plainpath`,
+    `DTSTAMP:${formatIcsDate(new Date())}`,
+    `DTSTART:${start}`,
+    `DTEND:${end}`,
+    `SUMMARY:${summary}`,
+    `DESCRIPTION:${description}`,
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ].join("\r\n")
+  const blob = new Blob([ics], { type: "text/calendar" })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement("a")
+  a.href = url
+  a.download = `${dl.title.replace(/[^a-z0-9]/gi, "_").toLowerCase()}.ics`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+function DeadlineCard({ dl, accentRed, docTitle }: { dl: DocumentAnalysis["deadlines"][0]; accentRed: boolean; docTitle: string }) {
+  const parsedDate = dl.date ? new Date(dl.date) : null
+  const hasCalendarDate = parsedDate && !isNaN(parsedDate.getTime()) && parsedDate.getFullYear() > 2000
   return (
     <div className={`p-4 rounded-2xl border ${accentRed ? "bg-white/70 dark:bg-red-950/30 border-red-200/40 dark:border-red-900/30" : "bg-white/70 dark:bg-amber-950/30 border-amber-200/40 dark:border-amber-900/30"}`}>
       <div className="flex items-start justify-between gap-3 mb-1">
@@ -992,9 +1028,18 @@ function DeadlineCard({ dl, accentRed }: { dl: DocumentAnalysis["deadlines"][0];
           <p className={`text-sm font-bold ${accentRed ? "text-red-700 dark:text-red-400" : "text-amber-700 dark:text-amber-400"}`}>{dl.date}</p>
           <h4 className="font-bold text-foreground">{dl.title}</h4>
         </div>
-        <div className="flex gap-2 shrink-0">
+        <div className="flex gap-2 shrink-0 items-start">
           {dl.isHard && <Badge variant="destructive" className="text-[10px] uppercase tracking-wider">Hard</Badge>}
           <ConfidenceBadge level={dl.confidence} />
+          {hasCalendarDate && (
+            <button
+              onClick={() => addToCalendar(dl, docTitle)}
+              title="Add to calendar (.ics)"
+              className="ml-1 p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+            >
+              <Calendar className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </div>
       <p className="text-sm text-muted-foreground mb-2.5">{dl.description}</p>
@@ -1006,6 +1051,7 @@ function DeadlineCard({ dl, accentRed }: { dl: DocumentAnalysis["deadlines"][0];
 function DeadlinesTab({ analysis }: { analysis: DocumentAnalysis }) {
   const hardDls = analysis.deadlines.filter(d => d.isHard)
   const softDls = analysis.deadlines.filter(d => !d.isHard)
+  const docTitle = analysis.title || "Document"
   return (
     <div className="space-y-5">
       <div>
@@ -1027,7 +1073,7 @@ function DeadlinesTab({ analysis }: { analysis: DocumentAnalysis }) {
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-400">{hardDls.length}</span>
                 </div>
                 <div className="p-3 space-y-2">
-                  {hardDls.map(dl => <DeadlineCard key={dl.id} dl={dl} accentRed />)}
+                  {hardDls.map(dl => <DeadlineCard key={dl.id} dl={dl} accentRed docTitle={docTitle} />)}
                 </div>
               </div>
             )}
@@ -1041,7 +1087,7 @@ function DeadlinesTab({ analysis }: { analysis: DocumentAnalysis }) {
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400">{softDls.length}</span>
                 </div>
                 <div className="p-3 space-y-2">
-                  {softDls.map(dl => <DeadlineCard key={dl.id} dl={dl} accentRed={false} />)}
+                  {softDls.map(dl => <DeadlineCard key={dl.id} dl={dl} accentRed={false} docTitle={docTitle} />)}
                 </div>
               </div>
             )}
@@ -1809,11 +1855,19 @@ function KeyTermCard({ term }: { term: KeyTerm }) {
 }
 
 function KeyTermsTab({ analysis }: { analysis: DocumentAnalysis }) {
+  const [termSearch, setTermSearch] = useState("")
   const keyTerms = analysis.keyTerms ?? []
   const sorted = [...keyTerms].sort((a, b) => {
     const order: Record<string, number> = { high: 0, medium: 1, low: 2 }
     return (order[a.severity] ?? 1) - (order[b.severity] ?? 1)
   })
+  const filtered = termSearch.trim()
+    ? sorted.filter(k =>
+        k.term.toLowerCase().includes(termSearch.toLowerCase()) ||
+        k.explanation.toLowerCase().includes(termSearch.toLowerCase()) ||
+        (k.category ?? "").toLowerCase().includes(termSearch.toLowerCase())
+      )
+    : sorted
   const highCount = sorted.filter(k => k.severity === "high").length
   const medCount = sorted.filter(k => k.severity === "medium").length
   const lowCount = sorted.filter(k => k.severity === "low").length
@@ -1855,9 +1909,36 @@ function KeyTermsTab({ analysis }: { analysis: DocumentAnalysis }) {
           )}
         </div>
       </div>
-      <div className="space-y-3">
-        {sorted.map(kt => <KeyTermCard key={kt.id} term={kt} />)}
-      </div>
+      {sorted.length > 4 && (
+        <div className="relative">
+          <input
+            type="text"
+            value={termSearch}
+            onChange={e => setTermSearch(e.target.value)}
+            placeholder="Search key terms…"
+            className="w-full h-9 pl-9 pr-4 rounded-xl border border-border/50 bg-secondary/30 text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-colors"
+          />
+          <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/50 pointer-events-none" />
+          {termSearch && (
+            <button
+              onClick={() => setTermSearch("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+      )}
+      {filtered.length === 0 && termSearch ? (
+        <div className="text-center py-8 text-muted-foreground">
+          <p className="text-sm">No key terms match "<span className="font-medium">{termSearch}</span>"</p>
+          <button onClick={() => setTermSearch("")} className="text-xs text-primary mt-1 hover:underline">Clear search</button>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {filtered.map(kt => <KeyTermCard key={kt.id} term={kt} />)}
+        </div>
+      )}
     </div>
   )
 }
