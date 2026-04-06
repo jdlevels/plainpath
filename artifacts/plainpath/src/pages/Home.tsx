@@ -165,14 +165,14 @@ export default function Home() {
             >
               <Button size="lg" onClick={() => setLocation("/import")}
                 className="h-12 px-8 text-base rounded-xl font-semibold shadow-md shadow-primary/20">
-                Analyze a Document <ArrowRight className="ml-2 w-4 h-4" />
+                <FileScan className="mr-2 w-4 h-4" /> Analyze a Document <ArrowRight className="ml-2 w-4 h-4" />
               </Button>
               <Button size="lg" variant="outline" onClick={() => setLocation("/import?mode=trust-check")}
-                className="h-12 px-8 text-base rounded-xl font-semibold">
+                className="h-12 px-8 text-base rounded-xl font-semibold border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-300 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/30 dark:hover:text-red-300 dark:hover:border-red-700">
                 <ShieldCheck className="mr-2 w-4 h-4" /> Document Trust Check
               </Button>
               <Button size="lg" variant="outline" onClick={() => setLocation("/contract-builder")}
-                className="h-12 px-8 text-base rounded-xl font-semibold">
+                className="h-12 px-8 text-base rounded-xl font-semibold border-green-200 text-green-600 hover:bg-green-50 hover:text-green-700 hover:border-green-300 dark:border-green-800 dark:text-green-400 dark:hover:bg-green-950/30 dark:hover:text-green-300 dark:hover:border-green-700">
                 <PenLine className="mr-2 w-4 h-4" /> Build a Contract
               </Button>
             </motion.div>
