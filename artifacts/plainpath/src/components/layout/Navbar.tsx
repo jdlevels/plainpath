@@ -4,7 +4,7 @@ import { FileText, ArrowRight, Plus, BookMarked } from "lucide-react"
 import { ThemeToggle } from "@/components/ui/ThemeToggle"
 
 export function Navbar() {
-  const [location] = useLocation()
+  const [location, navigate] = useLocation()
   const isHome = location === "/"
   const isImport = location === "/import"
   const isAnalyze = location.startsWith("/analyze")
@@ -16,8 +16,8 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-background/90 border-b border-border/50 transition-all duration-300 safe-top">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-        <Link
-          href="/"
+        <button
+          onClick={() => navigate("/")}
           aria-label="PlainPath — go to home"
           className="flex items-center gap-2 group cursor-pointer rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2"
         >
@@ -27,7 +27,7 @@ export function Navbar() {
           <span className="font-display font-bold text-xl tracking-tight text-foreground group-hover:text-primary transition-colors">
             PlainPath
           </span>
-        </Link>
+        </button>
 
         <nav className="flex items-center gap-1.5">
           <ThemeToggle />
