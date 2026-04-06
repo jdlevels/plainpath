@@ -1410,6 +1410,44 @@ function computeGaps(
 ): GapItem[] {
   const gaps: GapItem[] = []
 
+  // ── Party name check — required for every contract type ──────────────────
+  const partyAEffective = people.clientName?.trim() || people.clientEntityName?.trim() || ""
+  const partyBEffective = people.freelancerName?.trim() || people.freelancerEntityName?.trim() || ""
+
+  if (!partyAEffective) {
+    const label =
+      contractType === "nda" ? "Disclosing Party name" :
+      contractType === "payment-agreement" ? "Borrower name" :
+      "Client name"
+    gaps.push({
+      id: "party-a-name",
+      label: `Required: ${label} is missing`,
+      description: "A contract must identify both parties by name. Return to the People step to add this before generating.",
+      severity: "warning",
+      editStep: 1,
+      group: "people",
+      canQuickFill: false,
+    })
+  }
+  if (!partyBEffective) {
+    const label =
+      contractType === "nda" ? "Receiving Party name" :
+      contractType === "payment-agreement" ? "Lender name" :
+      contractType === "freelance" ? "Freelancer / Contractor name" :
+      contractType === "lease" ? "Landlord / Property Manager name" :
+      "Service Provider name"
+    gaps.push({
+      id: "party-b-name",
+      label: `Required: ${label} is missing`,
+      description: "A contract must identify both parties by name. Return to the People step to add this before generating.",
+      severity: "warning",
+      editStep: 1,
+      group: "people",
+      canQuickFill: false,
+    })
+  }
+  // ─────────────────────────────────────────────────────────────────────────
+
   if (contractType === "freelance" || contractType === "service-agreement") {
     if (!money.lateFee) {
       gaps.push({
@@ -1691,9 +1729,12 @@ function ReviewStep({
   const [gapInputValue, setGapInputValue] = useState("")
 
   const isFreelance = contractType === "freelance"
-  const clientName = people.clientName || people.clientEntityName || "—"
-  const freelancerName = people.freelancerName || people.freelancerEntityName || "—"
+  const clientEffective = people.clientName?.trim() || people.clientEntityName?.trim() || ""
+  const freelancerEffective = people.freelancerName?.trim() || people.freelancerEntityName?.trim() || ""
+  const clientName = clientEffective || "—"
+  const freelancerName = freelancerEffective || "—"
   const totalFee = money.totalFee ? `$${money.totalFee}` : money.hourlyRate ? `$${money.hourlyRate}/hr` : "—"
+  const missingPartyNames = !clientEffective || !freelancerEffective
 
   const gaps = computeGaps(contractType, people, scope, money, protection)
   const warningGaps = gaps.filter((g) => g.severity === "warning")
@@ -1738,8 +1779,8 @@ function ReviewStep({
       <div className="space-y-3">
         <div className="rounded-xl border border-border/50 p-4 bg-card/50 space-y-0.5">
           <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-1.5"><Users className="w-3.5 h-3.5" /> Parties</p>
-          <SummaryItem ok={!!people.clientName} label="Client:" value={clientName} />
-          <SummaryItem ok={!!people.freelancerName} label={isFreelance ? "Freelancer:" : "Party B:"} value={freelancerName} />
+          <SummaryItem ok={!!clientEffective} label="Client:" value={clientName} />
+          <SummaryItem ok={!!freelancerEffective} label={isFreelance ? "Freelancer:" : "Party B:"} value={freelancerName} />
           <SummaryItem ok={!!people.governingLaw} label="Governing Law:" value={people.governingLaw || "—"} />
           {people.projectTitle && <SummaryItem ok={true} label="Project:" value={people.projectTitle} />}
         </div>
@@ -1841,6 +1882,25 @@ function ReviewStep({
         </div>
       </div>
 
+      {missingPartyNames && (
+        <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 dark:border-red-800/60 dark:bg-red-950/20 px-4 py-3">
+          <TriangleAlert className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-semibold text-red-700 dark:text-red-400">Party names required before generating</p>
+            <p className="text-xs text-red-600/80 dark:text-red-400/70 mt-0.5">
+              A contract cannot be generated without identifying both parties by name.{" "}
+              <button
+                onClick={() => onEdit(1)}
+                className="underline font-medium hover:text-red-700 dark:hover:text-red-300 transition-colors"
+              >
+                Go to the People step
+              </button>{" "}
+              to add the missing name{!clientEffective && !freelancerEffective ? "s" : ""}.
+            </p>
+          </div>
+        </div>
+      )}
+
       {error && <p className="text-sm text-red-500 text-center">{error}</p>}
 
       <div className="flex flex-col sm:flex-row gap-3 pt-2">
@@ -1850,7 +1910,7 @@ function ReviewStep({
         <Button variant="outline" onClick={() => onEdit(1)} className="gap-2">
           <ArrowLeft className="w-4 h-4" /> Edit Answers
         </Button>
-        <Button onClick={onGenerate} disabled={generating} className="gap-2 flex-1 sm:flex-initial">
+        <Button onClick={onGenerate} disabled={generating || missingPartyNames} className="gap-2 flex-1 sm:flex-initial">
           {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
           {generating ? "Generating…" : "Generate Draft"}
         </Button>
@@ -2173,6 +2233,13 @@ export default function ContractBuilder() {
   }
 
   async function generateDraft() {
+    // Pre-flight: party names are required — block silently-broken drafts
+    const partyAOk = !!(people.clientName?.trim() || people.clientEntityName?.trim())
+    const partyBOk = !!(people.freelancerName?.trim() || people.freelancerEntityName?.trim())
+    if (!partyAOk || !partyBOk) {
+      setDraftError("Please add names for both parties before generating your contract. Go back to the People step.")
+      return
+    }
     try {
       beforeRunContractDraft(entitlements?.plan ?? null)
     } catch (err) {
