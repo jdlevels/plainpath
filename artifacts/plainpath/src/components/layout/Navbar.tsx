@@ -17,7 +17,10 @@ export function Navbar() {
     <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-background/90 border-b border-border/50 transition-all duration-300 safe-top">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
         <button
-          onClick={() => navigate("/")}
+          onClick={() => {
+            navigate("/")
+            window.scrollTo({ top: 0, behavior: "smooth" })
+          }}
           aria-label="PlainPath — go to home"
           className="flex items-center gap-2 group cursor-pointer rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2"
         >
