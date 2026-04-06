@@ -536,7 +536,8 @@ function extractRuleData(text: string): ExtractedRuleData {
   const lower = text.toLowerCase();
 
   const phoneRegex = /\b(\+1[\s.\-]?)?\(?\d{3}\)?[\s.\-]?\d{3}[\s.\-]?\d{4}\b/g;
-  const phones = [...new Set((text.match(phoneRegex) || []).map((p) => p.trim()))];
+  const intlPhoneRegex = /\+(?!1\b)\d{1,3}[\s.\-]\d{3,5}[\s.\-]\d{4,8}\b/g;
+  const phones = [...new Set([...(text.match(phoneRegex) || []), ...(text.match(intlPhoneRegex) || [])].map((p) => p.trim()))];
 
   const emailRegex = /\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}\b/g;
   const emails = [...new Set((text.match(emailRegex) || []).map((e) => e.trim()))];
@@ -660,6 +661,7 @@ function extractRuleData(text: string): ExtractedRuleData {
     ["auto-renewal", "Auto-renewal clause"],
     ["automatically renews", "Auto-renewal clause"],
     ["automatically renewed", "Auto-renewal clause"],
+    ["automatically renew", "Auto-renewal clause"],
     ["automatic renewal", "Auto-renewal clause"],
     ["until cancelled", "Continuous auto-renewal"],
     ["until you cancel", "Continuous auto-renewal"],
@@ -677,6 +679,10 @@ function extractRuleData(text: string): ExtractedRuleData {
     ["report to experian", "Credit bureau reporting threat"],
     ["the three major credit", "Credit bureau reporting threat"],
     ["three credit bureaus", "Credit bureau reporting threat"],
+    ["credit reporting agencies", "Credit bureau reporting threat"],
+    ["credit reporting agency", "Credit bureau reporting threat"],
+    ["report non-payment to credit", "Credit bureau reporting threat"],
+    ["report to credit reporting", "Credit bureau reporting threat"],
     // Collections referral
     ["collections partner", "Collections referral clause"],
     ["collection partner", "Collections referral clause"],
@@ -703,7 +709,9 @@ function extractRuleData(text: string): ExtractedRuleData {
     ["full replacement cost", "Equipment non-return fee"],
     // Long advance cancellation notice requirements — renewal traps
     ["days before renewal", "Long cancellation notice requirement"],
+    ["days before the renewal", "Long cancellation notice requirement"],
     ["days prior to renewal", "Long cancellation notice requirement"],
+    ["days prior to the renewal", "Long cancellation notice requirement"],
     ["prior written notice of cancellation", "Advance cancellation notice requirement"],
     ["days written notice", "Advance cancellation notice requirement"],
     // Unilateral price or term adjustment rights
@@ -765,6 +773,11 @@ function extractRuleData(text: string): ExtractedRuleData {
     // Unilateral price adjustment phrased as "price adjustments" (no "may adjust X" verb form)
     ["price adjustment", "Unilateral price/term adjustment right"],
     ["promotional expiration", "Unilateral price/term adjustment right"],
+    // Returned payment / NSF fee — common service-contract penalty for failed billing attempts
+    ["returned payment fee", "Returned payment fee"],
+    ["returned payment charge", "Returned payment fee"],
+    ["nsf fee", "Returned payment fee"],
+    ["insufficient funds fee", "Returned payment fee"],
     // ── Legal Glossary Expansion — high-risk clauses from Cornell LII / consumer law ─────────────
     // Personal guarantee — borrower's personal assets at risk beyond business liability
     ["personal guarantee", "Personal guarantee"],
@@ -781,6 +794,8 @@ function extractRuleData(text: string): ExtractedRuleData {
     ["waiver of jury trial", "Jury trial waiver"],
     ["jury trial waiver", "Jury trial waiver"],
     ["waives jury", "Jury trial waiver"],
+    ["waive your right to a jury", "Jury trial waiver"],
+    ["waive the right to a jury", "Jury trial waiver"],
     // Indemnification and hold harmless — one-sided liability transfer
     ["indemnif", "Indemnification clause"],
     ["hold harmless", "Hold harmless clause"],
@@ -1246,6 +1261,7 @@ function calculateDocumentRiskScore(contractRiskTerms: string[]): number {
     "Unilateral modification of terms": 10,
     "Evergreen clause": 9,
     "Force majeure clause": 5,
+    "Returned payment fee": 6,
     "Security interest clause": 8,
     "Attorneys' fees shifting": 9,
     "One-sided attorneys' fees clause": 11,
@@ -1310,6 +1326,15 @@ function calculateVerificationConfidence(
   // Positive: URL present (https://) without payment red flags
   if (ruleData.urls.length > 0 && ruleData.paymentRedFlags.length === 0) conf += 5;
 
+  // Positive: business email address (non-free-provider domain).
+  // A custom-domain email (e.g. billing@company.com) is a strong signal of a real registered entity.
+  // Free-provider emails (Gmail, Yahoo, Hotmail, Outlook, AOL, iCloud) are excluded —
+  // their presence is neutral at best and suspicious in formal-document contexts.
+  const businessEmails = ruleData.emails.filter(
+    (e) => !/(gmail|yahoo|hotmail|outlook|live|aol|icloud|msn|protonmail|mail\.com)\./i.test(e)
+  );
+  if (businessEmails.length > 0 && ruleData.paymentRedFlags.length === 0) conf += 6;
+
   // Positive: bare domain reference (Tuning Round 2).
   // Many legitimate documents (phone bills, EOBs, utility notices) cite domains without https://.
   // The URL extractor only captures https:// URLs, so bare domains were previously unrecognised.
@@ -1370,6 +1395,17 @@ function calculateVerificationConfidence(
     || /\bdear\s+(mr|ms|mrs|dr)\.?\s+[A-Z][a-z]+/i.test(text);
   if (hasNamedContractParty && identifierTypeCount >= 1 && ruleData.paymentRedFlags.length === 0 && riskScore < 25) {
     conf += 7;
+  }
+
+  // Positive: template contract with named-party placeholder (blank line after role label).
+  // Legitimate service agreements (gym memberships, leases, subscriptions) use "Member Name: ___"
+  // or "Customer Name: _____" as a template field. This signals a real business contract form,
+  // not a scam document. Only fires when risk is low and no payment red flags are present.
+  const hasContractTemplatePlaceholder =
+    /\b(member|customer|client|borrower|tenant|subscriber|employee|renter)\s+(name|:)\s*:?\s*_{3,}/i.test(text)
+    || /\b(member|customer|client)\s+name\s*:\s*\n/im.test(text);
+  if (hasContractTemplatePlaceholder && ruleData.paymentRedFlags.length === 0 && riskScore < 25) {
+    conf += 6;
   }
 
   // Negative: generic greeting
