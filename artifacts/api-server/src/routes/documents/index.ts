@@ -555,6 +555,11 @@ function extractRuleData(text: string): ExtractedRuleData {
     "today only", "time sensitive", "time-sensitive", "do not ignore", "must respond",
     "respond immediately", "urgent", "last chance", "final opportunity",
     "do not delay", "prompt attention", "without delay",
+    // Expanded — additional pressure phrases common in advance-fee, prize, and account-threat scams
+    "final demand", "deadline today", "expires today", "respond within",
+    "offer expires", "limited time offer", "respond by end of day",
+    "same day", "same-day", "before midnight", "by close of business",
+    "action required immediately", "must act", "failure to act",
   ];
   const urgencyPhrases = urgencyTerms.filter((t) => lower.includes(t));
 
@@ -570,6 +575,13 @@ function extractRuleData(text: string): ExtractedRuleData {
     "attorney general", "sheriff", "marshal", "federal agent",
     "contempt", "judgment", "garnish", "garnishment",
     "remote access", "remotely access", "anydesk", "teamviewer",
+    // Expanded — immigration/deportation scams, account-closure threats, tech-support variants
+    "deportation", "deportation order", "immigration violation", "visa revocation",
+    "visa cancellation", "ice agent", "ice officer", "immigration enforcement",
+    "account will be permanently", "account will be closed", "account closure",
+    "permanently suspended", "permanently banned", "access will be revoked",
+    "bench warrant", "federal charges", "criminal referral",
+    "interpol notice", "interpol warrant",
   ];
   const threatPhrases = threatTerms.filter((t) => lower.includes(t));
 
@@ -581,11 +593,16 @@ function extractRuleData(text: string): ExtractedRuleData {
     "prepaid card", "prepaid debit", "money order",
     "payment link", "pay here", "click to pay", "pay online now",
     // Account-takeover / fund-isolation signals (Tuning Round 3):
-    // Scammers instruct victims to move money to "holding", "safe", or "protected" accounts.
     "holding account", "safe account", "protected account",
     // Tuning Round 5 — P2: Cryptocurrency / digital asset payments as a standalone scam signal.
-    // Government agencies and legitimate institutions never accept digital asset transfers.
     "digital asset", "digital asset transfer", "digital wallet", "wallet transfer", "digital currency",
+    // Expanded — advance fee / processing fee / fake check signals
+    "processing fee", "release fee", "clearance fee", "administrative fee to release",
+    "customs fee", "customs clearance", "insurance fee to release",
+    "reload pack", "reload card", "scratch card",
+    // Fake check / overpayment refund pattern — send back the "excess"
+    "send back the difference", "return the difference", "refund the overpayment",
+    "deposit and return", "overpayment refund",
   ];
   const paymentRedFlags = paymentRedFlagTerms.filter((t) => lower.includes(t));
 
@@ -595,6 +612,11 @@ function extractRuleData(text: string): ExtractedRuleData {
     "credit card number", "debit card", "card number", "cvv",
     "date of birth", "mother's maiden name", "password", "pin number",
     "drivers license", "driver's license",
+    // Expanded — passport, Medicare, insurance ID, and online credentials
+    "passport number", "passport copy", "medicare number", "medicaid number",
+    "insurance id", "insurance card number", "national id", "national identification",
+    "online banking password", "banking credentials", "login credentials",
+    "security question", "one-time code", "verification code", "otp",
   ];
   const infoRequests = infoRequestTerms.filter((t) => lower.includes(t));
 
@@ -918,6 +940,62 @@ function calculateRiskScore(data: ExtractedRuleData, lower: string, text: string
   const hasFundIsolation = data.paymentRedFlags.some((f) => ["holding account", "safe account", "protected account"].some((k) => f.includes(k)));
   if (hasFundIsolation && antiVerification.test(lower)) score += 15;
 
+  // ── Trust Check Expansion: New Scam Category Detection ─────────────────────────────────────────
+
+  // Advance fee / 419 fraud — victim must pay a fee to "release" a larger sum.
+  // Signal: fee payment demand (processing, release, clearance, customs) + promise of large reward.
+  const hasAdvanceFeePay = data.paymentRedFlags.some((f) =>
+    ["processing fee", "release fee", "clearance fee", "customs fee", "customs clearance",
+     "administrative fee to release", "insurance fee to release"].some((k) => f.includes(k))
+  );
+  const hasAdvanceFeeReward = /\b(inheritance|unclaimed\s+(funds|money|prize|award)|winning(s)?|lottery|prize\s+(money|funds)|release\s+(your|the)\s+(funds|money|winnings)|compensation\s+(package|fund)|beneficiary\s+(of|to))\b/i.test(lower);
+  if (hasAdvanceFeePay && hasAdvanceFeeReward) score += 35;
+  else if (hasAdvanceFeeReward && data.amounts.length > 0 && data.paymentRedFlags.length > 0) score += 20;
+
+  // Lottery / prize notification fraud — "you have won" + any payment demand.
+  const hasPrizeClaim = /\b(you\s+have\s+(won|been\s+selected\s+(as\s+a\s+)?winner)|congratulations.*you\s+have\s+won|prize\s+winner|winning\s+notification|selected\s+as\s+a\s+(lucky|grand)\s+winner|lucky\s+draw\s+winner)\b/i.test(lower);
+  if (hasPrizeClaim && (data.paymentRedFlags.length > 0 || data.infoRequests.length > 0)) score += 30;
+  else if (hasPrizeClaim && data.urgencyPhrases.length > 0 && data.amounts.length > 0) score += 20;
+
+  // Fake check / overpayment scam — deposit a fraudulent check, then wire back the "excess".
+  const hasFakeCheckRefund = data.paymentRedFlags.some((f) =>
+    ["send back the difference", "return the difference", "refund the overpayment",
+     "deposit and return", "overpayment refund"].some((k) => f.includes(k))
+  );
+  const hasOverpaymentClaim = /\b(overpayment|over-payment|excess\s+(funds|amount|payment)|mistaken\s+(payment|deposit)|erroneous\s+(payment|transfer)|more\s+than\s+(intended|expected)|accidentally\s+(sent|transferred|deposited))\b/i.test(lower);
+  if (hasFakeCheckRefund || (hasOverpaymentClaim && (data.paymentRedFlags.some((f) => ["wire transfer", "western union", "moneygram", "zelle"].some((k) => f.includes(k)))))) score += 35;
+
+  // Immigration / deportation threat scam — creates fear of legal status action to extort payment.
+  const hasImmigrationThreat = data.threatPhrases.some((t) =>
+    ["deportation", "deportation order", "immigration violation", "visa revocation",
+     "visa cancellation", "ice agent", "ice officer", "immigration enforcement"].some((k) => t.includes(k))
+  );
+  if (hasImmigrationThreat && data.paymentRedFlags.length > 0) score += 30;
+  else if (hasImmigrationThreat && (data.infoRequests.length > 0 || data.urgencyPhrases.length >= 2)) score += 20;
+
+  // Free / personal email provider used as sender for a claimed official or governmental notice.
+  // Legitimate government agencies, banks, and established companies never use gmail/yahoo/hotmail.
+  const hasFreeEmailSender = data.emails.some((e) =>
+    /@(gmail|yahoo|hotmail|outlook\.com|aol|icloud|protonmail|mail\.com|yandex|live\.com)\./i.test(e)
+  );
+  if (hasFreeEmailSender && (data.paymentRedFlags.length > 0 || data.threatPhrases.length > 0 || data.infoRequests.length > 0)) score += 15;
+  // Extra boost when the document also claims to be from a government or official entity
+  if (hasFreeEmailSender && (claimsGovernmentEntity || /\b(irs|fbi|dea|police|court|federal|government|official\s+notice)\b/i.test(lower))) score += 10;
+
+  // Excessive urgency density — four or more urgency phrases in a single document is abnormal.
+  // Even genuine emergency communications rarely stack this many pressure terms together.
+  if (data.urgencyPhrases.length >= 4) score += 12;
+  else if (data.urgencyPhrases.length >= 6) score += 8; // additional, stacks with above
+
+  // Overseas / romance isolation pattern — sender claims to be abroad and asks for money transfer.
+  const hasOverseasSender = /\b(i\s+am\s+(currently\s+)?(overseas|abroad|out\s+of\s+country|stationed|deployed|traveling)|currently\s+(overseas|abroad|in\s+[A-Z][a-z]+)\s+and|cannot\s+(meet|come|be\s+there)\s+(in\s+person|right\s+now))\b/i.test(lower);
+  if (hasOverseasSender && (data.paymentRedFlags.length > 0 || data.amounts.length > 0)) score += 20;
+
+  // OTP / verification code request — phishing targeting 2FA bypass.
+  // Legitimate institutions never ask you to share a one-time code they sent you.
+  const hasOtpRequest = data.infoRequests.some((r) => ["one-time code", "verification code", "otp"].some((k) => r.includes(k)));
+  if (hasOtpRequest) score += 25;
+
   // Tuning Round 3 — Priority 1: Phishing domain detection.
   // Lookalike domains (brand + suspicious suffix: -secure, -accounts-secure, -verify, -helpdesk, etc.)
   // are a hallmark of phishing attacks. Check email domains and URL hostnames independently.
@@ -1138,6 +1216,33 @@ function calculateDocumentRiskScore(contractRiskTerms: string[]): number {
     "Unlimited rollover provision": 16,
     "No right of rescission": 11,
     "Predatory APR (≥100%)": 20,
+    // High-risk legal clauses added in legal glossary expansion (weights were defaulting to 8)
+    "Personal guarantee": 12,
+    "Confession of judgment": 15,
+    "Cognovit note / confession of judgment": 15,
+    "Jury trial waiver": 9,
+    "Waiver of jury trial": 9,
+    "Right of setoff": 11,
+    "Dragnet / cross-collateralization clause": 13,
+    "Cross-collateralization clause": 13,
+    "Indemnification clause": 9,
+    "Broad indemnification clause": 11,
+    "Mutual indemnification clause": 7,
+    "Limitation of liability clause": 8,
+    "Exclusion of consequential damages": 8,
+    "Non-disparagement clause": 6,
+    "Non-compete clause": 9,
+    "Forum selection clause": 7,
+    "Choice of law clause": 6,
+    "Assignment without consent": 8,
+    "Unilateral modification of terms": 10,
+    "Evergreen clause": 9,
+    "Force majeure clause": 5,
+    "Security interest clause": 8,
+    "Attorneys' fees shifting": 9,
+    "One-sided attorneys' fees clause": 11,
+    "Wage assignment clause": 13,
+    "Future-advances clause": 10,
   };
   let total = 0;
   for (const term of contractRiskTerms) {
@@ -1214,6 +1319,18 @@ function calculateVerificationConfidence(
 
   // Positive: named signatory
   if (/\b(sincerely|regards|yours\s+truly)\b/i.test(lower) && /[A-Z][a-z]+\s+[A-Z][a-z]+/.test(text)) conf += 5;
+
+  // Positive: business registration identifiers — EIN, DUNS, state license, NPI, NMLS
+  // These are verifiable through public registries and strongly indicate a real registered entity.
+  if (/\b(EIN|employer\s+identification\s+number|federal\s+tax\s+id)\s*:?\s*\d{2}-\d{7}/i.test(text)) conf += 12;
+  if (/\b(DUNS|D-U-N-S)\s*(number|#|no\.?)?\s*:?\s*\d{2}-\d{3}-\d{4}/i.test(text)) conf += 10;
+  if (/\b(NPI|national\s+provider\s+identifier)\s*:?\s*\d{10}/i.test(text)) conf += 10;
+  if (/\b(NMLS|nmls\s*id|nmls\s*#)\s*:?\s*\d{4,8}/i.test(text)) conf += 8;
+  if (/\b(license\s*(number|#|no\.?)|registration\s*(number|#|no\.?))\s*:?\s*[\w\-]{4,}/i.test(text)) conf += 6;
+
+  // Positive: named professional title with signatory — letter signed by a specific titled person
+  if (/\b(Director|Manager|President|Officer|Commissioner|Superintendent|Administrator|Attorney|Counsel|Trustee|Executor|Agent)\b/.test(text)
+      && /[A-Z][a-z]+\s+[A-Z][a-z]+/.test(text)) conf += 4;
 
   // Positive: multiple standard payment / contact channels (Tuning Round 2).
   // Wider set captures real billing documents (AutoPay, App, Online, automated phone, etc.)
@@ -1426,6 +1543,57 @@ function detectStructuralIssues(
     issues.push("Short-expiry settlement offer (5 days or fewer) combined with a non-standard payment method — this pressure combination is common in fraudulent collection attempts");
   }
 
+  // 8. Free / personal email provider used as sender contact for a claimed official or legal notice
+  const hasFreeEmailInDoc = ruleData.emails.some((e) =>
+    /@(gmail|yahoo|hotmail|outlook\.com|aol|icloud|protonmail|mail\.com|yandex|live\.com)\./i.test(e)
+  );
+  const looksOfficial = /\b(notice|official|government|federal|irs|fbi|treasury|court|department\s+of|ministry|bureau|commissioner|attorney\s+general|police\s+department|sheriff)\b/i.test(lower);
+  if (hasFreeEmailInDoc && looksOfficial) {
+    const freeEmail = ruleData.emails.find((e) => /@(gmail|yahoo|hotmail|outlook\.com|aol|icloud|protonmail|mail\.com|yandex|live\.com)\./i.test(e))!;
+    issues.push(`Contact email (${freeEmail}) uses a free personal email provider — government agencies, courts, and official institutions never use Gmail, Yahoo, or similar services for formal communications`);
+  } else if (hasFreeEmailInDoc && (ruleData.paymentRedFlags.length > 0 || ruleData.threatPhrases.length > 0)) {
+    const freeEmail = ruleData.emails.find((e) => /@(gmail|yahoo|hotmail|outlook\.com|aol|icloud|protonmail|mail\.com|yandex|live\.com)\./i.test(e))!;
+    issues.push(`Sender contact email (${freeEmail}) is a free personal email address, which is inconsistent with a formal legal notice, collection demand, or institutional communication`);
+  }
+
+  // 9. Advance fee / 419 fraud structural pattern
+  // Promising a large payout (inheritance, lottery, prize) but requiring a fee first is the
+  // defining characteristic of advance-fee fraud — never present in legitimate communications.
+  const hasAdvanceFeeSignal = /\b(inheritance|unclaimed\s+(funds|money|prize)|winning(s)?|lottery|beneficiary)\b/i.test(lower);
+  const hasFeeDemand = ruleData.paymentRedFlags.some((f) =>
+    ["processing fee", "release fee", "clearance fee", "customs fee",
+     "administrative fee to release", "insurance fee to release"].some((k) => f.includes(k))
+  );
+  if (hasAdvanceFeeSignal && hasFeeDemand) {
+    issues.push("Document promises a large sum (inheritance, winnings, or unclaimed funds) but requires a fee payment before the funds can be released — this is the defining structure of advance-fee (419) fraud");
+  }
+
+  // 10. Prize / lottery claim without prior entry — unsolicited winning notifications are a scam hallmark
+  const hasPrizeWinClaim = /\b(you\s+have\s+(won|been\s+selected\s+(as\s+a\s+)?winner)|prize\s+winner|winning\s+notification|lucky\s+draw\s+winner|selected\s+as\s+a\s+(lucky|grand)\s+winner)\b/i.test(lower);
+  if (hasPrizeWinClaim && (ruleData.paymentRedFlags.length > 0 || ruleData.infoRequests.length > 0 || ruleData.urgencyPhrases.length > 0)) {
+    issues.push("Document claims the recipient has won a prize or been selected as a winner, combined with a request for payment or personal information — unsolicited winning notifications combined with demands are a well-known scam pattern");
+  }
+
+  // 11. OTP / verification code sharing request
+  // No legitimate institution asks you to read back a security code they sent you.
+  const hasOtpRequest = ruleData.infoRequests.some((r) => ["one-time code", "verification code", "otp"].some((k) => r.includes(k)));
+  if (hasOtpRequest) {
+    issues.push("Document or message requests a one-time code, OTP, or verification code — legitimate senders never ask recipients to share security codes that were sent to them, as this is exclusively used to bypass two-factor authentication");
+  }
+
+  // 12. Excessive urgency — four or more pressure phrases in one document is structurally abnormal
+  if (ruleData.urgencyPhrases.length >= 4) {
+    issues.push(`Document contains ${ruleData.urgencyPhrases.length} urgency phrases (e.g. "${ruleData.urgencyPhrases.slice(0, 2).join('", "')}"...) — legitimate institutions rarely stack this many pressure terms; this density of urgency language is a social engineering pattern used to prevent calm verification`);
+  }
+
+  // 13. Overpayment / fake check refund request
+  // The overpayment scam always requires sending back "excess" via a fast, non-reversible channel.
+  const hasOverpaymentRefundSignal = /\b(overpayment|over-payment|excess\s+(funds|amount|payment)|mistakenly\s+sent|accidentally\s+(sent|transferred|deposited))\b/i.test(lower);
+  const hasReturnDemand = /\b(send\s+back|wire\s+back|return\s+(the\s+)?(difference|excess|overpayment|funds|amount)|refund\s+(the\s+)?(overpayment|difference|excess))\b/i.test(lower);
+  if (hasOverpaymentRefundSignal && hasReturnDemand) {
+    issues.push("Document claims an overpayment was made and asks the recipient to return the difference — this is the defining pattern of fake check / overpayment fraud, where a deposited check later bounces leaving the victim liable for the returned amount");
+  }
+
   return issues;
 }
 
@@ -1464,7 +1632,7 @@ Return ONLY a valid JSON object — no markdown, no code fences, just raw JSON.
 }
 
 Guidelines:
-- scamIndicators: 0-8 warning signs mapped to authenticity/scam risk only (not contract terms). HIGH: gift card/wire/crypto payment demand, threats of arrest, identity info requests, impersonation signals, instructions to not contact authorities; MEDIUM: time pressure, missing case/account numbers for a payment demand, vague sender identity; LOW: generic greetings, formatting inconsistencies, grammar errors
+- scamIndicators: 0-8 warning signs mapped to authenticity/scam risk only (not contract terms). HIGH: gift card/wire/crypto payment demand, threats of arrest or deportation, identity info requests, OTP/verification code requests, advance fee demands ("pay a fee to release your funds"), prize/lottery winning claims, fake check/overpayment refund requests, impersonation signals, instructions to not contact authorities, overseas-sender patterns; MEDIUM: time pressure, missing case/account numbers for a payment demand, vague sender identity, free email provider (gmail/yahoo/hotmail) used as official contact, excessive urgency density; LOW: generic greetings, formatting inconsistencies, grammar errors
 - structuralFindings: only include text-provable anomalies. Typical findings: sender name in header doesn't match signature block, email domain differs from URL domain, a payment is demanded but no account/case/reference number exists, dates are inconsistent or illogical, abrupt formality shift between sections, a wire transfer to a third-party named bank
 - suspiciousContactNotes: only flag contacts with a specific evidentiary reason
 - whatToVerify: 3-6 specific verification steps. Always include: verify sender identity through official public channels (not numbers in the letter)

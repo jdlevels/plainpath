@@ -56,12 +56,14 @@ Second product mode: evaluates documents across three independent risk dimension
 - 75-100: High scam risk
 
 ### Additional Phase 2 capabilities:
-- **Structural Findings** — 7 rule-pattern checks (generic greeting + payment demand, missing reference numbers, domain mismatch, area code dispersion, anti-verification instructions, wire to third-party bank, short-expiry settlement); displayed as bullet list only when findings exist
+- **Structural Findings** — 13 rule-pattern checks: generic greeting + payment demand, missing reference numbers, domain mismatch, area code dispersion, anti-verification instructions, wire to third-party bank, short-expiry settlement, free email provider as official sender, advance fee / 419 fraud pattern, prize/lottery claim + demand, OTP code request, excessive urgency density (4+), overpayment refund structure
 - **Metadata Findings** — PDF metadata inspection (creation/mod dates, producer, author); flags future dates, editing software in production docs, stripped metadata; displayed only for PDF uploads with suspicious metadata
-- **`calculateDocumentRiskScore()`** — weighted contract-term scoring function (17 term weights, max 100)
-- **`calculateVerificationConfidence()`** — text-signal confidence function (gov domain +20, reference numbers +15, etc.)
+- **`calculateDocumentRiskScore()`** — weighted contract-term scoring function (40+ term weights, max 100); explicit weights now set for all legal glossary expansion terms (personal guarantee, confession of judgment, jury trial waiver, right of setoff, non-compete, etc.)
+- **`calculateVerificationConfidence()`** — text-signal confidence function (gov domain +20, reference numbers +15, EIN +12, DUNS +10, NPI +10, NMLS +8, named professional title +4, etc.)
 - **`inspectPdfMetadata()`** — extracts and evaluates PDF embedded metadata
-- **`detectStructuralIssues()`** — 7 structural rule patterns
+- **`detectStructuralIssues()`** — 13 structural rule patterns
+- **New scam category scoring** — advance fee/419 (+35), prize/lottery fraud (+30), fake check/overpayment (+35), immigration/deportation threat scam (+30), OTP bypass phishing (+25), free email from official sender (+15–25), overseas-sender pattern (+20), excessive urgency density (+12), advance fee reward language (+20)
+- **Expanded term lists** — urgency (+8 new terms), threats (+12 new including immigration/deportation/interpol), payment red flags (+12 new including advance fee, reload packs, fake check refund terms), infoRequests (+8 new including passport, Medicare, OTP, banking credentials)
 
 ### Trust Check demos (5 total):
 - `fake-utility-shutoff` — auth=87, doc=0, conf=0; 3 structural findings
