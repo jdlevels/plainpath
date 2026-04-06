@@ -106,14 +106,14 @@ export default function Home() {
 
       {/* ── Hero background decoration ─────────────────────── */}
       <div className="absolute top-0 left-0 right-0 h-[90vh] pointer-events-none -z-10 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/8 via-blue-100/40 to-violet-100/25 dark:from-primary/8 dark:via-transparent dark:to-violet-500/5" />
-        <div className="absolute top-0 right-0 w-[700px] h-[700px] rounded-full bg-primary/12 dark:bg-primary/8 blur-3xl translate-x-1/3 -translate-y-1/4" />
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] rounded-full bg-blue-200/65 dark:bg-blue-900/20 blur-3xl -translate-x-1/4 translate-y-1/4" />
-        <div className="absolute top-1/2 left-1/2 w-[400px] h-[400px] rounded-full bg-violet-200/50 dark:bg-violet-900/15 blur-3xl -translate-x-1/2 -translate-y-1/2" />
-        <svg className="absolute inset-0 w-full h-full opacity-[0.018] dark:opacity-[0.035]" xmlns="http://www.w3.org/2000/svg">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-100/70 via-indigo-50/60 to-violet-100/50 dark:from-primary/8 dark:via-transparent dark:to-violet-500/5" />
+        <div className="absolute top-0 right-0 w-[700px] h-[700px] rounded-full bg-blue-300/30 dark:bg-primary/8 blur-3xl translate-x-1/3 -translate-y-1/4" />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] rounded-full bg-indigo-200/50 dark:bg-blue-900/20 blur-3xl -translate-x-1/4 translate-y-1/4" />
+        <div className="absolute top-1/2 left-1/2 w-[400px] h-[400px] rounded-full bg-violet-200/60 dark:bg-violet-900/15 blur-3xl -translate-x-1/2 -translate-y-1/2" />
+        <svg className="absolute inset-0 w-full h-full opacity-[0.03] dark:opacity-[0.035]" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <pattern id="dot-grid" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
-              <circle cx="1" cy="1" r="1" fill="currentColor" className="text-slate-700" />
+              <circle cx="1" cy="1" r="1" fill="currentColor" className="text-slate-500" />
             </pattern>
           </defs>
           <rect width="100%" height="100%" fill="url(#dot-grid)" />
@@ -125,12 +125,12 @@ export default function Home() {
         {/* ═══════════════════════════════════════════════════
             BAND 1 — HERO  (bg-background, transparent)
         ════════════════════════════════════════════════════ */}
-        <Band innerClassName="pt-24 pb-20">
+        <Band className="bg-gradient-to-br from-blue-50 via-indigo-50/40 to-violet-50/50 dark:from-transparent dark:via-transparent dark:to-transparent" innerClassName="pt-28 pb-24">
           <div className="max-w-4xl mx-auto text-center space-y-7">
             <motion.div
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-card border border-border shadow-sm text-xs font-semibold text-muted-foreground tracking-wide uppercase"
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/25 shadow-sm text-xs font-semibold text-primary dark:text-primary tracking-wide uppercase"
             >
               <span className="flex h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
               Structured document analysis
@@ -189,8 +189,8 @@ export default function Home() {
               className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2"
             >
               {["Plans from $4.99/month", "No account required", "Documents not stored by PlainPath", "Analyses saved on your device only"].map((item) => (
-                <span key={item} className="flex items-center gap-1.5 text-xs text-muted-foreground/55">
-                  <span className="w-1 h-1 rounded-full bg-muted-foreground/30 shrink-0" />
+                <span key={item} className="flex items-center gap-1.5 text-xs text-muted-foreground/80 dark:text-muted-foreground/55">
+                  <span className="w-1 h-1 rounded-full bg-primary/40 dark:bg-muted-foreground/30 shrink-0" />
                   {item}
                 </span>
               ))}
@@ -201,16 +201,16 @@ export default function Home() {
         {/* ═══════════════════════════════════════════════════
             BAND 2 — STATS + DOC TYPES  (muted/tinted)
         ════════════════════════════════════════════════════ */}
-        <div className="w-full bg-gradient-to-b from-slate-100 via-blue-50 to-slate-50 dark:from-slate-900 dark:via-blue-950/20 dark:to-slate-900 border-y border-border dark:border-border/50">
-          <Band innerClassName="py-16">
+        <div className="w-full bg-gradient-to-b from-slate-100 via-blue-50/80 to-slate-100/60 dark:from-slate-900 dark:via-blue-950/20 dark:to-slate-900 border-y border-slate-200 dark:border-border/50">
+          <Band innerClassName="py-20">
             <StatsBar />
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="mt-14"
+              className="mt-16"
             >
-              <p className="text-center text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-6">
+              <p className="text-center text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-7">
                 Works with all kinds of confusing paperwork
               </p>
               <div className="flex flex-wrap justify-center gap-3">
@@ -221,7 +221,7 @@ export default function Home() {
                     whileInView={{ opacity: 1, scale: 1 }}
                     viewport={{ once: true }}
                     transition={{ delay: i * 0.05 }}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-card border border-slate-200 dark:border-border/60 shadow-sm hover:shadow-md hover:border-primary/30 transition-all cursor-default"
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white dark:bg-card border border-slate-200 dark:border-border/60 shadow-sm hover:shadow-md hover:border-primary/30 transition-all cursor-default"
                   >
                     <div className={`w-7 h-7 rounded-lg ${f.bg} flex items-center justify-center`}>
                       <f.icon className={`w-3.5 h-3.5 ${f.color}`} />
@@ -237,7 +237,7 @@ export default function Home() {
         {/* ═══════════════════════════════════════════════════
             BAND 3 — THE PROBLEM  (neutral band, dark card inside)
         ════════════════════════════════════════════════════ */}
-        <Band className="bg-gradient-to-br from-slate-50 via-white to-violet-50/50 dark:from-slate-950 dark:to-slate-900/90" innerClassName="py-20">
+        <Band className="bg-white dark:bg-gradient-to-br dark:from-slate-950 dark:to-slate-900/90" innerClassName="py-20 border-b border-slate-100 dark:border-transparent">
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
@@ -301,7 +301,7 @@ export default function Home() {
         {/* ═══════════════════════════════════════════════════
             BAND 4 — TOOLS SHOWCASE  (muted/tinted)
         ════════════════════════════════════════════════════ */}
-        <div id="solutions" className="w-full bg-gradient-to-br from-indigo-50 via-violet-50/60 to-slate-50 dark:from-violet-950/22 dark:via-slate-900 dark:to-slate-900 border-y border-border dark:border-border/40">
+        <div id="solutions" className="w-full bg-gradient-to-br from-indigo-50/90 via-violet-50/70 to-slate-50/90 dark:from-violet-950/22 dark:via-slate-900 dark:to-slate-900 border-y border-indigo-100 dark:border-border/40">
           <Band innerClassName="py-20">
             <ToolsShowcase />
           </Band>
@@ -310,15 +310,15 @@ export default function Home() {
         {/* ═══════════════════════════════════════════════════
             BAND 5 — SEE IT IN ACTION  (neutral, dark card inside)
         ════════════════════════════════════════════════════ */}
-        <Band className="bg-gradient-to-b from-slate-50 via-sky-50/50 to-slate-50 dark:from-slate-950 dark:via-sky-950/10 dark:to-slate-950" innerClassName="py-20">
+        <Band className="bg-gradient-to-b from-white via-sky-50/60 to-slate-50 dark:from-slate-950 dark:via-sky-950/10 dark:to-slate-950 border-b border-slate-100 dark:border-transparent" innerClassName="py-20">
           <DemoSection />
         </Band>
 
         {/* ═══════════════════════════════════════════════════
             BAND 6 — HOW IT WORKS  (muted/tinted)
         ════════════════════════════════════════════════════ */}
-        <div id="how-it-works" className="w-full bg-gradient-to-b from-slate-100 via-slate-50 to-blue-50/60 dark:from-slate-900 dark:via-slate-800/40 dark:to-slate-900 border-y border-border dark:border-border/40">
-          <Band innerClassName="py-16">
+        <div id="how-it-works" className="w-full bg-gradient-to-b from-slate-100/90 via-blue-50/50 to-slate-100/70 dark:from-slate-900 dark:via-slate-800/40 dark:to-slate-900 border-y border-slate-200 dark:border-border/40">
+          <Band innerClassName="py-20">
             <div className="text-center mb-14">
               <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
                 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">How it works</motion.p>
@@ -337,13 +337,13 @@ export default function Home() {
               {HOW_IT_WORKS.map((step, i) => (
                 <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }} transition={{ delay: i * 0.12 }}>
-                  <Card className="h-full bg-card border-slate-200 dark:border-border/50 shadow-md hover:shadow-xl transition-shadow rounded-2xl overflow-hidden">
+                  <Card className="h-full bg-white dark:bg-card border-slate-200/80 dark:border-border/50 shadow-md hover:shadow-xl hover:border-primary/20 transition-all rounded-2xl overflow-hidden">
                     <div className="p-7">
                       <div className="flex items-center gap-4 mb-6">
-                        <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-sm shadow-primary/30 relative z-10">
+                        <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-md shadow-primary/25 relative z-10">
                           <step.icon className="w-5 h-5 text-white" />
                         </div>
-                        <span className="text-4xl font-display font-bold text-foreground/10 leading-none select-none">{step.step}</span>
+                        <span className="text-4xl font-display font-bold text-foreground/8 dark:text-foreground/10 leading-none select-none">{step.step}</span>
                       </div>
                       <h3 className="text-lg font-bold mb-2">{step.title}</h3>
                       <p className="text-muted-foreground text-sm leading-relaxed">{step.desc}</p>
@@ -367,7 +367,7 @@ export default function Home() {
         {/* ═══════════════════════════════════════════════════
             BAND 8 — LIVE DEMOS  (primary-tinted)
         ════════════════════════════════════════════════════ */}
-        <div className="w-full bg-gradient-to-br from-blue-50 via-indigo-50/70 to-slate-50 dark:from-blue-950/35 dark:via-slate-900 dark:to-slate-900 border-y border-primary/25 dark:border-primary/15">
+        <div className="w-full bg-gradient-to-br from-blue-50 via-indigo-50/80 to-white dark:from-blue-950/35 dark:via-slate-900 dark:to-slate-900 border-y border-blue-100 dark:border-primary/15">
           <Band id="demos" innerClassName="py-20 scroll-mt-24">
             <div className="text-center mb-12">
               <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
@@ -384,7 +384,7 @@ export default function Home() {
                 <motion.div key={demo.id} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }} transition={{ delay: i * 0.1 }} whileHover={{ y: -5, transition: { duration: 0.2 } }}>
                   <button onClick={() => setLocation(`/analyze?demo=${demo.id}`)} className="w-full text-left h-full group">
-                    <Card className="h-full border-slate-200 dark:border-border/40 hover:border-primary/40 hover:shadow-xl transition-all overflow-hidden bg-card rounded-2xl shadow-md">
+                    <Card className="h-full border-slate-200 dark:border-border/40 hover:border-primary/40 hover:shadow-xl transition-all overflow-hidden bg-white dark:bg-card rounded-2xl shadow-md">
                       <div className="p-7 flex flex-col h-full">
                         <div className={`w-12 h-12 rounded-xl ${demo.bg} flex items-center justify-center mb-5`}>
                           <demo.icon className={`w-6 h-6 ${demo.color}`} />
@@ -411,7 +411,7 @@ export default function Home() {
         {/* ═══════════════════════════════════════════════════
             BAND 9 — TESTIMONIALS  (muted)
         ════════════════════════════════════════════════════ */}
-        <div className="w-full bg-gradient-to-br from-violet-50/80 via-slate-50 to-white dark:from-violet-950/20 dark:via-slate-900 dark:to-slate-900 border-b border-border dark:border-border/40">
+        <div className="w-full bg-gradient-to-br from-violet-50/90 via-purple-50/50 to-slate-50 dark:from-violet-950/20 dark:via-slate-900 dark:to-slate-900 border-y border-violet-100 dark:border-border/40">
           <Band innerClassName="py-20">
             <TestimonialsSection />
           </Band>
@@ -420,14 +420,14 @@ export default function Home() {
         {/* ═══════════════════════════════════════════════════
             BAND 10 — PRICING  (clean white/dark)
         ════════════════════════════════════════════════════ */}
-        <div id="pricing" className="w-full bg-gradient-to-b from-white via-slate-50/70 to-slate-50 dark:bg-transparent border-y border-border/60 dark:border-border/25">
+        <div id="pricing" className="w-full bg-white dark:bg-transparent border-y border-slate-200 dark:border-border/25">
           <PricingSection />
         </div>
 
         {/* ═══════════════════════════════════════════════════
             BAND 11 — FAQ  (muted, last section)
         ════════════════════════════════════════════════════ */}
-        <div id="faq" className="w-full bg-gradient-to-b from-slate-100 via-slate-50/80 to-blue-50/70 dark:from-slate-900 dark:to-blue-950/25 border-t border-border dark:border-border/40">
+        <div id="faq" className="w-full bg-gradient-to-b from-slate-100/90 via-slate-50 to-blue-50/60 dark:from-slate-900 dark:to-blue-950/25 border-t border-slate-200 dark:border-border/40">
           <Band innerClassName="py-20">
             <FAQSection />
           </Band>
