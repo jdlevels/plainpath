@@ -368,7 +368,7 @@ export default function Home() {
             BAND 8 — LIVE DEMOS  (primary-tinted)
         ════════════════════════════════════════════════════ */}
         <div className="w-full bg-gradient-to-br from-blue-50 via-indigo-50/80 to-white dark:from-blue-950/35 dark:via-slate-900 dark:to-slate-900 border-y border-blue-100 dark:border-primary/15">
-          <Band id="demos" innerClassName="py-20 scroll-mt-24">
+          <Band id="demos" innerClassName="py-16 scroll-mt-24">
             <div className="text-center mb-12">
               <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
                 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Live demos</motion.p>
@@ -412,7 +412,7 @@ export default function Home() {
             BAND 9 — TESTIMONIALS  (muted)
         ════════════════════════════════════════════════════ */}
         <div className="w-full bg-gradient-to-br from-violet-50/90 via-purple-50/50 to-slate-50 dark:from-violet-950/20 dark:via-slate-900 dark:to-slate-900 border-y border-violet-100 dark:border-border/40">
-          <Band innerClassName="py-20">
+          <Band innerClassName="py-16">
             <TestimonialsSection />
           </Band>
         </div>
@@ -427,8 +427,8 @@ export default function Home() {
         {/* ═══════════════════════════════════════════════════
             BAND 11 — FAQ  (muted, last section)
         ════════════════════════════════════════════════════ */}
-        <div id="faq" className="w-full bg-gradient-to-b from-slate-100/90 via-slate-50 to-blue-50/60 dark:from-slate-900 dark:to-blue-950/25 border-t border-slate-200 dark:border-border/40">
-          <Band innerClassName="py-20">
+        <div id="faq" className="w-full bg-gradient-to-b from-slate-100/90 via-slate-50 to-blue-50/60 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900 border-t border-slate-200 dark:border-border/40">
+          <Band innerClassName="py-16">
             <FAQSection />
           </Band>
         </div>
@@ -437,7 +437,7 @@ export default function Home() {
             BAND 12 — CLOSING CTA  (strong, dark)
         ════════════════════════════════════════════════════ */}
         <div className="w-full bg-gradient-to-br from-slate-950 via-[#0c1525] to-violet-950/40 border-t border-white/5">
-          <Band innerClassName="py-28 text-center">
+          <Band innerClassName="py-20 text-center">
             <motion.div
               initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}

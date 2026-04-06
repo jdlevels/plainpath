@@ -68,7 +68,7 @@ function FAQItem({ q, a, index }: { q: string; a: string; index: number }) {
             transition={{ duration: 0.22 }}
             className="overflow-hidden"
           >
-            <p className="text-sm text-muted-foreground leading-relaxed pb-5">
+            <p className="text-sm text-muted-foreground dark:text-muted-foreground/85 leading-relaxed pb-5">
               {a}
             </p>
           </motion.div>
@@ -81,7 +81,7 @@ function FAQItem({ q, a, index }: { q: string; a: string; index: number }) {
 export default function FAQSection() {
   return (
     <section className="max-w-3xl w-full mx-auto">
-      <div className="text-center mb-12">
+      <div className="text-center mb-10">
         <motion.p
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
@@ -100,7 +100,7 @@ export default function FAQSection() {
         </motion.h2>
       </div>
 
-      <div className="bg-card border border-border/40 rounded-2xl shadow-sm px-6 divide-y-0">
+      <div className="bg-white dark:bg-card border border-border/50 rounded-2xl shadow-md px-6 divide-y-0">
         {FAQS.map((faq, i) => (
           <FAQItem key={i} q={faq.q} a={faq.a} index={i} />
         ))}

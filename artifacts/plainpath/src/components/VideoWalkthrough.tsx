@@ -229,20 +229,21 @@ export default function VideoWalkthrough() {
   return (
     <div className="w-full">
       {/* Section header */}
-      <div className="text-center mb-10">
-        <motion.p
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
+      <div className="text-center mb-12">
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-xs font-semibold uppercase tracking-widest text-primary/80 mb-3"
+          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/15 border border-primary/30 mb-5"
         >
-          Watch the demo
-        </motion.p>
+          <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+          <span className="text-xs font-semibold uppercase tracking-widest text-primary">Product walkthrough</span>
+        </motion.div>
         <motion.h2
           initial={{ opacity: 0, y: 12 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-3xl md:text-4xl font-display font-bold mb-4"
+          className="text-3xl md:text-5xl font-display font-bold mb-4 text-white"
         >
           See PlainPath in action
         </motion.h2>
@@ -251,9 +252,9 @@ export default function VideoWalkthrough() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.1 }}
-          className="text-muted-foreground text-lg max-w-lg mx-auto"
+          className="text-slate-400 text-lg max-w-xl mx-auto leading-relaxed"
         >
-          A narrated walkthrough of all three tools — from uploading a document to building a contract.
+          Three tools. One workflow. From uploading a confusing document to building your own contract — see exactly what PlainPath does.
         </motion.p>
       </div>
 
@@ -266,7 +267,7 @@ export default function VideoWalkthrough() {
         className="max-w-4xl mx-auto"
       >
         {/* Video frame */}
-        <div className="rounded-2xl overflow-hidden shadow-[0_32px_80px_rgba(0,0,0,0.22)] ring-1 ring-white/8">
+        <div className="rounded-2xl overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.35)] ring-1 ring-white/12 outline outline-1 outline-white/5">
           <AnimatePresence mode="wait">
             {playing && DEMO_VIDEO_URL ? (
               <motion.div
@@ -303,8 +304,8 @@ export default function VideoWalkthrough() {
                 className={[
                   "text-left px-4 py-3.5 rounded-xl border transition-all",
                   isActive
-                    ? `${ch.activeBg} ${ch.activeBorder} shadow-sm`
-                    : "bg-card/60 border-border/40 hover:border-border/70",
+                    ? `${ch.activeBg} ${ch.activeBorder} shadow-md`
+                    : "bg-white/6 border-white/10 hover:bg-white/10 hover:border-white/20",
                 ].join(" ")}
               >
                 <div className="flex items-start gap-3">
@@ -312,9 +313,9 @@ export default function VideoWalkthrough() {
                     <Icon className={`w-4 h-4 ${ch.color}`} />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-foreground mb-0.5 truncate">{ch.label}</p>
-                    <p className="text-[11px] text-muted-foreground leading-snug">{ch.desc}</p>
-                    <p className="text-[10px] text-muted-foreground/60 mt-1 font-mono">{ch.time} · {ch.duration}</p>
+                    <p className="text-sm font-semibold text-white mb-0.5 truncate">{ch.label}</p>
+                    <p className="text-[11px] text-slate-400 leading-snug">{ch.desc}</p>
+                    <p className="text-[10px] text-slate-500 mt-1 font-mono">{ch.time} · {ch.duration}</p>
                   </div>
                 </div>
               </motion.button>

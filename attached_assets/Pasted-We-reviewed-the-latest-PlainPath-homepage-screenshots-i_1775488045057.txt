@@ -1,0 +1,50 @@
+We reviewed the latest PlainPath homepage screenshots in both light and dark mode.
+
+The homepage is much stronger overall, but there are still a few visible issues to fix before we treat it as polished and ready for product-demo recording.
+
+Please make the following final refinement pass:
+
+1. HEADER / HOME ROUTING
+- Make the full PlainPath brand block in the top-left header clickable
+- The icon + PlainPath wordmark should route to the homepage
+- Do not add a separate Home nav item unless required for mobile
+- Add proper hover state, pointer cursor, and accessible label
+
+2. DARK MODE FAQ BUG
+- Fix the bright silver/white horizontal glow band behind the FAQ section in dark mode
+- That section should feel fully intentional and consistent with the dark visual system
+- Remove any accidental gradient, wash, or background artifact causing that bright strip
+- Keep the FAQ section premium and readable, but fully aligned with the dark theme
+
+3. MID / LOWER PAGE SPACING REFINEMENT
+- Tighten excessive empty vertical space in the mid and lower homepage sections
+- Focus especially on:
+  - live results section
+  - testimonials section
+  - transitions into pricing / FAQ / final CTA
+- Preserve breathing room, but reduce the feeling of disconnected floating blocks
+
+4. DARK MODE CONTRAST TUNING
+- Increase readability of small text, supporting labels, and secondary card content in dark mode
+- Improve contrast subtly without making the page harsh
+- Keep the premium dark feel, but reduce any muddy or overly dim areas
+
+5. VIDEO / DEMO SECTION POLISH
+- Strengthen the “See PlainPath in action” section so it feels more clearly like the homepage demo host area
+- Improve hierarchy of heading, supporting text, and frame presence
+- Make the video/demo area feel intentional and product-marketing ready
+- Do not redesign the section from scratch; refine the existing structure
+
+IMPORTANT
+- This is a final polish pass, not a redesign
+- Preserve the current structure and direction
+- Keep both light and dark mode aligned
+- Do not weaken the sections that are already working well
+
+DELIVERABLE
+Implement the fixes directly, then summarize:
+1. header home-button change
+2. dark FAQ background fix
+3. spacing refinements
+4. dark-mode contrast improvements
+5. demo-section polish

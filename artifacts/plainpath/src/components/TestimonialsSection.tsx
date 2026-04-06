@@ -60,7 +60,7 @@ function Stars({ count }: { count: number }) {
 export default function TestimonialsSection() {
   return (
     <section className="w-full">
-      <div className="text-center mb-14">
+      <div className="text-center mb-10">
         <motion.p
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
@@ -88,18 +88,18 @@ export default function TestimonialsSection() {
             viewport={{ once: true }}
             transition={{ delay: i * 0.08 }}
           >
-            <Card className="h-full bg-card border-border/40 shadow-sm hover:shadow-lg transition-shadow rounded-2xl p-6 flex flex-col gap-4">
+            <Card className="h-full bg-white dark:bg-card border-border/40 shadow-sm hover:shadow-lg transition-shadow rounded-2xl p-6 flex flex-col gap-4">
               <div className="flex items-start justify-between">
                 <Stars count={t.rating} />
-                <Quote className="w-4 h-4 text-muted-foreground/30 shrink-0" />
+                <Quote className="w-4 h-4 text-muted-foreground/25 dark:text-muted-foreground/40 shrink-0" />
               </div>
-              <p className="text-sm text-foreground/80 leading-relaxed flex-1">"{t.quote}"</p>
+              <p className="text-sm text-foreground/85 dark:text-foreground/90 leading-relaxed flex-1">"{t.quote}"</p>
               <div className="flex items-center justify-between pt-2 border-t border-border/40">
                 <div>
                   <div className="text-sm font-semibold text-foreground">{t.name}</div>
-                  <div className="text-xs text-muted-foreground">{t.role}</div>
+                  <div className="text-xs text-muted-foreground dark:text-muted-foreground/80">{t.role}</div>
                 </div>
-                <span className="text-xs px-2.5 py-1 rounded-full bg-primary/8 text-primary font-medium">
+                <span className="text-xs px-2.5 py-1 rounded-full bg-primary/8 dark:bg-primary/15 text-primary font-medium">
                   {t.tag}
                 </span>
               </div>
