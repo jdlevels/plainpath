@@ -68,8 +68,9 @@ Subscriptions are managed on the PlainPath website (plain-path.replit.app). On t
 
 router.post("/chat", async (req, res) => {
   try {
-    const { messages } = req.body as {
+    const { messages, pageContext } = req.body as {
       messages: Array<{ role: "user" | "assistant"; content: string }>
+      pageContext?: string
     };
 
     if (!Array.isArray(messages) || messages.length === 0) {
@@ -81,10 +82,14 @@ router.post("/chat", async (req, res) => {
       content: String(m.content).slice(0, 2000),
     }));
 
+    const contextNote = pageContext
+      ? `\n\n## Current User Context\nThe user is currently on: ${String(pageContext).slice(0, 200)}\nTailor your response to be most relevant to what they are doing right now.`
+      : "";
+
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: SYSTEM_PROMPT + contextNote },
         ...safeMessages,
       ],
       max_completion_tokens: 600,
