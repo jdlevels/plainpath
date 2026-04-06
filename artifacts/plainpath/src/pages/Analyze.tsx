@@ -37,6 +37,7 @@ import { getApiBaseUrl } from "@/lib/api"
 import { saveAnalysis, updateSaved } from "@/lib/savedAnalyses"
 import { useEntitlements } from "@/hooks/useEntitlements"
 import UpgradeCard from "@/components/UpgradeCard"
+import { findGlossaryEntry } from "@/lib/legalGlossary"
 
 const TABS = [
   { id: "plain-english",   label: "Plain English",   icon: BookOpen                                    },
@@ -1739,6 +1740,7 @@ const SEVERITY_CONFIG = {
 
 function KeyTermCard({ term }: { term: KeyTerm }) {
   const cfg = SEVERITY_CONFIG[term.severity] ?? SEVERITY_CONFIG.medium
+  const glossary = findGlossaryEntry(term.term, term.category)
   return (
     <div className="rounded-xl border border-border/40 bg-card overflow-hidden flex">
       <div className={`w-1 shrink-0 ${cfg.accentBg}`} />
@@ -1774,6 +1776,29 @@ function KeyTermCard({ term }: { term: KeyTerm }) {
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-0.5">Question to ask</p>
                 <p className="text-sm text-foreground/90 leading-relaxed">{term.questionToAsk}</p>
+              </div>
+            </div>
+          )}
+          {glossary && (
+            <div className="border-t border-border/20 pt-3 mt-1">
+              <div className="flex items-start gap-2">
+                <BookOpen className="w-3.5 h-3.5 text-muted-foreground/60 shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/70">
+                    Legal definition · {glossary.formalName}
+                  </p>
+                  <p className="text-[12px] text-muted-foreground leading-relaxed">{glossary.definition}</p>
+                  {glossary.learnMoreUrl && (
+                    <a
+                      href={glossary.learnMoreUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-[11px] text-primary/70 hover:text-primary transition-colors mt-0.5"
+                    >
+                      Learn more ↗
+                    </a>
+                  )}
+                </div>
               </div>
             </div>
           )}

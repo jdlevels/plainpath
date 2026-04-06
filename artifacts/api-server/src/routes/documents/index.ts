@@ -740,6 +740,76 @@ function extractRuleData(text: string): ExtractedRuleData {
     // Unilateral price adjustment phrased as "price adjustments" (no "may adjust X" verb form)
     ["price adjustment", "Unilateral price/term adjustment right"],
     ["promotional expiration", "Unilateral price/term adjustment right"],
+    // ── Legal Glossary Expansion — high-risk clauses from Cornell LII / consumer law ─────────────
+    // Personal guarantee — borrower's personal assets at risk beyond business liability
+    ["personal guarantee", "Personal guarantee"],
+    ["personal guaranty", "Personal guarantee"],
+    ["personal guarantor", "Personal guarantee"],
+    // Confession of judgment / cognovit — waives right to be heard before judgment
+    ["confession of judgment", "Confession of judgment"],
+    ["cognovit", "Confession of judgment"],
+    // Cross-collateralization / dragnet clause — existing collateral covers all future debts
+    ["cross-collateral", "Cross-collateralization clause"],
+    ["future advances", "Future advances / dragnet clause"],
+    ["dragnet clause", "Future advances / dragnet clause"],
+    // Jury trial waiver — gives up constitutional right to jury
+    ["waiver of jury trial", "Jury trial waiver"],
+    ["jury trial waiver", "Jury trial waiver"],
+    ["waives jury", "Jury trial waiver"],
+    // Indemnification and hold harmless — one-sided liability transfer
+    ["indemnif", "Indemnification clause"],
+    ["hold harmless", "Hold harmless clause"],
+    // Limitation of liability and consequential damages exclusion
+    ["limitation of liability", "Limitation of liability"],
+    ["consequential damage", "Exclusion of consequential damages"],
+    ["incidental damage", "Exclusion of consequential damages"],
+    // Right of setoff — lender can take funds from your other accounts
+    ["right of setoff", "Right of setoff"],
+    ["right of offset", "Right of setoff"],
+    ["right to setoff", "Right of setoff"],
+    // Prepayment penalty — fee for paying loan off early
+    ["prepayment penalty", "Prepayment penalty"],
+    ["prepayment fee", "Prepayment penalty"],
+    ["prepayment charge", "Prepayment penalty"],
+    // Wage assignment — voluntary paycheck diversion (distinct from garnishment)
+    ["wage assignment", "Wage assignment clause"],
+    // Assignment without consent — contract sold to unknown third party
+    ["may assign this agreement", "Assignment without consent"],
+    ["right to assign this", "Assignment without consent"],
+    ["assignable without your consent", "Assignment without consent"],
+    // Unilateral modification of terms
+    ["may modify these terms", "Unilateral modification of terms"],
+    ["may amend these terms", "Unilateral modification of terms"],
+    ["right to modify these terms", "Unilateral modification of terms"],
+    ["may change these terms", "Unilateral modification of terms"],
+    // Attorneys' fees shifting — loser pays the other side's legal costs
+    ["attorneys' fees", "Attorneys' fees clause"],
+    ["attorney fees", "Attorneys' fees clause"],
+    ["attorney's fees", "Attorneys' fees clause"],
+    ["prevailing party fees", "Attorneys' fees clause"],
+    // Forum selection — must sue in company's home state
+    ["forum selection", "Forum selection clause"],
+    ["exclusive jurisdiction", "Forum selection clause"],
+    // Choice of law — another state's laws govern
+    ["governing law", "Choice of law clause"],
+    // Non-disparagement — silences negative reviews
+    ["non-disparagement", "Non-disparagement clause"],
+    ["nondisparagement", "Non-disparagement clause"],
+    // Non-compete and non-solicitation
+    ["non-compete", "Non-compete clause"],
+    ["noncompete", "Non-compete clause"],
+    ["non-solicitation", "Non-solicitation clause"],
+    // Evergreen perpetual renewal
+    ["evergreen", "Evergreen (perpetual renewal) clause"],
+    // Force majeure — excuses performance
+    ["force majeure", "Force majeure clause"],
+    // Security interest — lender claims right to specific property
+    ["grant a security interest", "Security interest clause"],
+    ["grants a security interest", "Security interest clause"],
+    ["security interest in", "Security interest clause"],
+    // Blanket security / all-assets lien
+    ["all of your assets", "Blanket security interest"],
+    ["all assets of the", "Blanket security interest"],
   ];
   const seenContractLabels = new Set<string>();
   const contractRiskTerms: string[] = [];

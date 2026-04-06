@@ -199,6 +199,14 @@ Second product mode: evaluates documents across three independent risk dimension
 - `POST /api/documents/trust-check-upload` — file upload analysis (extracts PDF metadata)
 - `GET /api/documents/trust-check-demo/:demoId` — pre-computed demo
 
+### Legal Glossary (Key Terms enrichment):
+- `artifacts/plainpath/src/lib/legalGlossary.ts` — 37-entry plain-English legal definitions library
+- Definitions cover: arbitration, class-action waiver, acceleration clause, confession of judgment, personal guarantee, cross-collateralization, dragnet/future advances, jury trial waiver, indemnification, hold harmless, limitation of liability, consequential damages exclusion, right of setoff, deficiency judgment, repossession, force-placed insurance, balloon payment, negative amortization, liquidated damages, prepayment penalty, wage garnishment, wage assignment, blanket lien, security interest, auto-renewal, non-disparagement, non-compete, forum selection, choice of law, assignment, unilateral modification, attorneys' fees, force majeure, evergreen clause, right of rescission, penalty APR, rollover provision
+- Sources: Cornell LII (law.cornell.edu) and CFPB consumer guidance — all open-licensed
+- `findGlossaryEntry(termName, category)` — fuzzy substring matcher; called in `KeyTermCard` to show a "Legal definition" panel below AI-generated content
+- Matching is case-insensitive substring; first matching key wins; no network call needed (pure client-side)
+- Panel shows: formal clause name, 1–2 sentence definition, "Learn more ↗" link to Cornell LII / CFPB
+
 ### Key Trust Check files:
 - `artifacts/api-server/src/routes/documents/index.ts` — all rule functions + 4 Phase 2 functions + `runTrustCheckAnalysis()`
 - `artifacts/api-server/src/lib/trustCheckDemoData.ts` — 5 pre-computed demos with scores + structuralFindings
