@@ -5,8 +5,10 @@ import {
   Clock, AlertTriangle, Calendar, CheckCircle2,
 } from "lucide-react"
 
-/* ── Drop in a YouTube embed URL (e.g. https://www.youtube.com/embed/XXXX) ──
-   Leave empty and the play button scrolls to the interactive demo below.    */
+/* ── Drop in EITHER a YouTube embed URL or a direct MP4/WebM path ──────────
+   YouTube:  "https://www.youtube.com/embed/XXXX"
+   MP4 file: "/assets/demo.mp4"  or  "https://cdn.example.com/demo.mp4"
+   Leave empty → play button scrolls to the interactive demos section below. */
 const DEMO_VIDEO_URL = ""
 
 const CHAPTERS = [
@@ -150,20 +152,33 @@ function ThumbnailPreview({ onPlay }: { onPlay: () => void }) {
   )
 }
 
-/* ── Embedded video (YouTube iframe) ── */
+/* ── Embedded video — supports YouTube iframe OR native MP4/WebM ── */
 function VideoEmbed({ onClose }: { onClose: () => void }) {
+  const isYouTube = DEMO_VIDEO_URL.includes("youtube.com") || DEMO_VIDEO_URL.includes("youtu.be")
+
   return (
     <div className="relative w-full aspect-video bg-slate-950">
-      <iframe
-        className="w-full h-full"
-        src={`${DEMO_VIDEO_URL}?autoplay=1&rel=0&modestbranding=1`}
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowFullScreen
-        title="PlainPath demo walkthrough"
-      />
+      {isYouTube ? (
+        <iframe
+          className="w-full h-full"
+          src={`${DEMO_VIDEO_URL}?autoplay=1&rel=0&modestbranding=1`}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          title="PlainPath demo walkthrough"
+        />
+      ) : (
+        <video
+          className="w-full h-full object-cover"
+          src={DEMO_VIDEO_URL}
+          autoPlay
+          controls
+          playsInline
+          title="PlainPath demo walkthrough"
+        />
+      )}
       <button
         onClick={onClose}
-        className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/60 hover:bg-black/80 flex items-center justify-center text-white transition-colors"
+        className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/60 hover:bg-black/80 flex items-center justify-center text-white transition-colors z-10"
       >
         <X className="w-4 h-4" />
       </button>

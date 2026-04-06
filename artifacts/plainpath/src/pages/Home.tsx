@@ -13,6 +13,7 @@ import StatsBar from "@/components/StatsBar"
 import TestimonialsSection from "@/components/TestimonialsSection"
 import FAQSection from "@/components/FAQSection"
 import ToolsShowcase from "@/components/ToolsShowcase"
+import ProductPreview from "@/components/ProductPreview"
 import DemoSection from "@/components/DemoSection"
 import VideoWalkthrough from "@/components/VideoWalkthrough"
 
@@ -287,6 +288,15 @@ export default function Home() {
             </div>
           </motion.div>
         </Band>
+
+        {/* ═══════════════════════════════════════════════════
+            BAND 3.5 — PRODUCT PREVIEW  (dark, proof block)
+        ════════════════════════════════════════════════════ */}
+        <div className="w-full bg-gradient-to-b from-slate-950 via-[#0c1422] to-slate-950">
+          <Band innerClassName="py-20">
+            <ProductPreview />
+          </Band>
+        </div>
 
         {/* ═══════════════════════════════════════════════════
             BAND 4 — TOOLS SHOWCASE  (muted/tinted)
