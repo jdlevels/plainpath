@@ -93,7 +93,7 @@ export default function Subscribe() {
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-border/60 bg-card shadow-sm text-xs font-semibold text-muted-foreground tracking-wide uppercase mb-5">
             <Sparkles className="w-3.5 h-3.5 text-primary" />
-            Practical launch pricing
+            Simple, clear pricing
           </div>
           <h1 className="text-3xl sm:text-4xl font-display font-bold tracking-tight mb-3">
             Choose your PlainPath plan

@@ -1,0 +1,51 @@
+We are no longer optimizing PlainPath for the buildathon. We are now shifting fully into launch mode and want to get this product to market as fast as possible.
+
+New directive:
+Freeze marketing/demo polish unless there is a true bug. Focus on production cleanup, App Store / Play Store readiness, release QA, and submission preparation.
+
+Please perform a full launch-readiness audit and begin implementing fixes in this order:
+
+PHASE 1 — PRODUCTION CLEANUP
+1. Remove or hide any internal pilot, test, admin, or non-public tooling from the production app
+2. Hide/remove any external payment or Stripe purchase UI from native iOS-facing builds or flows that would create App Review issues
+3. Audit the app for buildathon/demo-only remnants and remove them
+4. Ensure PlainPath is the consistent production brand across the app
+5. Review all public-facing text for production quality
+
+PHASE 2 — PRIVACY / LEGAL ACCURACY
+6. Audit the privacy page and privacy disclosures
+7. Rewrite them so they accurately reflect actual data flow, server-side processing, document handling, storage, sharing, and retention behavior
+8. Identify any mismatch between the app’s real behavior and current legal/privacy text
+
+PHASE 3 — CORE FLOW QA
+9. Test all primary product flows:
+   - homepage
+   - analyze/upload
+   - action-plan output
+   - Trust Check
+   - contract builder
+   - contract draft output
+   - pricing
+   - legal/support pages
+10. Identify and fix broken states, confusing states, empty states, loading states, and mobile responsiveness issues
+11. Flag any flows that are not yet strong enough for production release
+
+PHASE 4 — STORE READINESS PREP
+12. Create a launch-readiness checklist for:
+   - Apple App Store
+   - Google Play Store
+13. List every remaining blocker to submission
+14. Identify what submission assets still need to be created:
+   - screenshots
+   - descriptions
+   - support/privacy URLs
+   - app icon
+   - permission text
+   - account/payment handling notes
+
+DELIVERABLE
+Return:
+1. a categorized launch blocker list
+2. what was fixed immediately
+3. what still needs decisions from us
+4. the fastest path to getting PlainPath live on the markets

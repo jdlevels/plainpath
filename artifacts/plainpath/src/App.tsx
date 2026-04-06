@@ -14,6 +14,7 @@ import TrustCheck from "@/pages/TrustCheck";
 import MyAnalyses from "@/pages/MyAnalyses";
 import Privacy from "@/pages/Privacy";
 import Terms from "@/pages/Terms";
+import Support from "@/pages/Support";
 import Subscribe from "./pages/Subscribe";
 import SubscribeSuccess from "./pages/SubscribeSuccess";
 import SubscribeCancel from "./pages/SubscribeCancel";
@@ -47,6 +48,7 @@ function Router() {
           <Route path="/my-analyses" component={MyAnalyses} />
           <Route path="/privacy" component={Privacy} />
           <Route path="/terms" component={Terms} />
+          <Route path="/support" component={Support} />
           <Route path="/subscribe" component={Subscribe} />
           <Route path="/subscribe/success" component={SubscribeSuccess} />
           <Route path="/subscribe/cancel" component={SubscribeCancel} />

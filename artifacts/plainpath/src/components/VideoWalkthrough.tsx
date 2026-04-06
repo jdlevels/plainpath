@@ -170,7 +170,7 @@ function ThumbnailPreview({ onPlay, hasVideo }: { onPlay: () => void; hasVideo: 
         ) : (
           <span className="px-3.5 py-1.5 rounded-full bg-black/55 backdrop-blur-sm text-white/70 text-[11px] font-medium flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-amber-400/80 shrink-0" />
-            Demo video coming soon — try it live in the meantime
+            Walkthrough video coming soon
           </span>
         )}
       </div>
