@@ -1,5 +1,22 @@
 uploads = []
-generated = []
+
+[[generated]]
+id = "HZsGDCW6Y2-Y0U6SyRS3H"
+uri = "file://attached_assets/generated_images/logo-concept-a-path-arrow.png"
+type = "image"
+title = "logo concept A path arrow"
+
+[[generated]]
+id = "K1hXW5myD4b-EbWfGJa5N"
+uri = "file://attached_assets/generated_images/logo-concept-b-compass.png"
+type = "image"
+title = "logo concept B compass document"
+
+[[generated]]
+id = "dAhkcuCKLZF9Wv7Pm2mx5"
+uri = "file://attached_assets/generated_images/logo-concept-c-waypoint.png"
+type = "image"
+title = "logo concept C waypoint pin"
 
 [[outputs]]
 id = "o7YB8F3oFhJfMlxpy-hZz"
