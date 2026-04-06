@@ -16,13 +16,11 @@ export const PRICING_PLANS: PricingPlan[] = [
     price: "$4.99",
     period: "/month",
     description:
-      "For individuals who occasionally need help understanding documents and building simple agreements.",
+      "For individuals who occasionally need help understanding documents.",
     features: [
       "Up to 10 document analyses / month",
       "Plain English overview",
       "Key Terms + Basic Action Pack",
-      "Document Trust Check — up to 5 / month",
-      "Contract Builder — up to 2 drafts / month",
       "Local saved analyses",
       "Export / Share tools"
     ],
@@ -34,7 +32,7 @@ export const PRICING_PLANS: PricingPlan[] = [
     price: "$24.99",
     period: "/month",
     description:
-      "The full PlainPath toolkit for individuals who need to read, verify, and build real documents.",
+      "Everything in Starter, plus Document Trust Check and Contract Builder — the full PlainPath toolkit.",
     features: [
       "Up to 100 document analyses / month",
       "Plain English + source explainers",

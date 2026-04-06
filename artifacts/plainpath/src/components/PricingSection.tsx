@@ -59,8 +59,7 @@ export default function PricingSection() {
         </h2>
 
         <p className="mt-4 text-base leading-7 text-slate-600 dark:text-slate-300 sm:text-lg">
-          Every plan includes document analysis, trust checking, and contract building.
-          Choose the level that fits how often you need them.
+          Start with document analysis on Starter, or unlock Trust Check and Contract Builder with Pro or Team.
         </p>
       </div>
 
