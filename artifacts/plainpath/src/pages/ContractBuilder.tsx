@@ -2203,6 +2203,13 @@ export default function ContractBuilder() {
     setStep(next)
     void fetchAIInsights(next)
     window.scrollTo({ top: 0, behavior: "smooth" })
+    // Auto-save progress on every step advance so mobile users don't lose work
+    if (contractType) {
+      localStorage.setItem(
+        "plainpath-contract-draft-latest",
+        JSON.stringify({ contractType, people, scope, money, protection, savedAt: new Date().toISOString() })
+      )
+    }
   }
 
   function handleBack() {
@@ -2293,7 +2300,7 @@ export default function ContractBuilder() {
                 </Button>
                 <div className="flex items-center gap-2">
                   {step > 0 && (
-                    <Button variant="outline" size="sm" onClick={saveDraft} className="gap-1.5 hidden sm:flex">
+                    <Button variant="outline" size="sm" onClick={saveDraft} className="gap-1.5">
                       <Save className="w-3.5 h-3.5" /> Save Draft
                     </Button>
                   )}
