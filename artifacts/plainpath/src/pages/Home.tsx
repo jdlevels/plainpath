@@ -313,9 +313,14 @@ export default function Home() {
               <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
                 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">How it works</motion.p>
               <motion.h2 initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-                className="text-3xl md:text-4xl font-display font-bold">
+                className="text-3xl md:text-4xl font-display font-bold mb-4">
                 From confusing to clear in seconds
               </motion.h2>
+              <motion.p initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+                transition={{ delay: 0.1 }}
+                className="text-muted-foreground text-lg max-w-xl mx-auto">
+                No training required. Drop in any document and get a structured action plan in under a minute.
+              </motion.p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
               <div className="hidden md:block absolute top-10 left-[calc(16.67%+1rem)] right-[calc(16.67%+1rem)] h-px bg-gradient-to-r from-border via-primary/30 to-border" />
@@ -405,7 +410,7 @@ export default function Home() {
         {/* ═══════════════════════════════════════════════════
             BAND 10 — PRICING  (clean white/dark)
         ════════════════════════════════════════════════════ */}
-        <div className="w-full">
+        <div id="pricing" className="w-full">
           <PricingSection />
         </div>
 
@@ -413,8 +418,89 @@ export default function Home() {
             BAND 11 — FAQ  (muted, last section)
         ════════════════════════════════════════════════════ */}
         <div id="faq" className="w-full bg-gradient-to-b from-slate-50/70 to-blue-50/45 dark:from-slate-900 dark:to-blue-950/25 border-t border-border/50">
-          <Band innerClassName="py-20 pb-28">
+          <Band innerClassName="py-20">
             <FAQSection />
+          </Band>
+        </div>
+
+        {/* ═══════════════════════════════════════════════════
+            BAND 12 — CLOSING CTA  (strong, dark)
+        ════════════════════════════════════════════════════ */}
+        <div className="w-full bg-gradient-to-br from-slate-950 via-[#0c1525] to-violet-950/40 border-t border-white/5">
+          <Band innerClassName="py-28 text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="max-w-2xl mx-auto space-y-6"
+            >
+              <motion.p
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                className="text-xs font-semibold uppercase tracking-widest text-primary/70"
+              >
+                Get started today
+              </motion.p>
+              <motion.h2
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="text-4xl md:text-5xl font-display font-bold text-white leading-[1.1] tracking-tight text-balance"
+              >
+                Your next document<br />
+                <span className="bg-gradient-to-r from-primary via-blue-400 to-violet-400 bg-clip-text text-transparent">
+                  shouldn't be a guessing game.
+                </span>
+              </motion.h2>
+              <motion.p
+                initial={{ opacity: 0, y: 8 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.1 }}
+                className="text-slate-400 text-lg leading-relaxed"
+              >
+                Free for your first two analyses. No account required. No documents stored on our servers.
+              </motion.p>
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.18 }}
+                className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2"
+              >
+                <Button
+                  size="lg"
+                  onClick={() => setLocation("/import")}
+                  className="h-12 px-8 text-base rounded-xl font-semibold shadow-lg shadow-primary/30 min-w-[200px]"
+                >
+                  Analyze a Document <ArrowRight className="ml-2 w-4 h-4" />
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={() => document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" })}
+                  className="h-12 px-8 text-base rounded-xl font-semibold border-white/20 text-white hover:bg-white/8 hover:border-white/35"
+                >
+                  View Plans
+                </Button>
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.28 }}
+                className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 pt-2"
+              >
+                {["Plans from $4.99/month", "Cancel any time", "iOS & Android apps coming"].map((item) => (
+                  <span key={item} className="flex items-center gap-1.5 text-xs text-slate-500">
+                    <span className="w-1 h-1 rounded-full bg-slate-600 shrink-0" />
+                    {item}
+                  </span>
+                ))}
+              </motion.div>
+            </motion.div>
           </Band>
         </div>
 

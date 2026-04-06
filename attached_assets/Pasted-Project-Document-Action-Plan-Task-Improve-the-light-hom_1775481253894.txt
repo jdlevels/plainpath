@@ -1,0 +1,60 @@
+Project: Document Action Plan
+Task: Improve the light homepage background system so it has clear section separation, layered contrast, and the same structural depth as the dark version.
+
+Problem:
+The dark homepage version looks strong because it has visible section separation and depth.
+The light version is too bright, too flat, and lacks actual section distinction. It reads like one long pale canvas with weak contrast between background, cards, and section transitions.
+
+Goal:
+Keep the light theme, but redesign the background and section-surface system so the page feels structured, premium, and intentional.
+
+Requirements:
+
+1. Replace the current near-white continuous page background with a layered light surface system
+Use subtle but visible section background variation, such as:
+- warm off-white hero
+- pale cool-gray / blue section bands
+- preserved deep navy showcase section
+- alternating light neutral surfaces below
+
+2. Add real section separation
+The page should not feel like one long blank light screen.
+Create stronger transitions between:
+- hero
+- stats/category area
+- product preview section
+- benefits/how-it-works sections
+- closing sections
+
+3. Keep contrast tasteful
+Do NOT make the page harsh or striped.
+Use elegant light tonal changes and soft gradients.
+
+4. Improve card-to-background contrast on light
+Homepage cards/panels should stand out better with:
+- slightly stronger borders
+- soft shadows
+- subtle tinted surfaces
+- clearer elevation against the page background
+
+5. Preserve the dark/navy showcase block
+The darker product-preview section works well and should remain an anchor point in the page.
+
+6. Maintain current content and routing
+This is a visual/background polish pass only.
+Do NOT change the actual homepage messaging structure or working CTA behavior.
+
+What I want visually:
+- the light homepage should feel premium, not washed out
+- section bands should be obvious enough to create rhythm
+- the page should have a strong editorial SaaS feel
+- the dark section should feel intentional inside a layered light system
+
+Output required:
+1. exact files changed
+2. what background/section surface system was introduced
+3. screenshots of:
+   - updated light hero
+   - updated middle light section
+   - transition into the dark showcase section
+4. note any risks introduced
