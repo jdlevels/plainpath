@@ -5,6 +5,7 @@ import multer from "multer";
 import router from "./routes";
 import stripeRoutes from "./routes/stripe";
 import entitlementRoutes from "./routes/entitlements";
+import contractRoutes from "./routes/contracts";
 import { logger } from "./lib/logger";
 
 const app: Express = express();
@@ -119,6 +120,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api", router);
 app.use("/api/stripe", stripeRoutes);
 app.use("/api/entitlements", entitlementRoutes);
+app.use("/api/contracts", contractRoutes);
 
 app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
   if (err instanceof multer.MulterError) {

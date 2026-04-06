@@ -1,0 +1,96 @@
+Project: Document Action Plan
+Task: Update the homepage CTA layout and add a “Check for Gaps & Fill” layer to the Contract Builder review flow.
+
+Goals:
+1. Move “Build a Contract” into the homepage hero CTA group so it sits next to the other primary product actions.
+2. Add a “Check for Gaps & Fill” review layer inside the Contract Builder flow so missing protections and incomplete business terms are surfaced before draft generation.
+
+-----------------------------------
+PART 1 — HOMEPAGE CTA UPDATE
+-----------------------------------
+
+Update the homepage hero action row so the three primary product actions are visible together:
+
+1. Analyze a Document
+2. Document Trust Check
+3. Build a Contract
+
+Requirements:
+- Keep current design language
+- Do not redesign the hero
+- Add Build a Contract as a third primary CTA beside the existing hero buttons
+- Keep spacing, hierarchy, and mobile responsiveness clean
+- Preserve top-nav link as well if already present
+
+-----------------------------------
+PART 2 — CONTRACT BUILDER “CHECK FOR GAPS & FILL”
+-----------------------------------
+
+Inside the Contract Builder intake/review flow, add a structured review layer that checks for missing protections, incomplete business terms, and common contract omissions before draft generation.
+
+Best placement:
+- Review Summary step
+- clearly visible section titled:
+  “Check for Gaps & Fill Recommendations”
+
+This section should scan the intake answers and surface items such as:
+- no late fee
+- no kill fee
+- no client feedback deadline
+- no revision cap
+- no delivery deadline
+- no payment due window
+- no governing law
+- no termination rule
+- ownership transfers before final payment
+- no dispute resolution method
+- no notice method
+
+Behavior:
+- show plain-English warnings/recommendations
+- distinguish between:
+  - recommended business protections
+  - default legal protections already added
+
+Examples:
+- ⚠ No late fee included
+- ⚠ No kill fee included
+- ⚠ No client-delay rule included
+- ✅ Default severability clause added
+- ✅ Default force majeure clause added
+- ✅ Default notices clause added
+
+For each recommended gap, allow the user to:
+- keep as-is
+- add recommended protection
+- answer a quick follow-up question
+- use standard default if appropriate
+
+Important rule:
+- Do NOT silently add major business terms
+- It is okay to auto-add neutral legal scaffolding
+- Business-impacting terms must be surfaced as recommendations or require confirmation
+
+-----------------------------------
+UX REQUIREMENTS
+-----------------------------------
+
+- Keep it lightweight and readable
+- Match existing dark premium UI
+- Make it useful, not noisy
+- Mobile and desktop both must work
+- Integrate with the existing AI insight/review logic rather than creating a disconnected experience
+
+-----------------------------------
+OUTPUT REQUIRED
+-----------------------------------
+
+Return:
+1. exact files changed
+2. what changed on the homepage
+3. how “Check for Gaps & Fill” works
+4. which gap rules are currently supported
+5. screenshots of:
+   - updated homepage hero CTA row
+   - Contract Builder review step with gap recommendations
+6. any risks introduced

@@ -1,0 +1,383 @@
+Project: Document Action Plan
+Task: Build the Contract Builder Intake UI foundation as a complete, testable end-to-end flow for Phase 1 — not a partial mockup.
+
+Goal:
+Create a fully usable Contract Builder intake experience that is complete enough to run full internal testing after implementation.
+
+Critical instruction:
+Do NOT build this as a half-finished concept screen.
+Do NOT build only static UI.
+Do NOT stop at a shell.
+Build the full Contract Builder Intake Phase 1 flow end-to-end so it can be tested from start to finish.
+
+This phase must be complete enough to:
+- choose a contract type
+- answer the guided intake flow
+- see live AI insight/support behavior
+- review a plain-English summary
+- generate a structured draft payload/output shell
+- save the intake state for testing
+- be ready for full internal UX testing
+
+FOUNDATION SCOPE
+
+Build the Contract Builder intake foundation for these initial contract types only:
+1. Freelance Services Agreement
+2. NDA / Confidentiality Agreement
+3. Simple Payment Agreement
+4. Service Agreement
+5. Lease / Rental Agreement
+
+Do NOT attempt every contract type in this phase.
+
+CORE UX DIRECTION
+
+The intake experience should feel:
+- guided
+- visual
+- progressive
+- low-cognitive-load
+- conversation-like
+- professional
+- premium and readable
+
+Do NOT use one giant long form.
+Use a step-by-step wizard / slide-based intake flow.
+
+PRIMARY UX STRUCTURE
+
+Build the flow with these steps:
+1. Contract Type
+2. People
+3. Work / Scope
+4. Money / Timing
+5. Rights / Protection
+6. Review Summary
+
+Each step should feel intentional and clearly grouped.
+
+GLOBAL UI REQUIREMENTS
+
+1. Progress Bar
+Add a top progress bar showing the active phase.
+
+Recommended phase labels:
+- Type
+- People
+- Work
+- Money
+- Protection
+- Review
+
+2. Navigation
+Include:
+- Back
+- Next
+- Save Draft
+- Exit / return safely if already supported by current app patterns
+
+3. Step layout
+Use:
+- strong step title
+- one-sentence explanation
+- limited fields per screen
+- progressive disclosure
+- conditional follow-up questions only when needed
+
+4. Design language
+Keep current app design language:
+- dark premium SaaS
+- clean spacing
+- strong hierarchy
+- restrained motion
+- mobile-friendly
+- desktop-friendly
+
+Do NOT redesign the whole app.
+Extend it consistently.
+
+STEP 1 — CONTRACT TYPE
+
+Build a contract-type selection screen using clickable cards.
+
+Initial cards:
+- Freelance Services Agreement
+- NDA / Confidentiality Agreement
+- Simple Payment Agreement
+- Service Agreement
+- Lease / Rental Agreement
+
+Each card should include:
+- title
+- short explanation
+- icon
+- small example use case
+
+When selected:
+- store the chosen template type
+- route the user into the correct intake flow schema
+
+STEP 2 — PEOPLE
+
+Build the People step with structured inputs.
+
+For Freelance Agreement, include at minimum:
+- client legal name
+- freelancer legal name
+- whether each party is an individual or business
+- optional business/entity name
+- address fields if appropriate
+- governing law / state
+- optional project title
+
+Use:
+- text inputs
+- dropdown/select controls
+- small contextual help for legal terms like Governing Law
+
+Tooltip/help examples should explain plain English meaning.
+
+STEP 3 — WORK / SCOPE
+
+For Freelance Agreement, include:
+- service type
+- scope of work
+- specific deliverables
+- what is excluded
+- revision limit
+- acceptance criteria if relevant
+
+UX requirements:
+- larger text area for scope
+- smaller inputs for deliverables and exclusions
+- option cards or chips where helpful
+- “suggested examples” or starter prompts if easy and safe
+
+Example:
+If user types “logo design,” surface suggested structured scope examples.
+
+STEP 4 — MONEY / TIMING
+
+For Freelance Agreement, include:
+- payment structure:
+  - flat fee
+  - hourly
+  - milestone
+- total fee or rate
+- deposit required? yes/no
+- deposit amount/percentage
+- late fee yes/no
+- late fee amount or interest rate
+- project start date
+- milestone dates if relevant
+- final deadline
+- invoice due period if relevant
+
+UX requirements:
+- use cards/icons for payment structure
+- currency-formatted fields
+- date pickers
+- conditional fields only when relevant
+
+Edge-case logic:
+If a high dollar amount or milestone structure is selected, trigger follow-up prompts such as:
+- late fee
+- milestone breakdown
+- pause work on nonpayment
+- final file release only after payment
+
+STEP 5 — RIGHTS / PROTECTION
+
+For Freelance Agreement, include:
+- IP ownership timing:
+  - on creation
+  - on final payment
+  - limited license only
+- portfolio usage allowed? yes/no
+- confidentiality required? yes/no
+- termination rights
+- kill fee yes/no
+- kill fee amount / percentage
+- dispute resolution preference
+- client delay / feedback delay handling
+- subcontracting allowed? yes/no if practical
+- final file release only after payment? yes/no
+
+Add “recommended protection” nudges where useful.
+
+Examples:
+- No late fee added
+- No kill fee selected
+- Ownership transfers before final payment
+- No client feedback deadline included
+
+These should appear as helpful warnings, not scary alerts.
+
+STEP 6 — REVIEW SUMMARY
+
+Before any draft generation, show a plain-English summary page.
+
+This page must include:
+- contract type
+- parties
+- payment setup
+- dates/deadlines
+- ownership rule
+- revision limit
+- key protection terms
+- missing protections / warnings
+- default protections added by the system
+
+Format example:
+- ✅ Client: Acme Corp
+- ✅ Freelancer: Jordan Smith LLC
+- ✅ Pay: $5,000 with 50% upfront
+- ✅ Deadline: June 1, 2026
+- ✅ Ownership transfers after final payment
+- ⚠ No late fee added
+- ⚠ No kill fee added
+
+Buttons:
+- Edit Answers
+- Generate Draft
+- Save Draft
+
+AI INSIGHT PANEL / DRAWER
+
+Build a lightweight live AI Insight experience.
+
+Desktop:
+- right-side panel
+
+Mobile:
+- bottom drawer or collapsible section
+
+It should update during intake and show:
+
+1. Live draft guidance
+Example:
+“Based on ‘2 revision rounds,’ a scope-creep protection clause will be added.”
+
+2. Smart suggestions
+Example:
+“Most freelancers also require a deposit before work begins. Add one?”
+
+3. Missing protection nudges
+Example:
+“You have not included a late fee.”
+“You have not included a kill fee.”
+“No client feedback delay rule has been set.”
+
+4. Default clause notices
+Example:
+“Default added: Severability”
+“Default added: Force majeure”
+“Default added: Notices clause”
+
+Critical rule:
+Do NOT make this panel noisy or overwhelming.
+Keep it concise, useful, and collapsible.
+
+LOGIC / DATA REQUIREMENTS
+
+This intake must not be visual-only.
+Build the actual data model and state handling required for testing.
+
+Required:
+- structured intake schema per contract type
+- saved answers in state
+- conditional logic support
+- draft-ready payload generation
+- ability to save/reload draft intake state if current architecture supports it safely
+
+For Freelance Agreement specifically, ensure the output can generate a structured contract payload containing:
+- parties
+- scope
+- payment terms
+- deadlines
+- rights/protection terms
+- review flags
+- default clauses added
+- missing protections
+
+Do NOT generate full final legal text in this phase unless it already fits the architecture cleanly.
+At minimum, generate a structured draft output shell / payload and a plain-English summary suitable for the next drafting phase.
+
+TESTABILITY REQUIREMENT
+
+This build must be complete enough for internal full-flow testing.
+
+That means a tester should be able to:
+1. choose Freelance Agreement
+2. complete the full intake wizard
+3. see live AI guidance
+4. reach the Review Summary
+5. click Generate Draft
+6. produce a draft-ready result payload/view
+7. save draft data
+8. restart and test again
+
+Do NOT leave dead-end flows.
+Do NOT leave major placeholder sections.
+Do NOT stop at static cards.
+
+OUT OF SCOPE FOR THIS PHASE
+
+Do NOT build yet:
+- e-signature integration
+- negotiation workflow
+- clause marketplace
+- advanced collaboration/comments
+- subscription gating
+- security rollout changes
+- broad jurisdiction engine
+- final polished DOCX/PDF legal export generation if not already easy
+- every possible contract type
+
+VALIDATION REQUIREMENTS
+
+After implementation, verify:
+- all 5 contract type cards render
+- Freelance Agreement full intake works end-to-end
+- conditional prompts work
+- AI Insight panel/drawer updates
+- Review Summary works
+- Generate Draft produces structured output
+- Save Draft works if supported
+- desktop layout works
+- mobile layout works
+- no console errors
+- no major dead-end states
+
+If only one template can be fully completed in this phase, prioritize:
+1. Freelance Services Agreement
+Then scaffold the others cleanly for expansion.
+
+OUTPUT REQUIRED AFTER COMPLETION
+
+Return:
+1. exact files changed
+2. new files created
+3. route(s) added
+4. contract types supported
+5. what parts of the intake are fully testable now
+6. screenshots of:
+   - contract type selection
+   - People step
+   - Work/Scope step
+   - Money/Timing step
+   - Rights/Protection step
+   - Review Summary
+   - AI Insight panel/drawer
+   - generated draft output shell
+7. any risks introduced
+8. what remains for Phase 2 (draft text generation / clause assembly)
+
+Success criteria:
+- Contract Builder intake is a real, complete, testable Phase 1 flow
+- Freelance Agreement can be run end-to-end
+- the UX feels guided and low-friction
+- the AI panel gives useful live feedback
+- the Review Summary is strong enough to catch missing protections
+- the output is ready for the next drafting phase
+- the feature is ready for full internal testing after completion
