@@ -27,8 +27,23 @@ export function Navbar() {
         <nav className="flex items-center gap-1.5">
           <ThemeToggle />
 
-          {/* My Analyses link — always visible except on the My Analyses page itself */}
-          {!isMyAnalyses && (
+          {/* Anchor nav — home page only, desktop */}
+          {isHome && (
+            <>
+              <a href="#solutions" className="hidden md:inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-2.5 py-1.5 rounded-lg hover:bg-secondary">
+                Solutions
+              </a>
+              <a href="#how-it-works" className="hidden md:inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-2.5 py-1.5 rounded-lg hover:bg-secondary">
+                How it works
+              </a>
+              <a href="#pricing" className="hidden md:inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
+                View Pricing
+              </a>
+            </>
+          )}
+
+          {/* My Analyses link — visible when not on home or My Analyses page */}
+          {!isHome && !isMyAnalyses && (
             <Link
               href="/my-analyses"
               className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-2 py-1.5 rounded-lg hover:bg-secondary"
@@ -38,7 +53,6 @@ export function Navbar() {
             </Link>
           )}
 
-
           {/* When on Contract Builder page, show Home link */}
           {isContractBuilder && (
             <Link
@@ -47,15 +61,6 @@ export function Navbar() {
             >
               Home
             </Link>
-          )}
-
-          {isHome && (
-            <a
-              href="#pricing"
-              className="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-            >
-              View Pricing
-            </a>
           )}
 
           {isHome && (

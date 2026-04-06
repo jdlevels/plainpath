@@ -1,0 +1,186 @@
+Project: Document Action Plan
+Task: Add a standout homepage product-preview block that gives PlainPath a stronger “this is real software” moment and makes the landing page feel more premium and credible.
+
+Goal:
+Create a visually strong centerpiece section on the homepage that quickly demonstrates what the product does, without copying any competitor’s branding or layout.
+
+Critical constraints:
+- Do NOT copy another site’s exact design
+- Do NOT copy another site’s wording
+- Do NOT change PlainPath’s product identity
+- Do NOT break current homepage routing or CTA behavior
+- Keep the current dark premium design language
+- This is a homepage proof / showcase section, not a full redesign
+
+Primary objective:
+Add one high-impact product-preview section that acts as a visual proof block and helps the homepage feel more like a finished software product.
+
+-----------------------------------
+SECTION PURPOSE
+-----------------------------------
+
+This new section should immediately communicate:
+- this is real software
+- it analyzes documents in a visible way
+- it produces actionable output
+- it is more than just marketing copy
+
+The section should feel like a product demonstration / proof moment.
+
+-----------------------------------
+BEST PRODUCT DIRECTION
+-----------------------------------
+
+Build the section around one of PlainPath’s strongest differentiators:
+
+Preferred direction:
+- Action Plan + Trust Check split preview
+
+Possible visual structure:
+- left side: source document / source panel / highlighted document preview
+- right side: extracted output panel showing one of:
+  - plain-English summary
+  - deadlines
+  - risks
+  - required documents
+  - trust-check verdict and score stack
+
+Alternative:
+- tabbed or layered preview showing:
+  - Analyze a Document result
+  - Trust Check result
+  - Build a Contract review preview
+
+But keep it focused and clean.
+Do NOT try to show everything at once.
+
+-----------------------------------
+HEADLINE / MESSAGING DIRECTION
+-----------------------------------
+
+The section should have a strong headline tied to PlainPath’s value.
+
+Preferred headline direction:
+- See PlainPath turn documents into clear next steps.
+
+Acceptable alternatives if they fit better:
+- See risks, deadlines, and missing pieces before they cost you.
+- Check what a document is asking for before you sign, pay, or respond.
+- See PlainPath analyze, verify, and organize confusing paperwork.
+
+Use the best one that fits the actual section design.
+
+Supporting copy should be short and outcome-focused.
+
+-----------------------------------
+VISUAL REQUIREMENTS
+-----------------------------------
+
+The section should feel premium and high-confidence.
+
+Requirements:
+- visually distinct from ordinary card rows
+- stronger than a normal feature section
+- subtle glow/depth/treatment allowed
+- look like a polished product surface
+- can include a framed product window, mock panel, screen card, or split-view
+- clear hierarchy: eyebrow / headline / short subtext / preview surface
+- should feel centered and intentional
+
+Do NOT make it gaudy.
+Do NOT overanimate.
+Do NOT reduce readability.
+
+-----------------------------------
+INTERACTION / CTA
+-----------------------------------
+
+Optional but recommended:
+- a small CTA like:
+  - See sample analysis
+  - View sample result
+  - Watch how it works
+- if included, it must route somewhere meaningful or scroll to an existing section
+- do not add a dead-end button
+
+If no CTA is added, the product-preview block itself should still feel complete.
+
+-----------------------------------
+CONTENT INSIDE THE PREVIEW
+-----------------------------------
+
+Inside the preview surface, show realistic product signals such as:
+- a document title
+- highlighted clauses/fields
+- extracted deadlines
+- risk labels
+- missing item callouts
+- trust-check verdict
+- authenticity/document/confidence scores
+- action steps
+
+Keep the content believable and directly tied to PlainPath’s real UX.
+
+The preview should resemble the actual product, not a fake generic dashboard.
+
+-----------------------------------
+PLACEMENT
+-----------------------------------
+
+Place this section where it will have the most impact on the homepage.
+Likely options:
+- after the hero / early on the page
+- before or inside the “How it works” rhythm
+- as a centerpiece between explanation and benefits
+
+Choose the location that improves the page most.
+
+-----------------------------------
+MOBILE / RESPONSIVE
+-----------------------------------
+
+The section must still look strong on:
+- desktop
+- tablet
+- mobile
+
+On mobile:
+- maintain hierarchy
+- avoid tiny unreadable preview details
+- stack cleanly if needed
+- preserve the “proof” feeling, not just collapse into a weak card
+
+-----------------------------------
+VALIDATION REQUIREMENTS
+-----------------------------------
+
+After implementation, verify:
+- homepage loads cleanly
+- no CTA routes broke
+- section looks visually stronger than surrounding rows
+- preview content feels product-realistic
+- desktop layout works
+- mobile layout works
+- no console errors
+- no dead-end interactions
+
+-----------------------------------
+OUTPUT REQUIRED
+-----------------------------------
+
+Return:
+1. exact files changed
+2. where the new section was placed
+3. what product experience it showcases
+4. headline/subtext used
+5. screenshots of:
+   - desktop version
+   - mobile version
+   - close-up of the preview surface
+6. any risks introduced
+
+Success criteria:
+- homepage gains a clear product-proof centerpiece
+- the section visually stands out without copying a competitor
+- the preview reinforces PlainPath’s real differentiators
+- the page feels more premium, credible, and launch-ready

@@ -1,7 +1,7 @@
 import { useLocation } from "wouter"
 import { motion } from "framer-motion"
 import {
-  ArrowRight, FileCheck, Clock, ShieldCheck, Upload,
+  ArrowRight, FileCheck, ShieldCheck, Upload,
   Sparkles, ClipboardList, GraduationCap, Banknote,
   Receipt, Scale, HeartPulse, FileSignature, MailWarning,
   CheckCircle2, PenLine, AlertTriangle, Eye, CalendarX, FileScan
@@ -14,7 +14,6 @@ import TestimonialsSection from "@/components/TestimonialsSection"
 import FAQSection from "@/components/FAQSection"
 import ToolsShowcase from "@/components/ToolsShowcase"
 import DemoSection from "@/components/DemoSection"
-import DocumentAnnotationSection from "@/components/DocumentAnnotationSection"
 
 const DEMOS = [
   {
@@ -289,16 +288,9 @@ export default function Home() {
         </Band>
 
         {/* ═══════════════════════════════════════════════════
-            BAND 3b — DOCUMENT ANNOTATION  (neutral, dark card)
-        ════════════════════════════════════════════════════ */}
-        <Band className="bg-gradient-to-b from-violet-50/15 to-white dark:from-slate-900/90 dark:to-slate-950" innerClassName="pb-20">
-          <DocumentAnnotationSection />
-        </Band>
-
-        {/* ═══════════════════════════════════════════════════
             BAND 4 — TOOLS SHOWCASE  (muted/tinted)
         ════════════════════════════════════════════════════ */}
-        <div className="w-full bg-gradient-to-br from-indigo-50/55 via-violet-50/25 to-white dark:from-violet-950/22 dark:via-slate-900 dark:to-slate-900 border-y border-border/50">
+        <div id="solutions" className="w-full bg-gradient-to-br from-indigo-50/55 via-violet-50/25 to-white dark:from-violet-950/22 dark:via-slate-900 dark:to-slate-900 border-y border-border/50">
           <Band innerClassName="py-20">
             <ToolsShowcase />
           </Band>
@@ -314,7 +306,7 @@ export default function Home() {
         {/* ═══════════════════════════════════════════════════
             BAND 6 — HOW IT WORKS  (muted/tinted)
         ════════════════════════════════════════════════════ */}
-        <div className="w-full bg-gradient-to-b from-slate-50/80 via-white to-blue-50/40 dark:from-slate-900 dark:via-slate-800/40 dark:to-slate-900 border-y border-border/50">
+        <div id="how-it-works" className="w-full bg-gradient-to-b from-slate-50/80 via-white to-blue-50/40 dark:from-slate-900 dark:via-slate-800/40 dark:to-slate-900 border-y border-border/50">
           <Band innerClassName="py-16">
             <div className="text-center mb-14">
               <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
@@ -346,42 +338,6 @@ export default function Home() {
             </div>
           </Band>
         </div>
-
-        {/* ═══════════════════════════════════════════════════
-            BAND 7 — WHAT YOU GET  (clean white/dark)
-        ════════════════════════════════════════════════════ */}
-        <Band className="bg-gradient-to-br from-white via-emerald-50/12 to-white dark:from-slate-950 dark:via-emerald-950/8 dark:to-slate-950" innerClassName="py-16">
-          <div className="text-center mb-14">
-            <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
-              className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">What you get</motion.p>
-            <motion.h2 initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-              className="text-3xl md:text-4xl font-display font-bold">
-              Everything a document is asking for — organized
-            </motion.h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {[
-              { icon: FileCheck,   title: "Prioritized Action Steps",  desc: "Every task extracted and ranked by urgency. High-priority items flagged first. Category labels on every step.",                                                                                  color: "bg-primary/10",                       iconColor: "text-primary",                           accent: "border-t-2 border-t-primary/30"     },
-              { icon: ShieldCheck, title: "Required Documents",        desc: "A complete list of every attachment, form, ID, or proof you need to gather — with source quotes showing exactly where each was mentioned.",                                                        color: "bg-emerald-50 dark:bg-emerald-950/50", iconColor: "text-emerald-600 dark:text-emerald-400", accent: "border-t-2 border-t-emerald-400/40" },
-              { icon: Clock,       title: "Deadlines & Risks",          desc: "Hard dates surfaced from fine print. High-severity risks flagged before they become problems. Confidence ratings on every item.", color: "bg-rose-50 dark:bg-rose-950/50",      iconColor: "text-rose-600 dark:text-rose-400",       accent: "border-t-2 border-t-rose-400/40"    },
-            ].map((card, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }} transition={{ delay: i * 0.1 }}>
-                <Card className={`h-full bg-card border-border/40 shadow-md hover:shadow-xl transition-shadow rounded-2xl ${card.accent}`}>
-                  <div className="p-7 space-y-5">
-                    <div className={`w-12 h-12 rounded-2xl ${card.color} flex items-center justify-center`}>
-                      <card.icon className={`w-6 h-6 ${card.iconColor}`} />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-bold mb-2">{card.title}</h3>
-                      <p className="text-muted-foreground leading-relaxed">{card.desc}</p>
-                    </div>
-                  </div>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </Band>
 
         {/* ═══════════════════════════════════════════════════
             BAND 8 — LIVE DEMOS  (primary-tinted)
@@ -446,7 +402,7 @@ export default function Home() {
         {/* ═══════════════════════════════════════════════════
             BAND 11 — FAQ  (muted, last section)
         ════════════════════════════════════════════════════ */}
-        <div className="w-full bg-gradient-to-b from-slate-50/70 to-blue-50/45 dark:from-slate-900 dark:to-blue-950/25 border-t border-border/50">
+        <div id="faq" className="w-full bg-gradient-to-b from-slate-50/70 to-blue-50/45 dark:from-slate-900 dark:to-blue-950/25 border-t border-border/50">
           <Band innerClassName="py-20 pb-28">
             <FAQSection />
           </Band>
