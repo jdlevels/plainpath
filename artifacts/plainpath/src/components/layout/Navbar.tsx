@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter"
 import { Button } from "@/components/ui/button"
-import { FileText, ArrowRight, Plus, BookMarked, PenLine } from "lucide-react"
+import { FileText, ArrowRight, Plus, BookMarked } from "lucide-react"
 import { ThemeToggle } from "@/components/ui/ThemeToggle"
 
 export function Navbar() {
@@ -38,16 +38,6 @@ export function Navbar() {
             </Link>
           )}
 
-          {/* Contract Builder link — visible on home, import, my-analyses, static pages */}
-          {(isHome || isImport || isMyAnalyses || isStaticPage) && (
-            <Link
-              href="/contract-builder"
-              className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-2 py-1.5 rounded-lg hover:bg-secondary"
-            >
-              <PenLine className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Build a Contract</span>
-            </Link>
-          )}
 
           {/* When on Contract Builder page, show Home link */}
           {isContractBuilder && (

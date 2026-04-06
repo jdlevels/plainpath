@@ -4,7 +4,7 @@ import {
   ArrowRight, FileCheck, Clock, ShieldCheck, Upload,
   Sparkles, ClipboardList, GraduationCap, Banknote,
   Receipt, Scale, HeartPulse, FileSignature, MailWarning,
-  CheckCircle2
+  CheckCircle2, PenLine
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -119,7 +119,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2"
+            className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2 flex-wrap"
           >
             <Button
               size="lg"
@@ -136,6 +136,15 @@ export default function Home() {
             >
               <ShieldCheck className="mr-2 w-4 h-4" />
               Document Trust Check
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={() => setLocation("/contract-builder")}
+              className="h-12 px-8 text-base rounded-xl font-semibold"
+            >
+              <PenLine className="mr-2 w-4 h-4" />
+              Build a Contract
             </Button>
           </motion.div>
 
