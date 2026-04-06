@@ -2,7 +2,7 @@ import { useEffect } from "react"
 import { Link } from "wouter"
 import { ArrowLeft, Shield, Lock, Eye, Server, RefreshCw, Mail } from "lucide-react"
 
-const LAST_UPDATED = "March 29, 2026"
+const LAST_UPDATED = "April 6, 2026"
 
 export default function Privacy() {
   useEffect(() => {
@@ -40,7 +40,8 @@ export default function Privacy() {
             <li className="flex items-start gap-2"><span className="text-primary font-bold mt-0.5">✓</span> PlainPath does not store your documents.</li>
             <li className="flex items-start gap-2"><span className="text-primary font-bold mt-0.5">✓</span> PlainPath does not require an account or collect personal information.</li>
             <li className="flex items-start gap-2"><span className="text-primary font-bold mt-0.5">✓</span> Your document text is sent to an AI service (OpenAI) for analysis and is subject to OpenAI's data use policies.</li>
-            <li className="flex items-start gap-2"><span className="text-primary font-bold mt-0.5">✓</span> Unsaved analyses exist only in your browser session. If you choose to save, results are stored on your device only — never on PlainPath servers.</li>
+            <li className="flex items-start gap-2"><span className="text-primary font-bold mt-0.5">✓</span> Unsaved analyses exist only in your browser session. Saved analyses are stored on your device only — not on PlainPath servers.</li>
+            <li className="flex items-start gap-2"><span className="text-primary font-bold mt-0.5">✓</span> When you use the Share feature, your analysis is stored on PlainPath servers for up to 30 days to generate a shareable link. No personal information is attached.</li>
           </ul>
         </div>
 
@@ -52,9 +53,10 @@ export default function Privacy() {
             <ul>
               <li><strong>Uploaded files</strong> are held in server memory only for the duration of processing (typically a few seconds). They are never written to disk, stored in a database, or logged by PlainPath.</li>
               <li><strong>Extracted text</strong> from your document is sent to OpenAI's API to generate your action plan. This text is not stored by PlainPath.</li>
-              <li><strong>Analysis results</strong> are returned to your browser and exist only in your current session unless you save them. If you use the Save feature, results are written to your browser's local storage on your device only — they are never transmitted to or stored by PlainPath.</li>
+              <li><strong>Analysis results</strong> are returned to your browser and exist only in your current session unless you save them. If you use the Save feature, results are written to your browser's local storage on your device only — they are not uploaded to PlainPath servers.</li>
+              <li><strong>Shared analyses</strong> — when you use the Share feature, your analysis result is stored on PlainPath servers in order to generate a shareable link. Shared analyses are automatically deleted after 30 days. No personal information or document text is stored — only the structured analysis output.</li>
             </ul>
-            <p>Checklist interactions (checking off items) and saved analyses are handled entirely on your device using browser storage. Nothing is transmitted to PlainPath after the initial analysis.</p>
+            <p>Checklist interactions (checking off items) and saved analyses are handled entirely on your device using browser storage. Nothing is transmitted to PlainPath after the initial analysis, except when you explicitly use the Share feature.</p>
           </Section>
 
           <Section icon={Server} title="2. Third-party AI processing">
@@ -64,8 +66,13 @@ export default function Privacy() {
           </Section>
 
           <Section icon={RefreshCw} title="3. Data retention">
-            <p>PlainPath retains <strong>no user data</strong>. There is no database of documents, analyses, or user activity.</p>
-            <p>Unsaved analysis results live only in your browser's memory for the duration of your session. Refreshing the page or closing the tab removes them. If you use the Save feature, your analysis is stored in your browser's local storage on your device only — it is not uploaded to or stored by PlainPath. You can delete saved analyses at any time from the My Analyses page.</p>
+            <p>PlainPath does not store your documents or personal information. The following server-side storage applies only in specific circumstances:</p>
+            <ul>
+              <li><strong>Unsaved analyses</strong> — exist only in your browser's memory for the duration of your session. Refreshing the page or closing the tab removes them permanently.</li>
+              <li><strong>Device-saved analyses</strong> — if you use the Save feature, your analysis is stored in your browser's local storage on your device only. It is not uploaded to PlainPath. You can delete saved analyses at any time from the My Analyses page.</li>
+              <li><strong>Shared analyses</strong> — if you use the Share feature, the structured analysis output (not your original document) is stored on PlainPath servers to power the shareable link. These records are automatically and permanently deleted after <strong>30 days</strong>. You can stop sharing at any time by not sharing the link — the record will expire on its own.</li>
+            </ul>
+            <p>PlainPath does not retain document text, uploaded files, or personally identifiable information in any database.</p>
           </Section>
 
           <Section icon={Lock} title="4. Cookies and analytics">

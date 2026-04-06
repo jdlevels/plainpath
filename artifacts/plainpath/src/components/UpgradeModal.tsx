@@ -1,7 +1,8 @@
 import { useLocation } from "wouter"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Zap, ShieldCheck, PenLine, BarChart3, ArrowRight, X } from "lucide-react"
+import { Zap, ShieldCheck, PenLine, BarChart3, ArrowRight, X, ExternalLink } from "lucide-react"
+import { isNative } from "@/lib/platform"
 
 interface Props {
   open: boolean
@@ -111,13 +112,25 @@ export default function UpgradeModal({ open, onClose, reason, used, limit }: Pro
 
         {/* Actions */}
         <div className="px-6 pb-5 flex flex-col gap-2.5">
-          <Button
-            className="w-full h-11 rounded-xl gap-2 font-semibold shadow-sm"
-            onClick={handleUpgrade}
-          >
-            View plans & pricing
-            <ArrowRight className="w-4 h-4" />
-          </Button>
+          {isNative() ? (
+            <a
+              href="https://plain-path.replit.app/#pricing"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full h-11 rounded-xl gap-2 font-semibold shadow-sm inline-flex items-center justify-center bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+            >
+              View plans at plain-path.app
+              <ExternalLink className="w-4 h-4" />
+            </a>
+          ) : (
+            <Button
+              className="w-full h-11 rounded-xl gap-2 font-semibold shadow-sm"
+              onClick={handleUpgrade}
+            >
+              View plans & pricing
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          )}
           <button
             onClick={onClose}
             className="text-center text-sm text-muted-foreground hover:text-foreground transition-colors py-1"

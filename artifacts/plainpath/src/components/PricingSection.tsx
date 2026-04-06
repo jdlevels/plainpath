@@ -1,7 +1,8 @@
-import { Check, Sparkles } from "lucide-react"
+import { Check, Sparkles, ExternalLink } from "lucide-react"
 import { useState } from "react"
 import { PRICING_PLANS, type PricingPlan } from "@/data/pricingData"
 import { startStripeCheckout } from "@/lib/stripe"
+import { isNative } from "@/lib/platform"
 
 function getButtonClasses(plan: PricingPlan) {
   const base =
@@ -15,9 +16,47 @@ function getButtonClasses(plan: PricingPlan) {
   return `${base} bg-slate-100 text-slate-900 hover:bg-slate-200 dark:bg-slate-900 dark:text-white dark:hover:bg-slate-800`
 }
 
+function NativePricingMessage() {
+  return (
+    <section
+      id="pricing"
+      className="mx-auto w-full max-w-7xl px-4 py-20 sm:px-6 lg:px-8"
+    >
+      <div className="mx-auto max-w-xl text-center">
+        <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-slate-300/70 bg-white/70 px-3 py-1 text-sm font-medium text-slate-700 backdrop-blur dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300">
+          <Sparkles className="h-4 w-4" />
+          PlainPath Pro
+        </div>
+        <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
+          Manage your subscription
+        </h2>
+        <p className="mt-4 text-base leading-7 text-slate-600 dark:text-slate-300">
+          To view plans, subscribe, or manage your existing subscription, visit PlainPath on the web.
+        </p>
+        <a
+          href="https://plain-path.replit.app/#pricing"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-8 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+        >
+          View plans at plain-path.app
+          <ExternalLink className="h-4 w-4" />
+        </a>
+        <p className="mt-4 text-xs text-slate-500 dark:text-slate-400">
+          Subscriptions are managed on the web and are not available for purchase in the app.
+        </p>
+      </div>
+    </section>
+  )
+}
+
 export default function PricingSection() {
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+
+  if (isNative()) {
+    return <NativePricingMessage />
+  }
 
   async function handlePlanClick(plan: PricingPlan) {
     if (plan.planned) {
