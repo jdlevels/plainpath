@@ -58,7 +58,7 @@ export default function StatsBar() {
             initial={{ opacity: 0, y: 12 }}
             animate={inView ? { opacity: 1, y: 0 } : {}}
             transition={{ delay: i * 0.08 }}
-            className="flex flex-col items-center justify-center text-center gap-2 px-4 py-6 rounded-2xl bg-card border border-border/50 shadow-sm hover:shadow-md transition-shadow"
+            className="flex flex-col items-center justify-center text-center gap-2 px-4 py-6 rounded-2xl bg-card border border-slate-200 dark:border-border/50 shadow-sm hover:shadow-md transition-shadow"
           >
             <div className={`w-9 h-9 rounded-xl flex items-center justify-center bg-muted/60`}>
               <stat.icon className={`w-4.5 h-4.5 ${stat.color}`} />

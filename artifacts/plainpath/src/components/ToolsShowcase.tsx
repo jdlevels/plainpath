@@ -114,7 +114,7 @@ export default function ToolsShowcase() {
             transition={{ delay: i * 0.12 }}
             className="group"
           >
-            <Card className={`h-full rounded-2xl border ${tool.border} shadow-sm hover:shadow-xl transition-all overflow-hidden bg-gradient-to-b ${tool.color}`}>
+            <Card className={`h-full rounded-2xl border ${tool.border} shadow-md hover:shadow-xl transition-all overflow-hidden bg-gradient-to-b ${tool.color}`}>
               <div className="p-7 flex flex-col h-full gap-5">
                 <div className="flex items-start justify-between">
                   <div className={`w-12 h-12 rounded-2xl ${tool.iconBg} flex items-center justify-center`}>

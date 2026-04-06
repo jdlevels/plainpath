@@ -1,0 +1,49 @@
+We are now moving into homepage polish for PlainPath.
+
+Priority objective:
+Fix the light-theme homepage so it has the same level of visual structure, separation, and professionalism as the dark theme.
+
+Problems to solve:
+1. Light mode feels too flat and too bright
+2. Sections visually blend together
+3. There is not enough separation between content blocks
+4. The homepage needs a stronger premium SaaS feel
+5. The product preview/proof sections need to stand out more
+
+Please make the following upgrades:
+
+LIGHT MODE VISUAL SYSTEM
+- Introduce a structured light-theme surface system instead of one mostly-white page
+- Use alternating section backgrounds with subtle but clearly visible contrast
+- Use soft neutral tint backgrounds for some sections
+- Add section dividers through spacing, borders, and surface contrast rather than harsh lines
+- Ensure each homepage section reads as a distinct block
+- Preserve a clean modern legal-tech / productivity SaaS look
+
+SECTION CONTAINERS
+- Add consistent vertical rhythm between sections
+- Use max-width containers and clearer section padding
+- Give cards and featured blocks subtle borders, shadows, and corner radius so they separate from the page
+- Make sure sections do not visually collapse into each other on large screens
+
+HOMEPAGE POLISH
+- Improve hero grounding in light mode so it feels anchored, not floating on blank white
+- Make the main proof/product-preview block feel like a premium feature showcase
+- Make CTA zones visually clear and intentional
+- Improve hierarchy of headlines, body text, supporting labels, and buttons
+- Keep the brand professional and high-trust, not playful
+
+IMPORTANT
+- Do not redesign the whole homepage from scratch
+- Keep the existing structure and messaging direction
+- This is a refinement pass, not a new concept
+- Dark mode should remain strong and should not be weakened
+- The light mode should feel intentionally designed, not just “white background version”
+
+DELIVERABLE
+- Apply the actual UI changes directly
+- Then summarize exactly what was changed in:
+  1. section background system
+  2. spacing/layout
+  3. card separation
+  4. hero/proof block polish
