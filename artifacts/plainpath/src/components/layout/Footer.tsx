@@ -35,7 +35,7 @@ export function Footer() {
               </div>
             </div>
             <p className="text-[11px] text-muted-foreground/50 leading-relaxed max-w-sm">
-              Document text is processed by an AI service for analysis. No data is retained by PlainPath between sessions.
+              Document text is processed by an AI service for analysis. No document data is retained by PlainPath between sessions.
             </p>
           </div>
 

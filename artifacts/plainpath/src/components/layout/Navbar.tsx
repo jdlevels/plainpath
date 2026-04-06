@@ -10,6 +10,7 @@ export function Navbar() {
   const isAnalyze = location.startsWith("/analyze")
   const isMyAnalyses = location === "/my-analyses"
   const isContractBuilder = location === "/contract-builder"
+  const isTrustCheck = location === "/trust-check"
   const isStaticPage = location === "/privacy" || location === "/terms" || location === "/subscribe" || location === "/subscribe/success" || location === "/subscribe/cancel"
 
   return (
@@ -73,7 +74,7 @@ export function Navbar() {
             </Button>
           )}
 
-          {(isImport || isMyAnalyses || isStaticPage) && (
+          {(isImport || isMyAnalyses || isStaticPage || isTrustCheck) && (
             <Link
               href="/"
               className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-2 py-1.5 rounded-lg hover:bg-secondary ml-1"

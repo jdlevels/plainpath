@@ -67,11 +67,10 @@ export default function Analyze() {
 
   const { entitlements, loading: entitlementsLoading } = useEntitlements()
   const isPro = entitlements?.plan === "pro" || entitlements?.plan === "team"
-  const PRO_ONLY_TABS = new Set(["source-sections", "missing", "checklist", "documents", "deadlines", "risks"])
-  // TESTING/PILOT MODE — gating disabled for Document Trust Check evaluation.
-  // To re-enable production gating, restore the line below and remove the bypass:
-  // const isTabLocked = (tabId: string) => PRO_ONLY_TABS.has(tabId) && !isPro && !entitlementsLoading
-  const isTabLocked = (_tabId: string) => false
+  // Tabs locked to Pro plan. Starter plan includes: plain-english, summary, key-terms,
+  // action-pack, documents (Required Docs), and deadlines.
+  const PRO_ONLY_TABS = new Set(["source-sections", "missing", "checklist", "risks"])
+  const isTabLocked = (tabId: string) => PRO_ONLY_TABS.has(tabId) && !isPro && !entitlementsLoading
 
   // Clear stale context whenever demoId changes (including on first mount when context
   // holds a previous demo's analysis — prevDemoIdRef approach misses the mount case).

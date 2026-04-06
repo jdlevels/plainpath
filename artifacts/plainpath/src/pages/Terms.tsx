@@ -1,8 +1,8 @@
 import { useEffect } from "react"
 import { Link } from "wouter"
-import { ArrowLeft, Scale, AlertTriangle, FileText, ShieldCheck, Mail } from "lucide-react"
+import { ArrowLeft, Scale, AlertTriangle, FileText, ShieldCheck, Mail, CreditCard } from "lucide-react"
 
-const LAST_UPDATED = "March 29, 2026"
+const LAST_UPDATED = "April 6, 2026"
 
 export default function Terms() {
   useEffect(() => {
@@ -82,12 +82,24 @@ export default function Terms() {
             <p>PlainPath does not claim ownership over any content you submit. See our <Link href="/privacy" className="text-primary underline underline-offset-2">Privacy Policy</Link> for details on how your content is handled.</p>
           </Section>
 
-          <Section icon={Scale} title="5. Changes to the service">
+          <Section icon={CreditCard} title="5. Subscriptions and billing">
+            <p>PlainPath offers optional paid subscription plans. Free-tier use does not require any payment or account creation.</p>
+            <ul>
+              <li>Subscriptions are processed by <strong>Stripe</strong>. Your payment details are entered on Stripe's secure checkout page and are not stored by PlainPath.</li>
+              <li>By subscribing, you authorize recurring monthly charges to your payment method. Your email address is stored by PlainPath to manage your subscription.</li>
+              <li>You may cancel your subscription at any time via the Stripe billing portal. Cancellation takes effect at the end of the current billing period. No partial refunds are issued for unused time.</li>
+              <li>PlainPath reserves the right to change subscription prices with reasonable notice. Continued subscription after a price change constitutes acceptance of the new price.</li>
+              <li>If a payment fails, your plan may be downgraded to the free tier until payment is resolved.</li>
+            </ul>
+            <p>On iOS and Android native apps, subscriptions are managed on the web at plain-path.replit.app. In-app purchase flows are not available in the native apps.</p>
+          </Section>
+
+          <Section icon={Scale} title="6. Changes to the service">
             <p>PlainPath is an evolving product. We may change, suspend, or discontinue features at any time. We will provide notice of material changes where practicable.</p>
             <p>We may update these terms from time to time. The "Last updated" date will reflect the most recent revision. Continued use of PlainPath after an update constitutes acceptance of the revised terms.</p>
           </Section>
 
-          <Section icon={Mail} title="6. Contact">
+          <Section icon={Mail} title="7. Contact">
             <p>Questions about these terms? Contact us at <a href="mailto:hello@plainpath.app" className="text-primary underline underline-offset-2">hello@plainpath.app</a>.</p>
           </Section>
 
