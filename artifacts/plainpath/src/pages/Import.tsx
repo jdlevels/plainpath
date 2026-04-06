@@ -5,7 +5,8 @@ import {
   UploadCloud, ArrowRight, Loader2, AlertCircle,
   ClipboardList, GraduationCap, Banknote, CheckCircle2, FileText, Type, File,
   ArrowLeft, Building2, Scale, Heart, FileSignature,
-  Mail, HelpCircle, ShieldCheck, AlertTriangle, XCircle
+  Mail, HelpCircle, ShieldCheck, AlertTriangle, XCircle,
+  Camera, X as XIcon, Plus, ScanLine, RotateCcw
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -261,7 +262,7 @@ export default function Import() {
     return () => { document.title = "PlainPath" }
   }, [isTrustCheck])
 
-  const [mode, setMode] = useState<"paste" | "upload">("paste")
+  const [mode, setMode] = useState<"paste" | "upload" | "camera">("paste")
   const [text, setText] = useState("")
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [isDragging, setIsDragging] = useState(false)
@@ -271,7 +272,10 @@ export default function Import() {
   const [pending, setPending] = useState<Payload | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [upgradeModal, setUpgradeModal] = useState<{ open: boolean; reason: "analyses" | "trustCheck" | "contractDraft"; used: number; limit: number }>({ open: false, reason: "analyses", used: 0, limit: 2 })
+  const [capturedImages, setCapturedImages] = useState<string[]>([])
+  const [cameraError, setCameraError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const cameraInputRef = useRef<HTMLInputElement>(null)
   const { mutate, isPending } = useAnalyzeDocument()
   const { entitlements } = useEntitlements()
 
@@ -344,9 +348,134 @@ export default function Import() {
     }
   }
 
+  // Camera: convert the chosen image file to a base64 data URL and add to capturedImages
+  const handleCameraCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith("image/")) {
+      setCameraError("Only image files are supported for scanning.")
+      e.target.value = ""
+      return
+    }
+    if (file.size > 15 * 1024 * 1024) {
+      setCameraError("Photo is too large. Please try a lower-resolution photo.")
+      e.target.value = ""
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = () => {
+      setCapturedImages(prev => [...prev, reader.result as string])
+      setCameraError(null)
+    }
+    reader.onerror = () => setCameraError("Could not read the photo. Please try again.")
+    reader.readAsDataURL(file)
+    e.target.value = "" // reset so the same image can be retaken
+  }
+
+  const triggerCamera = () => cameraInputRef.current?.click()
+
+  // Send all captured images to the API, extract text, then run through analysis
+  const handleScanImages = async (docTypeLabel: string, imagesToScan?: string[]) => {
+    const imgs = imagesToScan ?? capturedImages
+    if (imgs.length === 0) return
+
+    void haptic("medium")
+
+    try {
+      if (isTrustCheck) {
+        beforeRunTrustCheck(entitlements?.plan ?? null)
+      } else {
+        await beforeRunAnalysis()
+      }
+    } catch (err) {
+      if (err instanceof UsageLimitError) {
+        setUpgradeModal({ open: true, reason: err.reason, used: err.used, limit: err.limit })
+        setStep("input")
+        return
+      }
+      setCameraError(err instanceof Error ? err.message : "Unable to start analysis.")
+      setStep("input")
+      return
+    }
+
+    setDocumentTypeHint(docTypeLabel)
+    setIsAnalyzing(true)
+    setStep("analyzing")
+
+    try {
+      const apiBase = getApiBaseUrl()
+      const endpoint = isTrustCheck ? "/api/documents/scan-images-trust" : "/api/documents/scan-images"
+      const res = await fetch(`${apiBase}${endpoint}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ images: imgs, documentTypeHint: docTypeLabel }),
+      })
+      let data: any = {}
+      try { data = await res.json() } catch { /* non-JSON */ }
+
+      if (!res.ok) {
+        const msg = data?.message || (
+          res.status === 422 ? "Could not extract text from the photo(s). Please retake with a clearer, well-lit photo taken straight-on." :
+          res.status === 503 ? "The analysis service is temporarily busy. Please wait a moment and try again." :
+          res.status === 504 ? "Analysis is taking too long. Please try again with fewer pages." :
+          res.status === 413 ? "A photo is too large. Please try a lower-resolution image." :
+          "Scan failed. Please try again with a clearer photo."
+        )
+        setCameraError(msg)
+        setIsAnalyzing(false)
+        setStep("input")
+        setMode("camera")
+        return
+      }
+
+      if (!data?.analysis) {
+        setCameraError("Scan returned an unexpected result. Please try again.")
+        setIsAnalyzing(false)
+        setStep("input")
+        setMode("camera")
+        return
+      }
+
+      await haptic("success")
+      if (isTrustCheck) {
+        incrementTrustCheck()
+        setTrustCheckAnalysis(data.analysis)
+        setLocation("/trust-check")
+      } else {
+        incrementAnalysis()
+        setAnalysis(data.analysis)
+        setLocation("/analyze")
+      }
+    } catch {
+      setCameraError("Network error. Please check your connection and try again.")
+      setIsAnalyzing(false)
+      setStep("input")
+      setMode("camera")
+    }
+  }
+
+  // When camera mode is picked from the doctype step, route to scan handler
+  const goToDocTypeCamera = () => {
+    if (capturedImages.length === 0) return
+    if (isTrustCheck) {
+      void handleScanImages(TRUST_CHECK_HINT, capturedImages)
+    } else {
+      setPending(null) // camera flow doesn't use Payload
+      setStep("doctype")
+      setCameraError(null)
+    }
+  }
+
   const handleDocTypeSelect = async (docTypeLabel: string, payloadOverride?: Payload) => {
     const p = payloadOverride ?? pending
-    if (!p) return
+
+    // Camera mode: no Payload — route to image scan handler instead
+    if (!p) {
+      if (capturedImages.length > 0) {
+        void handleScanImages(docTypeLabel, capturedImages)
+      }
+      return
+    }
 
     void haptic("medium")
 
@@ -550,6 +679,15 @@ export default function Import() {
 
   return (
     <div className="min-h-screen bg-background pb-safe-bottom" style={{ paddingBottom: "max(7rem, env(safe-area-inset-bottom) + 7rem)" }}>
+      {/* Hidden camera input — always mounted so cameraInputRef is available */}
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={handleCameraCapture}
+      />
       <UpgradeModal
         open={upgradeModal.open}
         onClose={() => setUpgradeModal((u) => ({ ...u, open: false }))}
@@ -697,11 +835,11 @@ export default function Import() {
                 >
                   {/* Tab switcher */}
                   <div className="p-2 border-b border-border/30 bg-muted/30">
-                    <div className="grid grid-cols-2 rounded-xl bg-secondary/70 p-1 gap-1">
+                    <div className="grid grid-cols-3 sm:grid-cols-2 rounded-xl bg-secondary/70 p-1 gap-1">
                       {(["paste", "upload"] as const).map((tab) => (
                         <button
                           key={tab}
-                          onClick={() => { setMode(tab); setUploadError(null); setUploadedFile(null); setPasteError(null); if (fileInputRef.current) fileInputRef.current.value = "" }}
+                          onClick={() => { setMode(tab); setUploadError(null); setUploadedFile(null); setPasteError(null); setCameraError(null); if (fileInputRef.current) fileInputRef.current.value = "" }}
                           style={{ touchAction: "manipulation" }}
                           className={`flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-semibold transition-all min-h-[48px] ${
                             mode === tab
@@ -710,9 +848,23 @@ export default function Import() {
                           }`}
                         >
                           {tab === "paste" ? <Type className="w-4 h-4" /> : <UploadCloud className="w-4 h-4" />}
-                          {tab === "paste" ? "Paste Text" : "Upload File"}
+                          <span className="hidden xs:inline sm:inline">{tab === "paste" ? "Paste Text" : "Upload File"}</span>
+                          <span className="xs:hidden sm:hidden">{tab === "paste" ? "Paste" : "Upload"}</span>
                         </button>
                       ))}
+                      {/* Camera tab — visible on mobile only */}
+                      <button
+                        onClick={() => { setMode("camera"); setUploadError(null); setUploadedFile(null); setPasteError(null); setCameraError(null); }}
+                        style={{ touchAction: "manipulation" }}
+                        className={`sm:hidden flex items-center justify-center gap-1.5 py-3 rounded-lg text-sm font-semibold transition-all min-h-[48px] ${
+                          mode === "camera"
+                            ? "bg-card text-foreground shadow-sm shadow-black/[0.06]"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        <Camera className="w-4 h-4" />
+                        <span>Scan</span>
+                      </button>
                     </div>
                   </div>
 
@@ -856,6 +1008,109 @@ export default function Import() {
                               </div>
                             </div>
                           )}
+                        </motion.div>
+                      )}
+
+                      {/* ── CAMERA / SCAN mode ─────────────── */}
+                      {mode === "camera" && (
+                        <motion.div
+                          key="camera"
+                          initial={{ opacity: 0, x: 14 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -14 }}
+                          transition={{ duration: 0.14 }}
+                          className="space-y-4"
+                        >
+                          {/* Instruction tip */}
+                          <div className="rounded-xl bg-primary/5 border border-primary/15 p-3.5 flex gap-2.5 items-start">
+                            <ScanLine className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                            <p className="text-xs text-foreground/70 leading-relaxed">
+                              Take one photo per page. Hold your phone flat above the document for the sharpest scan. Tap <strong>Add Another Page</strong> for multi-page documents.
+                            </p>
+                          </div>
+
+                          {/* Thumbnail strip — shows captured pages */}
+                          {capturedImages.length > 0 && (
+                            <div>
+                              <p className="text-xs font-semibold text-muted-foreground mb-2">
+                                {capturedImages.length} page{capturedImages.length !== 1 ? "s" : ""} captured
+                              </p>
+                              <div className="flex gap-2 flex-wrap">
+                                {capturedImages.map((src, idx) => (
+                                  <div key={idx} className="relative group">
+                                    <img
+                                      src={src}
+                                      alt={`Page ${idx + 1}`}
+                                      className="w-16 h-20 object-cover rounded-lg border-2 border-border/50 shadow-sm"
+                                    />
+                                    <div className="absolute -top-1.5 -left-1.5 w-5 h-5 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-[10px] font-bold shadow">
+                                      {idx + 1}
+                                    </div>
+                                    <button
+                                      onClick={() => setCapturedImages(prev => prev.filter((_, i) => i !== idx))}
+                                      style={{ touchAction: "manipulation" }}
+                                      className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 active:opacity-100 transition-opacity shadow"
+                                      aria-label={`Remove page ${idx + 1}`}
+                                    >
+                                      <XIcon className="w-3 h-3" />
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Primary CTA: take first photo or add another */}
+                          <button
+                            onClick={triggerCamera}
+                            disabled={isWorking}
+                            style={{ touchAction: "manipulation" }}
+                            className="w-full flex items-center justify-center gap-3 py-5 rounded-xl border-2 border-dashed border-primary/40 bg-primary/5 text-primary font-bold text-base active:bg-primary/10 transition-colors disabled:opacity-50"
+                          >
+                            {capturedImages.length === 0 ? (
+                              <>
+                                <Camera className="w-6 h-6" />
+                                Take a Photo
+                              </>
+                            ) : (
+                              <>
+                                <Plus className="w-5 h-5" />
+                                Add Another Page
+                              </>
+                            )}
+                          </button>
+
+                          {/* Start over */}
+                          {capturedImages.length > 0 && (
+                            <button
+                              onClick={() => { setCapturedImages([]); setCameraError(null) }}
+                              style={{ touchAction: "manipulation" }}
+                              className="w-full flex items-center justify-center gap-2 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              <RotateCcw className="w-3.5 h-3.5" />
+                              Start over
+                            </button>
+                          )}
+
+                          {cameraError && <ErrorBanner message={cameraError} />}
+
+                          {/* Analyze button — only enabled when images are captured */}
+                          {capturedImages.length > 0 && (
+                            <Button
+                              size="lg"
+                              onClick={goToDocTypeCamera}
+                              disabled={isWorking}
+                              style={{ touchAction: "manipulation" }}
+                              className="w-full h-14 text-base rounded-xl"
+                            >
+                              {isTrustCheck ? "Check Document" : "Analyze"} {capturedImages.length} Page{capturedImages.length !== 1 ? "s" : ""}
+                              <ArrowRight className="ml-2 w-4 h-4" />
+                            </Button>
+                          )}
+
+                          <p className="text-[11px] text-center text-muted-foreground/50">
+                            Up to 10 pages · Photos are processed by AI and not stored by PlainPath
+                          </p>
                         </motion.div>
                       )}
 

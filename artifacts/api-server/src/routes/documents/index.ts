@@ -517,6 +517,173 @@ router.post("/upload", upload.single("file"), async (req, res, next) => {
   }
 });
 
+// ── Scan images (multi-page camera capture) ──────────────────────────────────
+router.post("/scan-images", async (req, res) => {
+  const { images, documentTypeHint } = req.body;
+
+  if (!Array.isArray(images) || images.length === 0) {
+    return res.status(400).json({ message: "No images provided. Please capture at least one page." });
+  }
+  if (images.length > 10) {
+    return res.status(400).json({ message: "Maximum 10 pages allowed per scan session." });
+  }
+
+  for (let i = 0; i < images.length; i++) {
+    const img = images[i];
+    if (typeof img !== "string" || !img.startsWith("data:image/")) {
+      return res.status(400).json({ message: `Page ${i + 1} has an invalid image format.` });
+    }
+    if (img.length > 12_000_000) {
+      return res.status(413).json({ message: `Page ${i + 1} image is too large. Please try a lower-resolution photo.` });
+    }
+  }
+
+  console.log(`[scan-images] Extracting text from ${images.length} page(s)`);
+
+  try {
+    const extractedTexts: string[] = [];
+
+    for (let i = 0; i < images.length; i++) {
+      const imageData = images[i];
+      console.log(`[scan-images] Processing page ${i + 1}/${images.length}`);
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: `You are a document scanner assistant. Extract ALL text from this image exactly as it appears, preserving structure and line breaks. Include every word, number, and symbol visible — even if the image is slightly tilted or imperfect. Do not summarize, interpret, or skip any content. Output only the raw extracted text, nothing else.`,
+              },
+              {
+                type: "image_url",
+                image_url: { url: imageData, detail: "high" },
+              },
+            ],
+          },
+        ],
+        max_completion_tokens: 4000,
+      });
+
+      const pageText = response.choices[0]?.message?.content?.trim() ?? "";
+      if (pageText) {
+        extractedTexts.push(images.length > 1 ? `--- Page ${i + 1} ---\n${pageText}` : pageText);
+      }
+    }
+
+    if (extractedTexts.length === 0) {
+      return res.status(422).json({
+        message: "Could not extract readable text from the photo(s). Please retake with a clearer, well-lit photo taken straight-on.",
+      });
+    }
+
+    let combinedText = extractedTexts.join("\n\n");
+    if (combinedText.length > 60000) combinedText = combinedText.slice(0, 60000);
+
+    console.log(`[scan-images] Extracted ${combinedText.length} chars — running analysis`);
+
+    const hint = typeof documentTypeHint === "string" ? documentTypeHint : undefined;
+    const analysis = await runAnalysis(combinedText, undefined, hint);
+    return res.json({ analysis });
+
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("[scan-images] error:", msg);
+
+    const isTimeout = err instanceof Error && (
+      err.name === "AbortError" ||
+      msg.toLowerCase().includes("timeout") ||
+      msg.toLowerCase().includes("timed out")
+    );
+    if (isTimeout) {
+      return res.status(504).json({
+        error: "analysis_timeout",
+        message: "Analysis is taking too long. Please try with fewer pages.",
+      });
+    }
+    const isBusy = msg.toLowerCase().includes("rate limit") || msg.toLowerCase().includes("quota") || msg.toLowerCase().includes("overloaded");
+    if (isBusy) {
+      return res.status(503).json({
+        error: "service_unavailable",
+        message: "The analysis service is temporarily busy. Please wait a moment and try again.",
+      });
+    }
+    return res.status(500).json({
+      error: "scan_failed",
+      message: "Scan analysis failed. Please try again with a clearer, well-lit photo.",
+    });
+  }
+});
+
+// ── Scan images → Trust Check ────────────────────────────────────────────────
+router.post("/scan-images-trust", async (req, res) => {
+  const { images } = req.body;
+
+  if (!Array.isArray(images) || images.length === 0) {
+    return res.status(400).json({ message: "No images provided. Please capture at least one page." });
+  }
+  if (images.length > 10) {
+    return res.status(400).json({ message: "Maximum 10 pages allowed per scan session." });
+  }
+  for (let i = 0; i < images.length; i++) {
+    const img = images[i];
+    if (typeof img !== "string" || !img.startsWith("data:image/")) {
+      return res.status(400).json({ message: `Page ${i + 1} has an invalid image format.` });
+    }
+    if (img.length > 12_000_000) {
+      return res.status(413).json({ message: `Page ${i + 1} image is too large. Please try a lower-resolution photo.` });
+    }
+  }
+
+  console.log(`[scan-images-trust] Extracting text from ${images.length} page(s)`);
+
+  try {
+    const extractedTexts: string[] = [];
+    for (let i = 0; i < images.length; i++) {
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [{
+          role: "user",
+          content: [
+            { type: "text", text: `Extract ALL text from this image exactly as it appears. Include every word, number, and symbol. Output only the raw extracted text, nothing else.` },
+            { type: "image_url", image_url: { url: images[i], detail: "high" } },
+          ],
+        }],
+        max_completion_tokens: 4000,
+      });
+      const pageText = response.choices[0]?.message?.content?.trim() ?? "";
+      if (pageText) extractedTexts.push(images.length > 1 ? `--- Page ${i + 1} ---\n${pageText}` : pageText);
+    }
+
+    if (extractedTexts.length === 0) {
+      return res.status(422).json({ message: "Could not extract readable text from the photo(s). Please retake with a clearer, well-lit photo." });
+    }
+
+    let text = extractedTexts.join("\n\n");
+    if (text.length > 60000) text = text.slice(0, 60000);
+
+    console.log(`[scan-images-trust] Extracted ${text.length} chars — running trust check`);
+
+    const lower = text.toLowerCase();
+    const ruleData = extractRuleData(text);
+    const riskScore = calculateRiskScore(ruleData, lower, text);
+    const verdict = scoreToVerdict(riskScore);
+    const analysis = await runTrustCheckAnalysis(text, ruleData, riskScore, verdict, undefined);
+    return res.json({ analysis });
+
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("[scan-images-trust] error:", msg);
+    const isTimeout = err instanceof Error && (err.name === "AbortError" || msg.toLowerCase().includes("timeout") || msg.toLowerCase().includes("timed out"));
+    if (isTimeout) return res.status(504).json({ error: "analysis_timeout", message: "Analysis is taking too long. Please try again with fewer pages." });
+    const isBusy = msg.toLowerCase().includes("rate limit") || msg.toLowerCase().includes("quota") || msg.toLowerCase().includes("overloaded");
+    if (isBusy) return res.status(503).json({ error: "service_unavailable", message: "The analysis service is temporarily busy. Please wait a moment and try again." });
+    return res.status(500).json({ error: "scan_failed", message: "Scan trust check failed. Please try again with a clearer photo." });
+  }
+});
+
 // ── Document Trust Check ──────────────────────────────────────────────────────
 
 interface ExtractedRuleData {
