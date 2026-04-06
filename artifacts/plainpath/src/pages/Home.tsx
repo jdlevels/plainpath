@@ -200,7 +200,7 @@ export default function Home() {
         {/* ═══════════════════════════════════════════════════
             BAND 2 — STATS + DOC TYPES  (muted/tinted)
         ════════════════════════════════════════════════════ */}
-        <div className="w-full bg-muted/50 dark:bg-muted/25 border-y border-border/40">
+        <div className="w-full bg-slate-100 dark:bg-muted/25 border-y border-border/60">
           <Band innerClassName="py-16">
             <StatsBar />
             <motion.div
@@ -298,7 +298,7 @@ export default function Home() {
         {/* ═══════════════════════════════════════════════════
             BAND 4 — TOOLS SHOWCASE  (muted/tinted)
         ════════════════════════════════════════════════════ */}
-        <div className="w-full bg-muted/40 dark:bg-muted/20 border-y border-border/40">
+        <div className="w-full bg-slate-100 dark:bg-muted/20 border-y border-border/60">
           <Band innerClassName="py-20">
             <ToolsShowcase />
           </Band>
@@ -314,7 +314,7 @@ export default function Home() {
         {/* ═══════════════════════════════════════════════════
             BAND 6 — HOW IT WORKS  (muted/tinted)
         ════════════════════════════════════════════════════ */}
-        <div className="w-full bg-muted/40 dark:bg-muted/20 border-y border-border/40">
+        <div className="w-full bg-slate-100 dark:bg-muted/20 border-y border-border/60">
           <Band innerClassName="py-20">
             <div className="text-center mb-14">
               <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
@@ -386,7 +386,7 @@ export default function Home() {
         {/* ═══════════════════════════════════════════════════
             BAND 8 — LIVE DEMOS  (primary-tinted)
         ════════════════════════════════════════════════════ */}
-        <div className="w-full bg-primary/[0.04] dark:bg-primary/[0.07] border-y border-primary/10">
+        <div className="w-full bg-blue-50 dark:bg-primary/[0.07] border-y border-primary/20">
           <Band id="demos" innerClassName="py-20 scroll-mt-24">
             <div className="text-center mb-12">
               <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
@@ -430,7 +430,7 @@ export default function Home() {
         {/* ═══════════════════════════════════════════════════
             BAND 9 — TESTIMONIALS  (muted)
         ════════════════════════════════════════════════════ */}
-        <div className="w-full bg-muted/50 dark:bg-muted/25 border-b border-border/40">
+        <div className="w-full bg-slate-100 dark:bg-muted/25 border-b border-border/60">
           <Band innerClassName="py-20">
             <TestimonialsSection />
           </Band>
@@ -446,7 +446,7 @@ export default function Home() {
         {/* ═══════════════════════════════════════════════════
             BAND 11 — FAQ  (muted, last section)
         ════════════════════════════════════════════════════ */}
-        <div className="w-full bg-muted/40 dark:bg-muted/20 border-t border-border/40">
+        <div className="w-full bg-slate-100 dark:bg-muted/20 border-t border-border/60">
           <Band innerClassName="py-20 pb-28">
             <FAQSection />
           </Band>
