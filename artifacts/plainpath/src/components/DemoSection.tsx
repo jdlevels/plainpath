@@ -431,8 +431,8 @@ export default function DemoSection() {
   }
 
   return (
-    <section className="w-full max-w-none -mx-4 px-4 mb-28">
-      <div className="rounded-3xl bg-slate-950 dark:bg-slate-900 max-w-6xl mx-auto overflow-hidden relative">
+    <div className="w-full">
+      <div className="rounded-3xl bg-slate-950 dark:bg-slate-900 overflow-hidden relative">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] rounded-full bg-primary/6 blur-3xl pointer-events-none" />
 
         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-0">
@@ -555,6 +555,6 @@ export default function DemoSection() {
           </div>
         </div>
       </div>
-    </section>
+    </div>
   )
 }

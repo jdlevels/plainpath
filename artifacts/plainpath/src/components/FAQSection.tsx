@@ -80,7 +80,7 @@ function FAQItem({ q, a, index }: { q: string; a: string; index: number }) {
 
 export default function FAQSection() {
   return (
-    <section className="max-w-3xl w-full mb-28">
+    <section className="max-w-3xl w-full mx-auto">
       <div className="text-center mb-12">
         <motion.p
           initial={{ opacity: 0 }}

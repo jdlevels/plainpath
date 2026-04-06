@@ -75,7 +75,7 @@ export default function ToolsShowcase() {
   const [, setLocation] = useLocation()
 
   return (
-    <section className="max-w-6xl w-full mb-28">
+    <section className="w-full">
       <div className="text-center mb-14">
         <motion.p
           initial={{ opacity: 0 }}
