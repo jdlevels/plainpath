@@ -1,0 +1,205 @@
+Project: Document Action Plan
+Task: Prepare a full Apple App Store pre-submission readiness checklist and implementation review for the current mobile build.
+
+Goal:
+Make the app truly ready for Apple submission by identifying every remaining blocker, required document, metadata item, permissions/compliance issue, and reviewer-note need before submission.
+
+Important:
+Do NOT assume the app is ready.
+Do NOT give a vague overview.
+Do a real submission-readiness pass against the current build and current Apple submission expectations.
+
+Primary objective:
+Return a launch-readiness checklist specifically for this app, with exact items grouped into:
+- must fix before submission
+- should fix before submission
+- nice to improve before submission
+- safe to defer until after launch
+
+-----------------------------------
+PART 1 — APP REVIEW READINESS AUDIT
+-----------------------------------
+
+Review the current iOS/mobile build and verify whether we are ready for Apple App Review.
+
+Check at minimum:
+
+1. Core app functionality
+- app launches cleanly
+- no broken routes
+- no dead-end flows
+- no placeholder/test screens exposed
+- no pilot/debug banners exposed
+- all main buttons work
+- no obvious crashes or console/runtime errors
+
+2. Core feature readiness
+- Analyze a Document works
+- Document Trust Check works
+- Build a Contract route/flow is either ready enough for submission or should be hidden/coming soon
+- Save/export behavior is stable
+- file picker works on mobile
+- permissions flow is correct
+
+3. Review-mode access
+Apple requires App Review to have full access to the app, including demo access or active credentials where needed.
+Verify whether:
+- any login is required
+- a demo mode exists if needed
+- all backend services are live and reachable
+- App Review could test all key flows without confusion
+
+4. Non-obvious feature explanation needs
+List anything that will need explanation in App Review notes, such as:
+- AI document analysis behavior
+- Trust Check scoring behavior
+- contract builder status
+- file upload/privacy behavior
+- any disabled pilot/paywall logic
+- any feature that depends on backend AI or external processing
+
+-----------------------------------
+PART 2 — PRIVACY / DATA HANDLING AUDIT
+-----------------------------------
+
+Review the app’s real behavior and compare it to what will need to be disclosed in App Store Connect.
+
+Check:
+- whether uploaded documents touch the server
+- whether extracted text is stored
+- whether analyses are stored locally, remotely, or both
+- whether logs contain document content
+- whether feedback records contain document metadata
+- whether third-party SDKs collect user/device data
+- whether analytics/crash reporting/privacy manifests are present
+- whether current homepage/privacy language accurately matches reality
+
+Return:
+- what the app actually does with user data
+- what must be disclosed in App Privacy details
+- any mismatch between app claims and actual behavior
+- anything that must be corrected before submission
+
+-----------------------------------
+PART 3 — APP STORE POLICY / COMPLIANCE CHECK
+-----------------------------------
+
+Check whether the app will need work for:
+- account creation and in-app account deletion if accounts exist
+- subscription / in-app purchase handling
+- external purchase/payment language
+- export compliance / encryption questions
+- legal/policy wording around AI, document analysis, fraud detection, or contract generation
+- disclaimers needed to avoid overclaiming legal advice or guaranteed fraud detection
+
+Important:
+If the app currently has sign-in disabled or deferred, confirm whether that helps or whether any dormant account code still affects submission risk.
+
+-----------------------------------
+PART 4 — APP STORE CONNECT ASSET CHECKLIST
+-----------------------------------
+
+Generate a complete checklist of what we need ready in App Store Connect, including:
+- app name
+- subtitle
+- category
+- keywords
+- description
+- screenshots by device size
+- app preview videos if recommended
+- support URL
+- privacy policy URL
+- marketing URL if needed
+- age rating inputs
+- app privacy details
+- accessibility support details if applicable
+- App Review notes
+- demo account info if needed
+
+Flag anything missing right now.
+
+-----------------------------------
+PART 5 — NATIVE IOS / MOBILE CHECKLIST
+-----------------------------------
+
+Verify all submission-sensitive mobile items:
+- Info.plist usage descriptions
+- file/document access permission text
+- camera/photo access text if present
+- status bar behavior
+- haptics usage
+- rate-app prompt usage timing
+- Capacitor/native plugin behavior
+- build/archive readiness
+- release configuration cleanliness
+- icons / splash / launch assets
+- app version/build number handling
+
+Flag anything incomplete, weak, or likely to cause review questions.
+
+-----------------------------------
+PART 6 — WHAT TO HIDE OR REMOVE BEFORE SUBMISSION
+-----------------------------------
+
+Identify anything that should not appear in the App Store build, including:
+- pilot/test wording
+- internal-only pages
+- debug reports
+- trust-check batch labels
+- unfinished builder flows
+- temporary placeholders
+- hidden but still reachable routes
+- dead-end CTA buttons
+
+For each, say whether it should be:
+- removed
+- hidden
+- relabeled as coming soon
+- left as-is
+
+-----------------------------------
+PART 7 — APP REVIEW NOTES DRAFT
+-----------------------------------
+
+Write a clean Apple App Review note draft specifically for this app, covering:
+- what the app does
+- how to test Analyze a Document
+- how to test Document Trust Check
+- whether Build a Contract is included now or should be hidden
+- whether login is required
+- whether documents are uploaded to a server or processed remotely
+- any non-obvious AI features
+- any demo mode or review mode details
+- any important limitations reviewers should know
+
+-----------------------------------
+PART 8 — FINAL READINESS DECISION
+-----------------------------------
+
+Return a final launch-readiness decision using exactly one of these:
+- NOT READY FOR APPLE SUBMISSION
+- READY AFTER FIXING MUST-HAVE ITEMS
+- READY FOR TESTFLIGHT ONLY
+- READY FOR APP STORE SUBMISSION
+
+If not fully ready, prioritize the remaining blockers in exact order.
+
+-----------------------------------
+OUTPUT REQUIRED
+-----------------------------------
+
+Return:
+1. Must-fix before submission
+2. Should-fix before submission
+3. Nice-to-improve before submission
+4. Safe to defer until after launch
+5. Exact files/settings/routes likely involved
+6. Draft App Review notes
+7. Draft submission checklist we can work through one by one
+8. Final readiness decision
+
+Success criteria:
+- we get a real Apple submission readiness audit
+- privacy and policy risks are surfaced early
+- no major App Review blocker is missed
+- we know exactly what to fix before submitting
