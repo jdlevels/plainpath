@@ -1,0 +1,241 @@
+Project: PlainPath
+Task: Create the full narrated product demo script and shot list for the homepage “See how it works” video.
+
+Goal:
+Prepare a professional, launch-ready demo plan for a real homepage product video that explains PlainPath clearly across all three core product lanes:
+1. Analyze a Document
+2. Document Trust Check
+3. Build a Contract
+
+Important clarification:
+This is not the homepage section build itself.
+This task is to create the actual demo video plan:
+- narrative structure
+- voiceover script
+- scene-by-scene shot list
+- on-screen text
+- timing
+- transitions
+- capture requirements
+
+Target outcome:
+A polished 60–90 second product demo that can be screen-recorded and voiced over, then embedded in the homepage video section.
+
+-----------------------------------
+VIDEO DIRECTION
+-----------------------------------
+
+The demo should feel:
+- professional
+- clear
+- premium
+- modern SaaS
+- confident
+- easy to follow
+- not overhyped
+- not robotic
+
+The video should explain the product fast and make it feel real.
+
+Preferred runtime:
+- ideal target: 75 seconds
+- acceptable range: 60 to 90 seconds
+
+Voice style:
+- calm
+- professional
+- plain English
+- steady pacing
+- no exaggerated ad tone
+
+-----------------------------------
+CORE STORY TO TELL
+-----------------------------------
+
+The video should explain the product as one system with three lanes:
+
+1. Analyze a Document
+- turn paperwork into a plain-English action plan
+- extract deadlines, risks, required documents, and next steps
+
+2. Document Trust Check
+- review suspicious documents before paying, signing, or responding
+- show verdict + score model + verification guidance
+
+3. Build a Contract
+- guide the user through structured intake
+- surface missing protections
+- generate a draft-ready result
+
+The video should make these feel connected, not like three random products.
+
+-----------------------------------
+NARRATIVE STRUCTURE
+-----------------------------------
+
+Build the video around this story arc:
+
+1. Opening problem
+People receive documents they do not fully understand.
+They miss deadlines, accept bad terms, or trust the wrong paperwork.
+
+2. Analyze a Document
+Show how PlainPath turns a document into clear next steps.
+
+3. Document Trust Check
+Show how PlainPath helps users review suspicious paperwork before acting.
+
+4. Build a Contract
+Show how PlainPath helps users create cleaner agreements from guided questions.
+
+5. Closing value
+PlainPath helps users understand, verify, and create documents with more clarity.
+
+-----------------------------------
+REQUIRED DELIVERABLES
+-----------------------------------
+
+Return all of the following:
+
+1. Final video concept summary
+- what the video is trying to communicate
+- intended audience
+- desired tone
+
+2. Full voiceover script
+- written line by line
+- timed by scene
+- concise enough for a 60–90 second runtime
+- polished and natural to read aloud
+
+3. Full shot list
+For each scene include:
+- scene number
+- duration estimate
+- what screen/page is shown
+- camera behavior (static / slow zoom / pan / highlight)
+- what UI element is emphasized
+- any cursor action
+- any scrolling
+- what should be highlighted visually
+- what on-screen text appears
+
+4. On-screen text system
+For each scene specify:
+- headline text
+- support text if any
+- labels/callouts if any
+
+5. Capture plan
+Specify exactly what screens should be recorded from the real app, including:
+- homepage
+- import flow
+- analysis result
+- trust check result
+- contract builder steps
+- review summary
+- draft output shell
+
+6. Editing notes
+Include:
+- transitions
+- pacing
+- caption guidance
+- whether to use subtle UI zooms
+- whether to use blur/focus effects
+- whether to use click highlights
+- whether to use section cards or lower-thirds
+
+7. Audio notes
+Include:
+- recommended pacing
+- where short pauses should happen
+- whether light music should be under the narration
+- how not to overpower the voice
+
+8. Final shot order recommendation
+Provide the best final order for assembling the video.
+
+-----------------------------------
+SCENE REQUIREMENTS
+-----------------------------------
+
+The shot list must include at minimum:
+
+SCENE 1 — Hook / homepage
+Show the homepage and introduce the product in one sentence.
+
+SCENE 2 — Upload / Analyze
+Show document upload or paste and transition into analysis.
+
+SCENE 3 — Action Plan result
+Show plain-English summary, deadlines, risks, required documents, and next steps.
+
+SCENE 4 — Trust Check entry
+Show switching into Document Trust Check.
+
+SCENE 5 — Trust Check result
+Show verdict, score bars, scam indicators / findings, and what to verify before acting.
+
+SCENE 6 — Contract Builder entry
+Show Build a Contract and contract type selection.
+
+SCENE 7 — Guided intake
+Show a few step-by-step wizard screens.
+
+SCENE 8 — Gap check / review summary
+Show missing protections and the review summary.
+
+SCENE 9 — Draft output shell
+Show the generated structured draft result.
+
+SCENE 10 — Closing
+Return to a strong PlainPath value statement and CTA framing.
+
+-----------------------------------
+IMPORTANT CONTENT RULES
+-----------------------------------
+
+- Use real product behavior, not fantasy features
+- Do not script features that do not exist yet
+- Do not overclaim legal or fraud certainty
+- Keep disclaimers in mind
+- Keep the demo honest and believable
+- Show what makes PlainPath different:
+  - plain-English action plans
+  - trust-check score model
+  - guided contract intake + gap detection
+
+-----------------------------------
+HEADLINE / TAGLINE SUGGESTIONS
+-----------------------------------
+
+Use or adapt one of these if appropriate:
+- See how PlainPath works
+- Turn documents into clear next steps
+- Understand, verify, and build with more clarity
+- See risks, deadlines, and missing pieces before they cost you
+
+Choose the strongest fit for the video.
+
+-----------------------------------
+OUTPUT FORMAT
+-----------------------------------
+
+Please structure the output like this:
+
+1. Demo concept summary
+2. Final runtime target
+3. Full voiceover script
+4. Scene-by-scene shot list table
+5. Capture checklist
+6. Editing guidance
+7. Audio guidance
+8. Final assembly order
+
+Success criteria:
+- the script sounds professional and believable
+- the video tells one coherent product story
+- the three product lanes are clearly explained
+- the plan can be handed directly to someone to record and edit
+- the final video would feel launch-ready on the homepage

@@ -201,7 +201,7 @@ export default function Home() {
         {/* ═══════════════════════════════════════════════════
             BAND 2 — STATS + DOC TYPES  (muted/tinted)
         ════════════════════════════════════════════════════ */}
-        <div className="w-full bg-gradient-to-b from-slate-50 via-blue-50/30 to-white dark:from-slate-900 dark:via-blue-950/20 dark:to-slate-900 border-y border-border/50">
+        <div className="w-full bg-gradient-to-b from-slate-100 via-blue-50/65 to-white dark:from-slate-900 dark:via-blue-950/20 dark:to-slate-900 border-y border-border/65">
           <Band innerClassName="py-16">
             <StatsBar />
             <motion.div
