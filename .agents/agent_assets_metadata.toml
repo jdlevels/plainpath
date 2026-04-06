@@ -12,3 +12,9 @@ id = "Z2HPWGzUxRqI_eLxt2ECo"
 uri = "file://.local/outputs/Plain-Path.pdf"
 type = "pdf"
 title = "Plain Path.pdf"
+
+[[outputs]]
+id = "EjnzDc6PO6-wY-zAm6LED"
+uri = "file://artifacts/plainpath/docs/APP_STORE_READINESS_AUDIT.md"
+type = "text"
+title = "PlainPath — Apple App Store Readiness Audit"
