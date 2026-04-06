@@ -12,7 +12,9 @@ import { Card } from "@/components/ui/card"
 import { useAnalyzeDocument } from "@workspace/api-client-react"
 import { useAnalysisContext } from "@/context/AnalysisContext"
 import { getApiBaseUrl } from "@/lib/api"
-import { beforeRunAnalysis } from "@/lib/analysisGate"
+import { beforeRunAnalysis, UsageLimitError } from "@/lib/analysisGate"
+import { incrementAnalysis, incrementTrustCheck } from "@/lib/usageMeter"
+import UpgradeModal from "@/components/UpgradeModal"
 import { isNative } from "@/lib/platform"
 import { haptic, pickFileNative } from "@/lib/native"
 
@@ -267,6 +269,7 @@ export default function Import() {
   const [step, setStep] = useState<Step>("input")
   const [pending, setPending] = useState<Payload | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [upgradeModal, setUpgradeModal] = useState<{ open: boolean; used: number; limit: number }>({ open: false, used: 0, limit: 3 })
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { mutate, isPending } = useAnalyzeDocument()
 
@@ -348,6 +351,11 @@ export default function Import() {
     try {
       await beforeRunAnalysis()
     } catch (err) {
+      if (err instanceof UsageLimitError) {
+        setUpgradeModal({ open: true, used: err.used, limit: err.limit })
+        setStep("input")
+        return
+      }
       const msg = err instanceof Error ? err.message : "Unable to start analysis."
       if (mode === "upload") {
         setUploadError(msg)
@@ -386,6 +394,7 @@ export default function Import() {
             return
           }
           await haptic("success")
+          incrementTrustCheck()
           setTrustCheckAnalysis(data.analysis)
           setLocation("/trust-check")
         } catch {
@@ -429,6 +438,7 @@ export default function Import() {
             return
           }
           await haptic("success")
+          incrementTrustCheck()
           setTrustCheckAnalysis(data.analysis)
           setLocation("/trust-check")
         } catch {
@@ -448,7 +458,7 @@ export default function Import() {
       mutate(
         { data: { text: p.text, documentTypeHint: docTypeLabel } as any },
         {
-          onSuccess: (data) => { void haptic("success"); setAnalysis(data.analysis); setLocation("/analyze") },
+          onSuccess: (data) => { void haptic("success"); incrementAnalysis(); setAnalysis(data.analysis); setLocation("/analyze") },
           onError: (err: any) => {
             const serverMessage = err?.data?.message
             const status = err?.status ?? 0
@@ -508,6 +518,7 @@ export default function Import() {
           return
         }
         await haptic("success")
+        incrementAnalysis()
         setAnalysis(data.analysis)
         setLocation("/analyze")
       } catch {
@@ -533,6 +544,13 @@ export default function Import() {
 
   return (
     <div className="min-h-screen bg-background pb-safe-bottom" style={{ paddingBottom: "max(7rem, env(safe-area-inset-bottom) + 7rem)" }}>
+      <UpgradeModal
+        open={upgradeModal.open}
+        onClose={() => setUpgradeModal((u) => ({ ...u, open: false }))}
+        reason="analyses"
+        used={upgradeModal.used}
+        limit={upgradeModal.limit}
+      />
       <div className="absolute top-0 inset-x-0 h-52 bg-gradient-to-b from-primary/[0.04] to-transparent pointer-events-none" />
 
       <div className="max-w-2xl mx-auto px-4 pt-4 sm:pt-12 relative">

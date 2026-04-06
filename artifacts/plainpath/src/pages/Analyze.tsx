@@ -1023,6 +1023,11 @@ function DeadlineCard({ dl, accentRed, docTitle }: { dl: DocumentAnalysis["deadl
   const parsedDate = dl.date ? new Date(dl.date) : null
   const hasCalendarDate = parsedDate && !isNaN(parsedDate.getTime()) && parsedDate.getFullYear() > 2000
   const [reminded, setReminded] = useState(false)
+  const [emailOpen, setEmailOpen] = useState(false)
+  const [emailInput, setEmailInput] = useState("")
+  const [emailSending, setEmailSending] = useState(false)
+  const [emailSent, setEmailSent] = useState(false)
+  const [emailError, setEmailError] = useState<string | null>(null)
 
   async function handleReminder() {
     const granted = await requestNotificationPermission()
@@ -1032,6 +1037,37 @@ function DeadlineCard({ dl, accentRed, docTitle }: { dl: DocumentAnalysis["deadl
     }
     addReminder({ title: dl.title, date: dl.date ?? "", docTitle })
     setReminded(true)
+  }
+
+  async function handleEmailSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!emailInput.includes("@")) return
+    setEmailSending(true)
+    setEmailError(null)
+    try {
+      const res = await fetch("/api/reminders/email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: emailInput.trim(),
+          deadlineTitle: dl.title,
+          deadlineDate: dl.date ?? "",
+          deadlineDescription: dl.description ?? "",
+          docTitle,
+        }),
+      })
+      if (res.ok) {
+        setEmailSent(true)
+        setEmailOpen(false)
+      } else {
+        const data = await res.json().catch(() => ({}))
+        setEmailError((data as any).error ?? "Failed to send. Please try again.")
+      }
+    } catch {
+      setEmailError("Network error. Please try again.")
+    } finally {
+      setEmailSending(false)
+    }
   }
 
   return (
@@ -1060,9 +1096,43 @@ function DeadlineCard({ dl, accentRed, docTitle }: { dl: DocumentAnalysis["deadl
           >
             {reminded ? <BellDot className="w-3.5 h-3.5" /> : <Bell className="w-3.5 h-3.5" />}
           </button>
+          <button
+            onClick={() => { setEmailOpen(o => !o); setEmailError(null) }}
+            title={emailSent ? "Email reminder sent" : "Email me a reminder"}
+            className={`p-1 rounded-lg transition-colors ${emailSent ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}
+          >
+            <Mail className="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
       <p className="text-sm text-muted-foreground mb-2.5">{dl.description}</p>
+
+      {emailOpen && !emailSent && (
+        <form onSubmit={(e) => void handleEmailSubmit(e)} className="mt-3 flex gap-2">
+          <input
+            type="email"
+            value={emailInput}
+            onChange={e => setEmailInput(e.target.value)}
+            placeholder="your@email.com"
+            required
+            className="flex-1 min-w-0 text-sm px-3 py-1.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+          />
+          <button
+            type="submit"
+            disabled={emailSending || !emailInput.includes("@")}
+            className="px-3 py-1.5 rounded-xl bg-primary text-primary-foreground text-xs font-semibold disabled:opacity-50 hover:bg-primary/90 transition-colors"
+          >
+            {emailSending ? "Sending…" : "Send"}
+          </button>
+        </form>
+      )}
+      {emailSent && (
+        <p className="mt-2 text-xs text-primary font-medium">✓ Reminder email sent!</p>
+      )}
+      {emailError && (
+        <p className="mt-2 text-xs text-destructive">{emailError}</p>
+      )}
+
       <EvidenceTooltip text={dl.sourceEvidence} />
     </div>
   )

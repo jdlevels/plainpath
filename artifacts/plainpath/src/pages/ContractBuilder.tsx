@@ -58,6 +58,16 @@ interface ScopeData {
   purposeOfDisclosure: string
   confidentialInfoDescription: string
   ndaTerm: string
+  // Service Agreement
+  serviceSchedule: string
+  serviceStandards: string
+  // Lease
+  propertyAddress: string
+  propertyType: string
+  propertyDescription: string
+  leaseType: string
+  utilitiesIncluded: string
+  petsAllowed: string
 }
 
 interface MoneyData {
@@ -72,6 +82,13 @@ interface MoneyData {
   deadline: string
   invoiceDueDays: string
   milestones: Array<{ name: string; amount: string; date: string }>
+  // Lease-specific
+  monthlyRent: string
+  securityDeposit: string
+  petDeposit: string
+  leaseTerm: string
+  leaseStartDate: string
+  leaseEndDate: string
 }
 
 interface ProtectionData {
@@ -162,7 +179,7 @@ const CONTRACT_TYPES: Array<{
     Icon: Briefcase,
     color: "text-amber-500",
     bg: "bg-amber-50 dark:bg-amber-950/40",
-    ready: false,
+    ready: true,
   },
   {
     id: "lease",
@@ -172,7 +189,7 @@ const CONTRACT_TYPES: Array<{
     Icon: HomeIcon,
     color: "text-rose-500",
     bg: "bg-rose-50 dark:bg-rose-950/40",
-    ready: false,
+    ready: true,
   },
 ]
 
@@ -247,6 +264,50 @@ function computeRuleInsights(
     if (step >= 2) {
       if (!scope.ndaTerm || scope.ndaTerm === "") {
         suggestions.push("No NDA duration set. A defined term (1–3 years) is standard.")
+      }
+    }
+  }
+
+  if (contractType === "service-agreement") {
+    if (step >= 2) {
+      if (!scope.serviceSchedule || scope.serviceSchedule.trim().length < 3) {
+        suggestions.push("No service schedule defined — when/how often services are provided should be explicit.")
+      }
+      if (!scope.exclusions || scope.exclusions.trim().length < 5) {
+        suggestions.push("Add explicit exclusions to prevent scope creep on ongoing service contracts.")
+      }
+    }
+    if (step >= 3) {
+      if (!money.lateFee) {
+        warnings.push("No late fee clause — late payments are common in retainer arrangements without one.")
+      }
+      if (!protection.terminationNoticeDays || protection.terminationNoticeDays === "0") {
+        suggestions.push("Define a termination notice period (e.g. 30 days) so either party can exit cleanly.")
+      }
+    }
+  }
+
+  if (contractType === "lease") {
+    if (step >= 2) {
+      if (!scope.propertyAddress || scope.propertyAddress.trim().length < 5) {
+        warnings.push("No property address entered — this is required for a legally binding lease.")
+      }
+      if (!scope.leaseType) {
+        suggestions.push("Specify fixed-term or month-to-month — this affects notice requirements and rights.")
+      }
+    }
+    if (step >= 3) {
+      if (!money.monthlyRent || money.monthlyRent === "0") {
+        warnings.push("No monthly rent amount set — this is a required term of any lease agreement.")
+      }
+      if (!money.securityDeposit) {
+        suggestions.push("No security deposit specified. Most leases require one to protect against damage.")
+      }
+      if (!money.lateFee) {
+        suggestions.push("Consider adding a late fee clause to deter overdue rent payments.")
+      }
+      if (!money.leaseStartDate) {
+        warnings.push("No lease start date — this must be specified for the lease to take effect.")
       }
     }
   }
@@ -695,6 +756,166 @@ function ScopeStep({
     )
   }
 
+  if (contractType === "service-agreement") {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-display font-bold mb-1">What services are being provided?</h2>
+          <p className="text-muted-foreground text-sm">Define the ongoing services, schedule, and scope boundaries.</p>
+        </div>
+        <div className="space-y-4">
+          <div className="space-y-1">
+            <Label className="text-xs">Service Type</Label>
+            <Input
+              placeholder="e.g. IT support, cleaning services, consulting, marketing retainer"
+              value={data.serviceType ?? ""}
+              onChange={(e) => onChange({ ...data, serviceType: e.target.value })}
+            />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Scope of Services</Label>
+            <Textarea
+              rows={4}
+              placeholder="Describe what the service provider will do. Be specific — this becomes the core of the services clause."
+              value={data.scopeDescription ?? ""}
+              onChange={(e) => onChange({ ...data, scopeDescription: e.target.value })}
+              className="resize-none"
+            />
+          </div>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-1.5">
+                <Label className="text-xs">Service Schedule</Label>
+                <Tooltip>
+                  <TooltipTrigger asChild><Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" /></TooltipTrigger>
+                  <TooltipContent className="text-xs max-w-xs">How often the service is performed — e.g. weekly, monthly, on-call, or during business hours.</TooltipContent>
+                </Tooltip>
+              </div>
+              <Input
+                placeholder="e.g. Weekly, monthly, on-demand, Mon–Fri 9am–5pm"
+                value={data.serviceSchedule ?? ""}
+                onChange={(e) => onChange({ ...data, serviceSchedule: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1">
+              <div className="flex items-center gap-1.5">
+                <Label className="text-xs">Service Standards / SLAs (optional)</Label>
+                <Tooltip>
+                  <TooltipTrigger asChild><Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" /></TooltipTrigger>
+                  <TooltipContent className="text-xs max-w-xs">Any measurable standards — e.g. "respond within 4 hours", "99% uptime", "resolve issues within 24 hours".</TooltipContent>
+                </Tooltip>
+              </div>
+              <Input
+                placeholder="e.g. 4-hour response time, issues resolved within 1 business day"
+                value={data.serviceStandards ?? ""}
+                onChange={(e) => onChange({ ...data, serviceStandards: e.target.value })}
+              />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">What is NOT included (Exclusions)</Label>
+            <Textarea
+              rows={3}
+              placeholder="e.g. Hardware procurement, after-hours emergency calls, travel outside the local area"
+              value={data.exclusions ?? ""}
+              onChange={(e) => onChange({ ...data, exclusions: e.target.value })}
+              className="resize-none"
+            />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (contractType === "lease") {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-display font-bold mb-1">What is being rented?</h2>
+          <p className="text-muted-foreground text-sm">Describe the property and rental conditions.</p>
+        </div>
+        <div className="space-y-4">
+          <div className="space-y-1">
+            <Label className="text-xs">Property Address</Label>
+            <Input
+              placeholder="e.g. 123 Main Street, Apt 4B, New York, NY 10001"
+              value={data.propertyAddress ?? ""}
+              onChange={(e) => onChange({ ...data, propertyAddress: e.target.value })}
+            />
+          </div>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <Label className="text-xs">Property Type</Label>
+              <div className="grid grid-cols-2 gap-1.5">
+                {["Residential", "Commercial", "Office", "Equipment"].map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => onChange({ ...data, propertyType: t })}
+                    className={`text-sm py-2 px-3 rounded-xl border-2 font-medium transition-all ${data.propertyType === t ? "border-primary bg-primary/5 text-primary" : "border-border/50 text-muted-foreground hover:border-primary/30"}`}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Lease Type</Label>
+              <div className="flex flex-col gap-1.5">
+                {[
+                  { id: "fixed-term", label: "Fixed Term", desc: "Set start and end date" },
+                  { id: "month-to-month", label: "Month-to-Month", desc: "Ongoing, monthly renewal" },
+                ].map((lt) => (
+                  <button
+                    key={lt.id}
+                    onClick={() => onChange({ ...data, leaseType: lt.id })}
+                    className={`text-left px-3 py-2 rounded-xl border-2 transition-all ${data.leaseType === lt.id ? "border-primary bg-primary/5" : "border-border/50 hover:border-primary/30"}`}
+                  >
+                    <div className="text-sm font-semibold">{lt.label}</div>
+                    <div className="text-[11px] text-muted-foreground">{lt.desc}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Property Description (optional)</Label>
+            <Textarea
+              rows={3}
+              placeholder="e.g. 2-bedroom, 1-bathroom apartment, furnished, includes parking space #12, no garage"
+              value={data.propertyDescription ?? ""}
+              onChange={(e) => onChange({ ...data, propertyDescription: e.target.value })}
+              className="resize-none"
+            />
+          </div>
+          <div className="grid sm:grid-cols-3 gap-4">
+            <div className="space-y-1">
+              <Label className="text-xs">Utilities Included</Label>
+              <Input
+                placeholder="e.g. Water, trash (tenant pays electric)"
+                value={data.utilitiesIncluded ?? ""}
+                onChange={(e) => onChange({ ...data, utilitiesIncluded: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Pets Allowed?</Label>
+              <div className="flex gap-1.5">
+                {["Yes", "No", "Case by case"].map((v) => (
+                  <button
+                    key={v}
+                    onClick={() => onChange({ ...data, petsAllowed: v })}
+                    className={`flex-1 text-xs py-2 rounded-lg border-2 font-medium transition-all ${data.petsAllowed === v ? "border-primary bg-primary/5 text-primary" : "border-border/50 text-muted-foreground hover:border-primary/30"}`}
+                  >
+                    {v}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -819,14 +1040,85 @@ function YesNoToggle({ label, value, onChange, tooltip }: {
   )
 }
 
-function MoneyStep({ data, onChange }: { data: Partial<MoneyData>; onChange: (d: Partial<MoneyData>) => void }) {
+function MoneyStep({ data, onChange, contractType }: { data: Partial<MoneyData>; onChange: (d: Partial<MoneyData>) => void; contractType: ContractType | null }) {
   const structure = data.paymentStructure ?? "flat"
+  const isLease = contractType === "lease"
 
   const PAYMENT_OPTIONS: Array<{ id: PaymentStructure; label: string; desc: string }> = [
     { id: "flat", label: "Flat Fee", desc: "One total price for the entire project" },
     { id: "hourly", label: "Hourly Rate", desc: "Billed based on hours worked" },
     { id: "milestone", label: "Milestone", desc: "Payments tied to project phases" },
   ]
+
+  if (isLease) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-display font-bold mb-1">Rent & Lease Terms</h2>
+          <p className="text-muted-foreground text-sm">Set the rental amounts, dates, and deposit requirements.</p>
+        </div>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div className="space-y-1">
+            <Label className="text-xs">Monthly Rent</Label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+              <Input className="pl-7" placeholder="0.00" value={data.monthlyRent ?? ""} onChange={(e) => onChange({ ...data, monthlyRent: e.target.value })} />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <div className="flex items-center gap-1.5">
+              <Label className="text-xs">Security Deposit</Label>
+              <Tooltip>
+                <TooltipTrigger asChild><Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" /></TooltipTrigger>
+                <TooltipContent className="text-xs">Typically 1–2 months rent. Check your local laws for the legal maximum.</TooltipContent>
+              </Tooltip>
+            </div>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+              <Input className="pl-7" placeholder="0.00" value={data.securityDeposit ?? ""} onChange={(e) => onChange({ ...data, securityDeposit: e.target.value })} />
+            </div>
+          </div>
+        </div>
+        <div className="grid sm:grid-cols-3 gap-4">
+          <div className="space-y-1">
+            <Label className="text-xs">Lease Start Date</Label>
+            <Input type="date" value={data.leaseStartDate ?? ""} onChange={(e) => onChange({ ...data, leaseStartDate: e.target.value })} />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Lease End Date</Label>
+            <Input type="date" value={data.leaseEndDate ?? ""} onChange={(e) => onChange({ ...data, leaseEndDate: e.target.value })} />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Rent Due Day</Label>
+            <Input placeholder="e.g. 1st of month" value={data.invoiceDueDays ?? ""} onChange={(e) => onChange({ ...data, invoiceDueDays: e.target.value })} />
+          </div>
+        </div>
+        <div className="rounded-xl border border-border/50 p-4 bg-card/50 space-y-0">
+          <YesNoToggle
+            label="Charge a late fee for overdue rent?"
+            value={data.lateFee ?? false}
+            onChange={(v) => onChange({ ...data, lateFee: v })}
+            tooltip="A late fee clause deters late payments. Common amounts are $25–$100 or 5–10% of monthly rent. Check local rent laws."
+          />
+          {data.lateFee && (
+            <div className="pt-2 pb-1">
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                <Input className="pl-7" placeholder="e.g. 50.00" value={data.lateFeeAmount ?? ""} onChange={(e) => onChange({ ...data, lateFeeAmount: e.target.value })} />
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs">Pet Deposit (if pets allowed)</Label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+            <Input className="pl-7" placeholder="e.g. 300.00 (leave blank if no pets)" value={data.petDeposit ?? ""} onChange={(e) => onChange({ ...data, petDeposit: e.target.value })} />
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -1930,7 +2222,7 @@ export default function ContractBuilder() {
     <TypeStep key="type" selected={contractType} onSelect={(t) => { setContractType(t); setAiInsights({ suggestions: [], warnings: [], draftGuidance: [] }) }} />,
     <PeopleStep key="people" data={people} onChange={setPeople} contractType={contractType ?? "freelance"} />,
     <ScopeStep key="scope" data={scope} onChange={setScope} contractType={contractType ?? "freelance"} />,
-    <MoneyStep key="money" data={money} onChange={setMoney} />,
+    <MoneyStep key="money" data={money} onChange={setMoney} contractType={contractType} />,
     <ProtectionStep key="protection" data={protection} onChange={setProtection} contractType={contractType ?? "freelance"} />,
     <ReviewStep
       key="review"

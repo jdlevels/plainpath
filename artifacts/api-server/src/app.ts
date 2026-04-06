@@ -7,6 +7,7 @@ import stripeRoutes from "./routes/stripe";
 import entitlementRoutes from "./routes/entitlements";
 import contractRoutes from "./routes/contracts";
 import sharesRoutes from "./routes/shares/index.js";
+import remindersRoutes from "./routes/reminders/index.js";
 import { logger } from "./lib/logger";
 
 const app: Express = express();
@@ -123,6 +124,7 @@ app.use("/api/stripe", stripeRoutes);
 app.use("/api/entitlements", entitlementRoutes);
 app.use("/api/contracts", contractRoutes);
 app.use("/api", sharesRoutes);
+app.use(remindersRoutes);
 
 app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
   if (err instanceof multer.MulterError) {

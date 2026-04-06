@@ -48,7 +48,7 @@ PlainPath is structured as a monorepo using pnpm workspaces.
 - **Export/Share**: Options to print/PDF, copy as text, download .txt, and share via Web Share API.
 - **Key Terms Glossary**: A client-side legal glossary with fuzzy matching to enrich AI-generated key terms, linking to external legal resources.
 - **Add to Calendar**: Integrates with deadlines to generate `.ics` files for calendar applications.
-- **Deadline Reminders**: Bell/BellDot buttons on every DeadlineCard; uses browser Notification API via `reminderStorage.ts` to schedule in-browser reminder notifications. Key file: `artifacts/plainpath/src/lib/reminderStorage.ts`
+- **Deadline Reminders**: Bell/BellDot buttons on every DeadlineCard for browser push notifications (via `reminderStorage.ts`). Plus a Mail button that expands an inline email input; submits to `POST /api/reminders/email` (Resend-powered, activates when RESEND_API_KEY is set). Key files: `artifacts/plainpath/src/lib/reminderStorage.ts`, `artifacts/api-server/src/routes/reminders/index.ts`
 - **Shareable Analysis Links**: "Copy share link" in ExportMenu posts analysis JSON to `/api/shares` (PostgreSQL-backed), returns a `/shared/:token` URL. `SharedAnalysis.tsx` renders read-only shared view. Key API: `artifacts/api-server/src/routes/shares/index.ts`
 
 ### Pricing Tiers
@@ -71,7 +71,7 @@ PlainPath is structured as a monorepo using pnpm workspaces.
 - **Route**: `/contract-builder` (frontend), `/api/contracts/*` (API)
 - **Purpose**: Guided 6-step intake wizard that produces a structured draft payload for freelance and other contracts.
 - **Steps**: Type → People → Scope → Money/Timing → Rights/Protection → Review Summary
-- **Contract Types**: Freelance Services Agreement (full), NDA (full), Simple Payment Agreement (full), Service Agreement (coming soon), Lease/Rental (coming soon)
+- **Contract Types**: Freelance Services Agreement (full), NDA (full), Simple Payment Agreement (full), Service Agreement (full), Lease/Rental Agreement (full)
 - **AI Insight Panel**: Desktop right-side panel; mobile collapsible drawer. Combines rule-based insights (immediate) with AI-enhanced insights (on step navigation).
 - **API Endpoints**:
   - `POST /api/contracts/insight` — returns live AI suggestions, warnings, and draft guidance for the current step

@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useRef } from "react"
+import React, { useState, useEffect, useRef, useMemo } from "react"
 import { useLocation } from "wouter"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import {
   BookMarked, ArrowRight, Trash2, Pencil, Check, X,
   FileText, Clock, HardDrive, AlertTriangle, Folders, CreditCard,
+  Search, SortAsc, SortDesc, ArrowUpDown,
 } from "lucide-react"
 import {
   getAll, deleteAnalysis, renameAnalysis,
@@ -39,6 +41,26 @@ export default function MyAnalyses() {
   const [editValue, setEditValue] = useState("")
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [showSubscription, setShowSubscription] = useState(false)
+  const [search, setSearch] = useState("")
+  const [sortBy, setSortBy] = useState<"newest" | "oldest" | "az">("newest")
+
+  const filteredItems = useMemo(() => {
+    let result = [...items]
+    const q = search.trim().toLowerCase()
+    if (q) {
+      result = result.filter((a) =>
+        a.title.toLowerCase().includes(q) ||
+        (a.analysis.documentType ?? "").toLowerCase().includes(q) ||
+        (a.documentTypeHint ?? "").toLowerCase().includes(q) ||
+        (a.analysis.overview ?? "").toLowerCase().includes(q)
+      )
+    }
+    if (sortBy === "newest") result.sort((a, b) => b.savedAt.localeCompare(a.savedAt))
+    if (sortBy === "oldest") result.sort((a, b) => a.savedAt.localeCompare(b.savedAt))
+    if (sortBy === "az") result.sort((a, b) => a.title.localeCompare(b.title))
+    return result
+  }, [items, search, sortBy])
+
   const editInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -179,11 +201,56 @@ export default function MyAnalyses() {
           </motion.div>
         )}
 
+        {/* ── Search & Sort ── */}
+        {items.length > 0 && (
+          <div className="flex items-center gap-2 mb-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/60 pointer-events-none" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search analyses…"
+                className="pl-8 h-9 text-sm rounded-xl bg-card border-border/60"
+              />
+            </div>
+            <div className="flex gap-1 shrink-0">
+              {([
+                { key: "newest", icon: <SortDesc className="w-3.5 h-3.5" />, label: "Newest" },
+                { key: "oldest", icon: <SortAsc className="w-3.5 h-3.5" />, label: "Oldest" },
+                { key: "az", icon: <ArrowUpDown className="w-3.5 h-3.5" />, label: "A–Z" },
+              ] as const).map(({ key, icon, label }) => (
+                <button
+                  key={key}
+                  onClick={() => setSortBy(key)}
+                  title={label}
+                  className={`h-9 px-2.5 rounded-xl border text-xs font-medium flex items-center gap-1.5 transition-colors ${
+                    sortBy === key
+                      ? "border-primary bg-primary/8 text-primary"
+                      : "border-border/60 text-muted-foreground hover:text-foreground hover:border-border bg-card"
+                  }`}
+                >
+                  {icon}
+                  <span className="hidden sm:inline">{label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── No search results ── */}
+        {items.length > 0 && filteredItems.length === 0 && (
+          <div className="text-center py-16 text-muted-foreground">
+            <Search className="w-8 h-8 mx-auto mb-3 opacity-30" />
+            <p className="text-sm font-medium">No analyses match "{search}"</p>
+            <button onClick={() => setSearch("")} className="text-xs text-primary mt-1 hover:underline">Clear search</button>
+          </div>
+        )}
+
         {/* ── Saved analyses list ── */}
         {items.length > 0 && (
           <div className="space-y-3">
             <AnimatePresence initial={false}>
-              {items.map((saved) => (
+              {filteredItems.map((saved) => (
                 <motion.div
                   key={saved.id}
                   layout
