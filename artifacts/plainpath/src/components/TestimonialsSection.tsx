@@ -8,14 +8,16 @@ const TESTIMONIALS = [
     name: "Marisol T.",
     role: "Renter, Austin TX",
     rating: 5,
-    tag: "Lease Agreement",
+    tag: "Analyze a Document",
+    tagColor: "bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400",
   },
   {
-    quote: "I'm a freelancer and I used Contract Builder to draft my first Freelance Agreement. It walked me through every clause, flagged that I had no kill fee, and generated a real, usable draft in minutes.",
+    quote: "I'm a freelancer and I used the contract builder to draft my first agreement. It walked me through every clause, flagged that I had no kill fee, and generated a real, usable draft in minutes.",
     name: "Jordan K.",
     role: "Independent Designer",
     rating: 5,
-    tag: "Contract Builder",
+    tag: "Build a Contract",
+    tagColor: "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400",
   },
   {
     quote: "I got a job offer from a company I'd never heard of. The Trust Check immediately flagged two things — the email domain didn't match the company name and the payment terms were unusual. Avoided a scam.",
@@ -23,27 +25,31 @@ const TESTIMONIALS = [
     role: "Job Seeker",
     rating: 5,
     tag: "Document Trust Check",
+    tagColor: "bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400",
   },
   {
     quote: "My father received a Medicare explanation of benefits that nobody in our family could understand. PlainPath broke it into plain English, listed exactly what he needed to do, and highlighted a billing error we then disputed.",
     name: "Carlos R.",
     role: "Family Caregiver",
     rating: 5,
-    tag: "Healthcare Document",
+    tag: "Analyze a Document",
+    tagColor: "bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400",
   },
   {
-    quote: "We applied for a city small business grant and uploaded the 28-page application packet. PlainPath pulled out every requirement and eligibility rule in about 90 seconds. We got the grant.",
+    quote: "I used Contract Review before signing my employment offer. It caught a 5-year non-compete buried on page 9 and gave me exact negotiation language. My lawyer confirmed it was legitimate and I got the clause removed.",
     name: "Diana W.",
-    role: "Small Business Owner",
+    role: "Operations Manager",
     rating: 5,
-    tag: "Grant Application",
+    tag: "Contract Review",
+    tagColor: "bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400",
   },
   {
-    quote: "As a paralegal I use this to do first-pass reviews on contracts before escalating to attorneys. It catches things fast. The source section explainers are especially good.",
+    quote: "As a paralegal I use Contract Review to do first-pass reviews before escalating to attorneys. It surfaces problematic clauses fast and explains why each one is a concern — the source section is especially useful.",
     name: "Nathaniel P.",
     role: "Paralegal",
     rating: 5,
-    tag: "Legal Documents",
+    tag: "Contract Review",
+    tagColor: "bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400",
   },
 ]
 
@@ -99,7 +105,7 @@ export default function TestimonialsSection() {
                   <div className="text-sm font-semibold text-foreground">{t.name}</div>
                   <div className="text-xs text-muted-foreground dark:text-muted-foreground/80">{t.role}</div>
                 </div>
-                <span className="text-xs px-2.5 py-1 rounded-full bg-primary/8 dark:bg-primary/15 text-primary font-medium">
+                <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${t.tagColor}`}>
                   {t.tag}
                 </span>
               </div>
