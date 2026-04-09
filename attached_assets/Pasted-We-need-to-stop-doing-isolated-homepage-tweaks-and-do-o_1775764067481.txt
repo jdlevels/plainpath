@@ -1,0 +1,105 @@
+We need to stop doing isolated homepage tweaks and do one full homepage/product-positioning pass.
+
+Current issue:
+The homepage still does not clearly represent the full PlainPath product. It reads too much like one main feature with extra add-ons. A user should immediately understand what PlainPath is, what tools it includes, what they get, and why they would pay.
+
+Please do a full product-story cleanup across the homepage with these goals:
+
+1. HERO MUST EXPLAIN THE FULL PRODUCT
+Update the hero so it clearly communicates that PlainPath is a document-understanding platform with multiple tools.
+
+The hero should quickly answer:
+- What is PlainPath?
+- What does it help me do?
+- What tools are included?
+
+Make sure the hero reflects the 4 core tools now:
+1. Analyze a Document
+2. Document Trust Check
+3. Build a Contract
+4. Contract Review
+
+Do not let the hero feel like it is only about Analyze.
+
+2. MAKE THE 4-TOOL STRUCTURE OBVIOUS
+Across the homepage, PlainPath should clearly feel like a platform with four distinct tools.
+
+Requirements:
+- explain each tool clearly
+- show how they are different from each other
+- make it obvious how they work together
+- make it obvious what type of user problem each one solves
+
+Suggested framing:
+- Read it
+- Trust it
+- Build it
+- Review it
+
+3. CLEAN UP THE DEMO / PROOF SECTIONS
+The demo areas still need cleanup.
+
+Requirements:
+- remove anything that feels placeholder, confusing, unfinished, or generic
+- make each demo section clearly tied to a real tool
+- make the “See PlainPath in action” area feel intentional and polished
+- make the live examples/results section clearer and more product-specific
+- improve hierarchy, spacing, copy, and framing so the demos feel like strong product proof
+
+4. EXPLAIN WHAT THE USER IS BUYING
+A visitor should understand what they are actually paying for.
+
+Clarify:
+- what is included in Starter
+- what becomes available in Pro
+- what tools are core vs premium
+- what happens after upload/review/build
+- what value the user receives in practical terms
+
+The homepage should answer:
+- Why would I use this?
+- Why would I pay for this?
+- Which tool should I use first?
+
+5. KEEP PRODUCT TRUTH ACCURATE
+Do not overpromise anything that is not truly live.
+If E-Signature or other features are not fully activated yet, do not present them as fully live core launch features on the homepage.
+Keep the homepage truthful and production-accurate.
+
+6. IMPROVE SECTION COPY AND FLOW
+Review all homepage section headings, supporting text, labels, and CTAs so the page tells one consistent product story from top to bottom.
+
+The homepage flow should feel like:
+- problem
+- what PlainPath is
+- the 4 tools
+- what each tool does
+- proof/demo
+- examples/results
+- pricing
+- FAQ
+- final CTA
+
+7. DO NOT REDESIGN EVERYTHING FROM SCRATCH
+Keep the current visual direction, premium look, and strongest existing sections.
+This is a product-positioning refinement pass, not a total redesign.
+
+DELIVERABLE
+Implement the homepage/product-story cleanup directly, then summarize in this structure:
+
+1. HERO CHANGES
+- what changed in the hero messaging
+- how the 4-tool platform is represented
+
+2. TOOL POSITIONING CHANGES
+- how each of the 4 tools is now described and differentiated
+
+3. DEMO / PROOF CLEANUP
+- what was cleaned up
+- how the demo sections are now clearer
+
+4. PRICING / VALUE CLARITY
+- how the page now explains what the user is buying
+
+5. REMAINING GAPS
+- anything still not ideal before launch
