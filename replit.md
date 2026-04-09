@@ -156,6 +156,27 @@ All three share: `h-12 px-8 text-base rounded-xl font-semibold`. The two outline
 - **Env var needed**: `DROPBOX_SIGN_API_KEY` (user must create account at sign.dropbox.com)
 - **Legal note**: Do NOT build a DIY draw-your-name signature — it won't hold up legally and undermines PlainPath's trustworthiness promise
 
+### Contract Review — "Fair Deal Check" (4th Core Tool, Pro Plan)
+- **Status**: Scoped, not yet built
+- **When**: Build after Stripe is live and Pro plan gating is confirmed (same window as e-signature)
+- **Purpose**: Someone hands the user a contract they didn't write — this tool tells them if it's fair, what's bad, and exactly what to do about it
+- **Use cases**: Music contracts, employment agreements, influencer deals, lease agreements, NDAs, brand deals, licensing deals
+- **UX Flow**:
+  1. User uploads a contract PDF or pastes contract text (reuses existing Import flow)
+  2. New tool option: "Review a Contract" (alongside Analyze, Trust Check, Contract Builder)
+  3. AI reviews every meaningful clause for fairness — rates each one: Fair / Watch Out / Red Flag
+  4. For each flagged clause, the user sees:
+     - Plain-English explanation of what the clause actually means
+     - Why it's unfair or problematic (e.g. "This gives them rights to your music forever, even if they drop you")
+     - Suggested negotiation language — exact wording the user can copy and send back
+     - Exit guidance — whether the clause is enforceable, what could void it, steps to take
+  5. Overall Fairness Score (like Trust Check's three-score model) — summary of how balanced the contract is
+- **Backend**: New route `POST /api/contracts/review` — accepts `{ text }`, returns `{ fairnessScore, clauses: [{ text, rating, explanation, negotiationLanguage, exitGuidance }] }`
+- **Frontend**: New page `/contract-review` with clause-by-clause accordion results, color-coded ratings (green/amber/red), copyable negotiation language blocks
+- **Plan gate**: Pro only (lock icon shown to Starter/Free users)
+- **AI model**: GPT-4o with structured JSON output — same pattern as existing analysis pipeline
+- **Homepage**: Add "Review a Contract" as a 4th CTA option once built
+
 ## Pending Integration Connections (not yet authorized)
 
 - **Stripe** (`connector:ccfg_stripe_01K611P4YQR0SZM11XFRQJC44Y`): All backend code is built (`/api/stripe/*` routes, billing SQLite DB, webhook handler). Needs `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET` env vars — either connect via Replit integration or add secrets manually.
