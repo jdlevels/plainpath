@@ -33,11 +33,12 @@ export const PRICING_PLANS: PricingPlan[] = [
     price: "$24.99",
     period: "/month",
     description:
-      "Everything in Starter, plus Document Trust Check and Contract Builder — the full PlainPath toolkit.",
+      "Everything in Starter, plus Document Trust Check, Contract Builder, and Contract Review — the full PlainPath toolkit.",
     features: [
       "Everything in Starter",
       "Unlimited Document Trust Checks",
       "Unlimited Contract Builder drafts",
+      "Unlimited Contract Reviews",
       "Source section explainers",
       "Checklist, Risks & What's Missing",
       "Full Action Pack",
@@ -52,7 +53,7 @@ export const PRICING_PLANS: PricingPlan[] = [
     price: "$49.99",
     period: "/month",
     description:
-      "Higher limits and shared workflows for teams. Planned for a later release.",
+      "All four tools with higher limits, shared workflows, and team management. Planned for a later release.",
     features: [
       "Everything in Pro",
       "Planned multi-user access",
