@@ -2,7 +2,7 @@ import { motion } from "framer-motion"
 import { useLocation } from "wouter"
 import {
   Clock, AlertTriangle, FileText, ArrowRight, ChevronRight,
-  ShieldCheck, XCircle, PenLine, BadgeCheck, Download,
+  ShieldCheck, XCircle, PenLine, BadgeCheck, Download, Scale, MessageSquare,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -44,6 +44,12 @@ const TRUST_FLAGS = [
 const CONTRACT_CLAUSES = [
   "1. Alex Rivera shall provide brand identity design services including logo, color palette, and type system with 3 revision rounds.",
   "2. Client shall pay $4,500 total: $2,250 due upon signing and $2,250 due upon final delivery.",
+]
+
+const REVIEW_FLAGS = [
+  { label: "Termination without notice — no severance protection", severity: "red" },
+  { label: "5-year global non-compete — likely unenforceable but still risky", severity: "red" },
+  { label: "IP clause transfers rights regardless of payment status", severity: "amber" },
 ]
 
 export default function ProductPreview() {
@@ -90,11 +96,12 @@ export default function ProductPreview() {
           className="flex flex-wrap items-center justify-center gap-3 mt-6"
         >
           {[
-            { icon: FileText,   label: "Analyze a Document",      color: "text-blue-400",    bg: "bg-blue-500/10",    border: "border-blue-500/20" },
-            { icon: ShieldCheck, label: "Document Trust Check",   color: "text-violet-400",  bg: "bg-violet-500/10",  border: "border-violet-500/20" },
-            { icon: PenLine,    label: "Build a Contract",         color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20" },
-          ].map(({ icon: Icon, label, color, bg, border }, i) => (
-            <span key={i} className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full border ${bg} ${border} text-xs font-semibold ${color}`}>
+            { icon: FileText,    label: "Analyze a Document"   },
+            { icon: ShieldCheck, label: "Document Trust Check" },
+            { icon: PenLine,     label: "Build a Contract"     },
+            { icon: Scale,       label: "Contract Review"      },
+          ].map(({ icon: Icon, label }, i) => (
+            <span key={i} className="flex items-center gap-2 px-3.5 py-1.5 rounded-full border bg-white/5 border-white/12 text-xs font-semibold text-slate-300">
               <Icon className="w-3.5 h-3.5 shrink-0" />
               {label}
             </span>
@@ -249,26 +256,25 @@ export default function ProductPreview() {
       </motion.div>
 
       {/* ══════════════════════════════════════════════════════
-          LANES 2 + 3: Trust Check + Contract Builder — proof cards
+          LANES 2 + 3 + 4: Trust Check, Contract Builder, Contract Review
       ═════════════════════════════════════════════════════════ */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-40px" }}
         transition={{ delay: 0.15 }}
-        className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4 mb-10"
+        className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4 mb-10"
       >
         {/* ── Trust Check proof card ── */}
         <div className="rounded-2xl bg-slate-950 border border-slate-800/80 overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.35)] ring-1 ring-white/4">
           <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-800 bg-slate-950/80">
-            <div className="w-5 h-5 rounded-md bg-violet-500/20 flex items-center justify-center">
-              <ShieldCheck className="w-3 h-3 text-violet-400" />
+            <div className="w-5 h-5 rounded-md bg-slate-700/60 flex items-center justify-center">
+              <ShieldCheck className="w-3 h-3 text-slate-300" />
             </div>
             <span className="text-xs font-semibold text-slate-300">Document Trust Check</span>
-            <span className="ml-auto text-[10px] text-violet-400/60 font-mono">fake_irs_notice.pdf</span>
+            <span className="ml-auto text-[10px] text-slate-500 font-mono">fake_irs_notice.pdf</span>
           </div>
           <div className="p-4 space-y-3">
-            {/* Verdict banner */}
             <motion.div
               initial={{ opacity: 0, scale: 0.97 }} whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }} transition={{ delay: 0.1 }}
@@ -279,34 +285,30 @@ export default function ProductPreview() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-red-400 font-bold text-sm">Likely Scam</p>
-                <p className="text-slate-500 text-[11px]">Trust score 18/100 · Do not pay or respond</p>
+                <p className="text-slate-500 text-[11px]">Score 18/100 · Do not pay</p>
               </div>
               <XCircle className="w-5 h-5 text-red-400 shrink-0" />
             </motion.div>
-            {/* Flags */}
             <p className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Red flags found</p>
             <div className="space-y-2">
               {TRUST_FLAGS.map((flag, i) => (
                 <motion.div key={i} initial={{ opacity: 0, x: 10 }} whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }} transition={{ delay: 0.15 + i * 0.08 }}
-                  className={`flex items-start gap-2.5 rounded-xl px-3.5 py-2.5 border ${
-                    flag.severity === "red"
-                      ? "bg-red-500/8 border-red-500/20"
-                      : "bg-amber-500/8 border-amber-500/20"
+                  className={`flex items-start gap-2.5 rounded-xl px-3 py-2 border ${
+                    flag.severity === "red" ? "bg-red-500/8 border-red-500/20" : "bg-amber-500/8 border-amber-500/20"
                   }`}
                 >
-                  <AlertTriangle className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${flag.severity === "red" ? "text-red-400" : "text-amber-400"}`} />
-                  <p className="text-white text-xs leading-snug">{flag.label}</p>
+                  <AlertTriangle className={`w-3 h-3 mt-0.5 shrink-0 ${flag.severity === "red" ? "text-red-400" : "text-amber-400"}`} />
+                  <p className="text-white text-[11px] leading-snug">{flag.label}</p>
                 </motion.div>
               ))}
             </div>
-            {/* Recommendation */}
             <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
               transition={{ delay: 0.4 }}
-              className="rounded-xl bg-slate-800/60 border border-slate-700/40 px-3.5 py-2.5"
+              className="rounded-xl bg-slate-800/60 border border-slate-700/40 px-3 py-2.5"
             >
               <p className="text-slate-300 text-[11px] leading-relaxed">
-                <span className="text-emerald-400 font-semibold">Safe next step:</span> Contact the IRS directly at irs.gov to verify. Do not use contact details from this document.
+                <span className="text-emerald-400 font-semibold">Safe next step:</span> Contact the IRS at irs.gov to verify. Do not use contact details from this document.
               </p>
             </motion.div>
           </div>
@@ -315,16 +317,15 @@ export default function ProductPreview() {
         {/* ── Contract Builder proof card ── */}
         <div className="rounded-2xl bg-slate-950 border border-slate-800/80 overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.35)] ring-1 ring-white/4">
           <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-800 bg-slate-950/80">
-            <div className="w-5 h-5 rounded-md bg-emerald-500/20 flex items-center justify-center">
-              <PenLine className="w-3 h-3 text-emerald-400" />
+            <div className="w-5 h-5 rounded-md bg-slate-700/60 flex items-center justify-center">
+              <PenLine className="w-3 h-3 text-slate-300" />
             </div>
             <span className="text-xs font-semibold text-slate-300">Contract Builder</span>
-            <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-semibold flex items-center gap-1">
+            <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-slate-700/60 text-slate-300 font-semibold flex items-center gap-1">
               <BadgeCheck className="w-3 h-3" /> Ready
             </span>
           </div>
           <div className="p-4 space-y-3">
-            {/* Contract header */}
             <motion.div
               initial={{ opacity: 0, y: -6 }} whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }} transition={{ delay: 0.1 }}
@@ -336,8 +337,7 @@ export default function ProductPreview() {
               </div>
               <span className="text-[10px] text-slate-400 font-mono shrink-0">3 pages</span>
             </motion.div>
-            {/* Clause previews */}
-            <div className="rounded-xl bg-slate-800/50 border border-slate-700/40 px-4 py-3 space-y-2.5">
+            <div className="rounded-xl bg-slate-800/50 border border-slate-700/40 px-3 py-3 space-y-2">
               {CONTRACT_CLAUSES.map((clause, i) => (
                 <motion.p key={i} initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
                   viewport={{ once: true }} transition={{ delay: 0.15 + i * 0.1 }}
@@ -348,21 +348,70 @@ export default function ProductPreview() {
               ))}
               <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
                 viewport={{ once: true }} transition={{ delay: 0.35 }}
-                className="border-t border-slate-700/50 pt-2.5 mt-1"
+                className="border-t border-slate-700/50 pt-2 mt-1"
               >
                 <p className="text-amber-400 text-[11px] font-medium flex items-start gap-1.5">
                   <AlertTriangle className="w-3 h-3 shrink-0 mt-0.5" />
-                  Gap found: No intellectual property clause. PlainPath recommends adding one before signing.
+                  Gap found: No IP clause. PlainPath recommends adding one before signing.
                 </p>
               </motion.div>
             </div>
-            {/* Download CTA */}
             <motion.div initial={{ opacity: 0, y: 4 }} whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }} transition={{ delay: 0.4 }}
-              className="flex items-center gap-2 rounded-xl bg-emerald-600/15 border border-emerald-500/25 px-3.5 py-2.5"
+              className="flex items-center gap-2 rounded-xl bg-slate-800/60 border border-slate-700/40 px-3 py-2.5"
             >
-              <Download className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-              <p className="text-emerald-300 text-xs font-semibold">Contract ready to download as PDF</p>
+              <Download className="w-3.5 h-3.5 text-slate-300 shrink-0" />
+              <p className="text-slate-300 text-[11px] font-semibold">Contract ready to download as PDF</p>
+            </motion.div>
+          </div>
+        </div>
+
+        {/* ── Contract Review proof card ── */}
+        <div className="rounded-2xl bg-slate-950 border border-slate-800/80 overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.35)] ring-1 ring-white/4">
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-800 bg-slate-950/80">
+            <div className="w-5 h-5 rounded-md bg-slate-700/60 flex items-center justify-center">
+              <Scale className="w-3 h-3 text-slate-300" />
+            </div>
+            <span className="text-xs font-semibold text-slate-300">Contract Review</span>
+            <span className="ml-auto text-[10px] text-slate-500 font-mono">employment_offer.pdf</span>
+          </div>
+          <div className="p-4 space-y-3">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.97 }} whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }} transition={{ delay: 0.1 }}
+              className="flex items-center gap-3 rounded-xl bg-red-500/10 border border-red-500/25 px-4 py-3"
+            >
+              <div className="w-10 h-10 rounded-xl bg-red-500/15 flex items-center justify-center shrink-0">
+                <span className="text-red-400 font-black text-base">28</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-red-400 font-bold text-sm">Heavily One-Sided</p>
+                <p className="text-slate-500 text-[11px]">Score 28/100 · Do not sign as-is</p>
+              </div>
+              <Scale className="w-5 h-5 text-red-400 shrink-0" />
+            </motion.div>
+            <p className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Red flags found</p>
+            <div className="space-y-2">
+              {REVIEW_FLAGS.map((flag, i) => (
+                <motion.div key={i} initial={{ opacity: 0, x: 10 }} whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }} transition={{ delay: 0.15 + i * 0.08 }}
+                  className={`flex items-start gap-2.5 rounded-xl px-3 py-2 border ${
+                    flag.severity === "red" ? "bg-red-500/8 border-red-500/20" : "bg-amber-500/8 border-amber-500/20"
+                  }`}
+                >
+                  <AlertTriangle className={`w-3 h-3 mt-0.5 shrink-0 ${flag.severity === "red" ? "text-red-400" : "text-amber-400"}`} />
+                  <p className="text-white text-[11px] leading-snug">{flag.label}</p>
+                </motion.div>
+              ))}
+            </div>
+            <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
+              transition={{ delay: 0.4 }}
+              className="rounded-xl bg-slate-800/60 border border-slate-700/40 px-3 py-2.5"
+            >
+              <p className="text-slate-300 text-[11px] leading-relaxed flex items-start gap-1.5">
+                <MessageSquare className="w-3 h-3 text-slate-400 shrink-0 mt-0.5" />
+                <span><span className="text-slate-200 font-semibold">Negotiation language ready:</span> "We request the termination clause include 30 days written notice."</span>
+              </p>
             </motion.div>
           </div>
         </div>
