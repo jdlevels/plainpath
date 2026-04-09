@@ -1,0 +1,70 @@
+We are moving forward with the 4th PlainPath core tool now.
+
+Rename “Fair Deal Check” everywhere user-facing to:
+
+CONTRACT REVIEW
+
+This should be treated as a real core product tool alongside:
+1. Analyze a Document
+2. Document Trust Check
+3. Build a Contract
+4. Contract Review
+
+GOAL
+A user uploads a contract they did not write, and PlainPath reviews it for fairness, risk, missing protections, negotiation opportunities, and what to look at before signing.
+
+START HERE — V1 FOUNDATION + WORKING FLOW
+
+1. HOMEPAGE / PRODUCT POSITIONING
+- Replace the homepage CTA label “Fair Deal Check” with “Contract Review”
+- Keep the current placement as the 4th core tool
+- Add/update short supporting text where appropriate so the value is clear:
+  “Review a contract you didn’t write. Spot unfair clauses, missing protections, negotiation points, and high-risk terms before you sign.”
+- Preserve the current premium visual style
+
+2. CONTRACT REVIEW USER FLOW
+Build a real V1 flow:
+- entry point from homepage
+- upload / paste contract
+- process the contract
+- show a structured Contract Review results page
+
+3. REQUIRED RESULTS STRUCTURE
+The Contract Review output should include:
+- Overall fairness summary
+- Clause-by-clause review
+- Plain-English explanation
+- Risk labels such as:
+  - Fair
+  - Watch Out
+  - Red Flag
+- Missing protections
+- Negotiation suggestions / suggested wording
+- “What to review before signing” section
+- clear “not legal advice” framing
+
+4. UX / PRODUCT RULES
+- Keep the output aligned in quality with Analyze and Trust Check
+- Desktop and mobile must both be usable
+- Keep the language plain-English and action-oriented
+- Do not make this a general-purpose legal chatbot
+- Do not frame it as “how to escape a contract”
+- Frame it as understanding, risk awareness, negotiation guidance, and pre-signing review
+
+5. DATA / SAVING
+- If it fits the current architecture, allow Contract Review results to save/view similarly to other analyses
+- Reuse existing patterns where possible instead of inventing a separate product system
+
+6. CONSTRAINTS
+- Do not touch Stripe/payment wiring
+- Do not break existing Analyze / Trust Check / Contract Builder flows
+- Keep the build production-minded, not just demo-level
+
+DELIVERABLE
+Start implementation now and return updates in this structure:
+1. files changed
+2. homepage / CTA changes completed
+3. Contract Review flow completed
+4. results structure completed
+5. mobile/desktop status
+6. remaining gaps before V1 is fully usable

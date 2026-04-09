@@ -20,6 +20,7 @@ import { getApiBaseUrl } from "@/lib/api"
 import { beforeRunContractDraft, UsageLimitError } from "@/lib/analysisGate"
 import { useEntitlements } from "@/hooks/useEntitlements"
 import UpgradeModal from "@/components/UpgradeModal"
+import SendForSignatureModal from "@/components/SendForSignatureModal"
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -1930,6 +1931,7 @@ function DraftResultView({ draft, contractType, onBack, onRestart }: {
   onRestart: () => void
 }) {
   const { toast } = useToast()
+  const [showSignatureModal, setShowSignatureModal] = useState(false)
 
   function exportJSON() {
     const blob = new Blob([JSON.stringify(draft, null, 2)], { type: "application/json" })
@@ -2051,6 +2053,14 @@ function DraftResultView({ draft, contractType, onBack, onRestart }: {
         <div className="flex gap-2 flex-wrap">
           <Button variant="outline" size="sm" onClick={onBack} className="gap-1.5"><ArrowLeft className="w-3.5 h-3.5" /> Back to Review</Button>
           <Button size="sm" onClick={downloadPDF} className="gap-1.5 bg-primary text-white hover:bg-primary/90"><Download className="w-3.5 h-3.5" /> Download PDF</Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowSignatureModal(true)}
+            className="gap-1.5 border-violet-200 text-violet-600 hover:bg-violet-50 hover:text-violet-700 hover:border-violet-300 dark:border-violet-800 dark:text-violet-400 dark:hover:bg-violet-950/30"
+          >
+            <Lock className="w-3.5 h-3.5" /> Send for Signature
+          </Button>
           <Button variant="outline" size="sm" onClick={exportJSON} className="gap-1.5"><Download className="w-3.5 h-3.5" /> Export JSON</Button>
           <Button variant="ghost" size="sm" onClick={onRestart} className="gap-1.5"><RotateCcw className="w-3.5 h-3.5" /> Start Over</Button>
         </div>
@@ -2135,6 +2145,13 @@ function DraftResultView({ draft, contractType, onBack, onRestart }: {
       <div className="bg-muted/30 border border-border/40 rounded-xl p-4 text-xs text-muted-foreground text-center">
         This is a structured draft payload for internal review. It is not a final legal document. Always have a qualified attorney review any contract before signing.
       </div>
+
+      <SendForSignatureModal
+        open={showSignatureModal}
+        onClose={() => setShowSignatureModal(false)}
+        draft={draft as unknown as Record<string, unknown>}
+        parties={draft.parties as unknown as Record<string, { label: string; name: string; type?: string }>}
+      />
     </div>
   )
 }

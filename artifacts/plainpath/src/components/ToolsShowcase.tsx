@@ -1,9 +1,9 @@
 import { motion } from "framer-motion"
 import { useLocation } from "wouter"
 import {
-  BookOpen, ShieldCheck, PenLine, ArrowRight,
+  BookOpen, ShieldCheck, PenLine, Scale, ArrowRight,
   ListTodo, Calendar, AlertTriangle, CheckCircle2,
-  Flag, BarChart2, FileCheck, Sparkles,
+  Flag, BarChart2, FileCheck, Sparkles, Copy, MessageSquare,
 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -69,6 +69,26 @@ const TOOLS = [
     iconBg: "bg-violet-100 dark:bg-violet-900/40",
     iconColor: "text-violet-600 dark:text-violet-400",
   },
+  {
+    icon: Scale,
+    title: "Fair Deal Check",
+    tagline: "Know if a contract is fair before you sign",
+    description: "Someone handed you a contract — a music deal, job offer, lease, or brand agreement. Paste it in and get a clause-by-clause fairness review with exact negotiation language ready to copy.",
+    features: [
+      { icon: Flag, label: "Red flags and watch-outs called out" },
+      { icon: Copy, label: "Negotiation language ready to copy" },
+      { icon: MessageSquare, label: "Plain English for every clause" },
+      { icon: AlertTriangle, label: "Exit guidance if already signed" },
+    ],
+    cta: "Review a Contract",
+    route: "/contract-review",
+    color: "from-amber-50/80 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20",
+    badge: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+    badgeLabel: "Pro · Team",
+    border: "border-amber-200/60 dark:border-amber-900/40",
+    iconBg: "bg-amber-100 dark:bg-amber-900/40",
+    iconColor: "text-amber-600 dark:text-amber-400",
+  },
 ]
 
 export default function ToolsShowcase() {
@@ -83,7 +103,7 @@ export default function ToolsShowcase() {
           viewport={{ once: true }}
           className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3"
         >
-          Three tools, one platform
+          Four tools, one platform
         </motion.p>
         <motion.h2
           initial={{ opacity: 0, y: 12 }}
@@ -91,7 +111,7 @@ export default function ToolsShowcase() {
           viewport={{ once: true }}
           className="text-3xl md:text-4xl font-display font-bold mb-4"
         >
-          Read it. Trust it. Build it.
+          Read it. Trust it. Build it. Fight for it.
         </motion.h2>
         <motion.p
           initial={{ opacity: 0, y: 8 }}
@@ -100,11 +120,11 @@ export default function ToolsShowcase() {
           transition={{ delay: 0.08 }}
           className="text-muted-foreground text-lg max-w-2xl mx-auto"
         >
-          Every document situation — understanding, verifying, or creating — covered in one place.
+          Every document situation — understanding, verifying, creating, or reviewing for fairness — covered in one place.
         </motion.p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
         {TOOLS.map((tool, i) => (
           <motion.div
             key={i}

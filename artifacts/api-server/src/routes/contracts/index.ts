@@ -1,6 +1,9 @@
 import { Router, type Request, type Response } from "express";
+import multer from "multer";
 import { openai } from "@workspace/integrations-openai-ai-server";
 import { logger } from "../../lib/logger";
+
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
 
 const router = Router();
 
@@ -129,6 +132,203 @@ Protection: ${JSON.stringify(protection ?? {})}`;
       error: "generation_failed",
       message: "Draft generation failed. Please try again.",
     });
+  }
+});
+
+// POST /api/contracts/review
+// Fair Deal Check — clause-by-clause fairness analysis of a contract the user received.
+// Accepts JSON { text } or multipart { file }.
+router.post("/review", upload.single("file"), async (req: Request, res: Response) => {
+  let text = "";
+
+  if (req.file) {
+    try {
+      const mime = req.file.mimetype;
+      if (mime === "application/pdf" || req.file.originalname?.endsWith(".pdf")) {
+        const { default: pdfParse } = await import("pdf-parse");
+        const parsed = await pdfParse(req.file.buffer);
+        text = parsed.text ?? "";
+      } else if (
+        mime === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+        req.file.originalname?.endsWith(".docx")
+      ) {
+        const mammoth = await import("mammoth");
+        const result = await mammoth.extractRawText({ buffer: req.file.buffer });
+        text = result.value ?? "";
+      } else {
+        text = req.file.buffer.toString("utf-8");
+      }
+    } catch (err) {
+      logger.error({ err }, "contracts/review file extraction failed");
+      return res.status(422).json({ message: "Could not read the uploaded file. Try a different format." });
+    }
+  } else {
+    text = typeof req.body?.text === "string" ? req.body.text : "";
+  }
+
+  if (!text || text.trim().length < 50) {
+    return res.status(400).json({ message: "Please provide at least 50 characters of contract text." });
+  }
+
+  const systemPrompt = `You are a contract fairness expert reviewing a contract on behalf of the person who did NOT draft it — someone handed this contract and needs to know if it's fair before signing.
+
+Review every meaningful clause. Return ONLY valid JSON — no markdown fences — in exactly this shape:
+{
+  "overallScore": number (0-100, where 100 = completely fair to the reader),
+  "verdict": "Fair" | "Mostly Fair" | "Some Concerns" | "Significant Issues" | "Heavily One-Sided",
+  "summary": "2-3 sentence plain English overall assessment",
+  "clauses": [
+    {
+      "id": "c1",
+      "text": "Short excerpt or label for the clause (max 100 chars)",
+      "rating": "fair" | "watch-out" | "red-flag",
+      "explanation": "Plain English: what this clause actually means (max 60 words)",
+      "whyUnfair": "Why this is unfair or risky — null if rating is fair (max 60 words)",
+      "negotiationLanguage": "Exact suggested revision the user can copy and send back — null if rating is fair (max 150 words)",
+      "exitGuidance": "If already signed or clause may be unenforceable — null if rating is fair (max 60 words)"
+    }
+  ]
+}
+
+Score guide: 80-100 = Fair, 60-79 = Mostly Fair, 40-59 = Some Concerns, 20-39 = Significant Issues, 0-19 = Heavily One-Sided.
+
+Rules:
+- Only include clauses that carry real obligations, rights, or restrictions (5-20 clauses total)
+- Skip purely administrative boilerplate (headings, "entire agreement" merger clauses, definitions with no impact)
+- Use "watch-out" for vague, unusual, or one-sided clauses that need clarification or negotiation
+- Use "red-flag" for clearly harmful, exploitative, or potentially unenforceable clauses
+- negotiationLanguage must be specific — not generic. Include the actual suggested replacement text
+- All language must be plain English — no legal jargon`;
+
+  const userPrompt = `Review this contract for fairness:\n\n${text.slice(0, 12000)}`;
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-5.2",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
+      temperature: 0.2,
+      max_completion_tokens: 4000,
+    });
+
+    const raw = response.choices[0]?.message?.content ?? "{}";
+    const cleaned = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "").trim();
+    const result = JSON.parse(cleaned);
+
+    return res.json({
+      overallScore: typeof result.overallScore === "number" ? Math.max(0, Math.min(100, result.overallScore)) : 50,
+      verdict: typeof result.verdict === "string" ? result.verdict : "Some Concerns",
+      summary: typeof result.summary === "string" ? result.summary : "",
+      clauses: Array.isArray(result.clauses) ? result.clauses : [],
+      reviewedAt: new Date().toISOString(),
+    });
+  } catch (err) {
+    logger.error({ err }, "contracts/review failed");
+    return res.status(500).json({ message: "Review failed. Please try again." });
+  }
+});
+
+// POST /api/contracts/send-for-signature
+// E-Signature — sends a contract for signature via Dropbox Sign.
+// Returns 503 if DROPBOX_SIGN_API_KEY is not set.
+router.post("/send-for-signature", async (req: Request, res: Response) => {
+  const apiKey = process.env.DROPBOX_SIGN_API_KEY;
+  if (!apiKey) {
+    return res.status(503).json({
+      error: "signature_not_configured",
+      message: "E-signature is not configured yet. A Dropbox Sign API key is required.",
+    });
+  }
+
+  const { draft, partyAEmail, partyAName, partyBEmail, partyBName, message } = req.body;
+
+  if (!draft) return res.status(400).json({ message: "Contract draft is required." });
+  if (!partyAEmail || !partyBEmail) return res.status(400).json({ message: "Both party email addresses are required." });
+
+  function buildContractText(d: Record<string, unknown>): string {
+    const parties = d.parties as Record<string, { label: string; name: string; type?: string }> ?? {};
+    const sections = d.sections as { title: string; clauses: string[] }[] ?? [];
+    const defaultClauses = d.defaultClauses as string[] ?? [];
+    const summary = d.plainEnglishSummary as string[] ?? [];
+
+    let out = `${String(d.contractType ?? "CONTRACT").toUpperCase()}\n`;
+    out += `Prepared with PlainPath · ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}\n\n`;
+
+    out += "PARTIES\n";
+    for (const p of Object.values(parties)) {
+      out += `${p.label}: ${p.name || "TBD"}${p.type ? ` (${p.type})` : ""}\n`;
+    }
+    out += "\n";
+
+    if (summary.length) {
+      out += "PLAIN ENGLISH SUMMARY\n";
+      for (const line of summary) out += `• ${line}\n`;
+      out += "\n";
+    }
+
+    for (const section of sections) {
+      out += `${section.title.toUpperCase()}\n`;
+      section.clauses.forEach((c, i) => { out += `${i + 1}. ${c}\n`; });
+      out += "\n";
+    }
+
+    if (defaultClauses.length) {
+      out += "STANDARD CLAUSES\n";
+      for (const c of defaultClauses) out += `• ${c}\n`;
+      out += "\n";
+    }
+
+    out += "\nSIGNATURES\n\n";
+    for (const p of Object.values(parties)) {
+      out += `_______________________________\n${p.name || p.label}\nDate: ___________________\n\n`;
+    }
+
+    out += "\nThis is a draft document prepared for review purposes only. It is not legal advice.\nHave a qualified attorney review any contract before signing.";
+    return out;
+  }
+
+  try {
+    const contractText = buildContractText(draft as Record<string, unknown>);
+    const buf = Buffer.from(contractText, "utf-8");
+
+    const formData = new FormData();
+
+    formData.append("title", `${String(draft.contractType ?? "Contract")} — Signature Request`);
+    formData.append("subject", `Please review and sign: ${String(draft.contractType ?? "Contract")}`);
+    formData.append("message", message || "Please review and sign this contract prepared via PlainPath.");
+    formData.append("signers[0][email_address]", partyAEmail);
+    formData.append("signers[0][name]", partyAName || "Party A");
+    formData.append("signers[0][order]", "0");
+    formData.append("signers[1][email_address]", partyBEmail);
+    formData.append("signers[1][name]", partyBName || "Party B");
+    formData.append("signers[1][order]", "1");
+    formData.append("signing_redirect_url", "");
+    formData.append("files[0]", new Blob([buf], { type: "text/plain" }), "contract.txt");
+
+    const credentials = Buffer.from(`${apiKey}:`).toString("base64");
+    const response = await fetch("https://api.hellosign.com/v3/signature_request/send", {
+      method: "POST",
+      headers: { Authorization: `Basic ${credentials}` },
+      body: formData,
+    });
+
+    const data = await response.json() as Record<string, unknown>;
+
+    if (!response.ok) {
+      logger.error({ status: response.status, data }, "Dropbox Sign API error");
+      return res.status(502).json({ message: "Could not send the signature request. Please check your Dropbox Sign configuration." });
+    }
+
+    const sigReq = data.signature_request as Record<string, unknown>;
+    return res.json({
+      signatureRequestId: sigReq?.signature_request_id ?? null,
+      message: "Signing emails sent to both parties.",
+    });
+  } catch (err) {
+    logger.error({ err }, "contracts/send-for-signature failed");
+    return res.status(500).json({ message: "Failed to send signature request. Please try again." });
   }
 });
 
