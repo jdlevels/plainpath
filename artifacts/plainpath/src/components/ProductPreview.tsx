@@ -2,43 +2,54 @@ import { motion } from "framer-motion"
 import { useLocation } from "wouter"
 import {
   Clock, AlertTriangle, FileText, ArrowRight, ChevronRight,
-  ShieldCheck, XCircle, PenLine, BadgeCheck, Download, Scale, MessageSquare,
+  ShieldCheck, XCircle, PenLine, BadgeCheck, Download, Scale,
+  MessageSquare, Sparkles,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
+/* ─── Shared design tokens ─────────────────────────────────────────────────
+   Applied consistently across every panel and proof card in this component.
+   ────────────────────────────────────────────────────────────────────────── */
+const CARD   = "rounded-2xl bg-[#0b0f1a] border border-slate-800/70 shadow-[0_12px_48px_rgba(0,0,0,0.55)] ring-1 ring-white/[0.04] overflow-hidden"
+const INNER  = "rounded-xl bg-slate-900/55 border border-slate-700/30"
+const CHROME = "flex items-center gap-2.5 px-4 py-3 border-b border-slate-800/70 bg-slate-950/70"
+const LABEL  = "text-[10px] uppercase tracking-widest text-slate-500 font-semibold"
+const ICON   = "w-5 h-5 rounded-md flex items-center justify-center shrink-0"
+
+/* ─── Data ──────────────────────────────────────────────────────────────── */
 const DOC_LINES = [
-  { text: "STATE OF CALIFORNIA — SUPERIOR COURT", style: "text-slate-400 text-[10px] uppercase tracking-widest text-center" },
-  { text: "UNLAWFUL DETAINER · Case No. 2026-CV-04912", style: "text-white font-bold text-xs text-center" },
-  { text: "", style: "" },
-  { text: "To: Occupant of Record, Unit 4B", style: "text-slate-300 text-xs" },
-  { text: "You are hereby notified that you have", style: "text-slate-300 text-xs" },
-  { text: "14 CALENDAR DAYS", style: "px-2 py-0.5 rounded bg-amber-500/25 text-amber-300 text-xs font-bold", highlight: true },
-  { text: "from the date of service to vacate the", style: "text-slate-300 text-xs" },
-  { text: "premises or contest this notice.", style: "text-slate-300 text-xs" },
-  { text: "", style: "" },
-  { text: "Failure to respond constitutes an", style: "text-slate-300 text-xs" },
-  { text: "AUTOMATIC WAIVER", style: "px-2 py-0.5 rounded bg-red-500/20 text-red-300 text-xs font-bold", highlight: true },
-  { text: "of your right to dispute this claim.", style: "text-slate-300 text-xs" },
-  { text: "", style: "" },
-  { text: "Required at time of filing:", style: "text-slate-400 text-xs font-semibold" },
-  { text: "· Form UD-105 (Unlawful Detainer Answer)", style: "text-blue-300 text-xs ml-2" },
-  { text: "· Certified Proof of Service", style: "text-blue-300 text-xs ml-2" },
+  { text: "STATE OF CALIFORNIA — SUPERIOR COURT",         style: "text-slate-400 text-[10px] uppercase tracking-widest text-center" },
+  { text: "UNLAWFUL DETAINER · Case No. 2026-CV-04912",   style: "text-white font-bold text-xs text-center" },
+  { text: "",                                              style: "" },
+  { text: "To: Occupant of Record, Unit 4B",              style: "text-slate-300 text-xs" },
+  { text: "You are hereby notified that you have",        style: "text-slate-300 text-xs" },
+  { text: "14 CALENDAR DAYS",                             style: "px-2 py-0.5 rounded bg-amber-500/25 text-amber-300 text-xs font-bold", highlight: true },
+  { text: "from the date of service to vacate the",       style: "text-slate-300 text-xs" },
+  { text: "premises or contest this notice.",             style: "text-slate-300 text-xs" },
+  { text: "",                                              style: "" },
+  { text: "Failure to respond constitutes an",            style: "text-slate-300 text-xs" },
+  { text: "AUTOMATIC WAIVER",                             style: "px-2 py-0.5 rounded bg-red-500/20 text-red-300 text-xs font-bold", highlight: true },
+  { text: "of your right to dispute this claim.",         style: "text-slate-300 text-xs" },
+  { text: "",                                              style: "" },
+  { text: "Required at time of filing:",                  style: "text-slate-400 text-xs font-semibold" },
+  { text: "· Form UD-105 (Unlawful Detainer Answer)",     style: "text-blue-300 text-xs ml-2" },
+  { text: "· Certified Proof of Service",                 style: "text-blue-300 text-xs ml-2" },
 ]
 
-const OUTPUT_ITEMS = {
-  deadline: { label: "14 days to respond", sub: "Court deadline — starts from service date.", tag: "URGENT" },
+const ANALYZE_OUTPUT = {
+  deadline: { label: "14 days to respond", sub: "Court deadline — starts from service date", tag: "URGENT" },
   risks: [
-    { label: "Risk: Default Judgment", sub: "Missing deadline = automatic loss in court" },
-    { label: "Risk: Rights Waived by Silence", sub: "No response = legal waiver you can't undo" },
+    { label: "Risk: Default Judgment",       sub: "Missing deadline = automatic loss in court"    },
+    { label: "Risk: Rights Waived by Silence", sub: "No response = legal waiver you can't undo"  },
   ],
-  docs: ["Form UD-105 (Answer)", "Certified Proof of Service"],
+  docs:  ["Form UD-105 (Answer)", "Certified Proof of Service"],
   steps: ["File your completed response with the court clerk", "Appear at the hearing on the scheduled date"],
 }
 
 const TRUST_FLAGS = [
-  { label: "Urgent payment demand with 48-hr deadline", severity: "red" },
-  { label: "Sender identity unverifiable — no agency code", severity: "red" },
-  { label: "Threatening language inconsistent with IRS style", severity: "amber" },
+  { label: "Urgent payment demand with 48-hr deadline",         severity: "red"   },
+  { label: "Sender identity unverifiable — no agency code",     severity: "red"   },
+  { label: "Threatening language inconsistent with IRS style",  severity: "amber" },
 ]
 
 const CONTRACT_CLAUSES = [
@@ -47,397 +58,396 @@ const CONTRACT_CLAUSES = [
 ]
 
 const REVIEW_FLAGS = [
-  { label: "Termination without notice — no severance protection", severity: "red" },
-  { label: "5-year global non-compete — likely unenforceable but still risky", severity: "red" },
-  { label: "IP clause transfers rights regardless of payment status", severity: "amber" },
+  { label: "Termination without notice — no severance protection",        severity: "red"   },
+  { label: "5-year global non-compete — likely unenforceable but risky",  severity: "red"   },
+  { label: "IP clause transfers rights regardless of payment status",      severity: "amber" },
 ]
 
+/* ─── Sub-components ────────────────────────────────────────────────────── */
+
+/** Uniform chrome bar used on every card/panel */
+function Chrome({
+  iconBg, IconEl, title, right,
+}: {
+  iconBg: string
+  IconEl: React.ReactNode
+  title: React.ReactNode
+  right?: React.ReactNode
+}) {
+  return (
+    <div className={CHROME}>
+      <div className={`${ICON} ${iconBg}`}>{IconEl}</div>
+      <span className="text-xs font-bold text-slate-200 tracking-tight">{title}</span>
+      {right && <div className="ml-auto">{right}</div>}
+    </div>
+  )
+}
+
+/** Status pill badge */
+function Badge({ children, color = "slate" }: { children: React.ReactNode; color?: "emerald" | "red" | "amber" | "slate" | "violet" }) {
+  const map = {
+    emerald: "bg-emerald-500/15 text-emerald-400 border border-emerald-500/25",
+    red:     "bg-red-500/15     text-red-400     border border-red-500/25",
+    amber:   "bg-amber-500/15   text-amber-400   border border-amber-500/25",
+    violet:  "bg-violet-500/15  text-violet-400  border border-violet-500/25",
+    slate:   "bg-slate-700/50   text-slate-400   border border-slate-600/30",
+  }
+  return (
+    <span className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-semibold ${map[color]}`}>
+      {children}
+    </span>
+  )
+}
+
+/** Uniform section label */
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return <p className={`${LABEL} mb-2`}>{children}</p>
+}
+
+/* ─── Main export ───────────────────────────────────────────────────────── */
 export default function ProductPreview() {
   const [, setLocation] = useLocation()
 
   return (
     <div className="w-full">
-      {/* ── Section header ── */}
-      <div className="text-center mb-14">
-        <motion.p
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          className="text-xs font-semibold uppercase tracking-widest text-primary/80 mb-3"
-        >
+
+      {/* Section header */}
+      <div className="text-center mb-12">
+        <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
+          className="text-xs font-semibold uppercase tracking-widest text-primary/80 mb-3">
           See it in action
         </motion.p>
-        <motion.h2
-          initial={{ opacity: 0, y: 12 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-3xl md:text-4xl font-display font-bold mb-4 text-balance text-white"
-        >
+        <motion.h2 initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          className="text-3xl md:text-4xl font-display font-bold mb-4 text-white text-balance">
           Any document. Any risk. Any contract.
           <br className="hidden md:block" />
           <span className="text-slate-400">PlainPath handles all of it.</span>
         </motion.h2>
-        <motion.p
-          initial={{ opacity: 0, y: 8 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.1 }}
-          className="text-slate-400 text-lg max-w-2xl mx-auto"
-        >
+        <motion.p initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          transition={{ delay: 0.1 }} className="text-slate-400 text-lg max-w-2xl mx-auto">
           Four tools. One platform. Everything you need to read, trust, and act on paperwork.
         </motion.p>
-
-        {/* Lane badges */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.18 }}
-          className="flex flex-wrap items-center justify-center gap-3 mt-6"
-        >
+        {/* Tool lane badges */}
+        <motion.div initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          transition={{ delay: 0.18 }} className="flex flex-wrap items-center justify-center gap-2.5 mt-6">
           {[
-            { icon: FileText,    label: "Analyze a Document"   },
-            { icon: ShieldCheck, label: "Document Trust Check" },
-            { icon: PenLine,     label: "Build a Contract"     },
-            { icon: Scale,       label: "Contract Review"      },
-          ].map(({ icon: Icon, label }, i) => (
-            <span key={i} className="flex items-center gap-2 px-3.5 py-1.5 rounded-full border bg-white/5 border-white/12 text-xs font-semibold text-slate-300">
-              <Icon className="w-3.5 h-3.5 shrink-0" />
+            { icon: FileText,    label: "Analyze a Document",   color: "text-blue-400",    bg: "bg-blue-500/15"    },
+            { icon: ShieldCheck, label: "Document Trust Check", color: "text-violet-400",  bg: "bg-violet-500/15"  },
+            { icon: PenLine,     label: "Build a Contract",     color: "text-emerald-400", bg: "bg-emerald-500/15" },
+            { icon: Scale,       label: "Contract Review",      color: "text-amber-400",   bg: "bg-amber-500/15"   },
+          ].map(({ icon: Icon, label, color, bg }, i) => (
+            <span key={i} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-slate-700/50 bg-slate-800/40 text-xs font-semibold text-slate-300`}>
+              <span className={`w-4 h-4 rounded ${bg} flex items-center justify-center shrink-0`}>
+                <Icon className={`w-2.5 h-2.5 ${color}`} />
+              </span>
               {label}
             </span>
           ))}
         </motion.div>
       </div>
 
-      {/* ══════════════════════════════════════════════════════
-          LANE 1: Analyze — main split panel
-      ═════════════════════════════════════════════════════════ */}
-      <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-60px" }}
-        transition={{ delay: 0.1 }}
-        className="max-w-5xl mx-auto mb-6"
-      >
-        {/* Unified card wrapper with header */}
-        <div className="rounded-2xl bg-slate-950 border border-slate-800/80 shadow-[0_8px_40px_rgba(0,0,0,0.4)] ring-1 ring-white/4 overflow-hidden">
-          <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-slate-800 bg-slate-950/80">
-            <div className="w-6 h-6 rounded-md bg-blue-500/20 flex items-center justify-center shrink-0">
-              <FileText className="w-3.5 h-3.5 text-blue-400" />
-            </div>
-            <span className="text-xs font-bold uppercase tracking-widest text-blue-400">Analyze a Document</span>
-          </div>
+      {/* ══════════════════════════════════════════════════════════════
+          LANE 1 — Analyze a Document (full-width split-panel module)
+      ═══════════════════════════════════════════════════════════════ */}
+      <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-60px" }} transition={{ delay: 0.08 }}
+        className="max-w-5xl mx-auto mb-4">
+        <div className={CARD}>
 
-          <div className="p-4">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-4 items-stretch">
-          {/* Left: Document panel */}
-          <div className="rounded-2xl bg-slate-950 border border-slate-800/80 overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.4)] ring-1 ring-white/4">
-            <div className="flex items-center gap-1.5 px-4 py-3 border-b border-slate-800 bg-slate-950/80">
-              <div className="w-2.5 h-2.5 rounded-full bg-red-500/50" />
-              <div className="w-2.5 h-2.5 rounded-full bg-amber-500/50" />
-              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/50" />
-              <span className="ml-3 text-[11px] text-slate-500 font-mono truncate">eviction_notice_2026.pdf</span>
-            </div>
-            <div className="p-6 space-y-1.5 font-mono overflow-hidden">
-              {DOC_LINES.map((line, i) => {
-                if (!line.text) return <div key={i} className="h-2" />
-                if (line.highlight) {
+          {/* Outer chrome — tool identity */}
+          <Chrome
+            iconBg="bg-blue-500/20"
+            IconEl={<FileText className="w-3 h-3 text-blue-400" />}
+            title="Analyze a Document"
+            right={<Badge color="slate">Eviction Notice · 3 pages</Badge>}
+          />
+
+          {/* Inner two-panel layout */}
+          <div className="p-3 grid grid-cols-1 lg:grid-cols-[1fr_48px_1fr] gap-3 items-stretch">
+
+            {/* Left — raw document */}
+            <div className={`${INNER} overflow-hidden`}>
+              {/* Faux browser chrome */}
+              <div className="flex items-center gap-1.5 px-3.5 py-2.5 border-b border-slate-700/30 bg-slate-900/40">
+                <div className="w-2 h-2 rounded-full bg-red-500/40" />
+                <div className="w-2 h-2 rounded-full bg-amber-500/40" />
+                <div className="w-2 h-2 rounded-full bg-emerald-500/40" />
+                <span className="ml-2.5 text-[10px] text-slate-500 font-mono">eviction_notice_2026.pdf</span>
+              </div>
+              <div className="px-5 py-4 space-y-1.5 font-mono overflow-hidden">
+                {DOC_LINES.map((line, i) => {
+                  if (!line.text) return <div key={i} className="h-1.5" />
+                  if (line.highlight) {
+                    return (
+                      <motion.span key={i} initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
+                        viewport={{ once: true }} transition={{ delay: 0.04 * i }}
+                        className={`inline-block ${line.style}`}>
+                        {line.text}
+                      </motion.span>
+                    )
+                  }
                   return (
-                    <motion.span
-                      key={i}
-                      initial={{ opacity: 0 }}
-                      whileInView={{ opacity: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: 0.05 * i }}
-                      className={`inline-block ${line.style}`}
-                    >
+                    <motion.p key={i} initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
+                      viewport={{ once: true }} transition={{ delay: 0.03 * i }}
+                      className={line.style}>
                       {line.text}
-                    </motion.span>
+                    </motion.p>
                   )
-                }
-                return (
-                  <motion.p
-                    key={i}
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: 0.04 * i }}
-                    className={line.style}
-                  >
-                    {line.text}
-                  </motion.p>
-                )
-              })}
+                })}
+              </div>
+              <div className="h-8 bg-gradient-to-t from-[#0b0f1a]/80 to-transparent -mt-8 pointer-events-none" />
+              <p className="text-[10px] text-slate-600 text-center pb-3 font-mono">— page 1 of 3 —</p>
             </div>
-            <div className="h-8 bg-gradient-to-t from-slate-950 to-transparent -mt-8 pointer-events-none" />
-            <p className="text-[10px] text-slate-600 text-center pb-3 font-mono">— page 1 of 3 —</p>
-          </div>
 
-          {/* Center arrow */}
-          <div className="hidden lg:flex flex-col items-center justify-center px-2 gap-1.5">
-            <div className="w-px h-12 bg-gradient-to-b from-transparent to-blue-400/40" />
-            <div className="w-8 h-8 rounded-full bg-blue-500/10 border border-blue-500/25 flex items-center justify-center">
-              <ChevronRight className="w-4 h-4 text-blue-400" />
+            {/* Center connector */}
+            <div className="hidden lg:flex flex-col items-center justify-center gap-1.5">
+              <div className="w-px flex-1 bg-gradient-to-b from-transparent via-blue-500/30 to-transparent" />
+              <div className="w-8 h-8 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
+                <ChevronRight className="w-3.5 h-3.5 text-blue-400" />
+              </div>
+              <p className="text-[9px] text-blue-400/50 font-bold uppercase tracking-widest">AI</p>
+              <div className="w-px flex-1 bg-gradient-to-b from-transparent via-blue-500/30 to-transparent" />
             </div>
-            <div className="w-px h-12 bg-gradient-to-t from-transparent to-blue-400/40" />
-            <span className="text-[10px] text-blue-400/60 font-semibold uppercase tracking-widest">AI</span>
-          </div>
 
-          {/* Right: Action plan output */}
-          <div className="rounded-2xl bg-slate-950 border border-slate-800/80 overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.4)] ring-1 ring-white/4">
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-800 bg-slate-950/80">
-              <div className="w-5 h-5 rounded-md bg-primary/20 flex items-center justify-center">
-                <FileText className="w-3 h-3 text-primary" />
-              </div>
-              <span className="text-xs font-semibold text-slate-300">PlainPath Action Plan</span>
-              <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-semibold">Complete</span>
-            </div>
-            <div className="p-4 space-y-3 overflow-hidden">
-              <motion.div
-                initial={{ opacity: 0, x: 12 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}
-                transition={{ delay: 0.15 }}
-                className="rounded-xl bg-red-500/10 border border-red-500/25 px-4 py-3"
-              >
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-red-400 shrink-0" />
-                  <p className="text-red-300 font-bold text-sm">{OUTPUT_ITEMS.deadline.label}</p>
-                  <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 font-bold">{OUTPUT_ITEMS.deadline.tag}</span>
+            {/* Right — action plan output */}
+            <div className={`${INNER} overflow-hidden flex flex-col`}>
+              {/* Inner panel chrome */}
+              <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-slate-700/30 bg-slate-900/40">
+                <div className="w-4 h-4 rounded bg-primary/20 flex items-center justify-center shrink-0">
+                  <Sparkles className="w-2.5 h-2.5 text-primary" />
                 </div>
-                <p className="text-red-400/70 text-[11px] mt-1 ml-6">{OUTPUT_ITEMS.deadline.sub}</p>
-              </motion.div>
-              <div>
-                <p className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold mb-2">Risks flagged</p>
-                <div className="space-y-2">
-                  {OUTPUT_ITEMS.risks.map((risk, i) => (
-                    <motion.div key={i} initial={{ opacity: 0, x: 12 }} whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true }} transition={{ delay: 0.2 + i * 0.07 }}
-                      className="rounded-xl bg-amber-500/8 border border-amber-500/20 px-3.5 py-2.5"
-                    >
-                      <div className="flex items-center gap-2">
-                        <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                        <p className="text-amber-300 font-semibold text-xs">{risk.label}</p>
-                      </div>
-                      <p className="text-amber-400/60 text-[11px] mt-0.5 ml-5">{risk.sub}</p>
-                    </motion.div>
-                  ))}
-                </div>
+                <span className="text-[11px] font-bold text-slate-200">PlainPath Action Plan</span>
+                <div className="ml-auto"><Badge color="emerald"><BadgeCheck className="w-2.5 h-2.5" /> Complete</Badge></div>
               </div>
-              <div>
-                <p className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold mb-2">Required documents</p>
-                <div className="space-y-1.5">
-                  {OUTPUT_ITEMS.docs.map((doc, i) => (
-                    <motion.div key={i} initial={{ opacity: 0, x: 12 }} whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true }} transition={{ delay: 0.3 + i * 0.06 }}
-                      className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-blue-500/8 border border-blue-500/15"
-                    >
-                      <FileText className="w-3 h-3 text-blue-400 shrink-0" />
-                      <p className="text-blue-300 text-xs font-medium">{doc}</p>
-                    </motion.div>
-                  ))}
+
+              <div className="p-3 space-y-2.5 flex-1">
+                {/* Deadline */}
+                <motion.div initial={{ opacity: 0, x: 10 }} whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }} transition={{ delay: 0.14 }}
+                  className="rounded-lg bg-red-500/10 border border-red-500/22 px-3.5 py-2.5">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-3.5 h-3.5 text-red-400 shrink-0" />
+                    <p className="text-red-300 font-bold text-sm flex-1">{ANALYZE_OUTPUT.deadline.label}</p>
+                    <Badge color="red">{ANALYZE_OUTPUT.deadline.tag}</Badge>
+                  </div>
+                  <p className="text-red-400/65 text-[11px] mt-1 ml-[22px]">{ANALYZE_OUTPUT.deadline.sub}</p>
+                </motion.div>
+
+                {/* Risks */}
+                <div>
+                  <SectionLabel>Risks flagged</SectionLabel>
+                  <div className="space-y-1.5">
+                    {ANALYZE_OUTPUT.risks.map((risk, i) => (
+                      <motion.div key={i} initial={{ opacity: 0, x: 10 }} whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }} transition={{ delay: 0.2 + i * 0.07 }}
+                        className="rounded-lg bg-amber-500/8 border border-amber-500/18 px-3 py-2">
+                        <div className="flex items-start gap-2">
+                          <AlertTriangle className="w-3 h-3 text-amber-400 shrink-0 mt-px" />
+                          <p className="text-amber-300 font-semibold text-[11px] leading-snug">{risk.label}</p>
+                        </div>
+                        <p className="text-amber-400/55 text-[10px] mt-0.5 ml-5">{risk.sub}</p>
+                      </motion.div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-              <div>
-                <p className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold mb-2">Action steps</p>
-                <div className="space-y-1.5">
-                  {OUTPUT_ITEMS.steps.map((step, i) => (
-                    <motion.div key={i} initial={{ opacity: 0, x: 12 }} whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true }} transition={{ delay: 0.38 + i * 0.06 }}
-                      className="flex items-start gap-2.5 px-3.5 py-2.5 rounded-xl bg-slate-800/50 border border-slate-700/30"
-                    >
-                      <div className="w-4 h-4 rounded-full border border-slate-600 flex items-center justify-center shrink-0 mt-0.5">
-                        <span className="text-[9px] text-slate-500 font-bold">{i + 1}</span>
-                      </div>
-                      <p className="text-slate-300 text-xs leading-snug">{step}</p>
-                    </motion.div>
-                  ))}
+
+                {/* Required docs */}
+                <div>
+                  <SectionLabel>Required documents</SectionLabel>
+                  <div className="space-y-1.5">
+                    {ANALYZE_OUTPUT.docs.map((doc, i) => (
+                      <motion.div key={i} initial={{ opacity: 0, x: 10 }} whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }} transition={{ delay: 0.3 + i * 0.06 }}
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-500/8 border border-blue-500/15">
+                        <FileText className="w-2.5 h-2.5 text-blue-400 shrink-0" />
+                        <p className="text-blue-300 text-[11px] font-medium">{doc}</p>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Action steps */}
+                <div>
+                  <SectionLabel>Action steps</SectionLabel>
+                  <div className="space-y-1.5">
+                    {ANALYZE_OUTPUT.steps.map((step, i) => (
+                      <motion.div key={i} initial={{ opacity: 0, x: 10 }} whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }} transition={{ delay: 0.38 + i * 0.06 }}
+                        className="flex items-start gap-2.5 px-3 py-2 rounded-lg bg-slate-800/40 border border-slate-700/25">
+                        <div className="w-4 h-4 rounded-full border border-slate-600/60 flex items-center justify-center shrink-0 mt-px">
+                          <span className="text-[9px] text-slate-500 font-bold">{i + 1}</span>
+                        </div>
+                        <p className="text-slate-300 text-[11px] leading-snug">{step}</p>
+                      </motion.div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-          </div>{/* closes p-4 */}
-        </div>{/* closes card wrapper */}
       </motion.div>
 
-      {/* ══════════════════════════════════════════════════════
-          LANES 2 + 3 + 4: Trust Check, Contract Builder, Contract Review
-      ═════════════════════════════════════════════════════════ */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-40px" }}
-        transition={{ delay: 0.15 }}
-        className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4 mb-10"
-      >
-        {/* ── Trust Check proof card ── */}
-        <div className="rounded-2xl bg-slate-950 border border-slate-800/80 overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.35)] ring-1 ring-white/4">
-          <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-800 bg-slate-950/80">
-            <div className="w-5 h-5 rounded-md bg-violet-500/20 flex items-center justify-center">
-              <ShieldCheck className="w-3 h-3 text-violet-400" />
-            </div>
-            <span className="text-xs font-semibold text-violet-300">Document Trust Check</span>
-            <span className="ml-auto text-[10px] text-slate-500 font-mono">fake_irs_notice.pdf</span>
-          </div>
-          <div className="p-4 space-y-3">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.97 }} whileInView={{ opacity: 1, scale: 1 }}
+      {/* ══════════════════════════════════════════════════════════════
+          LANES 2-4 — Trust Check · Build a Contract · Contract Review
+      ═══════════════════════════════════════════════════════════════ */}
+      <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-40px" }} transition={{ delay: 0.12 }}
+        className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+
+        {/* ── Trust Check ── */}
+        <div className={CARD}>
+          <Chrome
+            iconBg="bg-violet-500/20"
+            IconEl={<ShieldCheck className="w-3 h-3 text-violet-400" />}
+            title="Document Trust Check"
+            right={<Badge color="slate">fake_irs_notice.pdf</Badge>}
+          />
+          <div className="p-3 space-y-2.5">
+            <motion.div initial={{ opacity: 0, scale: 0.97 }} whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }} transition={{ delay: 0.1 }}
-              className="flex items-center gap-3 rounded-xl bg-red-500/10 border border-red-500/25 px-4 py-3"
-            >
+              className="flex items-center gap-3 rounded-xl bg-red-500/10 border border-red-500/22 px-3.5 py-3">
               <div className="w-10 h-10 rounded-xl bg-red-500/15 flex items-center justify-center shrink-0">
-                <span className="text-red-400 font-black text-base">18</span>
+                <span className="text-red-400 font-black text-base leading-none">18</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-red-400 font-bold text-sm">Likely Scam</p>
-                <p className="text-slate-500 text-[11px]">Score 18/100 · Do not pay</p>
+                <p className="text-red-400 font-bold text-sm leading-tight">Likely Scam</p>
+                <p className="text-slate-500 text-[11px]">Score 18 / 100 · Do not pay</p>
               </div>
               <XCircle className="w-5 h-5 text-red-400 shrink-0" />
             </motion.div>
-            <p className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Red flags found</p>
-            <div className="space-y-2">
+
+            <SectionLabel>Red flags found</SectionLabel>
+            <div className="space-y-1.5">
               {TRUST_FLAGS.map((flag, i) => (
-                <motion.div key={i} initial={{ opacity: 0, x: 10 }} whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }} transition={{ delay: 0.15 + i * 0.08 }}
-                  className={`flex items-start gap-2.5 rounded-xl px-3 py-2 border ${
-                    flag.severity === "red" ? "bg-red-500/8 border-red-500/20" : "bg-amber-500/8 border-amber-500/20"
-                  }`}
-                >
-                  <AlertTriangle className={`w-3 h-3 mt-0.5 shrink-0 ${flag.severity === "red" ? "text-red-400" : "text-amber-400"}`} />
-                  <p className="text-white text-[11px] leading-snug">{flag.label}</p>
+                <motion.div key={i} initial={{ opacity: 0, x: 8 }} whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }} transition={{ delay: 0.15 + i * 0.07 }}
+                  className={`flex items-start gap-2 rounded-lg px-3 py-2 border ${
+                    flag.severity === "red" ? "bg-red-500/8 border-red-500/18" : "bg-amber-500/8 border-amber-500/18"}`}>
+                  <AlertTriangle className={`w-3 h-3 mt-px shrink-0 ${flag.severity === "red" ? "text-red-400" : "text-amber-400"}`} />
+                  <p className="text-slate-200 text-[11px] leading-snug">{flag.label}</p>
                 </motion.div>
               ))}
             </div>
+
             <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
-              transition={{ delay: 0.4 }}
-              className="rounded-xl bg-slate-800/60 border border-slate-700/40 px-3 py-2.5"
-            >
+              transition={{ delay: 0.38 }}
+              className="rounded-lg bg-slate-800/40 border border-slate-700/25 px-3 py-2.5">
               <p className="text-slate-300 text-[11px] leading-relaxed">
-                <span className="text-emerald-400 font-semibold">Safe next step:</span> Contact the IRS at irs.gov to verify. Do not use contact details from this document.
+                <span className="text-emerald-400 font-semibold">Safe next step: </span>
+                Contact the IRS at irs.gov directly. Do not use contact details from this document.
               </p>
             </motion.div>
           </div>
         </div>
 
-        {/* ── Contract Builder proof card ── */}
-        <div className="rounded-2xl bg-slate-950 border border-slate-800/80 overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.35)] ring-1 ring-white/4">
-          <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-800 bg-slate-950/80">
-            <div className="w-5 h-5 rounded-md bg-emerald-500/20 flex items-center justify-center">
-              <PenLine className="w-3 h-3 text-emerald-400" />
-            </div>
-            <span className="text-xs font-semibold text-emerald-300">Contract Builder</span>
-            <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-semibold flex items-center gap-1">
-              <BadgeCheck className="w-3 h-3" /> Ready
-            </span>
-          </div>
-          <div className="p-4 space-y-3">
-            <motion.div
-              initial={{ opacity: 0, y: -6 }} whileInView={{ opacity: 1, y: 0 }}
+        {/* ── Build a Contract ── */}
+        <div className={CARD}>
+          <Chrome
+            iconBg="bg-emerald-500/20"
+            IconEl={<PenLine className="w-3 h-3 text-emerald-400" />}
+            title="Build a Contract"
+            right={<Badge color="emerald"><BadgeCheck className="w-2.5 h-2.5" /> Ready</Badge>}
+          />
+          <div className="p-3 space-y-2.5">
+            <motion.div initial={{ opacity: 0, y: -4 }} whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }} transition={{ delay: 0.1 }}
-              className="flex items-start justify-between gap-3"
-            >
-              <div>
-                <p className="text-white font-bold text-sm">Freelance Services Agreement</p>
-                <p className="text-slate-500 text-[11px]">Alex Rivera → Bright Marketing Co. · $4,500</p>
+              className="rounded-xl bg-slate-800/40 border border-slate-700/25 px-3.5 py-2.5">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-white font-bold text-sm leading-tight">Freelance Services Agreement</p>
+                  <p className="text-slate-500 text-[11px] mt-0.5">Alex Rivera → Bright Marketing Co. · $4,500</p>
+                </div>
+                <span className="text-[10px] text-slate-400 font-mono shrink-0 pt-0.5">3 pages</span>
               </div>
-              <span className="text-[10px] text-slate-400 font-mono shrink-0">3 pages</span>
             </motion.div>
-            <div className="rounded-xl bg-slate-800/50 border border-slate-700/40 px-3 py-3 space-y-2">
+
+            <SectionLabel>Generated clauses</SectionLabel>
+            <div className="rounded-xl bg-slate-800/40 border border-slate-700/25 px-3.5 py-3 space-y-2">
               {CONTRACT_CLAUSES.map((clause, i) => (
                 <motion.p key={i} initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
                   viewport={{ once: true }} transition={{ delay: 0.15 + i * 0.1 }}
-                  className="text-slate-300 text-[11px] leading-relaxed"
-                >
+                  className="text-slate-300 text-[11px] leading-relaxed">
                   {clause}
                 </motion.p>
               ))}
               <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
-                viewport={{ once: true }} transition={{ delay: 0.35 }}
-                className="border-t border-slate-700/50 pt-2 mt-1"
-              >
+                viewport={{ once: true }} transition={{ delay: 0.34 }}
+                className="border-t border-slate-700/40 pt-2 mt-1">
                 <p className="text-amber-400 text-[11px] font-medium flex items-start gap-1.5">
-                  <AlertTriangle className="w-3 h-3 shrink-0 mt-0.5" />
-                  Gap found: No IP clause. PlainPath recommends adding one before signing.
+                  <AlertTriangle className="w-3 h-3 shrink-0 mt-px" />
+                  Gap found: No IP ownership clause. PlainPath recommends adding one before signing.
                 </p>
               </motion.div>
             </div>
+
             <motion.div initial={{ opacity: 0, y: 4 }} whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }} transition={{ delay: 0.4 }}
-              className="flex items-center gap-2 rounded-xl bg-slate-800/60 border border-slate-700/40 px-3 py-2.5"
-            >
+              className="flex items-center gap-2 rounded-lg bg-slate-800/40 border border-slate-700/25 px-3 py-2.5">
               <Download className="w-3.5 h-3.5 text-slate-300 shrink-0" />
               <p className="text-slate-300 text-[11px] font-semibold">Contract ready to download as PDF</p>
             </motion.div>
           </div>
         </div>
 
-        {/* ── Contract Review proof card ── */}
-        <div className="rounded-2xl bg-slate-950 border border-slate-800/80 overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.35)] ring-1 ring-white/4">
-          <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-800 bg-slate-950/80">
-            <div className="w-5 h-5 rounded-md bg-amber-500/20 flex items-center justify-center">
-              <Scale className="w-3 h-3 text-amber-400" />
-            </div>
-            <span className="text-xs font-semibold text-amber-300">Contract Review</span>
-            <span className="ml-auto text-[10px] text-slate-500 font-mono">employment_offer.pdf</span>
-          </div>
-          <div className="p-4 space-y-3">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.97 }} whileInView={{ opacity: 1, scale: 1 }}
+        {/* ── Contract Review ── */}
+        <div className={CARD}>
+          <Chrome
+            iconBg="bg-amber-500/20"
+            IconEl={<Scale className="w-3 h-3 text-amber-400" />}
+            title="Contract Review"
+            right={<Badge color="slate">employment_offer.pdf</Badge>}
+          />
+          <div className="p-3 space-y-2.5">
+            <motion.div initial={{ opacity: 0, scale: 0.97 }} whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }} transition={{ delay: 0.1 }}
-              className="flex items-center gap-3 rounded-xl bg-red-500/10 border border-red-500/25 px-4 py-3"
-            >
+              className="flex items-center gap-3 rounded-xl bg-red-500/10 border border-red-500/22 px-3.5 py-3">
               <div className="w-10 h-10 rounded-xl bg-red-500/15 flex items-center justify-center shrink-0">
-                <span className="text-red-400 font-black text-base">28</span>
+                <span className="text-red-400 font-black text-base leading-none">28</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-red-400 font-bold text-sm">Heavily One-Sided</p>
-                <p className="text-slate-500 text-[11px]">Score 28/100 · Do not sign as-is</p>
+                <p className="text-red-400 font-bold text-sm leading-tight">Heavily One-Sided</p>
+                <p className="text-slate-500 text-[11px]">Score 28 / 100 · Do not sign as-is</p>
               </div>
               <Scale className="w-5 h-5 text-red-400 shrink-0" />
             </motion.div>
-            <p className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Red flags found</p>
-            <div className="space-y-2">
+
+            <SectionLabel>Red flags found</SectionLabel>
+            <div className="space-y-1.5">
               {REVIEW_FLAGS.map((flag, i) => (
-                <motion.div key={i} initial={{ opacity: 0, x: 10 }} whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }} transition={{ delay: 0.15 + i * 0.08 }}
-                  className={`flex items-start gap-2.5 rounded-xl px-3 py-2 border ${
-                    flag.severity === "red" ? "bg-red-500/8 border-red-500/20" : "bg-amber-500/8 border-amber-500/20"
-                  }`}
-                >
-                  <AlertTriangle className={`w-3 h-3 mt-0.5 shrink-0 ${flag.severity === "red" ? "text-red-400" : "text-amber-400"}`} />
-                  <p className="text-white text-[11px] leading-snug">{flag.label}</p>
+                <motion.div key={i} initial={{ opacity: 0, x: 8 }} whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }} transition={{ delay: 0.15 + i * 0.07 }}
+                  className={`flex items-start gap-2 rounded-lg px-3 py-2 border ${
+                    flag.severity === "red" ? "bg-red-500/8 border-red-500/18" : "bg-amber-500/8 border-amber-500/18"}`}>
+                  <AlertTriangle className={`w-3 h-3 mt-px shrink-0 ${flag.severity === "red" ? "text-red-400" : "text-amber-400"}`} />
+                  <p className="text-slate-200 text-[11px] leading-snug">{flag.label}</p>
                 </motion.div>
               ))}
             </div>
+
             <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
-              transition={{ delay: 0.4 }}
-              className="rounded-xl bg-slate-800/60 border border-slate-700/40 px-3 py-2.5"
-            >
+              transition={{ delay: 0.38 }}
+              className="rounded-lg bg-slate-800/40 border border-slate-700/25 px-3 py-2.5">
               <p className="text-slate-300 text-[11px] leading-relaxed flex items-start gap-1.5">
-                <MessageSquare className="w-3 h-3 text-slate-400 shrink-0 mt-0.5" />
-                <span><span className="text-slate-200 font-semibold">Negotiation language ready:</span> "We request the termination clause include 30 days written notice."</span>
+                <MessageSquare className="w-3 h-3 text-slate-400 shrink-0 mt-px" />
+                <span><span className="text-slate-200 font-semibold">Negotiation language ready: </span>"We request the termination clause include 30 days written notice."</span>
               </p>
             </motion.div>
           </div>
         </div>
       </motion.div>
 
-      {/* ── CTA ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ delay: 0.2 }}
-        className="text-center"
-      >
-        <Button
-          size="lg"
-          onClick={() => setLocation("/import")}
-          className="h-12 px-8 text-base rounded-xl font-semibold shadow-md shadow-primary/20"
-        >
+      {/* CTA */}
+      <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }} transition={{ delay: 0.2 }}
+        className="text-center">
+        <Button size="lg" onClick={() => setLocation("/import")}
+          className="h-12 px-8 text-base rounded-xl font-semibold shadow-md shadow-primary/20">
           Try it on your document <ArrowRight className="ml-2 w-4 h-4" />
         </Button>
         <p className="text-xs text-slate-500 mt-3">Free for 2 analyses · No account required · No documents stored</p>
       </motion.div>
+
     </div>
   )
 }
