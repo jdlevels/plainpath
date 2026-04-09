@@ -220,6 +220,12 @@
 .pp-badge-icon-emerald { color: #34d399; background-color: rgba( 16, 185, 129, 0.15); }
 .pp-badge-icon-amber   { color: #fbbf24; background-color: rgba(245, 158,  11, 0.15); }
 
+/* ─── "Always dark-context" tool buttons (ProductPreview section, always dark bg) ── */
+.pp-dark-btn-blue    { border-color: #3b82f6; color: #93c5fd; background-color: rgba(59,  130, 246, 0.12); }
+.pp-dark-btn-red     { border-color: #ef4444; color: #fca5a5; background-color: rgba(239,  68,  68, 0.12); }
+.pp-dark-btn-emerald { border-color: #10b981; color: #6ee7b7; background-color: rgba( 16, 185, 129, 0.12); }
+.pp-dark-btn-amber   { border-color: #f59e0b; color: #fcd34d; background-color: rgba(245, 158,  11, 0.12); }
+
 /* ─── Hero tool buttons — light mode ─────────────── */
 .tool-btn-blue    { border-color: #93c5fd; color: #1d4ed8; background-color: rgba(239, 246, 255, 0.9); }
 .tool-btn-red     { border-color: #fca5a5; color: #b91c1c; background-color: rgba(254, 242, 242, 0.9); }

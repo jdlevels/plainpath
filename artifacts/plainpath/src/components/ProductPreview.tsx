@@ -136,15 +136,13 @@ export default function ProductPreview() {
         <motion.div initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
           transition={{ delay: 0.18 }} className="flex flex-wrap items-center justify-center gap-2.5 mt-6">
           {[
-            { icon: FileText,    label: "Analyze a Document",   iconCls: "pp-badge-icon-blue"    },
-            { icon: ShieldCheck, label: "Document Trust Check", iconCls: "pp-badge-icon-red"     },
-            { icon: PenLine,     label: "Build a Contract",     iconCls: "pp-badge-icon-emerald" },
-            { icon: Scale,       label: "Contract Review",      iconCls: "pp-badge-icon-amber"   },
-          ].map(({ icon: Icon, label, iconCls }, i) => (
-            <span key={i} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-slate-700/50 bg-slate-800/40 text-xs font-semibold text-slate-300">
-              <span className={`w-4 h-4 rounded flex items-center justify-center shrink-0 ${iconCls}`}>
-                <Icon className="w-2.5 h-2.5" />
-              </span>
+            { icon: FileText,    label: "Analyze a Document",   btnCls: "pp-dark-btn-blue"    },
+            { icon: ShieldCheck, label: "Document Trust Check", btnCls: "pp-dark-btn-red"     },
+            { icon: PenLine,     label: "Build a Contract",     btnCls: "pp-dark-btn-emerald" },
+            { icon: Scale,       label: "Contract Review",      btnCls: "pp-dark-btn-amber"   },
+          ].map(({ icon: Icon, label, btnCls }, i) => (
+            <span key={i} className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border text-xs font-semibold ${btnCls}`}>
+              <Icon className="w-3.5 h-3.5 shrink-0" />
               {label}
             </span>
           ))}
