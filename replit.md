@@ -137,6 +137,25 @@ The homepage hero contains three visually uniform CTAs designed as one product-a
 
 All three share: `h-12 px-8 text-base rounded-xl font-semibold`. The two outline buttons are intentionally identical in className. Do not add special border, hover, or icon coloring overrides to either outline button that the other does not share.
 
+## Planned Features (Post-Launch Roadmap)
+
+### E-Signature — "Send for Signature" (Contract Builder, Pro Plan)
+- **Status**: Scoped, not yet built
+- **When**: Build after Stripe is live and Pro plan gating is confirmed
+- **Approach**: Integrate Dropbox Sign API (formerly HelloSign) — handles legal compliance, audit trails, tamper-evident PDFs, and multi-party email flows
+- **UX Flow**:
+  1. User completes Contract Builder and generates draft
+  2. New "Send for Signature" button appears on the final draft screen (Pro-gated, lock icon for Starter)
+  3. User enters both parties' email addresses and a short message
+  4. PlainPath sends the PDF to Dropbox Sign API → both parties receive signing emails
+  5. Dropbox Sign handles the signing ceremony
+  6. Both parties receive a certified signed PDF when complete
+- **Backend**: New route `POST /api/contracts/send-for-signature` — accepts `{ contractDraftId, partyAEmail, partyBEmail, message }`, calls Dropbox Sign API, returns signing request ID
+- **Frontend**: `SendForSignatureModal.tsx` in ContractBuilder.tsx — triggered from the draft output screen
+- **Plan gate**: Pro only (same gate as Contract Builder generation)
+- **Env var needed**: `DROPBOX_SIGN_API_KEY` (user must create account at sign.dropbox.com)
+- **Legal note**: Do NOT build a DIY draw-your-name signature — it won't hold up legally and undermines PlainPath's trustworthiness promise
+
 ## Pending Integration Connections (not yet authorized)
 
 - **Stripe** (`connector:ccfg_stripe_01K611P4YQR0SZM11XFRQJC44Y`): All backend code is built (`/api/stripe/*` routes, billing SQLite DB, webhook handler). Needs `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET` env vars — either connect via Replit integration or add secrets manually.
