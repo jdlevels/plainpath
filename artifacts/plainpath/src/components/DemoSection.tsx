@@ -2,10 +2,10 @@ import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   Upload, Loader2, CheckCircle2, AlertTriangle, Clock,
-  FileText, ChevronRight, ShieldCheck, Calendar, Flag,
+  FileText, ShieldCheck, Calendar, Flag,
   ArrowRight, PenLine, BookOpen, XCircle, TriangleAlert,
   CircleCheck, Download, User, DollarSign, Gavel, MessageSquare,
-  ScanLine, BadgeCheck,
+  ScanLine, BadgeCheck, Scale, Copy,
 } from "lucide-react"
 import { useLocation } from "wouter"
 
@@ -28,20 +28,30 @@ const TOOLS = [
     icon: ShieldCheck,
     label: "Document Trust Check",
     tagline: "Know if a document is real before you act",
-    url: "plain-path.replit.app/trust-check",
+    url: "plain-path.replit.app/import?mode=trust-check",
     frames: 3,
-    cta: { label: "Run a Trust Check", path: "/trust-check" },
+    cta: { label: "Run a Trust Check", path: "/import?mode=trust-check" },
     description: "Paste any document that made you uneasy — a payment demand, prize notice, or official-looking letter. Get an authenticity score and red flags explained.",
   },
   {
     id: "contract",
     icon: PenLine,
     label: "Build a Contract",
-    tagline: "Answer 5 questions, get a real contract",
+    tagline: "Answer 6 questions, get a real contract",
     url: "plain-path.replit.app/contract-builder",
     frames: 3,
     cta: { label: "Build a Contract", path: "/contract-builder" },
     description: "Answer a few plain-English questions about your deal. PlainPath drafts a complete, clause-by-clause contract with gap analysis — ready to download.",
+  },
+  {
+    id: "review",
+    icon: Scale,
+    label: "Contract Review",
+    tagline: "Review a contract before you sign",
+    url: "plain-path.replit.app/contract-review",
+    frames: 3,
+    cta: { label: "Review a Contract", path: "/contract-review" },
+    description: "Someone handed you a contract. Paste it in and get a clause-by-clause review: unfair terms flagged, missing protections identified, and negotiation language ready to send back.",
   },
 ]
 
@@ -374,6 +384,114 @@ function ContractReadyFrame() {
 }
 
 /* ─────────────────────────────────────────────────────────────
+   CONTRACT REVIEW FRAMES
+───────────────────────────────────────────────────────────── */
+const REVIEW_TEXT_LINES = [
+  "The Company retains sole right to terminate this",
+  "Agreement without notice or cause. Contractor waives",
+  "all claims for compensation upon early termination.",
+  "",
+  "Non-compete applies for 5 years globally with no",
+  "geographic limitation. All IP created belongs to",
+  "Company in perpetuity regardless of payment status.",
+]
+
+function ContractReviewInputFrame() {
+  return (
+    <div className="flex flex-col h-full gap-3 select-none">
+      <div className="bg-slate-800/70 border border-slate-700/50 rounded-xl px-4 py-3 flex-1">
+        <p className="text-slate-500 text-[11px] font-medium mb-2 uppercase tracking-wide">Paste the contract you received</p>
+        {REVIEW_TEXT_LINES.map((line, i) => (
+          <motion.p key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.1 }}
+            className="text-slate-300 text-xs leading-relaxed font-mono">{line || <span>&nbsp;</span>}</motion.p>
+        ))}
+      </div>
+      <motion.button initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.9 }}
+        className="w-full rounded-xl bg-amber-600 px-4 py-2.5 text-white text-xs font-semibold flex items-center justify-center gap-2">
+        <Scale className="w-3.5 h-3.5" /> Review This Contract
+      </motion.button>
+    </div>
+  )
+}
+
+function ContractReviewScanFrame() {
+  const checks = ["Reading every clause…", "Identifying red flags…", "Checking fairness balance…", "Finding missing protections…"]
+  const [idx, setIdx] = useState(0)
+  useEffect(() => {
+    const t = setInterval(() => setIdx((i) => (i + 1) % checks.length), 620)
+    return () => clearInterval(t)
+  }, [])
+  return (
+    <div className="flex flex-col items-center justify-center h-full gap-4 select-none">
+      <div className="relative w-14 h-14">
+        <div className="absolute inset-0 rounded-full bg-amber-500/15 animate-ping" />
+        <div className="relative w-14 h-14 rounded-full bg-amber-500/15 flex items-center justify-center">
+          <Scale className="w-6 h-6 text-amber-400 animate-pulse" />
+        </div>
+      </div>
+      <div className="text-center">
+        <p className="text-white font-bold text-sm mb-1">Reviewing your contract</p>
+        <AnimatePresence mode="wait">
+          <motion.p key={idx} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.2 }} className="text-slate-400 text-xs">{checks[idx]}</motion.p>
+        </AnimatePresence>
+      </div>
+      <div className="w-full space-y-2">
+        {checks.map((_, i) => (
+          <motion.div key={i} initial={{ opacity: 0 }} animate={{ opacity: i <= idx ? 1 : 0.2 }} transition={{ duration: 0.3 }}
+            className="flex items-center gap-2">
+            {i < idx ? <CircleCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> : i === idx ? <Loader2 className="w-3.5 h-3.5 text-amber-400 animate-spin shrink-0" /> : <div className="w-3.5 h-3.5 rounded-full border border-slate-700 shrink-0" />}
+            <div className="flex-1 h-1.5 rounded-full bg-slate-700 overflow-hidden">
+              <motion.div className={i <= idx ? "h-full rounded-full bg-amber-500" : "h-full rounded-full bg-slate-700"} initial={{ width: 0 }} animate={{ width: i < idx ? "100%" : i === idx ? "60%" : "0%" }} transition={{ duration: 0.5 }} />
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+const REVIEW_FLAGS = [
+  { icon: TriangleAlert, color: "red",   label: "Termination without notice — no severance protection" },
+  { icon: TriangleAlert, color: "red",   label: "5-year global non-compete — likely unenforceable but still risky" },
+  { icon: Copy,          color: "amber", label: "IP clause transfers rights regardless of payment status" },
+]
+
+function ContractReviewResultsFrame() {
+  return (
+    <div className="flex flex-col h-full gap-3 select-none overflow-hidden">
+      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+        className="flex items-center gap-4 bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3 shrink-0">
+        <div className="w-12 h-12 rounded-xl bg-red-500/15 flex items-center justify-center shrink-0">
+          <span className="text-red-400 font-black text-lg">28</span>
+        </div>
+        <div>
+          <p className="text-red-400 font-bold text-sm">Heavily One-Sided</p>
+          <p className="text-slate-400 text-xs">Score 28/100 · Do not sign as-is</p>
+        </div>
+        <Scale className="w-5 h-5 text-red-400 ml-auto shrink-0" />
+      </motion.div>
+      <p className="text-slate-400 text-[11px] font-semibold uppercase tracking-wide shrink-0">Red flags found</p>
+      <div className="flex flex-col gap-2 flex-1 overflow-hidden">
+        {REVIEW_FLAGS.map((flag, i) => (
+          <motion.div key={i} initial={{ opacity: 0, x: 14 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }}
+            className={["flex items-start gap-2.5 rounded-xl px-3 py-2.5 border", flag.color === "red" ? "bg-red-500/8 border-red-500/20" : "bg-amber-500/8 border-amber-500/20"].join(" ")}>
+            <flag.icon className={["w-3.5 h-3.5 mt-0.5 shrink-0", flag.color === "red" ? "text-red-400" : "text-amber-400"].join(" ")} />
+            <p className="text-white text-xs leading-snug">{flag.label}</p>
+          </motion.div>
+        ))}
+      </div>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
+        className="shrink-0 bg-slate-800/60 border border-slate-700/40 rounded-xl px-3 py-2.5">
+        <p className="text-slate-300 text-[11px] leading-relaxed">
+          <span className="text-amber-400 font-semibold flex items-center gap-1 mb-0.5"><MessageSquare className="w-3 h-3" /> Negotiation language ready to copy</span>
+          "We request the termination clause include 30 days written notice and appropriate severance."
+        </p>
+      </motion.div>
+    </div>
+  )
+}
+
+/* ─────────────────────────────────────────────────────────────
    FRAME RENDERER
 ───────────────────────────────────────────────────────────── */
 function FrameContent({ toolId, frame }: { toolId: string; frame: number }) {
@@ -386,6 +504,11 @@ function FrameContent({ toolId, frame }: { toolId: string; frame: number }) {
     if (frame === 0) return <TrustInputFrame />
     if (frame === 1) return <TrustScanFrame />
     return <TrustResultsFrame />
+  }
+  if (toolId === "review") {
+    if (frame === 0) return <ContractReviewInputFrame />
+    if (frame === 1) return <ContractReviewScanFrame />
+    return <ContractReviewResultsFrame />
   }
   if (frame === 0) return <ContractQuestionsFrame />
   if (frame === 1) return <ContractGeneratingFrame />
@@ -432,125 +555,117 @@ export default function DemoSection() {
 
   return (
     <div className="w-full">
+      {/* Section header */}
+      <div className="text-center mb-10">
+        <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
+          className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">
+          See it in action
+        </motion.p>
+        <motion.h2 initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          className="text-3xl md:text-4xl font-display font-bold mb-3">
+          Watch each tool work
+        </motion.h2>
+        <motion.p initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+          transition={{ delay: 0.1 }} className="text-muted-foreground text-lg max-w-xl mx-auto">
+          Select any of the four tools to see how it processes a real document scenario — from input to result.
+        </motion.p>
+      </div>
+
       <div className="rounded-3xl bg-slate-950 dark:bg-slate-900 overflow-hidden relative">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] rounded-full bg-primary/6 blur-3xl pointer-events-none" />
 
         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-0">
           {/* ── Left: tool selector + description ── */}
           <div className="flex flex-col justify-center px-8 py-12 sm:px-12 lg:py-16">
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary/80 mb-4">See it in action</p>
-            <h2 className="text-3xl sm:text-4xl font-display font-bold text-white leading-tight mb-3">
-              Four tools,<br />one platform
-            </h2>
-
-            <AnimatePresence mode="wait">
-              <motion.p
-                key={activeTool}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.25 }}
-                className="text-slate-400 leading-relaxed text-sm mb-8 max-w-sm"
-              >
-                {tool.description}
-              </motion.p>
-            </AnimatePresence>
-
-            {/* Tool tabs */}
-            <div className="flex flex-col gap-2.5">
-              {TOOLS.map((t, i) => {
-                const isActive = i === activeTool
-                return (
-                  <button
-                    key={t.id}
-                    onClick={() => selectTool(i)}
-                    className={[
-                      "flex items-center gap-4 rounded-2xl px-5 py-3.5 text-left transition-all border",
-                      isActive ? "bg-white/8 border-white/12" : "bg-transparent border-transparent hover:bg-white/4",
-                    ].join(" ")}
-                  >
-                    <div className={[
-                      "w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-colors",
-                      isActive ? "bg-primary" : "bg-slate-800",
-                    ].join(" ")}>
-                      <t.icon className={["w-4 h-4", isActive ? "text-white" : "text-slate-500"].join(" ")} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={["text-sm font-bold transition-colors", isActive ? "text-white" : "text-slate-500"].join(" ")}>{t.label}</p>
-                      <p className={["text-xs mt-0.5 transition-colors truncate", isActive ? "text-slate-400" : "text-slate-600"].join(" ")}>{t.tagline}</p>
-                    </div>
-                    {isActive && <ChevronRight className="w-4 h-4 text-primary shrink-0" />}
-                  </button>
-                )
-              })}
+            <div className="mb-8">
+              <p className="text-slate-500 text-[11px] font-semibold uppercase tracking-widest mb-4">Choose a tool</p>
+              <div className="flex flex-col gap-2">
+                {TOOLS.map((t, idx) => {
+                  const Icon = t.icon
+                  const isActive = activeTool === idx
+                  const accentColors: Record<string, { bg: string; border: string; icon: string; text: string }> = {
+                    analyze: { bg: "bg-primary/10",   border: "border-primary/30",   icon: "text-primary",       text: "text-primary"       },
+                    trust:   { bg: "bg-violet-500/10", border: "border-violet-500/30", icon: "text-violet-400",    text: "text-violet-300"    },
+                    contract:{ bg: "bg-emerald-500/10",border: "border-emerald-500/30",icon: "text-emerald-400",   text: "text-emerald-300"   },
+                    review:  { bg: "bg-amber-500/10",  border: "border-amber-500/30",  icon: "text-amber-400",     text: "text-amber-300"     },
+                  }
+                  const ac = accentColors[t.id]
+                  return (
+                    <button
+                      key={t.id}
+                      onClick={() => selectTool(idx)}
+                      className={[
+                        "text-left px-4 py-3 rounded-xl border transition-all flex items-center gap-3",
+                        isActive
+                          ? `${ac.bg} ${ac.border}`
+                          : "bg-white/4 border-white/8 hover:bg-white/8 hover:border-white/15",
+                      ].join(" ")}
+                    >
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isActive ? ac.bg : "bg-slate-800"}`}>
+                        <Icon className={`w-4 h-4 ${isActive ? ac.icon : "text-slate-500"}`} />
+                      </div>
+                      <div>
+                        <p className={`text-sm font-semibold ${isActive ? "text-white" : "text-slate-400"}`}>{t.label}</p>
+                        {isActive && <p className={`text-[11px] mt-0.5 ${ac.text}`}>{t.tagline}</p>}
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
             </div>
 
-            <div className="mt-8 flex items-center gap-4">
+            <div className="border-t border-white/6 pt-6">
+              <p className="text-slate-300 text-sm leading-relaxed mb-5">{tool.description}</p>
               <button
                 onClick={() => setLocation(tool.cta.path)}
-                className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary/90 transition-colors"
+                className="flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
               >
                 {tool.cta.label} <ArrowRight className="w-4 h-4" />
               </button>
-              <p className="text-slate-500 text-xs">No account required</p>
             </div>
           </div>
 
-          {/* ── Right: animated preview ── */}
-          <div className="flex items-center justify-center px-6 py-10 sm:px-10 lg:py-16 lg:pl-0">
-            <div className="w-full max-w-sm">
-              {/* Browser chrome */}
-              <div className="rounded-2xl overflow-hidden border border-slate-700/60 shadow-2xl shadow-black/50">
-                {/* Title bar */}
-                <div className="bg-slate-800/90 px-4 py-3 flex items-center gap-2 border-b border-slate-700/50">
-                  <div className="flex gap-1.5">
-                    <div className="w-2.5 h-2.5 rounded-full bg-red-500/50" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-amber-500/50" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/50" />
-                  </div>
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={activeTool}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="flex-1 mx-3 bg-slate-700/60 rounded-md px-3 py-1 text-[11px] text-slate-400 font-mono truncate"
-                    >
-                      {tool.url}
-                    </motion.div>
-                  </AnimatePresence>
-                </div>
-
-                {/* Content area */}
-                <div className="bg-slate-900 px-5 py-5 min-h-[340px] flex flex-col">
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={`${activeTool}-${activeFrame}`}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.28 }}
-                      className="flex-1 flex flex-col"
-                    >
-                      <FrameContent toolId={tool.id} frame={activeFrame} />
-                    </motion.div>
-                  </AnimatePresence>
+          {/* ── Right: animated frame preview ── */}
+          <div className="relative bg-slate-900/60 border-l border-white/6 px-8 py-12 sm:px-12 lg:py-16 flex flex-col">
+            {/* Browser chrome */}
+            <div className="rounded-2xl overflow-hidden border border-white/10 shadow-2xl flex-1 flex flex-col">
+              <div className="flex items-center gap-1.5 px-4 py-3 bg-slate-800/80 border-b border-white/8 shrink-0">
+                <div className="w-2.5 h-2.5 rounded-full bg-red-500/50" />
+                <div className="w-2.5 h-2.5 rounded-full bg-amber-500/50" />
+                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/50" />
+                <div className="ml-3 flex-1 bg-slate-700/60 rounded-md px-3 py-1">
+                  <p className="text-slate-500 text-[10px] font-mono truncate">{tool.url}</p>
                 </div>
               </div>
 
-              {/* Frame dots */}
-              <div className="flex justify-center gap-2 mt-4">
-                {Array.from({ length: tool.frames }).map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => selectFrame(i)}
-                    className={[
-                      "rounded-full transition-all",
-                      i === activeFrame ? "w-6 h-2 bg-primary" : "w-2 h-2 bg-slate-600 hover:bg-slate-500",
-                    ].join(" ")}
-                  />
-                ))}
+              <div className="flex-1 bg-[#0d1117] p-5 min-h-[280px]">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={`${activeTool}-${activeFrame}`}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.3 }}
+                    className="h-full"
+                  >
+                    <FrameContent toolId={tool.id} frame={activeFrame} />
+                  </motion.div>
+                </AnimatePresence>
               </div>
+            </div>
+
+            {/* Frame dots */}
+            <div className="flex items-center justify-center gap-2 mt-4">
+              {Array.from({ length: tool.frames }).map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => selectFrame(i)}
+                  className={[
+                    "rounded-full transition-all",
+                    activeFrame === i ? "w-5 h-2 bg-primary" : "w-2 h-2 bg-slate-700 hover:bg-slate-500",
+                  ].join(" ")}
+                />
+              ))}
             </div>
           </div>
         </div>

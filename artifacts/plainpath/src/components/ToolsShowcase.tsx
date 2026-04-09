@@ -12,26 +12,29 @@ const TOOLS = [
   {
     icon: BookOpen,
     title: "Analyze a Document",
+    verb: "Read it.",
     tagline: "Turn any document into a structured action plan",
     description: "Upload a PDF, Word file, or paste text. Get action steps, required documents, deadlines, risks, and plain English explanations — all sourced from the actual text.",
     features: [
       { icon: ListTodo, label: "Prioritized action steps" },
       { icon: Calendar, label: "Deadlines extracted from fine print" },
       { icon: AlertTriangle, label: "Risks flagged with severity" },
-      { icon: Flag, label: "Key terms defined" },
+      { icon: Flag, label: "Key terms defined in plain English" },
     ],
     cta: "Analyze a Document",
     route: "/import",
     color: "from-primary/10 to-blue-50 dark:from-primary/10 dark:to-blue-950/20",
     badge: "bg-primary/10 text-primary",
-    badgeLabel: "Core Tool",
+    badgeLabel: "Free · Starter · Pro",
     border: "border-primary/20",
     iconBg: "bg-primary/10",
     iconColor: "text-primary",
+    verbColor: "text-primary",
   },
   {
     icon: ShieldCheck,
     title: "Document Trust Check",
+    verb: "Trust it.",
     tagline: "Know if a document is legitimate before you act",
     description: "Paste or upload any document that made you uneasy — a job offer, a lease, a prize notice, a payment request. Get a scored verdict with red flags called out explicitly.",
     features: [
@@ -48,16 +51,18 @@ const TOOLS = [
     border: "border-emerald-200/60 dark:border-emerald-900/40",
     iconBg: "bg-emerald-100 dark:bg-emerald-900/40",
     iconColor: "text-emerald-600 dark:text-emerald-400",
+    verbColor: "text-emerald-600 dark:text-emerald-400",
   },
   {
     icon: PenLine,
     title: "Contract Builder",
+    verb: "Build it.",
     tagline: "Build a real contract from scratch in minutes",
     description: "Answer six steps about your deal — who, what, how much, when, and how disputes get resolved. Get a complete, clause-by-clause contract draft with gap analysis built in.",
     features: [
       { icon: Sparkles, label: "AI-generated clause drafts" },
       { icon: CheckCircle2, label: "Gap analysis — nothing left out" },
-      { icon: ShieldCheck, label: "3 contract types supported" },
+      { icon: ShieldCheck, label: "5 contract types supported" },
       { icon: FileCheck, label: "Download-ready PDF output" },
     ],
     cta: "Build a Contract",
@@ -68,10 +73,12 @@ const TOOLS = [
     border: "border-violet-200/60 dark:border-violet-900/40",
     iconBg: "bg-violet-100 dark:bg-violet-900/40",
     iconColor: "text-violet-600 dark:text-violet-400",
+    verbColor: "text-violet-600 dark:text-violet-400",
   },
   {
     icon: Scale,
     title: "Contract Review",
+    verb: "Review it.",
     tagline: "Review a contract you didn't write — before you sign",
     description: "Someone handed you a contract. Paste it in and get a clause-by-clause review: unfair terms flagged, missing protections identified, and exact negotiation language ready to copy and send back.",
     features: [
@@ -88,6 +95,7 @@ const TOOLS = [
     border: "border-amber-200/60 dark:border-amber-900/40",
     iconBg: "bg-amber-100 dark:bg-amber-900/40",
     iconColor: "text-amber-600 dark:text-amber-400",
+    verbColor: "text-amber-600 dark:text-amber-400",
   },
 ]
 
@@ -111,7 +119,7 @@ export default function ToolsShowcase() {
           viewport={{ once: true }}
           className="text-3xl md:text-4xl font-display font-bold mb-4"
         >
-          Read it. Trust it. Build it. Fight for it.
+          Read it. Trust it. Build it. Review it.
         </motion.h2>
         <motion.p
           initial={{ opacity: 0, y: 8 }}
@@ -120,7 +128,7 @@ export default function ToolsShowcase() {
           transition={{ delay: 0.08 }}
           className="text-muted-foreground text-lg max-w-2xl mx-auto"
         >
-          Every document situation — understanding, verifying, creating, or reviewing for fairness — covered in one place.
+          Whether you are reading a document, questioning its legitimacy, creating an agreement, or reviewing one before you sign — PlainPath has a dedicated tool for exactly that.
         </motion.p>
       </div>
 
@@ -146,6 +154,7 @@ export default function ToolsShowcase() {
                 </div>
 
                 <div>
+                  <p className={`text-xs font-bold uppercase tracking-widest mb-1 ${tool.verbColor}`}>{tool.verb}</p>
                   <h3 className="text-xl font-bold mb-1">{tool.title}</h3>
                   <p className="text-sm font-medium text-muted-foreground">{tool.tagline}</p>
                 </div>

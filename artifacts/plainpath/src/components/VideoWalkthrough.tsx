@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
-  Play, X, FileText, ShieldCheck, PenLine,
+  Play, X, FileText, ShieldCheck, PenLine, Scale,
   Clock, AlertTriangle, Calendar, CheckCircle2, ChevronDown,
 } from "lucide-react"
 
@@ -47,9 +47,22 @@ const CHAPTERS = [
     activeBorder: "border-emerald-400/50",
     activeBg: "bg-emerald-500/8",
     time: "1:24",
-    duration: "0:54",
+    duration: "0:42",
     label: "Build a Contract",
-    desc: "Answer 5 questions. Get a complete, gap-checked contract draft.",
+    desc: "Answer 6 questions. Get a complete, gap-checked contract draft.",
+  },
+  {
+    id: 3,
+    icon: Scale,
+    color: "text-amber-400",
+    bg: "bg-amber-500/10",
+    border: "border-amber-500/20",
+    activeBorder: "border-amber-400/50",
+    activeBg: "bg-amber-500/8",
+    time: "2:06",
+    duration: "0:52",
+    label: "Contract Review",
+    desc: "Paste a contract you received and get a clause-by-clause fairness review.",
   },
 ]
 
@@ -254,7 +267,7 @@ export default function VideoWalkthrough() {
           transition={{ delay: 0.1 }}
           className="text-slate-400 text-lg max-w-xl mx-auto leading-relaxed"
         >
-          Four tools. One workflow. From uploading a confusing document to reviewing a contract — see exactly what PlainPath does.
+          A short walkthrough of all four tools — from analyzing confusing paperwork to reviewing a contract before you sign.
         </motion.p>
       </div>
 
@@ -292,7 +305,7 @@ export default function VideoWalkthrough() {
         </div>
 
         {/* Chapter markers */}
-        <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-3">
           {CHAPTERS.map((ch) => {
             const Icon = ch.icon
             const isActive = activeChapter === ch.id

@@ -50,20 +50,20 @@ const DEMOS = [
 const HOW_IT_WORKS = [
   {
     step: "01",
-    title: "Upload or paste your document",
-    desc: "Drop in a PDF, Word file, or paste text directly. The full content is read and analyzed.",
-    icon: Upload,
+    title: "Choose the right tool",
+    desc: "Analyze a document, run a trust check on something suspicious, build a contract from scratch, or review one before you sign. Each tool is built for a specific situation.",
+    icon: Sparkles,
   },
   {
     step: "02",
-    title: "We extract every requirement",
-    desc: "Required steps, documents, deadlines, risks, and open questions — all pulled from the source.",
-    icon: FileCheck,
+    title: "Upload, paste, or answer a few questions",
+    desc: "Drop in a PDF, paste text, or work through a short guided wizard. No complex setup and no account required to get started.",
+    icon: Upload,
   },
   {
     step: "03",
-    title: "Work through your action plan",
-    desc: "Check off items as you go. Track what's missing and see your progress in real time.",
+    title: "Get a plain English result, ready to act on",
+    desc: "Action plans, authenticity verdicts, contract drafts, or clause-by-clause reviews — all structured, sourced, and written so anyone can understand them.",
     icon: CheckCircle2,
   },
 ]
@@ -133,7 +133,7 @@ export default function Home() {
               className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/25 shadow-sm text-xs font-semibold text-primary dark:text-primary tracking-wide uppercase"
             >
               <span className="flex h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-              Structured document analysis
+              Four tools · one platform
             </motion.div>
 
             <motion.h1
@@ -144,7 +144,7 @@ export default function Home() {
             >
               Stop guessing what<br />
               <span className="bg-gradient-to-r from-primary via-blue-500 to-violet-500 bg-clip-text text-transparent">
-                a document requires.
+                your documents mean.
               </span>
             </motion.h1>
 
@@ -154,7 +154,7 @@ export default function Home() {
               transition={{ delay: 0.14 }}
               className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed"
             >
-              Documents are drafted by experts to protect their interests — not yours. PlainPath reads every clause, surfaces every deadline, and turns confusing paperwork into a clear action plan in plain English.
+              PlainPath is a four-tool document platform. Analyze any paperwork, verify its legitimacy, build contracts, and review agreements before you sign — all turned into plain English and clear action.
             </motion.p>
 
             <motion.div
@@ -192,7 +192,7 @@ export default function Home() {
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
               className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2"
             >
-              {["Plans from $4.99/month", "No account required", "Documents not stored by PlainPath", "Analyses saved on your device only"].map((item) => (
+              {["Plans from $4.99/month", "No account required", "Documents not stored by PlainPath", "Free for your first two analyses"].map((item) => (
                 <span key={item} className="flex items-center gap-1.5 text-xs text-muted-foreground/80 dark:text-muted-foreground/55">
                   <span className="w-1 h-1 rounded-full bg-primary/40 dark:bg-muted-foreground/30 shrink-0" />
                   {item}
@@ -328,12 +328,12 @@ export default function Home() {
                 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">How it works</motion.p>
               <motion.h2 initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
                 className="text-3xl md:text-4xl font-display font-bold mb-4">
-                From confusing to clear in seconds
+                One platform, built for every document situation
               </motion.h2>
               <motion.p initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
                 transition={{ delay: 0.1 }}
                 className="text-muted-foreground text-lg max-w-xl mx-auto">
-                No training required. Drop in any document and get a structured action plan in under a minute.
+                No matter what kind of document you're dealing with, there's a PlainPath tool purpose-built for it.
               </motion.p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
@@ -377,10 +377,10 @@ export default function Home() {
               <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
                 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Live demos</motion.p>
               <motion.h2 initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-                className="text-3xl md:text-4xl font-display font-bold mb-3">See a real result instantly</motion.h2>
+                className="text-3xl md:text-4xl font-display font-bold mb-3">Real results from the Analyze tool</motion.h2>
               <motion.p initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
                 transition={{ delay: 0.1 }} className="text-muted-foreground text-lg max-w-xl mx-auto">
-                Three pre-loaded examples — click any card to open a full structured action plan.
+                Three pre-loaded documents — click any card to open a full structured action plan with deadlines, required documents, and risks surfaced.
               </motion.p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -475,7 +475,7 @@ export default function Home() {
                 transition={{ delay: 0.1 }}
                 className="text-slate-400 text-lg leading-relaxed"
               >
-                Free for your first two analyses. No account required. No documents stored on our servers.
+                Free to start. No account required. Four tools to handle any document situation you face.
               </motion.p>
               <motion.div
                 initial={{ opacity: 0, y: 12 }}
@@ -489,15 +489,15 @@ export default function Home() {
                   onClick={() => setLocation("/import")}
                   className="h-12 px-8 text-base rounded-xl font-semibold shadow-lg shadow-primary/30 min-w-[200px]"
                 >
-                  Analyze a Document <ArrowRight className="ml-2 w-4 h-4" />
+                  Get Started Free <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
                 <Button
                   size="lg"
                   variant="outline"
-                  onClick={() => document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" })}
+                  onClick={() => document.getElementById("solutions")?.scrollIntoView({ behavior: "smooth" })}
                   className="h-12 px-8 text-base rounded-xl font-semibold border-white/20 text-white hover:bg-white/8 hover:border-white/35"
                 >
-                  View Plans
+                  Explore all four tools
                 </Button>
               </motion.div>
               <motion.div
@@ -507,7 +507,7 @@ export default function Home() {
                 transition={{ delay: 0.28 }}
                 className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 pt-2"
               >
-                {["Plans from $4.99/month", "Cancel any time", "iOS & Android apps coming"].map((item) => (
+                {["Plans from $4.99/month", "Cancel any time", "No documents stored on our servers"].map((item) => (
                   <span key={item} className="flex items-center gap-1.5 text-xs text-slate-500">
                     <span className="w-1 h-1 rounded-full bg-slate-600 shrink-0" />
                     {item}
