@@ -25,6 +25,8 @@ const DEMOS = [
     icon: FileScan,
     color: "text-blue-500 dark:text-blue-400",
     bg: "bg-blue-50 dark:bg-blue-950/50",
+    hoverBorder: "hover:border-blue-400/50",
+    hoverTitle: "group-hover:text-blue-500 dark:group-hover:text-blue-400",
     tags: ["8 action steps", "6 required docs", "3 deadlines"],
     cta: "Open action plan",
     path: "/analyze?demo=event-permit",
@@ -35,8 +37,10 @@ const DEMOS = [
     title: "Fake IRS Payment Demand",
     desc: "A letter claiming your account is flagged, demanding $892 within 48 hours. Trust Check scores it 18/100 and surfaces 3 critical red flags.",
     icon: ShieldCheck,
-    color: "text-violet-500 dark:text-violet-400",
-    bg: "bg-violet-50 dark:bg-violet-950/50",
+    color: "text-red-500 dark:text-red-400",
+    bg: "bg-red-50 dark:bg-red-950/50",
+    hoverBorder: "hover:border-red-400/50",
+    hoverTitle: "group-hover:text-red-500 dark:group-hover:text-red-400",
     tags: ["Score: 18/100", "3 red flags", "Verdict: Likely Scam"],
     cta: "See trust verdict",
     path: "/import?mode=trust-check",
@@ -49,6 +53,8 @@ const DEMOS = [
     icon: PenLine,
     color: "text-emerald-500 dark:text-emerald-400",
     bg: "bg-emerald-50 dark:bg-emerald-950/50",
+    hoverBorder: "hover:border-emerald-400/50",
+    hoverTitle: "group-hover:text-emerald-500 dark:group-hover:text-emerald-400",
     tags: ["6-question wizard", "Gap analysis included", "PDF ready"],
     cta: "Build a contract",
     path: "/contract-builder",
@@ -61,6 +67,8 @@ const DEMOS = [
     icon: Scale,
     color: "text-amber-500 dark:text-amber-400",
     bg: "bg-amber-50 dark:bg-amber-950/50",
+    hoverBorder: "hover:border-amber-400/50",
+    hoverTitle: "group-hover:text-amber-500 dark:group-hover:text-amber-400",
     tags: ["Score: 28/100", "4 clauses flagged", "Negotiation language"],
     cta: "Review a contract",
     path: "/contract-review",
@@ -404,20 +412,20 @@ export default function Home() {
                 <motion.div key={demo.id} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }} transition={{ delay: i * 0.08 }} whileHover={{ y: -5, transition: { duration: 0.2 } }}>
                   <button onClick={() => setLocation(demo.path)} className="w-full text-left h-full group">
-                    <Card className="h-full border-slate-200 dark:border-border/40 hover:border-primary/40 hover:shadow-xl transition-all overflow-hidden bg-white dark:bg-card rounded-2xl shadow-md">
+                    <Card className={`h-full border-slate-200 dark:border-border/40 ${demo.hoverBorder} hover:shadow-xl transition-all overflow-hidden bg-white dark:bg-card rounded-2xl shadow-md`}>
                       <div className="p-6 flex flex-col h-full">
                         <div className={`w-11 h-11 rounded-xl ${demo.bg} flex items-center justify-center mb-4`}>
                           <demo.icon className={`w-5 h-5 ${demo.color}`} />
                         </div>
                         <p className={`text-[11px] font-bold uppercase tracking-widest mb-1.5 ${demo.color}`}>{demo.tool}</p>
-                        <h3 className="text-base font-bold group-hover:text-primary transition-colors mb-2 leading-snug">{demo.title}</h3>
+                        <h3 className={`text-base font-bold ${demo.hoverTitle} transition-colors mb-2 leading-snug`}>{demo.title}</h3>
                         <p className="text-sm text-muted-foreground leading-relaxed mb-4 flex-1">{demo.desc}</p>
                         <div className="flex flex-wrap gap-1.5 mb-4">
                           {demo.tags.map((tag) => (
                             <span key={tag} className="inline-block px-2.5 py-1 rounded-full bg-secondary text-xs font-semibold text-muted-foreground">{tag}</span>
                           ))}
                         </div>
-                        <div className="flex items-center gap-1.5 text-sm font-semibold text-primary">
+                        <div className={`flex items-center gap-1.5 text-sm font-semibold ${demo.color}`}>
                           {demo.cta} <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                         </div>
                       </div>
