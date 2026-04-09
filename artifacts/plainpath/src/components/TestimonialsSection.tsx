@@ -25,7 +25,7 @@ const TESTIMONIALS = [
     role: "Job Seeker",
     rating: 5,
     tag: "Document Trust Check",
-    tagColor: "bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400",
+    tagColor: "bg-red-50 dark:bg-red-950/50 text-red-600 dark:text-red-400",
   },
   {
     quote: "My father received a Medicare explanation of benefits that nobody in our family could understand. PlainPath broke it into plain English, listed exactly what he needed to do, and highlighted a billing error we then disputed.",
