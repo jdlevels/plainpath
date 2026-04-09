@@ -285,10 +285,10 @@ export default function Home() {
                 </div>
                 <div className="space-y-4">
                   {[
-                    { icon: CalendarX,    title: "Deadlines buried in fine print",          desc: "A 30-day window in paragraph 8 that nobody told you about. Once it passes, your options disappear." },
-                    { icon: Eye,          title: "Obligations you unknowingly accepted",     desc: "One signature transfers liability. One clause waives your right to dispute. Standard language — but not in your favor." },
-                    { icon: AlertTriangle,title: "Requirements that blindside you",          desc: "Missing one document in an 8-item checklist holds everything up. They're all listed — just not clearly." },
-                    { icon: FileScan,     title: "Fake documents designed to pressure you", desc: "Scam notices that look official enough to act on. The real ones and the fake ones use the same formatting." },
+                    { icon: CalendarX,    title: "Deadlines buried in fine print",             desc: "A 30-day window in paragraph 8 that nobody told you about. Once it passes, your options disappear. Analyze a Document surfaces every one.", tool: "Analyze a Document" },
+                    { icon: FileScan,     title: "Fake notices designed to pressure you",      desc: "Scam notices look identical to real ones. Same formatting, same urgency. Document Trust Check scores legitimacy and flags every red flag.", tool: "Document Trust Check" },
+                    { icon: PenLine,      title: "Signing the other party's boilerplate",      desc: "When you don't have your own contract, you sign theirs — and every clause was written to protect them. Build a Contract creates a fair agreement from scratch.", tool: "Build a Contract" },
+                    { icon: Eye,          title: "Clauses that shift all the risk to you",     desc: "One paragraph waives your right to dispute. Another transfers liability quietly. Contract Review reads it clause by clause and tells you exactly what you're agreeing to.", tool: "Contract Review" },
                   ].map((item, i) => (
                     <motion.div key={i} initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }}
                       viewport={{ once: true }} transition={{ delay: i * 0.08 }}
@@ -298,7 +298,8 @@ export default function Home() {
                       </div>
                       <div>
                         <p className="font-semibold text-white text-sm mb-0.5">{item.title}</p>
-                        <p className="text-slate-400 text-sm leading-relaxed">{item.desc}</p>
+                        <p className="text-slate-400 text-sm leading-relaxed mb-2">{item.desc}</p>
+                        <span className="inline-block text-[10px] font-bold uppercase tracking-widest text-primary/60 border border-primary/20 rounded-full px-2 py-0.5">{item.tool}</span>
                       </div>
                     </motion.div>
                   ))}

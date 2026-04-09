@@ -1,0 +1,71 @@
+We need a full UI consistency cleanup pass. This is not a one-card issue — multiple parts of the app are visually inconsistent and feel like they come from different systems.
+
+Start with the homepage demo/proof section shown here, then apply the same consistency logic to similar inconsistent areas across the product.
+
+PRIMARY ISSUE
+The “Analyze a Document” / “PlainPath Action Plan” showcase section does not feel unified:
+- “Analyze a Document” looks like it is sitting on top instead of being integrated into the frame
+- the PlainPath Action Plan panel does not visually match the document panel
+- the two sides do not feel like part of one system
+- spacing, padding, card structure, and hierarchy are inconsistent
+- this same type of inconsistency exists in other parts of the app too
+
+GOAL
+Create a cleaner, more uniform design system across the app so PlainPath feels like one polished product.
+
+START WITH THIS SECTION
+
+1. UNIFY THE ANALYZE SHOWCASE
+- Make the left document frame and right action-plan frame feel like one cohesive module
+- Make headers/chrome feel aligned and intentional
+- Integrate “Analyze a Document” into the component structure instead of looking pasted on top
+- Align border radius, stroke weight, internal padding, and spacing rhythm
+- Make both panels feel like part of the same product language
+
+2. FIX THE PLAINPATH ACTION PLAN PANEL
+- Improve the hierarchy and visual treatment so it feels more designed and branded
+- Add enough color hierarchy and structure so it does not feel flat or generic
+- Keep it premium, not noisy
+- Make it feel visually consistent with the rest of PlainPath
+
+3. STANDARDIZE COMPONENT RULES
+Establish and apply consistent rules for:
+- border radius
+- panel/header treatment
+- status badges
+- section labels
+- button style
+- padding
+- spacing between stacked elements
+- content density
+- shadows/glows/borders
+- icon sizing
+- text hierarchy
+
+4. APPLY THE SAME CLEANUP LOGIC ELSEWHERE
+After fixing this section, identify and clean similar inconsistencies in other visible product areas where components feel mismatched.
+Do not redesign the app — normalize it.
+
+5. KEEP THE CURRENT VISUAL DIRECTION
+- dark premium interface
+- strong product-demo feel
+- clear tool differentiation
+- no major redesign
+- this is a consistency pass, not a new concept
+
+DELIVERABLE
+Implement the cleanup directly, then summarize in this format:
+
+1. ANALYZE SHOWCASE FIXES
+- what changed in the left document panel
+- what changed in the right action-plan panel
+- how they were unified
+
+2. DESIGN SYSTEM NORMALIZATION
+- what component rules were standardized
+
+3. OTHER INCONSISTENT AREAS CLEANED
+- what other screens/sections were normalized
+
+4. REMAINING UI DEBT
+- any visible inconsistency that still remains but can wait

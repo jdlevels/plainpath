@@ -16,8 +16,8 @@ const FAQS = [
     a: "PlainPath works with leases, employment contracts, healthcare forms, government applications, grant packets, legal agreements, tax notices, and more. If it's text-based and has requirements, deadlines, or legalese — it works.",
   },
   {
-    q: "What's the difference between Analyze, Trust Check, and Contract Builder?",
-    a: "Analyze breaks down a document you already have — extracting action steps, deadlines, risks, and required documents. Trust Check evaluates whether a document appears legitimate or shows scam indicators. Contract Builder creates a new contract from scratch based on your deal terms.",
+    q: "What's the difference between the four tools?",
+    a: "Analyze a Document breaks down paperwork you already have — extracting action steps, deadlines, risks, and required documents in plain English. Document Trust Check scores whether a document appears legitimate or shows scam and fraud indicators. Build a Contract creates a new agreement from scratch based on your deal terms, with a gap analysis. Contract Review reads a contract someone else wrote, flags risky or missing clauses, scores it, and gives you negotiation language.",
   },
   {
     q: "Is the output legal advice?",
@@ -32,8 +32,8 @@ const FAQS = [
     a: "Yes — the web app is mobile-friendly. Native iOS and Android apps are on the roadmap.",
   },
   {
-    q: "What happens if I'm on the Starter plan and try Trust Check or Contract Builder?",
-    a: "Those tools are available on Pro and Team plans. You'll see an upgrade prompt. You can switch plans at any time.",
+    q: "Which plan do I need for each tool?",
+    a: "Analyze a Document is available on all plans, including Free (first two analyses). Document Trust Check, Build a Contract, and Contract Review are available on Pro and Team plans. You'll see an upgrade prompt if you try to use them on a lower tier, and you can switch plans at any time.",
   },
 ]
 
