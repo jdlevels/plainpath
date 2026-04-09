@@ -214,6 +214,12 @@
 .pp-tool-chrome-emerald { border-bottom-color: rgba( 16, 185, 129, 0.18); background-color: rgba( 16, 185, 129, 0.05); }
 .pp-tool-chrome-amber   { border-bottom-color: rgba(245, 158,  11, 0.18); background-color: rgba(245, 158,  11, 0.05); }
 
+/* ─── ProductPreview badge pill icons ───────────── */
+.pp-badge-icon-blue    { color: #60a5fa; background-color: rgba(59,  130, 246, 0.15); }
+.pp-badge-icon-red     { color: #f87171; background-color: rgba(239,  68,  68, 0.15); }
+.pp-badge-icon-emerald { color: #34d399; background-color: rgba( 16, 185, 129, 0.15); }
+.pp-badge-icon-amber   { color: #fbbf24; background-color: rgba(245, 158,  11, 0.15); }
+
 /* ─── Hero tool buttons — light mode ─────────────── */
 .tool-btn-blue    { border-color: #93c5fd; color: #1d4ed8; background-color: rgba(239, 246, 255, 0.9); }
 .tool-btn-red     { border-color: #fca5a5; color: #b91c1c; background-color: rgba(254, 242, 242, 0.9); }
