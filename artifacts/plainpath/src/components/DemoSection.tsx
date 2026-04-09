@@ -440,7 +440,7 @@ export default function DemoSection() {
           <div className="flex flex-col justify-center px-8 py-12 sm:px-12 lg:py-16">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary/80 mb-4">See it in action</p>
             <h2 className="text-3xl sm:text-4xl font-display font-bold text-white leading-tight mb-3">
-              Three tools,<br />one platform
+              Four tools,<br />one platform
             </h2>
 
             <AnimatePresence mode="wait">

@@ -99,7 +99,7 @@ export default function Subscribe() {
             Choose your PlainPath plan
           </h1>
           <p className="text-muted-foreground text-base max-w-xl mx-auto leading-relaxed">
-            Start with unlimited document analysis on Starter, or unlock all three tools with Pro.
+            Start with unlimited document analysis on Starter, or unlock all four tools with Pro.
           </p>
         </div>
 

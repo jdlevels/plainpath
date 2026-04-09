@@ -78,7 +78,7 @@ export default function ProductPreview() {
           transition={{ delay: 0.1 }}
           className="text-slate-400 text-lg max-w-2xl mx-auto"
         >
-          Three tools. One platform. Everything you need to read, trust, and act on paperwork.
+          Four tools. One platform. Everything you need to read, trust, and act on paperwork.
         </motion.p>
 
         {/* Lane badges */}

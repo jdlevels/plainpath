@@ -254,7 +254,7 @@ export default function VideoWalkthrough() {
           transition={{ delay: 0.1 }}
           className="text-slate-400 text-lg max-w-xl mx-auto leading-relaxed"
         >
-          Three tools. One workflow. From uploading a confusing document to building your own contract — see exactly what PlainPath does.
+          Four tools. One workflow. From uploading a confusing document to reviewing a contract — see exactly what PlainPath does.
         </motion.p>
       </div>
 
