@@ -187,6 +187,18 @@
   .dark .priority-bar-low { border-left-color: hsl(40 10% 35%); }
 }
 
+/* ─── Hero tool buttons — light mode ─────────────── */
+.tool-btn-blue    { border-color: #93c5fd; color: #1d4ed8; background-color: rgba(239, 246, 255, 0.9); }
+.tool-btn-red     { border-color: #fca5a5; color: #b91c1c; background-color: rgba(254, 242, 242, 0.9); }
+.tool-btn-emerald { border-color: #6ee7b7; color: #065f46; background-color: rgba(236, 253, 245, 0.9); }
+.tool-btn-amber   { border-color: #fcd34d; color: #92400e; background-color: rgba(255, 251, 235, 0.9); }
+
+/* ─── Hero tool buttons — dark mode ─────────────── */
+.dark .tool-btn-blue    { border-color: #3b82f6; color: #93c5fd; background-color: rgba(59,  130, 246, 0.12); }
+.dark .tool-btn-red     { border-color: #ef4444; color: #fca5a5; background-color: rgba(239,  68,  68, 0.12); }
+.dark .tool-btn-emerald { border-color: #10b981; color: #6ee7b7; background-color: rgba( 16, 185, 129, 0.12); }
+.dark .tool-btn-amber   { border-color: #f59e0b; color: #fcd34d; background-color: rgba(245, 158,  11, 0.12); }
+
 /* ─── Print-only: hidden on screen ─────────────── */
 .print-only { display: none !important; }
 
