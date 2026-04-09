@@ -584,10 +584,10 @@ export default function DemoSection() {
                   const Icon = t.icon
                   const isActive = activeTool === idx
                   const accentColors: Record<string, { bg: string; border: string; icon: string; text: string }> = {
-                    analyze: { bg: "bg-primary/10",   border: "border-primary/30",   icon: "text-primary",       text: "text-primary"       },
-                    trust:   { bg: "bg-violet-500/10", border: "border-violet-500/30", icon: "text-violet-400",    text: "text-violet-300"    },
-                    contract:{ bg: "bg-emerald-500/10",border: "border-emerald-500/30",icon: "text-emerald-400",   text: "text-emerald-300"   },
-                    review:  { bg: "bg-amber-500/10",  border: "border-amber-500/30",  icon: "text-amber-400",     text: "text-amber-300"     },
+                    analyze: { bg: "bg-blue-500/10",   border: "border-blue-500/30",   icon: "text-blue-400",    text: "text-blue-300"    },
+                    trust:   { bg: "bg-red-500/10",    border: "border-red-500/30",    icon: "text-red-400",     text: "text-red-300"     },
+                    contract:{ bg: "bg-emerald-500/10", border: "border-emerald-500/30", icon: "text-emerald-400", text: "text-emerald-300" },
+                    review:  { bg: "bg-amber-500/10",  border: "border-amber-500/30",  icon: "text-amber-400",   text: "text-amber-300"   },
                   }
                   const ac = accentColors[t.id]
                   return (

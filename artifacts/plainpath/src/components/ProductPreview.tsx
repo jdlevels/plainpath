@@ -10,12 +10,11 @@ import { Button } from "@/components/ui/button"
 /* ─── Shared design tokens ─────────────────────────────────────────────────
    CARD_BASE: shared shell — border supplied per-tool for color differentiation
    ────────────────────────────────────────────────────────────────────────── */
-const CARD_BASE = "rounded-2xl bg-[#0b0f1a] shadow-[0_12px_48px_rgba(0,0,0,0.55)] overflow-hidden border"
 const TOOL = {
-  blue:    { card: `${CARD_BASE} border-blue-500/28`,    chrome: "flex items-center gap-2.5 px-4 py-3 border-b border-blue-500/18    bg-blue-500/[0.05]"    },
-  red:     { card: `${CARD_BASE} border-red-500/28`,     chrome: "flex items-center gap-2.5 px-4 py-3 border-b border-red-500/18     bg-red-500/[0.05]"     },
-  emerald: { card: `${CARD_BASE} border-emerald-500/28`, chrome: "flex items-center gap-2.5 px-4 py-3 border-b border-emerald-500/18 bg-emerald-500/[0.05]" },
-  amber:   { card: `${CARD_BASE} border-amber-500/28`,   chrome: "flex items-center gap-2.5 px-4 py-3 border-b border-amber-500/18   bg-amber-500/[0.05]"   },
+  blue:    { card: "pp-tool-card pp-tool-card-blue",    chrome: "pp-tool-chrome pp-tool-chrome-blue"    },
+  red:     { card: "pp-tool-card pp-tool-card-red",     chrome: "pp-tool-chrome pp-tool-chrome-red"     },
+  emerald: { card: "pp-tool-card pp-tool-card-emerald", chrome: "pp-tool-chrome pp-tool-chrome-emerald" },
+  amber:   { card: "pp-tool-card pp-tool-card-amber",   chrome: "pp-tool-chrome pp-tool-chrome-amber"   },
 }
 const INNER  = "rounded-xl bg-slate-900/55 border border-slate-700/30"
 const LABEL  = "text-[10px] uppercase tracking-widest text-slate-500 font-semibold"
@@ -138,7 +137,7 @@ export default function ProductPreview() {
           transition={{ delay: 0.18 }} className="flex flex-wrap items-center justify-center gap-2.5 mt-6">
           {[
             { icon: FileText,    label: "Analyze a Document",   color: "text-blue-400",    bg: "bg-blue-500/15"    },
-            { icon: ShieldCheck, label: "Document Trust Check", color: "text-violet-400",  bg: "bg-violet-500/15"  },
+            { icon: ShieldCheck, label: "Document Trust Check", color: "text-red-400",     bg: "bg-red-500/15"     },
             { icon: PenLine,     label: "Build a Contract",     color: "text-emerald-400", bg: "bg-emerald-500/15" },
             { icon: Scale,       label: "Contract Review",      color: "text-amber-400",   bg: "bg-amber-500/15"   },
           ].map(({ icon: Icon, label, color, bg }, i) => (

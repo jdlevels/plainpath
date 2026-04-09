@@ -187,6 +187,33 @@
   .dark .priority-bar-low { border-left-color: hsl(40 10% 35%); }
 }
 
+/* ─── ProductPreview tool cards ─────────────────────── */
+.pp-tool-card {
+  border-radius: 1rem;
+  background-color: #0b0f1a;
+  box-shadow: 0 12px 48px rgba(0,0,0,0.55);
+  overflow: hidden;
+  border-width: 1px;
+  border-style: solid;
+}
+.pp-tool-card-blue    { border-color: rgba(59,  130, 246, 0.28); }
+.pp-tool-card-red     { border-color: rgba(239,  68,  68, 0.28); }
+.pp-tool-card-emerald { border-color: rgba( 16, 185, 129, 0.28); }
+.pp-tool-card-amber   { border-color: rgba(245, 158,  11, 0.28); }
+
+.pp-tool-chrome {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.75rem 1rem;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+}
+.pp-tool-chrome-blue    { border-bottom-color: rgba(59,  130, 246, 0.18); background-color: rgba(59,  130, 246, 0.05); }
+.pp-tool-chrome-red     { border-bottom-color: rgba(239,  68,  68, 0.18); background-color: rgba(239,  68,  68, 0.05); }
+.pp-tool-chrome-emerald { border-bottom-color: rgba( 16, 185, 129, 0.18); background-color: rgba( 16, 185, 129, 0.05); }
+.pp-tool-chrome-amber   { border-bottom-color: rgba(245, 158,  11, 0.18); background-color: rgba(245, 158,  11, 0.05); }
+
 /* ─── Hero tool buttons — light mode ─────────────── */
 .tool-btn-blue    { border-color: #93c5fd; color: #1d4ed8; background-color: rgba(239, 246, 255, 0.9); }
 .tool-btn-red     { border-color: #fca5a5; color: #b91c1c; background-color: rgba(254, 242, 242, 0.9); }
