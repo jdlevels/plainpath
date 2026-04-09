@@ -583,30 +583,30 @@ export default function DemoSection() {
                 {TOOLS.map((t, idx) => {
                   const Icon = t.icon
                   const isActive = activeTool === idx
-                  const accentColors: Record<string, { bg: string; border: string; icon: string; text: string }> = {
-                    analyze: { bg: "bg-blue-500/10",   border: "border-blue-500/30",   icon: "text-blue-400",    text: "text-blue-300"    },
-                    trust:   { bg: "bg-red-500/10",    border: "border-red-500/30",    icon: "text-red-400",     text: "text-red-300"     },
-                    contract:{ bg: "bg-emerald-500/10", border: "border-emerald-500/30", icon: "text-emerald-400", text: "text-emerald-300" },
-                    review:  { bg: "bg-amber-500/10",  border: "border-amber-500/30",  icon: "text-amber-400",   text: "text-amber-300"   },
+                  const palette: Record<string, { border: string; bg: string; iconBg: string; iconColor: string; taglineColor: string }> = {
+                    analyze: { border: "#3b82f6", bg: "rgba(59,130,246,0.13)",  iconBg: "rgba(59,130,246,0.18)",  iconColor: "#60a5fa", taglineColor: "#93c5fd" },
+                    trust:   { border: "#ef4444", bg: "rgba(239,68,68,0.13)",   iconBg: "rgba(239,68,68,0.18)",   iconColor: "#f87171", taglineColor: "#fca5a5" },
+                    contract:{ border: "#10b981", bg: "rgba(16,185,129,0.13)",  iconBg: "rgba(16,185,129,0.18)",  iconColor: "#34d399", taglineColor: "#6ee7b7" },
+                    review:  { border: "#f59e0b", bg: "rgba(245,158,11,0.13)",  iconBg: "rgba(245,158,11,0.18)",  iconColor: "#fbbf24", taglineColor: "#fcd34d" },
                   }
-                  const ac = accentColors[t.id]
+                  const p = palette[t.id]
                   return (
                     <button
                       key={t.id}
                       onClick={() => selectTool(idx)}
-                      className={[
-                        "text-left px-4 py-3 rounded-xl border transition-all flex items-center gap-3",
-                        isActive
-                          ? `${ac.bg} ${ac.border}`
-                          : "bg-white/4 border-white/8 hover:bg-white/8 hover:border-white/15",
-                      ].join(" ")}
+                      style={{
+                        borderColor: isActive ? p.border : `${p.border}55`,
+                        backgroundColor: isActive ? p.bg : "rgba(255,255,255,0.03)",
+                      }}
+                      className="text-left px-4 py-3 rounded-xl border transition-all flex items-center gap-3"
                     >
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isActive ? ac.bg : "bg-slate-800"}`}>
-                        <Icon className={`w-4 h-4 ${isActive ? ac.icon : "text-slate-500"}`} />
+                      <div style={{ backgroundColor: isActive ? p.iconBg : `${p.border}22` }}
+                        className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0">
+                        <Icon style={{ width: 16, height: 16, color: isActive ? p.iconColor : `${p.iconColor}99` }} />
                       </div>
                       <div>
-                        <p className={`text-sm font-semibold ${isActive ? "text-white" : "text-slate-400"}`}>{t.label}</p>
-                        {isActive && <p className={`text-[11px] mt-0.5 ${ac.text}`}>{t.tagline}</p>}
+                        <p style={{ color: isActive ? "#ffffff" : "#94a3b8" }} className="text-sm font-semibold">{t.label}</p>
+                        {isActive && <p style={{ color: p.taglineColor }} className="text-[11px] mt-0.5">{t.tagline}</p>}
                       </div>
                     </button>
                   )
