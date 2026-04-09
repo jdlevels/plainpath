@@ -2044,25 +2044,39 @@ function DraftResultView({ draft, contractType, onBack, onRestart }: {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      {/* Header row */}
+      <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
           <Badge variant="secondary" className="mb-2">{draft.contractType}</Badge>
-          <h2 className="text-2xl font-display font-bold">Draft Payload Ready</h2>
-          <p className="text-sm text-muted-foreground mt-1">Review the structured draft. This is ready for the next phase — clause assembly and final legal text.</p>
+          <h2 className="text-2xl font-display font-bold">Your Contract Draft</h2>
+          <p className="text-sm text-muted-foreground mt-1">Review the draft below, then download or send for signature.</p>
         </div>
-        <div className="flex gap-2 flex-wrap">
-          <Button variant="outline" size="sm" onClick={onBack} className="gap-1.5"><ArrowLeft className="w-3.5 h-3.5" /> Back to Review</Button>
-          <Button size="sm" onClick={downloadPDF} className="gap-1.5 bg-primary text-white hover:bg-primary/90"><Download className="w-3.5 h-3.5" /> Download PDF</Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowSignatureModal(true)}
-            className="gap-1.5 border-violet-200 text-violet-600 hover:bg-violet-50 hover:text-violet-700 hover:border-violet-300 dark:border-violet-800 dark:text-violet-400 dark:hover:bg-violet-950/30"
-          >
-            <Lock className="w-3.5 h-3.5" /> Send for Signature
-          </Button>
-          <Button variant="outline" size="sm" onClick={exportJSON} className="gap-1.5"><Download className="w-3.5 h-3.5" /> Export JSON</Button>
+        <div className="flex gap-2 flex-wrap items-center">
+          <Button variant="outline" size="sm" onClick={onBack} className="gap-1.5"><ArrowLeft className="w-3.5 h-3.5" /> Back</Button>
           <Button variant="ghost" size="sm" onClick={onRestart} className="gap-1.5"><RotateCcw className="w-3.5 h-3.5" /> Start Over</Button>
+        </div>
+      </div>
+
+      {/* Primary action bar */}
+      <div className="flex flex-col sm:flex-row gap-3 p-4 bg-muted/30 border border-border/40 rounded-2xl">
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold mb-0.5">Next step</p>
+          <p className="text-xs text-muted-foreground">Download a formatted PDF to share, or send directly for e-signature.</p>
+        </div>
+        <div className="flex gap-2.5 flex-shrink-0 flex-wrap sm:flex-nowrap">
+          <Button size="default" onClick={downloadPDF} className="gap-2 bg-primary text-white hover:bg-primary/90 flex-1 sm:flex-none">
+            <Download className="w-4 h-4" /> Download PDF
+          </Button>
+          <Button
+            size="default"
+            onClick={() => setShowSignatureModal(true)}
+            className="gap-2 bg-violet-600 hover:bg-violet-700 text-white flex-1 sm:flex-none"
+          >
+            <Lock className="w-4 h-4" /> Send for Signature
+          </Button>
+          <Button variant="outline" size="default" onClick={exportJSON} className="gap-2 hidden sm:flex">
+            <Download className="w-4 h-4" /> Export JSON
+          </Button>
         </div>
       </div>
 

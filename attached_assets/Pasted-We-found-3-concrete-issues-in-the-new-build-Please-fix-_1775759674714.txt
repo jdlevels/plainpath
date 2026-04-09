@@ -1,0 +1,102 @@
+We found 3 concrete issues in the new build. Please fix these now.
+
+ISSUE 1 — CONTRACT REVIEW RESULTS FEEL LIKE ENDLESS SCROLL
+The Contract Review results page is too long and feels like an endless vertical dump.
+
+Fix this by restructuring the results UX:
+
+1. Add a strong top summary block that stays concise:
+- fairness score / verdict
+- total red flags
+- total watch-outs
+- total fair clauses
+- missing protections count
+- primary recommendation / next-step summary
+
+2. Break the long clause list into clearer sections:
+- Red Flags
+- Watch Outs
+- Fair Clauses
+- Missing Protections
+- Negotiation Suggestions
+- Before You Sign
+
+3. Default behavior:
+- show the most important flagged items first
+- keep less critical items collapsed or grouped
+- do not force the user to scroll through every clause equally
+
+4. Add a quick-jump / section-nav pattern near the top:
+- jump to Red Flags
+- jump to Missing Protections
+- jump to Negotiation Suggestions
+- jump to Before You Sign
+
+5. Improve scanability:
+- stronger section separation
+- less visual monotony
+- avoid one uninterrupted infinite results stream
+
+IMPORTANT:
+Do not remove useful detail.
+The goal is better hierarchy and usability, not less substance.
+
+ISSUE 2 — CONTRACT REVIEW LOADING STATE DOES NOT MATCH PRODUCT QUALITY
+The loading experience for Contract Review is weaker than Analyze a Document.
+
+Fix this so Contract Review feels like a first-class core tool.
+
+Requirements:
+1. Create a loading/progress experience aligned with Analyze:
+- polished loading shell
+- strong product-consistent copy
+- clear progress state
+- same premium feel as Analyze / Trust Check
+
+2. Improve the in-between state:
+- make it feel intentional, not like a temporary button state
+- better loading messaging
+- better visual structure on desktop and mobile
+
+3. Contract Review should feel like the 4th core tool, not a side feature.
+
+ISSUE 3 — E-SIGNATURE ENTRY POINT IS NOT VISIBLE
+I do not currently see the E-Signature / Send for Signature entry point.
+
+Please verify and fix the full visibility path.
+
+Requirements:
+1. Show exactly where “Send for Signature” appears
+- it should be visible on the Contract Builder draft output screen
+- it must not be hidden behind an unclear condition
+- if it only appears after generation, make that state obvious
+
+2. If the button is missing due to route/state logic, fix it
+3. If the button is present but not visually discoverable, improve the placement
+4. Make the action feel production-intentional, not hidden or secondary
+5. Confirm the modal opens and the signer fields are visible
+
+DELIVERABLE
+Return your result in this structure:
+
+1. CONTRACT REVIEW UX FIXES
+- what changed to stop the endless-scroll feeling
+- what sections/navigation were added
+- whether items are now grouped/collapsed
+
+2. LOADING STATE FIXES
+- what changed in the loading experience
+- how it now matches Analyze more closely
+
+3. E-SIGNATURE VISIBILITY FIX
+- exact screen where Send for Signature now appears
+- what was preventing it before, if anything
+- whether modal + signer fields are now confirmed visible
+
+4. SCREENSHOTS REQUIRED AFTER FIX
+Please provide/point me to screenshots of:
+- top of Contract Review results
+- mid Contract Review results with grouped sections
+- Contract Review loading state
+- Contract draft output with Send for Signature visible
+- Send for Signature modal open
