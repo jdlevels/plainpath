@@ -119,14 +119,16 @@ export default function ProductPreview() {
         transition={{ delay: 0.1 }}
         className="max-w-5xl mx-auto mb-6"
       >
-        {/* Lane label */}
-        <div className="flex items-center gap-2 mb-4">
-          <div className="w-6 h-6 rounded-lg bg-blue-500/15 flex items-center justify-center shrink-0">
-            <FileText className="w-3.5 h-3.5 text-blue-400" />
+        {/* Unified card wrapper with header */}
+        <div className="rounded-2xl bg-slate-950 border border-slate-800/80 shadow-[0_8px_40px_rgba(0,0,0,0.4)] ring-1 ring-white/4 overflow-hidden">
+          <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-slate-800 bg-slate-950/80">
+            <div className="w-6 h-6 rounded-md bg-blue-500/20 flex items-center justify-center shrink-0">
+              <FileText className="w-3.5 h-3.5 text-blue-400" />
+            </div>
+            <span className="text-xs font-bold uppercase tracking-widest text-blue-400">Analyze a Document</span>
           </div>
-          <span className="text-xs font-bold uppercase tracking-widest text-blue-400/80">Analyze a Document</span>
-        </div>
 
+          <div className="p-4">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-4 items-stretch">
           {/* Left: Document panel */}
           <div className="rounded-2xl bg-slate-950 border border-slate-800/80 overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.4)] ring-1 ring-white/4">
@@ -253,6 +255,8 @@ export default function ProductPreview() {
             </div>
           </div>
         </div>
+          </div>{/* closes p-4 */}
+        </div>{/* closes card wrapper */}
       </motion.div>
 
       {/* ══════════════════════════════════════════════════════
@@ -268,10 +272,10 @@ export default function ProductPreview() {
         {/* ── Trust Check proof card ── */}
         <div className="rounded-2xl bg-slate-950 border border-slate-800/80 overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.35)] ring-1 ring-white/4">
           <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-800 bg-slate-950/80">
-            <div className="w-5 h-5 rounded-md bg-slate-700/60 flex items-center justify-center">
-              <ShieldCheck className="w-3 h-3 text-slate-300" />
+            <div className="w-5 h-5 rounded-md bg-violet-500/20 flex items-center justify-center">
+              <ShieldCheck className="w-3 h-3 text-violet-400" />
             </div>
-            <span className="text-xs font-semibold text-slate-300">Document Trust Check</span>
+            <span className="text-xs font-semibold text-violet-300">Document Trust Check</span>
             <span className="ml-auto text-[10px] text-slate-500 font-mono">fake_irs_notice.pdf</span>
           </div>
           <div className="p-4 space-y-3">
@@ -317,11 +321,11 @@ export default function ProductPreview() {
         {/* ── Contract Builder proof card ── */}
         <div className="rounded-2xl bg-slate-950 border border-slate-800/80 overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.35)] ring-1 ring-white/4">
           <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-800 bg-slate-950/80">
-            <div className="w-5 h-5 rounded-md bg-slate-700/60 flex items-center justify-center">
-              <PenLine className="w-3 h-3 text-slate-300" />
+            <div className="w-5 h-5 rounded-md bg-emerald-500/20 flex items-center justify-center">
+              <PenLine className="w-3 h-3 text-emerald-400" />
             </div>
-            <span className="text-xs font-semibold text-slate-300">Contract Builder</span>
-            <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-slate-700/60 text-slate-300 font-semibold flex items-center gap-1">
+            <span className="text-xs font-semibold text-emerald-300">Contract Builder</span>
+            <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-semibold flex items-center gap-1">
               <BadgeCheck className="w-3 h-3" /> Ready
             </span>
           </div>
@@ -369,10 +373,10 @@ export default function ProductPreview() {
         {/* ── Contract Review proof card ── */}
         <div className="rounded-2xl bg-slate-950 border border-slate-800/80 overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.35)] ring-1 ring-white/4">
           <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-800 bg-slate-950/80">
-            <div className="w-5 h-5 rounded-md bg-slate-700/60 flex items-center justify-center">
-              <Scale className="w-3 h-3 text-slate-300" />
+            <div className="w-5 h-5 rounded-md bg-amber-500/20 flex items-center justify-center">
+              <Scale className="w-3 h-3 text-amber-400" />
             </div>
-            <span className="text-xs font-semibold text-slate-300">Contract Review</span>
+            <span className="text-xs font-semibold text-amber-300">Contract Review</span>
             <span className="ml-auto text-[10px] text-slate-500 font-mono">employment_offer.pdf</span>
           </div>
           <div className="p-4 space-y-3">
