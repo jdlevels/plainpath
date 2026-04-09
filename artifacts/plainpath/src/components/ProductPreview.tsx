@@ -8,11 +8,16 @@ import {
 import { Button } from "@/components/ui/button"
 
 /* ─── Shared design tokens ─────────────────────────────────────────────────
-   Applied consistently across every panel and proof card in this component.
+   CARD_BASE: shared shell — border supplied per-tool for color differentiation
    ────────────────────────────────────────────────────────────────────────── */
-const CARD   = "rounded-2xl bg-[#0b0f1a] border border-slate-800/70 shadow-[0_12px_48px_rgba(0,0,0,0.55)] ring-1 ring-white/[0.04] overflow-hidden"
+const CARD_BASE = "rounded-2xl bg-[#0b0f1a] shadow-[0_12px_48px_rgba(0,0,0,0.55)] overflow-hidden border"
+const TOOL = {
+  blue:    { card: `${CARD_BASE} border-blue-500/28`,    chrome: "flex items-center gap-2.5 px-4 py-3 border-b border-blue-500/18    bg-blue-500/[0.05]"    },
+  red:     { card: `${CARD_BASE} border-red-500/28`,     chrome: "flex items-center gap-2.5 px-4 py-3 border-b border-red-500/18     bg-red-500/[0.05]"     },
+  emerald: { card: `${CARD_BASE} border-emerald-500/28`, chrome: "flex items-center gap-2.5 px-4 py-3 border-b border-emerald-500/18 bg-emerald-500/[0.05]" },
+  amber:   { card: `${CARD_BASE} border-amber-500/28`,   chrome: "flex items-center gap-2.5 px-4 py-3 border-b border-amber-500/18   bg-amber-500/[0.05]"   },
+}
 const INNER  = "rounded-xl bg-slate-900/55 border border-slate-700/30"
-const CHROME = "flex items-center gap-2.5 px-4 py-3 border-b border-slate-800/70 bg-slate-950/70"
 const LABEL  = "text-[10px] uppercase tracking-widest text-slate-500 font-semibold"
 const ICON   = "w-5 h-5 rounded-md flex items-center justify-center shrink-0"
 
@@ -67,15 +72,16 @@ const REVIEW_FLAGS = [
 
 /** Uniform chrome bar used on every card/panel */
 function Chrome({
-  iconBg, IconEl, title, right,
+  iconBg, IconEl, title, right, chromeCls,
 }: {
   iconBg: string
   IconEl: React.ReactNode
   title: React.ReactNode
   right?: React.ReactNode
+  chromeCls: string
 }) {
   return (
-    <div className={CHROME}>
+    <div className={chromeCls}>
       <div className={`${ICON} ${iconBg}`}>{IconEl}</div>
       <span className="text-xs font-bold text-slate-200 tracking-tight">{title}</span>
       {right && <div className="ml-auto">{right}</div>}
@@ -152,10 +158,11 @@ export default function ProductPreview() {
       <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-60px" }} transition={{ delay: 0.08 }}
         className="max-w-5xl mx-auto mb-4">
-        <div className={CARD}>
+        <div className={TOOL.blue.card}>
 
           {/* Outer chrome — tool identity */}
           <Chrome
+            chromeCls={TOOL.blue.chrome}
             iconBg="bg-blue-500/20"
             IconEl={<FileText className="w-3 h-3 text-blue-400" />}
             title="Analyze a Document"
@@ -296,10 +303,11 @@ export default function ProductPreview() {
         className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
 
         {/* ── Trust Check ── */}
-        <div className={CARD}>
+        <div className={TOOL.red.card}>
           <Chrome
-            iconBg="bg-violet-500/20"
-            IconEl={<ShieldCheck className="w-3 h-3 text-violet-400" />}
+            chromeCls={TOOL.red.chrome}
+            iconBg="bg-red-500/20"
+            IconEl={<ShieldCheck className="w-3 h-3 text-red-400" />}
             title="Document Trust Check"
             right={<Badge color="slate">fake_irs_notice.pdf</Badge>}
           />
@@ -342,8 +350,9 @@ export default function ProductPreview() {
         </div>
 
         {/* ── Build a Contract ── */}
-        <div className={CARD}>
+        <div className={TOOL.emerald.card}>
           <Chrome
+            chromeCls={TOOL.emerald.chrome}
             iconBg="bg-emerald-500/20"
             IconEl={<PenLine className="w-3 h-3 text-emerald-400" />}
             title="Build a Contract"
@@ -391,8 +400,9 @@ export default function ProductPreview() {
         </div>
 
         {/* ── Contract Review ── */}
-        <div className={CARD}>
+        <div className={TOOL.amber.card}>
           <Chrome
+            chromeCls={TOOL.amber.chrome}
             iconBg="bg-amber-500/20"
             IconEl={<Scale className="w-3 h-3 text-amber-400" />}
             title="Contract Review"
