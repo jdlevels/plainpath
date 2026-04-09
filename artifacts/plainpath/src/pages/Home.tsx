@@ -177,7 +177,7 @@ export default function Home() {
               </Button>
               <Button size="lg" variant="outline" onClick={() => setLocation("/contract-review")}
                 className="h-12 px-8 text-base rounded-xl font-semibold border-amber-200 text-amber-600 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-300 dark:border-amber-800 dark:text-amber-400 dark:hover:bg-amber-950/30 dark:hover:text-amber-300 dark:hover:border-amber-700">
-                <Scale className="mr-2 w-4 h-4" /> Fair Deal Check
+                <Scale className="mr-2 w-4 h-4" /> Contract Review
               </Button>
             </motion.div>
 

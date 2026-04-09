@@ -4,12 +4,11 @@ import {
   Scale, UploadCloud, Loader2, AlertCircle, Copy, Check,
   ChevronDown, ChevronUp, ArrowLeft, RotateCcw, FileText,
   ShieldAlert, AlertTriangle, CheckCircle2, X as XIcon,
+  Lock, ClipboardList,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-import { useToast } from "@/hooks/use-toast"
 import { getApiBaseUrl } from "@/lib/api"
 import { useLocation } from "wouter"
 
@@ -28,6 +27,8 @@ interface ReviewResult {
   verdict: string
   summary: string
   clauses: ClauseResult[]
+  missingProtections: string[]
+  preSigningChecklist: string[]
   reviewedAt: string
 }
 
@@ -133,16 +134,16 @@ function ClauseCard({ clause }: { clause: ClauseResult }) {
                 {clause.negotiationLanguage && (
                   <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-900/40 rounded-lg p-3">
                     <div className="flex items-center justify-between mb-1.5">
-                      <p className="text-xs font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">How to request a change</p>
+                      <p className="text-xs font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">Suggested revision — copy and send</p>
                       <CopyButton text={clause.negotiationLanguage} />
                     </div>
-                    <p className="text-sm text-blue-900 dark:text-blue-100 leading-relaxed font-mono text-xs bg-blue-100/50 dark:bg-blue-900/30 rounded p-2 mt-1 whitespace-pre-wrap">{clause.negotiationLanguage}</p>
+                    <p className="text-xs text-blue-900 dark:text-blue-100 leading-relaxed font-mono bg-blue-100/50 dark:bg-blue-900/30 rounded p-2 mt-1 whitespace-pre-wrap">{clause.negotiationLanguage}</p>
                   </div>
                 )}
 
                 {clause.exitGuidance && (
                   <div className="bg-muted/40 border border-border/30 rounded-lg p-3">
-                    <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">If you already signed</p>
+                    <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">Already signed?</p>
                     <p className="text-sm text-muted-foreground leading-relaxed">{clause.exitGuidance}</p>
                   </div>
                 )}
@@ -167,26 +168,26 @@ function ResultsView({ result, onReset }: { result: ReviewResult; onReset: () =>
       transition={{ duration: 0.3 }}
       className="space-y-6"
     >
+      {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-2xl font-display font-bold">Fair Deal Check Results</h2>
-          <p className="text-sm text-muted-foreground mt-0.5">Clause-by-clause review — read before you sign</p>
+          <h2 className="text-2xl font-display font-bold">Contract Review Results</h2>
+          <p className="text-sm text-muted-foreground mt-0.5">Clause-by-clause review — read this before you sign</p>
         </div>
         <Button variant="outline" size="sm" onClick={onReset} className="gap-1.5">
           <RotateCcw className="w-3.5 h-3.5" /> Review Another
         </Button>
       </div>
 
+      {/* Overall score */}
       <div className={`border rounded-2xl p-6 ${scoreBg(result.overallScore)}`}>
         <div className="flex items-center gap-6 flex-wrap">
-          <div className="text-center">
+          <div className="text-center min-w-[80px]">
             <p className={`text-6xl font-bold font-display ${scoreColor(result.overallScore)}`}>{result.overallScore}</p>
             <p className="text-xs text-muted-foreground mt-1">out of 100</p>
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-2 flex-wrap">
-              <span className={`text-xl font-bold ${scoreColor(result.overallScore)}`}>{result.verdict}</span>
-            </div>
+            <p className={`text-xl font-bold mb-2 ${scoreColor(result.overallScore)}`}>{result.verdict}</p>
             <p className="text-sm text-foreground/80 leading-relaxed">{result.summary}</p>
           </div>
         </div>
@@ -209,10 +210,12 @@ function ResultsView({ result, onReset }: { result: ReviewResult; onReset: () =>
         </div>
       </div>
 
+      {/* Not legal advice */}
       <div className="bg-muted/30 border border-border/30 rounded-xl px-4 py-3 text-xs text-muted-foreground">
-        This is an AI-assisted fairness review for informational purposes only. It is not legal advice. Always consult a qualified attorney before signing any legal agreement.
+        This is an AI-assisted contract review for informational purposes only. It is not legal advice. Always consult a qualified attorney before signing any legal agreement.
       </div>
 
+      {/* Clause-by-clause */}
       <div className="space-y-3">
         <h3 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">Clause-by-Clause Review</h3>
         {result.clauses.length === 0 ? (
@@ -221,13 +224,58 @@ function ResultsView({ result, onReset }: { result: ReviewResult; onReset: () =>
           result.clauses.map(clause => <ClauseCard key={clause.id} clause={clause} />)
         )}
       </div>
+
+      {/* Missing protections */}
+      {result.missingProtections && result.missingProtections.length > 0 && (
+        <div className="space-y-3">
+          <h3 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">Missing Protections</h3>
+          <Card className="border-amber-200/60 dark:border-amber-900/40">
+            <CardContent className="p-4">
+              <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
+                These are standard protections a fair contract of this type should include — but this one doesn't. Consider requesting them before signing.
+              </p>
+              <ul className="space-y-2.5">
+                {result.missingProtections.map((item, i) => (
+                  <li key={i} className="flex items-start gap-2.5">
+                    <Lock className="w-3.5 h-3.5 text-amber-500 flex-shrink-0 mt-0.5" />
+                    <span className="text-sm text-foreground/85 leading-snug">{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Pre-signing checklist */}
+      {result.preSigningChecklist && result.preSigningChecklist.length > 0 && (
+        <div className="space-y-3">
+          <h3 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">Before You Sign</h3>
+          <Card className="border-blue-200/60 dark:border-blue-900/40 bg-blue-50/30 dark:bg-blue-950/10">
+            <CardContent className="p-4">
+              <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
+                Work through this checklist before you put pen to paper.
+              </p>
+              <ul className="space-y-2.5">
+                {result.preSigningChecklist.map((item, i) => (
+                  <li key={i} className="flex items-start gap-2.5">
+                    <div className="w-5 h-5 rounded border border-blue-300 dark:border-blue-700 flex-shrink-0 mt-0.5 flex items-center justify-center">
+                      <ClipboardList className="w-3 h-3 text-blue-500" />
+                    </div>
+                    <span className="text-sm text-foreground/85 leading-snug">{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </motion.div>
   )
 }
 
 export default function ContractReview() {
   const [, setLocation] = useLocation()
-  const { toast } = useToast()
 
   const [activeTab, setActiveTab] = useState<"paste" | "upload">("paste")
   const [text, setText] = useState("")
@@ -303,17 +351,18 @@ export default function ContractReview() {
           className="space-y-7"
         >
           <div className="text-center space-y-3">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-violet-100 dark:bg-violet-900/40 mb-1">
-              <Scale className="w-7 h-7 text-violet-600 dark:text-violet-400" />
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-100 dark:bg-amber-900/40 mb-1">
+              <Scale className="w-7 h-7 text-amber-600 dark:text-amber-400" />
             </div>
-            <h1 className="text-3xl font-display font-bold">Fair Deal Check</h1>
+            <h1 className="text-3xl font-display font-bold">Contract Review</h1>
             <p className="text-muted-foreground text-base max-w-lg mx-auto leading-relaxed">
-              Someone handed you a contract. Before you sign, paste it below and we'll review every clause — flagging what's unfair and giving you the exact language to push back.
+              Review a contract you didn't write. Spot unfair clauses, missing protections, negotiation points, and high-risk terms before you sign.
             </p>
-            <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground pt-1">
-              <span className="flex items-center gap-1.5"><ShieldAlert className="w-3.5 h-3.5 text-red-500" /> Red flags called out</span>
+            <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground pt-1 flex-wrap">
+              <span className="flex items-center gap-1.5"><ShieldAlert className="w-3.5 h-3.5 text-red-500" /> Red flags surfaced</span>
               <span className="flex items-center gap-1.5"><AlertTriangle className="w-3.5 h-3.5 text-amber-500" /> Watch-outs explained</span>
               <span className="flex items-center gap-1.5"><Copy className="w-3.5 h-3.5 text-blue-500" /> Negotiation language ready to copy</span>
+              <span className="flex items-center gap-1.5"><Lock className="w-3.5 h-3.5 text-violet-500" /> Missing protections identified</span>
             </div>
           </div>
 
@@ -362,12 +411,12 @@ export default function ContractReview() {
                     />
                     <button
                       onClick={() => fileInputRef.current?.click()}
-                      className="w-full border-2 border-dashed border-border/50 rounded-xl p-10 text-center hover:border-primary/40 hover:bg-primary/5 transition-all group"
+                      className="w-full border-2 border-dashed border-border/50 rounded-xl p-10 text-center hover:border-amber-400/50 hover:bg-amber-50/30 dark:hover:bg-amber-950/10 transition-all group"
                     >
                       {file ? (
                         <div className="space-y-2">
                           <div className="flex items-center justify-center gap-2">
-                            <FileText className="w-5 h-5 text-primary" />
+                            <FileText className="w-5 h-5 text-amber-600" />
                             <span className="text-sm font-medium text-foreground">{file.name}</span>
                             <button
                               onClick={e => { e.stopPropagation(); setFile(null) }}
@@ -380,7 +429,7 @@ export default function ContractReview() {
                         </div>
                       ) : (
                         <>
-                          <UploadCloud className="w-8 h-8 text-muted-foreground group-hover:text-primary/60 mx-auto mb-2 transition-colors" />
+                          <UploadCloud className="w-8 h-8 text-muted-foreground group-hover:text-amber-500 mx-auto mb-2 transition-colors" />
                           <p className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">Drop a file or click to browse</p>
                           <p className="text-xs text-muted-foreground mt-1">PDF, Word (.docx), or plain text · Max 20 MB</p>
                         </>
@@ -400,11 +449,11 @@ export default function ContractReview() {
               <Button
                 onClick={handleReview}
                 disabled={loading || (activeTab === "paste" ? text.trim().length < 50 : !file)}
-                className="w-full gap-2"
+                className="w-full gap-2 bg-amber-600 hover:bg-amber-700 text-white"
                 size="lg"
               >
                 {loading ? (
-                  <><Loader2 className="w-4 h-4 animate-spin" /> Reviewing clauses…</>
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Reviewing contract…</>
                 ) : (
                   <><Scale className="w-4 h-4" /> Review This Contract</>
                 )}
@@ -412,7 +461,7 @@ export default function ContractReview() {
 
               {loading && (
                 <p className="text-center text-xs text-muted-foreground animate-pulse">
-                  Reading every clause… this takes 15–30 seconds
+                  Reading every clause… this typically takes 20–40 seconds
                 </p>
               )}
             </CardContent>

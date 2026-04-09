@@ -136,7 +136,7 @@ Protection: ${JSON.stringify(protection ?? {})}`;
 });
 
 // POST /api/contracts/review
-// Fair Deal Check — clause-by-clause fairness analysis of a contract the user received.
+// Contract Review — clause-by-clause fairness analysis of a contract the user received.
 // Accepts JSON { text } or multipart { file }.
 router.post("/review", upload.single("file"), async (req: Request, res: Response) => {
   let text = "";
@@ -170,37 +170,44 @@ router.post("/review", upload.single("file"), async (req: Request, res: Response
     return res.status(400).json({ message: "Please provide at least 50 characters of contract text." });
   }
 
-  const systemPrompt = `You are a contract fairness expert reviewing a contract on behalf of the person who did NOT draft it — someone handed this contract and needs to know if it's fair before signing.
+  const systemPrompt = `You are a contract review expert working on behalf of the person who received this contract — they did NOT write it and need to know if it's fair, what risks they're taking on, and what to negotiate before signing.
 
-Review every meaningful clause. Return ONLY valid JSON — no markdown fences — in exactly this shape:
+Return ONLY valid JSON — no markdown fences — in exactly this shape:
 {
-  "overallScore": number (0-100, where 100 = completely fair to the reader),
+  "overallScore": number (0-100, where 100 = completely fair and balanced for the reader),
   "verdict": "Fair" | "Mostly Fair" | "Some Concerns" | "Significant Issues" | "Heavily One-Sided",
-  "summary": "2-3 sentence plain English overall assessment",
+  "summary": "2-3 sentence plain English overall assessment of the contract's fairness and key risks",
   "clauses": [
     {
       "id": "c1",
-      "text": "Short excerpt or label for the clause (max 100 chars)",
+      "text": "Short label or excerpt identifying the clause (max 100 chars)",
       "rating": "fair" | "watch-out" | "red-flag",
-      "explanation": "Plain English: what this clause actually means (max 60 words)",
-      "whyUnfair": "Why this is unfair or risky — null if rating is fair (max 60 words)",
-      "negotiationLanguage": "Exact suggested revision the user can copy and send back — null if rating is fair (max 150 words)",
-      "exitGuidance": "If already signed or clause may be unenforceable — null if rating is fair (max 60 words)"
+      "explanation": "Plain English: what this clause actually means for the reader (max 70 words)",
+      "whyUnfair": "Why this clause is problematic or risky — null if rating is fair (max 70 words)",
+      "negotiationLanguage": "Specific suggested revision wording the reader can copy and send back — null if rating is fair (max 160 words, include actual replacement clause text)",
+      "exitGuidance": "What the reader should know if they've already signed or if this clause may be unenforceable — null if rating is fair (max 60 words)"
     }
+  ],
+  "missingProtections": [
+    "Short plain-English statement of an important protection missing from this contract (e.g. 'No payment protection if the project is cancelled mid-way')"
+  ],
+  "preSigningChecklist": [
+    "Specific action item or verification the reader should complete before signing (e.g. 'Confirm the payment schedule aligns with your invoicing cycle')"
   ]
 }
 
 Score guide: 80-100 = Fair, 60-79 = Mostly Fair, 40-59 = Some Concerns, 20-39 = Significant Issues, 0-19 = Heavily One-Sided.
 
 Rules:
-- Only include clauses that carry real obligations, rights, or restrictions (5-20 clauses total)
-- Skip purely administrative boilerplate (headings, "entire agreement" merger clauses, definitions with no impact)
-- Use "watch-out" for vague, unusual, or one-sided clauses that need clarification or negotiation
-- Use "red-flag" for clearly harmful, exploitative, or potentially unenforceable clauses
-- negotiationLanguage must be specific — not generic. Include the actual suggested replacement text
-- All language must be plain English — no legal jargon`;
+- clauses: 5-20 items covering real obligations, rights, or restrictions. Skip purely administrative boilerplate (section headings, "entire agreement" mergers, page references)
+- Use "watch-out" for vague, unusual, or one-sided clauses that deserve attention or negotiation
+- Use "red-flag" for clearly harmful, exploitative, or potentially unenforceable clauses  
+- negotiationLanguage must be specific — not "you may want to request a revision." Include actual suggested replacement text the reader can send
+- missingProtections: 2-5 items — important protections a fair contract of this type should have but this one lacks or poorly addresses
+- preSigningChecklist: 3-6 specific verifications the reader should do before signing, tailored to this contract's actual content
+- All language plain English — no legal jargon. Frame as understanding, risk awareness, and negotiation guidance`;
 
-  const userPrompt = `Review this contract for fairness:\n\n${text.slice(0, 12000)}`;
+  const userPrompt = `Review this contract:\n\n${text.slice(0, 12000)}`;
 
   try {
     const response = await openai.chat.completions.create({
@@ -210,7 +217,7 @@ Rules:
         { role: "user", content: userPrompt },
       ],
       temperature: 0.2,
-      max_completion_tokens: 4000,
+      max_completion_tokens: 4500,
     });
 
     const raw = response.choices[0]?.message?.content ?? "{}";
@@ -222,6 +229,8 @@ Rules:
       verdict: typeof result.verdict === "string" ? result.verdict : "Some Concerns",
       summary: typeof result.summary === "string" ? result.summary : "",
       clauses: Array.isArray(result.clauses) ? result.clauses : [],
+      missingProtections: Array.isArray(result.missingProtections) ? result.missingProtections : [],
+      preSigningChecklist: Array.isArray(result.preSigningChecklist) ? result.preSigningChecklist : [],
       reviewedAt: new Date().toISOString(),
     });
   } catch (err) {
