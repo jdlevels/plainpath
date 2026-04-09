@@ -1,10 +1,9 @@
 import { useLocation } from "wouter"
 import { motion } from "framer-motion"
 import {
-  ArrowRight, FileCheck, ShieldCheck, Upload,
-  Sparkles, ClipboardList, GraduationCap, Banknote,
-  Receipt, Scale, HeartPulse, FileSignature, MailWarning,
-  CheckCircle2, PenLine, AlertTriangle, Eye, CalendarX, FileScan
+  ArrowRight, ShieldCheck, Upload,
+  Sparkles, Receipt, Scale, HeartPulse, FileSignature, MailWarning,
+  CheckCircle2, PenLine, FileScan, CalendarX, Eye, AlertTriangle
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -20,30 +19,51 @@ import VideoWalkthrough from "@/components/VideoWalkthrough"
 const DEMOS = [
   {
     id: "event-permit",
+    tool: "Analyze a Document",
     title: "Small Business Event Permit Packet",
-    desc: "City government permit to host a public event. Requires 4 departmental sign-offs, a $1M liability certificate, and a 45-day lead time.",
-    icon: ClipboardList,
+    desc: "City permit to host a public event. Requires 4 departmental sign-offs, a $1M liability certificate, and a 45-day lead time.",
+    icon: FileScan,
     color: "text-blue-500 dark:text-blue-400",
     bg: "bg-blue-50 dark:bg-blue-950/50",
     tags: ["8 action steps", "6 required docs", "3 deadlines"],
+    cta: "Open action plan",
+    path: "/analyze?demo=event-permit",
   },
   {
-    id: "school-enrollment",
-    title: "School Enrollment Packet",
-    desc: "K–12 district enrollment requiring residency proof, immunization compliance, and prior school records.",
-    icon: GraduationCap,
+    id: "trust-check-irs",
+    tool: "Document Trust Check",
+    title: "Fake IRS Payment Demand",
+    desc: "A letter claiming your account is flagged, demanding $892 within 48 hours. Trust Check scores it 18/100 and surfaces 3 critical red flags.",
+    icon: ShieldCheck,
+    color: "text-violet-500 dark:text-violet-400",
+    bg: "bg-violet-50 dark:bg-violet-950/50",
+    tags: ["Score: 18/100", "3 red flags", "Verdict: Likely Scam"],
+    cta: "See trust verdict",
+    path: "/import?mode=trust-check",
+  },
+  {
+    id: "contract-builder-freelance",
+    tool: "Build a Contract",
+    title: "Freelance Services Agreement",
+    desc: "Answer 6 questions about your deal — scope, payment, and deadline — and get a complete contract with gap analysis ready to download.",
+    icon: PenLine,
     color: "text-emerald-500 dark:text-emerald-400",
     bg: "bg-emerald-50 dark:bg-emerald-950/50",
-    tags: ["7 action steps", "6 required docs", "2 deadlines"],
+    tags: ["6-question wizard", "Gap analysis included", "PDF ready"],
+    cta: "Build a contract",
+    path: "/contract-builder",
   },
   {
-    id: "grant-application",
-    title: "Small Business Community Grant",
-    desc: "Competitive city grant for $5,000–$25,000. Requires a business plan, 2 years of financials, and vendor quotes.",
-    icon: Banknote,
+    id: "contract-review-employment",
+    tool: "Contract Review",
+    title: "Employment Offer — Heavily One-Sided",
+    desc: "An offer letter with a 5-year global non-compete, no severance clause, and IP rights stripping. Scored 28/100 with negotiation language ready.",
+    icon: Scale,
     color: "text-amber-500 dark:text-amber-400",
     bg: "bg-amber-50 dark:bg-amber-950/50",
-    tags: ["8 action steps", "8 required docs", "2 deadlines"],
+    tags: ["Score: 28/100", "4 clauses flagged", "Negotiation language"],
+    cta: "Review a contract",
+    path: "/contract-review",
   },
 ]
 
@@ -372,31 +392,32 @@ export default function Home() {
               <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
                 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Live demos</motion.p>
               <motion.h2 initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-                className="text-3xl md:text-4xl font-display font-bold mb-3">Real results from the Analyze tool</motion.h2>
+                className="text-3xl md:text-4xl font-display font-bold mb-3">One demo for each tool</motion.h2>
               <motion.p initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
                 transition={{ delay: 0.1 }} className="text-muted-foreground text-lg max-w-xl mx-auto">
-                Three pre-loaded documents — click any card to open a full structured action plan with deadlines, required documents, and risks surfaced.
+                Four tools, four real-world examples. Click any card to try that tool with a pre-loaded scenario.
               </motion.p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
               {DEMOS.map((demo, i) => (
                 <motion.div key={demo.id} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }} transition={{ delay: i * 0.1 }} whileHover={{ y: -5, transition: { duration: 0.2 } }}>
-                  <button onClick={() => setLocation(`/analyze?demo=${demo.id}`)} className="w-full text-left h-full group">
+                  viewport={{ once: true }} transition={{ delay: i * 0.08 }} whileHover={{ y: -5, transition: { duration: 0.2 } }}>
+                  <button onClick={() => setLocation(demo.path)} className="w-full text-left h-full group">
                     <Card className="h-full border-slate-200 dark:border-border/40 hover:border-primary/40 hover:shadow-xl transition-all overflow-hidden bg-white dark:bg-card rounded-2xl shadow-md">
-                      <div className="p-7 flex flex-col h-full">
-                        <div className={`w-12 h-12 rounded-xl ${demo.bg} flex items-center justify-center mb-5`}>
-                          <demo.icon className={`w-6 h-6 ${demo.color}`} />
+                      <div className="p-6 flex flex-col h-full">
+                        <div className={`w-11 h-11 rounded-xl ${demo.bg} flex items-center justify-center mb-4`}>
+                          <demo.icon className={`w-5 h-5 ${demo.color}`} />
                         </div>
-                        <h3 className="text-lg font-bold group-hover:text-primary transition-colors mb-2 leading-snug">{demo.title}</h3>
-                        <p className="text-sm text-muted-foreground leading-relaxed mb-5 flex-1">{demo.desc}</p>
+                        <p className={`text-[11px] font-bold uppercase tracking-widest mb-1.5 ${demo.color}`}>{demo.tool}</p>
+                        <h3 className="text-base font-bold group-hover:text-primary transition-colors mb-2 leading-snug">{demo.title}</h3>
+                        <p className="text-sm text-muted-foreground leading-relaxed mb-4 flex-1">{demo.desc}</p>
                         <div className="flex flex-wrap gap-1.5 mb-4">
                           {demo.tags.map((tag) => (
                             <span key={tag} className="inline-block px-2.5 py-1 rounded-full bg-secondary text-xs font-semibold text-muted-foreground">{tag}</span>
                           ))}
                         </div>
                         <div className="flex items-center gap-1.5 text-sm font-semibold text-primary">
-                          Open action plan <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                          {demo.cta} <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                         </div>
                       </div>
                     </Card>
