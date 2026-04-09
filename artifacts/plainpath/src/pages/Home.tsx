@@ -184,13 +184,13 @@ export default function Home() {
               className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 w-full max-w-3xl mx-auto"
             >
               {[
-                { label: "Analyze a Document",   Icon: FileScan,    path: "/import",                   cls: "border-blue-300/70   text-blue-700   bg-blue-50/80   hover:bg-blue-100   hover:border-blue-400   dark:border-blue-500/40  dark:text-blue-300  dark:bg-blue-500/10  dark:hover:bg-blue-500/18" },
-                { label: "Document Trust Check", Icon: ShieldCheck, path: "/import?mode=trust-check",   cls: "border-red-300/70    text-red-700    bg-red-50/80    hover:bg-red-100    hover:border-red-400    dark:border-red-500/40   dark:text-red-300   dark:bg-red-500/10   dark:hover:bg-red-500/18"  },
-                { label: "Build a Contract",     Icon: PenLine,     path: "/contract-builder",           cls: "border-emerald-300/70 text-emerald-700 bg-emerald-50/80 hover:bg-emerald-100 hover:border-emerald-400 dark:border-emerald-500/40 dark:text-emerald-300 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/18" },
-                { label: "Contract Review",      Icon: Scale,       path: "/contract-review",            cls: "border-amber-300/70  text-amber-700  bg-amber-50/80  hover:bg-amber-100  hover:border-amber-400  dark:border-amber-500/40 dark:text-amber-300  dark:bg-amber-500/10  dark:hover:bg-amber-500/18"  },
+                { label: "Analyze a Document",   Icon: FileScan,    path: "/import",                   cls: "border-blue-300    text-blue-700   bg-blue-50/90   hover:bg-blue-100   dark:border-blue-500    dark:text-blue-300  dark:bg-blue-500/[0.13] dark:hover:bg-blue-500/[0.22]" },
+                { label: "Document Trust Check", Icon: ShieldCheck, path: "/import?mode=trust-check",   cls: "border-red-300     text-red-700    bg-red-50/90    hover:bg-red-100    dark:border-red-500     dark:text-red-300   dark:bg-red-500/[0.13]  dark:hover:bg-red-500/[0.22]"  },
+                { label: "Build a Contract",     Icon: PenLine,     path: "/contract-builder",           cls: "border-emerald-300 text-emerald-700 bg-emerald-50/90 hover:bg-emerald-100 dark:border-emerald-500 dark:text-emerald-300 dark:bg-emerald-500/[0.13] dark:hover:bg-emerald-500/[0.22]" },
+                { label: "Contract Review",      Icon: Scale,       path: "/contract-review",            cls: "border-amber-300   text-amber-700  bg-amber-50/90  hover:bg-amber-100  dark:border-amber-500   dark:text-amber-300  dark:bg-amber-500/[0.13]  dark:hover:bg-amber-500/[0.22]"  },
               ].map(({ label, Icon, path, cls }) => (
-                <Button key={label} size="lg" variant="outline" onClick={() => setLocation(path)}
-                  className={`w-full h-12 px-4 text-sm rounded-xl font-semibold transition-all ${cls}`}>
+                <Button key={label} size="lg" variant="ghost" onClick={() => setLocation(path)}
+                  className={`w-full h-12 px-4 text-sm rounded-xl font-semibold border transition-all ${cls}`}>
                   <Icon className="mr-2 w-4 h-4 shrink-0" /> {label}
                 </Button>
               ))}
