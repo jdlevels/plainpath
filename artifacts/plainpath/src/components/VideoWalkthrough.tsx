@@ -15,11 +15,8 @@ const CHAPTERS = [
   {
     id: 0,
     icon: FileText,
-    color: "text-blue-400",
-    bg: "bg-blue-500/10",
-    border: "border-blue-500/20",
-    activeBorder: "border-blue-400/50",
-    activeBg: "bg-blue-500/8",
+    hex: "#3b82f6",
+    iconColor: "#60a5fa",
     time: "0:00",
     duration: "0:48",
     label: "Analyze a Document",
@@ -28,11 +25,8 @@ const CHAPTERS = [
   {
     id: 1,
     icon: ShieldCheck,
-    color: "text-violet-400",
-    bg: "bg-violet-500/10",
-    border: "border-violet-500/20",
-    activeBorder: "border-violet-400/50",
-    activeBg: "bg-violet-500/8",
+    hex: "#ef4444",
+    iconColor: "#f87171",
     time: "0:48",
     duration: "0:36",
     label: "Document Trust Check",
@@ -41,11 +35,8 @@ const CHAPTERS = [
   {
     id: 2,
     icon: PenLine,
-    color: "text-emerald-400",
-    bg: "bg-emerald-500/10",
-    border: "border-emerald-500/20",
-    activeBorder: "border-emerald-400/50",
-    activeBg: "bg-emerald-500/8",
+    hex: "#10b981",
+    iconColor: "#34d399",
     time: "1:24",
     duration: "0:42",
     label: "Build a Contract",
@@ -54,17 +45,15 @@ const CHAPTERS = [
   {
     id: 3,
     icon: Scale,
-    color: "text-amber-400",
-    bg: "bg-amber-500/10",
-    border: "border-amber-500/20",
-    activeBorder: "border-amber-400/50",
-    activeBg: "bg-amber-500/8",
+    hex: "#f59e0b",
+    iconColor: "#fbbf24",
     time: "2:06",
     duration: "0:52",
     label: "Contract Review",
     desc: "Paste a contract you received and get a clause-by-clause fairness review.",
   },
 ]
+
 
 /* ── Simulated PlainPath UI thumbnail shown before play ── */
 function ThumbnailPreview({ onPlay, hasVideo }: { onPlay: () => void; hasVideo: boolean }) {
@@ -180,12 +169,7 @@ function ThumbnailPreview({ onPlay, hasVideo }: { onPlay: () => void; hasVideo: 
             <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shrink-0" />
             AI narrated walkthrough · 2 min 18 sec
           </span>
-        ) : (
-          <span className="px-3.5 py-1.5 rounded-full bg-black/55 backdrop-blur-sm text-white/70 text-[11px] font-medium flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400/80 shrink-0" />
-            Walkthrough video coming soon
-          </span>
-        )}
+        ) : null}
       </div>
     </div>
   )
@@ -314,16 +298,17 @@ export default function VideoWalkthrough() {
                 key={ch.id}
                 onClick={() => setActiveChapter(ch.id)}
                 whileHover={{ y: -2 }}
-                className={[
-                  "text-left px-4 py-3.5 rounded-xl border transition-all",
-                  isActive
-                    ? `${ch.activeBg} ${ch.activeBorder} shadow-md`
-                    : "bg-white/6 border-white/10 hover:bg-white/10 hover:border-white/20",
-                ].join(" ")}
+                style={{
+                  borderColor: isActive ? ch.hex : `${ch.hex}44`,
+                  backgroundColor: isActive ? `${ch.hex}22` : `${ch.hex}0d`,
+                  boxShadow: isActive ? `0 4px 24px ${ch.hex}18` : "none",
+                }}
+                className="text-left px-4 py-3.5 rounded-xl border transition-all"
               >
                 <div className="flex items-start gap-3">
-                  <div className={`w-8 h-8 rounded-lg ${ch.bg} flex items-center justify-center shrink-0 mt-0.5`}>
-                    <Icon className={`w-4 h-4 ${ch.color}`} />
+                  <div style={{ backgroundColor: isActive ? `${ch.hex}30` : `${ch.hex}18` }}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5">
+                    <Icon style={{ width: 16, height: 16, color: isActive ? ch.iconColor : `${ch.iconColor}99` }} />
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-white mb-0.5 truncate">{ch.label}</p>
