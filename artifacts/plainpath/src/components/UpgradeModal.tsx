@@ -23,13 +23,13 @@ const REASON_COPY = {
   trustCheck: {
     title: "Document Trust Check requires Pro",
     sub: "Upgrade to Pro to run unlimited trust checks on any document.",
-    icon: <ShieldCheck className="w-6 h-6 text-violet-500" />,
+    icon: <ShieldCheck className="w-6 h-6 text-red-500" />,
     planRequired: "pro" as const,
   },
   contractDraft: {
     title: "Contract Builder requires Pro",
     sub: "Upgrade to Pro to generate unlimited AI-drafted contracts.",
-    icon: <PenLine className="w-6 h-6 text-amber-500" />,
+    icon: <PenLine className="w-6 h-6 text-emerald-500" />,
     planRequired: "pro" as const,
   },
 }

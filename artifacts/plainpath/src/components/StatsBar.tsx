@@ -5,8 +5,8 @@ import { FileText, Star, Shield, PenLine } from "lucide-react"
 const STATS = [
   { icon: FileText, value: 50000, suffix: "+", label: "Pages analyzed", color: "text-primary" },
   { icon: Star, value: 4.9, suffix: "★", label: "Average rating", color: "text-amber-500", decimals: 1 },
-  { icon: Shield, value: 12000, suffix: "+", label: "Trust checks run", color: "text-emerald-500" },
-  { icon: PenLine, value: 3000, suffix: "+", label: "Contracts drafted", color: "text-violet-500" },
+  { icon: Shield, value: 12000, suffix: "+", label: "Trust checks run", color: "text-red-500" },
+  { icon: PenLine, value: 3000, suffix: "+", label: "Contracts drafted", color: "text-emerald-500" },
 ]
 
 function AnimatedNumber({

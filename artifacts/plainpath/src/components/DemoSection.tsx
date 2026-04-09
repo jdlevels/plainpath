@@ -210,9 +210,9 @@ function TrustScanFrame() {
   return (
     <div className="flex flex-col items-center justify-center h-full gap-4 select-none">
       <div className="relative w-14 h-14">
-        <div className="absolute inset-0 rounded-full bg-violet-500/15 animate-ping" />
-        <div className="relative w-14 h-14 rounded-full bg-violet-500/15 flex items-center justify-center">
-          <ShieldCheck className="w-6 h-6 text-violet-400 animate-pulse" />
+        <div className="absolute inset-0 rounded-full bg-red-500/15 animate-ping" />
+        <div className="relative w-14 h-14 rounded-full bg-red-500/15 flex items-center justify-center">
+          <ShieldCheck className="w-6 h-6 text-red-400 animate-pulse" />
         </div>
       </div>
       <div className="text-center">
@@ -225,9 +225,9 @@ function TrustScanFrame() {
         {checks.map((_, i) => (
           <motion.div key={i} initial={{ opacity: 0 }} animate={{ opacity: i <= idx ? 1 : 0.2 }} transition={{ duration: 0.3 }}
             className="flex items-center gap-2">
-            {i < idx ? <CircleCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> : i === idx ? <Loader2 className="w-3.5 h-3.5 text-violet-400 animate-spin shrink-0" /> : <div className="w-3.5 h-3.5 rounded-full border border-slate-700 shrink-0" />}
+            {i < idx ? <CircleCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> : i === idx ? <Loader2 className="w-3.5 h-3.5 text-red-400 animate-spin shrink-0" /> : <div className="w-3.5 h-3.5 rounded-full border border-slate-700 shrink-0" />}
             <div className="flex-1 h-1.5 rounded-full bg-slate-700 overflow-hidden">
-              <motion.div className={i <= idx ? "h-full rounded-full bg-violet-500" : "h-full rounded-full bg-slate-700"} initial={{ width: 0 }} animate={{ width: i < idx ? "100%" : i === idx ? "60%" : "0%" }} transition={{ duration: 0.5 }} />
+              <motion.div className={i <= idx ? "h-full rounded-full bg-red-500" : "h-full rounded-full bg-slate-700"} initial={{ width: 0 }} animate={{ width: i < idx ? "100%" : i === idx ? "60%" : "0%" }} transition={{ duration: 0.5 }} />
             </div>
           </motion.div>
         ))}

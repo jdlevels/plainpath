@@ -50,6 +50,7 @@ function Router() {
           <Route path="/privacy" component={Privacy} />
           <Route path="/terms" component={Terms} />
           <Route path="/support" component={Support} />
+          <Route path="/pricing">{() => { window.location.replace("/#pricing"); return null; }}</Route>
           <Route path="/subscribe" component={Subscribe} />
           <Route path="/subscribe/success" component={SubscribeSuccess} />
           <Route path="/subscribe/cancel" component={SubscribeCancel} />
