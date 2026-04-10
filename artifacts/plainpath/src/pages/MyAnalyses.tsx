@@ -6,12 +6,15 @@ import { Input } from "@/components/ui/input"
 import {
   BookMarked, ArrowRight, Trash2, Pencil, Check, X,
   FileText, Clock, HardDrive, AlertTriangle, Folders, CreditCard,
-  Search, SortAsc, SortDesc, ArrowUpDown,
+  Search, SortAsc, SortDesc, ArrowUpDown, ShieldCheck,
 } from "lucide-react"
 import {
   getAll, deleteAnalysis, renameAnalysis,
   estimateSizeKb, type SavedAnalysis,
 } from "@/lib/savedAnalyses"
+import {
+  getAllTrustChecks, deleteTrustCheck, type SavedTrustCheck,
+} from "@/lib/savedTrustChecks"
 import { useAnalysisContext } from "@/context/AnalysisContext"
 import { useEntitlements } from "@/hooks/useEntitlements"
 import PlanStatusBanner from "@/components/PlanStatusBanner"
@@ -34,7 +37,7 @@ function sourceLabel(kind: SavedAnalysis["sourceKind"]): string {
 
 export default function MyAnalyses() {
   const [, setLocation] = useLocation()
-  const { setAnalysis, setDocumentTypeHint } = useAnalysisContext()
+  const { setAnalysis, setDocumentTypeHint, setTrustCheckAnalysis } = useAnalysisContext()
   const { entitlements, reload: reloadEntitlements } = useEntitlements()
   const [items, setItems] = useState<SavedAnalysis[]>([])
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -43,6 +46,9 @@ export default function MyAnalyses() {
   const [showSubscription, setShowSubscription] = useState(false)
   const [search, setSearch] = useState("")
   const [sortBy, setSortBy] = useState<"newest" | "oldest" | "az">("newest")
+  const [trustChecks, setTrustChecks] = useState<SavedTrustCheck[]>([])
+  const [showTrustChecks, setShowTrustChecks] = useState(false)
+  const [confirmDeleteTrustCheckId, setConfirmDeleteTrustCheckId] = useState<string | null>(null)
 
   const filteredItems = useMemo(() => {
     let result = [...items]
@@ -70,7 +76,19 @@ export default function MyAnalyses() {
 
   useEffect(() => {
     setItems(getAll())
+    setTrustChecks(getAllTrustChecks())
   }, [])
+
+  const handleOpenTrustCheck = (tc: SavedTrustCheck) => {
+    setTrustCheckAnalysis(tc.analysis)
+    setLocation("/trust-check")
+  }
+
+  const handleDeleteTrustCheck = (id: string) => {
+    deleteTrustCheck(id)
+    setTrustChecks(prev => prev.filter(tc => tc.id !== id))
+    setConfirmDeleteTrustCheckId(null)
+  }
 
   useEffect(() => {
     if (editingId && editInputRef.current) {
@@ -165,6 +183,95 @@ export default function MyAnalyses() {
             <div className="space-y-3">
               <PlanStatusBanner entitlements={entitlements} />
               <SubscriptionRestoreCard onLoaded={() => void reloadEntitlements()} />
+            </div>
+          )}
+        </div>
+
+        {/* ── Trust Checks section ── */}
+        <div className="mb-6">
+          <button
+            onClick={() => setShowTrustChecks(v => !v)}
+            className="flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors mb-3 w-full text-left"
+            style={{ touchAction: "manipulation" }}
+          >
+            <div className="bg-red-500/10 p-1.5 rounded-lg">
+              <ShieldCheck className="w-4 h-4 text-red-500" />
+            </div>
+            <span>Saved Trust Checks</span>
+            {trustChecks.length > 0 && (
+              <span className="ml-1 text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-md bg-red-500/10 text-red-500">
+                {trustChecks.length}
+              </span>
+            )}
+            <span className="ml-auto text-xs text-muted-foreground/50">{showTrustChecks ? "Hide" : "Show"}</span>
+          </button>
+          {showTrustChecks && (
+            <div className="space-y-3">
+              {trustChecks.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-6 bg-card border border-border/50 rounded-2xl">
+                  No saved trust checks yet. Run a Document Trust Check and tap the bookmark icon to save it.
+                </p>
+              ) : (
+                trustChecks.map((tc) => (
+                  <div key={tc.id} className="bg-card border border-red-200/50 dark:border-red-900/40 rounded-2xl p-4 sm:p-5 shadow-sm">
+                    <div className="flex items-start gap-3">
+                      <div className="shrink-0 mt-0.5 bg-red-500/10 rounded-xl p-2">
+                        <ShieldCheck className="w-4 h-4 text-red-500" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm font-bold text-foreground leading-snug mb-1.5 truncate pr-2">
+                          {tc.title}
+                        </h3>
+                        <div className="flex items-center gap-1.5 mb-3">
+                          <span className="flex items-center gap-1 text-[10px] text-muted-foreground/50">
+                            <Clock className="w-2.5 h-2.5" />
+                            {formatDate(tc.savedAt)}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Button
+                            size="sm"
+                            className="h-8 text-xs rounded-lg gap-1.5 shadow-none bg-red-600 hover:bg-red-700 text-white border-0"
+                            onClick={() => handleOpenTrustCheck(tc)}
+                            style={{ touchAction: "manipulation" }}
+                          >
+                            Open <ArrowRight className="w-3 h-3" />
+                          </Button>
+                          {confirmDeleteTrustCheckId === tc.id ? (
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-xs text-destructive font-medium">Delete?</span>
+                              <button
+                                onClick={() => handleDeleteTrustCheck(tc.id)}
+                                className="h-8 px-2.5 text-xs font-semibold rounded-lg bg-destructive text-destructive-foreground hover:opacity-90 transition-opacity"
+                                style={{ touchAction: "manipulation" }}
+                              >
+                                Yes, delete
+                              </button>
+                              <button
+                                onClick={() => setConfirmDeleteTrustCheckId(null)}
+                                className="h-8 px-2.5 text-xs font-medium rounded-lg text-muted-foreground hover:bg-secondary transition-colors"
+                                style={{ touchAction: "manipulation" }}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setConfirmDeleteTrustCheckId(tc.id)}
+                              className="flex items-center gap-1.5 h-8 px-2.5 text-xs font-medium rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/8 transition-colors"
+                              title="Delete"
+                              style={{ touchAction: "manipulation" }}
+                            >
+                              <Trash2 className="w-3 h-3" />
+                              <span className="hidden sm:inline">Delete</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           )}
         </div>

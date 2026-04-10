@@ -6,8 +6,9 @@ import {
   Phone, Mail, Globe, Calendar, Clock, Eye, CheckSquare,
   ArrowRight, AlertCircle, Flag, Shield, ExternalLink,
   Loader2, FileText, BarChart2, Info,
-  Copy, Check,
+  Copy, Check, Bookmark, BookmarkCheck,
 } from "lucide-react"
+import { saveTrustCheck } from "@/lib/savedTrustChecks"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useAnalysisContext } from "@/context/AnalysisContext"
@@ -110,6 +111,8 @@ export default function TrustCheck() {
   const [demoLoading, setDemoLoading] = useState(false)
   const [demoError, setDemoError] = useState<string | null>(null)
   const [copyDone, setCopyDone] = useState(false)
+  const [savedId, setSavedId] = useState<string | null>(null)
+  const [justSaved, setJustSaved] = useState(false)
 
   useEffect(() => {
     document.title = "Document Trust Check — PlainPath"
@@ -170,6 +173,15 @@ export default function TrustCheck() {
 
   const hasStructural = (analysis.structuralFindings?.length ?? 0) > 0
   const hasMetadata = (analysis.metadataFindings?.length ?? 0) > 0
+
+  function handleSave() {
+    if (!analysis || demoId) return
+    const title = `Trust Check — ${analysis.verdict} (${analysis.riskScore}/100)`
+    const saved = saveTrustCheck({ title, analysis })
+    setSavedId(saved.id)
+    setJustSaved(true)
+    setTimeout(() => setJustSaved(false), 2500)
+  }
 
   function copyResults() {
     const lines: string[] = [
@@ -253,6 +265,24 @@ export default function TrustCheck() {
             >
               {copyDone ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
             </button>
+
+            {!demoId && (
+              <button
+                onClick={handleSave}
+                title={savedId ? "Saved to My Analyses" : "Save this result"}
+                className={`p-2 rounded-xl transition-colors shrink-0 ${
+                  justSaved
+                    ? "text-emerald-500 bg-emerald-50 dark:bg-emerald-950/30"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                }`}
+                aria-label="Save result"
+              >
+                {savedId
+                  ? <BookmarkCheck className="w-4 h-4" />
+                  : <Bookmark className="w-4 h-4" />
+                }
+              </button>
+            )}
 
             <Button
               size="sm"

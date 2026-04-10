@@ -199,7 +199,7 @@ function ContractReviewLoadingScreen() {
     <div className="min-h-screen bg-background">
       {/* sticky header skeleton */}
       <div className="bg-background/95 border-b border-border/50 sticky top-0 z-30">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4 flex items-center gap-4">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center gap-4">
           <div className="w-10 h-10 rounded-2xl bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center flex-shrink-0">
             <Scale className="w-5 h-5 text-amber-500 animate-pulse" />
           </div>
@@ -210,7 +210,7 @@ function ContractReviewLoadingScreen() {
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-6 space-y-5">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-6 space-y-5">
         {/* Progress message */}
         <div className="text-center py-4">
           <div className="inline-flex items-center gap-2.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-900/40 rounded-full px-5 py-2.5">
@@ -383,7 +383,38 @@ function SectionBlock({ id, title, badge, children, collapsible = false, default
 
 // ─── Results View ─────────────────────────────────────────────────────────────
 
+function buildReviewText(result: ReviewResult): string {
+  const lines: string[] = [
+    "PLAINPATH — CONTRACT REVIEW",
+    `Score: ${result.overallScore}/100 — ${result.verdict}`,
+    "",
+    result.summary,
+    "",
+  ]
+  const redFlags = result.clauses.filter(c => c.rating === "red-flag")
+  const watchOuts = result.clauses.filter(c => c.rating === "watch-out")
+  if (redFlags.length) {
+    lines.push("─── RED FLAGS ───")
+    redFlags.forEach(c => lines.push(`• ${c.text}`, `  ${c.explanation}`, ""))
+  }
+  if (watchOuts.length) {
+    lines.push("─── WATCH OUTS ───")
+    watchOuts.forEach(c => lines.push(`• ${c.text}`, `  ${c.explanation}`, ""))
+  }
+  if (result.missingProtections.length) {
+    lines.push("─── MISSING PROTECTIONS ───")
+    result.missingProtections.forEach(p => lines.push(`• ${p}`))
+    lines.push("")
+  }
+  if (result.preSigningChecklist.length) {
+    lines.push("─── BEFORE YOU SIGN ───")
+    result.preSigningChecklist.forEach((p, i) => lines.push(`${i + 1}. ${p}`))
+  }
+  return lines.join("\n")
+}
+
 function ResultsView({ result, onReset }: { result: ReviewResult; onReset: () => void }) {
+  const [copied, setCopied] = useState(false)
   const redFlags = result.clauses.filter(c => c.rating === "red-flag")
   const watchOuts = result.clauses.filter(c => c.rating === "watch-out")
   const fair = result.clauses.filter(c => c.rating === "fair")
@@ -412,9 +443,23 @@ function ResultsView({ result, onReset }: { result: ReviewResult; onReset: () =>
           <h2 className="text-2xl font-display font-bold">Contract Review Results</h2>
           <p className="text-sm text-muted-foreground mt-0.5">Clause-by-clause — read this before you sign</p>
         </div>
-        <Button variant="outline" size="sm" onClick={onReset} className="gap-1.5 flex-shrink-0">
-          <RotateCcw className="w-3.5 h-3.5" /> Review Another
-        </Button>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(buildReviewText(result)).then(() => {
+                setCopied(true)
+                setTimeout(() => setCopied(false), 2000)
+              })
+            }}
+            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground border border-border/60 bg-card hover:bg-secondary rounded-xl px-3 py-1.5 transition-colors"
+          >
+            {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+            <span className="hidden sm:inline">{copied ? "Copied" : "Copy results"}</span>
+          </button>
+          <Button variant="outline" size="sm" onClick={onReset} className="gap-1.5">
+            <RotateCcw className="w-3.5 h-3.5" /> Review Another
+          </Button>
+        </div>
       </div>
 
       {/* ── Score summary ── */}
@@ -481,7 +526,11 @@ function ResultsView({ result, onReset }: { result: ReviewResult; onReset: () =>
         >
           <p className="text-xs text-muted-foreground mb-3">These clauses are harmful, exploitative, or potentially unenforceable. Each should be negotiated or removed before you sign.</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
-            {redFlags.map(c => <ClauseCard key={c.id} clause={c} defaultOpen={true} />)}
+            {redFlags.map((c, i) => (
+              <div key={c.id} className={redFlags.length % 2 !== 0 && i === redFlags.length - 1 ? "md:col-span-2" : ""}>
+                <ClauseCard clause={c} defaultOpen={true} />
+              </div>
+            ))}
           </div>
         </SectionBlock>
       )}
@@ -496,7 +545,11 @@ function ResultsView({ result, onReset }: { result: ReviewResult; onReset: () =>
         >
           <p className="text-xs text-muted-foreground mb-3">These clauses are vague, one-sided, or unusual. You can still sign — but you should understand what you're agreeing to and consider pushing back.</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
-            {watchOuts.map(c => <ClauseCard key={c.id} clause={c} defaultOpen={true} />)}
+            {watchOuts.map((c, i) => (
+              <div key={c.id} className={watchOuts.length % 2 !== 0 && i === watchOuts.length - 1 ? "md:col-span-2" : ""}>
+                <ClauseCard clause={c} defaultOpen={true} />
+              </div>
+            ))}
           </div>
         </SectionBlock>
       )}
@@ -513,7 +566,11 @@ function ResultsView({ result, onReset }: { result: ReviewResult; onReset: () =>
         >
           <p className="text-xs text-muted-foreground mb-3">These clauses appear balanced and reasonable. Expand each to see what it means in plain English.</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
-            {fair.map(c => <ClauseCard key={c.id} clause={c} defaultOpen={false} />)}
+            {fair.map((c, i) => (
+              <div key={c.id} className={fair.length % 2 !== 0 && i === fair.length - 1 ? "md:col-span-2" : ""}>
+                <ClauseCard clause={c} defaultOpen={false} />
+              </div>
+            ))}
           </div>
         </SectionBlock>
       )}
@@ -639,7 +696,10 @@ export default function ContractReview() {
 
   // Results view
   if (result) return (
-    <div className="min-h-screen bg-background">
+    <div
+      className="min-h-screen bg-background"
+      style={{ paddingBottom: "max(6rem, env(safe-area-inset-bottom) + 6rem)" }}
+    >
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
         <ResultsView result={result} onReset={handleReset} />
       </div>
