@@ -9,7 +9,7 @@ the Google Play Console. Copy-paste into each field.
 PlainPath
 
 ## Subtitle (Apple — 30 chars max)
-Turn Paperwork Into Action Plans
+Turn Docs Into Action Plans
 
 ---
 
@@ -39,6 +39,12 @@ PlainPath reads confusing paperwork and turns it into a structured, plain-Englis
 **Document Trust Check**
 Not sure if a document is legitimate? Run it through PlainPath's Document Trust Check. It scans for scam indicators, pressure tactics, suspicious payment demands, and red flags — giving you an Authenticity Risk score, Document Risk score, and Verification Confidence score.
 
+**Contract Builder**
+Need a contract? PlainPath guides you through a simple intake wizard and generates a clean, AI-drafted contract in plain English. Choose from five types: Freelance Agreement, NDA, Payment Agreement, Service Agreement, or Lease Agreement. Export as PDF.
+
+**Contract Review**
+About to sign something? PlainPath reads your contract clause by clause and flags Red Flags, Watch-Outs, and Fair terms — along with an overall score, missing protections, and a plain-English pre-signing checklist. Know exactly what you're agreeing to before you sign.
+
 **Your privacy is protected:**
 - PlainPath never stores your documents
 - No account or email required
@@ -50,7 +56,7 @@ Supported formats: PDF, Word (.docx), plain text (.txt), or paste any text direc
 ---
 
 ## Keywords (Apple — 100 chars max, comma-separated)
-document,paperwork,action plan,PDF reader,IRS notice,lease,contract,scam checker,form helper
+document,paperwork,action plan,PDF reader,contract review,scam checker,lease,IRS notice,AI
 
 ## Tags (Google Play — up to 5)
 - Productivity
@@ -114,16 +120,24 @@ Same 5 screens. Min 2 required, up to 8.
 ---
 
 ## App Store Review Notes (for the reviewer)
-PlainPath is a document reading and summarization tool. It uses OpenAI's API to
-analyze document text submitted by the user. No account creation is required.
-No sensitive permissions are requested beyond document file access.
+PlainPath is a four-tool document platform powered by AI. No account creation
+is required. No sensitive permissions are requested beyond document file access.
 
-The Document Trust Check feature analyzes documents for scam indicators. It is
-an informational tool only — it does not make legal determinations.
+The four tools are:
+1. Analyze a Document — action steps, deadlines, required documents, key terms
+2. Document Trust Check — scam/fraud indicator scoring with authenticity verdict
+3. Contract Builder — AI-drafted contracts from a guided intake wizard
+4. Contract Review — clause-by-clause grading of contracts before signing
 
 Test the app using the built-in demo documents (no upload required):
-- Tap "Analyze a Document" → scroll to "Or try a built-in demo" → tap any demo
-- Tap "Document Trust Check" → scroll to "Or try a built-in demo" → tap any demo
+- Tap "Analyze a Document" → select a pre-loaded demo document → tap Analyze
+- Tap "Document Trust Check" → select a demo document → tap Run Trust Check
+- Tap "Build a Contract" → select Service Agreement → complete the wizard → tap Generate
+- Tap "Contract Review" → paste any contract text → tap Review Contract
+
+Subscriptions are managed on the web at plain-path.replit.app. There are no
+in-app purchases. The upgrade prompt shown to free users is informational only
+and contains no buy button or external payment link.
 
 ---
 

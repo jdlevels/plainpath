@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+
+    <!--
+        PlainPath — iOS Privacy Manifest (PrivacyInfo.xcprivacy)
+        Required for App Store submission since Spring 2024.
+
+        PlainPath does NOT track users. No advertising identifiers, no fingerprinting,
+        no third-party analytics SDKs. Document text is sent to OpenAI solely
+        to generate analysis results and is never stored by PlainPath.
+    -->
+
+    <!-- ── Tracking ──────────────────────────────────────────────────────────── -->
+    <!-- The app does not track users across apps or websites for advertising.   -->
+    <key>NSPrivacyTracking</key>
+    <false/>
+
+    <key>NSPrivacyTrackingDomains</key>
+    <array/>
+
+    <!-- ── Data collected ────────────────────────────────────────────────────── -->
+    <!-- PlainPath collects no data linked to the user's identity.               -->
+    <!-- Server access logs (IP, URL path, timestamp) are operational only       -->
+    <!-- and are not linked to any persistent user identity.                     -->
+    <key>NSPrivacyCollectedDataTypes</key>
+    <array/>
+
+    <!-- ── Required reason APIs ──────────────────────────────────────────────── -->
+    <!--
+        Capacitor's WKWebView layer and the @capawesome/capacitor-file-picker
+        plugin access the following system APIs. Reasons are declared per Apple's
+        required reasons API list.
+    -->
+    <key>NSPrivacyAccessedAPITypes</key>
+    <array>
+
+        <!--
+            File timestamp APIs
+            Used by: @capawesome/capacitor-file-picker when reading selected files.
+            Reason 0A2A.1 — File timestamp accessed in response to user-initiated
+            file-picker action. The app does not use file timestamps for fingerprinting.
+        -->
+        <dict>
+            <key>NSPrivacyAccessedAPIType</key>
+            <string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
+            <key>NSPrivacyAccessedAPITypeReasons</key>
+            <array>
+                <string>0A2A.1</string>
+            </array>
+        </dict>
+
+        <!--
+            User defaults
+            Used by: Capacitor runtime for storing plugin configuration and
+            app preferences (e.g. status bar style). Also used by WKWebView's
+            localStorage bridge in some Capacitor versions.
+            Reason CA92.1 — Accessing user defaults written by the same app.
+        -->
+        <dict>
+            <key>NSPrivacyAccessedAPIType</key>
+            <string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+            <key>NSPrivacyAccessedAPITypeReasons</key>
+            <array>
+                <string>CA92.1</string>
+            </array>
+        </dict>
+
+        <!--
+            Disk space APIs
+            Used by: Capacitor when determining available storage before writing
+            temporary files during document processing.
+            Reason E174.1 — App uses disk space to inform user when storage is low.
+        -->
+        <dict>
+            <key>NSPrivacyAccessedAPIType</key>
+            <string>NSPrivacyAccessedAPICategoryDiskSpace</string>
+            <key>NSPrivacyAccessedAPITypeReasons</key>
+            <array>
+                <string>E174.1</string>
+            </array>
+        </dict>
+
+    </array>
+
+</dict>
+</plist>
