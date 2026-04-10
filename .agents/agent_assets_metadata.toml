@@ -36,6 +36,18 @@ uri = "file://attached_assets/generated_images/logo-v2-concept-c.png"
 type = "image"
 title = "logo v2 C shield gradient"
 
+[[generated]]
+id = "CrmMSJwC0BCTm6O74oO3H"
+uri = "file://artifacts/plainpath-marketing/public/images/mockup-1.png"
+type = "image"
+title = "Phone mockup of document analysis"
+
+[[generated]]
+id = "uXHKBzJwyWvk1t8CbBFvq"
+uri = "file://artifacts/plainpath-marketing/public/images/mockup-2.png"
+type = "image"
+title = "Contract building wizard interface"
+
 [[outputs]]
 id = "o7YB8F3oFhJfMlxpy-hZz"
 uri = "file://PlainPath-Handoff.md"
