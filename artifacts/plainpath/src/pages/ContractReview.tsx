@@ -465,7 +465,7 @@ function ResultsView({ result, onReset }: { result: ReviewResult; onReset: () =>
           badge={<Badge className="bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 border-0 text-[10px]">{redFlags.length}</Badge>}
         >
           <p className="text-xs text-muted-foreground mb-3">These clauses are harmful, exploitative, or potentially unenforceable. Each should be negotiated or removed before you sign.</p>
-          <div className="space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
             {redFlags.map(c => <ClauseCard key={c.id} clause={c} defaultOpen={true} />)}
           </div>
         </SectionBlock>
@@ -479,7 +479,7 @@ function ResultsView({ result, onReset }: { result: ReviewResult; onReset: () =>
           badge={<Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border-0 text-[10px]">{watchOuts.length}</Badge>}
         >
           <p className="text-xs text-muted-foreground mb-3">These clauses are vague, one-sided, or unusual. You can still sign — but you should understand what you're agreeing to and consider pushing back.</p>
-          <div className="space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
             {watchOuts.map(c => <ClauseCard key={c.id} clause={c} defaultOpen={true} />)}
           </div>
         </SectionBlock>
@@ -495,7 +495,7 @@ function ResultsView({ result, onReset }: { result: ReviewResult; onReset: () =>
           defaultCollapsed={true}
         >
           <p className="text-xs text-muted-foreground mb-3">These clauses appear balanced and reasonable. Expand each to see what it means in plain English.</p>
-          <div className="space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
             {fair.map(c => <ClauseCard key={c.id} clause={c} defaultOpen={false} />)}
           </div>
         </SectionBlock>
@@ -621,7 +621,7 @@ export default function ContractReview() {
   // Results view
   if (result) return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
         <ResultsView result={result} onReset={handleReset} />
       </div>
     </div>
