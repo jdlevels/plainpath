@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react"
+import React, { useState, useRef, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   Scale, UploadCloud, Loader2, AlertCircle, Copy, Check,
@@ -107,6 +107,259 @@ function CopyButton({ text }: { text: string }) {
     </button>
   )
 }
+
+// ─── Built-in demo data ────────────────────────────────────────────────────────
+
+const REVIEW_DEMOS: Array<{
+  id: string
+  label: string
+  meta: string
+  icon: React.ComponentType<{ className?: string }>
+  color: string
+  bg: string
+  data: ReviewResult
+}> = [
+  {
+    id: "freelance-design",
+    label: "Freelance Design Agreement",
+    meta: "3 red flags · Score 32",
+    icon: AlertTriangle,
+    color: "text-red-500",
+    bg: "bg-red-50 dark:bg-red-950/40",
+    data: {
+      overallScore: 32,
+      verdict: "Do not sign without significant revisions",
+      summary: "This freelance design agreement is heavily weighted in the client's favour. Three clauses pose serious legal and financial risk: perpetual IP assignment before payment, uncapped revision rounds, and a kill-fee waiver. Push back on all three before signing.",
+      reviewedAt: new Date().toISOString(),
+      clauses: [
+        {
+          id: "ip-assign",
+          rating: "red-flag",
+          text: "All work product, deliverables, and creative materials produced under this Agreement shall be the sole and exclusive property of the Client immediately upon creation, regardless of payment status.",
+          explanation: "IP transfers to the client the moment you create anything — even if they never pay you. You lose all leverage to withhold files until you're paid.",
+          whyUnfair: "Industry standard is that IP transfers only upon receipt of full payment. Immediate transfer removes the freelancer's primary leverage.",
+          negotiationLanguage: "\"All intellectual property rights in the deliverables shall transfer to Client only upon Client's receipt and clearance of payment in full. Until such time, Freelancer retains full ownership and grants Client a limited, non-exclusive licence to review materials.\"",
+          exitGuidance: "This is a dealbreaker clause. Do not sign without changing the payment-trigger condition.",
+        },
+        {
+          id: "revisions",
+          rating: "red-flag",
+          text: "Client may request unlimited revisions during the project lifecycle at no additional cost to Client.",
+          explanation: "Unlimited, unpaid revision rounds can turn a fixed-fee project into an indefinite obligation. There is no cap, no definition of what constitutes a revision, and no time limit.",
+          whyUnfair: "Without a defined revision scope, clients can keep requesting changes indefinitely. Standard contracts cap revisions at 2–3 rounds.",
+          negotiationLanguage: "\"This Agreement includes up to two (2) rounds of minor revisions per deliverable. Additional revision rounds will be billed at Freelancer's standard hourly rate of $[RATE]/hr.\"",
+          exitGuidance: "Negotiate a specific revision limit and define what counts as a revision vs. a new scope of work.",
+        },
+        {
+          id: "kill-fee",
+          rating: "red-flag",
+          text: "In the event Client cancels this project for any reason, Freelancer shall not be entitled to any compensation for work completed to date.",
+          explanation: "If the client cancels mid-project, you receive nothing — even for completed work. This is an extreme clause rarely seen in legitimate freelance agreements.",
+          whyUnfair: "Standard practice is a kill fee of 25–50% of the remaining project value, plus payment for all work completed. This clause provides zero protection.",
+          negotiationLanguage: "\"If Client cancels this Agreement after work has commenced, Client shall pay (a) 100% of fees for all deliverables completed, and (b) a kill fee equal to 25% of the remaining project value to compensate for lost opportunity.\"",
+          exitGuidance: "Do not sign this clause. Walk away or require a kill-fee provision.",
+        },
+        {
+          id: "payment-30",
+          rating: "watch-out",
+          text: "Client shall remit payment within thirty (30) days of receipt of Freelancer's invoice.",
+          explanation: "Net-30 payment terms are common but mean you wait a month for payment. Negotiate net-14 or require a deposit upfront.",
+          whyUnfair: "30-day terms are standard but unfavourable for small freelancers. Many clients push past 30 days without penalty.",
+          negotiationLanguage: "\"Payment is due within fourteen (14) days of invoice receipt. Invoices unpaid after 14 days shall accrue interest at 1.5% per month.\"",
+          exitGuidance: null,
+        },
+        {
+          id: "governing-law",
+          rating: "fair",
+          text: "This Agreement shall be governed by the laws of the State of California.",
+          explanation: "A standard governing law clause. California has well-developed freelance contract law.",
+          whyUnfair: null,
+          negotiationLanguage: null,
+          exitGuidance: null,
+        },
+        {
+          id: "confidentiality",
+          rating: "fair",
+          text: "Each party agrees to keep the other's confidential information private and not disclose it to third parties without prior written consent.",
+          explanation: "A mutual NDA clause that protects both sides equally. This is fair and standard.",
+          whyUnfair: null,
+          negotiationLanguage: null,
+          exitGuidance: null,
+        },
+      ],
+      missingProtections: [
+        "Late payment interest clause — no penalty for delayed payment",
+        "Scope creep / change order process — what counts as 'new work'?",
+        "Portfolio/credit clause — are you allowed to show this work?",
+        "Termination for convenience procedure — unclear process if you need to exit",
+      ],
+      preSigningChecklist: [
+        "Confirm IP transfers only on full payment — not on creation",
+        "Negotiate a cap on revision rounds (2–3 rounds is standard)",
+        "Add a kill fee equal to 25–50% of remaining project value",
+        "Require a 30–50% deposit before starting any work",
+        "Confirm you can list this project in your portfolio",
+        "Add a 1.5%/month late payment interest clause",
+      ],
+    },
+  },
+  {
+    id: "apartment-lease",
+    label: "Apartment Lease Agreement",
+    meta: "2 red flags · Score 51",
+    icon: ShieldAlert,
+    color: "text-amber-500",
+    bg: "bg-amber-50 dark:bg-amber-950/40",
+    data: {
+      overallScore: 51,
+      verdict: "Review carefully — some clauses require negotiation",
+      summary: "This residential lease has two clauses that are either uncommon or potentially unlawful in several states: a broad entry-without-notice provision and automatic lease renewal with no written notice. The remaining terms are reasonably standard for a residential tenancy.",
+      reviewedAt: new Date().toISOString(),
+      clauses: [
+        {
+          id: "entry-without-notice",
+          rating: "red-flag",
+          text: "Landlord reserves the right to enter the premises at any time for inspection, repairs, or other purposes without prior notice to Tenant.",
+          explanation: "Most U.S. states require landlords to provide 24–48 hours' written notice before entering (except in true emergencies). A blanket no-notice entry clause may be unenforceable but can still be used to harass tenants.",
+          whyUnfair: "This violates tenant privacy rights in most jurisdictions. Even if unenforceable, a landlord citing it could create a hostile environment.",
+          negotiationLanguage: "\"Landlord shall provide Tenant with at least twenty-four (24) hours' written or electronic notice before entering the premises for non-emergency purposes. Emergency entry is permitted without notice only if there is an imminent threat to property or safety.\"",
+          exitGuidance: "Check your state's landlord-entry laws. In CA, NY, WA, and most others, 24-hour notice is required by statute regardless of lease language.",
+        },
+        {
+          id: "auto-renewal",
+          rating: "red-flag",
+          text: "This Lease shall automatically renew for successive one-year terms unless Tenant provides written notice of non-renewal at least ninety (90) days prior to the expiration date.",
+          explanation: "A 90-day notice window is unusually long — 30–60 days is standard. Missing this window could lock you into another full year of rent even if your circumstances change.",
+          whyUnfair: "90 days is almost a full season in advance. Most tenants don't track lease end dates that far ahead, making this clause an inadvertent trap.",
+          negotiationLanguage: "\"This Lease shall automatically renew on a month-to-month basis unless either party provides written notice of non-renewal at least thirty (30) days before the expiration date.\"",
+          exitGuidance: "Negotiate this down to 30 or 60 days, or switch to month-to-month auto-renewal.",
+        },
+        {
+          id: "security-deposit",
+          rating: "watch-out",
+          text: "Tenant shall pay a security deposit equal to two (2) months' rent, to be returned within thirty (30) days of Lease termination minus any deductions for damages or unpaid rent.",
+          explanation: "A two-month security deposit is on the high end in many markets, though legal in most states. Confirm your state's security deposit cap (e.g., California limits it to 2 months for unfurnished units).",
+          whyUnfair: "Two months is at the legal maximum in several states. The 30-day return window is standard but confirm your state's specific requirement.",
+          negotiationLanguage: null,
+          exitGuidance: null,
+        },
+        {
+          id: "pet-clause",
+          rating: "watch-out",
+          text: "No pets of any kind are permitted on the premises. Violation of this clause may result in immediate termination of the Lease.",
+          explanation: "While enforceable in general, this clause cannot override your right to an approved emotional support animal (ESA) under the Fair Housing Act if you have a documented disability.",
+          whyUnfair: "Landlords must make reasonable accommodations for ESAs regardless of a no-pet policy. If this applies to you, request a separate ESA addendum.",
+          negotiationLanguage: null,
+          exitGuidance: null,
+        },
+        {
+          id: "rent-amount",
+          rating: "fair",
+          text: "Tenant shall pay monthly rent of $2,100, due on the first day of each month. A grace period of five (5) days is provided before a late fee of $50 is assessed.",
+          explanation: "Clear rent amount, due date, grace period, and late fee. This clause is well-structured and fair.",
+          whyUnfair: null,
+          negotiationLanguage: null,
+          exitGuidance: null,
+        },
+        {
+          id: "maintenance",
+          rating: "fair",
+          text: "Landlord is responsible for all structural repairs and maintaining the property in a habitable condition. Tenant is responsible for minor maintenance and keeping the unit clean.",
+          explanation: "A balanced maintenance split that aligns with the implied warranty of habitability in most states.",
+          whyUnfair: null,
+          negotiationLanguage: null,
+          exitGuidance: null,
+        },
+      ],
+      missingProtections: [
+        "Move-in inspection checklist — no documented baseline for damage comparison",
+        "Lease break clause — no defined penalty if you need to exit early",
+        "Utility responsibility — unclear who pays which utilities",
+      ],
+      preSigningChecklist: [
+        "Negotiate the entry-without-notice clause to require 24-hour written notice",
+        "Change auto-renewal notice from 90 days to 30–60 days",
+        "Verify your state's security deposit cap — confirm 2 months is legal",
+        "Complete a written move-in inspection form and keep a copy",
+        "Document all pre-existing damage with photos on move-in day",
+        "Clarify which utilities are included in rent before signing",
+        "If you have pets or an ESA, request the appropriate addendum now",
+      ],
+    },
+  },
+  {
+    id: "contractor-nda",
+    label: "Independent Contractor NDA",
+    meta: "1 red flag · Score 67",
+    icon: Lock,
+    color: "text-blue-500",
+    bg: "bg-blue-50 dark:bg-blue-950/40",
+    data: {
+      overallScore: 67,
+      verdict: "Mostly fair — one clause needs revision",
+      summary: "This NDA is largely balanced and uses standard confidentiality language. One clause — an indefinite confidentiality term with no sunset date — is overly broad and may hinder your future work. The non-solicitation scope is narrow and reasonable. Overall this is a workable agreement with one targeted fix.",
+      reviewedAt: new Date().toISOString(),
+      clauses: [
+        {
+          id: "indefinite-conf",
+          rating: "red-flag",
+          text: "Receiving Party's obligations of confidentiality shall survive the termination of this Agreement and shall continue in perpetuity with respect to all Confidential Information.",
+          explanation: "A perpetual confidentiality obligation with no sunset clause is overly broad and, in many jurisdictions, may be unenforceable. More importantly, it can prevent you from discussing industry knowledge you naturally develop over time.",
+          whyUnfair: "Perpetual NDAs are increasingly disfavoured by courts, especially for general know-how. Courts may refuse to enforce them. Standard is 2–5 years for trade secrets; some courts impose a reasonableness cap.",
+          negotiationLanguage: "\"Receiving Party's obligations of confidentiality shall continue for three (3) years following termination of this Agreement, except for information that constitutes a trade secret under applicable law, which shall be protected for as long as it qualifies as a trade secret.\"",
+          exitGuidance: "Push for a 2–5 year term with a trade-secret carve-out. A perpetual obligation is a significant career risk.",
+        },
+        {
+          id: "definition",
+          rating: "watch-out",
+          text: "Confidential Information means any information disclosed by Disclosing Party to Receiving Party, whether oral, written, or in any other form, that is designated as confidential or that reasonably should be understood to be confidential given the nature of the information.",
+          explanation: "The phrase 'reasonably should be understood to be confidential' is broad. Without clearer boundaries, almost any information you receive could be treated as confidential.",
+          whyUnfair: "Overly broad definitions create ambiguity. Ask for exclusions for information you already knew, independently developed, or that becomes publicly available.",
+          negotiationLanguage: "\"Confidential Information does not include information that: (a) is or becomes publicly known through no fault of Receiving Party; (b) was already known to Receiving Party at the time of disclosure; or (c) is independently developed by Receiving Party without use of Confidential Information.\"",
+          exitGuidance: null,
+        },
+        {
+          id: "non-solicit",
+          rating: "fair",
+          text: "During the term of this Agreement and for twelve (12) months thereafter, Receiving Party shall not solicit the employees or clients of Disclosing Party with whom Receiving Party had direct contact.",
+          explanation: "A non-solicitation clause limited to people you directly worked with, for 12 months, is narrowly scoped and reasonable.",
+          whyUnfair: null,
+          negotiationLanguage: null,
+          exitGuidance: null,
+        },
+        {
+          id: "return-of-info",
+          rating: "fair",
+          text: "Upon termination of this Agreement, Receiving Party shall promptly return or destroy all Confidential Information and certify in writing that it has done so.",
+          explanation: "A standard return/destroy clause. The written certification requirement is reasonable and protects both parties.",
+          whyUnfair: null,
+          negotiationLanguage: null,
+          exitGuidance: null,
+        },
+        {
+          id: "governing-law",
+          rating: "fair",
+          text: "This Agreement shall be governed by the laws of the State of New York, and any disputes shall be resolved in the courts of New York County.",
+          explanation: "Venue and governing law clauses are standard. New York has strong and well-developed NDA case law.",
+          whyUnfair: null,
+          negotiationLanguage: null,
+          exitGuidance: null,
+        },
+      ],
+      missingProtections: [
+        "Mutual disclosure protection — only the contractor is bound; company's obligations are unspecified",
+        "Injunctive relief carve-out — no provision for emergency court relief if needed",
+      ],
+      preSigningChecklist: [
+        "Change perpetual confidentiality to a 3–5 year term with a trade-secret carve-out",
+        "Add standard exclusions to the Confidential Information definition",
+        "Confirm whether this is mutual or one-way — both parties should have obligations",
+        "Check the non-solicitation scope is limited to direct contacts only",
+        "Keep a signed copy of the final agreement for your records",
+      ],
+    },
+  },
+]
 
 // ─── ClauseCard ───────────────────────────────────────────────────────────────
 
@@ -898,6 +1151,31 @@ export default function ContractReview() {
               </Button>
             </CardContent>
           </Card>
+
+          {/* ── Built-in demo shortcuts ── */}
+          <div className="space-y-3">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground text-center">Or try a built-in demo</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {REVIEW_DEMOS.map((demo) => {
+                const Icon = demo.icon
+                return (
+                  <button
+                    key={demo.id}
+                    onClick={() => setResult(demo.data)}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/50 hover:border-amber-400/50 hover:bg-amber-50/40 dark:hover:bg-amber-950/10 transition-all text-left group"
+                  >
+                    <div className={`w-8 h-8 rounded-lg ${demo.bg} flex items-center justify-center shrink-0`}>
+                      <Icon className={`w-4 h-4 ${demo.color}`} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold leading-tight group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors truncate">{demo.label}</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">{demo.meta}</p>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
 
           <div className="text-center">
             <button

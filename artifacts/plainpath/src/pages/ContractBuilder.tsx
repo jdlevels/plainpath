@@ -129,6 +129,154 @@ interface DraftPayload {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// BUILDER DEMO PRE-FILLS
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface BuilderDemo {
+  id: string
+  label: string
+  meta: string
+  contractType: ContractType
+  people: Partial<PeopleData>
+  scope: Partial<ScopeData>
+  money: Partial<MoneyData>
+  protection: Partial<ProtectionData>
+}
+
+const BUILDER_DEMOS: BuilderDemo[] = [
+  {
+    id: "web-dev-freelance",
+    label: "Freelance Web Dev Contract",
+    meta: "Freelance · Flat-fee · 30-day project",
+    contractType: "freelance",
+    people: {
+      clientName: "Acme Corp",
+      clientType: "business",
+      clientEntityName: "Acme Corporation LLC",
+      clientAddress: "123 Market St, San Francisco, CA 94105",
+      clientState: "California",
+      freelancerName: "Jordan Lee",
+      freelancerType: "individual",
+      freelancerAddress: "456 Oak Ave, Oakland, CA 94601",
+      governingLaw: "California",
+      projectTitle: "E-commerce Website Redesign",
+    },
+    scope: {
+      serviceType: "Web Development",
+      scopeDescription: "Full redesign and development of Acme Corp's e-commerce storefront using React and Tailwind CSS, including product catalogue, cart, and checkout flow.",
+      deliverables: "1) Figma mockups (mobile + desktop)\n2) Fully coded React storefront\n3) Stripe payment integration\n4) Admin dashboard for product management\n5) Deployment to Vercel",
+      exclusions: "Custom CMS development, SEO copywriting, logo design, ongoing hosting fees.",
+      revisionLimit: "2",
+      acceptanceCriteria: "Deliverables are accepted when they match approved Figma mockups, pass basic QA testing, and process a successful test payment.",
+    },
+    money: {
+      paymentStructure: "milestone",
+      depositRequired: true,
+      depositAmount: "2500",
+      lateFee: true,
+      lateFeeAmount: "1.5",
+      startDate: "2026-05-01",
+      deadline: "2026-05-31",
+      invoiceDueDays: "14",
+      milestones: [
+        { name: "Kickoff deposit", amount: "2500", date: "2026-05-01" },
+        { name: "Mockup approval", amount: "2500", date: "2026-05-15" },
+        { name: "Final delivery", amount: "2000", date: "2026-05-31" },
+      ],
+    },
+    protection: {
+      ipTiming: "on-payment",
+      portfolioUsage: true,
+      confidentiality: true,
+      terminationNoticeDays: "7",
+      killFee: true,
+      killFeeAmount: "25",
+      disputeResolution: "negotiation",
+      clientFeedbackDeadlineDays: "5",
+      fileReleaseOnPayment: true,
+      subcontractingAllowed: false,
+    },
+  },
+  {
+    id: "nda-mutual",
+    label: "Mutual Non-Disclosure Agreement",
+    meta: "NDA · 2-year term · Both parties",
+    contractType: "nda",
+    people: {
+      partyAName: "TechVenture Inc",
+      partyAType: "business",
+      partyBName: "Bright Idea Studios",
+      partyBType: "business",
+      governingLaw: "New York",
+      projectTitle: "Product Partnership Exploration",
+    },
+    scope: {
+      purposeOfDisclosure: "Evaluating a potential co-development partnership for a B2B SaaS product. Both parties may share proprietary technology roadmaps, financial projections, and customer data.",
+      confidentialInfoDescription: "Business plans, source code, product roadmaps, financial data, customer lists, and any information marked 'Confidential' or that a reasonable person would understand to be confidential.",
+      ndaTerm: "2",
+    },
+    money: {
+      paymentStructure: "flat",
+      depositRequired: false,
+      lateFee: false,
+    },
+    protection: {
+      confidentiality: true,
+      disputeResolution: "arbitration",
+      subcontractingAllowed: false,
+      portfolioUsage: false,
+      ipTiming: "on-payment",
+      fileReleaseOnPayment: false,
+      killFee: false,
+    },
+  },
+  {
+    id: "lease-residential",
+    label: "Residential Lease Agreement",
+    meta: "Lease · 12-month · 2-bed apartment",
+    contractType: "lease",
+    people: {
+      partyAName: "Greenwood Properties LLC",
+      partyAType: "business",
+      partyBName: "Sam Rivera",
+      partyBType: "individual",
+      governingLaw: "Texas",
+      projectTitle: "2BR Apartment at 88 Elm Street",
+    },
+    scope: {
+      propertyAddress: "88 Elm Street, Unit 4B, Austin, TX 78701",
+      propertyType: "Apartment",
+      propertyDescription: "2-bedroom, 1-bathroom apartment on the 4th floor. Includes one assigned parking space (#12). No smoking permitted on premises.",
+      leaseType: "fixed",
+      utilitiesIncluded: "Water and trash. Tenant is responsible for electricity, gas, and internet.",
+      petsAllowed: "Small pets under 25 lbs permitted with a $300 pet deposit.",
+    },
+    money: {
+      paymentStructure: "flat",
+      monthlyRent: "1850",
+      securityDeposit: "3700",
+      petDeposit: "300",
+      leaseTerm: "12",
+      leaseStartDate: "2026-06-01",
+      leaseEndDate: "2027-05-31",
+      depositRequired: true,
+      lateFee: true,
+      lateFeeAmount: "75",
+    },
+    protection: {
+      terminationNoticeDays: "60",
+      disputeResolution: "mediation",
+      confidentiality: false,
+      killFee: false,
+      subcontractingAllowed: false,
+      portfolioUsage: false,
+      ipTiming: "on-payment",
+      fileReleaseOnPayment: false,
+    },
+  },
+]
+
+// ─────────────────────────────────────────────────────────────────────────────
 // CONSTANTS
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -2390,6 +2538,38 @@ export default function ContractBuilder() {
                   {stepContent[step]}
                 </motion.div>
               </AnimatePresence>
+
+              {/* ── Demo pre-fill shortcuts (step 0 only) ── */}
+              {step === 0 && (
+                <div className="mt-8 space-y-3">
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Or load a demo contract</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    {BUILDER_DEMOS.map((demo) => (
+                      <button
+                        key={demo.id}
+                        onClick={() => {
+                          setContractType(demo.contractType)
+                          setPeople((p) => ({ ...p, ...demo.people }))
+                          setScope((s) => ({ ...s, ...demo.scope }))
+                          setMoney((m) => ({ ...m, ...demo.money }))
+                          setProtection((p) => ({ ...p, ...demo.protection }))
+                          setStep(5)
+                          window.scrollTo({ top: 0, behavior: "smooth" })
+                        }}
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/50 hover:border-emerald-400/50 hover:bg-emerald-50/40 dark:hover:bg-emerald-950/10 transition-all text-left group"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 flex items-center justify-center shrink-0">
+                          <FileText className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold leading-tight group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">{demo.label}</p>
+                          <p className="text-[10px] text-muted-foreground mt-0.5">{demo.meta}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Navigation */}
               <div className="flex items-center justify-between mt-8 pt-4 border-t border-border/30">
