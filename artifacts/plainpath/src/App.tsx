@@ -28,6 +28,10 @@ import IrsLetter from "@/pages/guides/IrsLetter";
 import LeaseAgreement from "@/pages/guides/LeaseAgreement";
 import JobOffer from "@/pages/guides/JobOffer";
 import ScamNotice from "@/pages/guides/ScamNotice";
+import NonCompete from "@/pages/guides/NonCompete";
+import IndependentContractor from "@/pages/guides/IndependentContractor";
+import EvictionNotice from "@/pages/guides/EvictionNotice";
+import MedicalBillingDispute from "@/pages/guides/MedicalBillingDispute";
 import NotFound from "@/pages/not-found";
 
 import { Navbar } from "@/components/layout/Navbar";
@@ -73,6 +77,10 @@ function Router() {
             <Route path="/guides/lease-agreement" component={LeaseAgreement} />
             <Route path="/guides/job-offer-red-flags" component={JobOffer} />
             <Route path="/guides/scam-notice" component={ScamNotice} />
+            <Route path="/guides/non-compete-clause" component={NonCompete} />
+            <Route path="/guides/independent-contractor-agreement" component={IndependentContractor} />
+            <Route path="/guides/eviction-notice" component={EvictionNotice} />
+            <Route path="/guides/medical-billing-dispute" component={MedicalBillingDispute} />
             <Route component={NotFound} />
           </Switch>
         </ErrorBoundary>

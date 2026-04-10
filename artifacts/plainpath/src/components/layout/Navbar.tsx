@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter"
 import { Button } from "@/components/ui/button"
-import { FileText, ArrowRight, Plus, BookMarked } from "lucide-react"
+import { FileText, ArrowRight, Plus, BookMarked, GitCompare } from "lucide-react"
 import { ThemeToggle } from "@/components/ui/ThemeToggle"
 
 export function Navbar() {
@@ -59,6 +59,17 @@ export function Navbar() {
             >
               <BookMarked className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">My Analyses</span>
+            </Link>
+          )}
+
+          {/* Compare link — visible on non-home pages, not on Compare page itself */}
+          {!isHome && location !== "/compare" && (
+            <Link
+              href="/compare"
+              className="hidden md:flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-2 py-1.5 rounded-lg hover:bg-secondary"
+            >
+              <GitCompare className="w-3.5 h-3.5" />
+              Compare
             </Link>
           )}
 

@@ -1525,6 +1525,12 @@ function EmptyState({ icon: Icon, title, desc }: { icon: React.ElementType; titl
 }
 
 function LoadingScreen() {
+  const [seconds, setSeconds] = React.useState(0)
+  React.useEffect(() => {
+    const t = setInterval(() => setSeconds(s => s + 1), 1000)
+    return () => clearInterval(t)
+  }, [])
+
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Skeleton header */}
@@ -1541,6 +1547,18 @@ function LoadingScreen() {
           </div>
         </div>
       </div>
+
+      {/* "Still working" message after 15s */}
+      {seconds >= 15 && (
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-4">
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground bg-secondary/50 rounded-xl px-4 py-2.5 border border-border/30">
+            <span className="inline-block w-2 h-2 rounded-full bg-primary/60 animate-pulse" />
+            {seconds >= 30
+              ? "Almost there — complex documents take a little longer…"
+              : "Still working… larger documents can take up to 30 seconds."}
+          </div>
+        </div>
+      )}
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-6 sm:pt-8 space-y-5 sm:space-y-6">
         {/* Stat pills skeleton */}

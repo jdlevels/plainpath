@@ -19,6 +19,27 @@ import {
   authenticityRiskColor, documentRiskColor, verificationConfidenceColor,
 } from "@/lib/trustCheckTypes"
 
+function TrustCheckLoadingScreen({ label }: { label?: string }) {
+  const [seconds, setSeconds] = useState(0)
+  useEffect(() => {
+    const t = setInterval(() => setSeconds(s => s + 1), 1000)
+    return () => clearInterval(t)
+  }, [])
+
+  return (
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 px-4">
+      <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <p className="text-sm text-muted-foreground">{label ?? "Analyzing document…"}</p>
+      {seconds >= 12 && (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground bg-secondary/50 rounded-xl px-4 py-2 border border-border/30 max-w-xs text-center">
+          <span className="inline-block w-2 h-2 rounded-full bg-primary/60 animate-pulse shrink-0" />
+          {seconds >= 25 ? "Almost there — complex documents take a little longer…" : "Still working… trust checks can take up to 25 seconds."}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function VerdictIcon({ verdict }: { verdict: TrustCheckVerdict }) {
   switch (verdict) {
     case "High scam risk": return <XCircle className="w-5 h-5" />
@@ -137,14 +158,7 @@ export default function TrustCheck() {
   const analysis: TrustCheckAnalysis | null = demoId ? demoAnalysis : trustCheckAnalysis
 
   if (demoLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-3" />
-          <p className="text-sm text-muted-foreground">Loading trust check demo…</p>
-        </div>
-      </div>
-    )
+    return <TrustCheckLoadingScreen label="Loading trust check demo…" />
   }
 
   if (!analysis) {
