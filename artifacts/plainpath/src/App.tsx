@@ -41,26 +41,28 @@ function Router() {
     <div className="flex flex-col min-h-screen">
       <Navbar />
       <main className="flex-1">
-        <Switch>
-          <Route path="/" component={Home} />
-          <Route path="/import" component={Import} />
-          <Route path="/analyze" component={Analyze} />
-          <Route path="/trust-check" component={TrustCheck} />
-          <Route path="/my-analyses" component={MyAnalyses} />
-          <Route path="/privacy" component={Privacy} />
-          <Route path="/terms" component={Terms} />
-          <Route path="/support" component={Support} />
-          <Route path="/pricing">{() => { window.location.replace("/#pricing"); return null; }}</Route>
-          <Route path="/subscribe" component={Subscribe} />
-          <Route path="/subscribe/success" component={SubscribeSuccess} />
-          <Route path="/subscribe/cancel" component={SubscribeCancel} />
-          <Route path="/contract-builder" component={ContractBuilder} />
-          <Route path="/contract-review" component={ContractReview} />
-          <Route path="/shared/:token">
-            {(params) => <SharedAnalysis token={(params as { token: string }).token} />}
-          </Route>
-          <Route component={NotFound} />
-        </Switch>
+        <ErrorBoundary>
+          <Switch>
+            <Route path="/" component={Home} />
+            <Route path="/import" component={Import} />
+            <Route path="/analyze" component={Analyze} />
+            <Route path="/trust-check" component={TrustCheck} />
+            <Route path="/my-analyses" component={MyAnalyses} />
+            <Route path="/privacy" component={Privacy} />
+            <Route path="/terms" component={Terms} />
+            <Route path="/support" component={Support} />
+            <Route path="/pricing">{() => { window.location.replace("/#pricing"); return null; }}</Route>
+            <Route path="/subscribe" component={Subscribe} />
+            <Route path="/subscribe/success" component={SubscribeSuccess} />
+            <Route path="/subscribe/cancel" component={SubscribeCancel} />
+            <Route path="/contract-builder" component={ContractBuilder} />
+            <Route path="/contract-review" component={ContractReview} />
+            <Route path="/shared/:token">
+              {(params) => <SharedAnalysis token={(params as { token: string }).token} />}
+            </Route>
+            <Route component={NotFound} />
+          </Switch>
+        </ErrorBoundary>
       </main>
       <Footer />
       <HelpWidget />

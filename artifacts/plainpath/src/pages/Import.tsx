@@ -14,7 +14,7 @@ import { useAnalyzeDocument } from "@workspace/api-client-react"
 import { useAnalysisContext } from "@/context/AnalysisContext"
 import { getApiBaseUrl } from "@/lib/api"
 import { beforeRunAnalysis, beforeRunTrustCheck, UsageLimitError } from "@/lib/analysisGate"
-import { incrementAnalysis, incrementTrustCheck } from "@/lib/usageMeter"
+import { incrementAnalysis, incrementTrustCheck, getUsage } from "@/lib/usageMeter"
 import { useEntitlements } from "@/hooks/useEntitlements"
 import UpgradeModal from "@/components/UpgradeModal"
 import { isNative } from "@/lib/platform"
@@ -272,6 +272,9 @@ export default function Import() {
   const [pending, setPending] = useState<Payload | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [upgradeModal, setUpgradeModal] = useState<{ open: boolean; reason: "analyses" | "trustCheck" | "contractDraft"; used: number; limit: number }>({ open: false, reason: "analyses", used: 0, limit: 2 })
+  const [showNudge, setShowNudge] = useState(() => {
+    try { return !localStorage.getItem("plainpath-visited") } catch { return false }
+  })
   const [capturedImages, setCapturedImages] = useState<string[]>([])
   const [cameraError, setCameraError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -745,6 +748,66 @@ export default function Import() {
             </div>
           ))}
         </motion.div>
+
+        {/* ── First-run nudge ────────────────────────── */}
+        <AnimatePresence>
+          {showNudge && step === "input" && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8, height: 0 }}
+              transition={{ duration: 0.2 }}
+              className="mb-4"
+            >
+              <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-primary/6 border border-primary/20 text-sm">
+                <span className="text-base">👋</span>
+                <span className="flex-1 text-foreground/80">
+                  <span className="font-semibold text-foreground">New here?</span> Scroll down to try a built-in demo — no document needed.
+                </span>
+                <button
+                  onClick={() => {
+                    setShowNudge(false)
+                    try { localStorage.setItem("plainpath-visited", "1") } catch {}
+                  }}
+                  style={{ touchAction: "manipulation" }}
+                  className="text-muted-foreground/50 hover:text-muted-foreground transition-colors shrink-0 p-0.5"
+                  aria-label="Dismiss"
+                >
+                  <XIcon className="w-4 h-4" />
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* ── Usage indicator (free plan) ─────────────── */}
+        {(() => {
+          const plan = entitlements?.plan ?? null
+          const isFree = !plan || plan === "free"
+          const used = getUsage().analyses
+          if (!isFree || isTrustCheck || used === 0 || step !== "input") return null
+          const remaining = Math.max(0, 2 - used)
+          return (
+            <div className="flex justify-center mb-4">
+              <span
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border"
+                style={{
+                  background: remaining === 0 ? "rgba(239,68,68,0.07)" : "rgba(245,158,11,0.07)",
+                  borderColor: remaining === 0 ? "rgba(239,68,68,0.2)" : "rgba(245,158,11,0.2)",
+                  color: remaining === 0 ? "#dc2626" : "#92400e",
+                }}
+              >
+                <span
+                  className="w-1.5 h-1.5 rounded-full"
+                  style={{ background: remaining === 0 ? "#dc2626" : "#f59e0b" }}
+                />
+                {remaining === 0
+                  ? "Free limit reached — upgrade to continue"
+                  : `${used} of 2 free ${used === 1 ? "analysis" : "analyses"} used`}
+              </span>
+            </div>
+          )
+        })()}
 
         {/* ── Main card ──────────────────────────────── */}
         <motion.div

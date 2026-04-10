@@ -109,6 +109,17 @@ PlainPath is a monorepo using pnpm workspaces.
 - **Document Trust Check**: planned Phase 2
 - **Design rule**: Do NOT silently add major business terms. Auto-add only neutral legal scaffolding.
 
+## Pre-Launch Improvements (Completed)
+
+- **API Rate Limiting**: `express-rate-limit` added; general 200 req/15 min, AI endpoints 20 req/15 min (skipped in dev). Covers `/api/documents/analyze`, `/api/documents/trust-check*`, `/api/contracts/draft`, `/api/contracts/review`, scan-images, explain-section.
+- **Analytics Baseline**: `artifacts/plainpath/src/lib/analytics.ts` — `trackEvent()` via `navigator.sendBeacon`. API endpoint `POST /api/events` logs events via pino. Infrastructure ready for wiring key actions.
+- **Per-page Error Boundary**: `<ErrorBoundary>` wraps the `<Switch>` block in `App.tsx` — Navbar and Footer stay alive during page crashes.
+- **First-run Nudge**: Dismissible banner on `/import` for first-time visitors (`plainpath-visited` localStorage key). Points to built-in demos.
+- **Usage Indicator**: Shows "X of 2 free analyses used" pill on `/import` for free users who have already run an analysis.
+- **Trust Check Demo Shortcuts**: Empty state on `/trust-check` now shows 3 demo chips (Fake Utility Shutoff, Fake IRS Letter, Legitimate Utility Notice) below the main CTA.
+- **OG / Social Meta Tags**: `index.html` now has full `og:*` and `twitter:*` meta tags for rich social sharing previews.
+- **Share Confirmation**: Already implemented — `copiedLink` state shows "Copied!" with a check icon inside the Export dropdown.
+
 ## Post-Launch Roadmap
 
 ### E-Signature — "Send for Signature" (Contract Builder, Pro Plan)

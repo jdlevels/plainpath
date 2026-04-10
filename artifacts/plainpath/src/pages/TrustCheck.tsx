@@ -148,9 +148,14 @@ export default function TrustCheck() {
   }
 
   if (!analysis) {
+    const TC_DEMO_CHIPS = [
+      { id: "fake-utility-shutoff", label: "Fake Utility Shutoff Notice", verdict: "High scam risk", icon: XCircle, color: "text-red-500 dark:text-red-400", bg: "bg-red-50 dark:bg-red-950/50" },
+      { id: "fake-irs-collection", label: "Fake IRS Collection Letter", verdict: "High scam risk", icon: XCircle, color: "text-red-500 dark:text-red-400", bg: "bg-red-50 dark:bg-red-950/50" },
+      { id: "legitimate-utility-notice", label: "Legitimate Utility Notice", verdict: "Likely legitimate", icon: CheckCircle2, color: "text-green-500 dark:text-green-400", bg: "bg-green-50 dark:bg-green-950/50" },
+    ]
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-4">
-        <div className="text-center max-w-sm">
+      <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
+        <div className="text-center max-w-sm w-full">
           <div className="w-12 h-12 rounded-2xl bg-primary/8 flex items-center justify-center mx-auto mb-4">
             <ShieldCheck className="w-6 h-6 text-primary/60" />
           </div>
@@ -159,6 +164,33 @@ export default function TrustCheck() {
           <Button onClick={() => setLocation("/import?mode=trust-check")} className="gap-2">
             Start a Trust Check <ArrowRight className="w-4 h-4" />
           </Button>
+
+          <div className="mt-8">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="flex-1 h-px bg-border/50" />
+              <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">Or try a demo</p>
+              <div className="flex-1 h-px bg-border/50" />
+            </div>
+            <div className="flex flex-col gap-2">
+              {TC_DEMO_CHIPS.map((d) => (
+                <button
+                  key={d.id}
+                  onClick={() => setLocation(`/trust-check?demo=${d.id}`)}
+                  style={{ touchAction: "manipulation" }}
+                  className="group flex items-center gap-3 p-3 rounded-xl border border-border/40 bg-card hover:border-primary/40 hover:shadow-md transition-all text-left"
+                >
+                  <div className={`w-8 h-8 rounded-xl ${d.bg} flex items-center justify-center shrink-0`}>
+                    <d.icon className={`w-4 h-4 ${d.color}`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-foreground leading-snug group-hover:text-primary transition-colors">{d.label}</p>
+                    <p className="text-[11px] text-muted-foreground">{d.verdict}</p>
+                  </div>
+                  <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/30 shrink-0" />
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     )

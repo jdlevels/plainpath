@@ -2,6 +2,7 @@ import express, { type Express, type Request, type Response, type NextFunction }
 import cors from "cors";
 import pinoHttp from "pino-http";
 import multer from "multer";
+import rateLimit from "express-rate-limit";
 import router from "./routes";
 import stripeRoutes from "./routes/stripe";
 import entitlementRoutes from "./routes/entitlements";
@@ -9,6 +10,7 @@ import contractRoutes from "./routes/contracts";
 import sharesRoutes from "./routes/shares/index.js";
 import remindersRoutes from "./routes/reminders/index.js";
 import helpRoutes from "./routes/help/index.js";
+import eventsRouter from "./routes/events.js";
 import { logger } from "./lib/logger";
 
 const app: Express = express();
@@ -120,6 +122,47 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// ---------------------------------------------------------------------------
+// Rate limiting
+// General: 200 requests per 15 min per IP
+// AI endpoints: 20 requests per 15 min per IP (expensive OpenAI calls)
+// ---------------------------------------------------------------------------
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 200,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: { error: "too_many_requests", message: "Too many requests. Please wait a moment and try again." },
+  skip: () => process.env.NODE_ENV !== "production",
+})
+
+const aiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: { error: "rate_limited", message: "You've made too many requests. Please wait a few minutes and try again." },
+  skip: () => process.env.NODE_ENV !== "production",
+})
+
+app.use(generalLimiter)
+app.use(
+  [
+    "/api/documents/analyze",
+    "/api/documents/upload",
+    "/api/documents/scan-images",
+    "/api/documents/scan-images-trust",
+    "/api/documents/trust-check",
+    "/api/documents/trust-check-upload",
+    "/api/documents/explain-source-section",
+    "/api/documents/explain-section",
+    "/api/contracts/draft",
+    "/api/contracts/review",
+  ],
+  aiLimiter,
+)
+
+app.use("/api", eventsRouter)
 app.use("/api", router);
 app.use("/api/stripe", stripeRoutes);
 app.use("/api/entitlements", entitlementRoutes);
