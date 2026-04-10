@@ -226,7 +226,48 @@ export default function Home() {
         </Band>
 
         {/* ═══════════════════════════════════════════════════
-            BAND 2 — STATS + DOC TYPES  (muted/tinted)
+            BAND 2 — HOW IT WORKS  (muted/tinted)
+        ════════════════════════════════════════════════════ */}
+        <div id="how-it-works" className="w-full bg-gradient-to-b from-slate-100/90 via-blue-50/50 to-slate-100/70 dark:from-slate-900 dark:via-slate-800/40 dark:to-slate-900 border-y border-slate-200 dark:border-border/40">
+          <Band innerClassName="py-20">
+            <div className="text-center mb-14">
+              <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
+                className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">How it works</motion.p>
+              <motion.h2 initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+                className="text-3xl md:text-4xl font-display font-bold mb-4">
+                One platform, built for every document situation
+              </motion.h2>
+              <motion.p initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+                transition={{ delay: 0.1 }}
+                className="text-muted-foreground text-lg max-w-xl mx-auto">
+                No matter what kind of document you're dealing with, there's a PlainPath tool purpose-built for it.
+              </motion.p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
+              <div className="hidden md:block absolute top-10 left-[calc(16.67%+1rem)] right-[calc(16.67%+1rem)] h-px bg-gradient-to-r from-border via-primary/30 to-border" />
+              {HOW_IT_WORKS.map((step, i) => (
+                <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }} transition={{ delay: i * 0.12 }}>
+                  <Card className="h-full bg-white dark:bg-card border-slate-200/80 dark:border-border/50 shadow-md hover:shadow-xl hover:border-primary/20 transition-all rounded-2xl overflow-hidden">
+                    <div className="p-7">
+                      <div className="flex items-center gap-4 mb-6">
+                        <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-md shadow-primary/25 relative z-10">
+                          <step.icon className="w-5 h-5 text-white" />
+                        </div>
+                        <span className="text-4xl font-display font-bold text-foreground/8 dark:text-foreground/10 leading-none select-none">{step.step}</span>
+                      </div>
+                      <h3 className="text-lg font-bold mb-2">{step.title}</h3>
+                      <p className="text-muted-foreground text-sm leading-relaxed">{step.desc}</p>
+                    </div>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          </Band>
+        </div>
+
+        {/* ═══════════════════════════════════════════════════
+            BAND 3 — STATS + DOC TYPES  (muted/tinted)
         ════════════════════════════════════════════════════ */}
         <div className="w-full bg-gradient-to-b from-slate-100 via-blue-50/80 to-slate-100/60 dark:from-slate-900 dark:via-blue-950/20 dark:to-slate-900 border-y border-slate-200 dark:border-border/50">
           <Band innerClassName="py-20">
@@ -341,47 +382,6 @@ export default function Home() {
         <Band className="bg-gradient-to-b from-white via-sky-50/60 to-slate-50 dark:from-slate-950 dark:via-sky-950/10 dark:to-slate-950 border-b border-slate-100 dark:border-transparent" innerClassName="py-20">
           <DemoSection />
         </Band>
-
-        {/* ═══════════════════════════════════════════════════
-            BAND 6 — HOW IT WORKS  (muted/tinted)
-        ════════════════════════════════════════════════════ */}
-        <div id="how-it-works" className="w-full bg-gradient-to-b from-slate-100/90 via-blue-50/50 to-slate-100/70 dark:from-slate-900 dark:via-slate-800/40 dark:to-slate-900 border-y border-slate-200 dark:border-border/40">
-          <Band innerClassName="py-20">
-            <div className="text-center mb-14">
-              <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
-                className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">How it works</motion.p>
-              <motion.h2 initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-                className="text-3xl md:text-4xl font-display font-bold mb-4">
-                One platform, built for every document situation
-              </motion.h2>
-              <motion.p initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-                transition={{ delay: 0.1 }}
-                className="text-muted-foreground text-lg max-w-xl mx-auto">
-                No matter what kind of document you're dealing with, there's a PlainPath tool purpose-built for it.
-              </motion.p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
-              <div className="hidden md:block absolute top-10 left-[calc(16.67%+1rem)] right-[calc(16.67%+1rem)] h-px bg-gradient-to-r from-border via-primary/30 to-border" />
-              {HOW_IT_WORKS.map((step, i) => (
-                <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }} transition={{ delay: i * 0.12 }}>
-                  <Card className="h-full bg-white dark:bg-card border-slate-200/80 dark:border-border/50 shadow-md hover:shadow-xl hover:border-primary/20 transition-all rounded-2xl overflow-hidden">
-                    <div className="p-7">
-                      <div className="flex items-center gap-4 mb-6">
-                        <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-md shadow-primary/25 relative z-10">
-                          <step.icon className="w-5 h-5 text-white" />
-                        </div>
-                        <span className="text-4xl font-display font-bold text-foreground/8 dark:text-foreground/10 leading-none select-none">{step.step}</span>
-                      </div>
-                      <h3 className="text-lg font-bold mb-2">{step.title}</h3>
-                      <p className="text-muted-foreground text-sm leading-relaxed">{step.desc}</p>
-                    </div>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-          </Band>
-        </div>
 
         {/* ═══════════════════════════════════════════════════
             BAND 7 — VIDEO WALKTHROUGH  (dark cinematic)
