@@ -5,11 +5,11 @@ import { ChevronDown } from "lucide-react"
 const FAQS = [
   {
     q: "Does PlainPath store my documents?",
-    a: "No. Your document content is sent to our AI for analysis and then discarded. We never store the text of your documents on our servers. Your analysis results are saved locally on your device only (Pro: optional cloud backup).",
+    a: "No. Your document text is sent to our AI for analysis and then discarded — we never permanently store the content of your documents. Your analysis results are saved to your private history so you can reference them later. They are never shared or used for AI training.",
   },
   {
     q: "Who can see my document or analysis?",
-    a: "Only you. Documents are processed privately, not used for training, and not shared with any third party. Analysis results live on your device unless you explicitly share a link.",
+    a: "Only you. Documents are processed to generate your results and then discarded — not used for AI training, not shared with third parties. Your analysis results are saved to your private history and are never visible to anyone else.",
   },
   {
     q: "What kinds of documents work best?",

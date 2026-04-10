@@ -291,7 +291,7 @@ export default function PricingSection() {
 
       <div className="mx-auto mt-8 max-w-3xl text-center text-sm leading-6 text-slate-500 dark:text-slate-400">
         Team plan is shown as a forward-looking option. All current plans are single-user.
-        Saved analyses are stored locally on your device/browser.
+        Analysis results are saved to your private history. Document content is not permanently stored.
       </div>
     </section>
   )

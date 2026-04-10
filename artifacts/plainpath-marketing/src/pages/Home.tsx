@@ -93,7 +93,7 @@ const HOW = [
 const STATS = [
   { value: "4.9", label: "App Store rating" },
   { value: "2 min", label: "Average analysis time" },
-  { value: "100%", label: "Private — your docs stay yours" },
+  { value: "Zero", label: "Documents permanently stored" },
   { value: "Free", label: "First two analyses" },
 ];
 
@@ -459,7 +459,7 @@ export default function Home() {
                 className="text-2xl md:text-3xl font-bold mb-3 text-foreground"
                 style={{ fontFamily: "var(--font-display)" }}
               >
-                Your documents are private. Always.
+                Your documents aren't permanently stored.
               </h2>
               <p className="text-muted-foreground leading-relaxed mb-4">
                 We don't sell your data. We don't train AI on your documents.
