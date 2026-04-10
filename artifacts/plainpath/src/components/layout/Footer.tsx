@@ -55,7 +55,7 @@ export function Footer() {
             <Link href="/support" className="text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors">
               Support
             </Link>
-            <span className="text-xs text-muted-foreground/40">From $4.99/month · No account required</span>
+            <span className="text-xs text-muted-foreground/40">Free to try · Plans from $4.99/month</span>
           </div>
         </div>
 

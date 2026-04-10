@@ -87,7 +87,7 @@ const HOW_IT_WORKS = [
   {
     step: "02",
     title: "Upload, paste, or answer a few questions",
-    desc: "Drop in a PDF, paste text, or work through a short guided wizard. No complex setup and no account required to get started.",
+    desc: "Drop in a PDF, paste text, or work through a short guided wizard. No complex setup — your first 2 analyses are free.",
     icon: Upload,
   },
   {
@@ -255,7 +255,7 @@ export default function Home() {
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
               className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2"
             >
-              {["Plans from $4.99/month", "No account required", "Documents not stored by PlainPath", "Free for your first two analyses"].map((item) => (
+              {["Free for your first 2 analyses — no account needed", "Plans from $4.99/month", "Documents not stored by PlainPath"].map((item) => (
                 <span key={item} className="flex items-center gap-1.5 text-xs text-muted-foreground/80 dark:text-muted-foreground/55">
                   <span className="w-1 h-1 rounded-full bg-primary/40 dark:bg-muted-foreground/30 shrink-0" />
                   {item}
@@ -545,7 +545,7 @@ export default function Home() {
                 transition={{ delay: 0.1 }}
                 className="text-slate-400 text-lg leading-relaxed"
               >
-                Free to start. No account required. Four tools to handle any document situation you face.
+                Try your first 2 analyses free — no account needed. Subscribe when you're ready for unlimited access.
               </motion.p>
               <motion.div
                 initial={{ opacity: 0, y: 12 }}

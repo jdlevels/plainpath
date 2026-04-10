@@ -185,7 +185,7 @@ export default function Home() {
                   <span className="text-xs text-muted-foreground">· App Store rating</span>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Plans from $4.99/month &nbsp;·&nbsp; No account required &nbsp;·&nbsp; Free for your first two analyses
+                  Free for your first 2 analyses — no account needed &nbsp;·&nbsp; Plans from $4.99/month to unlock more
                 </p>
               </motion.div>
             </motion.div>
@@ -416,7 +416,7 @@ export default function Home() {
               </h2>
               <p className="text-muted-foreground mb-8 leading-relaxed">
                 Start on your phone with a photo. Finish on your laptop.
-                PlainPath feels fast and natural everywhere — no account required to try it.
+                PlainPath feels fast and natural everywhere — try it free, no account needed to start.
               </p>
               <div className="space-y-4 mb-8">
                 {[
@@ -517,7 +517,7 @@ export default function Home() {
             <PlayStoreBadge />
           </div>
           <p className="mt-6 text-xs text-white/30">
-            Plans from $4.99/month &nbsp;·&nbsp; Free for your first two analyses &nbsp;·&nbsp; No account required
+            Free for your first 2 analyses &nbsp;·&nbsp; Plans from $4.99/month &nbsp;·&nbsp; No account needed to try
           </p>
         </div>
       </div>
