@@ -145,7 +145,7 @@ router.post("/review", upload.single("file"), async (req: Request, res: Response
     try {
       const mime = req.file.mimetype;
       if (mime === "application/pdf" || req.file.originalname?.endsWith(".pdf")) {
-        const { default: pdfParse } = await import("pdf-parse");
+        const { default: pdfParse } = await import("pdf-parse/lib/pdf-parse.js");
         const parsed = await pdfParse(req.file.buffer);
         text = parsed.text ?? "";
       } else if (
