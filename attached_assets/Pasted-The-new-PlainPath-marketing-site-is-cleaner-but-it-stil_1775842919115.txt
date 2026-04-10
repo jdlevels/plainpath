@@ -1,0 +1,57 @@
+The new PlainPath marketing site is cleaner, but it still needs a stronger premium feel and better conversion quality.
+
+Do a refinement pass on the marketing site with the goal of making it feel more polished, trustworthy, product-led, and app-store ready.
+
+MAIN ISSUES TO FIX
+
+1. HERO NEEDS TO FEEL STRONGER
+- The hero is too plain and generic right now
+- Make it feel more premium, product-trustworthy, and visually intentional
+- Keep the current general structure, but improve hierarchy, spacing, and visual impact
+- The phone/mockup area should feel more integrated and polished, not like a generic placeholder
+- Strengthen the overall first impression so it feels like a real launch-ready app
+
+2. IMPROVE PRODUCT TRUST / VALUE SIGNALS
+- Make it clearer why PlainPath is valuable
+- Improve the supporting text and trust markers so the user understands what they are getting
+- The page should feel like a serious product, not a lightweight concept page
+
+3. FIX SECTION TRANSITIONS
+- The “Drowning in legal paperwork?” dark band feels disconnected
+- Smooth out the visual transition between hero and following sections
+- The whole landing page should feel like one cohesive narrative, not isolated blocks
+
+4. UPGRADE THE 4-TOOL SECTION
+- The tool cards are too soft and washed out
+- Make them feel more premium and product-grade
+- Improve card contrast, hierarchy, spacing, icon treatment, and color use
+- Keep the section clean, but make the cards feel more substantial and valuable
+
+5. MAKE THE PAGE FEEL MORE DISTINCTIVE
+- It should feel more like PlainPath specifically, not just a generic SaaS page
+- Use stronger product identity, clearer visual rhythm, and better emphasis
+- Keep it elegant and modern, not flashy
+
+6. KEEP WHAT WORKS
+- Do not do a full redesign
+- Keep the general structure, app-store CTA direction, and product story
+- This is a refinement pass for quality, trust, and premium feel
+
+DELIVERABLE
+Implement the refinement directly, then summarize in this format:
+
+1. HERO IMPROVEMENTS
+- what changed
+- how it now feels stronger
+
+2. TRUST / VALUE IMPROVEMENTS
+- what was added or improved
+
+3. SECTION FLOW IMPROVEMENTS
+- what was fixed between sections
+
+4. 4-TOOL CARD IMPROVEMENTS
+- how the cards were upgraded
+
+5. REMAINING GAPS
+- anything still not ideal but acceptable for now
