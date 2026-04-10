@@ -4,7 +4,7 @@ import {
   Scale, UploadCloud, Loader2, AlertCircle, Copy, Check,
   ChevronDown, ChevronUp, ArrowLeft, RotateCcw, FileText,
   ShieldAlert, AlertTriangle, CheckCircle2, X as XIcon,
-  Lock, ClipboardList, ChevronRight,
+  Lock, ClipboardList, ChevronRight, Mail, Shield,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -114,6 +114,42 @@ function ClauseCard({ clause, defaultOpen = false }: { clause: ClauseResult; def
   const [open, setOpen] = useState(defaultOpen)
   const config = RATING_CONFIG[clause.rating]
   const Icon = config.icon
+  const [negLoading, setNegLoading] = useState(false)
+  const [negEmail, setNegEmail] = useState<string | null>(null)
+  const [negError, setNegError] = useState<string | null>(null)
+  const [negCopied, setNegCopied] = useState(false)
+
+  async function handleDraftEmail() {
+    setNegLoading(true)
+    setNegError(null)
+    try {
+      const base = getApiBaseUrl()
+      const res = await fetch(`${base}/api/contracts/negotiate-clause`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clauseText: clause.text,
+          explanation: clause.explanation,
+          whyUnfair: clause.whyUnfair,
+          negotiationLanguage: clause.negotiationLanguage,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data?.message || "Failed to generate email")
+      setNegEmail(data.emailBody)
+    } catch (e) {
+      setNegError(e instanceof Error ? e.message : "Failed. Please try again.")
+    } finally {
+      setNegLoading(false)
+    }
+  }
+
+  function copyNegEmail() {
+    if (!negEmail) return
+    navigator.clipboard.writeText(negEmail).catch(() => {})
+    setNegCopied(true)
+    setTimeout(() => setNegCopied(false), 2000)
+  }
 
   return (
     <Card className={`border ${config.border} transition-all`}>
@@ -166,6 +202,43 @@ function ClauseCard({ clause, defaultOpen = false }: { clause: ClauseResult; def
                   <div className="bg-muted/40 border border-border/30 rounded-lg p-3">
                     <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">Already signed?</p>
                     <p className="text-sm text-muted-foreground leading-relaxed">{clause.exitGuidance}</p>
+                  </div>
+                )}
+
+                {clause.rating !== "fair" && (
+                  <div>
+                    {!negEmail ? (
+                      <button
+                        onClick={handleDraftEmail}
+                        disabled={negLoading}
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary border border-primary/30 bg-primary/5 hover:bg-primary/10 rounded-lg px-3 py-2 transition-colors disabled:opacity-60"
+                      >
+                        {negLoading
+                          ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Drafting email…</>
+                          : <><Mail className="w-3.5 h-3.5" /> Draft negotiation email</>
+                        }
+                      </button>
+                    ) : (
+                      <div className="bg-violet-50 dark:bg-violet-950/20 border border-violet-200/60 dark:border-violet-900/40 rounded-lg p-3 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs font-semibold uppercase tracking-widest text-violet-600 dark:text-violet-400">Negotiation email draft</p>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={copyNegEmail}
+                              className="inline-flex items-center gap-1 text-xs text-violet-600 dark:text-violet-400 hover:opacity-80 transition-opacity"
+                            >
+                              {negCopied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                              {negCopied ? "Copied" : "Copy"}
+                            </button>
+                            <button onClick={() => setNegEmail(null)} className="text-muted-foreground hover:text-foreground transition-colors">
+                              <XIcon className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                        <p className="text-xs text-foreground/85 leading-relaxed whitespace-pre-wrap">{negEmail}</p>
+                      </div>
+                    )}
+                    {negError && <p className="text-xs text-destructive mt-1">{negError}</p>}
                   </div>
                 )}
               </div>

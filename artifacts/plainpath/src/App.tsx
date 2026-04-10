@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AnalysisProvider } from "@/context/AnalysisContext";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { initStatusBar } from "@/lib/native";
+import { captureInboundRef } from "@/lib/referral";
 
 import Home from "@/pages/Home";
 import Import from "@/pages/Import";
@@ -21,6 +22,12 @@ import SubscribeCancel from "./pages/SubscribeCancel";
 import ContractBuilder from "@/pages/ContractBuilder";
 import ContractReview from "@/pages/ContractReview";
 import SharedAnalysis from "@/pages/SharedAnalysis";
+import Compare from "@/pages/Compare";
+import Methodology from "@/pages/Methodology";
+import IrsLetter from "@/pages/guides/IrsLetter";
+import LeaseAgreement from "@/pages/guides/LeaseAgreement";
+import JobOffer from "@/pages/guides/JobOffer";
+import ScamNotice from "@/pages/guides/ScamNotice";
 import NotFound from "@/pages/not-found";
 
 import { Navbar } from "@/components/layout/Navbar";
@@ -60,6 +67,12 @@ function Router() {
             <Route path="/shared/:token">
               {(params) => <SharedAnalysis token={(params as { token: string }).token} />}
             </Route>
+            <Route path="/compare" component={Compare} />
+            <Route path="/methodology" component={Methodology} />
+            <Route path="/guides/irs-letter" component={IrsLetter} />
+            <Route path="/guides/lease-agreement" component={LeaseAgreement} />
+            <Route path="/guides/job-offer-red-flags" component={JobOffer} />
+            <Route path="/guides/scam-notice" component={ScamNotice} />
             <Route component={NotFound} />
           </Switch>
         </ErrorBoundary>
@@ -73,6 +86,7 @@ function Router() {
 function App() {
   useEffect(() => {
     void initStatusBar()
+    captureInboundRef()
   }, [])
 
   return (

@@ -3,10 +3,12 @@ import { motion } from "framer-motion"
 import {
   ArrowRight, ShieldCheck, Upload,
   Sparkles, Receipt, Scale, HeartPulse, FileSignature, MailWarning,
-  CheckCircle2, PenLine, FileScan, CalendarX, Eye, AlertTriangle
+  CheckCircle2, PenLine, FileScan, CalendarX, Eye, AlertTriangle, Gift, Copy, Check
 } from "lucide-react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { getReferralLink } from "@/lib/referral"
 import PricingSection from "@/components/PricingSection"
 import StatsBar from "@/components/StatsBar"
 import TestimonialsSection from "@/components/TestimonialsSection"
@@ -121,6 +123,44 @@ function Band({
     <div id={id} className={`w-full ${className}`}>
       <div className={`max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 ${innerClassName}`}>
         {children}
+      </div>
+    </div>
+  )
+}
+
+function ReferralBand() {
+  const [copied, setCopied] = useState(false)
+  const link = getReferralLink()
+
+  function copyLink() {
+    navigator.clipboard.writeText(link).catch(() => {})
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2500)
+  }
+
+  return (
+    <div className="w-full border-b border-border/30 bg-gradient-to-r from-emerald-50/50 via-background to-blue-50/50 dark:from-emerald-950/20 dark:via-background dark:to-blue-950/20 py-10">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 border border-emerald-200/60 dark:border-emerald-900/40 text-xs font-bold text-emerald-700 dark:text-emerald-400 mb-4">
+          <Gift className="w-3.5 h-3.5" />
+          Refer a friend
+        </div>
+        <h3 className="text-xl sm:text-2xl font-display font-bold tracking-tight mb-2">
+          Give a friend free access to PlainPath
+        </h3>
+        <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
+          Share your personal link and anyone who signs up gets full access to all PlainPath tools — no credit card required.
+        </p>
+        <div className="flex items-center gap-2 max-w-sm mx-auto bg-card border border-border/60 rounded-xl overflow-hidden shadow-sm">
+          <span className="flex-1 text-xs text-muted-foreground truncate pl-3 font-mono">{link}</span>
+          <button
+            onClick={copyLink}
+            className="flex items-center gap-1.5 px-4 py-3 bg-primary text-primary-foreground text-xs font-bold hover:opacity-90 transition-opacity shrink-0"
+          >
+            {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+            {copied ? "Copied!" : "Copy link"}
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -452,6 +492,11 @@ export default function Home() {
         <div id="pricing" className="w-full bg-white dark:bg-transparent border-y border-slate-200 dark:border-border/25">
           <PricingSection />
         </div>
+
+        {/* ═══════════════════════════════════════════════════
+            REFERRAL BAND
+        ════════════════════════════════════════════════════ */}
+        <ReferralBand />
 
         {/* ═══════════════════════════════════════════════════
             BAND 11 — FAQ  (muted, last section)

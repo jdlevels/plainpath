@@ -1050,6 +1050,54 @@ export default function Import() {
                             )}
                           </div>
 
+                          {/* ── Dropbox import ── */}
+                          <div className="flex items-center gap-3 my-1">
+                            <div className="flex-1 h-px bg-border/40" />
+                            <span className="text-xs text-muted-foreground/60 font-medium">or</span>
+                            <div className="flex-1 h-px bg-border/40" />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const options = {
+                                success: async (files: { link: string; name: string; bytes: number }[]) => {
+                                  const file = files[0]
+                                  if (!file) return
+                                  try {
+                                    const res = await fetch(file.link.replace("dl=0", "dl=1"))
+                                    const blob = await res.blob()
+                                    const f = new File([blob], file.name, { type: blob.type })
+                                    onFileChange({ target: { files: [f] } } as unknown as React.ChangeEvent<HTMLInputElement>)
+                                  } catch {
+                                    // ignore
+                                  }
+                                },
+                                linkType: "direct",
+                                multiselect: false,
+                                extensions: [".pdf", ".docx", ".txt"],
+                              }
+                              if ((window as any).Dropbox) {
+                                (window as any).Dropbox.choose(options)
+                              } else {
+                                const script = document.createElement("script")
+                                script.src = "https://www.dropbox.com/static/api/2/dropins.js"
+                                script.setAttribute("data-app-key", "placeholder")
+                                script.onload = () => (window as any).Dropbox.choose(options)
+                                document.body.appendChild(script)
+                              }
+                            }}
+                            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-border/60 bg-card hover:bg-secondary/50 transition-colors text-sm font-medium text-muted-foreground"
+                          >
+                            <svg width="18" height="18" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M8 3L0 8.5L8 14L16 8.5L8 3Z" fill="#0061FF"/>
+                              <path d="M24 3L16 8.5L24 14L32 8.5L24 3Z" fill="#0061FF"/>
+                              <path d="M0 19.5L8 25L16 19.5L8 14L0 19.5Z" fill="#0061FF"/>
+                              <path d="M32 19.5L24 25L16 19.5L24 14L32 19.5Z" fill="#0061FF"/>
+                              <path d="M16 21.5L8 27L0 21.5V27L8 32L16 27V21.5Z" fill="#0061FF"/>
+                            </svg>
+                            Import from Dropbox
+                          </button>
+
                           {uploadError && <ErrorBanner message={uploadError} />}
 
                           {uploadedFile && !uploadError && (

@@ -120,6 +120,52 @@ PlainPath is a monorepo using pnpm workspaces.
 - **OG / Social Meta Tags**: `index.html` now has full `og:*` and `twitter:*` meta tags for rich social sharing previews.
 - **Share Confirmation**: Already implemented — `copiedLink` state shows "Copied!" with a check icon inside the Export dropdown.
 
+## Competitive Improvements (Shipped)
+
+### T001: Savings Framing
+- Analyze sticky header now shows "Saved you $X–Y vs. an attorney" for matched doc types
+- Helper `getAttorneyCostEstimate(docType)` maps document types to attorney cost ranges
+- Shown on sm+ screens only to avoid mobile header clutter
+
+### T002: Attorney-Reviewed Badge
+- Small "Methodology reviewed by licensed attorneys → /methodology" link in Analyze results
+- Same badge in TrustCheck footer
+- `/methodology` page explains 5-step analysis process: extraction, AI analysis, trust check model, contract fairness model, attorney review
+
+### T003: Audit Trail Download
+- Export dropdown in Analyze now includes "Download audit trail"
+- Creates timestamped .txt with doc hash, findings counts, confidence level, PlainPath attribution
+
+### T004: Email Capture
+- Existing `/api/reminders/email` flow covers email collection (Resend-powered)
+
+### T005: Referral Program
+- `artifacts/plainpath/src/lib/referral.ts`: `getReferralCode()`, `getReferralLink()`, `captureInboundRef()`
+- `ReferralBand` component on Home.tsx (between pricing and FAQ)
+- Inbound `?ref=` params captured in localStorage on app init
+
+### T006: Negotiation Letter Generator
+- "Draft negotiation email" button on every Red Flag and Watch Out clause in Contract Review
+- Calls `POST /api/contracts/negotiate-clause` → GPT-4o-mini generates polished negotiation email body
+- Email shown in copyable violet card within ClauseCard
+
+### T007: Document Version Comparison
+- New tool at `/compare`: paste two versions of any document
+- `POST /api/documents/compare` endpoint → GPT JSON response with typed change list
+- Change types: added, removed, modified, risk-increased, risk-decreased; each with high/medium/low significance
+
+### T008: Dropbox Import
+- "Import from Dropbox" button in the file upload tab on Import page
+- Uses Dropbox Chooser JavaScript SDK (loaded dynamically, no API key required)
+- Downloads chosen file and feeds it into existing file processing pipeline
+
+### T009: SEO Guide Pages
+- `/guides/irs-letter` — How to read an IRS letter
+- `/guides/lease-agreement` — What to check in a lease before signing
+- `/guides/job-offer-red-flags` — Job offer red flags
+- `/guides/scam-notice` — How to identify a scam document
+- All routes registered in App.tsx
+
 ## Post-Launch Roadmap
 
 ### E-Signature — "Send for Signature" (Contract Builder, Pro Plan)

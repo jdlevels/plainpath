@@ -341,4 +341,48 @@ router.post("/send-for-signature", async (req: Request, res: Response) => {
   }
 });
 
+// POST /api/contracts/negotiate-clause
+// Generates a polished negotiation email for a specific flagged clause.
+router.post("/negotiate-clause", async (req: Request, res: Response) => {
+  const { clauseText, explanation, whyUnfair, negotiationLanguage, contractType } = req.body;
+  if (!clauseText) {
+    return res.status(400).json({ error: "clause_required", message: "clauseText is required." });
+  }
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      max_completion_tokens: 600,
+      messages: [
+        {
+          role: "system",
+          content: `You are a professional negotiation assistant. Write a concise, polite, professional negotiation email that the recipient can send to request a change to a problematic contract clause. The email should:
+- Be direct but courteous
+- Reference the specific clause concern
+- Propose a fair alternative or request clarification
+- Be 3–5 short paragraphs
+- Sound like it was written by a professional, not a lawyer
+- Not be aggressive or confrontational
+Return only the email body (no subject line, no "Hi/Dear" opening — just the paragraphs).`,
+        },
+        {
+          role: "user",
+          content: `Contract type: ${contractType || "general agreement"}
+Clause: ${clauseText}
+Why it's a concern: ${whyUnfair || explanation || "This clause is one-sided or unusual."}
+Suggested revision: ${negotiationLanguage || "Please provide a balanced alternative."}
+
+Write a negotiation email body I can send.`,
+        },
+      ],
+    });
+
+    const emailBody = response.choices[0]?.message?.content?.trim() ?? "Unable to generate email. Please try again.";
+    return res.json({ emailBody });
+  } catch (err) {
+    logger.error({ err }, "contracts/negotiate-clause failed");
+    return res.status(500).json({ message: "Failed to generate negotiation email. Please try again." });
+  }
+});
+
 export default router;

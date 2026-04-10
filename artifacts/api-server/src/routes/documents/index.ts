@@ -2338,4 +2338,66 @@ router.post("/checklist", (req, res) => {
   return res.json({ success: true, itemId, completed: Boolean(completed) });
 });
 
+// POST /api/documents/compare
+// Compares two versions of a document and returns a structured diff with risk assessment.
+router.post("/compare", async (req, res) => {
+  const { original, revised } = req.body;
+  if (!original || !revised) {
+    return res.status(400).json({ error: "both_required", message: "Both original and revised document text are required." });
+  }
+  if (original.length < 50 || revised.length < 50) {
+    return res.status(422).json({ error: "too_short", message: "Both documents must be at least 50 characters." });
+  }
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      max_completion_tokens: 2000,
+      messages: [
+        {
+          role: "system",
+          content: `You are a document comparison expert. Compare two versions of a document and identify all meaningful changes. For each change, assess whether it increases or decreases risk for the party who didn't draft the document.
+
+Return a JSON object with this exact structure:
+{
+  "summary": "2-3 sentence plain-English summary of what changed overall",
+  "overallRiskChange": "increased or decreased or unchanged",
+  "changesCount": 0,
+  "highSignificanceCount": 0,
+  "recommendation": "1-2 sentence recommendation on whether to accept the revised version",
+  "changes": [
+    {
+      "type": "added or removed or modified or risk-increased or risk-decreased",
+      "clause": "short clause title/description (max 80 chars)",
+      "original": "relevant original text or null if added",
+      "revised": "relevant revised text or null if removed",
+      "significance": "high or medium or low",
+      "explanation": "plain-English explanation of what changed and why it matters"
+    }
+  ]
+}
+
+Focus on substantive changes — skip formatting-only differences. Limit to 15 most significant changes.`,
+        },
+        {
+          role: "user",
+          content: `ORIGINAL VERSION:\n${original.substring(0, 6000)}\n\n---\n\nREVISED VERSION:\n${revised.substring(0, 6000)}`,
+        },
+      ],
+      response_format: { type: "json_object" },
+    });
+
+    const content = response.choices[0]?.message?.content;
+    if (!content) throw new Error("Empty response from AI");
+
+    const result = JSON.parse(content);
+    result.analyzedAt = new Date().toISOString();
+    return res.json(result);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    logger.error({ err: msg }, "documents/compare failed");
+    return res.status(500).json({ message: "Comparison failed. Please try again." });
+  }
+});
+
 export default router;
