@@ -154,23 +154,23 @@ export default function Home() {
               </motion.p>
 
               {/* Tool pills */}
-              <motion.div custom={3} variants={fadeUp} className="flex flex-wrap gap-2 mb-6">
+              <motion.div custom={3} variants={fadeUp} className="grid grid-cols-2 gap-2 mb-6">
                 {TOOLS.map(({ label, icon: Icon, cls }) => (
                   <a
                     key={label}
                     href="https://plain-path.replit.app"
                     target="_blank"
                     rel="noreferrer"
-                    className={`${cls} inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border text-sm font-medium transition-opacity hover:opacity-80`}
+                    className={`${cls} flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border text-sm font-medium transition-opacity hover:opacity-80 w-full`}
                   >
-                    <Icon className="w-3.5 h-3.5" />
-                    {label}
+                    <Icon className="w-3.5 h-3.5 shrink-0" />
+                    <span className="truncate">{label}</span>
                   </a>
                 ))}
               </motion.div>
 
               {/* Download badges */}
-              <motion.div custom={4} variants={fadeUp} className="flex flex-wrap gap-3 mb-6" id="download">
+              <motion.div custom={4} variants={fadeUp} className="flex gap-3 mb-6" id="download">
                 <AppStoreBadge />
                 <PlayStoreBadge />
               </motion.div>
