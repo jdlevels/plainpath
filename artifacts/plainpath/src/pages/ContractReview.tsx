@@ -316,18 +316,29 @@ function SectionNav({ sections }: { sections: NavSection[] }) {
 
 // ─── Section Block ────────────────────────────────────────────────────────────
 
-function SectionBlock({ id, title, badge, children, collapsible = false, defaultCollapsed = false }: {
+const SECTION_COLORS = {
+  red:    { border: "border-red-200 dark:border-red-900/50",       bg: "bg-red-50/40 dark:bg-red-950/10",       heading: "text-red-700 dark:text-red-400"     },
+  amber:  { border: "border-amber-200 dark:border-amber-900/50",   bg: "bg-amber-50/40 dark:bg-amber-950/10",   heading: "text-amber-700 dark:text-amber-400" },
+  emerald:{ border: "border-emerald-200 dark:border-emerald-900/50", bg: "bg-emerald-50/30 dark:bg-emerald-950/10", heading: "text-emerald-700 dark:text-emerald-400" },
+  violet: { border: "border-violet-200 dark:border-violet-900/50", bg: "bg-violet-50/30 dark:bg-violet-950/10", heading: "text-violet-700 dark:text-violet-400" },
+  blue:   { border: "border-blue-200 dark:border-blue-900/50",     bg: "bg-blue-50/30 dark:bg-blue-950/10",     heading: "text-blue-700 dark:text-blue-400"   },
+}
+
+function SectionBlock({ id, title, badge, children, collapsible = false, defaultCollapsed = false, color }: {
   id: string
   title: string
   badge?: React.ReactNode
   children: React.ReactNode
   collapsible?: boolean
   defaultCollapsed?: boolean
+  color?: keyof typeof SECTION_COLORS
 }) {
   const [collapsed, setCollapsed] = useState(defaultCollapsed)
+  const colors = color ? SECTION_COLORS[color] : null
+
   const headerInner = (
     <>
-      <h3 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">{title}</h3>
+      <h3 className={`text-sm font-bold uppercase tracking-widest ${colors ? colors.heading : "text-muted-foreground"}`}>{title}</h3>
       {badge}
       {collapsible && (
         <span className="ml-auto text-xs text-muted-foreground flex items-center gap-1">
@@ -339,7 +350,10 @@ function SectionBlock({ id, title, badge, children, collapsible = false, default
   )
 
   return (
-    <div id={id} className="scroll-mt-24 space-y-3">
+    <div
+      id={id}
+      className={`scroll-mt-24 rounded-2xl border p-5 space-y-4 ${colors ? `${colors.border} ${colors.bg}` : "border-border/40 bg-card"}`}
+    >
       {collapsible ? (
         <button
           onClick={() => setCollapsed(c => !c)}
@@ -462,6 +476,7 @@ function ResultsView({ result, onReset }: { result: ReviewResult; onReset: () =>
         <SectionBlock
           id="red-flags"
           title="Red Flags"
+          color="red"
           badge={<Badge className="bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 border-0 text-[10px]">{redFlags.length}</Badge>}
         >
           <p className="text-xs text-muted-foreground mb-3">These clauses are harmful, exploitative, or potentially unenforceable. Each should be negotiated or removed before you sign.</p>
@@ -476,6 +491,7 @@ function ResultsView({ result, onReset }: { result: ReviewResult; onReset: () =>
         <SectionBlock
           id="watch-outs"
           title="Watch Outs"
+          color="amber"
           badge={<Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border-0 text-[10px]">{watchOuts.length}</Badge>}
         >
           <p className="text-xs text-muted-foreground mb-3">These clauses are vague, one-sided, or unusual. You can still sign — but you should understand what you're agreeing to and consider pushing back.</p>
@@ -490,6 +506,7 @@ function ResultsView({ result, onReset }: { result: ReviewResult; onReset: () =>
         <SectionBlock
           id="fair-clauses"
           title="Fair Clauses"
+          color="emerald"
           badge={<Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border-0 text-[10px]">{fair.length}</Badge>}
           collapsible={true}
           defaultCollapsed={true}
@@ -506,6 +523,7 @@ function ResultsView({ result, onReset }: { result: ReviewResult; onReset: () =>
         <SectionBlock
           id="missing-protections"
           title="Missing Protections"
+          color="violet"
           badge={<Badge className="bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300 border-0 text-[10px]">{result.missingProtections.length}</Badge>}
         >
           <Card className="border-violet-200/60 dark:border-violet-900/40">
@@ -531,6 +549,7 @@ function ResultsView({ result, onReset }: { result: ReviewResult; onReset: () =>
         <SectionBlock
           id="before-you-sign"
           title="Before You Sign"
+          color="blue"
           badge={<Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border-0 text-[10px]">{result.preSigningChecklist.length}</Badge>}
         >
           <Card className="border-blue-200/60 dark:border-blue-900/40 bg-blue-50/30 dark:bg-blue-950/10">
