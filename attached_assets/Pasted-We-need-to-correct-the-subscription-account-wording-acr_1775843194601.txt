@@ -1,0 +1,59 @@
+We need to correct the subscription/account wording across the homepage and pricing areas.
+
+Current issue:
+The site says things like “Plans from $4.99/month” and also “No account required,” which creates confusion. If PlainPath charges monthly, the wording must clearly explain what is free, what requires subscription, and whether an account/sign-up is required for paid access.
+
+Please do a copy correction pass focused on account / signup / subscription clarity.
+
+GOALS
+1. Remove any wording that creates the impression that a paid subscription works with no account/identity at all
+2. Make it clear what users can try for free
+3. Make it clear what paid plans unlock
+4. Keep the messaging simple, consumer-friendly, and trustworthy
+
+REQUIREMENTS
+
+1. HOMEPAGE / HERO COPY
+- Find and replace broad wording like:
+  - “No account required”
+  - or anything similarly misleading if monthly plans exist
+- Replace it with clearer wording such as:
+  - “No account required to try”
+  - “Start free”
+  - “Try your first analyses before subscribing”
+  - or equivalent language that accurately reflects the product
+
+2. PRICING SECTION
+- Make the pricing section clearly explain:
+  - what is free
+  - what is included in Starter
+  - what is included in Pro
+  - whether signup/account/subscription is required for paid access
+- Keep it simple and readable, not overly technical
+
+3. SUBSCRIPTION / ACCESS LANGUAGE
+- Audit all homepage and public-facing pricing copy for contradictions about:
+  - account creation
+  - sign-up
+  - subscription
+  - free trial / free analyses
+- Ensure the language is internally consistent
+
+4. TRUST / CLARITY
+- The wording should reduce buyer confusion
+- A user should understand:
+  - what they can do immediately
+  - when payment is required
+  - whether they can try before subscribing
+
+5. DO NOT OVERCOMPLICATE
+- Do not add legal/technical jargon
+- Keep the wording plain-English and conversion-friendly
+- This is a copy-accuracy pass, not a redesign
+
+DELIVERABLE
+Return:
+1. every location where misleading account/subscription wording was found
+2. the old wording
+3. the new wording
+4. confirmation that homepage + pricing now tell one consistent story
