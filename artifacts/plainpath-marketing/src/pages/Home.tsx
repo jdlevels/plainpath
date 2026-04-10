@@ -89,14 +89,6 @@ const HOW = [
   { icon: CheckCircle2, num: "03", title: "Act with confidence", desc: "Clear summary, action checklist, deadlines — no jargon." },
 ];
 
-/* ─── Trust stats ────────────────────────────────────────── */
-const STATS = [
-  { value: "4.9", label: "App Store rating" },
-  { value: "2 min", label: "Average analysis time" },
-  { value: "Zero", label: "Documents permanently stored" },
-  { value: "Free", label: "First two analyses" },
-];
-
 /* ─── Component ──────────────────────────────────────────── */
 export default function Home() {
   return (
@@ -107,8 +99,8 @@ export default function Home() {
           HERO
       ════════════════════════════════════════════════ */}
       <section className="relative pt-28 pb-0 md:pt-40 overflow-hidden">
-        {/* Layered gradient — same palette as the main app, richer depth */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-100/80 via-indigo-50/70 to-violet-100/60 pointer-events-none" />
+        {/* Layered gradient — exact same palette as the main app */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-100/70 via-indigo-50/60 to-violet-100/50 pointer-events-none" />
         <div className="absolute top-0 right-0 w-[700px] h-[700px] bg-gradient-radial from-violet-200/30 to-transparent rounded-full blur-3xl pointer-events-none -translate-y-1/4 translate-x-1/4" />
 
         <div className="relative z-10 max-w-6xl mx-auto px-6">
@@ -116,16 +108,13 @@ export default function Home() {
 
             {/* ── Left col ── */}
             <motion.div initial="hidden" animate="visible" className="pb-20 md:pb-28">
-              {/* Pill badge */}
+              {/* Pill badge — same style as main app */}
               <motion.div
                 custom={0} variants={fadeUp}
-                className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary font-medium text-sm mb-6"
+                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/25 shadow-sm text-xs font-semibold text-primary tracking-wide uppercase mb-6"
               >
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
-                </span>
-                NOW ON iOS &amp; ANDROID
+                <span className="flex h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                Now on iOS &amp; Android
               </motion.div>
 
               {/* Heading */}
@@ -264,22 +253,6 @@ export default function Home() {
         {/* Bottom fade into next section — seamless transition */}
         <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-b from-transparent to-background pointer-events-none" />
       </section>
-
-      {/* ════════════════════════════════════════════════
-          STATS STRIP — bridges hero to content
-      ════════════════════════════════════════════════ */}
-      <div className="border-y border-border/60 bg-white/60 backdrop-blur-sm py-8">
-        <div className="max-w-5xl mx-auto px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-0 md:divide-x divide-border/50">
-            {STATS.map(({ value, label }) => (
-              <div key={label} className="flex flex-col items-center text-center px-6">
-                <span className="text-2xl font-bold text-foreground" style={{ fontFamily: "var(--font-display)" }}>{value}</span>
-                <span className="text-xs text-muted-foreground mt-1">{label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
 
       {/* ════════════════════════════════════════════════
           FOUR TOOLS — premium cards

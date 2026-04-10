@@ -708,7 +708,7 @@ export default function Import() {
             <motion.div
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/8 border border-primary/20 text-xs font-semibold text-primary mb-3"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-50 border border-red-200/70 text-xs font-semibold text-red-700 mb-3"
             >
               <ShieldCheck className="w-3.5 h-3.5" />
               Trust &amp; Verification
@@ -972,6 +972,7 @@ export default function Import() {
 
                           <Button
                             size="lg"
+                            variant={isTrustCheck ? "destructive" : "default"}
                             onClick={handlePasteStage}
                             disabled={isWorking || text.trim().length < 30}
                             style={{ touchAction: "manipulation" }}
@@ -1209,6 +1210,7 @@ export default function Import() {
                           {capturedImages.length > 0 && (
                             <Button
                               size="lg"
+                              variant={isTrustCheck ? "destructive" : "default"}
                               onClick={goToDocTypeCamera}
                               disabled={isWorking}
                               style={{ touchAction: "manipulation" }}
@@ -1321,6 +1323,7 @@ export default function Import() {
           >
             <Button
               size="lg"
+              variant={isTrustCheck ? "destructive" : "default"}
               onClick={handlePasteStage}
               disabled={isWorking}
               style={{ touchAction: "manipulation" }}

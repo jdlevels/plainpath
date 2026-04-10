@@ -1,0 +1,144 @@
+We need to stop design drift and re-anchor PlainPath to the original approved design language.
+
+This is important:
+Do NOT invent a new visual direction.
+Do NOT do another “premium redesign.”
+Do NOT reinterpret the brand.
+
+We spent a lot of time on the earlier/original PlainPath build, and that original version is the design anchor now.
+
+GOAL
+Return PlainPath to the original visual language and then normalize the current app/website to match that system.
+
+What I mean by “original PlainPath design language”:
+- darker, stronger product feel
+- clearer color identity by tool
+- more powerful and product-led presentation
+- more intentional spacing and hierarchy
+- less generic SaaS / template feel
+- one consistent UI family across the whole app
+
+PRIMARY OBJECTIVE
+Use the original approved PlainPath build as the reference point.
+From now on, all cleanup should be:
+- restore
+- align
+- normalize
+- refine
+
+NOT:
+- redesign
+- restyle
+- reinterpret
+- replace the original feel with a new one
+
+PHASE 1 — DEFINE THE DESIGN ANCHOR
+First, identify the current parts of the app/site that are closest to the original PlainPath design language and use them as the visual source of truth.
+
+Establish and follow one consistent system for:
+1. background style
+2. panel/card style
+3. border radius
+4. border/stroke treatment
+5. spacing rhythm
+6. button style
+7. badge style
+8. heading hierarchy
+9. body text hierarchy
+10. tool color mapping
+
+Tool color mapping must stay consistent:
+- Analyze a Document → blue
+- Document Trust Check → red
+- Build a Contract → green
+- Contract Review → amber/orange
+
+PHASE 2 — RE-ANCHOR THE HOMEPAGE / MARKETING PAGE
+The homepage/marketing page has drifted from the original feel.
+
+Please bring it back toward the original PlainPath identity:
+- stronger dark product feel where appropriate
+- more product-led presentation
+- less generic landing-page look
+- more visually consistent with the original app experience
+- stronger continuity between hero, tools, proof, pricing, and CTA sections
+
+Important:
+Do not rebuild the page from scratch.
+Do not change the page architecture unless absolutely necessary.
+Keep the current structure if possible, but restyle it so it feels like the original PlainPath system again.
+
+PHASE 3 — NORMALIZE THE CORE PRODUCT UI
+Go through the app and fix inconsistent screens/components so they all feel like one product.
+
+Focus on:
+- hero / homepage tool CTAs
+- “See it in action” demo/proof area
+- tool cards
+- Analyze product panels
+- Action Plan panels
+- Contract Review screens
+- Contract Builder screens
+- Trust Check screens
+- loading states
+- modals
+- status badges
+- helper panels / insight panels
+
+Requirements:
+- unify card families
+- unify panel/header treatment
+- unify spacing and padding
+- unify badge/button language
+- unify shadows/borders/glows
+- make all screens feel like they belong to one system
+
+PHASE 4 — FIX ONLY INCONSISTENCY, NOT FUNCTIONALITY
+This pass is about design consistency and brand restoration.
+Do not use this as an excuse to introduce new product concepts, new layouts, or random style changes.
+
+Only make changes that support:
+- original PlainPath feel
+- visual consistency
+- stronger brand identity
+- better hierarchy
+- better alignment
+
+DO NOT
+- create a new light SaaS-style design language
+- flatten strong colors back to neutral
+- wash out the original darker/high-contrast look
+- replace distinctive product UI with generic marketing blocks
+- over-soften cards or panels
+- change copy unless needed for consistency/accuracy
+
+DELIVERABLE
+Implement this re-anchoring pass directly, then return a concise summary in this format:
+
+1. DESIGN ANCHOR CHOSEN
+- what screens/components were used as the source of truth
+
+2. HOMEPAGE RE-ANCHORED
+- what changed to bring it back toward the original PlainPath style
+
+3. CORE PRODUCT NORMALIZED
+- what app screens/components were aligned to the same system
+
+4. DESIGN RULES NOW CONSISTENT
+- what visual rules are now standardized
+
+5. REMAINING DRIFT / UI DEBT
+- what still does not fully match the original design language but can be fixed later
+
+6. SCREENSHOTS REQUIRED
+Provide updated screenshots of:
+- homepage hero
+- homepage tools/proof section
+- Analyze screen
+- Trust Check screen
+- Contract Builder screen
+- Contract Review screen
+
+IMPORTANT FINAL INSTRUCTION
+From this point forward, treat the original PlainPath design language as locked.
+Future work should refine within that system, not create new visual directions.
