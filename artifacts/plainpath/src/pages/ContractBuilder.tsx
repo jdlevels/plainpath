@@ -488,13 +488,14 @@ function TypeStep({
         <p className="text-muted-foreground text-sm">Choose the contract type that best fits your situation.</p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-        {CONTRACT_TYPES.map(({ id, title, description, example, Icon, color, bg, ready }) => {
+        {CONTRACT_TYPES.map(({ id, title, description, example, Icon, color, bg, ready }, idx) => {
           const isSelected = selected === id
+          const centreLastRow = CONTRACT_TYPES.length % 3 === 2 && idx === CONTRACT_TYPES.length - 2
           return (
             <button
               key={id}
               onClick={() => ready && onSelect(id)}
-              className={`relative text-left rounded-2xl border-2 p-4 transition-all duration-200 ${
+              className={`relative text-left rounded-2xl border-2 p-4 transition-all duration-200 ${centreLastRow ? "xl-col-start-2" : ""} ${
                 isSelected
                   ? "border-primary bg-primary/5 shadow-md shadow-primary/10"
                   : ready

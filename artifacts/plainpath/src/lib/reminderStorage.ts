@@ -21,19 +21,19 @@ export function getReminders(): Reminder[] {
 export function addReminder(r: Omit<Reminder, "id" | "notified" | "createdAt">): Reminder {
   const reminders = getReminders()
   const newR: Reminder = { ...r, id: crypto.randomUUID(), notified: false, createdAt: Date.now() }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify([...reminders, newR]))
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify([...reminders, newR])) } catch {}
   return newR
 }
 
 export function markNotified(id: string) {
   const reminders = getReminders()
   const updated = reminders.map(r => r.id === id ? { ...r, notified: true } : r)
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(updated)) } catch {}
 }
 
 export function removeReminder(id: string) {
   const reminders = getReminders()
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(reminders.filter(r => r.id !== id)))
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(reminders.filter(r => r.id !== id))) } catch {}
 }
 
 export function getDueReminders(): Reminder[] {

@@ -365,3 +365,10 @@
     vertical-align: middle;
   }
 }
+
+/* ── Grid orphan centering ───────────────────────────────────── */
+@media (min-width: 1280px) {
+  .xl-col-start-2 {
+    grid-column-start: 2;
+  }
+}
