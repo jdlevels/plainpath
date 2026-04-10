@@ -1,0 +1,58 @@
+We need a strict layout-alignment cleanup pass on the marketing page.
+
+Current issue:
+The page is cleaner, but multiple sections are still visually uneven. The result feels unfinished because cards, tool blocks, and hero utility rows are not aligned to a consistent layout system.
+
+Please fix alignment, spacing, and grid consistency only. Do not redesign the page.
+
+PRIORITY 1 — FOUR-TOOL CARD GRID
+The 4 tool cards are not visually even.
+
+Fix:
+1. Make all 4 cards align cleanly in one consistent grid
+2. Normalize:
+   - top edges
+   - bottom edges
+   - card heights
+   - internal padding
+   - title spacing
+   - body copy spacing
+   - chip/tag spacing
+3. Ensure the two top cards and two bottom cards feel like one intentional system
+4. Make the section look balanced on desktop and mobile
+
+PRIORITY 2 — HERO APP STORE / ANDROID / TRUST ROWS
+The App Store / Google Play area and the supporting rows beneath it feel uneven vertically.
+
+Fix:
+1. Normalize vertical spacing between:
+   - tool chips row
+   - store buttons row
+   - ratings/trust row
+   - micro-metrics row
+2. Make the App Store and Google Play buttons sit evenly
+3. Ensure the trust/rating text and the stats row feel centered and evenly spaced above and below
+4. Remove any “one row feels too high / too low” visual imbalance
+
+PRIORITY 3 — PAGE RHYTHM
+Apply a consistency pass to section spacing so the page feels professionally aligned.
+
+Fix:
+1. Normalize section top/bottom padding where needed
+2. Ensure content blocks snap to a consistent container/grid system
+3. Make headings, supporting text, and card groups feel optically aligned, not just technically aligned
+
+CONSTRAINTS
+- Do not change the overall structure
+- Do not rewrite the page
+- Do not redesign components
+- This is a spacing/alignment/grid polish pass only
+
+DELIVERABLE
+Return:
+1. what was fixed in the 4-card grid
+2. what was fixed in the hero utility rows
+3. any other layout inconsistencies corrected
+4. updated screenshots of:
+   - hero section
+   - 4-tool card section

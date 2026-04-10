@@ -144,17 +144,17 @@ export default function Home() {
                 mean.
               </motion.h1>
 
-              {/* Sub-copy — more specific, more trustworthy */}
+              {/* Sub-copy */}
               <motion.p
                 custom={2} variants={fadeUp}
-                className="text-lg text-muted-foreground mb-8 leading-relaxed max-w-lg"
+                className="text-lg text-muted-foreground mb-6 leading-relaxed max-w-lg"
               >
                 Leases, contracts, medical bills, court notices. PlainPath reads them for you,
                 tells you exactly what to do next, and protects you from signing anything you shouldn't.
               </motion.p>
 
               {/* Tool pills */}
-              <motion.div custom={3} variants={fadeUp} className="flex flex-wrap gap-2 mb-8">
+              <motion.div custom={3} variants={fadeUp} className="flex flex-wrap gap-2 mb-6">
                 {TOOLS.map(({ label, icon: Icon, cls }) => (
                   <a
                     key={label}
@@ -170,13 +170,13 @@ export default function Home() {
               </motion.div>
 
               {/* Download badges */}
-              <motion.div custom={4} variants={fadeUp} className="flex flex-wrap gap-3 mb-5" id="download">
+              <motion.div custom={4} variants={fadeUp} className="flex flex-wrap gap-3 mb-6" id="download">
                 <AppStoreBadge />
                 <PlayStoreBadge />
               </motion.div>
 
               {/* Star rating + trust bar */}
-              <motion.div custom={5} variants={fadeUp} className="flex flex-col gap-2">
+              <motion.div custom={5} variants={fadeUp} className="flex flex-col gap-1.5">
                 <div className="flex items-center gap-1.5">
                   {[1,2,3,4,5].map(i => (
                     <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
@@ -305,7 +305,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-5">
+          <div className="grid md:grid-cols-2 gap-6">
             {FEATURES.map(({ icon: Icon, color, bg, border, accent, glow, title, desc, result, tags, tagCls }, i) => {
               const ResultIcon = result.icon;
               return (
@@ -316,32 +316,33 @@ export default function Home() {
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: i * 0.07 }}
                   whileHover={{ y: -3 }}
-                  className={`bg-card rounded-2xl border-l-4 ${border} border border-border/60 shadow-sm relative overflow-hidden group`}
+                  className={`bg-card rounded-2xl border-l-4 ${border} border border-border/60 shadow-sm relative overflow-hidden group h-full`}
                 >
                   {/* Subtle color glow in corner */}
                   <div className={`absolute top-0 right-0 w-56 h-56 bg-gradient-to-bl ${glow} to-transparent opacity-50 group-hover:opacity-80 transition-opacity duration-300`} />
 
-                  <div className="relative z-10 p-7">
-                    {/* Icon + title row */}
-                    <div className="flex items-start gap-4 mb-4">
+                  <div className="relative z-10 p-7 flex flex-col h-full">
+                    {/* Icon + title row — fixed height, always aligned */}
+                    <div className="flex items-center gap-3.5 mb-4">
                       <div className={`w-11 h-11 ${bg} rounded-xl flex items-center justify-center shrink-0`}>
-                        <Icon className={`w-5.5 h-5.5 ${color}`} />
+                        <Icon className={`w-5 h-5 ${color}`} />
                       </div>
                       <div>
                         <h3
-                          className="text-lg font-bold text-foreground"
+                          className="text-lg font-bold text-foreground leading-tight"
                           style={{ fontFamily: "var(--font-display)" }}
                         >
                           {title}
                         </h3>
-                        <div className={`h-0.5 w-8 ${accent} rounded-full mt-1 opacity-50`} />
+                        <div className={`h-0.5 w-8 ${accent} rounded-full mt-1.5 opacity-60`} />
                       </div>
                     </div>
 
-                    <p className="text-muted-foreground text-sm leading-relaxed mb-5">{desc}</p>
+                    {/* Description — grows to fill available space so result box always at same vertical position */}
+                    <p className="text-muted-foreground text-sm leading-relaxed mb-5 flex-1">{desc}</p>
 
-                    {/* Result preview — shows what the tool actually produces */}
-                    <div className={`${result.bg} rounded-xl p-3.5 mb-5 border border-border/40`}>
+                    {/* Result preview */}
+                    <div className={`${result.bg} rounded-xl p-3.5 mb-4 border border-border/40`}>
                       <div className="flex items-start gap-2.5">
                         <ResultIcon className={`w-4 h-4 ${result.color} mt-0.5 shrink-0`} />
                         <div>
@@ -351,7 +352,7 @@ export default function Home() {
                       </div>
                     </div>
 
-                    {/* Tags */}
+                    {/* Tags — pinned to the bottom of every card */}
                     <div className="flex flex-wrap gap-1.5">
                       {tags.map(t => (
                         <span key={t} className={`px-2 py-0.5 ${tagCls} rounded-md text-[11px] font-medium`}>{t}</span>
