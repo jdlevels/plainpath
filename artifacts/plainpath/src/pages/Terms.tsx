@@ -100,7 +100,7 @@ export default function Terms() {
           </Section>
 
           <Section icon={Mail} title="7. Contact">
-            <p>Questions about these terms? Contact us at <a href="mailto:hello@plainpath.app" className="text-primary underline underline-offset-2">hello@plainpath.app</a>.</p>
+            <p>Questions about these terms? Contact us at <a href="mailto:support@plainpathapp.com" className="text-primary underline underline-offset-2">support@plainpathapp.com</a>.</p>
           </Section>
 
         </div>

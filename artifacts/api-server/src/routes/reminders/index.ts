@@ -27,7 +27,7 @@ async function sendReminderEmail(opts: {
     : "coming up soon"
 
   const { error } = await resend.emails.send({
-    from: "PlainPath <reminders@plain-path.app>",
+    from: "PlainPath <support@plainpathapp.com>",
     to: opts.to,
     subject: `Deadline reminder: ${opts.deadlineTitle}`,
     html: `
@@ -122,7 +122,7 @@ router.post("/api/reminders/drip", async (req, res) => {
   const toolName = tool ?? "PlainPath"
 
   const { error } = await resend.emails.send({
-    from: "PlainPath <hello@plain-path.app>",
+    from: "PlainPath <support@plainpathapp.com>",
     to: email.trim().toLowerCase(),
     subject: "Your first PlainPath analysis is ready",
     html: `

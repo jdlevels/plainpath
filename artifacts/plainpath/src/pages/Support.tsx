@@ -36,10 +36,10 @@ export default function Support() {
               Send us an email and we'll get back to you as quickly as we can, typically within one business day.
             </p>
             <a
-              href="mailto:hello@plainpath.app"
+              href="mailto:support@plainpathapp.com"
               className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline"
             >
-              hello@plainpath.app
+              support@plainpathapp.com
             </a>
           </div>
         </div>
@@ -64,7 +64,7 @@ export default function Support() {
 
           <Item icon={CreditCard} title="How do I manage or cancel my subscription?">
             Subscriptions are managed through Stripe. To cancel or update your plan, email us at{" "}
-            <a href="mailto:hello@plainpath.app" className="text-primary underline underline-offset-2">hello@plainpath.app</a>{" "}
+            <a href="mailto:support@plainpathapp.com" className="text-primary underline underline-offset-2">support@plainpathapp.com</a>{" "}
             and we'll send you a direct link to the billing portal. On iOS and Android, subscriptions are managed on the web
             at <a href="https://plain-path.replit.app" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2">plain-path.replit.app</a>.
           </Item>
@@ -87,10 +87,10 @@ export default function Support() {
             Still need help?
           </p>
           <a
-            href="mailto:hello@plainpath.app"
+            href="mailto:support@plainpathapp.com"
             className="text-sm font-semibold text-primary hover:underline"
           >
-            hello@plainpath.app
+            support@plainpathapp.com
           </a>
         </div>
 

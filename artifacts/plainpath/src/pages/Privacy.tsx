@@ -137,7 +137,7 @@ export default function Privacy() {
           </Section>
 
           <Section icon={Mail} title="7. Contact">
-            <p>Questions about this privacy policy? Reach out at <a href="mailto:hello@plainpath.app" className="text-primary underline underline-offset-2">hello@plainpath.app</a>.</p>
+            <p>Questions about this privacy policy? Reach out at <a href="mailto:support@plainpathapp.com" className="text-primary underline underline-offset-2">support@plainpathapp.com</a>.</p>
             <p>We will update this policy as the product evolves. The "Last updated" date at the top reflects the most recent revision.</p>
           </Section>
 

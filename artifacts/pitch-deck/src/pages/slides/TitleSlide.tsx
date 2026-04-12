@@ -53,7 +53,7 @@ export default function TitleSlide() {
 
         <div className="flex items-center gap-[3vw]">
           <div className="text-[1.3vw] text-[#f0f4f8]/45 font-body">
-            hello@plainpath.app
+            support@plainpathapp.com
           </div>
           <div className="w-[0.06vw] h-[2.5vh] bg-[#f0f4f8]/20" />
           <div className="text-[1.3vw] text-[#f0f4f8]/45 font-body">

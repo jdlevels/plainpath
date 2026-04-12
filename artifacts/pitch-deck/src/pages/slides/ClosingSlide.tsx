@@ -53,7 +53,7 @@ export default function ClosingSlide() {
         <div className="flex items-center gap-[4vw]">
           <div className="text-center">
             <div className="text-[1.2vw] text-[#6b7a8d] font-body mb-[0.5vh]">Email</div>
-            <div className="text-[1.5vw] font-semibold text-[#7fb2d9] font-body">hello@plainpath.app</div>
+            <div className="text-[1.5vw] font-semibold text-[#7fb2d9] font-body">support@plainpathapp.com</div>
           </div>
           <div className="w-px h-[5vh] bg-[#1e2d44]" />
           <div className="text-center">

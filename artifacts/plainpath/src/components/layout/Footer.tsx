@@ -19,7 +19,7 @@ export function Footer() {
               Making paperwork clear, actionable, and less stressful.
             </p>
             <p className="text-xs text-muted-foreground/60 max-w-xs leading-relaxed">
-              Questions or feedback? <a href="mailto:hello@plainpath.app" className="text-muted-foreground/80 font-medium hover:text-foreground transition-colors">hello@plainpath.app</a>
+              Questions or feedback? <a href="mailto:support@plainpathapp.com" className="text-muted-foreground/80 font-medium hover:text-foreground transition-colors">support@plainpathapp.com</a>
             </p>
           </div>
 

@@ -57,7 +57,7 @@ export default function Subscribe() {
   async function handleSubscribe(planKey?: string) {
     if (!planKey || planKey === "team") {
       window.open(
-        "https://mail.google.com/mail/?view=cm&fs=1&to=hello@plainpath.app&su=PlainPath%20Team%20Waitlist",
+        "https://mail.google.com/mail/?view=cm&fs=1&to=support@plainpathapp.com&su=PlainPath%20Team%20Waitlist",
         "_blank",
         "noopener,noreferrer"
       )
