@@ -226,17 +226,42 @@
 .pp-dark-btn-emerald { border-color: #10b981; color: #6ee7b7; background-color: rgba( 16, 185, 129, 0.12); }
 .pp-dark-btn-amber   { border-color: #f59e0b; color: #fcd34d; background-color: rgba(245, 158,  11, 0.12); }
 
+/* ─── Hero tool buttons — base ─────────────────────── */
+.tool-btn-blue,
+.tool-btn-red,
+.tool-btn-emerald,
+.tool-btn-amber {
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
+.tool-btn-blue:hover,
+.tool-btn-red:hover,
+.tool-btn-emerald:hover,
+.tool-btn-amber:hover {
+  transform: translateY(-3px) scale(1.03);
+}
+
 /* ─── Hero tool buttons — light mode ─────────────── */
 .tool-btn-blue    { border-color: #93c5fd; color: #1d4ed8; background-color: rgba(239, 246, 255, 0.9); }
 .tool-btn-red     { border-color: #fca5a5; color: #b91c1c; background-color: rgba(254, 242, 242, 0.9); }
 .tool-btn-emerald { border-color: #6ee7b7; color: #065f46; background-color: rgba(236, 253, 245, 0.9); }
 .tool-btn-amber   { border-color: #fcd34d; color: #92400e; background-color: rgba(255, 251, 235, 0.9); }
 
+.tool-btn-blue:hover    { border-color: #3b82f6; background-color: rgba(219, 234, 254, 1); box-shadow: 0 4px 16px rgba(59, 130, 246, 0.25); }
+.tool-btn-red:hover     { border-color: #ef4444; background-color: rgba(254, 226, 226, 1); box-shadow: 0 4px 16px rgba(239, 68, 68, 0.25); }
+.tool-btn-emerald:hover { border-color: #10b981; background-color: rgba(209, 250, 229, 1); box-shadow: 0 4px 16px rgba(16, 185, 129, 0.25); }
+.tool-btn-amber:hover   { border-color: #f59e0b; background-color: rgba(254, 243, 199, 1); box-shadow: 0 4px 16px rgba(245, 158, 11, 0.25); }
+
 /* ─── Hero tool buttons — dark mode ─────────────── */
 .dark .tool-btn-blue    { border-color: #3b82f6; color: #93c5fd; background-color: rgba(59,  130, 246, 0.12); }
 .dark .tool-btn-red     { border-color: #ef4444; color: #fca5a5; background-color: rgba(239,  68,  68, 0.12); }
 .dark .tool-btn-emerald { border-color: #10b981; color: #6ee7b7; background-color: rgba( 16, 185, 129, 0.12); }
 .dark .tool-btn-amber   { border-color: #f59e0b; color: #fcd34d; background-color: rgba(245, 158,  11, 0.12); }
+
+.dark .tool-btn-blue:hover    { border-color: #60a5fa; background-color: rgba(59,  130, 246, 0.25); box-shadow: 0 4px 20px rgba(59,  130, 246, 0.3); }
+.dark .tool-btn-red:hover     { border-color: #f87171; background-color: rgba(239,  68,  68, 0.25); box-shadow: 0 4px 20px rgba(239,  68,  68, 0.3); }
+.dark .tool-btn-emerald:hover { border-color: #34d399; background-color: rgba( 16, 185, 129, 0.25); box-shadow: 0 4px 20px rgba( 16, 185, 129, 0.3); }
+.dark .tool-btn-amber:hover   { border-color: #fbbf24; background-color: rgba(245, 158,  11, 0.25); box-shadow: 0 4px 20px rgba(245, 158,  11, 0.3); }
 
 /* ─── Print-only: hidden on screen ─────────────── */
 .print-only { display: none !important; }

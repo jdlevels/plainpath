@@ -140,12 +140,14 @@ export default function ToolsShowcase() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: i * 0.12 }}
-            className="group"
+            whileHover={{ y: -6, scale: 1.02 }}
+            className="group cursor-pointer"
+            onClick={() => setLocation(tool.route)}
           >
-            <Card className={`h-full rounded-2xl border ${tool.border} shadow-md hover:shadow-xl transition-all overflow-hidden bg-gradient-to-b ${tool.color}`}>
+            <Card className={`h-full rounded-2xl border-2 ${tool.border} shadow-md group-hover:shadow-2xl transition-all duration-200 overflow-hidden bg-gradient-to-b ${tool.color}`}>
               <div className="p-7 flex flex-col h-full gap-5">
                 <div className="flex items-start justify-between">
-                  <div className={`w-12 h-12 rounded-2xl ${tool.iconBg} flex items-center justify-center`}>
+                  <div className={`w-12 h-12 rounded-2xl ${tool.iconBg} flex items-center justify-center group-hover:scale-110 transition-transform duration-200`}>
                     <tool.icon className={`w-6 h-6 ${tool.iconColor}`} />
                   </div>
                   <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${tool.badge}`}>
@@ -170,14 +172,10 @@ export default function ToolsShowcase() {
                   ))}
                 </ul>
 
-                <Button
-                  variant="ghost"
-                  className={`w-full justify-between mt-2 ${tool.iconColor} hover:bg-white/60 dark:hover:bg-white/10 font-semibold text-sm`}
-                  onClick={() => setLocation(tool.route)}
-                >
+                <div className={`w-full flex items-center justify-between mt-2 px-4 py-2.5 rounded-xl font-semibold text-sm ${tool.iconColor} bg-white/40 dark:bg-white/5 group-hover:bg-white/70 dark:group-hover:bg-white/15 transition-colors duration-200`}>
                   {tool.cta}
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </Button>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
+                </div>
               </div>
             </Card>
           </motion.div>
