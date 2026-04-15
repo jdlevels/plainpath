@@ -1307,6 +1307,16 @@ export default function Import() {
           </div>
         )}
 
+        {/* ── Back to home ── */}
+        <div className="text-center pt-2 pb-6">
+          <button
+            onClick={() => setLocation("/")}
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" /> Back to home
+          </button>
+        </div>
+
       </div>
 
       {/* ── Sticky mobile CTA (paste mode, input step) ── */}

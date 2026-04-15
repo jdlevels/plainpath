@@ -2592,6 +2592,16 @@ export default function ContractBuilder() {
                 </div>
               </div>
 
+              {/* ── Back to home ── */}
+              <div className="text-center pt-2">
+                <button
+                  onClick={() => setLocation("/")}
+                  className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" /> Back to home
+                </button>
+              </div>
+
               {/* Mobile AI insights drawer */}
               {step > 0 && <MobileInsightDrawer insights={mergedInsights} loading={insightLoading} />}
             </div>
