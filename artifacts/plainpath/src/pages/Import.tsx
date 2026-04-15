@@ -898,7 +898,7 @@ export default function Import() {
                 >
                   {/* Tab switcher */}
                   <div className="p-2 border-b border-border/30 bg-muted/30">
-                    <div className="grid grid-cols-3 sm:grid-cols-2 rounded-xl bg-secondary/70 p-1 gap-1">
+                    <div className="grid grid-cols-3 rounded-xl bg-secondary/70 p-1 gap-1">
                       {(["paste", "upload"] as const).map((tab) => (
                         <button
                           key={tab}
@@ -911,22 +911,21 @@ export default function Import() {
                           }`}
                         >
                           {tab === "paste" ? <Type className="w-4 h-4" /> : <UploadCloud className="w-4 h-4" />}
-                          <span className="hidden xs:inline sm:inline">{tab === "paste" ? "Paste Text" : "Upload File"}</span>
-                          <span className="xs:hidden sm:hidden">{tab === "paste" ? "Paste" : "Upload"}</span>
+                          <span>{tab === "paste" ? "Paste Text" : "Upload File"}</span>
                         </button>
                       ))}
-                      {/* Camera tab — visible on mobile only */}
+                      {/* Camera / Scan tab */}
                       <button
                         onClick={() => { setMode("camera"); setUploadError(null); setUploadedFile(null); setPasteError(null); setCameraError(null); }}
                         style={{ touchAction: "manipulation" }}
-                        className={`sm:hidden flex items-center justify-center gap-1.5 py-3 rounded-lg text-sm font-semibold transition-all min-h-[48px] ${
+                        className={`flex items-center justify-center gap-1.5 py-3 rounded-lg text-sm font-semibold transition-all min-h-[48px] ${
                           mode === "camera"
                             ? "bg-card text-foreground shadow-sm shadow-black/[0.06]"
                             : "text-muted-foreground hover:text-foreground"
                         }`}
                       >
                         <Camera className="w-4 h-4" />
-                        <span>Scan</span>
+                        <span>Scan Photo</span>
                       </button>
                     </div>
                   </div>
