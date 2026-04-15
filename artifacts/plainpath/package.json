@@ -85,6 +85,7 @@
     "@capacitor/ios": "^8.3.0",
     "@capacitor/status-bar": "^8.0.2",
     "@capawesome/capacitor-file-picker": "^8.0.2",
+    "@clerk/react": "^6.3.0",
     "@sentry/react": "^10.48.0"
   }
 }

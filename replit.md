@@ -93,6 +93,17 @@ PlainPath is a monorepo using pnpm workspaces.
 - **StatsBar**, **TestimonialsSection**, **FAQSection**, **PricingSection** all present
 - Key file: `artifacts/plainpath/src/pages/Home.tsx`
 
+### Authentication (Clerk)
+- **Provider**: Clerk (via Replit integration — keys auto-provisioned, no separate Clerk account needed)
+- **Methods**: Google OAuth + email/password
+- **Sign-in page**: `/sign-in` — clean centered card with "Continue with Google" + email field
+- **Sign-up page**: `/sign-up`
+- **Navbar**: Shows "Sign in" button when logged out; shows user initials + dropdown (with Sign out) when logged in
+- **ClerkProvider** wraps app inside `<WouterRouter>` in `App.tsx`
+- **Server**: `clerkMiddleware()` and `clerkProxyMiddleware` mounted in `artifacts/api-server/src/app.ts`
+- **Env vars**: `CLERK_SECRET_KEY`, `CLERK_PUBLISHABLE_KEY`, `VITE_CLERK_PUBLISHABLE_KEY` (auto-provisioned)
+- **Vite**: `vite.config.ts` uses `define` to forward `VITE_CLERK_PUBLISHABLE_KEY` and `VITE_CLERK_PROXY_URL` to the client
+
 ### Key Technical Notes
 - Use `max_completion_tokens` (not `max_tokens`) for gpt-5.2 and gpt-5.2 compatibility
 - DB pattern: always `import { pool } from "@workspace/db"` — never import pg directly

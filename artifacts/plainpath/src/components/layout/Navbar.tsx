@@ -1,10 +1,65 @@
+import { useState, useRef, useEffect } from "react"
 import { Link, useLocation } from "wouter"
 import { Button } from "@/components/ui/button"
-import { FileText, ArrowRight, Plus, BookMarked, GitCompare } from "lucide-react"
+import { FileText, ArrowRight, Plus, BookMarked, GitCompare, LogOut, User, ChevronDown } from "lucide-react"
 import { ThemeToggle } from "@/components/ui/ThemeToggle"
+import { useUser, useClerk } from "@clerk/react"
+
+function UserMenu() {
+  const { user } = useUser()
+  const { signOut } = useClerk()
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false)
+      }
+    }
+    if (open) document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [open])
+
+  const displayName = user?.firstName || user?.emailAddresses?.[0]?.emailAddress?.split("@")[0] || "Account"
+  const initials = (user?.firstName?.[0] || "") + (user?.lastName?.[0] || "")
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+        aria-label="Account menu"
+      >
+        <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-xs select-none">
+          {initials ? initials.toUpperCase() : <User className="w-3.5 h-3.5" />}
+        </div>
+        <span className="hidden sm:inline max-w-[120px] truncate">{displayName}</span>
+        <ChevronDown className="w-3.5 h-3.5 opacity-60" />
+      </button>
+
+      {open && (
+        <div className="absolute right-0 mt-1.5 w-52 rounded-xl border border-border/60 bg-background shadow-lg z-50 py-1 overflow-hidden">
+          <div className="px-3 py-2 border-b border-border/40">
+            <p className="text-xs font-medium text-foreground truncate">{displayName}</p>
+            <p className="text-xs text-muted-foreground truncate">{user?.emailAddresses?.[0]?.emailAddress}</p>
+          </div>
+          <button
+            onClick={() => { setOpen(false); signOut({ redirectUrl: "/" }) }}
+            className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            Sign out
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
 
 export function Navbar() {
   const [location, navigate] = useLocation()
+  const { isSignedIn, isLoaded } = useUser()
   const isHome = location === "/"
   const isImport = location === "/import"
   const isAnalyze = location.startsWith("/analyze")
@@ -108,6 +163,20 @@ export function Navbar() {
                 <Plus className="w-3.5 h-3.5" /> New Analysis
               </Link>
             </Button>
+          )}
+
+          {/* Auth — sign in button or user menu */}
+          {isLoaded && (
+            isSignedIn
+              ? <UserMenu />
+              : (
+                <Link
+                  href="/sign-in"
+                  className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-2.5 py-1.5 rounded-lg hover:bg-secondary ml-1 border border-border/50"
+                >
+                  Sign in
+                </Link>
+              )
           )}
         </nav>
       </div>
