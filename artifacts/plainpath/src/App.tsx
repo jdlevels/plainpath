@@ -23,6 +23,8 @@ import SubscribeCancel from "./pages/SubscribeCancel";
 import ContractBuilder from "@/pages/ContractBuilder";
 import ContractReview from "@/pages/ContractReview";
 import SharedAnalysis from "@/pages/SharedAnalysis";
+import TeamDashboard from "@/pages/TeamDashboard";
+import JoinTeam from "@/pages/JoinTeam";
 import Compare from "@/pages/Compare";
 import Methodology from "@/pages/Methodology";
 import IrsLetter from "@/pages/guides/IrsLetter";
@@ -163,6 +165,8 @@ function Router() {
             <Route path="/guides/independent-contractor-agreement" component={IndependentContractor} />
             <Route path="/guides/eviction-notice" component={EvictionNotice} />
             <Route path="/guides/medical-billing-dispute" component={MedicalBillingDispute} />
+            <Route path="/team" component={TeamDashboard} />
+            <Route path="/join" component={JoinTeam} />
             <Route component={NotFound} />
           </Switch>
         </ErrorBoundary>
