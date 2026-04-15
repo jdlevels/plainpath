@@ -220,7 +220,7 @@ export default function Home() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.14 }}
-              className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed"
+              className="text-xl text-foreground/75 max-w-2xl mx-auto leading-relaxed"
             >
               PlainPath is a four-tool document platform. Analyze any paperwork, verify its legitimacy, build contracts, and review agreements before you sign — all turned into plain English and clear action.
             </motion.p>
@@ -256,7 +256,7 @@ export default function Home() {
               className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2"
             >
               {["Free for your first 2 analyses — no account needed", "Plans from $4.99/month", "Documents not stored by PlainPath"].map((item) => (
-                <span key={item} className="flex items-center gap-1.5 text-xs text-muted-foreground/80 dark:text-muted-foreground/55">
+                <span key={item} className="flex items-center gap-1.5 text-xs text-foreground/65 dark:text-foreground/55">
                   <span className="w-1 h-1 rounded-full bg-primary/40 dark:bg-muted-foreground/30 shrink-0" />
                   {item}
                 </span>
