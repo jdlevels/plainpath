@@ -35,6 +35,8 @@ import { triggerPrint } from "@/lib/print"
 import { isNative } from "@/lib/platform"
 import { getApiBaseUrl } from "@/lib/api"
 import { saveAnalysis, updateSaved } from "@/lib/savedAnalyses"
+import { saveCloudAnalysis, renameCloudAnalysis } from "@/lib/cloudHistory"
+import { useUser } from "@clerk/react"
 import { useEntitlements } from "@/hooks/useEntitlements"
 import UpgradeCard from "@/components/UpgradeCard"
 import { findGlossaryEntry } from "@/lib/legalGlossary"
@@ -66,6 +68,7 @@ export default function Analyze() {
   const [guidedReviewCtx, setGuidedReviewCtx] = useState<string | null>(null)
 
   const { entitlements, loading: entitlementsLoading } = useEntitlements()
+  const { isSignedIn } = useUser()
   const isPro = entitlements?.plan === "pro" || entitlements?.plan === "team"
   // Tabs locked to Pro plan. Starter plan includes: plain-english, summary, key-terms,
   // action-pack, documents (Required Docs), and deadlines.
@@ -130,24 +133,51 @@ export default function Analyze() {
   // Missing count badge for the tab
   const missingCount = incompleteHigh.length + requiredDocuments.filter(d => d.required && !d.obtained).length
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!analysis) return
     const triggerFeedback = () => {
       setJustSaved(true)
       setTimeout(() => setJustSaved(false), 2200)
     }
-    if (savedId) {
-      updateSaved(savedId, { analysis })
-      triggerFeedback()
+    if (isSignedIn) {
+      if (savedId) {
+        renameCloudAnalysis(savedId, analysis.title).catch(() => {})
+        triggerFeedback()
+      } else {
+        try {
+          const saved = await saveCloudAnalysis({
+            title: analysis.title,
+            sourceKind: demoId ? "demo" : "document",
+            documentTypeHint,
+            analysis,
+          })
+          setSavedId(saved.id)
+          triggerFeedback()
+        } catch {
+          const saved = saveAnalysis({
+            title: analysis.title,
+            sourceKind: demoId ? "demo" : "document",
+            documentTypeHint,
+            analysis,
+          })
+          setSavedId(saved.id)
+          triggerFeedback()
+        }
+      }
     } else {
-      const saved = saveAnalysis({
-        title: analysis.title,
-        sourceKind: demoId ? "demo" : "document",
-        documentTypeHint,
-        analysis,
-      })
-      setSavedId(saved.id)
-      triggerFeedback()
+      if (savedId) {
+        updateSaved(savedId, { analysis })
+        triggerFeedback()
+      } else {
+        const saved = saveAnalysis({
+          title: analysis.title,
+          sourceKind: demoId ? "demo" : "document",
+          documentTypeHint,
+          analysis,
+        })
+        setSavedId(saved.id)
+        triggerFeedback()
+      }
     }
   }
 

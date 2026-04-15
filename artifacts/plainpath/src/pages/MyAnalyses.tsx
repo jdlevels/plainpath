@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import {
   BookMarked, ArrowRight, Trash2, Pencil, Check, X,
   FileText, Clock, HardDrive, AlertTriangle, Folders, CreditCard,
-  Search, SortAsc, SortDesc, ArrowUpDown, ShieldCheck,
+  Search, SortAsc, SortDesc, ArrowUpDown, ShieldCheck, Loader2,
 } from "lucide-react"
 import {
   getAll, deleteAnalysis, renameAnalysis,
@@ -15,6 +15,11 @@ import {
 import {
   getAllTrustChecks, deleteTrustCheck, type SavedTrustCheck,
 } from "@/lib/savedTrustChecks"
+import {
+  fetchCloudAnalyses, deleteCloudAnalysis, renameCloudAnalysis,
+  fetchCloudTrustChecks, deleteCloudTrustCheck,
+} from "@/lib/cloudHistory"
+import { useUser } from "@clerk/react"
 import { useAnalysisContext } from "@/context/AnalysisContext"
 import { useEntitlements } from "@/hooks/useEntitlements"
 import PlanStatusBanner from "@/components/PlanStatusBanner"
@@ -39,7 +44,9 @@ export default function MyAnalyses() {
   const [, setLocation] = useLocation()
   const { setAnalysis, setDocumentTypeHint, setTrustCheckAnalysis } = useAnalysisContext()
   const { entitlements, reload: reloadEntitlements } = useEntitlements()
+  const { isSignedIn, isLoaded: authLoaded } = useUser()
   const [items, setItems] = useState<SavedAnalysis[]>([])
+  const [cloudLoading, setCloudLoading] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editValue, setEditValue] = useState("")
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
@@ -75,9 +82,24 @@ export default function MyAnalyses() {
   }, [])
 
   useEffect(() => {
-    setItems(getAll())
-    setTrustChecks(getAllTrustChecks())
-  }, [])
+    if (!authLoaded) return
+    if (isSignedIn) {
+      setCloudLoading(true)
+      Promise.all([fetchCloudAnalyses(), fetchCloudTrustChecks()])
+        .then(([analyses, checks]) => {
+          setItems(analyses)
+          setTrustChecks(checks)
+        })
+        .catch(() => {
+          setItems(getAll())
+          setTrustChecks(getAllTrustChecks())
+        })
+        .finally(() => setCloudLoading(false))
+    } else {
+      setItems(getAll())
+      setTrustChecks(getAllTrustChecks())
+    }
+  }, [isSignedIn, authLoaded])
 
   const handleOpenTrustCheck = (tc: SavedTrustCheck) => {
     setTrustCheckAnalysis(tc.analysis)
@@ -85,7 +107,11 @@ export default function MyAnalyses() {
   }
 
   const handleDeleteTrustCheck = (id: string) => {
-    deleteTrustCheck(id)
+    if (isSignedIn) {
+      deleteCloudTrustCheck(id).catch(() => {})
+    } else {
+      deleteTrustCheck(id)
+    }
     setTrustChecks(prev => prev.filter(tc => tc.id !== id))
     setConfirmDeleteTrustCheckId(null)
   }
@@ -112,7 +138,11 @@ export default function MyAnalyses() {
   const commitRename = (id: string) => {
     const trimmed = editValue.trim()
     if (trimmed) {
-      renameAnalysis(id, trimmed)
+      if (isSignedIn) {
+        renameCloudAnalysis(id, trimmed).catch(() => {})
+      } else {
+        renameAnalysis(id, trimmed)
+      }
       setItems((prev) =>
         prev.map((a) => (a.id === id ? { ...a, title: trimmed, savedAt: new Date().toISOString() } : a))
       )
@@ -123,7 +153,11 @@ export default function MyAnalyses() {
   const cancelRename = () => setEditingId(null)
 
   const handleDelete = (id: string) => {
-    deleteAnalysis(id)
+    if (isSignedIn) {
+      deleteCloudAnalysis(id).catch(() => {})
+    } else {
+      deleteAnalysis(id)
+    }
     setItems((prev) => prev.filter((a) => a.id !== id))
     setConfirmDeleteId(null)
   }
@@ -160,6 +194,35 @@ export default function MyAnalyses() {
             <ArrowRight className="w-3.5 h-3.5" />
           </Button>
         </div>
+
+        {/* ── Cloud sync banner for signed-out users with local data ── */}
+        {authLoaded && !isSignedIn && items.length > 0 && (
+          <div className="mb-6 flex items-center gap-3 px-4 py-3 rounded-xl border border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/40">
+            <div className="shrink-0 w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+              <Folders className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">Your history is saved on this device only</p>
+              <p className="text-xs text-blue-700 dark:text-blue-300">Sign in to sync your analyses across all your devices.</p>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              className="shrink-0 text-blue-700 border-blue-300 hover:bg-blue-100 dark:text-blue-300 dark:border-blue-700 dark:hover:bg-blue-900"
+              onClick={() => setLocation("/sign-in")}
+            >
+              Sign in
+            </Button>
+          </div>
+        )}
+
+        {/* ── Cloud loading state ── */}
+        {cloudLoading && (
+          <div className="mb-6 flex items-center gap-2 text-sm text-muted-foreground px-1">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Loading your history…
+          </div>
+        )}
 
         {/* ── Subscription section ── */}
         <div className="mb-6">
@@ -280,9 +343,10 @@ export default function MyAnalyses() {
         <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-card border border-border/50 mb-6 text-xs text-muted-foreground">
           <HardDrive className="w-3.5 h-3.5 shrink-0 text-muted-foreground/60" />
           <span>
-            Analyses are saved on <strong className="text-foreground font-semibold">this device only</strong> using your browser's local storage.
-            Nothing is uploaded to or stored by PlainPath.
-            {sizeKb > 0 && <span className="ml-1 opacity-60">({sizeKb} KB used)</span>}
+            {isSignedIn
+              ? <>Analyses are <strong className="text-foreground font-semibold">synced to your account</strong> and accessible on all your devices.</>
+              : <>Analyses are saved on <strong className="text-foreground font-semibold">this device only</strong>. Sign in to sync across devices.{sizeKb > 0 && <span className="ml-1 opacity-60">({sizeKb} KB used)</span>}</>
+            }
           </span>
         </div>
 

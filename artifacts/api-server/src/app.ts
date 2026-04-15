@@ -13,6 +13,7 @@ import sharesRoutes from "./routes/shares/index.js";
 import remindersRoutes from "./routes/reminders/index.js";
 import helpRoutes from "./routes/help/index.js";
 import eventsRouter from "./routes/events.js";
+import userHistoryRoutes from "./routes/userHistory/index.js";
 import { logger } from "./lib/logger";
 
 const app: Express = express();
@@ -177,6 +178,7 @@ app.use("/api/contracts", contractRoutes);
 app.use("/api", sharesRoutes);
 app.use(remindersRoutes);
 app.use("/api/help", helpRoutes);
+app.use("/api/user", userHistoryRoutes);
 
 app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
   if (err instanceof multer.MulterError) {

@@ -9,6 +9,8 @@ import {
   Copy, Check, Bookmark, BookmarkCheck,
 } from "lucide-react"
 import { saveTrustCheck } from "@/lib/savedTrustChecks"
+import { saveCloudTrustCheck } from "@/lib/cloudHistory"
+import { useUser } from "@clerk/react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useAnalysisContext } from "@/context/AnalysisContext"
@@ -128,6 +130,7 @@ export default function TrustCheck() {
   const searchString = useSearch()
   const demoId = new URLSearchParams(searchString).get("demo")
   const { trustCheckAnalysis } = useAnalysisContext()
+  const { isSignedIn } = useUser()
   const [demoAnalysis, setDemoAnalysis] = useState<TrustCheckAnalysis | null>(null)
   const [demoLoading, setDemoLoading] = useState(false)
   const [demoError, setDemoError] = useState<string | null>(null)
@@ -220,11 +223,21 @@ export default function TrustCheck() {
   const hasStructural = (analysis.structuralFindings?.length ?? 0) > 0
   const hasMetadata = (analysis.metadataFindings?.length ?? 0) > 0
 
-  function handleSave() {
+  async function handleSave() {
     if (!analysis || demoId) return
     const title = `Trust Check — ${analysis.verdict} (${analysis.riskScore}/100)`
-    const saved = saveTrustCheck({ title, analysis })
-    setSavedId(saved.id)
+    if (isSignedIn) {
+      try {
+        const saved = await saveCloudTrustCheck({ title, analysis })
+        setSavedId(saved.id)
+      } catch {
+        const saved = saveTrustCheck({ title, analysis })
+        setSavedId(saved.id)
+      }
+    } else {
+      const saved = saveTrustCheck({ title, analysis })
+      setSavedId(saved.id)
+    }
     setJustSaved(true)
     setTimeout(() => setJustSaved(false), 2500)
   }
