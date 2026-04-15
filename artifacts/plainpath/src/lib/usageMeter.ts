@@ -5,6 +5,7 @@ type UsageRecord = {
   analyses: number
   trustChecks: number
   contractDrafts: number
+  contractReviews: number
 }
 
 function getCurrentMonth(): string {
@@ -20,7 +21,7 @@ function getRecord(): UsageRecord {
       if (parsed.month === getCurrentMonth()) return parsed
     }
   } catch {}
-  return { month: getCurrentMonth(), analyses: 0, trustChecks: 0, contractDrafts: 0 }
+  return { month: getCurrentMonth(), analyses: 0, trustChecks: 0, contractDrafts: 0, contractReviews: 0 }
 }
 
 function saveRecord(record: UsageRecord): void {
@@ -36,16 +37,19 @@ export function incrementTrustCheck(): void {
 export function incrementContractDraft(): void {
   const r = getRecord(); r.contractDrafts += 1; saveRecord(r)
 }
+export function incrementContractReview(): void {
+  const r = getRecord(); r.contractReviews += 1; saveRecord(r)
+}
 
 export function getUsage(): UsageRecord {
   return getRecord()
 }
 
-const LIMITS: Record<string, { analyses: number; trustChecks: number; contractDrafts: number }> = {
-  free:    { analyses: 2,        trustChecks: 0,        contractDrafts: 0 },
-  starter: { analyses: Infinity, trustChecks: 0,        contractDrafts: 0 },
-  pro:     { analyses: Infinity, trustChecks: Infinity, contractDrafts: Infinity },
-  team:    { analyses: Infinity, trustChecks: Infinity, contractDrafts: Infinity },
+const LIMITS: Record<string, { analyses: number; trustChecks: number; contractDrafts: number; contractReviews: number }> = {
+  free:    { analyses: 2,        trustChecks: 0,        contractDrafts: 0,        contractReviews: 0 },
+  starter: { analyses: Infinity, trustChecks: 0,        contractDrafts: 0,        contractReviews: 0 },
+  pro:     { analyses: Infinity, trustChecks: Infinity, contractDrafts: Infinity, contractReviews: Infinity },
+  team:    { analyses: Infinity, trustChecks: Infinity, contractDrafts: Infinity, contractReviews: Infinity },
 }
 
 function planLimits(planKey: string | null | undefined) {
@@ -68,4 +72,10 @@ export function canRunContractDraft(planKey?: string | null): { allowed: boolean
   const lim = planLimits(planKey)
   const used = getRecord().contractDrafts
   return { allowed: used < lim.contractDrafts, used, limit: lim.contractDrafts }
+}
+
+export function canRunContractReview(planKey?: string | null): { allowed: boolean; used: number; limit: number } {
+  const lim = planLimits(planKey)
+  const used = getRecord().contractReviews
+  return { allowed: used < lim.contractReviews, used, limit: lim.contractReviews }
 }

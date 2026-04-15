@@ -1,13 +1,13 @@
 import { useLocation } from "wouter"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Zap, ShieldCheck, PenLine, BarChart3, ArrowRight, X } from "lucide-react"
+import { Zap, ShieldCheck, PenLine, BarChart3, ArrowRight, X, Scale } from "lucide-react"
 import { isNative } from "@/lib/platform"
 
 interface Props {
   open: boolean
   onClose: () => void
-  reason: "analyses" | "trustCheck" | "contractDraft"
+  reason: "analyses" | "trustCheck" | "contractDraft" | "contractReview"
   used?: number
   limit?: number
   planRequired?: "starter" | "pro"
@@ -30,6 +30,12 @@ const REASON_COPY = {
     title: "Contract Builder requires Pro",
     sub: "Upgrade to Pro to generate unlimited AI-drafted contracts.",
     icon: <PenLine className="w-6 h-6 text-emerald-500" />,
+    planRequired: "pro" as const,
+  },
+  contractReview: {
+    title: "Contract Review requires Pro",
+    sub: "Upgrade to Pro to run unlimited AI-powered contract reviews.",
+    icon: <Scale className="w-6 h-6 text-amber-500" />,
     planRequired: "pro" as const,
   },
 }

@@ -1,12 +1,12 @@
 import { getStoredSubscriberEmail } from "../lib/subscriberStorage";
 import { consumeAnalysis } from "../lib/entitlements";
-import { canRunAnalysis, canRunTrustCheck, canRunContractDraft } from "../lib/usageMeter";
+import { canRunAnalysis, canRunTrustCheck, canRunContractDraft, canRunContractReview } from "../lib/usageMeter";
 
 export class UsageLimitError extends Error {
   public readonly used: number
   public readonly limit: number
-  public readonly reason: "analyses" | "trustCheck" | "contractDraft"
-  constructor(reason: "analyses" | "trustCheck" | "contractDraft", used: number, limit: number) {
+  public readonly reason: "analyses" | "trustCheck" | "contractDraft" | "contractReview"
+  constructor(reason: "analyses" | "trustCheck" | "contractDraft" | "contractReview", used: number, limit: number) {
     super(`You've used ${used} of ${limit} free ${reason} this month.`)
     this.name = "UsageLimitError"
     this.reason = reason
@@ -35,4 +35,9 @@ export function beforeRunTrustCheck(planKey?: string | null) {
 export function beforeRunContractDraft(planKey?: string | null) {
   const { allowed, used, limit } = canRunContractDraft(planKey)
   if (!allowed) throw new UsageLimitError("contractDraft", used, limit)
+}
+
+export function beforeRunContractReview(planKey?: string | null) {
+  const { allowed, used, limit } = canRunContractReview(planKey)
+  if (!allowed) throw new UsageLimitError("contractReview", used, limit)
 }

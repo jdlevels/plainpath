@@ -13,6 +13,9 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { getApiBaseUrl } from "@/lib/api"
 import { useLocation } from "wouter"
+import { beforeRunContractReview, UsageLimitError } from "@/lib/analysisGate"
+import { useEntitlements } from "@/hooks/useEntitlements"
+import UpgradeModal from "@/components/UpgradeModal"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -970,6 +973,9 @@ export default function ContractReview() {
   const [result, setResult] = useState<ReviewResult | null>(null)
   const [capturedImages, setCapturedImages] = useState<string[]>([])
   const [cameraError, setCameraError] = useState<string | null>(null)
+  const [upgradeModal, setUpgradeModal] = useState(false)
+
+  const { entitlements } = useEntitlements()
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const cameraInputRef = useRef<HTMLInputElement>(null)
@@ -988,6 +994,11 @@ export default function ContractReview() {
 
   async function handleScanReview() {
     if (capturedImages.length === 0) return
+    try {
+      beforeRunContractReview(entitlements?.plan ?? null)
+    } catch (err) {
+      if (err instanceof UsageLimitError) { setUpgradeModal(true); return }
+    }
     setLoading(true)
     setCameraError(null)
     setError(null)
@@ -1013,6 +1024,11 @@ export default function ContractReview() {
   }
 
   async function handleReview() {
+    try {
+      beforeRunContractReview(entitlements?.plan ?? null)
+    } catch (err) {
+      if (err instanceof UsageLimitError) { setUpgradeModal(true); return }
+    }
     setError(null)
     setLoading(true)
     try {
@@ -1308,6 +1324,11 @@ export default function ContractReview() {
           </div>
         </motion.div>
       </div>
+    <UpgradeModal
+      open={upgradeModal}
+      reason="contractReview"
+      onClose={() => setUpgradeModal(false)}
+    />
     </div>
   )
 }
