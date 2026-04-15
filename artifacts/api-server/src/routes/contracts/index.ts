@@ -239,6 +239,109 @@ Rules:
   }
 });
 
+// POST /api/contracts/scan-images
+// Camera scan → Contract Review: extract text from images, then run review.
+router.post("/scan-images", async (req: Request, res: Response) => {
+  const { images } = req.body;
+
+  if (!Array.isArray(images) || images.length === 0) {
+    return res.status(400).json({ message: "No images provided. Please capture at least one page." });
+  }
+  if (images.length > 10) {
+    return res.status(400).json({ message: "Maximum 10 pages allowed per scan session." });
+  }
+  for (let i = 0; i < images.length; i++) {
+    const img = images[i];
+    if (typeof img !== "string" || !img.startsWith("data:image/")) {
+      return res.status(400).json({ message: `Page ${i + 1} has an invalid image format.` });
+    }
+    if (img.length > 8 * 1024 * 1024) {
+      return res.status(413).json({ message: `Page ${i + 1} image is too large. Please try a lower-resolution photo.` });
+    }
+  }
+
+  console.log(`[contracts/scan-images] Extracting text from ${images.length} page(s)`);
+
+  try {
+    const extractedTexts: string[] = [];
+    for (let i = 0; i < images.length; i++) {
+      const resp = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [{
+          role: "user",
+          content: [
+            { type: "text", text: "Extract ALL text from this contract image exactly as it appears. Include every word, number, clause, and symbol. Output only the raw extracted text, nothing else." },
+            { type: "image_url", image_url: { url: images[i], detail: "high" } },
+          ],
+        }],
+        max_completion_tokens: 4000,
+      });
+      const pageText = resp.choices[0]?.message?.content?.trim() ?? "";
+      if (pageText) extractedTexts.push(images.length > 1 ? `--- Page ${i + 1} ---\n${pageText}` : pageText);
+    }
+
+    const text = extractedTexts.join("\n\n");
+    if (!text || text.trim().length < 50) {
+      return res.status(422).json({ message: "Could not extract readable text from the photo. Please try a clearer, well-lit image." });
+    }
+
+    console.log(`[contracts/scan-images] Extracted ${text.length} chars — running review`);
+
+    const systemPrompt = `You are a contract review expert working on behalf of the person who received this contract — they did NOT write it and need to know if it's fair, what risks they're taking on, and what to negotiate before signing.
+
+Return ONLY valid JSON — no markdown fences — in exactly this shape:
+{
+  "overallScore": number (0-100, where 100 = completely fair and balanced for the reader),
+  "verdict": "Fair" | "Mostly Fair" | "Some Concerns" | "Significant Issues" | "Heavily One-Sided",
+  "summary": "2-3 sentence plain English overall assessment of the contract's fairness and key risks",
+  "clauses": [
+    {
+      "id": "c1",
+      "text": "Short label or excerpt identifying the clause (max 100 chars)",
+      "rating": "fair" | "watch-out" | "red-flag",
+      "explanation": "Plain English: what this clause actually means for the reader (max 70 words)",
+      "whyUnfair": "Why this clause is problematic or risky — null if rating is fair (max 70 words)",
+      "negotiationLanguage": "Specific suggested revision wording the reader can copy and send back — null if rating is fair (max 160 words, include actual replacement clause text)",
+      "exitGuidance": "What the reader should know if they've already signed or if this clause may be unenforceable — null if rating is fair (max 60 words)"
+    }
+  ],
+  "missingProtections": ["Short plain-English statement of an important protection missing from this contract"],
+  "preSigningChecklist": ["Specific action item or verification the reader should complete before signing"]
+}
+
+Score guide: 80-100 = Fair, 60-79 = Mostly Fair, 40-59 = Some Concerns, 20-39 = Significant Issues, 0-19 = Heavily One-Sided.
+Rules: clauses 5-20 items, negotiationLanguage must include actual replacement text, missingProtections 2-5 items, preSigningChecklist 3-6 items.`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-5.2",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: `Review this contract:\n\n${text.slice(0, 12000)}` },
+      ],
+      temperature: 0.2,
+      max_completion_tokens: 4500,
+    });
+
+    const raw = response.choices[0]?.message?.content ?? "{}";
+    const cleaned = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "").trim();
+    const result = JSON.parse(cleaned);
+
+    return res.json({
+      overallScore: typeof result.overallScore === "number" ? Math.max(0, Math.min(100, result.overallScore)) : 50,
+      verdict: typeof result.verdict === "string" ? result.verdict : "Some Concerns",
+      summary: typeof result.summary === "string" ? result.summary : "",
+      clauses: Array.isArray(result.clauses) ? result.clauses : [],
+      missingProtections: Array.isArray(result.missingProtections) ? result.missingProtections : [],
+      preSigningChecklist: Array.isArray(result.preSigningChecklist) ? result.preSigningChecklist : [],
+      reviewedAt: new Date().toISOString(),
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    logger.error({ err }, "contracts/scan-images failed");
+    return res.status(500).json({ error: "scan_failed", message: "Scan review failed. Please try again with a clearer, well-lit photo." });
+  }
+});
+
 // POST /api/contracts/send-for-signature
 // E-Signature — sends a contract for signature via Dropbox Sign.
 // Returns 503 if DROPBOX_SIGN_API_KEY is not set.

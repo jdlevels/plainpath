@@ -5,6 +5,7 @@ import {
   ChevronDown, ChevronUp, ArrowLeft, RotateCcw, FileText,
   ShieldAlert, AlertTriangle, CheckCircle2, X as XIcon,
   Lock, ClipboardList, ChevronRight, Mail, Shield,
+  Camera, ScanLine,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -961,14 +962,55 @@ function ResultsView({ result, onReset }: { result: ReviewResult; onReset: () =>
 export default function ContractReview() {
   const [, setLocation] = useLocation()
 
-  const [activeTab, setActiveTab] = useState<"paste" | "upload">("paste")
+  const [activeTab, setActiveTab] = useState<"paste" | "upload" | "camera">("paste")
   const [text, setText] = useState("")
   const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<ReviewResult | null>(null)
+  const [capturedImages, setCapturedImages] = useState<string[]>([])
+  const [cameraError, setCameraError] = useState<string | null>(null)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const cameraInputRef = useRef<HTMLInputElement>(null)
+
+  const handleCameraCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0]
+    if (!f) return
+    if (!f.type.startsWith("image/")) { setCameraError("Only image files are supported."); return }
+    if (f.size > 10 * 1024 * 1024) { setCameraError("Photo is too large. Please try a lower-resolution photo."); return }
+    const reader = new FileReader()
+    reader.onload = () => { setCapturedImages(prev => [...prev, reader.result as string]); setCameraError(null) }
+    reader.onerror = () => setCameraError("Could not read the photo. Please try again.")
+    reader.readAsDataURL(f)
+    e.target.value = ""
+  }
+
+  async function handleScanReview() {
+    if (capturedImages.length === 0) return
+    setLoading(true)
+    setCameraError(null)
+    setError(null)
+    try {
+      const base = getApiBaseUrl()
+      const response = await fetch(`${base}/api/contracts/scan-images`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ images: capturedImages }),
+      })
+      const data = await response.json() as ReviewResult & { message?: string }
+      if (!response.ok) {
+        setCameraError(data.message ?? "Scan failed. Please try again.")
+        setLoading(false)
+        return
+      }
+      setResult(data)
+    } catch {
+      setCameraError("Network error. Please check your connection and try again.")
+    } finally {
+      setLoading(false)
+    }
+  }
 
   async function handleReview() {
     setError(null)
@@ -1058,20 +1100,30 @@ export default function ContractReview() {
             </div>
           </div>
 
+          {/* Hidden camera input */}
+          <input
+            ref={cameraInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={handleCameraCapture}
+          />
+
           <Card>
             <CardContent className="p-5 space-y-4">
               <div className="flex gap-1 bg-muted/40 p-1 rounded-lg w-fit">
-                {(["paste", "upload"] as const).map(tab => (
+                {(["paste", "upload", "camera"] as const).map(tab => (
                   <button
                     key={tab}
-                    onClick={() => { setActiveTab(tab); setError(null) }}
-                    className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${
+                    onClick={() => { setActiveTab(tab); setError(null); setCameraError(null) }}
+                    className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all flex items-center gap-1.5 ${
                       activeTab === tab
                         ? "bg-background shadow-sm text-foreground"
                         : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
-                    {tab === "paste" ? "Paste Text" : "Upload File"}
+                    {tab === "paste" ? "Paste Text" : tab === "upload" ? "Upload File" : <><Camera className="w-3.5 h-3.5" /> Scan Photo</>}
                   </button>
                 ))}
               </div>
@@ -1088,7 +1140,7 @@ export default function ContractReview() {
                     />
                     <p className="text-xs text-muted-foreground mt-1.5 text-right">{text.length.toLocaleString()} characters</p>
                   </motion.div>
-                ) : (
+                ) : activeTab === "upload" ? (
                   <motion.div key="upload" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                     <input
                       ref={fileInputRef}
@@ -1131,6 +1183,72 @@ export default function ContractReview() {
                       )}
                     </button>
                   </motion.div>
+                ) : (
+                  <motion.div key="camera" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-3">
+                    <div className="flex items-start gap-2.5 text-sm text-muted-foreground bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-900/40 rounded-lg px-3 py-2.5">
+                      <ScanLine className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                      <span>Take a photo of each page of the contract. AI will extract the text and review it for you. Up to 10 pages.</span>
+                    </div>
+
+                    {capturedImages.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-xs font-semibold text-muted-foreground">{capturedImages.length} page{capturedImages.length !== 1 ? "s" : ""} captured</p>
+                        <div className="flex flex-wrap gap-2">
+                          {capturedImages.map((src, idx) => (
+                            <div key={idx} className="relative group">
+                              <img src={src} alt={`Page ${idx + 1}`} className="w-16 h-20 object-cover rounded-lg border border-border/50" />
+                              <button
+                                onClick={() => setCapturedImages(prev => prev.filter((_, i) => i !== idx))}
+                                className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <XIcon className="w-3 h-3" />
+                              </button>
+                              <span className="absolute bottom-1 left-0 right-0 text-center text-[10px] text-white font-bold drop-shadow">{idx + 1}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <button
+                      onClick={() => cameraInputRef.current?.click()}
+                      className="w-full border-2 border-dashed border-amber-300/50 dark:border-amber-700/40 rounded-xl p-8 text-center hover:border-amber-400 hover:bg-amber-50/40 dark:hover:bg-amber-950/20 transition-all group"
+                    >
+                      <Camera className="w-7 h-7 text-amber-500 mx-auto mb-2 group-hover:scale-110 transition-transform" />
+                      <p className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
+                        {capturedImages.length === 0 ? "Tap to take a photo or choose from gallery" : "Add another page"}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">Works with printed or digital contracts</p>
+                    </button>
+
+                    {capturedImages.length > 0 && (
+                      <button
+                        onClick={() => { setCapturedImages([]); setCameraError(null) }}
+                        className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        <RotateCcw className="w-3 h-3" /> Clear all pages
+                      </button>
+                    )}
+
+                    {cameraError && (
+                      <div className="flex items-start gap-2 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20 border border-red-200/60 dark:border-red-900/40 rounded-lg px-3 py-2.5 text-sm">
+                        <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                        {cameraError}
+                      </div>
+                    )}
+
+                    {capturedImages.length > 0 && (
+                      <Button
+                        onClick={handleScanReview}
+                        disabled={loading}
+                        className="w-full gap-2 bg-amber-600 hover:bg-amber-700 text-white"
+                        size="lg"
+                      >
+                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ScanLine className="w-4 h-4" />}
+                        {loading ? "Scanning & reviewing…" : `Review ${capturedImages.length} Page${capturedImages.length !== 1 ? "s" : ""}`}
+                      </Button>
+                    )}
+                  </motion.div>
                 )}
               </AnimatePresence>
 
@@ -1141,14 +1259,17 @@ export default function ContractReview() {
                 </div>
               )}
 
-              <Button
-                onClick={handleReview}
-                disabled={loading || (activeTab === "paste" ? text.trim().length < 50 : !file)}
-                className="w-full gap-2 bg-amber-600 hover:bg-amber-700 text-white"
-                size="lg"
-              >
-                <Scale className="w-4 h-4" /> Review This Contract
-              </Button>
+              {activeTab !== "camera" && (
+                <Button
+                  onClick={handleReview}
+                  disabled={loading || (activeTab === "paste" ? text.trim().length < 50 : !file)}
+                  className="w-full gap-2 bg-amber-600 hover:bg-amber-700 text-white"
+                  size="lg"
+                >
+                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Scale className="w-4 h-4" />}
+                  {loading ? "Reviewing…" : "Review This Contract"}
+                </Button>
+              )}
             </CardContent>
           </Card>
 
