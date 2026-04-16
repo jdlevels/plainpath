@@ -374,21 +374,24 @@ export default function Home() {
                 </div>
                 <div className="space-y-4">
                   {[
-                    { icon: CalendarX, title: "Deadlines buried in fine print",          desc: "A 30-day window in paragraph 8 that nobody told you about. Once it passes, your options disappear. Analyze a Document surfaces every one.", tool: "Analyze a Document",   iconBg: "rgba(59,130,246,0.15)",  iconColor: "#60a5fa", badgeBorder: "rgba(59,130,246,0.35)",  badgeColor: "#93c5fd" },
-                    { icon: FileScan,  title: "Fake notices designed to pressure you",   desc: "Scam notices look identical to real ones. Same formatting, same urgency. Document Trust Check scores legitimacy and flags every red flag.", tool: "Document Trust Check", iconBg: "rgba(239,68,68,0.15)",   iconColor: "#f87171", badgeBorder: "rgba(239,68,68,0.35)",   badgeColor: "#fca5a5" },
-                    { icon: PenLine,   title: "Signing the other party's boilerplate",   desc: "When you don't have your own contract, you sign theirs — and every clause was written to protect them. Build a Contract creates a fair agreement from scratch.", tool: "Build a Contract",     iconBg: "rgba(16,185,129,0.15)", iconColor: "#34d399", badgeBorder: "rgba(16,185,129,0.35)", badgeColor: "#6ee7b7" },
-                    { icon: Eye,       title: "Clauses that shift all the risk to you",  desc: "One paragraph waives your right to dispute. Another transfers liability quietly. Contract Review reads it clause by clause and tells you exactly what you're agreeing to.", tool: "Contract Review",      iconBg: "rgba(245,158,11,0.15)", iconColor: "#fbbf24", badgeBorder: "rgba(245,158,11,0.35)", badgeColor: "#fcd34d" },
+                    { icon: CalendarX, title: "Deadlines buried in fine print",          desc: "A 30-day window in paragraph 8 that nobody told you about. Once it passes, your options disappear. Analyze a Document surfaces every one.", tool: "Analyze a Document",   path: "/import",                  iconBg: "rgba(59,130,246,0.15)",  iconColor: "#60a5fa", badgeBorder: "rgba(59,130,246,0.35)",  badgeColor: "#93c5fd" },
+                    { icon: FileScan,  title: "Fake notices designed to pressure you",   desc: "Scam notices look identical to real ones. Same formatting, same urgency. Document Trust Check scores legitimacy and flags every red flag.", tool: "Document Trust Check", path: "/import?mode=trust-check", iconBg: "rgba(239,68,68,0.15)",   iconColor: "#f87171", badgeBorder: "rgba(239,68,68,0.35)",   badgeColor: "#fca5a5" },
+                    { icon: PenLine,   title: "Signing the other party's boilerplate",   desc: "When you don't have your own contract, you sign theirs — and every clause was written to protect them. Build a Contract creates a fair agreement from scratch.", tool: "Build a Contract",     path: "/contract-builder",        iconBg: "rgba(16,185,129,0.15)", iconColor: "#34d399", badgeBorder: "rgba(16,185,129,0.35)", badgeColor: "#6ee7b7" },
+                    { icon: Eye,       title: "Clauses that shift all the risk to you",  desc: "One paragraph waives your right to dispute. Another transfers liability quietly. Contract Review reads it clause by clause and tells you exactly what you're agreeing to.", tool: "Contract Review",      path: "/contract-review",         iconBg: "rgba(245,158,11,0.15)", iconColor: "#fbbf24", badgeBorder: "rgba(245,158,11,0.35)", badgeColor: "#fcd34d" },
                   ].map((item, i) => (
                     <motion.div key={i} initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }}
                       viewport={{ once: true }} transition={{ delay: i * 0.08 }}
-                      className="flex items-start gap-4 bg-white/5 hover:bg-white/8 transition-colors rounded-2xl px-5 py-4">
-                      <div style={{ backgroundColor: item.iconBg }} className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5">
+                      onClick={() => setLocation(item.path)}
+                      className="flex items-start gap-4 bg-white/5 hover:bg-white/12 active:bg-white/15 transition-colors rounded-2xl px-5 py-4 cursor-pointer group">
+                      <div style={{ backgroundColor: item.iconBg }} className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5 group-hover:scale-110 transition-transform">
                         <item.icon style={{ width: 18, height: 18, color: item.iconColor }} />
                       </div>
-                      <div>
+                      <div className="flex-1 min-w-0">
                         <p className="font-semibold text-white text-sm mb-0.5">{item.title}</p>
                         <p className="text-slate-400 text-sm leading-relaxed mb-2">{item.desc}</p>
-                        <span style={{ color: item.badgeColor, borderColor: item.badgeBorder }} className="inline-block text-[10px] font-bold uppercase tracking-widest border rounded-full px-2 py-0.5">{item.tool}</span>
+                        <span style={{ color: item.badgeColor, borderColor: item.badgeBorder }} className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest border rounded-full px-2 py-0.5">
+                          {item.tool} <ArrowRight style={{ width: 9, height: 9 }} className="opacity-0 group-hover:opacity-100 transition-opacity -ml-0.5" />
+                        </span>
                       </div>
                     </motion.div>
                   ))}
@@ -451,8 +454,8 @@ export default function Home() {
               {DEMOS.map((demo, i) => (
                 <motion.div key={demo.id} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }} transition={{ delay: i * 0.08 }} whileHover={{ y: -5, transition: { duration: 0.2 } }}>
-                  <button onClick={() => setLocation(demo.path)} className="w-full text-left h-full group">
-                    <Card className={`h-full border-slate-200 dark:border-border/40 ${demo.hoverBorder} hover:shadow-xl transition-all overflow-hidden bg-white dark:bg-card rounded-2xl shadow-md`}>
+                  <button onClick={() => setLocation(demo.path)} className="w-full text-left h-full group cursor-pointer">
+                    <Card className={`h-full border-slate-200 dark:border-border/40 ${demo.hoverBorder} hover:shadow-xl group-hover:scale-[1.01] transition-all overflow-hidden bg-white dark:bg-card rounded-2xl shadow-md cursor-pointer`}>
                       <div className="p-6 flex flex-col h-full">
                         <div className={`w-11 h-11 rounded-xl ${demo.bg} flex items-center justify-center mb-4`}>
                           <demo.icon className={`w-5 h-5 ${demo.color}`} />
