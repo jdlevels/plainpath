@@ -21,7 +21,7 @@ export function Footer() {
             <h4 className="font-semibold mb-4 text-foreground">Product</h4>
             <ul className="space-y-3">
               <li><a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">Features</a></li>
-              <li><a href="https://plain-path.replit.app" target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">Web App</a></li>
+              <li><a href="/app/" className="text-muted-foreground hover:text-foreground transition-colors">Web App</a></li>
               <li><a href="#download" className="text-muted-foreground hover:text-foreground transition-colors">Download iOS</a></li>
               <li><a href="#download" className="text-muted-foreground hover:text-foreground transition-colors">Download Android</a></li>
             </ul>
@@ -30,9 +30,9 @@ export function Footer() {
           <div>
             <h4 className="font-semibold mb-4 text-foreground">Company</h4>
             <ul className="space-y-3">
-              <li><a href="https://plain-path.replit.app/support" target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">Support</a></li>
-              <li><a href="https://plain-path.replit.app/privacy" target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">Privacy Policy</a></li>
-              <li><a href="https://plain-path.replit.app/terms" target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">Terms of Service</a></li>
+              <li><a href="/app/support" className="text-muted-foreground hover:text-foreground transition-colors">Support</a></li>
+              <li><a href="/app/privacy" className="text-muted-foreground hover:text-foreground transition-colors">Privacy Policy</a></li>
+              <li><a href="/app/terms" className="text-muted-foreground hover:text-foreground transition-colors">Terms of Service</a></li>
             </ul>
           </div>
         </div>

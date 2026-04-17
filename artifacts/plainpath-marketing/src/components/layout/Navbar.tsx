@@ -16,11 +16,11 @@ export function Navbar() {
         <div className="hidden md:flex items-center gap-6 text-sm font-medium text-muted-foreground">
           <a href="#features" className="hover:text-foreground transition-colors">Features</a>
           <a href="#how-it-works" className="hover:text-foreground transition-colors">How it works</a>
-          <a href="https://plain-path.replit.app/support" target="_blank" rel="noreferrer" className="hover:text-foreground transition-colors">Support</a>
+          <a href="/app/support" className="hover:text-foreground transition-colors">Support</a>
         </div>
 
         <div className="flex items-center gap-4">
-          <a href="https://plain-path.replit.app" target="_blank" rel="noreferrer" className="hidden md:block text-sm font-medium hover:text-foreground transition-colors">
+          <a href="/app/" className="hidden md:block text-sm font-medium hover:text-foreground transition-colors">
             Log in to Web App
           </a>
           <Button asChild className="rounded-full px-6 font-medium shadow-sm">
