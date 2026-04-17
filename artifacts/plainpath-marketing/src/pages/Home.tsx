@@ -6,6 +6,7 @@ import { AppStoreBadge } from "@/components/ui/AppStoreBadge";
 import { PlayStoreBadge } from "@/components/ui/PlayStoreBadge";
 import { WaitlistModal } from "@/components/WaitlistModal";
 import { PhoneHeroDemo } from "@/components/PhoneHeroDemo";
+import { WebAppDemo } from "@/components/WebAppDemo";
 import {
   FileText, ShieldAlert, FileSignature, ShieldCheck,
   ArrowRight, Upload, Sparkles, Scale,
@@ -583,11 +584,7 @@ export default function Home() {
           <div className="grid lg:grid-cols-2 gap-14 items-center">
             <div className="relative order-2 lg:order-1">
               <div className="absolute -inset-3 bg-gradient-to-tr from-emerald-100/40 dark:from-emerald-900/10 via-blue-50/30 dark:via-blue-900/10 to-transparent rounded-3xl blur-xl -z-10" />
-              <img
-                src={`${import.meta.env.BASE_URL}images/mockup-2.png`}
-                alt="PlainPath web app"
-                className="w-full h-auto rounded-2xl shadow-2xl border border-border/50 object-cover"
-              />
+              <WebAppDemo />
             </div>
             <div className="max-w-lg order-1 lg:order-2">
               <p className="text-xs font-semibold tracking-[0.12em] uppercase text-muted-foreground mb-3">Web &amp; Mobile</p>
