@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { motion } from "framer-motion";
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { AppStoreBadge } from "@/components/ui/AppStoreBadge";
@@ -20,6 +20,64 @@ const fadeUp = {
     transition: { duration: 0.55, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] },
   }),
 };
+
+/* ─── Rotating floating badge ─────────────────────────────── */
+const BADGE_CYCLE = [
+  {
+    key: "action",
+    icon: CheckCircle2,
+    iconBg: "bg-blue-100 dark:bg-blue-900/40",
+    iconColor: "text-blue-600 dark:text-blue-400",
+    title: "Action Step",
+    desc: "Sign and return by April 22nd",
+  },
+  {
+    key: "scam",
+    icon: AlertTriangle,
+    iconBg: "bg-red-100 dark:bg-red-900/40",
+    iconColor: "text-red-600 dark:text-red-400",
+    title: "Scam Detected",
+    desc: "3 red flags found. Do not pay.",
+  },
+  {
+    key: "speed",
+    icon: Clock,
+    iconBg: "bg-emerald-100 dark:bg-emerald-900/40",
+    iconColor: "text-emerald-600 dark:text-emerald-400",
+    title: "Ready in ~90 sec",
+    desc: "Analysis complete",
+  },
+]
+
+function RotatingBadge() {
+  const [idx, setIdx] = useState(0)
+  useEffect(() => {
+    const id = setInterval(() => setIdx(i => (i + 1) % BADGE_CYCLE.length), 3000)
+    return () => clearInterval(id)
+  }, [])
+  const b = BADGE_CYCLE[idx]
+  const Icon = b.icon
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={b.key}
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -6 }}
+        transition={{ duration: 0.38, ease: [0.16, 1, 0.3, 1] }}
+        className="bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md px-3 py-2.5 rounded-2xl shadow-lg border border-border/40 flex items-center gap-2.5 w-[168px]"
+      >
+        <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${b.iconBg}`}>
+          <Icon className={`w-3 h-3 ${b.iconColor}`} />
+        </div>
+        <div className="min-w-0">
+          <p className="text-[11px] font-semibold text-foreground leading-tight">{b.title}</p>
+          <p className="text-[10px] text-muted-foreground mt-0.5 leading-snug truncate">{b.desc}</p>
+        </div>
+      </motion.div>
+    </AnimatePresence>
+  )
+}
 
 /* ─── Tool pill data ─────────────────────────────────────── */
 const TOOLS = [
@@ -263,53 +321,14 @@ export default function Home() {
 
                 <PhoneHeroDemo />
 
-                {/* Floating card — action step */}
+                {/* Single rotating floating badge — bottom-right, clear of phone content */}
                 <motion.div
-                  initial={{ opacity: 0, x: -16 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.9, duration: 0.5 }}
-                  className="absolute -left-10 top-[22%] bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md p-3 rounded-2xl shadow-xl border border-border/50 w-[176px]"
-                >
-                  <div className="flex items-start gap-2">
-                    <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center shrink-0 mt-0.5">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <div>
-                      <p className="text-[11px] font-semibold text-foreground leading-tight">Action Step</p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5 leading-snug">Sign and return by Friday, April 14th.</p>
-                    </div>
-                  </div>
-                </motion.div>
-
-                {/* Floating card — trust verdict */}
-                <motion.div
-                  initial={{ opacity: 0, x: 16 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 1.1, duration: 0.5 }}
-                  className="absolute -right-8 top-[55%] bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md p-3 rounded-2xl shadow-xl border border-border/50 w-[164px]"
-                >
-                  <div className="flex items-start gap-2">
-                    <div className="w-6 h-6 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center shrink-0 mt-0.5">
-                      <AlertTriangle className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
-                    </div>
-                    <div>
-                      <p className="text-[11px] font-semibold text-red-700 dark:text-red-400 leading-tight">Scam Detected</p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5 leading-snug">3 red flags found. Do not pay.</p>
-                    </div>
-                  </div>
-                </motion.div>
-
-                {/* Floating card — timing */}
-                <motion.div
-                  initial={{ opacity: 0, y: 16 }}
+                  initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 1.3, duration: 0.5 }}
-                  className="absolute -left-4 bottom-[12%] bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md px-3 py-2 rounded-2xl shadow-xl border border-border/50 flex items-center gap-2"
+                  transition={{ delay: 0.4, duration: 0.5 }}
+                  className="absolute -right-5 top-[62%]"
                 >
-                  <div className="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center shrink-0">
-                    <Clock className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                  </div>
-                  <p className="text-[11px] font-semibold text-foreground">Ready in ~90 sec</p>
+                  <RotatingBadge />
                 </motion.div>
               </motion.div>
             </div>
