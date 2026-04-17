@@ -7,8 +7,7 @@ import {
   ArrowRight, AlertCircle, Flag, Shield, ExternalLink,
   Loader2, FileText, BarChart2, Info,
   Copy, Check, Bookmark, BookmarkCheck,
-  ChevronDown, ChevronUp, Download, BanIcon,
-  AlertOctagon, Ban,
+  Download, BanIcon, AlertOctagon, Ban,
 } from "lucide-react"
 import { saveTrustCheck } from "@/lib/savedTrustChecks"
 import { saveCloudTrustCheck } from "@/lib/cloudHistory"
@@ -24,6 +23,9 @@ import {
   verdictColor, severityColor,
   authenticityRiskColor, documentRiskColor, verificationConfidenceColor,
 } from "@/lib/trustCheckTypes"
+import { ResultStickyHeader } from "@/components/result/ResultStickyHeader"
+import { ResultSectionCard } from "@/components/result/ResultSectionCard"
+import { ResultMetaStrip } from "@/components/result/ResultMetaStrip"
 
 /* ── Helpers ────────────────────────────────────────────────────────────── */
 
@@ -102,90 +104,7 @@ function VerdictIcon({ verdict }: { verdict: TrustCheckVerdict }) {
   }
 }
 
-/* ── Collapsible section card ───────────────────────────────────────────── */
-
-function CollapsibleSection({
-  icon: Icon,
-  title,
-  defaultOpen = true,
-  badge,
-  accentClass = "",
-  children,
-}: {
-  icon: React.ElementType
-  title: string
-  defaultOpen?: boolean
-  badge?: React.ReactNode
-  accentClass?: string
-  children: React.ReactNode
-}) {
-  const [open, setOpen] = useState(defaultOpen)
-  return (
-    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-      <Card className={`border-border/40 overflow-hidden ${accentClass}`}>
-        <button
-          onClick={() => setOpen(v => !v)}
-          className="w-full flex items-center gap-2 px-5 py-4 text-left hover:bg-secondary/30 transition-colors"
-          style={{ touchAction: "manipulation" }}
-        >
-          <div className="w-7 h-7 rounded-lg bg-primary/8 flex items-center justify-center shrink-0">
-            <Icon className="w-3.5 h-3.5 text-primary/70" />
-          </div>
-          <h3 className="text-sm font-bold text-foreground flex-1 min-w-0">{title}</h3>
-          {badge}
-          {open
-            ? <ChevronUp className="w-4 h-4 text-muted-foreground/50 shrink-0" />
-            : <ChevronDown className="w-4 h-4 text-muted-foreground/50 shrink-0" />
-          }
-        </button>
-        <AnimatePresence initial={false}>
-          {open && (
-            <motion.div
-              key="content"
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.22, ease: "easeInOut" }}
-              className="overflow-hidden"
-            >
-              <div className="px-5 pb-5">
-                {children}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </Card>
-    </motion.div>
-  )
-}
-
-/* ── Static section card (non-collapsible) ──────────────────────────────── */
-
-function SectionCard({
-  icon: Icon,
-  title,
-  children,
-  className = "",
-}: {
-  icon: React.ElementType
-  title: string
-  children: React.ReactNode
-  className?: string
-}) {
-  return (
-    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-      <Card className={`p-5 border-border/40 ${className}`}>
-        <div className="flex items-center gap-2 mb-4">
-          <div className="w-7 h-7 rounded-lg bg-primary/8 flex items-center justify-center shrink-0">
-            <Icon className="w-3.5 h-3.5 text-primary/70" />
-          </div>
-          <h3 className="text-sm font-bold text-foreground">{title}</h3>
-        </div>
-        {children}
-      </Card>
-    </motion.div>
-  )
-}
+/* CollapsibleSection and SectionCard are now ResultSectionCard from @/components/result */
 
 /* ── Score card ─────────────────────────────────────────────────────────── */
 
@@ -454,34 +373,16 @@ export default function TrustCheck() {
       style={{ paddingBottom: "max(6rem, env(safe-area-inset-bottom) + 6rem)" }}
     >
       {/* ── Sticky header ───────────────────────────────────────────── */}
-      <div className="bg-background/95 backdrop-blur-md border-b border-border/50 sticky top-0 z-30 print:hidden">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-2.5 sm:py-4">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <button
-              onClick={() => setLocation("/import?mode=trust-check")}
-              className="w-10 h-10 sm:w-9 sm:h-9 flex items-center justify-center hover:bg-secondary active:bg-secondary rounded-xl transition-colors shrink-0"
-              aria-label="Back to Trust Check"
-            >
-              <ArrowLeft className="w-4 h-4 text-muted-foreground" />
-            </button>
-
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1.5 mb-0.5">
-                <ShieldCheck className="w-3 h-3 text-primary/70" />
-                <span className="text-[10px] font-bold uppercase tracking-widest text-primary/70">
-                  Document Trust Check
-                </span>
-              </div>
-              <p className="text-xs text-muted-foreground truncate hidden sm:block">
-                Scam Risk Score: {analysis.riskScore}/100
-              </p>
-            </div>
-
-            <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border shrink-0 hidden sm:inline-flex ${vc.badge}`}>
-              {analysis.verdict}
-            </span>
-
-            {/* Copy summary */}
+      <ResultStickyHeader
+        toolIcon={ShieldCheck}
+        toolLabel="Document Trust Check"
+        toolIconClass="text-primary/70"
+        subtitleText={`Scam Risk Score: ${analysis.riskScore}/100`}
+        verdictLabel={analysis.verdict}
+        verdictBadgeClass={vc.badge}
+        onBack={() => setLocation("/import?mode=trust-check")}
+        actions={
+          <>
             <button
               onClick={copyResults}
               title="Copy results as text"
@@ -490,8 +391,6 @@ export default function TrustCheck() {
             >
               {copyDone ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
             </button>
-
-            {/* Export PDF */}
             <button
               onClick={exportPDF}
               title="Export as PDF"
@@ -500,8 +399,6 @@ export default function TrustCheck() {
             >
               <Download className="w-4 h-4" />
             </button>
-
-            {/* Save */}
             {!demoId && (
               <button
                 onClick={handleSave}
@@ -513,14 +410,9 @@ export default function TrustCheck() {
                 }`}
                 aria-label="Save result"
               >
-                {savedId
-                  ? <BookmarkCheck className="w-4 h-4" />
-                  : <Bookmark className="w-4 h-4" />
-                }
+                {savedId ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
               </button>
             )}
-
-            {/* New Check */}
             <Button
               size="sm"
               variant="outline"
@@ -529,9 +421,9 @@ export default function TrustCheck() {
             >
               New Check <ArrowRight className="w-3.5 h-3.5" />
             </Button>
-          </div>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {/* ── Content ─────────────────────────────────────────────────── */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-5 sm:pt-8 space-y-4">
@@ -646,26 +538,11 @@ export default function TrustCheck() {
         </motion.div>
 
         {/* ── 3. Metadata strip ─────────────────────────────────────── */}
-        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground/60 px-1">
-            <span className="flex items-center gap-1">
-              <Clock className="w-3 h-3" />
-              Analyzed {formatAnalyzedAt(analysis.processedAt)}
-            </span>
-            {analysis.documentType && (
-              <span className="flex items-center gap-1">
-                <FileText className="w-3 h-3" />
-                {analysis.documentType}
-              </span>
-            )}
-            {demoId && (
-              <span className="flex items-center gap-1">
-                <Info className="w-3 h-3" />
-                Demo document
-              </span>
-            )}
-          </div>
-        </motion.div>
+        <ResultMetaStrip items={[
+          { icon: Clock, text: `Analyzed ${formatAnalyzedAt(analysis.processedAt)}` },
+          ...(analysis.documentType ? [{ icon: FileText, text: analysis.documentType }] : []),
+          ...(demoId ? [{ icon: Info, text: "Demo document" }] : []),
+        ]} />
 
         {/* ── 4. Score Summary — 3 dimensions ───────────────────────── */}
         {scores && (
@@ -743,20 +620,20 @@ export default function TrustCheck() {
 
         {/* ── 6. What This Letter Claims ─────────────────────────────── */}
         {analysis.whatItClaims && (
-          <SectionCard icon={Flag} title="What This Document Claims">
+          <ResultSectionCard collapsible={false} icon={Flag} title="What This Document Claims">
             <p className="text-sm text-foreground/80 leading-relaxed">{analysis.whatItClaims}</p>
-          </SectionCard>
+          </ResultSectionCard>
         )}
 
         {/* ── 7. Demanded Action ─────────────────────────────────────── */}
         {analysis.demandedAction && (
-          <SectionCard icon={AlertCircle} title="What It Demands From You">
+          <ResultSectionCard collapsible={false} icon={AlertCircle} title="What It Demands From You">
             <p className="text-sm text-foreground/80 leading-relaxed">{analysis.demandedAction}</p>
-          </SectionCard>
+          </ResultSectionCard>
         )}
 
         {/* ── 8. Scam Indicators — collapsible ──────────────────────── */}
-        <CollapsibleSection
+        <ResultSectionCard collapsible={true}
           icon={Shield}
           title="Scam Indicators"
           defaultOpen={isHighRisk || isSuspicious}
@@ -796,7 +673,7 @@ export default function TrustCheck() {
           ) : (
             <p className="text-sm text-muted-foreground">No significant scam indicators detected in this document.</p>
           )}
-        </CollapsibleSection>
+        </ResultSectionCard>
 
         {/* ── 9. Legitimacy Signals ──────────────────────────────────── */}
         {analysis.legitimacyIndicators && analysis.legitimacyIndicators.length > 0 && (
@@ -831,7 +708,7 @@ export default function TrustCheck() {
 
         {/* ── 10. Metadata Findings ─────────────────────────────────── */}
         {hasMetadata && (
-          <CollapsibleSection
+          <ResultSectionCard collapsible={true}
             icon={Info}
             title={`File Metadata Findings (${analysis.metadataFindings!.length})`}
             defaultOpen={false}
@@ -855,12 +732,12 @@ export default function TrustCheck() {
                 </div>
               ))}
             </div>
-          </CollapsibleSection>
+          </ResultSectionCard>
         )}
 
         {/* ── 11. Structural Observations — collapsible ─────────────── */}
         {hasStructural && (
-          <CollapsibleSection
+          <ResultSectionCard collapsible={true}
             icon={AlertTriangle}
             title={`Structural Observations (${analysis.structuralFindings!.length})`}
             defaultOpen={false}
@@ -881,12 +758,12 @@ export default function TrustCheck() {
                 </li>
               ))}
             </ul>
-          </CollapsibleSection>
+          </ResultSectionCard>
         )}
 
         {/* ── 12. Contact Details — collapsible ─────────────────────── */}
         {analysis.contactDetails.length > 0 && (
-          <CollapsibleSection
+          <ResultSectionCard collapsible={true}
             icon={Phone}
             title="Contact Details Found"
             defaultOpen={isHighRisk || isSuspicious}
@@ -930,12 +807,12 @@ export default function TrustCheck() {
             <p className="text-[11px] text-muted-foreground mt-3 border-t border-border/30 pt-3">
               Do not call or visit these contacts from this document. Verify through official public channels first.
             </p>
-          </CollapsibleSection>
+          </ResultSectionCard>
         )}
 
         {/* ── 13. Deadlines & Pressure Tactics — collapsible ────────── */}
         {analysis.deadlines.length > 0 && (
-          <CollapsibleSection
+          <ResultSectionCard collapsible={true}
             icon={Clock}
             title="Deadlines & Pressure Tactics"
             defaultOpen={isHighRisk || isSuspicious}
@@ -975,12 +852,12 @@ export default function TrustCheck() {
                 )
               })}
             </div>
-          </CollapsibleSection>
+          </ResultSectionCard>
         )}
 
         {/* ── 14. What To Verify ─────────────────────────────────────── */}
         {analysis.whatToVerify.length > 0 && (
-          <SectionCard icon={Eye} title="What To Verify Before Acting">
+          <ResultSectionCard collapsible={false} icon={Eye} title="What To Verify Before Acting">
             <ul className="space-y-2.5">
               {analysis.whatToVerify.map((item, i) => (
                 <li key={i} className="flex items-start gap-3">
@@ -991,12 +868,12 @@ export default function TrustCheck() {
                 </li>
               ))}
             </ul>
-          </SectionCard>
+          </ResultSectionCard>
         )}
 
         {/* ── 15. Safe Next Steps ────────────────────────────────────── */}
         {analysis.safeNextSteps.length > 0 && (
-          <SectionCard icon={CheckSquare} title="Safe Next Steps">
+          <ResultSectionCard collapsible={false} icon={CheckSquare} title="Safe Next Steps">
             <ul className="space-y-2.5">
               {analysis.safeNextSteps.map((step, i) => (
                 <li key={i} className="flex items-start gap-3">
@@ -1007,7 +884,7 @@ export default function TrustCheck() {
                 </li>
               ))}
             </ul>
-          </SectionCard>
+          </ResultSectionCard>
         )}
 
         {/* ── Footer disclaimer ──────────────────────────────────────── */}

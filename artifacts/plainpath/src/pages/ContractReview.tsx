@@ -5,18 +5,22 @@ import {
   ChevronDown, ChevronUp, ArrowLeft, RotateCcw, FileText,
   ShieldAlert, AlertTriangle, CheckCircle2, X as XIcon,
   Lock, ClipboardList, ChevronRight, Mail, Shield,
-  Camera, ScanLine,
+  Camera, ScanLine, Download, Bookmark, Clock, ArrowRight,
+  CheckSquare,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { getApiBaseUrl } from "@/lib/api"
-import { useLocation } from "wouter"
+import { useLocation, useSearch } from "wouter"
 import { WorkspaceShell } from "@/components/WorkspaceShell"
 import { beforeRunContractReview, UsageLimitError } from "@/lib/analysisGate"
 import { useEntitlements } from "@/hooks/useEntitlements"
 import UpgradeModal from "@/components/UpgradeModal"
+import { ResultStickyHeader } from "@/components/result/ResultStickyHeader"
+import { ResultSectionCard } from "@/components/result/ResultSectionCard"
+import { ResultMetaStrip } from "@/components/result/ResultMetaStrip"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -78,6 +82,38 @@ function scoreBg(score: number) {
   if (score >= 60) return "bg-blue-50 dark:bg-blue-950/30 border-blue-200/60 dark:border-blue-900/40"
   if (score >= 40) return "bg-amber-50 dark:bg-amber-950/30 border-amber-200/60 dark:border-amber-900/40"
   return "bg-red-50 dark:bg-red-950/30 border-red-200/60 dark:border-red-900/40"
+}
+
+function scoreBarClass(score: number): string {
+  if (score >= 80) return "bg-emerald-500"
+  if (score >= 60) return "bg-blue-500"
+  if (score >= 40) return "bg-amber-500"
+  return "bg-red-500"
+}
+
+function scoreBadgeClass(score: number): string {
+  if (score >= 80) return "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300"
+  if (score >= 60) return "bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300"
+  if (score >= 40) return "bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300"
+  return "bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800 text-red-700 dark:text-red-300"
+}
+
+function interpretScore(score: number): string {
+  if (score >= 80) return "This contract looks generally fair and balanced"
+  if (score >= 60) return "Mostly reasonable — some clauses deserve attention before signing"
+  if (score >= 40) return "Mixed — significant issues require negotiation before you sign"
+  return "Heavily one-sided — do not sign without major revisions"
+}
+
+function formatReviewedAt(iso: string): string {
+  try {
+    return new Date(iso).toLocaleString(undefined, {
+      month: "short", day: "numeric", year: "numeric",
+      hour: "numeric", minute: "2-digit",
+    })
+  } catch {
+    return iso
+  }
 }
 
 function primaryRecommendation(result: ReviewResult): string {
@@ -648,11 +684,11 @@ function SectionNav({ sections }: { sections: NavSection[] }) {
 // ─── Section Block ────────────────────────────────────────────────────────────
 
 const SECTION_COLORS = {
-  red:    { border: "border-red-200 dark:border-red-900/50",       bg: "bg-red-50/40 dark:bg-red-950/10",       heading: "text-red-700 dark:text-red-400"     },
-  amber:  { border: "border-amber-200 dark:border-amber-900/50",   bg: "bg-amber-50/40 dark:bg-amber-950/10",   heading: "text-amber-700 dark:text-amber-400" },
-  emerald:{ border: "border-emerald-200 dark:border-emerald-900/50", bg: "bg-emerald-50/30 dark:bg-emerald-950/10", heading: "text-emerald-700 dark:text-emerald-400" },
-  violet: { border: "border-violet-200 dark:border-violet-900/50", bg: "bg-violet-50/30 dark:bg-violet-950/10", heading: "text-violet-700 dark:text-violet-400" },
-  blue:   { border: "border-blue-200 dark:border-blue-900/50",     bg: "bg-blue-50/30 dark:bg-blue-950/10",     heading: "text-blue-700 dark:text-blue-400"   },
+  red:    { border: "border-red-200 dark:border-red-900/50",         bg: "bg-red-50/40 dark:bg-red-950/10",         icon: ShieldAlert  },
+  amber:  { border: "border-amber-200 dark:border-amber-900/50",     bg: "bg-amber-50/40 dark:bg-amber-950/10",     icon: AlertTriangle },
+  emerald:{ border: "border-emerald-200 dark:border-emerald-900/50", bg: "bg-emerald-50/30 dark:bg-emerald-950/10", icon: CheckCircle2 },
+  violet: { border: "border-violet-200 dark:border-violet-900/50",   bg: "bg-violet-50/30 dark:bg-violet-950/10",   icon: Lock         },
+  blue:   { border: "border-blue-200 dark:border-blue-900/50",       bg: "bg-blue-50/30 dark:bg-blue-950/10",       icon: ClipboardList },
 }
 
 function SectionBlock({ id, title, badge, children, collapsible = false, defaultCollapsed = false, color }: {
@@ -664,52 +700,25 @@ function SectionBlock({ id, title, badge, children, collapsible = false, default
   defaultCollapsed?: boolean
   color?: keyof typeof SECTION_COLORS
 }) {
-  const [collapsed, setCollapsed] = useState(defaultCollapsed)
   const colors = color ? SECTION_COLORS[color] : null
-
-  const headerInner = (
-    <>
-      <h3 className={`text-sm font-bold uppercase tracking-widest ${colors ? colors.heading : "text-muted-foreground"}`}>{title}</h3>
-      {badge}
-      {collapsible && (
-        <span className="ml-auto text-xs text-muted-foreground flex items-center gap-1">
-          {collapsed ? "Show" : "Hide"}
-          {collapsed ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
-        </span>
-      )}
-    </>
-  )
+  const accentClass = colors ? `${colors.border} ${colors.bg}` : ""
+  const Icon = colors?.icon ?? FileText
 
   return (
-    <div
-      id={id}
-      className={`scroll-mt-24 rounded-2xl border p-5 space-y-4 ${colors ? `${colors.border} ${colors.bg}` : "border-border/40 bg-card"}`}
-    >
-      {collapsible ? (
-        <button
-          onClick={() => setCollapsed(c => !c)}
-          className="flex items-center gap-2 w-full text-left cursor-pointer"
-        >
-          {headerInner}
-        </button>
-      ) : (
-        <div className="flex items-center gap-2">{headerInner}</div>
-      )}
-      <AnimatePresence initial={false}>
-        {!collapsed && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-            className="overflow-hidden"
-          >
-            {children}
-          </motion.div>
-        )}
-      </AnimatePresence>
+    <div id={id} className="scroll-mt-24">
+      <ResultSectionCard
+        icon={Icon}
+        title={title}
+        badge={badge}
+        collapsible={collapsible}
+        defaultOpen={!defaultCollapsed}
+        accentClass={accentClass}
+      >
+        {children}
+      </ResultSectionCard>
     </div>
   )
+
 }
 
 // ─── Results View ─────────────────────────────────────────────────────────────
@@ -745,7 +754,6 @@ function buildReviewText(result: ReviewResult): string {
 }
 
 function ResultsView({ result, onReset }: { result: ReviewResult; onReset: () => void }) {
-  const [copied, setCopied] = useState(false)
   const redFlags = result.clauses.filter(c => c.rating === "red-flag")
   const watchOuts = result.clauses.filter(c => c.rating === "watch-out")
   const fair = result.clauses.filter(c => c.rating === "fair")
@@ -766,85 +774,111 @@ function ResultsView({ result, onReset }: { result: ReviewResult; onReset: () =>
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="space-y-8"
+      className="space-y-4"
     >
-      {/* ── Header ── */}
-      <div className="flex items-start justify-between flex-wrap gap-3">
-        <div>
-          <h2 className="text-2xl font-display font-bold">Contract Review Results</h2>
-          <p className="text-sm text-muted-foreground mt-0.5">Clause-by-clause — read this before you sign</p>
-        </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <button
-            onClick={() => {
-              navigator.clipboard.writeText(buildReviewText(result)).then(() => {
-                setCopied(true)
-                setTimeout(() => setCopied(false), 2000)
-              })
-            }}
-            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground border border-border/60 bg-card hover:bg-secondary rounded-xl px-3 py-1.5 transition-colors"
-          >
-            {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-            <span className="hidden sm:inline">{copied ? "Copied" : "Copy results"}</span>
-          </button>
-          <Button variant="outline" size="sm" onClick={onReset} className="gap-1.5">
-            <RotateCcw className="w-3.5 h-3.5" /> Review Another
-          </Button>
-        </div>
-      </div>
-
-      {/* ── Score summary ── */}
-      <div className={`border rounded-2xl p-6 ${scoreBg(result.overallScore)}`}>
-        <div className="flex items-start gap-6 flex-wrap">
-          <div className="text-center min-w-[72px]">
-            <p className={`text-6xl font-bold font-display leading-none ${scoreColor(result.overallScore)}`}>{result.overallScore}</p>
-            <p className="text-xs text-muted-foreground mt-1.5">out of 100</p>
+      {/* ── Score banner — matches Trust Check verdict panel rhythm ── */}
+      <div className={`rounded-2xl border p-5 sm:p-6 ${scoreBg(result.overallScore)}`}>
+        <div className="flex items-start gap-6 flex-wrap mb-3">
+          <div className="text-center min-w-[80px]">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">Contract Score</p>
+            <p className={`text-6xl font-bold leading-none tabular-nums ${scoreColor(result.overallScore)}`}>{result.overallScore}</p>
+            <p className="text-xs text-muted-foreground mt-1">/ 100</p>
           </div>
           <div className="flex-1 min-w-0">
-            <p className={`text-xl font-bold mb-1.5 ${scoreColor(result.overallScore)}`}>{result.verdict}</p>
+            <p className={`text-xl font-bold mb-1 ${scoreColor(result.overallScore)}`}>{result.verdict}</p>
+            <p className={`text-xs font-semibold mb-2 ${scoreColor(result.overallScore)} opacity-70`}>
+              {interpretScore(result.overallScore)}
+            </p>
             <p className="text-sm text-foreground/80 leading-relaxed">{result.summary}</p>
           </div>
         </div>
 
         {/* Count pills */}
-        <div className="flex flex-wrap gap-3 mt-5 pt-4 border-t border-border/20">
-          <div className="flex items-center gap-1.5 text-sm">
-            <ShieldAlert className="w-4 h-4 text-red-500" />
-            <span className="font-bold text-red-600 dark:text-red-400">{redFlags.length}</span>
-            <span className="text-muted-foreground">red flag{redFlags.length !== 1 ? "s" : ""}</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-sm">
-            <AlertTriangle className="w-4 h-4 text-amber-500" />
-            <span className="font-bold text-amber-600 dark:text-amber-400">{watchOuts.length}</span>
-            <span className="text-muted-foreground">watch-out{watchOuts.length !== 1 ? "s" : ""}</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-sm">
-            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-            <span className="font-bold text-emerald-600 dark:text-emerald-400">{fair.length}</span>
-            <span className="text-muted-foreground">fair clause{fair.length !== 1 ? "s" : ""}</span>
-          </div>
-          {missingCount > 0 && (
-            <div className="flex items-center gap-1.5 text-sm">
-              <Lock className="w-4 h-4 text-violet-500" />
-              <span className="font-bold text-violet-600 dark:text-violet-400">{missingCount}</span>
-              <span className="text-muted-foreground">missing protection{missingCount !== 1 ? "s" : ""}</span>
-            </div>
+        <div className="flex flex-wrap gap-2 mb-4">
+          {redFlags.length > 0 && (
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-red-500/15 text-red-700 dark:text-red-300 border border-red-500/20">
+              <ShieldAlert className="w-3 h-3" /> {redFlags.length} red flag{redFlags.length !== 1 ? "s" : ""}
+            </span>
           )}
+          {watchOuts.length > 0 && (
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/20">
+              <AlertTriangle className="w-3 h-3" /> {watchOuts.length} watch-out{watchOuts.length !== 1 ? "s" : ""}
+            </span>
+          )}
+          {fair.length > 0 && (
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
+              <CheckCircle2 className="w-3 h-3" /> {fair.length} fair clause{fair.length !== 1 ? "s" : ""}
+            </span>
+          )}
+          {missingCount > 0 && (
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-violet-500/15 text-violet-700 dark:text-violet-300 border border-violet-500/20">
+              <Lock className="w-3 h-3" /> {missingCount} missing protection{missingCount !== 1 ? "s" : ""}
+            </span>
+          )}
+        </div>
+
+        {/* Progress bar */}
+        <div className="space-y-1.5">
+          <div className="h-2 rounded-full bg-black/8 dark:bg-white/10 overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${result.overallScore}%` }}
+              transition={{ delay: 0.3, duration: 0.6, ease: "easeOut" }}
+              className={`h-full rounded-full ${scoreBarClass(result.overallScore)}`}
+            />
+          </div>
+          <div className="flex justify-between text-[10px] text-muted-foreground/60 font-medium">
+            <span>0 — Needs major revisions</span>
+            <span>100 — Fair and balanced</span>
+          </div>
         </div>
       </div>
 
-      {/* ── Primary recommendation ── */}
-      <div className="flex items-start gap-3 bg-background border border-border/50 rounded-xl px-4 py-3.5 shadow-sm">
-        <ChevronRight className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
-        <p className="text-sm font-medium leading-relaxed">{recommendation}</p>
+      {/* ── Primary recommendation — matches Trust Check Recommended Actions card ── */}
+      <div className={`p-5 rounded-2xl border ${
+        redFlags.length >= 3
+          ? "border-red-200/70 dark:border-red-700/40 bg-red-50/40 dark:bg-red-950/20"
+          : redFlags.length >= 1
+          ? "border-amber-200/70 dark:border-amber-700/40 bg-amber-50/40 dark:bg-amber-950/20"
+          : watchOuts.length >= 3
+          ? "border-amber-200/70 dark:border-amber-700/40 bg-amber-50/40 dark:bg-amber-950/20"
+          : "border-blue-200/70 dark:border-blue-700/40 bg-blue-50/40 dark:bg-blue-950/20"
+      }`}>
+        <div className="flex items-center gap-2 mb-2.5">
+          <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border ${
+            redFlags.length >= 1
+              ? "bg-amber-100 dark:bg-amber-900/40 border-amber-200 dark:border-amber-700"
+              : "bg-blue-100 dark:bg-blue-900/40 border-blue-200 dark:border-blue-700"
+          }`}>
+            <CheckSquare className={`w-3.5 h-3.5 ${
+              redFlags.length >= 1
+                ? "text-amber-600 dark:text-amber-400"
+                : "text-blue-600 dark:text-blue-400"
+            }`} />
+          </div>
+          <h3 className={`text-sm font-bold ${
+            redFlags.length >= 1
+              ? "text-amber-800 dark:text-amber-300"
+              : "text-blue-800 dark:text-blue-300"
+          }`}>Recommended Action</h3>
+        </div>
+        <p className="text-sm text-foreground/85 leading-relaxed">{recommendation}</p>
       </div>
+
+      {/* ── Metadata strip ── */}
+      {result.reviewedAt && (
+        <ResultMetaStrip items={[
+          { icon: Clock, text: `Reviewed ${formatReviewedAt(result.reviewedAt)}` },
+          { icon: FileText, text: "Contract review" },
+        ]} />
+      )}
 
       {/* ── Section nav ── */}
       <SectionNav sections={navSections} />
 
       {/* ── Legal disclaimer ── */}
       <div className="bg-muted/30 border border-border/30 rounded-xl px-4 py-3 text-xs text-muted-foreground">
-        AI-assisted contract review for informational purposes only. Not legal advice. Always consult a qualified attorney before signing any legal agreement.
+        AI-assisted contract review. Not legal advice — always consult a qualified attorney before signing any legal agreement.
       </div>
 
       {/* ── Red Flags ── */}
@@ -957,6 +991,30 @@ function ResultsView({ result, onReset }: { result: ReviewResult; onReset: () =>
           </Card>
         </SectionBlock>
       )}
+      {/* ── Footer ── */}
+      <div className="text-center py-4">
+        <p className="text-[11px] text-muted-foreground/60 max-w-sm mx-auto leading-relaxed">
+          PlainPath Contract Review uses AI to surface clause-level risks. Results are not legal or financial advice. When in doubt, consult a qualified attorney.
+        </p>
+        <div className="flex items-center justify-center gap-3 mt-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => window.print()}
+            className="text-xs gap-1.5 print:hidden"
+          >
+            <Download className="w-3.5 h-3.5" /> Export PDF
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onReset}
+            className="text-xs gap-1.5"
+          >
+            Review another contract <ArrowRight className="w-3.5 h-3.5" />
+          </Button>
+        </div>
+      </div>
     </motion.div>
   )
 }
@@ -965,6 +1023,7 @@ function ResultsView({ result, onReset }: { result: ReviewResult; onReset: () =>
 
 export default function ContractReview() {
   const [, setLocation] = useLocation()
+  const searchString = useSearch()
 
   const [activeTab, setActiveTab] = useState<"paste" | "upload" | "camera">("paste")
   const [text, setText] = useState("")
@@ -972,9 +1031,19 @@ export default function ContractReview() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<ReviewResult | null>(null)
+
+  // URL-based demo loading: /contract-review?demo=freelance-design
+  useEffect(() => {
+    const demoId = new URLSearchParams(searchString).get("demo")
+    if (demoId) {
+      const demo = REVIEW_DEMOS.find(d => d.id === demoId)
+      if (demo) setResult(demo.data)
+    }
+  }, [])
   const [capturedImages, setCapturedImages] = useState<string[]>([])
   const [cameraError, setCameraError] = useState<string | null>(null)
   const [upgradeModal, setUpgradeModal] = useState(false)
+  const [copyDone, setCopyDone] = useState(false)
 
   const { entitlements } = useEntitlements()
 
@@ -1080,16 +1149,65 @@ export default function ContractReview() {
   if (loading) return <ContractReviewLoadingScreen />
 
   // Results view
-  if (result) return (
-    <div
-      className="min-h-screen bg-background"
-      style={{ paddingBottom: "max(6rem, env(safe-area-inset-bottom) + 6rem)" }}
-    >
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
-        <ResultsView result={result} onReset={handleReset} />
+  if (result) {
+    function copyResult() {
+      navigator.clipboard.writeText(buildReviewText(result!)).then(() => {
+        setCopyDone(true)
+        setTimeout(() => setCopyDone(false), 2000)
+      })
+    }
+
+    return (
+      <div
+        className="min-h-screen bg-background"
+        style={{ paddingBottom: "max(6rem, env(safe-area-inset-bottom) + 6rem)" }}
+      >
+        <ResultStickyHeader
+          toolIcon={Scale}
+          toolLabel="Contract Review"
+          toolIconClass="text-amber-500/80"
+          subtitleText={`Score: ${result.overallScore}/100`}
+          verdictLabel={result.verdict}
+          verdictBadgeClass={scoreBadgeClass(result.overallScore)}
+          onBack={handleReset}
+          actions={
+            <>
+              <button
+                onClick={copyResult}
+                title="Copy results as text"
+                className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors shrink-0"
+                aria-label="Copy summary"
+              >
+                {copyDone
+                  ? <Check className="w-4 h-4 text-emerald-500" />
+                  : <Copy className="w-4 h-4" />
+                }
+              </button>
+              <button
+                onClick={() => window.print()}
+                title="Export as PDF"
+                className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors shrink-0 print:hidden"
+                aria-label="Export PDF"
+              >
+                <Download className="w-4 h-4" />
+              </button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleReset}
+                className="text-xs h-8 hidden sm:flex gap-1.5 shrink-0"
+              >
+                Review Another <ArrowRight className="w-3.5 h-3.5" />
+              </Button>
+            </>
+          }
+        />
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-5 sm:pt-8 space-y-4">
+          <ResultsView result={result} onReset={handleReset} />
+        </div>
       </div>
-    </div>
-  )
+    )
+  }
 
   // Input form
   return (
