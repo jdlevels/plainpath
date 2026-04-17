@@ -10,7 +10,7 @@ import { WebAppDemo } from "@/components/WebAppDemo";
 import {
   FileText, ShieldAlert, FileSignature, ShieldCheck,
   ArrowRight, Upload, Sparkles, Scale,
-  AlertTriangle, CheckCircle2, Clock, Lock, X as XIcon,
+  AlertTriangle, CheckCircle2, Clock, Lock, X as XIcon, EyeOff,
 } from "lucide-react";
 
 /* ─── Animation helpers ──────────────────────────────────── */
@@ -82,10 +82,11 @@ function RotatingBadge() {
 
 /* ─── Tool pill data ─────────────────────────────────────── */
 const TOOLS = [
-  { label: "Analyze a Document",   icon: FileText,       cls: "tool-btn-blue",    href: "/app/analyze"       },
-  { label: "Document Trust Check", icon: ShieldAlert,    cls: "tool-btn-red",     href: "/app/import?mode=trust-check"   },
-  { label: "Build a Contract",     icon: FileSignature,  cls: "tool-btn-emerald", href: "/app/build-contract" },
-  { label: "Contract Review",      icon: Scale,          cls: "tool-btn-amber",   href: "/app/contract-review" },
+  { label: "Analyze a Document",    icon: FileText,      cls: "tool-btn-blue",    href: "/app/analyze"       },
+  { label: "Document Trust Check",  icon: ShieldAlert,   cls: "tool-btn-red",     href: "/app/import?mode=trust-check"   },
+  { label: "Build a Contract",      icon: FileSignature, cls: "tool-btn-emerald", href: "/app/build-contract" },
+  { label: "Contract Review",       icon: Scale,         cls: "tool-btn-amber",   href: "/app/contract-review" },
+  { label: "Redact Sensitive Info", icon: EyeOff,        cls: "tool-btn-violet",  href: "/app/redact"         },
 ];
 
 /* ─── Feature cards ─────────────────────────────────────── */
@@ -142,6 +143,19 @@ const FEATURES = [
     tags: ["Freelance work", "NDAs", "Rental agreements", "Payment plans"],
     tagCls: "bg-emerald-50/80 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-700/40",
   },
+  {
+    icon: EyeOff,
+    color: "text-violet-600 dark:text-violet-400",
+    bg: "bg-violet-100 dark:bg-violet-900/30",
+    border: "border-l-violet-500 dark:border-l-violet-400",
+    accent: "bg-violet-500 dark:bg-violet-400",
+    glow: "from-violet-50 dark:from-violet-900/10",
+    title: "Redact Sensitive Info",
+    desc: "Paste or upload any document. PlainPath detects names, SSNs, account numbers, phone numbers, and more — then you choose exactly what gets removed before sharing or analyzing.",
+    result: { label: "Redaction Applied", value: "3 names, 2 SSNs, and 1 account number removed. Redacted copy ready to share.", icon: Lock, color: "text-violet-600 dark:text-violet-400", bg: "bg-violet-50 dark:bg-violet-900/20" },
+    tags: ["Medical records", "Legal documents", "Financial statements", "Personal correspondence"],
+    tagCls: "bg-violet-50/80 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300 border border-violet-200/60 dark:border-violet-700/40",
+  },
 ];
 
 /* ─── How it works ───────────────────────────────────────── */
@@ -169,10 +183,11 @@ const PLANS = [
     highlight: false,
     badge: null as string | null,
     tools: [
-      { label: "Analyze a Document",   included: true  },
-      { label: "Document Trust Check", included: false },
-      { label: "Build a Contract",     included: false },
-      { label: "Contract Review",      included: false },
+      { label: "Analyze a Document",    included: true  },
+      { label: "Document Trust Check",  included: false },
+      { label: "Build a Contract",      included: false },
+      { label: "Contract Review",       included: false },
+      { label: "Redact Sensitive Info", included: true  },
     ],
     extras: [] as string[],
     cta: "Start with Starter",
@@ -182,7 +197,7 @@ const PLANS = [
     name: "Pro",
     price: "$19.99",
     period: "/month",
-    desc: "Full access to all four tools. Best for individuals.",
+    desc: "Full access to all five tools. Best for individuals.",
     highlight: true,
     badge: "Most Popular",
     tools: [
@@ -190,6 +205,7 @@ const PLANS = [
       { label: "Document Trust Check", included: true },
       { label: "Build a Contract",     included: true },
       { label: "Contract Review",      included: true },
+      { label: "Redact Sensitive Info", included: true },
     ],
     extras: ["Saved analysis history", "Deeper output formatting"],
     cta: "Get Pro",
@@ -250,9 +266,9 @@ export default function Home() {
                 custom={2} variants={fadeUp}
                 className="text-base md:text-lg text-muted-foreground mb-6 leading-relaxed max-w-lg"
               >
-                Leases, contracts, medical bills, and court notices. PlainPath gives you four ways to
+                Leases, contracts, medical bills, and court notices. PlainPath gives you five ways to
                 move forward: analyze documents, trust-check suspicious paperwork, review agreements,
-                and build contracts — all in plain English.
+                build contracts, and redact sensitive information — all in plain English.
               </motion.p>
 
               {/* Tool pills */}
@@ -288,7 +304,7 @@ export default function Home() {
 
               <motion.div custom={5} variants={fadeUp}>
                 <p className="text-xs text-muted-foreground">
-                  Plans from $4.99/month &nbsp;·&nbsp; All four tools on Pro &nbsp;·&nbsp; Cancel anytime
+                  Plans from $4.99/month &nbsp;·&nbsp; All five tools on Pro &nbsp;·&nbsp; Cancel anytime
                 </p>
               </motion.div>
             </motion.div>
@@ -329,7 +345,7 @@ export default function Home() {
       <section id="features" className="py-20 md:py-28">
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
           <div className="text-center max-w-2xl mx-auto mb-14">
-            <p className="text-xs font-semibold tracking-[0.12em] uppercase text-muted-foreground mb-3">Four tools · one platform</p>
+            <p className="text-xs font-semibold tracking-[0.12em] uppercase text-muted-foreground mb-3">Five tools · one platform</p>
             <h2
               className="text-4xl md:text-5xl font-bold mb-4 text-foreground"
               style={{ fontFamily: "var(--font-display)" }}
@@ -343,7 +359,7 @@ export default function Home() {
               </span>
             </h2>
             <p className="text-lg text-muted-foreground">
-              Whether you're reading, verifying, building, or negotiating — PlainPath has a tool for it.
+              Whether you're reading, verifying, building, reviewing, or redacting — PlainPath has a tool for it.
             </p>
           </div>
 

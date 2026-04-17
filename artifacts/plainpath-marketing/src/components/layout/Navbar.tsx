@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import {
   Menu, X, ChevronDown,
-  FileText, ShieldCheck, Scale, PenLine, GitCompare, LayoutGrid,
+  FileText, ShieldCheck, Scale, PenLine, GitCompare, LayoutGrid, EyeOff,
 } from "lucide-react";
 
 function smoothScroll(id: string) {
@@ -18,11 +18,12 @@ const NAV_LINKS = [
 ];
 
 const TOOL_LINKS = [
-  { label: "Analyze a Document",   href: "/app/analyze",         icon: FileText    },
-  { label: "Document Trust Check", href: "/app/import?mode=trust-check", icon: ShieldCheck },
-  { label: "Contract Review",      href: "/app/contract-review", icon: Scale       },
-  { label: "Build a Contract",     href: "/app/build-contract",  icon: PenLine     },
-  { label: "Compare Versions",     href: "/app/compare",         icon: GitCompare  },
+  { label: "Analyze a Document",    href: "/app/analyze",                icon: FileText    },
+  { label: "Document Trust Check",  href: "/app/import?mode=trust-check", icon: ShieldCheck },
+  { label: "Contract Review",       href: "/app/contract-review",        icon: Scale       },
+  { label: "Build a Contract",      href: "/app/build-contract",         icon: PenLine     },
+  { label: "Redact Sensitive Info", href: "/app/redact",                 icon: EyeOff      },
+  { label: "Compare Versions",      href: "/app/compare",                icon: GitCompare  },
 ];
 
 const LOGO_SVG = (
