@@ -1014,15 +1014,15 @@ export default function Import() {
                           className="space-y-4"
                         >
                           {redactedNotice && (
-                            <div className="rounded-xl border border-emerald-200 dark:border-emerald-800/40 bg-emerald-50/60 dark:bg-emerald-950/20 px-3.5 py-3 flex items-center gap-2.5">
-                              <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                            <div className="rounded-xl border border-emerald-200 dark:border-emerald-800/40 bg-emerald-50/60 dark:bg-emerald-950/20 px-3.5 py-3 flex items-start gap-2.5">
+                              <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
                               <div className="flex-1 min-w-0">
-                                <p className="text-xs font-semibold text-emerald-800 dark:text-emerald-300">Using redacted document</p>
-                                <p className="text-[11px] text-emerald-700/70 dark:text-emerald-400/60 mt-0.5">Sensitive information has been removed. Ready to analyze.</p>
+                                <p className="text-xs font-semibold text-emerald-800 dark:text-emerald-300">Working on redacted copy</p>
+                                <p className="text-[11px] text-emerald-700/70 dark:text-emerald-400/60 mt-0.5">Only the redacted version will be submitted — original values are not sent for analysis</p>
                               </div>
                               <button
                                 onClick={() => { setRedactedNotice(false); setText("") }}
-                                className="p-1 rounded hover:bg-emerald-100 dark:hover:bg-emerald-900/30 text-emerald-600/50"
+                                className="p-1 rounded hover:bg-emerald-100 dark:hover:bg-emerald-900/30 text-emerald-600/50 shrink-0"
                               >
                                 <XIcon className="w-3.5 h-3.5" />
                               </button>

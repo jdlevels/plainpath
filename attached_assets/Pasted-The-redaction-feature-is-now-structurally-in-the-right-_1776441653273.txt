@@ -1,0 +1,105 @@
+The redaction feature is now structurally in the right direction. Good.
+
+Now we need the next pass focused on proof of real redaction, export flow, and user trust.
+
+Do NOT rework the routing foundation that was just built.
+Build on top of it.
+
+==================================================
+PHASE 3 — REDACTION PROOF + EXPORT + TRUST LAYER
+==================================================
+
+Goals:
+- prove that redaction is real, not masking
+- complete the export/download/copy workflow
+- make the user confident about what was redacted and what version is being used
+- make the flow feel consistent across Analyze, Trust Check, and Contract Review
+
+Required work:
+
+1. TRUE REDACTION VERIFICATION
+Audit and confirm how redaction is being applied for each supported format.
+
+I need explicit confirmation for:
+- pasted text
+- copied redacted text
+- exported/downloaded output
+- uploaded text-based documents
+- PDFs if supported now
+
+For each format, confirm whether:
+- underlying text is removed/replaced
+- hidden text remains or not
+- copy/paste reveals anything or not
+- output is actually safe to share
+
+If any current format is still only visually masked, fix it or clearly mark it unsupported for safe export.
+
+2. REDACTION SUMMARY PANEL
+Add a visible summary after review/apply:
+- total sensitive values detected
+- total redacted
+- total skipped
+- categories detected
+- repeated-value count where relevant
+
+Example:
+- 12 sensitive values detected
+- 10 redacted
+- 2 left unchanged
+- 3 emails, 2 phone numbers, 1 SSN, 4 names
+
+3. EXPORT / COPY ACTIONS
+Add clear output actions after redaction:
+- Download redacted copy
+- Copy redacted text
+- Continue to Analyze / Trust Check / Contract Review
+
+Make sure:
+- copied output is the redacted version only
+- downloaded/exported output is the redacted version only
+- destination tool uses the redacted version, not the original
+
+4. “USING REDACTED VERSION” CONFIRMATION
+On destination pages, make the banner more explicit:
+- show user is working on a redacted copy
+- make it clear the original is not being passed into the next tool
+- add a “View redaction summary” link or expandable summary if practical
+
+5. CONSISTENT ENTRY EXPERIENCE
+Make redaction feel like a real first-class safety step across:
+- Analyze
+- Trust Check
+- Contract Review
+
+Standardize:
+- entry button wording
+- banner wording
+- summary wording
+- continue CTA wording
+- visual treatment
+
+6. REVIEW PANEL IMPROVEMENTS
+Keep same-value grouping, but improve trust/readability:
+- show occurrence count clearly
+- let user expand grouped items to inspect all occurrences if needed
+- preserve enough context around each occurrence so user knows what they are redacting
+
+7. SAFETY COPY
+Add clear user-facing copy:
+- “Redacted output is what will be copied/exported”
+- “Review all suggested redactions before sharing”
+- if any format has limitations, state them clearly
+
+==================================================
+DELIVERABLES
+==================================================
+
+Return:
+A. Exact files changed
+B. Supported safe-export formats right now
+C. Proof of how true redaction is applied per format
+D. Screenshot of redaction summary panel
+E. Screenshot of export/download/copy actions
+F. Screenshot of destination page showing “using redacted version”
+G. Any remaining limitations that still need Phase 4

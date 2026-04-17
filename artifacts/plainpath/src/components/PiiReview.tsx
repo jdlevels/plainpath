@@ -6,7 +6,7 @@ import { useState, useEffect, useMemo, useCallback } from "react"
 import {
   ShieldCheck, ShieldAlert, Check, X, Download, Copy, ChevronRight,
   Loader2, AlertCircle, RotateCcw, ArrowRight, Eye, EyeOff,
-  CheckCheck, Trash2,
+  CheckCheck, Trash2, ChevronDown, ChevronUp,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { getApiBaseUrl } from "@/lib/api"
@@ -17,8 +17,9 @@ import {
   buildPreviewSegments,
   downloadRedactedText,
   copyRedactedText,
-  buildRedactionSummary,
+  buildRedactionStats,
 } from "@/lib/piiExport"
+import type { RedactionStats } from "@/lib/piiExport"
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -47,7 +48,6 @@ function groupByCategory(spans: PiiSpanWithStatus[]): Map<string, PiiSpanWithSta
     if (!map.has(cat)) map.set(cat, [])
     map.get(cat)!.push(span)
   }
-  // Sort categories by CATEGORY_ORDER
   const sorted = new Map<string, PiiSpanWithStatus[]>()
   for (const cat of CATEGORY_ORDER) {
     if (map.has(cat)) sorted.set(cat, map.get(cat)!)
@@ -56,6 +56,25 @@ function groupByCategory(spans: PiiSpanWithStatus[]): Map<string, PiiSpanWithSta
     if (!sorted.has(cat)) sorted.set(cat, items)
   }
   return sorted
+}
+
+// Extract surrounding context for an occurrence
+function getContextSnippet(text: string, span: PiiSpanWithStatus, contextLen = 50): {
+  before: string
+  value: string
+  after: string
+  truncatedBefore: boolean
+  truncatedAfter: boolean
+} {
+  const rawBefore = text.slice(Math.max(0, span.start - contextLen), span.start)
+  const rawAfter = text.slice(span.end, Math.min(text.length, span.end + contextLen))
+  return {
+    before: rawBefore.replace(/\s+/g, " "),
+    value: span.value,
+    after: rawAfter.replace(/\s+/g, " "),
+    truncatedBefore: span.start > contextLen,
+    truncatedAfter: span.end + contextLen < text.length,
+  }
 }
 
 // ─── Preview Renderer ─────────────────────────────────────────────────────────
@@ -72,7 +91,7 @@ function DocumentPreview({ text, spans }: { text: string; spans: PiiSpanWithStat
         </p>
         {approvedCount > 0 && (
           <span className="text-[11px] bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full">
-            {approvedCount} item{approvedCount !== 1 ? "s" : ""} will be redacted
+            {approvedCount} will be redacted
           </span>
         )}
       </div>
@@ -108,85 +127,148 @@ function DocumentPreview({ text, spans }: { text: string; spans: PiiSpanWithStat
         </p>
       </div>
       <p className="text-[11px] text-muted-foreground/50 text-center">
-        Black labels show what will be replaced in the final export. Faded text will remain.
+        Black labels show what will be replaced. Faded text will remain unchanged.
       </p>
     </div>
   )
 }
 
-// ─── Span Row ──────────────────────────────────────────────────────────────────
+// ─── Span Group ────────────────────────────────────────────────────────────────
+// Renders one row per unique value (with ×N count), expandable to see all
+// occurrences with their surrounding context in the document.
 
-function SpanRow({ span, count = 1, allApproved, onToggle }: {
-  span: PiiSpanWithStatus
-  count?: number
+function SpanGroup({
+  group,
+  text,
+  allApproved,
+  onToggle,
+}: {
+  group: PiiSpanWithStatus[]
+  text: string
   allApproved: boolean
   onToggle: () => void
 }) {
-  const meta = PII_TYPE_META[span.type]
-  return (
-    <div
-      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-all cursor-pointer select-none ${
-        allApproved
-          ? "border-border/60 bg-background hover:bg-muted/30"
-          : "border-border/30 bg-muted/20 opacity-60 hover:opacity-80"
-      }`}
-      onClick={onToggle}
-    >
-      <button
-        type="button"
-        className={`w-5 h-5 rounded flex items-center justify-center shrink-0 transition-colors ${
-          allApproved
-            ? "bg-destructive/15 border border-destructive/30 text-destructive"
-            : "bg-muted border border-border/50 text-muted-foreground"
-        }`}
-        aria-label={allApproved ? "Click to keep (un-redact)" : "Click to redact"}
-      >
-        {allApproved ? <X className="w-3 h-3" /> : <Check className="w-3 h-3" />}
-      </button>
+  const [expanded, setExpanded] = useState(false)
+  const representative = group[0]
+  const count = group.length
+  const meta = PII_TYPE_META[representative.type]
 
-      <div className="flex-1 min-w-0">
-        <span className={`inline-flex items-center text-[10px] font-semibold px-1.5 py-0.5 rounded-full mr-2 ${meta.badgeBg} ${meta.badgeText}`}>
-          {meta.label}
-        </span>
-        <span className={`text-sm font-mono ${allApproved ? "line-through text-muted-foreground/70" : "text-foreground/80"}`}>
-          {truncateValue(span.value)}
-        </span>
-        {count > 1 && (
-          <span className="ml-2 text-[10px] font-medium text-muted-foreground/60 bg-muted/50 rounded-full px-1.5 py-0.5">
-            ×{count}
+  return (
+    <div className={`rounded-lg border transition-all ${
+      allApproved
+        ? "border-border/60 bg-background"
+        : "border-border/30 bg-muted/20 opacity-60"
+    }`}>
+      {/* Main row */}
+      <div
+        className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer select-none ${
+          allApproved ? "hover:bg-muted/30" : "hover:opacity-80"
+        } transition-all`}
+        onClick={onToggle}
+      >
+        {/* Toggle checkbox */}
+        <button
+          type="button"
+          className={`w-5 h-5 rounded flex items-center justify-center shrink-0 transition-colors ${
+            allApproved
+              ? "bg-destructive/15 border border-destructive/30 text-destructive"
+              : "bg-muted border border-border/50 text-muted-foreground"
+          }`}
+          aria-label={allApproved ? "Click to keep (un-redact)" : "Click to redact"}
+        >
+          {allApproved ? <X className="w-3 h-3" /> : <Check className="w-3 h-3" />}
+        </button>
+
+        {/* Label + value */}
+        <div className="flex-1 min-w-0">
+          <span className={`inline-flex items-center text-[10px] font-semibold px-1.5 py-0.5 rounded-full mr-2 ${meta.badgeBg} ${meta.badgeText}`}>
+            {meta.label}
           </span>
+          <span className={`text-sm font-mono ${allApproved ? "line-through text-muted-foreground/70" : "text-foreground/80"}`}>
+            {truncateValue(representative.value)}
+          </span>
+          {count > 1 && (
+            <span className="ml-2 text-[10px] font-medium text-muted-foreground/60 bg-muted/50 rounded-full px-1.5 py-0.5">
+              ×{count}
+            </span>
+          )}
+        </div>
+
+        {/* Confidence */}
+        <span className={`text-[10px] shrink-0 ${
+          representative.confidence === "high" ? "text-emerald-600 dark:text-emerald-400" :
+          representative.confidence === "medium" ? "text-amber-600 dark:text-amber-400" :
+          "text-muted-foreground/50"
+        }`}>
+          {representative.confidence}
+        </span>
+
+        {/* Expand toggle (only if multiple occurrences) */}
+        {count > 1 && (
+          <button
+            type="button"
+            onClick={e => { e.stopPropagation(); setExpanded(v => !v) }}
+            className="ml-0.5 p-1 rounded text-muted-foreground/40 hover:text-muted-foreground hover:bg-muted/50 transition-colors shrink-0"
+            aria-label={expanded ? "Collapse occurrences" : "Show all occurrences"}
+          >
+            {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+          </button>
         )}
       </div>
 
-      <span className={`text-[10px] shrink-0 ${
-        span.confidence === "high" ? "text-emerald-600 dark:text-emerald-400" :
-        span.confidence === "medium" ? "text-amber-600 dark:text-amber-400" :
-        "text-muted-foreground/50"
-      }`}>
-        {span.confidence}
-      </span>
+      {/* Expanded context panel */}
+      {expanded && count > 1 && (
+        <div className="border-t border-border/20 px-3 py-2.5 space-y-2 bg-muted/10">
+          <p className="text-[10px] font-medium text-muted-foreground/50 uppercase tracking-wider">
+            {count} occurrences in document
+          </p>
+          {group.map((span, i) => {
+            const ctx = getContextSnippet(text, span, 50)
+            return (
+              <div key={span.id} className="text-xs font-mono leading-relaxed text-muted-foreground/70">
+                <span className="text-muted-foreground/30 mr-1.5 select-none">{i + 1}.</span>
+                {ctx.truncatedBefore && <span className="opacity-40">…</span>}
+                <span>{ctx.before}</span>
+                <span className={`font-semibold rounded px-0.5 mx-0.5 ${
+                  allApproved
+                    ? "bg-destructive/10 text-destructive dark:text-red-400"
+                    : "bg-muted text-foreground/70"
+                }`}>{ctx.value}</span>
+                <span>{ctx.after}</span>
+                {ctx.truncatedAfter && <span className="opacity-40">…</span>}
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }
 
-// ─── Applied State ────────────────────────────────────────────────────────────
+// ─── Applied / Summary View ────────────────────────────────────────────────────
+// Shown after user clicks "Apply Redactions". Includes:
+//  - Structured breakdown of what was redacted
+//  - Format verification (proof of true redaction)
+//  - Export + continue actions
 
 function AppliedView({
   redactedText,
   spans,
   fileName,
+  continueLabel,
   onAnalyze,
   onReset,
 }: {
   redactedText: string
   spans: PiiSpanWithStatus[]
   fileName?: string
+  continueLabel: string
   onAnalyze: () => void
   onReset: () => void
 }) {
   const [copied, setCopied] = useState(false)
-  const summary = buildRedactionSummary(spans)
-  const approvedCount = spans.filter(s => s.approved).length
+  const [showRedacted, setShowRedacted] = useState(false)
+  const stats = useMemo(() => buildRedactionStats(spans), [spans])
 
   async function handleCopy() {
     await copyRedactedText(redactedText)
@@ -194,38 +276,100 @@ function AppliedView({
     setTimeout(() => setCopied(false), 2000)
   }
 
+  const isUploadedFile = !!fileName
+
   return (
     <div className="space-y-5">
-      {/* Summary banner */}
-      <div className="rounded-xl border border-emerald-200 dark:border-emerald-800/50 bg-emerald-50 dark:bg-emerald-950/30 p-4 flex gap-3">
-        <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-        <div>
-          <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
-            {approvedCount === 0 ? "No items redacted" : `${approvedCount} item${approvedCount !== 1 ? "s" : ""} permanently redacted`}
-          </p>
-          <p className="text-xs text-emerald-700/70 dark:text-emerald-400/70 mt-0.5">{summary}</p>
+
+      {/* ── Summary panel ─────────────────────────────────────────────────── */}
+      <div className="rounded-xl border border-emerald-200 dark:border-emerald-800/50 bg-emerald-50 dark:bg-emerald-950/30 p-4 space-y-3">
+        <div className="flex items-center gap-2.5">
+          <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+          <div>
+            <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
+              {stats.totalRedacted === 0
+                ? "No items redacted — document unchanged"
+                : `${stats.uniqueRedacted} value${stats.uniqueRedacted !== 1 ? "s" : ""} permanently removed (${stats.totalRedacted} instance${stats.totalRedacted !== 1 ? "s" : ""})`
+              }
+            </p>
+            {stats.totalSkipped > 0 && (
+              <p className="text-xs text-emerald-700/60 dark:text-emerald-400/60 mt-0.5">
+                {stats.uniqueSkipped} value{stats.uniqueSkipped !== 1 ? "s" : ""} left unchanged by your choice
+              </p>
+            )}
+          </div>
         </div>
+
+        {/* Per-type breakdown */}
+        {stats.byType.some(t => t.redacted > 0) && (
+          <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 pl-7">
+            {stats.byType.filter(t => t.redacted > 0).map(t => (
+              <div key={t.label} className="flex items-center justify-between gap-2">
+                <span className="text-xs text-emerald-800/70 dark:text-emerald-300/70 truncate">{t.label}</span>
+                <span className="text-xs font-mono font-semibold text-emerald-700 dark:text-emerald-400 shrink-0">{t.redacted}</span>
+              </div>
+            ))}
+            {stats.totalSkipped > 0 && (
+              <div className="flex items-center justify-between gap-2 col-span-2 pt-1 border-t border-emerald-200/60 dark:border-emerald-700/30 mt-0.5">
+                <span className="text-xs text-emerald-800/40 dark:text-emerald-400/40">Left unchanged</span>
+                <span className="text-xs font-mono text-emerald-800/40 dark:text-emerald-400/40">{stats.totalSkipped}</span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Notice */}
-      <div className="rounded-lg bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-900/30 p-3 flex gap-2">
-        <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-        <p className="text-xs text-amber-800/80 dark:text-amber-300/80 leading-relaxed">
-          <strong>These redactions are permanent in the exported output.</strong> The original values are not present in the downloaded file or copied text. Review before sharing externally.
+      {/* ── Format verification ───────────────────────────────────────────── */}
+      <div className="rounded-lg border border-border/40 bg-muted/20 dark:bg-muted/10 px-4 py-3 space-y-2">
+        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+          What's safe to share
         </p>
-      </div>
-
-      {/* Redacted preview */}
-      <div className="space-y-2">
-        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Redacted Document</p>
-        <div className="rounded-xl border border-border/50 bg-muted/20 p-4 max-h-[260px] overflow-y-auto">
-          <p className="text-sm leading-relaxed whitespace-pre-wrap font-mono break-words text-foreground/80">
-            {redactedText}
-          </p>
+        <div className="space-y-1.5">
+          <div className="flex items-start gap-2 text-xs text-emerald-700 dark:text-emerald-400">
+            <Check className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+            <span>Original values permanently replaced in the output — not hidden, not recoverable</span>
+          </div>
+          <div className="flex items-start gap-2 text-xs text-emerald-700 dark:text-emerald-400">
+            <Check className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+            <span>Downloaded <span className="font-mono">.txt</span> file contains only the redacted version</span>
+          </div>
+          <div className="flex items-start gap-2 text-xs text-emerald-700 dark:text-emerald-400">
+            <Check className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+            <span>Copied text contains only the redacted version</span>
+          </div>
+          {isUploadedFile ? (
+            <div className="flex items-start gap-2 text-xs text-amber-600 dark:text-amber-400">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+              <span>Source file <span className="font-mono">{fileName}</span> is not modified — <strong>do not share the original file</strong></span>
+            </div>
+          ) : (
+            <div className="flex items-start gap-2 text-xs text-emerald-700 dark:text-emerald-400">
+              <Check className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+              <span>Pasted input: original values gone — no source file to worry about</span>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Export actions */}
+      {/* ── Redacted preview (collapsible) ────────────────────────────────── */}
+      <div className="space-y-2">
+        <button
+          onClick={() => setShowRedacted(v => !v)}
+          className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+        >
+          {showRedacted ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          {showRedacted ? "Hide" : "Inspect"} redacted output
+        </button>
+        {showRedacted && (
+          <div className="rounded-xl border border-border/50 bg-muted/20 p-4 max-h-[240px] overflow-y-auto">
+            <p className="text-sm leading-relaxed whitespace-pre-wrap font-mono break-words text-foreground/80">
+              {redactedText}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* ── Actions ───────────────────────────────────────────────────────── */}
       <div className="space-y-2">
         <Button
           size="lg"
@@ -257,26 +401,31 @@ function AppliedView({
           </Button>
         </div>
 
+        <p className="text-[11px] text-center text-muted-foreground/40 pt-0.5">
+          Downloaded file and copied text contain only the redacted version
+        </p>
+
         <button
           onClick={onReset}
-          className="w-full text-xs text-muted-foreground/60 hover:text-muted-foreground py-1.5 flex items-center justify-center gap-1.5 transition-colors"
+          className="w-full text-xs text-muted-foreground/50 hover:text-muted-foreground py-1.5 flex items-center justify-center gap-1.5 transition-colors"
         >
           <RotateCcw className="w-3.5 h-3.5" />
           Start over with full document
         </button>
       </div>
-
-      {/* Format note */}
-      <p className="text-[11px] text-muted-foreground/40 text-center">
-        Phase 1: text export only. PDF binary redaction coming in a future update.
-      </p>
     </div>
   )
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export function PiiReview({ text, fileName, continueLabel = "Analyze this document", onAnalyzeRedacted, onCancel }: Props) {
+export function PiiReview({
+  text,
+  fileName,
+  continueLabel = "Analyze this document",
+  onAnalyzeRedacted,
+  onCancel,
+}: Props) {
   const [status, setStatus] = useState<DetectStatus>("detecting")
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [spans, setSpans] = useState<PiiSpanWithStatus[]>([])
@@ -310,12 +459,7 @@ export function PiiReview({ text, fileName, continueLabel = "Analyze this docume
     return () => { cancelled = true }
   }, [text])
 
-  // ── Toggle individual span ─────────────────────────────────────────────────
-  const toggleSpan = useCallback((id: string) => {
-    setSpans(prev => prev.map(s => s.id === id ? { ...s, approved: !s.approved } : s))
-  }, [])
-
-  // ── Toggle all spans that share the same normalized value ──────────────────
+  // ── Toggle all spans sharing the same normalized value ─────────────────────
   const toggleSameValue = useCallback((normalizedValue: string, approve: boolean) => {
     setSpans(prev => prev.map(s =>
       s.value.toLowerCase().trim() === normalizedValue ? { ...s, approved: approve } : s
@@ -337,12 +481,18 @@ export function PiiReview({ text, fileName, continueLabel = "Analyze this docume
     setShowPreview(false)
   }, [text, spans])
 
-  // ── Groups ─────────────────────────────────────────────────────────────────
+  // ── Derived state ──────────────────────────────────────────────────────────
   const groups = useMemo(() => groupByCategory(spans), [spans])
   const approvedCount = useMemo(() => spans.filter(s => s.approved).length, [spans])
-  const totalCount = spans.length
 
-  // ─── LOADING ────────────────────────────────────────────────────────────────
+  // Unique values (for display in the header)
+  const uniqueValueCount = useMemo(() => {
+    return new Set(spans.map(s => s.value.toLowerCase().trim())).size
+  }, [spans])
+
+  const totalInstances = spans.length
+
+  // ─── LOADING ──────────────────────────────────────────────────────────────
   if (status === "detecting") {
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
@@ -361,7 +511,7 @@ export function PiiReview({ text, fileName, continueLabel = "Analyze this docume
     )
   }
 
-  // ─── ERROR ───────────────────────────────────────────────────────────────────
+  // ─── ERROR ────────────────────────────────────────────────────────────────
   if (status === "error") {
     return (
       <div className="space-y-4 py-8 text-center">
@@ -383,6 +533,7 @@ export function PiiReview({ text, fileName, continueLabel = "Analyze this docume
         redactedText={redactedText}
         spans={spans}
         fileName={fileName}
+        continueLabel={continueLabel}
         onAnalyze={() => onAnalyzeRedacted(redactedText)}
         onReset={() => { setApplied(false); setRedactedText(null) }}
       />
@@ -390,7 +541,7 @@ export function PiiReview({ text, fileName, continueLabel = "Analyze this docume
   }
 
   // ─── NO PII FOUND ─────────────────────────────────────────────────────────
-  if (totalCount === 0) {
+  if (totalInstances === 0) {
     return (
       <div className="space-y-5 py-4">
         <div className="rounded-xl border border-emerald-200 dark:border-emerald-800/50 bg-emerald-50 dark:bg-emerald-950/30 p-5 text-center flex flex-col items-center gap-2">
@@ -412,23 +563,29 @@ export function PiiReview({ text, fileName, continueLabel = "Analyze this docume
     )
   }
 
-  // ─── REVIEW STATE ────────────────────────────────────────────────────────
+  // ─── REVIEW STATE ─────────────────────────────────────────────────────────
   return (
     <div className="space-y-5">
-      {/* Summary header */}
+
+      {/* ── Summary header ──────────────────────────────────────────────── */}
       <div className="rounded-xl border border-amber-200 dark:border-amber-800/40 bg-amber-50/60 dark:bg-amber-950/20 p-3.5 flex gap-3">
         <ShieldAlert className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
         <div>
           <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">
-            {totalCount} item{totalCount !== 1 ? "s" : ""} detected
+            {uniqueValueCount} sensitive value{uniqueValueCount !== 1 ? "s" : ""} detected
+            {totalInstances !== uniqueValueCount && (
+              <span className="font-normal text-amber-700/70 dark:text-amber-400/70">
+                {" "}({totalInstances} total instances)
+              </span>
+            )}
           </p>
           <p className="text-xs text-amber-700/70 dark:text-amber-400/70 mt-0.5 leading-relaxed">
-            Review each item below. Checked items will be redacted. Click an item to toggle.
+            Checked items will be redacted everywhere they appear. Click an item to toggle. Click ↕ to see context.
           </p>
         </div>
       </div>
 
-      {/* Approve / Reject all */}
+      {/* ── Approve / Reject all ────────────────────────────────────────── */}
       <div className="flex items-center gap-2">
         <button
           onClick={() => setSpans(prev => prev.map(s => ({ ...s, approved: true })))}
@@ -447,16 +604,17 @@ export function PiiReview({ text, fileName, continueLabel = "Analyze this docume
           className="text-xs px-3 py-1.5 rounded-lg border border-border/50 bg-background hover:bg-muted/40 flex items-center gap-1.5 transition-colors ml-auto"
         >
           {showPreview ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-          {showPreview ? "Hide" : "Preview"}
+          {showPreview ? "Hide preview" : "Preview"}
         </button>
       </div>
 
-      {/* Grouped detection list */}
-      <div className="space-y-4 max-h-[340px] overflow-y-auto pr-1">
+      {/* ── Grouped detection list ──────────────────────────────────────── */}
+      <div className="space-y-4 max-h-[360px] overflow-y-auto pr-1">
         {Array.from(groups.entries()).map(([category, catSpans]) => {
           const allApproved = catSpans.every(s => s.approved)
           const noneApproved = catSpans.every(s => !s.approved)
-          // Deduplicate by normalized value — group all occurrences of the same text together
+
+          // Deduplicate by normalized value — one row per unique value
           const valueGroups = Array.from(
             catSpans.reduce((acc, span) => {
               const key = span.value.toLowerCase().trim()
@@ -465,13 +623,17 @@ export function PiiReview({ text, fileName, continueLabel = "Analyze this docume
               return acc
             }, new Map<string, PiiSpanWithStatus[]>())
           )
+
           return (
             <div key={category} className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   {category}
                   <span className="ml-1.5 font-normal text-muted-foreground/50">
-                    ({valueGroups.length}{catSpans.length !== valueGroups.length ? `, ${catSpans.length} total` : ""})
+                    ({valueGroups.length}{catSpans.length !== valueGroups.length
+                      ? `, ${catSpans.length} total`
+                      : ""
+                    })
                   </span>
                 </p>
                 <div className="flex gap-1.5">
@@ -495,13 +657,12 @@ export function PiiReview({ text, fileName, continueLabel = "Analyze this docume
               </div>
               <div className="space-y-1">
                 {valueGroups.map(([normVal, group]) => {
-                  const representative = group[0]
                   const allInGroupApproved = group.every(s => s.approved)
                   return (
-                    <SpanRow
+                    <SpanGroup
                       key={normVal}
-                      span={representative}
-                      count={group.length}
+                      group={group}
+                      text={text}
                       allApproved={allInGroupApproved}
                       onToggle={() => toggleSameValue(normVal, !allInGroupApproved)}
                     />
@@ -513,10 +674,10 @@ export function PiiReview({ text, fileName, continueLabel = "Analyze this docume
         })}
       </div>
 
-      {/* Preview */}
+      {/* ── Live preview ────────────────────────────────────────────────── */}
       {showPreview && <DocumentPreview text={text} spans={spans} />}
 
-      {/* Apply CTA */}
+      {/* ── Apply CTA ───────────────────────────────────────────────────── */}
       <div className="space-y-2 pt-1">
         <Button
           size="lg"
@@ -531,14 +692,12 @@ export function PiiReview({ text, fileName, continueLabel = "Analyze this docume
           onClick={onCancel}
           className="w-full text-xs text-muted-foreground/50 hover:text-muted-foreground py-1.5 transition-colors"
         >
-          Cancel — analyze without redacting
+          Cancel — continue without redacting
         </button>
       </div>
 
-      {/* Phase 2 note */}
       <p className="text-[11px] text-muted-foreground/35 text-center leading-relaxed">
-        Redactions permanently replace the selected values in the exported output.
-        Manual selection and PDF redaction coming in a future update.
+        Redactions permanently replace selected values. Exported output and submitted text contain only the redacted version.
       </p>
     </div>
   )

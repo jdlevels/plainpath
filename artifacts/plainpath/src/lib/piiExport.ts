@@ -105,8 +105,8 @@ export async function copyRedactedText(redactedText: string): Promise<void> {
   await navigator.clipboard.writeText(redactedText)
 }
 
-// ─── Redaction summary ─────────────────────────────────────────────────────
-// Returns a human-readable summary of what was redacted.
+// ─── Redaction summary (plain string) ─────────────────────────────────────
+// Returns a human-readable one-liner of what was redacted.
 
 export function buildRedactionSummary(spans: PiiSpanWithStatus[]): string {
   const approved = spans.filter(s => s.approved)
@@ -123,4 +123,50 @@ export function buildRedactionSummary(spans: PiiSpanWithStatus[]): string {
     .map(([label, count]) => `${count} ${label}${count > 1 ? "s" : ""}`)
 
   return `${approved.length} item${approved.length > 1 ? "s" : ""} redacted: ${lines.join(", ")}.`
+}
+
+// ─── Redaction stats (structured) ──────────────────────────────────────────
+// Returns a structured breakdown used for the summary panel.
+
+export type RedactionStats = {
+  totalInstances: number    // total span instances detected (not unique values)
+  totalRedacted: number     // approved span instances
+  totalSkipped: number      // rejected span instances
+  uniqueValues: number      // unique distinct values across all spans
+  uniqueRedacted: number    // unique values being redacted
+  uniqueSkipped: number     // unique values being kept
+  byType: { label: string; redacted: number; skipped: number }[]
+  hasRepeatedValues: boolean
+}
+
+export function buildRedactionStats(spans: PiiSpanWithStatus[]): RedactionStats {
+  const approved = spans.filter(s => s.approved)
+  const skipped = spans.filter(s => !s.approved)
+
+  const allValues = new Set(spans.map(s => s.value.toLowerCase().trim()))
+  const redactedValues = new Set(approved.map(s => s.value.toLowerCase().trim()))
+  const skippedValues = new Set(skipped.map(s => s.value.toLowerCase().trim()))
+
+  const byLabel: Record<string, { redacted: number; skipped: number }> = {}
+  for (const span of spans) {
+    const label = PII_TYPE_META[span.type].label
+    if (!byLabel[label]) byLabel[label] = { redacted: 0, skipped: 0 }
+    if (span.approved) byLabel[label].redacted++
+    else byLabel[label].skipped++
+  }
+
+  const byType = Object.entries(byLabel)
+    .map(([label, counts]) => ({ label, ...counts }))
+    .sort((a, b) => (b.redacted + b.skipped) - (a.redacted + a.skipped))
+
+  return {
+    totalInstances: spans.length,
+    totalRedacted: approved.length,
+    totalSkipped: skipped.length,
+    uniqueValues: allValues.size,
+    uniqueRedacted: redactedValues.size,
+    uniqueSkipped: skippedValues.size,
+    byType,
+    hasRepeatedValues: spans.length > allValues.size,
+  }
 }

@@ -241,7 +241,17 @@ Redaction is a first-class pre-processing safety step across the entire document
 ### PII Types Detected
 Identity: Full names, Dates of birth | Government ID: SSN, Tax ID/EIN, License numbers | Contact: Email addresses, Phone numbers | Financial: Account numbers, Routing numbers, Credit card numbers | Location: Street addresses | Healthcare/Insurance: Policy IDs, Member/Subscriber IDs | Legal: Case/Reference numbers | Technical: IP addresses | Other: General personal identifiers
 
-### Future (Phase 3)
+### Phase 3 (Shipped) — Redaction Proof + Export + Trust Layer
+- **`buildRedactionStats()`** in piiExport.ts: structured breakdown (totalInstances, totalRedacted, uniqueRedacted, byType[])
+- **AppliedView redesign**: structured summary panel (per-type counts, unique values vs total instances), format verification checklist (what's safe to share, uploaded file warning), collapsible "Inspect redacted output" panel, explicit export labels
+- **SpanGroup component**: replaced SpanRow — expandable occurrences list with surrounding context snippets (50 chars before/after each occurrence in document), context shows actual surrounding text so user can verify what they're redacting
+- **Review header**: now shows "X values detected (Y total instances)" distinguishing unique values from repeated occurrences
+- **Cancel copy**: "Cancel — continue without redacting" (was hardcoded "analyze")
+- **Destination banners**: "Working on redacted copy — only redacted version submitted, original not sent" (Analyze/Trust Check and Contract Review)
+- **`continueLabel` prop bug fixed**: was referenced in AppliedView but not passed — now passed correctly from PiiReview to AppliedView
+- **Bottom safety copy**: "Redactions permanently replace selected values. Exported output and submitted text contain only the redacted version."
+
+### Future (Phase 4)
 - Manual box-select redaction on PDF/image
 - "Redact all SSNs" one-click rules
 - Redaction audit log
