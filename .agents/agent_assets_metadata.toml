@@ -78,6 +78,18 @@ uri = "file://docs/store/assets/feature-graphic-final.png"
 type = "image"
 title = "PlainPath feature graphic no hex codes"
 
+[[generated]]
+id = "X91LeWl3xuHpL1A1_CmYG"
+uri = "file://docs/store/submission/assets/feature-graphic/plainpath-feature-graphic-v2.png"
+type = "image"
+title = "plainpath feature graphic banner"
+
+[[generated]]
+id = "Vvb9ssEgbUI2zGr2SC181"
+uri = "file://docs/store/submission/assets/app-icon/plainpath-app-icon-v2.png"
+type = "image"
+title = "plainpath app icon clean"
+
 [[outputs]]
 id = "o7YB8F3oFhJfMlxpy-hZz"
 uri = "file://PlainPath-Handoff.md"
