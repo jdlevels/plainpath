@@ -11,8 +11,9 @@ import { useUser, useClerk } from "@clerk/react"
 const TOOL_NAV = [
   { label: "Analyze a Document",   href: "/analyze",         icon: FileText    },
   { label: "Document Trust Check", href: "/trust-check",     icon: ShieldCheck },
-  { label: "Build a Contract",     href: "/build-contract",  icon: PenLine     },
   { label: "Contract Review",      href: "/contract-review", icon: Scale       },
+  { label: "Build a Contract",     href: "/build-contract",  icon: PenLine     },
+  { label: "Compare Versions",     href: "/compare",         icon: GitCompare  },
 ]
 
 function UserMenu() {
@@ -82,7 +83,6 @@ export function Navbar() {
 
   const isResults = location.startsWith("/results")
   const isMyAnalyses = location === "/my-analyses"
-  const isCompare = location === "/compare"
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -147,20 +147,7 @@ export function Navbar() {
                     {label}
                   </button>
                 ))}
-                <div className="border-t border-border/30 mt-1 pt-1">
-                  <button
-                    onClick={() => { navigate("/compare"); setToolsOpen(false) }}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm transition-colors text-left ${
-                      isCompare
-                        ? "text-primary bg-primary/6 font-medium"
-                        : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-                    }`}
-                  >
-                    <GitCompare className="w-3.5 h-3.5 shrink-0" />
-                    Compare Documents
-                  </button>
                 </div>
-              </div>
             )}
           </div>
 
@@ -240,16 +227,6 @@ export function Navbar() {
                 {label}
               </button>
             ))}
-            <button
-              onClick={() => navigate("/compare")}
-              className={`w-full flex items-center gap-2.5 px-2.5 py-2 text-sm rounded-lg transition-colors text-left ${
-                isCompare ? "text-primary bg-primary/8 font-medium" : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-              }`}
-            >
-              <GitCompare className="w-4 h-4 shrink-0" />
-              Compare Documents
-            </button>
-
             <div className="border-t border-border/30 mt-2 pt-2">
               <button
                 onClick={() => navigate("/my-analyses")}
