@@ -155,3 +155,69 @@ id = "h2Y72RvtJezh481uaCcZ0"
 uri = "file://docs/store/00-asset-index.md"
 type = "text"
 title = "Asset Index — Master inventory + submission checklist"
+
+[[outputs]]
+id = "deoJ3OZS3sI2pb7C0cyqh"
+uri = "file://docs/store/submission/SUBMISSION-READY-INVENTORY.md"
+type = "text"
+title = "Submission Inventory — master index + pre-submission checklist"
+
+[[outputs]]
+id = "qM9pl9ZWParhne2koRJAO"
+uri = "file://docs/store/submission/metadata/app-store-metadata.md"
+type = "text"
+title = "App Store Metadata — copy-paste ready for App Store Connect"
+
+[[outputs]]
+id = "pZhxpIZnCJBlUCIjP7xf0"
+uri = "file://docs/store/submission/metadata/play-store-metadata.md"
+type = "text"
+title = "Play Store Metadata — copy-paste ready for Google Play Console"
+
+[[outputs]]
+id = "MJHfPU7gEAfgRNs0G68uy"
+uri = "file://docs/store/submission/assets/app-icon/plainpath-app-icon-1024x1024.png"
+type = "image"
+title = "App Icon — 1024×1024 PNG concept"
+
+[[outputs]]
+id = "c7IkRLgo5d1vmpf1nwraD"
+uri = "file://docs/store/submission/assets/feature-graphic/plainpath-feature-graphic-crop-to-1024x500.png"
+type = "image"
+title = "Feature Graphic — crop to 1024×500 before Play Store upload"
+
+[[outputs]]
+id = "i4FsY1YD4TDWgI9AWDznH"
+uri = "file://docs/store/submission/ios/screenshots/01-home-tool-grid.jpg"
+type = "image"
+title = "iOS Shot 1 — Home / Tool Grid"
+
+[[outputs]]
+id = "A-KUzR9ItAq-xECp1LJ9D"
+uri = "file://docs/store/submission/ios/screenshots/02-analyze-plain-english.jpg"
+type = "image"
+title = "iOS Shot 2 — Analyze: Plain English Result"
+
+[[outputs]]
+id = "x4GnwGaLtzVTiWhALq66o"
+uri = "file://docs/store/submission/ios/screenshots/03-trust-check-verdict.jpg"
+type = "image"
+title = "iOS Shot 3 — Trust Check: Scam Verdict"
+
+[[outputs]]
+id = "A_jvnxsqGs3eeRVi8H5yO"
+uri = "file://docs/store/submission/ios/screenshots/04-contract-review-score.jpg"
+type = "image"
+title = "iOS Shot 4 — Contract Review: Fairness Score"
+
+[[outputs]]
+id = "Y-1_IAaCwzWcuD3PJ-HIe"
+uri = "file://docs/store/submission/ios/screenshots/05-contract-builder.jpg"
+type = "image"
+title = "iOS Shot 5 — Contract Builder"
+
+[[outputs]]
+id = "6wl3CNlAJ8mJxdPYa3faD"
+uri = "file://docs/store/submission/ios/screenshots/06-redact-detection.jpg"
+type = "image"
+title = "iOS Shot 6 — Redact: Sample Docs + Input"
