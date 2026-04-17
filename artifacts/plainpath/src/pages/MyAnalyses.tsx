@@ -355,18 +355,81 @@ export default function MyAnalyses() {
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col items-center justify-center py-24 text-center"
+            className="py-8"
           >
-            <div className="bg-card border border-border/50 rounded-2xl p-8 max-w-sm shadow-sm">
-              <div className="bg-secondary rounded-xl p-4 w-fit mx-auto mb-5">
-                <Folders className="w-8 h-8 text-muted-foreground/50" />
+            {/* Prompt */}
+            <div className="text-center mb-8">
+              <div className="bg-secondary rounded-xl p-4 w-fit mx-auto mb-4">
+                <Folders className="w-7 h-7 text-muted-foreground/50" />
               </div>
-              <h2 className="text-lg font-bold text-foreground mb-2">Nothing saved yet</h2>
-              <p className="text-sm text-muted-foreground leading-relaxed mb-6">
-                Analyze a document, then tap <strong>Save</strong> on the results page to keep it here for later.
+              <h2 className="text-lg font-bold text-foreground mb-1.5">Nothing saved yet</h2>
+              <p className="text-sm text-muted-foreground max-w-xs mx-auto leading-relaxed">
+                Analyze a document, then tap <strong>Save</strong> on the results page to keep it here.
               </p>
-              <Button className="w-full rounded-xl gap-1.5" onClick={() => setLocation("/import")}>
-                Analyze a document <ArrowRight className="w-3.5 h-3.5" />
+            </div>
+
+            {/* Tool cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+              {[
+                {
+                  icon: FileText,
+                  label: "Analyze a Document",
+                  desc: "Plain-English breakdown of any document — deadlines, actions, risks, and key terms.",
+                  color: "text-primary",
+                  bg: "bg-primary/8",
+                  border: "hover:border-primary/40",
+                  path: "/analyze",
+                },
+                {
+                  icon: ShieldCheck,
+                  label: "Document Trust Check",
+                  desc: "Verify if a letter or notice is legitimate. Catches scams and fake legal threats.",
+                  color: "text-red-500",
+                  bg: "bg-red-50 dark:bg-red-950/20",
+                  border: "hover:border-red-200 dark:hover:border-red-900/50",
+                  path: "/trust-check",
+                },
+                {
+                  icon: BookMarked,
+                  label: "Contract Builder",
+                  desc: "Generate a professional agreement in minutes by answering plain-English questions.",
+                  color: "text-emerald-500",
+                  bg: "bg-emerald-50 dark:bg-emerald-950/20",
+                  border: "hover:border-emerald-200 dark:hover:border-emerald-900/50",
+                  path: "/build-contract",
+                },
+                {
+                  icon: AlertTriangle,
+                  label: "Contract Review",
+                  desc: "Catch unfair clauses, hidden obligations, and risky terms before you sign.",
+                  color: "text-amber-500",
+                  bg: "bg-amber-50 dark:bg-amber-950/20",
+                  border: "hover:border-amber-200 dark:hover:border-amber-900/50",
+                  path: "/contract-review",
+                },
+              ].map((tool) => (
+                <button
+                  key={tool.label}
+                  onClick={() => setLocation(tool.path)}
+                  className={`text-left p-4 rounded-2xl border border-border/50 bg-card transition-all ${tool.border} hover:shadow-sm group`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={`w-9 h-9 rounded-xl ${tool.bg} flex items-center justify-center shrink-0 mt-0.5`}>
+                      <tool.icon className={`w-4.5 h-4.5 ${tool.color}`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-foreground mb-0.5">{tool.label}</p>
+                      <p className="text-xs text-muted-foreground leading-relaxed">{tool.desc}</p>
+                    </div>
+                    <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/40 group-hover:text-muted-foreground shrink-0 mt-1 transition-colors" />
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            <div className="text-center">
+              <Button className="rounded-full gap-1.5 px-8" onClick={() => setLocation("/import")}>
+                Start with your first document <ArrowRight className="w-3.5 h-3.5" />
               </Button>
             </div>
           </motion.div>

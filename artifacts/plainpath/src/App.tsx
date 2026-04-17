@@ -1,7 +1,8 @@
 import { useEffect, useRef } from "react";
 import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
-import { ClerkProvider, SignIn, SignUp, useClerk } from "@clerk/react";
+import { ClerkProvider, SignIn, SignUp, useClerk, useUser } from "@clerk/react";
+import { getApiBaseUrl } from "@/lib/api";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AnalysisProvider } from "@/context/AnalysisContext";
@@ -26,6 +27,7 @@ import SharedAnalysis from "@/pages/SharedAnalysis";
 import TeamDashboard from "@/pages/TeamDashboard";
 import JoinTeam from "@/pages/JoinTeam";
 import Compare from "@/pages/Compare";
+import Upgrade from "@/pages/Upgrade";
 import Methodology from "@/pages/Methodology";
 import IrsLetter from "@/pages/guides/IrsLetter";
 import LeaseAgreement from "@/pages/guides/LeaseAgreement";
@@ -106,6 +108,30 @@ function SignUpPage() {
   );
 }
 
+// Sends a one-time welcome email to new users (fires only if account < 15 min old)
+function WelcomeEmailTrigger() {
+  const { user } = useUser();
+  useEffect(() => {
+    if (!user?.primaryEmailAddress?.emailAddress) return;
+    const key = `welcome_sent_${user.id}`;
+    if (localStorage.getItem(key)) return;
+    const createdAt = new Date((user as any).createdAt ?? 0).getTime();
+    const minsAgo = (Date.now() - createdAt) / 60000;
+    if (minsAgo > 15) return;
+    localStorage.setItem(key, "1");
+    const base = getApiBaseUrl();
+    fetch(`${base}/api/reminders/welcome`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: user.primaryEmailAddress.emailAddress,
+        firstName: user.firstName ?? undefined,
+      }),
+    }).catch(() => {});
+  }, [user]);
+  return null;
+}
+
 // Invalidates react-query cache when signed-in user changes
 function ClerkQueryClientCacheInvalidator() {
   const { addListener } = useClerk();
@@ -160,6 +186,7 @@ function Router() {
               {(params) => <SharedAnalysis token={(params as { token: string }).token} />}
             </Route>
             <Route path="/compare" component={Compare} />
+            <Route path="/upgrade" component={Upgrade} />
             <Route path="/methodology" component={Methodology} />
             <Route path="/guides/irs-letter" component={IrsLetter} />
             <Route path="/guides/lease-agreement" component={LeaseAgreement} />
@@ -193,6 +220,7 @@ function ClerkProviderWithRoutes() {
     >
       <QueryClientProvider client={queryClient}>
         <ClerkQueryClientCacheInvalidator />
+        <WelcomeEmailTrigger />
         <TooltipProvider>
           <AnalysisProvider>
             <Router />

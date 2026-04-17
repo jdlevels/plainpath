@@ -13,7 +13,7 @@ export function Footer() {
   return (
     <footer className="bg-background border-t border-border pt-14 pb-8">
       <div className="max-w-7xl mx-auto px-5 sm:px-6">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-14">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-10 mb-14">
 
           {/* Brand */}
           <div className="col-span-2">
@@ -59,6 +59,16 @@ export function Footer() {
               <li><a href="/app/analyze" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Web App</a></li>
               <li><a href="#download" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Download iOS</a></li>
               <li><a href="#download" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Download Android</a></li>
+            </ul>
+          </div>
+
+          {/* Guides */}
+          <div>
+            <h4 className="font-semibold text-sm mb-4 text-foreground">Guides</h4>
+            <ul className="space-y-3">
+              <li><a href="/guides/reviewing-a-lease" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Reviewing a Lease</a></li>
+              <li><a href="/guides/understanding-an-nda" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Understanding an NDA</a></li>
+              <li><a href="/guides/employment-contract-red-flags" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Employment Contracts</a></li>
             </ul>
           </div>
 

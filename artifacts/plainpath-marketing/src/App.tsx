@@ -5,6 +5,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
+import ReviewingALease from "@/pages/guides/ReviewingALease";
+import UnderstandingAnNDA from "@/pages/guides/UnderstandingAnNDA";
+import EmploymentContractRedFlags from "@/pages/guides/EmploymentContractRedFlags";
 
 const queryClient = new QueryClient();
 
@@ -12,6 +15,9 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/guides/reviewing-a-lease" component={ReviewingALease} />
+      <Route path="/guides/understanding-an-nda" component={UnderstandingAnNDA} />
+      <Route path="/guides/employment-contract-red-flags" component={EmploymentContractRedFlags} />
       <Route component={NotFound} />
     </Switch>
   );
