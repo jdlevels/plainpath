@@ -21,7 +21,7 @@ const fadeUp = {
 /* ─── Tool pill data ─────────────────────────────────────── */
 const TOOLS = [
   { label: "Analyze a Document",   icon: FileText,       cls: "tool-btn-blue",    href: "/app/analyze"       },
-  { label: "Document Trust Check", icon: ShieldAlert,    cls: "tool-btn-red",     href: "/app/trust-check"   },
+  { label: "Document Trust Check", icon: ShieldAlert,    cls: "tool-btn-red",     href: "/app/import?mode=trust-check"   },
   { label: "Build a Contract",     icon: FileSignature,  cls: "tool-btn-emerald", href: "/app/build-contract" },
   { label: "Contract Review",      icon: Scale,          cls: "tool-btn-amber",   href: "/app/contract-review" },
 ];

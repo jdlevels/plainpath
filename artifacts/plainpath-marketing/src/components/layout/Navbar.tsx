@@ -19,7 +19,7 @@ const NAV_LINKS = [
 
 const TOOL_LINKS = [
   { label: "Analyze a Document",   href: "/app/analyze",         icon: FileText    },
-  { label: "Document Trust Check", href: "/app/trust-check",     icon: ShieldCheck },
+  { label: "Document Trust Check", href: "/app/import?mode=trust-check", icon: ShieldCheck },
   { label: "Contract Review",      href: "/app/contract-review", icon: Scale       },
   { label: "Build a Contract",     href: "/app/build-contract",  icon: PenLine     },
   { label: "Compare Versions",     href: "/app/compare",         icon: GitCompare  },

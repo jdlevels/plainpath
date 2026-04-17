@@ -10,7 +10,7 @@ import { useUser, useClerk } from "@clerk/react"
 
 const TOOL_NAV = [
   { label: "Analyze a Document",   href: "/analyze",         icon: FileText    },
-  { label: "Document Trust Check", href: "/trust-check",     icon: ShieldCheck },
+  { label: "Document Trust Check", href: "/import?mode=trust-check", icon: ShieldCheck },
   { label: "Contract Review",      href: "/contract-review", icon: Scale       },
   { label: "Build a Contract",     href: "/build-contract",  icon: PenLine     },
   { label: "Compare Versions",     href: "/compare",         icon: GitCompare  },
