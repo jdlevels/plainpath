@@ -29,19 +29,20 @@ export const PRICING_PLANS: PricingPlan[] = [
   },
   {
     name: "Pro",
-    price: "$19.99",
+    price: "$29.99",
     period: "/month",
     description:
-      "Full access to all 5 live tools — Analyze, Trust Check, Contract Builder, Contract Review, and Redact. Digital Signature coming soon.",
+      "Full access to all 5 live tools — Analyze, Trust Check, Contract Builder, Contract Review, and Redact. Unlimited use across every tool.",
     features: [
       "Everything in Starter",
       "Unlimited Document Trust Checks",
       "Unlimited Contract Builder drafts",
       "Unlimited Contract Reviews",
+      "Unlimited Redactions",
+      "Full Action Pack across all tools",
       "Source section explainers",
-      "Checklist, Risks & What's Missing",
-      "Full Action Pack",
-      "AI Insight panel across all tools"
+      "AI Insight panel across all tools",
+      "Saved analysis history"
     ],
     ctaLabel: "Get Pro",
     planKey: "pro",

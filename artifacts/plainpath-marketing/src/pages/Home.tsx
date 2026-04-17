@@ -161,17 +161,17 @@ const FEATURES = [
 
 /* ─── How it works ───────────────────────────────────────── */
 const HOW = [
-  { icon: Upload,       num: "01", title: "Upload or paste",    desc: "Photo, PDF, or plain text — any format works." },
-  { icon: Sparkles,     num: "02", title: "AI reads it for you", desc: "PlainPath extracts meaning, risks, and required actions." },
-  { icon: CheckCircle2, num: "03", title: "Act with confidence", desc: "Clear summary, action checklist, deadlines — no jargon." },
+  { icon: Upload,       num: "01", title: "Drop it in",            desc: "PDF, photo, or plain text — any format, any document type." },
+  { icon: Sparkles,     num: "02", title: "AI does the reading",   desc: "PlainPath extracts what matters: risks, obligations, deadlines, and required actions." },
+  { icon: CheckCircle2, num: "03", title: "Get clarity, not confusion", desc: "A plain-English summary, prioritized action checklist, and deadlines — every time." },
 ];
 
 /* ─── Trust ──────────────────────────────────────────────── */
 const TRUST = [
-  { icon: FileText,    title: "Plain-English results",    desc: "No legal jargon. Every result is written to be read and acted on immediately." },
-  { icon: Lock,        title: "Secure processing",        desc: "Documents are processed securely. Content is never sold or shared." },
-  { icon: ShieldCheck, title: "Works for any document",   desc: "Leases, IRS letters, medical bills, contracts, notices — all handled." },
-  { icon: CheckCircle2,title: "No account required",      desc: "Try any tool instantly — no sign-up needed to get your first result." },
+  { icon: FileText,    title: "Results you can act on",   desc: "Every analysis is written in plain English — no jargon. Read it once and know exactly what to do." },
+  { icon: Lock,        title: "Your documents stay yours", desc: "Documents are never stored permanently. We don't sell your data or train AI on your files." },
+  { icon: ShieldCheck, title: "Built for every document",  desc: "Leases, IRS letters, medical bills, contracts, court notices, NDAs — PlainPath handles them all." },
+  { icon: CheckCircle2,title: "Start in seconds",          desc: "No account needed for your first analysis. Try any tool immediately — sign up when you're ready." },
 ];
 
 /* ─── Pricing ────────────────────────────────────────────── */
@@ -180,7 +180,7 @@ const PLANS = [
     name: "Starter",
     price: "$4.99",
     period: "/month",
-    desc: "Document clarity on demand for individuals.",
+    desc: "Unlimited document analysis in plain English — key terms, deadlines, and action steps.",
     highlight: false,
     badge: null as string | null,
     tools: [
@@ -188,7 +188,7 @@ const PLANS = [
       { label: "Document Trust Check",  included: false, comingSoon: false },
       { label: "Build a Contract",      included: false, comingSoon: false },
       { label: "Contract Review",       included: false, comingSoon: false },
-      { label: "Redact Sensitive Info", included: true,  comingSoon: false },
+      { label: "Redact Sensitive Info", included: false, comingSoon: false },
       { label: "Digital Signature",     included: false, comingSoon: true  },
     ],
     extras: [] as string[],
@@ -197,20 +197,20 @@ const PLANS = [
   },
   {
     name: "Pro",
-    price: "$19.99",
+    price: "$29.99",
     period: "/month",
-    desc: "Full access to all 5 live tools. Best for individuals.",
+    desc: "Full access to all 5 live tools. Unlimited analyses, trust checks, contracts, reviews, and redactions.",
     highlight: true,
-    badge: "Most Popular",
+    badge: "Best Value",
     tools: [
-      { label: "Analyze a Document",   included: true,  comingSoon: false },
-      { label: "Document Trust Check", included: true,  comingSoon: false },
-      { label: "Build a Contract",     included: true,  comingSoon: false },
-      { label: "Contract Review",      included: true,  comingSoon: false },
-      { label: "Redact Sensitive Info", included: true, comingSoon: false },
-      { label: "Digital Signature",    included: false,  comingSoon: true  },
+      { label: "Analyze a Document",    included: true,  comingSoon: false },
+      { label: "Document Trust Check",  included: true,  comingSoon: false },
+      { label: "Build a Contract",      included: true,  comingSoon: false },
+      { label: "Contract Review",       included: true,  comingSoon: false },
+      { label: "Redact Sensitive Info", included: true,  comingSoon: false },
+      { label: "Digital Signature",     included: false, comingSoon: true  },
     ],
-    extras: ["Saved analysis history", "Deeper output formatting"],
+    extras: ["Saved analysis history", "Full Action Pack across all tools", "Priority AI processing"],
     cta: "Get Pro",
     href: "/app/analyze",
   },
@@ -318,7 +318,7 @@ export default function Home() {
 
               <motion.div custom={5} variants={fadeUp}>
                 <p className="text-xs text-muted-foreground">
-                  Plans from $4.99/month &nbsp;·&nbsp; All five tools on Pro &nbsp;·&nbsp; Cancel anytime
+                  From $4.99/month &nbsp;·&nbsp; All 5 tools on Pro &nbsp;·&nbsp; Cancel anytime
                 </p>
               </motion.div>
             </motion.div>
@@ -505,7 +505,7 @@ export default function Home() {
               className="text-4xl md:text-5xl font-bold mb-4 text-foreground"
               style={{ fontFamily: "var(--font-display)" }}
             >
-              Clear pricing.{" "}
+              Honest pricing.{" "}
               <span
                 className="bg-gradient-to-r from-primary via-blue-500 to-violet-500 bg-clip-text text-transparent"
                 style={{ WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}
@@ -514,7 +514,7 @@ export default function Home() {
               </span>
             </h2>
             <p className="text-lg text-muted-foreground">
-              Choose the plan that fits how you work. Cancel anytime.
+              Start with document analysis, or unlock every tool with Pro. No contracts — cancel anytime.
             </p>
           </div>
 
@@ -586,7 +586,7 @@ export default function Home() {
           </div>
 
           <p className="text-center text-xs text-muted-foreground mt-8">
-            All plans include web and mobile access &nbsp;·&nbsp; No contracts &nbsp;·&nbsp; Cancel anytime
+            Web access included on all plans &nbsp;·&nbsp; iOS &amp; Android coming soon &nbsp;·&nbsp; Cancel anytime
           </p>
         </div>
       </div>
@@ -707,7 +707,7 @@ export default function Home() {
             </a>
           </div>
           <p className="mt-6 text-xs text-white/25">
-            Plans from $4.99/month &nbsp;·&nbsp; All five tools on Pro &nbsp;·&nbsp; Cancel anytime
+            From $4.99/month &nbsp;·&nbsp; All 5 tools on Pro ($29.99/mo) &nbsp;·&nbsp; Cancel anytime
           </p>
         </div>
       </div>

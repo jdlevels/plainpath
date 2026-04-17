@@ -40,7 +40,7 @@ PlainPath is built as a monorepo using pnpm workspaces.
 7.  **Document Comparison**: Allows comparison of two document versions, highlighting changes and their significance (added, removed, modified, risk-increased/decreased).
 
 ### Payment and Billing
--   Full billing architecture implemented in test mode with Stripe, supporting Starter ($4.99/month) and Pro ($19.99/month) tiers.
+-   Full billing architecture implemented in test mode with Stripe, supporting Starter ($4.99/month) and Pro ($29.99/month) tiers. Starter = Analyze a Document only. Pro = all 5 live tools.
 -   Native billing abstraction scaffold built for iOS/Android using RevenueCat (account setup pending — see `docs/store/05-revenuecat-config.md`).
 
 ### Store & Launch Docs (`docs/store/`)

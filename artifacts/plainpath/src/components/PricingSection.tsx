@@ -59,14 +59,14 @@ function AttorneyCostCalculator() {
             <span className="text-muted-foreground text-sm font-medium">vs</span>
             <div className="text-center px-4 py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-900/40">
               <p className="text-xs text-muted-foreground mb-0.5">PlainPath Pro</p>
-              <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">$19.99/mo</p>
+              <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">$29.99/mo</p>
             </div>
           </div>
         )}
       </div>
       {cost && (
         <p className="text-xs text-muted-foreground mt-3">
-          One attorney review of a {selected.toLowerCase()} typically costs <strong className="text-foreground">{cost.range}</strong>. PlainPath Pro gives you unlimited reviews across all 5 tools for <strong className="text-foreground">$19.99/month</strong> — that's a saving of <strong className="text-emerald-600">${cost.low - 20}–${cost.high - 20}</strong> on just the first document.
+          One attorney review of a {selected.toLowerCase()} typically costs <strong className="text-foreground">{cost.range}</strong>. PlainPath Pro gives you unlimited access across all 5 tools for <strong className="text-foreground">$29.99/month</strong> — that's a saving of <strong className="text-emerald-600">${cost.low - 30}–${cost.high - 30}</strong> on just the first document.
         </p>
       )}
     </div>
@@ -166,11 +166,11 @@ export default function PricingSection() {
         </div>
 
         <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
-          Simple pricing. Five powerful tools.
+          Honest pricing. All 5 live tools on Pro.
         </h2>
 
         <p className="mt-4 text-base leading-7 text-slate-600 dark:text-slate-300 sm:text-lg">
-          Start with document analysis on Starter, or unlock all 5 live tools with Pro.
+          Start with document analysis on Starter, or unlock every tool with Pro. No contracts, cancel anytime.
         </p>
 
         {/* Billing period toggle */}
