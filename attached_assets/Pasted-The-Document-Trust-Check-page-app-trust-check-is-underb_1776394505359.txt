@@ -1,0 +1,74 @@
+The Document Trust Check page (`/app/trust-check`) is underbuilt and needs a full product-quality upgrade.
+
+Current problems:
+
+* tiny centered widget on a huge empty canvas
+* no real page structure
+* no clear explanation of what the tool does
+* no upload/paste/scan workflow
+* not enough guidance about what users will get back
+* overall page feels like a placeholder, not a finished product tool
+
+Required improvements:
+
+1. Add a real page title:
+
+* `Document Trust Check`
+
+2. Add clear supporting copy under the title:
+
+* `Check whether a document looks legitimate, risky, manipulative, or potentially fraudulent before you act on it.`
+* `Upload, paste, or scan a document to detect scam signals, pressure tactics, suspicious payment demands, impersonation clues, and other trust concerns — all explained in plain English.`
+
+3. Add a “What this tool checks” section near the top with items like:
+
+* urgency and scare tactics
+* suspicious payment requests
+* impersonation or spoofing patterns
+* unverifiable or inconsistent details
+* debt collection / utility shutoff / legal threat red flags
+* sensitive information requests
+
+4. Add a real input workflow for the trust check:
+
+* Upload File
+* Paste Text
+* Scan Photo
+  Optional:
+* sender/company/source field if it fits naturally
+
+5. Add a “What you’ll get” section:
+
+* trust verdict
+* key red flags
+* explanation of suspicious language
+* suggested next verification steps
+* clearer decision support before responding
+
+6. Keep the sample suspicious-document cards, but reposition them as a proper “Try a sample document” section under the main trust-check workspace.
+
+7. Improve the page layout:
+
+* stronger centered content container
+* reduce excessive empty space
+* make the page feel grounded and premium
+* align with the visual quality of the homepage
+
+8. Improve CTA wording if needed:
+
+* `Run Trust Check`
+  or
+* `Check Legitimacy`
+  Use the strongest wording that fits the product.
+
+9. Support both light and dark mode cleanly.
+
+10. Keep routing and working navigation intact.
+
+Deliverables:
+
+* exact files changed
+* final page structure
+* final copy used
+* list of input methods added
+* screenshots in light and dark mode

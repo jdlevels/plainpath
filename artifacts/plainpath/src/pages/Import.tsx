@@ -6,7 +6,7 @@ import {
   ClipboardList, GraduationCap, Banknote, CheckCircle2, FileText, Type, File,
   ArrowLeft, Building2, Scale, Heart, FileSignature,
   Mail, HelpCircle, ShieldCheck, AlertTriangle, XCircle,
-  Camera, X as XIcon, Plus, ScanLine, RotateCcw
+  Camera, X as XIcon, Plus, ScanLine, RotateCcw, Clock,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -108,6 +108,14 @@ const FORMATS = [
 const ACCEPTED = ".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
 
 const EXAMPLES = ["IRS notice", "Lease agreement", "Insurance EOB", "Permit application", "Court summons", "Grant instructions", "HOA violation", "Medicare letter"]
+
+const WHAT_YOU_GET = [
+  { label: "Plain-English summary",                     icon: FileText      },
+  { label: "Key obligations & deadlines",               icon: Clock         },
+  { label: "Missing info or required documents",        icon: ClipboardList },
+  { label: "Risks and confusing language",              icon: AlertTriangle },
+  { label: "Clear next-step guidance",                  icon: CheckCircle2  },
+]
 
 const DOC_TYPES = [
   { id: "Tax & Government Form",     label: "Tax & Government Form",    icon: Building2,    color: "text-blue-500",    bg: "bg-blue-50 dark:bg-blue-950/60"    },
@@ -258,7 +266,7 @@ export default function Import() {
   useEffect(() => {
     document.title = isTrustCheck
       ? "Document Trust Check — PlainPath"
-      : "Import Your Document — PlainPath"
+      : "Analyze a Document — PlainPath"
     return () => { document.title = "PlainPath" }
   }, [isTrustCheck])
 
@@ -703,8 +711,8 @@ export default function Import() {
       <div className="max-w-2xl mx-auto px-4 pt-4 sm:pt-12 relative">
 
         {/* ── Header ─────────────────────────────────── */}
-        <div className="text-center mb-5 sm:mb-10">
-          {isTrustCheck && (
+        {isTrustCheck ? (
+          <div className="text-center mb-5 sm:mb-10">
             <motion.div
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
@@ -713,41 +721,59 @@ export default function Import() {
               <ShieldCheck className="w-3.5 h-3.5" />
               Trust &amp; Verification
             </motion.div>
-          )}
-          <motion.h1
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-2xl sm:text-3xl font-display font-bold tracking-tight mb-2"
-          >
-            {isTrustCheck ? "Document Trust Check" : "Import Your Document"}
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.07 }}
-            className="text-muted-foreground text-sm sm:text-base"
-          >
-            {isTrustCheck
-              ? "Upload or paste a document to scan for scam indicators, pressure tactics, suspicious contact details, and verification risks."
-              : "PlainPath reads the content and returns a structured action plan — not a summary."}
-          </motion.p>
-        </div>
+            <motion.h1
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-2xl sm:text-3xl font-display font-bold tracking-tight mb-2"
+            >
+              Document Trust Check
+            </motion.h1>
+            <motion.p
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.07 }}
+              className="text-muted-foreground text-sm sm:text-base"
+            >
+              Upload or paste a document to scan for scam indicators, pressure tactics, suspicious contact details, and verification risks.
+            </motion.p>
+          </div>
+        ) : (
+          <div className="text-center mb-5 sm:mb-7">
+            <motion.h1
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-3xl sm:text-4xl font-display font-bold tracking-tight mb-3"
+            >
+              Analyze a Document
+            </motion.h1>
+            <motion.p
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.06 }}
+              className="text-muted-foreground text-sm sm:text-base max-w-lg mx-auto leading-relaxed mb-6"
+            >
+              Upload, paste, or scan a document to get a plain-English action plan. PlainPath highlights key obligations, deadlines, red flags, and what to do next.
+            </motion.p>
 
-        {/* ── Format chips ───────────────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="flex justify-center gap-2 mb-5 sm:mb-8"
-        >
-          {FORMATS.map((f) => (
-            <div key={f.ext} className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-card border border-border/50 shadow-sm">
-              <f.icon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-muted-foreground" />
-              <span className="text-xs font-bold text-foreground">{f.ext}</span>
-              <span className="text-[10px] text-muted-foreground/60 hidden sm:inline">{f.note}</span>
-            </div>
-          ))}
-        </motion.div>
+            {/* What you'll get */}
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="flex flex-wrap justify-center gap-2"
+            >
+              {WHAT_YOU_GET.map(({ label, icon: Icon }) => (
+                <span
+                  key={label}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/6 border border-primary/15 text-[11px] sm:text-xs font-medium text-foreground/75"
+                >
+                  <Icon className="w-3 h-3 text-primary shrink-0" />
+                  {label}
+                </span>
+              ))}
+            </motion.div>
+          </div>
+        )}
 
         {/* ── First-run nudge ────────────────────────── */}
         <AnimatePresence>
@@ -762,7 +788,7 @@ export default function Import() {
               <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-primary/6 border border-primary/20 text-sm">
                 <span className="text-base">👋</span>
                 <span className="flex-1 text-foreground/80">
-                  <span className="font-semibold text-foreground">New here?</span> Scroll down to try a built-in demo — no document needed.
+                  <span className="font-semibold text-foreground">New here?</span> Scroll down to try a sample document — no upload needed.
                 </span>
                 <button
                   onClick={() => {
@@ -802,8 +828,8 @@ export default function Import() {
                   style={{ background: remaining === 0 ? "#dc2626" : "#f59e0b" }}
                 />
                 {remaining === 0
-                  ? "Free limit reached — upgrade to continue"
-                  : `${used} of 2 free ${used === 1 ? "analysis" : "analyses"} used`}
+                  ? "Free limit reached — Starter ($4.99/mo) unlocks unlimited analyses"
+                  : `${used} of 2 free ${used === 1 ? "analysis" : "analyses"} used this month`}
               </span>
             </div>
           )
@@ -904,28 +930,36 @@ export default function Import() {
                           key={tab}
                           onClick={() => { setMode(tab); setUploadError(null); setUploadedFile(null); setPasteError(null); setCameraError(null); if (fileInputRef.current) fileInputRef.current.value = "" }}
                           style={{ touchAction: "manipulation" }}
-                          className={`flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-semibold transition-all min-h-[48px] ${
+                          className={`flex flex-col items-center justify-center gap-0.5 py-3 rounded-lg transition-all min-h-[56px] ${
                             mode === tab
                               ? "bg-card text-foreground shadow-sm shadow-black/[0.06]"
                               : "text-muted-foreground hover:text-foreground"
                           }`}
                         >
-                          {tab === "paste" ? <Type className="w-4 h-4" /> : <UploadCloud className="w-4 h-4" />}
-                          <span>{tab === "paste" ? "Paste Text" : "Upload File"}</span>
+                          <div className="flex items-center gap-1.5 text-sm font-semibold">
+                            {tab === "paste" ? <Type className="w-4 h-4" /> : <UploadCloud className="w-4 h-4" />}
+                            <span>{tab === "paste" ? "Paste Text" : "Upload File"}</span>
+                          </div>
+                          <span className="text-[10px] font-normal opacity-55">
+                            {tab === "paste" ? "Copy & paste" : "PDF, DOCX, TXT"}
+                          </span>
                         </button>
                       ))}
                       {/* Camera / Scan tab */}
                       <button
                         onClick={() => { setMode("camera"); setUploadError(null); setUploadedFile(null); setPasteError(null); setCameraError(null); }}
                         style={{ touchAction: "manipulation" }}
-                        className={`flex items-center justify-center gap-1.5 py-3 rounded-lg text-sm font-semibold transition-all min-h-[48px] ${
+                        className={`flex flex-col items-center justify-center gap-0.5 py-3 rounded-lg transition-all min-h-[56px] ${
                           mode === "camera"
                             ? "bg-card text-foreground shadow-sm shadow-black/[0.06]"
                             : "text-muted-foreground hover:text-foreground"
                         }`}
                       >
-                        <Camera className="w-4 h-4" />
-                        <span>Scan Photo</span>
+                        <div className="flex items-center gap-1.5 text-sm font-semibold">
+                          <Camera className="w-4 h-4" />
+                          <span>Scan Photo</span>
+                        </div>
+                        <span className="text-[10px] font-normal opacity-55">Camera or image</span>
                       </button>
                     </div>
                   </div>
@@ -943,11 +977,13 @@ export default function Import() {
                           transition={{ duration: 0.14 }}
                           className="space-y-4"
                         >
-                          <div className="flex flex-wrap gap-1.5 items-center">
-                            <span className="text-xs text-muted-foreground/50 font-medium mr-0.5">e.g.</span>
-                            {EXAMPLES.map(ex => (
-                              <span key={ex} className="px-2.5 py-1 rounded-full bg-secondary/60 border border-border/40 text-[11px] font-medium text-muted-foreground">{ex}</span>
-                            ))}
+                          <div className="space-y-2">
+                            <p className="text-[11px] font-medium text-muted-foreground/55">Works with any document — common examples:</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {EXAMPLES.map(ex => (
+                                <span key={ex} className="px-2.5 py-1 rounded-full bg-secondary/70 border border-border/40 text-[11px] font-semibold text-muted-foreground/80">{ex}</span>
+                              ))}
+                            </div>
                           </div>
 
                           <div className="relative">
@@ -1240,7 +1276,7 @@ export default function Import() {
           <div className="mt-6 sm:mt-10 space-y-5">
             <div className="flex items-center gap-3">
               <div className="flex-1 h-px bg-border/50" />
-              <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Or try a built-in demo</p>
+              <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Try a sample document</p>
               <div className="flex-1 h-px bg-border/50" />
             </div>
 
