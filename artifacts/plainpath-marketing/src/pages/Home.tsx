@@ -197,8 +197,9 @@ export default function Home() {
                 custom={2} variants={fadeUp}
                 className="text-base md:text-lg text-muted-foreground mb-6 leading-relaxed max-w-lg"
               >
-                Leases, contracts, medical bills, court notices. PlainPath reads them for you,
-                tells you exactly what to do next, and protects you from signing anything you shouldn't.
+                Leases, contracts, medical bills, and court notices. PlainPath gives you four ways to
+                move forward: analyze documents, trust-check suspicious paperwork, review agreements,
+                and build contracts — all in plain English.
               </motion.p>
 
               {/* Tool pills */}
