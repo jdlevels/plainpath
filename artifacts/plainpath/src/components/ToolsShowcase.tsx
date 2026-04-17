@@ -4,6 +4,7 @@ import {
   BookOpen, ShieldCheck, PenLine, Scale, ArrowRight,
   ListTodo, Calendar, AlertTriangle, CheckCircle2,
   Flag, BarChart2, FileCheck, Sparkles, Copy, MessageSquare,
+  EyeOff, Download, ArrowRightLeft, Lock,
 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -97,6 +98,28 @@ const TOOLS = [
     iconColor: "text-amber-600 dark:text-amber-400",
     verbColor: "text-amber-600 dark:text-amber-400",
   },
+  {
+    icon: EyeOff,
+    title: "Redact Sensitive Info",
+    verb: "Protect it.",
+    tagline: "Remove private details before sharing, analyzing, or reviewing",
+    description: "Paste or upload a document. PlainPath detects names, SSNs, account numbers, phone numbers, and more. You choose exactly what gets redacted — nothing is removed without your approval.",
+    features: [
+      { icon: Lock, label: "Auto-detection of 14 PII categories" },
+      { icon: CheckCircle2, label: "You approve every redaction" },
+      { icon: Download, label: "Export redacted copy as text" },
+      { icon: ArrowRightLeft, label: "Send directly into any PlainPath tool" },
+    ],
+    cta: "Redact a Document",
+    route: "/redact",
+    color: "from-violet-50/80 to-purple-50 dark:from-violet-950/20 dark:to-purple-950/20",
+    badge: "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300",
+    badgeLabel: "Free · Starter · Pro",
+    border: "border-violet-200/60 dark:border-violet-900/40",
+    iconBg: "bg-violet-100 dark:bg-violet-900/40",
+    iconColor: "text-violet-600 dark:text-violet-400",
+    verbColor: "text-violet-600 dark:text-violet-400",
+  },
 ]
 
 export default function ToolsShowcase() {
@@ -111,7 +134,7 @@ export default function ToolsShowcase() {
           viewport={{ once: true }}
           className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3"
         >
-          Four tools, one platform
+          Five tools, one platform
         </motion.p>
         <motion.h2
           initial={{ opacity: 0, y: 12 }}
@@ -119,7 +142,7 @@ export default function ToolsShowcase() {
           viewport={{ once: true }}
           className="text-3xl md:text-4xl font-display font-bold mb-4"
         >
-          Read it. Trust it. Build it. Review it.
+          Read it. Trust it. Build it. Review it. Protect it.
         </motion.h2>
         <motion.p
           initial={{ opacity: 0, y: 8 }}
@@ -128,11 +151,11 @@ export default function ToolsShowcase() {
           transition={{ delay: 0.08 }}
           className="text-muted-foreground text-lg max-w-2xl mx-auto"
         >
-          Whether you are reading a document, questioning its legitimacy, creating an agreement, or reviewing one before you sign — PlainPath has a dedicated tool for exactly that.
+          Whether you are reading a document, questioning its legitimacy, creating an agreement, reviewing one before you sign, or redacting private information — PlainPath has a dedicated tool for exactly that.
         </motion.p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5 gap-6">
         {TOOLS.map((tool, i) => (
           <motion.div
             key={i}

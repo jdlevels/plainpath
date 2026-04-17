@@ -567,7 +567,7 @@ export default function DemoSection() {
         </motion.h2>
         <motion.p initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
           transition={{ delay: 0.1 }} className="text-muted-foreground text-lg max-w-xl mx-auto">
-          Select any of the four tools to see how it processes a real document scenario — from input to result.
+          Select any of the five tools to see how it processes a real document scenario — from input to result.
         </motion.p>
       </div>
 

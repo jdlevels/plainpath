@@ -3,7 +3,7 @@ import { motion } from "framer-motion"
 import {
   ArrowRight, ShieldCheck, Upload,
   Sparkles, Receipt, Scale, HeartPulse, FileSignature, MailWarning,
-  CheckCircle2, PenLine, FileScan, CalendarX, Eye, AlertTriangle, Gift, Copy, Check
+  CheckCircle2, PenLine, FileScan, CalendarX, Eye, AlertTriangle, Gift, Copy, Check, EyeOff,
 } from "lucide-react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
@@ -201,7 +201,7 @@ export default function Home() {
               className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/25 shadow-sm text-xs font-semibold text-primary dark:text-primary tracking-wide uppercase"
             >
               <span className="flex h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-              Four tools · one platform
+              Five tools · one platform
             </motion.div>
 
             <motion.h1
@@ -222,20 +222,21 @@ export default function Home() {
               transition={{ delay: 0.14 }}
               className="text-xl text-foreground/75 max-w-2xl mx-auto leading-relaxed"
             >
-              PlainPath is a four-tool document platform. Analyze any paperwork, verify its legitimacy, build contracts, and review agreements before you sign — all turned into plain English and clear action.
+              PlainPath is a five-tool document platform. Analyze any paperwork, verify its legitimacy, build contracts, review agreements before you sign, and redact sensitive information before sharing — all in plain English and clear action.
             </motion.p>
 
             <motion.div
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 w-full max-w-3xl mx-auto"
+              className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 pt-2 w-full max-w-4xl mx-auto"
             >
               {[
                 { label: "Analyze a Document",   Icon: FileScan,    path: "/import",                 col: "tool-btn-blue"    },
                 { label: "Document Trust Check", Icon: ShieldCheck, path: "/import?mode=trust-check", col: "tool-btn-red"     },
                 { label: "Build a Contract",     Icon: PenLine,     path: "/contract-builder",        col: "tool-btn-emerald" },
                 { label: "Contract Review",      Icon: Scale,       path: "/contract-review",         col: "tool-btn-amber"   },
+                { label: "Redact Sensitive Info", Icon: EyeOff,     path: "/redact",                  col: "tool-btn-violet"  },
               ].map(({ label, Icon, path, col }) => (
                 <Button key={label} size="lg" variant="ghost" onClick={() => setLocation(path)}
                   className={`w-full h-12 px-4 text-sm rounded-xl font-semibold border transition-all ${col}`}>
@@ -444,7 +445,7 @@ export default function Home() {
                 className="text-3xl md:text-4xl font-display font-bold mb-3">One demo for each tool</motion.h2>
               <motion.p initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
                 transition={{ delay: 0.1 }} className="text-muted-foreground text-lg max-w-xl mx-auto">
-                Four tools, four real-world examples. Click any card to try that tool with a pre-loaded scenario.
+                Four real-world examples. Click any card to try that tool with a pre-loaded scenario.
               </motion.p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -567,7 +568,7 @@ export default function Home() {
                   onClick={() => document.getElementById("solutions")?.scrollIntoView({ behavior: "smooth" })}
                   className="h-12 px-8 text-base rounded-xl font-semibold border-white/20 text-white hover:bg-white/8 hover:border-white/35"
                 >
-                  Explore all four tools
+                  Explore all five tools
                 </Button>
               </motion.div>
               <motion.div

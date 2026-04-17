@@ -3,7 +3,7 @@ import { useLocation } from "wouter"
 import {
   Clock, AlertTriangle, FileText, ArrowRight, ChevronRight,
   ShieldCheck, XCircle, PenLine, BadgeCheck, Download, Scale,
-  MessageSquare, Sparkles,
+  MessageSquare, Sparkles, EyeOff,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -130,7 +130,7 @@ export default function ProductPreview() {
         </motion.h2>
         <motion.p initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
           transition={{ delay: 0.1 }} className="text-slate-400 text-lg max-w-2xl mx-auto">
-          Four tools. One platform. Everything you need to read, trust, and act on paperwork.
+          Five tools. One platform. Everything you need to read, trust, and act on paperwork.
         </motion.p>
         {/* Tool lane badges */}
         <motion.div initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
@@ -140,6 +140,7 @@ export default function ProductPreview() {
             { icon: ShieldCheck, label: "Document Trust Check", btnCls: "pp-dark-btn-red"     },
             { icon: PenLine,     label: "Build a Contract",     btnCls: "pp-dark-btn-emerald" },
             { icon: Scale,       label: "Contract Review",      btnCls: "pp-dark-btn-amber"   },
+            { icon: EyeOff,      label: "Redact Sensitive Info", btnCls: "pp-dark-btn-violet" },
           ].map(({ icon: Icon, label, btnCls }, i) => (
             <span key={i} className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border text-xs font-semibold ${btnCls}`}>
               <Icon className="w-3.5 h-3.5 shrink-0" />
