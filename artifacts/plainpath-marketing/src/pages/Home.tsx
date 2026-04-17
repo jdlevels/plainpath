@@ -147,7 +147,9 @@ export default function Home() {
                 {TOOLS.map(({ label, icon: Icon, cls }) => (
                   <a
                     key={label}
-                    href="/"
+                    href="https://plain-path.replit.app"
+                    target="_blank"
+                    rel="noreferrer"
                     className={`${cls} flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border text-sm font-medium transition-opacity hover:opacity-80 w-full`}
                   >
                     <Icon className="w-3.5 h-3.5 shrink-0" />
@@ -405,7 +407,9 @@ export default function Home() {
                 ))}
               </div>
               <a
-                href="/"
+                href="https://plain-path.replit.app"
+                target="_blank"
+                rel="noreferrer"
                 className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
               >
                 Try the web app free <ArrowRight className="w-4 h-4" />
@@ -444,7 +448,9 @@ export default function Home() {
                 ))}
               </div>
               <a
-                href="/privacy"
+                href="https://plain-path.replit.app/privacy"
+                target="_blank"
+                rel="noreferrer"
                 className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
               >
                 Read our Privacy Policy <ArrowRight className="w-4 h-4" />
