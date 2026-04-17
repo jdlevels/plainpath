@@ -1,5 +1,5 @@
 export async function startStripeCheckout(
-  plan: "starter" | "pro" | "team",
+  plan: "starter" | "pro",
   email?: string
 ) {
   const response = await fetch("/api/stripe/create-checkout-session", {

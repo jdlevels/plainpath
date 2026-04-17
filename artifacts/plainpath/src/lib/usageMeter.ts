@@ -49,7 +49,6 @@ const LIMITS: Record<string, { analyses: number; trustChecks: number; contractDr
   free:    { analyses: 2,        trustChecks: 0,        contractDrafts: 0,        contractReviews: 0 },
   starter: { analyses: Infinity, trustChecks: 0,        contractDrafts: 0,        contractReviews: 0 },
   pro:     { analyses: Infinity, trustChecks: Infinity, contractDrafts: Infinity, contractReviews: Infinity },
-  team:    { analyses: Infinity, trustChecks: Infinity, contractDrafts: Infinity, contractReviews: Infinity },
 }
 
 function planLimits(planKey: string | null | undefined) {

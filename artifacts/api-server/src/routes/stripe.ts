@@ -7,57 +7,52 @@ import {
   getSubscriberBySubscriptionId,
   upsertSubscriber,
 } from "../lib/billingDb"
+import { BILLING_CONFIG } from "../lib/billingConfig"
 
 const router = Router()
 
 const APP_BASE_URL = process.env.APP_BASE_URL || "https://plainpathapp.com/app"
 const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET
 
-type PlanKey = "starter" | "pro" | "team"
+type PlanKey = "starter" | "pro"
 
-const PLAN_CONFIG: Record<
-  PlanKey,
-  {
-    name: string
-    amount: number
-    description: string
-  }
-> = {
+// ─── Plan → Stripe product config ────────────────────────────────────────────
+// These create inline products in Stripe checkout.
+// NOTE: Pro is $19.99/month (1999 cents). Starter is $4.99/month (499 cents).
+const PLAN_CONFIG: Record<PlanKey, { name: string; amount: number; description: string }> = {
   starter: {
     name: "PlainPath Starter",
     amount: 499,
-    description: "Unlimited document analyses",
+    description: "Unlimited document analyses — plain English breakdowns, any time.",
   },
   pro: {
     name: "PlainPath Pro",
-    amount: 2499,
-    description: "Unlimited analyses, trust checks, and contract drafts",
-  },
-  team: {
-    name: "PlainPath Team",
-    amount: 3999,
-    description: "Higher-volume shared workflows",
+    amount: 1999, // $19.99/month
+    description: "All four tools: Analyze, Trust Check, Contract Builder, Contract Review.",
   },
 }
 
 function isPlanKey(value: unknown): value is PlanKey {
-  return value === "starter" || value === "pro" || value === "team"
+  return value === "starter" || value === "pro"
 }
 
-function toIsoFromUnix(unixSeconds?: number | null) {
+function toIsoFromUnix(unixSeconds?: number | null): string | null {
   if (!unixSeconds) return null
   return new Date(unixSeconds * 1000).toISOString()
 }
+
+// ─── Create Checkout Session ──────────────────────────────────────────────────
 
 router.post("/create-checkout-session", async (req, res) => {
   try {
     const { plan, email } = req.body as { plan?: string; email?: string }
 
     if (!isPlanKey(plan)) {
-      return res.status(400).json({ error: "Invalid plan" })
+      return res.status(400).json({ error: "Invalid plan. Must be 'starter' or 'pro'." })
     }
 
     const selectedPlan = PLAN_CONFIG[plan]
+    const billingMode = BILLING_CONFIG.BILLING_MODE
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
@@ -69,9 +64,7 @@ router.post("/create-checkout-session", async (req, res) => {
           quantity: 1,
           price_data: {
             currency: "usd",
-            recurring: {
-              interval: "month",
-            },
+            recurring: { interval: "month" },
             product_data: {
               name: selectedPlan.name,
               description: selectedPlan.description,
@@ -80,19 +73,13 @@ router.post("/create-checkout-session", async (req, res) => {
           },
         },
       ],
-      metadata: {
-        plan,
-      },
-      subscription_data: {
-        metadata: {
-          plan,
-        },
-      },
+      metadata: { plan, billingMode },
+      subscription_data: { metadata: { plan, billingMode } },
       allow_promotion_codes: true,
     })
 
     if (!session.url) {
-      return res.status(500).json({ error: "No checkout URL returned" })
+      return res.status(500).json({ error: "No checkout URL returned from Stripe" })
     }
 
     return res.json({ url: session.url })
@@ -101,6 +88,8 @@ router.post("/create-checkout-session", async (req, res) => {
     return res.status(500).json({ error: "Unable to create checkout session" })
   }
 })
+
+// ─── Checkout Session Status ──────────────────────────────────────────────────
 
 router.get("/checkout-session-status", async (req, res) => {
   try {
@@ -126,6 +115,8 @@ router.get("/checkout-session-status", async (req, res) => {
   }
 })
 
+// ─── Billing Portal ───────────────────────────────────────────────────────────
+
 router.post("/billing-portal", async (req, res) => {
   try {
     const { email } = req.body as { email?: string }
@@ -144,7 +135,7 @@ router.post("/billing-portal", async (req, res) => {
 
     const session = await stripe.billingPortal.sessions.create({
       customer: subscriber.stripeCustomerId,
-      return_url: `${APP_BASE_URL}/my-analyses`,
+      return_url: `${APP_BASE_URL}/billing`,
     })
 
     return res.json({ url: session.url })
@@ -153,6 +144,8 @@ router.post("/billing-portal", async (req, res) => {
     return res.status(500).json({ error: "Unable to open billing portal" })
   }
 })
+
+// ─── Subscriber Status (quick lookup, no entitlement details) ─────────────────
 
 router.get("/subscriber-status", (req, res) => {
   try {
@@ -164,11 +157,7 @@ router.get("/subscriber-status", (req, res) => {
     const subscriber = getSubscriberByEmail(email.toLowerCase().trim())
 
     if (!subscriber) {
-      return res.json({
-        found: false,
-        plan: null,
-        status: "inactive",
-      })
+      return res.json({ found: false, plan: null, status: "inactive" })
     }
 
     return res.json({
@@ -178,6 +167,8 @@ router.get("/subscriber-status", (req, res) => {
       status: subscriber.status,
       currentPeriodEnd: subscriber.currentPeriodEnd,
       cancelAtPeriodEnd: Boolean(subscriber.cancelAtPeriodEnd),
+      billingMode: subscriber.billingMode,
+      billingProvider: subscriber.billingProvider,
     })
   } catch (error) {
     console.error("Subscriber status error:", error)
@@ -185,9 +176,14 @@ router.get("/subscriber-status", (req, res) => {
   }
 })
 
+// ─── Webhook ──────────────────────────────────────────────────────────────────
+// Handles all Stripe events and keeps the local billing DB in sync.
+// Raw body parsing is required for signature verification (configured in app.ts).
+
 router.post("/webhook", async (req: any, res) => {
   try {
     if (!WEBHOOK_SECRET) {
+      console.error("STRIPE_WEBHOOK_SECRET is not set")
       return res.status(500).send("Missing STRIPE_WEBHOOK_SECRET")
     }
 
@@ -196,13 +192,11 @@ router.post("/webhook", async (req: any, res) => {
       return res.status(400).send("Missing Stripe signature")
     }
 
-    const event = stripe.webhooks.constructEvent(
-      req.body,
-      signature,
-      WEBHOOK_SECRET
-    )
+    const event = stripe.webhooks.constructEvent(req.body, signature, WEBHOOK_SECRET)
+    const billingMode = BILLING_CONFIG.BILLING_MODE
 
     switch (event.type) {
+      // ── Checkout completed: initial subscription creation ─────────────────
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session
 
@@ -211,8 +205,9 @@ router.post("/webhook", async (req: any, res) => {
           session.customer_email?.toLowerCase().trim()
 
         const plan = session.metadata?.plan || "starter"
+        const sessionBillingMode = session.metadata?.billingMode || billingMode
 
-        if (email) {
+        if (email && isPlanKey(plan)) {
           upsertSubscriber({
             email,
             stripeCustomerId:
@@ -220,23 +215,24 @@ router.post("/webhook", async (req: any, res) => {
             stripeCheckoutSessionId: session.id,
             plan,
             status: "active",
+            billingMode: sessionBillingMode,
+            billingProvider: "stripe",
           })
         }
-
         break
       }
 
+      // ── Subscription created or updated ───────────────────────────────────
       case "customer.subscription.created":
       case "customer.subscription.updated": {
         const subscription = event.data.object as Stripe.Subscription
 
         const customerId =
-          typeof subscription.customer === "string"
-            ? subscription.customer
-            : null
+          typeof subscription.customer === "string" ? subscription.customer : null
 
-        let subscriber =
-          customerId ? getSubscriberByCustomerId(customerId) : undefined
+        let subscriber = customerId
+          ? getSubscriberByCustomerId(customerId)
+          : undefined
 
         let email = subscriber?.email ?? null
 
@@ -252,23 +248,30 @@ router.post("/webhook", async (req: any, res) => {
           subscription.items.data[0]?.price?.nickname?.toLowerCase() ||
           "starter"
 
+        const subBillingMode = subscription.metadata?.billingMode || billingMode
+
         if (email) {
           upsertSubscriber({
             email,
             stripeCustomerId: customerId,
             stripeSubscriptionId: subscription.id,
-            plan,
+            plan: isPlanKey(plan) ? plan : "starter",
             status: subscription.status,
+            currentPeriodStart: toIsoFromUnix(
+              (subscription as any).current_period_start
+            ),
             currentPeriodEnd: toIsoFromUnix(
               (subscription as any).current_period_end
             ),
             cancelAtPeriodEnd: Boolean(subscription.cancel_at_period_end),
+            billingMode: subBillingMode,
+            billingProvider: "stripe",
           })
         }
-
         break
       }
 
+      // ── Subscription cancelled ────────────────────────────────────────────
       case "customer.subscription.deleted": {
         const subscription = event.data.object as Stripe.Subscription
 
@@ -288,9 +291,72 @@ router.post("/webhook", async (req: any, res) => {
               (subscription as any).current_period_end
             ),
             cancelAtPeriodEnd: Boolean(subscription.cancel_at_period_end),
+            billingMode: existing.billingMode,
+            billingProvider: "stripe",
           })
         }
+        break
+      }
 
+      // ── Invoice paid: subscription renewed ───────────────────────────────
+      case "invoice.paid": {
+        const invoice = event.data.object as Stripe.Invoice
+
+        const customerId =
+          typeof invoice.customer === "string" ? invoice.customer : null
+        const subscriptionId =
+          typeof invoice.subscription === "string" ? invoice.subscription : null
+
+        let subscriber =
+          customerId ? getSubscriberByCustomerId(customerId) : undefined
+
+        if (!subscriber && subscriptionId) {
+          subscriber = getSubscriberBySubscriptionId(subscriptionId)
+        }
+
+        if (subscriber) {
+          // Re-activate in case of past_due → paid recovery
+          upsertSubscriber({
+            email: subscriber.email,
+            stripeCustomerId: customerId,
+            stripeSubscriptionId: subscriptionId,
+            plan: subscriber.plan,
+            status: "active",
+            billingMode: subscriber.billingMode,
+            billingProvider: "stripe",
+          })
+        }
+        break
+      }
+
+      // ── Invoice payment failed: mark past_due ─────────────────────────────
+      case "invoice.payment_failed": {
+        const invoice = event.data.object as Stripe.Invoice
+
+        const customerId =
+          typeof invoice.customer === "string" ? invoice.customer : null
+        const subscriptionId =
+          typeof invoice.subscription === "string" ? invoice.subscription : null
+
+        let subscriber =
+          customerId ? getSubscriberByCustomerId(customerId) : undefined
+
+        if (!subscriber && subscriptionId) {
+          subscriber = getSubscriberBySubscriptionId(subscriptionId)
+        }
+
+        if (subscriber) {
+          upsertSubscriber({
+            email: subscriber.email,
+            stripeCustomerId: customerId,
+            stripeSubscriptionId: subscriptionId,
+            plan: subscriber.plan,
+            status: "past_due",
+            billingMode: subscriber.billingMode,
+            billingProvider: "stripe",
+          })
+          console.warn(`Payment failed for subscriber: ${subscriber.email}`)
+        }
         break
       }
 
@@ -301,9 +367,7 @@ router.post("/webhook", async (req: any, res) => {
     return res.json({ received: true })
   } catch (error: any) {
     console.error("Stripe webhook error:", error?.message || error)
-    return res
-      .status(400)
-      .send(`Webhook Error: ${error?.message || "Unknown error"}`)
+    return res.status(400).send(`Webhook Error: ${error?.message || "Unknown error"}`)
   }
 })
 

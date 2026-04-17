@@ -1,31 +1,29 @@
-import { getStoredSubscriberEmail } from "../lib/subscriberStorage";
-import { consumeAnalysis } from "../lib/entitlements";
-import { canRunAnalysis, canRunTrustCheck, canRunContractDraft, canRunContractReview } from "../lib/usageMeter";
+import { getStoredSubscriberEmail } from "./subscriberStorage"
+import { consumeToolUsage } from "./entitlements"
+import { BILLING_CONFIG } from "./billingConfig"
+import {
+  canRunAnalysis,
+  canRunTrustCheck,
+  canRunContractDraft,
+  canRunContractReview,
+  incrementAnalysis,
+  incrementTrustCheck,
+  incrementContractDraft,
+  incrementContractReview,
+} from "./usageMeter"
 
-// ─── Payment enforcement flag ──────────────────────────────────────────────
-//
-// TODO: Set PAYMENT_ENFORCEMENT_ENABLED = true once Stripe is fully
-// implemented and live in production. This gates:
-//   • Free-tier analysis limit (2/month)
-//   • Trust Check, Contract Builder, Contract Review (Starter = blocked, Pro = allowed)
-//
-// Pricing tiers when enforcement is re-enabled:
-//   • Free    — 2 document analyses, no other tools
-//   • Starter — $4.99/month — unlimited analyses, no Pro tools
-//   • Pro     — $19.99/month — all four tools, unlimited
-//
-// Until Stripe is live, all usage gates are bypassed so testing
-// and development are never blocked by a fake paywall.
-//
-const PAYMENT_ENFORCEMENT_ENABLED = false
-// ──────────────────────────────────────────────────────────────────────────
+// ─── Usage Limit Error ────────────────────────────────────────────────────────
 
 export class UsageLimitError extends Error {
   public readonly used: number
   public readonly limit: number
   public readonly reason: "analyses" | "trustCheck" | "contractDraft" | "contractReview"
-  constructor(reason: "analyses" | "trustCheck" | "contractDraft" | "contractReview", used: number, limit: number) {
-    super(`You've used ${used} of ${limit} free ${reason} this month.`)
+  constructor(
+    reason: "analyses" | "trustCheck" | "contractDraft" | "contractReview",
+    used: number,
+    limit: number
+  ) {
+    super(`Usage limit reached for ${reason}: ${used}/${limit}`)
     this.name = "UsageLimitError"
     this.reason = reason
     this.used = used
@@ -33,36 +31,83 @@ export class UsageLimitError extends Error {
   }
 }
 
-export async function beforeRunAnalysis() {
-  if (!PAYMENT_ENFORCEMENT_ENABLED) return
+// ─── Gate Functions ───────────────────────────────────────────────────────────
+//
+// Each gate function:
+//   1. Always records usage locally (for analytics / future enforcement)
+//   2. When enforcement is OFF: never blocks — returns immediately
+//   3. When enforcement is ON:  validates plan and blocks if over limit
+//
+// To activate enforcement: set PAYWALL_ENFORCEMENT = true in billingConfig.ts
+//
+// ─────────────────────────────────────────────────────────────────────────────
 
-  const email = getStoredSubscriberEmail();
+export async function beforeRunAnalysis() {
+  // Always track usage (for future enforcement and analytics)
+  incrementAnalysis()
+
+  const email = getStoredSubscriberEmail()
+  if (email) {
+    // Fire-and-forget: record server-side usage (non-blocking)
+    void consumeToolUsage(email, "analyze").catch(() => {})
+  }
+
+  // TODO: When PAYWALL_ENFORCEMENT = true, the block below enforces limits.
+  if (!BILLING_CONFIG.PAYWALL_ENFORCEMENT) return
 
   if (!email) {
     const { allowed, used, limit } = canRunAnalysis(null)
     if (!allowed) throw new UsageLimitError("analyses", used, limit)
-    return;
+    return
   }
 
-  await consumeAnalysis(email);
+  const { allowed, used, limit } = canRunAnalysis(null)
+  if (!allowed) throw new UsageLimitError("analyses", used, limit)
 }
 
-export function beforeRunTrustCheck(planKey?: string | null) {
-  if (!PAYMENT_ENFORCEMENT_ENABLED) return
+export async function beforeRunTrustCheck(planKey?: string | null) {
+  // Always track usage
+  incrementTrustCheck()
+
+  const email = getStoredSubscriberEmail()
+  if (email) {
+    void consumeToolUsage(email, "trust-check").catch(() => {})
+  }
+
+  // TODO: When PAYWALL_ENFORCEMENT = true, the block below enforces plan limits.
+  if (!BILLING_CONFIG.PAYWALL_ENFORCEMENT) return
 
   const { allowed, used, limit } = canRunTrustCheck(planKey)
   if (!allowed) throw new UsageLimitError("trustCheck", used, limit)
 }
 
-export function beforeRunContractDraft(planKey?: string | null) {
-  if (!PAYMENT_ENFORCEMENT_ENABLED) return
+export async function beforeRunContractDraft(planKey?: string | null) {
+  // Always track usage
+  incrementContractDraft()
+
+  const email = getStoredSubscriberEmail()
+  if (email) {
+    void consumeToolUsage(email, "build-contract").catch(() => {})
+  }
+
+  // TODO: When PAYWALL_ENFORCEMENT = true, the block below enforces plan limits.
+  if (!BILLING_CONFIG.PAYWALL_ENFORCEMENT) return
 
   const { allowed, used, limit } = canRunContractDraft(planKey)
   if (!allowed) throw new UsageLimitError("contractDraft", used, limit)
 }
 
-export function beforeRunContractReview(planKey?: string | null) {
-  if (!PAYMENT_ENFORCEMENT_ENABLED) return
+export async function beforeRunContractReview(planKey?: string | null) {
+  // Always track usage
+  incrementContractReview()
+
+  const email = getStoredSubscriberEmail()
+  if (email) {
+    void consumeToolUsage(email, "contract-review").catch(() => {})
+  }
+
+  // TODO: When PAYWALL_ENFORCEMENT = true, the block below enforces plan limits.
+  if (!BILLING_CONFIG.PAYWALL_ENFORCEMENT) return
 
   const { allowed, used, limit } = canRunContractReview(planKey)
   if (!allowed) throw new UsageLimitError("contractReview", used, limit)

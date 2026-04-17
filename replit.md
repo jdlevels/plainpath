@@ -215,11 +215,31 @@ PlainPath is a monorepo using pnpm workspaces.
 - **Frontend**: `artifacts/plainpath/src/components/SendForSignatureModal.tsx`
 - **Env var needed**: `DROPBOX_SIGN_API_KEY` (create account at sign.dropbox.com)
 
-### Stripe Payments
-- **Status**: All backend code built (`/api/stripe/*` routes, billing DB, webhook handler). Waiting for EIN + bank account setup.
+### Stripe Payments — Full Billing Architecture Built (Test Mode)
+- **Status**: Full billing foundation built and running in test mode. Waiting for business bank account approval to go live.
 - **Env vars needed**: `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET`
 - **Integration**: `connector:ccfg_stripe_01K611P4YQR0SZM11XFRQJC44Y`
-- **When ready**: Set `PAYMENT_ENFORCEMENT_ENABLED = true` in `artifacts/plainpath/src/lib/analysisGate.ts` to activate all usage gates and upgrade prompts
+
+**Architecture (all centralized):**
+- `artifacts/api-server/src/lib/billingConfig.ts` — Master server billing flags (`BILLING_ENABLED`, `BILLING_MODE`, `PAYWALL_ENFORCEMENT`, `STRIPE_TEST_MODE`)
+- `artifacts/api-server/src/lib/billingProvider.ts` — Provider abstraction (stripe active; storekit + play_billing placeholders for native)
+- `artifacts/api-server/src/lib/planEntitlements.ts` — `PLAN_ENTITLEMENTS` (starter/pro only), `TOOL_ACCESS` map, `canAccessTool()`, `normalizePlan()`. Prices: Starter=$4.99 (499¢), Pro=$19.99 (1999¢)
+- `artifacts/api-server/src/lib/billingDb.ts` — SQLite billing DB (`plainpath-billing.sqlite`). Schema includes `billingMode` + `billingProvider` columns
+- `artifacts/api-server/src/lib/usageDb.ts` — Per-tool usage tracking (`tool_usage` table: email × tool × monthKey)
+- `artifacts/api-server/src/routes/stripe.ts` — Checkout, billing portal, subscriber-status, webhook (handles: checkout.session.completed, subscription.created/updated/deleted, invoice.paid, invoice.payment_failed)
+- `artifacts/api-server/src/routes/entitlements.ts` — `/status`, `/consume` (all tools), `/consume-analysis` (legacy)
+- `artifacts/plainpath/src/lib/billingConfig.ts` — Client-side mirror of billing flags
+- `artifacts/plainpath/src/lib/analysisGate.ts` — Always tracks usage (fire-and-forget server call); gates bypass when `PAYWALL_ENFORCEMENT=false`
+- `artifacts/plainpath/src/lib/entitlements.ts` — `fetchEntitlements()`, `consumeToolUsage()`, `openBillingPortal()`
+- `artifacts/plainpath/src/pages/Billing.tsx` — `/billing` route: current plan, tool access grid, restore subscription, upgrade CTA, test-mode notice
+
+**To go live (activation checklist):**
+1. Add `STRIPE_SECRET_KEY=sk_live_...` and `STRIPE_WEBHOOK_SECRET=whsec_live_...` to environment
+2. In `artifacts/api-server/src/lib/billingConfig.ts`: set `BILLING_MODE = "live"`, `STRIPE_TEST_MODE = false`, `BILLING_ENABLED = true`
+3. In `artifacts/api-server/src/lib/billingConfig.ts`: set `PAYWALL_ENFORCEMENT = true`
+4. Mirror the same flags in `artifacts/plainpath/src/lib/billingConfig.ts`
+5. Remove test-mode notice from `artifacts/plainpath/src/pages/Billing.tsx`
+6. For iOS/Android native: implement StoreKit/Play Billing via RevenueCat; activate `storekit`/`play_billing` providers in `billingProvider.ts`
 
 ### Resend Email Reminders
 - **Status**: Route built (`POST /api/reminders/email`). Gracefully returns 503 until key set.

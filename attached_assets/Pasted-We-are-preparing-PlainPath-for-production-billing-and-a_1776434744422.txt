@@ -1,0 +1,225 @@
+We are preparing PlainPath for production billing and app-store readiness, but we are NOT turning on live payments yet.
+
+Business context:
+- The EIN is received.
+- Business bank account approval is still pending.
+- We want to keep moving now.
+- Build everything needed to make billing, subscriptions, and plan gating production-ready in TEST MODE only for now.
+
+Critical rules:
+1. Do NOT enable live Stripe charges yet.
+2. Do NOT enforce payment/paywall limits yet.
+3. Keep current testing access open while building the billing foundation.
+4. Build the architecture correctly now so we can switch on live billing later with minimal changes.
+
+Current pricing model:
+- Starter = $4.99/month
+- Pro = $19.99/month
+
+Plan access rules:
+Starter:
+- Analyze a Document only
+
+Pro:
+- Analyze a Document
+- Document Trust Check
+- Contract Review
+- Build a Contract
+
+We removed Teams. Do not bring Teams back.
+
+Build the following now:
+
+==================================================
+PHASE 1 — BILLING ARCHITECTURE FOUNDATION
+==================================================
+
+1. Create a shared billing/subscription model
+- add a plan model that supports:
+  - starter
+  - pro
+- add subscription status handling:
+  - none
+  - trial/test
+  - active
+  - past_due
+  - canceled
+- add a future-proof billing provider abstraction:
+  - web provider = Stripe
+  - iOS provider placeholder = StoreKit
+  - Android provider placeholder = Play Billing
+- keep this architecture clean so native billing can be plugged in later
+
+2. Add environment/config structure
+Create config/feature flags for:
+- BILLING_ENABLED=false (for now)
+- BILLING_MODE=test
+- PAYWALL_ENFORCEMENT=false
+- STRIPE_TEST_MODE=true
+- future provider flags if needed
+
+3. Add plan-based feature mapping in code
+Create one shared source of truth for feature access:
+- starter:
+  - analyze
+- pro:
+  - analyze
+  - trust-check
+  - contract-review
+  - build-contract
+
+Do NOT hardcode plan logic in multiple pages.
+Use one centralized permissions map/service.
+
+==================================================
+PHASE 2 — STRIPE TEST MODE PREP (WEB)
+==================================================
+
+4. Implement Stripe in test mode only
+- set up Stripe test integration for web subscriptions
+- do not use live keys
+- do not enable production charging yet
+- create the Stripe product/price integration structure for:
+  - Starter monthly
+  - Pro monthly
+- wire checkout/session creation in test mode
+- wire customer portal / manage subscription flow in test mode if appropriate
+
+5. Implement webhook handling
+Create secure webhook endpoints and handlers for test mode events such as:
+- checkout.session.completed
+- customer.subscription.created
+- customer.subscription.updated
+- customer.subscription.deleted
+- invoice.paid
+- invoice.payment_failed
+
+Update local subscription state correctly when these test events occur.
+
+6. Add database/state persistence
+Store:
+- customer ID
+- subscription ID
+- plan
+- billing status
+- billing provider
+- current period dates
+- cancellation state
+- test-mode metadata
+Design it cleanly for future native billing support.
+
+==================================================
+PHASE 3 — APP UI / USER ACCOUNT BILLING READINESS
+==================================================
+
+7. Add a Billing / Plan Management area
+Create a user-facing billing/settings page or panel with:
+- current plan
+- feature summary
+- upgrade button
+- manage subscription button
+- billing status
+- future invoice/history area if appropriate
+
+Suggested route:
+- /app/settings/billing
+or
+- /app/billing
+
+8. Add upgrade surfaces, but keep enforcement off
+Show upgrade UI where appropriate, but do NOT block testing usage yet.
+Examples:
+- subtle “Upgrade to Pro” prompts on Pro-only tools
+- plan comparison modal/panel
+- billing page access
+
+Important:
+- users can still keep testing during this phase
+- do not show “free limit reached”
+- do not hard-stop usage yet
+
+9. Add usage tracking for future enforcement
+Track usage/events needed for future plan enforcement, but do not enforce yet.
+Examples:
+- analyze runs
+- trust checks
+- contract reviews
+- contract builds
+
+This is for future Starter/Pro enforcement once billing goes live.
+
+==================================================
+PHASE 4 — NATIVE / STORE READINESS GROUNDWORK
+==================================================
+
+10. Prepare billing abstraction for app stores
+Do NOT fully implement StoreKit or Play Billing yet if not ready,
+but create the architecture so that:
+- web uses Stripe
+- iOS can later use StoreKit
+- Android can later use Play Billing
+
+Make sure plan/entitlement logic is provider-agnostic.
+
+11. Prepare submission-sensitive areas
+Audit and improve:
+- privacy page
+- terms page
+- support page
+- account settings
+- account deletion readiness if account creation is enabled
+- route consistency
+- no stale/dead links
+
+12. Keep product behavior clean for testing
+- root URL `/` always goes to homepage
+- all tool routes still work
+- theme toggle remains globally consistent
+- no fake paywall lockouts during test phase
+
+==================================================
+PHASE 5 — IMPLEMENTATION QUALITY
+==================================================
+
+13. Code quality requirements
+- use centralized billing service / entitlement logic
+- avoid duplicate pricing logic in components
+- avoid duplicate feature-gating logic across pages
+- add comments/TODOs where live activation will later occur
+- keep things production-structured, not temporary hacks
+
+14. Do not break current app behavior
+Do NOT break:
+- homepage
+- tool routing
+- tool results
+- footer/legal/support pages
+- theme switching
+- current testing access
+
+==================================================
+PHASE 6 — DELIVERABLES
+==================================================
+
+When done, provide:
+
+A. Exact files created/changed
+
+B. What billing foundation is now implemented
+
+C. Which parts are in test mode only
+
+D. What remains blocked until the business bank account is approved
+
+E. What remains blocked until native store billing is implemented
+
+F. A final activation checklist for when we are ready to go live, including:
+- where to add live Stripe keys
+- where to switch test mode off
+- where to enable paywall enforcement
+- where to enable Starter restrictions
+- what to do later for iOS StoreKit
+- what to do later for Android Play Billing
+
+Important final instruction:
+Build everything necessary now so we are technically ready to move fast later, but do NOT activate live billing or hard enforcement yet.

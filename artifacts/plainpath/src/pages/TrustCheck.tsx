@@ -190,7 +190,7 @@ export default function TrustCheck() {
   const [savedId, setSavedId] = useState<string | null>(null)
   const [justSaved, setJustSaved] = useState(false)
 
-  const isPro = entitlements?.plan === "pro" || entitlements?.plan === "team"
+  const isPro = entitlements?.plan === "pro"
 
   function handleCheckDocument() {
     if (entitlements && !isPro) {
