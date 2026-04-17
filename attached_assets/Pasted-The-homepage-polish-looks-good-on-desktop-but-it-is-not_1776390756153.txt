@@ -1,0 +1,95 @@
+The homepage polish looks good on desktop, but it is not working correctly on mobile. Stop all other polish work and do a mobile-only responsive fix pass.
+
+Critical instruction:
+Do NOT redesign the desktop version.
+Do NOT change backend logic.
+Do NOT change working tool routing.
+Do NOT break:
+
+* `/`
+* `/app/analyze`
+* `/app/trust-check`
+* `/app/build-contract`
+* `/app/contract-review`
+
+Goal:
+Make the public homepage fully responsive and polished on mobile devices, especially iPhone-size screens.
+
+Required mobile fixes:
+
+1. Hero section
+
+* stack hero content cleanly on mobile
+* prevent headline overflow or awkward wrapping
+* reduce hero padding/margins for small screens
+* scale phone/device mockup correctly
+* make sure CTA buttons wrap or stack neatly
+* keep the hero visually premium, not cramped
+
+2. Header / navigation
+
+* implement a proper mobile nav menu if not already present
+* prevent nav items, theme toggle, login button, and CTA from crowding the top bar
+* logo should remain clean and aligned
+* mobile menu should be easy to open/close and not overlap brokenly
+
+3. Pricing section
+
+* pricing cards must stack vertically on mobile
+* equal spacing between cards
+* no cutoff text
+* CTA buttons inside cards must remain readable and tappable
+
+4. Section spacing
+
+* tighten oversized whitespace on mobile
+* remove any desktop spacing that causes giant gaps
+* ensure all sections flow naturally top to bottom
+
+5. Buttons and tap targets
+
+* increase tap target size where needed
+* ensure all buttons are fully visible and not clipped
+* keep button text centered and readable
+
+6. Typography
+
+* adjust font sizes, line heights, and wrapping for mobile
+* prevent oversized headlines from dominating the screen
+* maintain hierarchy without breaking layout
+
+7. Cards / grids
+
+* collapse multi-column layouts into 1-column mobile layouts where appropriate
+* prevent horizontal scrolling
+* make all cards full-width within a safe content container
+
+8. Images / media
+
+* ensure illustrations, screenshots, and device mockups scale responsively
+* no overflow past viewport
+* no cropped critical content
+
+9. Dark mode mobile review
+
+* verify mobile layout works in both light and dark mode
+* check contrast, card borders, and nav readability
+
+10. Final responsive QA
+    Test and fix at least these widths:
+
+* 390px
+* 430px
+* 768px
+
+Deliverables required:
+
+* exact files changed
+* list of responsive issues fixed
+* screenshots or confirmation for:
+
+  * mobile light mode homepage
+  * mobile dark mode homepage
+  * mobile pricing section
+  * mobile nav menu
+* exact live URLs to test
