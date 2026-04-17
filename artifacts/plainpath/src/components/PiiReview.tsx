@@ -127,7 +127,7 @@ function DocumentPreview({ text, spans }: { text: string; spans: PiiSpanWithStat
         </p>
       </div>
       <p className="text-[11px] text-muted-foreground/50 text-center">
-        Black labels show what will be replaced. Faded text will remain unchanged.
+        Highlighted labels show items selected for redaction. Unselected values will remain unchanged.
       </p>
     </div>
   )
@@ -156,27 +156,25 @@ function SpanGroup({
   return (
     <div className={`rounded-lg border transition-all ${
       allApproved
-        ? "border-border/60 bg-background"
-        : "border-border/30 bg-muted/20 opacity-60"
+        ? "border-destructive/30 bg-destructive/5 dark:bg-destructive/10"
+        : "border-border/50 bg-background hover:border-border/70"
     }`}>
       {/* Main row */}
       <div
-        className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer select-none ${
-          allApproved ? "hover:bg-muted/30" : "hover:opacity-80"
-        } transition-all`}
+        className="flex items-center gap-3 px-3 py-2.5 cursor-pointer select-none transition-all hover:bg-muted/20"
         onClick={onToggle}
       >
-        {/* Toggle checkbox */}
+        {/* Selection checkbox */}
         <button
           type="button"
           className={`w-5 h-5 rounded flex items-center justify-center shrink-0 transition-colors ${
             allApproved
-              ? "bg-destructive/15 border border-destructive/30 text-destructive"
-              : "bg-muted border border-border/50 text-muted-foreground"
+              ? "bg-destructive/15 border border-destructive/40 text-destructive"
+              : "border-2 border-border/50 bg-background text-transparent hover:border-border"
           }`}
-          aria-label={allApproved ? "Click to keep (un-redact)" : "Click to redact"}
+          aria-label={allApproved ? "Deselect — keep this value" : "Select for redaction"}
         >
-          {allApproved ? <X className="w-3 h-3" /> : <Check className="w-3 h-3" />}
+          {allApproved && <X className="w-3 h-3" />}
         </button>
 
         {/* Label + value */}
@@ -184,11 +182,15 @@ function SpanGroup({
           <span className={`inline-flex items-center text-[10px] font-semibold px-1.5 py-0.5 rounded-full mr-2 ${meta.badgeBg} ${meta.badgeText}`}>
             {meta.label}
           </span>
-          <span className={`text-sm font-mono ${allApproved ? "line-through text-muted-foreground/70" : "text-foreground/80"}`}>
+          <span className={`text-sm font-mono ${
+            allApproved
+              ? "line-through text-muted-foreground/60"
+              : "text-foreground/85"
+          }`}>
             {truncateValue(representative.value)}
           </span>
           {count > 1 && (
-            <span className="ml-2 text-[10px] font-medium text-muted-foreground/60 bg-muted/50 rounded-full px-1.5 py-0.5">
+            <span className="ml-2 text-[10px] font-medium text-muted-foreground/60 bg-muted/60 rounded-full px-1.5 py-0.5">
               ×{count}
             </span>
           )}
@@ -218,7 +220,9 @@ function SpanGroup({
 
       {/* Expanded context panel */}
       {expanded && count > 1 && (
-        <div className="border-t border-border/20 px-3 py-2.5 space-y-2 bg-muted/10">
+        <div className={`border-t px-3 py-2.5 space-y-2 ${
+          allApproved ? "border-destructive/20 bg-destructive/5" : "border-border/20 bg-muted/10"
+        }`}>
           <p className="text-[10px] font-medium text-muted-foreground/50 uppercase tracking-wider">
             {count} occurrences in document
           </p>
@@ -231,8 +235,8 @@ function SpanGroup({
                 <span>{ctx.before}</span>
                 <span className={`font-semibold rounded px-0.5 mx-0.5 ${
                   allApproved
-                    ? "bg-destructive/10 text-destructive dark:text-red-400"
-                    : "bg-muted text-foreground/70"
+                    ? "bg-destructive/15 text-destructive dark:text-red-400"
+                    : "bg-amber-100/60 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300"
                 }`}>{ctx.value}</span>
                 <span>{ctx.after}</span>
                 {ctx.truncatedAfter && <span className="opacity-40">…</span>}
@@ -448,7 +452,8 @@ export function PiiReview({
         if (!res.ok) throw new Error(`Detection failed (${res.status})`)
         const data = await res.json() as { spans: Omit<PiiSpanWithStatus, "approved">[] }
         if (cancelled) return
-        setSpans((data.spans ?? []).map(s => ({ ...s, approved: true })))
+        // All items start unselected — user must explicitly choose what to redact
+        setSpans((data.spans ?? []).map(s => ({ ...s, approved: false })))
         setStatus("done")
       } catch (err) {
         if (cancelled) return
@@ -567,37 +572,42 @@ export function PiiReview({
   return (
     <div className="space-y-5">
 
-      {/* ── Summary header ──────────────────────────────────────────────── */}
-      <div className="rounded-xl border border-amber-200 dark:border-amber-800/40 bg-amber-50/60 dark:bg-amber-950/20 p-3.5 flex gap-3">
-        <ShieldAlert className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
-        <div>
-          <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">
-            {uniqueValueCount} sensitive value{uniqueValueCount !== 1 ? "s" : ""} detected
-            {totalInstances !== uniqueValueCount && (
-              <span className="font-normal text-amber-700/70 dark:text-amber-400/70">
-                {" "}({totalInstances} total instances)
-              </span>
-            )}
-          </p>
-          <p className="text-xs text-amber-700/70 dark:text-amber-400/70 mt-0.5 leading-relaxed">
-            Checked items will be redacted everywhere they appear. Click an item to toggle. Click ↕ to see context.
-          </p>
+      {/* ── Detection header ────────────────────────────────────────────── */}
+      <div className="rounded-xl border border-amber-200 dark:border-amber-800/40 bg-amber-50/60 dark:bg-amber-950/20 p-3.5 space-y-1.5">
+        <div className="flex gap-3">
+          <ShieldAlert className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">
+              PlainPath found {uniqueValueCount} possible sensitive value{uniqueValueCount !== 1 ? "s" : ""}
+              {totalInstances !== uniqueValueCount && (
+                <span className="font-normal text-amber-700/70 dark:text-amber-400/70">
+                  {" "}({totalInstances} total instance{totalInstances !== 1 ? "s" : ""})
+                </span>
+              )}
+            </p>
+            <p className="text-xs text-amber-700/70 dark:text-amber-400/70 mt-0.5 leading-relaxed">
+              Review and choose what to redact. You control which values are removed.
+            </p>
+          </div>
         </div>
+        <p className="text-[11px] text-amber-700/60 dark:text-amber-400/50 pl-8 leading-relaxed">
+          Nothing is permanently redacted until you apply selected redactions.
+        </p>
       </div>
 
-      {/* ── Approve / Reject all ────────────────────────────────────────── */}
+      {/* ── Selection controls ──────────────────────────────────────────── */}
       <div className="flex items-center gap-2">
         <button
           onClick={() => setSpans(prev => prev.map(s => ({ ...s, approved: true })))}
           className="text-xs px-3 py-1.5 rounded-lg border border-border/50 bg-background hover:bg-muted/40 flex items-center gap-1.5 transition-colors"
         >
-          <CheckCheck className="w-3.5 h-3.5 text-destructive" /> Redact all
+          <CheckCheck className="w-3.5 h-3.5 text-destructive" /> Select all
         </button>
         <button
           onClick={() => setSpans(prev => prev.map(s => ({ ...s, approved: false })))}
           className="text-xs px-3 py-1.5 rounded-lg border border-border/50 bg-background hover:bg-muted/40 flex items-center gap-1.5 transition-colors"
         >
-          <Trash2 className="w-3.5 h-3.5 text-muted-foreground" /> Keep all
+          <Trash2 className="w-3.5 h-3.5 text-muted-foreground" /> Deselect all
         </button>
         <button
           onClick={() => setShowPreview(v => !v)}
@@ -642,7 +652,7 @@ export function PiiReview({
                       onClick={() => toggleCategory(category, true)}
                       className="text-[10px] text-destructive/70 hover:text-destructive transition-colors px-1.5"
                     >
-                      Redact all
+                      Select all
                     </button>
                   )}
                   {!noneApproved && (
@@ -650,7 +660,7 @@ export function PiiReview({
                       onClick={() => toggleCategory(category, false)}
                       className="text-[10px] text-muted-foreground/50 hover:text-muted-foreground transition-colors px-1.5"
                     >
-                      Keep all
+                      Clear
                     </button>
                   )}
                 </div>
@@ -682,11 +692,15 @@ export function PiiReview({
         <Button
           size="lg"
           variant="destructive"
-          className="w-full h-12 text-sm rounded-xl gap-2"
+          className="w-full h-12 text-sm rounded-xl gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
           onClick={applyAndShowResult}
+          disabled={approvedCount === 0}
         >
           <ShieldCheck className="w-4 h-4" />
-          Apply {approvedCount} Redaction{approvedCount !== 1 ? "s" : ""}
+          {approvedCount === 0
+            ? "Select items to redact"
+            : `Apply selected redactions (${approvedCount})`
+          }
         </Button>
         <button
           onClick={onCancel}
@@ -697,7 +711,7 @@ export function PiiReview({
       </div>
 
       <p className="text-[11px] text-muted-foreground/35 text-center leading-relaxed">
-        Redactions permanently replace selected values. Exported output and submitted text contain only the redacted version.
+        Only selected items are redacted. Unselected values remain in the document unchanged.
       </p>
     </div>
   )
