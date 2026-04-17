@@ -1,0 +1,47 @@
+The tool pages need more depth and a stronger workspace feel. Right now they look like content floating on an empty canvas.
+
+Create a shared app-page workspace shell and apply it to the tool pages, starting with `/app/build-contract`.
+
+Goal:
+- make each tool page feel grounded, premium, and consistent
+- add visual depth without redesigning the product from scratch
+
+Required shared workspace shell:
+1. Centered max-width content container
+2. Rounded corners (20px–24px)
+3. Subtle 1px border
+4. Slightly raised surface/background contrast from the page background
+5. Soft shadow/glow for depth
+6. Consistent internal padding
+7. Clear spacing between page header, main content, and footer actions
+
+Dark mode guidance:
+- use a slightly lighter panel background than the page background
+- border around `rgba(255,255,255,0.08)` or similar
+- soft, premium shadow
+- do not use harsh outlines
+
+Light mode guidance:
+- white/light panel
+- subtle border like `rgba(15,23,42,0.08)`
+- soft shadow
+- same radius/padding system
+
+For `/app/build-contract` specifically:
+1. Add a real page title above the current content:
+   `Build a Contract`
+2. Add supporting copy:
+   `Choose the type of contract you want to create, then PlainPath will guide you through the details step by step.`
+3. Place the title, stepper, contract cards, sample/demo section, and next/back actions inside the shared workspace shell.
+4. Improve selected card styling so the active contract type is more obvious.
+5. Move the `Next` button into a clean footer area inside the workspace shell.
+6. Remove duplicate back-navigation clutter. Keep only one clear back action.
+7. Keep the demo contract area, but visually separate it from the main contract-type choices.
+
+After that, apply the same workspace-shell treatment across the other tool pages so the app feels consistent.
+
+Deliverables:
+- exact files changed
+- shared shell component or style system used
+- screenshots of Build a Contract in light and dark mode
+- list of other pages updated with the same shell
