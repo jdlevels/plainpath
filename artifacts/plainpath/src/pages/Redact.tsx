@@ -25,6 +25,7 @@ import { useLocation } from "wouter"
 import {
   ShieldCheck, ArrowLeft, UploadCloud, Type, Loader2, AlertCircle, File, X,
   FileText, Scale, EyeOff, Download, Copy, Check, ArrowRight,
+  User, FileSignature, HeartPulse,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { WorkspaceShell } from "@/components/WorkspaceShell"
@@ -34,6 +35,147 @@ import { getApiBaseUrl } from "@/lib/api"
 // ─── Accepted file types ──────────────────────────────────────────────────────
 
 const ACCEPTED = ".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+
+// ─── Built-in demo documents ──────────────────────────────────────────────────
+
+const REDACT_DEMOS: Array<{
+  id: string
+  label: string
+  meta: string
+  fileName: string
+  icon: React.ComponentType<{ className?: string }>
+  color: string
+  bg: string
+  text: string
+}> = [
+  {
+    id: "personal-info-letter",
+    label: "Personal Info Letter",
+    meta: "Name · SSN · address · phone",
+    fileName: "personal_info_letter.txt",
+    icon: User,
+    color: "text-violet-600 dark:text-violet-400",
+    bg: "bg-violet-50 dark:bg-violet-950/40",
+    text: `Re: Application Confirmation — Reference Number 2024-48291
+
+Dear Jordan M. Whitfield,
+
+Thank you for submitting your application. We have received your request dated March 14, 2024, and have assigned it case number 2024-48291 for tracking.
+
+To complete your application, please confirm the following information on file:
+
+  Full Name:              Jordan M. Whitfield
+  Date of Birth:          August 3, 1985
+  Social Security Number: 542-87-1934
+  Home Address:           4817 Cedarwood Drive, Apt 3B, Columbus, OH 43215
+  Phone Number:           (614) 882-0374
+  Email Address:          jordan.whitfield@myemail.com
+
+A representative from our office will contact you within 5 to 7 business days. If you have questions, please call our support line at (800) 555-0192 or email support@agencyoffice.gov and reference your case number.
+
+Please note that this correspondence contains personal information. Do not share this letter with anyone other than the intended recipient.
+
+Sincerely,
+Daniel R. Hoffman
+Senior Processing Officer
+Region 5 Compliance Office`,
+  },
+  {
+    id: "freelance-contract",
+    label: "Freelance Contract",
+    meta: "Names · bank details · tax ID",
+    fileName: "freelance_contract.txt",
+    icon: FileSignature,
+    color: "text-emerald-600 dark:text-emerald-400",
+    bg: "bg-emerald-50 dark:bg-emerald-950/40",
+    text: `FREELANCE SERVICES AGREEMENT
+
+This Agreement is entered into as of April 1, 2024, between:
+
+CLIENT
+Name:    Marcella V. Torres (trading as Horizon Creative Studio)
+Address: 88 Lakeview Boulevard, Suite 210, Austin, TX 78701
+Email:   marcella.torres@horizoncreative.com
+Phone:   (512) 448-0093
+
+FREELANCER
+Name:    Samuel A. Park
+Address: 1204 Birchwood Lane, Portland, OR 97202
+Email:   sam.park@freelancedesign.io
+Phone:   (503) 774-2281
+Tax ID (EIN): 47-3826104
+
+1. SCOPE OF WORK
+Freelancer agrees to design a brand identity package — including logo, color palette, and typography system — for Client's product launch scheduled for June 2024.
+
+2. COMPENSATION
+Client shall pay Freelancer a flat fee of $4,800 USD. A deposit of $1,200 USD is due upon signing. The remaining $3,600 USD is due within 14 days of final delivery.
+
+Payment via bank transfer to:
+  Account Name:   Samuel A. Park
+  Account Number: 7820134567
+  Routing Number: 021000021
+
+3. INTELLECTUAL PROPERTY
+All work product transfers to Client upon receipt of full payment.
+
+4. CONFIDENTIALITY
+Both parties agree to keep the terms of this Agreement and all shared materials confidential.
+
+Signed,
+Marcella V. Torres — Client
+Samuel A. Park — Freelancer`,
+  },
+  {
+    id: "medical-benefits-form",
+    label: "Medical Benefits Form",
+    meta: "Patient · DOB · member ID · provider",
+    fileName: "medical_benefits_form.txt",
+    icon: HeartPulse,
+    color: "text-blue-600 dark:text-blue-400",
+    bg: "bg-blue-50 dark:bg-blue-950/40",
+    text: `PATIENT INFORMATION FORM
+Bright Valley Medical Center
+
+Please complete all fields before your appointment.
+
+PATIENT DETAILS
+  Patient Name:           Christine L. Nguyen
+  Date of Birth:          February 12, 1979
+  Social Security Number: 318-55-7092
+  Member ID:              BVC-449821-K
+  Home Address:           2930 Maple Run Drive, Sacramento, CA 95814
+  Phone:                  (916) 553-4401
+  Email:                  c.nguyen79@gmail.com
+
+INSURANCE INFORMATION
+  Insurance Provider:     Pacific Health Group
+  Policy Number:          PHG-00827-CA
+  Group Number:           3318-B
+  Subscriber Name:        Christine L. Nguyen
+
+EMERGENCY CONTACT
+  Name:                   David K. Nguyen
+  Relationship:           Spouse
+  Phone:                  (916) 553-0872
+
+PRIMARY CARE PROVIDER
+  Name:                   Dr. Anita Ramos
+  Provider NPI:           1234567890
+  Clinic Phone:           (916) 481-2200
+  Clinic Fax:             (916) 481-2201
+
+REFERRING PHYSICIAN
+  Dr. James T. Holbrook
+  Holbrook Internal Medicine
+  751 Oak Park Avenue, Suite 104, Sacramento, CA 95815
+
+By signing below, I authorize Bright Valley Medical Center to use and disclose my health information as needed for treatment, payment, and healthcare operations.
+
+Patient Signature: Christine L. Nguyen
+Date: April 10, 2024`,
+  },
+]
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -384,6 +526,46 @@ export default function Redact() {
           <p className="text-sm text-muted-foreground">
             Automatically detect and permanently remove personal information from a document before sharing, analyzing, or exporting it.
           </p>
+        </div>
+
+        {/* Try a sample document */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="flex-1 h-px bg-border/40" />
+            <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">Try a sample document</p>
+            <div className="flex-1 h-px bg-border/40" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            {REDACT_DEMOS.map((demo) => {
+              const Icon = demo.icon
+              return (
+                <button
+                  key={demo.id}
+                  onClick={() => {
+                    setActiveText(demo.text)
+                    setActiveFileName(demo.fileName)
+                    setReturnTo("none")
+                  }}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/50 hover:border-violet-400/50 hover:bg-violet-50/40 dark:hover:bg-violet-950/10 transition-all text-left group"
+                >
+                  <div className={`w-8 h-8 rounded-lg ${demo.bg} flex items-center justify-center shrink-0`}>
+                    <Icon className={`w-4 h-4 ${demo.color}`} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold leading-tight group-hover:text-violet-700 dark:group-hover:text-violet-400 transition-colors">{demo.label}</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">{demo.meta}</p>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div className="flex items-center gap-3">
+          <div className="flex-1 h-px bg-border/40" />
+          <p className="text-[11px] text-muted-foreground">or paste your own text</p>
+          <div className="flex-1 h-px bg-border/40" />
         </div>
 
         {/* Mode tabs */}
