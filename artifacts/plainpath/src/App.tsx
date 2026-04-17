@@ -25,6 +25,7 @@ import ContractBuilder from "@/pages/ContractBuilder";
 import ContractReview from "@/pages/ContractReview";
 import SharedAnalysis from "@/pages/SharedAnalysis";
 import Compare from "@/pages/Compare";
+import Redact from "@/pages/Redact";
 import Billing from "@/pages/Billing";
 import Upgrade from "@/pages/Upgrade";
 import Methodology from "@/pages/Methodology";
@@ -186,6 +187,7 @@ function Router() {
               {(params) => <SharedAnalysis token={(params as { token: string }).token} />}
             </Route>
             <Route path="/compare" component={Compare} />
+            <Route path="/redact" component={Redact} />
             <Route path="/billing" component={Billing} />
             <Route path="/upgrade" component={Upgrade} />
             <Route path="/methodology" component={Methodology} />

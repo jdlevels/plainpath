@@ -1,0 +1,184 @@
+Add a real PII Redaction feature to PlainPath.
+
+This feature must fit the PlainPath product and document workflow. It should help users safely remove sensitive information from documents before analyzing, sharing, exporting, or saving them.
+
+Important rule:
+This must be TRUE REDACTION, not just visual black boxes.
+If text is redacted, the underlying text must not remain selectable, searchable, copyable, or recoverable in exported output.
+
+==================================================
+GOAL
+==================================================
+
+Build Phase 1 of a PII Redaction feature that allows users to:
+1. upload/paste a document
+2. detect likely sensitive information automatically
+3. review and confirm redactions
+4. apply real irreversible redactions
+5. export/download the redacted copy
+6. optionally continue into PlainPath analysis using the redacted version
+
+==================================================
+PHASE 1 SCOPE
+==================================================
+
+Build these now:
+
+A. SMART PII DETECTION
+Detect likely sensitive information such as:
+- full names
+- home addresses
+- phone numbers
+- email addresses
+- SSNs / tax IDs
+- date of birth
+- account numbers
+- routing numbers
+- policy/member IDs
+- case/reference numbers
+- license numbers
+- signatures if possible
+- other obvious personal identifiers where feasible
+
+Use a combination of:
+- regex/pattern detection
+- document heuristics
+- structured entity detection where appropriate
+
+B. USER REVIEW FLOW
+Before redaction is applied, show a review screen where the user can:
+- see all suggested redactions
+- approve/reject individual redactions
+- approve all of one type
+- undo a suggested redaction
+- preview what the document will look like redacted
+
+C. TRUE REDACTION OUTPUT
+Export must produce a real redacted file/output:
+- no hidden underlying selectable text
+- no searchable original text left under overlays
+- no fake black boxes
+- flatten/redact properly in export
+- for pasted text, redacted text must be replaced in the content itself
+- for PDFs/images, apply real redaction handling appropriate to the format
+
+D. EXPORT + NEXT STEP
+After redaction, user should be able to:
+- download/export redacted document
+- copy redacted text
+- continue with PlainPath analysis using the redacted version
+- optionally save the redacted version as the active working copy for that session
+
+==================================================
+PRODUCT / UX REQUIREMENTS
+==================================================
+
+1. Placement in product
+Implement this as a first-class document safety step.
+
+Preferred UX:
+- inside Analyze flow, add an option like:
+  “Redact sensitive info first”
+or
+  “Detect and redact PII before analysis”
+
+Also create the architecture so this can later become a standalone tool:
+- “Redact a Document”
+
+2. Input support for Phase 1
+Support as much of the current PlainPath input flow as is practical:
+- pasted text
+- uploaded document text/PDF if currently supported
+- scanned/photo input if already supported in current flows
+
+If some formats need partial support first, clearly state what is supported in Phase 1.
+
+3. Redaction review UX
+Show redaction suggestions in a clean review panel with:
+- category/type
+- detected value preview
+- confidence if available
+- toggle/accept/reject
+- “redact all similar” option where practical
+
+4. Safe copy
+If the user chooses “Copy redacted text,” ensure copied output contains only the redacted version.
+
+5. Clear messaging
+Make it obvious to the user:
+- what was detected
+- what was redacted
+- that exported redactions are permanent in the output file
+- that they should review redactions before sharing externally
+
+==================================================
+TECHNICAL REQUIREMENTS
+==================================================
+
+1. Do NOT use fake overlay-only masking
+If current document rendering only draws black boxes visually but leaves source text intact, that is not acceptable.
+
+2. Add a redaction pipeline/service
+Create a clean internal structure for:
+- detection
+- review state
+- apply redactions
+- export redacted output
+
+3. Keep it modular
+Create this as a reusable feature that can later be used by:
+- Analyze
+- Trust Check
+- Contract Review
+- future standalone redaction tool
+
+4. Keep current app stable
+Do not break:
+- Analyze flow
+- document upload
+- routing
+- theme
+- result pages
+- billing/test mode setup
+
+==================================================
+PHASE 2 / FUTURE-READY SCAFFOLDING
+==================================================
+
+Do not fully build these yet unless trivial, but prepare the architecture for later:
+- manual box-select redaction on image/PDF
+- “redact all SSNs / all emails” one-click rules
+- redaction audit log
+- document-type-based redaction templates
+- standalone “Redact a Document” tool route
+
+==================================================
+DELIVERABLES
+==================================================
+
+When complete, provide:
+
+A. Exact files created/changed
+
+B. Supported formats in Phase 1
+
+C. What PII/entity types are currently detected
+
+D. How true redaction is being applied for each supported format
+
+E. UX flow summary:
+- detect
+- review
+- redact
+- export
+- analyze redacted copy
+
+F. Any limitations still remaining
+
+G. Screenshot(s) of:
+- detection/review screen
+- redacted preview
+- final export/download flow
+
+Important:
+Do not ship this as a cosmetic masking feature. It must function as a real document safety feature.

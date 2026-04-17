@@ -277,6 +277,20 @@ export default function Import() {
     return () => { document.title = "PlainPath" }
   }, [isTrustCheck])
 
+  // Check if we're returning from the redaction flow with a pre-redacted text
+  useEffect(() => {
+    try {
+      const redactedText = sessionStorage.getItem("pii_analyze_text")
+      if (redactedText) {
+        sessionStorage.removeItem("pii_analyze_text")
+        setText(redactedText)
+        setRedactedNotice(true)
+      }
+    } catch {
+      // sessionStorage unavailable — ignore
+    }
+  }, [])
+
   const [mode, setMode] = useState<"paste" | "upload" | "camera">("paste")
   const [text, setText] = useState("")
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
@@ -292,6 +306,7 @@ export default function Import() {
   })
   const [capturedImages, setCapturedImages] = useState<string[]>([])
   const [cameraError, setCameraError] = useState<string | null>(null)
+  const [redactedNotice, setRedactedNotice] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const cameraInputRef = useRef<HTMLInputElement>(null)
   const { mutate, isPending } = useAnalyzeDocument()
@@ -998,6 +1013,22 @@ export default function Import() {
                           transition={{ duration: 0.14 }}
                           className="space-y-4"
                         >
+                          {redactedNotice && (
+                            <div className="rounded-xl border border-emerald-200 dark:border-emerald-800/40 bg-emerald-50/60 dark:bg-emerald-950/20 px-3.5 py-3 flex items-center gap-2.5">
+                              <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-semibold text-emerald-800 dark:text-emerald-300">Using redacted document</p>
+                                <p className="text-[11px] text-emerald-700/70 dark:text-emerald-400/60 mt-0.5">Sensitive information has been removed. Ready to analyze.</p>
+                              </div>
+                              <button
+                                onClick={() => { setRedactedNotice(false); setText("") }}
+                                className="p-1 rounded hover:bg-emerald-100 dark:hover:bg-emerald-900/30 text-emerald-600/50"
+                              >
+                                <XIcon className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          )}
+
                           <div className="space-y-2">
                             <p className="text-[11px] font-medium text-muted-foreground/55">Works with any document — common examples:</p>
                             <div className="flex flex-wrap gap-1.5">
@@ -1036,6 +1067,26 @@ export default function Import() {
                           >
                             {isTrustCheck ? "Check Document" : "Generate Action Plan"} <ArrowRight className="ml-2 w-4 h-4" />
                           </Button>
+
+                          {!isTrustCheck && text.trim().length >= 30 && (
+                            <button
+                              type="button"
+                              style={{ touchAction: "manipulation" }}
+                              onClick={() => {
+                                try {
+                                  sessionStorage.setItem(
+                                    "pii_redact_input",
+                                    JSON.stringify({ text, source: "analyze" })
+                                  )
+                                } catch { /* sessionStorage unavailable */ }
+                                setLocation("/redact")
+                              }}
+                              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-border/40 hover:border-border/60 bg-transparent hover:bg-muted/30 text-muted-foreground hover:text-foreground text-sm transition-all"
+                            >
+                              <ShieldCheck className="w-3.5 h-3.5 text-primary/50" />
+                              Redact sensitive info first
+                            </button>
+                          )}
 
                           <p className="text-[11px] text-center text-muted-foreground/50">
                             For best results, paste the full document text · Your text is processed by AI and not stored by PlainPath
@@ -1158,14 +1209,33 @@ export default function Import() {
                           {uploadError && <ErrorBanner message={uploadError} />}
 
                           {uploadedFile && !uploadError && (
-                            <Button
-                              size="lg"
-                              onClick={() => goToDocType({ kind: "file", file: uploadedFile })}
-                              style={{ touchAction: "manipulation" }}
-                              className="w-full h-14 text-base rounded-xl"
-                            >
-                              Continue <ArrowRight className="ml-2 w-4 h-4" />
-                            </Button>
+                            <div className="space-y-2">
+                              <Button
+                                size="lg"
+                                onClick={() => goToDocType({ kind: "file", file: uploadedFile })}
+                                style={{ touchAction: "manipulation" }}
+                                className="w-full h-14 text-base rounded-xl"
+                              >
+                                Continue <ArrowRight className="ml-2 w-4 h-4" />
+                              </Button>
+                              <button
+                                type="button"
+                                style={{ touchAction: "manipulation" }}
+                                onClick={() => {
+                                  try {
+                                    sessionStorage.setItem(
+                                      "pii_redact_file_name",
+                                      uploadedFile.name
+                                    )
+                                  } catch { /* sessionStorage unavailable */ }
+                                  setLocation("/redact")
+                                }}
+                                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-border/40 hover:border-border/60 bg-transparent hover:bg-muted/30 text-muted-foreground hover:text-foreground text-sm transition-all"
+                              >
+                                <ShieldCheck className="w-3.5 h-3.5 text-primary/50" />
+                                Redact sensitive info first
+                              </button>
+                            </div>
                           )}
 
                           {!uploadError && (
