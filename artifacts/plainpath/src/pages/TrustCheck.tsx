@@ -395,6 +395,32 @@ export default function TrustCheck() {
               <p className="text-sm text-foreground/80 leading-relaxed">{analysis.verdictExplanation}</p>
             </div>
           </div>
+          {/* Count summary pills */}
+          {(() => {
+            const high = analysis.scamIndicators.filter(i => i.severity === "high").length
+            const total = analysis.scamIndicators.length
+            const legit = analysis.legitimacyIndicators?.length ?? 0
+            return (
+              <div className="flex flex-wrap gap-2 mb-4">
+                {total === 0 ? (
+                  <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
+                    <CheckCircle2 className="w-3 h-3" /> No scam indicators
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-red-500/15 text-red-700 dark:text-red-300 border border-red-500/20">
+                    <XCircle className="w-3 h-3" />
+                    {total} scam {total === 1 ? "indicator" : "indicators"}
+                    {high > 0 && <span className="opacity-70">· {high} high-risk</span>}
+                  </span>
+                )}
+                {legit > 0 && (
+                  <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
+                    <CheckCircle2 className="w-3 h-3" /> {legit} legitimacy {legit === 1 ? "signal" : "signals"}
+                  </span>
+                )}
+              </div>
+            )
+          })()}
           {/* Progress bar */}
           <div className="space-y-1.5">
             <div className="h-2 rounded-full bg-black/8 dark:bg-white/10 overflow-hidden">

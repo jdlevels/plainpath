@@ -1,11 +1,9 @@
 import { motion } from "framer-motion";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { AppStoreBadge } from "@/components/ui/AppStoreBadge";
-import { PlayStoreBadge } from "@/components/ui/PlayStoreBadge";
 import {
   FileText, ShieldAlert, FileSignature, ShieldCheck,
-  ArrowRight, Upload, Sparkles, Scale, Star,
+  ArrowRight, Upload, Sparkles, Scale,
   AlertTriangle, CheckCircle2, Clock, Lock, X as XIcon,
 } from "lucide-react";
 
@@ -91,10 +89,10 @@ const HOW = [
 
 /* ─── Trust ──────────────────────────────────────────────── */
 const TRUST = [
-  { icon: FileText,    title: "Plain-English results",   desc: "No legal jargon. Every result is written to be read and acted on immediately." },
-  { icon: Lock,        title: "Secure processing",       desc: "Documents are processed securely. Content is never sold or shared." },
-  { icon: ShieldCheck, title: "Works for any document",  desc: "Leases, IRS letters, medical bills, contracts, notices — all handled." },
-  { icon: Star,        title: "4.9 App Store rating",    desc: "Trusted by thousands navigating confusing paperwork every day." },
+  { icon: FileText,    title: "Plain-English results",    desc: "No legal jargon. Every result is written to be read and acted on immediately." },
+  { icon: Lock,        title: "Secure processing",        desc: "Documents are processed securely. Content is never sold or shared." },
+  { icon: ShieldCheck, title: "Works for any document",   desc: "Leases, IRS letters, medical bills, contracts, notices — all handled." },
+  { icon: CheckCircle2,title: "No account required",      desc: "Try any tool instantly — no sign-up needed to get your first result." },
 ];
 
 /* ─── Pricing ────────────────────────────────────────────── */
@@ -175,7 +173,7 @@ export default function Home() {
                 className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/25 shadow-sm text-xs font-semibold text-primary tracking-wide uppercase mb-5"
               >
                 <span className="flex h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                Now on iOS &amp; Android
+                Web app — iOS &amp; Android coming soon
               </motion.div>
 
               <motion.h1
@@ -216,21 +214,20 @@ export default function Home() {
                 ))}
               </motion.div>
 
-              {/* App store badges */}
-              <motion.div custom={4} variants={fadeUp} className="flex gap-3 mb-5" id="download">
-                <AppStoreBadge />
-                <PlayStoreBadge />
+              {/* Mobile coming soon + web CTA */}
+              <motion.div custom={4} variants={fadeUp} className="flex flex-col gap-2 mb-5" id="download">
+                <a
+                  href="/app/analyze"
+                  className="inline-flex items-center gap-2 bg-primary text-white rounded-xl px-5 h-12 sm:h-14 text-sm font-semibold hover:opacity-90 transition-opacity w-fit"
+                >
+                  Try it free — no account needed <ArrowRight className="w-4 h-4" />
+                </a>
+                <p className="text-xs text-muted-foreground/70 mt-1">
+                  iOS &amp; Android apps launching soon
+                </p>
               </motion.div>
 
-              {/* Star rating */}
-              <motion.div custom={5} variants={fadeUp} className="flex flex-col gap-1">
-                <div className="flex items-center gap-1.5">
-                  {[1,2,3,4,5].map(i => (
-                    <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
-                  ))}
-                  <span className="text-sm font-semibold text-foreground ml-1">4.9</span>
-                  <span className="text-xs text-muted-foreground">· App Store rating</span>
-                </div>
+              <motion.div custom={5} variants={fadeUp}>
                 <p className="text-xs text-muted-foreground">
                   Plans from $4.99/month &nbsp;·&nbsp; All four tools on Pro &nbsp;·&nbsp; Cancel anytime
                 </p>
@@ -641,12 +638,7 @@ export default function Home() {
       ════════════════════════════════════════════════ */}
       <div className="w-full bg-gradient-to-br from-slate-950 via-[#0c1525] to-violet-950/40 border-t border-white/5 py-24 md:py-32">
         <div className="max-w-3xl mx-auto px-5 sm:px-6 text-center">
-          <div className="flex justify-center mb-6">
-            {[1,2,3,4,5].map(i => (
-              <Star key={i} className="w-5 h-5 fill-amber-400 text-amber-400" />
-            ))}
-          </div>
-          <p className="text-xs font-semibold tracking-[0.12em] uppercase text-white/40 mb-4">Available on Web, iOS &amp; Android</p>
+          <p className="text-xs font-semibold tracking-[0.12em] uppercase text-white/40 mb-4">Available on Web · iOS &amp; Android coming soon</p>
           <h2
             className="text-4xl md:text-5xl font-bold mb-4 text-white"
             style={{ fontFamily: "var(--font-display)" }}
@@ -663,15 +655,13 @@ export default function Home() {
             Never sign something confusing again. PlainPath reads it so you don't have to.
           </p>
           <div className="flex flex-wrap justify-center gap-4 mb-6">
-            <AppStoreBadge />
-            <PlayStoreBadge />
+            <a
+              href="/app/analyze"
+              className="inline-flex items-center gap-2 bg-primary text-white rounded-xl px-6 h-13 text-sm font-semibold hover:opacity-90 transition-opacity"
+            >
+              Try it free — no account needed <ArrowRight className="w-4 h-4" />
+            </a>
           </div>
-          <a
-            href="/app/analyze"
-            className="inline-flex items-center gap-1.5 text-sm font-semibold text-white/60 hover:text-white transition-colors"
-          >
-            Or open the web app <ArrowRight className="w-4 h-4" />
-          </a>
           <p className="mt-6 text-xs text-white/25">
             Plans from $4.99/month &nbsp;·&nbsp; All four tools on Pro &nbsp;·&nbsp; Cancel anytime
           </p>

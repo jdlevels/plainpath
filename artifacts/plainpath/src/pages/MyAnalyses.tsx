@@ -50,11 +50,11 @@ export default function MyAnalyses() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editValue, setEditValue] = useState("")
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
-  const [showSubscription, setShowSubscription] = useState(false)
+  const [showSubscription, setShowSubscription] = useState(true)
   const [search, setSearch] = useState("")
   const [sortBy, setSortBy] = useState<"newest" | "oldest" | "az">("newest")
   const [trustChecks, setTrustChecks] = useState<SavedTrustCheck[]>([])
-  const [showTrustChecks, setShowTrustChecks] = useState(false)
+  const [showTrustChecks, setShowTrustChecks] = useState(true)
   const [confirmDeleteTrustCheckId, setConfirmDeleteTrustCheckId] = useState<string | null>(null)
 
   const filteredItems = useMemo(() => {
