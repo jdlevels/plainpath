@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { useThemeContext } from "@/components/ThemeProvider";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import {
-  Moon, Sun, Menu, X, ChevronDown,
+  Menu, X, ChevronDown,
   FileText, ShieldCheck, Scale, PenLine, GitCompare, LayoutGrid,
 } from "lucide-react";
 
@@ -32,7 +32,6 @@ const LOGO_SVG = (
 );
 
 export function Navbar() {
-  const { isDark, setTheme } = useThemeContext();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
   const [mobileToolsOpen, setMobileToolsOpen] = useState(false);
@@ -52,8 +51,6 @@ export function Navbar() {
     if (toolsOpen) document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [toolsOpen]);
-
-  const toggleTheme = () => setTheme(isDark ? "light" : "dark");
 
   const handleNav = (target: string) => {
     smoothScroll(target);
@@ -126,13 +123,7 @@ export function Navbar() {
 
         {/* Desktop actions */}
         <div className="flex items-center gap-2 shrink-0">
-          <button
-            onClick={toggleTheme}
-            aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-            className="w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors border-0 bg-transparent cursor-pointer"
-          >
-            {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-          </button>
+          <ThemeToggle />
 
           <a
             href="/app/sign-in"
