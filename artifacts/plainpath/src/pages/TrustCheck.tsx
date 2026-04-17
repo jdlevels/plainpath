@@ -379,20 +379,20 @@ export default function TrustCheck() {
           animate={{ opacity: 1, y: 0 }}
           className={`rounded-2xl border p-5 sm:p-6 ${vc.bg} ${vc.border}`}
         >
-          {/* Verdict header row: icon + title on left, score on right */}
-          <div className="flex items-start gap-3 mb-4">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border mt-0.5 ${vc.badge}`}>
-              <VerdictIcon verdict={analysis.verdict} />
+          {/* Score + verdict row — matches Contract Review layout */}
+          <div className="flex items-start gap-6 flex-wrap mb-5">
+            <div className="text-center min-w-[72px]">
+              <p className={`text-6xl font-bold leading-none tabular-nums ${vc.text}`}>{analysis.riskScore}</p>
+              <p className="text-xs text-muted-foreground mt-1.5">out of 100</p>
             </div>
             <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-3">
-                <h1 className={`text-lg font-bold leading-snug ${vc.text}`}>{analysis.verdict}</h1>
-                <div className="shrink-0 text-right">
-                  <p className={`text-4xl font-extrabold tabular-nums leading-none ${vc.text}`}>{analysis.riskScore}</p>
-                  <p className="text-[10px] text-muted-foreground/50 font-medium mt-0.5">/ 100</p>
+              <div className="flex items-center gap-2 mb-1.5">
+                <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 border ${vc.badge}`}>
+                  <VerdictIcon verdict={analysis.verdict} />
                 </div>
+                <h1 className={`text-xl font-bold leading-snug ${vc.text}`}>{analysis.verdict}</h1>
               </div>
-              <p className="text-sm text-foreground/80 mt-2 leading-relaxed">{analysis.verdictExplanation}</p>
+              <p className="text-sm text-foreground/80 leading-relaxed">{analysis.verdictExplanation}</p>
             </div>
           </div>
           {/* Progress bar */}
