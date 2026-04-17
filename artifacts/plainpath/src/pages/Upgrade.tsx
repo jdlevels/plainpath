@@ -2,7 +2,7 @@ import { useEffect } from "react"
 import { useLocation } from "wouter"
 import { motion } from "framer-motion"
 import {
-  Check, Zap, BarChart3, ShieldCheck, PenLine, Scale,
+  Check, Zap, BarChart3, ShieldCheck, PenLine, Scale, EyeOff,
   ArrowRight, Sparkles,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -18,10 +18,11 @@ const PLAN_COLORS: Record<string, string> = {
 }
 
 const TOOL_BREAKDOWN = [
-  { icon: BarChart3,  name: "Analyze a Document",     starter: true,  pro: true, desc: "Plain-English breakdown of any document" },
-  { icon: ShieldCheck, name: "Document Trust Check",  starter: false, pro: true, desc: "Verify legitimacy, detect scams and fraud" },
-  { icon: PenLine,   name: "Contract Builder",        starter: false, pro: true, desc: "Generate professional agreements in minutes" },
-  { icon: Scale,     name: "Contract Review",         starter: false, pro: true, desc: "Catch unfair clauses before you sign" },
+  { icon: BarChart3,   name: "Analyze a Document",    starter: true,  pro: true, desc: "Plain-English summary, key terms, deadlines, and required actions" },
+  { icon: ShieldCheck, name: "Document Trust Check",  starter: false, pro: true, desc: "Verify legitimacy, surface red flags, and detect fraud" },
+  { icon: PenLine,     name: "Build a Contract",      starter: false, pro: true, desc: "Guided wizard that outputs a professional, ready-to-send draft" },
+  { icon: Scale,       name: "Contract Review",       starter: false, pro: true, desc: "Clause-by-clause risk analysis with negotiation language" },
+  { icon: EyeOff,      name: "Redact Sensitive Info", starter: false, pro: true, desc: "Redact sensitive info before sharing or uploading for review" },
 ]
 
 export default function Upgrade() {

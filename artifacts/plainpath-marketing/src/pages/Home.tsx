@@ -180,7 +180,7 @@ const PLANS = [
     name: "Starter",
     price: "$4.99",
     period: "/month",
-    desc: "Unlimited document analysis in plain English — key terms, deadlines, and action steps.",
+    desc: "Analyze any document in plain English — key terms, deadlines, and required actions. Unlimited use.",
     highlight: false,
     badge: null as string | null,
     tools: [
@@ -199,7 +199,7 @@ const PLANS = [
     name: "Pro",
     price: "$29.99",
     period: "/month",
-    desc: "Full access to all 5 live tools. Unlimited analyses, trust checks, contracts, reviews, and redactions.",
+    desc: "All 5 live tools in one plan — unlimited use across every workflow.",
     highlight: true,
     badge: "Best Value",
     tools: [
@@ -210,7 +210,7 @@ const PLANS = [
       { label: "Redact Sensitive Info", included: true,  comingSoon: false },
       { label: "Digital Signature",     included: false, comingSoon: true  },
     ],
-    extras: ["Saved analysis history", "Full Action Pack across all tools", "Priority AI processing"],
+    extras: ["Saved analysis history", "Premium output and workflow tools"],
     cta: "Get Pro",
     href: "/app/analyze",
   },
