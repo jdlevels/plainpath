@@ -691,7 +691,7 @@ export default function Home() {
             </a>
           </div>
           <p className="mt-6 text-xs text-white/25">
-            Plans from $4.99/month &nbsp;·&nbsp; All four tools on Pro &nbsp;·&nbsp; Cancel anytime
+            Plans from $4.99/month &nbsp;·&nbsp; All five tools on Pro &nbsp;·&nbsp; Cancel anytime
           </p>
         </div>
       </div>

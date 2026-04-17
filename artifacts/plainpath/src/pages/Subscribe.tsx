@@ -89,7 +89,7 @@ export default function Subscribe() {
             Choose your PlainPath plan
           </h1>
           <p className="text-muted-foreground text-base max-w-xl mx-auto leading-relaxed">
-            Start with unlimited document analysis on Starter, or unlock all four tools with Pro.
+            Start with unlimited document analysis on Starter, or unlock all five tools with Pro.
           </p>
         </div>
 
@@ -236,7 +236,7 @@ export default function Subscribe() {
             },
             {
               q: "What's the difference between plans?",
-              a: "Starter covers unlimited document analysis. Pro unlocks all four tools: Document Analysis, Trust Check, Contract Builder, and Contract Review.",
+              a: "Starter covers unlimited document analysis. Pro unlocks all five tools: Document Analysis, Trust Check, Contract Builder, Contract Review, and Redact Sensitive Info.",
             },
           ].map((item) => (
             <div key={item.q} className="rounded-2xl border border-border/50 bg-card p-4">

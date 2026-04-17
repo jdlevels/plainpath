@@ -16,7 +16,7 @@ interface Props {
 const REASON_COPY = {
   analyses: {
     title: "You've used your 2 free analyses this month",
-    sub: "Upgrade to Starter for unlimited document analyses — or Pro for all four tools.",
+    sub: "Upgrade to Starter for unlimited document analyses — or Pro for all five tools.",
     icon: <BarChart3 className="w-6 h-6 text-primary" />,
     planRequired: "starter" as const,
   },

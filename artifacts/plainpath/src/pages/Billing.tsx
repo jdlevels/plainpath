@@ -372,7 +372,7 @@ export default function Billing() {
                 </p>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   Starter at <strong>$4.99/mo</strong> gives you unlimited document analysis.
-                  Pro at <strong>$19.99/mo</strong> unlocks all four tools.
+                  Pro at <strong>$19.99/mo</strong> unlocks all five tools.
                 </p>
               </div>
               <Button size="sm" onClick={() => navigate("/subscribe")} className="shrink-0">

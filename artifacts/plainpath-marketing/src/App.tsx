@@ -6,6 +6,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
+import Privacy from "@/pages/Privacy";
+import Terms from "@/pages/Terms";
+import Support from "@/pages/Support";
 import ReviewingALease from "@/pages/guides/ReviewingALease";
 import UnderstandingAnNDA from "@/pages/guides/UnderstandingAnNDA";
 import EmploymentContractRedFlags from "@/pages/guides/EmploymentContractRedFlags";
@@ -25,9 +28,9 @@ function Router() {
       <Route path="/guides/understanding-an-nda" component={UnderstandingAnNDA} />
       <Route path="/guides/employment-contract-red-flags" component={EmploymentContractRedFlags} />
       <Route path="/pricing">{() => <ExternalRedirect to="/#pricing" />}</Route>
-      <Route path="/privacy">{() => <ExternalRedirect to="/app/privacy" />}</Route>
-      <Route path="/terms">{() => <ExternalRedirect to="/app/terms" />}</Route>
-      <Route path="/support">{() => <ExternalRedirect to="/app/support" />}</Route>
+      <Route path="/privacy" component={Privacy} />
+      <Route path="/terms" component={Terms} />
+      <Route path="/support" component={Support} />
       <Route component={NotFound} />
     </Switch>
   );

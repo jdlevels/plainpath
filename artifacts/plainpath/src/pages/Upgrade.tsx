@@ -50,7 +50,7 @@ export default function Upgrade() {
             Simple pricing. Powerful tools.
           </h1>
           <p className="text-muted-foreground text-base sm:text-lg max-w-xl mx-auto leading-relaxed">
-            Start with document analysis on Starter, or unlock all four tools with Pro. No contracts, cancel anytime.
+            Start with document analysis on Starter, or unlock all five tools with Pro. No contracts, cancel anytime.
           </p>
         </motion.div>
 

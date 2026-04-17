@@ -32,7 +32,7 @@ export const PRICING_PLANS: PricingPlan[] = [
     price: "$19.99",
     period: "/month",
     description:
-      "Full access to all four tools — Analyze, Trust Check, Contract Builder, and Contract Review.",
+      "Full access to all five tools — Analyze, Trust Check, Contract Builder, Contract Review, and Redact.",
     features: [
       "Everything in Starter",
       "Unlimited Document Trust Checks",

@@ -16,8 +16,8 @@ const FAQS = [
     a: "PlainPath works with leases, employment contracts, healthcare forms, government applications, grant packets, legal agreements, tax notices, and more. If it's text-based and has requirements, deadlines, or legalese — it works.",
   },
   {
-    q: "What's the difference between the four tools?",
-    a: "Analyze a Document breaks down paperwork you already have — extracting action steps, deadlines, risks, and required documents in plain English. Document Trust Check scores whether a document appears legitimate or shows scam and fraud indicators. Build a Contract creates a new agreement from scratch based on your deal terms, with a gap analysis. Contract Review reads a contract someone else wrote, flags risky or missing clauses, scores it, and gives you negotiation language.",
+    q: "What's the difference between the five tools?",
+    a: "Analyze a Document breaks down paperwork you already have — extracting action steps, deadlines, risks, and required documents in plain English. Document Trust Check scores whether a document appears legitimate or shows scam and fraud indicators. Build a Contract creates a new agreement from scratch based on your deal terms, with a gap analysis. Contract Review reads a contract someone else wrote, flags risky or missing clauses, scores it, and gives you negotiation language. Redact Sensitive Info detects and removes personal information — names, SSNs, account numbers, and more — before you share or analyze a document.",
   },
   {
     q: "Is the output legal advice?",
