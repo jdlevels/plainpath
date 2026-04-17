@@ -69,7 +69,7 @@ export default function Analyze() {
 
   const { entitlements, loading: entitlementsLoading } = useEntitlements()
   const { isSignedIn } = useUser()
-  const isPro = entitlements?.plan === "pro" || entitlements?.plan === "team"
+  const isPro = entitlements?.plan === "pro"
   // Tabs locked to Pro plan. Starter plan includes: plain-english, summary, key-terms,
   // action-pack, documents (Required Docs), and deadlines.
   const PRO_ONLY_TABS = new Set(["source-sections", "missing", "checklist", "risks"])

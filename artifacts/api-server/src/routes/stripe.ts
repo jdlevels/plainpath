@@ -41,9 +41,19 @@ function toIsoFromUnix(unixSeconds?: number | null): string | null {
   return new Date(unixSeconds * 1000).toISOString()
 }
 
+/** Returns true only when a live Stripe key is present. */
+function isStripeReady(): boolean {
+  return Boolean(process.env.STRIPE_SECRET_KEY)
+}
+
 // ─── Create Checkout Session ──────────────────────────────────────────────────
 
 router.post("/create-checkout-session", async (req, res) => {
+  // TODO: remove this guard when STRIPE_SECRET_KEY is added for go-live
+  if (!isStripeReady()) {
+    return res.status(503).json({ error: "Stripe is not configured. Billing is in test mode — no real charges possible." })
+  }
+
   try {
     const { plan, email } = req.body as { plan?: string; email?: string }
 
@@ -92,6 +102,10 @@ router.post("/create-checkout-session", async (req, res) => {
 // ─── Checkout Session Status ──────────────────────────────────────────────────
 
 router.get("/checkout-session-status", async (req, res) => {
+  // TODO: remove this guard when STRIPE_SECRET_KEY is added for go-live
+  if (!isStripeReady()) {
+    return res.status(503).json({ error: "Stripe is not configured." })
+  }
   try {
     const sessionId = req.query.session_id
     if (typeof sessionId !== "string") {
@@ -118,6 +132,10 @@ router.get("/checkout-session-status", async (req, res) => {
 // ─── Billing Portal ───────────────────────────────────────────────────────────
 
 router.post("/billing-portal", async (req, res) => {
+  // TODO: remove this guard when STRIPE_SECRET_KEY is added for go-live
+  if (!isStripeReady()) {
+    return res.status(503).json({ error: "Stripe is not configured. Billing is in test mode." })
+  }
   try {
     const { email } = req.body as { email?: string }
 
@@ -182,9 +200,10 @@ router.get("/subscriber-status", (req, res) => {
 
 router.post("/webhook", async (req: any, res) => {
   try {
+    // TODO: Remove this guard when STRIPE_WEBHOOK_SECRET is added for go-live
     if (!WEBHOOK_SECRET) {
-      console.error("STRIPE_WEBHOOK_SECRET is not set")
-      return res.status(500).send("Missing STRIPE_WEBHOOK_SECRET")
+      console.warn("STRIPE_WEBHOOK_SECRET not set — webhook rejected (test mode)")
+      return res.status(400).send("Webhook not configured")
     }
 
     const signature = req.headers["stripe-signature"]

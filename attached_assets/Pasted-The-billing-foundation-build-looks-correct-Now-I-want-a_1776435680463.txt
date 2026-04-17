@@ -1,0 +1,86 @@
+The billing foundation build looks correct. Now I want a strict QA / verification pass on the billing system before we move further.
+
+Do a full validation of the new billing foundation and prove that it works cleanly in test mode.
+
+Required verification:
+
+1. Billing page
+
+* verify `/billing` renders correctly
+* verify current plan displays correctly
+* verify Starter and Pro are the only plans shown
+* verify Teams is fully removed
+* verify test-mode banner is visible and accurate
+
+2. Checkout flow
+
+* verify upgrade CTA opens Stripe test checkout correctly
+* verify return/cancel routes work
+* verify no broken redirects
+
+3. Webhook flow
+   Test and verify these update local billing state correctly:
+
+* checkout.session.completed
+* customer.subscription.created
+* customer.subscription.updated
+* customer.subscription.deleted
+* invoice.paid
+* invoice.payment_failed
+
+4. Subscription state persistence
+   Verify the DB stores and updates:
+
+* customer ID
+* subscription ID
+* plan
+* billing status
+* provider
+* current period dates
+* cancellation state
+
+5. Entitlements
+   Verify centralized entitlements are correct:
+
+* Starter = Analyze only
+* Pro = Analyze + Trust Check + Contract Review + Build a Contract
+
+6. Usage tracking
+   Verify usage is recorded correctly for:
+
+* analyze
+* trust-check
+* contract-review
+* build-contract
+
+7. No regressions
+   Verify billing changes did not break:
+
+* homepage
+* root routing
+* theme toggle
+* footer
+* privacy / terms / support
+* tool pages
+* result pages
+
+8. Teams cleanup
+   Verify no remaining traces of:
+
+* team routes
+* join routes
+* team menu items
+* team pricing copy
+* admin/shared workflow copy
+
+Deliverables:
+
+* exact routes tested
+* exact webhook events tested
+* exact DB/state fields verified
+* list of regressions found (if any)
+* exact files changed if fixes were needed
+* final verdict:
+
+  * billing foundation VERIFIED
+  * or billing foundation NOT VERIFIED
