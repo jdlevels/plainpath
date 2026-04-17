@@ -70,18 +70,19 @@ export default function Analyze() {
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(true)
 
-  useEffect(() => {
+  const checkScroll = useCallback(() => {
     const el = tabListRef.current
     if (!el) return
-    const check = () => {
-      setCanScrollLeft(el.scrollLeft > 2)
-      setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 2)
-    }
-    check()
-    el.addEventListener("scroll", check, { passive: true })
-    window.addEventListener("resize", check, { passive: true })
-    return () => { el.removeEventListener("scroll", check); window.removeEventListener("resize", check) }
+    setCanScrollLeft(el.scrollLeft > 2)
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 2)
   }, [])
+
+  // Re-run whenever analysis arrives so the tab bar is present in the DOM
+  useEffect(() => {
+    checkScroll()
+    window.addEventListener("resize", checkScroll, { passive: true })
+    return () => window.removeEventListener("resize", checkScroll)
+  }, [analysis, checkScroll])
 
   const scrollTabsLeft  = () => tabListRef.current?.scrollBy({ left: -200, behavior: "smooth" })
   const scrollTabsRight = () => tabListRef.current?.scrollBy({ left:  200, behavior: "smooth" })
@@ -309,7 +310,7 @@ export default function Analyze() {
               </button>
             )}
           <div className="flex-1 overflow-hidden rounded-2xl">
-          <Tabs.List ref={tabListRef} className="flex overflow-x-auto hide-scrollbar gap-0.5 px-1 py-1 scroll-smooth">
+          <Tabs.List ref={tabListRef} onScroll={checkScroll} className="flex overflow-x-auto hide-scrollbar gap-0.5 px-1 py-1 scroll-smooth">
             {TABS.map((tab) => {
               const count = (tab as any).countKey ? (analysis as any)[(tab as any).countKey]?.length : null
               const isMissing = tab.id === "missing"

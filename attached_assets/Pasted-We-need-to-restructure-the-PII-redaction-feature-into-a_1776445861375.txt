@@ -1,0 +1,160 @@
+We need to restructure the PII redaction feature into a first-class standalone PlainPath tool.
+
+Strategic decision:
+Redaction should NOT only live as a hidden pre-step inside other tools.
+It should become its own core tool, just like:
+- Analyze a Document
+- Document Trust Check
+- Contract Review
+- Build a Contract
+
+New tool name:
+Redact Sensitive Info
+
+==================================================
+PRODUCT GOAL
+==================================================
+
+Users should be able to:
+1. open the Redact Sensitive Info tool directly
+2. upload / paste / scan a document
+3. detect likely sensitive information
+4. choose exactly what to redact
+5. apply selected redactions
+6. copy / save / export the redacted version
+7. send the redacted version into another PlainPath tool if they want
+
+This tool must also remain cross-connected with the other tools.
+
+==================================================
+NEW PRODUCT STRUCTURE
+==================================================
+
+Add a 5th core tool:
+- Redact Sensitive Info
+
+This tool should appear:
+- on homepage with the other tool cards
+- in nav/tool menus
+- anywhere else the core tools are listed
+
+==================================================
+REQUIRED USER FLOWS
+==================================================
+
+Primary redaction flow:
+- user opens Redact Sensitive Info
+- uploads/pastes/scans document
+- PlainPath detects likely PII
+- user selects what to redact
+- user clicks Apply selected redactions
+- PlainPath creates redacted version
+- user can:
+  - Copy redacted text
+  - Download/export redacted copy
+  - Save redacted copy
+  - Send to Analyze
+  - Send to Trust Check
+  - Send to Contract Review
+
+Cross-tool flow:
+If user is already inside:
+- Analyze
+- Trust Check
+- Contract Review
+
+They should still see a shortcut like:
+- Redact first
+- Open in Redact
+- Use redacted version
+
+But the main redaction logic/workspace should now live in the standalone Redact tool.
+
+==================================================
+UX / ARCHITECTURE REQUIREMENTS
+==================================================
+
+1. Create a dedicated Redact tool page/route
+Suggested route:
+- /app/redact
+
+2. Make Redact a first-class homepage card
+Match the style of the existing 4 tools.
+
+3. Use Redact as the source-of-truth workspace
+The redacted document should become a reusable working artifact/session object that can be passed into:
+- Analyze
+- Trust Check
+- Contract Review
+
+4. Keep user-controlled redaction
+- detection automatic
+- redaction not automatic
+- user selects what to redact
+- only selected items are redacted
+
+5. Keep grouped repeated-value behavior
+- group same-value occurrences
+- show counts
+- allow group toggle
+- allow inspection
+
+6. Preserve export/copy/safe-output behavior
+- copy redacted text
+- export redacted output
+- verify true redaction behavior for supported formats
+
+7. Add post-redaction next-step panel
+After redaction, show:
+- Analyze this redacted document
+- Run Trust Check on this redacted document
+- Review this redacted contract
+- Save / Download / Copy
+
+==================================================
+HOMEPAGE / TOOL CARD REQUIREMENTS
+==================================================
+
+Add the new card:
+Title:
+- Redact Sensitive Info
+
+Supporting copy:
+- Remove private details before sharing, analyzing, or reviewing your document.
+
+or equivalent PlainPath-style wording.
+
+Update any “four tools” copy to “five tools” where appropriate.
+
+==================================================
+IMPORTANT
+==================================================
+
+Do not break:
+- existing Analyze flow
+- existing Trust Check flow
+- existing Contract Review flow
+- current redaction review logic
+- theme
+- routing
+- billing foundation
+
+We are reorganizing the redaction feature into a better product structure, not throwing away the work already done.
+
+==================================================
+DELIVERABLES
+==================================================
+
+Return:
+A. exact files changed
+B. new route(s) created
+C. homepage/tool menu updates
+D. how redacted documents are passed into other tools
+E. screenshots of:
+- standalone Redact tool page
+- homepage card
+- post-redaction next-step panel
+- send-to-Analyze flow
+- send-to-Trust Check flow
+- send-to-Contract Review flow
+F. confirmation that existing redaction logic was preserved and restructured rather than lost
