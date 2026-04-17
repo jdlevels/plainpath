@@ -48,6 +48,36 @@ uri = "file://artifacts/plainpath-marketing/public/images/mockup-2.png"
 type = "image"
 title = "Contract building wizard interface"
 
+[[generated]]
+id = "IBXf3b0flpa-RnoE12o02"
+uri = "file://docs/store/assets/app-icon-1024.png"
+type = "image"
+title = "PlainPath app icon document shield"
+
+[[generated]]
+id = "ES3Kts9N5EK1Ine1la6RL"
+uri = "file://docs/store/assets/feature-graphic-16x9.png"
+type = "image"
+title = "PlainPath Play Store feature graphic"
+
+[[generated]]
+id = "RqaYAcVp2i3xx_M-DhuMO"
+uri = "file://docs/store/assets/app-icon-1024-v2.png"
+type = "image"
+title = "PlainPath app icon clean background"
+
+[[generated]]
+id = "3jCVBjqemvguqEWLLK4aB"
+uri = "file://docs/store/assets/feature-graphic-16x9-v2.png"
+type = "image"
+title = "PlainPath feature graphic clean"
+
+[[generated]]
+id = "ncFDmLK1WxbfJ5W28UnFR"
+uri = "file://docs/store/assets/feature-graphic-final.png"
+type = "image"
+title = "PlainPath feature graphic no hex codes"
+
 [[outputs]]
 id = "o7YB8F3oFhJfMlxpy-hZz"
 uri = "file://PlainPath-Handoff.md"
@@ -65,3 +95,63 @@ id = "EjnzDc6PO6-wY-zAm6LED"
 uri = "file://artifacts/plainpath/docs/APP_STORE_READINESS_AUDIT.md"
 type = "text"
 title = "PlainPath — Apple App Store Readiness Audit"
+
+[[outputs]]
+id = "r6L3wgzI1Dw2rXW-Hd1Gi"
+uri = "file://docs/store/assets/app-icon-1024-v2.png"
+type = "image"
+title = "App Icon — 1024×1024 (concept, v2)"
+
+[[outputs]]
+id = "ANZU1K-zWPRqvEwS0HcBe"
+uri = "file://docs/store/assets/feature-graphic-final.png"
+type = "image"
+title = "Feature Graphic — 16:9 (crop to 1024×500 for Play)"
+
+[[outputs]]
+id = "EwzWfwyxLn6HDpn-dTdzM"
+uri = "file://docs/store/screenshots/01-home-tools.jpg"
+type = "image"
+title = "Screenshot 1 — Home / Tool Grid"
+
+[[outputs]]
+id = "_KBBNZ_wHDkrODrqNlYTF"
+uri = "file://docs/store/screenshots/02-analyze-result.jpg"
+type = "image"
+title = "Screenshot 2 — Analyze: Plain English Result"
+
+[[outputs]]
+id = "_pzWjJ7WcN8209ZzXiK5f"
+uri = "file://docs/store/screenshots/03-trust-check.jpg"
+type = "image"
+title = "Screenshot 3 — Trust Check: Scam Verdict"
+
+[[outputs]]
+id = "qiajGFNP3p62ZayS6MgpA"
+uri = "file://docs/store/screenshots/04-contract-review.jpg"
+type = "image"
+title = "Screenshot 4 — Contract Review: Fairness Score"
+
+[[outputs]]
+id = "H4Ne4iVhKdmETYS5L_Rb2"
+uri = "file://docs/store/screenshots/05-contract-builder.jpg"
+type = "image"
+title = "Screenshot 5 — Contract Builder"
+
+[[outputs]]
+id = "oaKMud20-6e8teTldM5Zm"
+uri = "file://docs/store/screenshots/06-redact-input.jpg"
+type = "image"
+title = "Screenshot 6 — Redact: Sample Docs + Input"
+
+[[outputs]]
+id = "m369mQb0F2rfWLlGUFW8q"
+uri = "file://docs/store/07-metadata-pack-final.md"
+type = "text"
+title = "Metadata Pack — Copy-paste ready (both stores)"
+
+[[outputs]]
+id = "h2Y72RvtJezh481uaCcZ0"
+uri = "file://docs/store/00-asset-index.md"
+type = "text"
+title = "Asset Index — Master inventory + submission checklist"

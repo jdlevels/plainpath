@@ -222,9 +222,14 @@ Based on RevenueCat's State of Subscription Apps 2026 (Productivity category):
 - PlainPath Starter at $4.99 is positioned as accessible/entry
 - PlainPath Pro at $29.99 is positioned as professional-grade (above category median by design — 5 live tools with unlimited use)
 
-Consider offering an **annual option** at ~20–30% discount:
-- Starter Annual: $47.99/year (~$4.00/month — 20% off)
-- Pro Annual: $251.99/year (~$21.00/month — 30% off; aligns with marketing "save 30%" messaging)
+Consider offering an **annual option** (save about 20–30% vs monthly):
+
+| Plan | Annual Price | Monthly Equivalent | vs Monthly × 12 | Savings |
+|---|---|---|---|---|
+| Starter Annual | $47.99/year | ~$4.00/month | $59.88 | ~$11.89 (save about 20%) |
+| Pro Annual | $251.99/year | ~$21.00/month | $359.88 | ~$107.89 (save about 30%) |
+
+> Prices are charm-priced ($47.99, $251.99). Do not advertise these as exact 20% or 30% discounts in store copy — use "save about 20%" / "save about 30%" language. The underlying savings are 19.85% and 29.98% respectively, which rounds cleanly to "about 20%" and "about 30%."
 
 Annual products would be added as additional packages in the same Default Offering.
 
