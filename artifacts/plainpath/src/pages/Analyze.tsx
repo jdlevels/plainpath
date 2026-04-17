@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from "react"
+import React, { useEffect, useState, useCallback, useMemo, useRef } from "react"
 import { useLocation, useSearch } from "wouter"
 import { useGetDemoDocument, useUpdateChecklist } from "@workspace/api-client-react"
 import { useAnalysisContext } from "@/context/AnalysisContext"
@@ -66,6 +66,18 @@ export default function Analyze() {
   const [savedId, setSavedId] = useState<string | null>(null)
   const [justSaved, setJustSaved] = useState(false)
   const [guidedReviewCtx, setGuidedReviewCtx] = useState<string | null>(null)
+  const tabListRef = useRef<HTMLDivElement>(null)
+  const [canScrollRight, setCanScrollRight] = useState(true)
+
+  useEffect(() => {
+    const el = tabListRef.current
+    if (!el) return
+    const check = () => setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 2)
+    check()
+    el.addEventListener("scroll", check, { passive: true })
+    window.addEventListener("resize", check, { passive: true })
+    return () => { el.removeEventListener("scroll", check); window.removeEventListener("resize", check) }
+  }, [])
 
   const { entitlements, loading: entitlementsLoading } = useEntitlements()
   const { isSignedIn } = useUser()
@@ -279,7 +291,15 @@ export default function Analyze() {
 
         {/* ── Tab bar ──────────────────────────────────── */}
         <Tabs.Root value={activeTab} onValueChange={setActiveTab}>
-          <Tabs.List className="no-print flex overflow-x-auto hide-scrollbar gap-0.5 pl-1 py-1 bg-card border border-border/40 rounded-2xl shadow-sm mb-4 sm:mb-6 scroll-smooth" style={{ paddingRight: '8px' }}>
+          <div className="no-print relative bg-card border border-border/40 rounded-2xl shadow-sm mb-4 sm:mb-6 overflow-hidden">
+            {canScrollRight && (
+              <div
+                className="absolute inset-y-0 right-0 w-12 pointer-events-none z-10 rounded-r-2xl"
+                style={{ background: "linear-gradient(to left, var(--card) 20%, transparent)" }}
+                aria-hidden="true"
+              />
+            )}
+          <Tabs.List ref={tabListRef} className="flex overflow-x-auto hide-scrollbar gap-0.5 px-1 py-1 scroll-smooth w-full">
             {TABS.map((tab) => {
               const count = (tab as any).countKey ? (analysis as any)[(tab as any).countKey]?.length : null
               const isMissing = tab.id === "missing"
@@ -313,11 +333,9 @@ export default function Analyze() {
                 </Tabs.Trigger>
               )
             })}
-            {/* Trailing spacer: ensures the last tab clears the right border when the row is scrolled to the end.
-                padding-right on overflow containers is not reliably rendered in all browsers;
-                a physical flex child is always rendered correctly. */}
-            <div className="shrink-0" style={{ width: '4px' }} aria-hidden="true" />
+            <div className="shrink-0" style={{ width: '48px' }} aria-hidden="true" />
           </Tabs.List>
+          </div>
 
           {/* ── Content pane ────────────────────────────── */}
           <div className="no-print bg-card rounded-3xl border border-border/30 shadow-lg shadow-black/[0.04] dark:shadow-black/20 overflow-hidden min-h-[400px] sm:min-h-[540px]">

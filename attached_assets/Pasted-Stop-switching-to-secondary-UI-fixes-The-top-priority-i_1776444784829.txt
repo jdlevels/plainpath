@@ -1,0 +1,99 @@
+Stop switching to secondary UI fixes. The top priority is finishing the PII redaction feature.
+
+The tab bar issue can be verified later. Do not spend more time on it right now unless it blocks the redaction flow.
+
+We need to complete redaction fully.
+
+Priority rules:
+1. Detection can be automatic
+2. Redaction must NOT be automatic
+3. User must choose what to redact
+4. Only selected items get redacted
+5. The redacted version must be the version passed into the next tool
+
+Finish all remaining redaction work now.
+
+Required completion checklist:
+
+A. User-controlled review
+- detect likely PII automatically
+- show all suggested redactions
+- allow select / deselect individual items
+- allow select all
+- allow clear all
+- allow select by category
+- allow select all same-value occurrences
+
+B. Same-value grouping
+- group repeated identical values together
+- show occurrence count clearly
+- allow one-click toggle for all same-value matches
+- allow expansion if needed to inspect each match
+
+C. Full tool integration
+Redaction must work cleanly when entered from:
+- Analyze
+- Trust Check
+- Contract Review
+
+After redaction:
+- return to the correct destination tool
+- pass the redacted version only
+- do not pass the original by mistake
+
+D. Summary + trust layer
+After user applies selected redactions, show:
+- total detected
+- total selected for redaction
+- total left unchanged
+- categories found
+- repeated values count where relevant
+
+E. Export / copy / continue
+The user must be able to:
+- download/export redacted copy
+- copy redacted text
+- continue into the destination tool
+
+These actions must use the redacted version only.
+
+F. True redaction verification
+Prove how redaction works for each supported format.
+For each format, confirm:
+- whether underlying text is removed/replaced
+- whether copy/paste reveals hidden text
+- whether exported output is actually safe to share
+
+If any format is not truly safe yet:
+- clearly state the limitation
+- do not fake it
+- restrict unsupported export paths if needed
+
+G. Destination banners
+On Analyze / Trust Check / Contract Review after redaction:
+- show a clear “using redacted version” banner
+- make it clear the original was not passed through
+- optionally include “view redaction summary”
+
+H. Final proof required
+Return screenshots of:
+1. detection/review screen
+2. grouped same-value screen
+3. summary after applying selected redactions
+4. export/download/copy actions
+5. Analyze using redacted version
+6. Trust Check using redacted version
+7. Contract Review using redacted version
+
+Final deliverable:
+State clearly:
+- REDACTION FEATURE COMPLETE
+or
+- REDACTION FEATURE NOT COMPLETE
+
+Do not mark complete unless:
+- user-controlled selection works
+- grouped repeated values work
+- export/copy works
+- all 3 tool integrations work
+- true-redaction behavior is verified
