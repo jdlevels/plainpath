@@ -49,9 +49,9 @@ export default function Redact() {
   // Review state
   const [activeText, setActiveText] = useState<string | null>(null)
   const [activeFileName, setActiveFileName] = useState<string | undefined>()
-  const [returnTo, setReturnTo] = useState<"analyze" | "none">("none")
+  const [returnTo, setReturnTo] = useState<"analyze" | "trust-check" | "contract-review" | "none">("none")
 
-  // On mount: check if we were launched from Import flow
+  // On mount: check if we were launched from another tool's "Redact first" flow
   useEffect(() => {
     document.title = "Redact Sensitive Information — PlainPath"
     try {
@@ -59,14 +59,19 @@ export default function Redact() {
       if (raw) {
         const stored = JSON.parse(raw) as {
           text: string
-          source?: "analyze" | "trust-check"
+          source?: "analyze" | "trust-check" | "contract-review"
           fileName?: string
         }
         sessionStorage.removeItem("pii_redact_input")
         if (stored.text && stored.text.trim().length > 10) {
           setActiveText(stored.text)
           setActiveFileName(stored.fileName)
-          setReturnTo(stored.source === "analyze" ? "analyze" : "none")
+          const src = stored.source
+          setReturnTo(
+            src === "trust-check" ? "trust-check" :
+            src === "contract-review" ? "contract-review" :
+            src === "analyze" ? "analyze" : "none"
+          )
         }
       }
     } catch {
@@ -134,28 +139,40 @@ export default function Redact() {
     }
   }
 
-  // ── After redaction applied: route appropriately ──────────────────────────
+  // ── After redaction applied: route to the tool that launched redaction ────
   function handleAnalyzeRedacted(redactedText: string) {
     try {
-      sessionStorage.setItem("pii_analyze_text", redactedText)
+      if (returnTo === "contract-review") {
+        sessionStorage.setItem("pii_contract_review_text", redactedText)
+        setLocation("/contract-review")
+      } else if (returnTo === "trust-check") {
+        sessionStorage.setItem("pii_analyze_text", redactedText)
+        setLocation("/analyze?mode=trust-check")
+      } else {
+        sessionStorage.setItem("pii_analyze_text", redactedText)
+        setLocation("/analyze")
+      }
     } catch {
-      // sessionStorage unavailable
-    }
-    if (returnTo === "analyze") {
-      setLocation("/analyze")
-    } else {
-      setLocation("/analyze")
+      // sessionStorage unavailable — navigate anyway
+      if (returnTo === "contract-review") setLocation("/contract-review")
+      else if (returnTo === "trust-check") setLocation("/analyze?mode=trust-check")
+      else setLocation("/analyze")
     }
   }
 
-  // ── Cancel: return to Import ──────────────────────────────────────────────
+  // ── Cancel: return to the originating tool ────────────────────────────────
   function handleCancel() {
-    if (returnTo === "analyze") {
-      setLocation("/analyze")
-    } else {
-      setActiveText(null)
-    }
+    if (returnTo === "contract-review") setLocation("/contract-review")
+    else if (returnTo === "trust-check") setLocation("/analyze?mode=trust-check")
+    else if (returnTo === "analyze") setLocation("/analyze")
+    else setActiveText(null)
   }
+
+  // ── Label for the "continue" action based on origin ───────────────────────
+  const continueLabel =
+    returnTo === "contract-review" ? "Review this contract" :
+    returnTo === "trust-check" ? "Run Trust Check on this document" :
+    "Analyze this document"
 
   const canSubmitPaste = pastedText.trim().length >= 30
 
@@ -181,6 +198,7 @@ export default function Redact() {
           <PiiReview
             text={activeText}
             fileName={activeFileName}
+            continueLabel={continueLabel}
             onAnalyzeRedacted={handleAnalyzeRedacted}
             onCancel={handleCancel}
           />

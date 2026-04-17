@@ -1068,7 +1068,7 @@ export default function Import() {
                             {isTrustCheck ? "Check Document" : "Generate Action Plan"} <ArrowRight className="ml-2 w-4 h-4" />
                           </Button>
 
-                          {!isTrustCheck && text.trim().length >= 30 && (
+                          {text.trim().length >= 30 && (
                             <button
                               type="button"
                               style={{ touchAction: "manipulation" }}
@@ -1076,14 +1076,14 @@ export default function Import() {
                                 try {
                                   sessionStorage.setItem(
                                     "pii_redact_input",
-                                    JSON.stringify({ text, source: "analyze" })
+                                    JSON.stringify({ text, source: isTrustCheck ? "trust-check" : "analyze" })
                                   )
                                 } catch { /* sessionStorage unavailable */ }
                                 setLocation("/redact")
                               }}
-                              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-border/40 hover:border-border/60 bg-transparent hover:bg-muted/30 text-muted-foreground hover:text-foreground text-sm transition-all"
+                              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-amber-300/50 dark:border-amber-700/40 hover:border-amber-400/70 bg-amber-50/60 dark:bg-amber-950/20 hover:bg-amber-50 dark:hover:bg-amber-950/30 text-amber-800 dark:text-amber-300 text-sm font-medium transition-all"
                             >
-                              <ShieldCheck className="w-3.5 h-3.5 text-primary/50" />
+                              <ShieldCheck className="w-3.5 h-3.5" />
                               Redact sensitive info first
                             </button>
                           )}

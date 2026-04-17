@@ -252,40 +252,24 @@ Rules:
 
     // Find all occurrences of this value in the text (case-insensitive match)
     const needle = entity.value.trim()
+    // Find ALL occurrences of this value in the text so every instance gets redacted
+    const lowerText = text.toLowerCase()
+    const lowerNeedle = needle.toLowerCase()
     let searchFrom = 0
-    while (true) {
-      const idx = text.indexOf(needle, searchFrom)
-      if (idx === -1) {
-        // Try case-insensitive
-        const lower = text.toLowerCase()
-        const needleLower = needle.toLowerCase()
-        const ci = lower.indexOf(needleLower, searchFrom)
-        if (ci === -1) break
-        spans.push({
-          id: uuidv4(),
-          type: meta.type,
-          label: meta.label,
-          value: text.slice(ci, ci + needle.length),
-          start: ci,
-          end: ci + needle.length,
-          confidence: "medium",
-          source: "ai",
-        })
-        searchFrom = ci + needle.length
-      } else {
-        spans.push({
-          id: uuidv4(),
-          type: meta.type,
-          label: meta.label,
-          value: text.slice(idx, idx + needle.length),
-          start: idx,
-          end: idx + needle.length,
-          confidence: "medium",
-          source: "ai",
-        })
-        searchFrom = idx + needle.length
-      }
-      break // Only first occurrence per entity value (AI deduplicates)
+    while (searchFrom < text.length) {
+      const ci = lowerText.indexOf(lowerNeedle, searchFrom)
+      if (ci === -1) break
+      spans.push({
+        id: uuidv4(),
+        type: meta.type,
+        label: meta.label,
+        value: text.slice(ci, ci + needle.length),
+        start: ci,
+        end: ci + needle.length,
+        confidence: "medium",
+        source: "ai",
+      })
+      searchFrom = ci + needle.length
     }
   }
 

@@ -25,6 +25,7 @@ import {
 type Props = {
   text: string
   fileName?: string
+  continueLabel?: string
   onAnalyzeRedacted: (redactedText: string) => void
   onCancel: () => void
 }
@@ -115,12 +116,17 @@ function DocumentPreview({ text, spans }: { text: string; spans: PiiSpanWithStat
 
 // ─── Span Row ──────────────────────────────────────────────────────────────────
 
-function SpanRow({ span, onToggle }: { span: PiiSpanWithStatus; onToggle: () => void }) {
+function SpanRow({ span, count = 1, allApproved, onToggle }: {
+  span: PiiSpanWithStatus
+  count?: number
+  allApproved: boolean
+  onToggle: () => void
+}) {
   const meta = PII_TYPE_META[span.type]
   return (
     <div
       className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-all cursor-pointer select-none ${
-        span.approved
+        allApproved
           ? "border-border/60 bg-background hover:bg-muted/30"
           : "border-border/30 bg-muted/20 opacity-60 hover:opacity-80"
       }`}
@@ -129,22 +135,27 @@ function SpanRow({ span, onToggle }: { span: PiiSpanWithStatus; onToggle: () => 
       <button
         type="button"
         className={`w-5 h-5 rounded flex items-center justify-center shrink-0 transition-colors ${
-          span.approved
+          allApproved
             ? "bg-destructive/15 border border-destructive/30 text-destructive"
             : "bg-muted border border-border/50 text-muted-foreground"
         }`}
-        aria-label={span.approved ? "Click to keep (un-redact)" : "Click to redact"}
+        aria-label={allApproved ? "Click to keep (un-redact)" : "Click to redact"}
       >
-        {span.approved ? <X className="w-3 h-3" /> : <Check className="w-3 h-3" />}
+        {allApproved ? <X className="w-3 h-3" /> : <Check className="w-3 h-3" />}
       </button>
 
       <div className="flex-1 min-w-0">
         <span className={`inline-flex items-center text-[10px] font-semibold px-1.5 py-0.5 rounded-full mr-2 ${meta.badgeBg} ${meta.badgeText}`}>
           {meta.label}
         </span>
-        <span className={`text-sm font-mono ${span.approved ? "line-through text-muted-foreground/70" : "text-foreground/80"}`}>
+        <span className={`text-sm font-mono ${allApproved ? "line-through text-muted-foreground/70" : "text-foreground/80"}`}>
           {truncateValue(span.value)}
         </span>
+        {count > 1 && (
+          <span className="ml-2 text-[10px] font-medium text-muted-foreground/60 bg-muted/50 rounded-full px-1.5 py-0.5">
+            ×{count}
+          </span>
+        )}
       </div>
 
       <span className={`text-[10px] shrink-0 ${
@@ -222,7 +233,7 @@ function AppliedView({
           onClick={onAnalyze}
         >
           <ChevronRight className="w-4 h-4" />
-          Analyze this document
+          {continueLabel}
         </Button>
 
         <div className="grid grid-cols-2 gap-2">
@@ -265,7 +276,7 @@ function AppliedView({
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export function PiiReview({ text, fileName, onAnalyzeRedacted, onCancel }: Props) {
+export function PiiReview({ text, fileName, continueLabel = "Analyze this document", onAnalyzeRedacted, onCancel }: Props) {
   const [status, setStatus] = useState<DetectStatus>("detecting")
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [spans, setSpans] = useState<PiiSpanWithStatus[]>([])
@@ -302,6 +313,13 @@ export function PiiReview({ text, fileName, onAnalyzeRedacted, onCancel }: Props
   // ── Toggle individual span ─────────────────────────────────────────────────
   const toggleSpan = useCallback((id: string) => {
     setSpans(prev => prev.map(s => s.id === id ? { ...s, approved: !s.approved } : s))
+  }, [])
+
+  // ── Toggle all spans that share the same normalized value ──────────────────
+  const toggleSameValue = useCallback((normalizedValue: string, approve: boolean) => {
+    setSpans(prev => prev.map(s =>
+      s.value.toLowerCase().trim() === normalizedValue ? { ...s, approved: approve } : s
+    ))
   }, [])
 
   // ── Toggle all in category ─────────────────────────────────────────────────
@@ -387,7 +405,7 @@ export function PiiReview({ text, fileName, onAnalyzeRedacted, onCancel }: Props
             Back
           </Button>
           <Button onClick={() => onAnalyzeRedacted(text)} className="h-11 rounded-xl gap-2">
-            Analyze document <ArrowRight className="w-4 h-4" />
+            {continueLabel} <ArrowRight className="w-4 h-4" />
           </Button>
         </div>
       </div>
@@ -438,12 +456,23 @@ export function PiiReview({ text, fileName, onAnalyzeRedacted, onCancel }: Props
         {Array.from(groups.entries()).map(([category, catSpans]) => {
           const allApproved = catSpans.every(s => s.approved)
           const noneApproved = catSpans.every(s => !s.approved)
+          // Deduplicate by normalized value — group all occurrences of the same text together
+          const valueGroups = Array.from(
+            catSpans.reduce((acc, span) => {
+              const key = span.value.toLowerCase().trim()
+              if (!acc.has(key)) acc.set(key, [])
+              acc.get(key)!.push(span)
+              return acc
+            }, new Map<string, PiiSpanWithStatus[]>())
+          )
           return (
             <div key={category} className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   {category}
-                  <span className="ml-1.5 font-normal text-muted-foreground/50">({catSpans.length})</span>
+                  <span className="ml-1.5 font-normal text-muted-foreground/50">
+                    ({valueGroups.length}{catSpans.length !== valueGroups.length ? `, ${catSpans.length} total` : ""})
+                  </span>
                 </p>
                 <div className="flex gap-1.5">
                   {!allApproved && (
@@ -465,9 +494,19 @@ export function PiiReview({ text, fileName, onAnalyzeRedacted, onCancel }: Props
                 </div>
               </div>
               <div className="space-y-1">
-                {catSpans.map(span => (
-                  <SpanRow key={span.id} span={span} onToggle={() => toggleSpan(span.id)} />
-                ))}
+                {valueGroups.map(([normVal, group]) => {
+                  const representative = group[0]
+                  const allInGroupApproved = group.every(s => s.approved)
+                  return (
+                    <SpanRow
+                      key={normVal}
+                      span={representative}
+                      count={group.length}
+                      allApproved={allInGroupApproved}
+                      onToggle={() => toggleSameValue(normVal, !allInGroupApproved)}
+                    />
+                  )
+                })}
               </div>
             </div>
           )

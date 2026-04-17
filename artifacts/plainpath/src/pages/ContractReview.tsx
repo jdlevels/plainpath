@@ -4,7 +4,7 @@ import {
   Scale, UploadCloud, Loader2, AlertCircle, Copy, Check,
   ChevronDown, ChevronUp, ArrowLeft, RotateCcw, FileText,
   ShieldAlert, AlertTriangle, CheckCircle2, X as XIcon,
-  Lock, ClipboardList, ChevronRight, Mail, Shield,
+  Lock, ClipboardList, ChevronRight, Mail, Shield, ShieldCheck,
   Camera, ScanLine, Download, Bookmark, Clock, ArrowRight,
   CheckSquare,
 } from "lucide-react"
@@ -1029,6 +1029,7 @@ export default function ContractReview() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<ReviewResult | null>(null)
+  const [redactedNotice, setRedactedNotice] = useState(false)
 
   // URL-based demo loading: /contract-review?demo=freelance-design
   useEffect(() => {
@@ -1037,6 +1038,19 @@ export default function ContractReview() {
       const demo = REVIEW_DEMOS.find(d => d.id === demoId)
       if (demo) setResult(demo.data)
     }
+  }, [])
+
+  // Returning from redaction flow with pre-redacted contract text
+  useEffect(() => {
+    try {
+      const redactedText = sessionStorage.getItem("pii_contract_review_text")
+      if (redactedText) {
+        sessionStorage.removeItem("pii_contract_review_text")
+        setText(redactedText)
+        setRedactedNotice(true)
+        setActiveTab("paste")
+      }
+    } catch { /* sessionStorage unavailable */ }
   }, [])
   const [capturedImages, setCapturedImages] = useState<string[]>([])
   const [cameraError, setCameraError] = useState<string | null>(null)
@@ -1263,7 +1277,23 @@ export default function ContractReview() {
 
               <AnimatePresence mode="wait">
                 {activeTab === "paste" ? (
-                  <motion.div key="paste" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  <motion.div key="paste" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-2">
+                    {redactedNotice && (
+                      <div className="flex items-start gap-2 rounded-lg border border-emerald-200 dark:border-emerald-800/50 bg-emerald-50 dark:bg-emerald-950/30 px-3 py-2">
+                        <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold text-emerald-800 dark:text-emerald-300">Using redacted contract</p>
+                          <p className="text-[11px] text-emerald-700/70 dark:text-emerald-400/70 mt-0.5">Sensitive information has been removed before review</p>
+                        </div>
+                        <button
+                          onClick={() => { setRedactedNotice(false); setText("") }}
+                          className="text-emerald-600/60 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors shrink-0"
+                          aria-label="Clear"
+                        >
+                          <XIcon className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    )}
                     <Textarea
                       placeholder="Paste the full contract text here…"
                       value={text}
@@ -1271,7 +1301,7 @@ export default function ContractReview() {
                       rows={12}
                       className="resize-none font-mono text-sm"
                     />
-                    <p className="text-xs text-muted-foreground mt-1.5 text-right">{text.length.toLocaleString()} characters</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 text-right">{text.length.toLocaleString()} characters</p>
                   </motion.div>
                 ) : activeTab === "upload" ? (
                   <motion.div key="upload" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -1432,6 +1462,24 @@ export default function ContractReview() {
                   {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Scale className="w-4 h-4" />}
                   {loading ? "Reviewing…" : "Review This Contract"}
                 </Button>
+                {activeTab === "paste" && text.trim().length >= 50 && !redactedNotice && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      try {
+                        sessionStorage.setItem(
+                          "pii_redact_input",
+                          JSON.stringify({ text, source: "contract-review" })
+                        )
+                      } catch { /* sessionStorage unavailable */ }
+                      setLocation("/redact")
+                    }}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-amber-300/50 dark:border-amber-700/40 hover:border-amber-400/70 bg-amber-50/60 dark:bg-amber-950/20 hover:bg-amber-50 dark:hover:bg-amber-950/30 text-amber-800 dark:text-amber-300 text-sm font-medium transition-all"
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    Redact sensitive info before reviewing
+                  </button>
+                )}
               </div>
             )}
           </WorkspaceShell>

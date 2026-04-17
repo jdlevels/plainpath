@@ -205,40 +205,47 @@ PlainPath is a monorepo using pnpm workspaces.
 - `/guides/scam-notice` — How to identify a scam document
 - All routes registered in App.tsx
 
-## PII Redaction Feature (Phase 1 — Shipped)
+## PII Redaction Feature (Phase 2 — Shipped)
 
-### Architecture
-- **Route**: `/redact` — standalone page + entry point from Import flow
-- **Entry**: On Analyze page (paste or upload mode), after text/file is ready, "Redact sensitive info first" secondary button appears
-- **Flow**: Import → sessionStorage `pii_redact_input` → `/redact` → review → sessionStorage `pii_analyze_text` → `/analyze` with redacted text pre-loaded
+### Positioning
+Redaction is a first-class pre-processing safety step across the entire document pipeline — not a standalone tool. It integrates into Analyze, Trust Check, and Contract Review as "Redact sensitive info first" / "Redact sensitive info before reviewing".
+
+### Session Handoff Architecture
+| Origin | sessionStorage key in | sessionStorage key out | Destination |
+|---|---|---|---|
+| Analyze (paste) | `pii_redact_input` `{ text, source: "analyze" }` | `pii_analyze_text` | `/analyze` |
+| Trust Check (paste) | `pii_redact_input` `{ text, source: "trust-check" }` | `pii_analyze_text` | `/analyze?mode=trust-check` |
+| Contract Review (paste) | `pii_redact_input` `{ text, source: "contract-review" }` | `pii_contract_review_text` | `/contract-review` |
 
 ### Server-side
 - **`POST /api/documents/detect-pii`** (`artifacts/api-server/src/routes/piiDetection.ts`):
   - Regex pass: email, phone, SSN, EIN/tax ID, credit card, IP address, DOB, routing number, account number, policy ID, case number, license number (with labeled context patterns)
-  - OpenAI pass (gpt-4o-mini): names, addresses, member IDs, license numbers, case numbers, other personal identifiers — returns raw value strings, matched back to text for character positions
+  - OpenAI pass (gpt-4o-mini): names, addresses, member IDs, license numbers, case numbers, other personal identifiers — returns raw value strings, matched back to text for ALL character positions (not just first occurrence)
   - Merges results, removes overlapping spans (longer/higher-priority wins)
   - Returns `{ spans: PiiSpan[] }` with id, type, label, value, start, end, confidence, source
 
 ### Client-side
 - **`artifacts/plainpath/src/lib/piiTypes.ts`** — PiiType enum, PiiSpan type, PII_TYPE_META (label, category, badge colors, redact label), CATEGORY_ORDER
 - **`artifacts/plainpath/src/lib/piiExport.ts`** — `applyRedactions()` (true text replacement), `buildPreviewSegments()` (for live preview), `downloadRedactedText()`, `copyRedactedText()`, `buildRedactionSummary()`
-- **`artifacts/plainpath/src/components/PiiReview.tsx`** — full review UI: loading state, grouped detection list, per-item toggle, approve/reject all per category, live preview (black label blocks show what will be replaced), apply → export panel
-- **`artifacts/plainpath/src/pages/Redact.tsx`** — standalone route with paste + upload input step; reads from sessionStorage when launched from Analyze flow
+- **`artifacts/plainpath/src/components/PiiReview.tsx`** — full review UI: loading state, grouped detection list (same-value occurrences grouped with ×N badge, toggle-all-in-group), per-category approve/reject, live preview, apply → export panel. `continueLabel` prop controls the final action button text based on origin tool.
+- **`artifacts/plainpath/src/pages/Redact.tsx`** — standalone route; reads from sessionStorage, routes back to originating tool with correct session key and URL
+- **`artifacts/plainpath/src/pages/Import.tsx`** — "Redact sensitive info first" shown for both Analyze and Trust Check modes (amber safety-step styling)
+- **`artifacts/plainpath/src/pages/ContractReview.tsx`** — "Redact sensitive info before reviewing" button (paste mode, shown when text ≥ 50 chars, hidden after redaction applied). Green "Using redacted contract" banner on return.
 
 ### True Redaction Implementation
 - **Text/paste**: `applyRedactions()` replaces character spans in the actual string. The original value is gone. Exported `.txt` and clipboard contain only the redacted version.
-- **Uploaded files (PDF/DOCX/TXT)**: Phase 1 calls `/api/documents/extract-text`, applies redactions to extracted text, exports as `.txt`. PDF binary modification is Phase 2.
+- **Uploaded files (PDF/DOCX/TXT)**: Calls `/api/documents/extract-text`, applies redactions to extracted text, exports as `.txt`. PDF binary modification is Phase 3.
 - **No overlay masking**: There are no visual-only black boxes. The text itself is replaced.
+- **All-occurrences**: When a value like "John Smith" appears 5× in the document, all 5 are redacted. The AI detection loop finds every position, and the review UI groups them under one row (×5).
 
 ### PII Types Detected
 Identity: Full names, Dates of birth | Government ID: SSN, Tax ID/EIN, License numbers | Contact: Email addresses, Phone numbers | Financial: Account numbers, Routing numbers, Credit card numbers | Location: Street addresses | Healthcare/Insurance: Policy IDs, Member/Subscriber IDs | Legal: Case/Reference numbers | Technical: IP addresses | Other: General personal identifiers
 
-### Phase 2 Scaffolding (prepared, not built)
+### Future (Phase 3)
 - Manual box-select redaction on PDF/image
 - "Redact all SSNs" one-click rules
 - Redaction audit log
 - Document-type redaction templates
-- Standalone "Redact a Document" tool card in Home/Navbar
 
 ## Post-Launch Roadmap
 
