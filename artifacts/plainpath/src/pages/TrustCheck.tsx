@@ -26,6 +26,7 @@ import {
 import { ResultStickyHeader } from "@/components/result/ResultStickyHeader"
 import { ResultSectionCard } from "@/components/result/ResultSectionCard"
 import { ResultMetaStrip } from "@/components/result/ResultMetaStrip"
+import { ScoreLegend, TRUST_CHECK_LEGEND } from "@/components/ui/ScoreLegend"
 
 /* ── Helpers ────────────────────────────────────────────────────────────── */
 
@@ -480,7 +481,7 @@ export default function TrustCheck() {
             )
           })()}
 
-          {/* Progress bar */}
+          {/* Progress bar + legend */}
           <div className="space-y-1.5">
             <div className="h-2 rounded-full bg-black/8 dark:bg-white/10 overflow-hidden">
               <motion.div
@@ -490,11 +491,8 @@ export default function TrustCheck() {
                 className={`h-full rounded-full ${vc.bar}`}
               />
             </div>
-            <div className="flex justify-between text-[10px] text-muted-foreground/60 font-medium">
-              <span>0 — Likely legitimate</span>
-              <span>100 — High scam risk</span>
-            </div>
           </div>
+          <ScoreLegend score={analysis.riskScore} config={TRUST_CHECK_LEGEND} />
         </motion.div>
 
         {/* ── 2. Recommended Action ─────────────────────────────────── */}

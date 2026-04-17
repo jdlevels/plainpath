@@ -21,6 +21,7 @@ import UpgradeModal from "@/components/UpgradeModal"
 import { ResultStickyHeader } from "@/components/result/ResultStickyHeader"
 import { ResultSectionCard } from "@/components/result/ResultSectionCard"
 import { ResultMetaStrip } from "@/components/result/ResultMetaStrip"
+import { ScoreLegend, CONTRACT_REVIEW_LEGEND } from "@/components/ui/ScoreLegend"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -780,7 +781,7 @@ function ResultsView({ result, onReset }: { result: ReviewResult; onReset: () =>
       <div className={`rounded-2xl border p-5 sm:p-6 ${scoreBg(result.overallScore)}`}>
         <div className="flex items-start gap-6 flex-wrap mb-3">
           <div className="text-center min-w-[80px]">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">Contract Score</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">Contract Fairness Score</p>
             <p className={`text-6xl font-bold leading-none tabular-nums ${scoreColor(result.overallScore)}`}>{result.overallScore}</p>
             <p className="text-xs text-muted-foreground mt-1">/ 100</p>
           </div>
@@ -817,7 +818,7 @@ function ResultsView({ result, onReset }: { result: ReviewResult; onReset: () =>
           )}
         </div>
 
-        {/* Progress bar */}
+        {/* Progress bar + legend */}
         <div className="space-y-1.5">
           <div className="h-2 rounded-full bg-black/8 dark:bg-white/10 overflow-hidden">
             <motion.div
@@ -827,11 +828,8 @@ function ResultsView({ result, onReset }: { result: ReviewResult; onReset: () =>
               className={`h-full rounded-full ${scoreBarClass(result.overallScore)}`}
             />
           </div>
-          <div className="flex justify-between text-[10px] text-muted-foreground/60 font-medium">
-            <span>0 — Needs major revisions</span>
-            <span>100 — Fair and balanced</span>
-          </div>
         </div>
+        <ScoreLegend score={result.overallScore} config={CONTRACT_REVIEW_LEGEND} />
       </div>
 
       {/* ── Primary recommendation — matches Trust Check Recommended Actions card ── */}

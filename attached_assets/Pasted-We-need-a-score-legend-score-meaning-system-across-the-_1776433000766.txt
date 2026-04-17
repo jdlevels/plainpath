@@ -1,0 +1,81 @@
+We need a score legend / score meaning system across the tools.
+
+Current problem:
+The app shows numbers like `87 / 100` or `32 / 100`, but users are not clearly told:
+
+* whether a higher score is good or bad
+* what ranges are low / medium / high
+* how to interpret the score
+
+This must be fixed.
+
+Required change:
+Create a shared score-meaning component/system and apply it anywhere a score is shown.
+
+Requirements for every score display:
+
+1. Show the score label clearly, e.g.:
+
+* Scam Risk Score
+* Contract Fairness Score
+* Document Risk Score
+* Clause Risk Score
+
+2. Show whether higher is better or worse:
+
+* `Higher = worse`
+  or
+* `Higher = better`
+
+3. Show a status label next to the numeric score:
+
+* example: `87 / 100 — High scam risk`
+* example: `32 / 100 — Weak / risky contract`
+
+4. Add a score legend, either inline and/or via tooltip/info icon.
+
+Tool-specific legend behavior:
+Do NOT use one generic legend for all tools.
+The score meaning must match the tool.
+
+Recommended legends:
+
+A. Document Trust Check
+
+* 0–24 = Low scam risk
+* 25–49 = Caution
+* 50–74 = High risk
+* 75–100 = Severe / likely scam
+* Higher = worse
+
+B. Contract Review
+
+* 0–24 = Unsafe / major revisions needed
+* 25–49 = Weak / risky
+* 50–74 = Acceptable with revisions
+* 75–100 = Strong / fair
+* Higher = better
+
+If other tools use numeric scores now or later, define a clear legend for each.
+
+Implementation guidance:
+
+* create one shared component such as `ScoreLegend` or `ScoreMeaning`
+* allow tool-specific configuration for ranges, labels, and directionality
+* use the same visual style across the app
+* support desktop and mobile
+* support light and dark mode
+
+Where to apply:
+
+* Document Trust Check result page
+* Contract Review result page
+* any other page/tool currently showing a score
+* any future score-based output should use the same system
+
+Deliverables:
+
+* exact files changed
+* exact shared score component created or updated
+* legend definitions used for each tool
+* screenshots showing the improved score interpretation on Trust Check and Contract Review
