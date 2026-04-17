@@ -159,6 +159,12 @@
   .tool-btn-emerald { border-color: #6ee7b7; color: #065f46; background-color: rgba(236, 253, 245, 0.9); }
   .tool-btn-amber   { border-color: #fcd34d; color: #92400e; background-color: rgba(255, 251, 235, 0.9); }
 
+  /* ── Hero tool pill buttons — dark ─── */
+  .dark .tool-btn-blue    { border-color: #3b82f6; color: #93c5fd; background-color: rgba(30, 58, 138, 0.25); }
+  .dark .tool-btn-red     { border-color: #ef4444; color: #fca5a5; background-color: rgba(127, 29, 29, 0.25); }
+  .dark .tool-btn-emerald { border-color: #10b981; color: #6ee7b7; background-color: rgba(6, 78, 59, 0.25); }
+  .dark .tool-btn-amber   { border-color: #f59e0b; color: #fcd34d; background-color: rgba(120, 53, 15, 0.25); }
+
   /* ── Hide scrollbar ─── */
   .hide-scrollbar::-webkit-scrollbar { display: none; }
   .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

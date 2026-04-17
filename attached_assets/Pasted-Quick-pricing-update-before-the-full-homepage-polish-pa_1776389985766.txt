@@ -1,0 +1,125 @@
+Quick pricing update before the full homepage polish pass.
+
+Pricing change required:
+Remove the Free plan entirely.
+
+Use this pricing structure on the marketing homepage:
+
+1. Starter — $4.99/month
+
+* Analyze a Document only
+* limited to the Analyze a Document tool
+* no access to:
+
+  * Document Trust Check
+  * Build a Contract
+  * Contract Review
+
+2. Pro — $14.99/month
+
+* full access to all 4 tools
+* best for individual users
+* includes:
+
+  * Analyze a Document
+  * Document Trust Check
+  * Build a Contract
+  * Contract Review
+  * saved history / deeper outputs positioning is fine if already supported in copy
+
+3. Teams — $49.99/month
+
+* full access to all 4 tools
+* intended for multi-user/team positioning
+* add light team-oriented copy such as collaboration/admin/shared workflows if it fits naturally
+* do not overbuild team functionality in this pass unless it already exists
+
+Now continue with the homepage polish work using this updated pricing structure.
+
+Important constraints:
+
+* Do NOT change backend logic
+* Do NOT change working tool routing
+* Do NOT change auth flow
+* Do NOT break:
+
+  * `/`
+  * `/app/analyze`
+  * `/app/trust-check`
+  * `/app/build-contract`
+  * `/app/contract-review`
+
+Continue the presentation-only polish pass for the public marketing homepage.
+
+Required work:
+
+1. Hero refinement
+
+* tighten spacing and alignment
+* improve typography balance
+* keep the current hero structure and overall visual direction
+* make the tool buttons cleaner and more deliberate
+* improve CTA hierarchy
+* keep the page premium and professional
+
+2. Pricing section
+   Use exactly these three plans:
+
+* Starter — $4.99/month
+* Pro — $14.99/month
+* Teams — $49.99/month
+
+Pricing rules:
+
+* Starter = Analyze a Document only
+* Pro = full access to all 4 tools
+* Teams = full access to all 4 tools
+
+Place pricing below the features/how-it-works area and above the final CTA/footer.
+
+3. Dark mode
+   Add a light/dark mode toggle in the top navigation.
+   Requirements:
+
+* save preference in localStorage
+* default to system theme on first visit
+* homepage fully supported in both modes
+* use premium dark grays, not harsh pure black
+* maintain strong contrast and readability
+
+4. Navigation polish
+   Refine top nav to include:
+
+* Features
+* How it Works
+* Pricing
+* Support
+* Log In / Open Web App
+* Get the App
+* Theme toggle
+
+5. Trust / credibility section
+   Add a concise trust section with items such as:
+
+* Plain-English results
+* Secure document processing
+* Works for leases, contracts, notices, and forms
+* usage stats / ratings / trust indicators if appropriate
+
+6. Footer / final CTA
+   Add a cleaner footer and final CTA section that feels complete and app-store ready.
+
+7. Mobile polish
+   Improve mobile spacing, stacking, CTA sizing, and consistency across the homepage.
+
+8. Visual consistency
+   Refine section spacing, card treatment, button hierarchy, border radius consistency, and visual rhythm.
+   Keep the page professional, modern, and conversion-focused.
+
+Deliverables after update:
+
+* exact files changed
+* final section order
+* final pricing layout
+* final dark mode behavior
+* exact live URLs to test
