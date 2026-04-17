@@ -136,7 +136,7 @@ function Router() {
       <main className="flex-1">
         <ErrorBoundary>
           <Switch>
-            <Route path="/" component={Home} />
+            <Route path="/">{() => { window.location.replace("/app/analyze"); return null; }}</Route>
             <Route path="/sign-in/*?" component={SignInPage} />
             <Route path="/sign-up/*?" component={SignUpPage} />
             <Route path="/import" component={Import} />

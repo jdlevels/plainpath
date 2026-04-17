@@ -1,0 +1,51 @@
+We now have the exact remaining bug.
+
+Observed behavior:
+1. `plainpathapp.com/` loads the correct marketing homepage
+2. clicking a homepage tool button correctly opens the real tool page
+3. but on the tool page, clicking the top-left PlainPath logo sends the user to the old secondary page
+
+Diagnosis:
+- the app header/logo click target is still wrong
+- it is likely pointing to `/app`
+- `/app` is still rendering the stale secondary landing/interstitial page
+- so the app logo is routing users backward into the wrong page
+
+Required fix:
+1. Audit the app header/navbar component used on the real tool pages.
+2. Find the PlainPath logo/brand link target in that app header.
+3. Make the PlainPath logo use the SAME destination as the “Home” nav link.
+4. Do not let the app logo point to the stale page.
+
+Recommended immediate behavior:
+- inside app routes, PlainPath logo should point to `/`
+OR
+- if there is a real app home/dashboard, point both the logo and Home link to `/app/dashboard`
+
+Critical routing rule:
+- `/app` must NOT remain a stale secondary landing page if the logo points there
+- either:
+  A. change the logo target away from `/app`
+  OR
+  B. turn `/app` into the real app dashboard/home
+
+Also do this:
+5. Audit both desktop and mobile headers/navbars.
+6. Audit shared header components and any layout wrappers used by:
+   - `/app/analyze`
+   - `/app/trust-check`
+   - `/app/build-contract`
+   - `/app/contract-review`
+7. Make sure the PlainPath logo destination is consistent across all app tool pages.
+8. If the old secondary page still needs to exist, move it off `/app` to a non-primary route like:
+   - `/overview`
+   - `/solutions`
+   - `/how-it-works`
+9. Republish after the fix.
+
+Deliverables required:
+- exact file/component containing the app-header PlainPath logo link
+- current route target of that logo
+- new route target of that logo
+- exact component/page currently mounted at `/app`
+- confirmation that the stale secondary page is no longer the logo destination
