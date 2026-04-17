@@ -279,41 +279,51 @@ export default function Analyze() {
 
         {/* ── Tab bar ──────────────────────────────────── */}
         <Tabs.Root value={activeTab} onValueChange={setActiveTab}>
-          <Tabs.List className="no-print flex overflow-x-auto hide-scrollbar gap-0.5 p-1 bg-card border border-border/40 rounded-2xl shadow-sm mb-4 sm:mb-6 scroll-smooth">
-            {TABS.map((tab) => {
-              const count = (tab as any).countKey ? (analysis as any)[(tab as any).countKey]?.length : null
-              const isMissing = tab.id === "missing"
-              const isLocked = isTabLocked(tab.id)
-              return (
-                <Tabs.Trigger
-                  key={tab.id}
-                  value={tab.id}
-                  style={{ touchAction: "manipulation" }}
-                  className={`relative flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap outline-none flex-shrink-0 min-h-[44px] ${
-                    activeTab === tab.id
-                      ? "bg-foreground text-background shadow-sm"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/70"
-                  }`}
-                >
-                  <tab.icon className="w-3.5 h-3.5" />
-                  <span>{tab.label}</span>
-                  {isLocked && (
-                    <Lock className="w-3 h-3 text-amber-500 shrink-0" />
-                  )}
-                  {count != null && count > 0 && !isLocked && (
-                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold leading-none ${activeTab === tab.id ? "bg-background/20 text-background" : "bg-border/50 text-muted-foreground"}`}>
-                      {count}
-                    </span>
-                  )}
-                  {isMissing && missingCount > 0 && activeTab !== "missing" && !isLocked && (
-                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[9px] font-bold text-white flex items-center justify-center">
-                      {missingCount > 9 ? "9+" : missingCount}
-                    </span>
-                  )}
-                </Tabs.Trigger>
-              )
-            })}
-          </Tabs.List>
+          {/* Wrapper provides the right-edge fade scroll hint */}
+          <div className="no-print relative mb-4 sm:mb-6">
+            <Tabs.List className="flex overflow-x-auto hide-scrollbar gap-0.5 pl-1 py-1 pr-1 bg-card border border-border/40 rounded-2xl shadow-sm scroll-smooth">
+              {TABS.map((tab) => {
+                const count = (tab as any).countKey ? (analysis as any)[(tab as any).countKey]?.length : null
+                const isMissing = tab.id === "missing"
+                const isLocked = isTabLocked(tab.id)
+                return (
+                  <Tabs.Trigger
+                    key={tab.id}
+                    value={tab.id}
+                    style={{ touchAction: "manipulation" }}
+                    className={`relative flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap outline-none flex-shrink-0 min-h-[44px] ${
+                      activeTab === tab.id
+                        ? "bg-foreground text-background shadow-sm"
+                        : "text-foreground/55 dark:text-foreground/50 hover:text-foreground hover:bg-secondary/70"
+                    }`}
+                  >
+                    <tab.icon className="w-3.5 h-3.5" />
+                    <span>{tab.label}</span>
+                    {isLocked && (
+                      <Lock className="w-3 h-3 text-amber-500 shrink-0" />
+                    )}
+                    {count != null && count > 0 && !isLocked && (
+                      <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold leading-none ${activeTab === tab.id ? "bg-background/20 text-background" : "bg-border/50 text-muted-foreground"}`}>
+                        {count}
+                      </span>
+                    )}
+                    {isMissing && missingCount > 0 && activeTab !== "missing" && !isLocked && (
+                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[9px] font-bold text-white flex items-center justify-center">
+                        {missingCount > 9 ? "9+" : missingCount}
+                      </span>
+                    )}
+                  </Tabs.Trigger>
+                )
+              })}
+              {/* Right-padding spacer — keeps last tab clear of the container border when scrolled to end */}
+              <div className="w-2 shrink-0" aria-hidden="true" />
+            </Tabs.List>
+            {/* Subtle right-edge gradient — hints that the row scrolls; pointer-events-none so tabs remain clickable */}
+            <div
+              className="absolute top-0 right-0 bottom-0 w-10 bg-gradient-to-l from-card via-card/60 to-transparent rounded-r-2xl pointer-events-none"
+              aria-hidden="true"
+            />
+          </div>
 
           {/* ── Content pane ────────────────────────────── */}
           <div className="no-print bg-card rounded-3xl border border-border/30 shadow-lg shadow-black/[0.04] dark:shadow-black/20 overflow-hidden min-h-[400px] sm:min-h-[540px]">
