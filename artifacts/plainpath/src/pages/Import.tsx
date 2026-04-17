@@ -1068,7 +1068,7 @@ export default function Import() {
                             {isTrustCheck ? "Check Document" : "Generate Action Plan"} <ArrowRight className="ml-2 w-4 h-4" />
                           </Button>
 
-                          {text.trim().length >= 30 && (
+                          {text.trim().length >= 30 && !redactedNotice && (
                             <button
                               type="button"
                               style={{ touchAction: "manipulation" }}
