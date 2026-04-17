@@ -170,7 +170,7 @@ export default function PricingSection() {
         </h2>
 
         <p className="mt-4 text-base leading-7 text-slate-600 dark:text-slate-300 sm:text-lg">
-          Start with document analysis on Starter, or unlock all five tools with Pro.
+          Start with document analysis on Starter, or unlock all 5 live tools with Pro.
         </p>
 
         {/* Billing period toggle */}

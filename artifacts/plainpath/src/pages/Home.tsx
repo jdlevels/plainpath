@@ -201,7 +201,7 @@ export default function Home() {
               className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/25 shadow-sm text-xs font-semibold text-primary dark:text-primary tracking-wide uppercase"
             >
               <span className="flex h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-              Five tools · one platform
+              5 tools live · Digital Signature coming soon
             </motion.div>
 
             <motion.h1
@@ -222,7 +222,7 @@ export default function Home() {
               transition={{ delay: 0.14 }}
               className="text-xl text-foreground/75 max-w-2xl mx-auto leading-relaxed"
             >
-              PlainPath is a five-tool document platform. Analyze any paperwork, verify its legitimacy, build contracts, review agreements before you sign, and redact sensitive information before sharing — all in plain English and clear action.
+              PlainPath is a document platform with 5 live tools. Analyze any paperwork, verify its legitimacy, build contracts, review agreements before you sign, and redact sensitive information before sharing — all in plain English and clear action.
             </motion.p>
 
             <motion.div
@@ -568,7 +568,7 @@ export default function Home() {
                   onClick={() => document.getElementById("solutions")?.scrollIntoView({ behavior: "smooth" })}
                   className="h-12 px-8 text-base rounded-xl font-semibold border-white/20 text-white hover:bg-white/8 hover:border-white/35"
                 >
-                  Explore all five tools
+                  Explore all tools
                 </Button>
               </motion.div>
               <motion.div

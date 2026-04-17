@@ -251,7 +251,7 @@ export default function VideoWalkthrough() {
           transition={{ delay: 0.1 }}
           className="text-slate-400 text-lg max-w-xl mx-auto leading-relaxed"
         >
-          A short walkthrough of all five tools — from analyzing confusing paperwork to reviewing a contract before you sign.
+          A short walkthrough of all 5 tools — from analyzing confusing paperwork to reviewing a contract before you sign.
         </motion.p>
       </div>
 

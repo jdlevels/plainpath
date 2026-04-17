@@ -10,7 +10,7 @@ import { WebAppDemo } from "@/components/WebAppDemo";
 import {
   FileText, ShieldAlert, FileSignature, ShieldCheck,
   ArrowRight, Upload, Sparkles, Scale,
-  AlertTriangle, CheckCircle2, Clock, Lock, X as XIcon, EyeOff,
+  AlertTriangle, CheckCircle2, Clock, Lock, X as XIcon, EyeOff, Pen,
 } from "lucide-react";
 
 /* ─── Animation helpers ──────────────────────────────────── */
@@ -82,11 +82,12 @@ function RotatingBadge() {
 
 /* ─── Tool pill data ─────────────────────────────────────── */
 const TOOLS = [
-  { label: "Analyze a Document",    icon: FileText,      cls: "tool-btn-blue",    href: "/app/analyze"       },
-  { label: "Document Trust Check",  icon: ShieldAlert,   cls: "tool-btn-red",     href: "/app/import?mode=trust-check"   },
-  { label: "Build a Contract",      icon: FileSignature, cls: "tool-btn-emerald", href: "/app/build-contract" },
-  { label: "Contract Review",       icon: Scale,         cls: "tool-btn-amber",   href: "/app/contract-review" },
-  { label: "Redact Sensitive Info", icon: EyeOff,        cls: "tool-btn-violet",  href: "/app/redact"         },
+  { label: "Analyze a Document",    icon: FileText,      cls: "tool-btn-blue",    href: "/app/analyze",       comingSoon: false },
+  { label: "Document Trust Check",  icon: ShieldAlert,   cls: "tool-btn-red",     href: "/app/import?mode=trust-check", comingSoon: false },
+  { label: "Build a Contract",      icon: FileSignature, cls: "tool-btn-emerald", href: "/app/build-contract", comingSoon: false },
+  { label: "Contract Review",       icon: Scale,         cls: "tool-btn-amber",   href: "/app/contract-review", comingSoon: false },
+  { label: "Redact Sensitive Info", icon: EyeOff,        cls: "tool-btn-violet",  href: "/app/redact",         comingSoon: false },
+  { label: "Digital Signature",     icon: Pen,           cls: "tool-btn-slate",   href: "",                    comingSoon: true  },
 ];
 
 /* ─── Feature cards ─────────────────────────────────────── */
@@ -183,11 +184,12 @@ const PLANS = [
     highlight: false,
     badge: null as string | null,
     tools: [
-      { label: "Analyze a Document",    included: true  },
-      { label: "Document Trust Check",  included: false },
-      { label: "Build a Contract",      included: false },
-      { label: "Contract Review",       included: false },
-      { label: "Redact Sensitive Info", included: true  },
+      { label: "Analyze a Document",    included: true,  comingSoon: false },
+      { label: "Document Trust Check",  included: false, comingSoon: false },
+      { label: "Build a Contract",      included: false, comingSoon: false },
+      { label: "Contract Review",       included: false, comingSoon: false },
+      { label: "Redact Sensitive Info", included: true,  comingSoon: false },
+      { label: "Digital Signature",     included: false, comingSoon: true  },
     ],
     extras: [] as string[],
     cta: "Start with Starter",
@@ -197,15 +199,16 @@ const PLANS = [
     name: "Pro",
     price: "$19.99",
     period: "/month",
-    desc: "Full access to all five tools. Best for individuals.",
+    desc: "Full access to all 5 live tools. Best for individuals.",
     highlight: true,
     badge: "Most Popular",
     tools: [
-      { label: "Analyze a Document",   included: true },
-      { label: "Document Trust Check", included: true },
-      { label: "Build a Contract",     included: true },
-      { label: "Contract Review",      included: true },
-      { label: "Redact Sensitive Info", included: true },
+      { label: "Analyze a Document",   included: true,  comingSoon: false },
+      { label: "Document Trust Check", included: true,  comingSoon: false },
+      { label: "Build a Contract",     included: true,  comingSoon: false },
+      { label: "Contract Review",      included: true,  comingSoon: false },
+      { label: "Redact Sensitive Info", included: true, comingSoon: false },
+      { label: "Digital Signature",    included: false,  comingSoon: true  },
     ],
     extras: ["Saved analysis history", "Deeper output formatting"],
     cta: "Get Pro",
@@ -266,22 +269,33 @@ export default function Home() {
                 custom={2} variants={fadeUp}
                 className="text-base md:text-lg text-muted-foreground mb-6 leading-relaxed max-w-lg"
               >
-                Leases, contracts, medical bills, and court notices. PlainPath gives you five ways to
+                Leases, contracts, medical bills, and court notices. PlainPath gives you 5 tools to
                 move forward: analyze documents, trust-check suspicious paperwork, review agreements,
                 build contracts, and redact sensitive information — all in plain English.
               </motion.p>
 
               {/* Tool pills */}
               <motion.div custom={3} variants={fadeUp} className="grid grid-cols-2 gap-2 mb-6">
-                {TOOLS.map(({ label, icon: Icon, cls, href }) => (
-                  <a
-                    key={label}
-                    href={href}
-                    className={`${cls} flex items-center gap-1.5 px-3 py-2.5 rounded-xl border text-xs sm:text-sm font-medium transition-opacity hover:opacity-80 w-full`}
-                  >
-                    <Icon className="w-3.5 h-3.5 shrink-0" />
-                    <span className="leading-tight">{label}</span>
-                  </a>
+                {TOOLS.map(({ label, icon: Icon, cls, href, comingSoon }) => (
+                  comingSoon ? (
+                    <span
+                      key={label}
+                      className={`${cls} flex items-center gap-1.5 px-3 py-2.5 rounded-xl border text-xs sm:text-sm font-medium w-full pointer-events-none select-none`}
+                    >
+                      <Icon className="w-3.5 h-3.5 shrink-0" />
+                      <span className="leading-tight">{label}</span>
+                      <span className="ml-auto text-[10px] font-semibold opacity-60 hidden sm:inline">Soon</span>
+                    </span>
+                  ) : (
+                    <a
+                      key={label}
+                      href={href}
+                      className={`${cls} flex items-center gap-1.5 px-3 py-2.5 rounded-xl border text-xs sm:text-sm font-medium transition-opacity hover:opacity-80 w-full`}
+                    >
+                      <Icon className="w-3.5 h-3.5 shrink-0" />
+                      <span className="leading-tight">{label}</span>
+                    </a>
+                  )
                 ))}
               </motion.div>
 
@@ -345,7 +359,7 @@ export default function Home() {
       <section id="features" className="py-20 md:py-28">
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
           <div className="text-center max-w-2xl mx-auto mb-14">
-            <p className="text-xs font-semibold tracking-[0.12em] uppercase text-muted-foreground mb-3">Five tools · one platform</p>
+            <p className="text-xs font-semibold tracking-[0.12em] uppercase text-muted-foreground mb-3">5 tools available · Digital Signature coming soon</p>
             <h2
               className="text-4xl md:text-5xl font-bold mb-4 text-foreground"
               style={{ fontFamily: "var(--font-display)" }}
@@ -534,12 +548,14 @@ export default function Home() {
                 <div className="space-y-2.5 mb-8 flex-1">
                   {plan.tools.map(tool => (
                     <div key={tool.label} className="flex items-center gap-2.5">
-                      {tool.included
-                        ? <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
-                        : <XIcon className="w-4 h-4 text-muted-foreground/30 shrink-0" />
+                      {tool.comingSoon
+                        ? <Clock className="w-4 h-4 text-muted-foreground/30 shrink-0" />
+                        : tool.included
+                          ? <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
+                          : <XIcon className="w-4 h-4 text-muted-foreground/30 shrink-0" />
                       }
-                      <span className={`text-sm ${tool.included ? "text-foreground" : "text-muted-foreground/40"}`}>
-                        {tool.label}
+                      <span className={`text-sm ${tool.comingSoon ? "text-muted-foreground/40 italic" : tool.included ? "text-foreground" : "text-muted-foreground/40"}`}>
+                        {tool.label}{tool.comingSoon ? " — coming soon" : ""}
                       </span>
                     </div>
                   ))}

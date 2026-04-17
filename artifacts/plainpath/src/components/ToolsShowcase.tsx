@@ -4,7 +4,7 @@ import {
   BookOpen, ShieldCheck, PenLine, Scale, ArrowRight,
   ListTodo, Calendar, AlertTriangle, CheckCircle2,
   Flag, BarChart2, FileCheck, Sparkles, Copy, MessageSquare,
-  EyeOff, Download, ArrowRightLeft, Lock,
+  EyeOff, Download, ArrowRightLeft, Lock, Clock, Pen,
 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -119,6 +119,30 @@ const TOOLS = [
     iconBg: "bg-violet-100 dark:bg-violet-900/40",
     iconColor: "text-violet-600 dark:text-violet-400",
     verbColor: "text-violet-600 dark:text-violet-400",
+    comingSoon: false,
+  },
+  {
+    icon: Pen,
+    title: "Digital Signature",
+    verb: "Sign it.",
+    tagline: "Secure signing and signature workflows",
+    description: "Secure signing and signature workflows — coming soon.",
+    features: [
+      { icon: Clock, label: "Secure document signing" },
+      { icon: Clock, label: "Multi-party signature workflows" },
+      { icon: Clock, label: "Audit trail and verification" },
+      { icon: Clock, label: "Send for signature from any tool" },
+    ],
+    cta: "Coming Soon",
+    route: "",
+    color: "from-slate-50/60 to-slate-50/40 dark:from-slate-900/10 dark:to-slate-900/10",
+    badge: "bg-slate-100 text-slate-500 dark:bg-slate-800/60 dark:text-slate-400",
+    badgeLabel: "Coming Soon",
+    border: "border-slate-200/40 dark:border-slate-800/40",
+    iconBg: "bg-slate-100 dark:bg-slate-800/40",
+    iconColor: "text-slate-400 dark:text-slate-500",
+    verbColor: "text-slate-400 dark:text-slate-500",
+    comingSoon: true,
   },
 ]
 
@@ -134,7 +158,7 @@ export default function ToolsShowcase() {
           viewport={{ once: true }}
           className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3"
         >
-          Five tools, one platform
+          5 tools live · Digital Signature coming soon
         </motion.p>
         <motion.h2
           initial={{ opacity: 0, y: 12 }}
@@ -155,22 +179,22 @@ export default function ToolsShowcase() {
         </motion.p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {TOOLS.map((tool, i) => (
           <motion.div
             key={i}
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ delay: i * 0.12 }}
-            whileHover={{ y: -6, scale: 1.02 }}
-            className="group cursor-pointer"
-            onClick={() => setLocation(tool.route)}
+            transition={{ delay: i * 0.10 }}
+            whileHover={tool.comingSoon ? {} : { y: -6, scale: 1.02 }}
+            className={tool.comingSoon ? "cursor-default" : "group cursor-pointer"}
+            onClick={() => !tool.comingSoon && tool.route && setLocation(tool.route)}
           >
-            <Card className={`h-full rounded-2xl border-2 ${tool.border} shadow-md group-hover:shadow-2xl transition-all duration-200 overflow-hidden bg-gradient-to-b ${tool.color}`}>
+            <Card className={`h-full rounded-2xl border-2 ${tool.border} shadow-md ${tool.comingSoon ? "" : "group-hover:shadow-2xl"} transition-all duration-200 overflow-hidden bg-gradient-to-b ${tool.color} ${tool.comingSoon ? "opacity-60" : ""}`}>
               <div className="p-7 flex flex-col h-full gap-5">
                 <div className="flex items-start justify-between">
-                  <div className={`w-12 h-12 rounded-2xl ${tool.iconBg} flex items-center justify-center group-hover:scale-110 transition-transform duration-200`}>
+                  <div className={`w-12 h-12 rounded-2xl ${tool.iconBg} flex items-center justify-center ${tool.comingSoon ? "" : "group-hover:scale-110"} transition-transform duration-200`}>
                     <tool.icon className={`w-6 h-6 ${tool.iconColor}`} />
                   </div>
                   <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${tool.badge}`}>
@@ -186,19 +210,28 @@ export default function ToolsShowcase() {
 
                 <p className="text-sm text-muted-foreground leading-relaxed flex-1">{tool.description}</p>
 
-                <ul className="space-y-2">
-                  {tool.features.map((f, fi) => (
-                    <li key={fi} className="flex items-center gap-2.5 text-xs text-foreground/70">
-                      <f.icon className={`w-3.5 h-3.5 ${tool.iconColor} shrink-0`} />
-                      {f.label}
-                    </li>
-                  ))}
-                </ul>
+                {!tool.comingSoon && (
+                  <ul className="space-y-2">
+                    {tool.features.map((f, fi) => (
+                      <li key={fi} className="flex items-center gap-2.5 text-xs text-foreground/70">
+                        <f.icon className={`w-3.5 h-3.5 ${tool.iconColor} shrink-0`} />
+                        {f.label}
+                      </li>
+                    ))}
+                  </ul>
+                )}
 
-                <div className={`w-full flex items-center justify-between mt-2 px-4 py-2.5 rounded-xl font-semibold text-sm ${tool.iconColor} bg-white/40 dark:bg-white/5 group-hover:bg-white/70 dark:group-hover:bg-white/15 transition-colors duration-200`}>
-                  {tool.cta}
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
-                </div>
+                {tool.comingSoon ? (
+                  <div className="w-full flex items-center justify-center mt-2 px-4 py-2.5 rounded-xl font-semibold text-sm text-slate-400 dark:text-slate-500 bg-slate-100/60 dark:bg-slate-800/30 border border-slate-200/50 dark:border-slate-700/30 gap-2">
+                    <Clock className="w-3.5 h-3.5" />
+                    Coming Soon
+                  </div>
+                ) : (
+                  <div className={`w-full flex items-center justify-between mt-2 px-4 py-2.5 rounded-xl font-semibold text-sm ${tool.iconColor} bg-white/40 dark:bg-white/5 group-hover:bg-white/70 dark:group-hover:bg-white/15 transition-colors duration-200`}>
+                    {tool.cta}
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
+                  </div>
+                )}
               </div>
             </Card>
           </motion.div>
