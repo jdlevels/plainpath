@@ -1,0 +1,108 @@
+We need to upgrade PlainPath Redaction from text-only MVP behavior into true file-copy redaction behavior.
+
+This is a product requirement change.
+
+==================================================
+NEW REQUIREMENT
+==================================================
+
+When a person redacts a file, they must be able to save a NEW REDACTED COPY of that file.
+
+Also:
+- redacted information must be completely blacked out
+- no line-through / strike-through behavior
+- the redacted content must not be readable
+- the exported redacted copy must permanently hide the selected information
+
+Current MVP behavior (text extraction + .txt output) is not enough for this requirement.
+
+==================================================
+TARGET BEHAVIOR
+==================================================
+
+1. Uploaded/scanned documents:
+- user uploads PDF / scanned document
+- PlainPath detects likely sensitive info
+- user chooses what to redact
+- selected areas are shown as SOLID BLACK REDACTION BOXES
+- user exports a NEW REDACTED COPY
+- original file remains untouched
+
+2. Redacted copy rules:
+- exported file must be a separate redacted copy
+- redactions must be burned into the output
+- no CSS-only masking
+- no hidden text under black overlays in the final output
+- no readable text visible through redaction
+- no strike-through presentation
+
+3. UI rules:
+- in the review/export state, redacted selections should display as black boxes, not crossed-out text
+- if needed, use placeholders only in internal summary panels, but the actual document preview/export must show true black boxes
+
+==================================================
+IMPLEMENTATION DIRECTION
+==================================================
+
+Build this as Phase 2 of the Redact tool.
+
+Required architecture:
+A. For uploaded PDFs / scanned documents
+- render pages visually
+- detect text regions / coordinates
+- support OCR mapping where needed
+- place black redaction boxes over selected text regions
+- export a flattened redacted PDF copy
+
+B. For pasted text / txt workflows
+- keep text-redaction flow
+- but improve visual preview so selected items look like true redactions where appropriate
+- exported text output may remain text-based, but file redaction must produce a true redacted copy
+
+C. Manual review support
+- user can accept suggested regions
+- user can deselect suggested regions
+- user can manually add/remove redaction regions if practical
+
+==================================================
+OUTPUT REQUIREMENTS
+==================================================
+
+For uploaded/scanned document redaction, user must be able to:
+- preview redacted pages
+- download/save a redacted copy
+- keep original untouched
+- clearly see that the redacted copy is the safe one to share
+
+Suggested output filename:
+- originalname.redacted.pdf
+
+==================================================
+DO NOT FAKE THIS
+==================================================
+
+Do not implement this as:
+- line-through
+- front-end overlay only
+- hidden text underneath black divs
+- cosmetic masking that leaves recoverable source content in the exported redacted copy
+
+This must be a real exported redacted copy.
+
+==================================================
+DELIVERABLES
+==================================================
+
+Return:
+1. exact files changed
+2. architecture used for true file-copy redaction
+3. supported formats in this phase
+4. screenshots of:
+   - uploaded/scanned document review
+   - black-box redaction preview
+   - exported redacted copy flow
+5. confirmation of whether exported redacted PDF is flattened/permanent
+6. any limitations that still remain
+
+Important:
+This is now the required direction for the Redact tool.

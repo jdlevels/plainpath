@@ -36,12 +36,20 @@ PlainPath is built as a monorepo using pnpm workspaces.
 3.  **Contract Builder**: A 6-step guided wizard to build contracts (e.g., Freelance, NDA). Features an AI Insight Panel, gap analysis, and generates a structured draft with options to send for signature.
 4.  **Fair Deal Check**: Reviews user-received contracts clause-by-clause, flagging unfair terms with explanations, negotiation language, and exit guidance.
 5.  **AI Help Assistant**: A floating chat widget (`gpt-4o-mini`) providing context-aware assistance.
-6.  **PII Redaction**: A pre-processing safety step across the document pipeline, enabling detection and permanent redaction of sensitive information via regex and OpenAI.
+6.  **PII Redaction (MVP — FROZEN)**: A pre-processing safety step across the document pipeline. Detects 16 PII types via regex + AI, groups repeated values, lets users select what to redact, and applies true character-level replacement (not masking). Exports a clean redacted `.txt` version. Original uploaded PDF/DOCX files are not modified — limitation note is displayed in the tool. Handoff: sets sessionStorage keys so Analyze, Trust Check, and Contract Review load the redacted version with a banner. **Native PDF/DOCX binary redaction is a future upgrade — do not modify redaction architecture unless a bug is found.**
 7.  **Document Comparison**: Allows comparison of two document versions, highlighting changes and their significance (added, removed, modified, risk-increased/decreased).
 
 ### Payment and Billing
 -   Full billing architecture implemented in test mode with Stripe, supporting Starter ($4.99/month) and Pro ($19.99/month) tiers.
--   Native billing abstraction built for iOS/Android using RevenueCat.
+-   Native billing abstraction scaffold built for iOS/Android using RevenueCat (account setup pending — see `docs/store/05-revenuecat-config.md`).
+
+### Store & Launch Docs (`docs/store/`)
+-   `01-store-metadata.md` — shared app name, description, keywords, category, pricing, URLs
+-   `02-app-store-listing.md` — full Apple App Store copy, screenshot plan, IAP config, review notes
+-   `03-play-store-listing.md` — full Google Play listing, data safety section, IAP config
+-   `04-store-assets.md` — icon specs, screenshot sizes, feature graphic brief, preview video script
+-   `05-revenuecat-config.md` — product/entitlement structure, client code scaffold, pricing notes
+-   `06-native-packaging-checklist.md` — step-by-step Capacitor + App Store + Play Store checklist
 
 ## External Dependencies
 
