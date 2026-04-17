@@ -13,7 +13,7 @@ import {
   Loader2, FileText, ListTodo, Calendar, AlertTriangle,
   Printer, ArrowLeft, CheckCircle2, AlertCircle, XCircle,
   ArrowRight, ShieldCheck, Clock, TrendingUp, BookOpen,
-  HelpCircle, ChevronDown, Lightbulb, Eye, Shield, Zap,
+  HelpCircle, ChevronDown, ChevronLeft, ChevronRight, Lightbulb, Eye, Shield, Zap,
   AlignLeft, MessageSquare, X, Flag, Package, Lock,
   FolderOpen, Mail, CheckSquare, Copy, Check,
   Bookmark, BookmarkCheck, Share2, Download, Upload, Bell, BellDot, Link2
@@ -67,17 +67,24 @@ export default function Analyze() {
   const [justSaved, setJustSaved] = useState(false)
   const [guidedReviewCtx, setGuidedReviewCtx] = useState<string | null>(null)
   const tabListRef = useRef<HTMLDivElement>(null)
+  const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(true)
 
   useEffect(() => {
     const el = tabListRef.current
     if (!el) return
-    const check = () => setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 2)
+    const check = () => {
+      setCanScrollLeft(el.scrollLeft > 2)
+      setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 2)
+    }
     check()
     el.addEventListener("scroll", check, { passive: true })
     window.addEventListener("resize", check, { passive: true })
     return () => { el.removeEventListener("scroll", check); window.removeEventListener("resize", check) }
   }, [])
+
+  const scrollTabsLeft  = () => tabListRef.current?.scrollBy({ left: -200, behavior: "smooth" })
+  const scrollTabsRight = () => tabListRef.current?.scrollBy({ left:  200, behavior: "smooth" })
 
   const { entitlements, loading: entitlementsLoading } = useEntitlements()
   const { isSignedIn } = useUser()
@@ -291,15 +298,18 @@ export default function Analyze() {
 
         {/* ── Tab bar ──────────────────────────────────── */}
         <Tabs.Root value={activeTab} onValueChange={setActiveTab}>
-          <div className="no-print relative bg-card border border-border/40 rounded-2xl shadow-sm mb-4 sm:mb-6 overflow-hidden">
-            {canScrollRight && (
-              <div
-                className="absolute inset-y-0 right-0 w-12 pointer-events-none z-10 rounded-r-2xl"
-                style={{ background: "linear-gradient(to left, var(--card) 20%, transparent)" }}
-                aria-hidden="true"
-              />
+          <div className="no-print flex items-center gap-0 bg-card border border-border/40 rounded-2xl shadow-sm mb-4 sm:mb-6">
+            {canScrollLeft && (
+              <button
+                onClick={scrollTabsLeft}
+                aria-label="Scroll tabs left"
+                className="shrink-0 flex items-center justify-center w-8 h-10 text-muted-foreground hover:text-foreground transition-colors rounded-l-2xl hover:bg-secondary/60"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
             )}
-          <Tabs.List ref={tabListRef} className="flex overflow-x-auto hide-scrollbar gap-0.5 px-1 py-1 scroll-smooth w-full">
+          <div className="flex-1 overflow-hidden rounded-2xl">
+          <Tabs.List ref={tabListRef} className="flex overflow-x-auto hide-scrollbar gap-0.5 px-1 py-1 scroll-smooth">
             {TABS.map((tab) => {
               const count = (tab as any).countKey ? (analysis as any)[(tab as any).countKey]?.length : null
               const isMissing = tab.id === "missing"
@@ -333,8 +343,18 @@ export default function Analyze() {
                 </Tabs.Trigger>
               )
             })}
-            <div className="shrink-0" style={{ width: '48px' }} aria-hidden="true" />
+            <div className="shrink-0" style={{ width: '4px' }} aria-hidden="true" />
           </Tabs.List>
+          </div>
+            {canScrollRight && (
+              <button
+                onClick={scrollTabsRight}
+                aria-label="Scroll tabs right"
+                className="shrink-0 flex items-center justify-center w-8 h-10 text-muted-foreground hover:text-foreground transition-colors rounded-r-2xl hover:bg-secondary/60"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            )}
           </div>
 
           {/* ── Content pane ────────────────────────────── */}
