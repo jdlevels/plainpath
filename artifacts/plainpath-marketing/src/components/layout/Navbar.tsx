@@ -42,17 +42,17 @@ export function Navbar() {
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 ${scrolled ? "bg-background/95 backdrop-blur-lg shadow-sm" : "bg-background/80 backdrop-blur-md"} border-b border-border/50`}>
       <div className="max-w-7xl mx-auto px-5 sm:px-6 h-16 flex items-center justify-between gap-4">
 
-        {/* Logo */}
-        <button
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="flex items-center gap-2 cursor-pointer bg-transparent border-0 p-0 shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded-lg"
-          aria-label="PlainPath home"
+        {/* Logo → public homepage */}
+        <a
+          href="/"
+          className="flex items-center gap-2 shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded-lg"
+          aria-label="PlainPath — go to homepage"
         >
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shrink-0">
             {LOGO_SVG}
           </div>
           <span className="font-display font-bold text-xl tracking-tight text-foreground">PlainPath</span>
-        </button>
+        </a>
 
         {/* Desktop nav links */}
         <div className="hidden md:flex items-center gap-1">

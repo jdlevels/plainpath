@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter"
 import { Button } from "@/components/ui/button"
 import {
   FileText, Plus, BookMarked, GitCompare, LogOut, User, ChevronDown,
-  Users, LayoutGrid, ShieldCheck, PenLine, Scale, Menu, X, ExternalLink,
+  Users, LayoutGrid, ShieldCheck, PenLine, Scale, Menu, X, LayoutDashboard,
 } from "lucide-react"
 import { ThemeToggle } from "@/components/ui/ThemeToggle"
 import { useUser, useClerk } from "@clerk/react"
@@ -103,11 +103,11 @@ export function Navbar() {
     <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-background/90 border-b border-border/50 transition-all duration-300 safe-top">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
 
-        {/* Logo → internal app home */}
-        <button
-          onClick={() => navigate("/analyze")}
-          aria-label="PlainPath — go to app home"
-          className="flex items-center gap-2 group cursor-pointer rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2"
+        {/* Logo → always public homepage */}
+        <a
+          href="/"
+          aria-label="PlainPath — go to homepage"
+          className="flex items-center gap-2 group rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2"
         >
           <div className="bg-primary/10 p-2 rounded-xl group-hover:bg-primary/20 transition-colors">
             <FileText className="w-5 h-5 text-primary" strokeWidth={2.5} />
@@ -115,7 +115,7 @@ export function Navbar() {
           <span className="font-display font-bold text-xl tracking-tight text-foreground group-hover:text-primary transition-colors">
             PlainPath
           </span>
-        </button>
+        </a>
 
         {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-0.5">
@@ -189,13 +189,13 @@ export function Navbar() {
         <div className="flex items-center gap-1.5">
           <ThemeToggle />
 
-          <a
-            href="/"
+          <button
+            onClick={() => navigate("/analyze")}
             className="hidden md:flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-2.5 py-1.5 rounded-lg hover:bg-secondary"
           >
-            <ExternalLink className="w-3.5 h-3.5" />
-            Website
-          </a>
+            <LayoutDashboard className="w-3.5 h-3.5" />
+            Open App
+          </button>
 
           {isLoaded && (
             isSignedIn
@@ -260,13 +260,13 @@ export function Navbar() {
                 <BookMarked className="w-4 h-4 shrink-0" />
                 My Analyses
               </button>
-              <a
-                href="/"
-                className="flex items-center gap-2.5 px-2.5 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors"
+              <button
+                onClick={() => navigate("/analyze")}
+                className="w-full flex items-center gap-2.5 px-2.5 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors text-left"
               >
-                <ExternalLink className="w-4 h-4 shrink-0" />
-                Website
-              </a>
+                <LayoutDashboard className="w-4 h-4 shrink-0" />
+                Open App
+              </button>
             </div>
           </div>
         </div>
