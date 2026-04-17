@@ -1,0 +1,73 @@
+Before any more feature work, perform a full App Store / Play Store readiness location audit.
+
+We have had multiple cases where work was implemented on the wrong website artifact/page. I need to verify that all app-store-readiness work exists on the correct deployment target.
+
+Source-of-truth rule:
+- First confirm which PlainPath website/artifact is the real deployment target.
+- Then audit ALL store-readiness work against that target only.
+
+Required first step:
+1. Explicitly identify which artifact is the true source of truth for deployment.
+2. Explicitly identify which artifacts/pages are stale, duplicate, or not used for deployment.
+
+Then audit whether the following work exists on the correct target:
+
+A. Store asset readiness
+- screenshot capture checklist
+- iPhone screenshot plan
+- Android screenshot plan
+- feature graphic plan
+- app icon requirements
+
+B. Store metadata readiness
+- Apple App Store metadata draft
+- Google Play metadata draft
+- promotional text / subtitle / keywords / descriptions
+
+C. Billing / subscription readiness
+- Starter / Pro pricing reflected correctly
+- no Teams references
+- test-mode billing messaging correct
+- no live billing claims that are inaccurate
+- RevenueCat preparation/config notes tied to the correct target
+
+D. Legal / support / trust pages
+- Privacy
+- Terms
+- Support
+- subscription wording
+- support email
+- store-facing/legal copy accuracy
+
+E. Native packaging / submission readiness
+- iOS checklist
+- Android checklist
+- bundle/package naming references
+- store submission blocker lists
+- app-store-facing copy on the deployed site if applicable
+
+F. Homepage / product presentation
+- current homepage reflects the actual product structure
+- if we are now a 5-tool product, homepage must show that on the correct target
+- no stale 4-tool copy on the deployed version
+- no stale screenshots/copy on a non-deployed version only
+
+Required deliverables:
+1. Name of the true deployment artifact
+2. List of all duplicate/stale artifacts
+3. Audit table with columns:
+   - Area
+   - Expected location
+   - Found on correct target? (Yes/No)
+   - Found only on wrong artifact? (Yes/No)
+   - Missing entirely? (Yes/No)
+   - Exact file/page/artifact location
+4. List of anything that must be migrated into the true deployment target
+5. Final verdict:
+   - STORE READINESS WORK IS ON THE CORRECT TARGET
+   or
+   - STORE READINESS WORK IS NOT ON THE CORRECT TARGET
+
+Important:
+Do not continue new work until this audit is complete.
+If anything is on the wrong artifact, stop and provide the migration plan first.
