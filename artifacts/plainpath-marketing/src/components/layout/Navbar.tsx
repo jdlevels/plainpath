@@ -135,7 +135,7 @@ export function Navbar() {
           </button>
 
           <a
-            href="/app/analyze"
+            href="/app/sign-in"
             className="hidden md:block text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-2"
           >
             Log in
@@ -143,9 +143,9 @@ export function Navbar() {
 
           <Button
             className="rounded-full px-5 font-medium shadow-sm hidden md:flex"
-            onClick={() => handleNav("download")}
+            asChild
           >
-            Get the App
+            <a href="/app/analyze">Get the App</a>
           </Button>
 
           {/* Mobile hamburger */}
@@ -209,17 +209,17 @@ export function Navbar() {
 
           <div className="pt-2 border-t border-border/40 mt-2 space-y-2">
             <a
-              href="/app/analyze"
+              href="/app/sign-in"
               className="block px-3 py-2.5 rounded-lg text-sm font-medium text-foreground hover:bg-secondary/60 transition-colors"
               onClick={() => setMobileOpen(false)}
             >
-              Log in to Web App
+              Log in
             </a>
             <Button
               className="w-full rounded-xl font-medium"
-              onClick={() => handleNav("download")}
+              asChild
             >
-              Get the App
+              <a href="/app/analyze">Get the App</a>
             </Button>
           </div>
         </div>

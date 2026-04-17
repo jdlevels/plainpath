@@ -176,13 +176,13 @@ export function Navbar() {
         <div className="flex items-center gap-1.5">
           <ThemeToggle />
 
-          <button
-            onClick={() => navigate("/analyze")}
+          <a
+            href="/"
             className="hidden md:flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-2.5 py-1.5 rounded-lg hover:bg-secondary"
           >
             <LayoutDashboard className="w-3.5 h-3.5" />
-            Open App
-          </button>
+            Website
+          </a>
 
           {isLoaded && (
             isSignedIn
@@ -237,13 +237,13 @@ export function Navbar() {
                 <BookMarked className="w-4 h-4 shrink-0" />
                 My Analyses
               </button>
-              <button
-                onClick={() => navigate("/analyze")}
-                className="w-full flex items-center gap-2.5 px-2.5 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors text-left"
+              <a
+                href="/"
+                className="w-full flex items-center gap-2.5 px-2.5 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors"
               >
                 <LayoutDashboard className="w-4 h-4 shrink-0" />
-                Open App
-              </button>
+                Website
+              </a>
             </div>
           </div>
         </div>
