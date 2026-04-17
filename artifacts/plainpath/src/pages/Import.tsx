@@ -9,7 +9,6 @@ import {
   Camera, X as XIcon, Plus, ScanLine, RotateCcw, Clock,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
 import { WorkspaceShell } from "@/components/WorkspaceShell"
 import { useAnalyzeDocument } from "@workspace/api-client-react"
 import { useAnalysisContext } from "@/context/AnalysisContext"
@@ -810,7 +809,7 @@ export default function Import() {
               <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-primary/6 border border-primary/20 text-sm">
                 <span className="text-base">👋</span>
                 <span className="flex-1 text-foreground/80">
-                  <span className="font-semibold text-foreground">New here?</span> Scroll down to try a sample document — no upload needed.
+                  <span className="font-semibold text-foreground">New here?</span> Try a sample document below — no upload needed.
                 </span>
                 <button
                   onClick={() => {
@@ -1286,6 +1285,57 @@ export default function Import() {
 
                     </AnimatePresence>
                   </div>
+
+                  {/* ── Try a sample ── inside shell ── */}
+                  <div className="px-4 sm:px-7 pb-6 space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 h-px bg-border/40" />
+                      <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+                        Try a sample {isTrustCheck ? "document" : "document"}
+                      </p>
+                      <div className="flex-1 h-px bg-border/40" />
+                    </div>
+                    {isTrustCheck ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {TRUST_CHECK_DEMOS.map((demo) => (
+                          <button
+                            key={demo.id}
+                            onClick={() => setLocation(`/trust-check?demo=${demo.id}`)}
+                            style={{ touchAction: "manipulation" }}
+                            className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/50 hover:border-red-400/50 hover:bg-red-50/40 dark:hover:bg-red-950/10 transition-all text-left group"
+                          >
+                            <div className={`w-8 h-8 rounded-lg ${demo.bg} flex items-center justify-center shrink-0`}>
+                              <demo.icon className={`w-4 h-4 ${demo.color}`} />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs font-semibold leading-tight group-hover:text-red-700 dark:group-hover:text-red-400 transition-colors">{demo.title}</p>
+                              <p className="text-[10px] text-muted-foreground mt-0.5">{demo.meta}</p>
+                            </div>
+                            <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        {DEMOS.map((demo) => (
+                          <button
+                            key={demo.id}
+                            onClick={() => setLocation(`/results?demo=${demo.id}`)}
+                            style={{ touchAction: "manipulation" }}
+                            className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/50 hover:border-blue-400/50 hover:bg-blue-50/40 dark:hover:bg-blue-950/10 transition-all text-left group"
+                          >
+                            <div className={`w-8 h-8 rounded-lg ${demo.bg} flex items-center justify-center shrink-0`}>
+                              <demo.icon className={`w-4 h-4 ${demo.color}`} />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs font-semibold leading-tight group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors">{demo.title}</p>
+                              <p className="text-[10px] text-muted-foreground mt-0.5">{demo.meta}</p>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -1293,77 +1343,6 @@ export default function Import() {
           </WorkspaceShell>
         </motion.div>
 
-        {/* ── Demo shortcuts ─────────────────────────── */}
-        {step === "input" && (
-          <div className="mt-6 sm:mt-10 space-y-5">
-            <div className="flex items-center gap-3">
-              <div className="flex-1 h-px bg-border/50" />
-              <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Try a sample document</p>
-              <div className="flex-1 h-px bg-border/50" />
-            </div>
-
-            {isTrustCheck ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
-                {TRUST_CHECK_DEMOS.map((demo, i) => (
-                  <motion.button
-                    key={demo.id}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.07 + 0.2 }}
-                    whileHover={{ y: -3 }}
-                    onClick={() => setLocation(`/trust-check?demo=${demo.id}`)}
-                    style={{ touchAction: "manipulation" }}
-                    className="text-left group"
-                  >
-                    <Card className="p-3.5 sm:p-4 h-full border-border/40 hover:border-primary/40 active:border-primary/40 hover:shadow-lg transition-all bg-card rounded-xl shadow-sm">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-9 h-9 rounded-xl ${demo.bg} flex items-center justify-center shrink-0`}>
-                          <demo.icon className={`w-4 h-4 ${demo.color}`} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-bold text-sm leading-snug group-hover:text-primary transition-colors mb-0.5">{demo.title}</p>
-                          <p className="text-[11px] text-muted-foreground">{demo.meta}</p>
-                        </div>
-                        <ArrowRight className="w-4 h-4 text-muted-foreground/40 shrink-0" />
-                      </div>
-                    </Card>
-                  </motion.button>
-                ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
-                {DEMOS.map((demo, i) => (
-                  <motion.button
-                    key={demo.id}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.07 + 0.2 }}
-                    whileHover={{ y: -3 }}
-                    onClick={() => setLocation(`/results?demo=${demo.id}`)}
-                    style={{ touchAction: "manipulation" }}
-                    className="text-left group"
-                  >
-                    <Card className="p-3.5 sm:p-4 h-full border-border/40 hover:border-primary/40 active:border-primary/40 hover:shadow-lg transition-all bg-card rounded-xl shadow-sm">
-                      <div className="flex sm:block items-center gap-3 sm:gap-0">
-                        <div className={`w-9 h-9 rounded-xl ${demo.bg} flex items-center justify-center sm:mb-3 shrink-0`}>
-                          <demo.icon className={`w-4 h-4 ${demo.color}`} />
-                        </div>
-                        <div className="flex-1 min-w-0 sm:block">
-                          <p className="font-bold text-sm leading-snug group-hover:text-primary transition-colors mb-0.5 sm:mb-1">{demo.title}</p>
-                          <p className="text-[11px] text-muted-foreground">{demo.meta}</p>
-                        </div>
-                        <ArrowRight className="w-4 h-4 text-muted-foreground/40 sm:hidden shrink-0" />
-                      </div>
-                      <div className="hidden sm:flex items-center gap-1 mt-2.5 text-[11px] font-semibold text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-                        Open instantly <ArrowRight className="w-3 h-3" />
-                      </div>
-                    </Card>
-                  </motion.button>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
 
 
       </div>

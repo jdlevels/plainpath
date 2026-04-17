@@ -5,7 +5,8 @@
     <script>
       (function () {
         try {
-          var t = localStorage.getItem("plainpath-theme") || "system";
+          var q = new URLSearchParams(window.location.search).get("theme");
+          var t = q || localStorage.getItem("plainpath-theme") || "system";
           if (t === "dark" || (t === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
             document.documentElement.classList.add("dark");
           }

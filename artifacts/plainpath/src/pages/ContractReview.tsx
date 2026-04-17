@@ -1269,6 +1269,34 @@ export default function ContractReview() {
                 )}
               </AnimatePresence>
 
+              {/* ── Try a sample contract ── inside shell ── */}
+              <div className="pt-4 mt-2 border-t border-border/[0.15] space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 h-px bg-border/40" />
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Try a sample contract</p>
+                  <div className="flex-1 h-px bg-border/40" />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  {REVIEW_DEMOS.map((demo) => {
+                    const Icon = demo.icon
+                    return (
+                      <button
+                        key={demo.id}
+                        onClick={() => setResult(demo.data)}
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/50 hover:border-amber-400/50 hover:bg-amber-50/40 dark:hover:bg-amber-950/10 transition-all text-left group"
+                      >
+                        <div className={`w-8 h-8 rounded-lg ${demo.bg} flex items-center justify-center shrink-0`}>
+                          <Icon className={`w-4 h-4 ${demo.color}`} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold leading-tight group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors truncate">{demo.label}</p>
+                          <p className="text-[10px] text-muted-foreground mt-0.5">{demo.meta}</p>
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
             </div>
 
             {activeTab !== "camera" && (
@@ -1291,35 +1319,6 @@ export default function ContractReview() {
               </div>
             )}
           </WorkspaceShell>
-
-          {/* ── Built-in demo shortcuts ── */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="flex-1 h-px bg-border/40" />
-              <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Try a sample contract</p>
-              <div className="flex-1 h-px bg-border/40" />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              {REVIEW_DEMOS.map((demo) => {
-                const Icon = demo.icon
-                return (
-                  <button
-                    key={demo.id}
-                    onClick={() => setResult(demo.data)}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/50 hover:border-amber-400/50 hover:bg-amber-50/40 dark:hover:bg-amber-950/10 transition-all text-left group"
-                  >
-                    <div className={`w-8 h-8 rounded-lg ${demo.bg} flex items-center justify-center shrink-0`}>
-                      <Icon className={`w-4 h-4 ${demo.color}`} />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs font-semibold leading-tight group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors truncate">{demo.label}</p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">{demo.meta}</p>
-                    </div>
-                  </button>
-                )
-              })}
-            </div>
-          </div>
 
         </motion.div>
       </div>

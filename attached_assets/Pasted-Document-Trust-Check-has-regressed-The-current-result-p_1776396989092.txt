@@ -1,0 +1,55 @@
+Document Trust Check has regressed. The current result page looks cleaner, but it is no longer showing all of the previous Trust Check data, and the numeric output display is not being surfaced correctly anymore.
+
+This is not just a styling issue. It appears to be a result-rendering / data-mapping regression.
+
+Required fix:
+
+1. Audit the current Trust Check result payload being returned by the backend.
+2. Compare the current payload against the older Trust Check version that previously showed more complete data.
+3. Identify which fields are no longer being rendered on the result page.
+4. Restore the missing Trust Check result fields to the UI.
+5. Restore the numeric result display/score presentation so the user can clearly see the number again in the correct place.
+
+Likely issue:
+
+* the new Trust Check result UI is using a simplified renderer
+* or some older fields are no longer being mapped into the new layout
+* or field names changed and the UI is now dropping parts of the response
+
+Please do the following:
+
+A. Data audit
+
+* list all fields currently returned by the Trust Check backend
+* list all fields previously shown in the older Trust Check UI
+* identify missing/unmapped fields
+
+B. UI restore
+Make the result page render the full Trust Check output again, including:
+
+* final trust/risk number display
+* key red flags
+* legitimacy indicators
+* verification details
+* any previously shown score breakdowns
+* recommended next actions
+* any other previously available structured result fields
+
+C. Preserve current improved layout
+
+* keep the improved page structure and cleaner visual design
+* but restore the missing data richness
+* do not simplify the analysis output
+
+D. Regression protection
+
+* add a stable result mapping layer so future page redesigns do not drop analysis fields
+* make sure the renderer gracefully handles all expected Trust Check fields
+
+Deliverables required:
+
+* exact Trust Check result fields currently returned by backend
+* exact fields restored to the UI
+* exact file(s) where result mapping/rendering was fixed
+* before/after comparison of result sections
+* screenshot of the corrected Trust Check result page

@@ -18,6 +18,10 @@ function applyTheme(theme: Theme) {
 export function useTheme() {
   const [theme, setThemeState] = useState<Theme>(() => {
     try {
+      const urlParam = new URLSearchParams(window.location.search).get("theme")
+      if (urlParam === "dark" || urlParam === "light" || urlParam === "system") {
+        return urlParam as Theme
+      }
       return (localStorage.getItem(STORAGE_KEY) as Theme | null) ?? "system"
     } catch {
       return "system"
