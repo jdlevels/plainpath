@@ -103,9 +103,24 @@ PlainPath Inc. *(or individual developer name — update before submission)*
 | Plan | Price | Term |
 |---|---|---|
 | Starter | $4.99 | /month |
-| Pro | $19.99 | /month |
+| Pro | $29.99 | /month |
 
-In-app purchases are managed via RevenueCat. Free tier: core Analyze tool (limited). Paid plans unlock all 5 tools with unlimited usage.
+In-app purchases are managed via RevenueCat. Starter: Analyze tool, unlimited use. Pro: all 5 live tools (Analyze, Trust Check, Contract Builder, Contract Review, Redact Sensitive Info) with unlimited use. Digital Signature listed as Coming Soon — not yet included in any plan.
+
+## Plan Positioning (frozen — do not regress)
+
+**Starter ($4.99/month):** "Analyze any document in plain English — unlimited use of one core workflow."
+
+**Pro ($29.99/month):** "All 5 live tools in one plan — unlimited use across every workflow."
+- Everything in Starter
+- Document Trust Check — verify legitimacy and detect fraud
+- Contract Review — clause-by-clause risk and negotiation analysis
+- Build a Contract — guided wizard with professional draft output
+- Redact sensitive info before sharing or review (exports clean text version; original file unchanged)
+- Saved analysis history
+- Premium output and workflow tools
+
+**Digital Signature:** Coming Soon — not included in current pricing plans.
 
 ---
 

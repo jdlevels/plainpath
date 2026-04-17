@@ -122,7 +122,7 @@ Test account:
 Email: [add test@plainpathapp.com before submission]
 Password: [add before submission]
 
-In-app purchases: Starter ($4.99/month), Pro ($19.99/month). Use Apple Sandbox environment to test.
+In-app purchases: Starter ($4.99/month), Pro ($29.99/month). Use Apple Sandbox environment to test.
 Redact tool works entirely from pasted text — no camera, microphone, or location access required.
 ```
 
@@ -133,7 +133,7 @@ Redact tool works entirely from pasted text — no camera, microphone, or locati
 | Product ID | Type | Price | Display Name |
 |---|---|---|---|
 | com.plainpath.app.starter_monthly | Auto-Renewable Subscription | $4.99/month | PlainPath Starter |
-| com.plainpath.app.pro_monthly | Auto-Renewable Subscription | $19.99/month | PlainPath Pro |
+| com.plainpath.app.pro_monthly | Auto-Renewable Subscription | $29.99/month | PlainPath Pro |
 
 **Subscription Group:** PlainPath Plans
 **Free Trial:** Configure in App Store Connect after account setup (RevenueCat reads trial metadata automatically)

@@ -35,7 +35,7 @@ This document defines the product/entitlement structure for RevenueCat and docum
 | Product ID | Platform | Type | Price | Entitlement |
 |---|---|---|---|---|
 | `plainpath_starter_monthly` | iOS + Android | Auto-Renewable Subscription | $4.99/month | `starter` |
-| `plainpath_pro_monthly` | iOS + Android | Auto-Renewable Subscription | $19.99/month | `pro` |
+| `plainpath_pro_monthly` | iOS + Android | Auto-Renewable Subscription | $29.99/month | `pro` |
 
 ### Offerings
 
@@ -220,11 +220,11 @@ Server handler stub location: `artifacts/api-server/src/routes/revenuecat.ts` (t
 Based on RevenueCat's State of Subscription Apps 2026 (Productivity category):
 - Median monthly price: $7.99–$12.99
 - PlainPath Starter at $4.99 is positioned as accessible/entry
-- PlainPath Pro at $19.99 is positioned as professional-grade
+- PlainPath Pro at $29.99 is positioned as professional-grade (above category median by design — 5 live tools with unlimited use)
 
-Consider offering an **annual option** at ~20% discount:
-- Starter Annual: $47.99/year (~$4.00/month)
-- Pro Annual: $191.99/year (~$16.00/month)
+Consider offering an **annual option** at ~20–30% discount:
+- Starter Annual: $47.99/year (~$4.00/month — 20% off)
+- Pro Annual: $251.99/year (~$21.00/month — 30% off; aligns with marketing "save 30%" messaging)
 
 Annual products would be added as additional packages in the same Default Offering.
 

@@ -124,7 +124,7 @@ PlainPath uses AI to power document analysis. See our Privacy Policy at plainpat
 | Product ID | Type | Price | Display Name |
 |---|---|---|---|
 | plainpath_starter_monthly | Auto-Renewable Subscription | $4.99/month | PlainPath Starter |
-| plainpath_pro_monthly | Auto-Renewable Subscription | $19.99/month | PlainPath Pro |
+| plainpath_pro_monthly | Auto-Renewable Subscription | $29.99/month | PlainPath Pro |
 
 **Subscription Group:** PlainPath Plans
 **Free Trial:** Configure in Google Play Console. RevenueCat reads trial metadata automatically.

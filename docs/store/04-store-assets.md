@@ -41,12 +41,16 @@ Complete asset checklist and design briefs for App Store and Google Play submiss
 
 | # | Priority | Screen | Caption Overlay |
 |---|---|---|---|
-| 1 | Required | Home / Tool Grid | "5 tools for every document you face" |
+| 1 | Required | Home / Tool Grid (5 live tools + Digital Signature Coming Soon card) | "5 tools for every document you face" |
 | 2 | Required | Analyze — Plain English result | "Understand any document instantly" |
 | 3 | Required | Trust Check — flagged clause view | "Know what you're signing" |
 | 4 | Recommended | Contract Builder — draft output | "Build clear contracts in minutes" |
-| 5 | Recommended | Redact — PII detection list | "Remove sensitive info before sharing" |
+| 5 | Recommended | Redact — PII detection list (grouped detection, demo doc loaded) | "Remove sensitive info before sharing" |
 | 6 | Recommended | Redact — Applied summary (green panel) | "Clean redacted output. Original untouched." |
+
+> **Note on Shot 1:** The home screen displays 5 live tool cards (Analyze, Trust Check, Contract Builder, Contract Review, Redact Sensitive Info) plus a 6th card for "Digital Signature — Coming Soon." Include all 6 cards in the screenshot to show the product roadmap. The caption "5 tools for every document you face" correctly reflects the 5 live tools.
+
+> **Note on Shot 5:** The Redact tool now includes 3 built-in sample documents (Personal Info Letter, Freelance Contract, Medical Benefits Form). Use one of these to populate the demo without showing real user PII.
 
 ### Screenshot Sizes Required
 

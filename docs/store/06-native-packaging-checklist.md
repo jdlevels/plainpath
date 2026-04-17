@@ -103,7 +103,7 @@ npx cap open ios
 - [ ] Bundle ID `com.plainpath.app` registered
 - [ ] In-app purchases created:
   - [ ] `com.plainpath.app.starter_monthly` ($4.99/month)
-  - [ ] `com.plainpath.app.pro_monthly` ($19.99/month)
+  - [ ] `com.plainpath.app.pro_monthly` ($29.99/month)
 - [ ] Subscription group: "PlainPath Plans"
 - [ ] App metadata filled (name, subtitle, description, keywords, categories)
 - [ ] Screenshots uploaded (6 shots, iPhone 16 Pro Max size)
@@ -160,7 +160,7 @@ npx cap open android
 
 ### In-app products (Play Console):
 - [ ] `plainpath_starter_monthly` subscription created ($4.99/month)
-- [ ] `plainpath_pro_monthly` subscription created ($19.99/month)
+- [ ] `plainpath_pro_monthly` subscription created ($29.99/month)
 - [ ] Subscription group: "PlainPath Plans"
 - [ ] Products activated and linked to RevenueCat
 
