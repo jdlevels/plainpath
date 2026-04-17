@@ -379,34 +379,35 @@ export default function TrustCheck() {
           animate={{ opacity: 1, y: 0 }}
           className={`rounded-2xl border p-5 sm:p-6 ${vc.bg} ${vc.border}`}
         >
-          <div className="flex items-start gap-3 mb-5">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${vc.badge}`}>
+          {/* Verdict header row: icon + title on left, score on right */}
+          <div className="flex items-start gap-3 mb-4">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border mt-0.5 ${vc.badge}`}>
               <VerdictIcon verdict={analysis.verdict} />
             </div>
-            <div>
-              <h1 className={`text-lg font-bold leading-snug ${vc.text}`}>{analysis.verdict}</h1>
-              <p className="text-sm text-foreground/80 mt-1.5 leading-relaxed">{analysis.verdictExplanation}</p>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between gap-3">
+                <h1 className={`text-lg font-bold leading-snug ${vc.text}`}>{analysis.verdict}</h1>
+                <div className="shrink-0 text-right">
+                  <p className={`text-4xl font-extrabold tabular-nums leading-none ${vc.text}`}>{analysis.riskScore}</p>
+                  <p className="text-[10px] text-muted-foreground/50 font-medium mt-0.5">/ 100</p>
+                </div>
+              </div>
+              <p className="text-sm text-foreground/80 mt-2 leading-relaxed">{analysis.verdictExplanation}</p>
             </div>
           </div>
-          <div className="flex items-start gap-4 mt-1">
-            <div className="shrink-0 text-center min-w-[70px]">
-              <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">Risk Score</p>
-              <p className={`text-5xl font-extrabold tabular-nums leading-none ${vc.text}`}>{analysis.riskScore}</p>
-              <p className="text-[10px] text-muted-foreground/50 font-medium mt-1">out of 100</p>
+          {/* Progress bar */}
+          <div className="space-y-1.5">
+            <div className="h-2 rounded-full bg-black/8 dark:bg-white/10 overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${analysis.riskScore}%` }}
+                transition={{ delay: 0.3, duration: 0.6, ease: "easeOut" }}
+                className={`h-full rounded-full ${vc.bar}`}
+              />
             </div>
-            <div className="flex-1 pt-7">
-              <div className="h-2.5 rounded-full bg-black/8 dark:bg-white/10 overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${analysis.riskScore}%` }}
-                  transition={{ delay: 0.3, duration: 0.6, ease: "easeOut" }}
-                  className={`h-full rounded-full ${vc.bar}`}
-                />
-              </div>
-              <div className="flex justify-between text-[10px] text-muted-foreground/60 font-medium mt-1.5">
-                <span>0 — Likely legitimate</span>
-                <span>100 — High scam risk</span>
-              </div>
+            <div className="flex justify-between text-[10px] text-muted-foreground/60 font-medium">
+              <span>0 — Likely legitimate</span>
+              <span>100 — High scam risk</span>
             </div>
           </div>
         </motion.div>
