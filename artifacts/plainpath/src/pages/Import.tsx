@@ -111,11 +111,18 @@ const ACCEPTED = ".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats
 const EXAMPLES = ["IRS notice", "Lease agreement", "Insurance EOB", "Permit application", "Court summons", "Grant instructions", "HOA violation", "Medicare letter"]
 
 const WHAT_YOU_GET = [
-  { label: "Plain-English summary",                     icon: FileText      },
-  { label: "Key obligations & deadlines",               icon: Clock         },
-  { label: "Missing info or required documents",        icon: ClipboardList },
-  { label: "Risks and confusing language",              icon: AlertTriangle },
-  { label: "Clear next-step guidance",                  icon: CheckCircle2  },
+  { label: "Plain-English summary",              icon: FileText,     color: "text-blue-500"    },
+  { label: "Key obligations & deadlines",        icon: Clock,        color: "text-blue-500"    },
+  { label: "Missing info or required documents", icon: ClipboardList,color: "text-amber-500"   },
+  { label: "Risks and confusing language",       icon: AlertTriangle,color: "text-red-500"     },
+  { label: "Clear next-step guidance",           icon: CheckCircle2, color: "text-emerald-500" },
+]
+
+const TRUST_CHECK_FEATURES = [
+  { label: "Scam indicators identified",  icon: ShieldCheck,   color: "text-red-500"     },
+  { label: "Pressure tactics flagged",    icon: AlertTriangle, color: "text-amber-500"   },
+  { label: "Contact details verified",    icon: CheckCircle2,  color: "text-emerald-500" },
+  { label: "Risk level assessment",       icon: Scale,         color: "text-blue-500"    },
 ]
 
 const DOC_TYPES = [
@@ -713,19 +720,19 @@ export default function Import() {
 
         {/* ── Header ─────────────────────────────────── */}
         {isTrustCheck ? (
-          <div className="text-center mb-5 sm:mb-10">
+          <div className="text-center mb-6 sm:mb-10 space-y-3">
             <motion.div
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-50 border border-red-200/70 text-xs font-semibold text-red-700 mb-3"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.2 }}
+              className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-red-100 dark:bg-red-900/40 mb-1"
             >
-              <ShieldCheck className="w-3.5 h-3.5" />
-              Trust &amp; Verification
+              <ShieldCheck className="w-7 h-7 text-red-600 dark:text-red-400" />
             </motion.div>
             <motion.h1
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-2xl sm:text-3xl font-display font-bold tracking-tight mb-2"
+              className="text-3xl sm:text-4xl font-display font-bold tracking-tight"
             >
               Document Trust Check
             </motion.h1>
@@ -733,17 +740,37 @@ export default function Import() {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.07 }}
-              className="text-muted-foreground text-sm sm:text-base"
+              className="text-muted-foreground text-sm sm:text-base max-w-lg mx-auto leading-relaxed"
             >
               Upload or paste a document to scan for scam indicators, pressure tactics, suspicious contact details, and verification risks.
             </motion.p>
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.12 }}
+              className="flex items-center justify-center gap-4 text-xs text-muted-foreground flex-wrap pt-1"
+            >
+              {TRUST_CHECK_FEATURES.map(({ label, icon: Icon, color }) => (
+                <span key={label} className="flex items-center gap-1.5">
+                  <Icon className={`w-3.5 h-3.5 ${color}`} />{label}
+                </span>
+              ))}
+            </motion.div>
           </div>
         ) : (
-          <div className="text-center mb-5 sm:mb-7">
+          <div className="text-center mb-6 sm:mb-8 space-y-3">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.2 }}
+              className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-100 dark:bg-blue-900/40 mb-1"
+            >
+              <FileText className="w-7 h-7 text-blue-600 dark:text-blue-400" />
+            </motion.div>
             <motion.h1
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-3xl sm:text-4xl font-display font-bold tracking-tight mb-3"
+              className="text-3xl sm:text-4xl font-display font-bold tracking-tight"
             >
               Analyze a Document
             </motion.h1>
@@ -751,25 +778,19 @@ export default function Import() {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.06 }}
-              className="text-muted-foreground text-sm sm:text-base max-w-lg mx-auto leading-relaxed mb-6"
+              className="text-muted-foreground text-sm sm:text-base max-w-lg mx-auto leading-relaxed"
             >
               Upload, paste, or scan a document to get a plain-English action plan. PlainPath highlights key obligations, deadlines, red flags, and what to do next.
             </motion.p>
-
-            {/* What you'll get */}
             <motion.div
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="flex flex-wrap justify-center gap-2"
+              className="flex items-center justify-center gap-4 text-xs text-muted-foreground flex-wrap pt-1"
             >
-              {WHAT_YOU_GET.map(({ label, icon: Icon }) => (
-                <span
-                  key={label}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/6 border border-primary/15 text-[11px] sm:text-xs font-medium text-foreground/75"
-                >
-                  <Icon className="w-3 h-3 text-primary shrink-0" />
-                  {label}
+              {WHAT_YOU_GET.map(({ label, icon: Icon, color }) => (
+                <span key={label} className="flex items-center gap-1.5">
+                  <Icon className={`w-3.5 h-3.5 ${color}`} />{label}
                 </span>
               ))}
             </motion.div>

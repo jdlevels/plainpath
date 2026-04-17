@@ -1269,14 +1269,16 @@ export default function ContractReview() {
                 )}
               </AnimatePresence>
 
-              {error && (
-                <div className="flex items-start gap-2 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20 border border-red-200/60 dark:border-red-900/40 rounded-lg px-3 py-2.5 text-sm">
-                  <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                  {error}
-                </div>
-              )}
+            </div>
 
-              {activeTab !== "camera" && (
+            {activeTab !== "camera" && (
+              <div className="px-5 py-4 border-t border-border/[0.15] bg-muted/20 space-y-3">
+                {error && (
+                  <div className="flex items-start gap-2 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20 border border-red-200/60 dark:border-red-900/40 rounded-lg px-3 py-2.5 text-sm">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                    {error}
+                  </div>
+                )}
                 <Button
                   onClick={handleReview}
                   disabled={loading || (activeTab === "paste" ? text.trim().length < 50 : !file)}
@@ -1286,8 +1288,8 @@ export default function ContractReview() {
                   {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Scale className="w-4 h-4" />}
                   {loading ? "Reviewing…" : "Review This Contract"}
                 </Button>
-              )}
-            </div>
+              </div>
+            )}
           </WorkspaceShell>
 
           {/* ── Built-in demo shortcuts ── */}

@@ -2528,13 +2528,22 @@ export default function ContractBuilder() {
           <>
             {/* ── Page header (step 0 only) ── */}
             {step === 0 && (
-              <div className="text-center mb-8">
-                <h1 className="text-3xl sm:text-4xl font-display font-bold tracking-tight mb-3">
+              <div className="text-center mb-8 space-y-3">
+                <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-emerald-100 dark:bg-emerald-900/40 mb-1">
+                  <FileText className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <h1 className="text-3xl sm:text-4xl font-display font-bold tracking-tight">
                   Build a Contract
                 </h1>
-                <p className="text-muted-foreground text-base sm:text-lg max-w-xl mx-auto leading-relaxed">
+                <p className="text-muted-foreground text-base max-w-lg mx-auto leading-relaxed">
                   Choose the type of contract you want to create, then PlainPath will guide you through the details step by step.
                 </p>
+                <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground flex-wrap pt-1">
+                  <span className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />Professional clause structure</span>
+                  <span className="flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-blue-500" />Legal protections included</span>
+                  <span className="flex items-center gap-1.5"><FileText className="w-3.5 h-3.5 text-amber-500" />Ready-to-sign draft</span>
+                  <span className="flex items-center gap-1.5"><BookOpen className="w-3.5 h-3.5 text-violet-500" />Guided step by step</span>
+                </div>
               </div>
             )}
 
@@ -2606,7 +2615,7 @@ export default function ContractBuilder() {
                         </Button>
                       )}
                       {!isLastStep && (
-                        <Button onClick={handleNext} disabled={!canProceed} className="gap-1.5">
+                        <Button onClick={handleNext} disabled={!canProceed} className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white">
                           {step === STEPS.length - 2 ? "Review Summary" : "Next"}
                           <ArrowRight className="w-4 h-4" />
                         </Button>
