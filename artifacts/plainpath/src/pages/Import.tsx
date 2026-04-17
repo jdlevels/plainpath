@@ -10,6 +10,7 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { WorkspaceShell } from "@/components/WorkspaceShell"
 import { useAnalyzeDocument } from "@workspace/api-client-react"
 import { useAnalysisContext } from "@/context/AnalysisContext"
 import { getApiBaseUrl } from "@/lib/api"
@@ -841,7 +842,7 @@ export default function Import() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.14 }}
         >
-          <Card className="overflow-hidden bg-card shadow-xl shadow-black/[0.07] dark:shadow-black/30 rounded-2xl border-border/40">
+          <WorkspaceShell>
 
             {/* ── DOCTYPE step ─────────────────────────── */}
             <AnimatePresence mode="wait">
@@ -1268,7 +1269,7 @@ export default function Import() {
               )}
             </AnimatePresence>
 
-          </Card>
+          </WorkspaceShell>
         </motion.div>
 
         {/* ── Demo shortcuts ─────────────────────────── */}

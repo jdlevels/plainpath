@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { getApiBaseUrl } from "@/lib/api"
+import { WorkspaceShell } from "@/components/WorkspaceShell"
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
@@ -439,70 +440,75 @@ export default function Compare() {
                 </div>
               </div>
 
-              {/* Input panels */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
-                <DocumentInput
-                  label="Original Version"
-                  helperText="Upload or paste the version you received first"
-                  value={original}
-                  onChange={setOriginal}
-                  side="original"
-                />
-                <DocumentInput
-                  label="Revised Version"
-                  helperText="Upload or paste the edited or revised version for comparison"
-                  value={revised}
-                  onChange={setRevised}
-                  side="revised"
-                />
-              </div>
+              <WorkspaceShell>
+                <div className="p-6 sm:p-8 space-y-6">
+                  {/* Input panels */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <DocumentInput
+                      label="Original Version"
+                      helperText="Upload or paste the version you received first"
+                      value={original}
+                      onChange={setOriginal}
+                      side="original"
+                    />
+                    <DocumentInput
+                      label="Revised Version"
+                      helperText="Upload or paste the edited or revised version for comparison"
+                      value={revised}
+                      onChange={setRevised}
+                      side="revised"
+                    />
+                  </div>
 
-              {/* Error */}
-              {error && (
-                <div className="flex items-start gap-2.5 p-4 rounded-xl bg-destructive/8 border border-destructive/15 text-destructive mb-5">
-                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                  <p className="text-sm leading-snug">{error}</p>
-                </div>
-              )}
-
-              {/* CTA */}
-              <div className="flex justify-center">
-                <Button
-                  size="lg"
-                  onClick={handleCompare}
-                  disabled={loading || !canCompare}
-                  className="gap-2.5 px-10 rounded-full shadow-md hover:shadow-lg transition-shadow"
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Analyzing changes…
-                    </>
-                  ) : (
-                    <>
-                      <GitCompare className="w-4 h-4" />
-                      Compare Changes
-                      <ArrowRight className="w-4 h-4" />
-                    </>
+                  {/* Hint when empty */}
+                  {!original && !revised && (
+                    <p className="text-center text-xs text-muted-foreground/60">
+                      Add both versions above to begin — you can upload files or paste text directly.
+                    </p>
                   )}
-                </Button>
-              </div>
 
-              {/* Hint when empty */}
-              {!original && !revised && (
-                <p className="text-center text-xs text-muted-foreground/60 mt-5">
-                  Add both versions above to begin — you can upload files or paste text directly.
-                </p>
-              )}
+                  {/* Progress hint */}
+                  {(!!original !== !!revised) && (
+                    <p className="text-center text-xs text-muted-foreground/70">
+                      {original
+                        ? "Original version loaded. Add the revised version to compare."
+                        : "Revised version loaded. Add the original version to compare."}
+                    </p>
+                  )}
+                </div>
 
-              {/* Progress hint */}
-              {(!!original !== !!revised) && (
-                <p className="text-center text-xs text-muted-foreground/70 mt-4">
-                  {original
-                    ? "Original version loaded. Add the revised version to compare."
-                    : "Revised version loaded. Add the original version to compare."}
-                </p>
-              )}
+                {/* Footer CTA */}
+                <div className="px-6 sm:px-8 py-4 border-t border-border/[0.15] bg-muted/20">
+                  {/* Error */}
+                  {error && (
+                    <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-destructive/8 border border-destructive/15 text-destructive mb-4">
+                      <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                      <p className="text-sm leading-snug">{error}</p>
+                    </div>
+                  )}
+                  <div className="flex justify-center">
+                    <Button
+                      size="lg"
+                      onClick={handleCompare}
+                      disabled={loading || !canCompare}
+                      className="gap-2.5 px-10 rounded-full shadow-md hover:shadow-lg transition-shadow"
+                    >
+                      {loading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Analyzing changes…
+                        </>
+                      ) : (
+                        <>
+                          <GitCompare className="w-4 h-4" />
+                          Compare Changes
+                          <ArrowRight className="w-4 h-4" />
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </WorkspaceShell>
             </motion.div>
           )}
 

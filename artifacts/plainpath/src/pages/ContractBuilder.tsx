@@ -21,6 +21,7 @@ import { beforeRunContractDraft, UsageLimitError } from "@/lib/analysisGate"
 import { useEntitlements } from "@/hooks/useEntitlements"
 import UpgradeModal from "@/components/UpgradeModal"
 import SendForSignatureModal from "@/components/SendForSignatureModal"
+import { WorkspaceShell } from "@/components/WorkspaceShell"
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -645,7 +646,7 @@ function TypeStep({
               onClick={() => ready && onSelect(id)}
               className={`relative text-left rounded-2xl border-2 p-4 transition-all duration-200 ${centreLastRow ? "xl-col-start-2" : ""} ${
                 isSelected
-                  ? "border-primary bg-primary/5 shadow-md shadow-primary/10"
+                  ? "border-primary bg-primary/8 shadow-[0_0_0_4px_rgba(99,102,241,0.10)] dark:shadow-[0_0_0_4px_rgba(139,92,246,0.15)]"
                   : ready
                   ? "border-border/50 hover:border-primary/40 hover:bg-accent/30"
                   : "border-border/30 opacity-50 cursor-not-allowed"
@@ -664,7 +665,7 @@ function TypeStep({
               <div className={`w-10 h-10 rounded-xl ${bg} flex items-center justify-center mb-3`}>
                 <Icon className={`w-5 h-5 ${color}`} />
               </div>
-              <h3 className="text-sm font-semibold mb-1">{title}</h3>
+              <h3 className={`text-sm font-semibold mb-1 transition-colors ${isSelected ? "text-primary" : ""}`}>{title}</h3>
               <p className="text-xs text-muted-foreground mb-2 leading-relaxed">{description}</p>
               <span className="text-[10px] text-muted-foreground/70 italic">{example}</span>
             </button>
@@ -2524,97 +2525,110 @@ export default function ContractBuilder() {
             onRestart={handleRestart}
           />
         ) : (
-          <div className="flex gap-8">
-            {/* ── Main content ── */}
-            <div className="flex-1 min-w-0">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={step}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.22, ease: "easeOut" }}
-                >
-                  {stepContent[step]}
-                </motion.div>
-              </AnimatePresence>
+          <>
+            {/* ── Page header (step 0 only) ── */}
+            {step === 0 && (
+              <div className="text-center mb-8">
+                <h1 className="text-3xl sm:text-4xl font-display font-bold tracking-tight mb-3">
+                  Build a Contract
+                </h1>
+                <p className="text-muted-foreground text-base sm:text-lg max-w-xl mx-auto leading-relaxed">
+                  Choose the type of contract you want to create, then PlainPath will guide you through the details step by step.
+                </p>
+              </div>
+            )}
 
-              {/* ── Demo pre-fill shortcuts (step 0 only) ── */}
-              {step === 0 && (
-                <div className="mt-8 space-y-3">
-                  <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Or load a demo contract</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                    {BUILDER_DEMOS.map((demo) => (
-                      <button
-                        key={demo.id}
-                        onClick={() => {
-                          setContractType(demo.contractType)
-                          setPeople((p) => ({ ...p, ...demo.people }))
-                          setScope((s) => ({ ...s, ...demo.scope }))
-                          setMoney((m) => ({ ...m, ...demo.money }))
-                          setProtection((p) => ({ ...p, ...demo.protection }))
-                          setStep(5)
-                          window.scrollTo({ top: 0, behavior: "smooth" })
-                        }}
-                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/50 hover:border-emerald-400/50 hover:bg-emerald-50/40 dark:hover:bg-emerald-950/10 transition-all text-left group"
+            <div className="flex gap-8">
+              {/* ── Main content ── */}
+              <div className="flex-1 min-w-0">
+                <WorkspaceShell>
+                  {/* Step content */}
+                  <div className="p-6 sm:p-8">
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={step}
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        transition={{ duration: 0.22, ease: "easeOut" }}
                       >
-                        <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 flex items-center justify-center shrink-0">
-                          <FileText className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                        {stepContent[step]}
+                      </motion.div>
+                    </AnimatePresence>
+
+                    {/* ── Demo pre-fill shortcuts (step 0 only) ── */}
+                    {step === 0 && (
+                      <div className="mt-8 space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="flex-1 h-px bg-border/40" />
+                          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Try a sample contract</p>
+                          <div className="flex-1 h-px bg-border/40" />
                         </div>
-                        <div className="min-w-0">
-                          <p className="text-xs font-semibold leading-tight group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">{demo.label}</p>
-                          <p className="text-[10px] text-muted-foreground mt-0.5">{demo.meta}</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                          {BUILDER_DEMOS.map((demo) => (
+                            <button
+                              key={demo.id}
+                              onClick={() => {
+                                setContractType(demo.contractType)
+                                setPeople((p) => ({ ...p, ...demo.people }))
+                                setScope((s) => ({ ...s, ...demo.scope }))
+                                setMoney((m) => ({ ...m, ...demo.money }))
+                                setProtection((p) => ({ ...p, ...demo.protection }))
+                                setStep(5)
+                                window.scrollTo({ top: 0, behavior: "smooth" })
+                              }}
+                              className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/50 hover:border-emerald-400/50 hover:bg-emerald-50/40 dark:hover:bg-emerald-950/10 transition-all text-left group"
+                            >
+                              <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 flex items-center justify-center shrink-0">
+                                <FileText className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-xs font-semibold leading-tight group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">{demo.label}</p>
+                                <p className="text-[10px] text-muted-foreground mt-0.5">{demo.meta}</p>
+                              </div>
+                            </button>
+                          ))}
                         </div>
-                      </button>
-                    ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* ── Footer navigation ── */}
+                  <div className="flex items-center justify-between px-6 sm:px-8 py-4 border-t border-border/[0.15] bg-muted/20">
+                    <Button variant="ghost" onClick={handleBack} className="gap-1.5 text-sm">
+                      <ArrowLeft className="w-4 h-4" />
+                      {step === 0 ? "Home" : "Back"}
+                    </Button>
+                    <div className="flex items-center gap-2">
+                      {step > 0 && (
+                        <Button variant="outline" size="sm" onClick={saveDraft} className="gap-1.5">
+                          <Save className="w-3.5 h-3.5" /> Save Draft
+                        </Button>
+                      )}
+                      {!isLastStep && (
+                        <Button onClick={handleNext} disabled={!canProceed} className="gap-1.5">
+                          {step === STEPS.length - 2 ? "Review Summary" : "Next"}
+                          <ArrowRight className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </WorkspaceShell>
+
+                {/* Mobile AI insights drawer */}
+                {step > 0 && <MobileInsightDrawer insights={mergedInsights} loading={insightLoading} />}
+              </div>
+
+              {/* ── Desktop AI panel ── */}
+              {step > 0 && (
+                <div className="hidden lg:block w-72 flex-shrink-0">
+                  <div className="sticky top-32">
+                    <AIInsightPanel insights={mergedInsights} loading={insightLoading} />
                   </div>
                 </div>
               )}
-
-              {/* Navigation */}
-              <div className="flex items-center justify-between mt-8 pt-4 border-t border-border/30">
-                <Button variant="ghost" onClick={handleBack} className="gap-1.5 text-sm">
-                  <ArrowLeft className="w-4 h-4" />
-                  {step === 0 ? "Home" : "Back"}
-                </Button>
-                <div className="flex items-center gap-2">
-                  {step > 0 && (
-                    <Button variant="outline" size="sm" onClick={saveDraft} className="gap-1.5">
-                      <Save className="w-3.5 h-3.5" /> Save Draft
-                    </Button>
-                  )}
-                  {!isLastStep && (
-                    <Button onClick={handleNext} disabled={!canProceed} className="gap-1.5">
-                      {step === STEPS.length - 2 ? "Review Summary" : "Next"}
-                      <ArrowRight className="w-4 h-4" />
-                    </Button>
-                  )}
-                </div>
-              </div>
-
-              {/* ── Back to home ── */}
-              <div className="text-center pt-2">
-                <button
-                  onClick={() => setLocation("/")}
-                  className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <ArrowLeft className="w-3.5 h-3.5" /> Back to home
-                </button>
-              </div>
-
-              {/* Mobile AI insights drawer */}
-              {step > 0 && <MobileInsightDrawer insights={mergedInsights} loading={insightLoading} />}
             </div>
-
-            {/* ── Desktop AI panel ── */}
-            {step > 0 && (
-              <div className="hidden lg:block w-72 flex-shrink-0">
-                <div className="sticky top-32">
-                  <AIInsightPanel insights={mergedInsights} loading={insightLoading} />
-                </div>
-              </div>
-            )}
-          </div>
+          </>
         )}
       </div>
     </div>

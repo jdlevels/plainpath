@@ -13,6 +13,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { getApiBaseUrl } from "@/lib/api"
 import { useLocation } from "wouter"
+import { WorkspaceShell } from "@/components/WorkspaceShell"
 import { beforeRunContractReview, UsageLimitError } from "@/lib/analysisGate"
 import { useEntitlements } from "@/hooks/useEntitlements"
 import UpgradeModal from "@/components/UpgradeModal"
@@ -1126,8 +1127,8 @@ export default function ContractReview() {
             onChange={handleCameraCapture}
           />
 
-          <Card>
-            <CardContent className="p-5 space-y-4">
+          <WorkspaceShell>
+            <div className="p-5 space-y-4">
               <div className="flex gap-1 bg-muted/40 p-1 rounded-lg w-fit">
                 {(["paste", "upload", "camera"] as const).map(tab => (
                   <button
@@ -1286,12 +1287,16 @@ export default function ContractReview() {
                   {loading ? "Reviewing…" : "Review This Contract"}
                 </Button>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </WorkspaceShell>
 
           {/* ── Built-in demo shortcuts ── */}
           <div className="space-y-3">
-            <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground text-center">Or try a built-in demo</p>
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-border/40" />
+              <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Try a sample contract</p>
+              <div className="flex-1 h-px bg-border/40" />
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               {REVIEW_DEMOS.map((demo) => {
                 const Icon = demo.icon
