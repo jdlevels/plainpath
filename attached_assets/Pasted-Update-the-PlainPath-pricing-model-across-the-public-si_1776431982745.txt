@@ -1,0 +1,93 @@
+Update the PlainPath pricing model across the public site and all supporting copy.
+
+We are simplifying from 3 plans to 2 plans.
+
+New pricing model:
+
+1. Starter — $4.99/month
+2. Pro — $19.99/month
+
+Required pricing rules:
+
+Starter — $4.99/month
+
+* Analyze a Document only
+* no access to:
+
+  * Document Trust Check
+  * Build a Contract
+  * Contract Review
+
+Pro — $19.99/month
+
+* full access to all 4 tools:
+
+  * Analyze a Document
+  * Document Trust Check
+  * Build a Contract
+  * Contract Review
+* keep value-add copy such as:
+
+  * saved analysis history
+  * deeper output formatting
+  * export/copy/save features
+    only if those are real or already being implemented
+
+Remove Teams plan entirely:
+
+* remove Teams card from pricing section
+* remove all Teams copy
+* remove:
+
+  * Team collaboration
+  * Admin dashboard
+  * Shared workflows
+  * Everything in Pro
+* remove any internal/public pricing copy that references Teams
+
+Required updates:
+
+1. Homepage pricing section
+
+* change from 3 cards to 2 cards
+* Starter = $4.99/month
+* Pro = $19.99/month
+* make the layout still feel balanced and premium with only two cards
+* keep Pro visually emphasized as the recommended plan if appropriate
+
+2. Pricing-related copy across the site
+   Search and update all references to:
+
+* Teams
+* $49.99/month
+* team workflows
+* admin dashboard
+* shared workflows
+* outdated plan descriptions
+
+3. Footer / support / legal / pricing references
+   Update any pages that reference pricing so they match the new structure:
+
+* Starter = $4.99/month
+* Pro = $19.99/month
+* no Teams references
+
+4. App gating language
+   Where the app explains access levels, update language to reflect only:
+
+* Starter
+* Pro
+
+5. Keep product messaging consistent
+   Starter = Analyze only
+   Pro = full access to all 4 tools
+
+6. Do not break routing or existing layouts unnecessarily
+   Keep the homepage looking polished after the pricing reduction from 3 plans to 2.
+
+Deliverables:
+
+* exact files changed
+* list of all pricing references updated
+* confirmation that Teams references were fully removed
+* screenshot of the updated pricing section

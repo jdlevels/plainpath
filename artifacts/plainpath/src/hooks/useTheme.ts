@@ -18,10 +18,6 @@ function applyTheme(theme: Theme) {
 export function useTheme() {
   const [theme, setThemeState] = useState<Theme>(() => {
     try {
-      const urlParam = new URLSearchParams(window.location.search).get("theme")
-      if (urlParam === "dark" || urlParam === "light" || urlParam === "system") {
-        return urlParam as Theme
-      }
       return (localStorage.getItem(STORAGE_KEY) as Theme | null) ?? "system"
     } catch {
       return "system"
@@ -37,8 +33,19 @@ export function useTheme() {
     return () => mq.removeEventListener("change", handler)
   }, [theme])
 
+  useEffect(() => {
+    function handleStorage(e: StorageEvent) {
+      if (e.key !== STORAGE_KEY || e.newValue === null) return
+      const incoming = e.newValue as Theme
+      setThemeState(incoming)
+      applyTheme(incoming)
+    }
+    window.addEventListener("storage", handleStorage)
+    return () => window.removeEventListener("storage", handleStorage)
+  }, [])
+
   function setTheme(t: Theme) {
-    try { localStorage.setItem(STORAGE_KEY, t) } catch { /* storage disabled */ }
+    try { localStorage.setItem(STORAGE_KEY, t) } catch { }
     setThemeState(t)
   }
 

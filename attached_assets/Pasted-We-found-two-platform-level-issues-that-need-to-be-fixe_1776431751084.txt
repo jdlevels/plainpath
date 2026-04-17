@@ -1,0 +1,68 @@
+We found two platform-level issues that need to be fixed globally.
+
+Issue 1: Root URL is inconsistent
+Typing `plainpathapp.com` does NOT always take me directly to the public homepage.
+
+Required fix:
+
+1. Make `/` always resolve to the public marketing homepage.
+2. Remove any redirect logic, session logic, localStorage logic, or last-visited-app logic that can hijack `/` and send users somewhere else.
+3. Typing `plainpathapp.com` in the address bar must always load the homepage, regardless of:
+
+* auth state
+* prior tool usage
+* session state
+* theme state
+* browser cache/localStorage
+
+4. Keep app pages under `/app` only.
+5. Confirm:
+
+* `/` = public homepage always
+* `/app` = app landing/dashboard
+* `/app/...` = tool pages
+
+Issue 2: Theme toggle is not globally consistent
+The homepage has theme switching, but the same light/dark/system behavior is not consistently shared across other pages.
+
+Required fix:
+
+1. Implement one global theme system for the entire product.
+2. Use one shared source of truth for theme selection:
+
+* Light
+* Dark
+* System
+
+3. Save the user’s theme preference in localStorage (or equivalent shared state).
+4. Apply the same theme choice consistently across:
+
+* homepage
+* support
+* analyze
+* trust check
+* contract review
+* build contract
+* compare
+* my analyses
+* privacy / terms if themed
+
+5. Make the theme toggle behavior consistent everywhere.
+6. If some pages currently use a different theme toggle or different theme logic, replace them with the shared global implementation.
+7. A theme change on one page should immediately persist and match on the next page.
+
+QA requirements:
+
+* verify typing `plainpathapp.com` always loads homepage
+* verify changing theme on homepage also affects all app pages
+* verify changing theme on app pages also affects homepage
+* verify Light / Dark / System all work consistently
+* verify no page is stuck on a different theme implementation
+
+Deliverables:
+
+* exact files changed
+* exact root-route logic updated
+* exact shared theme system/provider used
+* list of pages confirmed with unified theme behavior
+* confirmation that `/` no longer redirects incorrectly

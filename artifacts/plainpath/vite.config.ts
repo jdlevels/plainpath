@@ -8,9 +8,10 @@ import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 const rawPort = process.env.PORT;
 const port = rawPort ? Number(rawPort) : 3000;
 
-// BASE_PATH drives the Vite `base` option. Default to "/" for production builds
-// where the env var may not be injected by the build runner.
-const basePath = process.env.BASE_PATH ?? "/";
+// BASE_PATH drives the Vite `base` option.
+// Hard-code the fallback to "/app/" so the SPA router is always scoped
+// to the /app/ subpath — even if BASE_PATH is not injected by the build runner.
+const basePath = process.env.BASE_PATH ?? "/app/";
 
 export default defineConfig({
   base: basePath,
