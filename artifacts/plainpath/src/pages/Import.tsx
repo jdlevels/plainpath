@@ -447,7 +447,7 @@ export default function Import() {
       } else {
         incrementAnalysis()
         setAnalysis(data.analysis)
-        setLocation("/analyze")
+        setLocation("/results")
       }
     } catch {
       setCameraError("Network error. Please check your connection and try again.")
@@ -596,7 +596,7 @@ export default function Import() {
       mutate(
         { data: { text: p.text, documentTypeHint: docTypeLabel } as any },
         {
-          onSuccess: (data) => { void haptic("success"); incrementAnalysis(); setAnalysis(data.analysis); setLocation("/analyze") },
+          onSuccess: (data) => { void haptic("success"); incrementAnalysis(); setAnalysis(data.analysis); setLocation("/results") },
           onError: (err: any) => {
             const serverMessage = err?.data?.message
             const status = err?.status ?? 0
@@ -658,7 +658,7 @@ export default function Import() {
         await haptic("success")
         incrementAnalysis()
         setAnalysis(data.analysis)
-        setLocation("/analyze")
+        setLocation("/results")
       } catch {
         setUploadError("Network error. Please check your connection and try again.")
         setUploadedFile(null)
@@ -1281,7 +1281,7 @@ export default function Import() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.07 + 0.2 }}
                     whileHover={{ y: -3 }}
-                    onClick={() => setLocation(`/analyze?demo=${demo.id}`)}
+                    onClick={() => setLocation(`/results?demo=${demo.id}`)}
                     style={{ touchAction: "manipulation" }}
                     className="text-left group"
                   >

@@ -21,6 +21,11 @@ const PAGE_ACTIONS: Record<string, { label: string; message: string }[]> = {
     { label: "What happens after I submit?", message: "What happens after I submit my document?" },
   ],
   "/analyze": [
+    { label: "What file types work?", message: "What file formats does PlainPath support?" },
+    { label: "How much text do I need?", message: "How long does my text need to be for a good analysis?" },
+    { label: "What happens after I submit?", message: "What happens after I submit my document?" },
+  ],
+  "/results": [
     { label: "Next Steps", message: "What are the most important next steps from my analysis?" },
     { label: "Deadlines", message: "What deadlines should I be aware of from my document?" },
     { label: "Required Docs", message: "What documents do I need to gather?" },
@@ -63,8 +68,9 @@ const DEFAULT_ACTIONS = [
 
 const PAGE_CONTEXT_LABELS: Record<string, string> = {
   "/": "Home screen — the user is on the landing/home page",
-  "/import": "Import page — the user is preparing to upload or paste a document for analysis",
-  "/analyze": "Analyze results page — the user is viewing the results of a completed document analysis",
+  "/import": "Analyze a Document page — the user is preparing to upload or paste a document for analysis",
+  "/analyze": "Analyze a Document page — the user is preparing to upload or paste a document for analysis",
+  "/results": "Analysis results page — the user is viewing the results of a completed document analysis",
   "/trust-check": "Document Trust Check page — the user is analyzing a document for authenticity and scam indicators",
   "/contract-builder": "Contract Builder page — the user is creating a legal document from a guided template",
   "/my-analyses": "My Analyses page — the user is browsing their saved analysis history",

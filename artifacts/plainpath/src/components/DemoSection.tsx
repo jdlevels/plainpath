@@ -20,7 +20,7 @@ const TOOLS = [
     tagline: "Upload any document, get a full action plan",
     url: "plainpathapp.com/app/analyze",
     frames: 3,
-    cta: { label: "Try it free", path: "/import" },
+    cta: { label: "Try it free", path: "/analyze" },
     description: "Upload any notice, contract, or government form. PlainPath reads every clause and returns prioritized action steps, deadlines, and risks — in plain English.",
   },
   {

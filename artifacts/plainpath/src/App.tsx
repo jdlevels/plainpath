@@ -140,7 +140,8 @@ function Router() {
             <Route path="/sign-in/*?" component={SignInPage} />
             <Route path="/sign-up/*?" component={SignUpPage} />
             <Route path="/import" component={Import} />
-            <Route path="/analyze" component={Analyze} />
+            <Route path="/analyze" component={Import} />
+            <Route path="/results" component={Analyze} />
             <Route path="/trust-check" component={TrustCheck} />
             <Route path="/my-analyses" component={MyAnalyses} />
             <Route path="/privacy" component={Privacy} />
@@ -151,6 +152,7 @@ function Router() {
             <Route path="/subscribe/success" component={SubscribeSuccess} />
             <Route path="/subscribe/cancel" component={SubscribeCancel} />
             <Route path="/contract-builder" component={ContractBuilder} />
+            <Route path="/build-contract" component={ContractBuilder} />
             <Route path="/contract-review" component={ContractReview} />
             <Route path="/build" component={ContractBuilder} />
             <Route path="/review" component={ContractReview} />

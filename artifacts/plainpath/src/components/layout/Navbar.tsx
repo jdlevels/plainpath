@@ -69,11 +69,11 @@ export function Navbar() {
   const [location, navigate] = useLocation()
   const { isSignedIn, isLoaded } = useUser()
   const isHome = location === "/"
-  const isImport = location === "/import"
-  const isAnalyze = location.startsWith("/analyze")
+  const isImport = location === "/import" || location === "/analyze"
+  const isAnalyze = location.startsWith("/results")
   const isMyAnalyses = location === "/my-analyses"
-  const isContractBuilder = location === "/contract-builder"
-  const isContractReview = location === "/contract-review"
+  const isContractBuilder = location === "/contract-builder" || location === "/build-contract" || location === "/build"
+  const isContractReview = location === "/contract-review" || location === "/review"
   const isTrustCheck = location === "/trust-check"
   const isStaticPage = location === "/privacy" || location === "/terms" || location === "/subscribe" || location === "/subscribe/success" || location === "/subscribe/cancel"
 
@@ -148,7 +148,7 @@ export function Navbar() {
 
           {isHome && (
             <Button asChild size="sm" className="rounded-full shadow-sm hover:shadow-md gap-1.5 ml-1" style={{ touchAction: "manipulation" }}>
-              <Link href="/import">
+              <Link href="/analyze">
                 <span className="sm:hidden">Analyze</span>
                 <span className="hidden sm:inline">Analyze a Document</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -167,7 +167,7 @@ export function Navbar() {
 
           {isAnalyze && (
             <Button asChild size="sm" variant="outline" className="rounded-full gap-1.5 bg-card border-border/60 text-sm ml-1">
-              <Link href="/import">
+              <Link href="/analyze">
                 <Plus className="w-3.5 h-3.5" /> New Analysis
               </Link>
             </Button>

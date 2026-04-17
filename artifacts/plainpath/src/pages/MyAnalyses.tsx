@@ -126,7 +126,7 @@ export default function MyAnalyses() {
   const handleOpen = (saved: SavedAnalysis) => {
     setAnalysis(saved.analysis)
     setDocumentTypeHint(saved.documentTypeHint)
-    setLocation("/analyze")
+    setLocation("/results")
   }
 
   const startRename = (saved: SavedAnalysis) => {
@@ -186,7 +186,7 @@ export default function MyAnalyses() {
           <Button
             size="sm"
             className="shrink-0 rounded-xl gap-1.5 shadow-sm"
-            onClick={() => setLocation("/import")}
+            onClick={() => setLocation("/analyze")}
             style={{ touchAction: "manipulation" }}
           >
             <span className="hidden sm:inline">Analyze a document</span>

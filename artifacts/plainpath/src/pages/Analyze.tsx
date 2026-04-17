@@ -95,7 +95,7 @@ export default function Analyze() {
       setAnalysis(demoData.analysis)
     }
   }, [demoData, analysis, setAnalysis, demoId])
-  useEffect(() => { if (!demoId && !analysis) setLocation("/import") }, [demoId, analysis, setLocation])
+  useEffect(() => { if (!demoId && !analysis) setLocation("/analyze") }, [demoId, analysis, setLocation])
   useEffect(() => {
     if (analysis?.title) {
       document.title = `${analysis.title} — PlainPath`
@@ -104,7 +104,7 @@ export default function Analyze() {
   }, [analysis?.title])
 
   if (isLoading || (!analysis && demoId)) return <LoadingScreen />
-  if (demoError) return <ErrorScreen onBack={() => setLocation("/import")} />
+  if (demoError) return <ErrorScreen onBack={() => setLocation("/analyze")} />
   if (!analysis) return null
 
   const actionSteps = analysis.actionSteps ?? []
@@ -189,7 +189,7 @@ export default function Analyze() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-2.5 sm:py-4">
           <div className="flex items-center gap-4">
             <button
-              onClick={() => setLocation("/import")}
+              onClick={() => setLocation("/analyze")}
               style={{ touchAction: "manipulation" }}
               className="w-10 h-10 sm:w-9 sm:h-9 flex items-center justify-center hover:bg-secondary active:bg-secondary rounded-xl transition-colors shrink-0"
             >
