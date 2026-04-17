@@ -178,8 +178,8 @@ const TRUST = [
 const PLANS = [
   {
     name: "Starter",
-    price: "$4.99",
-    period: "/month",
+    monthly: { price: "$4.99", period: "/month", sub: null },
+    annual:  { price: "$47.99", period: "/year", sub: "billed annually", eq: "≈ $4.00/mo", savings: "Save about 20%" },
     desc: "Analyze any document in plain English — key terms, deadlines, and required actions. Unlimited use.",
     highlight: false,
     badge: null as string | null,
@@ -197,8 +197,8 @@ const PLANS = [
   },
   {
     name: "Pro",
-    price: "$29.99",
-    period: "/month",
+    monthly: { price: "$29.99", period: "/month", sub: null },
+    annual:  { price: "$251.99", period: "/year", sub: "billed annually", eq: "≈ $21.00/mo", savings: "Save about 30%" },
     desc: "All 5 live tools in one plan — unlimited use across every workflow.",
     highlight: true,
     badge: "Best Value",
@@ -220,6 +220,7 @@ const PLANS = [
 export default function Home() {
   const [waitlistOpen, setWaitlistOpen] = useState(false)
   const [waitlistPlatform, setWaitlistPlatform] = useState<"ios" | "android" | "both">("both")
+  const [billing, setBilling] = useState<"monthly" | "yearly">("monthly")
 
   function openWaitlist(platform: "ios" | "android" | "both") {
     setWaitlistPlatform(platform)
@@ -516,10 +517,40 @@ export default function Home() {
             <p className="text-lg text-muted-foreground">
               Start with document analysis, or unlock every tool with Pro. No contracts — cancel anytime.
             </p>
+
+            {/* ── Billing toggle ── */}
+            <div className="mt-8 flex items-center justify-center">
+              <div className="relative flex items-center bg-muted/60 dark:bg-zinc-800/60 border border-border/50 rounded-full p-1 gap-1 shadow-inner">
+                {(["monthly", "yearly"] as const).map((option) => (
+                  <button
+                    key={option}
+                    onClick={() => setBilling(option)}
+                    className={`relative px-5 py-2 text-sm font-semibold rounded-full transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                      billing === option
+                        ? "bg-card text-foreground shadow-sm border border-border/40"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {option === "monthly" ? "Monthly" : "Yearly"}
+                    {option === "yearly" && (
+                      <span className={`ml-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full transition-colors ${
+                        billing === "yearly"
+                          ? "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400"
+                          : "bg-emerald-100/60 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-500"
+                      }`}>
+                        Save
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
           <div className="grid md:grid-cols-2 gap-5 items-stretch max-w-3xl mx-auto">
-            {PLANS.map((plan, i) => (
+            {PLANS.map((plan, i) => {
+              const pr = billing === "yearly" ? plan.annual : plan.monthly;
+              return (
               <motion.div
                 key={plan.name}
                 initial={{ opacity: 0, y: 20 }}
@@ -535,13 +566,38 @@ export default function Home() {
                 )}
 
                 <div className="mb-6">
-                  <h3 className="text-xl font-bold text-foreground mb-1" style={{ fontFamily: "var(--font-display)" }}>
-                    {plan.name}
-                  </h3>
-                  <div className="flex items-baseline gap-0.5 mb-2">
-                    <span className="text-4xl font-bold text-foreground tracking-tight">{plan.price}</span>
-                    <span className="text-muted-foreground text-sm ml-0.5">{plan.period}</span>
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className="text-xl font-bold text-foreground" style={{ fontFamily: "var(--font-display)" }}>
+                      {plan.name}
+                    </h3>
+                    {billing === "yearly" && (
+                      <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40">
+                        {plan.annual.savings}
+                      </span>
+                    )}
                   </div>
+                  <div className="flex items-baseline gap-0.5 mb-1">
+                    <AnimatePresence mode="wait" initial={false}>
+                      <motion.span
+                        key={`${plan.name}-${billing}`}
+                        initial={{ opacity: 0, y: -6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 6 }}
+                        transition={{ duration: 0.18 }}
+                        className="text-4xl font-bold text-foreground tracking-tight"
+                      >
+                        {pr.price}
+                      </motion.span>
+                    </AnimatePresence>
+                    <span className="text-muted-foreground text-sm ml-0.5">{pr.period}</span>
+                  </div>
+                  {billing === "yearly" ? (
+                    <p className="text-xs text-muted-foreground mb-2">
+                      {plan.annual.sub} &nbsp;·&nbsp; {plan.annual.eq}
+                    </p>
+                  ) : (
+                    <div className="mb-2" />
+                  )}
                   <p className="text-sm text-muted-foreground leading-snug">{plan.desc}</p>
                 </div>
 
@@ -582,7 +638,8 @@ export default function Home() {
                   {plan.cta}
                 </a>
               </motion.div>
-            ))}
+              );
+            })}
           </div>
 
           <p className="text-center text-xs text-muted-foreground mt-8">
