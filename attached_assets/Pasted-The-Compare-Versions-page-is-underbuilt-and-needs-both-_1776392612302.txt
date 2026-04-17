@@ -1,0 +1,102 @@
+The Compare Versions page is underbuilt and needs both product and UI improvements.
+
+Current issues:
+
+* it only supports pasted text
+* it does not clearly explain what the tool is for
+* it does not explain what the user will get back
+* it feels sparse and unfinished compared with the homepage quality
+* there is too much empty space and not enough guidance
+
+We need to upgrade this page into a real product feature.
+
+Target route:
+
+* `/app/compare`
+
+Required product behavior:
+
+1. Input methods
+   For BOTH “Original Version” and “Revised Version”, add:
+
+* Upload file
+* Paste text
+* optional drag-and-drop area
+
+Supported file types:
+
+* PDF
+* DOCX
+* TXT
+
+2. Clear tool explanation
+   Add a short explanation near the top that clearly tells the user what this page is for.
+
+Use positioning like:
+
+* Compare an original document against a revised version
+* See what changed, what got added or removed, and what may now carry more risk
+* Designed for contracts, leases, agreements, and revised paperwork before signing
+
+3. Explain output/result
+   Add a “What you’ll get” section or supporting text explaining that PlainPath will identify:
+
+* major changes
+* added clauses
+* removed clauses
+* wording changes
+* increased risks
+* payment/deadline/obligation changes
+* recommended items to review before signing
+
+4. Improve labels and helper text
+   Use clearer labels:
+
+* Original Version
+* Revised Version
+
+Add helper text under each:
+
+* “Upload or paste the version you received first”
+* “Upload or paste the edited/revised version for comparison”
+
+5. Better layout
+   Refine layout so the page feels product-finished:
+
+* stronger max-width/container
+* better section spacing
+* reduce excessive empty whitespace
+* make the compare workspace feel centered and intentional
+* align with the premium quality of the marketing homepage
+
+6. Better CTA
+   Rename the action button to something clearer and stronger such as:
+
+* Compare Changes
+  or
+* Analyze Differences
+
+7. Empty-state guidance
+   If no files/text are added yet, show helpful guidance/examples rather than a bare blank page.
+
+8. Light and dark mode support
+   Make sure the improved compare page works cleanly in both light and dark mode.
+
+9. Mobile responsiveness
+   Ensure the compare page works well on mobile:
+
+* stacked layout on small screens
+* clear upload areas
+* readable text
+* full-width CTA
+
+10. Do not break routing
+    Do not change working routing or app shell behavior outside this page.
+
+Deliverables required:
+
+* exact files changed
+* list of new input methods added
+* final page structure
+* exact output explanation copy used
+* screenshots or confirmation for light mode and dark mode

@@ -2338,6 +2338,74 @@ router.post("/checklist", (req, res) => {
   return res.json({ success: true, itemId, completed: Boolean(completed) });
 });
 
+// POST /api/documents/extract-text
+// Extracts plain text from a PDF, DOCX, or TXT file without running analysis.
+// Used by the Compare tool to load document text before diffing.
+router.post("/extract-text", upload.single("file"), async (req, res) => {
+  const file = req.file;
+  if (!file) {
+    return res.status(400).json({ error: "no_file", message: "No file was uploaded." });
+  }
+
+  const mime = file.mimetype ?? "";
+  const originalName = (file.originalname ?? "").toLowerCase();
+  let extractedText = "";
+
+  if (mime === "application/pdf" || originalName.endsWith(".pdf")) {
+    try {
+      const pdfMod = await import("pdf-parse/lib/pdf-parse.js");
+      const pdfParse: (buf: Buffer) => Promise<{ text: string }> =
+        (pdfMod as any).default ?? (pdfMod as any);
+      const pdfResult = await pdfParse(file.buffer);
+      extractedText = pdfResult?.text ?? "";
+    } catch (err) {
+      return res.status(422).json({
+        error: "corrupt_pdf",
+        message: "This PDF could not be read. It may be corrupted or password-protected. Please paste the text instead.",
+      });
+    }
+    if (!extractedText.trim()) {
+      return res.status(422).json({
+        error: "scanned_pdf",
+        message: "This PDF appears to contain only images and cannot be read as text. Please paste the text instead.",
+      });
+    }
+  } else if (
+    mime === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+    originalName.endsWith(".docx")
+  ) {
+    try {
+      const mammoth = await import("mammoth");
+      const result = await mammoth.extractRawText({ buffer: file.buffer });
+      extractedText = result.value ?? "";
+    } catch (err) {
+      return res.status(422).json({
+        error: "unreadable_docx",
+        message: "Could not read this Word document. Please paste the text instead.",
+      });
+    }
+    if (!extractedText.trim()) {
+      return res.status(422).json({
+        error: "empty_docx",
+        message: "This Word document appears to be empty.",
+      });
+    }
+  } else if (mime === "text/plain" || originalName.endsWith(".txt")) {
+    extractedText = file.buffer.toString("utf-8");
+    if (!extractedText.trim()) {
+      return res.status(422).json({ error: "empty_txt", message: "This text file appears to be empty." });
+    }
+  } else {
+    return res.status(400).json({
+      error: "unsupported_type",
+      message: "Unsupported file type. Please upload a PDF (.pdf), Word document (.docx), or plain text (.txt) file.",
+    });
+  }
+
+  if (extractedText.length > 60000) extractedText = extractedText.slice(0, 60000);
+  return res.json({ text: extractedText, filename: file.originalname });
+});
+
 // POST /api/documents/compare
 // Compares two versions of a document and returns a structured diff with risk assessment.
 router.post("/compare", async (req, res) => {
