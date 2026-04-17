@@ -23,17 +23,15 @@ export function Footer() {
               </div>
               <span className="font-display font-bold text-xl tracking-tight text-foreground">PlainPath</span>
             </div>
-            <p className="text-muted-foreground text-sm leading-relaxed max-w-xs mb-5">
-              Your smart friend for confusing paperwork. Turning legal jargon into plain-English action plans.
+            <p className="text-muted-foreground text-sm leading-relaxed max-w-xs mb-3">
+              Plain-English help for confusing paperwork.
             </p>
-            <div className="flex flex-wrap gap-4 text-xs font-medium text-muted-foreground">
-              {["Secure processing", "Plain-English results", "Web & Mobile"].map(item => (
-                <span key={item} className="flex items-center gap-1">
-                  <span className="w-1 h-1 rounded-full bg-primary inline-block" />
-                  {item}
-                </span>
-              ))}
-            </div>
+            <a
+              href="mailto:support@plainpathapp.com"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              support@plainpathapp.com
+            </a>
           </div>
 
           {/* Product */}
@@ -57,8 +55,6 @@ export function Footer() {
                 </button>
               </li>
               <li><a href="/app/analyze" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Web App</a></li>
-              <li><a href="#download" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Download iOS</a></li>
-              <li><a href="#download" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Download Android</a></li>
             </ul>
           </div>
 
@@ -85,7 +81,11 @@ export function Footer() {
 
         <div className="pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
           <p>© {new Date().getFullYear()} PlainPath. All rights reserved.</p>
-          <p>Designed for everyday people. Not just lawyers.</p>
+          <div className="flex items-center gap-5">
+            <a href="/app/privacy" className="hover:text-foreground transition-colors">Privacy Policy</a>
+            <a href="/app/terms" className="hover:text-foreground transition-colors">Terms of Service</a>
+            <a href="/app/support" className="hover:text-foreground transition-colors">Support</a>
+          </div>
         </div>
       </div>
     </footer>

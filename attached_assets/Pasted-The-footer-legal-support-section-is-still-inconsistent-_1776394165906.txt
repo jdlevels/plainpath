@@ -1,0 +1,93 @@
+The footer/legal/support section is still inconsistent and partially broken. Fix this as a footer and legal-link cleanup pass.
+
+Current problems:
+
+1. `Download iOS` and `Download Android` footer links are not aligned with the real app store buttons and may not go anywhere useful.
+2. `Terms of Service / Terms of Use / Terms of Conditions` currently leads to a broken “something went wrong” page.
+3. Privacy/legal/support pages still contain outdated copy such as `free to try`.
+4. Footer copy and link structure still contain legacy content from earlier versions and are not aligned with the current pricing/product model.
+
+Required fixes:
+
+1. Footer cleanup
+   Simplify the footer and make it consistent.
+
+Recommended footer structure:
+
+Left section:
+
+* PlainPath
+* Plain-English help for confusing paperwork.
+* [support@plainpathapp.com](mailto:support@plainpathapp.com)
+
+Product section:
+
+* Features
+* Pricing
+* Web App
+
+Company section:
+
+* Support
+* Privacy Policy
+* Terms of Service
+
+Bottom row:
+
+* © 2026 PlainPath. All rights reserved.
+* Privacy Policy
+* Terms of Service
+* Support
+
+2. Remove or disable fake/unfinished links
+   Remove `Download iOS` and `Download Android` from the footer unless real store URLs exist and are wired.
+   Do not leave dead or placeholder links in the footer.
+
+3. Fix legal/support routes
+   Ensure these routes are real, working, and linked consistently:
+
+* `/privacy`
+* `/terms`
+* `/support`
+
+4. Fix broken Terms page
+   The Terms page must render a real page and must not show “something went wrong.”
+   Audit the current route and component and repair it.
+
+5. Remove outdated pricing language
+   Search the project for outdated phrases such as:
+
+* `free to try`
+* old pricing language
+* legacy trial references
+  Update or remove them so they match the current model:
+* Starter = $4.99/month
+* Pro = $14.99/month
+* Teams = $49.99/month
+  If pricing should not appear in legal/support pages, remove pricing references from those pages entirely.
+
+6. Consistency audit
+   Search footer, support, privacy, and terms pages for:
+
+* outdated product descriptions
+* stale CTA copy
+* old pricing references
+* placeholder download/store links
+* inconsistent naming such as Terms of Use vs Terms of Service vs Terms of Conditions
+
+Use one naming convention only:
+
+* Privacy Policy
+* Terms of Service
+* Support
+
+7. Do not break routing
+   Do not change working app tool routes.
+
+Deliverables required:
+
+* exact files changed
+* exact footer structure after cleanup
+* exact working routes for privacy/terms/support
+* list of outdated phrases removed or updated
+* confirmation that all footer links now work

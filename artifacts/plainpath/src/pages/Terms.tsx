@@ -1,11 +1,12 @@
 import { useEffect } from "react"
+import { Link } from "wouter"
 import { Scale, AlertTriangle, FileText, ShieldCheck, Mail, CreditCard } from "lucide-react"
 
 const LAST_UPDATED = "April 6, 2026"
 
 export default function Terms() {
   useEffect(() => {
-    document.title = "Terms of Use — PlainPath"
+    document.title = "Terms of Service — PlainPath"
     return () => { document.title = "PlainPath" }
   }, [])
 
@@ -18,7 +19,7 @@ export default function Terms() {
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
               <Scale className="w-5 h-5 text-primary" />
             </div>
-            <h1 className="text-3xl font-display font-bold">Terms of Use</h1>
+            <h1 className="text-3xl font-display font-bold">Terms of Service</h1>
           </div>
           <p className="text-sm text-muted-foreground">Last updated: {LAST_UPDATED}</p>
           <p className="mt-4 text-muted-foreground leading-relaxed">

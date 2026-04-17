@@ -50,12 +50,11 @@ export function Footer() {
               Privacy Policy
             </Link>
             <Link href="/terms" className="text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors">
-              Terms of Use
+              Terms of Service
             </Link>
             <Link href="/support" className="text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors">
               Support
             </Link>
-            <span className="text-xs text-muted-foreground/40">Free to try · Plans from $4.99/month</span>
           </div>
         </div>
 
