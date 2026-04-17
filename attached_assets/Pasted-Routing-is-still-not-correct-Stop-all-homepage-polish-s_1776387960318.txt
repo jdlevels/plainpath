@@ -1,0 +1,54 @@
+Routing is still not correct. Stop all homepage polish/styling work until this is fixed.
+
+Current problem:
+
+* `plainpathapp.com` correctly shows the marketing homepage
+* but the 4 homepage tool buttons still do NOT enter the real working tool pages
+* they are still sending users to a secondary marketing/app shell page instead of the actual tool workspaces
+
+This must be fixed at the route/link level.
+
+Required behavior:
+
+* Analyze a Document button must go to the real analyze workspace
+* Document Trust Check button must go to the real trust check workspace
+* Build a Contract button must go to the real contract builder workspace
+* Contract Review button must go to the real contract review workspace
+
+Required live routes:
+
+* `/` = marketing homepage
+* `/app/analyze` = real analyze tool page
+* `/app/trust-check` = real trust check tool page
+* `/app/build-contract` = real build contract tool page
+* `/app/contract-review` = real contract review tool page
+
+Authentication requirement:
+
+* if a tool requires auth, redirect to sign-in and then return to the exact requested tool route
+* example: `/app/sign-in?redirect=/app/analyze`
+
+Critical instructions:
+
+1. Audit every homepage button href/onClick/navigation handler and replace any route that currently sends users to a secondary landing page, app teaser page, generic `/app` marketing shell, old frontend shell, or legacy route.
+2. Make each homepage button point directly to its actual tool route.
+3. Ensure each of those routes renders the real working tool workspace, not another marketing/interstitial page.
+4. Ensure backend/API connectivity works from those routes.
+5. Ensure refresh works on each route with no 404:
+
+   * `/app/analyze`
+   * `/app/trust-check`
+   * `/app/build-contract`
+   * `/app/contract-review`
+6. Remove or isolate the secondary marketing/app shell page so it is NOT the destination of the homepage tool buttons.
+7. Search the entire project for all route redirects, fallback routes, navigation wrappers, guards, and hardcoded links that could be forcing users into the wrong page.
+8. Confirm no button points to any old Replit URL or old app shell.
+9. Republish after routing is corrected.
+
+Verification deliverables required:
+
+* exact files changed
+* exact route map
+* exact button destination map
+* exact live URLs to test
+* confirmation of which component/page renders for each tool route

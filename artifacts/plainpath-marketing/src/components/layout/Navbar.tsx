@@ -38,7 +38,7 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center gap-4">
-          <a href="/app/" className="hidden md:block text-sm font-medium hover:text-foreground transition-colors">
+          <a href="/app/analyze" className="hidden md:block text-sm font-medium hover:text-foreground transition-colors">
             Log in to Web App
           </a>
           <Button className="rounded-full px-6 font-medium shadow-sm" onClick={() => smoothScroll("download")}>

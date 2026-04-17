@@ -176,10 +176,10 @@ export default function TrustCheck() {
           <div className="w-12 h-12 rounded-2xl bg-primary/8 flex items-center justify-center mx-auto mb-4">
             <ShieldCheck className="w-6 h-6 text-primary/60" />
           </div>
-          <h2 className="text-base font-bold mb-2">{demoError || "No trust-check result found"}</h2>
-          <p className="text-sm text-muted-foreground mb-5">Run a Document Trust Check to see a risk assessment here.</p>
+          <h2 className="text-base font-bold mb-2">{demoError || "Document Trust Check"}</h2>
+          <p className="text-sm text-muted-foreground mb-5">Check if a document is legitimate. PlainPath detects scams, forgeries, and high-risk patterns.</p>
           <Button onClick={() => setLocation("/import?mode=trust-check")} className="gap-2">
-            Start a Trust Check <ArrowRight className="w-4 h-4" />
+            Check a Document <ArrowRight className="w-4 h-4" />
           </Button>
 
           <div className="mt-8">
