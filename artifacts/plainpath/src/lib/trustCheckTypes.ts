@@ -39,6 +39,7 @@ export interface TrustCheckMetadataFinding {
 export interface TrustCheckAnalysis {
   id: string
   processedAt: string
+  documentType?: string
   riskScore: number
   verdict: TrustCheckVerdict
   verdictExplanation: string

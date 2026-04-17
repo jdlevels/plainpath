@@ -1,0 +1,113 @@
+We need to stop incremental patching and run a full QA / gap-and-fill pass across the entire PlainPath product.
+
+Goal:
+Perform a structured audit of the marketing site, app shell, tool pages, result pages, footer/legal pages, and navigation. Identify all inconsistencies, broken flows, missing content, stale copy, layout mismatches, and rendering regressions. Then fix them in a controlled batch sequence.
+
+Audit scope:
+
+1. Navigation QA
+   Check all pages for:
+
+* PlainPath logo behavior
+* Tools dropdown behavior
+* Open App / Website / Sign in links
+* footer links
+* back buttons
+* no stale replit.app links
+* no dead or duplicate routes
+
+2. Tool QA
+   Audit all major app routes:
+
+* /app/analyze
+* /app/trust-check
+* /app/contract-review
+* /app/build-contract
+* /app/compare
+* /app/my-analyses
+* /app/support
+
+For each route, check:
+
+* page entry
+* empty state
+* input workflow
+* CTA behavior
+* results rendering
+* return navigation
+* light/dark mode
+* mobile behavior
+
+3. Layout consistency QA
+   Confirm all tool pages and result pages use a unified design system:
+
+* shared workspace shell
+* consistent max-width
+* border/surface depth
+* spacing rhythm
+* button styling
+* section-card styling
+* typography hierarchy
+
+4. Copy/content QA
+   Find and fix:
+
+* outdated pricing text
+* free-trial leftovers
+* inconsistent feature naming
+* unclear tool descriptions
+* inconsistent legal/support copy
+* homepage/app product mismatch
+
+5. Footer/legal/support QA
+   Verify:
+
+* Privacy Policy route works
+* Terms of Service route works
+* Support route works
+* all footer links work
+* fake store/download links are removed unless real
+
+6. Data/render QA
+   Especially for tool result pages:
+
+* missing fields
+* missing scores
+* regressions from earlier versions
+* broken mappings
+* collapsed/expanded sections
+* export/copy/save controls
+
+7. Mobile QA
+   Audit mobile rendering on:
+
+* homepage
+* pricing
+* all 4 primary tools
+* result pages
+* support
+* my analyses
+
+Required output from you:
+A. A master QA table with columns:
+
+* Area
+* Page/Route
+* Issue
+* Severity (Critical / High / Medium / Low)
+* Recommended Fix
+
+B. Then implement fixes in this order:
+
+1. Critical routing/nav issues
+2. Missing data/rendering regressions
+3. Layout/design inconsistencies
+4. Copy/legal/footer cleanup
+5. Mobile/dark-mode polish
+
+C. After fixes, provide:
+
+* exact files changed
+* final issue list resolved
+* unresolved items if any
+* screenshots of key pages after QA cleanup

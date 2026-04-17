@@ -7,6 +7,8 @@ import {
   ArrowRight, AlertCircle, Flag, Shield, ExternalLink,
   Loader2, FileText, BarChart2, Info,
   Copy, Check, Bookmark, BookmarkCheck,
+  ChevronDown, ChevronUp, Download, BanIcon,
+  AlertOctagon, Ban,
 } from "lucide-react"
 import { saveTrustCheck } from "@/lib/savedTrustChecks"
 import { saveCloudTrustCheck } from "@/lib/cloudHistory"
@@ -22,6 +24,51 @@ import {
   verdictColor, severityColor,
   authenticityRiskColor, documentRiskColor, verificationConfidenceColor,
 } from "@/lib/trustCheckTypes"
+
+/* ── Helpers ────────────────────────────────────────────────────────────── */
+
+function interpretRiskScore(score: number): string {
+  if (score >= 80) return "Very high likelihood of fraudulent or manipulative behavior"
+  if (score >= 60) return "High likelihood of scam or impersonation tactics"
+  if (score >= 40) return "Moderate risk — significant suspicious elements present"
+  if (score >= 20) return "Low-to-moderate risk — some elements warrant verification"
+  return "Low likelihood of fraudulent activity"
+}
+
+function recommendedActions(verdict: TrustCheckVerdict): Array<{ text: string; icon: React.ElementType; color: string }> {
+  switch (verdict) {
+    case "High scam risk":
+      return [
+        { text: "Do not pay or respond to this document yet", icon: Ban, color: "text-red-600 dark:text-red-400" },
+        { text: "Do not call phone numbers listed in the document", icon: Phone, color: "text-red-600 dark:text-red-400" },
+        { text: "Contact the original company directly using their official website or phone number — not from this document", icon: Globe, color: "text-amber-600 dark:text-amber-400" },
+        { text: "Keep a copy of this analysis result for your records", icon: Bookmark, color: "text-blue-600 dark:text-blue-400" },
+      ]
+    case "Suspicious — verify before acting":
+      return [
+        { text: "Do not act on this document until you have independently verified it", icon: AlertOctagon, color: "text-amber-600 dark:text-amber-400" },
+        { text: "Look up the sender's official contact information independently — not from this document", icon: Globe, color: "text-amber-600 dark:text-amber-400" },
+        { text: "Do not share personal or financial information until verified", icon: Shield, color: "text-amber-600 dark:text-amber-400" },
+        { text: "Keep a copy of this analysis result for your records", icon: Bookmark, color: "text-blue-600 dark:text-blue-400" },
+      ]
+    case "Cannot verify authenticity":
+      return [
+        { text: "Proceed with caution — authenticity cannot be confirmed from content alone", icon: AlertCircle, color: "text-blue-600 dark:text-blue-400" },
+        { text: "Independently verify the sender's identity through official public channels", icon: Globe, color: "text-blue-600 dark:text-blue-400" },
+        { text: "Do not share personal or financial information until verified", icon: Shield, color: "text-amber-600 dark:text-amber-400" },
+        { text: "Keep a copy of this analysis result for your records", icon: Bookmark, color: "text-blue-600 dark:text-blue-400" },
+      ]
+    case "Likely legitimate":
+    default:
+      return [
+        { text: "Verify account numbers and deadlines match your personal records before acting", icon: CheckCircle2, color: "text-emerald-600 dark:text-emerald-400" },
+        { text: "Use only official contact information from your original account documentation", icon: Globe, color: "text-emerald-600 dark:text-emerald-400" },
+        { text: "Keep a copy of this analysis result for your records", icon: Bookmark, color: "text-blue-600 dark:text-blue-400" },
+      ]
+  }
+}
+
+/* ── Loading screen ─────────────────────────────────────────────────────── */
 
 function TrustCheckLoadingScreen({ label }: { label?: string }) {
   const [seconds, setSeconds] = useState(0)
@@ -44,6 +91,8 @@ function TrustCheckLoadingScreen({ label }: { label?: string }) {
   )
 }
 
+/* ── Verdict icon ───────────────────────────────────────────────────────── */
+
 function VerdictIcon({ verdict }: { verdict: TrustCheckVerdict }) {
   switch (verdict) {
     case "High scam risk": return <XCircle className="w-5 h-5" />
@@ -52,6 +101,65 @@ function VerdictIcon({ verdict }: { verdict: TrustCheckVerdict }) {
     case "Likely legitimate": return <CheckCircle2 className="w-5 h-5" />
   }
 }
+
+/* ── Collapsible section card ───────────────────────────────────────────── */
+
+function CollapsibleSection({
+  icon: Icon,
+  title,
+  defaultOpen = true,
+  badge,
+  accentClass = "",
+  children,
+}: {
+  icon: React.ElementType
+  title: string
+  defaultOpen?: boolean
+  badge?: React.ReactNode
+  accentClass?: string
+  children: React.ReactNode
+}) {
+  const [open, setOpen] = useState(defaultOpen)
+  return (
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+      <Card className={`border-border/40 overflow-hidden ${accentClass}`}>
+        <button
+          onClick={() => setOpen(v => !v)}
+          className="w-full flex items-center gap-2 px-5 py-4 text-left hover:bg-secondary/30 transition-colors"
+          style={{ touchAction: "manipulation" }}
+        >
+          <div className="w-7 h-7 rounded-lg bg-primary/8 flex items-center justify-center shrink-0">
+            <Icon className="w-3.5 h-3.5 text-primary/70" />
+          </div>
+          <h3 className="text-sm font-bold text-foreground flex-1 min-w-0">{title}</h3>
+          {badge}
+          {open
+            ? <ChevronUp className="w-4 h-4 text-muted-foreground/50 shrink-0" />
+            : <ChevronDown className="w-4 h-4 text-muted-foreground/50 shrink-0" />
+          }
+        </button>
+        <AnimatePresence initial={false}>
+          {open && (
+            <motion.div
+              key="content"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.22, ease: "easeInOut" }}
+              className="overflow-hidden"
+            >
+              <div className="px-5 pb-5">
+                {children}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </Card>
+    </motion.div>
+  )
+}
+
+/* ── Static section card (non-collapsible) ──────────────────────────────── */
 
 function SectionCard({
   icon: Icon,
@@ -65,10 +173,7 @@ function SectionCard({
   className?: string
 }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-    >
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
       <Card className={`p-5 border-border/40 ${className}`}>
         <div className="flex items-center gap-2 mb-4">
           <div className="w-7 h-7 rounded-lg bg-primary/8 flex items-center justify-center shrink-0">
@@ -82,15 +187,19 @@ function SectionCard({
   )
 }
 
+/* ── Score card ─────────────────────────────────────────────────────────── */
+
 function ScoreCard({
   label,
   score,
   description,
+  tooltip,
   colorFn,
 }: {
   label: string
   score: number
   description: string
+  tooltip: string
   colorFn: (n: number) => { label: string; labelClass: string; barClass: string; textClass: string }
 }) {
   const c = colorFn(score)
@@ -112,11 +221,13 @@ function ScoreCard({
       </div>
       <div className="flex items-center gap-1.5">
         <span className={`text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full ${c.labelClass}`}>{c.label}</span>
-        <span className="text-[10px] text-muted-foreground/60 leading-snug">{description}</span>
       </div>
+      <p className="text-[10px] text-muted-foreground/60 leading-snug border-t border-border/30 pt-2 mt-0.5">{tooltip}</p>
     </div>
   )
 }
+
+/* ── Contact icon helper ────────────────────────────────────────────────── */
 
 function contactIcon(type: string) {
   switch (type) {
@@ -126,6 +237,23 @@ function contactIcon(type: string) {
     default: return Flag
   }
 }
+
+/* ── Format date helper ─────────────────────────────────────────────────── */
+
+function formatAnalyzedAt(iso: string): string {
+  try {
+    return new Date(iso).toLocaleString(undefined, {
+      month: "short", day: "numeric", year: "numeric",
+      hour: "numeric", minute: "2-digit",
+    })
+  } catch {
+    return iso
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════ */
+/*  Main component                                                         */
+/* ════════════════════════════════════════════════════════════════════════ */
 
 export default function TrustCheck() {
   const [, setLocation] = useLocation()
@@ -178,6 +306,7 @@ export default function TrustCheck() {
     return <TrustCheckLoadingScreen label="Loading trust check demo…" />
   }
 
+  /* ── Empty / landing state ────────────────────────────────────────── */
   if (!analysis) {
     const TC_DEMO_CHIPS = [
       { id: "fake-utility-shutoff", label: "Fake Utility Shutoff Notice", verdict: "High scam risk", icon: XCircle, color: "text-red-500 dark:text-red-400", bg: "bg-red-50 dark:bg-red-950/50" },
@@ -228,6 +357,7 @@ export default function TrustCheck() {
     )
   }
 
+  /* ── Derived values ───────────────────────────────────────────────── */
   const vc = verdictColor(analysis.verdict)
   const scores: TrustCheckScores | undefined = analysis.scores
 
@@ -238,6 +368,10 @@ export default function TrustCheck() {
   const hasStructural = (analysis.structuralFindings?.length ?? 0) > 0
   const hasMetadata = (analysis.metadataFindings?.length ?? 0) > 0
 
+  const isHighRisk = analysis.verdict === "High scam risk"
+  const isSuspicious = analysis.verdict === "Suspicious — verify before acting"
+
+  /* ── Actions ──────────────────────────────────────────────────────── */
   async function handleSave() {
     if (!analysis || demoId) return
     const title = `Trust Check — ${analysis.verdict} (${analysis.riskScore}/100)`
@@ -260,11 +394,15 @@ export default function TrustCheck() {
   function copyResults() {
     const lines: string[] = [
       `PLAINPATH — DOCUMENT TRUST CHECK`,
+      `Scam Risk Score: ${analysis.riskScore}/100`,
       `Verdict: ${analysis.verdict}`,
-      `Authenticity Risk Score: ${analysis.riskScore}/100`,
+      `Interpretation: ${interpretRiskScore(analysis.riskScore)}`,
       ``,
       `─── VERDICT EXPLANATION ───`,
       analysis.verdictExplanation ?? "",
+      ``,
+      `─── RECOMMENDED ACTIONS ───`,
+      ...recommendedActions(analysis.verdict).map(a => `• ${a.text}`),
       ``,
       `─── WHAT THIS DOCUMENT CLAIMS ───`,
       analysis.whatItClaims ?? "",
@@ -275,11 +413,14 @@ export default function TrustCheck() {
     }
     if (analysis.scamIndicators?.length) {
       lines.push(`─── SCAM INDICATORS (${analysis.scamIndicators.length}) ───`)
-      analysis.scamIndicators.forEach(i => lines.push(`[${i.severity.toUpperCase()}] ${i.indicator}`))
+      analysis.scamIndicators.forEach(i => {
+        lines.push(`[${i.severity.toUpperCase()}] ${i.indicator}`)
+        if (i.sourceEvidence) lines.push(`  Evidence: "${i.sourceEvidence}"`)
+      })
       lines.push(``)
     }
     if (analysis.structuralFindings?.length) {
-      lines.push(`─── STRUCTURAL FINDINGS ───`)
+      lines.push(`─── STRUCTURAL OBSERVATIONS ───`)
       analysis.structuralFindings.forEach((f, n) => lines.push(`${n + 1}. ${f}`))
       lines.push(``)
     }
@@ -292,21 +433,30 @@ export default function TrustCheck() {
       lines.push(`─── SAFE NEXT STEPS ───`)
       analysis.safeNextSteps.forEach((s, n) => lines.push(`${n + 1}. ${s}`))
     }
+    if (analysis.processedAt) {
+      lines.push(``, `Analyzed: ${formatAnalyzedAt(analysis.processedAt)}`)
+      lines.push(`PlainPath — plainpathapp.com`)
+    }
     navigator.clipboard.writeText(lines.join("\n")).then(() => {
       setCopyDone(true)
       setTimeout(() => setCopyDone(false), 2000)
     })
   }
 
+  function exportPDF() {
+    window.print()
+  }
+
+  /* ── Render ───────────────────────────────────────────────────────── */
   return (
     <div
       className="min-h-screen bg-background"
       style={{ paddingBottom: "max(6rem, env(safe-area-inset-bottom) + 6rem)" }}
     >
-      {/* ── Sticky header ──────────────────────────────────────────────────── */}
-      <div className="bg-background/95 backdrop-blur-md border-b border-border/50 sticky top-0 z-30">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-2.5 sm:py-4">
-          <div className="flex items-center gap-3">
+      {/* ── Sticky header ───────────────────────────────────────────── */}
+      <div className="bg-background/95 backdrop-blur-md border-b border-border/50 sticky top-0 z-30 print:hidden">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-2.5 sm:py-4">
+          <div className="flex items-center gap-2 sm:gap-3">
             <button
               onClick={() => setLocation("/import?mode=trust-check")}
               className="w-10 h-10 sm:w-9 sm:h-9 flex items-center justify-center hover:bg-secondary active:bg-secondary rounded-xl transition-colors shrink-0"
@@ -323,23 +473,35 @@ export default function TrustCheck() {
                 </span>
               </div>
               <p className="text-xs text-muted-foreground truncate hidden sm:block">
-                Authenticity risk: {analysis.riskScore}/100
+                Scam Risk Score: {analysis.riskScore}/100
               </p>
             </div>
 
-            <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border shrink-0 ${vc.badge}`}>
+            <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border shrink-0 hidden sm:inline-flex ${vc.badge}`}>
               {analysis.verdict}
             </span>
 
+            {/* Copy summary */}
             <button
               onClick={copyResults}
               title="Copy results as text"
               className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors shrink-0"
-              aria-label="Copy results"
+              aria-label="Copy summary"
             >
               {copyDone ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
             </button>
 
+            {/* Export PDF */}
+            <button
+              onClick={exportPDF}
+              title="Export as PDF"
+              className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors shrink-0"
+              aria-label="Export PDF"
+            >
+              <Download className="w-4 h-4" />
+            </button>
+
+            {/* Save */}
             {!demoId && (
               <button
                 onClick={handleSave}
@@ -358,6 +520,7 @@ export default function TrustCheck() {
               </button>
             )}
 
+            {/* New Check */}
             <Button
               size="sm"
               variant="outline"
@@ -370,20 +533,21 @@ export default function TrustCheck() {
         </div>
       </div>
 
-      {/* ── Content ──────────────────────────────────────────────────────────── */}
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-5 sm:pt-8 space-y-4">
+      {/* ── Content ─────────────────────────────────────────────────── */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-5 sm:pt-8 space-y-4">
 
-        {/* Primary Verdict banner */}
+        {/* ── 1. Primary Verdict banner ──────────────────────────── */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           className={`rounded-2xl border p-5 sm:p-6 ${vc.bg} ${vc.border}`}
         >
-          {/* Score + verdict row — matches Contract Review layout */}
-          <div className="flex items-start gap-6 flex-wrap mb-5">
-            <div className="text-center min-w-[72px]">
+          {/* Score + verdict row */}
+          <div className="flex items-start gap-6 flex-wrap mb-3">
+            <div className="text-center min-w-[80px]">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">Scam Risk Score</p>
               <p className={`text-6xl font-bold leading-none tabular-nums ${vc.text}`}>{analysis.riskScore}</p>
-              <p className="text-xs text-muted-foreground mt-1.5">out of 100</p>
+              <p className="text-xs text-muted-foreground mt-1">/ 100</p>
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1.5">
@@ -392,9 +556,11 @@ export default function TrustCheck() {
                 </div>
                 <h1 className={`text-xl font-bold leading-snug ${vc.text}`}>{analysis.verdict}</h1>
               </div>
+              <p className={`text-xs font-semibold mb-2 ${vc.text} opacity-70`}>{interpretRiskScore(analysis.riskScore)}</p>
               <p className="text-sm text-foreground/80 leading-relaxed">{analysis.verdictExplanation}</p>
             </div>
           </div>
+
           {/* Count summary pills */}
           {(() => {
             const high = analysis.scamIndicators.filter(i => i.severity === "high").length
@@ -421,6 +587,7 @@ export default function TrustCheck() {
               </div>
             )
           })()}
+
           {/* Progress bar */}
           <div className="space-y-1.5">
             <div className="h-2 rounded-full bg-black/8 dark:bg-white/10 overflow-hidden">
@@ -438,7 +605,69 @@ export default function TrustCheck() {
           </div>
         </motion.div>
 
-        {/* Score Summary — 3 dimensions */}
+        {/* ── 2. Recommended Action ─────────────────────────────────── */}
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+          <Card className={`p-5 border ${
+            isHighRisk
+              ? "border-red-200/70 dark:border-red-700/40 bg-red-50/40 dark:bg-red-950/20"
+              : isSuspicious
+              ? "border-amber-200/70 dark:border-amber-700/40 bg-amber-50/40 dark:bg-amber-950/20"
+              : "border-blue-200/70 dark:border-blue-700/40 bg-blue-50/40 dark:bg-blue-950/20"
+          }`}>
+            <div className="flex items-center gap-2 mb-3">
+              <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border ${
+                isHighRisk
+                  ? "bg-red-100 dark:bg-red-900/40 border-red-200 dark:border-red-700"
+                  : isSuspicious
+                  ? "bg-amber-100 dark:bg-amber-900/40 border-amber-200 dark:border-amber-700"
+                  : "bg-blue-100 dark:bg-blue-900/40 border-blue-200 dark:border-blue-700"
+              }`}>
+                <CheckSquare className={`w-3.5 h-3.5 ${
+                  isHighRisk ? "text-red-600 dark:text-red-400"
+                  : isSuspicious ? "text-amber-600 dark:text-amber-400"
+                  : "text-blue-600 dark:text-blue-400"
+                }`} />
+              </div>
+              <h3 className={`text-sm font-bold ${
+                isHighRisk ? "text-red-800 dark:text-red-300"
+                : isSuspicious ? "text-amber-800 dark:text-amber-300"
+                : "text-blue-800 dark:text-blue-300"
+              }`}>Recommended Actions</h3>
+            </div>
+            <ul className="space-y-2.5">
+              {recommendedActions(analysis.verdict).map((action, i) => (
+                <li key={i} className="flex items-start gap-2.5">
+                  <action.icon className={`w-4 h-4 shrink-0 mt-0.5 ${action.color}`} />
+                  <p className="text-sm text-foreground/85 leading-snug">{action.text}</p>
+                </li>
+              ))}
+            </ul>
+          </Card>
+        </motion.div>
+
+        {/* ── 3. Metadata strip ─────────────────────────────────────── */}
+        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground/60 px-1">
+            <span className="flex items-center gap-1">
+              <Clock className="w-3 h-3" />
+              Analyzed {formatAnalyzedAt(analysis.processedAt)}
+            </span>
+            {analysis.documentType && (
+              <span className="flex items-center gap-1">
+                <FileText className="w-3 h-3" />
+                {analysis.documentType}
+              </span>
+            )}
+            {demoId && (
+              <span className="flex items-center gap-1">
+                <Info className="w-3 h-3" />
+                Demo document
+              </span>
+            )}
+          </div>
+        </motion.div>
+
+        {/* ── 4. Score Summary — 3 dimensions ───────────────────────── */}
         {scores && (
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
             <Card className="p-4 sm:p-5 border-border/40">
@@ -446,36 +675,39 @@ export default function TrustCheck() {
                 <div className="w-7 h-7 rounded-lg bg-primary/8 flex items-center justify-center shrink-0">
                   <BarChart2 className="w-3.5 h-3.5 text-primary/70" />
                 </div>
-                <h3 className="text-sm font-bold text-foreground">Risk Score Summary</h3>
+                <h3 className="text-sm font-bold text-foreground">Risk Score Breakdown</h3>
               </div>
               <div className="flex gap-3 flex-col sm:flex-row">
                 <ScoreCard
                   label="Authenticity Risk"
                   score={scores.authenticityRisk}
                   description="Scam / impersonation signals"
+                  tooltip="How strongly this document resembles known scam or impersonation patterns. High = strong scam characteristics."
                   colorFn={authenticityRiskColor}
                 />
                 <ScoreCard
                   label="Document Risk"
                   score={scores.documentRisk}
                   description="Harsh contract terms"
+                  tooltip="Whether the document contains harmful, manipulative, or one-sided contract terms — regardless of whether it's a scam."
                   colorFn={documentRiskColor}
                 />
                 <ScoreCard
                   label="Verification Confidence"
                   score={scores.verificationConfidence}
                   description="How verifiable the sender appears"
+                  tooltip="How many of the sender's claimed details (name, phone, address, domain) can be independently verified. High = easier to confirm."
                   colorFn={verificationConfidenceColor}
                 />
               </div>
               <p className="text-[10px] text-muted-foreground/50 mt-3 leading-relaxed">
-                These three scores are independent. A document can have low authenticity risk but high document risk, or vice versa.
+                Each score is independent. A legitimate company can still send a high-risk contract; a scam can still be sent on official letterhead.
               </p>
             </Card>
           </motion.div>
         )}
 
-        {/* Contract Risk Callout — shown only for contract-type documents */}
+        {/* ── 5. Contract Risk Callout ───────────────────────────────── */}
         {(analysis.contractRiskNotes || (analysis.contractTermsFound && analysis.contractTermsFound.length > 0)) && (
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
             <Card className="p-5 border-amber-200/70 dark:border-amber-700/40 bg-amber-50/60 dark:bg-amber-950/20">
@@ -486,7 +718,7 @@ export default function TrustCheck() {
                 <div className="flex-1 min-w-0">
                   <h3 className="text-sm font-bold text-amber-800 dark:text-amber-300 mb-1">Contract Terms to Review</h3>
                   <p className="text-[11px] font-medium text-amber-700/70 dark:text-amber-400/60 mb-2.5">
-                    These are contract-risk findings — separate from any scam or authenticity concerns. A document can be genuine and still contain terms that deserve careful attention.
+                    Contract-risk findings — separate from scam or authenticity concerns. A document can be genuine and still contain terms that deserve careful attention.
                   </p>
                   {analysis.contractRiskNotes && (
                     <p className="text-sm text-foreground/80 leading-relaxed mb-3">{analysis.contractRiskNotes}</p>
@@ -509,33 +741,53 @@ export default function TrustCheck() {
           </motion.div>
         )}
 
-        {/* What This Letter Claims */}
+        {/* ── 6. What This Letter Claims ─────────────────────────────── */}
         {analysis.whatItClaims && (
-          <SectionCard icon={Flag} title="What This Letter Claims">
+          <SectionCard icon={Flag} title="What This Document Claims">
             <p className="text-sm text-foreground/80 leading-relaxed">{analysis.whatItClaims}</p>
           </SectionCard>
         )}
 
-        {/* Demanded Action */}
+        {/* ── 7. Demanded Action ─────────────────────────────────────── */}
         {analysis.demandedAction && (
-          <SectionCard icon={AlertCircle} title="Demanded Action">
+          <SectionCard icon={AlertCircle} title="What It Demands From You">
             <p className="text-sm text-foreground/80 leading-relaxed">{analysis.demandedAction}</p>
           </SectionCard>
         )}
 
-        {/* Scam Indicators */}
-        <SectionCard icon={Shield} title={`Scam Indicators${analysis.scamIndicators.length > 0 ? ` (${analysis.scamIndicators.length})` : ""}`}>
+        {/* ── 8. Scam Indicators — collapsible ──────────────────────── */}
+        <CollapsibleSection
+          icon={Shield}
+          title="Scam Indicators"
+          defaultOpen={isHighRisk || isSuspicious}
+          badge={
+            analysis.scamIndicators.length > 0 ? (
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md border mr-1 ${
+                highIndicators.length > 0
+                  ? "bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 border-red-200 dark:border-red-700"
+                  : "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-700"
+              }`}>
+                {analysis.scamIndicators.length}
+              </span>
+            ) : null
+          }
+        >
           {analysis.scamIndicators.length > 0 ? (
             <div className="space-y-3">
               {[...highIndicators, ...medIndicators, ...lowIndicators].map((indicator, i) => (
-                <div key={i} className="flex items-start gap-3">
+                <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-secondary/30 border border-border/30">
                   <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full shrink-0 mt-0.5 ${severityColor(indicator.severity)}`}>
                     {indicator.severity}
                   </span>
-                  <div>
+                  <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground leading-snug">{indicator.indicator}</p>
                     {indicator.sourceEvidence && (
-                      <p className="text-xs text-muted-foreground mt-0.5 italic">"{indicator.sourceEvidence}"</p>
+                      <div className="mt-1.5 flex items-start gap-1.5">
+                        <span className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground/50 shrink-0 mt-0.5">Evidence</span>
+                        <p className="text-xs text-muted-foreground italic bg-secondary/50 rounded-lg px-2.5 py-1.5 border border-border/30 leading-relaxed">
+                          "{indicator.sourceEvidence}"
+                        </p>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -544,9 +796,9 @@ export default function TrustCheck() {
           ) : (
             <p className="text-sm text-muted-foreground">No significant scam indicators detected in this document.</p>
           )}
-        </SectionCard>
+        </CollapsibleSection>
 
-        {/* Legitimacy Signals — shown when the analysis found positive/verifiable signals */}
+        {/* ── 9. Legitimacy Signals ──────────────────────────────────── */}
         {analysis.legitimacyIndicators && analysis.legitimacyIndicators.length > 0 && (
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
             <Card className="p-5 border-emerald-200/70 dark:border-emerald-700/40 bg-emerald-50/60 dark:bg-emerald-950/20">
@@ -559,7 +811,7 @@ export default function TrustCheck() {
                     Legitimacy Signals ({analysis.legitimacyIndicators.length})
                   </h3>
                   <p className="text-[11px] font-medium text-emerald-700/70 dark:text-emerald-400/60 mb-2.5">
-                    Observable signals that support this document's authenticity — distinct from the verdict, these indicate specific elements that checked out.
+                    Observable signals that support this document's authenticity — specific elements that checked out during analysis.
                   </p>
                   <ul className="space-y-2">
                     {analysis.legitimacyIndicators.map((signal, i) => (
@@ -577,9 +829,13 @@ export default function TrustCheck() {
           </motion.div>
         )}
 
-        {/* Metadata Findings — only suspicious findings, only for uploaded PDFs */}
+        {/* ── 10. Metadata Findings ─────────────────────────────────── */}
         {hasMetadata && (
-          <SectionCard icon={Info} title={`File Metadata Findings (${analysis.metadataFindings!.length})`}>
+          <CollapsibleSection
+            icon={Info}
+            title={`File Metadata Findings (${analysis.metadataFindings!.length})`}
+            defaultOpen={false}
+          >
             <p className="text-[11px] text-muted-foreground/70 mb-3 font-medium">
               These findings come from the PDF file's embedded metadata. Suspicious metadata may indicate the document was produced by unexpected software or modified after the fact.
             </p>
@@ -599,14 +855,23 @@ export default function TrustCheck() {
                 </div>
               ))}
             </div>
-          </SectionCard>
+          </CollapsibleSection>
         )}
 
-        {/* Structural Findings */}
+        {/* ── 11. Structural Observations — collapsible ─────────────── */}
         {hasStructural && (
-          <SectionCard icon={AlertTriangle} title={`Structural Observations (${analysis.structuralFindings!.length})`}>
+          <CollapsibleSection
+            icon={AlertTriangle}
+            title={`Structural Observations (${analysis.structuralFindings!.length})`}
+            defaultOpen={false}
+            badge={
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md border bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-700 mr-1">
+                {analysis.structuralFindings!.length}
+              </span>
+            }
+          >
             <p className="text-[11px] text-muted-foreground/70 mb-3 font-medium">
-              These are text-pattern and logic inconsistencies found in the document structure — distinct from scam indicators and contract terms.
+              Text-pattern and logic inconsistencies in the document structure — distinct from scam indicators and contract terms.
             </p>
             <ul className="space-y-2.5">
               {analysis.structuralFindings!.map((finding, i) => (
@@ -616,12 +881,21 @@ export default function TrustCheck() {
                 </li>
               ))}
             </ul>
-          </SectionCard>
+          </CollapsibleSection>
         )}
 
-        {/* Suspicious Contact Details */}
+        {/* ── 12. Contact Details — collapsible ─────────────────────── */}
         {analysis.contactDetails.length > 0 && (
-          <SectionCard icon={Phone} title="Contact Details Found">
+          <CollapsibleSection
+            icon={Phone}
+            title="Contact Details Found"
+            defaultOpen={isHighRisk || isSuspicious}
+            badge={
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md border bg-secondary text-muted-foreground border-border/40 mr-1">
+                {analysis.contactDetails.length}
+              </span>
+            }
+          >
             <div className="space-y-2.5">
               {analysis.contactDetails.map((contact, i) => {
                 const Icon = contactIcon(contact.type)
@@ -654,14 +928,27 @@ export default function TrustCheck() {
               })}
             </div>
             <p className="text-[11px] text-muted-foreground mt-3 border-t border-border/30 pt-3">
-              Do not call or visit these contacts directly. Verify through official public channels first.
+              Do not call or visit these contacts from this document. Verify through official public channels first.
             </p>
-          </SectionCard>
+          </CollapsibleSection>
         )}
 
-        {/* Deadlines & Pressure Tactics */}
+        {/* ── 13. Deadlines & Pressure Tactics — collapsible ────────── */}
         {analysis.deadlines.length > 0 && (
-          <SectionCard icon={Clock} title="Deadlines & Pressure Tactics">
+          <CollapsibleSection
+            icon={Clock}
+            title="Deadlines & Pressure Tactics"
+            defaultOpen={isHighRisk || isSuspicious}
+            badge={
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md border mr-1 ${
+                analysis.deadlines.some(d => d.type === "threat" || d.type === "escalation")
+                  ? "bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 border-red-200 dark:border-red-700"
+                  : "bg-secondary text-muted-foreground border-border/40"
+              }`}>
+                {analysis.deadlines.length}
+              </span>
+            }
+          >
             <div className="space-y-2">
               {analysis.deadlines.map((dl, i) => {
                 const isThreaten = dl.type === "threat" || dl.type === "escalation"
@@ -688,10 +975,10 @@ export default function TrustCheck() {
                 )
               })}
             </div>
-          </SectionCard>
+          </CollapsibleSection>
         )}
 
-        {/* What To Verify */}
+        {/* ── 14. What To Verify ─────────────────────────────────────── */}
         {analysis.whatToVerify.length > 0 && (
           <SectionCard icon={Eye} title="What To Verify Before Acting">
             <ul className="space-y-2.5">
@@ -707,7 +994,7 @@ export default function TrustCheck() {
           </SectionCard>
         )}
 
-        {/* Safe Next Steps */}
+        {/* ── 15. Safe Next Steps ────────────────────────────────────── */}
         {analysis.safeNextSteps.length > 0 && (
           <SectionCard icon={CheckSquare} title="Safe Next Steps">
             <ul className="space-y-2.5">
@@ -723,7 +1010,7 @@ export default function TrustCheck() {
           </SectionCard>
         )}
 
-        {/* Footer disclaimer */}
+        {/* ── Footer disclaimer ──────────────────────────────────────── */}
         <div className="text-center py-4">
           <p className="text-[11px] text-muted-foreground/60 max-w-sm mx-auto leading-relaxed">
             PlainPath Trust Check uses AI and rule-based analysis to assess risk across three dimensions. Results are not legal or financial advice. When in doubt, consult an official agency or attorney.
@@ -732,14 +1019,24 @@ export default function TrustCheck() {
             <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             Methodology reviewed by licensed attorneys
           </a>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setLocation("/import?mode=trust-check")}
-            className="mt-3 text-xs gap-1.5"
-          >
-            Check another document <ArrowRight className="w-3.5 h-3.5" />
-          </Button>
+          <div className="flex items-center justify-center gap-3 mt-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={exportPDF}
+              className="text-xs gap-1.5"
+            >
+              <Download className="w-3.5 h-3.5" /> Export PDF
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setLocation("/import?mode=trust-check")}
+              className="text-xs gap-1.5"
+            >
+              Check another document <ArrowRight className="w-3.5 h-3.5" />
+            </Button>
+          </div>
         </div>
       </div>
     </div>
