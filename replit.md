@@ -96,10 +96,17 @@ PlainPath is a monorepo using pnpm workspaces.
 - API: `POST /api/documents/scan-images` (standard analysis), `POST /api/documents/scan-images-trust` (trust check)
 
 ### Pricing Tiers
-- **Starter** ($4.99/month): Analyze a Document only
-- **Pro** ($24.99/month): All 4 tools — Analyze, Trust Check, Contract Builder, Fair Deal Check
-- **Team** ($49.99/month): Pro + team features (planned)
+- **Starter** ($4.99/month): Unlimited Analyze a Document
+- **Pro** ($19.99/month): All 4 tools — Analyze, Trust Check, Contract Builder, Contract Review
+- No Team plan (removed)
 - Key file: `artifacts/plainpath/src/data/pricingData.ts`
+
+### Payment / Paywall Enforcement
+- **Status: DISABLED during build/testing phase**
+- Free-limit gating and upgrade prompts are bypassed via `PAYMENT_ENFORCEMENT_ENABLED = false` in `artifacts/plainpath/src/lib/analysisGate.ts`
+- **To re-enable:** Set `PAYMENT_ENFORCEMENT_ENABLED = true` in `analysisGate.ts` once Stripe is fully live in production
+- All underlying limit/usage/counter logic is preserved and will activate immediately when the flag is flipped
+- Free tier limits (when re-enabled): 2 analyses/month, no Pro tools without subscription
 
 ### Homepage
 - **Hero CTA Cluster**: 4 outline buttons — Analyze a Document (blue), Document Trust Check (red), Build a Contract (green), Fair Deal Check (amber)
@@ -209,9 +216,10 @@ PlainPath is a monorepo using pnpm workspaces.
 - **Env var needed**: `DROPBOX_SIGN_API_KEY` (create account at sign.dropbox.com)
 
 ### Stripe Payments
-- **Status**: All backend code built (`/api/stripe/*` routes, billing DB, webhook handler). Waiting for Friday (developer accounts).
+- **Status**: All backend code built (`/api/stripe/*` routes, billing DB, webhook handler). Waiting for EIN + bank account setup.
 - **Env vars needed**: `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET`
 - **Integration**: `connector:ccfg_stripe_01K611P4YQR0SZM11XFRQJC44Y`
+- **When ready**: Set `PAYMENT_ENFORCEMENT_ENABLED = true` in `artifacts/plainpath/src/lib/analysisGate.ts` to activate all usage gates and upgrade prompts
 
 ### Resend Email Reminders
 - **Status**: Route built (`POST /api/reminders/email`). Gracefully returns 503 until key set.
