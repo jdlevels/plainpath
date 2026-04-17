@@ -66,7 +66,7 @@ export default function Support() {
             Subscriptions are managed through Stripe. To cancel or update your plan, email us at{" "}
             <a href="mailto:support@plainpathapp.com" className="text-primary underline underline-offset-2">support@plainpathapp.com</a>{" "}
             and we'll send you a direct link to the billing portal. On iOS and Android, subscriptions are managed on the web
-            at <a href="https://plain-path.replit.app" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2">plain-path.replit.app</a>.
+            at <a href="https://plainpathapp.com" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2">plainpathapp.com</a>.
           </Item>
 
           <Item icon={FileText} title="What file types does PlainPath support?">

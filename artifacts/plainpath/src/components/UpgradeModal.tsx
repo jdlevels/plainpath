@@ -122,7 +122,7 @@ export default function UpgradeModal({ open, onClose, reason, used, limit }: Pro
             <div className="rounded-xl border border-border/50 bg-secondary/50 px-4 py-3 text-center">
               <p className="text-sm text-muted-foreground leading-relaxed">
                 Pro subscription required. Visit{" "}
-                <span className="font-semibold text-foreground">plain-path.replit.app</span>
+                <span className="font-semibold text-foreground">plainpathapp.com</span>
                 {" "}to manage your plan.
               </p>
             </div>

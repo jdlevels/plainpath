@@ -57,7 +57,7 @@ export default function TitleSlide() {
           </div>
           <div className="w-[0.06vw] h-[2.5vh] bg-[#f0f4f8]/20" />
           <div className="text-[1.3vw] text-[#f0f4f8]/45 font-body">
-            plain-path.replit.app
+            plainpathapp.com
           </div>
         </div>
       </div>

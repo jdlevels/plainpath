@@ -1,0 +1,57 @@
+We need to fix the live routing architecture for PlainPath.
+
+Goal:
+
+* `https://plainpathapp.com/` must show the marketing homepage
+* all tool buttons on the marketing page must open the live web app on the SAME domain
+* backend/API must remain fully functional
+* no button should send users to any old Replit page, preview page, legacy frontend, or old deployment
+
+Required routing structure:
+
+* `/` = marketing homepage
+* `/app` = PlainPath web app shell
+* `/app/analyze` = Analyze a Document
+* `/app/trust-check` = Document Trust Check
+* `/app/review` = Contract Review
+* `/app/build` = Build a Contract
+* `/api/*` = backend API routes
+
+Required fixes:
+
+1. Search the entire project for all hardcoded Replit URLs, preview URLs, old deployment URLs, and legacy frontend links.
+2. Replace all marketing page tool links so they route to the live app on the same domain using relative paths:
+
+   * Analyze a Document → `/app/analyze`
+   * Document Trust Check → `/app/trust-check`
+   * Contract Review → `/app/review`
+   * Build a Contract → `/app/build`
+   * Log in to Web App → `/app` or `/app/login`
+3. Keep the backend working under the same deployment using `/api/*`.
+4. Make sure frontend routing supports deep links and refreshes on:
+
+   * `/app`
+   * `/app/analyze`
+   * `/app/trust-check`
+   * `/app/review`
+   * `/app/build`
+     No 404s on refresh.
+5. Remove any redirects that send users to the old app build.
+6. Remove any old `replit.app` links from share/copy buttons, metadata, manifest, service worker, canonical URLs, and config.
+7. Make all internal links relative where possible.
+8. Keep auth/session/cookies working on `plainpathapp.com`.
+9. Confirm CORS, allowed origins, and callback URLs include `https://plainpathapp.com` and do not depend on old Replit URLs.
+10. Republish after changes.
+
+I want one clean live product:
+
+* marketing site at `plainpathapp.com`
+* working web app under `/app`
+* working backend under `/api`
+
+After changes, give me:
+
+* the list of files changed
+* every old URL found
+* the final route map
+* the exact live URLs I should test

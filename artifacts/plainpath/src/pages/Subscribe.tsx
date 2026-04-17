@@ -22,10 +22,10 @@ function NativeMessage() {
         </div>
         <h1 className="text-2xl font-display font-bold mb-3">Manage subscription on web</h1>
         <p className="text-sm text-muted-foreground leading-relaxed mb-7">
-          Subscriptions are managed at plain-path.replit.app. Visit from a browser to view plans, subscribe, or manage your existing plan.
+          Subscriptions are managed at plainpathapp.com. Visit from a browser to view plans, subscribe, or manage your existing plan.
         </p>
         <a
-          href="https://plain-path.replit.app/#pricing"
+          href="https://plainpathapp.com/app/#pricing"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors"

@@ -117,7 +117,7 @@ function NativePricingMessage() {
           To view plans, subscribe, or manage your existing subscription, visit PlainPath on the web.
         </p>
         <a
-          href="https://plain-path.replit.app/#pricing"
+          href="https://plainpathapp.com/app/#pricing"
           target="_blank"
           rel="noopener noreferrer"
           className="mt-8 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"

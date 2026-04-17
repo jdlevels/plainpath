@@ -1,0 +1,57 @@
+We found the routing problem.
+
+Current issue:
+
+* `plainpathapp.com` shows the correct professional marketing homepage
+* but when a user clicks any of the 4 tool buttons, they are taken to a second marketing/sales page instead of the real working app tool
+
+This is not the desired behavior.
+
+Required fix:
+
+1. Keep `plainpathapp.com/` as the public marketing homepage exactly as it is now.
+2. Remove the extra marketing/interstitial page from the 4 homepage tool button flows.
+3. Make each homepage tool button route directly to the real app tool page.
+
+Required direct routes:
+
+* Analyze a Document → `/app/analyze`
+* Document Trust Check → `/app/trust-check`
+* Build a Contract → `/app/build-contract`
+* Contract Review → `/app/contract-review`
+
+Authentication behavior:
+4. If the user must be logged in, redirect them to sign-in and then return them to the requested tool:
+
+* `/app/sign-in?redirect=/app/analyze`
+* `/app/sign-in?redirect=/app/trust-check`
+* `/app/sign-in?redirect=/app/build-contract`
+* `/app/sign-in?redirect=/app/contract-review`
+
+5. If guest access is allowed for any tools, open the actual tool directly without showing another landing page.
+
+Routing cleanup:
+6. The second marketing/sales page currently shown under `/app` should not be the destination of the homepage tool buttons.
+7. If that second page should still exist, move it to a different non-primary route such as:
+
+* `/solutions`
+* `/overview`
+* `/how-it-works`
+  But do not use it as the tool destination.
+
+App verification:
+8. Confirm that each direct tool route renders the real app workspace and uses the existing backend endpoints.
+9. Confirm refresh/deep-link behavior works on:
+
+* `/app/analyze`
+* `/app/trust-check`
+* `/app/build-contract`
+* `/app/contract-review`
+
+10. Confirm no tool button points to any old Replit URL, old frontend, or duplicate landing page.
+
+After changes, provide:
+
+* the exact route map
+* the exact files changed
+* the exact live URLs I should test

@@ -20,10 +20,10 @@ const fadeUp = {
 
 /* ─── Tool pill data ─────────────────────────────────────── */
 const TOOLS = [
-  { label: "Analyze a Document", icon: FileText,      cls: "tool-btn-blue"    },
-  { label: "Document Trust Check", icon: ShieldAlert, cls: "tool-btn-red"     },
-  { label: "Build a Contract",    icon: FileSignature, cls: "tool-btn-emerald" },
-  { label: "Contract Review",     icon: Scale,         cls: "tool-btn-amber"   },
+  { label: "Analyze a Document",   icon: FileText,       cls: "tool-btn-blue",    href: "/app/analyze"      },
+  { label: "Document Trust Check", icon: ShieldAlert,    cls: "tool-btn-red",     href: "/app/trust-check"  },
+  { label: "Build a Contract",     icon: FileSignature,  cls: "tool-btn-emerald", href: "/app/build"        },
+  { label: "Contract Review",      icon: Scale,          cls: "tool-btn-amber",   href: "/app/review"       },
 ];
 
 /* ─── Feature cards ─────────────────────────────────────── */
@@ -144,12 +144,10 @@ export default function Home() {
 
               {/* Tool pills */}
               <motion.div custom={3} variants={fadeUp} className="grid grid-cols-2 gap-2 mb-6">
-                {TOOLS.map(({ label, icon: Icon, cls }) => (
+                {TOOLS.map(({ label, icon: Icon, cls, href }) => (
                   <a
                     key={label}
-                    href="/app/"
-                    target="_blank"
-                    rel="noreferrer"
+                    href={href}
                     className={`${cls} flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border text-sm font-medium transition-opacity hover:opacity-80 w-full`}
                   >
                     <Icon className="w-3.5 h-3.5 shrink-0" />
@@ -408,8 +406,6 @@ export default function Home() {
               </div>
               <a
                 href="/app/"
-                target="_blank"
-                rel="noreferrer"
                 className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
               >
                 Try the web app free <ArrowRight className="w-4 h-4" />
@@ -449,8 +445,6 @@ export default function Home() {
               </div>
               <a
                 href="/app/privacy"
-                target="_blank"
-                rel="noreferrer"
                 className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
               >
                 Read our Privacy Policy <ArrowRight className="w-4 h-4" />

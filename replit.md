@@ -2,7 +2,21 @@
 
 ## Overview
 
-PlainPath is a full-stack commercial multi-platform product (Web, iPhone, Android) turning confusing paperwork into structured action plans. Stack: React + Vite, Express 5, PostgreSQL, OpenAI. Live at **https://plain-path.replit.app/**.
+PlainPath is a full-stack commercial multi-platform product (Web, iPhone, Android) turning confusing paperwork into structured action plans. Stack: React + Vite, Express 5, PostgreSQL, OpenAI. Live at **https://plainpathapp.com/**.
+
+## Routing Architecture
+
+- `https://plainpathapp.com/` → Marketing site (artifact: `plainpath-marketing`, BASE_PATH="/")
+- `https://plainpathapp.com/app/` → PlainPath web app (artifact: `plainpath`, BASE_PATH="/app/")
+- `https://plainpathapp.com/api/*` → Express API server (artifact: `api-server`)
+
+**App clean URLs (all under `/app/`):**
+- `/app/analyze` → Analyze a Document entry (redirects to `/import` if no context)
+- `/app/trust-check` → Document Trust Check
+- `/app/review` → Contract Review (alias for `/contract-review`)
+- `/app/build` → Build a Contract (alias for `/contract-builder`)
+
+**CRITICAL:** Do NOT swap the artifact `previewPath` values. Marketing must stay at `/`, app at `/app/`.
 
 ## User Preferences
 

@@ -152,6 +152,8 @@ function Router() {
             <Route path="/subscribe/cancel" component={SubscribeCancel} />
             <Route path="/contract-builder" component={ContractBuilder} />
             <Route path="/contract-review" component={ContractReview} />
+            <Route path="/build" component={ContractBuilder} />
+            <Route path="/review" component={ContractReview} />
             <Route path="/shared/:token">
               {(params) => <SharedAnalysis token={(params as { token: string }).token} />}
             </Route>

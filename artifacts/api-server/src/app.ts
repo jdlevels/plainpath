@@ -70,8 +70,10 @@ const CAPACITOR_ORIGINS = [
   "https://localhost",
 ];
 
-// Hard-coded production domain for plain-path.replit.app
+// Hard-coded production domains
 const KNOWN_PRODUCTION_ORIGINS = [
+  "https://plainpathapp.com",
+  "https://www.plainpathapp.com",
   "https://plain-path.replit.app",
 ];
 

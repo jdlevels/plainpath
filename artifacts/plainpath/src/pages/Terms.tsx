@@ -91,7 +91,7 @@ export default function Terms() {
               <li>PlainPath reserves the right to change subscription prices with reasonable notice. Continued subscription after a price change constitutes acceptance of the new price.</li>
               <li>If a payment fails, your plan may be downgraded to the free tier until payment is resolved.</li>
             </ul>
-            <p>On iOS and Android native apps, subscriptions are managed on the web at plain-path.replit.app. In-app purchase flows are not available in the native apps.</p>
+            <p>On iOS and Android native apps, subscriptions are managed on the web at plainpathapp.com. In-app purchase flows are not available in the native apps.</p>
           </Section>
 
           <Section icon={Scale} title="6. Changes to the service">

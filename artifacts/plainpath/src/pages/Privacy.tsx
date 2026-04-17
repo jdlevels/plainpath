@@ -119,7 +119,7 @@ export default function Privacy() {
               <li>Payment card details are entered directly on Stripe's hosted checkout page. PlainPath never sees, stores, or handles raw card numbers.</li>
               <li>After checkout, Stripe notifies PlainPath of your subscription status. PlainPath stores your email address and plan level to enable the features you've paid for.</li>
               <li>You can cancel your subscription at any time via Stripe's billing portal.</li>
-              <li>On iOS and Android apps, subscriptions must be managed on the web at plain-path.replit.app — in-app payment flows are not available in the native apps.</li>
+              <li>On iOS and Android apps, subscriptions must be managed on the web at plainpathapp.com — in-app payment flows are not available in the native apps.</li>
             </ul>
           </Section>
 

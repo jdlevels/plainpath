@@ -79,7 +79,7 @@ export default function ExamplesSlide() {
             Real Examples
           </p>
           <h2 className="text-[3.8vw] font-extrabold leading-[1.05] tracking-tight text-[#f0f4f8] font-display">
-            One tool per scenario. All live at plain-path.replit.app.
+            One tool per scenario. All live at plainpathapp.com.
           </h2>
         </div>
 

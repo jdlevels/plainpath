@@ -12,7 +12,7 @@ export function getReferralCode(): string {
 }
 
 export function getReferralLink(): string {
-  return `https://plain-path.replit.app/?ref=${getReferralCode()}`
+  return `https://plainpathapp.com/app/?ref=${getReferralCode()}`
 }
 
 export function captureInboundRef() {
