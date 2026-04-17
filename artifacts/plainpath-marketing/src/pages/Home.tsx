@@ -5,6 +5,7 @@ import { Footer } from "@/components/layout/Footer";
 import { AppStoreBadge } from "@/components/ui/AppStoreBadge";
 import { PlayStoreBadge } from "@/components/ui/PlayStoreBadge";
 import { WaitlistModal } from "@/components/WaitlistModal";
+import { PhoneHeroDemo } from "@/components/PhoneHeroDemo";
 import {
   FileText, ShieldAlert, FileSignature, ShieldCheck,
   ArrowRight, Upload, Sparkles, Scale,
@@ -260,11 +261,7 @@ export default function Home() {
               >
                 <div className="absolute -inset-8 bg-gradient-to-tr from-primary/15 via-violet-200/20 dark:via-violet-900/10 to-transparent rounded-[4rem] blur-3xl -z-10" />
 
-                <img
-                  src={`${import.meta.env.BASE_URL}images/mockup-1.png`}
-                  alt="PlainPath app on iPhone"
-                  className="w-full h-auto drop-shadow-2xl rounded-[2.5rem] border-[7px] border-white/95 dark:border-zinc-800/95 object-cover aspect-[9/19.5]"
-                />
+                <PhoneHeroDemo />
 
                 {/* Floating card — action step */}
                 <motion.div
