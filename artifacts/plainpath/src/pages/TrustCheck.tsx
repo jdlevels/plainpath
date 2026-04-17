@@ -308,9 +308,9 @@ export default function TrustCheck() {
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-2.5 sm:py-4">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setLocation("/")}
+              onClick={() => setLocation("/import?mode=trust-check")}
               className="w-10 h-10 sm:w-9 sm:h-9 flex items-center justify-center hover:bg-secondary active:bg-secondary rounded-xl transition-colors shrink-0"
-              aria-label="Back to home"
+              aria-label="Back to Trust Check"
             >
               <ArrowLeft className="w-4 h-4 text-muted-foreground" />
             </button>

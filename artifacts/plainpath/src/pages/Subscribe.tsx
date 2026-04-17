@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react"
-import { useLocation } from "wouter"
 import { motion } from "framer-motion"
 import {
   Check, ArrowLeft, Sparkles, Loader2,
@@ -40,7 +39,6 @@ function NativeMessage() {
 // ─── Main page ───────────────────────────────────────────────────────────────
 
 export default function Subscribe() {
-  const [, setLocation] = useLocation()
   const [email, setEmail] = useState("")
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -80,14 +78,13 @@ export default function Subscribe() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-10 sm:pt-14">
 
         {/* ── Back ── */}
-        <button
-          onClick={() => setLocation("/")}
+        <a
+          href="/"
           className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-10"
-          style={{ touchAction: "manipulation" }}
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           Back to home
-        </button>
+        </a>
 
         {/* ── Header ── */}
         <div className="text-center mb-10">

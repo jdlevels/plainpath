@@ -2462,7 +2462,7 @@ export default function ContractBuilder() {
 
   function handleBack() {
     if (draft) { setDraft(null); return }
-    if (step === 0) { setLocation("/"); return }
+    if (step === 0) { setLocation("/analyze"); return }
     setStep((s) => Math.max(s - 1, 0))
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
