@@ -1,6 +1,10 @@
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { AppStoreBadge } from "@/components/ui/AppStoreBadge";
+import { PlayStoreBadge } from "@/components/ui/PlayStoreBadge";
+import { WaitlistModal } from "@/components/WaitlistModal";
 import {
   FileText, ShieldAlert, FileSignature, ShieldCheck,
   ArrowRight, Upload, Sparkles, Scale,
@@ -152,6 +156,14 @@ const PLANS = [
 
 /* ─── Component ──────────────────────────────────────────── */
 export default function Home() {
+  const [waitlistOpen, setWaitlistOpen] = useState(false)
+  const [waitlistPlatform, setWaitlistPlatform] = useState<"ios" | "android" | "both">("both")
+
+  function openWaitlist(platform: "ios" | "android" | "both") {
+    setWaitlistPlatform(platform)
+    setWaitlistOpen(true)
+  }
+
   return (
     <div className="min-h-screen bg-background selection:bg-primary/20 selection:text-primary">
       <Navbar />
@@ -214,16 +226,20 @@ export default function Home() {
                 ))}
               </motion.div>
 
-              {/* Mobile coming soon + web CTA */}
-              <motion.div custom={4} variants={fadeUp} className="flex flex-col gap-2 mb-5" id="download">
+              {/* CTA + App Store badges */}
+              <motion.div custom={4} variants={fadeUp} className="flex flex-col gap-3 mb-5" id="download">
                 <a
                   href="/app/analyze"
                   className="inline-flex items-center gap-2 bg-primary text-white rounded-xl px-5 h-12 sm:h-14 text-sm font-semibold hover:opacity-90 transition-opacity w-fit"
                 >
                   Try it free — no account needed <ArrowRight className="w-4 h-4" />
                 </a>
-                <p className="text-xs text-muted-foreground/70 mt-1">
-                  iOS &amp; Android apps launching soon
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <AppStoreBadge onClick={() => openWaitlist("ios")} />
+                  <PlayStoreBadge onClick={() => openWaitlist("android")} />
+                </div>
+                <p className="text-xs text-muted-foreground/70">
+                  iOS &amp; Android apps coming soon — tap to get notified.
                 </p>
               </motion.div>
 
@@ -669,6 +685,12 @@ export default function Home() {
       </div>
 
       <Footer />
+
+      <WaitlistModal
+        open={waitlistOpen}
+        onClose={() => setWaitlistOpen(false)}
+        defaultPlatform={waitlistPlatform}
+      />
     </div>
   );
 }

@@ -2,11 +2,13 @@ import { Router, type IRouter, type Request, type Response, type NextFunction } 
 import healthRouter from "./health";
 import documentsRouter from "./documents/index.js";
 import pilotFeedbackRouter from "./pilot-feedback.js";
+import waitlistRouter from "./waitlist.js";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
 router.use("/documents", documentsRouter);
+router.use("/", waitlistRouter);
 
 // Pilot feedback routes are internal-only.
 // Gate them behind X-Internal-Token header matching INTERNAL_API_TOKEN env var.

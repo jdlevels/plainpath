@@ -1,0 +1,86 @@
+The screenshot I shared was the PREVIOUS correct hero state before the App Store / Google Play buttons and bottom links were removed. They are NOT currently restored.
+
+I need a full restoration pass using that previous screenshot as the visual reference.
+
+Restore the following:
+
+1. Hero app badges
+   Bring back:
+
+* App Store badge
+* Google Play badge
+
+These must be visually restored in the hero exactly where they were before.
+
+2. Footer / bottom-page links
+   Bring back the footer navigation that was removed.
+
+Required footer links:
+
+* Features
+* Pricing
+* Web App
+* Support
+* Privacy Policy
+* Terms of Service
+
+3. Route integrity
+   Every restored button/link must go somewhere real.
+   No dead links, no placeholders, no “something went wrong” pages.
+
+Required working routes:
+
+* Web App → `/app`
+* Support → `/support`
+* Privacy Policy → `/privacy`
+* Terms of Service → `/terms`
+* Features / Pricing → homepage anchored sections or correct working routes
+
+4. App badge destination logic
+   For App Store / Google Play:
+
+* if real store URLs exist, use them
+* if they do not exist yet, do NOT restore fake/dead links
+* instead route them to real working interim destinations such as:
+
+  * `/ios`
+  * `/android`
+    or a working “Get the App / Notify Me” flow
+
+5. Keep current product state consistent
+   When restoring the footer/legal/support pages, make sure they match the current model:
+
+* Starter = $4.99/month
+* Pro = $14.99/month
+* Teams = $49.99/month
+
+Remove outdated copy such as:
+
+* `free to try`
+* old trial language
+* old store/download placeholder language
+
+6. Do not break current routes
+   Do NOT break:
+
+* `/`
+* `/app`
+* `/app/analyze`
+* `/app/trust-check`
+* `/app/contract-review`
+* `/app/build-contract`
+
+7. Match the previous screenshot visually
+   Use the previous screenshot as the visual reference for:
+
+* hero badge placement
+* hero spacing
+* footer presence and structure
+
+Deliverables required:
+
+* exact files changed
+* final hero badge destinations
+* final footer structure
+* exact route map for restored links
+* confirmation that all restored links were tested

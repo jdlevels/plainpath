@@ -107,6 +107,13 @@ PlainPath is a monorepo using pnpm workspaces.
 - **StatsBar**, **TestimonialsSection**, **FAQSection**, **PricingSection** all present
 - Key file: `artifacts/plainpath/src/pages/Home.tsx`
 
+### Marketing Site — Mobile Waitlist
+- **App Store + Play Store badges** appear in the hero download section; clicking opens `WaitlistModal`
+- **WaitlistModal** (`artifacts/plainpath-marketing/src/components/WaitlistModal.tsx`): platform selector (iOS / Android / Both) + email capture; on success shows confirmation state
+- **API**: `POST /api/waitlist/join` — body `{email, platform, source}` → inserts into SQLite `mobile_waitlist` table; sends Resend confirmation email if `RESEND_API_KEY` set
+- **API**: `GET /api/waitlist/count` — returns `{count}`
+- **DB**: `artifacts/api-server/data/plainpath-waitlist.sqlite` — `mobile_waitlist` table (email UNIQUE, platform, source, created_at)
+
 ### Authentication (Clerk)
 - **Provider**: Clerk (via Replit integration — keys auto-provisioned, no separate Clerk account needed)
 - **Methods**: Google OAuth + email/password
