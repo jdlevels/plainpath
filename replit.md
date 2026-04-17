@@ -239,7 +239,40 @@ PlainPath is a monorepo using pnpm workspaces.
 3. In `artifacts/api-server/src/lib/billingConfig.ts`: set `PAYWALL_ENFORCEMENT = true`
 4. Mirror the same flags in `artifacts/plainpath/src/lib/billingConfig.ts`
 5. Remove test-mode notice from `artifacts/plainpath/src/pages/Billing.tsx`
-6. For iOS/Android native: implement StoreKit/Play Billing via RevenueCat; activate `storekit`/`play_billing` providers in `billingProvider.ts`
+6. Register Stripe webhook at `https://plainpathapp.com/api/stripe/webhook` in Stripe Dashboard
+
+### Native Billing — RevenueCat Architecture (Built, Not Yet Activated)
+
+**Status**: Full native billing abstraction layer built. Waiting for:
+- RevenueCat account creation
+- App Store Connect and Google Play Console products created
+- Capacitor SDK installed
+
+**Architecture files:**
+- `artifacts/api-server/src/lib/nativeBillingConfig.ts` — RevenueCat product IDs for iOS + Android, entitlement ID mappings, `resolvePlanFromRCEntitlements()`, `getRevenueCatApiKey()`
+- `artifacts/api-server/src/routes/nativeEntitlements.ts` — `POST /api/entitlements/native-verify`: verifies RC purchase with RevenueCat REST API, syncs to billing DB. Returns 503 until RC keys set.
+- `artifacts/plainpath/src/lib/nativeBilling.ts` — Client-side: `configureRevenueCat()`, `checkNativeEntitlements()`, `purchaseNativePlan()`, `restoreNativePurchases()`. All are platform-aware (no-op on web). All stubbed until RC SDK installed.
+
+**Product IDs (both iOS and Android use same IDs):**
+- Starter: `plainpath_starter_monthly` ($4.99/month)
+- Pro: `plainpath_pro_monthly` ($19.99/month)
+
+**RevenueCat Entitlement IDs:** `starter` | `pro` (must match RC dashboard exactly)
+
+**To activate native billing (iOS):**
+1. Create RevenueCat account → Create Project "PlainPath" → Add iOS app (Bundle ID: `com.plainpath.app`)
+2. Create products in App Store Connect: `plainpath_starter_monthly` ($4.99) + `plainpath_pro_monthly` ($19.99), type: Auto-Renewable Subscription, group: "PlainPath"
+3. In RevenueCat dashboard: create Entitlements `starter` and `pro`, map products
+4. Set `REVENUECAT_API_KEY_IOS` (secret key) in environment; set `VITE_REVENUECAT_PUBLIC_KEY_IOS` for client
+5. Install SDK: `pnpm --filter @workspace/plainpath add @revenuecat/purchases-capacitor`
+6. Uncomment all `// TODO: ACTIVATE` blocks in `nativeBilling.ts` and `nativeEntitlements.ts`
+7. Call `configureRevenueCat()` in native app init (App.tsx initStatusBar block)
+8. Wire `purchaseNativePlan()` into `Billing.tsx` upgrade CTA when `isNative() === true`
+9. Wire `restoreNativePurchases()` into `Billing.tsx` restore button when `isNative() === true`
+10. In `billingProvider.ts`: set `storekit.active = true`, `storekit.testMode = false`
+
+**To activate native billing (Android):**
+- Same as iOS but: RevenueCat Android app, `REVENUECAT_API_KEY_ANDROID`, Google Play Console products, `billingProvider.play_billing.active = true`
 
 ### Resend Email Reminders
 - **Status**: Route built (`POST /api/reminders/email`). Gracefully returns 503 until key set.

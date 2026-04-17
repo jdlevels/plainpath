@@ -8,6 +8,7 @@ import { CLERK_PROXY_PATH, clerkProxyMiddleware } from "./middlewares/clerkProxy
 import router from "./routes";
 import stripeRoutes from "./routes/stripe";
 import entitlementRoutes from "./routes/entitlements";
+import nativeEntitlementRoutes from "./routes/nativeEntitlements";
 import contractRoutes from "./routes/contracts";
 import sharesRoutes from "./routes/shares/index.js";
 import remindersRoutes from "./routes/reminders/index.js";
@@ -177,6 +178,7 @@ app.use("/api", eventsRouter)
 app.use("/api", router);
 app.use("/api/stripe", stripeRoutes);
 app.use("/api/entitlements", entitlementRoutes);
+app.use("/api/entitlements", nativeEntitlementRoutes);
 app.use("/api/contracts", contractRoutes);
 app.use("/api", sharesRoutes);
 app.use(remindersRoutes);
