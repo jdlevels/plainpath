@@ -33,7 +33,7 @@ const FAQS = [
   },
   {
     q: "Which plan do I need for each tool?",
-    a: "Analyze a Document is available on all plans, including Free (first two analyses). Document Trust Check, Build a Contract, and Contract Review are available on Pro and Team plans. You'll see an upgrade prompt if you try to use them on a lower tier, and you can switch plans at any time.",
+    a: "Analyze a Document is available on all plans, including Free (first two analyses). Document Trust Check, Build a Contract, and Contract Review require a Pro plan. You'll see an upgrade prompt if you try to use them on Starter, and you can switch plans at any time.",
   },
 ]
 

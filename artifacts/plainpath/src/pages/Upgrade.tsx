@@ -3,7 +3,7 @@ import { useLocation } from "wouter"
 import { motion } from "framer-motion"
 import {
   Check, Zap, BarChart3, ShieldCheck, PenLine, Scale,
-  ArrowRight, Sparkles, Users, Mail,
+  ArrowRight, Sparkles,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { PRICING_PLANS } from "@/data/pricingData"
@@ -11,12 +11,10 @@ import { PRICING_PLANS } from "@/data/pricingData"
 const PLAN_ICONS: Record<string, React.ElementType> = {
   starter: BarChart3,
   pro: Zap,
-  team: Users,
 }
 
 const PLAN_COLORS: Record<string, string> = {
   starter: "text-blue-500",
-  team: "text-emerald-500",
 }
 
 const TOOL_BREAKDOWN = [
@@ -57,12 +55,11 @@ export default function Upgrade() {
         </motion.div>
 
         {/* Plan cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-14">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-14 max-w-2xl mx-auto w-full">
           {PRICING_PLANS.map((plan, i) => {
-            const planKey = plan.planKey ?? "team"
-            const Icon = PLAN_ICONS[planKey] ?? Users
+            const planKey = plan.planKey ?? "starter"
+            const Icon = PLAN_ICONS[planKey] ?? BarChart3
             const isHighlight = plan.highlight
-            const isPlanned = plan.planned
 
             return (
               <motion.div
@@ -80,13 +77,6 @@ export default function Upgrade() {
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                     <span className="bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full shadow-sm">
                       Most popular
-                    </span>
-                  </div>
-                )}
-                {isPlanned && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <span className="bg-secondary text-muted-foreground text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border border-border/50">
-                      Planned
                     </span>
                   </div>
                 )}
@@ -116,19 +106,9 @@ export default function Upgrade() {
                   ))}
                 </ul>
 
-                {isPlanned ? (
-                  <button
-                    onClick={() => setLocation("/support")}
-                    className="w-full py-2.5 rounded-xl border border-border/60 text-sm font-medium text-muted-foreground hover:text-foreground hover:border-border transition-colors flex items-center justify-center gap-1.5"
-                  >
-                    <Mail className="w-3.5 h-3.5" />
-                    Join waitlist
-                  </button>
-                ) : (
-                  <div className="w-full py-2.5 rounded-xl border border-dashed border-border/60 text-xs text-center text-muted-foreground/60">
-                    Coming soon
-                  </div>
-                )}
+                <div className="w-full py-2.5 rounded-xl border border-dashed border-border/60 text-xs text-center text-muted-foreground/60">
+                  Coming soon
+                </div>
               </motion.div>
             )
           })}

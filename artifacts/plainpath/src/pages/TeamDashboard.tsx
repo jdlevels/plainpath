@@ -141,9 +141,9 @@ export default function TeamDashboard() {
     return (
       <div className="max-w-md mx-auto px-4 py-20 text-center">
         <Crown className="h-12 w-12 mx-auto mb-4 text-amber-500" />
-        <h2 className="text-xl font-semibold mb-2">Team plan required</h2>
+        <h2 className="text-xl font-semibold mb-2">Pro plan required</h2>
         <p className="text-muted-foreground mb-6 text-sm">
-          Upgrade to the Team plan to create a shared workspace, invite teammates, and track usage together.
+          Upgrade to Pro to create a shared workspace, invite teammates, and track usage together.
         </p>
         <button
           onClick={() => setLocation("/#pricing")}

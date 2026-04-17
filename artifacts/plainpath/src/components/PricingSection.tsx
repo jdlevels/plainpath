@@ -59,14 +59,14 @@ function AttorneyCostCalculator() {
             <span className="text-muted-foreground text-sm font-medium">vs</span>
             <div className="text-center px-4 py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-900/40">
               <p className="text-xs text-muted-foreground mb-0.5">PlainPath Pro</p>
-              <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">$14.99/mo</p>
+              <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">$19.99/mo</p>
             </div>
           </div>
         )}
       </div>
       {cost && (
         <p className="text-xs text-muted-foreground mt-3">
-          One attorney review of a {selected.toLowerCase()} typically costs <strong className="text-foreground">{cost.range}</strong>. PlainPath Pro gives you unlimited reviews across all 4 tools for <strong className="text-foreground">$14.99/month</strong> — that's a saving of <strong className="text-emerald-600">${cost.low - 15}–${cost.high - 15}</strong> on just the first document.
+          One attorney review of a {selected.toLowerCase()} typically costs <strong className="text-foreground">{cost.range}</strong>. PlainPath Pro gives you unlimited reviews across all 4 tools for <strong className="text-foreground">$19.99/month</strong> — that's a saving of <strong className="text-emerald-600">${cost.low - 20}–${cost.high - 20}</strong> on just the first document.
         </p>
       )}
     </div>
@@ -92,9 +92,6 @@ function getButtonClasses(plan: PricingPlan) {
     "mt-8 inline-flex w-full items-center justify-center rounded-xl px-4 py-3 text-sm font-semibold transition-colors"
   if (plan.highlight) {
     return `${base} bg-blue-600 text-white hover:bg-blue-700`
-  }
-  if (plan.planned) {
-    return `${base} bg-amber-500 text-white hover:bg-amber-600`
   }
   return `${base} bg-slate-100 text-slate-900 hover:bg-slate-200 dark:bg-slate-900 dark:text-white dark:hover:bg-slate-800`
 }
@@ -143,15 +140,6 @@ export default function PricingSection() {
   }
 
   async function handlePlanClick(plan: PricingPlan) {
-    if (plan.planned) {
-      window.open(
-        "https://mail.google.com/mail/?view=cm&fs=1&to=support@plainpathapp.com&su=PlainPath%20Team%20Waitlist",
-        "_blank",
-        "noopener,noreferrer"
-      )
-      return
-    }
-
     if (!plan.planKey) return
 
     try {
@@ -182,7 +170,7 @@ export default function PricingSection() {
         </h2>
 
         <p className="mt-4 text-base leading-7 text-slate-600 dark:text-slate-300 sm:text-lg">
-          Start with document analysis on Starter, or unlock Trust Check, Contract Builder, and Contract Review with Pro or Team.
+          Start with document analysis on Starter, or unlock all four tools with Pro.
         </p>
 
         {/* Billing period toggle */}
@@ -209,7 +197,7 @@ export default function PricingSection() {
         <AttorneyCostCalculator />
       </div>
 
-      <div className="mt-4 grid gap-6 lg:grid-cols-3">
+      <div className="mt-4 grid gap-6 lg:grid-cols-2 lg:max-w-3xl lg:mx-auto w-full">
         {PRICING_PLANS.map((plan) => (
           <div
             key={plan.name}
@@ -227,24 +215,18 @@ export default function PricingSection() {
               </div>
             )}
 
-            {plan.planned && (
-              <div className="absolute -top-3 right-6 rounded-full bg-amber-500 px-3 py-1 text-xs font-semibold text-white shadow">
-                Coming Soon
-              </div>
-            )}
-
             <div className="pt-2">
               <h3 className="text-xl font-semibold">{plan.name}</h3>
 
               <div className="mt-4 flex items-end gap-1">
                 <span className="text-4xl font-bold tracking-tight">
-                  {billing === "annually" && !plan.planned ? getAnnualPrice(plan) : plan.price}
+                  {billing === "annually" ? getAnnualPrice(plan) : plan.price}
                 </span>
                 <div className="pb-1">
                   <span className="text-sm text-slate-500 dark:text-slate-400">
                     {plan.period}
                   </span>
-                  {billing === "annually" && !plan.planned && plan.price !== "Free" && (
+                  {billing === "annually" && plan.price !== "Free" && (
                     <div className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
                       {getAnnualTotal(plan)} · save 20%
                     </div>
@@ -290,8 +272,7 @@ export default function PricingSection() {
       ) : null}
 
       <div className="mx-auto mt-8 max-w-3xl text-center text-sm leading-6 text-slate-500 dark:text-slate-400">
-        Team plan is shown as a forward-looking option. All current plans are single-user.
-        Analysis results are saved to your private history. Document content is not permanently stored.
+        All plans are single-user. Analysis results are saved to your private history. Document content is not permanently stored.
       </div>
     </section>
   )

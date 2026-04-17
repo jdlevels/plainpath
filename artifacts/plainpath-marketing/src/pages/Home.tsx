@@ -180,7 +180,7 @@ const PLANS = [
   },
   {
     name: "Pro",
-    price: "$14.99",
+    price: "$19.99",
     period: "/month",
     desc: "Full access to all four tools. Best for individuals.",
     highlight: true,
@@ -193,23 +193,6 @@ const PLANS = [
     ],
     extras: ["Saved analysis history", "Deeper output formatting"],
     cta: "Get Pro",
-    href: "/app/analyze",
-  },
-  {
-    name: "Teams",
-    price: "$49.99",
-    period: "/month",
-    desc: "All four tools for your entire team, with shared workflows.",
-    highlight: false,
-    badge: null as string | null,
-    tools: [
-      { label: "Analyze a Document",   included: true },
-      { label: "Document Trust Check", included: true },
-      { label: "Build a Contract",     included: true },
-      { label: "Contract Review",      included: true },
-    ],
-    extras: ["Everything in Pro", "Team collaboration", "Admin dashboard", "Shared workflows"],
-    cta: "Get Teams",
     href: "/app/analyze",
   },
 ];
@@ -505,7 +488,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-5 items-stretch">
+          <div className="grid md:grid-cols-2 gap-5 items-stretch max-w-3xl mx-auto">
             {PLANS.map((plan, i) => (
               <motion.div
                 key={plan.name}

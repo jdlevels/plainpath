@@ -53,14 +53,7 @@ export default function Subscribe() {
   if (isNative()) return <NativeMessage />
 
   async function handleSubscribe(planKey?: string) {
-    if (!planKey || planKey === "team") {
-      window.open(
-        "https://mail.google.com/mail/?view=cm&fs=1&to=support@plainpathapp.com&su=PlainPath%20Team%20Waitlist",
-        "_blank",
-        "noopener,noreferrer"
-      )
-      return
-    }
+    if (!planKey) return
     setError(null)
     setLoadingPlan(planKey)
     try {

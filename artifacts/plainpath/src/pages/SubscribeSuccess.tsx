@@ -33,7 +33,7 @@ export default function SubscribeSuccess() {
   }, [])
 
   const plan = sessionData?.metadata?.plan ?? "starter"
-  const planLabel = plan === "pro" ? "Pro" : plan === "team" ? "Team" : "Starter"
+  const planLabel = plan === "pro" ? "Pro" : "Starter"
 
   return (
     <div className="min-h-[70vh] flex items-center justify-center px-4 py-20">
@@ -49,8 +49,8 @@ export default function SubscribeSuccess() {
         </h1>
         <p className="text-muted-foreground text-sm leading-relaxed mb-6">
           Your <strong className="text-foreground">{planLabel}</strong> plan is now active.
-          {plan === "pro" || plan === "team"
-            ? " You now have access to all PlainPath tools — Document Trust Check, Contract Builder, and full analysis features."
+          {plan === "pro"
+            ? " You now have access to all four PlainPath tools — Analyze, Trust Check, Contract Builder, and Contract Review."
             : " You now have unlimited document analyses."}
         </p>
 

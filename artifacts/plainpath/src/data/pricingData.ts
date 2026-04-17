@@ -5,9 +5,8 @@ export type PricingPlan = {
   description: string;
   features: string[];
   ctaLabel: string;
-  planKey?: "starter" | "pro" | "team";
+  planKey?: "starter" | "pro";
   highlight?: boolean;
-  planned?: boolean;
 };
 
 export const PRICING_PLANS: PricingPlan[] = [
@@ -30,10 +29,10 @@ export const PRICING_PLANS: PricingPlan[] = [
   },
   {
     name: "Pro",
-    price: "$14.99",
+    price: "$19.99",
     period: "/month",
     description:
-      "Everything in Starter, plus Document Trust Check, Contract Builder, and Contract Review — the full PlainPath toolkit.",
+      "Full access to all four tools — Analyze, Trust Check, Contract Builder, and Contract Review.",
     features: [
       "Everything in Starter",
       "Unlimited Document Trust Checks",
@@ -47,20 +46,5 @@ export const PRICING_PLANS: PricingPlan[] = [
     ctaLabel: "Get Pro",
     planKey: "pro",
     highlight: true
-  },
-  {
-    name: "Team",
-    price: "$49.99",
-    period: "/month",
-    description:
-      "All four tools with higher limits, shared workflows, and team management. Planned for a later release.",
-    features: [
-      "Everything in Pro",
-      "Planned multi-user access",
-      "Planned shared workflows + admin controls",
-      "Priority support"
-    ],
-    ctaLabel: "Join Team Waitlist",
-    planned: true
   }
 ];
