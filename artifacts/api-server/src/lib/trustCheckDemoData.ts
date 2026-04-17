@@ -259,6 +259,13 @@ export const trustCheckDemoDocuments: Record<string, TrustCheckAnalysis> = {
         sourceEvidence: "Sincerely, Customer Accounts Department",
       },
     ],
+    legitimacyIndicators: [
+      "References specific customer account number (MW-7734219-B) that can be independently verified against your account",
+      "Provides multiple official, verifiable payment channels — utility website, automated phone, mail, and in-person",
+      "No suspicious or untraceable payment methods — no gift cards, wire transfer, or cryptocurrency",
+      "Deadline is a specific calendar date (November 15) with no extreme urgency or threat language",
+      "Balance and late-fee amounts are specific and verifiable against your account history",
+    ],
     contactDetails: [
       {
         type: "phone",
@@ -329,6 +336,12 @@ export const trustCheckDemoDocuments: Record<string, TrustCheckAnalysis> = {
         severity: "low",
         sourceEvidence: "repossession of the vehicle without prior notice",
       },
+    ],
+    legitimacyIndicators: [
+      "Document structure and section layout match a genuine retail installment sale agreement",
+      "Monthly payment ($447.71) and total interest are internally consistent with the stated APR (7.49%) and 60-month term",
+      "Provides verifiable lender contact details — phone (800-348-7700) and email (loanservicing@midstatefcu.org) through which the sender identity can be confirmed",
+      "Payment obligation is to a named credit union institution — not to an individual, P.O. Box, or cash-only method",
     ],
     contactDetails: [
       {

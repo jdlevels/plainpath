@@ -169,6 +169,7 @@ export interface TrustCheckAnalysis {
   whatItClaims: string;
   demandedAction: string;
   scamIndicators: TrustCheckScamIndicator[];
+  legitimacyIndicators?: string[];
   contactDetails: TrustCheckContactDetail[];
   deadlines: TrustCheckDeadlineItem[];
   whatToVerify: string[];

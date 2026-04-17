@@ -388,22 +388,25 @@ export default function TrustCheck() {
               <p className="text-sm text-foreground/80 mt-1.5 leading-relaxed">{analysis.verdictExplanation}</p>
             </div>
           </div>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-medium text-muted-foreground">Authenticity Risk Score</span>
-              <span className={`font-bold tabular-nums ${vc.text}`}>{analysis.riskScore} / 100</span>
+          <div className="flex items-start gap-4 mt-1">
+            <div className="shrink-0 text-center min-w-[70px]">
+              <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">Risk Score</p>
+              <p className={`text-5xl font-extrabold tabular-nums leading-none ${vc.text}`}>{analysis.riskScore}</p>
+              <p className="text-[10px] text-muted-foreground/50 font-medium mt-1">out of 100</p>
             </div>
-            <div className="h-2 rounded-full bg-black/8 dark:bg-white/10 overflow-hidden">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${analysis.riskScore}%` }}
-                transition={{ delay: 0.3, duration: 0.6, ease: "easeOut" }}
-                className={`h-full rounded-full ${vc.bar}`}
-              />
-            </div>
-            <div className="flex justify-between text-[10px] text-muted-foreground/60 font-medium">
-              <span>0 — Likely legitimate</span>
-              <span>100 — High scam risk</span>
+            <div className="flex-1 pt-7">
+              <div className="h-2.5 rounded-full bg-black/8 dark:bg-white/10 overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${analysis.riskScore}%` }}
+                  transition={{ delay: 0.3, duration: 0.6, ease: "easeOut" }}
+                  className={`h-full rounded-full ${vc.bar}`}
+                />
+              </div>
+              <div className="flex justify-between text-[10px] text-muted-foreground/60 font-medium mt-1.5">
+                <span>0 — Likely legitimate</span>
+                <span>100 — High scam risk</span>
+              </div>
             </div>
           </div>
         </motion.div>
@@ -515,6 +518,37 @@ export default function TrustCheck() {
             <p className="text-sm text-muted-foreground">No significant scam indicators detected in this document.</p>
           )}
         </SectionCard>
+
+        {/* Legitimacy Signals — shown when the analysis found positive/verifiable signals */}
+        {analysis.legitimacyIndicators && analysis.legitimacyIndicators.length > 0 && (
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+            <Card className="p-5 border-emerald-200/70 dark:border-emerald-700/40 bg-emerald-50/60 dark:bg-emerald-950/20">
+              <div className="flex items-start gap-3">
+                <div className="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 border border-emerald-200 dark:border-emerald-700 flex items-center justify-center shrink-0 mt-0.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm font-bold text-emerald-800 dark:text-emerald-300 mb-1">
+                    Legitimacy Signals ({analysis.legitimacyIndicators.length})
+                  </h3>
+                  <p className="text-[11px] font-medium text-emerald-700/70 dark:text-emerald-400/60 mb-2.5">
+                    Observable signals that support this document's authenticity — distinct from the verdict, these indicate specific elements that checked out.
+                  </p>
+                  <ul className="space-y-2">
+                    {analysis.legitimacyIndicators.map((signal, i) => (
+                      <li key={i} className="flex items-start gap-2.5">
+                        <div className="w-4 h-4 rounded-full bg-emerald-100 dark:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-700 flex items-center justify-center shrink-0 mt-0.5">
+                          <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400" />
+                        </div>
+                        <p className="text-sm text-foreground/80 leading-snug">{signal}</p>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </Card>
+          </motion.div>
+        )}
 
         {/* Metadata Findings — only suspicious findings, only for uploaded PDFs */}
         {hasMetadata && (

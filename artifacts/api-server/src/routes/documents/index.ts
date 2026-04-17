@@ -1839,6 +1839,9 @@ Return ONLY a valid JSON object — no markdown, no code fences, just raw JSON.
   "safeNextSteps": [
     "string - one concrete safe action"
   ],
+  "legitimacyIndicators": [
+    "string - a specific observable signal that supports the document's authenticity or legitimacy. Examples: references a specific account/member/case number that matches the claimed sender; uses officially-listed payment channels (website, mail, in-person); no suspicious or untraceable payment methods; deadlines are specific calendar dates rather than extreme urgency threats; contact details match known official sources; document structure matches known legitimate format for this document type; sender can be independently verified. Only include genuinely positive signals you can directly support from the document text or rule-extracted data. Leave EMPTY for clearly fraudulent documents."
+  ],
   "contractRiskNotes": "string or null — ONLY populate when the document is a binding legal agreement (loan contract, lease, service agreement, employment contract, gym membership, subscription, financing agreement, or any commitment requiring payment or performance) AND it contains potentially harmful consumer terms. Harmful terms include: high default/penalty APR or compounded interest accrual, mandatory arbitration or class-action waiver, repossession or acceleration clauses, deficiency balance exposure, force-placed insurance, GPS/starter-interrupt devices, balloon payments, blanket liens, prepayment penalties, early termination or cancellation fees, auto-renewal or continuous billing traps, credit bureau reporting threats, collections referral, one-sided termination rights, liquidated damages, or non-refundable clause combinations. Write 2-4 sentences in plain language explaining the specific risks. These are CONTRACT risks — distinct from scam/authenticity concerns. A contract can be entirely authentic yet contain provisions that significantly harm the consumer. Return null if not a binding agreement or no significant harmful terms."
 }
 
@@ -2044,6 +2047,10 @@ async function runTrustCheckAnalysis(
 
   const significantMetadataFindings = metadataFindings?.filter((f) => f.suspicious) ?? [];
 
+  const legitimacyIndicators: string[] = Array.isArray(parsed.legitimacyIndicators)
+    ? parsed.legitimacyIndicators.filter((s: unknown) => typeof s === "string" && (s as string).trim().length > 0)
+    : [];
+
   return {
     id: uuidv4(),
     processedAt: new Date().toISOString(),
@@ -2053,6 +2060,7 @@ async function runTrustCheckAnalysis(
     whatItClaims: parsed.whatItClaims || "",
     demandedAction: parsed.demandedAction || "",
     scamIndicators,
+    legitimacyIndicators: legitimacyIndicators.length > 0 ? legitimacyIndicators : undefined,
     contactDetails,
     deadlines,
     whatToVerify: Array.isArray(parsed.whatToVerify) ? parsed.whatToVerify : [],
