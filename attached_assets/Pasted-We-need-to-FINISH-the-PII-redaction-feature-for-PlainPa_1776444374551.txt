@@ -1,0 +1,147 @@
+We need to FINISH the PII redaction feature for PlainPath.
+
+This is now the top priority.
+Do not switch to store assets, RevenueCat, or packaging until this redaction workflow is complete and verified.
+
+==================================================
+PRIMARY PRODUCT RULE
+==================================================
+
+Detection can be automatic.
+Redaction must NOT be automatic.
+
+PlainPath should:
+1. detect likely sensitive information
+2. show suggestions to the user
+3. let the user choose exactly what to redact
+4. only apply redaction after the user clicks:
+   "Apply selected redactions"
+
+No permanent redaction should happen before user approval.
+
+==================================================
+WHAT MUST BE FINISHED
+==================================================
+
+1. USER-CONTROLLED REDACTION
+- no auto-applied redactions
+- user can select/deselect individual items
+- user can select all
+- user can clear all
+- user can select by category
+- user can select all same-value occurrences
+
+2. SAME-VALUE GROUPING
+Keep and finalize grouped redaction behavior:
+- if the same value appears multiple times, show one grouped row
+- show occurrence count clearly (ex: x3, x7)
+- allow toggle for all same-value occurrences
+- allow expansion if needed to inspect each occurrence
+
+3. COMPLETE TOOL INTEGRATION
+Redaction must work cleanly with:
+- Analyze
+- Trust Check
+- Contract Review
+
+When the user enters from one of these tools and finishes redaction:
+- they must return to the correct tool
+- the correct tool must receive the redacted version
+- the original unredacted version must not be passed forward by mistake
+
+4. REDACTION SUMMARY
+After review/apply, show a clear summary:
+- total sensitive values detected
+- total selected for redaction
+- total left unchanged
+- categories found
+- repeated values count where relevant
+
+5. EXPORT / COPY / NEXT STEP
+The redaction flow must provide:
+- Download redacted copy
+- Copy redacted text
+- Continue to Analyze / Trust Check / Contract Review
+
+The copied/exported/continued version must be the redacted version only.
+
+6. TRUE REDACTION PROOF
+This is critical:
+prove that supported outputs are real redaction, not masking.
+
+For each supported format, confirm:
+- whether underlying text is removed/replaced
+- whether copy/paste reveals anything hidden
+- whether exported file is actually safe to share
+
+If any format is not truly safe yet:
+- do not fake it
+- clearly mark the limitation
+- restrict export for unsupported formats if needed
+
+7. DESTINATION BANNERS / USER TRUST
+On Analyze / Trust Check / Contract Review after redaction:
+- show a visible banner that the user is working on a redacted version
+- make it clear the original was not passed through
+- optionally show "View redaction summary"
+
+8. UX CONSISTENCY
+Standardize the flow across all tools:
+- entry button wording
+- review panel
+- selection controls
+- summary panel
+- export buttons
+- continue buttons
+- destination banner
+
+==================================================
+WHAT TO AUDIT / FIX NOW
+==================================================
+
+Audit every file involved in:
+- PII detection
+- redaction review state
+- apply redactions
+- export/copy actions
+- routing back to destination tools
+- redacted content persistence in session/state
+
+Make sure the redaction feature behaves like a first-class PlainPath safety layer, not a side tool.
+
+==================================================
+DELIVERABLES REQUIRED
+==================================================
+
+When done, provide:
+
+A. Exact files changed
+
+B. Supported formats right now
+
+C. Exactly what PII/entity types are detected right now
+
+D. Screenshot of:
+- detection/review screen
+- grouped same-value review state
+- post-redaction summary
+- export/download/copy actions
+- Analyze using redacted version
+- Trust Check using redacted version
+- Contract Review using redacted version
+
+E. True-redaction verification summary for each supported format
+
+F. Any remaining limitations
+
+G. Final verdict:
+- REDACTION FEATURE COMPLETE
+or
+- REDACTION FEATURE NOT COMPLETE
+
+Important:
+Do not say complete unless:
+- user-controlled redaction works
+- export/copy works
+- all 3 tool integrations work
+- true-redaction behavior is verified
