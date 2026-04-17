@@ -2,13 +2,14 @@ import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import {
   Check, ArrowLeft, Sparkles, Loader2,
-  ExternalLink, Lock, Mail,
+  ExternalLink, Lock, Mail, Clock,
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { PRICING_PLANS } from "@/data/pricingData"
 import { startStripeCheckout } from "@/lib/stripe"
 import { getStoredSubscriberEmail } from "@/lib/subscriberStorage"
 import { isNative } from "@/lib/platform"
+import { BILLING_CONFIG } from "@/lib/billingConfig"
 
 // ─── Native fallback ────────────────────────────────────────────────────────
 
@@ -92,6 +93,25 @@ export default function Subscribe() {
             Start with unlimited document analysis on Starter, or unlock all 5 live tools with Pro.
           </p>
         </div>
+
+        {/* ── Pre-launch notice ── */}
+        {!BILLING_CONFIG.BILLING_ENABLED && (
+          <motion.div
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-2xl mx-auto mb-8 flex items-start gap-3 rounded-xl border border-amber-400/40 bg-amber-50 dark:bg-amber-950/20 px-4 py-3.5"
+          >
+            <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+                Subscriptions launching soon
+              </p>
+              <p className="text-xs text-amber-700/80 dark:text-amber-400/70 mt-0.5 leading-relaxed">
+                Live billing is not yet active. You can explore all 5 tools for free during pre-launch — no checkout required. We'll update this page once subscriptions are open.
+              </p>
+            </div>
+          </motion.div>
+        )}
 
         {/* ── Email field ── */}
         <div className="max-w-sm mx-auto mb-10">

@@ -192,8 +192,8 @@ const PLANS = [
       { label: "Digital Signature",     included: false, comingSoon: true  },
     ],
     extras: [] as string[],
-    cta: "Start with Starter",
-    href: "/app/analyze",
+    cta: "Subscribe to Starter",
+    href: "/app/subscribe?plan=starter",
   },
   {
     name: "Pro",
@@ -211,8 +211,8 @@ const PLANS = [
       { label: "Digital Signature",     included: false, comingSoon: true  },
     ],
     extras: ["Saved analysis history", "Premium output and workflow tools"],
-    cta: "Get Pro",
-    href: "/app/analyze",
+    cta: "Subscribe to Pro",
+    href: "/app/subscribe?plan=pro",
   },
 ];
 
