@@ -1,8 +1,10 @@
-import { Link } from "wouter";
-import { Menu } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useThemeContext } from "@/components/ThemeProvider";
 
 export function Navbar() {
+  const { isDark, setTheme } = useThemeContext()
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/50">
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -21,7 +23,14 @@ export function Navbar() {
           <a href="/app/support" className="hover:text-foreground transition-colors">Support</a>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setTheme(isDark ? "light" : "dark")}
+            aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+            className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+          >
+            {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </button>
           <a href="/app/" className="hidden md:block text-sm font-medium hover:text-foreground transition-colors">
             Log in to Web App
           </a>
