@@ -52,17 +52,9 @@ export default function Upgrade() {
             Simple pricing. Powerful tools.
           </h1>
           <p className="text-muted-foreground text-base sm:text-lg max-w-xl mx-auto leading-relaxed">
-            Start free with two analyses per month. Upgrade to unlock the full PlainPath toolkit — no contracts, cancel anytime.
+            Start with document analysis on Starter, or unlock all four tools with Pro. No contracts, cancel anytime.
           </p>
         </motion.div>
-
-        {/* Coming Soon Banner */}
-        <div className="mb-10 flex items-center justify-center gap-2.5 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/40 rounded-xl px-5 py-3">
-          <Zap className="w-4 h-4 text-amber-500 shrink-0" />
-          <p className="text-sm text-amber-700 dark:text-amber-400 font-medium">
-            Paid plans are launching soon. All tools are available to try while we finalize payments.
-          </p>
-        </div>
 
         {/* Plan cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-14">

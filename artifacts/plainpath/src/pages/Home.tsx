@@ -255,7 +255,7 @@ export default function Home() {
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
               className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2"
             >
-              {["Free for your first 2 analyses — no account needed", "Plans from $4.99/month", "Documents not stored by PlainPath"].map((item) => (
+              {["No account needed to start", "Plans from $4.99/month", "Documents not stored by PlainPath"].map((item) => (
                 <span key={item} className="flex items-center gap-1.5 text-xs text-foreground/65 dark:text-foreground/55">
                   <span className="w-1 h-1 rounded-full bg-primary/40 dark:bg-muted-foreground/30 shrink-0" />
                   {item}

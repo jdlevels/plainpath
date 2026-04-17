@@ -30,7 +30,7 @@ export const PRICING_PLANS: PricingPlan[] = [
   },
   {
     name: "Pro",
-    price: "$24.99",
+    price: "$14.99",
     period: "/month",
     description:
       "Everything in Starter, plus Document Trust Check, Contract Builder, and Contract Review — the full PlainPath toolkit.",

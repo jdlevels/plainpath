@@ -59,14 +59,14 @@ function AttorneyCostCalculator() {
             <span className="text-muted-foreground text-sm font-medium">vs</span>
             <div className="text-center px-4 py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-900/40">
               <p className="text-xs text-muted-foreground mb-0.5">PlainPath Pro</p>
-              <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">$24.99/mo</p>
+              <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">$14.99/mo</p>
             </div>
           </div>
         )}
       </div>
       {cost && (
         <p className="text-xs text-muted-foreground mt-3">
-          One attorney review of a {selected.toLowerCase()} typically costs <strong className="text-foreground">{cost.range}</strong>. PlainPath Pro gives you unlimited reviews across all 4 tools for <strong className="text-foreground">$24.99/month</strong> — that's a saving of <strong className="text-emerald-600">${cost.low - 25}–${cost.high - 25}</strong> on just the first document.
+          One attorney review of a {selected.toLowerCase()} typically costs <strong className="text-foreground">{cost.range}</strong>. PlainPath Pro gives you unlimited reviews across all 4 tools for <strong className="text-foreground">$14.99/month</strong> — that's a saving of <strong className="text-emerald-600">${cost.low - 15}–${cost.high - 15}</strong> on just the first document.
         </p>
       )}
     </div>

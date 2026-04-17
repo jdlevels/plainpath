@@ -38,22 +38,8 @@ export function Footer() {
           <div>
             <h4 className="font-semibold text-sm mb-4 text-foreground">Product</h4>
             <ul className="space-y-3">
-              <li>
-                <button
-                  onClick={() => smoothScroll("features")}
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors bg-transparent border-0 cursor-pointer p-0"
-                >
-                  Features
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => smoothScroll("pricing")}
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors bg-transparent border-0 cursor-pointer p-0"
-                >
-                  Pricing
-                </button>
-              </li>
+              <li><a href="/#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Features</a></li>
+              <li><a href="/#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Pricing</a></li>
               <li><a href="/app/analyze" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Web App</a></li>
             </ul>
           </div>
