@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { Switch, Route, Router as WouterRouter, useLocation, useSearch } from "wouter";
+import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { ClerkProvider, SignIn, SignUp, useClerk } from "@clerk/react";
 import { Toaster } from "@/components/ui/toaster";
@@ -36,7 +36,6 @@ import IndependentContractor from "@/pages/guides/IndependentContractor";
 import EvictionNotice from "@/pages/guides/EvictionNotice";
 import MedicalBillingDispute from "@/pages/guides/MedicalBillingDispute";
 import NotFound from "@/pages/not-found";
-import ToolGate from "@/components/ToolGate";
 
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -66,20 +65,6 @@ const queryClient = new QueryClient({
     },
   },
 });
-
-// Wraps Import so that trust-check mode requires a Pro plan gate
-function ImportPage() {
-  const search = useSearch()
-  const isTrustCheck = new URLSearchParams(search).get("mode") === "trust-check"
-  if (isTrustCheck) {
-    return (
-      <ToolGate reason="trustCheck" requiredPlan="pro">
-        <Import />
-      </ToolGate>
-    )
-  }
-  return <Import />
-}
 
 function SignInPage() {
   // To update login providers, app branding, or OAuth settings use the Auth
@@ -154,11 +139,9 @@ function Router() {
             <Route path="/" component={Home} />
             <Route path="/sign-in/*?" component={SignInPage} />
             <Route path="/sign-up/*?" component={SignUpPage} />
-            <Route path="/import" component={ImportPage} />
+            <Route path="/import" component={Import} />
             <Route path="/analyze" component={Analyze} />
-            <Route path="/trust-check">
-              {() => <ToolGate reason="trustCheck" requiredPlan="pro"><TrustCheck /></ToolGate>}
-            </Route>
+            <Route path="/trust-check" component={TrustCheck} />
             <Route path="/my-analyses" component={MyAnalyses} />
             <Route path="/privacy" component={Privacy} />
             <Route path="/terms" component={Terms} />
@@ -167,12 +150,8 @@ function Router() {
             <Route path="/subscribe" component={Subscribe} />
             <Route path="/subscribe/success" component={SubscribeSuccess} />
             <Route path="/subscribe/cancel" component={SubscribeCancel} />
-            <Route path="/contract-builder">
-              {() => <ToolGate reason="contractDraft" requiredPlan="pro"><ContractBuilder /></ToolGate>}
-            </Route>
-            <Route path="/contract-review">
-              {() => <ToolGate reason="contractReview" requiredPlan="pro"><ContractReview /></ToolGate>}
-            </Route>
+            <Route path="/contract-builder" component={ContractBuilder} />
+            <Route path="/contract-review" component={ContractReview} />
             <Route path="/shared/:token">
               {(params) => <SharedAnalysis token={(params as { token: string }).token} />}
             </Route>
