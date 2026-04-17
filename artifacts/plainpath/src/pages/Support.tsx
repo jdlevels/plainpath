@@ -1,6 +1,5 @@
 import { useEffect } from "react"
-import { Link } from "wouter"
-import { ArrowLeft, Mail, MessageCircle, FileText, ShieldCheck, CreditCard, HelpCircle } from "lucide-react"
+import { Mail, MessageCircle, FileText, ShieldCheck, CreditCard, HelpCircle } from "lucide-react"
 
 export default function Support() {
   useEffect(() => {
@@ -11,10 +10,6 @@ export default function Support() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-12 pb-24">
-
-        <Link href="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-10">
-          <ArrowLeft className="w-4 h-4" /> Back to PlainPath
-        </Link>
 
         <div className="mb-10">
           <div className="flex items-center gap-3 mb-4">

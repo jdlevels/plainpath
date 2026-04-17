@@ -207,10 +207,10 @@ export default function Home() {
                   <a
                     key={label}
                     href={href}
-                    className={`${cls} flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border text-sm font-medium transition-opacity hover:opacity-80 w-full`}
+                    className={`${cls} flex items-center gap-1.5 px-3 py-2.5 rounded-xl border text-xs sm:text-sm font-medium transition-opacity hover:opacity-80 w-full`}
                   >
                     <Icon className="w-3.5 h-3.5 shrink-0" />
-                    <span className="truncate">{label}</span>
+                    <span className="leading-tight">{label}</span>
                   </a>
                 ))}
               </motion.div>
@@ -236,8 +236,8 @@ export default function Home() {
               </motion.div>
             </motion.div>
 
-            {/* ── Right col — phone mockup ── */}
-            <div className="relative lg:flex lg:justify-end pb-0">
+            {/* ── Right col — phone mockup (desktop only) ── */}
+            <div className="hidden lg:relative lg:flex lg:justify-end pb-0">
               <motion.div
                 initial={{ opacity: 0, y: 40 }}
                 animate={{ opacity: 1, y: 0 }}

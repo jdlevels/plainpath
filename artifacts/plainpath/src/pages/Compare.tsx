@@ -128,7 +128,7 @@ export default function Compare() {
       {/* Header */}
       <div className="bg-background/95 backdrop-blur-md border-b border-border/50 sticky top-0 z-30">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center gap-3">
-          <button onClick={() => setLocation("/")} className="w-10 h-10 flex items-center justify-center hover:bg-secondary rounded-xl transition-colors shrink-0">
+          <button onClick={() => setLocation("/analyze")} className="w-10 h-10 flex items-center justify-center hover:bg-secondary rounded-xl transition-colors shrink-0">
             <ArrowLeft className="w-4 h-4 text-muted-foreground" />
           </button>
           <div className="w-9 h-9 rounded-xl bg-violet-50 dark:bg-violet-950/50 flex items-center justify-center shrink-0">

@@ -1,0 +1,114 @@
+We need to fix the product information architecture and app navigation consistency. This is now beyond a single routing bug.
+
+Observed problem:
+
+* The marketing homepage presents PlainPath as a 4-tool product:
+
+  * Analyze a Document
+  * Document Trust Check
+  * Build a Contract
+  * Contract Review
+* But the app shell/navigation currently presents a different structure:
+
+  * My Analyses
+  * Compare
+  * Home
+  * Support on some pages
+* This creates a mismatch between the public product definition and the internal app structure.
+
+Primary issues to fix:
+
+1. App “Home” is off
+
+* Audit the current “Home” nav link inside app pages.
+* Determine its exact destination.
+* If it routes to the marketing homepage `/`, rename it to:
+
+  * Website
+  * or Back to Website
+* If it routes to the app’s main internal landing page, rename it to:
+
+  * Dashboard
+  * or Workspace
+* Do NOT leave it as “Home” if the meaning is ambiguous.
+
+2. Define one canonical app home
+
+* Create one real internal app landing page:
+
+  * `/app`
+    OR
+  * `/app/dashboard`
+* That page should be the app’s main hub.
+* The PlainPath logo inside app pages should route there consistently.
+* Do not let app pages bounce between multiple “home-like” destinations.
+
+3. Unify app navigation with homepage product structure
+   The app must clearly expose the same core tools the homepage sells.
+
+Required core app routes:
+
+* `/app/analyze`
+* `/app/trust-check`
+* `/app/build-contract`
+* `/app/contract-review`
+
+If Compare is a real fifth tool, keep:
+
+* `/app/compare`
+  But then treat it as a clearly defined additional tool, not a hidden side feature.
+
+4. Standardize the app header across all `/app/*` pages
+   Use one consistent app header/navigation component on:
+
+* analyze
+* trust-check
+* build-contract
+* contract-review
+* compare
+* my-analyses
+* support
+
+Remove inconsistent per-page nav differences unless there is a clear reason.
+
+5. Remove redundant back-link patterns
+
+* Support page currently has both the PlainPath logo and “Back to PlainPath.”
+* Simplify this.
+* Use either:
+
+  * a breadcrumb with explicit meaning
+    OR
+  * the standard app header behavior
+* Avoid duplicate ways to go “back” with unclear destinations.
+
+6. Align pricing/gating with app access
+   Pricing currently says:
+
+* Starter = Analyze only
+* Pro = full access
+* Teams = full access
+
+Implement UI alignment:
+
+* Starter users should not feel like they have unrestricted access to all tools.
+* Show non-Starter tools as locked, hidden, or upgrade-gated consistently.
+* Do not let app nav and pricing contradict each other.
+
+7. Improve app-shell layout quality
+   The homepage looks premium, but internal app pages still feel underbuilt.
+   Without redesigning the app from scratch:
+
+* improve container width
+* reduce excessive empty whitespace
+* make support, compare, and my-analyses feel more grounded and product-finished
+* maintain light/dark mode consistency
+
+Required deliverables:
+
+* exact route map
+* exact meaning/destination of the app logo
+* exact meaning/destination of the current “Home” button
+* final app header nav structure
+* list of files changed
+* confirmation of Starter gating behavior

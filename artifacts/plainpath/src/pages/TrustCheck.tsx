@@ -15,6 +15,8 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useAnalysisContext } from "@/context/AnalysisContext"
 import { getApiBaseUrl } from "@/lib/api"
+import { useEntitlements } from "@/hooks/useEntitlements"
+import UpgradeModal from "@/components/UpgradeModal"
 import {
   type TrustCheckAnalysis, type TrustCheckVerdict, type TrustCheckScores,
   verdictColor, severityColor,
@@ -131,12 +133,24 @@ export default function TrustCheck() {
   const demoId = new URLSearchParams(searchString).get("demo")
   const { trustCheckAnalysis } = useAnalysisContext()
   const { isSignedIn } = useUser()
+  const { entitlements } = useEntitlements()
+  const [showUpgrade, setShowUpgrade] = useState(false)
   const [demoAnalysis, setDemoAnalysis] = useState<TrustCheckAnalysis | null>(null)
   const [demoLoading, setDemoLoading] = useState(false)
   const [demoError, setDemoError] = useState<string | null>(null)
   const [copyDone, setCopyDone] = useState(false)
   const [savedId, setSavedId] = useState<string | null>(null)
   const [justSaved, setJustSaved] = useState(false)
+
+  const isPro = entitlements?.plan === "pro" || entitlements?.plan === "team"
+
+  function handleCheckDocument() {
+    if (entitlements && !isPro) {
+      setShowUpgrade(true)
+      return
+    }
+    setLocation("/import?mode=trust-check")
+  }
 
   useEffect(() => {
     document.title = "Document Trust Check — PlainPath"
@@ -178,9 +192,10 @@ export default function TrustCheck() {
           </div>
           <h2 className="text-base font-bold mb-2">{demoError || "Document Trust Check"}</h2>
           <p className="text-sm text-muted-foreground mb-5">Check if a document is legitimate. PlainPath detects scams, forgeries, and high-risk patterns.</p>
-          <Button onClick={() => setLocation("/import?mode=trust-check")} className="gap-2">
+          <Button onClick={handleCheckDocument} className="gap-2">
             Check a Document <ArrowRight className="w-4 h-4" />
           </Button>
+          <UpgradeModal open={showUpgrade} onClose={() => setShowUpgrade(false)} reason="trustCheck" />
 
           <div className="mt-8">
             <div className="flex items-center gap-3 mb-3">

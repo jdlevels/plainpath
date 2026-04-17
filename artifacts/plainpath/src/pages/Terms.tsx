@@ -1,6 +1,5 @@
 import { useEffect } from "react"
-import { Link } from "wouter"
-import { ArrowLeft, Scale, AlertTriangle, FileText, ShieldCheck, Mail, CreditCard } from "lucide-react"
+import { Scale, AlertTriangle, FileText, ShieldCheck, Mail, CreditCard } from "lucide-react"
 
 const LAST_UPDATED = "April 6, 2026"
 
@@ -13,10 +12,6 @@ export default function Terms() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12 pb-24">
-
-        <Link href="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-10">
-          <ArrowLeft className="w-4 h-4" /> Back to PlainPath
-        </Link>
 
         <div className="mb-10">
           <div className="flex items-center gap-3 mb-4">
