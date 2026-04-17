@@ -1,0 +1,132 @@
+Phase 1 is approved.
+
+Now begin Phase 2:
+FINAL REDACTION COMPLETION VERIFICATION.
+
+Do not switch to store assets, metadata, RevenueCat, or packaging yet.
+We must first verify whether the Redact Sensitive Info tool is actually complete on the correct deployment/app targets.
+
+==================================================
+PHASE 2 GOAL
+==================================================
+
+Determine whether the redaction feature is truly complete and ready.
+
+We need proof for:
+- standalone Redact Sensitive Info tool
+- user-controlled selection
+- grouped repeated-value behavior
+- summary after redaction
+- copy / download / export behavior
+- Analyze receives redacted version only
+- Trust Check receives redacted version only
+- Contract Review receives redacted version only
+- true redaction behavior verified (not visual masking)
+
+==================================================
+REQUIRED VERIFICATION CHECKLIST
+==================================================
+
+A. STANDALONE TOOL
+Verify that Redact Sensitive Info exists as a standalone first-class tool and is reachable from the correct product surface.
+
+Need proof of:
+- route/path
+- homepage/tool entry
+- working standalone screen
+
+B. USER-CONTROLLED REDACTION
+Verify that:
+- detection can happen automatically
+- redaction is NOT auto-applied
+- user can select individual items
+- user can deselect individual items
+- user can select all
+- user can clear all
+- user can select by category
+- user can select all same-value occurrences
+
+C. SAME-VALUE GROUPING
+Verify that repeated identical values are grouped correctly:
+- grouped row exists
+- occurrence count is shown
+- one-click toggle affects all same-value matches
+- expansion/inspection works if supported
+
+D. APPLY + SUMMARY
+After user clicks Apply selected redactions, verify a clear summary exists:
+- total detected
+- total selected/redacted
+- total unchanged
+- categories found
+- repeated-value count if available
+
+E. OUTPUT ACTIONS
+Verify the redaction workflow provides:
+- Copy redacted text
+- Download/export redacted copy
+- Continue into Analyze
+- Continue into Trust Check
+- Continue into Contract Review
+
+F. DESTINATION TOOL HANDOFF
+Verify that the next tool receives the REDACTED version only.
+
+Need proof for all 3:
+1. Redact → Analyze
+2. Redact → Trust Check
+3. Redact → Contract Review
+
+Each destination page should visibly indicate the user is working on a redacted version.
+
+G. TRUE REDACTION VERIFICATION
+This is critical.
+For each supported format, verify whether redaction is real.
+
+For each supported format, report:
+- what format is supported right now
+- whether underlying text is removed/replaced
+- whether copy/paste reveals hidden original text
+- whether exported output is actually safe to share
+- any limitations
+
+If any format is only visually masked:
+- do not call the feature complete
+- state the limitation explicitly
+
+==================================================
+DELIVERABLES REQUIRED
+==================================================
+
+Return:
+
+1. Exact files involved in the redaction feature
+
+2. Supported input/output formats right now
+
+3. Screenshots for:
+- standalone Redact tool page
+- detection/review screen
+- grouped same-value review state
+- post-redaction summary
+- copy/download/export actions
+- Analyze using redacted version
+- Trust Check using redacted version
+- Contract Review using redacted version
+
+4. True-redaction verification summary per supported format
+
+5. Final verdict with ONLY one of these:
+- REDACTION FEATURE COMPLETE
+or
+- REDACTION FEATURE NOT COMPLETE
+
+Important:
+Do not mark complete unless all of the following are proven:
+- standalone tool exists
+- user-controlled selection works
+- grouped repeated values work
+- summary exists
+- copy/download/export works
+- all 3 destination-tool handoffs work
+- true-redaction behavior is verified
