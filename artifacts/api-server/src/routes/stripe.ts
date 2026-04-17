@@ -10,7 +10,7 @@ import {
 
 const router = Router()
 
-const APP_BASE_URL = process.env.APP_BASE_URL || "http://localhost:5000"
+const APP_BASE_URL = process.env.APP_BASE_URL || "https://plainpathapp.com/app"
 const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET
 
 type PlanKey = "starter" | "pro" | "team"

@@ -280,7 +280,7 @@ router.post("/:teamId/invite", requireTeamPlan, async (req: any, res) => {
     const teamResult = await pool.query(`SELECT name FROM teams WHERE id = $1`, [req.params.teamId]);
     const teamName = teamResult.rows[0]?.name ?? "your team";
 
-    const inviteUrl = `${process.env.APP_URL ?? "https://plain-path.replit.app"}/join?token=${token}`;
+    const inviteUrl = `${process.env.APP_URL ?? "https://plainpathapp.com/app"}/join?token=${token}`;
 
     res.json({
       ok: true,

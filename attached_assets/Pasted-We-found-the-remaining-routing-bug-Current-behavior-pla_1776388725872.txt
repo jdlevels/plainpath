@@ -1,0 +1,67 @@
+We found the remaining routing bug.
+
+Current behavior:
+
+* `plainpathapp.com/` loads the correct marketing homepage
+* the 4 homepage tool buttons now go to the correct real tool pages
+* but when I click the PlainPath logo/icon inside the app, it sends me back to the wrong old page and I get stuck there
+
+This means the app header/navbar brand link is still wired to the wrong route, or `/app` still renders the wrong page.
+
+Required fix:
+
+1. Audit every PlainPath logo/brand click target in:
+
+   * app header
+   * app navbar
+   * mobile header
+   * desktop header
+   * any shared Header/Nav component
+
+2. Separate marketing navigation from app navigation:
+
+   * Marketing header logo on `/` should route to `/`
+   * App header logo inside `/app/*` should route to the real app home/dashboard, not an old marketing/interstitial page
+
+3. Make `/app` the real app hub/dashboard.
+
+   * `/app` must not render the old secondary marketing page
+   * `/app` must render the actual app landing/dashboard/signed-in shell
+
+4. Keep direct tool routes working:
+
+   * `/app/analyze`
+   * `/app/trust-check`
+   * `/app/build-contract`
+   * `/app/contract-review`
+
+5. Remove or relocate the old secondary/interstitial app page.
+
+   * It should not live at `/app`
+   * Move it to a non-primary route like `/overview` or remove it entirely
+
+6. Audit redirects, guards, and fallbacks:
+
+   * no app route should redirect back into the old interstitial page
+   * no wildcard fallback inside the app should land on the stale page
+
+7. Confirm refresh works on:
+
+   * `/app`
+   * `/app/analyze`
+   * `/app/trust-check`
+   * `/app/build-contract`
+   * `/app/contract-review`
+
+8. Confirm all PlainPath logo clicks now behave correctly:
+
+   * from marketing homepage → stays on `/`
+   * from inside app routes → goes to real `/app` dashboard/home
+
+Deliverables required:
+
+* exact files changed
+* exact component handling the app logo click
+* exact route rendered at `/app`
+* confirmation that the old interstitial page is no longer mounted at `/app`
+* exact URLs to test

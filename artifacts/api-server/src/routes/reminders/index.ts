@@ -49,7 +49,7 @@ async function sendReminderEmail(opts: {
 
         <p style="font-size: 13px; color: #999; margin: 0;">
           This reminder was set via PlainPath. You can analyze more documents at
-          <a href="https://plain-path.replit.app" style="color: #4F6EF7;">plain-path.replit.app</a>.
+          <a href="https://plainpathapp.com" style="color: #4F6EF7;">plainpathapp.com</a>.
         </p>
       </div>
     `,
@@ -145,13 +145,13 @@ router.post("/api/reminders/drip", async (req, res) => {
           </ul>
         </div>
 
-        <a href="https://plain-path.replit.app" style="display: inline-block; background: #4F6EF7; color: #fff; padding: 12px 24px; border-radius: 10px; font-size: 14px; font-weight: 600; text-decoration: none; margin-bottom: 24px;">
+        <a href="https://plainpathapp.com/app/analyze" style="display: inline-block; background: #4F6EF7; color: #fff; padding: 12px 24px; border-radius: 10px; font-size: 14px; font-weight: 600; text-decoration: none; margin-bottom: 24px;">
           Open PlainPath →
         </a>
 
         <p style="font-size: 13px; color: #999; margin: 0;">
           Questions? Reply to this email — we read every message.<br>
-          <a href="https://plain-path.replit.app/privacy" style="color: #999;">Privacy policy</a>
+          <a href="https://plainpathapp.com/app/privacy" style="color: #999;">Privacy policy</a>
         </p>
       </div>
     `,
