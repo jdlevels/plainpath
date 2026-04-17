@@ -479,7 +479,7 @@ export default function Redact() {
             )}
 
             <p className="text-[11px] text-muted-foreground/50 text-center">
-              For Phase 1, uploaded files are exported as .txt after redaction. PDF binary redaction coming in a future update.
+              Uploaded PDF/DOCX files are converted to text for redaction. PlainPath exports a clean redacted text version. The original uploaded file is not modified.
             </p>
           </div>
         )}

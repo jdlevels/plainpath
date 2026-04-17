@@ -342,10 +342,16 @@ function AppliedView({
             <span>Copied text contains only the redacted version</span>
           </div>
           {isUploadedFile ? (
-            <div className="flex items-start gap-2 text-xs text-amber-600 dark:text-amber-400">
-              <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-              <span>Source file <span className="font-mono">{fileName}</span> is not modified — <strong>do not share the original file</strong></span>
-            </div>
+            <>
+              <div className="flex items-start gap-2 text-xs text-amber-600 dark:text-amber-400">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                <span>Source file <span className="font-mono">{fileName}</span> is not modified — <strong>do not share the original file</strong></span>
+              </div>
+              <div className="flex items-start gap-2 text-xs text-amber-600/80 dark:text-amber-400/80">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                <span>Uploaded PDF/DOCX files are converted to text for redaction. PlainPath exports a clean redacted text version. The original uploaded file is not modified.</span>
+              </div>
+            </>
           ) : (
             <div className="flex items-start gap-2 text-xs text-emerald-700 dark:text-emerald-400">
               <Check className="w-3.5 h-3.5 shrink-0 mt-0.5" />
