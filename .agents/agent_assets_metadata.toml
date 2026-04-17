@@ -90,6 +90,12 @@ uri = "file://docs/store/submission/assets/app-icon/plainpath-app-icon-v2.png"
 type = "image"
 title = "plainpath app icon clean"
 
+[[generated]]
+id = "HR-EPdGo3XWoQOzd-_jPP"
+uri = "file://attached_assets/generated_images/generated_image.png"
+type = "image"
+title = "generated_image"
+
 [[outputs]]
 id = "o7YB8F3oFhJfMlxpy-hZz"
 uri = "file://PlainPath-Handoff.md"
