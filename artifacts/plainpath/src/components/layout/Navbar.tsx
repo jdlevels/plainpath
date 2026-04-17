@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter"
 import { Button } from "@/components/ui/button"
 import {
   FileText, Plus, BookMarked, GitCompare, LogOut, User, ChevronDown,
-  Users, LayoutGrid, ShieldCheck, PenLine, Scale, Menu, X, LayoutDashboard,
+  LayoutGrid, ShieldCheck, PenLine, Scale, Menu, X, LayoutDashboard,
 } from "lucide-react"
 import { ThemeToggle } from "@/components/ui/ThemeToggle"
 import { useUser, useClerk } from "@clerk/react"
@@ -53,14 +53,6 @@ function UserMenu() {
             <p className="text-xs font-medium text-foreground truncate">{displayName}</p>
             <p className="text-xs text-muted-foreground truncate">{user?.emailAddresses?.[0]?.emailAddress}</p>
           </div>
-          <Link
-            href="/team"
-            onClick={() => setOpen(false)}
-            className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-          >
-            <Users className="w-3.5 h-3.5" />
-            Team
-          </Link>
           <button
             onClick={() => { setOpen(false); signOut({ redirectUrl: "/" }) }}
             className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"

@@ -727,7 +727,7 @@ function SectionBlock({ id, title, badge, children, collapsible = false, default
 function buildReviewText(result: ReviewResult): string {
   const lines: string[] = [
     "PLAINPATH — CONTRACT REVIEW",
-    `Score: ${result.overallScore}/100 — ${result.verdict}`,
+    `Contract Fairness Score: ${result.overallScore}/100 — ${result.verdict}`,
     "",
     result.summary,
     "",

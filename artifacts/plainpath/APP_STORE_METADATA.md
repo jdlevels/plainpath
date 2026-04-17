@@ -83,16 +83,16 @@ Utilities
 ---
 
 ## Privacy Policy URL
-https://plain-path.replit.app/privacy
+https://plainpathapp.com/app/privacy
 
 ## Terms of Service URL
-https://plain-path.replit.app/terms
+https://plainpathapp.com/app/terms
 
 ## Support URL
-https://plain-path.replit.app/support
+https://plainpathapp.com/app/support
 
 ## Support Email
-hello@plainpath.app
+support@plainpathapp.com
 
 ---
 
