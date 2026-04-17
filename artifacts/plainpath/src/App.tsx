@@ -10,6 +10,7 @@ import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { initStatusBar } from "@/lib/native";
 import { captureInboundRef } from "@/lib/referral";
 
+import Home from "@/pages/Home";
 import Import from "@/pages/Import";
 import Analyze from "@/pages/Analyze";
 import TrustCheck from "@/pages/TrustCheck";
@@ -57,13 +58,6 @@ function stripBase(path: string): string {
     : path;
 }
 
-// SPA-safe redirect: uses the wouter router (respects basePath) instead of
-// window.location.replace so the browser never escapes the /app/ subpath.
-function RedirectToAnalyze() {
-  const [, navigate] = useLocation();
-  useEffect(() => { navigate("/analyze", { replace: true }); }, []);
-  return null;
-}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -168,7 +162,7 @@ function Router() {
       <main className="flex-1">
         <ErrorBoundary>
           <Switch>
-            <Route path="/" component={RedirectToAnalyze} />
+            <Route path="/" component={Home} />
             <Route path="/sign-in/*?" component={SignInPage} />
             <Route path="/sign-up/*?" component={SignUpPage} />
             <Route path="/import" component={Import} />
