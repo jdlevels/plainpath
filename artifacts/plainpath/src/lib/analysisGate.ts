@@ -42,68 +42,62 @@ export class UsageLimitError extends Error {
 //
 // ─────────────────────────────────────────────────────────────────────────────
 
-export async function beforeRunAnalysis() {
-  incrementAnalysis()
+export async function beforeRunAnalysis(planKey?: string | null) {
   const email = getStoredSubscriberEmail()
   if (email) {
     void consumeToolUsage(email, "analyze").catch(() => {})
   }
-  if (!BILLING_CONFIG.PAYWALL_ENFORCEMENT) return
-
-  if (!email) {
-    const { allowed, used, limit } = canRunAnalysis(null)
+  if (BILLING_CONFIG.PAYWALL_ENFORCEMENT) {
+    const { allowed, used, limit } = canRunAnalysis(planKey)
     if (!allowed) throw new UsageLimitError("analyses", used, limit)
-    return
   }
-
-  const { allowed, used, limit } = canRunAnalysis(null)
-  if (!allowed) throw new UsageLimitError("analyses", used, limit)
+  incrementAnalysis()
 }
 
 export async function beforeRunTrustCheck(planKey?: string | null) {
-  incrementTrustCheck()
   const email = getStoredSubscriberEmail()
   if (email) {
     void consumeToolUsage(email, "trust-check").catch(() => {})
   }
-  if (!BILLING_CONFIG.PAYWALL_ENFORCEMENT) return
-
-  const { allowed, used, limit } = canRunTrustCheck(planKey)
-  if (!allowed) throw new UsageLimitError("trustCheck", used, limit)
+  if (BILLING_CONFIG.PAYWALL_ENFORCEMENT) {
+    const { allowed, used, limit } = canRunTrustCheck(planKey)
+    if (!allowed) throw new UsageLimitError("trustCheck", used, limit)
+  }
+  incrementTrustCheck()
 }
 
 export async function beforeRunContractDraft(planKey?: string | null) {
-  incrementContractDraft()
   const email = getStoredSubscriberEmail()
   if (email) {
     void consumeToolUsage(email, "build-contract").catch(() => {})
   }
-  if (!BILLING_CONFIG.PAYWALL_ENFORCEMENT) return
-
-  const { allowed, used, limit } = canRunContractDraft(planKey)
-  if (!allowed) throw new UsageLimitError("contractDraft", used, limit)
+  if (BILLING_CONFIG.PAYWALL_ENFORCEMENT) {
+    const { allowed, used, limit } = canRunContractDraft(planKey)
+    if (!allowed) throw new UsageLimitError("contractDraft", used, limit)
+  }
+  incrementContractDraft()
 }
 
 export async function beforeRunContractReview(planKey?: string | null) {
-  incrementContractReview()
   const email = getStoredSubscriberEmail()
   if (email) {
     void consumeToolUsage(email, "contract-review").catch(() => {})
   }
-  if (!BILLING_CONFIG.PAYWALL_ENFORCEMENT) return
-
-  const { allowed, used, limit } = canRunContractReview(planKey)
-  if (!allowed) throw new UsageLimitError("contractReview", used, limit)
+  if (BILLING_CONFIG.PAYWALL_ENFORCEMENT) {
+    const { allowed, used, limit } = canRunContractReview(planKey)
+    if (!allowed) throw new UsageLimitError("contractReview", used, limit)
+  }
+  incrementContractReview()
 }
 
 export async function beforeRunRedact(planKey?: string | null) {
-  incrementRedact()
   const email = getStoredSubscriberEmail()
   if (email) {
     void consumeToolUsage(email, "redact").catch(() => {})
   }
-  if (!BILLING_CONFIG.PAYWALL_ENFORCEMENT) return
-
-  const { allowed, used, limit } = canRunRedact(planKey)
-  if (!allowed) throw new UsageLimitError("redact", used, limit)
+  if (BILLING_CONFIG.PAYWALL_ENFORCEMENT) {
+    const { allowed, used, limit } = canRunRedact(planKey)
+    if (!allowed) throw new UsageLimitError("redact", used, limit)
+  }
+  incrementRedact()
 }

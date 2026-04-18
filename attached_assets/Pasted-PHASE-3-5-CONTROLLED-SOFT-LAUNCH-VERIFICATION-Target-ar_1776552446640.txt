@@ -1,0 +1,184 @@
+PHASE 3.5 — CONTROLLED SOFT LAUNCH VERIFICATION
+Target: artifacts/plainpath, artifacts/api-server, and only product-operational files required for live launch verification
+Do not modify artifacts/plainpath-marketing unless a live product/support/billing link must be corrected for accuracy.
+Do not touch investor/pitch/mock sandbox artifacts.
+
+Mission:
+Run a controlled soft-launch verification pass for PlainPath after business account setup and live billing credentials are available. This is not a redesign pass. This is an operational truth, checkout, entitlement, webhook, support, and production-readiness verification pass.
+
+Primary objective:
+Prove that PlainPath can accept a real subscription, grant the correct plan entitlements, handle post-checkout state correctly, and keep all public/product billing claims accurate.
+
+Environment assumptions:
+- Business account is now ready
+- Replit secrets can be added
+- Domain is live
+- Marketing site and product app are already visually polished
+- Approved plans remain:
+  - Starter = $4.99/month
+  - Pro = $19.99/month
+- No annual live checkout unless real annual Stripe price IDs are created and wired
+- Digital Signature remains coming soon and must never be granted
+
+Required live secrets / config to verify:
+1. STRIPE_SECRET_KEY
+2. STRIPE_WEBHOOK_SECRET
+3. Any required Stripe price IDs actually used in checkout
+4. STRIPE_TEST_MODE or equivalent live/test switch must be set correctly for live operation
+5. Support/contact domain references must remain plainpathapp.com
+6. If Resend/email is expected for receipts or onboarding support messaging, verify configured secrets too
+
+What to verify:
+
+A. Live Stripe configuration truth check
+- Read the actual billing config and confirm which Stripe price IDs are wired.
+- Confirm monthly Starter and monthly Pro only.
+- If annual price IDs do not exist, ensure no annual purchase path is exposed in product checkout.
+- Confirm no stale test IDs remain in live purchase flow.
+- Confirm environment is not accidentally mixed (live publishable key with test secret key, etc.).
+
+B. End-to-end checkout verification
+Test with one real controlled purchase flow.
+Run each of these:
+1. Logged-out user clicks subscribe
+2. Logged-in free user upgrades to Starter
+3. Logged-in free user upgrades to Pro
+At minimum, complete one successful real charge path.
+For each:
+- checkout page opens correctly
+- price shown in Stripe matches product UI
+- cancellation/back path works
+- success URL returns correctly
+- failed payment / canceled payment path does not corrupt account state
+
+C. Entitlement activation after purchase
+After successful payment:
+- verify database/account state updates correctly
+- verify correct plan is shown in product UI
+- verify unlocked tools match purchased plan exactly
+- verify free gating disappears where appropriate
+- verify wrong tools do not unlock
+- verify Digital Signature still stays coming soon
+
+Use the approved access matrix:
+Free:
+- Analyze = 2/month
+- all others gated
+- Digital Signature coming soon
+Starter:
+- Analyze unlimited
+- Redact unlimited
+- Trust Check / Build / Review locked
+- Digital Signature coming soon
+Pro:
+- Analyze unlimited
+- Redact unlimited
+- Trust Check unlimited
+- Build unlimited
+- Review unlimited
+- Digital Signature coming soon
+
+D. Webhook verification
+Confirm webhook endpoint works in live mode:
+- checkout.session.completed
+- customer.subscription.created
+- customer.subscription.updated
+- customer.subscription.deleted
+- invoice.paid
+- invoice.payment_failed
+Verify each event is accepted and processed without signature failure.
+If live event triggering is limited, use Stripe dashboard/webhook logs as evidence.
+Confirm no 400/500 webhook failures remain.
+
+E. Billing portal / manage subscription
+- Verify “manage subscription” or billing portal link opens correctly
+- Verify customer can access plan management
+- Verify return URL back to product works
+- Verify cancel flow is understandable
+- Verify downgrade/cancel status is reflected in product state after Stripe updates
+
+F. Product truth audit after live setup
+Re-check all product-facing billing and access claims after live config:
+- Starter $4.99
+- Pro $19.99
+- no fake annual checkout promise
+- tool access matrices accurate
+- upgrade prompts accurate
+- locked tools explain which plan is needed
+- free Analyze limit messaging still accurate
+- no domain mistakes
+- no stale “plain-path.app” references
+- no stale $29.99 references anywhere
+
+G. Support / legal / account readiness
+Verify:
+- support email visible and correct
+- privacy policy reachable
+- terms reachable
+- billing/subscription wording consistent with actual live flow
+- no “in-app purchase” wording if subscriptions are web-only
+- no unsupported feature promises
+
+H. Analytics / event logging sanity
+Without changing privacy stance, confirm internal events still fire for:
+- subscribe_started
+- checkout_success / equivalent
+- upgrade path opened
+- analysis_started
+- trust_check_started
+- contract_review_started
+- contract_draft_started
+- redact_started if now tracked
+If redact events are still missing, document as non-blocking unless required for launch analytics.
+
+I. Production resilience / console / runtime pass
+On desktop + mobile widths:
+- verify zero console errors during subscribe flow
+- verify success/cancel pages load cleanly
+- verify billing page loads cleanly
+- verify no broken routes
+- verify no auth loop
+- verify no post-purchase stale cache requiring manual refresh
+
+J. Required screenshots / proof
+Capture proof for:
+1. live pricing page/product subscribe page
+2. Stripe checkout showing correct real price
+3. successful return/success state
+4. Starter entitlements active
+5. Pro entitlements active
+6. billing portal/manage subscription access
+7. webhook/dashboard evidence or server log evidence
+8. locked Digital Signature after paid activation
+9. mobile-width billing/account state
+
+Rules:
+- Prefer correction over commentary
+- Do not introduce new design work unless required to fix an operational mismatch
+- Do not add annual billing unless real annual price IDs are created and wired end-to-end
+- Do not weaken honesty language for conversion
+- Do not touch marketing visuals unless launch truth requires it
+
+Deliverables required:
+1. Target confirmation
+2. Exact files/settings changed
+3. Secret/config checklist verified
+4. Stripe price mapping table
+5. Checkout flow result table
+6. Entitlement verification table by plan
+7. Webhook result table
+8. Remaining blockers table: blocker vs non-blocker
+9. Final verdict using one of:
+   - NOT READY
+   - READY FOR CONTROLLED SOFT LAUNCH
+   - READY FOR PUBLIC LAUNCH
+
+Success criteria:
+- Real checkout completes successfully
+- Correct plan entitlements activate automatically
+- Billing portal works
+- Webhooks process successfully
+- Product/UI claims match real live behavior
+- No stale pricing/domain inconsistencies remain
+- Digital Signature still not granted
+- Zero critical console/runtime errors

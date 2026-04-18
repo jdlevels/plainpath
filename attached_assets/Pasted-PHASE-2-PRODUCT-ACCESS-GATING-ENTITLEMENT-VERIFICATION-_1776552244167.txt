@@ -1,0 +1,123 @@
+PHASE 2 — PRODUCT ACCESS / GATING / ENTITLEMENT VERIFICATION
+Target: artifacts/plainpath only
+Do not modify artifacts/plainpath-marketing unless a product link or gating message absolutely requires alignment.
+Do not touch pitch deck or mock sandbox.
+
+Mission:
+Run a full product-side audit and correction pass for access control, paywall behavior, tool gating, entitlement checks, upgrade prompts, and plan-state UX. The goal is to make the real in-app experience match the approved business rules exactly and remove any user confusion between demos, free usage, Starter, and Pro.
+
+Approved plan rules to enforce:
+1. Free / no subscription:
+   - Analyze a Document = allowed for 2 uses per month, then gated
+   - All other live tools = gated immediately
+   - Digital Signature = coming soon, never granted
+2. Starter ($4.99/month):
+   - Analyze a Document = unlimited
+   - Redact Sensitive Info = unlimited
+   - Trust Check / Build Contract / Contract Review = locked
+   - Digital Signature = coming soon, not granted
+3. Pro ($19.99/month):
+   - Analyze a Document = unlimited
+   - Redact Sensitive Info = unlimited
+   - Document Trust Check = unlimited
+   - Build a Contract = unlimited
+   - Contract Review = unlimited
+   - Digital Signature = coming soon, not granted
+
+What to audit:
+A. Route protection
+- Verify every real product route for:
+  /analyze
+  /redact
+  /import?mode=trust-check
+  /build-contract
+  /contract-review
+  /subscribe
+  /billing
+  any dashboard / tool-launch routes
+- Confirm access behavior by plan state:
+  logged out
+  logged in free
+  Starter
+  Pro
+- Confirm demo links do not accidentally bypass billing or unlock tools.
+
+B. Upgrade / paywall UX
+- For locked tools, verify the user sees the correct upgrade message:
+  Free user trying Trust Check / Build / Review / Redact after limits or without plan
+  Starter user trying Trust Check / Build / Review
+- Make the upgrade prompt specific, not vague:
+  say exactly which plan unlocks the tool
+  say exactly what the current plan includes
+- Remove any misleading wording like “available now” if actually gated.
+
+C. Tool cards / dashboard / navigation consistency
+- Audit all product-side tool cards, dashboard cards, sidebar links, quick actions, buttons, empty states, and upgrade banners.
+- Everywhere the tool list appears, it must match the approved access matrix.
+- If a tool is locked, its label, icon treatment, CTA, and destination must all agree.
+- Digital Signature must be consistently shown as “Coming soon” and not treated as unlockable.
+
+D. Analyze monthly free-limit behavior
+- Verify Analyze uses the correct monthly limit logic for free users.
+- Confirm the limit message appears at the correct threshold.
+- Confirm Starter and Pro remove that limit.
+- Confirm messaging clearly explains why Analyze is still available for free while others are not.
+
+E. Redact positioning
+- Since Redact is included in Starter and Pro, verify:
+  tool entry points
+  pricing-related copy inside product
+  upgrade modals
+  locked/unlocked badges
+  billing / subscribe comparisons
+- Make sure Redact is not mistakenly shown as Pro-only anywhere.
+
+F. Demo separation
+- Audit any demo/preloaded scenarios and ensure they are clearly demo experiences, not mistaken for full unlocked usage.
+- Demo routes may show a sample workflow, but must not imply that the full tool is free if it is actually gated.
+- Add brief clarification only where needed. Do not clutter the UI.
+
+G. Billing / subscribe page consistency
+- Product-side subscribe and billing surfaces must reflect:
+  Starter = $4.99
+  Pro = $19.99
+  No annual checkout unless real annual Stripe price IDs exist
+- Remove or disable any annual promises on product-side surfaces if they still imply purchase availability.
+- Ensure the tool access lists on subscribe/billing pages match the approved plan rules exactly.
+
+H. Logged-out behavior
+- Verify what happens when a logged-out visitor tries to access each tool.
+- The flow should be intentional:
+  either sign-in first, then gated
+  or modal with sign-in + plan explanation
+- Avoid jarring dead ends or silent redirects.
+
+I. Copy clarity
+- Replace any vague messages like:
+  “Upgrade to continue”
+  with stronger versions like:
+  “Document Trust Check is included with Pro.”
+  “Starter includes Analyze + Redact.”
+  “Free accounts can try Analyze 2 times per month.”
+- Keep tone premium, direct, and honest.
+
+Required deliverables:
+1. Full file list changed
+2. Exact gating matrix confirmed after fixes
+3. Route-by-route behavior table
+4. Screenshot proof of:
+   - free state
+   - Starter locked state on a Pro tool
+   - Pro unlocked state
+   - Analyze free-limit message
+   - subscribe page tool matrix
+5. Clear list of any remaining blockers
+
+Success criteria:
+- No real tool access contradicts the plan rules
+- No demo flow creates false entitlement expectations
+- Locked tools clearly explain what plan is needed
+- Starter and Pro entitlements behave exactly as approved
+- Digital Signature remains “Coming soon” everywhere
+- No annual billing promise remains on product surfaces unless actually implemented
+- Zero console errors

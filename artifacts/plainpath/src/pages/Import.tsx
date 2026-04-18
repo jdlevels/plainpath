@@ -14,7 +14,7 @@ import { useAnalyzeDocument } from "@workspace/api-client-react"
 import { useAnalysisContext } from "@/context/AnalysisContext"
 import { getApiBaseUrl } from "@/lib/api"
 import { beforeRunAnalysis, beforeRunTrustCheck, UsageLimitError } from "@/lib/analysisGate"
-import { incrementAnalysis, incrementTrustCheck, getUsage } from "@/lib/usageMeter"
+import { getUsage } from "@/lib/usageMeter"
 import { useEntitlements } from "@/hooks/useEntitlements"
 import UpgradeModal from "@/components/UpgradeModal"
 import { isNative } from "@/lib/platform"
@@ -417,9 +417,9 @@ export default function Import() {
 
     try {
       if (isTrustCheck) {
-        beforeRunTrustCheck(entitlements?.plan ?? null)
+        await beforeRunTrustCheck(entitlements?.plan ?? null)
       } else {
-        await beforeRunAnalysis()
+        await beforeRunAnalysis(entitlements?.plan ?? null)
       }
     } catch (err) {
       if (err instanceof UsageLimitError) {
@@ -472,11 +472,9 @@ export default function Import() {
 
       await haptic("success")
       if (isTrustCheck) {
-        incrementTrustCheck()
         setTrustCheckAnalysis(data.analysis)
         setLocation("/trust-check")
       } else {
-        incrementAnalysis()
         setAnalysis(data.analysis)
         setLocation("/results")
       }
@@ -515,9 +513,9 @@ export default function Import() {
 
     try {
       if (isTrustCheck) {
-        beforeRunTrustCheck(entitlements?.plan ?? null)
+        await beforeRunTrustCheck(entitlements?.plan ?? null)
       } else {
-        await beforeRunAnalysis()
+        await beforeRunAnalysis(entitlements?.plan ?? null)
       }
     } catch (err) {
       if (err instanceof UsageLimitError) {
@@ -563,7 +561,6 @@ export default function Import() {
             return
           }
           await haptic("success")
-          incrementTrustCheck()
           setTrustCheckAnalysis(data.analysis)
           setLocation("/trust-check")
         } catch {
@@ -607,7 +604,6 @@ export default function Import() {
             return
           }
           await haptic("success")
-          incrementTrustCheck()
           setTrustCheckAnalysis(data.analysis)
           setLocation("/trust-check")
         } catch {
@@ -627,7 +623,7 @@ export default function Import() {
       mutate(
         { data: { text: p.text, documentTypeHint: docTypeLabel } as any },
         {
-          onSuccess: (data) => { void haptic("success"); incrementAnalysis(); setAnalysis(data.analysis); setLocation("/results") },
+          onSuccess: (data) => { void haptic("success"); setAnalysis(data.analysis); setLocation("/results") },
           onError: (err: any) => {
             const serverMessage = err?.data?.message
             const status = err?.status ?? 0
@@ -687,7 +683,6 @@ export default function Import() {
           return
         }
         await haptic("success")
-        incrementAnalysis()
         setAnalysis(data.analysis)
         setLocation("/results")
       } catch {

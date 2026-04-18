@@ -22,7 +22,7 @@ const TOOL_BREAKDOWN = [
   { icon: ShieldCheck, name: "Document Trust Check",  starter: false, pro: true, desc: "Verify legitimacy, surface red flags, and detect fraud" },
   { icon: PenLine,     name: "Build a Contract",      starter: false, pro: true, desc: "Guided wizard that outputs a professional, ready-to-send draft" },
   { icon: Scale,       name: "Contract Review",       starter: false, pro: true, desc: "Clause-by-clause risk analysis with negotiation language" },
-  { icon: EyeOff,      name: "Redact Sensitive Info", starter: false, pro: true, desc: "Redact sensitive info before sharing or uploading for review" },
+  { icon: EyeOff,      name: "Redact Sensitive Info", starter: true,  pro: true, desc: "Redact sensitive info before sharing or uploading for review" },
 ]
 
 export default function Upgrade() {
