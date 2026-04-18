@@ -1,0 +1,233 @@
+PHASE 4 — LIVE BILLING CUTOVER PREP + PRODUCTION ACTIVATION DRY RUN
+
+You are working on the PlainPath codebase.
+
+PRIMARY GOAL
+Do a strict pre-live production billing/cutover audit and prep pass BEFORE live Stripe/business account activation. This is not a redesign pass. This is a launch-readiness / billing-activation / entitlement-integrity pass.
+
+TARGETS
+- artifacts/plainpath
+- artifacts/api-server
+
+DO NOT TOUCH unless absolutely required by a discovered billing mismatch:
+- artifacts/plainpath-marketing
+- any pitch deck / mockup / sandbox artifacts
+
+CONTEXT / CURRENT TRUTH TO PRESERVE
+- Starter = $4.99/month
+- Pro = $19.99/month
+- Starter includes:
+  - Analyze a Document
+  - Redact Sensitive Info
+- Pro includes:
+  - Analyze a Document
+  - Document Trust Check
+  - Build a Contract
+  - Contract Review
+  - Redact Sensitive Info
+- Digital Signature remains “coming soon” and is not granted on any plan
+- Free / no subscription:
+  - Analyze = limited free usage only
+  - all other paid tools gated
+- Annual billing is NOT live yet as a real Stripe checkout implementation
+- Marketing site pricing/order/copy was already polished earlier — do not casually rewrite it in this pass
+- This pass is about production activation readiness, entitlement correctness, billing flow integrity, and live cutover prep
+
+HARD RULES
+1. Read the full billing / entitlement / subscription flow before editing anything.
+2. Do not invent Stripe values, fake price IDs, fake secrets, or placeholder logic that changes runtime behavior.
+3. Do not enable live mode yet unless it is already fully intended and safe; this is primarily a prep / dry-run / readiness pass.
+4. Do not change pricing, feature access, or public copy unless you find a real mismatch against the current approved truth above.
+5. Do not touch product features unrelated to billing, entitlements, subscriptions, checkout, portal, upgrade flows, or launch readiness.
+6. If something is already correct, leave it alone.
+7. Prefer minimal surgical fixes.
+8. Restart workflows and verify app/runtime after changes.
+9. Give a strict final report, not a casual summary.
+
+AUDIT EVERYTHING BELOW
+A. BILLING CONFIG / PRICE SOURCE OF TRUTH
+- Find every billing config / plan config / entitlement config source in:
+  - client
+  - server
+  - Stripe routes
+  - billing pages
+  - success / cancel pages
+  - subscribe buttons / upgrade modals
+- Confirm all places agree on:
+  - Starter $4.99
+  - Pro $19.99
+  - Starter tools
+  - Pro tools
+  - Digital Signature coming soon
+- Confirm no stale $29.99, no stale “all four tools,” no stale annual checkout promise
+
+B. STRIPE ACTIVATION READINESS
+Verify the exact path for:
+- checkout session creation
+- success redirect
+- cancel redirect
+- webhook handler
+- customer portal
+- entitlement refresh after purchase
+- cancellation / cancel-at-period-end handling
+- invoice.payment_failed / past_due behavior
+- missing-secret behavior
+- live/test mode switching
+- price ID loading / reference safety
+- whether webhook raw body is mounted before express.json()
+
+C. ENV / SECRET READINESS
+Locate all required env vars / secrets for production launch, including but not limited to:
+- STRIPE_SECRET_KEY
+- STRIPE_WEBHOOK_SECRET
+- any publishable key
+- app base URL / API base URL
+- admin email bypass vars
+- any email / Resend / notification vars tied to billing
+- any domain/cors env vars
+Confirm:
+- exact secret names expected by the code
+- which are blockers
+- which are optional / not blockers
+- what happens when each is missing
+
+D. ENTITLEMENT / GATING INTEGRITY
+Audit all tool gates and access decisions again:
+- Analyze
+- Trust Check
+- Build Contract
+- Contract Review
+- Redact
+- Digital Signature
+Confirm:
+- Free user behavior
+- Starter behavior
+- Pro behavior
+- Admin bypass behavior
+- post-purchase refresh behavior
+- upgrade modal plan table correctness
+- billing page tool list correctness
+- success page tool list correctness
+- no stale “Starter lacks Redact” bug
+- no stale “subscriber still treated as free” bug
+- no double-counting / quota misuse remains anywhere
+
+E. LIVE CUTOVER SAFETY
+Confirm whether the system can go live with config only, or whether code changes are still required.
+Specifically determine:
+- what exactly must be added in Replit secrets
+- what exactly must be changed in billing config flags
+- whether any Stripe dashboard setup is still required
+- exact webhook URL to register
+- exact events to subscribe to
+- whether frontend and backend already point to the right production domain(s)
+- whether CORS is production-safe
+- whether any test banners auto-hide correctly in live mode
+- whether any “test mode” or “coming soon” notice would remain incorrectly after live activation
+
+F. SUBSCRIPTION UX / SOFT-LAUNCH SAFETY
+Audit and confirm the real user flow:
+- anonymous user hits gated tool
+- sees correct upgrade UI
+- subscribes to Starter or Pro
+- lands on success page
+- entitlements refresh
+- access updates correctly
+- billing page reflects plan correctly
+- manage subscription opens portal correctly
+- cancellation state is reflected correctly
+If any part is weak, fix it.
+
+G. DOMAIN / PRODUCTION CONSISTENCY
+Confirm:
+- plainpathapp.com is canonical where it should be
+- no stale plain-path.app or dev-domain references remain in product-side billing flow
+- success/cancel/portal return paths are production-safe
+- API routing is correct for deployed environment
+
+H. ANALYTICS / EVENT COVERAGE FOR BILLING
+Audit internal analytics / event logging around:
+- checkout started
+- subscribe started
+- success completed
+- portal opened
+- upgrade modal shown
+- analysis started
+- trust check started
+- redact started
+Do not add third-party analytics.
+Only fix internal event coverage if there is a real product-side gap and it is low-risk.
+
+IF YOU FIND ISSUES
+Fix only what is required to make the system truly ready for controlled soft launch.
+Keep fixes minimal and explicit.
+
+AFTER AUDIT / FIX
+- restart workflows
+- verify no new runtime errors
+- verify key pages / flows render
+- verify billing and entitlement surfaces still match approved plan structure
+- take screenshots of the most important verification surfaces
+
+REQUIRED SCREENSHOTS
+Take screenshots for:
+1. billing / upgrade plan display
+2. success page
+3. billing management page
+4. any subscribe/checkout initiation surface
+5. one gated tool flow
+6. one post-upgrade verified surface if possible
+
+STRICT FINAL RETURN FORMAT
+Return your answer in this exact structure:
+
+1. TARGET CONFIRMATION
+- edited artifacts
+- intentionally untouched artifacts
+
+2. FILES READ
+- complete list of critical files inspected
+
+3. ISSUES FOUND
+For each issue:
+- severity: blocker / major / minor
+- file
+- problem
+- user impact
+- fix applied or “no fix needed”
+
+4. FILES CHANGED
+- file
+- exact purpose of change
+
+5. BILLING / PLAN TRUTH TABLE
+Show the final confirmed matrix for:
+- Free
+- Starter
+- Pro
+Including each tool and access state
+
+6. STRIPE / ENV READINESS
+List:
+- required secrets
+- optional secrets
+- blockers
+- exact webhook URL
+- exact webhook events
+- exact config flags that must be changed for go-live
+
+7. CONTROLLED SOFT-LAUNCH CHECKLIST
+Give the exact ordered checklist Jeff should follow tonight once the business account is ready
+
+8. SCREENSHOT VERIFICATION
+Brief note for each screenshot captured
+
+9. FINAL VERDICT
+Choose one:
+- READY FOR CONTROLLED SOFT LAUNCH
+- READY ONLY AFTER CONFIG
+- NOT READY
+And explain why in 3–8 bullets
+
+IMPORTANT
+Do not stop at a static code read. Actually validate the flow paths, restart the app, and confirm the current state rigorously.

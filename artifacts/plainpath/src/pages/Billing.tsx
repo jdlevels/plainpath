@@ -12,6 +12,7 @@ import { getStoredSubscriberEmail, setStoredSubscriberEmail, clearStoredSubscrib
 import { openBillingPortal } from "@/lib/entitlements"
 import { BILLING_CONFIG } from "@/lib/billingConfig"
 import { isNative } from "@/lib/platform"
+import { trackEvent } from "@/lib/analytics"
 
 // ─── Plan display config ──────────────────────────────────────────────────────
 
@@ -158,6 +159,7 @@ export default function Billing() {
     if (!email) return
     setPortalLoading(true)
     setPortalError(null)
+    trackEvent("portal_opened", { plan: plan ?? "unknown" })
     try {
       await openBillingPortal(email)
     } catch (err) {

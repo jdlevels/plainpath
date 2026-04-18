@@ -3,10 +3,11 @@ import { useLocation } from "wouter"
 import { motion } from "framer-motion"
 import {
   Check, Zap, BarChart3, ShieldCheck, PenLine, Scale, EyeOff,
-  ArrowRight, Sparkles,
+  ArrowRight, Sparkles, Clock,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { PRICING_PLANS } from "@/data/pricingData"
+import { BILLING_CONFIG } from "@/lib/billingConfig"
 
 const PLAN_ICONS: Record<string, React.ElementType> = {
   starter: BarChart3,
@@ -107,9 +108,25 @@ export default function Upgrade() {
                   ))}
                 </ul>
 
-                <div className="w-full py-2.5 rounded-xl border border-dashed border-border/60 text-xs text-center text-muted-foreground/60">
-                  Coming soon
-                </div>
+                {BILLING_CONFIG.BILLING_ENABLED ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLocation("/subscribe")
+                    }}
+                    className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                      isHighlight
+                        ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
+                        : "bg-secondary text-foreground hover:bg-muted"
+                    }`}
+                  >
+                    {plan.ctaLabel} <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                ) : (
+                  <div className="w-full py-2.5 rounded-xl border border-dashed border-border/60 text-xs text-center text-muted-foreground/60 flex items-center justify-center gap-1.5">
+                    <Clock className="w-3 h-3" /> Subscriptions launching soon
+                  </div>
+                )}
               </motion.div>
             )
           })}

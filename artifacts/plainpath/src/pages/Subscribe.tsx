@@ -10,6 +10,7 @@ import { startStripeCheckout } from "@/lib/stripe"
 import { getStoredSubscriberEmail } from "@/lib/subscriberStorage"
 import { isNative } from "@/lib/platform"
 import { BILLING_CONFIG } from "@/lib/billingConfig"
+import { trackEvent } from "@/lib/analytics"
 
 // ─── Native fallback ────────────────────────────────────────────────────────
 
@@ -57,6 +58,7 @@ export default function Subscribe() {
     if (!planKey) return
     setError(null)
     setLoadingPlan(planKey)
+    trackEvent("subscribe_started", { plan: planKey })
     try {
       await startStripeCheckout(planKey as "starter" | "pro", email || undefined)
     } catch (err) {
