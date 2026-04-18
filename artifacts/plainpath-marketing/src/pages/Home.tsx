@@ -355,7 +355,8 @@ export default function Home() {
       </section>
 
       {/* ════════════════════════════════════════════════
-          FOUR TOOLS — premium cards
+          FIVE TOOLS — premium feature cards
+          (Digital Signature card is coming soon — not shown here)
       ════════════════════════════════════════════════ */}
       <section id="features" className="py-20 md:py-28">
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
