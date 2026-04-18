@@ -205,6 +205,7 @@ export default function VideoWalkthrough() {
   const [activeChapter, setActiveChapter] = useState(0)
   const hasVideo = Boolean(DEMO_VIDEO_URL)
 
+
   function handlePlay() {
     if (hasVideo) {
       setPlaying(true)
@@ -290,7 +291,9 @@ export default function VideoWalkthrough() {
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-white mb-0.5 truncate">{ch.label}</p>
                     <p className="text-[11px] text-slate-400 leading-snug">{ch.desc}</p>
-                    <p className="text-[10px] text-slate-500 mt-1 font-mono">{ch.time} · {ch.duration}</p>
+                    {hasVideo && (
+                      <p className="text-[10px] text-slate-500 mt-1 font-mono">{ch.time} · {ch.duration}</p>
+                    )}
                   </div>
                 </div>
               </motion.button>

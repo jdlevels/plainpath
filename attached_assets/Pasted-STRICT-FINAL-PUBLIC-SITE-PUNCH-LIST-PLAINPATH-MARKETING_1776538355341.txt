@@ -1,0 +1,262 @@
+STRICT FINAL PUBLIC SITE PUNCH LIST — PLAINPATH MARKETING SITE ONLY
+
+You are working on the PUBLIC MARKETING SITE ONLY.
+
+TARGET ARTIFACT:
+- artifacts/plainpath-marketing
+
+DO NOT TOUCH:
+- artifacts/plainpath
+- any /app product logic
+- analyze/redact/trust check/contract review/build contract tool code
+- backend routes
+- auth flows
+- billing logic
+- product API calls
+
+RULE 1:
+Before making any change, verify the target artifact and state clearly:
+- "Confirmed target: artifacts/plainpath-marketing"
+- "Confirmed non-target: artifacts/plainpath"
+
+RULE 2:
+Do not work from assumptions. Read the current public marketing files first, then make only the scoped changes below.
+
+RULE 3:
+Do not add fake reviews, fake numbers, fake claims, fake usage stats, fake waitlist counts, fake customer quotes, or any misleading store/badge language.
+
+RULE 4:
+Do not move sections into the product app. All work in this session is for the PUBLIC SITE ONLY.
+
+==================================================
+PRIMARY OBJECTIVE
+==================================================
+
+Complete a strict final polish pass on the PUBLIC PlainPath marketing site in this order:
+
+1. Final marketing polish pass
+2. Mobile responsiveness pass
+3. CTA funnel audit
+4. Store / billing readiness surface audit
+
+This is NOT a redesign. This is a precision cleanup and consistency pass.
+
+==================================================
+SECTION A — FINAL MARKETING POLISH PASS
+==================================================
+
+Audit and refine the public page section-by-section for consistency, spacing, hierarchy, and honesty.
+
+Review these areas on the public site:
+- hero
+- stats / trust pillars
+- “Every document situation, covered”
+- “The Problem” section
+- 6-card tools showcase
+- “See PlainPath in action”
+- “One demo for each tool”
+- “Documents people bring to PlainPath”
+- “Built for real people, not lawyers”
+- FAQ
+- pricing
+- web & mobile section
+- privacy / trust band
+- final CTA
+- footer
+
+Required polish tasks:
+1. Ensure spacing between sections is visually consistent.
+2. Ensure headings, subheadings, pill labels, and card labels follow one consistent style system.
+3. Ensure no section repeats the exact same message unnecessarily.
+4. Tighten repetitive copy where needed without changing the product truth.
+5. Keep all claims factual and supportable by the actual product.
+6. Ensure “Digital Signature” is always clearly labeled as Coming Soon wherever it appears.
+7. Ensure all card grids are aligned:
+   - equal heights where intended
+   - CTAs/buttons pinned consistently
+   - badges/pills aligned cleanly
+   - no short card next to taller cards unless intentionally designed
+8. Improve the “See PlainPath in action” mini-card area if text is too cramped:
+   - either slightly increase card width/height
+   - or reduce visible density
+   - but do not make the section bulky or sloppy
+9. Improve balance in the “Web & Mobile” section if the product image is too small relative to the text.
+10. Preserve the current color system and brand feel. No random redesigns.
+
+==================================================
+SECTION B — MOBILE RESPONSIVENESS PASS
+==================================================
+
+Run a strict responsive audit for the PUBLIC SITE ONLY.
+
+Test these breakpoints at minimum:
+- 390px width
+- 768px width
+- 1280px+ desktop
+
+Requirements:
+1. No overlapping text.
+2. No cut-off cards.
+3. No broken grids.
+4. No overflowing pills/badges/buttons.
+5. No hero controls wrapping awkwardly.
+6. No CTA buttons falling outside card boundaries.
+7. No section with excessive empty space caused by desktop-only sizing.
+8. Ensure the 6-card tools section stacks cleanly on mobile/tablet.
+9. Ensure the live demos cards stack/read cleanly on mobile.
+10. Ensure FAQ accordion is readable and touch-friendly.
+11. Ensure navbar and mobile nav links all work and point to the correct public destinations.
+
+If any desktop section needs slight breakpoint-specific adjustments, make them cleanly and minimally.
+
+==================================================
+SECTION C — CTA FUNNEL AUDIT
+==================================================
+
+Audit every major public CTA from the homepage.
+
+Trace and verify these:
+- hero tool pills
+- hero primary CTA
+- navbar “Get the App”
+- pricing CTAs
+- tools showcase CTAs
+- demo cards CTAs
+- document situation cards CTAs
+- footer web app link
+- support/privacy/terms links
+
+Rules:
+1. Every CTA must go to the correct destination.
+2. Public-site informational links should stay on marketing routes.
+3. Tool-entry CTAs should go into the product routes intentionally.
+4. Disabled / Coming Soon items must not behave like active product CTAs.
+5. No dead links.
+6. No misleading links.
+7. No route should unexpectedly land on the wrong surface.
+
+Important distinction:
+- Marketing page routes = public-facing content
+- /app routes = actual product tools
+
+Do not change app behavior. Only fix public CTA routing where needed.
+
+==================================================
+SECTION D — STORE / BILLING READINESS SURFACE AUDIT
+==================================================
+
+This is a SURFACE COPY audit only for the public site.
+
+Do not implement Stripe.
+Do not change backend billing logic.
+Do not create store assets in this task.
+
+Audit public-site wording for:
+- pricing clarity
+- Starter vs Pro clarity
+- what is included/excluded
+- web/iOS/Android wording
+- Coming Soon wording
+- app store badge wording
+- subscription wording
+- CTA wording
+
+Requirements:
+1. Pricing copy must be honest and consistent with the actual product state.
+2. If mobile apps are not yet live, the wording must clearly reflect that.
+3. App Store / Google Play graphics must not imply the app is live if they only open a waitlist/modal.
+4. Starter and Pro language must match the current intended gating model.
+5. Digital Signature must remain clearly non-live.
+6. No claims that imply full store readiness if that is not true yet.
+
+==================================================
+NON-NEGOTIABLE TRUTH RULES
+==================================================
+
+Keep these truths intact unless the code proves otherwise:
+- 5 live tools
+- Digital Signature = Coming Soon only
+- no fake testimonials
+- no fake social proof numbers
+- no misleading store availability
+- no false “AI training” claims
+- no false “documents never touch servers” claim if the product processes uploads server-side
+- all privacy wording must remain consistent with the actual current app behavior
+
+If any current public wording is inaccurate, fix it conservatively and honestly.
+
+==================================================
+DELIVERABLE FORMAT
+==================================================
+
+When finished, return a strict report in this exact structure:
+
+1. TARGET CONFIRMATION
+- target artifact confirmed
+- non-target artifact confirmed untouched
+
+2. FILES READ
+- list files inspected before editing
+
+3. FILES CHANGED
+For each changed file:
+- file path
+- exact purpose of change
+
+4. FINAL PUBLIC SITE POLISH CHANGES
+- section-by-section summary of what was improved
+
+5. RESPONSIVE FIXES
+- desktop/tablet/mobile issues found
+- exact fixes made
+
+6. CTA AUDIT RESULTS
+For each major CTA group:
+- where it points
+- whether it is correct
+- what was fixed, if anything
+
+7. BILLING / STORE SURFACE AUDIT RESULTS
+- wording verified
+- wording fixed
+- anything intentionally left unchanged
+
+8. SCREENSHOTS REQUIRED
+Take and show screenshots of:
+- hero
+- 6-card tools showcase
+- walkthrough section
+- live demos section
+- document situations section
+- FAQ + pricing section
+- mobile hero
+- mobile tools section
+- mobile pricing section
+
+9. FINAL STATUS
+One of:
+- DONE — strict punch list complete
+- PARTIAL — list remaining blockers
+
+==================================================
+STOP CONDITIONS
+==================================================
+
+Stop immediately and report instead of guessing if:
+- the public-site file structure does not match the expected artifact
+- a requested change would require modifying artifacts/plainpath
+- a claim cannot be verified from the actual current code/state
+
+==================================================
+IMPLEMENTATION STYLE
+==================================================
+
+- minimal, precise edits
+- no unnecessary redesign
+- no speculative features
+- no fake content
+- no broad refactors
+- preserve current brand direction
+- fix only what improves clarity, honesty, consistency, responsiveness, and conversion flow
+
+Begin by reading the public marketing files and confirming the target artifact before making any edits.
