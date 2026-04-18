@@ -230,7 +230,7 @@ export function PdfRedactViewer({
 
   return (
     <div
-      className={`space-y-2 max-h-[380px] overflow-y-auto rounded-xl border border-border/30 bg-muted/5 p-1.5 ${className}`}
+      className={`space-y-2 min-h-[500px] max-h-[calc(100vh-220px)] overflow-y-auto rounded-xl border border-border/30 bg-muted/5 p-1.5 ${className}`}
     >
       {pages.map((pg, idx) => {
         const pn = idx + 1
