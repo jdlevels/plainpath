@@ -1,0 +1,282 @@
+STRICT PHASE 3: Launch operations, business-account readiness, payments, compliance, and go-live setup.
+
+TARGET:
+- Work only on the systems, settings, integrations, and operational surfaces needed to prepare PlainPath for real launch readiness.
+- Do NOT redesign the approved public-site layout unless a launch-critical issue forces a tiny fix.
+- Do NOT reopen already approved visual decisions from Phase 1 / Phase 2 unless there is a real blocker.
+- If marketing site and product app are separate artifacts, identify which artifact owns each launch-critical item and edit only where required.
+
+MISSION:
+Prepare PlainPath for controlled real-world launch readiness after visual acceptance.
+This phase is about:
+- business/account readiness
+- payments
+- access enforcement
+- legal/support surface accuracy
+- domain / email / analytics / admin readiness
+- launch safety
+- operational trust
+
+CRITICAL CONTEXT:
+Before treating this phase as complete, confirm whether Phase 0 gating is already fixed:
+- Starter = Analyze + Redact only
+- Pro = all 5 live tools
+- Digital Signature = coming soon / unavailable
+If not already fixed, stop and fix/verify that first because launch readiness is invalid without correct access control.
+
+PHASE 3 OBJECTIVES:
+
+1. BUSINESS / ACCOUNT READINESS
+Audit and prepare all business-facing setup dependencies:
+- branded business email usage
+- sender/support email consistency
+- legal/company references on site where applicable
+- invoice/subscription/business identity surfaces
+- account ownership/admin readiness
+- environment variables / secrets structure for production operations
+- ensure no personal/dev placeholders remain
+
+2. PAYMENTS / BILLING READINESS
+Audit the real payment flow end to end:
+- pricing CTAs
+- subscribe routes
+- Stripe or billing integration
+- plan mapping
+- Starter vs Pro entitlements
+- checkout success/cancel behavior
+- post-purchase account state refresh
+- billing portal / manage subscription route if present
+- cancellation / downgrade / upgrade logic if present
+- ensure no demo-only or broken payment paths remain
+
+Verify:
+- Starter purchase grants only approved Starter tools
+- Pro purchase grants approved Pro tools
+- Digital Signature is not unintentionally granted
+- price text and real billing config match exactly
+- yearly discount math matches displayed savings
+
+3. ACCESS / ENTITLEMENT CONSISTENCY
+Confirm product access is enforced consistently across:
+- signed-out state
+- signed-in no-plan state
+- Starter account
+- Pro account
+- expired/cancelled account if such state exists
+- direct route entry
+- dashboard/tool launcher
+- CTA deep links
+- pricing cards
+- demo entry points
+
+No tool may appear unlocked if it is actually blocked.
+No tool may be accessible by bypassing UI.
+No hidden or alternate route should defeat the plan logic.
+
+4. LEGAL / TRUST / SUPPORT SURFACES
+Audit and correct all real trust surfaces for launch:
+- Privacy Policy
+- Terms of Service
+- Support page
+- contact email
+- footer links
+- document-storage wording
+- AI training wording
+- legal disclaimer wording
+- “not legal advice” treatment
+- pricing fine print
+- referral wording
+- attorney comparison disclaimer
+
+Everything must be factually aligned with actual product behavior.
+No overstated privacy claims.
+No overstated legal claims.
+No misleading “coming soon” language.
+No dead support/legal links.
+
+5. DOMAIN / PRODUCTION SURFACE READINESS
+Audit production readiness of:
+- primary domain behavior
+- www/non-www if applicable
+- favicon / title / metadata correctness
+- OG image / social preview if configured
+- canonical consistency if applicable
+- production env references
+- broken preview/dev URLs accidentally exposed
+- support email links
+- public routes vs app routes
+- sign-in / sign-up / post-login landing behavior
+
+6. ANALYTICS / EVENT READINESS
+If analytics are installed, audit them.
+If missing and already planned, prepare or wire cleanly without clutter.
+
+Check:
+- page views
+- pricing CTA clicks
+- upgrade CTA clicks
+- trial/get-started CTA clicks
+- referral CTA clicks
+- core tool-entry clicks
+- subscription success/cancel events if supported
+- no duplicate firing
+- no debug/dev spam in production
+
+Do not add noisy or privacy-invasive tracking.
+
+7. REFERRAL SECTION / PRODUCT-REALITY READINESS
+Confirm the public referral presentation remains honest:
+- no fake personal referral links on public page
+- no fake rewards counters
+- no fake account state
+- CTA routes to real destination
+- product account referral functionality is either real and correctly surfaced, or clearly framed as inside-account only
+
+If an actual referral system exists or is being activated, verify:
+- where referral link is generated
+- who can access it
+- whether reward logic is real
+- whether public wording matches actual functionality
+
+8. EMAIL / COMMUNICATION READINESS
+Audit any outgoing emails or transactional communication if present:
+- welcome / signup emails
+- billing emails
+- support contact behavior
+- referral emails if applicable
+- branding consistency
+- no personal/dev sender names
+- links route to correct production destination
+- no broken template placeholders
+
+9. ADMIN / SAFETY / OPERATIONAL CHECKS
+Audit for launch blockers such as:
+- exposed test routes
+- leftover debug panels
+- preview/demo-only routes exposed publicly
+- broken auth redirects
+- dead buttons
+- incorrect environment toggles
+- mock data where real production logic is expected
+- console errors
+- failed network requests
+- security-sensitive data exposure in frontend state
+- misconfigured role checks
+
+10. APP STORE / MOBILE POSITIONING READINESS
+Because PlainPath references iOS/Android coming soon:
+- confirm store badges and mobile references remain honest
+- no false store availability
+- no broken store links
+- keep current waitlist / notify behavior accurate
+- verify mobile wording aligns with actual readiness status
+
+MANDATORY LAUNCH CHECKLIST:
+Audit and explicitly report status for each of the following:
+
+A. Pricing accuracy
+- displayed monthly pricing
+- displayed yearly pricing
+- displayed savings %
+- checkout product IDs / price IDs
+- correct plan naming
+
+B. Tool gating
+- Analyze
+- Trust Check
+- Build
+- Review
+- Redact
+- Digital Signature
+
+C. Public/legal/support links
+- privacy
+- terms
+- support
+- footer links
+- contact email
+
+D. Production surfaces
+- domain
+- title/meta
+- favicon
+- OG/social card if present
+- no dev URLs
+
+E. Payment flow
+- checkout opens
+- purchase returns correctly
+- entitlement updates correctly
+- manage subscription works if implemented
+
+F. Operational integrity
+- no console errors
+- no dead buttons
+- no broken routes
+- no exposed debug/dev UI
+
+G. Trust consistency
+- privacy wording matches real storage behavior
+- AI wording matches real training behavior
+- referral wording matches real functionality
+- attorney comparison remains clearly framed as estimate, not legal claim
+
+NON-NEGOTIABLE RULES:
+- Do not invent business features that do not exist
+- Do not fabricate legal/compliance readiness
+- Do not add fake launch language
+- Do not touch approved visual hierarchy unless needed for a real launch blocker
+- If something is incomplete, label it clearly as incomplete
+- If launch is not fully ready, say so explicitly
+
+REQUIRED RETURN FORMAT:
+
+1. TARGET CONFIRMATION
+- Which artifact(s) were edited
+- Which artifact(s) were intentionally untouched
+
+2. FILES / SETTINGS / INTEGRATIONS CHANGED
+- exact files changed
+- exact integrations/settings touched
+
+3. BILLING / PLAN STATUS
+- Starter rule table
+- Pro rule table
+- Coming Soon status table
+
+4. PAYMENT FLOW VALIDATION
+- checkout status
+- post-checkout status
+- subscription management status
+- failures or gaps
+
+5. LEGAL / SUPPORT AUDIT
+- Privacy
+- Terms
+- Support
+- disclaimers
+- any mismatches corrected
+
+6. DOMAIN / PRODUCTION AUDIT
+- production URL health
+- favicon/meta/branding status
+- no dev leakage confirmation
+
+7. ANALYTICS / EVENTS
+- what exists
+- what was fixed
+- what still missing
+
+8. LAUNCH BLOCKERS
+List only real blockers, categorized:
+- blocker
+- important but not blocker
+- future improvement
+
+9. FINAL VERDICT
+Choose exactly one:
+- READY FOR CONTROLLED SOFT LAUNCH
+- READY FOR BETA ONLY
+- NOT READY FOR LAUNCH
+
+If not fully ready, explain the minimum remaining actions required.
