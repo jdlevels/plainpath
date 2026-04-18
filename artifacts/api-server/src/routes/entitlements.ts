@@ -49,7 +49,7 @@ router.get("/status", (req, res) => {
         usageLimit: proEntitlements.analysesPerMonth,
         usageRemaining: proEntitlements.analysesPerMonth,
         toolAccess: TOOL_ACCESS["pro"],
-        toolUsage: { analyze: 0, "trust-check": 0, "contract-review": 0, "build-contract": 0 },
+        toolUsage: { analyze: 0, "trust-check": 0, "contract-review": 0, "build-contract": 0, redact: 0 },
         features: proEntitlements.features,
         currentPeriodEnd: null,
         cancelAtPeriodEnd: false,

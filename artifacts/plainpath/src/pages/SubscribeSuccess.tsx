@@ -50,8 +50,8 @@ export default function SubscribeSuccess() {
         <p className="text-muted-foreground text-sm leading-relaxed mb-6">
           Your <strong className="text-foreground">{planLabel}</strong> plan is now active.
           {plan === "pro"
-            ? " You now have access to all four PlainPath tools — Analyze, Trust Check, Contract Builder, and Contract Review."
-            : " You now have unlimited document analyses."}
+            ? " You now have access to all five PlainPath tools — Analyze, Trust Check, Contract Builder, Contract Review, and Redact Sensitive Info."
+            : " You now have unlimited document analyses and access to Redact Sensitive Info."}
         </p>
 
         {sessionData?.customer_email && (
