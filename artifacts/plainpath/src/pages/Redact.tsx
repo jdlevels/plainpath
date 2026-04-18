@@ -713,46 +713,6 @@ export default function Redact() {
           </p>
         </div>
 
-        {/* Try a sample document */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-3">
-            <div className="flex-1 h-px bg-border/40" />
-            <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">Try a sample document</p>
-            <div className="flex-1 h-px bg-border/40" />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            {REDACT_DEMOS.map((demo) => {
-              const Icon = demo.icon
-              return (
-                <button
-                  key={demo.id}
-                  onClick={() => {
-                    setActiveText(demo.text)
-                    setActiveFileName(demo.fileName)
-                    setReturnTo("none")
-                  }}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/50 hover:border-violet-400/50 hover:bg-violet-50/40 dark:hover:bg-violet-950/10 transition-all text-left group"
-                >
-                  <div className={`w-8 h-8 rounded-lg ${demo.bg} flex items-center justify-center shrink-0`}>
-                    <Icon className={`w-4 h-4 ${demo.color}`} />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold leading-tight group-hover:text-violet-700 dark:group-hover:text-violet-400 transition-colors">{demo.label}</p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">{demo.meta}</p>
-                  </div>
-                </button>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* Divider */}
-        <div className="flex items-center gap-3">
-          <div className="flex-1 h-px bg-border/40" />
-          <p className="text-[11px] text-muted-foreground">or paste your own text</p>
-          <div className="flex-1 h-px bg-border/40" />
-        </div>
-
         {/* Mode tabs */}
         <div className="flex gap-1 bg-muted/40 rounded-xl p-1">
           {([
@@ -965,6 +925,39 @@ export default function Redact() {
                 {item}
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* Try a sample document */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="flex-1 h-px bg-border/40" />
+            <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">Try a sample document</p>
+            <div className="flex-1 h-px bg-border/40" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            {REDACT_DEMOS.map((demo) => {
+              const Icon = demo.icon
+              return (
+                <button
+                  key={demo.id}
+                  onClick={() => {
+                    setActiveText(demo.text)
+                    setActiveFileName(demo.fileName)
+                    setReturnTo("none")
+                  }}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/50 hover:border-violet-400/50 hover:bg-violet-50/40 dark:hover:bg-violet-950/10 transition-all text-left group"
+                >
+                  <div className={`w-8 h-8 rounded-lg ${demo.bg} flex items-center justify-center shrink-0`}>
+                    <Icon className={`w-4 h-4 ${demo.color}`} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold leading-tight group-hover:text-violet-700 dark:group-hover:text-violet-400 transition-colors">{demo.label}</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">{demo.meta}</p>
+                  </div>
+                </button>
+              )
+            })}
           </div>
         </div>
       </div>
