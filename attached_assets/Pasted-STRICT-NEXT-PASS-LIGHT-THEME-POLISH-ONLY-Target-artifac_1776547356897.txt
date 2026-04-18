@@ -1,0 +1,203 @@
+STRICT NEXT PASS — LIGHT THEME POLISH ONLY
+Target artifact: artifacts/plainpath-marketing
+Non-target: artifacts/plainpath (do not touch product app logic, routes, billing, auth, API, or app UI)
+Mode: preserve approved public conversion work; improve only the LIGHT visual system and section depth
+
+CONTEXT
+The dark/public site is now in strong shape and should be treated as approved for this pass.
+Do NOT redesign or reorder the approved dark-mode content.
+Do NOT reopen pricing order, attorney comparison order, referral placement, walkthrough behavior, CTA routing, or truthfulness fixes unless absolutely required by the light-theme polish work.
+
+GOAL
+Refine the LIGHT background/theme so it no longer feels:
+- too bright
+- too flat
+- too uniform
+- too brochure-like
+- low-depth compared to dark mode
+
+The light version needs:
+- more variation between sections
+- more visual depth
+- less raw brightness
+- clearer hierarchy
+- better card separation
+- a more premium feel
+
+PRIMARY REQUIREMENT
+This pass is LIGHT-THEME VISUAL POLISH ONLY.
+
+DO NOT:
+- change approved public copy unless required for contrast/readability
+- change section order
+- remove any approved features
+- alter pricing logic
+- alter the attorney comparison behavior
+- alter referral honesty rules
+- add fake metrics, fake reviews, fake testimonials, fake badges, fake users, or fake rewards
+- add heavy motion everywhere
+- make the light theme look “gray and dead”
+
+KEEP EXACTLY AS APPROVED
+1. Pricing section order remains:
+   heading/subhead
+   attorney comparison
+   monthly/yearly toggle
+   starter/pro cards
+   fine print
+
+2. Referral section remains honest/public-safe
+3. Walkthrough remains app-inspired motion with no fake timestamps/video chrome
+4. Approved CTA destinations remain unchanged
+5. Dark theme styling and current public structure remain intact unless a tiny shared token change is required
+
+LIGHT THEME DESIGN DIRECTION
+Shift the light theme from “bright white page” to “premium soft-light system.”
+
+Use this visual direction:
+- base page background should move away from near-white into a soft fog / mist / cool-neutral light surface
+- alternate large section bands should have subtle tonal differences
+- introduce soft blue-gray and neutral off-white variation between major sections
+- cards should read as deliberate containers, not barely-visible white rectangles
+- preserve brand blues/violets/greens/ambers, but let them sit on calmer surfaces
+- stronger hierarchy between page canvas, section band, card surface, and CTA
+
+SPECIFIC VISUAL CHANGES TO IMPLEMENT
+A. PAGE + SECTION SURFACES
+1. Reduce total page brightness in light mode
+   - Replace raw near-white page background with a softer off-white / cool mist background
+   - Avoid pure #ffffff as the dominant full-page field unless used only on specific cards
+2. Create section separation
+   - Alternate major sections with subtle but visible tonal shifts
+   - Example direction only: one band can be soft blue-gray, the next neutral fog, the next slightly warm off-white, etc.
+   - Differences should be restrained, premium, and not striped/cartoonish
+3. Preserve hero-to-section flow
+   - The page should no longer read as one uninterrupted pale sheet
+
+B. CARD SYSTEM DEPTH
+1. Increase card contrast against light backgrounds
+   - Cards should be slightly more distinct from the section surface
+   - Use stronger but refined borders
+   - Use soft shadow/elevation where appropriate
+2. Ensure cards still feel modern and minimal
+   - no thick heavy shadows
+   - no harsh dark outlines
+   - no over-glassmorphism
+3. Re-check these card systems in light mode:
+   - trust pillar cards
+   - tools showcase cards
+   - problem section side cards
+   - live demo cards
+   - document situation cards
+   - FAQ container
+   - pricing cards
+   - referral right-side illustration card
+
+C. TYPOGRAPHIC CONTRAST
+1. Improve body text contrast on light backgrounds
+   - secondary text is currently too weak against pale surfaces
+2. Headlines should still feel authoritative
+3. Muted labels/captions should remain subtle but readable
+4. Fine print should not disappear into the background
+
+D. SECTION HIERARCHY / DEPTH
+Refine these sections specifically in light mode:
+1. Hero
+   - keep layout
+   - improve background depth so the hero feels premium, not washed out
+2. Stats / trust pillars
+   - clearer section separation from hero and from next band
+3. Tools showcase
+   - cards should sit on the page with more confidence
+4. Problem section
+   - maintain dark narrative impact if already approved
+   - only adjust if shared theme changes force it
+5. Walkthrough
+   - light version should still feel like a living product section
+   - surrounding band should frame it better
+6. Live demos
+   - improve contrast between section background and demo cards
+7. Document situations
+   - stronger container distinction; avoid flat wall-of-cards feeling
+8. Built for real people / trust cards
+   - clearer band separation from neighbors
+9. FAQ
+   - container and rows should feel grounded, not washed out
+10. Pricing + attorney comparison
+   - maintain approved order
+   - improve section depth and card separation only
+11. Referral section
+   - maintain approved honesty structure
+   - improve light-mode surface hierarchy
+12. Web & mobile demo
+   - retain content; improve surrounding contrast
+13. Privacy band
+   - this section should feel secure, calm, and intentional in light mode
+14. Final CTA + footer
+   - preserve current approved structure; improve visual grounding only
+
+E. LIGHT-THEME COLOR SYSTEM
+Apply restrained theme tuning:
+- slightly darker section backgrounds than current light mode
+- slightly richer card surfaces
+- slightly more visible separators and borders
+- preserve accent colors without making them neon
+- keep accessibility and readability strong
+
+F. SHARED TOKEN DISCIPLINE
+If theme tokens/variables are used:
+- prefer improving shared light-theme tokens rather than one-off hacks
+- but do not accidentally degrade dark mode
+- if a shared token would harm dark mode, isolate the light-mode styling cleanly
+
+MOTION RULES
+- Keep motion restrained and premium
+- No new motion spam
+- No bouncing/glowing distractions
+- Only preserve existing approved motion behavior
+- This pass is mostly about surfaces, contrast, and hierarchy
+
+RESPONSIVE REQUIREMENTS
+Verify light mode at:
+- desktop wide
+- desktop standard
+- tablet
+- mobile
+
+Check specifically for:
+- no clipped cards
+- no washed-out text
+- no section blending
+- no invisible borders
+- no layout jumps
+- no excessive blank white-feeling space
+- no accidental dark-mode regressions
+
+MANDATORY DELIVERABLE
+After changes, provide:
+1. exact files changed
+2. exact light-theme visual changes by section
+3. confirmation that dark mode/public approved structure was preserved
+4. screenshots of LIGHT mode for these sections:
+   - hero
+   - tools showcase
+   - walkthrough
+   - live demos + document situations
+   - FAQ + pricing
+   - referral + web/mobile + privacy band
+5. note whether any tiny shared token changes affected dark mode
+6. final acceptance statement on whether light mode now has:
+   - more variation
+   - more depth
+   - less raw brightness
+   - stronger hierarchy
+   - more premium card separation
+
+FINAL SUCCESS CRITERIA
+This pass is successful only if:
+- light mode no longer feels painfully bright
+- sections are visually separated
+- cards feel anchored and premium
+- typography is easier to read
+- page feels like a real product, not a flat brochure
+- dark mode remains approved and intact

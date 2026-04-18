@@ -730,7 +730,7 @@ export default function Home() {
           HERO
       ════════════════════════════════════════════════ */}
       <section className="relative pt-28 pb-0 md:pt-40 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-100/70 via-indigo-50/60 to-violet-100/50 dark:from-blue-950/40 dark:via-indigo-950/30 dark:to-violet-950/20 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-200/50 via-indigo-100/60 to-violet-200/50 dark:from-blue-950/40 dark:via-indigo-950/30 dark:to-violet-950/20 pointer-events-none" />
         <div className="absolute top-0 right-0 w-[700px] h-[700px] bg-gradient-radial from-violet-200/30 dark:from-violet-900/20 to-transparent rounded-full blur-3xl pointer-events-none -translate-y-1/4 translate-x-1/4" />
 
         <div className="relative z-10 max-w-6xl mx-auto px-5 sm:px-6">
@@ -852,7 +852,7 @@ export default function Home() {
       {/* ════════════════════════════════════════════════
           STATS BAR
       ════════════════════════════════════════════════ */}
-      <div className="w-full bg-gradient-to-b from-slate-100/90 via-blue-50/50 to-slate-100/70 dark:from-zinc-900/80 dark:via-blue-950/20 dark:to-zinc-900/60 border-y border-slate-200/80 dark:border-zinc-800/60 py-14">
+      <div className="w-full bg-gradient-to-b from-sky-100/80 via-blue-50/70 to-slate-100/80 dark:from-zinc-900/80 dark:via-blue-950/20 dark:to-zinc-900/60 border-y border-sky-200/60 dark:border-zinc-800/60 py-14">
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
           <StatsBar />
         </div>
@@ -896,7 +896,7 @@ export default function Home() {
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: i * 0.07 }}
                   whileHover={isComingSoon ? {} : { y: -3 }}
-                  className={`bg-card rounded-2xl border-l-4 ${border} border border-border/60 shadow-sm relative overflow-hidden h-full ${isComingSoon ? "opacity-55 cursor-default select-none" : "group"}`}
+                  className={`bg-card rounded-2xl border-l-4 ${border} border border-border/75 shadow-sm relative overflow-hidden h-full ${isComingSoon ? "opacity-55 cursor-default select-none" : "group"}`}
                 >
                   <div className={`absolute top-0 right-0 w-56 h-56 bg-gradient-to-bl ${glow} to-transparent opacity-50 ${isComingSoon ? "" : "group-hover:opacity-80"} transition-opacity duration-300`} />
                   <div className="relative z-10 p-7 flex flex-col h-full">
@@ -951,7 +951,7 @@ export default function Home() {
       ════════════════════════════════════════════════ */}
       <div
         id="how-it-works"
-        className="w-full bg-gradient-to-b from-slate-100/90 via-blue-50/50 to-slate-100/70 dark:from-zinc-900/80 dark:via-blue-950/20 dark:to-zinc-900/60 border-y border-slate-200/80 dark:border-zinc-800/60 py-16"
+        className="w-full bg-gradient-to-b from-indigo-100/60 via-sky-50/70 to-blue-100/50 dark:from-zinc-900/80 dark:via-blue-950/20 dark:to-zinc-900/60 border-y border-indigo-200/50 dark:border-zinc-800/60 py-16"
       >
         <div className="max-w-5xl mx-auto px-5 sm:px-6">
           <p className="text-center text-xs font-semibold tracking-[0.12em] uppercase text-muted-foreground mb-12">
@@ -984,7 +984,7 @@ export default function Home() {
       {/* ════════════════════════════════════════════════
           THE PROBLEM — dark product story
       ════════════════════════════════════════════════ */}
-      <div className="w-full bg-white dark:bg-gradient-to-br dark:from-slate-950 dark:to-slate-900/90 border-b border-slate-100 dark:border-transparent py-20">
+      <div className="w-full bg-gradient-to-b from-white via-slate-50/80 to-white dark:bg-gradient-to-br dark:from-slate-950 dark:to-slate-900/90 border-b border-slate-200/80 dark:border-transparent py-20">
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
           <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true, margin: "-80px" }}>
             <div className="rounded-3xl bg-slate-950 dark:bg-slate-900 text-white px-6 py-16 sm:px-12 sm:py-20 overflow-hidden relative">
@@ -1037,7 +1037,7 @@ export default function Home() {
       {/* ════════════════════════════════════════════════
           TOOLS SHOWCASE — 6-card detailed grid
       ════════════════════════════════════════════════ */}
-      <div id="solutions" className="w-full bg-gradient-to-br from-indigo-50/90 via-violet-50/70 to-slate-50/90 dark:from-violet-950/22 dark:via-slate-900 dark:to-slate-900 border-y border-indigo-100 dark:border-border/40 py-20">
+      <div id="solutions" className="w-full bg-gradient-to-br from-indigo-100/80 via-violet-100/60 to-slate-100/80 dark:from-violet-950/22 dark:via-slate-900 dark:to-slate-900 border-y border-indigo-200/60 dark:border-border/40 py-20">
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
           <ToolsShowcase />
         </div>
@@ -1055,7 +1055,7 @@ export default function Home() {
       {/* ════════════════════════════════════════════════
           LIVE DEMOS — one demo per tool
       ════════════════════════════════════════════════ */}
-      <div id="demos" className="w-full bg-gradient-to-br from-blue-50 via-indigo-50/80 to-white dark:from-blue-950/35 dark:via-slate-900 dark:to-slate-900 border-y border-blue-100 dark:border-primary/15 py-16 scroll-mt-24">
+      <div id="demos" className="w-full bg-gradient-to-br from-blue-100/80 via-indigo-100/60 to-sky-50/80 dark:from-blue-950/35 dark:via-slate-900 dark:to-slate-900 border-y border-blue-200/60 dark:border-primary/15 py-16 scroll-mt-24">
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
           <div className="text-center mb-12">
             <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
@@ -1100,7 +1100,7 @@ export default function Home() {
       {/* ════════════════════════════════════════════════
           DOCUMENT SITUATIONS
       ════════════════════════════════════════════════ */}
-      <div className="w-full bg-gradient-to-br from-slate-50 via-blue-50/40 to-indigo-50/30 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900 border-y border-slate-200 dark:border-border/40 py-16">
+      <div className="w-full bg-gradient-to-br from-slate-100/90 via-blue-100/50 to-indigo-100/60 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900 border-y border-slate-200/80 dark:border-border/40 py-16">
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
           <DocumentSituations />
         </div>
@@ -1109,7 +1109,7 @@ export default function Home() {
       {/* ════════════════════════════════════════════════
           TRUST / CREDIBILITY
       ════════════════════════════════════════════════ */}
-      <section className="py-20 md:py-24">
+      <section className="py-20 md:py-24 bg-gradient-to-b from-white via-slate-50/60 to-white dark:bg-transparent">
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
           <div className="text-center mb-12">
             <p className="text-xs font-semibold tracking-[0.12em] uppercase text-muted-foreground mb-3">Why PlainPath</p>
@@ -1132,7 +1132,7 @@ export default function Home() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.45 }}
                 whileHover={{ y: -4 }}
-                className="bg-card rounded-2xl border border-border/60 p-6 shadow-sm"
+                className="bg-card rounded-2xl border border-border/80 p-6 shadow-sm"
               >
                 <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
                   <Icon className="w-5 h-5 text-primary" />
@@ -1148,7 +1148,7 @@ export default function Home() {
       {/* ════════════════════════════════════════════════
           FAQ
       ════════════════════════════════════════════════ */}
-      <div className="w-full bg-gradient-to-b from-slate-100/90 via-slate-50 to-blue-50/60 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900 border-t border-slate-200 dark:border-border/40 py-16">
+      <div className="w-full bg-gradient-to-b from-sky-100/70 via-blue-50/60 to-indigo-100/50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900 border-t border-sky-200/60 dark:border-border/40 py-16">
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
           <FAQSection />
         </div>
@@ -1159,7 +1159,7 @@ export default function Home() {
       ════════════════════════════════════════════════ */}
       <div
         id="pricing"
-        className="w-full bg-gradient-to-b from-slate-100/90 via-blue-50/40 to-slate-100/70 dark:from-zinc-900/80 dark:via-blue-950/10 dark:to-zinc-900/60 border-y border-slate-200/80 dark:border-zinc-800/60 py-24 md:py-32"
+        className="w-full bg-gradient-to-b from-violet-100/60 via-blue-100/50 to-indigo-100/60 dark:from-zinc-900/80 dark:via-blue-950/10 dark:to-zinc-900/60 border-y border-violet-200/50 dark:border-zinc-800/60 py-24 md:py-32"
       >
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
           <div className="text-center max-w-2xl mx-auto mb-14">
@@ -1339,7 +1339,7 @@ export default function Home() {
       {/* ════════════════════════════════════════════════
           APP SHOWCASE — web + mobile
       ════════════════════════════════════════════════ */}
-      <section className="py-20 md:py-24">
+      <section className="py-20 md:py-24 bg-gradient-to-br from-emerald-50/60 via-sky-50/50 to-white dark:bg-transparent">
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
           <div className="grid lg:grid-cols-2 gap-14 items-center">
             <div className="relative order-2 lg:order-1">
@@ -1386,7 +1386,7 @@ export default function Home() {
       {/* ════════════════════════════════════════════════
           PRIVACY
       ════════════════════════════════════════════════ */}
-      <div className="w-full bg-gradient-to-br from-indigo-50/90 dark:from-indigo-950/30 via-violet-50/70 dark:via-violet-950/20 to-slate-50/90 dark:to-zinc-900/60 border-y border-indigo-100 dark:border-indigo-900/40 py-20">
+      <div className="w-full bg-gradient-to-br from-indigo-100/80 dark:from-indigo-950/30 via-violet-100/60 dark:via-violet-950/20 to-blue-50/80 dark:to-zinc-900/60 border-y border-indigo-200/60 dark:border-indigo-900/40 py-20">
         <div className="max-w-4xl mx-auto px-5 sm:px-6">
           <div className="flex flex-col md:flex-row items-center gap-10">
             <div className="w-16 h-16 bg-foreground rounded-2xl flex items-center justify-center shrink-0">
