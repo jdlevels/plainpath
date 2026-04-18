@@ -26,24 +26,22 @@ const TOOL_LINKS = [
 ];
 
 const LogoBrand = () => (
-  <>
-    {/* Light mode: full PNG horizontal lockup */}
+  <div className="flex items-center gap-2">
+    {/* Transparent icon mark — works on both light and dark surfaces */}
     <img
-      src="/images/logo-plainpath.png"
-      alt="PlainPath"
-      className="h-8 w-auto dark:hidden"
+      src="/images/logo-icon.png"
+      alt=""
+      aria-hidden="true"
+      className="h-8 w-8 shrink-0 object-contain"
       draggable={false}
     />
-    {/* Dark mode: icon mark + text (PNG has white bg, not readable on dark) */}
-    <div className="hidden dark:flex items-center gap-2">
-      <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shrink-0">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5 text-white">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-      </div>
-      <span className="font-display font-bold text-xl tracking-tight text-foreground">PlainPath</span>
-    </div>
-  </>
+    <span
+      className="font-display font-bold text-[1.2rem] leading-none tracking-tight text-foreground"
+      style={{ fontFamily: "var(--font-display)" }}
+    >
+      PlainPath
+    </span>
+  </div>
 );
 
 export function Navbar() {
