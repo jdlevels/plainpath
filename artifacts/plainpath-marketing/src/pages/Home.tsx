@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -18,7 +18,7 @@ import {
   ArrowRight, Upload, Sparkles, Scale,
   AlertTriangle, CheckCircle2, Clock, Lock, X as XIcon, EyeOff, Pen,
   CalendarX, Eye, PenLine, FileScan,
-  DollarSign, Copy, Users,
+  DollarSign, Copy, Users, ChevronDown,
 } from "lucide-react";
 
 /* ─── Animation helpers ──────────────────────────────────── */
@@ -316,61 +316,92 @@ const PLANS = [
 const ATTORNEY_SCENARIOS = [
   {
     id: "lease",
-    label: "Review a Lease",
+    label: "Lease agreement",
     attyLow: 300, attyHigh: 600,
-    ppPlan: "Starter",
-    ppPrice: 4.99,
-    ppTool: "Analyze a Document",
+    ppPlan: "Starter", ppPrice: 4.99, ppTool: "Analyze a Document",
     note: "1–2 hrs at typical attorney rates of $150–$350/hr.",
   },
   {
-    id: "trust",
-    label: "Check a Suspicious Letter",
-    attyLow: 150, attyHigh: 400,
-    ppPlan: "Pro",
-    ppPrice: 29.99,
-    ppTool: "Document Trust Check",
-    note: "Brief attorney consultation for letter review.",
-  },
-  {
     id: "employment",
-    label: "Review an Employment Contract",
+    label: "Employment contract",
     attyLow: 500, attyHigh: 1500,
-    ppPlan: "Pro",
-    ppPrice: 29.99,
-    ppTool: "Contract Review",
+    ppPlan: "Pro", ppPrice: 29.99, ppTool: "Contract Review",
     note: "Employment attorney review, typically 3–10 hrs.",
   },
   {
-    id: "build",
-    label: "Build a Freelance Contract",
+    id: "freelance",
+    label: "Freelance agreement",
     attyLow: 200, attyHigh: 800,
-    ppPlan: "Pro",
-    ppPrice: 29.99,
-    ppTool: "Build a Contract",
+    ppPlan: "Pro", ppPrice: 29.99, ppTool: "Build a Contract",
     note: "Simple contract drafting, typically 1–4 attorney hrs.",
   },
   {
-    id: "redact",
-    label: "Redact a Document",
-    attyLow: 100, attyHigh: 300,
-    ppPlan: "Starter",
-    ppPrice: 4.99,
-    ppTool: "Redact Sensitive Info",
-    note: "Redaction services via paralegal or attorney.",
+    id: "nda",
+    label: "NDA",
+    attyLow: 300, attyHigh: 750,
+    ppPlan: "Pro", ppPrice: 29.99, ppTool: "Contract Review",
+    note: "NDA review or drafting, typically 1–3 attorney hrs.",
+  },
+  {
+    id: "business",
+    label: "Business contract",
+    attyLow: 500, attyHigh: 2000,
+    ppPlan: "Pro", ppPrice: 29.99, ppTool: "Contract Review",
+    note: "Complex agreement review, typically 2–8 attorney hrs.",
+  },
+  {
+    id: "irs",
+    label: "IRS notice response",
+    attyLow: 200, attyHigh: 600,
+    ppPlan: "Pro", ppPrice: 29.99, ppTool: "Document Trust Check",
+    note: "Tax attorney or CPA review, typically 1–3 hrs.",
+  },
+  {
+    id: "eviction",
+    label: "Eviction notice",
+    attyLow: 150, attyHigh: 400,
+    ppPlan: "Starter", ppPrice: 4.99, ppTool: "Analyze a Document",
+    note: "Landlord-tenant attorney review, typically 1–2 hrs.",
+  },
+  {
+    id: "medical",
+    label: "Medical bill dispute",
+    attyLow: 150, attyHigh: 350,
+    ppPlan: "Starter", ppPrice: 4.99, ppTool: "Analyze a Document",
+    note: "Healthcare billing advocate or attorney, 1–2 hrs.",
+  },
+  {
+    id: "general",
+    label: "General document review",
+    attyLow: 200, attyHigh: 500,
+    ppPlan: "Starter", ppPrice: 4.99, ppTool: "Analyze a Document",
+    note: "General attorney document review, typically 1–2 hrs.",
   },
 ] as const;
 
 function AttorneyComparison() {
   const [idx, setIdx] = useState(0);
+  const [open, setOpen] = useState(false);
+  const dropRef = useRef<HTMLDivElement>(null);
   const s = ATTORNEY_SCENARIOS[idx];
   const savingsLow  = s.attyLow  - s.ppPrice;
   const savingsHigh = s.attyHigh - s.ppPrice;
 
+  /* Close dropdown when clicking outside */
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropRef.current && !dropRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    if (open) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [open]);
+
   return (
-    <div className="max-w-3xl mx-auto mb-14">
+    <div className="max-w-3xl mx-auto mb-10">
       {/* Section header */}
-      <div className="text-center mb-8">
+      <div className="text-center mb-7">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/25 mb-4">
           <DollarSign className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
           <span className="text-xs font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
@@ -384,25 +415,50 @@ function AttorneyComparison() {
           One attorney hour or a full month of PlainPath?
         </h3>
         <p className="text-muted-foreground text-sm max-w-md mx-auto">
-          Select a task to see a typical cost comparison. Attorney rates vary by region and specialization.
+          Select a document type to see a typical cost comparison.
         </p>
       </div>
 
-      {/* Scenario pills */}
-      <div className="flex flex-wrap justify-center gap-2 mb-7">
-        {ATTORNEY_SCENARIOS.map((scenario, i) => (
+      {/* Scenario dropdown */}
+      <div className="flex justify-center mb-6">
+        <div ref={dropRef} className="relative w-full max-w-xs">
           <button
-            key={scenario.id}
-            onClick={() => setIdx(i)}
-            className={`px-4 py-2 rounded-full text-xs font-semibold border transition-all duration-200 ${
-              idx === i
-                ? "bg-foreground text-background border-foreground shadow-sm"
-                : "bg-transparent text-muted-foreground border-border/60 hover:border-foreground/30 hover:text-foreground"
-            }`}
+            onClick={() => setOpen((v) => !v)}
+            className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-card border border-border/70 rounded-xl shadow-sm text-sm font-semibold text-foreground hover:border-border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
-            {scenario.label}
+            <span className="truncate">{s.label}</span>
+            <ChevronDown
+              className={`w-4 h-4 text-muted-foreground shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+            />
           </button>
-        ))}
+
+          <AnimatePresence>
+            {open && (
+              <motion.div
+                initial={{ opacity: 0, y: -6, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                transition={{ duration: 0.14 }}
+                className="absolute top-[calc(100%+6px)] left-0 right-0 bg-card border border-border/70 rounded-xl shadow-xl overflow-hidden"
+                style={{ zIndex: 50 }}
+              >
+                {ATTORNEY_SCENARIOS.map((scenario, i) => (
+                  <button
+                    key={scenario.id}
+                    onClick={() => { setIdx(i); setOpen(false); }}
+                    className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
+                      idx === i
+                        ? "bg-primary/10 text-primary font-semibold"
+                        : "text-foreground hover:bg-muted/60 font-normal"
+                    }`}
+                  >
+                    {scenario.label}
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
 
       {/* Comparison card */}
@@ -417,7 +473,7 @@ function AttorneyComparison() {
         >
           <div className="grid grid-cols-2 divide-x divide-border/60">
             {/* Attorney column */}
-            <div className="p-6 sm:p-8 bg-red-50/60 dark:bg-red-950/10">
+            <div className="p-5 sm:p-7 bg-red-50/60 dark:bg-red-950/10">
               <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-red-100 dark:bg-red-900/30 mb-4">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-red-600 dark:text-red-400">
                   Attorney
@@ -426,11 +482,11 @@ function AttorneyComparison() {
               <p className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight leading-none mb-1">
                 ${s.attyLow.toLocaleString()}–${s.attyHigh.toLocaleString()}
               </p>
-              <p className="text-sm text-muted-foreground mb-5">per engagement</p>
+              <p className="text-sm text-muted-foreground mb-4">per engagement</p>
               <div className="space-y-2">
                 {[
                   "Hours of consultation",
-                  "Scheduling delays",
+                  "Scheduling required",
                   s.note,
                 ].map((item) => (
                   <p key={item} className="text-xs text-muted-foreground flex items-start gap-2">
@@ -442,7 +498,7 @@ function AttorneyComparison() {
             </div>
 
             {/* PlainPath column */}
-            <div className="p-6 sm:p-8 bg-emerald-50/60 dark:bg-emerald-950/10">
+            <div className="p-5 sm:p-7 bg-emerald-50/60 dark:bg-emerald-950/10">
               <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-100 dark:bg-emerald-900/30 mb-4">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-700 dark:text-emerald-400">
                   PlainPath {s.ppPlan}
@@ -451,13 +507,9 @@ function AttorneyComparison() {
               <p className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight leading-none mb-1">
                 ${s.ppPrice}
               </p>
-              <p className="text-sm text-muted-foreground mb-5">per month · unlimited use</p>
+              <p className="text-sm text-muted-foreground mb-4">per month · unlimited use</p>
               <div className="space-y-2">
-                {[
-                  s.ppTool,
-                  "Results in under 2 minutes",
-                  "Cancel anytime",
-                ].map((item) => (
+                {[s.ppTool, "Results in under 2 minutes", "Cancel anytime"].map((item) => (
                   <p key={item} className="text-xs text-muted-foreground flex items-start gap-2">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
                     {item}
@@ -468,7 +520,7 @@ function AttorneyComparison() {
           </div>
 
           {/* Savings footer */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-6 py-4 bg-emerald-50/80 dark:bg-emerald-950/20 border-t border-border/50">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-5 sm:px-7 py-4 bg-emerald-50/80 dark:bg-emerald-950/20 border-t border-border/50">
             <div>
               <p className="text-xs font-semibold uppercase tracking-widest text-emerald-700 dark:text-emerald-400 mb-0.5">
                 Estimated savings on this task
@@ -482,7 +534,7 @@ function AttorneyComparison() {
         </motion.div>
       </AnimatePresence>
 
-      <p className="text-center text-[11px] text-muted-foreground/55 mt-4 leading-relaxed">
+      <p className="text-center text-[11px] text-muted-foreground/55 mt-3 leading-relaxed">
         Attorney rates vary widely. Estimates reflect typical hourly ranges ($150–$500+/hr) and are approximate.
         PlainPath supplements but does not replace legal advice.
       </p>
@@ -1034,7 +1086,7 @@ export default function Home() {
         className="w-full bg-gradient-to-b from-slate-100/90 via-blue-50/40 to-slate-100/70 dark:from-zinc-900/80 dark:via-blue-950/10 dark:to-zinc-900/60 border-y border-slate-200/80 dark:border-zinc-800/60 py-20 md:py-28"
       >
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
-          <div className="text-center max-w-2xl mx-auto mb-14">
+          <div className="text-center max-w-2xl mx-auto mb-10">
             <motion.p
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
@@ -1068,38 +1120,38 @@ export default function Home() {
             >
               Start with document analysis, or unlock every tool with Pro. No contracts — cancel anytime.
             </motion.p>
-
-            {/* ── Billing toggle ── */}
-            <div className="mt-8 flex items-center justify-center">
-              <div className="relative flex items-center bg-muted/60 dark:bg-zinc-800/60 border border-border/50 rounded-full p-1 gap-1 shadow-inner">
-                {(["monthly", "yearly"] as const).map((option) => (
-                  <button
-                    key={option}
-                    onClick={() => setBilling(option)}
-                    className={`relative px-5 py-2 text-sm font-semibold rounded-full transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-                      billing === option
-                        ? "bg-card text-foreground shadow-sm border border-border/40"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {option === "monthly" ? "Monthly" : "Yearly"}
-                    {option === "yearly" && (
-                      <span className={`ml-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full transition-colors ${
-                        billing === "yearly"
-                          ? "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400"
-                          : "bg-emerald-100/60 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-500"
-                      }`}>
-                        Save
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
           </div>
 
           {/* ── Attorney cost comparison ── */}
           <AttorneyComparison />
+
+          {/* ── Billing toggle — sits directly above pricing cards ── */}
+          <div className="flex items-center justify-center mb-6">
+            <div className="relative flex items-center bg-muted/60 dark:bg-zinc-800/60 border border-border/50 rounded-full p-1 gap-1 shadow-inner">
+              {(["monthly", "yearly"] as const).map((option) => (
+                <button
+                  key={option}
+                  onClick={() => setBilling(option)}
+                  className={`relative px-5 py-2 text-sm font-semibold rounded-full transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                    billing === option
+                      ? "bg-card text-foreground shadow-sm border border-border/40"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {option === "monthly" ? "Monthly" : "Yearly"}
+                  {option === "yearly" && (
+                    <span className={`ml-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full transition-colors ${
+                      billing === "yearly"
+                        ? "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400"
+                        : "bg-emerald-100/60 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-500"
+                    }`}>
+                      Save
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
 
           <div className="grid md:grid-cols-2 gap-5 items-stretch max-w-3xl mx-auto">
             {PLANS.map((plan, i) => {

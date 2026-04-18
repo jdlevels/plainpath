@@ -1,0 +1,150 @@
+STRICT TARGET CONFIRMATION — PUBLIC MARKETING SITE ONLY
+
+TARGET:
+artifacts/plainpath-marketing
+
+NON-TARGET:
+artifacts/plainpath
+
+Do not touch the product app.
+Do not change tool logic.
+Do not edit anything outside artifacts/plainpath-marketing.
+
+==================================================
+TASK
+==================================================
+
+The public pricing section is almost correct now.
+
+KEEP the current layout concept:
+- pricing heading at top
+- attorney comparison block above pricing cards
+- starter / pro cards below
+
+But fix one structural issue and one content requirement:
+
+1. The Monthly / Yearly toggle is currently too high.
+2. The Compare to attorney costs selector must use the exact document/task list below.
+
+==================================================
+REQUIRED FINAL ORDER
+==================================================
+
+The pricing section must render in this exact order:
+
+1. Pricing heading
+2. Pricing subheading
+3. Compare to attorney costs block
+4. Monthly / Yearly toggle
+5. Starter / Pro pricing cards
+6. pricing fine print
+
+IMPORTANT:
+- the toggle must visually belong to the Starter / Pro cards
+- the toggle must NOT sit above the attorney comparison block
+- the toggle must sit immediately above the pricing cards
+- spacing between toggle and pricing cards should be tight and intentional
+- spacing between attorney comparison block and toggle should also be clean
+
+==================================================
+COMPARE TO ATTORNEY COSTS — REQUIRED OPTIONS
+==================================================
+
+The selector / dropdown / segmented comparison control must include these exact options:
+
+- Lease agreement
+- Employment contract
+- Freelance agreement
+- NDA
+- Business contract
+- IRS notice response
+- Eviction notice
+- Medical bill dispute
+- General document review
+
+Requirements:
+- keep the selector visually clean and premium
+- do not let the dropdown overlap pricing cards awkwardly
+- if needed, constrain dropdown layering/z-index and spacing so it opens cleanly
+- options must be readable on desktop and mobile
+- preserve the current public-site design language
+
+==================================================
+DO NOT CHANGE
+==================================================
+
+Do not redesign the whole pricing section.
+Do not remove the attorney comparison block.
+Do not move the attorney comparison block below pricing.
+Do not remove the refer-a-friend section.
+Do not change pricing copy unless needed for spacing cleanup only.
+Do not change routes or logic.
+Do not touch artifacts/plainpath.
+
+==================================================
+VISUAL RULES
+==================================================
+
+- Preserve the current premium public-site look
+- Keep the attorney comparison block centered and strong
+- Keep the toggle centered
+- Make the toggle feel like the control for Starter / Pro billing only
+- Make sure the cards still align cleanly desktop/tablet/mobile
+- No overlap
+- No awkward gaps
+- No broken responsive spacing
+
+==================================================
+RESPONSIVE REQUIREMENTS
+==================================================
+
+Verify:
+- desktop
+- tablet
+- mobile
+
+The toggle must remain directly associated with the pricing cards at all breakpoints.
+
+Also verify:
+- the attorney cost selector opens cleanly
+- the dropdown is not clipped
+- the dropdown does not visually collide with the pricing cards
+- the options remain readable and tappable on mobile
+
+==================================================
+RETURN FORMAT
+==================================================
+
+When done, return exactly:
+
+1. TARGET CONFIRMATION
+- confirm edited artifact only
+- confirm artifacts/plainpath untouched
+
+2. FILES CHANGED
+- exact files edited
+- one-line summary per file
+
+3. PRICING ORDER FIX
+- what the order was before
+- what the order is now
+- confirm toggle now sits directly above Starter / Pro cards
+
+4. ATTORNEY COMPARISON OPTIONS
+- list the exact options now present
+- confirm all 9 required options were added
+
+5. RESPONSIVE CHECK
+- desktop result
+- tablet result
+- mobile result
+
+6. SCREENSHOTS
+Provide fresh screenshots of:
+- pricing heading + attorney comparison + toggle + pricing cards
+- desktop full pricing section
+- mobile pricing section
+- opened attorney comparison selector
+
+7. FINAL STATUS
+- DONE only if the toggle is directly above the Starter / Pro cards and all 9 comparison options are present
