@@ -1,0 +1,267 @@
+STRICT FOLLOW-UP PASS — APPLY ONLY THESE RECOMMENDATIONS
+
+TARGET:
+artifacts/plainpath-marketing
+
+NON-TARGET:
+artifacts/plainpath
+
+Do not touch the product app.
+Do not modify any app logic, auth, billing, API behavior, or tool workflows.
+This pass is PUBLIC MARKETING SITE ONLY.
+
+==================================================
+GOAL OF THIS PASS
+==================================================
+
+Refine the public marketing site so it feels more like a living software product, while keeping all current product claims accurate and preserving the approved pricing layout.
+
+This pass is not a redesign.
+This is a controlled polish pass.
+
+Apply these 5 recommendations only:
+
+1. Lock the pricing section exactly as approved
+2. Add the referral section only in an honest public-site form
+3. Use real app-inspired motion, not fake video/timestamps
+4. Simplify the walkthrough mini cards
+5. Apply restrained motion polish across a few key sections, not everywhere
+
+==================================================
+1) LOCK THE PRICING SECTION EXACTLY AS APPROVED
+==================================================
+
+Do not redesign the current pricing section.
+Do not reorder it again.
+Do not disturb spacing, hierarchy, or approved layout.
+
+Keep this exact order:
+
+- Pricing heading
+- Pricing subheading
+- Compare to attorney costs block
+- Monthly / Yearly toggle
+- Starter / Pro pricing cards
+- Pricing fine print
+
+Keep the current attorney comparison feature intact.
+Keep the current approved visual approach.
+Do not move the Monthly / Yearly toggle again.
+Do not move pricing cards above the comparison block.
+Do not remove the comparison feature.
+
+Treat the current pricing section as LOCKED and APPROVED.
+
+==================================================
+2) ADD THE REFERRAL SECTION ONLY IN AN HONEST PUBLIC-SITE FORM
+==================================================
+
+Add a public-facing referral/share section to the marketing site, but do it honestly.
+
+Important rules:
+- do NOT create fake logged-in referral functionality
+- do NOT show fake personal referral URLs
+- do NOT fabricate referral counts, invites, or rewards
+- do NOT imply public users already have a referral dashboard
+
+Correct implementation:
+- a clean marketing section that explains referral/share access exists through PlainPath usage or after signup
+- premium visual treatment
+- concise copy
+- CTA routes to a real destination only (for example sign in, get started, or web app)
+- copy must clearly indicate the feature is accessed through real product use, not directly from the brochure page
+
+Recommended placement:
+- directly below Pricing, or
+- immediately after Pricing before the lower trust/support sections
+
+Make it useful, believable, and conversion-oriented.
+
+==================================================
+3) USE REAL APP-INSPIRED MOTION — NOT FAKE VIDEO / TIMESTAMPS
+==================================================
+
+Improve “See PlainPath in action” so it feels like a living product preview.
+
+Replace static-feeling behavior with app-inspired animated workflow behavior:
+- document enters system
+- scan/progress movement
+- extracted items appear
+- flagged clauses / trust findings / action items surface
+- redaction overlays or next-step extraction appear where appropriate
+- tool-color mapping stays consistent with Analyze / Trust Check / Build / Review / Redact
+
+Do NOT use:
+- fake video controls
+- fake timestamps
+- fake chapter durations
+- fake loading that serves no UI purpose
+- meaningless motion
+
+Use:
+- real interface-style state transitions
+- believable workflow animation
+- smooth looping preview or controlled tool-to-tool swapping
+- calm, premium motion that communicates function
+
+All 5 live tools must be represented:
+- Analyze a Document
+- Document Trust Check
+- Build a Contract
+- Contract Review
+- Redact Sensitive Info
+
+==================================================
+4) SIMPLIFY THE WALKTHROUGH MINI CARDS
+==================================================
+
+The mini cards under the walkthrough are too visually dense.
+
+Simplify them without making them empty.
+
+Required direction:
+- keep all 5 tools represented
+- reduce text density
+- improve scan speed
+- strengthen hierarchy
+- remove any metadata that implies real video chaptering if none exists
+- keep tool-color system consistent
+- make desktop cleaner and mobile easier to read
+
+Good structure:
+- tool name
+- one short result-oriented line
+- optional small secondary detail only if genuinely useful
+
+Do not make them feel like fake video chapters.
+They should feel like clean product entry points / quick tool summaries.
+
+==================================================
+5) APPLY RESTRAINED MOTION POLISH ACROSS A FEW KEY SECTIONS
+==================================================
+
+Add subtle motion polish only where it improves quality.
+
+Good candidates:
+- The Problem section
+- Tools showcase
+- See PlainPath in action
+- Mini cards below walkthrough
+- Demo cards
+- Referral section
+
+Use only restrained motion such as:
+- soft fade/slide-in on scroll
+- subtle stagger
+- very light hover lift
+- border/glow emphasis
+- smooth content transitions
+
+Do NOT:
+- animate every section heavily
+- add flashy or distracting motion
+- create jitter on mobile
+- hurt performance
+- make it feel gimmicky
+
+The result should feel:
+- premium
+- modern
+- alive
+- software-like
+- calm
+
+==================================================
+TRUTH / ACCURACY RULES
+==================================================
+
+Keep all public claims honest.
+
+Do not add:
+- fake reviews
+- fake usage metrics
+- fake user counts
+- fake store availability
+- fake legal claims
+- fake referral links
+- fake rewards
+- fake “watch video” metadata if there is no video
+
+Maintain:
+- 5 live tools
+- Digital Signature coming soon
+- honest pricing
+- honest storage/privacy wording
+- honest CTA routing
+
+==================================================
+RESPONSIVE REQUIREMENTS
+==================================================
+
+Verify on:
+- desktop
+- tablet
+- mobile
+
+Check carefully:
+- pricing section unchanged and clean
+- walkthrough animation scales properly
+- mini cards remain readable
+- referral section stacks correctly
+- no overlap
+- no overflow
+- no clipped text
+- no broken hover states
+- no layout jumping
+
+==================================================
+RETURN FORMAT
+==================================================
+
+When complete, return exactly:
+
+1. TARGET CONFIRMATION
+- confirm artifacts/plainpath-marketing only
+- confirm artifacts/plainpath untouched
+
+2. FILES CHANGED
+- exact files edited
+- one-line purpose per file
+
+3. PRICING LOCK CONFIRMATION
+- confirm pricing layout/order stayed unchanged
+
+4. REFERRAL SECTION
+- placement
+- copy approach
+- real CTA destination
+- confirmation that no fake referral logic/URL was added
+
+5. WALKTHROUGH MOTION UPGRADE
+- what changed
+- how the 5 tools are represented
+- confirmation no fake video/timestamps remain
+
+6. MINI CARD CLEANUP
+- what was simplified
+- how readability improved
+
+7. MOTION POLISH
+- which sections received subtle motion
+- what type of motion was used
+
+8. RESPONSIVE CHECK
+- desktop
+- tablet
+- mobile
+
+9. SCREENSHOTS
+Provide fresh screenshots of:
+- pricing section unchanged
+- upgraded “See PlainPath in action”
+- simplified mini cards
+- new referral section
+- one mobile screenshot of the upgraded public area
+
+10. FINAL STATUS
+- DONE only if pricing stayed locked, walkthrough feels more alive, mini cards are cleaner, and referral is added honestly

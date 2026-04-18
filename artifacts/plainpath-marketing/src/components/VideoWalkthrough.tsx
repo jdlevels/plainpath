@@ -7,7 +7,7 @@
    jumps immediately to that tool.
    Respects prefers-reduced-motion.
    ───────────────────────────────────────────────────────────── */
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 import {
   FileText, ShieldAlert, PenLine, Scale, EyeOff,
@@ -22,7 +22,7 @@ const TOOLS = [
     id: 0,
     name: "Analyze a Document",
     shortName: "Analyze",
-    desc: "Action steps, deadlines, and risks in plain English.",
+    desc: "Deadlines, risks, and action steps — fast.",
     icon: FileText,
     hex: "#3b82f6",
     iconHex: "#93c5fd",
@@ -37,7 +37,7 @@ const TOOLS = [
     id: 1,
     name: "Document Trust Check",
     shortName: "Trust Check",
-    desc: "Score + red flags before you act on any letter.",
+    desc: "Trust score and red flags before you respond.",
     icon: ShieldAlert,
     hex: "#ef4444",
     iconHex: "#fca5a5",
@@ -52,7 +52,7 @@ const TOOLS = [
     id: 2,
     name: "Build a Contract",
     shortName: "Build",
-    desc: "Answer 6 questions, download a complete agreement.",
+    desc: "Six questions. One complete agreement.",
     icon: PenLine,
     hex: "#10b981",
     iconHex: "#6ee7b7",
@@ -67,7 +67,7 @@ const TOOLS = [
     id: 3,
     name: "Contract Review",
     shortName: "Review",
-    desc: "Clause flags and negotiation language included.",
+    desc: "Clause-by-clause flags plus negotiation language.",
     icon: Scale,
     hex: "#f59e0b",
     iconHex: "#fcd34d",
@@ -82,7 +82,7 @@ const TOOLS = [
     id: 4,
     name: "Redact Sensitive Info",
     shortName: "Redact",
-    desc: "Auto-detect and approve removals before sharing.",
+    desc: "Auto-detect sensitive info and approve redactions.",
     icon: EyeOff,
     hex: "#8b5cf6",
     iconHex: "#c4b5fd",
@@ -475,6 +475,50 @@ function ToolOutput({ toolId, reduced }: { toolId: ToolId; reduced: boolean }) {
   return <RedactOutput reduced={reduced} />
 }
 
+/* ─── Processing view (brief scan state on tool switch) ───── */
+const PROCESSING_LABELS: Record<number, string> = {
+  0: "Extracting action items…",
+  1: "Scoring document legitimacy…",
+  2: "Building clause structure…",
+  3: "Flagging risk clauses…",
+  4: "Detecting sensitive data…",
+}
+
+function ProcessingView({ tool }: { tool: typeof TOOLS[number] }) {
+  return (
+    <div className="flex flex-col gap-2 pt-1">
+      <p className="text-[8px] font-semibold tracking-widest uppercase mb-1" style={{ color: "#475569" }}>
+        Processing
+      </p>
+      {[65, 80, 50, 72, 42].map((w, i) => (
+        <motion.div
+          key={i}
+          animate={{ opacity: [0.25, 0.65, 0.25] }}
+          transition={{ duration: 1.1, repeat: Infinity, delay: i * 0.1, ease: "easeInOut" }}
+          className="h-[5px] rounded-full"
+          style={{ width: `${w}%`, backgroundColor: `${tool.hex}55` }}
+        />
+      ))}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.18 }}
+        className="flex items-center gap-1.5 mt-1"
+      >
+        <motion.div
+          animate={{ opacity: [1, 0.3, 1] }}
+          transition={{ duration: 0.8, repeat: Infinity }}
+          className="w-1.5 h-1.5 rounded-full shrink-0"
+          style={{ backgroundColor: tool.hex }}
+        />
+        <span className="text-[8px] font-medium" style={{ color: tool.iconHex }}>
+          {PROCESSING_LABELS[tool.id] ?? "Processing…"}
+        </span>
+      </motion.div>
+    </div>
+  )
+}
+
 /* ─── Mini nav bar ───────────────────────────────────────── */
 function MiniNav({ active }: { active: ToolId }) {
   const activeTool = TOOLS[active]
@@ -551,7 +595,8 @@ function DocHeader({ toolId }: { toolId: ToolId }) {
 }
 
 /* ─── Full demo panel ────────────────────────────────────── */
-function DemoPanel({ toolId, reduced }: { toolId: ToolId; reduced: boolean }) {
+function DemoPanel({ toolId, isProcessing, reduced }: { toolId: ToolId; isProcessing: boolean; reduced: boolean }) {
+  const tool = TOOLS[toolId]
   return (
     <div
       className="rounded-2xl overflow-hidden ring-1 ring-white/8 flex flex-col"
@@ -577,18 +622,53 @@ function DemoPanel({ toolId, reduced }: { toolId: ToolId; reduced: boolean }) {
         >
           <DocLines toolId={toolId} reduced={reduced} />
           {toolId === 1 && <ScanLine reduced={reduced} />}
+          {/* Scan overlay when processing */}
+          {isProcessing && !reduced && (
+            <motion.div
+              initial={{ top: "8%", opacity: 0 }}
+              animate={{ top: "90%", opacity: [0, 0.6, 0.6, 0] }}
+              transition={{ duration: 0.7, ease: "easeInOut" }}
+              className="absolute left-0 right-0 pointer-events-none"
+              style={{ position: "absolute" }}
+            >
+              <div className="h-px" style={{ background: `linear-gradient(to right, transparent, ${tool.hex}99, transparent)` }} />
+              <div className="h-3" style={{ background: `linear-gradient(to bottom, ${tool.hex}18, transparent)` }} />
+            </motion.div>
+          )}
           <div
             className="absolute bottom-0 left-0 right-0 h-8 pointer-events-none"
             style={{ background: "linear-gradient(to top, #060d1a, transparent)" }}
           />
         </div>
 
-        {/* Right: tool output */}
+        {/* Right: tool output — shows processing state briefly on switch */}
         <div
           className="relative flex-1 px-3 pt-3 overflow-hidden"
           style={{ backgroundColor: "#0b1120" }}
         >
-          <ToolOutput toolId={toolId} reduced={reduced} />
+          <AnimatePresence mode="wait">
+            {isProcessing && !reduced ? (
+              <motion.div
+                key={`proc-${toolId}`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.18 }}
+              >
+                <ProcessingView tool={tool} />
+              </motion.div>
+            ) : (
+              <motion.div
+                key={`out-${toolId}`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.25 }}
+              >
+                <ToolOutput toolId={toolId} reduced={reduced} />
+              </motion.div>
+            )}
+          </AnimatePresence>
           <div
             className="absolute bottom-0 left-0 right-0 h-8 pointer-events-none"
             style={{ background: "linear-gradient(to top, #0b1120, transparent)" }}
@@ -638,7 +718,7 @@ function ChapterCards({
             onClick={() => onSelect(t.id as ToolId)}
             whileHover={reduced ? {} : { y: -2 }}
             whileTap={{ scale: 0.97 }}
-            className="relative text-left px-3.5 py-3.5 rounded-xl border transition-all duration-200 focus-visible:outline-none overflow-hidden"
+            className="relative text-left px-3 py-3 rounded-xl border transition-all duration-200 focus-visible:outline-none overflow-hidden"
             style={{
               borderColor: isActive ? t.hex : `${t.hex}28`,
               backgroundColor: isActive ? `${t.hex}14` : `${t.hex}07`,
@@ -648,12 +728,12 @@ function ChapterCards({
             }}
           >
             {/* Tool icon + name row */}
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-1.5">
               <div
-                className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                className="w-6 h-6 rounded-md flex items-center justify-center shrink-0"
                 style={{ backgroundColor: isActive ? `${t.hex}28` : `${t.hex}14` }}
               >
-                <Icon style={{ width: 14, height: 14, color: isActive ? t.iconHex : `${t.iconHex}55` }} />
+                <Icon style={{ width: 12, height: 12, color: isActive ? t.iconHex : `${t.iconHex}55` }} />
               </div>
               <p
                 className="text-[11px] font-bold leading-tight flex-1 min-w-0"
@@ -669,9 +749,9 @@ function ChapterCards({
               )}
             </div>
 
-            {/* Description — CSS clamp instead of JS slice */}
+            {/* Description */}
             <p
-              className="text-[10px] leading-relaxed line-clamp-2"
+              className="text-[9px] leading-snug line-clamp-2"
               style={{ color: isActive ? "#94a3b8" : "#475569" }}
             >
               {t.desc}
@@ -694,8 +774,11 @@ function ChapterCards({
 /* ─── Main export ────────────────────────────────────────── */
 export default function VideoWalkthrough() {
   const [active, setActive] = useState<ToolId>(0)
+  const [isProcessing, setIsProcessing] = useState(false)
   const reduced = useReducedMotion() ?? false
+  const isFirstRender = useRef(true)
 
+  /* Auto-advance */
   useEffect(() => {
     if (reduced) return
     const id = setInterval(() => {
@@ -703,6 +786,18 @@ export default function VideoWalkthrough() {
     }, INTERVAL_MS)
     return () => clearInterval(id)
   }, [reduced])
+
+  /* Show brief processing state on every tool change except the first render */
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false
+      return
+    }
+    if (reduced) return
+    setIsProcessing(true)
+    const t = setTimeout(() => setIsProcessing(false), 760)
+    return () => clearTimeout(t)
+  }, [active, reduced])
 
   function handleSelect(id: ToolId) {
     setActive(id)
@@ -757,7 +852,7 @@ export default function VideoWalkthrough() {
             exit={reduced ? {} : { opacity: 0, x: 10 }}
             transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
           >
-            <DemoPanel toolId={active} reduced={reduced} />
+            <DemoPanel toolId={active} isProcessing={isProcessing} reduced={reduced} />
           </motion.div>
         </AnimatePresence>
 

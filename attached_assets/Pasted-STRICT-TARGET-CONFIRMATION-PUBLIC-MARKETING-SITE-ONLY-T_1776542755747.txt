@@ -1,0 +1,304 @@
+STRICT TARGET CONFIRMATION — PUBLIC MARKETING SITE ONLY
+
+TARGET:
+artifacts/plainpath-marketing
+
+NON-TARGET:
+artifacts/plainpath
+
+Do not touch the product app.
+Do not change app logic, API calls, auth, billing, or tool workflows in artifacts/plainpath.
+All work in this pass is marketing/public-site only.
+
+==================================================
+LOCKED / APPROVED BASELINE — DO NOT REGRESS
+==================================================
+
+The current public PRICING section is now approved as the baseline.
+
+KEEP this exact pricing structure and visual hierarchy:
+1. Pricing heading
+2. Pricing subheading
+3. Compare to attorney costs block
+4. Monthly / Yearly toggle
+5. Starter / Pro pricing cards
+6. Pricing fine print
+
+KEEP these attorney comparison options exactly:
+- Lease agreement
+- Employment contract
+- Freelance agreement
+- NDA
+- Business contract
+- IRS notice response
+- Eviction notice
+- Medical bill dispute
+- General document review
+
+Do not redesign or reorder this approved pricing layout.
+Do not move the Monthly / Yearly toggle again.
+Do not remove the attorney comparison block.
+Preserve the current approved public pricing look.
+
+==================================================
+PRIMARY GOAL OF THIS PASS
+==================================================
+
+The public site is now accurate and structurally solid.
+This next pass should make it feel more like a living product and less like a static brochure.
+
+Highest-value upgrades for this pass:
+
+A. Bring a stronger animated workflow experience into the public site
+B. Bring the “Refer a friend” concept onto the public site in an honest way
+C. Reduce visual density in the walkthrough mini cards
+D. Add subtle motion/polish so sections feel alive without becoming gimmicky
+
+==================================================
+TASK A — UPGRADE “SEE PLAINPATH IN ACTION”
+==================================================
+
+This is the highest-priority improvement.
+
+Replace the mostly static preview feel in:
+“See PlainPath in action”
+
+with a stronger looping motion demo / controlled animated preview that clearly feels inspired by the real product.
+
+The public preview should cycle through all 5 live tools:
+1. Analyze a Document
+2. Document Trust Check
+3. Build a Contract
+4. Contract Review
+5. Redact Sensitive Info
+
+The motion preview should show app-like behavior such as:
+- a document entering the system
+- scan/progress movement
+- highlighted lines or detected sections appearing
+- risk/action items appearing in sequence
+- flagged clauses / trust findings / action steps
+- redaction overlays or extracted next steps where relevant
+- tool-specific color treatment matching each feature
+- smooth looping transitions between tools
+
+Important:
+- this should feel premium and believable
+- not cartoonish
+- not over-animated
+- no fake “video player” behavior if there is no real video
+- no meaningless timestamps
+- no fake loading for loading’s sake
+- motion should communicate product capability
+
+Best implementation direction:
+- use a muted looping animation or controlled state machine
+- keep it inside the marketing artifact only
+- use Framer Motion or existing motion patterns already in the marketing site
+- keep performance clean on desktop and mobile
+
+==================================================
+TASK B — REDUCE DENSITY IN THE WALKTHROUGH MINI CARDS
+==================================================
+
+The mini cards under “See PlainPath in action” are currently a bit visually dense.
+
+Tighten them so they read faster.
+
+Goals:
+- slightly less text
+- stronger hierarchy
+- easier scanning at desktop width
+- still clear on tablet/mobile
+- preserve 5-tool coverage
+
+Recommended simplification:
+- tool name
+- one short outcome-oriented line
+- optional small metadata only if meaningful
+- remove any labels that imply video chaptering or timestamps if there is no real video
+- keep tool-color mapping consistent
+
+Do not make them empty.
+Do not remove them.
+Just make them cleaner and more useful.
+
+==================================================
+TASK C — ADD “REFER A FRIEND” TO THE PUBLIC SITE, HONESTLY
+==================================================
+
+Bring the “Refer a friend” concept onto the public marketing site.
+
+Placement recommendation:
+- directly below the pricing area, or
+- immediately after pricing / before lower trust sections
+
+Important:
+This must be honest and public-site appropriate.
+Do not fake logged-in referral functionality if it does not exist in the marketing artifact.
+
+Acceptable implementation:
+- a polished referral promo section
+- headline + concise explanation
+- explain that referral access happens inside PlainPath / after signup / in the app
+- CTA should point to the appropriate real route (sign in / get started / app)
+- no fake personal referral URLs on the public page
+- no fake counters or fake referral rewards unless already real and supportable
+
+The section should communicate:
+- PlainPath has a referral/share benefit
+- it is available through actual product use
+- the CTA takes users toward the real place to access it
+
+Keep it premium and conversion-oriented.
+
+==================================================
+TASK D — ADD SUBTLE PUBLIC-SITE MOTION POLISH
+==================================================
+
+Add restrained motion polish to make the site feel alive.
+
+Use subtle section-level motion only where it improves quality:
+- soft fade/slide-in on scroll
+- gentle stagger for cards
+- slight hover lift / glow / border emphasis
+- soft animated state transitions on tool chips / preview swaps
+- calm background motion if already consistent with the brand
+
+Good candidates:
+- The Problem section cards
+- Tools showcase cards
+- Walkthrough tool swap / animated preview
+- Demo cards
+- Document situations cards
+- Pricing compare block
+- Referral section
+
+Do NOT:
+- overuse animation
+- animate every single element
+- create distracting motion
+- slow down interaction
+- break mobile performance
+
+Target result:
+premium SaaS feel, not flashy landing-page noise.
+
+==================================================
+TASK E — KEEP PRODUCT TRUTH CLEAN
+==================================================
+
+Preserve current truth rules.
+
+Do not add:
+- fake reviews
+- fake user counts
+- fake usage metrics
+- fake legal claims
+- fake store availability
+- fake video durations
+- fake referral URLs
+- fake attorney guarantees
+
+Keep:
+- honest product positioning
+- accurate 5 live tools + Digital Signature coming soon
+- accurate public-site routes and CTA behavior
+- accurate storage/privacy wording
+
+==================================================
+TASK F — DO NOT DISTURB APPROVED SECTIONS
+==================================================
+
+Do not break or regress:
+- Hero
+- Stats / trust pillars
+- 6-card tool grid
+- The Problem section
+- Pricing section order/layout now approved
+- Compare to attorney costs now approved
+- FAQ
+- Footer routes
+- responsive layout already cleaned up
+
+==================================================
+DESIGN / UX QUALITY BAR
+==================================================
+
+Target outcome:
+The public site should feel like a premium, living software product.
+
+Specifically:
+- clearer motion storytelling
+- stronger “I can see it working” feeling
+- better emotional confidence without fake claims
+- better conversion energy through product realism, not marketing fluff
+
+==================================================
+RESPONSIVE REQUIREMENTS
+==================================================
+
+Verify on:
+- desktop
+- tablet
+- mobile
+
+Must remain clean on all three.
+
+Check specifically:
+- animated preview scales properly
+- walkthrough cards don’t feel cramped
+- referral section stacks cleanly
+- no overflow
+- no clipped buttons
+- no jittery animation
+- no layout jumping
+- no overlap with surrounding sections
+
+==================================================
+RETURN FORMAT
+==================================================
+
+When done, return exactly:
+
+1. TARGET CONFIRMATION
+- confirm artifacts/plainpath-marketing only
+- confirm artifacts/plainpath untouched
+
+2. FILES CHANGED
+- exact files edited
+- one-line purpose per file
+
+3. WALKTHROUGH UPGRADE
+- what changed in “See PlainPath in action”
+- how the 5 tools are represented
+- what motion behaviors were added
+
+4. MINI CARD CLEANUP
+- what was removed or simplified
+- how readability improved
+
+5. REFERRAL SECTION
+- exact placement
+- exact CTA destination
+- confirmation that no fake referral URL or fake reward logic was added
+
+6. MOTION POLISH
+- which sections received motion
+- what kind of motion each got
+
+7. RESPONSIVE CHECK
+- desktop
+- tablet
+- mobile
+
+8. SCREENSHOTS
+Provide fresh screenshots of:
+- upgraded “See PlainPath in action”
+- the mini cards below it
+- the new public referral section
+- one desktop full-page section showing the upgraded motion sections in context
+- one mobile screenshot of the upgraded area
+
+9. FINAL STATUS
+- DONE only if pricing remains intact, the walkthrough feels meaningfully more alive, the mini cards are cleaner, and the referral section is added honestly

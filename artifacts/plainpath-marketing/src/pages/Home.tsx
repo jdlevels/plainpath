@@ -550,86 +550,159 @@ function ReferFriend() {
   function handleCopy() {
     navigator.clipboard.writeText(url).then(() => {
       setCopied(true);
-      setTimeout(() => setCopied(false), 2200);
+      setTimeout(() => setCopied(false), 2400);
     }).catch(() => {});
   }
 
   return (
-    <div className="w-full bg-gradient-to-br from-violet-50/80 via-blue-50/60 to-slate-50 dark:from-violet-950/30 dark:via-blue-950/20 dark:to-zinc-900/60 border-y border-violet-100/60 dark:border-violet-900/30 py-20">
-      <div className="max-w-xl mx-auto px-5 sm:px-6 text-center">
-        {/* Icon */}
-        <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-6">
-          <Users className="w-7 h-7 text-primary" />
-        </div>
+    <div className="w-full bg-gradient-to-br from-violet-50/80 via-blue-50/60 to-slate-50 dark:from-violet-950/30 dark:via-blue-950/20 dark:to-zinc-900/60 border-y border-violet-100/60 dark:border-violet-900/30 py-20 md:py-24">
+      <div className="max-w-5xl mx-auto px-5 sm:px-6">
+        <div className="grid md:grid-cols-2 gap-12 items-center">
 
-        <h3
-          className="text-2xl md:text-3xl font-bold text-foreground mb-3"
-          style={{ fontFamily: "var(--font-display)" }}
-        >
-          Know someone dealing with confusing paperwork?
-        </h3>
-        <p className="text-muted-foreground text-base leading-relaxed max-w-sm mx-auto mb-7">
-          No account needed to try their first document analysis. Share the link and they can start immediately.
-        </p>
-
-        {/* Value bullets */}
-        <div className="flex flex-wrap justify-center gap-x-6 gap-y-2.5 mb-8">
-          {[
-            "No account needed",
-            "Results in under 2 minutes",
-            "Any document type",
-          ].map((item) => (
-            <span key={item} className="flex items-center gap-1.5 text-sm text-muted-foreground">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-              {item}
-            </span>
-          ))}
-        </div>
-
-        {/* Copy box */}
-        <div className="flex items-center gap-2 bg-background border border-border/60 rounded-xl pl-4 pr-1.5 py-1.5 max-w-sm mx-auto shadow-sm">
-          <span className="text-sm text-muted-foreground flex-1 truncate font-mono leading-none py-1.5">
-            {url}
-          </span>
-          <button
-            onClick={handleCopy}
-            className={`flex items-center gap-1.5 shrink-0 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-              copied
-                ? "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400"
-                : "bg-primary text-primary-foreground hover:bg-primary/90"
-            }`}
+          {/* Left — content */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
           >
-            <AnimatePresence mode="wait" initial={false}>
-              {copied ? (
-                <motion.span
-                  key="copied"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ duration: 0.15 }}
-                  className="flex items-center gap-1.5 whitespace-nowrap"
-                >
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Copied!
-                </motion.span>
-              ) : (
-                <motion.span
-                  key="copy"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ duration: 0.15 }}
-                  className="flex items-center gap-1.5 whitespace-nowrap"
-                >
-                  <Copy className="w-3.5 h-3.5" /> Copy link
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </button>
-        </div>
+            {/* Eyebrow */}
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-5">
+              <Users className="w-3.5 h-3.5 text-primary" />
+              <span className="text-xs font-semibold text-primary tracking-wide">Refer a friend</span>
+            </div>
 
-        <p className="text-xs text-muted-foreground/50 mt-4">
-          Just the link — no spam, no referral tracking.
-        </p>
+            <h3
+              className="text-2xl md:text-3xl font-bold text-foreground mb-4 leading-snug"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              Know someone drowning in confusing paperwork?
+            </h3>
+            <p className="text-muted-foreground text-base leading-relaxed mb-6">
+              Share PlainPath with anyone dealing with a lease, contract, government notice, or medical bill.
+              They can try it immediately — no account required.
+            </p>
+
+            {/* Value bullets */}
+            <div className="space-y-2.5 mb-8">
+              {[
+                { text: "No account needed to start", detail: "First analysis is free, no sign-up" },
+                { text: "Results in under 2 minutes",  detail: "Upload, analyze, done" },
+                { text: "Works on any document type",  detail: "Contracts, bills, notices, and more" },
+              ].map(({ text, detail }) => (
+                <div key={text} className="flex items-start gap-3">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="text-sm font-semibold text-foreground">{text}</span>
+                    <span className="text-sm text-muted-foreground"> — {detail}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* CTAs */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <a
+                href="/app/analyze"
+                className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-xl px-5 py-3 text-sm font-semibold hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-sm shadow-primary/20"
+              >
+                Get started free <ArrowRight className="w-4 h-4" />
+              </a>
+
+              {/* Copy link */}
+              <div className="flex items-center gap-0 bg-background border border-border/60 rounded-xl pl-3.5 pr-1 py-1 shadow-sm">
+                <span className="text-sm text-muted-foreground flex-1 truncate font-mono leading-none py-1.5 pr-2 min-w-0">
+                  {url}
+                </span>
+                <button
+                  onClick={handleCopy}
+                  className={`flex items-center gap-1.5 shrink-0 px-3 py-2 rounded-lg text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                    copied
+                      ? "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400"
+                      : "bg-muted text-foreground hover:bg-muted/80"
+                  }`}
+                >
+                  <AnimatePresence mode="wait" initial={false}>
+                    {copied ? (
+                      <motion.span
+                        key="copied"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        transition={{ duration: 0.15 }}
+                        className="flex items-center gap-1.5 whitespace-nowrap"
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Copied!
+                      </motion.span>
+                    ) : (
+                      <motion.span
+                        key="copy"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        transition={{ duration: 0.15 }}
+                        className="flex items-center gap-1.5 whitespace-nowrap"
+                      >
+                        <Copy className="w-3.5 h-3.5" /> Copy
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </button>
+              </div>
+            </div>
+
+            <p className="text-xs text-muted-foreground/55 mt-4">
+              Referral rewards and tracking are available inside your PlainPath account after sign-up.
+            </p>
+          </motion.div>
+
+          {/* Right — visual card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="hidden md:flex justify-center"
+          >
+            <div className="w-full max-w-sm rounded-2xl border border-border/60 bg-card shadow-sm p-6 space-y-4">
+              {/* Header */}
+              <div className="flex items-center gap-3 pb-4 border-b border-border/40">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+                  <Users className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-foreground">PlainPath Referrals</p>
+                  <p className="text-xs text-muted-foreground">Available inside your account</p>
+                </div>
+              </div>
+
+              {/* Placeholder steps */}
+              {[
+                { step: "1", label: "Sign up for PlainPath",     done: false },
+                { step: "2", label: "Share your referral link",  done: false },
+                { step: "3", label: "Friend tries PlainPath",    done: false },
+                { step: "4", label: "Both of you benefit",       done: false },
+              ].map(({ step, label }) => (
+                <div key={step} className="flex items-center gap-3">
+                  <div className="w-6 h-6 rounded-full bg-primary/10 border border-primary/25 flex items-center justify-center shrink-0">
+                    <span className="text-[10px] font-bold text-primary">{step}</span>
+                  </div>
+                  <span className="text-sm text-foreground">{label}</span>
+                </div>
+              ))}
+
+              <div className="pt-2 border-t border-border/40">
+                <a
+                  href="/app/analyze"
+                  className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-xl px-4 py-2.5 text-sm font-semibold hover:bg-primary/90 transition-colors"
+                >
+                  Get started to unlock <ArrowRight className="w-3.5 h-3.5" />
+                </a>
+              </div>
+            </div>
+          </motion.div>
+
+        </div>
       </div>
     </div>
   );
