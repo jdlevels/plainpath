@@ -507,6 +507,7 @@ export default function Redact() {
             continueLabel={continueLabel}
             onAnalyzeRedacted={handleAnalyzeRedacted}
             onCancel={handleCancel}
+            sourcePdfFile={uploadedFile?.name?.toLowerCase().endsWith(".pdf") ? uploadedFile : null}
           />
         </div>
       </WorkspaceShell>

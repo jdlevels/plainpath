@@ -2414,6 +2414,177 @@ router.post("/extract-text", upload.single("file"), async (req, res) => {
   return res.json({ text: extractedText, filename: file.originalname });
 });
 
+// POST /api/documents/redact-pdf
+// Accepts a PDF + list of string values to redact.
+// Uses pdfjs-dist to locate each value's bounding box on each page.
+// Draws solid black filled rectangles over every matching text item using pdf-lib.
+// Returns the modified PDF binary. The original uploaded file is never mutated.
+router.post("/redact-pdf", upload.single("file"), async (req, res) => {
+  try {
+    const file = req.file;
+    if (!file) return res.status(400).json({ message: "PDF file required." });
+
+    const mime = file.mimetype;
+    const ext = (file.originalname ?? "").split(".").pop()?.toLowerCase() ?? "";
+    if (mime !== "application/pdf" && ext !== "pdf") {
+      return res.status(400).json({ message: "Only PDF files are supported for PDF redaction." });
+    }
+
+    let redactValues: string[] = [];
+    try {
+      const raw = req.body?.redactValues;
+      if (raw) redactValues = JSON.parse(raw);
+    } catch {
+      return res.status(400).json({ message: "Invalid redactValues — expected a JSON array of strings." });
+    }
+
+    // Deduplicate and filter empty values
+    redactValues = [...new Set(redactValues.map(v => v?.trim()).filter(v => v && v.length >= 2))];
+
+    // If nothing to redact, return a clean copy of the PDF as-is
+    const pdfBuffer = file.buffer;
+    if (redactValues.length === 0) {
+      res.set("Content-Type", "application/pdf");
+      res.set("Content-Disposition", `attachment; filename="redacted.pdf"`);
+      return res.send(pdfBuffer);
+    }
+
+    // ── Step 1: Extract text items with bounding boxes ────────────────────────
+    // We piggyback on pdf-parse's bundled pdfjs-dist (v2.x) via its pagerender
+    // hook. That version is already configured for Node.js and doesn't require
+    // DOMMatrix, canvas polyfills, or external worker setup.
+
+    interface TextItem {
+      str: string;
+      page: number;
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+    }
+
+    const allItems: TextItem[] = [];
+    let currentPage = 0;
+
+    // Import the internal module directly to avoid pdf-parse's test-file-read side effect
+    const pdfParseModule = await import("pdf-parse/lib/pdf-parse.js");
+    const pdfParse = pdfParseModule.default ?? pdfParseModule;
+
+    await pdfParse(pdfBuffer, {
+      pagerender: async (pageData: { getTextContent: (opts?: Record<string, unknown>) => Promise<{ items: unknown[] }> }) => {
+        currentPage++;
+        const pageNum = currentPage;
+        try {
+          const content = await pageData.getTextContent();
+          for (const item of content.items) {
+            const ti = item as Record<string, unknown>;
+            if (typeof ti.str !== "string" || !ti.str.trim()) continue;
+            const t = ti.transform as number[];
+            if (!Array.isArray(t) || t.length < 6) continue;
+            const height = Math.abs(t[3]) || (ti.height as number) || 12;
+            allItems.push({
+              str: ti.str,
+              page: pageNum,
+              x: t[4],
+              y: t[5],
+              width: (ti.width as number) || 0,
+              height,
+            });
+          }
+        } catch {
+          // Page extraction failed — skip this page's items
+        }
+        return "";
+      },
+    });
+
+    // ── Step 2: Build searchable flat text + character→item offset map ───────
+    let fullText = "";
+    const itemOffsets: Array<{ start: number; end: number; idx: number }> = [];
+
+    for (let i = 0; i < allItems.length; i++) {
+      const start = fullText.length;
+      fullText += allItems[i].str;
+      itemOffsets.push({ start, end: fullText.length, idx: i });
+      // Add separator (space or newline) between items
+      fullText += " ";
+    }
+
+    // ── Step 3: Find each value in the flat text, collect bounding boxes ─────
+    interface RedactBox {
+      page: number;
+      x: number;
+      y: number;
+      w: number;
+      h: number;
+    }
+
+    const boxes: RedactBox[] = [];
+    const seen = new Set<string>(); // deduplicate identical boxes
+
+    for (const value of redactValues) {
+      let searchPos = 0;
+      while (true) {
+        const found = fullText.indexOf(value, searchPos);
+        if (found === -1) break;
+        const foundEnd = found + value.length;
+
+        for (const range of itemOffsets) {
+          // Include any text item that overlaps with [found, foundEnd]
+          if (range.start < foundEnd && range.end > found) {
+            const item = allItems[range.idx];
+            const key = `${item.page}:${item.x.toFixed(1)}:${item.y.toFixed(1)}:${item.width.toFixed(1)}`;
+            if (!seen.has(key)) {
+              seen.add(key);
+              boxes.push({
+                page: item.page,
+                x: item.x,
+                y: item.y,
+                w: item.width > 0 ? item.width : Math.max(value.length * 6, 30),
+                h: item.height,
+              });
+            }
+          }
+        }
+
+        searchPos = found + 1;
+      }
+    }
+
+    // ── Step 4: Load PDF with pdf-lib, draw solid black rectangles ───────────
+    const { PDFDocument, rgb } = await import("pdf-lib");
+    const pdfLibDoc = await PDFDocument.load(pdfBuffer);
+    const pages = pdfLibDoc.getPages();
+
+    const PAD_X = 1; // horizontal padding around text box
+    const PAD_Y = 2; // vertical padding below text box
+
+    for (const box of boxes) {
+      const page = pages[box.page - 1];
+      if (!page) continue;
+      page.drawRectangle({
+        x: box.x - PAD_X,
+        y: box.y - PAD_Y,
+        width: box.w + PAD_X * 2,
+        height: box.h + PAD_Y * 2,
+        color: rgb(0, 0, 0),
+        opacity: 1,
+      });
+    }
+
+    // Save with no compression to prevent any text-layer recovery
+    const redactedBytes = await pdfLibDoc.save({ useObjectStreams: false });
+
+    res.set("Content-Type", "application/pdf");
+    res.set("Content-Disposition", `attachment; filename="${file.originalname.replace(/\.[^.]+$/, "")}_redacted.pdf"`);
+    res.send(Buffer.from(redactedBytes));
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("[documents/redact-pdf]", msg);
+    return res.status(500).json({ message: "PDF redaction failed. Please try again." });
+  }
+});
+
 // POST /api/documents/compare
 // Compares two versions of a document and returns a structured diff with risk assessment.
 router.post("/compare", async (req, res) => {

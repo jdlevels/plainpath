@@ -97,6 +97,47 @@ export function downloadRedactedText(redactedText: string, originalName?: string
   }, 1000)
 }
 
+// ─── Download as redacted PDF ─────────────────────────────────────────────────
+// Sends the original PDF + approved span values to the server.
+// Server applies permanent black-box redactions and returns a new PDF binary.
+// The original File object is never modified — the server works on a copy.
+
+export async function downloadRedactedPdf(
+  originalFile: File,
+  approvedValues: string[],
+  apiBase: string,
+): Promise<void> {
+  const formData = new FormData()
+  formData.append("file", originalFile)
+  formData.append("redactValues", JSON.stringify(approvedValues))
+
+  const res = await fetch(`${apiBase}/api/documents/redact-pdf`, {
+    method: "POST",
+    body: formData,
+  })
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({})) as { message?: string }
+    throw new Error(data.message ?? `PDF redaction failed (${res.status})`)
+  }
+
+  const blob = await res.blob()
+  const base = originalFile.name.replace(/\.[^.]+$/, "").replace(/[^a-zA-Z0-9_\-]/g, "_")
+  const filename = `${base}_redacted.pdf`
+
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement("a")
+  a.href = url
+  a.download = filename
+  a.style.display = "none"
+  document.body.appendChild(a)
+  a.click()
+  setTimeout(() => {
+    URL.revokeObjectURL(url)
+    document.body.removeChild(a)
+  }, 1000)
+}
+
 // ─── Copy to clipboard ─────────────────────────────────────────────────────
 // Copies the redacted text to the clipboard.
 // The copied content is the fully redacted version only.

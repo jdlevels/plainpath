@@ -6,7 +6,7 @@ import { useState, useEffect, useMemo, useCallback } from "react"
 import {
   ShieldCheck, ShieldAlert, Check, X, Download, Copy, ChevronRight,
   Loader2, AlertCircle, RotateCcw, ArrowRight, Eye, EyeOff,
-  CheckCheck, Trash2, ChevronDown, ChevronUp,
+  CheckCheck, Trash2, ChevronDown, ChevronUp, FileDown,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { getApiBaseUrl } from "@/lib/api"
@@ -16,6 +16,7 @@ import {
   applyRedactions,
   buildPreviewSegments,
   downloadRedactedText,
+  downloadRedactedPdf,
   copyRedactedText,
   buildRedactionStats,
 } from "@/lib/piiExport"
@@ -29,6 +30,7 @@ type Props = {
   continueLabel?: string
   onAnalyzeRedacted: (redactedText: string) => void
   onCancel: () => void
+  sourcePdfFile?: File | null
 }
 
 // ─── Detection status ─────────────────────────────────────────────────────────
@@ -260,6 +262,7 @@ function AppliedView({
   spans,
   fileName,
   continueLabel,
+  sourcePdfFile,
   onAnalyze,
   onReset,
 }: {
@@ -267,12 +270,21 @@ function AppliedView({
   spans: PiiSpanWithStatus[]
   fileName?: string
   continueLabel: string
+  sourcePdfFile?: File | null
   onAnalyze: () => void
   onReset: () => void
 }) {
   const [copied, setCopied] = useState(false)
   const [showRedacted, setShowRedacted] = useState(false)
+  const [pdfDownloading, setPdfDownloading] = useState(false)
+  const [pdfError, setPdfError] = useState<string | null>(null)
   const stats = useMemo(() => buildRedactionStats(spans), [spans])
+
+  const isPdfUpload = !!(sourcePdfFile && sourcePdfFile.name.toLowerCase().endsWith(".pdf"))
+  const approvedValues = useMemo(
+    () => [...new Set(spans.filter(s => s.approved).map(s => s.value))],
+    [spans]
+  )
 
   async function handleCopy() {
     await copyRedactedText(redactedText)
@@ -280,7 +292,19 @@ function AppliedView({
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const isUploadedFile = !!fileName
+  async function handleDownloadPdf() {
+    if (!sourcePdfFile || pdfDownloading) return
+    setPdfDownloading(true)
+    setPdfError(null)
+    try {
+      const apiBase = getApiBaseUrl()
+      await downloadRedactedPdf(sourcePdfFile, approvedValues, apiBase)
+    } catch (err) {
+      setPdfError(err instanceof Error ? err.message : "PDF download failed. Please try again.")
+    } finally {
+      setPdfDownloading(false)
+    }
+  }
 
   return (
     <div className="space-y-5">
@@ -323,43 +347,44 @@ function AppliedView({
         )}
       </div>
 
-      {/* ── Format verification ───────────────────────────────────────────── */}
-      <div className="rounded-lg border border-border/40 bg-muted/20 dark:bg-muted/10 px-4 py-3 space-y-2">
-        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-          What's safe to share
-        </p>
-        <div className="space-y-1.5">
-          <div className="flex items-start gap-2 text-xs text-emerald-700 dark:text-emerald-400">
-            <Check className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-            <span>Original values permanently replaced in the output — not hidden, not recoverable</span>
+      {/* ── PDF status banner (shown only for PDF uploads) ────────────────── */}
+      {isPdfUpload && (
+        <div className="rounded-lg border border-violet-200 dark:border-violet-800/40 bg-violet-50 dark:bg-violet-950/20 px-4 py-3 space-y-1.5">
+          <div className="flex items-start gap-2 text-xs text-violet-700 dark:text-violet-400">
+            <Check className="w-3.5 h-3.5 shrink-0 mt-0.5 text-emerald-500" />
+            <span><span className="font-semibold">Original PDF unchanged</span> — {sourcePdfFile.name} was not modified</span>
           </div>
-          <div className="flex items-start gap-2 text-xs text-emerald-700 dark:text-emerald-400">
-            <Check className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-            <span>Downloaded <span className="font-mono">.txt</span> file contains only the redacted version</span>
+          <div className="flex items-start gap-2 text-xs text-violet-700 dark:text-violet-400">
+            <Check className="w-3.5 h-3.5 shrink-0 mt-0.5 text-emerald-500" />
+            <span><span className="font-semibold">Redacted PDF copy ready</span> — solid black boxes over all selected items, content permanently hidden</span>
           </div>
-          <div className="flex items-start gap-2 text-xs text-emerald-700 dark:text-emerald-400">
-            <Check className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-            <span>Copied text contains only the redacted version</span>
-          </div>
-          {isUploadedFile ? (
-            <>
-              <div className="flex items-start gap-2 text-xs text-amber-600 dark:text-amber-400">
-                <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-                <span>Source file <span className="font-mono">{fileName}</span> is not modified — <strong>do not share the original file</strong></span>
-              </div>
-              <div className="flex items-start gap-2 text-xs text-amber-600/80 dark:text-amber-400/80">
-                <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-                <span>Uploaded PDF/DOCX files are converted to text for redaction. PlainPath exports a clean redacted text version. The original uploaded file is not modified.</span>
-              </div>
-            </>
-          ) : (
+        </div>
+      )}
+
+      {/* ── Format verification (non-PDF) ─────────────────────────────────── */}
+      {!isPdfUpload && (
+        <div className="rounded-lg border border-border/40 bg-muted/20 dark:bg-muted/10 px-4 py-3 space-y-2">
+          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+            What's safe to share
+          </p>
+          <div className="space-y-1.5">
             <div className="flex items-start gap-2 text-xs text-emerald-700 dark:text-emerald-400">
               <Check className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-              <span>Pasted input: original values gone — no source file to worry about</span>
+              <span>Original values permanently replaced — not hidden, not recoverable</span>
             </div>
-          )}
+            <div className="flex items-start gap-2 text-xs text-emerald-700 dark:text-emerald-400">
+              <Check className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+              <span>Downloaded <span className="font-mono">.txt</span> file contains only the redacted version</span>
+            </div>
+            {fileName && (
+              <div className="flex items-start gap-2 text-xs text-amber-600 dark:text-amber-400">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                <span>Original file <span className="font-mono">{fileName}</span> is not modified — do not share it</span>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ── Redacted preview (collapsible) ────────────────────────────────── */}
       <div className="space-y-2">
@@ -368,7 +393,7 @@ function AppliedView({
           className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
         >
           {showRedacted ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-          {showRedacted ? "Hide" : "Inspect"} redacted output
+          {showRedacted ? "Hide" : "Inspect"} redacted text output
         </button>
         {showRedacted && (
           <div className="rounded-xl border border-border/50 bg-muted/20 p-4 max-h-[240px] overflow-y-auto">
@@ -381,16 +406,42 @@ function AppliedView({
 
       {/* ── Actions ───────────────────────────────────────────────────────── */}
       <div className="space-y-2">
+
+        {/* PDF download — primary action for PDF uploads */}
+        {isPdfUpload && (
+          <div className="space-y-1.5">
+            <Button
+              size="lg"
+              className="w-full h-12 text-sm rounded-xl gap-2 bg-violet-600 hover:bg-violet-700 text-white"
+              onClick={handleDownloadPdf}
+              disabled={pdfDownloading}
+            >
+              {pdfDownloading
+                ? <Loader2 className="w-4 h-4 animate-spin" />
+                : <FileDown className="w-4 h-4" />
+              }
+              {pdfDownloading ? "Building redacted PDF…" : "Download Redacted PDF"}
+            </Button>
+            {pdfError && (
+              <p className="text-xs text-destructive text-center">{pdfError}</p>
+            )}
+            <p className="text-[10px] text-center text-muted-foreground/50">
+              Black boxes permanently cover selected content · original file unchanged
+            </p>
+          </div>
+        )}
+
         <Button
-          size="lg"
-          className="w-full h-12 text-sm rounded-xl gap-2"
+          size={isPdfUpload ? "sm" : "lg"}
+          className={`w-full rounded-xl gap-2 ${isPdfUpload ? "h-10 text-xs" : "h-12 text-sm"}`}
           onClick={onAnalyze}
+          variant={isPdfUpload ? "outline" : "default"}
         >
           <ChevronRight className="w-4 h-4" />
           {continueLabel}
         </Button>
 
-        <div className="grid grid-cols-2 gap-2">
+        <div className={`grid gap-2 ${isPdfUpload ? "grid-cols-2" : "grid-cols-2"}`}>
           <Button
             variant="outline"
             size="sm"
@@ -398,7 +449,7 @@ function AppliedView({
             onClick={() => downloadRedactedText(redactedText, fileName)}
           >
             <Download className="w-4 h-4" />
-            Download .txt
+            {isPdfUpload ? "Download .txt" : "Download .txt"}
           </Button>
           <Button
             variant="outline"
@@ -411,9 +462,17 @@ function AppliedView({
           </Button>
         </div>
 
-        <p className="text-[11px] text-center text-muted-foreground/40 pt-0.5">
-          Downloaded file and copied text contain only the redacted version
-        </p>
+        {isPdfUpload && (
+          <p className="text-[10px] text-center text-muted-foreground/40">
+            .txt download is a text-only alternative — use the PDF download above for a redacted copy of the original
+          </p>
+        )}
+
+        {!isPdfUpload && (
+          <p className="text-[11px] text-center text-muted-foreground/40 pt-0.5">
+            Downloaded file and copied text contain only the redacted version
+          </p>
+        )}
 
         <button
           onClick={onReset}
@@ -435,6 +494,7 @@ export function PiiReview({
   continueLabel = "Analyze this document",
   onAnalyzeRedacted,
   onCancel,
+  sourcePdfFile,
 }: Props) {
   const [status, setStatus] = useState<DetectStatus>("detecting")
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -545,6 +605,7 @@ export function PiiReview({
         spans={spans}
         fileName={fileName}
         continueLabel={continueLabel}
+        sourcePdfFile={sourcePdfFile}
         onAnalyze={() => onAnalyzeRedacted(redactedText)}
         onReset={() => { setApplied(false); setRedactedText(null) }}
       />
