@@ -229,20 +229,31 @@ export default function Home() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 pt-2 w-full max-w-4xl mx-auto"
+              className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-3 pt-2 w-full max-w-2xl mx-auto"
             >
               {[
-                { label: "Analyze a Document",   Icon: FileScan,    path: "/import",                 col: "tool-btn-blue"    },
-                { label: "Document Trust Check", Icon: ShieldCheck, path: "/import?mode=trust-check", col: "tool-btn-red"     },
-                { label: "Build a Contract",     Icon: PenLine,     path: "/contract-builder",        col: "tool-btn-emerald" },
-                { label: "Contract Review",      Icon: Scale,       path: "/contract-review",         col: "tool-btn-amber"   },
-                { label: "Redact Sensitive Info", Icon: EyeOff,     path: "/redact",                  col: "tool-btn-violet"  },
+                { label: "Analyze a Document",    Icon: FileScan,    path: "/import",                  col: "tool-btn-blue"    },
+                { label: "Document Trust Check",  Icon: ShieldCheck, path: "/import?mode=trust-check",  col: "tool-btn-red"     },
+                { label: "Build a Contract",      Icon: PenLine,     path: "/contract-builder",         col: "tool-btn-emerald" },
+                { label: "Contract Review",       Icon: Scale,       path: "/contract-review",          col: "tool-btn-amber"   },
+                { label: "Redact Sensitive Info", Icon: EyeOff,      path: "/redact",                   col: "tool-btn-violet"  },
               ].map(({ label, Icon, path, col }) => (
                 <Button key={label} size="lg" variant="ghost" onClick={() => setLocation(path)}
                   className={`w-full h-12 px-4 text-sm rounded-xl font-semibold border transition-all ${col}`}>
                   <Icon className="mr-2 w-4 h-4 shrink-0" /> {label}
                 </Button>
               ))}
+
+              {/* Digital Signature — Coming Soon */}
+              <div className="relative">
+                <div className="w-full h-12 px-4 text-sm rounded-xl font-semibold border border-border/35 bg-muted/25 dark:bg-muted/15 text-muted-foreground/50 dark:text-muted-foreground/35 flex items-center justify-center gap-2 select-none cursor-default">
+                  <FileSignature className="w-4 h-4 shrink-0" />
+                  Digital Signature
+                </div>
+                <span className="absolute -top-2.5 right-2 text-[9px] font-bold uppercase tracking-widest bg-background dark:bg-card border border-border/50 text-muted-foreground/60 px-2 py-0.5 rounded-full whitespace-nowrap shadow-sm">
+                  Coming Soon
+                </span>
+              </div>
             </motion.div>
 
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.26 }}>
