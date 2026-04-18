@@ -1,0 +1,237 @@
+STRICT PHASE 1: Final public-site conversion polish and truthful marketing lock.
+
+TARGET:
+- Edit only the public marketing artifact for PlainPath unless a tiny supporting shared component must be touched.
+- Do NOT edit the product app, auth logic, billing logic, or internal dashboard in this phase.
+- This phase is strictly for the public-facing marketing site.
+
+MISSION:
+Take the already-approved public site and move it into final conversion-polish mode without breaking truthfulness, layout integrity, or approved structure.
+
+This is NOT a redesign.
+This is a controlled refinement pass.
+
+GOALS:
+1. Improve conversion strength
+2. Improve clarity and authority
+3. Preserve factual accuracy
+4. Preserve approved section order unless there is a real UX blocker
+5. Preserve pricing structure already approved
+6. Preserve attorney-comparison placement already approved
+7. Preserve honest public-safe referral treatment
+8. Preserve real app-inspired walkthrough behavior
+
+NON-NEGOTIABLE LOCKS:
+Do not change these without explicit approval:
+- Pricing section order:
+  heading/subheading
+  attorney comparison
+  monthly/yearly toggle
+  Starter/Pro cards
+  fine print
+- Referral remains honest/public-safe
+- Walkthrough remains app-inspired motion, not fake video UI
+- No fake reviews
+- No fake user counts
+- No fake legal claims
+- No fake App Store / Google Play availability
+- No changes to actual plan logic in this phase
+
+PHASE 1 OBJECTIVES:
+
+1. HERO CONVERSION POLISH
+Audit and refine:
+- headline hierarchy
+- subheadline clarity
+- CTA clarity
+- hero trust/readability
+- tool-pill readability
+- store/waitlist honesty
+- phone hero composition
+
+Keep the hero structure intact.
+Improve scanability and first-impression confidence.
+Do not add noisy elements.
+
+2. TRUST / CREDIBILITY POLISH
+Improve the sections that explain why the product is safe and trustworthy:
+- trust pillars
+- privacy/storage band
+- “Built for real people, not lawyers”
+- FAQ clarity
+- final CTA confidence
+
+Goal:
+Make the site feel more credible and grounded without fake social proof.
+
+3. PRICING CONVERSION POLISH
+The pricing section is already approved structurally.
+Keep it structurally locked.
+
+You may refine only:
+- spacing
+- hierarchy
+- copy sharpness
+- attorney comparison presentation
+- legibility
+- CTA emphasis
+- plan-card clarity
+
+Attorney comparison requirements:
+- keep it above toggle and pricing cards
+- maintain honest estimate framing
+- no exaggerated or fabricated savings claims
+- ensure dropdown/options remain readable and non-overlapping
+- keep comparison visually premium and easy to understand
+
+4. REFERRAL SECTION — PUBLIC-SAFE CONVERSION VERSION
+Keep the referral section, but preserve public honesty:
+- no fake personal referral links
+- no fake rewards numbers
+- no fake user dashboard data
+- no fake account-only functionality exposed publicly
+
+Allowed:
+- explain the referral feature exists inside the product
+- use a clean CTA to get started
+- use a secondary copy-link treatment only if it is clearly public-safe and not pretending to be a real personal referral link
+- show a static illustration of how referrals work inside the account
+
+Goal:
+High-conversion explanation of the referral capability without misleading the public.
+
+5. WALKTHROUGH / LIVING PRODUCT FEEL
+Keep the approved “See PlainPath in action” direction:
+- real app-inspired motion
+- no fake timestamps
+- no fake scrubbing bar
+- no fake chapter-video UI behavior
+- no fake video claims
+
+Refine:
+- processing-state clarity
+- output reveal clarity
+- card readability
+- desktop composition
+- section authority
+
+The section should feel like a living product, not a brochure.
+
+6. MINI CARD SIMPLIFICATION
+Tighten any dense support/demo cards:
+- shorter copy
+- clearer outcome-first wording
+- better hierarchy
+- less visual clutter
+- easier scanning
+
+Targets may include:
+- walkthrough mini cards
+- demo cards
+- situation cards
+- trust cards
+- small CTA cards
+
+7. RESTRAINED MOTION POLISH
+Add or refine restrained motion only where useful:
+- entrance fade/slide
+- subtle hover lift
+- CTA press feedback
+- section reveal
+- card emphasis
+
+Do NOT animate everything.
+Do NOT create a gimmicky page.
+The site should feel premium, controlled, and modern.
+
+8. COPY CLEANUP
+Audit the full public site copy for:
+- repetition
+- awkward phrasing
+- inflated language
+- unclear benefit statements
+- anything that sounds like legal advice
+- anything that sounds more capable than the product actually is
+
+Rewrite only where needed.
+Keep the tone crisp, premium, plain-English, and trustworthy.
+
+9. RESPONSIVE / CROSS-SECTION CONSISTENCY
+Confirm:
+- desktop
+- tablet
+- mobile
+
+Check especially:
+- pricing
+- attorney comparison
+- referral
+- walkthrough
+- mini cards
+- footer
+- CTA buttons
+- logo / navbar spacing if touched incidentally
+
+No clipping, no collisions, no broken stacking.
+
+MANDATORY TRUTH RULE:
+This is a public site.
+Everything must remain supportable by actual product behavior.
+
+Do not introduce:
+- fake testimonials
+- fake case studies
+- fake “as seen in”
+- fake enterprise claims
+- fake app-store status
+- fake referral rewards
+- fake document processing claims
+- fake security claims
+
+REQUIRED RETURN FORMAT:
+
+1. TARGET CONFIRMATION
+- artifact edited
+- artifact intentionally untouched
+
+2. FILES CHANGED
+- exact files changed
+- short reason for each
+
+3. SECTION-BY-SECTION CHANGES
+- Hero
+- Trust / credibility
+- Pricing
+- Attorney comparison
+- Referral
+- Walkthrough
+- Mini cards
+- Final CTA
+- Footer if touched
+
+4. TRUTH / CLAIM AUDIT
+Confirm:
+- no fake metrics
+- no fake referrals
+- no fake store availability
+- no fake legal claims
+- no false pricing language
+
+5. RESPONSIVE CHECK
+- desktop
+- tablet
+- mobile
+
+6. SCREENSHOTS
+Provide proof screenshots of:
+- hero
+- pricing
+- referral
+- walkthrough
+- at least one mobile view
+
+7. FINAL VERDICT
+Choose one:
+- PHASE 1 COMPLETE
+- PHASE 1 COMPLETE WITH MINOR FOLLOW-UP
+- PHASE 1 NOT COMPLETE

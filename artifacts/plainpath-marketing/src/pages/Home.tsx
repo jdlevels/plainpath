@@ -191,9 +191,9 @@ const HOW = [
 /* ─── Trust ──────────────────────────────────────────────── */
 const TRUST = [
   { icon: FileText,    title: "Results you can act on",   desc: "Every analysis is written in plain English — no jargon. Read it once and know exactly what to do." },
-  { icon: Lock,        title: "Your documents stay yours", desc: "Documents are never stored permanently. We don't sell your data or train AI on your files." },
-  { icon: ShieldCheck, title: "Built for every document",  desc: "Leases, IRS letters, medical bills, contracts, court notices, NDAs — PlainPath handles them all." },
-  { icon: CheckCircle2,title: "Start in seconds",          desc: "No account needed for your first analysis. Try any tool immediately — sign up when you're ready." },
+  { icon: Lock,        title: "Your documents stay yours", desc: "Documents are processed to give you answers, then discarded. We don't sell your data or train AI on your files." },
+  { icon: ShieldCheck, title: "Built for every document",  desc: "Leases, IRS letters, medical bills, contracts, court notices, NDAs — if it's text-based, PlainPath can analyze it." },
+  { icon: CheckCircle2,title: "Start in seconds",          desc: "No account needed to start. Paste or upload a document and get a plain-English breakdown in under 2 minutes — no sign-up required." },
 ];
 
 /* ─── Live demos ─────────────────────────────────────────── */
@@ -765,9 +765,9 @@ export default function Home() {
                 custom={2} variants={fadeUp}
                 className="text-base md:text-lg text-muted-foreground mb-6 leading-relaxed max-w-lg"
               >
-                Leases, contracts, medical bills, and court notices. PlainPath gives you 5 tools to
-                move forward: analyze documents, trust-check suspicious paperwork, review agreements,
-                build contracts, and redact sensitive information — all in plain English.
+                Leases, contracts, medical bills, and court notices — PlainPath gives you 5 tools to
+                understand what any document means, spot problems before you sign, and know exactly
+                what to do next. All in plain English.
               </motion.p>
 
               {/* Tool pills */}
@@ -1064,7 +1064,7 @@ export default function Home() {
               className="text-3xl md:text-4xl font-bold mb-3" style={{ fontFamily: "var(--font-display)" }}>One demo for each tool</motion.h2>
             <motion.p initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
               transition={{ delay: 0.1 }} className="text-muted-foreground text-lg max-w-xl mx-auto">
-              Five real-world examples — one per live tool. Click any card to try it with a pre-loaded scenario.
+              Real documents, real scenarios — one per live tool. Click any card to open a pre-loaded example in the app.
             </motion.p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
@@ -1202,7 +1202,7 @@ export default function Home() {
           <AttorneyComparison />
 
           {/* ── Billing toggle — sits directly above pricing cards ── */}
-          <div className="flex items-center justify-center mb-8">
+          <div className="flex flex-col items-center gap-2.5 mb-8">
             <div className="relative flex items-center bg-muted/60 dark:bg-zinc-800/60 border border-border/50 rounded-full p-1 gap-1 shadow-inner">
               {(["monthly", "yearly"] as const).map((option) => (
                 <button
@@ -1227,6 +1227,19 @@ export default function Home() {
                 </button>
               ))}
             </div>
+            <AnimatePresence>
+              {billing === "yearly" && (
+                <motion.p
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.18 }}
+                  className="text-[11px] text-muted-foreground/60 text-center"
+                >
+                  Annual billing is coming soon — subscriptions currently start on a monthly plan.
+                </motion.p>
+              )}
+            </AnimatePresence>
           </div>
 
           <div className="grid md:grid-cols-2 gap-6 items-stretch max-w-4xl mx-auto">
@@ -1355,8 +1368,7 @@ export default function Home() {
                 One platform, every device.
               </h2>
               <p className="text-muted-foreground mb-7 leading-relaxed">
-                Works great on any device — phone, tablet, or laptop.
-                PlainPath feels fast and natural everywhere.
+                Available on any device — phone, tablet, or laptop. No app to install — open it in any browser and start immediately.
               </p>
               <div className="space-y-4 mb-8">
                 {[
