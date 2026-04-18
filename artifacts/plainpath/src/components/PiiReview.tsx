@@ -21,6 +21,7 @@ import {
   buildRedactionStats,
 } from "@/lib/piiExport"
 import type { RedactionStats } from "@/lib/piiExport"
+import { PdfRedactViewer } from "@/components/PdfRedactViewer"
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -28,7 +29,7 @@ type Props = {
   text: string
   fileName?: string
   continueLabel?: string
-  onAnalyzeRedacted: (redactedText: string) => void
+  onAnalyzeRedacted: (redactedText: string, approvedValues?: string[]) => void
   onCancel: () => void
   sourcePdfFile?: File | null
 }
@@ -347,12 +348,28 @@ function AppliedView({
         )}
       </div>
 
+      {/* ── PDF preview — shows final redacted state for PDF uploads ─────── */}
+      {isPdfUpload && sourcePdfFile && (
+        <div className="space-y-2">
+          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+            Redacted PDF Preview
+            <span className="text-[9px] font-normal text-emerald-600 dark:text-emerald-400 normal-case">
+              black boxes = permanently hidden
+            </span>
+          </p>
+          <PdfRedactViewer
+            file={sourcePdfFile}
+            approvedValues={approvedValues}
+          />
+        </div>
+      )}
+
       {/* ── PDF status banner (shown only for PDF uploads) ────────────────── */}
       {isPdfUpload && (
         <div className="rounded-lg border border-violet-200 dark:border-violet-800/40 bg-violet-50 dark:bg-violet-950/20 px-4 py-3 space-y-1.5">
           <div className="flex items-start gap-2 text-xs text-violet-700 dark:text-violet-400">
             <Check className="w-3.5 h-3.5 shrink-0 mt-0.5 text-emerald-500" />
-            <span><span className="font-semibold">Original PDF unchanged</span> — {sourcePdfFile.name} was not modified</span>
+            <span><span className="font-semibold">Original PDF unchanged</span> — {sourcePdfFile?.name} was not modified</span>
           </div>
           <div className="flex items-start gap-2 text-xs text-violet-700 dark:text-violet-400">
             <Check className="w-3.5 h-3.5 shrink-0 mt-0.5 text-emerald-500" />
@@ -563,6 +580,19 @@ export function PiiReview({
 
   const totalInstances = spans.length
 
+  // PDF-specific derived state (computed unconditionally before early returns)
+  const isPdfSource = !!(sourcePdfFile && sourcePdfFile.name.toLowerCase().endsWith(".pdf"))
+
+  const approvedValuesForViewer = useMemo(
+    () => [...new Set(spans.filter(s => s.approved).map(s => s.value))],
+    [spans]
+  )
+
+  const detectedValuesForViewer = useMemo(
+    () => [...new Set(spans.filter(s => !s.approved).map(s => s.value))],
+    [spans]
+  )
+
   // ─── LOADING ──────────────────────────────────────────────────────────────
   if (status === "detecting") {
     return (
@@ -606,7 +636,7 @@ export function PiiReview({
         fileName={fileName}
         continueLabel={continueLabel}
         sourcePdfFile={sourcePdfFile}
-        onAnalyze={() => onAnalyzeRedacted(redactedText)}
+        onAnalyze={() => onAnalyzeRedacted(redactedText, approvedValuesForViewer)}
         onReset={() => { setApplied(false); setRedactedText(null) }}
       />
     )
@@ -661,6 +691,28 @@ export function PiiReview({
           Nothing is permanently redacted until you apply selected redactions.
         </p>
       </div>
+
+      {/* ── PDF Live Preview (Issues 2 & 3) ─────────────────────────────── */}
+      {isPdfSource && sourcePdfFile && (
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+              PDF Live Preview
+            </p>
+            <span className="text-[9px] text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 px-1.5 py-0.5 rounded-full">
+              updates as you select
+            </span>
+            <span className="text-[9px] text-muted-foreground/50 ml-1">
+              amber = detected · black = will be redacted
+            </span>
+          </div>
+          <PdfRedactViewer
+            file={sourcePdfFile}
+            approvedValues={approvedValuesForViewer}
+            detectedValues={detectedValuesForViewer}
+          />
+        </div>
+      )}
 
       {/* ── Selection controls ──────────────────────────────────────────── */}
       <div className="flex items-center gap-2">

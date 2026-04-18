@@ -1,0 +1,91 @@
+We found 4 critical UX/product issues in the new Redact PDF flow.
+
+Current state:
+- PDF upload works
+- Download Redacted PDF works
+- but the flow is still partially falling back into the old text-redaction architecture
+
+These issues must be fixed now.
+
+==================================================
+ISSUE 1 — Add photo/scanned upload support to Redact
+==================================================
+
+The Redact tool should support photo/scanned uploads like the other tools.
+
+Required:
+- add photo/image upload support to Redact
+- if image/scanned document is uploaded, route it into the same visual redaction workflow
+- keep this aligned with PDF redaction behavior as much as possible
+
+==================================================
+ISSUE 2 — Show the actual PDF during selection/redaction
+==================================================
+
+Right now the user is not seeing the actual PDF page during the redaction workflow.
+
+Required:
+- for uploaded PDFs, show the actual PDF page(s) in the review screen
+- detected redaction targets should be tied to visible locations on the PDF
+- user must be able to see what is being redacted on the page itself
+
+==================================================
+ISSUE 3 — Live real-time PDF preview during selection
+==================================================
+
+As the user selects/deselects items to redact, the PDF preview must update in real time.
+
+Required behavior:
+- selected items show black redaction boxes on the PDF preview immediately
+- deselected items remove the black box immediately
+- do not wait until after final apply to show the redactions
+- make this a live preview experience
+
+==================================================
+ISSUE 4 — Remove fallback to old text-only completion screen for PDF mode
+==================================================
+
+Bug:
+After clicking “Continue with redacted version,” the flow falls back to the old text-only screen with “Copy text” and “Download .txt”.
+
+This is wrong for PDF mode.
+
+Required fix:
+- if source file is PDF, do NOT route into the old text-output completion state
+- keep the user in the PDF-redaction flow
+- after apply, show a final PDF preview screen with the redacted PDF visible
+- actions should be:
+  - Download Redacted PDF
+  - Continue into Analyze
+  - Continue into Trust Check
+  - Continue into Contract Review
+- .txt actions may remain secondary/optional, but must not replace the PDF result flow
+
+==================================================
+CORRECT PDF UX
+==================================================
+
+For uploaded PDFs, the user flow must be:
+
+1. Upload PDF
+2. Detect sensitive items
+3. Review PDF with detected regions
+4. Select/deselect redactions
+5. See live black-box updates on the PDF preview
+6. Apply redactions
+7. See final redacted PDF preview
+8. Choose:
+   - Download Redacted PDF
+   - Continue with redacted version into another PlainPath tool
+
+==================================================
+DELIVERABLES
+==================================================
+
+Return:
+1. exact files changed
+2. screenshot of PDF review screen with visible page preview
+3. screenshot showing live selected redactions on the PDF
+4. screenshot of final redacted PDF preview screen
+5. screenshot showing corrected “Continue with redacted version” behavior
+6. note any remaining limitations for image/scanned redaction

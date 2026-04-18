@@ -25,16 +25,30 @@ import { useLocation } from "wouter"
 import {
   ShieldCheck, ArrowLeft, UploadCloud, Type, Loader2, AlertCircle, File, X,
   FileText, Scale, EyeOff, Download, Copy, Check, ArrowRight,
-  User, FileSignature, HeartPulse,
+  User, FileSignature, HeartPulse, Image as ImageIcon, FileDown,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { WorkspaceShell } from "@/components/WorkspaceShell"
 import { PiiReview } from "@/components/PiiReview"
+import { PdfRedactViewer } from "@/components/PdfRedactViewer"
 import { getApiBaseUrl } from "@/lib/api"
+import { downloadRedactedPdf, downloadRedactedText } from "@/lib/piiExport"
 
 // ─── Accepted file types ──────────────────────────────────────────────────────
 
-const ACCEPTED = ".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+const ACCEPTED = ".pdf,.docx,.txt,.jpg,.jpeg,.png,.webp,.gif,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,image/jpeg,image/png,image/webp,image/gif"
+
+const IMAGE_EXTS = [".jpg", ".jpeg", ".png", ".webp", ".gif"]
+const IMAGE_MIMES = ["image/jpeg", "image/png", "image/webp", "image/gif"]
+
+function isImageFile(name: string, mime?: string): boolean {
+  const ext = "." + (name.split(".").pop() ?? "").toLowerCase()
+  return IMAGE_EXTS.includes(ext) || IMAGE_MIMES.includes(mime ?? "")
+}
+
+function isPdfFile(name: string): boolean {
+  return name.toLowerCase().endsWith(".pdf")
+}
 
 // ─── Built-in demo documents ──────────────────────────────────────────────────
 
@@ -197,6 +211,10 @@ export default function Redact() {
   // Post-redaction next-step state (standalone mode only)
   const [nextStepText, setNextStepText] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const [pdfCompletionActive, setPdfCompletionActive] = useState(false)
+  const [pdfApprovedValues, setPdfApprovedValues] = useState<string[]>([])
+  const [pdfDownloading, setPdfDownloading] = useState(false)
+  const [pdfDownloadError, setPdfDownloadError] = useState<string | null>(null)
 
   // On mount: check if we were launched from another tool's "Redact first" flow
   useEffect(() => {
@@ -228,11 +246,16 @@ export default function Redact() {
 
   // ── File validation ──────────────────────────────────────────────────────
   function validateFile(file: File): string | null {
-    const allowed = ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/plain"]
-    const allowedExts = [".pdf", ".docx", ".txt"]
+    const allowedMimes = [
+      "application/pdf",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "text/plain",
+      ...IMAGE_MIMES,
+    ]
+    const allowedExts = [".pdf", ".docx", ".txt", ...IMAGE_EXTS]
     const ext = "." + (file.name.split(".").pop() ?? "").toLowerCase()
-    if (!allowed.includes(file.type) && !allowedExts.includes(ext)) {
-      return "Unsupported file type. Please upload a PDF, DOCX, or TXT file."
+    if (!allowedMimes.includes(file.type) && !allowedExts.includes(ext)) {
+      return "Unsupported file type. Please upload a PDF, DOCX, TXT, or image file (JPG, PNG, WEBP)."
     }
     if (file.size > 20 * 1024 * 1024) {
       return "File is too large. Maximum allowed size is 20 MB."
@@ -287,10 +310,14 @@ export default function Redact() {
   }
 
   // ── After redaction applied: route back OR show next-step panel ──────────
-  function handleAnalyzeRedacted(redactedText: string) {
+  function handleAnalyzeRedacted(redactedText: string, approvedValues?: string[]) {
     if (returnTo === "none") {
-      // Standalone mode — show multi-destination next-step panel
       setNextStepText(redactedText)
+      // PDF source: show PDF completion screen instead of text-only panel
+      if (uploadedFile && isPdfFile(uploadedFile.name)) {
+        setPdfApprovedValues(approvedValues ?? [])
+        setPdfCompletionActive(true)
+      }
       return
     }
     try {
@@ -370,7 +397,179 @@ export default function Redact() {
 
   const canSubmitPaste = pastedText.trim().length >= 30
 
-  // ─── NEXT-STEP PANEL (standalone post-redaction) ─────────────────────────
+  // ── PDF download helper (used in PDF completion screen) ──────────────────
+  async function handleDownloadRedactedPdfFinal() {
+    if (!uploadedFile || pdfDownloading) return
+    setPdfDownloading(true)
+    setPdfDownloadError(null)
+    try {
+      const apiBase = getApiBaseUrl()
+      await downloadRedactedPdf(uploadedFile, pdfApprovedValues, apiBase)
+    } catch (err) {
+      setPdfDownloadError(err instanceof Error ? err.message : "PDF download failed. Please try again.")
+    } finally {
+      setPdfDownloading(false)
+    }
+  }
+
+  // ── Reset helper ──────────────────────────────────────────────────────────
+  function resetAll() {
+    setNextStepText(null)
+    setPdfCompletionActive(false)
+    setPdfApprovedValues([])
+    setPdfDownloadError(null)
+    setActiveText(null)
+    setPastedText("")
+    setUploadedFile(null)
+  }
+
+  // ─── PDF COMPLETION SCREEN (Issue 4) ─────────────────────────────────────
+  // Shown when source was a PDF and returnTo === "none"
+  if (nextStepText !== null && pdfCompletionActive && uploadedFile) {
+    return (
+      <WorkspaceShell>
+        <div className="max-w-xl mx-auto py-6 px-4 space-y-5">
+
+          {/* Header */}
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-violet-100 dark:bg-violet-900/40 flex items-center justify-center shrink-0">
+              <ShieldCheck className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+            </div>
+            <div>
+              <h1 className="text-lg font-bold leading-tight">Redacted PDF ready</h1>
+              <p className="text-xs text-muted-foreground">
+                {pdfApprovedValues.length} value{pdfApprovedValues.length !== 1 ? "s" : ""} permanently blacked out
+                {uploadedFile.name && <span className="font-mono ml-1">· {uploadedFile.name}</span>}
+              </p>
+            </div>
+          </div>
+
+          {/* PDF preview with black boxes */}
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                Redacted PDF Preview
+              </p>
+              <span className="text-[9px] text-muted-foreground/50">
+                black boxes = permanently hidden content
+              </span>
+            </div>
+            <PdfRedactViewer
+              file={uploadedFile}
+              approvedValues={pdfApprovedValues}
+            />
+          </div>
+
+          {/* Primary: download PDF */}
+          <div className="space-y-1.5">
+            <Button
+              size="lg"
+              className="w-full h-12 text-sm rounded-xl gap-2 bg-violet-600 hover:bg-violet-700 text-white"
+              onClick={handleDownloadRedactedPdfFinal}
+              disabled={pdfDownloading}
+            >
+              {pdfDownloading
+                ? <Loader2 className="w-4 h-4 animate-spin" />
+                : <FileDown className="w-4 h-4" />
+              }
+              {pdfDownloading ? "Building redacted PDF…" : "Download Redacted PDF"}
+            </Button>
+            {pdfDownloadError && (
+              <p className="text-xs text-destructive text-center">{pdfDownloadError}</p>
+            )}
+            <p className="text-[10px] text-center text-muted-foreground/40">
+              Solid black boxes · original file unchanged · content unrecoverable
+            </p>
+          </div>
+
+          {/* Send to a PlainPath tool */}
+          <div className="rounded-xl border border-border/50 bg-card p-4 space-y-3">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              Continue with the redacted text
+            </p>
+            <div className="space-y-2">
+              <button
+                onClick={() => sendToTool("analyze")}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-blue-200/60 dark:border-blue-900/40 bg-blue-50/80 dark:bg-blue-950/20 hover:bg-blue-100/80 dark:hover:bg-blue-950/40 transition-colors group text-left"
+              >
+                <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center shrink-0">
+                  <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">Analyze this document</p>
+                  <p className="text-xs text-muted-foreground">Get an action plan from the redacted version</p>
+                </div>
+                <ArrowRight className="w-4 h-4 text-blue-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+              </button>
+
+              <button
+                onClick={() => sendToTool("trust-check")}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-red-200/60 dark:border-red-900/40 bg-red-50/80 dark:bg-red-950/20 hover:bg-red-100/80 dark:hover:bg-red-950/40 transition-colors group text-left"
+              >
+                <div className="w-8 h-8 rounded-lg bg-red-100 dark:bg-red-900/40 flex items-center justify-center shrink-0">
+                  <ShieldCheck className="w-4 h-4 text-red-600 dark:text-red-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-red-700 dark:text-red-300">Run Trust Check</p>
+                  <p className="text-xs text-muted-foreground">Verify legitimacy on the redacted document</p>
+                </div>
+                <ArrowRight className="w-4 h-4 text-red-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+              </button>
+
+              <button
+                onClick={() => sendToTool("contract-review")}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-amber-200/60 dark:border-amber-900/40 bg-amber-50/80 dark:bg-amber-950/20 hover:bg-amber-100/80 dark:hover:bg-amber-950/40 transition-colors group text-left"
+              >
+                <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center shrink-0">
+                  <Scale className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">Review this contract</p>
+                  <p className="text-xs text-muted-foreground">Clause-by-clause review of the redacted version</p>
+                </div>
+                <ArrowRight className="w-4 h-4 text-amber-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+              </button>
+            </div>
+          </div>
+
+          {/* Secondary: .txt export */}
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 gap-2 rounded-lg"
+              onClick={handleCopyRedacted}
+            >
+              {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+              {copied ? "Copied!" : "Copy text"}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 gap-2 rounded-lg"
+              onClick={handleDownloadRedacted}
+            >
+              <Download className="w-3.5 h-3.5" />
+              Download .txt
+            </Button>
+          </div>
+
+          {/* Start over */}
+          <div className="flex justify-center">
+            <button
+              onClick={resetAll}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Redact another document
+            </button>
+          </div>
+
+        </div>
+      </WorkspaceShell>
+    )
+  }
+
+  // ─── TEXT NEXT-STEP PANEL (non-PDF standalone post-redaction) ────────────
   if (nextStepText !== null) {
     return (
       <WorkspaceShell>
@@ -501,13 +700,37 @@ export default function Redact() {
             </div>
           </div>
 
+          {/* Image preview (when source was a photo/scanned upload) */}
+          {uploadedFile && isImageFile(uploadedFile.name, uploadedFile.type) && (
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Source Image
+                </p>
+                <span className="text-[9px] text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 px-1.5 py-0.5 rounded-full">
+                  text extracted via OCR
+                </span>
+              </div>
+              <div className="rounded-xl border border-border/30 bg-muted/5 p-1.5 overflow-hidden">
+                <img
+                  src={URL.createObjectURL(uploadedFile)}
+                  alt={uploadedFile.name}
+                  className="w-full rounded-lg border border-border/20 object-contain max-h-[280px]"
+                />
+              </div>
+              <p className="text-[10px] text-muted-foreground/50 text-center">
+                Note: image pixel-level redaction not available — select items below to produce a redacted text copy
+              </p>
+            </div>
+          )}
+
           <PiiReview
             text={activeText}
             fileName={activeFileName}
             continueLabel={continueLabel}
             onAnalyzeRedacted={handleAnalyzeRedacted}
             onCancel={handleCancel}
-            sourcePdfFile={uploadedFile?.name?.toLowerCase().endsWith(".pdf") ? uploadedFile : null}
+            sourcePdfFile={uploadedFile && isPdfFile(uploadedFile.name) ? uploadedFile : null}
           />
         </div>
       </WorkspaceShell>
@@ -614,7 +837,7 @@ export default function Redact() {
                 <UploadCloud className="w-9 h-9 text-muted-foreground/50" />
                 <div>
                   <p className="text-sm font-medium text-foreground">Click to upload a file</p>
-                  <p className="text-xs text-muted-foreground mt-1">PDF, DOCX, or TXT · up to 20 MB</p>
+                  <p className="text-xs text-muted-foreground mt-1">PDF, DOCX, TXT, or image (JPG, PNG, WEBP) · up to 20 MB</p>
                 </div>
                 <input
                   type="file"

@@ -2403,10 +2403,57 @@ router.post("/extract-text", upload.single("file"), async (req, res) => {
     if (!extractedText.trim()) {
       return res.status(422).json({ error: "empty_txt", message: "This text file appears to be empty." });
     }
+  } else if (
+    mime.startsWith("image/") ||
+    /\.(jpg|jpeg|png|webp|gif)$/i.test(originalName)
+  ) {
+    // ── Image OCR via OpenAI Vision ────────────────────────────────────────
+    try {
+      const openaiMod = await import("openai");
+      const OpenAI = (openaiMod as any).default ?? openaiMod.OpenAI;
+      const openai = new OpenAI();
+      const b64 = file.buffer.toString("base64");
+      const imageMediaType = (
+        mime.startsWith("image/") ? mime : "image/jpeg"
+      ) as "image/jpeg" | "image/png" | "image/webp" | "image/gif";
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        max_tokens: 4096,
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: "Please transcribe ALL visible text from this image exactly as it appears. Include every word, number, address, name, date, and piece of information visible. Format it clearly as plain text. If there is no text, respond with '[no text found]'.",
+              },
+              {
+                type: "image_url",
+                image_url: { url: `data:${imageMediaType};base64,${b64}`, detail: "high" },
+              },
+            ],
+          },
+        ],
+      });
+      extractedText = response.choices?.[0]?.message?.content?.trim() ?? "";
+      if (!extractedText || extractedText === "[no text found]") {
+        return res.status(422).json({
+          error: "no_text_in_image",
+          message: "No readable text was found in this image. Please upload an image with visible text, or paste the text directly.",
+        });
+      }
+    } catch (err) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      console.error("[extract-text] OpenAI Vision error:", errMsg, "| file:", file.originalname);
+      return res.status(500).json({
+        error: "vision_failed",
+        message: "Could not extract text from this image. Please try again or paste the text directly.",
+      });
+    }
   } else {
     return res.status(400).json({
       error: "unsupported_type",
-      message: "Unsupported file type. Please upload a PDF (.pdf), Word document (.docx), or plain text (.txt) file.",
+      message: "Unsupported file type. Please upload a PDF (.pdf), Word document (.docx), plain text (.txt), or image (JPG, PNG, WEBP).",
     });
   }
 
