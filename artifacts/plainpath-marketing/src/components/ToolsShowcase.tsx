@@ -185,7 +185,7 @@ export default function ToolsShowcase() {
             viewport={{ once: true }}
             transition={{ delay: i * 0.10 }}
             whileHover={tool.comingSoon ? {} : { y: -6, scale: 1.02 }}
-            className={tool.comingSoon ? "cursor-default" : "group cursor-pointer"}
+            className={`h-full ${tool.comingSoon ? "cursor-default" : "group cursor-pointer"}`}
           >
             {tool.comingSoon ? (
               <Card className={`h-full rounded-2xl border-2 ${tool.border} border shadow-md transition-all duration-200 overflow-hidden bg-gradient-to-b ${tool.color} opacity-60`}>

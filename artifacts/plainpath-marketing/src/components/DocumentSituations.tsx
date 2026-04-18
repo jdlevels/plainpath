@@ -148,6 +148,7 @@ export default function DocumentSituations() {
               viewport={{ once: true }}
               transition={{ delay: i * 0.06 }}
               whileHover={{ y: -4, transition: { duration: 0.18 } }}
+              className="h-full"
             >
               <a href={s.href} className="block h-full group">
                 <Card className="h-full bg-white dark:bg-card border-border/40 hover:border-border hover:shadow-lg transition-all rounded-2xl p-5 flex flex-col gap-3">
