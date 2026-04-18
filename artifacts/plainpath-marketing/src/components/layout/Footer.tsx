@@ -1,7 +1,22 @@
-const LOGO_SVG = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5 text-white">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-  </svg>
+const FooterLogo = () => (
+  <div className="flex items-center gap-2 mb-4">
+    {/* Light mode: full PNG horizontal lockup */}
+    <img
+      src="/images/logo-plainpath.png"
+      alt="PlainPath"
+      className="h-7 w-auto dark:hidden"
+      draggable={false}
+    />
+    {/* Dark mode: icon mark + text */}
+    <div className="hidden dark:flex items-center gap-2">
+      <div className="w-7 h-7 bg-primary rounded-md flex items-center justify-center shrink-0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4 text-white">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      </div>
+      <span className="font-display font-bold text-lg tracking-tight text-foreground">PlainPath</span>
+    </div>
+  </div>
 );
 
 export function Footer() {
@@ -13,12 +28,7 @@ export function Footer() {
 
           {/* Brand */}
           <div className="col-span-2">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shrink-0">
-                {LOGO_SVG}
-              </div>
-              <span className="font-display font-bold text-xl tracking-tight text-foreground">PlainPath</span>
-            </div>
+            <FooterLogo />
             <p className="text-muted-foreground text-sm leading-relaxed max-w-xs mb-3">
               Plain-English help for confusing paperwork.
             </p>

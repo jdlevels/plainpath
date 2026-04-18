@@ -1,0 +1,156 @@
+STRICT LIGHT-THEME DEPTH + VARIATION PASS
+Target artifact: artifacts/plainpath-marketing
+Non-target: artifacts/plainpath
+Mode: visual refinement only
+Goal: keep the approved layout exactly as-is, but make LIGHT mode feel more premium, less raw-bright, more varied, and more dimensional.
+
+IMPORTANT RULES
+1. Do NOT change section order.
+2. Do NOT change pricing order.
+3. Do NOT change attorney comparison placement/order.
+4. Do NOT change walkthrough logic or CTA routing.
+5. Do NOT change dark-mode styling except where absolutely required for shared token safety.
+6. Do NOT touch product app logic, auth, API, or billing.
+7. This is NOT a redesign. This is a light-theme surface/depth refinement pass only.
+
+PRIMARY OBJECTIVE
+The light theme is improved, but still feels slightly too bright, slightly too uniform, and slightly too flat in large areas.
+Refine only the LIGHT mode so it feels:
+- less raw bright
+- more premium
+- more intentionally sectioned
+- more dimensional
+- more visually authoritative
+
+WHAT TO IMPROVE
+
+A. LOWER RAW BRIGHTNESS SLIGHTLY
+Reduce the overall light-mode intensity a bit so the site no longer feels like a near-white sheet.
+Target outcome:
+- still clearly light mode
+- still clean
+- but less glaring
+- cooler and more controlled
+
+B. INCREASE SECTION-TO-SECTION VARIATION
+Some light sections are still too close in tone.
+Create more deliberate band distinction across the marketing page using subtle, premium light tints.
+Use restrained variation such as:
+- cool mist blue
+- soft slate-blue
+- faint blue-violet mist
+- pale neutral gray
+Do NOT make the page colorful or playful.
+Goal: each major section should feel intentionally separated while still belonging to one system.
+
+C. ADD MORE DEPTH
+Increase visual depth so cards feel more elevated from light backgrounds.
+Refine:
+- border opacity/strength
+- shadow softness and presence
+- background contrast behind cards
+- section containment
+Goal:
+- cards should feel like real surfaces
+- not like faint outlines sitting on the same plane as the page
+
+D. KEEP DARK SECTIONS STRONG
+Dark sections already provide valuable rhythm.
+Preserve them.
+Do not flatten or lighten them unnecessarily.
+They should continue to act as contrast anchors between light sections.
+
+E. GIVE PRICING MORE AUTHORITY IN LIGHT MODE
+Pricing structure is approved and must stay locked.
+Do NOT move anything.
+But strengthen its visual authority in light mode by refining:
+- surrounding band contrast
+- comparison container presence
+- card separation from background
+- heading/subhead readability
+The pricing block should feel like a premium decision zone, not washed into the page.
+
+F. KEEP COPY/TRUTHFULNESS EXACT
+No fabricated metrics
+No fake reviews
+No fake referral behavior
+No fake video timestamps
+No misleading store behavior
+No content drift
+
+SECTIONS TO CHECK CAREFULLY IN LIGHT MODE
+1. Hero band
+2. Stats / trust pillars band
+3. Tools showcase
+4. How it works
+5. Problem section transition into light mode
+6. Feature cards grid
+7. Walkthrough mini-card zone
+8. Live demos
+9. Document situations
+10. Trust / credibility band
+11. FAQ
+12. Pricing section
+13. Referral section
+14. Web & mobile section
+15. Privacy band
+16. Final CTA
+17. Footer
+
+VISUAL DIRECTION
+Use subtle premium separation, not loud contrast.
+Think:
+- cleaner depth
+- calmer brightness
+- more deliberate tonal banding
+- slightly stronger card edges
+- slightly stronger surface distinction
+Avoid:
+- heavy shadows
+- glossy effects
+- loud gradients
+- colorful section backgrounds
+- design drift from the approved premium look
+
+RESPONSIVE REQUIREMENTS
+Confirm clean rendering at:
+- desktop wide
+- standard desktop
+- tablet
+- mobile
+
+VERIFY:
+- no overflow
+- no clipping
+- no washed-out text
+- no section band collapse
+- no broken contrast in pricing/referral/privacy areas
+- no light sections blending together too much
+
+MANDATORY RETURN FORMAT
+Return:
+1. files changed
+2. exact light-theme tokens or section classes adjusted
+3. which sections received tonal variation changes
+4. which sections received depth/border/shadow refinements
+5. confirmation dark mode was preserved
+6. updated screenshots showing:
+   - hero light mode
+   - tools/features light mode
+   - walkthrough + demos light mode
+   - pricing + referral light mode
+   - lower-page privacy/final CTA light mode
+7. final verdict:
+   - whether light mode now has enough variation
+   - whether brightness is reduced enough
+   - whether card depth now reads clearly
+
+SUCCESS CRITERIA
+This pass is successful only if:
+- light mode is still clean and premium
+- brightness feels controlled, not raw
+- section variation is clearly intentional
+- depth is visibly stronger
+- pricing still stays exactly in the approved order
+- dark mode remains intact
+- nothing truthful/public-safe regresses
