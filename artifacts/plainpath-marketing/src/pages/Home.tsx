@@ -182,7 +182,7 @@ const FEATURES = [
 
 /* ─── How it works ───────────────────────────────────────── */
 const HOW = [
-  { icon: Upload,       num: "01", title: "Drop it in",            desc: "PDF, photo, or plain text — any format, any document type." },
+  { icon: Upload,       num: "01", title: "Drop it in",            desc: "PDF, Word file, or paste text — any text-based document." },
   { icon: Sparkles,     num: "02", title: "AI does the reading",   desc: "PlainPath extracts what matters: risks, obligations, deadlines, and required actions." },
   { icon: CheckCircle2, num: "03", title: "Get clarity, not confusion", desc: "A plain-English summary, prioritized action checklist, and deadlines — every time." },
 ];
@@ -275,7 +275,7 @@ const PLANS = [
     name: "Starter",
     monthly: { price: "$4.99", period: "/month", sub: null },
     annual:  { price: "$47.99", period: "/year", sub: "billed annually", eq: "≈ $4.00/mo", savings: "Save about 20%" },
-    desc: "Analyze any document in plain English — key terms, deadlines, and required actions. Unlimited use.",
+    desc: "Analyze and redact documents in plain English — key terms, deadlines, required actions, and sensitive info removal. Unlimited use.",
     highlight: false,
     badge: null as string | null,
     tools: [
@@ -283,7 +283,7 @@ const PLANS = [
       { label: "Document Trust Check",  included: false, comingSoon: false },
       { label: "Build a Contract",      included: false, comingSoon: false },
       { label: "Contract Review",       included: false, comingSoon: false },
-      { label: "Redact Sensitive Info", included: false, comingSoon: false },
+      { label: "Redact Sensitive Info", included: true,  comingSoon: false },
       { label: "Digital Signature",     included: false, comingSoon: true  },
     ],
     extras: [] as string[],
@@ -920,12 +920,12 @@ export default function Home() {
                 One platform, every device.
               </h2>
               <p className="text-muted-foreground mb-7 leading-relaxed">
-                Start on your phone with a photo. Finish on your laptop.
+                Works great on any device — phone, tablet, or laptop.
                 PlainPath feels fast and natural everywhere.
               </p>
               <div className="space-y-4 mb-8">
                 {[
-                  { icon: Upload,       text: "Upload a photo, PDF, or paste text" },
+                  { icon: Upload,       text: "Upload a PDF, Word file, or paste text" },
                   { icon: Sparkles,     text: "AI analyzes in under 2 minutes" },
                   { icon: CheckCircle2, text: "Plain English summary + action plan" },
                 ].map(({ icon: Icon, text }, idx) => (
@@ -977,7 +977,7 @@ export default function Home() {
                 ))}
               </div>
               <a
-                href="/app/privacy"
+                href="/privacy"
                 className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
               >
                 Read our Privacy Policy <ArrowRight className="w-4 h-4" />

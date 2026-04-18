@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import {
   Menu, X, ChevronDown,
-  FileText, ShieldCheck, Scale, PenLine, GitCompare, LayoutGrid, EyeOff,
+  FileText, ShieldCheck, Scale, PenLine, LayoutGrid, EyeOff,
 } from "lucide-react";
 
 function smoothScroll(id: string) {
@@ -23,7 +23,6 @@ const TOOL_LINKS = [
   { label: "Contract Review",       href: "/app/contract-review",        icon: Scale       },
   { label: "Build a Contract",      href: "/app/build-contract",         icon: PenLine     },
   { label: "Redact Sensitive Info", href: "/app/redact",                 icon: EyeOff      },
-  { label: "Compare Versions",      href: "/app/compare",                icon: GitCompare  },
 ];
 
 const LOGO_SVG = (
