@@ -164,6 +164,20 @@ const FEATURES = [
     tags: ["Medical records", "Legal documents", "Financial statements", "Personal correspondence"],
     tagCls: "bg-violet-50/80 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300 border border-violet-200/60 dark:border-violet-700/40",
   },
+  {
+    icon: Pen,
+    color: "text-slate-400 dark:text-slate-500",
+    bg: "bg-slate-100 dark:bg-slate-800/40",
+    border: "border-l-slate-300 dark:border-l-slate-700",
+    accent: "bg-slate-300 dark:bg-slate-700",
+    glow: "from-slate-50 dark:from-slate-900/10",
+    title: "Digital Signature",
+    desc: "Request signatures, track status, and complete multi-party signing workflows — all without leaving PlainPath. Integrates with any document you build or review.",
+    result: null,
+    tags: [],
+    tagCls: "",
+    comingSoon: true,
+  },
 ];
 
 /* ─── How it works ───────────────────────────────────────── */
@@ -451,7 +465,7 @@ export default function Home() {
       <section id="features" className="py-20 md:py-28">
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
           <div className="text-center max-w-2xl mx-auto mb-14">
-            <p className="text-xs font-semibold tracking-[0.12em] uppercase text-muted-foreground mb-3">5 tools available · Digital Signature coming soon</p>
+            <p className="text-xs font-semibold tracking-[0.12em] uppercase text-muted-foreground mb-3">5 tools live · Digital Signature coming soon</p>
             <h2
               className="text-4xl md:text-5xl font-bold mb-4 text-foreground"
               style={{ fontFamily: "var(--font-display)" }}
@@ -469,9 +483,11 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-5">
-            {FEATURES.map(({ icon: Icon, color, bg, border, accent, glow, title, desc, result, tags, tagCls }, i) => {
-              const ResultIcon = result.icon;
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {FEATURES.map((feature, i) => {
+              const { icon: Icon, color, bg, border, accent, glow, title, desc, result, tags, tagCls } = feature;
+              const isComingSoon = (feature as any).comingSoon === true;
+              const ResultIcon = result?.icon;
               return (
                 <motion.div
                   key={title}
@@ -479,37 +495,49 @@ export default function Home() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: i * 0.07 }}
-                  whileHover={{ y: -3 }}
-                  className={`bg-card rounded-2xl border-l-4 ${border} border border-border/60 shadow-sm relative overflow-hidden group h-full`}
+                  whileHover={isComingSoon ? {} : { y: -3 }}
+                  className={`bg-card rounded-2xl border-l-4 ${border} border border-border/60 shadow-sm relative overflow-hidden h-full ${isComingSoon ? "opacity-55 cursor-default select-none" : "group"}`}
                 >
-                  <div className={`absolute top-0 right-0 w-56 h-56 bg-gradient-to-bl ${glow} to-transparent opacity-50 group-hover:opacity-80 transition-opacity duration-300`} />
+                  <div className={`absolute top-0 right-0 w-56 h-56 bg-gradient-to-bl ${glow} to-transparent opacity-50 ${isComingSoon ? "" : "group-hover:opacity-80"} transition-opacity duration-300`} />
                   <div className="relative z-10 p-7 flex flex-col h-full">
-                    <div className="flex items-center gap-3.5 mb-4">
-                      <div className={`w-11 h-11 ${bg} rounded-xl flex items-center justify-center shrink-0`}>
-                        <Icon className={`w-5 h-5 ${color}`} />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-bold text-foreground leading-tight" style={{ fontFamily: "var(--font-display)" }}>
-                          {title}
-                        </h3>
-                        <div className={`h-0.5 w-8 ${accent} rounded-full mt-1.5 opacity-60`} />
-                      </div>
-                    </div>
-                    <p className="text-muted-foreground text-sm leading-relaxed mb-5 flex-1">{desc}</p>
-                    <div className={`${result.bg} rounded-xl p-3.5 mb-4 border border-border/40`}>
-                      <div className="flex items-start gap-2.5">
-                        <ResultIcon className={`w-4 h-4 ${result.color} mt-0.5 shrink-0`} />
+                    <div className="flex items-center justify-between gap-3.5 mb-4">
+                      <div className="flex items-center gap-3.5">
+                        <div className={`w-11 h-11 ${bg} rounded-xl flex items-center justify-center shrink-0`}>
+                          <Icon className={`w-5 h-5 ${color}`} />
+                        </div>
                         <div>
-                          <p className={`text-[11px] font-semibold ${result.color} uppercase tracking-wide mb-0.5`}>{result.label}</p>
-                          <p className="text-xs text-foreground leading-relaxed font-medium">"{result.value}"</p>
+                          <h3 className="text-lg font-bold text-foreground leading-tight" style={{ fontFamily: "var(--font-display)" }}>
+                            {title}
+                          </h3>
+                          <div className={`h-0.5 w-8 ${accent} rounded-full mt-1.5 opacity-60`} />
                         </div>
                       </div>
+                      {isComingSoon && (
+                        <span className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 text-[11px] font-semibold border border-slate-200/60 dark:border-slate-700/40">
+                          <Clock className="w-3 h-3" />
+                          Coming Soon
+                        </span>
+                      )}
                     </div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {tags.map(t => (
-                        <span key={t} className={`px-2 py-0.5 ${tagCls} rounded-md text-[11px] font-medium`}>{t}</span>
-                      ))}
-                    </div>
+                    <p className="text-muted-foreground text-sm leading-relaxed mb-5 flex-1">{desc}</p>
+                    {!isComingSoon && result && ResultIcon && (
+                      <div className={`${result.bg} rounded-xl p-3.5 mb-4 border border-border/40`}>
+                        <div className="flex items-start gap-2.5">
+                          <ResultIcon className={`w-4 h-4 ${result.color} mt-0.5 shrink-0`} />
+                          <div>
+                            <p className={`text-[11px] font-semibold ${result.color} uppercase tracking-wide mb-0.5`}>{result.label}</p>
+                            <p className="text-xs text-foreground leading-relaxed font-medium">"{result.value}"</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {!isComingSoon && tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {tags.map(t => (
+                          <span key={t} className={`px-2 py-0.5 ${tagCls} rounded-md text-[11px] font-medium`}>{t}</span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               );
