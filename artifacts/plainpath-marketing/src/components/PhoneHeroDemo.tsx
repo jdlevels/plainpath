@@ -2,6 +2,8 @@
  * PhoneHeroDemo
  * ─────────────
  * Animated product demo — pure React + Framer Motion, no video.
+ * Shell: iPhone-16-Pro-Max-inspired — Dynamic Island, thin titanium frame,
+ *        glass sheen, premium shadow stack.
  *
  * Loop (12 s total, 3 s per phase):
  *  Phase 0 — document loaded, scanning              (3 s)
@@ -22,6 +24,7 @@ import {
   FileText,
   Wifi,
   BatteryFull,
+  Signal,
 } from "lucide-react"
 
 const PHASE_MS = 3000
@@ -33,14 +36,42 @@ const fade = {
   exit:    { opacity: 0, y: -5, transition: { duration: 0.3 } },
 }
 
-/* ─── Status bar ─────────────────────────────────────────── */
-function StatusBar() {
+/* ─── Top bar: Dynamic Island + flanked status icons ───────── */
+function TopBar() {
   return (
-    <div className="flex items-center justify-between px-4 pt-2 pb-0.5 bg-[#F8F7F4] dark:bg-zinc-900">
-      <span className="text-[10px] font-semibold text-zinc-700 dark:text-zinc-300 tabular-nums">9:41</span>
-      <div className="flex items-center gap-1">
-        <Wifi className="w-2.5 h-2.5 text-zinc-700 dark:text-zinc-300" />
-        <BatteryFull className="w-3 h-3 text-zinc-700 dark:text-zinc-300" />
+    <div
+      className="relative flex items-center justify-between bg-[#F8F7F4] dark:bg-zinc-900 shrink-0"
+      style={{ height: 44, paddingLeft: 20, paddingRight: 20, paddingTop: 8 }}
+    >
+      {/* Time — left of pill */}
+      <span className="text-[10px] font-semibold text-zinc-700 dark:text-zinc-300 tabular-nums relative z-10">
+        9:41
+      </span>
+
+      {/* Dynamic Island pill — absolute centred */}
+      <div
+        className="absolute left-1/2 -translate-x-1/2 bg-zinc-950 rounded-full z-20 flex items-center justify-center gap-[5px]"
+        style={{ top: 7, width: "29%", height: 28 }}
+      >
+        {/* FaceID/infrared sensor bar */}
+        <div
+          className="rounded-full bg-zinc-800"
+          style={{ width: 18, height: 4 }}
+        />
+        {/* Front camera lens */}
+        <div
+          className="rounded-full bg-[#1a1a1e] ring-1 ring-zinc-700/60 flex items-center justify-center"
+          style={{ width: 10, height: 10 }}
+        >
+          <div className="w-[4px] h-[4px] rounded-full bg-zinc-600/50" />
+        </div>
+      </div>
+
+      {/* Status icons — right of pill */}
+      <div className="flex items-center gap-[3px] relative z-10">
+        <Signal className="text-zinc-700 dark:text-zinc-300" style={{ width: 10, height: 10 }} />
+        <Wifi className="text-zinc-700 dark:text-zinc-300" style={{ width: 11, height: 11 }} />
+        <BatteryFull className="text-zinc-700 dark:text-zinc-300" style={{ width: 13, height: 13 }} />
       </div>
     </div>
   )
@@ -49,7 +80,7 @@ function StatusBar() {
 /* ─── App header bar ──────────────────────────────────────── */
 function AppHeader() {
   return (
-    <div className="flex items-center gap-2 px-3 pt-1.5 pb-2.5 bg-[#F8F7F4] dark:bg-zinc-900 border-b border-zinc-200/70 dark:border-zinc-800">
+    <div className="flex items-center gap-2 px-3 pt-1.5 pb-2.5 bg-[#F8F7F4] dark:bg-zinc-900 border-b border-zinc-200/70 dark:border-zinc-800 shrink-0">
       <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
         <ChevronLeft className="w-3 h-3 text-primary" />
       </div>
@@ -92,14 +123,12 @@ function DocLines({ highlightClause }: { highlightClause: boolean }) {
         Document Summary
       </p>
 
-      {/* Leading text lines */}
       <div className="space-y-1.5">
         {[72, 88, 60, 82].map((w, i) => (
           <div key={i} className="h-[6px] rounded-full bg-zinc-200 dark:bg-zinc-700" style={{ width: `${w}%` }} />
         ))}
       </div>
 
-      {/* Highlighted clause block */}
       <motion.div
         animate={{
           backgroundColor: highlightClause ? "rgb(254 243 199)" : "rgb(244 244 245)",
@@ -144,7 +173,6 @@ function DocLines({ highlightClause }: { highlightClause: boolean }) {
         )}
       </motion.div>
 
-      {/* Trailing text lines */}
       <div className="space-y-1.5 pt-1">
         {[55, 78, 65, 90].map((w, i) => (
           <div key={i} className="h-[6px] rounded-full bg-zinc-200 dark:bg-zinc-700" style={{ width: `${w}%` }} />
@@ -284,56 +312,98 @@ export function PhoneHeroDemo() {
 
   const activePhase = shouldReduce ? 3 : phase
 
-  /* Subtle upward scroll as content progresses */
   const scrollY = activePhase >= 2 ? -22 : 0
 
   return (
     <div
-      className="w-full drop-shadow-2xl rounded-[2.5rem] border-[7px] border-white/95 dark:border-zinc-800/95 overflow-hidden bg-[#F8F7F4] dark:bg-zinc-900 select-none"
+      className="w-full select-none"
       style={{ aspectRatio: "9 / 19.5" }}
       aria-hidden="true"
     >
-      <StatusBar />
-      <AppHeader />
+      {/*
+        ── Premium flagship shell ──
+        Layers (outside → in):
+          1. Titanium-tone frame ring via box-shadow
+          2. Inner screen edge highlight (glass lip)
+          3. Elevation shadows (two layers for realism)
+          4. Rounded body with overflow-hidden clips content
+          5. Glass sheen gradient overlay (pointer-events: none, z-30)
+          6. Screen content
+      */}
+      <div
+        className="relative h-full flex flex-col bg-[#F8F7F4] dark:bg-zinc-900"
+        style={{
+          borderRadius: "3.25rem",
+          overflow: "hidden",
+          boxShadow: [
+            /* titanium-like outer frame ring */
+            "0 0 0 2px rgba(105,105,115,0.60)",
+            /* inner glass-edge highlight */
+            "0 0 0 3.5px rgba(255,255,255,0.18)",
+            /* main elevation — soft and wide */
+            "0 40px 80px -10px rgba(0,0,0,0.28)",
+            /* close ambient shadow */
+            "0 12px 24px -6px rgba(0,0,0,0.16)",
+            /* tiny crisp base shadow */
+            "0 2px 4px 0 rgba(0,0,0,0.10)",
+          ].join(", "),
+        }}
+      >
+        {/* Glass sheen — top-left highlight, pointer-events none */}
+        <div
+          className="absolute inset-0 pointer-events-none z-30"
+          style={{
+            borderRadius: "inherit",
+            background:
+              "linear-gradient(148deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.07) 22%, transparent 48%)",
+          }}
+        />
 
-      {/* Screen body */}
-      <div className="relative overflow-hidden" style={{ height: "calc(100% - 56px)" }}>
-        <motion.div
-          animate={{ y: scrollY }}
-          transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-        >
-          <SummaryStats />
-          <DocLines highlightClause={activePhase >= 1} />
+        {/* ── Top bar with Dynamic Island ── */}
+        <TopBar />
 
-          <AnimatePresence mode="wait">
-            {activePhase === 0 && <AnalyzingBadge key="analyzing" />}
-            {activePhase === 1 && (
-              <motion.div
-                key="clause-hint"
-                variants={fade}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                className="mx-3 mt-3 rounded-xl border border-amber-200 dark:border-amber-800/50 bg-amber-50 dark:bg-amber-900/20 px-3 py-2.5 flex items-center gap-2"
-              >
-                <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                <p className="text-[10px] font-semibold text-amber-700 dark:text-amber-400">
-                  1 unfair clause flagged — tap to review
-                </p>
-              </motion.div>
-            )}
-            {activePhase === 2 && <RiskCard key="risks" />}
-            {activePhase === 3 && <ActionSteps key="actions" />}
+        {/* ── App header ── */}
+        <AppHeader />
+
+        {/* ── Scrollable screen body ── */}
+        <div className="relative flex-1 overflow-hidden">
+          <motion.div
+            animate={{ y: scrollY }}
+            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <SummaryStats />
+            <DocLines highlightClause={activePhase >= 1} />
+
+            <AnimatePresence mode="wait">
+              {activePhase === 0 && <AnalyzingBadge key="analyzing" />}
+              {activePhase === 1 && (
+                <motion.div
+                  key="clause-hint"
+                  variants={fade}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  className="mx-3 mt-3 rounded-xl border border-amber-200 dark:border-amber-800/50 bg-amber-50 dark:bg-amber-900/20 px-3 py-2.5 flex items-center gap-2"
+                >
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                  <p className="text-[10px] font-semibold text-amber-700 dark:text-amber-400">
+                    1 unfair clause flagged — tap to review
+                  </p>
+                </motion.div>
+              )}
+              {activePhase === 2 && <RiskCard key="risks" />}
+              {activePhase === 3 && <ActionSteps key="actions" />}
+            </AnimatePresence>
+          </motion.div>
+
+          {/* Scan-line overlay during phase 0 */}
+          <AnimatePresence>
+            {activePhase === 0 && <ScanLine key="scan" />}
           </AnimatePresence>
-        </motion.div>
 
-        {/* Scan-line overlay during phase 0 */}
-        <AnimatePresence>
-          {activePhase === 0 && <ScanLine key="scan" />}
-        </AnimatePresence>
-
-        {/* Bottom fade */}
-        <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-[#F8F7F4] dark:from-zinc-900 to-transparent pointer-events-none" />
+          {/* Bottom screen fade */}
+          <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-[#F8F7F4] dark:from-zinc-900 to-transparent pointer-events-none" />
+        </div>
       </div>
     </div>
   )

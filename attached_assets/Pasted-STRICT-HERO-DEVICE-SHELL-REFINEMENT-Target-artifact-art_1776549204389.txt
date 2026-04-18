@@ -1,0 +1,135 @@
+STRICT HERO DEVICE SHELL REFINEMENT
+Target artifact: artifacts/plainpath-marketing
+Non-target: artifacts/plainpath
+Mode: premium visual refinement only
+
+OBJECTIVE
+Refine the hero phone mockup on the public PlainPath marketing site so it feels like a modern premium flagship device, specifically iPhone-16-Pro-Max-inspired in front-view proportions and detailing, while keeping PlainPath’s UI as the main focus.
+
+NON-NEGOTIABLE RULES
+1. Edit ONLY artifacts/plainpath-marketing.
+2. Do NOT touch artifacts/plainpath.
+3. Do NOT change product logic, routes, billing, auth, pricing structure, referral structure, CTA destinations, or section order.
+4. Do NOT redesign the hero content itself except for fit/spacing adjustments required by the improved phone shell.
+5. Do NOT add Apple branding, Apple logos, trademarked hardware branding, or photoreal product rendering.
+6. Keep this premium, restrained, and product-marketing-safe.
+7. Preserve all approved work already live:
+   - pricing order
+   - attorney comparison placement
+   - referral section
+   - walkthrough motion behavior
+   - light-mode refinements
+   - dark mode
+   - updated logo treatment
+
+CURRENT PROBLEM
+The hero device reads too generic. It looks like a rounded rectangle with UI inside it instead of a premium flagship phone. The public page needs a more believable, higher-end device shell.
+
+REQUIRED IMPLEMENTATION
+
+A. DEVICE PROPORTIONS
+Refine the hero phone outer shell so it feels closer to a premium flagship front view:
+- slightly taller / more elegant front-face proportion
+- more precise corner radius
+- thinner, more consistent bezels
+- improved screen-to-body ratio
+- cleaner edge geometry
+- more intentional device silhouette
+
+B. TOP HARDWARE DETAIL
+Add restrained flagship-inspired top hardware cues:
+- Dynamic-Island-style pill at the top center
+- subtle top hardware presence so the device does not feel empty at the top
+- keep this elegant and minimal
+- no Apple branding, no exact copy, no gimmicks
+
+C. MATERIAL / DEPTH / PREMIUM FINISH
+Improve the hardware feel with subtle realism:
+- more refined outer shadow
+- better glass/front-surface feel
+- slight internal inset between frame and display
+- soft highlight/reflection treatment
+- slight frame depth/contrast so it feels like hardware, not flat artwork
+- maintain a premium web-marketing look, not a photoreal render
+
+D. HERO SCREEN FIT
+Adjust the UI inside the phone only where needed so it fits the refined shell naturally:
+- preserve current PlainPath content and structure
+- keep content comfortably inset from the edges
+- keep the floating action bubble believable and aligned
+- ensure the top content is not cramped by the new hardware area
+- preserve readability and hierarchy
+
+E. LIGHT AND DARK COMPATIBILITY
+Ensure the refined phone shell works in both themes:
+- looks premium in light mode
+- does not disappear or flatten in dark mode
+- no washed-out edges in light mode
+- no muddy frame/glass in dark mode
+
+F. DO NOT OVERDO IT
+This should feel:
+- premium
+- flagship-inspired
+- subtle
+- modern
+- high-trust
+
+This must NOT feel:
+- overly glossy
+- cartoonish
+- fake-3D product render
+- louder than the rest of the hero
+- like an Apple ad clone
+
+G. RESPONSIVE VERIFICATION
+Confirm the refined shell remains correct at:
+- large desktop hero
+- normal laptop width
+- tablet
+- mobile hero
+
+Must remain:
+- centered correctly
+- not clipped
+- not distorted
+- not oversized
+- not too tiny to appreciate
+
+H. NO REGRESSIONS
+After refining the shell, verify no regressions to:
+- hero copy
+- hero pills
+- hero CTA
+- App Store / Play Store badges
+- stats bar
+- feature cards
+- pricing
+- referral section
+- walkthrough
+- logo
+- mobile nav
+
+SUCCESS CRITERIA
+This pass is successful only if:
+1. the hero phone no longer reads as generic
+2. the shell feels premium and flagship-inspired
+3. bezels and top hardware detail are visibly improved
+4. the PlainPath UI remains the primary focus
+5. the device looks clean in both light and dark modes
+6. no other approved section is changed or broken
+
+MANDATORY RETURN FORMAT
+Return:
+1. files changed
+2. exact shell changes made
+3. exact top hardware changes made
+4. exact material/depth changes made
+5. screenshot of hero in light mode
+6. screenshot of hero in dark mode
+7. screenshot of hero at narrower desktop/laptop width
+8. confirmation that:
+   - the device now feels premium
+   - the top hardware detail is present
+   - the UI still fits cleanly
+   - no other section was modified
