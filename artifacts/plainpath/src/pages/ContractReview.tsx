@@ -22,6 +22,7 @@ import { ResultStickyHeader } from "@/components/result/ResultStickyHeader"
 import { ResultSectionCard } from "@/components/result/ResultSectionCard"
 import { ResultMetaStrip } from "@/components/result/ResultMetaStrip"
 import { ScoreLegend, CONTRACT_REVIEW_LEGEND } from "@/components/ui/ScoreLegend"
+import { DocumentScanScreen } from "@/components/DocumentScanScreen"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -545,118 +546,6 @@ function ClauseCard({ clause, defaultOpen = false }: { clause: ClauseResult; def
   )
 }
 
-// ─── Loading Screen ───────────────────────────────────────────────────────────
-
-const LOADING_STEPS = [
-  "Reading every clause…",
-  "Evaluating fairness and risk…",
-  "Drafting negotiation language…",
-  "Identifying missing protections…",
-  "Building your review…",
-]
-
-function ContractReviewLoadingScreen() {
-  const [step, setStep] = useState(0)
-
-  useEffect(() => {
-    const t = setInterval(() => setStep(s => (s + 1) % LOADING_STEPS.length), 2800)
-    return () => clearInterval(t)
-  }, [])
-
-  return (
-    <div className="min-h-screen bg-background">
-      {/* sticky header skeleton */}
-      <div className="bg-background/95 border-b border-border/50 sticky top-0 z-30">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center gap-4">
-          <div className="w-10 h-10 rounded-2xl bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center flex-shrink-0">
-            <Scale className="w-5 h-5 text-amber-500 animate-pulse" />
-          </div>
-          <div className="flex-1 space-y-2">
-            <div className="h-2.5 w-28 rounded-full bg-secondary animate-pulse" />
-            <div className="h-4 w-52 rounded-full bg-secondary animate-pulse" />
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-6 space-y-5">
-        {/* Progress message */}
-        <div className="text-center py-4">
-          <div className="inline-flex items-center gap-2.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-900/40 rounded-full px-5 py-2.5">
-            <Loader2 className="w-4 h-4 text-amber-600 dark:text-amber-400 animate-spin flex-shrink-0" />
-            <AnimatePresence mode="wait">
-              <motion.span
-                key={step}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.25 }}
-                className="text-sm font-medium text-amber-700 dark:text-amber-300"
-              >
-                {LOADING_STEPS[step]}
-              </motion.span>
-            </AnimatePresence>
-          </div>
-          <p className="text-xs text-muted-foreground mt-3">This typically takes 20–40 seconds for a complete contract.</p>
-        </div>
-
-        {/* Score card skeleton */}
-        <div className="border rounded-2xl p-6 bg-muted/20 animate-pulse">
-          <div className="flex items-center gap-6">
-            <div className="text-center">
-              <div className="w-16 h-14 rounded-xl bg-secondary mx-auto mb-1" />
-              <div className="h-2 w-12 rounded-full bg-secondary mx-auto" />
-            </div>
-            <div className="flex-1 space-y-2">
-              <div className="h-5 w-36 rounded-lg bg-secondary" />
-              <div className="h-3 w-full rounded-full bg-secondary/70" />
-              <div className="h-3 w-4/5 rounded-full bg-secondary/60" />
-            </div>
-          </div>
-          <div className="flex gap-6 mt-4 pt-4 border-t border-border/20">
-            {[80, 100, 90].map((w, i) => (
-              <div key={i} className="h-5 rounded-full bg-secondary/70" style={{ width: w }} />
-            ))}
-          </div>
-        </div>
-
-        {/* Section nav skeleton */}
-        <div className="flex gap-2 flex-wrap">
-          {[100, 90, 130, 110, 120].map((w, i) => (
-            <div key={i} className="h-8 rounded-full bg-secondary animate-pulse" style={{ width: w }} />
-          ))}
-        </div>
-
-        {/* Clause card skeletons */}
-        <div className="space-y-2">
-          <div className="h-4 w-24 rounded bg-secondary animate-pulse" />
-          {[1, 2].map(i => (
-            <div key={i} className="border border-red-200/40 rounded-xl p-4 animate-pulse bg-red-50/20 dark:bg-red-950/10">
-              <div className="flex items-center gap-3">
-                <div className="w-4 h-4 rounded-full bg-red-200 dark:bg-red-800/40" />
-                <div className="flex-1 h-3 rounded-full bg-secondary" />
-                <div className="h-5 w-16 rounded-full bg-red-200/60 dark:bg-red-800/40" />
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="space-y-2">
-          <div className="h-4 w-24 rounded bg-secondary animate-pulse" />
-          {[1, 2, 3].map(i => (
-            <div key={i} className="border border-amber-200/40 rounded-xl p-4 animate-pulse bg-amber-50/20 dark:bg-amber-950/10">
-              <div className="flex items-center gap-3">
-                <div className="w-4 h-4 rounded-full bg-amber-200 dark:bg-amber-800/40" />
-                <div className="flex-1 h-3 rounded-full bg-secondary" />
-                <div className="h-5 w-20 rounded-full bg-amber-200/60 dark:bg-amber-800/40" />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-}
-
 // ─── Section nav ─────────────────────────────────────────────────────────────
 
 interface NavSection { id: string; label: string; count: number; color: string }
@@ -1158,7 +1047,7 @@ export default function ContractReview() {
   }
 
   // Full-page loading skeleton
-  if (loading) return <ContractReviewLoadingScreen />
+  if (loading) return <DocumentScanScreen mode="contract-review" fileName={file?.name} />
 
   // Results view
   if (result) {

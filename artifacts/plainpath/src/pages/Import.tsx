@@ -19,6 +19,7 @@ import { useEntitlements } from "@/hooks/useEntitlements"
 import UpgradeModal from "@/components/UpgradeModal"
 import { isNative } from "@/lib/platform"
 import { haptic, pickFileNative } from "@/lib/native"
+import { DocumentScanScreen } from "@/components/DocumentScanScreen"
 
 const DEMOS = [
   {
@@ -709,6 +710,10 @@ export default function Import() {
   }
   const isWorking = isPending || isAnalyzing
   const canAnalyze = !isWorking && text.trim().length >= 50
+
+  if (isTrustCheck && step === "analyzing") {
+    return <DocumentScanScreen mode="trust-check" />
+  }
 
   return (
     <div className="min-h-screen bg-background pb-safe-bottom" style={{ paddingBottom: "max(7rem, env(safe-area-inset-bottom) + 7rem)" }}>

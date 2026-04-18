@@ -5,7 +5,7 @@ import {
   ArrowLeft, ShieldCheck, AlertTriangle, XCircle, CheckCircle2,
   Phone, Mail, Globe, Calendar, Clock, Eye, CheckSquare,
   ArrowRight, AlertCircle, Flag, Shield, ExternalLink,
-  Loader2, FileText, BarChart2, Info,
+  FileText, BarChart2, Info,
   Copy, Check, Bookmark, BookmarkCheck,
   Download, BanIcon, AlertOctagon, Ban,
 } from "lucide-react"
@@ -27,6 +27,7 @@ import { ResultStickyHeader } from "@/components/result/ResultStickyHeader"
 import { ResultSectionCard } from "@/components/result/ResultSectionCard"
 import { ResultMetaStrip } from "@/components/result/ResultMetaStrip"
 import { ScoreLegend, TRUST_CHECK_LEGEND } from "@/components/ui/ScoreLegend"
+import { DocumentScanScreen } from "@/components/DocumentScanScreen"
 
 /* ── Helpers ────────────────────────────────────────────────────────────── */
 
@@ -69,29 +70,6 @@ function recommendedActions(verdict: TrustCheckVerdict): Array<{ text: string; i
         { text: "Keep a copy of this analysis result for your records", icon: Bookmark, color: "text-blue-600 dark:text-blue-400" },
       ]
   }
-}
-
-/* ── Loading screen ─────────────────────────────────────────────────────── */
-
-function TrustCheckLoadingScreen({ label }: { label?: string }) {
-  const [seconds, setSeconds] = useState(0)
-  useEffect(() => {
-    const t = setInterval(() => setSeconds(s => s + 1), 1000)
-    return () => clearInterval(t)
-  }, [])
-
-  return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 px-4">
-      <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      <p className="text-sm text-muted-foreground">{label ?? "Analyzing document…"}</p>
-      {seconds >= 12 && (
-        <div className="flex items-center gap-2 text-xs text-muted-foreground bg-secondary/50 rounded-xl px-4 py-2 border border-border/30 max-w-xs text-center">
-          <span className="inline-block w-2 h-2 rounded-full bg-primary/60 animate-pulse shrink-0" />
-          {seconds >= 25 ? "Almost there — complex documents take a little longer…" : "Still working… trust checks can take up to 25 seconds."}
-        </div>
-      )}
-    </div>
-  )
 }
 
 /* ── Verdict icon ───────────────────────────────────────────────────────── */
@@ -223,7 +201,7 @@ export default function TrustCheck() {
   const analysis: TrustCheckAnalysis | null = demoId ? demoAnalysis : trustCheckAnalysis
 
   if (demoLoading) {
-    return <TrustCheckLoadingScreen label="Loading trust check demo…" />
+    return <DocumentScanScreen mode="trust-check" />
   }
 
   /* ── Empty / landing state ────────────────────────────────────────── */
