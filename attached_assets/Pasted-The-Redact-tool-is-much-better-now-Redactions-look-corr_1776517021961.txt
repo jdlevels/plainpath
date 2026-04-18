@@ -1,0 +1,67 @@
+The Redact tool is much better now. Redactions look correct.
+
+There are 3 remaining UX issues to fix.
+
+==================================================
+1. ADD PHONE-FIRST SCAN / PHOTO SUPPORT
+==================================================
+
+The Redact tool still does not clearly expose the mobile-friendly scan/upload entry.
+
+Required:
+- add a visible “Take Photo / Scan” option like the other tools
+- keep “Upload File” too
+- on phones, support direct camera capture
+- make the mobile upload/scan entry obvious in the input screen
+
+==================================================
+2. MOVE DOCUMENT PREVIEW INTO A LEFT-SIDE PANEL
+==================================================
+
+The live document/PDF preview should not sit above the controls.
+It should be displayed in its own left-side window/panel.
+
+Required desktop layout:
+- LEFT: live PDF/document preview panel
+- RIGHT: detected redaction items, controls, apply button, download, continue
+
+This should apply during:
+- review/detection state
+- selection/redaction state
+- final redacted PDF preview state
+
+The preview should remain visible as the user works.
+
+==================================================
+3. ADD BACK / PREVIOUS NAVIGATION
+==================================================
+
+The flow is missing basic navigation controls.
+
+Required:
+- Back button
+- Previous button where appropriate
+- Start Over / Redact Another Document should remain available
+
+User should be able to move backward in the flow without confusion.
+
+==================================================
+GOAL
+==================================================
+
+Make the Redact tool feel like a complete, professional workflow:
+- scan/upload from phone
+- live preview always visible
+- controls on the right
+- proper back navigation
+
+==================================================
+DELIVERABLES
+==================================================
+
+Return:
+1. exact files changed
+2. screenshot of the new input screen with Take Photo / Scan visible
+3. screenshot of the split layout with preview on the left and controls on the right
+4. screenshot showing Back / Previous controls
+5. note any mobile-specific behavior differences

@@ -1,0 +1,100 @@
+We need to upgrade PlainPath’s processing UX with live animated loading states.
+
+This is a product polish priority.
+
+Goal:
+Make the app feel alive and premium while documents are being processed.
+Use Replit’s animation capability fully, but with purpose.
+
+This is not decorative motion.
+It must look like the actual uploaded document is being scanned and reviewed.
+
+==================================================
+PRIORITY 1 — DOCUMENT TRUST CHECK ANIMATED PROCESSING
+==================================================
+
+When a user uploads a document into Document Trust Check, show a live animated processing scene.
+
+Required experience:
+- a small document preview window appears
+- the document looks like it is being scanned in real time
+- a scan line moves top-to-bottom
+- trust/risk indicators appear progressively
+- risk/confidence meter builds live
+- staged status text updates in sequence
+
+Suggested stages:
+1. Reading document
+2. Checking contact details
+3. Scanning for pressure tactics
+4. Verifying document structure
+5. Finalizing trust verdict
+
+Visual details:
+- use a document preview box/window, similar in feel to the homepage hero
+- animate subtle highlight regions on the document
+- show warning chips or verification chips appearing as the scan runs
+- do not use just a generic spinner
+
+==================================================
+PRIORITY 2 — CONTRACT REVIEW ANIMATED PROCESSING
+==================================================
+
+When a user uploads or starts a contract review, show a live animated contract scan.
+
+Required experience:
+- a contract page preview window appears
+- the page is scanned in real time
+- clause blocks highlight progressively
+- risky clauses appear with red/yellow indicators
+- contract score/risk state builds progressively
+- staged status text updates in sequence
+
+Suggested stages:
+1. Reading contract
+2. Identifying clauses
+3. Flagging risky language
+4. Checking missing protections
+5. Preparing revisions
+
+Visual details:
+- clause highlight areas should animate in
+- score should build progressively, not appear instantly
+- the whole screen should feel like the contract is being actively reviewed
+
+==================================================
+IMPLEMENTATION RULES
+==================================================
+
+1. Build this as a reusable shared processing system, not one-off hacks.
+2. It should feel like a live video experience, but built as UI animation/state, not just a static mp4.
+3. The processing shell should support:
+   - preview window
+   - scan animation
+   - progressive findings
+   - staged status text
+   - progressive result reveal
+4. Keep the motion subtle, premium, and functional.
+5. Do not use meaningless floating effects or endless generic spinners.
+
+==================================================
+LAYOUT
+==================================================
+
+Preferred layout:
+- LEFT: animated document/contract preview window
+- RIGHT: progress stages, animated findings, score/confidence buildup
+
+If mobile:
+- stack preview first, then progress feed below
+
+==================================================
+DELIVERABLES
+==================================================
+
+Return:
+1. exact files changed
+2. any shared animation/loading components created
+3. screenshot/gif of Trust Check animated state
+4. screenshot/gif of Contract Review animated state
+5. note any remaining tools still using old loading states
