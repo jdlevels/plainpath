@@ -1,0 +1,86 @@
+This is now a critical target-correction task.
+
+Problem:
+Homepage / marketing inputs and feature changes were implemented on the PlainPath web app artifact instead of the PlainPath Marketing site artifact.
+
+This must be corrected immediately before any more feature work continues.
+
+==================================================
+SOURCE OF TRUTH
+==================================================
+
+Correct targets:
+- Marketing / deployed homepage site = artifacts/plainpath-marketing
+- Product / web app tools = artifacts/plainpath
+
+From now on:
+- Homepage
+- hero
+- marketing tool grid
+- pricing section
+- coming soon card
+- marketing copy
+- support links on the marketing site
+must be edited ONLY in artifacts/plainpath-marketing
+
+The app artifact (artifacts/plainpath) is only for:
+- tool routes
+- app flows
+- billing/subscription pages
+- product internals
+
+==================================================
+REQUIRED TASK
+==================================================
+
+1. Audit both artifacts and identify all marketing/homepage-related changes that were placed in the wrong artifact.
+
+2. Migrate or replicate the necessary homepage/marketing changes into the correct deployment target:
+- artifacts/plainpath-marketing
+
+3. Verify the deployed marketing homepage now reflects the intended current state.
+
+==================================================
+SPECIFIC ITEMS TO VERIFY ON THE CORRECT MARKETING TARGET
+==================================================
+
+Make sure these exist on artifacts/plainpath-marketing homepage:
+
+- correct hero copy/state
+- correct product positioning
+- 5 live tools messaging
+- Digital Signature shown as Coming Soon
+- 6-card homepage tool grid fully filled
+- pricing section reflects approved values
+- honest CTA behavior/copy on the marketing side
+- no stale/old homepage content remains
+
+==================================================
+PROTECTION STEP
+==================================================
+
+Add a clear repo note/document stating:
+
+CURRENT TARGETS
+- Marketing homepage target
+- Web app target
+- stale/non-target artifact usage rules
+
+This is to prevent future edits from going into the wrong place again.
+
+Suggested file:
+- docs/CURRENT_TARGETS.md
+or similar
+
+==================================================
+RETURN FORMAT
+==================================================
+
+Return:
+1. exact target artifact for marketing homepage
+2. exact homepage file changed
+3. any wrong/non-target file previously edited
+4. list of migrated/fixed homepage items
+5. screenshot of the corrected marketing homepage
+6. screenshot of the corrected 6-card tool grid on the marketing site
+7. confirmation that future marketing edits should not be done in artifacts/plainpath
