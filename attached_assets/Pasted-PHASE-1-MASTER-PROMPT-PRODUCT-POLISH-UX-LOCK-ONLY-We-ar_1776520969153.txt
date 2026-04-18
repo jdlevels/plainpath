@@ -1,0 +1,217 @@
+PHASE 1 MASTER PROMPT — PRODUCT POLISH + UX LOCK ONLY
+
+We are now in PHASE 1 only for PlainPath.
+
+Important:
+- Do NOT start Phase 2 or Phase 3 yet.
+- Do NOT change pricing, legal/store docs, metadata, icons, feature graphic, billing architecture, or submission packaging in this pass.
+- Do NOT touch Stripe/live billing activation.
+- This pass is only for product polish, UX consistency, and final UI/workflow refinement.
+
+Goal:
+Finish the product-facing refinements, make the app feel premium and consistent, then stop for review.
+
+==================================================
+PHASE 1 SCOPE
+==================================================
+
+1. REDACT TOOL — FINAL INPUT PAGE CONSISTENCY
+2. REDACT TOOL — FINAL WORKSPACE / LAYOUT POLISH
+3. REDACT TOOL — FINAL FLOW / NAVIGATION POLISH
+4. ANIMATED PROCESSING SYSTEM — ANALYZE TOOL
+5. HOMEPAGE TOOL GRID — ADD 6TH CARD
+6. FULL UI CONSISTENCY PASS
+7. STOP AND REPORT BACK
+
+==================================================
+1. REDACT TOOL — FINAL INPUT PAGE CONSISTENCY
+==================================================
+
+Make this one quick layout fix:
+
+Current issue:
+The “Try a sample document” section is above “What gets detected”.
+
+Required change:
+Move “Try a sample document” BELOW “What gets detected”.
+
+Desired order:
+1. Input area
+   - Paste Text / Upload File / Take Photo
+   - input textarea or file/photo input
+   - Scan for Sensitive Information button
+
+2. What gets detected
+
+3. Try a sample document
+
+Rules:
+- keep all demo cards and behavior unchanged
+- only change the order
+- preserve current styling and spacing
+- keep desktop and mobile balanced
+
+==================================================
+2. REDACT TOOL — FINAL WORKSPACE / LAYOUT POLISH
+==================================================
+
+The Redact tool must feel like a real workspace, not a compressed strip.
+
+Required desktop layout:
+- LEFT: document/PDF/image preview in its own tall pane
+- RIGHT: detected items, controls, selection tools, apply/download/continue actions in its own tall pane
+
+Requirements:
+- the active Redact workspace must extend downward into the main content section
+- remove any short/hero-style height limitation
+- preview pane must be taller
+- right-side controls pane must be taller
+- both panes must scroll internally if needed
+- avoid leaving a large empty area below while the workspace is compressed above
+
+Keep footer intact, but let the tool occupy the main page body correctly.
+
+==================================================
+3. REDACT TOOL — FINAL FLOW / NAVIGATION POLISH
+==================================================
+
+The Redact workflow is close, but finish these final usability items.
+
+Required:
+- Keep Take Photo / Scan visible and usable
+- Keep Upload File visible and usable
+- Keep PDF upload flow working
+- Keep image/photo flow working
+- Keep live preview behavior working
+- Keep live redaction preview behavior working
+- Keep Download Redacted PDF working
+- Keep original file untouched
+- Keep “Continue with redacted version” working into:
+  - Analyze
+  - Trust Check
+  - Contract Review
+
+Navigation requirements:
+- add or preserve Back button
+- add or preserve Previous button where appropriate
+- preserve Start Over / Redact Another Document
+
+Rules:
+- do NOT let uploaded PDF flow fall back into the old text-only completion state
+- for PDF mode, keep the user in PDF-specific preview/result flow
+- text copy/download can remain secondary, but must not replace the PDF result path
+
+==================================================
+4. ANIMATED PROCESSING SYSTEM — ANALYZE TOOL
+==================================================
+
+Trust Check already has the new premium animated processing experience.
+Apply the same shared processing shell to Analyze a Document.
+
+Goal:
+Analyze a Document should feel like it is actively reading and building the result.
+
+Use the same structural model as Trust Check:
+- LEFT: animated document preview window
+- RIGHT: staged analysis progress, live findings, progress/confidence area
+
+Analyze-specific stages:
+1. Reading document
+2. Identifying document type
+3. Extracting key terms
+4. Finding deadlines and dates
+5. Detecting missing or required items
+6. Building plain-English summary
+7. Finalizing action plan
+
+Live findings examples:
+- Key dates found
+- Required documents detected
+- Missing items identified
+- Action items extracted
+- Summary prepared
+
+Rules:
+- use the same premium motion language as Trust Check
+- do not use generic dead spinners
+- result reveal should feel progressive, not instant
+- reuse shared components where possible so the app feels unified
+
+==================================================
+5. HOMEPAGE TOOL GRID — ADD 6TH CARD
+==================================================
+
+Add the 6th tool card to the homepage grid to fill the empty space and make the layout feel complete.
+
+Tool:
+Digital Signature
+
+Status:
+Coming Soon
+
+Requirements:
+- add the card as the 6th tool in the grid
+- place it so the layout feels balanced, ideally beside Redact on the bottom row
+- style it as clearly inactive:
+  - muted / grayed appearance
+  - softer border/icon treatment
+  - visible “Coming Soon” badge
+- suggested supporting copy:
+  - “Secure signing and signature workflows — coming soon”
+  or similar
+- do NOT present it as live
+- do NOT count it as one of the 5 live tools in pricing/product copy
+- if clickable, it may only open a simple placeholder/coming-soon state, not a fake live tool
+
+==================================================
+6. FULL UI CONSISTENCY PASS
+==================================================
+
+Run one Phase 1 consistency pass across the live product.
+
+Check and fix only if needed:
+- button wording consistency
+- tool headers
+- spacing rhythm
+- loading states
+- card alignment
+- desktop/mobile balance
+- theme consistency
+- footer consistency
+- no stale “4 tools” language
+- no overlapping panels or duplicate states
+- no broken routes in the touched areas
+
+Do NOT expand scope beyond product polish.
+
+==================================================
+7. DELIVERABLES
+==================================================
+
+When Phase 1 is complete, stop and report back.
+
+Return:
+1. Exact files changed
+2. What was changed in each file
+3. Screenshot of updated Redact input page
+4. Screenshot of updated Redact split workspace
+5. Screenshot showing Back / Previous navigation in Redact
+6. Screenshot of Analyze animated processing state
+7. Screenshot of the final 6-card homepage grid
+8. Final Phase 1 checklist with each item marked:
+   - DONE
+   - PARTIAL
+   - BLOCKED
+
+==================================================
+IMPORTANT STOP RULE
+==================================================
+
+After Phase 1 work is finished:
+- STOP
+- DO NOT begin Phase 2
+- DO NOT begin store asset work
+- DO NOT begin metadata or submission work
+- DO NOT begin billing changes
+
+Wait for approval before moving on.

@@ -557,13 +557,22 @@ export default function Redact() {
 
           {/* Header */}
           <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <div className="w-9 h-9 rounded-xl bg-violet-100 dark:bg-violet-900/40 flex items-center justify-center">
-                <EyeOff className="w-5 h-5 text-violet-600 dark:text-violet-400" />
-              </div>
-              <div>
-                <h1 className="text-lg font-bold leading-tight">Redaction complete</h1>
-                <p className="text-xs text-muted-foreground">Your redacted document is ready</p>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setNextStepText(null)}
+                className="p-1.5 rounded-lg hover:bg-muted/50 text-muted-foreground transition-colors"
+                aria-label="Back to review"
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </button>
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 rounded-xl bg-violet-100 dark:bg-violet-900/40 flex items-center justify-center">
+                  <EyeOff className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+                </div>
+                <div>
+                  <h1 className="text-lg font-bold leading-tight">Redaction complete</h1>
+                  <p className="text-xs text-muted-foreground">Your redacted document is ready</p>
+                </div>
               </div>
             </div>
           </div>
