@@ -7,10 +7,17 @@ import { PlayStoreBadge } from "@/components/ui/PlayStoreBadge";
 import { WaitlistModal } from "@/components/WaitlistModal";
 import { PhoneHeroDemo } from "@/components/PhoneHeroDemo";
 import { WebAppDemo } from "@/components/WebAppDemo";
+import StatsBar from "@/components/StatsBar";
+import ToolsShowcase from "@/components/ToolsShowcase";
+import TestimonialsSection from "@/components/TestimonialsSection";
+import FAQSection from "@/components/FAQSection";
+import VideoWalkthrough from "@/components/VideoWalkthrough";
+import { Card } from "@/components/ui/card";
 import {
   FileText, ShieldAlert, FileSignature, ShieldCheck,
   ArrowRight, Upload, Sparkles, Scale,
   AlertTriangle, CheckCircle2, Clock, Lock, X as XIcon, EyeOff, Pen,
+  CalendarX, Eye, PenLine, FileScan,
 } from "lucide-react";
 
 /* ─── Animation helpers ──────────────────────────────────── */
@@ -173,6 +180,66 @@ const TRUST = [
   { icon: ShieldCheck, title: "Built for every document",  desc: "Leases, IRS letters, medical bills, contracts, court notices, NDAs — PlainPath handles them all." },
   { icon: CheckCircle2,title: "Start in seconds",          desc: "No account needed for your first analysis. Try any tool immediately — sign up when you're ready." },
 ];
+
+/* ─── Live demos ─────────────────────────────────────────── */
+const DEMOS = [
+  {
+    id: "event-permit",
+    tool: "Analyze a Document",
+    title: "Small Business Event Permit Packet",
+    desc: "City permit to host a public event. Requires 4 departmental sign-offs, a $1M liability certificate, and a 45-day lead time.",
+    icon: FileScan,
+    color: "text-blue-500 dark:text-blue-400",
+    bg: "bg-blue-50 dark:bg-blue-950/50",
+    hoverBorder: "hover:border-blue-400/50",
+    hoverTitle: "group-hover:text-blue-500 dark:group-hover:text-blue-400",
+    tags: ["8 action steps", "6 required docs", "3 deadlines"],
+    cta: "Open action plan",
+    href: "/app/analyze?demo=event-permit",
+  },
+  {
+    id: "trust-check-irs",
+    tool: "Document Trust Check",
+    title: "Fake IRS Payment Demand",
+    desc: "A letter claiming your account is flagged, demanding $892 within 48 hours. Trust Check scores it 18/100 and surfaces 3 critical red flags.",
+    icon: ShieldCheck,
+    color: "text-red-500 dark:text-red-400",
+    bg: "bg-red-50 dark:bg-red-950/50",
+    hoverBorder: "hover:border-red-400/50",
+    hoverTitle: "group-hover:text-red-500 dark:group-hover:text-red-400",
+    tags: ["Score: 18/100", "3 red flags", "Verdict: Likely Scam"],
+    cta: "See trust verdict",
+    href: "/app/import?mode=trust-check",
+  },
+  {
+    id: "contract-builder-freelance",
+    tool: "Build a Contract",
+    title: "Freelance Services Agreement",
+    desc: "Answer 6 questions about your deal — scope, payment, and deadline — and get a complete contract with gap analysis ready to download.",
+    icon: PenLine,
+    color: "text-emerald-500 dark:text-emerald-400",
+    bg: "bg-emerald-50 dark:bg-emerald-950/50",
+    hoverBorder: "hover:border-emerald-400/50",
+    hoverTitle: "group-hover:text-emerald-500 dark:group-hover:text-emerald-400",
+    tags: ["6-question wizard", "Gap analysis included", "PDF ready"],
+    cta: "Build a contract",
+    href: "/app/build-contract",
+  },
+  {
+    id: "contract-review-employment",
+    tool: "Contract Review",
+    title: "Employment Offer — Heavily One-Sided",
+    desc: "An offer letter with a 5-year global non-compete, no severance clause, and IP rights stripping. Scored 28/100 with negotiation language ready.",
+    icon: Scale,
+    color: "text-amber-500 dark:text-amber-400",
+    bg: "bg-amber-50 dark:bg-amber-950/50",
+    hoverBorder: "hover:border-amber-400/50",
+    hoverTitle: "group-hover:text-amber-500 dark:group-hover:text-amber-400",
+    tags: ["Score: 28/100", "4 clauses flagged", "Negotiation language"],
+    cta: "Review a contract",
+    href: "/app/contract-review",
+  },
+]
 
 /* ─── Pricing ────────────────────────────────────────────── */
 const PLANS = [
@@ -355,6 +422,15 @@ export default function Home() {
       </section>
 
       {/* ════════════════════════════════════════════════
+          STATS BAR
+      ════════════════════════════════════════════════ */}
+      <div className="w-full bg-gradient-to-b from-slate-100/90 via-blue-50/50 to-slate-100/70 dark:from-zinc-900/80 dark:via-blue-950/20 dark:to-zinc-900/60 border-y border-slate-200/80 dark:border-zinc-800/60 py-14">
+        <div className="max-w-6xl mx-auto px-5 sm:px-6">
+          <StatsBar />
+        </div>
+      </div>
+
+      {/* ════════════════════════════════════════════════
           FIVE TOOLS — premium feature cards
           (Digital Signature card is coming soon — not shown here)
       ════════════════════════════════════════════════ */}
@@ -456,6 +532,131 @@ export default function Home() {
       </div>
 
       {/* ════════════════════════════════════════════════
+          THE PROBLEM — dark product story
+      ════════════════════════════════════════════════ */}
+      <div className="w-full bg-white dark:bg-gradient-to-br dark:from-slate-950 dark:to-slate-900/90 border-b border-slate-100 dark:border-transparent py-20">
+        <div className="max-w-6xl mx-auto px-5 sm:px-6">
+          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true, margin: "-80px" }}>
+            <div className="rounded-3xl bg-slate-950 dark:bg-slate-900 text-white px-6 py-16 sm:px-12 sm:py-20 overflow-hidden relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 opacity-80 pointer-events-none" />
+              <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full bg-primary/10 blur-3xl pointer-events-none" />
+              <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-violet-500/8 blur-3xl pointer-events-none" />
+              <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+                <div>
+                  <motion.p initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+                    className="text-xs font-bold uppercase tracking-[0.2em] text-primary/80 mb-5">The problem</motion.p>
+                  <motion.h2 initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+                    transition={{ delay: 0.06 }}
+                    className="text-4xl sm:text-5xl font-bold leading-[1.08] tracking-tight text-white mb-6" style={{ fontFamily: "var(--font-display)" }}>
+                    They wrote<br />every clause.<br />
+                    <span className="text-slate-400">You have to live<br />with every one.</span>
+                  </motion.h2>
+                  <motion.p initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+                    transition={{ delay: 0.12 }}
+                    className="text-slate-400 leading-relaxed text-base sm:text-lg max-w-md">
+                    Contracts, notices, and government forms are written by specialists with one goal: protecting the organization that issued them. Nobody writes them for you.
+                  </motion.p>
+                </div>
+                <div className="space-y-4">
+                  {[
+                    { icon: CalendarX, title: "Deadlines buried in fine print",          desc: "A 30-day window in paragraph 8 that nobody told you about. Once it passes, your options disappear. Analyze a Document surfaces every one.", tool: "Analyze a Document",   iconBg: "rgba(59,130,246,0.15)",  iconColor: "#60a5fa", badgeBorder: "rgba(59,130,246,0.35)",  badgeColor: "#93c5fd" },
+                    { icon: FileScan,  title: "Fake notices designed to pressure you",   desc: "Scam notices look identical to real ones. Same formatting, same urgency. Document Trust Check scores legitimacy and flags every red flag.", tool: "Document Trust Check", iconBg: "rgba(239,68,68,0.15)",   iconColor: "#f87171", badgeBorder: "rgba(239,68,68,0.35)",   badgeColor: "#fca5a5" },
+                    { icon: PenLine,   title: "Signing the other party's boilerplate",   desc: "When you don't have your own contract, you sign theirs — and every clause was written to protect them. Build a Contract creates a fair agreement from scratch.", tool: "Build a Contract",     iconBg: "rgba(16,185,129,0.15)", iconColor: "#34d399", badgeBorder: "rgba(16,185,129,0.35)", badgeColor: "#6ee7b7" },
+                    { icon: Eye,       title: "Clauses that shift all the risk to you",  desc: "One paragraph waives your right to dispute. Another transfers liability quietly. Contract Review reads it clause by clause and tells you exactly what you're agreeing to.", tool: "Contract Review",      iconBg: "rgba(245,158,11,0.15)", iconColor: "#fbbf24", badgeBorder: "rgba(245,158,11,0.35)", badgeColor: "#fcd34d" },
+                  ].map((item, i) => (
+                    <motion.div key={i} initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }} transition={{ delay: i * 0.08 }}
+                      className="flex items-start gap-4 bg-white/5 hover:bg-white/8 transition-colors rounded-2xl px-5 py-4">
+                      <div style={{ backgroundColor: item.iconBg }} className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5">
+                        <item.icon style={{ width: 18, height: 18, color: item.iconColor }} />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-white text-sm mb-0.5">{item.title}</p>
+                        <p className="text-slate-400 text-sm leading-relaxed mb-2">{item.desc}</p>
+                        <span style={{ color: item.badgeColor, borderColor: item.badgeBorder }} className="inline-block text-[10px] font-bold uppercase tracking-widest border rounded-full px-2 py-0.5">{item.tool}</span>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* ════════════════════════════════════════════════
+          TOOLS SHOWCASE — 6-card detailed grid
+      ════════════════════════════════════════════════ */}
+      <div id="solutions" className="w-full bg-gradient-to-br from-indigo-50/90 via-violet-50/70 to-slate-50/90 dark:from-violet-950/22 dark:via-slate-900 dark:to-slate-900 border-y border-indigo-100 dark:border-border/40 py-20">
+        <div className="max-w-6xl mx-auto px-5 sm:px-6">
+          <ToolsShowcase />
+        </div>
+      </div>
+
+      {/* ════════════════════════════════════════════════
+          VIDEO WALKTHROUGH — dark cinematic
+      ════════════════════════════════════════════════ */}
+      <div className="w-full bg-gradient-to-b from-slate-950 via-[#0d1526] to-slate-950 py-20">
+        <div className="max-w-6xl mx-auto px-5 sm:px-6">
+          <VideoWalkthrough />
+        </div>
+      </div>
+
+      {/* ════════════════════════════════════════════════
+          LIVE DEMOS — one demo per tool
+      ════════════════════════════════════════════════ */}
+      <div id="demos" className="w-full bg-gradient-to-br from-blue-50 via-indigo-50/80 to-white dark:from-blue-950/35 dark:via-slate-900 dark:to-slate-900 border-y border-blue-100 dark:border-primary/15 py-16 scroll-mt-24">
+        <div className="max-w-6xl mx-auto px-5 sm:px-6">
+          <div className="text-center mb-12">
+            <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
+              className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Live demos</motion.p>
+            <motion.h2 initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+              className="text-3xl md:text-4xl font-bold mb-3" style={{ fontFamily: "var(--font-display)" }}>One demo for each tool</motion.h2>
+            <motion.p initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+              transition={{ delay: 0.1 }} className="text-muted-foreground text-lg max-w-xl mx-auto">
+              Four real-world examples. Click any card to try that tool with a pre-loaded scenario.
+            </motion.p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {DEMOS.map((demo, i) => (
+              <motion.div key={demo.id} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }} transition={{ delay: i * 0.08 }} whileHover={{ y: -5, transition: { duration: 0.2 } }}>
+                <a href={demo.href} className="w-full text-left h-full group block">
+                  <Card className={`h-full border-slate-200 dark:border-border/40 ${demo.hoverBorder} hover:shadow-xl transition-all overflow-hidden bg-white dark:bg-card rounded-2xl shadow-md`}>
+                    <div className="p-6 flex flex-col h-full">
+                      <div className={`w-11 h-11 rounded-xl ${demo.bg} flex items-center justify-center mb-4`}>
+                        <demo.icon className={`w-5 h-5 ${demo.color}`} />
+                      </div>
+                      <p className={`text-[11px] font-bold uppercase tracking-widest mb-1.5 ${demo.color}`}>{demo.tool}</p>
+                      <h3 className={`text-base font-bold ${demo.hoverTitle} transition-colors mb-2 leading-snug`}>{demo.title}</h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed mb-4 flex-1">{demo.desc}</p>
+                      <div className="flex flex-wrap gap-1.5 mb-4">
+                        {demo.tags.map((tag) => (
+                          <span key={tag} className="inline-block px-2.5 py-1 rounded-full bg-secondary text-xs font-semibold text-muted-foreground">{tag}</span>
+                        ))}
+                      </div>
+                      <div className={`flex items-center gap-1.5 text-sm font-semibold ${demo.color}`}>
+                        {demo.cta} <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                      </div>
+                    </div>
+                  </Card>
+                </a>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ════════════════════════════════════════════════
+          TESTIMONIALS
+      ════════════════════════════════════════════════ */}
+      <div className="w-full bg-gradient-to-br from-violet-50/90 via-purple-50/50 to-slate-50 dark:from-violet-950/20 dark:via-slate-900 dark:to-slate-900 border-y border-violet-100 dark:border-border/40 py-16">
+        <div className="max-w-6xl mx-auto px-5 sm:px-6">
+          <TestimonialsSection />
+        </div>
+      </div>
+
+      {/* ════════════════════════════════════════════════
           TRUST / CREDIBILITY
       ════════════════════════════════════════════════ */}
       <section className="py-20 md:py-24">
@@ -492,6 +693,15 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* ════════════════════════════════════════════════
+          FAQ
+      ════════════════════════════════════════════════ */}
+      <div className="w-full bg-gradient-to-b from-slate-100/90 via-slate-50 to-blue-50/60 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900 border-t border-slate-200 dark:border-border/40 py-16">
+        <div className="max-w-6xl mx-auto px-5 sm:px-6">
+          <FAQSection />
+        </div>
+      </div>
 
       {/* ════════════════════════════════════════════════
           PRICING

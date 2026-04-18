@@ -1,0 +1,105 @@
+We have now confirmed through side-by-side screenshot comparison that the public marketing page and the backend/app page are diverged.
+
+Decision:
+Do NOT merge the full app into the marketing site.
+Do NOT move tool logic.
+Instead, migrate the correct PUBLIC-FACING product-marketing sections from the backend/app page into the public marketing site.
+
+==================================================
+ARCHITECTURE RULE
+==================================================
+
+Public marketing target:
+- artifacts/plainpath-marketing
+
+Backend/app target:
+- artifacts/plainpath
+
+Public marketing should contain:
+- hero
+- product positioning
+- feature/tool showcase
+- pricing
+- public CTA flow
+- Digital Signature coming-soon presentation
+- public demo/story sections
+- testimonials/trust-building sections
+
+Backend/app should contain:
+- actual working tools
+- Analyze
+- Trust Check
+- Contract Review
+- Build a Contract
+- Redact
+- app-side loading animations
+- in-app billing/subscription flows
+- actual product-use surfaces
+
+==================================================
+TASK
+==================================================
+
+Audit the backend/app page and identify which sections currently there are actually PUBLIC-FACING MARKETING SECTIONS that should live on the marketing homepage instead.
+
+Then migrate the correct public-facing sections into:
+- artifacts/plainpath-marketing
+
+Do NOT move tool logic.
+Do NOT change working app routes.
+Do NOT break the current split architecture.
+
+==================================================
+PRIORITY PUBLIC-FACING SECTIONS TO REVIEW FOR MIGRATION
+==================================================
+
+Review and migrate the best versions of these if they currently exist on the backend/app page:
+
+1. 6-card tool grid
+   - including Digital Signature coming-soon card
+
+2. “Watch each tool work” section
+
+3. “One demo for each tool” section
+
+4. Stronger product-story / feature explanation sections
+
+5. Any clearly public-facing trust/demo/persuasion sections that belong before entering the app
+
+6. Any public-facing pricing/promo sections that are better on the backend than on the current marketing page
+
+==================================================
+IMPORTANT RULES
+==================================================
+
+1. Keep the split architecture.
+2. Do NOT move the actual tools into the marketing artifact.
+3. Only migrate/copy the public-facing MARKETING sections.
+4. Preserve styling quality and section spacing.
+5. If duplicate/older marketing sections exist, improve or replace them cleanly rather than stacking redundant sections.
+6. The public page should end up as the best polished customer-facing narrative before a user enters /app/.
+
+==================================================
+PROTECTION / DOCUMENTATION
+==================================================
+
+Add a short repo note documenting:
+
+- CURRENT PUBLIC MARKETING TARGET
+- CURRENT BACKEND/APP TARGET
+- what belongs in each
+
+Suggested file:
+- docs/CURRENT_TARGETS.md
+
+==================================================
+RETURN FORMAT
+==================================================
+
+Return:
+A. list of backend/app sections identified as actually public-facing marketing
+B. list of sections migrated to the public marketing page
+C. exact files changed in artifacts/plainpath-marketing
+D. note any old/redundant public marketing sections replaced or removed
+E. updated screenshots of the corrected public marketing homepage
+F. confirmation that app logic/routes remain in artifacts/plainpath only
