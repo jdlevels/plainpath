@@ -1,0 +1,77 @@
+STOP all new UI/code work.
+
+We are no longer troubleshooting content.
+We are troubleshooting DEPLOYMENT TARGET / PUBLIC DOMAIN MAPPING.
+
+The screenshots prove that the new marketing sections exist in some environment, but they are not reliably reflected on the actual public-facing live site the way they should be.
+
+This is now a deployment verification task only.
+
+==================================================
+GOAL
+==================================================
+
+Prove exactly which artifact is:
+1. being previewed
+2. being published
+3. serving the custom public domain plainpathapp.com
+
+==================================================
+REQUIRED VERIFICATION
+==================================================
+
+I need a clean deployment map with exact answers:
+
+A. Which artifact currently serves:
+- preview URL for the marketing page
+- live custom domain plainpathapp.com/
+- /app/ routes
+
+B. Confirm whether plainpathapp.com is currently bound to:
+- artifacts/plainpath-marketing
+or
+- something else
+
+C. Confirm whether the preview I am seeing is newer than the current public deployment.
+
+D. Confirm whether “Publish app” is publishing the correct artifact or a stale/other deployment.
+
+E. Check whether browser/CDN cache is masking the latest deployment.
+
+==================================================
+DO NOT EDIT ANY UI YET
+==================================================
+
+Do not make new page changes.
+Do not add/remove sections.
+Do not continue migration work.
+
+First prove the deployment target.
+
+==================================================
+REQUIRED OUTPUT
+==================================================
+
+Return a table with:
+
+1. Surface
+2. URL
+3. Artifact serving it
+4. Current status
+5. Correct/incorrect
+
+Surfaces to include:
+- marketing preview
+- live public domain /
+- /app/
+- any staging/dev preview URL involved
+
+Also return:
+- screenshot of the live public domain
+- screenshot of the marketing preview
+- explicit statement whether they match or differ
+- exact next action to make the public domain reflect the correct marketing artifact
+
+If the live domain is pointing to the wrong deployment, fix the deployment binding/publish target first, then show refreshed screenshots from:
+- plainpathapp.com/
+- preview URL
