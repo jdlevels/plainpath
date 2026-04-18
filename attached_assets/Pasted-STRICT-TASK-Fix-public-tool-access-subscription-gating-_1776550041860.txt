@@ -1,0 +1,86 @@
+STRICT TASK: Fix public tool access / subscription gating logic before any visual polish.
+
+TARGET:
+- Edit ONLY the public/product access logic needed to enforce the correct plan restrictions.
+- Do NOT redesign the site.
+- Do NOT change copy, branding, layout, animations, or section order unless required for accurate gating labels.
+- Preserve all existing approved public-site visuals.
+- If the marketing site and the app are separate artifacts, confirm which artifact controls real tool access and edit the correct one only.
+
+PROBLEM TO FIX:
+The current site/app behavior appears wrong:
+- Users can currently access 4 tools freely
+- Only Analyze a Document appears locked
+This is likely reversed or otherwise inconsistent with the approved pricing model.
+
+APPROVED PLAN LOGIC TO ENFORCE:
+Starter plan:
+- Analyze a Document = allowed
+- Redact Sensitive Info = allowed
+- Document Trust Check = locked
+- Build a Contract = locked
+- Contract Review = locked
+- Digital Signature = coming soon / unavailable to all plans for now
+
+Pro plan:
+- Analyze a Document = allowed
+- Document Trust Check = allowed
+- Build a Contract = allowed
+- Contract Review = allowed
+- Redact Sensitive Info = allowed
+- Digital Signature = still coming soon / unavailable for now unless explicitly implemented later
+
+REQUIRED OUTPUT:
+1. Audit all real entry points into tools:
+   - navbar
+   - hero pills/buttons
+   - pricing CTAs
+   - demo cards
+   - direct routes
+   - deep links
+   - dashboard/app tool launcher
+2. Identify the exact source of truth for plan gating:
+   - client-side config
+   - auth/user plan state
+   - feature flag map
+   - route guard
+   - billing/subscription check
+3. Fix the gating so the actual behavior exactly matches the approved pricing model above.
+4. Ensure locked tools:
+   - do not open the real workflow for Starter users
+   - route to the correct upgrade/paywall flow
+   - do not appear falsely usable through alternative routes
+5. Ensure allowed tools:
+   - open normally without false lock states
+6. Ensure Digital Signature:
+   - remains visibly “coming soon”
+   - is not accidentally accessible through any route
+7. Verify consistency between:
+   - pricing page
+   - tool cards
+   - CTAs
+   - route guards
+   - account/dashboard state
+8. Do not leave any mismatched UI where a tool looks unlocked but is actually blocked, or vice versa.
+
+MANDATORY VALIDATION:
+Test these exact cases:
+- signed-out visitor
+- free/no-plan user
+- Starter user
+- Pro user
+
+For each case, verify:
+- which tools open
+- which tools show upgrade
+- which tools show coming soon
+- whether direct route entry is blocked correctly
+- whether dashboard/tool launcher matches pricing
+
+RETURN FORMAT:
+- Which artifact/file controlled the real gating
+- Exact files changed
+- Final rule table for Starter vs Pro vs Coming Soon
+- Route-by-route validation results
+- Confirmation that no unintended tools remain freely accessible
+- Confirmation that Digital Signature is still unavailable everywhere except labeled “coming soon”

@@ -1,0 +1,381 @@
+Yes. The **tool access issue is not a Phase 1 or Phase 2 cosmetic item**. It is a **critical gating / billing logic problem** and should be handled **first**.
+
+If the public app currently lets users access 4 tools freely while only one tool is locked, that is a **product access-control bug**. That belongs in a **pre-phase hotfix** before visual polish.
+
+## Recommended order now
+
+### 0. Immediate hotfix — access / paywall logic
+
+Fix plan gating before anything else.
+
+### 1. Phase 1 — visual lock / acceptance
+
+Freeze public-site layout, branding, light/dark treatment, device shell, section hierarchy.
+
+### 2. Phase 2 — conversion authority / living product feel
+
+Improve motion, walkthrough realism, referral presentation, product confidence.
+
+### 3. Phase 3 — launch / business setup
+
+Business account, domain/business details, payments, go-live checks, legal/support pages, analytics, launch assets.
+
+Your **business account** fits best in **Phase 3 operational readiness**, but the **tool gating bug must be fixed before that** because it affects monetization directly.
+
+---
+
+# Prompt 0 — Immediate critical fix: public tool access / paywall logic
+
+Use this first.
+
+```text
+STRICT TASK: Fix public tool access / subscription gating logic before any visual polish.
+
+TARGET:
+- Edit ONLY the public/product access logic needed to enforce the correct plan restrictions.
+- Do NOT redesign the site.
+- Do NOT change copy, branding, layout, animations, or section order unless required for accurate gating labels.
+- Preserve all existing approved public-site visuals.
+- If the marketing site and the app are separate artifacts, confirm which artifact controls real tool access and edit the correct one only.
+
+PROBLEM TO FIX:
+The current site/app behavior appears wrong:
+- Users can currently access 4 tools freely
+- Only Analyze a Document appears locked
+This is likely reversed or otherwise inconsistent with the approved pricing model.
+
+APPROVED PLAN LOGIC TO ENFORCE:
+Starter plan:
+- Analyze a Document = allowed
+- Redact Sensitive Info = allowed
+- Document Trust Check = locked
+- Build a Contract = locked
+- Contract Review = locked
+- Digital Signature = coming soon / unavailable to all plans for now
+
+Pro plan:
+- Analyze a Document = allowed
+- Document Trust Check = allowed
+- Build a Contract = allowed
+- Contract Review = allowed
+- Redact Sensitive Info = allowed
+- Digital Signature = still coming soon / unavailable for now unless explicitly implemented later
+
+REQUIRED OUTPUT:
+1. Audit all real entry points into tools:
+   - navbar
+   - hero pills/buttons
+   - pricing CTAs
+   - demo cards
+   - direct routes
+   - deep links
+   - dashboard/app tool launcher
+2. Identify the exact source of truth for plan gating:
+   - client-side config
+   - auth/user plan state
+   - feature flag map
+   - route guard
+   - billing/subscription check
+3. Fix the gating so the actual behavior exactly matches the approved pricing model above.
+4. Ensure locked tools:
+   - do not open the real workflow for Starter users
+   - route to the correct upgrade/paywall flow
+   - do not appear falsely usable through alternative routes
+5. Ensure allowed tools:
+   - open normally without false lock states
+6. Ensure Digital Signature:
+   - remains visibly “coming soon”
+   - is not accidentally accessible through any route
+7. Verify consistency between:
+   - pricing page
+   - tool cards
+   - CTAs
+   - route guards
+   - account/dashboard state
+8. Do not leave any mismatched UI where a tool looks unlocked but is actually blocked, or vice versa.
+
+MANDATORY VALIDATION:
+Test these exact cases:
+- signed-out visitor
+- free/no-plan user
+- Starter user
+- Pro user
+
+For each case, verify:
+- which tools open
+- which tools show upgrade
+- which tools show coming soon
+- whether direct route entry is blocked correctly
+- whether dashboard/tool launcher matches pricing
+
+RETURN FORMAT:
+- Which artifact/file controlled the real gating
+- Exact files changed
+- Final rule table for Starter vs Pro vs Coming Soon
+- Route-by-route validation results
+- Confirmation that no unintended tools remain freely accessible
+- Confirmation that Digital Signature is still unavailable everywhere except labeled “coming soon”
+```
+
+---
+
+# Prompt 1 — Phase 1: public site visual lock / acceptance
+
+Run this after the gating fix is complete.
+
+```text
+STRICT PHASE 1: Final public-site visual lock and acceptance pass.
+
+TARGET:
+- Edit ONLY the public marketing site artifact.
+- Do NOT modify product app logic, API, auth, billing, or tool workflows.
+- Preserve all approved structure and ordering unless explicitly listed below.
+- This is a freeze/lock pass, not a redesign pass.
+
+PRIMARY GOAL:
+Lock the public site into its approved visual system across dark and light themes so the site stops drifting.
+
+LOCK THESE AS APPROVED:
+1. Hero layout and copy hierarchy
+2. Device shell placement and premium presentation
+3. Stats/trust band structure
+4. “Every document situation covered” section
+5. Problem section
+6. Tools showcase
+7. See PlainPath in action placement
+8. One demo for each tool
+9. Document situations section
+10. Pricing section order:
+   - pricing heading/subhead
+   - attorney comparison
+   - monthly/yearly toggle
+   - starter/pro cards
+   - fine print
+11. Referral section location and honest public-site framing
+12. Web & Mobile section
+13. Privacy/trust band
+14. Final CTA
+15. Footer structure
+16. Logo treatment in navbar and footer
+
+CRITICAL PHASE 1 OBJECTIVES:
+A. Dual-theme acceptance
+- Dark mode must remain fully approved and untouched in spirit
+- Light mode must no longer feel flat, washed out, or overly bright
+- Each major section in light mode must have clearer tonal separation
+- Add more depth and variation between section backgrounds
+- Reduce raw brightness
+- Increase premium feel through controlled tonal layering, not loud contrast
+
+B. Light theme refinement
+Improve light mode so it feels intentional and premium:
+- more section-to-section variation
+- slightly deeper surfaces
+- more visual depth
+- less “sheet of pale white-blue”
+- stronger border visibility where needed
+- slightly richer section bands
+- preserve readability and calm tone
+
+C. Logo acceptance
+Update brand presentation so the logo is readable and appropriately scaled:
+- navbar logo should not feel tiny or vague
+- footer logo should feel intentional and readable
+- preserve clean premium look in both themes
+- no distorted scaling
+- no fuzzy or artifact-heavy rendering
+- ensure favicon and brand mark are coherent with the current approved identity
+
+D. Device shell lock
+Keep the premium phone shell treatment approved in the hero:
+- premium flagship feel
+- refined bezels
+- top hardware detail present
+- not cartoonish
+- not generic
+- not over-detailed to the point of distraction
+- preserve current layout and scaling discipline
+
+MANDATORY VISUAL RULES:
+- Do not change approved section order
+- Do not introduce new fake testimonials, fake counters, or fake trust signals
+- Do not replace honest copy with marketing fluff
+- Do not over-animate anything
+- Keep the site premium, calm, and restrained
+
+MANDATORY VALIDATION:
+Check rendering at:
+- desktop 1440+
+- laptop 1280
+- tablet 1024 / 768
+- mobile 390
+
+VERIFY:
+- no overflow
+- no clipped text
+- no tiny unreadable logo
+- no flat section blending in light mode
+- no broken borders
+- no regressions in dark mode
+- no disturbance to pricing/referral/walkthrough order
+
+RETURN FORMAT:
+1. Files changed
+2. Exact visual adjustments by section
+3. Logo treatment details
+4. Dark-mode preservation confirmation
+5. Light-mode improvement confirmation
+6. Responsive validation
+7. Final acceptance verdict: PHASE 1 LOCKED or NOT LOCKED
+```
+
+---
+
+# Prompt 2 — Phase 2: conversion authority / living product feel
+
+Run this only after Phase 1 is locked.
+
+```text
+STRICT PHASE 2: Improve conversion authority and make the public site feel more like a living product, not a brochure.
+
+TARGET:
+- Edit ONLY the public marketing site artifact
+- Do NOT change product billing logic
+- Do NOT change approved pricing order
+- Do NOT reopen solved visual structure decisions from Phase 1
+- This is a conversion-authority and motion-polish pass, not a layout rewrite
+
+PRIMARY GOAL:
+Increase confidence, product realism, and conversion strength while keeping the public site fully honest.
+
+REQUIRED PRIORITIES:
+1. Lock the pricing section exactly as approved
+2. Keep the attorney comparison exactly in its approved position
+3. Keep the referral section only in an honest public-site form
+4. Use real app-inspired motion, not fake video UI/timestamps
+5. Simplify walkthrough mini cards
+6. Apply restrained motion polish across a few key sections, not everywhere
+
+A. WALKTHROUGH UPGRADE — HIGHEST PRIORITY
+Improve “See PlainPath in action” so it feels like a real product workflow.
+
+REQUIREMENTS:
+- Replace static-feeling preview with real app-inspired motion behavior
+- No fake video controls
+- No fake timestamps
+- No fake progress scrubber
+- No fake chapter durations shown to users
+
+Use a controlled looping motion demo that cycles through:
+- Analyze a Document
+- Document Trust Check
+- Build a Contract
+- Contract Review
+- Redact Sensitive Info
+
+The demo should show:
+- a document entering the workflow
+- scan/progress behavior
+- findings appearing
+- extracted action items / flags / clauses / redaction outputs
+- tool-colored state changes matching the relevant feature
+
+Keep the motion restrained, premium, and believable.
+
+B. MINI CARD CLEANUP
+Simplify the mini cards under the walkthrough:
+- faster to scan
+- clearer hierarchy
+- less dense wording
+- more product-entry-point feel
+- no fake “video chapter” feeling
+- cleaner spacing and sizing
+
+C. REFERRAL SECTION — PUBLIC-SAFE ONLY
+Keep referral on the public site only in an honest form:
+- explain that referrals exist inside the product/account experience
+- no fake personal referral URL generation on public page
+- no fake counters
+- no fake earned rewards
+- no fake account state
+- CTA must go to a real destination
+- if showing a visual example panel, it must be clearly illustrative and not deceptive
+
+D. MOTION POLISH — RESTRAINED
+Only add subtle, premium motion where it helps:
+- walkthrough tool switch transitions
+- selected cards or section entrances
+- CTA hover polish
+- maybe subtle section reveal timing
+
+Do NOT add motion everywhere.
+Do NOT reduce performance.
+Do NOT make it feel gimmicky.
+
+E. CONVERSION AUTHORITY
+Strengthen the sense that PlainPath is a working product:
+- real workflow cues
+- stronger product clarity
+- better visual confidence around how each tool works
+- keep all claims supportable and truthful
+- do not add fake proof elements
+
+MANDATORY DO-NOT-CHANGE ITEMS:
+- approved pricing order
+- attorney comparison placement
+- starter/pro structure
+- honesty of public claims
+- core approved section order from Phase 1
+- product/app logic
+
+RESPONSIVE CHECK:
+Verify at:
+- 1440+
+- 1280
+- 1024
+- 768
+- 390
+
+Check:
+- walkthrough remains readable
+- motion does not break layout
+- mini cards remain tappable/readable
+- referral does not overflow
+- no regressions to pricing or CTA hierarchy
+
+RETURN FORMAT:
+1. Files changed
+2. Walkthrough changes
+3. Mini card simplification changes
+4. Referral public-safe confirmation
+5. Motion polish summary
+6. Responsive check
+7. Final verdict: PHASE 2 COMPLETE or NOT COMPLETE
+```
+
+---
+
+## My recommendation on the access issue
+
+That access-control bug is serious enough that I would treat it as:
+
+**Phase 0: monetization / gating correction**
+
+Not optional.
+Not later.
+Fix that before more polish.
+
+## Business account note
+
+Once your business account is ready tonight, that supports:
+
+* billing ownership
+* brand/domain operations
+* payment setup
+* launch credibility
+* support/legal/business admin
+
+But that should run **parallel to visual work**, not instead of the gating fix.
+
+If you want, I can next write:
+**Phase 3 prompt: launch operations / business-account readiness**

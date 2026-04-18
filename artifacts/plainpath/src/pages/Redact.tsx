@@ -33,6 +33,9 @@ import { PiiReview } from "@/components/PiiReview"
 import { PdfRedactViewer } from "@/components/PdfRedactViewer"
 import { getApiBaseUrl } from "@/lib/api"
 import { downloadRedactedPdf, downloadRedactedText } from "@/lib/piiExport"
+import { useEntitlements } from "@/hooks/useEntitlements"
+import UpgradeModal from "@/components/UpgradeModal"
+import { BILLING_CONFIG } from "@/lib/billingConfig"
 
 // ─── Accepted file types ──────────────────────────────────────────────────────
 
@@ -195,6 +198,23 @@ Date: April 10, 2024`,
 
 export default function Redact() {
   const [, setLocation] = useLocation()
+
+  // ── Subscription gate ─────────────────────────────────────────────────────
+  // Redact Sensitive Info is available to Starter and Pro plans.
+  // Free / no-subscription users are shown an upgrade prompt.
+  const { entitlements, loading: entitlementsLoading } = useEntitlements()
+  const [upgradeOpen, setUpgradeOpen] = useState(false)
+
+  const canRedact = BILLING_CONFIG.PAYWALL_ENFORCEMENT
+    ? (entitlements?.toolAccess?.includes("redact") ?? false)
+    : true
+
+  // Show upgrade modal automatically when enforcement is on and user lacks access
+  useEffect(() => {
+    if (!entitlementsLoading && BILLING_CONFIG.PAYWALL_ENFORCEMENT && !canRedact) {
+      setUpgradeOpen(true)
+    }
+  }, [entitlementsLoading, canRedact])
 
   // Input state
   const [mode, setMode] = useState<"paste" | "upload" | "scan">("paste")
@@ -421,6 +441,51 @@ export default function Redact() {
     setActiveText(null)
     setPastedText("")
     setUploadedFile(null)
+  }
+
+  // ─── SUBSCRIPTION GATE ────────────────────────────────────────────────────
+  // Redact requires Starter or Pro. Show upgrade modal for free/no-plan users.
+  if (entitlementsLoading && BILLING_CONFIG.PAYWALL_ENFORCEMENT) {
+    return (
+      <WorkspaceShell>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        </div>
+      </WorkspaceShell>
+    )
+  }
+
+  if (!canRedact) {
+    return (
+      <WorkspaceShell>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4 gap-4">
+          <div className="w-14 h-14 rounded-2xl bg-violet-50 dark:bg-violet-950/40 border border-violet-200 dark:border-violet-800/60 flex items-center justify-center">
+            <EyeOff className="w-7 h-7 text-violet-500 dark:text-violet-400" />
+          </div>
+          <div className="max-w-xs">
+            <h2 className="text-lg font-bold mb-1">Redact Sensitive Info</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Automatic PII detection and redaction is available on the Starter plan and above.
+            </p>
+          </div>
+          <Button onClick={() => setUpgradeOpen(true)} className="gap-2 mt-1">
+            View plans &amp; pricing
+            <ArrowRight className="w-4 h-4" />
+          </Button>
+          <button
+            onClick={() => setLocation("/")}
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Back to tools
+          </button>
+        </div>
+        <UpgradeModal
+          open={upgradeOpen}
+          onClose={() => setUpgradeOpen(false)}
+          reason="redact"
+        />
+      </WorkspaceShell>
+    )
   }
 
   // ─── PDF COMPLETION SCREEN ───────────────────────────────────────────────

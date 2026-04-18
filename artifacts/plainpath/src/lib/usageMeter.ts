@@ -6,6 +6,7 @@ type UsageRecord = {
   trustChecks: number
   contractDrafts: number
   contractReviews: number
+  redacts: number
 }
 
 function getCurrentMonth(): string {
@@ -21,7 +22,7 @@ function getRecord(): UsageRecord {
       if (parsed.month === getCurrentMonth()) return parsed
     }
   } catch {}
-  return { month: getCurrentMonth(), analyses: 0, trustChecks: 0, contractDrafts: 0, contractReviews: 0 }
+  return { month: getCurrentMonth(), analyses: 0, trustChecks: 0, contractDrafts: 0, contractReviews: 0, redacts: 0 }
 }
 
 function saveRecord(record: UsageRecord): void {
@@ -40,15 +41,29 @@ export function incrementContractDraft(): void {
 export function incrementContractReview(): void {
   const r = getRecord(); r.contractReviews += 1; saveRecord(r)
 }
+export function incrementRedact(): void {
+  const r = getRecord(); r.redacts += 1; saveRecord(r)
+}
 
 export function getUsage(): UsageRecord {
   return getRecord()
 }
 
-const LIMITS: Record<string, { analyses: number; trustChecks: number; contractDrafts: number; contractReviews: number }> = {
-  free:    { analyses: 2,        trustChecks: 0,        contractDrafts: 0,        contractReviews: 0 },
-  starter: { analyses: Infinity, trustChecks: 0,        contractDrafts: 0,        contractReviews: 0 },
-  pro:     { analyses: Infinity, trustChecks: Infinity, contractDrafts: Infinity, contractReviews: Infinity },
+// ─── Per-plan limits ──────────────────────────────────────────────────────────
+// free    = no subscription (2 free analyses only; all other tools blocked)
+// starter = $4.99/mo (Analyze + Redact; Trust Check / Contract tools locked)
+// pro     = $19.99/mo (all 5 live tools)
+
+const LIMITS: Record<string, {
+  analyses: number
+  trustChecks: number
+  contractDrafts: number
+  contractReviews: number
+  redacts: number
+}> = {
+  free:    { analyses: 2,        trustChecks: 0,        contractDrafts: 0,        contractReviews: 0,        redacts: 0        },
+  starter: { analyses: Infinity, trustChecks: 0,        contractDrafts: 0,        contractReviews: 0,        redacts: Infinity },
+  pro:     { analyses: Infinity, trustChecks: Infinity, contractDrafts: Infinity, contractReviews: Infinity, redacts: Infinity },
 }
 
 function planLimits(planKey: string | null | undefined) {
@@ -77,4 +92,10 @@ export function canRunContractReview(planKey?: string | null): { allowed: boolea
   const lim = planLimits(planKey)
   const used = getRecord().contractReviews
   return { allowed: used < lim.contractReviews, used, limit: lim.contractReviews }
+}
+
+export function canRunRedact(planKey?: string | null): { allowed: boolean; used: number; limit: number } {
+  const lim = planLimits(planKey)
+  const used = getRecord().redacts
+  return { allowed: used < lim.redacts, used, limit: lim.redacts }
 }

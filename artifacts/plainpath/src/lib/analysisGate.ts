@@ -6,10 +6,12 @@ import {
   canRunTrustCheck,
   canRunContractDraft,
   canRunContractReview,
+  canRunRedact,
   incrementAnalysis,
   incrementTrustCheck,
   incrementContractDraft,
   incrementContractReview,
+  incrementRedact,
 } from "./usageMeter"
 
 // ─── Usage Limit Error ────────────────────────────────────────────────────────
@@ -17,9 +19,9 @@ import {
 export class UsageLimitError extends Error {
   public readonly used: number
   public readonly limit: number
-  public readonly reason: "analyses" | "trustCheck" | "contractDraft" | "contractReview"
+  public readonly reason: "analyses" | "trustCheck" | "contractDraft" | "contractReview" | "redact"
   constructor(
-    reason: "analyses" | "trustCheck" | "contractDraft" | "contractReview",
+    reason: "analyses" | "trustCheck" | "contractDraft" | "contractReview" | "redact",
     used: number,
     limit: number
   ) {
@@ -34,25 +36,18 @@ export class UsageLimitError extends Error {
 // ─── Gate Functions ───────────────────────────────────────────────────────────
 //
 // Each gate function:
-//   1. Always records usage locally (for analytics / future enforcement)
-//   2. When enforcement is OFF: never blocks — returns immediately
-//   3. When enforcement is ON:  validates plan and blocks if over limit
-//
-// To activate enforcement: set PAYWALL_ENFORCEMENT = true in billingConfig.ts
+//   1. Always records usage locally (analytics)
+//   2. When PAYWALL_ENFORCEMENT is OFF: never blocks — returns immediately
+//   3. When PAYWALL_ENFORCEMENT is ON:  validates plan; throws UsageLimitError if blocked
 //
 // ─────────────────────────────────────────────────────────────────────────────
 
 export async function beforeRunAnalysis() {
-  // Always track usage (for future enforcement and analytics)
   incrementAnalysis()
-
   const email = getStoredSubscriberEmail()
   if (email) {
-    // Fire-and-forget: record server-side usage (non-blocking)
     void consumeToolUsage(email, "analyze").catch(() => {})
   }
-
-  // TODO: When PAYWALL_ENFORCEMENT = true, the block below enforces limits.
   if (!BILLING_CONFIG.PAYWALL_ENFORCEMENT) return
 
   if (!email) {
@@ -66,15 +61,11 @@ export async function beforeRunAnalysis() {
 }
 
 export async function beforeRunTrustCheck(planKey?: string | null) {
-  // Always track usage
   incrementTrustCheck()
-
   const email = getStoredSubscriberEmail()
   if (email) {
     void consumeToolUsage(email, "trust-check").catch(() => {})
   }
-
-  // TODO: When PAYWALL_ENFORCEMENT = true, the block below enforces plan limits.
   if (!BILLING_CONFIG.PAYWALL_ENFORCEMENT) return
 
   const { allowed, used, limit } = canRunTrustCheck(planKey)
@@ -82,15 +73,11 @@ export async function beforeRunTrustCheck(planKey?: string | null) {
 }
 
 export async function beforeRunContractDraft(planKey?: string | null) {
-  // Always track usage
   incrementContractDraft()
-
   const email = getStoredSubscriberEmail()
   if (email) {
     void consumeToolUsage(email, "build-contract").catch(() => {})
   }
-
-  // TODO: When PAYWALL_ENFORCEMENT = true, the block below enforces plan limits.
   if (!BILLING_CONFIG.PAYWALL_ENFORCEMENT) return
 
   const { allowed, used, limit } = canRunContractDraft(planKey)
@@ -98,17 +85,25 @@ export async function beforeRunContractDraft(planKey?: string | null) {
 }
 
 export async function beforeRunContractReview(planKey?: string | null) {
-  // Always track usage
   incrementContractReview()
-
   const email = getStoredSubscriberEmail()
   if (email) {
     void consumeToolUsage(email, "contract-review").catch(() => {})
   }
-
-  // TODO: When PAYWALL_ENFORCEMENT = true, the block below enforces plan limits.
   if (!BILLING_CONFIG.PAYWALL_ENFORCEMENT) return
 
   const { allowed, used, limit } = canRunContractReview(planKey)
   if (!allowed) throw new UsageLimitError("contractReview", used, limit)
+}
+
+export async function beforeRunRedact(planKey?: string | null) {
+  incrementRedact()
+  const email = getStoredSubscriberEmail()
+  if (email) {
+    void consumeToolUsage(email, "redact").catch(() => {})
+  }
+  if (!BILLING_CONFIG.PAYWALL_ENFORCEMENT) return
+
+  const { allowed, used, limit } = canRunRedact(planKey)
+  if (!allowed) throw new UsageLimitError("redact", used, limit)
 }

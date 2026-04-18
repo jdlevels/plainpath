@@ -101,7 +101,7 @@ router.post("/consume", (req, res) => {
     const email = String(req.body?.email || "").trim().toLowerCase()
     const tool = String(req.body?.tool || "") as ToolKey
 
-    const validTools: ToolKey[] = ["analyze", "trust-check", "contract-review", "build-contract"]
+    const validTools: ToolKey[] = ["analyze", "trust-check", "contract-review", "build-contract", "redact"]
 
     if (!email) {
       return res.status(400).json({ error: "Missing email" })

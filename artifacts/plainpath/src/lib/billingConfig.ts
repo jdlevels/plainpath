@@ -26,7 +26,7 @@ export const BILLING_CONFIG = {
   // When false: all tools work regardless of plan (testing / launch window).
   // When true:  tools are gated by the user's active subscription plan.
   // TODO: Set to true after live billing is confirmed end-to-end.
-  PAYWALL_ENFORCEMENT: false,
+  PAYWALL_ENFORCEMENT: true,
 
   // Explicit Stripe test-mode guard.
   STRIPE_TEST_MODE: true,

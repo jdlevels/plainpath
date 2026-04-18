@@ -7,7 +7,7 @@ import { isNative } from "@/lib/platform"
 interface Props {
   open: boolean
   onClose: () => void
-  reason: "analyses" | "trustCheck" | "contractDraft" | "contractReview"
+  reason: "analyses" | "trustCheck" | "contractDraft" | "contractReview" | "redact"
   used?: number
   limit?: number
   planRequired?: "starter" | "pro"
@@ -38,11 +38,18 @@ const REASON_COPY = {
     icon: <Scale className="w-6 h-6 text-amber-500" />,
     planRequired: "pro" as const,
   },
+  redact: {
+    title: "Redact Sensitive Info requires a subscription",
+    sub: "Upgrade to Starter or Pro to automatically detect and redact PII from any document.",
+    icon: <ShieldCheck className="w-6 h-6 text-violet-500" />,
+    planRequired: "starter" as const,
+  },
 }
 
 const PLAN_HIGHLIGHTS = {
   starter: [
     "Unlimited document analyses",
+    "Redact Sensitive Info (automatic PII removal)",
     "Plain English summary & full Action Pack",
     "Key Terms, Deadlines, Risks",
     "Shareable analysis links",
@@ -50,8 +57,9 @@ const PLAN_HIGHLIGHTS = {
   pro: [
     "Everything in Starter",
     "Unlimited Document Trust Checks",
-    "Unlimited Contract Builder drafts",
-    "AI Insight panel across all tools",
+    "Build a Contract (AI-drafted)",
+    "AI Contract Review",
+    "Digital Signature (coming soon)",
   ],
 }
 
