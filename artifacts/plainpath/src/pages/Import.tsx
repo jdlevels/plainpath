@@ -715,6 +715,10 @@ export default function Import() {
     return <DocumentScanScreen mode="trust-check" />
   }
 
+  if (!isTrustCheck && step === "analyzing") {
+    return <DocumentScanScreen mode="analyze" fileName={uploadedFile?.name} />
+  }
+
   return (
     <div className="min-h-screen bg-background pb-safe-bottom" style={{ paddingBottom: "max(7rem, env(safe-area-inset-bottom) + 7rem)" }}>
       {/* Hidden camera input — always mounted so cameraInputRef is available */}

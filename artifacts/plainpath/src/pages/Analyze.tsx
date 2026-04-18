@@ -32,6 +32,7 @@ import { ConfidenceBadge } from "@/components/shared/ConfidenceBadge"
 import { EvidenceTooltip } from "@/components/shared/EvidenceTooltip"
 import type { DocumentAnalysis, PlainEnglishSections, KeyTerm, ActionPack } from "@workspace/api-client-react"
 import { triggerPrint } from "@/lib/print"
+import { DocumentScanScreen } from "@/components/DocumentScanScreen"
 import { isNative } from "@/lib/platform"
 import { getApiBaseUrl } from "@/lib/api"
 import { saveAnalysis, updateSaved } from "@/lib/savedAnalyses"
@@ -123,7 +124,7 @@ export default function Analyze() {
     }
   }, [analysis?.title])
 
-  if (isLoading || (!analysis && demoId)) return <LoadingScreen />
+  if (isLoading || (!analysis && demoId)) return <DocumentScanScreen mode="analyze" />
   if (demoError) return <ErrorScreen onBack={() => setLocation("/analyze")} />
   if (!analysis) return null
 

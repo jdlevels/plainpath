@@ -5,7 +5,7 @@ import {
   AlertTriangle, CheckCircle2, AlertCircle,
 } from "lucide-react"
 
-export type ScanMode = "trust-check" | "contract-review"
+export type ScanMode = "trust-check" | "contract-review" | "analyze"
 
 interface Finding {
   text: string
@@ -117,6 +117,45 @@ const CONFIGS: Record<ScanMode, ScanConfig> = {
     docLines: 20,
     footerText: "Complete reviews typically take 20–40 seconds.",
     progressLabel: "Review Completeness",
+  },
+  "analyze": {
+    ToolIcon: FileText,
+    iconBg: "bg-violet-100 dark:bg-violet-900/40",
+    iconColor: "text-violet-600 dark:text-violet-400",
+    label: "Document Analysis",
+    accent: "border-violet-200/60 dark:border-violet-900/40",
+    accentBg: "bg-violet-50 dark:bg-violet-950/30",
+    accentText: "text-violet-700 dark:text-violet-300",
+    scanGlow: "rgb(139 92 246 / 0.5)",
+    scanLineClass: "bg-violet-500",
+    stepInterval: 5000,
+    steps: [
+      "Reading document",
+      "Identifying document type",
+      "Extracting key terms",
+      "Finding deadlines and dates",
+      "Detecting missing or required items",
+      "Building plain-English summary",
+      "Finalizing action plan",
+    ],
+    findings: [
+      { text: "Document structure mapped",  type: "info",    step: 0 },
+      { text: "Document type identified",   type: "success", step: 1 },
+      { text: "Key terms extracted",        type: "info",    step: 2 },
+      { text: "3 key dates detected",       type: "warning", step: 3 },
+      { text: "Missing items flagged",      type: "warning", step: 4 },
+      { text: "Action plan assembled",      type: "success", step: 5 },
+    ],
+    regions: [
+      { top: 5,  height: 9,  color: "bg-violet-100/50 dark:bg-violet-900/20",   chipText: "Doc type", chipType: "info",    step: 0 },
+      { top: 22, height: 8,  color: "bg-blue-100/50 dark:bg-blue-900/20",       chipText: "Key term", chipType: "info",    step: 1 },
+      { top: 38, height: 10, color: "bg-amber-100/60 dark:bg-amber-900/20",     chipText: "Deadline", chipType: "warning", step: 2 },
+      { top: 55, height: 8,  color: "bg-amber-100/55 dark:bg-amber-900/15",     chipText: "Missing",  chipType: "warning", step: 3 },
+      { top: 70, height: 9,  color: "bg-emerald-100/50 dark:bg-emerald-900/20", chipText: "Action",   chipType: "success", step: 4 },
+    ],
+    docLines: 20,
+    footerText: "Analysis typically completes in 20–35 seconds.",
+    progressLabel: "Analysis Completeness",
   },
 }
 
