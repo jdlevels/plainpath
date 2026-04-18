@@ -1,221 +1,697 @@
-import { useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+/* ─────────────────────────────────────────────────────────────
+   VideoWalkthrough.tsx
+   
+   Animated workflow demo cycling all 5 live PlainPath tools.
+   Each tool shows: document loaded → processing → findings.
+   Auto-advances every INTERVAL_MS. Clicking a chapter card
+   jumps immediately to that tool.
+   Respects prefers-reduced-motion.
+   ───────────────────────────────────────────────────────────── */
+import { useState, useEffect } from "react"
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 import {
-  Play, X, FileText, ShieldCheck, PenLine, Scale, EyeOff,
-  Clock, AlertTriangle, Calendar, CheckCircle2, ChevronDown,
+  FileText, ShieldAlert, PenLine, Scale, EyeOff,
+  AlertTriangle, CheckCircle2, Lock, Sparkles, Download,
 } from "lucide-react"
 
-const DEMO_VIDEO_URL = ""
+const INTERVAL_MS = 5200
 
-const CHAPTERS = [
+/* ─── Tool configuration ──────────────────────────────────── */
+const TOOLS = [
   {
     id: 0,
+    name: "Analyze a Document",
+    shortName: "Analyze",
+    desc: "Action steps, deadlines, and risks in plain English.",
     icon: FileText,
     hex: "#3b82f6",
-    iconColor: "#60a5fa",
-    time: "0:00",
-    duration: "0:48",
-    label: "Analyze a Document",
-    desc: "Upload any notice or form, get prioritized action steps and deadlines.",
+    iconHex: "#93c5fd",
+    docName: "Lease_Agreement_Unit4B.pdf",
+    docMeta: "847 words · 12 pages",
+    badgeLabel: "3 issues",
+    badgeText: "#f59e0b",
+    badgeBg: "rgba(245,158,11,0.12)",
+    badgeBorder: "rgba(245,158,11,0.3)",
   },
   {
     id: 1,
-    icon: ShieldCheck,
+    name: "Document Trust Check",
+    shortName: "Trust Check",
+    desc: "Score + red flags before you act on any letter.",
+    icon: ShieldAlert,
     hex: "#ef4444",
-    iconColor: "#f87171",
-    time: "0:48",
-    duration: "0:36",
-    label: "Document Trust Check",
-    desc: "Spot fake or predatory documents before you act on them.",
+    iconHex: "#fca5a5",
+    docName: "IRS_Notice_CP2000.pdf",
+    docMeta: "312 words · 2 pages",
+    badgeLabel: "High risk",
+    badgeText: "#ef4444",
+    badgeBg: "rgba(239,68,68,0.12)",
+    badgeBorder: "rgba(239,68,68,0.3)",
   },
   {
     id: 2,
+    name: "Build a Contract",
+    shortName: "Build",
+    desc: "Answer 6 questions, download a complete agreement.",
     icon: PenLine,
     hex: "#10b981",
-    iconColor: "#34d399",
-    time: "1:24",
-    duration: "0:42",
-    label: "Build a Contract",
-    desc: "Answer 6 questions. Get a complete, gap-checked contract draft.",
+    iconHex: "#6ee7b7",
+    docName: "Freelance_Services_Agreement",
+    docMeta: "New contract · 6 fields",
+    badgeLabel: "Building…",
+    badgeText: "#10b981",
+    badgeBg: "rgba(16,185,129,0.12)",
+    badgeBorder: "rgba(16,185,129,0.3)",
   },
   {
     id: 3,
+    name: "Contract Review",
+    shortName: "Review",
+    desc: "Clause flags and negotiation language included.",
     icon: Scale,
     hex: "#f59e0b",
-    iconColor: "#fbbf24",
-    time: "2:06",
-    duration: "0:52",
-    label: "Contract Review",
-    desc: "Paste a contract you received and get a clause-by-clause fairness review.",
+    iconHex: "#fcd34d",
+    docName: "Employment_Offer_Letter.pdf",
+    docMeta: "1,240 words · 8 pages",
+    badgeLabel: "2 clauses",
+    badgeText: "#f59e0b",
+    badgeBg: "rgba(245,158,11,0.12)",
+    badgeBorder: "rgba(245,158,11,0.3)",
   },
   {
     id: 4,
+    name: "Redact Sensitive Info",
+    shortName: "Redact",
+    desc: "Auto-detect and approve removals before sharing.",
     icon: EyeOff,
     hex: "#8b5cf6",
-    iconColor: "#a78bfa",
-    time: "2:58",
-    duration: "0:38",
-    label: "Redact Sensitive Info",
-    desc: "Auto-detect and remove private details before sharing or analyzing a document.",
+    iconHex: "#c4b5fd",
+    docName: "Patient_Intake_Form.pdf",
+    docMeta: "423 words · 3 pages",
+    badgeLabel: "3 items",
+    badgeText: "#8b5cf6",
+    badgeBg: "rgba(139,92,246,0.12)",
+    badgeBorder: "rgba(139,92,246,0.3)",
   },
+] as const
+
+type ToolId = 0 | 1 | 2 | 3 | 4
+
+/* ─── Document line configs ───────────────────────────────── */
+type LineConfig = { w: number; hl?: string; redacted?: boolean; delay: number }
+
+const DOC_LINES: Record<number, LineConfig[]> = {
+  0: [
+    { w: 100, delay: 0 },
+    { w: 85,  delay: 0.04 },
+    { w: 100, delay: 0.08 },
+    { w: 90,  delay: 0.10, hl: "rgba(245,158,11,0.52)" },
+    { w: 72,  delay: 0.13, hl: "rgba(245,158,11,0.52)" },
+    { w: 100, delay: 0.18 },
+    { w: 80,  delay: 0.22 },
+    { w: 100, delay: 0.26, hl: "rgba(239,68,68,0.42)" },
+    { w: 65,  delay: 0.30 },
+    { w: 100, delay: 0.34 },
+    { w: 88,  delay: 0.38 },
+  ],
+  1: [
+    { w: 100, delay: 0 },
+    { w: 80,  delay: 0.04 },
+    { w: 100, delay: 0.08 },
+    { w: 95,  delay: 0.11, hl: "rgba(239,68,68,0.45)" },
+    { w: 78,  delay: 0.14, hl: "rgba(239,68,68,0.45)" },
+    { w: 100, delay: 0.20 },
+    { w: 72,  delay: 0.24, hl: "rgba(239,68,68,0.32)" },
+    { w: 100, delay: 0.29 },
+    { w: 90,  delay: 0.33 },
+    { w: 100, delay: 0.37 },
+  ],
+  2: [],
+  3: [
+    { w: 100, delay: 0 },
+    { w: 90,  delay: 0.04 },
+    { w: 100, delay: 0.08 },
+    { w: 88,  delay: 0.11, hl: "rgba(239,68,68,0.42)" },
+    { w: 70,  delay: 0.14, hl: "rgba(239,68,68,0.42)" },
+    { w: 100, delay: 0.20 },
+    { w: 85,  delay: 0.24 },
+    { w: 100, delay: 0.28, hl: "rgba(245,158,11,0.42)" },
+    { w: 60,  delay: 0.32, hl: "rgba(245,158,11,0.42)" },
+    { w: 100, delay: 0.37 },
+  ],
+  4: [
+    { w: 100, delay: 0 },
+    { w: 80,  delay: 0.04 },
+    { w: 55,  delay: 0.08, redacted: true },
+    { w: 100, delay: 0.14 },
+    { w: 90,  delay: 0.18 },
+    { w: 42,  delay: 0.22, redacted: true },
+    { w: 100, delay: 0.28 },
+    { w: 85,  delay: 0.32 },
+    { w: 50,  delay: 0.36, redacted: true },
+    { w: 100, delay: 0.42 },
+    { w: 70,  delay: 0.46 },
+  ],
+}
+
+/* ─── Left panel: document lines ─────────────────────────── */
+function DocLines({ toolId, reduced }: { toolId: ToolId; reduced: boolean }) {
+  if (toolId === 2) return <BuildWizardLeft reduced={reduced} />
+
+  const lines = DOC_LINES[toolId] ?? []
+
+  return (
+    <div className="space-y-1.5">
+      <p className="text-[8px] font-semibold tracking-widest uppercase mb-2" style={{ color: "#475569" }}>
+        Document Preview
+      </p>
+      {lines.map((line, i) => {
+        if (line.redacted) {
+          return (
+            <motion.div
+              key={i}
+              initial={reduced ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: reduced ? 0 : line.delay, duration: 0.25 }}
+              className="h-[5px] rounded-sm"
+              style={{ width: `${line.w}%`, backgroundColor: "#cbd5e1" }}
+            />
+          )
+        }
+        if (line.hl) {
+          return (
+            <motion.div
+              key={i}
+              initial={reduced ? false : { backgroundColor: "rgba(71,85,105,0.5)" }}
+              animate={{ backgroundColor: line.hl }}
+              transition={{ delay: reduced ? 0 : 0.65 + line.delay, duration: 0.55, ease: "easeOut" }}
+              className="h-[5px] rounded-full"
+              style={{ width: `${line.w}%` }}
+            />
+          )
+        }
+        return (
+          <motion.div
+            key={i}
+            initial={reduced ? false : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: reduced ? 0 : line.delay, duration: 0.18 }}
+            className="h-[5px] rounded-full"
+            style={{ width: `${line.w}%`, backgroundColor: "rgba(71,85,105,0.55)" }}
+          />
+        )
+      })}
+    </div>
+  )
+}
+
+/* ─── Build: wizard fields (left panel) ──────────────────── */
+const WIZARD_FIELDS = [
+  { label: "Party A — Freelancer", done: true },
+  { label: "Party B — Client",     done: true },
+  { label: "Scope of work",         done: true },
+  { label: "Payment: $4,200",       done: true },
+  { label: "Delivery deadline",     done: false },
+  { label: "Dispute resolution",    done: false },
 ]
 
-function ThumbnailPreview({ onPlay, hasVideo }: { onPlay: () => void; hasVideo: boolean }) {
+function BuildWizardLeft({ reduced }: { reduced: boolean }) {
+  return (
+    <div className="space-y-1">
+      <p className="text-[8px] font-semibold tracking-widest uppercase mb-2" style={{ color: "#475569" }}>Contract Fields</p>
+      {WIZARD_FIELDS.map(({ label, done }, i) => (
+        <motion.div
+          key={label}
+          initial={reduced ? false : { opacity: 0, x: -4 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: reduced ? 0 : i * 0.1, duration: 0.3 }}
+          className="flex items-center gap-2"
+        >
+          <div
+            className="w-3 h-3 rounded border flex items-center justify-center shrink-0"
+            style={{
+              backgroundColor: done ? "#10b981" : "transparent",
+              borderColor: done ? "#10b981" : "#475569",
+            }}
+          >
+            {done && (
+              <svg viewBox="0 0 12 12" className="w-1.5 h-1.5 fill-none">
+                <path d="M2.5 6L5 8.5L9.5 4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            )}
+          </div>
+          <div
+            className="h-[5px] flex-1 rounded-full"
+            style={{ backgroundColor: done ? "rgba(52,211,153,0.3)" : "rgba(71,85,105,0.5)" }}
+          />
+          <span className="text-[7px] shrink-0 w-[66px] truncate text-right" style={{ color: "#475569" }}>{label}</span>
+        </motion.div>
+      ))}
+    </div>
+  )
+}
+
+/* ─── Scan line (Trust Check only) ──────────────────────── */
+function ScanLine({ reduced }: { reduced: boolean }) {
+  if (reduced) return null
+  return (
+    <motion.div
+      initial={{ top: "10%", opacity: 0 }}
+      animate={{ top: "88%", opacity: [0, 0.75, 0.75, 0] }}
+      transition={{ delay: 0.45, duration: 1.7, ease: "easeInOut" }}
+      className="absolute left-0 right-0 pointer-events-none"
+      style={{ position: "absolute" }}
+    >
+      <div className="h-px" style={{ background: "linear-gradient(to right, transparent, rgba(239,68,68,0.7), transparent)" }} />
+      <div className="h-4" style={{ background: "linear-gradient(to bottom, rgba(239,68,68,0.12), transparent)" }} />
+    </motion.div>
+  )
+}
+
+/* ─── Right panel outputs ────────────────────────────────── */
+function AnalyzeOutput({ reduced }: { reduced: boolean }) {
+  const items = [
+    { icon: AlertTriangle, label: "Response deadline", value: "14 days — by April 22nd",     hex: "#f59e0b", bg: "rgba(245,158,11,0.10)", border: "rgba(245,158,11,0.25)" },
+    { icon: AlertTriangle, label: "Risk if ignored",   value: "Automatic renewal — silent",   hex: "#ef4444", bg: "rgba(239,68,68,0.10)",  border: "rgba(239,68,68,0.25)" },
+    { icon: CheckCircle2,  label: "Required step",     value: "Sign and return addendum",      hex: "#10b981", bg: "rgba(16,185,129,0.10)", border: "rgba(16,185,129,0.25)" },
+  ]
+  return (
+    <div className="space-y-1.5">
+      <p className="text-[8px] font-semibold tracking-widest uppercase mb-2" style={{ color: "#475569" }}>Analysis</p>
+      {items.map(({ icon: Icon, label, value, hex, bg, border }, i) => (
+        <motion.div
+          key={label}
+          initial={reduced ? false : { opacity: 0, x: 8 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: reduced ? 0 : 1.05 + i * 0.2, duration: 0.35 }}
+          className="rounded-lg border p-2"
+          style={{ backgroundColor: bg, borderColor: border }}
+        >
+          <div className="flex items-center gap-1.5 mb-0.5">
+            <Icon style={{ width: 9, height: 9, color: hex }} className="shrink-0" />
+            <span className="text-[8px] font-bold uppercase tracking-wide" style={{ color: hex }}>{label}</span>
+          </div>
+          <p className="text-[8px] leading-snug ml-[17px]" style={{ color: "#94a3b8" }}>{value}</p>
+        </motion.div>
+      ))}
+    </div>
+  )
+}
+
+function TrustOutput({ reduced }: { reduced: boolean }) {
+  const flags = [
+    "Requests gift card or wire payment",
+    "Threatening language — act immediately",
+    "Sender domain doesn't match agency",
+  ]
+  return (
+    <div className="space-y-1.5">
+      <p className="text-[8px] font-semibold tracking-widest uppercase mb-2" style={{ color: "#475569" }}>Trust Verdict</p>
+      <motion.div
+        initial={reduced ? false : { opacity: 0, scale: 0.96 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: reduced ? 0 : 1.0, duration: 0.38 }}
+        className="rounded-lg border p-2 mb-2"
+        style={{ backgroundColor: "rgba(239,68,68,0.10)", borderColor: "rgba(239,68,68,0.28)" }}
+      >
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="text-[8px] font-bold uppercase tracking-wide" style={{ color: "#ef4444" }}>Trust Score</span>
+          <span className="text-[10px] font-bold" style={{ color: "#ef4444" }}>18 / 100</span>
+        </div>
+        <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: "rgba(71,85,105,0.5)" }}>
+          <motion.div
+            initial={reduced ? false : { width: "0%" }}
+            animate={{ width: "18%" }}
+            transition={{ delay: reduced ? 0 : 1.15, duration: 1.0, ease: "easeOut" }}
+            className="h-full rounded-full"
+            style={{ backgroundColor: "#ef4444" }}
+          />
+        </div>
+        <p className="text-[8px] font-semibold mt-1.5" style={{ color: "#ef4444" }}>Likely Scam — Do not pay</p>
+      </motion.div>
+      {flags.map((f, i) => (
+        <motion.div
+          key={f}
+          initial={reduced ? false : { opacity: 0, x: 5 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: reduced ? 0 : 1.6 + i * 0.14, duration: 0.3 }}
+          className="flex items-start gap-1.5"
+        >
+          <div className="w-1 h-1 rounded-full shrink-0 mt-1.5" style={{ backgroundColor: "#ef4444" }} />
+          <span className="text-[8px] leading-snug" style={{ color: "#94a3b8" }}>{f}</span>
+        </motion.div>
+      ))}
+    </div>
+  )
+}
+
+function BuildOutput({ reduced }: { reduced: boolean }) {
+  const bullets = ["6 clauses drafted", "Gap analysis complete", "No missing protections"]
+  return (
+    <div className="space-y-1.5">
+      <p className="text-[8px] font-semibold tracking-widest uppercase mb-2" style={{ color: "#475569" }}>Contract Ready</p>
+      <motion.div
+        initial={reduced ? false : { opacity: 0, scale: 0.96 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: reduced ? 0 : 0.75, duration: 0.38 }}
+        className="rounded-lg border p-2.5 mb-1.5"
+        style={{ backgroundColor: "rgba(16,185,129,0.10)", borderColor: "rgba(16,185,129,0.28)" }}
+      >
+        <div className="flex items-center gap-1.5 mb-1.5">
+          <CheckCircle2 style={{ width: 10, height: 10, color: "#34d399" }} />
+          <span className="text-[9px] font-bold" style={{ color: "#34d399" }}>Freelance Agreement</span>
+        </div>
+        {bullets.map((t, i) => (
+          <motion.p
+            key={t}
+            initial={reduced ? false : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: reduced ? 0 : 1.05 + i * 0.15, duration: 0.28 }}
+            className="text-[8px] ml-4"
+            style={{ color: "#6ee7b7" }}
+          >{t}</motion.p>
+        ))}
+      </motion.div>
+      <motion.div
+        initial={reduced ? false : { opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: reduced ? 0 : 1.6, duration: 0.35 }}
+        className="flex items-center gap-1.5 p-2 rounded-lg border"
+        style={{ backgroundColor: "rgba(59,130,246,0.08)", borderColor: "rgba(59,130,246,0.25)" }}
+      >
+        <Download style={{ width: 10, height: 10, color: "#93c5fd" }} />
+        <span className="text-[8px] font-semibold" style={{ color: "#93c5fd" }}>Download PDF / Word</span>
+      </motion.div>
+    </div>
+  )
+}
+
+function ReviewOutput({ reduced }: { reduced: boolean }) {
+  const clauses = [
+    { label: "5-yr global non-compete", severity: "Unfair",  hex: "#ef4444", bg: "rgba(239,68,68,0.10)", border: "rgba(239,68,68,0.26)" },
+    { label: "No severance on termination", severity: "Missing", hex: "#f59e0b", bg: "rgba(245,158,11,0.10)", border: "rgba(245,158,11,0.26)" },
+  ]
+  return (
+    <div className="space-y-1.5">
+      <p className="text-[8px] font-semibold tracking-widest uppercase mb-2" style={{ color: "#475569" }}>Clause Review</p>
+      {clauses.map(({ label, severity, hex, bg, border }, i) => (
+        <motion.div
+          key={label}
+          initial={reduced ? false : { opacity: 0, x: 8 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: reduced ? 0 : 0.95 + i * 0.28, duration: 0.35 }}
+          className="rounded-lg border p-2"
+          style={{ backgroundColor: bg, borderColor: border }}
+        >
+          <div className="flex items-center gap-1 mb-0.5">
+            <AlertTriangle style={{ width: 9, height: 9, color: hex }} className="shrink-0" />
+            <span className="text-[8px] font-bold uppercase tracking-wide" style={{ color: hex }}>{severity}</span>
+          </div>
+          <p className="text-[8px] leading-snug ml-[17px]" style={{ color: "#94a3b8" }}>{label}</p>
+        </motion.div>
+      ))}
+      <motion.div
+        initial={reduced ? false : { opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: reduced ? 0 : 1.55, duration: 0.35 }}
+        className="flex items-center gap-1.5 pt-0.5"
+      >
+        <Sparkles style={{ width: 9, height: 9, color: "#fbbf24" }} />
+        <span className="text-[8px] font-medium" style={{ color: "#fbbf24" }}>Negotiation language included</span>
+      </motion.div>
+    </div>
+  )
+}
+
+function RedactOutput({ reduced }: { reduced: boolean }) {
+  const items = [
+    { label: "John M. Chen",     type: "Full name" },
+    { label: "SSN: ***-**-4821", type: "Social Security No." },
+    { label: "Acct ****3042",    type: "Account number" },
+  ]
+  return (
+    <div className="space-y-1.5">
+      <p className="text-[8px] font-semibold tracking-widest uppercase mb-2" style={{ color: "#475569" }}>Redaction</p>
+      {items.map(({ label, type }, i) => (
+        <motion.div
+          key={label}
+          initial={reduced ? false : { opacity: 0, x: 8 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: reduced ? 0 : 0.95 + i * 0.22, duration: 0.35 }}
+          className="flex items-center gap-2 rounded-lg border p-2"
+          style={{ backgroundColor: "rgba(139,92,246,0.09)", borderColor: "rgba(139,92,246,0.26)" }}
+        >
+          <div
+            className="w-4 h-4 rounded-full flex items-center justify-center shrink-0"
+            style={{ backgroundColor: "rgba(16,185,129,0.15)", border: "1px solid rgba(16,185,129,0.35)" }}
+          >
+            <CheckCircle2 style={{ width: 8, height: 8, color: "#34d399" }} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[8px] font-semibold truncate" style={{ color: "#e2e8f0" }}>{label}</p>
+            <p className="text-[7px] leading-tight" style={{ color: "#64748b" }}>{type}</p>
+          </div>
+          <Lock style={{ width: 8, height: 8, color: "#a78bfa" }} className="shrink-0" />
+        </motion.div>
+      ))}
+      <motion.p
+        initial={reduced ? false : { opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: reduced ? 0 : 1.65, duration: 0.35 }}
+        className="text-[8px] font-medium text-center pt-0.5"
+        style={{ color: "#a78bfa" }}
+      >
+        Redacted copy ready to share
+      </motion.p>
+    </div>
+  )
+}
+
+function ToolOutput({ toolId, reduced }: { toolId: ToolId; reduced: boolean }) {
+  if (toolId === 0) return <AnalyzeOutput reduced={reduced} />
+  if (toolId === 1) return <TrustOutput reduced={reduced} />
+  if (toolId === 2) return <BuildOutput reduced={reduced} />
+  if (toolId === 3) return <ReviewOutput reduced={reduced} />
+  return <RedactOutput reduced={reduced} />
+}
+
+/* ─── Mini nav bar ───────────────────────────────────────── */
+function MiniNav({ active }: { active: ToolId }) {
+  const activeTool = TOOLS[active]
   return (
     <div
-      className="relative w-full aspect-video bg-slate-950 overflow-hidden cursor-pointer select-none group"
-      onClick={onPlay}
+      className="flex items-center gap-1 px-2.5 py-1.5 border-b shrink-0"
+      style={{ backgroundColor: "#0b1121", borderColor: "#1e2d45" }}
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-[#0d1526] to-slate-950" />
-      <div className="absolute top-0 right-0 w-[600px] h-[400px] rounded-full bg-primary/8 blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[500px] h-[300px] rounded-full bg-violet-500/6 blur-3xl pointer-events-none" />
-
-      <div className="absolute inset-0 flex items-center justify-center gap-5 px-10 py-6 opacity-45 group-hover:opacity-20 transition-opacity duration-300">
-        <div className="w-[36%] h-[85%] bg-slate-800/70 rounded-2xl border border-slate-700/50 p-4 overflow-hidden flex flex-col">
-          <div className="flex items-center gap-1.5 mb-3">
-            <div className="w-2 h-2 rounded-full bg-red-400/80" />
-            <div className="w-2 h-2 rounded-full bg-amber-400/80" />
-            <div className="w-2 h-2 rounded-full bg-emerald-400/80" />
-            <span className="ml-2 text-[9px] text-slate-500 font-mono">eviction_notice.pdf</span>
-          </div>
-          <div className="space-y-1.5 flex-1">
-            {[
-              { w: "w-full",  hl: false, c: "" },
-              { w: "w-5/6",  hl: false, c: "" },
-              { w: "w-full",  hl: true,  c: "bg-amber-400/30" },
-              { w: "w-4/5",  hl: false, c: "" },
-              { w: "w-full",  hl: false, c: "" },
-              { w: "w-3/4",  hl: true,  c: "bg-red-400/25" },
-              { w: "w-full",  hl: false, c: "" },
-              { w: "w-5/6",  hl: false, c: "" },
-              { w: "w-full",  hl: true,  c: "bg-blue-400/25" },
-              { w: "w-2/3",  hl: false, c: "" },
-              { w: "w-full",  hl: false, c: "" },
-              { w: "w-4/5",  hl: false, c: "" },
-            ].map((line, i) => (
-              <div key={i} className={`h-1.5 rounded-full ${line.w} ${line.hl ? line.c : "bg-slate-700/80"}`} />
-            ))}
-          </div>
+      <div className="flex items-center gap-1 mr-1.5 shrink-0">
+        <div
+          className="w-4 h-4 rounded flex items-center justify-center shrink-0"
+          style={{ backgroundColor: `${activeTool.hex}22` }}
+        >
+          <svg viewBox="0 0 24 24" fill="none" strokeWidth="2.5" className="w-2.5 h-2.5" stroke={activeTool.hex}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
         </div>
-
-        <div className="w-[36%] h-[85%] flex flex-col gap-2">
-          {[
-            { icon: Clock,         color: "text-red-400",     bg: "bg-red-500/10",    border: "border-red-500/25",   label: "14 days to respond · URGENT" },
-            { icon: AlertTriangle, color: "text-amber-400",   bg: "bg-amber-500/10",  border: "border-amber-500/20", label: "Risk: default judgment"       },
-            { icon: FileText,      color: "text-blue-400",    bg: "bg-blue-500/10",   border: "border-blue-500/20",  label: "Required: Form UD-105"        },
-            { icon: Calendar,      color: "text-slate-400",   bg: "bg-slate-700/40",  border: "border-slate-600/30", label: "Court date: May 22, 2026"     },
-            { icon: CheckCircle2,  color: "text-emerald-400", bg: "bg-emerald-500/10",border: "border-emerald-500/20",label: "Auto-renews if ignored"       },
-          ].map(({ icon: Icon, color, bg, border, label }, i) => (
-            <div key={i} className={`flex items-center gap-2 rounded-xl px-3 py-2.5 border ${bg} ${border}`}>
-              <Icon className={`w-3 h-3 shrink-0 ${color}`} />
-              <span className={`text-[10px] font-semibold ${color}`}>{label}</span>
-            </div>
-          ))}
-        </div>
+        <span className="text-[9px] font-bold whitespace-nowrap" style={{ color: "#e2e8f0" }}>PlainPath</span>
       </div>
-
-      <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-slate-950/80 to-transparent pointer-events-none" />
-
-      <div className="absolute top-4 left-5 flex items-center gap-2 opacity-60">
-        <div className="w-6 h-6 rounded-lg bg-primary/20 flex items-center justify-center">
-          <FileText className="w-3.5 h-3.5 text-primary" />
-        </div>
-        <span className="text-white text-xs font-bold tracking-tight">PlainPath</span>
-      </div>
-
-      {hasVideo && (
-        <div className="absolute top-4 right-5 px-2 py-1 rounded-md bg-black/60 text-white text-[11px] font-semibold opacity-75">
-          2:18
-        </div>
-      )}
-
-      <div className="absolute inset-0 flex items-center justify-center">
-        {hasVideo ? (
-          <motion.div whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.94 }} className="relative">
-            <div className="absolute inset-0 rounded-full bg-white/15 animate-ping scale-[1.6]" />
-            <div className="relative w-[72px] h-[72px] rounded-full bg-white/95 shadow-[0_0_60px_rgba(255,255,255,0.25)] flex items-center justify-center">
-              <Play className="w-7 h-7 text-slate-900 fill-slate-900 ml-1" />
-            </div>
-          </motion.div>
-        ) : (
-          <motion.div
-            whileHover={{ scale: 1.04, y: -2 }}
-            whileTap={{ scale: 0.97 }}
-            className="flex flex-col items-center gap-3"
+      <div className="flex items-center gap-0.5 overflow-hidden flex-1">
+        {TOOLS.map((t) => (
+          <span
+            key={t.id}
+            className="text-[8px] font-medium px-1.5 py-0.5 rounded whitespace-nowrap transition-colors duration-300"
+            style={{
+              backgroundColor: active === t.id ? `${t.hex}22` : "transparent",
+              color: active === t.id ? t.iconHex : "#475569",
+            }}
           >
-            <div className="px-6 py-3 rounded-2xl bg-white/95 shadow-[0_0_40px_rgba(255,255,255,0.20)] flex items-center gap-2.5">
-              <Play className="w-4 h-4 text-slate-700 fill-slate-700 shrink-0" />
-              <span className="text-slate-900 font-semibold text-sm">Try it yourself</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-white/50 text-[11px]">
-              <ChevronDown className="w-3.5 h-3.5 animate-bounce" />
-              <span>Interactive demos below</span>
-            </div>
-          </motion.div>
-        )}
-      </div>
-
-      <div className="absolute bottom-5 inset-x-0 flex justify-center">
-        {hasVideo ? (
-          <span className="px-3.5 py-1.5 rounded-full bg-black/55 backdrop-blur-sm text-white text-[11px] font-medium flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shrink-0" />
-            AI narrated walkthrough · 2 min 18 sec
+            {t.shortName}
           </span>
-        ) : null}
+        ))}
+      </div>
+      <div className="w-4 h-4 rounded-full shrink-0 ml-1" style={{ backgroundColor: "#1e293b" }} />
+    </div>
+  )
+}
+
+/* ─── Document header ────────────────────────────────────── */
+function DocHeader({ toolId }: { toolId: ToolId }) {
+  const tool = TOOLS[toolId]
+  const Icon = tool.icon
+  return (
+    <div
+      className="flex items-center gap-2 px-3 py-2 border-b shrink-0"
+      style={{ backgroundColor: "#0d1526", borderColor: "#1e2d45" }}
+    >
+      <div
+        className="w-6 h-6 rounded-md flex items-center justify-center shrink-0"
+        style={{ backgroundColor: `${tool.hex}20` }}
+      >
+        <Icon style={{ width: 12, height: 12, color: tool.iconHex }} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-[10px] font-semibold truncate leading-tight" style={{ color: "#e2e8f0" }}>{tool.docName}</p>
+        <p className="text-[8px] leading-tight" style={{ color: "#475569" }}>{tool.docMeta}</p>
+      </div>
+      <div
+        className="flex items-center gap-1 px-2 py-0.5 rounded-full border shrink-0"
+        style={{ backgroundColor: tool.badgeBg, borderColor: tool.badgeBorder }}
+      >
+        <motion.div
+          animate={{ opacity: [1, 0.35, 1] }}
+          transition={{ duration: 1.6, repeat: Infinity }}
+          className="w-1 h-1 rounded-full shrink-0"
+          style={{ backgroundColor: tool.badgeText }}
+        />
+        <span className="text-[8px] font-semibold whitespace-nowrap" style={{ color: tool.badgeText }}>
+          {tool.badgeLabel}
+        </span>
       </div>
     </div>
   )
 }
 
-function VideoEmbed({ onClose }: { onClose: () => void }) {
-  const isYouTube = DEMO_VIDEO_URL.includes("youtube.com") || DEMO_VIDEO_URL.includes("youtu.be")
-
+/* ─── Full demo panel ────────────────────────────────────── */
+function DemoPanel({ toolId, reduced }: { toolId: ToolId; reduced: boolean }) {
   return (
-    <div className="relative w-full aspect-video bg-slate-950">
-      {isYouTube ? (
-        <iframe
-          className="w-full h-full"
-          src={`${DEMO_VIDEO_URL}?autoplay=1&rel=0&modestbranding=1`}
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-          title="PlainPath demo walkthrough"
-        />
-      ) : (
-        <video
-          className="w-full h-full object-cover"
-          src={DEMO_VIDEO_URL}
-          autoPlay
-          controls
-          playsInline
-          title="PlainPath demo walkthrough"
-        />
-      )}
-      <button
-        onClick={onClose}
-        className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/60 hover:bg-black/80 flex items-center justify-center text-white transition-colors z-10"
-      >
-        <X className="w-4 h-4" />
-      </button>
+    <div
+      className="rounded-2xl overflow-hidden ring-1 ring-white/8 flex flex-col"
+      style={{
+        aspectRatio: "16 / 10",
+        backgroundColor: "#0b1120",
+        boxShadow: "0 40px 100px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05)",
+      }}
+      aria-hidden="true"
+    >
+      {/* Nav bar */}
+      <MiniNav active={toolId} />
+
+      {/* Doc header */}
+      <DocHeader toolId={toolId} />
+
+      {/* Two-column body */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Left: document preview */}
+        <div
+          className="relative flex-1 px-3 pt-3 overflow-hidden border-r"
+          style={{ borderColor: "#1e2d45", backgroundColor: "#060d1a" }}
+        >
+          <DocLines toolId={toolId} reduced={reduced} />
+          {toolId === 1 && <ScanLine reduced={reduced} />}
+          <div
+            className="absolute bottom-0 left-0 right-0 h-8 pointer-events-none"
+            style={{ background: "linear-gradient(to top, #060d1a, transparent)" }}
+          />
+        </div>
+
+        {/* Right: tool output */}
+        <div
+          className="relative flex-1 px-3 pt-3 overflow-hidden"
+          style={{ backgroundColor: "#0b1120" }}
+        >
+          <ToolOutput toolId={toolId} reduced={reduced} />
+          <div
+            className="absolute bottom-0 left-0 right-0 h-8 pointer-events-none"
+            style={{ background: "linear-gradient(to top, #0b1120, transparent)" }}
+          />
+        </div>
+      </div>
     </div>
   )
 }
 
+/* ─── Progress bar (resets on toolId change via key) ─────── */
+function ProgressBar({ toolId, reduced }: { toolId: ToolId; reduced: boolean }) {
+  if (reduced) return null
+  const tool = TOOLS[toolId]
+  return (
+    <div className="h-0.5 rounded-full mt-3 overflow-hidden" style={{ backgroundColor: "#1e293b" }}>
+      <motion.div
+        key={toolId}
+        initial={{ width: "0%" }}
+        animate={{ width: "100%" }}
+        transition={{ duration: INTERVAL_MS / 1000, ease: "linear" }}
+        className="h-full rounded-full"
+        style={{ backgroundColor: tool.hex }}
+      />
+    </div>
+  )
+}
+
+/* ─── Chapter cards (tool selectors) ─────────────────────── */
+function ChapterCards({
+  active,
+  onSelect,
+  reduced,
+}: {
+  active: ToolId
+  onSelect: (id: ToolId) => void
+  reduced: boolean
+}) {
+  return (
+    <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+      {TOOLS.map((t) => {
+        const Icon = t.icon
+        const isActive = active === t.id
+        return (
+          <motion.button
+            key={t.id}
+            onClick={() => onSelect(t.id as ToolId)}
+            whileHover={reduced ? {} : { y: -2 }}
+            whileTap={{ scale: 0.97 }}
+            className="text-left px-3 py-3 rounded-xl border transition-all duration-200 focus-visible:outline-none"
+            style={{
+              borderColor: isActive ? t.hex : `${t.hex}2e`,
+              backgroundColor: isActive ? `${t.hex}16` : `${t.hex}08`,
+              boxShadow: isActive ? `0 2px 18px ${t.hex}1a` : "none",
+            }}
+          >
+            <div className="flex items-center gap-2 mb-1.5">
+              <div
+                className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
+                style={{ backgroundColor: isActive ? `${t.hex}28` : `${t.hex}14` }}
+              >
+                <Icon style={{ width: 13, height: 13, color: isActive ? t.iconHex : `${t.iconHex}66` }} />
+              </div>
+              <p
+                className="text-xs font-semibold leading-tight truncate"
+                style={{ color: isActive ? "#f1f5f9" : "#64748b" }}
+              >
+                {t.shortName}
+              </p>
+            </div>
+            <p
+              className="text-[10px] leading-snug"
+              style={{ color: isActive ? "#94a3b8" : "#475569" }}
+            >
+              {t.desc.length > 45 ? t.desc.slice(0, 45) + "…" : t.desc}
+            </p>
+          </motion.button>
+        )
+      })}
+    </div>
+  )
+}
+
+/* ─── Main export ────────────────────────────────────────── */
 export default function VideoWalkthrough() {
-  const [playing, setPlaying] = useState(false)
-  const [activeChapter, setActiveChapter] = useState(0)
-  const hasVideo = Boolean(DEMO_VIDEO_URL)
+  const [active, setActive] = useState<ToolId>(0)
+  const reduced = useReducedMotion() ?? false
 
+  useEffect(() => {
+    if (reduced) return
+    const id = setInterval(() => {
+      setActive((prev) => ((prev + 1) % 5) as ToolId)
+    }, INTERVAL_MS)
+    return () => clearInterval(id)
+  }, [reduced])
 
-  function handlePlay() {
-    if (hasVideo) {
-      setPlaying(true)
-    } else {
-      document.getElementById("demos")?.scrollIntoView({ behavior: "smooth" })
-    }
+  function handleSelect(id: ToolId) {
+    setActive(id)
   }
 
   return (
     <div className="w-full">
+      {/* Section header */}
       <div className="text-center mb-12">
         <motion.div
           initial={{ opacity: 0, y: 8 }}
@@ -224,7 +700,7 @@ export default function VideoWalkthrough() {
           className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/15 border border-primary/30 mb-5"
         >
           <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-          <span className="text-xs font-semibold uppercase tracking-widest text-primary">Product walkthrough</span>
+          <span className="text-xs font-semibold uppercase tracking-widest text-primary">5 tools · live demo</span>
         </motion.div>
         <motion.h2
           initial={{ opacity: 0, y: 12 }}
@@ -242,7 +718,7 @@ export default function VideoWalkthrough() {
           transition={{ delay: 0.1 }}
           className="text-slate-400 text-lg max-w-xl mx-auto leading-relaxed"
         >
-          A short walkthrough of all 5 tools — from analyzing paperwork and spotting scams to building contracts, reviewing terms, and redacting private information.
+          Each tool cycles through a real workflow. Click any card below to explore that tool.
         </motion.p>
       </div>
 
@@ -253,53 +729,24 @@ export default function VideoWalkthrough() {
         transition={{ delay: 0.1 }}
         className="max-w-4xl mx-auto"
       >
-        <div className="rounded-2xl overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.35)] ring-1 ring-white/12 outline outline-1 outline-white/5">
-          <AnimatePresence mode="wait">
-            {playing && DEMO_VIDEO_URL ? (
-              <motion.div key="video" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                <VideoEmbed onClose={() => setPlaying(false)} />
-              </motion.div>
-            ) : (
-              <motion.div key="thumb" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                <ThumbnailPreview onPlay={handlePlay} hasVideo={hasVideo} />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+        {/* Animated demo panel */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={active}
+            initial={reduced ? false : { opacity: 0, x: -14 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={reduced ? {} : { opacity: 0, x: 10 }}
+            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <DemoPanel toolId={active} reduced={reduced} />
+          </motion.div>
+        </AnimatePresence>
 
-        <div className="mt-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-          {CHAPTERS.map((ch) => {
-            const Icon = ch.icon
-            const isActive = activeChapter === ch.id
-            return (
-              <motion.button
-                key={ch.id}
-                onClick={() => setActiveChapter(ch.id)}
-                whileHover={{ y: -2 }}
-                style={{
-                  borderColor: isActive ? ch.hex : `${ch.hex}44`,
-                  backgroundColor: isActive ? `${ch.hex}22` : `${ch.hex}0d`,
-                  boxShadow: isActive ? `0 4px 24px ${ch.hex}18` : "none",
-                }}
-                className="text-left px-4 py-3.5 rounded-xl border transition-all"
-              >
-                <div className="flex items-start gap-3">
-                  <div style={{ backgroundColor: isActive ? `${ch.hex}30` : `${ch.hex}18` }}
-                    className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5">
-                    <Icon style={{ width: 16, height: 16, color: isActive ? ch.iconColor : `${ch.iconColor}99` }} />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-white mb-0.5 truncate">{ch.label}</p>
-                    <p className="text-[11px] text-slate-400 leading-snug">{ch.desc}</p>
-                    {hasVideo && (
-                      <p className="text-[10px] text-slate-500 mt-1 font-mono">{ch.time} · {ch.duration}</p>
-                    )}
-                  </div>
-                </div>
-              </motion.button>
-            )
-          })}
-        </div>
+        {/* Progress bar */}
+        <ProgressBar toolId={active} reduced={reduced} />
+
+        {/* Chapter / tool selector cards */}
+        <ChapterCards active={active} onSelect={handleSelect} reduced={reduced} />
       </motion.div>
     </div>
   )
