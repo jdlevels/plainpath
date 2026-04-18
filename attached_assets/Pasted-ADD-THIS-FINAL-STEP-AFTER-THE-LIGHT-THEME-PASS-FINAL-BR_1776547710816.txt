@@ -1,0 +1,118 @@
+ADD THIS FINAL STEP AFTER THE LIGHT-THEME PASS
+
+FINAL BRAND LOGO UPDATE + DUAL-THEME ACCEPTANCE REVIEW
+Target artifact: artifacts/plainpath-marketing
+Non-target: artifacts/plainpath unless absolutely requested later
+Mode: brand-surface polish only, no product logic changes
+
+NEW TASK
+Update the public marketing-site logo using the uploaded PlainPath logo asset from this conversation.
+
+GOAL
+Replace the current generic/simple navbar brand treatment with the approved PlainPath branded logo system while preserving clean alignment, readability, and responsiveness across dark and light themes.
+
+LOGO RULES
+1. Use the uploaded PlainPath logo asset from this conversation as the source reference.
+2. Keep the logo professional, crisp, and balanced — no distortion, stretching, squeezing, blurring, or recoloring that damages the brand.
+3. Preserve clean navbar/header height and alignment. Do not let the new logo make the navbar feel oversized, cramped, or vertically off-center.
+4. The logo must work in both:
+   - dark theme / dark sections
+   - light theme / light sections
+5. If a single version does not work cleanly in all contexts, create a responsive/logo-system treatment:
+   - full horizontal logo/wordmark for desktop
+   - compact simplified version for tighter widths if needed
+6. Maintain strong legibility at small sizes.
+7. Keep the brand treatment premium and minimal — no extra badge effects, glow, fake embossing, or decorative clutter.
+
+WHERE TO APPLY
+At minimum, update:
+- navbar/logo area
+- footer brand area
+
+OPTIONAL ONLY IF CLEAN AND QUICK
+- favicon / tab icon
+- social/share icon
+- any small repeated site brand mark in the marketing artifact only
+
+DO NOT
+- redesign the brand from scratch
+- invent a new icon
+- substitute a random font lockup
+- change product app branding inside artifacts/plainpath
+- break spacing/alignment in navbar or footer
+- let the logo dominate the header visually
+- create separate inconsistent logos between sections
+
+RESPONSIVE REQUIREMENTS
+Check logo fit at:
+- wide desktop
+- standard desktop
+- tablet
+- mobile
+
+Specifically verify:
+- no clipping
+- no blurry scaling
+- no vertical misalignment in navbar
+- no footer misalignment
+- no collision with nav links or CTA buttons
+- no oversized logo on mobile
+- no tiny unreadable wordmark on desktop
+
+FINAL DUAL-THEME ACCEPTANCE REVIEW
+After the logo update, run a final public acceptance review for BOTH dark and light theme presentations.
+
+REVIEW CHECKLIST
+1. Dark mode / dark sections
+   - logo reads clearly
+   - no harsh halo/fringing
+   - brand feels premium and balanced
+
+2. Light mode / light sections
+   - logo reads clearly
+   - no washed-out effect
+   - still feels distinct from the page background
+
+3. Navbar
+   - logo aligned vertically with nav links and CTA
+   - header height still feels refined
+   - no spacing regression
+
+4. Footer
+   - logo sits cleanly with footer content
+   - no scale mismatch
+
+5. Overall site
+   - approved layout remains intact
+   - pricing order remains intact
+   - attorney comparison remains intact
+   - referral section remains intact
+   - walkthrough remains intact
+   - no truthfulness regressions
+   - no broken responsive behavior
+
+MANDATORY DELIVERABLE
+Return:
+1. exact files changed
+2. what logo treatment was used
+   - full logo only, or full + compact responsive variant
+3. where the logo was updated
+4. confirmation that navbar/footer spacing still works
+5. screenshots showing the logo in:
+   - dark header/footer context
+   - light header/footer context
+   - desktop
+   - mobile
+6. final dual-theme sign-off statement confirming:
+   - layout approved
+   - logo approved
+   - dark/light both approved
+   - no regressions introduced
+
+FINAL SUCCESS CRITERIA
+This pass is successful only if:
+- the new PlainPath logo feels like the real brand
+- navbar and footer remain clean
+- the logo works in both dark and light contexts
+- mobile remains readable and uncluttered
+- no previously approved public-site work is broken
