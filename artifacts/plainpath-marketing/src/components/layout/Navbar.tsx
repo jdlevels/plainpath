@@ -114,7 +114,7 @@ export function Navbar() {
             </button>
           ))}
           <a
-            href="/app/support"
+            href="/support"
             className="px-3 py-1.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors"
           >
             Support
@@ -191,7 +191,7 @@ export function Navbar() {
           ))}
 
           <a
-            href="/app/support"
+            href="/support"
             className="block px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors"
             onClick={() => setMobileOpen(false)}
           >
