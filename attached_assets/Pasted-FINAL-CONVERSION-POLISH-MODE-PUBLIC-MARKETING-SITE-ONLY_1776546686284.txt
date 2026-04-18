@@ -1,0 +1,209 @@
+FINAL CONVERSION POLISH MODE — PUBLIC MARKETING SITE ONLY
+
+TARGET
+- Edit ONLY: artifacts/plainpath-marketing
+- DO NOT touch: artifacts/plainpath
+- This is a conversion-polish pass, not a rebuild, not a redesign, and not a product-logic pass.
+
+MISSION
+The public site is now live and structurally correct. Move it from “approved and accurate” to “premium and conversion-ready” without breaking anything already approved.
+
+NON-NEGOTIABLE RULES
+1. Keep all public claims honest.
+2. No fake reviews, no fake metrics, no fake counters, no fake urgency, no fake referral logic, no fake video/timestamps, no invented plan tiers.
+3. Do not change product truth:
+   - 5 live tools
+   - Digital Signature = coming soon
+   - public site is marketing only
+   - referral section must remain public-safe and honest
+4. Do not change the approved pricing structure/order.
+5. Do not remove existing working sections unless absolutely required for polish.
+6. Do not touch backend, auth, billing logic, app routes, or product flows in artifacts/plainpath.
+7. Preserve correct CTA routing already approved.
+
+LOCKED / APPROVED STRUCTURE — DO NOT REORDER
+Keep the site architecture intact. Especially preserve:
+- Hero
+- Trust pillar / stats row
+- Tools showcase
+- Problem section
+- How it works
+- App-inspired walkthrough
+- Live demos
+- Document situations
+- Built for real people / trust cards
+- FAQ
+- Pricing
+- Referral section
+- Web & Mobile
+- Privacy band
+- Final CTA
+- Footer
+
+PRICING SECTION — HARD LOCK
+Keep this exact sequence:
+1. Pricing heading + subheading
+2. Attorney comparison block
+3. Monthly / Yearly toggle
+4. Starter / Pro pricing cards
+5. Pricing fine print
+
+Do NOT move the attorney comparison below the pricing cards.
+Do NOT move the Monthly / Yearly toggle above the attorney comparison.
+Do NOT remove the approved dropdown options already added.
+
+PRIMARY GOAL
+Improve conversion polish while preserving truth, layout integrity, and current public-site accuracy.
+
+CONVERSION POLISH PRIORITIES — IN THIS ORDER
+
+1. DESKTOP PRESENCE / VISUAL AUTHORITY
+Improve the visual strength of the most important conversion sections on large desktop screens:
+- Pricing
+- Referral
+- Walkthrough
+- Final CTA
+
+Make them feel more important and less undersized on wide monitors.
+This means:
+- better max-width decisions
+- stronger internal spacing
+- slightly larger headings where appropriate
+- better visual hierarchy
+- more deliberate section density
+Do NOT make them crowded.
+
+2. PRICING SECTION POLISH
+Keep the approved structure exactly as-is, but polish the section so it feels stronger and cleaner:
+- improve spacing between the attorney comparison, toggle, and pricing cards
+- slightly strengthen hierarchy of the attorney comparison title/subcopy
+- ensure the comparison block feels clearly tied to pricing, not like a separate floating widget
+- ensure Starter/Pro cards sit with stronger visual presence on desktop
+- keep the dropdown clean and readable
+- keep the savings row readable and premium
+- no overlap, clipping, awkward stacking, or cramped spacing at desktop/tablet/mobile
+
+3. REFERRAL SECTION POLISH
+Keep the referral section honest and public-safe, but make it more conversion-oriented and visually valuable.
+Requirements:
+- do NOT imply public referral rewards are already active if they are not
+- do NOT use fake personal referral links
+- do NOT use fake counters or fake account data
+- keep the CTA honest
+- make the section look worth noticing
+Improve:
+- section hierarchy
+- headline clarity
+- benefit bullets
+- CTA prominence
+- right-side visual panel polish
+- spacing and alignment
+Goal: it should feel like a real growth feature preview, not filler.
+
+4. WALKTHROUGH POLISH
+The walkthrough is no longer fake-video based. Keep that truth intact.
+Continue using real app-inspired motion and processing-state behavior.
+Improve:
+- size / presence of the central demo area
+- visual clarity of tool switching
+- clarity of state change from “processing” to “result”
+- readability of the mini cards below
+- overall feeling of a living product rather than a static brochure
+Do NOT add:
+- fake timestamps
+- fake scrubber/video UI
+- meaningless chapter durations
+- fake embedded video controls
+
+5. MINI CARD CLEANUP
+The mini cards under the walkthrough should be faster to scan.
+Refine:
+- title truncation behavior
+- text density
+- spacing
+- icon sizing
+- line-height
+- badge treatment if needed
+Goal: clean product navigation feel, not “video chapter” feel.
+
+6. RESTRAINED MOTION POLISH
+Apply subtle motion only where it helps conversion and product feel.
+Good candidates:
+- walkthrough demo state transitions
+- gentle section entrance on key blocks
+- CTA hover polish
+- light card lift on important conversion cards
+Do NOT over-animate the page.
+Avoid gimmicks, aggressive parallax, excessive floating, or performance-heavy effects.
+
+7. CONTRAST / READABILITY POLISH
+Some sections still feel slightly muted on large screens.
+Improve legibility while keeping the approved premium look:
+- headings
+- subhead text
+- card borders
+- muted labels
+- fine print
+- FAQ readability
+- document situation cards
+Do not flatten the brand style.
+Do not make everything high-contrast black/white.
+Improve clarity without losing the premium tone.
+
+8. CTA HIERARCHY POLISH
+Review the major public-site conversion moments and make the CTA hierarchy more deliberate:
+- one strong primary CTA where appropriate
+- secondary actions visually quieter
+- keep correct routing
+- maintain consistency in button tone and emphasis
+Likely strongest primary CTA target remains:
+- /app/analyze
+Do not create competing CTA clutter.
+
+9. MOBILE / TABLET SAFETY
+All polish changes must remain clean at:
+- desktop
+- tablet
+- mobile
+No clipping, no overlap, no broken grids, no oversized sections, no crowded controls.
+
+DO NOT CHANGE
+- tool truth
+- plan truth
+- approved pricing order
+- attorney comparison options
+- honest referral logic
+- correct CTA routing
+- section order
+- footer/legal/support links
+
+SUCCESS CRITERIA
+This pass is successful only if all are true:
+1. Public site still reads as fully truthful
+2. Pricing section remains exactly in the approved order
+3. Attorney comparison remains above toggle and pricing cards
+4. Referral section looks stronger but still honest/public-safe
+5. Walkthrough feels more like a living product
+6. Mini cards are easier to scan
+7. Desktop sections feel more substantial and conversion-ready
+8. Mobile and tablet remain clean
+9. No regressions anywhere else on the page
+
+RETURN FORMAT
+When done, return:
+1. Target confirmation
+2. Files changed
+3. Exact visual/conversion improvements made by section
+4. Confirmation that pricing order remained locked
+5. Confirmation that referral remained honest/public-safe
+6. Confirmation that walkthrough still uses app-inspired motion, not fake video UI
+7. Responsive check summary: desktop / tablet / mobile
+8. Fresh screenshots of:
+   - pricing section
+   - referral section
+   - walkthrough section
+   - one full lower-page scan showing pricing → referral → web/mobile/privacy/final CTA
+9. Explicit statement whether this is now ready for final public polish sign-off
+
+IMPORTANT
+Do not just say it is complete. Actually inspect the rendered result after changes and verify visually.

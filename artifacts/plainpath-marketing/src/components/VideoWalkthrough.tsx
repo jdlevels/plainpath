@@ -736,7 +736,7 @@ function ChapterCards({
                 <Icon style={{ width: 12, height: 12, color: isActive ? t.iconHex : `${t.iconHex}55` }} />
               </div>
               <p
-                className="text-[11px] font-bold leading-tight flex-1 min-w-0"
+                className="text-xs font-bold leading-tight flex-1 min-w-0"
                 style={{ color: isActive ? "#f1f5f9" : "#64748b" }}
               >
                 {t.shortName}
@@ -751,8 +751,8 @@ function ChapterCards({
 
             {/* Description */}
             <p
-              className="text-[9px] leading-snug line-clamp-2"
-              style={{ color: isActive ? "#94a3b8" : "#475569" }}
+              className="text-[10px] leading-snug line-clamp-2"
+              style={{ color: isActive ? "#94a3b8" : "#64748b" }}
             >
               {t.desc}
             </p>
@@ -841,7 +841,7 @@ export default function VideoWalkthrough() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ delay: 0.1 }}
-        className="max-w-4xl mx-auto"
+        className="max-w-5xl mx-auto"
       >
         {/* Animated demo panel */}
         <AnimatePresence mode="wait">

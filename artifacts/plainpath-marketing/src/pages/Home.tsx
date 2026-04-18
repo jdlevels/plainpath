@@ -399,9 +399,9 @@ function AttorneyComparison() {
   }, [open]);
 
   return (
-    <div className="max-w-3xl mx-auto mb-10">
+    <div className="max-w-4xl mx-auto mb-12">
       {/* Section header */}
-      <div className="text-center mb-7">
+      <div className="text-center mb-8">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/25 mb-4">
           <DollarSign className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
           <span className="text-xs font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
@@ -409,12 +409,12 @@ function AttorneyComparison() {
           </span>
         </div>
         <h3
-          className="text-2xl md:text-3xl font-bold text-foreground mb-2"
+          className="text-2xl md:text-4xl font-bold text-foreground mb-3"
           style={{ fontFamily: "var(--font-display)" }}
         >
           One attorney hour or a full month of PlainPath?
         </h3>
-        <p className="text-muted-foreground text-sm max-w-md mx-auto">
+        <p className="text-foreground/55 text-base max-w-md mx-auto">
           Select a document type to see a typical cost comparison.
         </p>
       </div>
@@ -473,16 +473,16 @@ function AttorneyComparison() {
         >
           <div className="grid grid-cols-2 divide-x divide-border/60">
             {/* Attorney column */}
-            <div className="p-5 sm:p-7 bg-red-50/60 dark:bg-red-950/10">
+            <div className="p-5 sm:p-8 bg-red-50/60 dark:bg-red-950/10">
               <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-red-100 dark:bg-red-900/30 mb-4">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-red-600 dark:text-red-400">
                   Attorney
                 </span>
               </div>
-              <p className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight leading-none mb-1">
+              <p className="text-3xl sm:text-5xl font-bold text-foreground tracking-tight leading-none mb-1">
                 ${s.attyLow.toLocaleString()}–${s.attyHigh.toLocaleString()}
               </p>
-              <p className="text-sm text-muted-foreground mb-4">per engagement</p>
+              <p className="text-sm text-foreground/50 mb-4">per engagement</p>
               <div className="space-y-2">
                 {[
                   "Hours of consultation",
@@ -498,16 +498,16 @@ function AttorneyComparison() {
             </div>
 
             {/* PlainPath column */}
-            <div className="p-5 sm:p-7 bg-emerald-50/60 dark:bg-emerald-950/10">
+            <div className="p-5 sm:p-8 bg-emerald-50/60 dark:bg-emerald-950/10">
               <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-100 dark:bg-emerald-900/30 mb-4">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-700 dark:text-emerald-400">
                   PlainPath {s.ppPlan}
                 </span>
               </div>
-              <p className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight leading-none mb-1">
+              <p className="text-3xl sm:text-5xl font-bold text-foreground tracking-tight leading-none mb-1">
                 ${s.ppPrice}
               </p>
-              <p className="text-sm text-muted-foreground mb-4">per month · unlimited use</p>
+              <p className="text-sm text-foreground/50 mb-4">per month · unlimited use</p>
               <div className="space-y-2">
                 {[s.ppTool, "Results in under 2 minutes", "Cancel anytime"].map((item) => (
                   <p key={item} className="text-xs text-muted-foreground flex items-start gap-2">
@@ -555,9 +555,9 @@ function ReferFriend() {
   }
 
   return (
-    <div className="w-full bg-gradient-to-br from-violet-50/80 via-blue-50/60 to-slate-50 dark:from-violet-950/30 dark:via-blue-950/20 dark:to-zinc-900/60 border-y border-violet-100/60 dark:border-violet-900/30 py-20 md:py-24">
-      <div className="max-w-5xl mx-auto px-5 sm:px-6">
-        <div className="grid md:grid-cols-2 gap-12 items-center">
+    <div className="w-full bg-gradient-to-br from-violet-50/80 via-blue-50/60 to-slate-50 dark:from-violet-950/30 dark:via-blue-950/20 dark:to-zinc-900/60 border-y border-violet-100/60 dark:border-violet-900/30 py-24 md:py-28">
+      <div className="max-w-6xl mx-auto px-5 sm:px-6">
+        <div className="grid md:grid-cols-2 gap-14 lg:gap-20 items-center">
 
           {/* Left — content */}
           <motion.div
@@ -573,12 +573,12 @@ function ReferFriend() {
             </div>
 
             <h3
-              className="text-2xl md:text-3xl font-bold text-foreground mb-4 leading-snug"
+              className="text-3xl md:text-4xl font-bold text-foreground mb-4 leading-snug"
               style={{ fontFamily: "var(--font-display)" }}
             >
               Know someone drowning in confusing paperwork?
             </h3>
-            <p className="text-muted-foreground text-base leading-relaxed mb-6">
+            <p className="text-foreground/60 text-base leading-relaxed mb-7">
               Share PlainPath with anyone dealing with a lease, contract, government notice, or medical bill.
               They can try it immediately — no account required.
             </p>
@@ -664,37 +664,40 @@ function ReferFriend() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="hidden md:flex justify-center"
           >
-            <div className="w-full max-w-sm rounded-2xl border border-border/60 bg-card shadow-sm p-6 space-y-4">
+            <div className="w-full max-w-sm rounded-2xl border border-border/60 bg-card shadow-md p-7 space-y-5">
               {/* Header */}
-              <div className="flex items-center gap-3 pb-4 border-b border-border/40">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+              <div className="flex items-center gap-3 pb-5 border-b border-border/50">
+                <div className="w-11 h-11 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
                   <Users className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-foreground">PlainPath Referrals</p>
-                  <p className="text-xs text-muted-foreground">Available inside your account</p>
+                  <p className="text-sm font-bold text-foreground leading-tight">PlainPath Referrals</p>
+                  <p className="text-xs text-foreground/50 mt-0.5">Available inside your account</p>
                 </div>
               </div>
 
-              {/* Placeholder steps */}
+              {/* Steps */}
               {[
-                { step: "1", label: "Sign up for PlainPath",     done: false },
-                { step: "2", label: "Share your referral link",  done: false },
-                { step: "3", label: "Friend tries PlainPath",    done: false },
-                { step: "4", label: "Both of you benefit",       done: false },
-              ].map(({ step, label }) => (
-                <div key={step} className="flex items-center gap-3">
-                  <div className="w-6 h-6 rounded-full bg-primary/10 border border-primary/25 flex items-center justify-center shrink-0">
-                    <span className="text-[10px] font-bold text-primary">{step}</span>
+                { step: "1", label: "Create your free account",   note: "No credit card required" },
+                { step: "2", label: "Share your personal link",   note: "One click from your dashboard" },
+                { step: "3", label: "Friend tries PlainPath",     note: "They get their first doc free" },
+                { step: "4", label: "Both of you benefit",        note: "Rewards inside your account" },
+              ].map(({ step, label, note }) => (
+                <div key={step} className="flex items-start gap-3.5">
+                  <div className="w-7 h-7 rounded-full bg-primary/10 border border-primary/25 flex items-center justify-center shrink-0 mt-0.5">
+                    <span className="text-[11px] font-bold text-primary">{step}</span>
                   </div>
-                  <span className="text-sm text-foreground">{label}</span>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground leading-tight">{label}</p>
+                    <p className="text-xs text-foreground/45 mt-0.5">{note}</p>
+                  </div>
                 </div>
               ))}
 
-              <div className="pt-2 border-t border-border/40">
+              <div className="pt-1 border-t border-border/50">
                 <a
                   href="/app/analyze"
-                  className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-xl px-4 py-2.5 text-sm font-semibold hover:bg-primary/90 transition-colors"
+                  className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-xl px-4 py-3 text-sm font-semibold hover:bg-primary/90 transition-colors"
                 >
                   Get started to unlock <ArrowRight className="w-3.5 h-3.5" />
                 </a>
@@ -1156,10 +1159,10 @@ export default function Home() {
       ════════════════════════════════════════════════ */}
       <div
         id="pricing"
-        className="w-full bg-gradient-to-b from-slate-100/90 via-blue-50/40 to-slate-100/70 dark:from-zinc-900/80 dark:via-blue-950/10 dark:to-zinc-900/60 border-y border-slate-200/80 dark:border-zinc-800/60 py-20 md:py-28"
+        className="w-full bg-gradient-to-b from-slate-100/90 via-blue-50/40 to-slate-100/70 dark:from-zinc-900/80 dark:via-blue-950/10 dark:to-zinc-900/60 border-y border-slate-200/80 dark:border-zinc-800/60 py-24 md:py-32"
       >
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
-          <div className="text-center max-w-2xl mx-auto mb-10">
+          <div className="text-center max-w-2xl mx-auto mb-14">
             <motion.p
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
@@ -1173,7 +1176,7 @@ export default function Home() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
-              className="text-4xl md:text-5xl font-bold mb-4 text-foreground"
+              className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 text-foreground"
               style={{ fontFamily: "var(--font-display)" }}
             >
               Honest pricing.{" "}
@@ -1189,7 +1192,7 @@ export default function Home() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: 0.08 }}
-              className="text-lg text-muted-foreground"
+              className="text-lg text-foreground/60"
             >
               Start with document analysis, or unlock every tool with Pro. No contracts — cancel anytime.
             </motion.p>
@@ -1199,7 +1202,7 @@ export default function Home() {
           <AttorneyComparison />
 
           {/* ── Billing toggle — sits directly above pricing cards ── */}
-          <div className="flex items-center justify-center mb-6">
+          <div className="flex items-center justify-center mb-8">
             <div className="relative flex items-center bg-muted/60 dark:bg-zinc-800/60 border border-border/50 rounded-full p-1 gap-1 shadow-inner">
               {(["monthly", "yearly"] as const).map((option) => (
                 <button
@@ -1226,7 +1229,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-5 items-stretch max-w-3xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-6 items-stretch max-w-4xl mx-auto">
             {PLANS.map((plan, i) => {
               const pr = billing === "yearly" ? plan.annual : plan.monthly;
               return (
@@ -1236,7 +1239,8 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.45, delay: i * 0.08 }}
-                className={`relative rounded-2xl border bg-card flex flex-col p-7 shadow-sm transition-shadow hover:shadow-md ${plan.highlight ? "border-primary shadow-md shadow-primary/10 ring-1 ring-primary/20" : "border-border/60"}`}
+                whileHover={{ y: -4 }}
+                className={`relative rounded-2xl border bg-card flex flex-col p-8 shadow-sm transition-shadow hover:shadow-lg ${plan.highlight ? "border-primary shadow-md shadow-primary/10 ring-1 ring-primary/20" : "border-border/60"}`}
               >
                 {plan.badge && (
                   <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-[11px] font-bold px-4 py-1 rounded-full tracking-wide whitespace-nowrap shadow-sm">
@@ -1436,7 +1440,7 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.55 }}
-            className="text-4xl md:text-5xl font-bold mb-4 text-white"
+            className="text-5xl md:text-6xl font-bold mb-5 text-white"
             style={{ fontFamily: "var(--font-display)" }}
           >
             Ready for{" "}
@@ -1452,7 +1456,7 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.45, delay: 0.08 }}
-            className="text-lg text-white/60 mb-10 max-w-xl mx-auto leading-relaxed"
+            className="text-xl text-white/60 mb-10 max-w-xl mx-auto leading-relaxed"
           >
             Never sign something confusing again. PlainPath reads it so you don't have to.
           </motion.p>
@@ -1465,12 +1469,12 @@ export default function Home() {
           >
             <a
               href="/app/analyze"
-              className="inline-flex items-center gap-2 bg-primary text-white rounded-xl px-6 py-3.5 text-sm font-semibold hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-lg shadow-primary/25"
+              className="inline-flex items-center gap-2 bg-primary text-white rounded-xl px-8 py-4 text-base font-semibold hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-lg shadow-primary/30"
             >
-              Try it free — no account needed <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+              Try it free — no account needed <ArrowRight className="w-5 h-5" />
             </a>
           </motion.div>
-          <p className="mt-6 text-xs text-white/25">
+          <p className="mt-6 text-xs text-white/30">
             From $4.99/month &nbsp;·&nbsp; All 5 tools on Pro ($29.99/mo) &nbsp;·&nbsp; Cancel anytime
           </p>
         </div>
