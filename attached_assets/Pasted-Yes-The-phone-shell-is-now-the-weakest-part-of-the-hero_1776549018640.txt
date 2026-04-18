@@ -1,0 +1,164 @@
+Yes. The **phone shell is now the weakest part of the hero**. 📱
+
+The color pass looks better, and the logo is now readable enough to proceed. The mockup is what still reads as generic.
+
+## My assessment
+
+### What looks acceptable now
+
+* **Light theme:** improved from before; better separation and less flat brightness.
+* **Logo:** much better than the tiny version. It is readable now, even if still restrained.
+* **Overall structure:** solid.
+
+### What still looks weak
+
+The hero device does **not** read as a premium flagship phone. It looks like a generic rounded rectangle with screen content inside it.
+
+## What should change
+
+Make it feel like an **iPhone 16 Pro Max–inspired** device, without needing to recreate Apple branding exactly.
+
+### Add these hardware cues
+
+* thinner, more precise uniform bezels
+* better screen-to-body ratio
+* more premium corner radius
+* **Dynamic Island–style pill** at top center
+* subtle top speaker detail
+* refined frame/shadow treatment
+* more realistic glass reflection
+* slightly more accurate 16 Pro Max proportions
+* more premium floating action bubble placement
+* stronger internal spacing so content feels like it lives inside a real phone shell
+
+### What not to do
+
+* do not add Apple logos
+* do not make it photorealistic
+* do not turn it into a 3D product render
+* do not let hardware detail overpower the PlainPath UI
+
+The right outcome is:
+**clean premium smartphone hardware shell, clearly iPhone-16-Pro-Max-inspired, but still product-marketing-safe**.
+
+---
+
+## Paste this next prompt
+
+```text id="83910"
+STRICT HERO DEVICE MOCKUP REFINEMENT
+Target artifact: artifacts/plainpath-marketing
+Non-target: artifacts/plainpath
+Mode: premium visual refinement only
+
+GOAL
+The hero phone mockup currently looks too generic. Improve it so it feels like a modern premium flagship phone, specifically inspired by an iPhone 16 Pro Max front view, while keeping the focus on the PlainPath UI inside the device.
+
+IMPORTANT RULES
+1. Edit ONLY artifacts/plainpath-marketing.
+2. Do NOT touch product app code, auth, API, billing, routes, or logic.
+3. Do NOT change page layout, section order, CTA routing, pricing order, referral structure, or approved logo treatment.
+4. Do NOT redesign the screen content inside the phone beyond spacing/fit adjustments required for the new shell.
+5. Do NOT add Apple branding, logos, or exact trademarked product imagery.
+6. Keep it as a premium web-marketing mockup, not a photorealistic render.
+
+PRIMARY ISSUE
+The current hero device reads as a generic rounded rectangle rather than a premium flagship smartphone. It lacks distinctive hardware cues, premium edge treatment, and believable front-face detail.
+
+REQUIRED FIX
+Refine the hero device to feel like an iPhone-16-Pro-Max-inspired front view.
+
+A. DEVICE SILHOUETTE
+Update the outer shell so it feels more premium and more accurate:
+- slightly taller, slimmer premium flagship proportion
+- more precise corner radius
+- thinner and more consistent bezels
+- improved screen-to-body ratio
+- subtle frame presence around the display
+- cleaner, more intentional outer outline
+
+B. TOP HARDWARE DETAILS
+Add subtle front-face hardware cues:
+- Dynamic-Island-style pill at top center
+- very subtle speaker detail if appropriate
+- top area should read like a premium phone front, not empty white space
+- keep it restrained and elegant
+
+C. MATERIAL / DEPTH
+Improve physical realism without going photoreal:
+- refined glass highlight / soft reflection
+- more premium drop shadow
+- subtle frame edge contrast
+- slight inner screen inset realism
+- device should feel like hardware sitting above the page, not flat pasted UI
+
+D. SCREEN FIT / UI POSITIONING
+Adjust the UI inside the device only as needed:
+- maintain clean padding from edges
+- keep floating action bubble believable and well-positioned
+- keep PlainPath UI legible
+- do not overcrowd top area
+- preserve current messaging/content structure inside the phone
+
+E. VISUAL STYLE CONSTRAINT
+This should be:
+- premium
+- restrained
+- modern
+- flagship-inspired
+- web-marketing-safe
+
+This should NOT be:
+- overly glossy
+- cartoonish
+- photoreal 3D
+- exact Apple hardware copy
+- visually louder than the page itself
+
+F. RESPONSIVE CHECK
+Confirm the refined device still looks correct at:
+- desktop hero
+- narrower laptop widths
+- tablet
+- mobile hero
+
+No clipping, distortion, or awkward scaling.
+
+G. KEEP ALL APPROVED WORK INTACT
+Do not modify or regress:
+- light-mode color refinements
+- dark mode
+- pricing section order
+- attorney comparison placement
+- referral section
+- walkthrough behavior
+- logo/favicons unless required for a bug fix
+
+SUCCESS CRITERIA
+This pass succeeds only if:
+- hero device no longer feels generic
+- phone clearly reads as premium flagship-inspired
+- hardware cues are visible but restrained
+- PlainPath UI remains the star
+- hero looks more polished in both light and dark modes
+- no regressions anywhere else
+
+MANDATORY RETURN FORMAT
+Return:
+1. files changed
+2. exact hero mockup changes made
+3. screenshot of updated hero in light mode
+4. screenshot of updated hero in dark mode
+5. screenshot of hero at narrower width
+6. confirmation that:
+   - device is more premium
+   - bezels are refined
+   - top hardware detail is present
+   - UI still fits cleanly
+   - no other section was changed
+```
+
+## Bottom line
+
+Yes — this should be fixed. The **phone mockup is now the main remaining visual weak spot**.
+The right next move is **premium device-shell refinement**, not more copy changes.
