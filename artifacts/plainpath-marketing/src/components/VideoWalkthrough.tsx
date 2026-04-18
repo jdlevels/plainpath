@@ -628,7 +628,7 @@ function ChapterCards({
   reduced: boolean
 }) {
   return (
-    <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+    <div className="mt-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
       {TOOLS.map((t) => {
         const Icon = t.icon
         const isActive = active === t.id
@@ -638,33 +638,52 @@ function ChapterCards({
             onClick={() => onSelect(t.id as ToolId)}
             whileHover={reduced ? {} : { y: -2 }}
             whileTap={{ scale: 0.97 }}
-            className="text-left px-3 py-3 rounded-xl border transition-all duration-200 focus-visible:outline-none"
+            className="relative text-left px-3.5 py-3.5 rounded-xl border transition-all duration-200 focus-visible:outline-none overflow-hidden"
             style={{
-              borderColor: isActive ? t.hex : `${t.hex}2e`,
-              backgroundColor: isActive ? `${t.hex}16` : `${t.hex}08`,
-              boxShadow: isActive ? `0 2px 18px ${t.hex}1a` : "none",
+              borderColor: isActive ? t.hex : `${t.hex}28`,
+              backgroundColor: isActive ? `${t.hex}14` : `${t.hex}07`,
+              boxShadow: isActive
+                ? `0 0 0 1px ${t.hex}38, 0 6px 28px ${t.hex}18`
+                : "none",
             }}
           >
-            <div className="flex items-center gap-2 mb-1.5">
+            {/* Tool icon + name row */}
+            <div className="flex items-center gap-2 mb-2">
               <div
-                className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
+                className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
                 style={{ backgroundColor: isActive ? `${t.hex}28` : `${t.hex}14` }}
               >
-                <Icon style={{ width: 13, height: 13, color: isActive ? t.iconHex : `${t.iconHex}66` }} />
+                <Icon style={{ width: 14, height: 14, color: isActive ? t.iconHex : `${t.iconHex}55` }} />
               </div>
               <p
-                className="text-xs font-semibold leading-tight truncate"
+                className="text-[11px] font-bold leading-tight flex-1 min-w-0"
                 style={{ color: isActive ? "#f1f5f9" : "#64748b" }}
               >
                 {t.shortName}
               </p>
+              {isActive && (
+                <div
+                  className="w-1.5 h-1.5 rounded-full shrink-0 animate-pulse"
+                  style={{ backgroundColor: t.hex }}
+                />
+              )}
             </div>
+
+            {/* Description — CSS clamp instead of JS slice */}
             <p
-              className="text-[10px] leading-snug"
+              className="text-[10px] leading-relaxed line-clamp-2"
               style={{ color: isActive ? "#94a3b8" : "#475569" }}
             >
-              {t.desc.length > 45 ? t.desc.slice(0, 45) + "…" : t.desc}
+              {t.desc}
             </p>
+
+            {/* Active tool bottom accent bar */}
+            {isActive && (
+              <div
+                className="absolute bottom-0 left-0 right-0 h-[2px]"
+                style={{ backgroundColor: t.hex, opacity: 0.7 }}
+              />
+            )}
           </motion.button>
         )
       })}

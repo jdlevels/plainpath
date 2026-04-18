@@ -368,27 +368,36 @@ function AttorneyComparison() {
   const savingsHigh = s.attyHigh - s.ppPrice;
 
   return (
-    <div className="rounded-2xl border border-border/50 bg-gradient-to-br from-primary/4 via-background to-background p-6 mb-10">
-      <div className="flex items-center gap-2.5 mb-5">
-        <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-          <DollarSign className="w-4 h-4 text-primary" />
+    <div className="max-w-3xl mx-auto mb-14">
+      {/* Section header */}
+      <div className="text-center mb-8">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/25 mb-4">
+          <DollarSign className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+          <span className="text-xs font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+            Attorney vs. PlainPath
+          </span>
         </div>
-        <div>
-          <p className="text-sm font-bold text-foreground leading-tight">Compare to attorney costs</p>
-          <p className="text-xs text-muted-foreground">Select a task to see a typical cost comparison</p>
-        </div>
+        <h3
+          className="text-2xl md:text-3xl font-bold text-foreground mb-2"
+          style={{ fontFamily: "var(--font-display)" }}
+        >
+          One attorney hour or a full month of PlainPath?
+        </h3>
+        <p className="text-muted-foreground text-sm max-w-md mx-auto">
+          Select a task to see a typical cost comparison. Attorney rates vary by region and specialization.
+        </p>
       </div>
 
       {/* Scenario pills */}
-      <div className="flex flex-wrap gap-2 mb-6">
+      <div className="flex flex-wrap justify-center gap-2 mb-7">
         {ATTORNEY_SCENARIOS.map((scenario, i) => (
           <button
             key={scenario.id}
             onClick={() => setIdx(i)}
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+            className={`px-4 py-2 rounded-full text-xs font-semibold border transition-all duration-200 ${
               idx === i
-                ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                : "bg-transparent text-muted-foreground border-border/50 hover:border-primary/40 hover:text-foreground"
+                ? "bg-foreground text-background border-foreground shadow-sm"
+                : "bg-transparent text-muted-foreground border-border/60 hover:border-foreground/30 hover:text-foreground"
             }`}
           >
             {scenario.label}
@@ -396,50 +405,84 @@ function AttorneyComparison() {
         ))}
       </div>
 
-      {/* Comparison columns */}
-      <div className="grid grid-cols-2 gap-4 mb-4">
-        <div className="rounded-xl border border-red-200/50 dark:border-red-900/30 bg-red-50/50 dark:bg-red-950/10 p-4">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-red-500 dark:text-red-400 mb-2">Attorney</p>
-          <p className="text-2xl font-bold text-foreground tracking-tight">
-            ${s.attyLow.toLocaleString()}–${s.attyHigh.toLocaleString()}
-          </p>
-          <p className="text-xs text-muted-foreground mt-1 mb-3">per engagement</p>
-          <div className="space-y-1">
-            {["Hours of consultation", "Scheduling delays"].map((item) => (
-              <p key={item} className="text-xs text-muted-foreground flex items-center gap-1.5">
-                <span className="w-1 h-1 rounded-full bg-red-400 shrink-0" />
-                {item}
+      {/* Comparison card */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={s.id}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.22 }}
+          className="rounded-2xl border border-border/60 overflow-hidden shadow-sm"
+        >
+          <div className="grid grid-cols-2 divide-x divide-border/60">
+            {/* Attorney column */}
+            <div className="p-6 sm:p-8 bg-red-50/60 dark:bg-red-950/10">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-red-100 dark:bg-red-900/30 mb-4">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-red-600 dark:text-red-400">
+                  Attorney
+                </span>
+              </div>
+              <p className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight leading-none mb-1">
+                ${s.attyLow.toLocaleString()}–${s.attyHigh.toLocaleString()}
               </p>
-            ))}
-          </div>
-        </div>
+              <p className="text-sm text-muted-foreground mb-5">per engagement</p>
+              <div className="space-y-2">
+                {[
+                  "Hours of consultation",
+                  "Scheduling delays",
+                  s.note,
+                ].map((item) => (
+                  <p key={item} className="text-xs text-muted-foreground flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-400/70 shrink-0 mt-1.5" />
+                    {item}
+                  </p>
+                ))}
+              </div>
+            </div>
 
-        <div className="rounded-xl border border-emerald-200/50 dark:border-emerald-900/30 bg-emerald-50/50 dark:bg-emerald-950/10 p-4">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400 mb-2">
-            PlainPath {s.ppPlan}
-          </p>
-          <p className="text-2xl font-bold text-foreground tracking-tight">${s.ppPrice}</p>
-          <p className="text-xs text-muted-foreground mt-1 mb-3">per month</p>
-          <div className="space-y-1">
-            {[s.ppTool, "Results in under 2 minutes"].map((item) => (
-              <p key={item} className="text-xs text-muted-foreground flex items-center gap-1.5">
-                <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
-                {item}
+            {/* PlainPath column */}
+            <div className="p-6 sm:p-8 bg-emerald-50/60 dark:bg-emerald-950/10">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-100 dark:bg-emerald-900/30 mb-4">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-700 dark:text-emerald-400">
+                  PlainPath {s.ppPlan}
+                </span>
+              </div>
+              <p className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight leading-none mb-1">
+                ${s.ppPrice}
               </p>
-            ))}
+              <p className="text-sm text-muted-foreground mb-5">per month · unlimited use</p>
+              <div className="space-y-2">
+                {[
+                  s.ppTool,
+                  "Results in under 2 minutes",
+                  "Cancel anytime",
+                ].map((item) => (
+                  <p key={item} className="text-xs text-muted-foreground flex items-start gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                    {item}
+                  </p>
+                ))}
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
-      {/* Savings callout */}
-      <div className="flex items-center justify-between rounded-xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200/50 dark:border-emerald-900/30 px-4 py-3 mb-3">
-        <p className="text-sm font-semibold text-foreground">Estimated savings</p>
-        <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
-          ${Math.round(savingsLow).toLocaleString()}–${Math.round(savingsHigh).toLocaleString()} on this task
-        </p>
-      </div>
+          {/* Savings footer */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-6 py-4 bg-emerald-50/80 dark:bg-emerald-950/20 border-t border-border/50">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-widest text-emerald-700 dark:text-emerald-400 mb-0.5">
+                Estimated savings on this task
+              </p>
+              <p className="text-xs text-muted-foreground">vs. one attorney engagement</p>
+            </div>
+            <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 shrink-0">
+              ${Math.round(savingsLow).toLocaleString()}–${Math.round(savingsHigh).toLocaleString()}
+            </p>
+          </div>
+        </motion.div>
+      </AnimatePresence>
 
-      <p className="text-[10px] text-muted-foreground/60 leading-relaxed">
+      <p className="text-center text-[11px] text-muted-foreground/55 mt-4 leading-relaxed">
         Attorney rates vary widely. Estimates reflect typical hourly ranges ($150–$500+/hr) and are approximate.
         PlainPath supplements but does not replace legal advice.
       </p>
@@ -460,45 +503,70 @@ function ReferFriend() {
   }
 
   return (
-    <div className="w-full bg-gradient-to-br from-violet-50/80 via-blue-50/60 to-slate-50 dark:from-violet-950/30 dark:via-blue-950/20 dark:to-zinc-900/60 border-y border-violet-100/60 dark:border-violet-900/30 py-14">
-      <div className="max-w-2xl mx-auto px-5 sm:px-6 text-center">
-        <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-5">
-          <Users className="w-6 h-6 text-primary" />
+    <div className="w-full bg-gradient-to-br from-violet-50/80 via-blue-50/60 to-slate-50 dark:from-violet-950/30 dark:via-blue-950/20 dark:to-zinc-900/60 border-y border-violet-100/60 dark:border-violet-900/30 py-20">
+      <div className="max-w-xl mx-auto px-5 sm:px-6 text-center">
+        {/* Icon */}
+        <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-6">
+          <Users className="w-7 h-7 text-primary" />
         </div>
+
         <h3
-          className="text-2xl md:text-3xl font-bold text-foreground mb-2"
+          className="text-2xl md:text-3xl font-bold text-foreground mb-3"
           style={{ fontFamily: "var(--font-display)" }}
         >
           Know someone dealing with confusing paperwork?
         </h3>
-        <p className="text-muted-foreground text-base mb-7 leading-relaxed max-w-md mx-auto">
-          Send them to PlainPath — no account needed to try their first document analysis.
+        <p className="text-muted-foreground text-base leading-relaxed max-w-sm mx-auto mb-7">
+          No account needed to try their first document analysis. Share the link and they can start immediately.
         </p>
 
-        <div className="flex items-center gap-2 bg-background border border-border/60 rounded-xl px-4 py-3 max-w-sm mx-auto shadow-sm">
-          <span className="text-sm text-muted-foreground flex-1 truncate font-mono">{url}</span>
+        {/* Value bullets */}
+        <div className="flex flex-wrap justify-center gap-x-6 gap-y-2.5 mb-8">
+          {[
+            "No account needed",
+            "Results in under 2 minutes",
+            "Any document type",
+          ].map((item) => (
+            <span key={item} className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+              {item}
+            </span>
+          ))}
+        </div>
+
+        {/* Copy box */}
+        <div className="flex items-center gap-2 bg-background border border-border/60 rounded-xl pl-4 pr-1.5 py-1.5 max-w-sm mx-auto shadow-sm">
+          <span className="text-sm text-muted-foreground flex-1 truncate font-mono leading-none py-1.5">
+            {url}
+          </span>
           <button
             onClick={handleCopy}
-            className="flex items-center gap-1.5 text-xs font-semibold shrink-0 transition-colors focus-visible:outline-none"
+            className={`flex items-center gap-1.5 shrink-0 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+              copied
+                ? "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400"
+                : "bg-primary text-primary-foreground hover:bg-primary/90"
+            }`}
           >
             <AnimatePresence mode="wait" initial={false}>
               {copied ? (
                 <motion.span
                   key="copied"
-                  initial={{ opacity: 0, y: -3 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 3 }}
-                  className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.15 }}
+                  className="flex items-center gap-1.5 whitespace-nowrap"
                 >
                   <CheckCircle2 className="w-3.5 h-3.5" /> Copied!
                 </motion.span>
               ) : (
                 <motion.span
                   key="copy"
-                  initial={{ opacity: 0, y: -3 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 3 }}
-                  className="flex items-center gap-1 text-primary hover:text-primary/80"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.15 }}
+                  className="flex items-center gap-1.5 whitespace-nowrap"
                 >
                   <Copy className="w-3.5 h-3.5" /> Copy link
                 </motion.span>
@@ -506,6 +574,10 @@ function ReferFriend() {
             </AnimatePresence>
           </button>
         </div>
+
+        <p className="text-xs text-muted-foreground/50 mt-4">
+          Just the link — no spam, no referral tracking.
+        </p>
       </div>
     </div>
   );
@@ -599,7 +671,7 @@ export default function Home() {
               <motion.div custom={4} variants={fadeUp} className="flex flex-col gap-3 mb-5" id="download">
                 <a
                   href="/app/analyze"
-                  className="inline-flex items-center gap-2 bg-primary text-white rounded-xl px-5 h-12 sm:h-14 text-sm font-semibold hover:opacity-90 transition-opacity w-fit"
+                  className="inline-flex items-center gap-2 bg-primary text-white rounded-xl px-5 h-12 sm:h-14 text-sm font-semibold hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-md shadow-primary/20 w-fit"
                 >
                   Try it free — no account needed <ArrowRight className="w-4 h-4" />
                 </a>
@@ -963,8 +1035,19 @@ export default function Home() {
       >
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
           <div className="text-center max-w-2xl mx-auto mb-14">
-            <p className="text-xs font-semibold tracking-[0.12em] uppercase text-muted-foreground mb-3">Pricing</p>
-            <h2
+            <motion.p
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              className="text-xs font-semibold tracking-[0.12em] uppercase text-muted-foreground mb-3"
+            >
+              Pricing
+            </motion.p>
+            <motion.h2
+              initial={{ opacity: 0, y: 14 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
               className="text-4xl md:text-5xl font-bold mb-4 text-foreground"
               style={{ fontFamily: "var(--font-display)" }}
             >
@@ -975,10 +1058,16 @@ export default function Home() {
               >
                 No surprises.
               </span>
-            </h2>
-            <p className="text-lg text-muted-foreground">
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0, y: 8 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: 0.08 }}
+              className="text-lg text-muted-foreground"
+            >
               Start with document analysis, or unlock every tool with Pro. No contracts — cancel anytime.
-            </p>
+            </motion.p>
 
             {/* ── Billing toggle ── */}
             <div className="mt-8 flex items-center justify-center">
@@ -1209,8 +1298,19 @@ export default function Home() {
       ════════════════════════════════════════════════ */}
       <div className="w-full bg-gradient-to-br from-slate-950 via-[#0c1525] to-violet-950/40 border-t border-white/5 py-24 md:py-32">
         <div className="max-w-3xl mx-auto px-5 sm:px-6 text-center">
-          <p className="text-xs font-semibold tracking-[0.12em] uppercase text-white/40 mb-4">Available on Web · iOS &amp; Android coming soon</p>
-          <h2
+          <motion.p
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="text-xs font-semibold tracking-[0.12em] uppercase text-white/40 mb-4"
+          >
+            Available on Web · iOS &amp; Android coming soon
+          </motion.p>
+          <motion.h2
+            initial={{ opacity: 0, y: 18 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.55 }}
             className="text-4xl md:text-5xl font-bold mb-4 text-white"
             style={{ fontFamily: "var(--font-display)" }}
           >
@@ -1221,18 +1321,30 @@ export default function Home() {
             >
               absolute clarity?
             </span>
-          </h2>
-          <p className="text-lg text-white/60 mb-10 max-w-xl mx-auto leading-relaxed">
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.45, delay: 0.08 }}
+            className="text-lg text-white/60 mb-10 max-w-xl mx-auto leading-relaxed"
+          >
             Never sign something confusing again. PlainPath reads it so you don't have to.
-          </p>
-          <div className="flex flex-wrap justify-center gap-4 mb-6">
+          </motion.p>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4, delay: 0.15 }}
+            className="flex flex-wrap justify-center gap-4 mb-6"
+          >
             <a
               href="/app/analyze"
-              className="inline-flex items-center gap-2 bg-primary text-white rounded-xl px-6 py-3 text-sm font-semibold hover:opacity-90 transition-opacity"
+              className="inline-flex items-center gap-2 bg-primary text-white rounded-xl px-6 py-3.5 text-sm font-semibold hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-lg shadow-primary/25"
             >
-              Try it free — no account needed <ArrowRight className="w-4 h-4" />
+              Try it free — no account needed <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
             </a>
-          </div>
+          </motion.div>
           <p className="mt-6 text-xs text-white/25">
             From $4.99/month &nbsp;·&nbsp; All 5 tools on Pro ($29.99/mo) &nbsp;·&nbsp; Cancel anytime
           </p>

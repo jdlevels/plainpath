@@ -1,0 +1,384 @@
+STRICT TARGET CONFIRMATION — READ FIRST
+
+You are working on the PUBLIC MARKETING SITE ONLY.
+
+TARGET:
+artifacts/plainpath-marketing
+
+NON-TARGET — DO NOT TOUCH:
+artifacts/plainpath
+
+This task is for the PUBLIC site that renders at plainpathapp.com.
+Do not edit the product app.
+Do not move tool logic.
+Do not refactor routes in the product app.
+Do not change pricing logic in the product app.
+Do not touch redact/analyze/trust-check/build/contract-review app screens.
+
+Before making any change, verify the files you are editing are inside:
+artifacts/plainpath-marketing
+
+==================================================
+OBJECTIVE
+==================================================
+
+Improve the PUBLIC PlainPath marketing site so it feels more alive, premium, and conversion-focused without creating fake claims or fake functionality.
+
+This is a POLISH + CONVERSION + MOTION pass on the public site.
+
+Two public-facing features are HIGH PRIORITY and must be preserved and improved:
+
+1. “Compare to attorney costs”
+2. “Refer a friend”
+
+These are important conversion/value features. Do NOT remove them. Improve them.
+
+Also implement the next recommended public-site upgrade:
+
+Replace the mostly static “See PlainPath in action” area with a real looping animated workflow demo that visually mirrors the actual app experience.
+
+==================================================
+PRIMARY GOALS
+==================================================
+
+GOAL 1 — Preserve and improve the pricing value section
+Keep and improve:
+- “Compare to attorney costs”
+- the pricing table
+- “Refer a friend”
+
+GOAL 2 — Upgrade “See PlainPath in action”
+Replace the current mostly static preview with a muted looping workflow demo that cycles through the 5 live tools:
+- Analyze a Document
+- Document Trust Check
+- Build a Contract
+- Contract Review
+- Redact Sensitive Info
+
+GOAL 3 — Reduce visual density in the walkthrough/demo mini cards
+They currently feel a little dense at desktop scale.
+Improve spacing, hierarchy, readability, and clickability.
+
+GOAL 4 — Make the public site feel more like a living product
+The page should feel active and premium, not like a static brochure.
+Use subtle motion, live-state transitions, richer preview behavior, and stronger interaction cues.
+
+GOAL 5 — Keep copy and claims honest
+No fake testimonials.
+No fake usage claims.
+No fake video timestamps if no real video exists.
+No fake store links.
+No fake “team” plan.
+No fake features.
+No app logic invented that does not exist.
+
+==================================================
+STRICT RULES
+==================================================
+
+1. PUBLIC MARKETING SITE ONLY
+All edits must stay inside artifacts/plainpath-marketing.
+
+2. DO NOT REMOVE THESE SECTIONS
+- Compare to attorney costs
+- Refer a friend
+- Pricing
+- Web & Mobile
+- Privacy trust band
+- FAQ
+- 6-card tools showcase with Digital Signature coming soon
+
+3. NO FALSE CLAIMS
+Everything on the public page must remain supportable and truthful.
+
+4. NO FAKE VIDEO UI
+If there is no real hosted video, do not show meaningless timestamp labels or fake “video progress” indicators that imply a real playable video file.
+If a play button remains, it must do something real and honest:
+- trigger the animation state
+- toggle the workflow demo
+- scroll to demos
+But it must not pretend a real video exists if one does not.
+
+5. DIGITAL SIGNATURE
+Must stay clearly labeled “Coming Soon” everywhere it appears.
+
+6. RESPONSIVE FIRST
+Desktop must look premium and aligned.
+Mobile must remain clean, readable, and unclipped.
+
+7. RESPECT PERFORMANCE
+Use efficient motion.
+Do not make the page heavy or laggy.
+Respect prefers-reduced-motion.
+
+==================================================
+TASKS — DO THESE IN ORDER
+==================================================
+
+--------------------------------------------------
+TASK A — AUDIT THE CURRENT PUBLIC MARKETING PAGE
+--------------------------------------------------
+
+Read the current marketing page structure and identify the exact files/components currently rendering:
+- pricing section
+- compare-to-attorney-costs module
+- refer-a-friend module
+- “See PlainPath in action”
+- walkthrough mini cards
+- live demos section
+- tools showcase
+- web & mobile section
+
+Return the exact file list before edits.
+
+--------------------------------------------------
+TASK B — IMPROVE “COMPARE TO ATTORNEY COSTS”
+--------------------------------------------------
+
+Keep this feature and improve it visually and structurally.
+
+Requirements:
+- Keep it near the pricing section, above the pricing cards
+- Make it feel premium and important, not like a temporary widget
+- Improve spacing, typography, and contrast
+- Ensure the selected scenario, attorney cost range, PlainPath Pro value, and estimated savings are clear at a glance
+- Use a clean config/data array for scenarios so future edits are easy
+- Keep the language careful and non-deceptive
+- If cost ranges already exist, preserve the truthfulness and improve presentation only
+- If calculations are already implemented, preserve them and improve visual output only
+- The component must look strong on desktop and still stack/read well on tablet/mobile
+
+UX targets:
+- better hierarchy
+- stronger focus state
+- cleaner dropdown
+- clearer “Attorney vs PlainPath Pro” comparison
+- savings highlighted without looking spammy
+
+--------------------------------------------------
+TASK C — IMPROVE “REFER A FRIEND”
+--------------------------------------------------
+
+Keep this feature and improve it.
+
+Requirements:
+- Do not remove it
+- Keep it visually tied to the pricing/value section
+- Make the section feel intentional and premium, not like an afterthought
+- Improve spacing, hierarchy, and CTA clarity
+- Preserve truthfulness: if it is a real referral link, keep it real; if any part is mock-only, label honestly
+- Make the copy easy to scan
+- Ensure the copy button / link interaction feels strong and polished
+- Improve responsive layout so it does not feel squeezed or detached
+
+Goal:
+This section should visually reinforce:
+- value
+- growth/shareability
+- product confidence
+
+--------------------------------------------------
+TASK D — REBUILD “SEE PLAINPATH IN ACTION” AS A REAL LOOPING WORKFLOW DEMO
+--------------------------------------------------
+
+This is the biggest enhancement in this pass.
+
+Replace the mostly static preview with a real looping animated workflow demo that feels like a lightweight version of the actual app.
+
+The motion should be MUTED, PREMIUM, and BELIEVABLE.
+Not flashy.
+Not gimmicky.
+Not fake-video style.
+
+The demo should cycle through the 5 live tools:
+
+1. Analyze a Document
+2. Document Trust Check
+3. Build a Contract
+4. Contract Review
+5. Redact Sensitive Info
+
+For each tool state, show a believable sequence such as:
+- document enters / loads into workspace
+- scan/progress or processing state
+- findings populate
+- action items / clauses / trust flags / redaction overlays appear
+- final outcome card or ready state appears
+
+Tool-specific examples:
+- Analyze: action steps, deadlines, missing docs, summary blocks
+- Trust Check: risk score, red flags, legitimacy warnings, verdict elements
+- Build: guided fields, draft generation, contract-ready result
+- Contract Review: clause flags, negotiation notes, risk items
+- Redact: highlighted sensitive fields, detected items, approved redactions
+
+Interaction requirements:
+- Auto-cycle through tools every few seconds
+- Manual switching via the tool mini cards below
+- When a user clicks a mini card, switch immediately to that tool state
+- Pause/restart behavior should feel stable
+- No fake timestamps if no actual video file exists
+- If the current play button remains, it must trigger the workflow demo honestly
+- Maintain the current dark / premium visual language
+
+Visual requirements:
+- app-like panel or mock window
+- subtle progress movement
+- staggered findings entering
+- tool-specific accent colors
+- soft shadows / glow only where useful
+- no loud motion
+- no chaotic animation
+- no toy-like effects
+
+IMPORTANT:
+This is a PRESENTATIONAL marketing demo only.
+Do not import or move product logic from artifacts/plainpath.
+Recreate the feel visually inside the marketing site using lightweight presentational components and demo data.
+
+--------------------------------------------------
+TASK E — CLEAN UP THE WALKTHROUGH MINI CARDS
+--------------------------------------------------
+
+The mini cards below “See PlainPath in action” are too visually dense.
+
+Improve them by:
+- reducing copy density
+- tightening title length
+- improving line breaks
+- increasing legibility
+- equalizing card heights
+- keeping the selected state obvious
+- making them feel like chapter/tool selectors rather than cramped info blocks
+
+Requirements:
+- Each card should be easy to parse in under 2 seconds
+- Better spacing between title, description, and metadata
+- If timestamps are still present but no real video exists, remove them
+- The selected card should feel stronger but still elegant
+- Preserve all 5 live tools
+- Responsive behavior must remain clean
+
+--------------------------------------------------
+TASK F — ADD SUBTLE SITE-WIDE MOTION POLISH
+--------------------------------------------------
+
+Add tasteful motion to make the public site feel like a living product.
+
+Use subtle motion only where it adds value:
+- headings fade/slide in softly on viewport entry
+- cards lift or glow slightly on hover
+- section previews reveal smoothly
+- demo states transition cleanly
+- CTA buttons have better hover/focus feedback
+
+Do NOT:
+- animate everything
+- create constant distracting movement
+- slow down page usability
+- make accessibility worse
+
+Respect reduced motion preferences.
+
+--------------------------------------------------
+TASK G — KEEP THE PUBLIC PAGE HONEST
+--------------------------------------------------
+
+Do a final truthfulness audit after changes.
+
+Confirm all of the following are still accurate:
+- 5 live tools only
+- Digital Signature is Coming Soon
+- App Store / Play Store treatment remains honest
+- Pricing matches actual public offering
+- No fake testimonials/reviews
+- No fake team plan
+- No fake hosted video
+- No route or CTA claims that don’t work
+- No false “scan from phone” claims unless truly supported on the public page
+- No public page copy that contradicts the actual product
+
+==================================================
+DESIGN INTENT
+==================================================
+
+The finished public page should feel like:
+- a real SaaS product
+- polished
+- credible
+- animated in a quiet, premium way
+- easier to understand at first glance
+- more valuable before a user clicks into the app
+
+The public site should feel closer to:
+“working product with live motion”
+and less like:
+“static brochure page”
+
+==================================================
+ACCEPTANCE CRITERIA
+==================================================
+
+The task is complete only when ALL of these are true:
+
+1. Compare to attorney costs is still present and improved
+2. Refer a friend is still present and improved
+3. “See PlainPath in action” now uses a real looping animated workflow demo
+4. All 5 live tools are represented in that demo
+5. The walkthrough mini cards are less dense and more readable
+6. The page feels more alive through subtle motion polish
+7. No fake reviews/testimonials exist
+8. No fake timestamps remain if there is no real video
+9. No false claims were introduced
+10. Digital Signature remains clearly marked Coming Soon
+11. Desktop layout is clean
+12. Mobile layout is clean
+13. All edits stayed inside artifacts/plainpath-marketing only
+
+==================================================
+RETURN FORMAT
+==================================================
+
+When done, return exactly this structure:
+
+1. TARGET CONFIRMATION
+- confirm edited artifact
+- confirm untouched non-target artifact
+
+2. FILES CHANGED
+- exact file list
+- one-line summary per file
+
+3. WHAT WAS IMPROVED
+- Compare to attorney costs
+- Refer a friend
+- See PlainPath in action
+- walkthrough mini cards
+- motion polish
+
+4. TRUTHFULNESS / CLAIM AUDIT
+- confirm no fake claims introduced
+- confirm no fake video implication
+- confirm Digital Signature still Coming Soon
+- confirm public pricing language remains accurate
+
+5. RESPONSIVE CHECK
+- desktop result
+- tablet result
+- mobile result
+
+6. SCREENSHOTS
+Provide fresh screenshots of:
+- pricing section with compare-to-attorney-costs visible
+- refer-a-friend section
+- “See PlainPath in action” resting state
+- “See PlainPath in action” active animation state
+- walkthrough mini cards close-up
+- mobile screenshot of the improved public page
+
+7. FINAL STATUS
+- DONE only if all acceptance criteria passed
+
+Do not stop halfway.
+Do not give a theory report without implementing.
+Implement first, then verify with screenshots.

@@ -1,0 +1,321 @@
+STRICT TARGET CONFIRMATION — READ FIRST
+
+You are working on the PUBLIC MARKETING SITE ONLY.
+
+TARGET:
+artifacts/plainpath-marketing
+
+NON-TARGET — DO NOT TOUCH:
+artifacts/plainpath
+
+This task is for the PUBLIC site that renders at plainpathapp.com.
+Do not edit the product app.
+Do not move product logic.
+Do not touch tool screens, pricing logic, or flows inside artifacts/plainpath.
+
+Before making changes, verify every edited file is inside:
+artifacts/plainpath-marketing
+
+==================================================
+CRITICAL STRUCTURE CORRECTION
+==================================================
+
+The current PUBLIC pricing section is structurally wrong.
+
+Current bad flow:
+1. Pricing heading
+2. Monthly / Yearly toggle
+3. Compare to attorney costs
+4. Starter / Pro cards
+
+This splits the pricing section and weakens hierarchy.
+
+REQUIRED correct flow:
+1. Pricing heading
+2. Monthly / Yearly toggle
+3. Starter / Pro pricing cards directly below the toggle
+4. Pricing fine print
+5. Compare to attorney costs as a separate value-proof block BELOW the pricing cards
+6. Refer a friend section below that
+
+The compare module must NOT sit between the billing toggle and the plan cards.
+
+==================================================
+PRIMARY OBJECTIVES
+==================================================
+
+We need to improve the PUBLIC marketing page by doing all of the following:
+
+1. Fix pricing section hierarchy
+2. Reposition and improve “Compare to attorney costs”
+3. Preserve and improve “Refer a friend”
+4. Improve “See PlainPath in action” so it feels more like a living product
+5. Reduce visual density in the walkthrough mini cards
+6. Keep all claims honest and supportable
+
+==================================================
+TASK A — READ THE PUBLIC FILES FIRST
+==================================================
+
+Read the current public marketing files and identify exactly which files render:
+- pricing section
+- compare-to-attorney-costs block
+- refer-a-friend block
+- “See PlainPath in action”
+- walkthrough mini cards
+
+Return the exact file list before editing.
+
+==================================================
+TASK B — FIX THE PRICING HIERARCHY FIRST
+==================================================
+
+Rebuild the PUBLIC pricing section order so the pricing logic reads cleanly and naturally.
+
+REQUIRED ORDER:
+- pricing heading
+- pricing subheading
+- monthly/yearly toggle
+- starter/pro plan cards
+- pricing footnote/fine print
+- compare-to-attorney-costs module
+- refer-a-friend module
+
+STRICT RULES:
+- the Monthly / Yearly toggle must visually belong to the Starter / Pro cards
+- the toggle must sit immediately above the pricing cards
+- no feature/value module may sit between the toggle and the cards
+- compare-to-attorney-costs must become its own subsection below pricing, not inside the core pricing hierarchy
+- refer-a-friend must feel intentionally placed beneath pricing/value, not randomly floating
+
+==================================================
+TASK C — KEEP THE ORIGINAL “COMPARE TO ATTORNEY COSTS” IDEA, BUT FIX IT
+==================================================
+
+We want to preserve the original concept, but cleanly implement it on the PUBLIC site only.
+
+The module should still include:
+- a document/task selector
+- attorney cost comparison
+- PlainPath price comparison
+- clear savings statement
+
+HOWEVER:
+- it must NOT overlap pricing cards
+- it must NOT split pricing structure
+- it must NOT visually compete with the plan cards
+- it must read as a separate “value proof” / “cost justification” section
+
+IMPORTANT STRUCTURAL CHANGE:
+Move it BELOW the pricing cards.
+
+Preferred value-proof flow:
+- pricing cards first
+- then compare-to-attorney-costs
+- then refer-a-friend
+
+Design direction:
+- premium dark card
+- clean spacing
+- strong containment
+- clearly separated from pricing plans
+- responsive and readable
+
+Current public version looks bad because:
+- pricing is being visually split by the compare block
+- the toggle is disconnected from the plan cards
+- the comparison module is too dominant in the wrong place
+
+Fix that.
+
+==================================================
+TASK D — RESTYLE THE COMPARE MODULE FOR THE PUBLIC PAGE
+==================================================
+
+Use the original intended design direction, but adapt it so it works better on the public site.
+
+Keep:
+- comparison concept
+- dropdown/selector or task pills
+- attorney cost vs PlainPath comparison
+- savings output
+
+Improve:
+- spacing
+- grouping
+- containment
+- readability
+- separation from pricing
+- responsive stacking
+
+The compare module should feel like:
+“Here is why PlainPath is worth it”
+NOT:
+“This is the pricing section itself”
+
+If needed, use a cleaner structure like:
+- title row
+- selectable scenarios
+- comparison row or cards
+- savings bar/message
+- legal/supporting disclaimer
+
+==================================================
+TASK E — PRESERVE THESE SCENARIOS
+==================================================
+
+The attorney cost comparison can use these scenarios if already present or if a data cleanup is needed:
+- Review a Lease
+- Check a Suspicious Letter
+- Review an Employment Contract
+- Build a Freelance Contract
+- Redact a Document
+
+Or equivalent cleaned versions, provided the wording remains honest and clear.
+
+No fake legal guarantees.
+No misleading implication that PlainPath replaces an attorney.
+Keep disclaimer language supportable.
+
+==================================================
+TASK F — KEEP “REFER A FRIEND”
+==================================================
+
+Do not remove it.
+
+Instead:
+- place it cleanly after the compare/value-proof section
+- make it feel intentional
+- keep it visually related to value and growth
+- ensure it does not collide with pricing or footer spacing
+
+==================================================
+TASK G — NEXT RECOMMENDED IMPROVEMENT:
+UPGRADE “SEE PLAINPATH IN ACTION”
+==================================================
+
+The public page is accurate now, but still slightly static.
+
+Upgrade “See PlainPath in action” so it feels more like a living product.
+
+Requirements:
+- PUBLIC site only
+- presentational only
+- do not import product logic from artifacts/plainpath
+- use a lightweight looping or controlled motion demo
+- make it feel like a real workflow preview
+
+Cycle through the 5 live tools:
+- Analyze a Document
+- Document Trust Check
+- Build a Contract
+- Contract Review
+- Redact Sensitive Info
+
+The preview should visually suggest:
+- document entering
+- scan/progress motion
+- findings appearing
+- next steps / flags / clauses / redactions appearing
+- ready state
+
+IMPORTANT:
+If there is no actual video file, do NOT fake full video semantics.
+Do not show meaningless timestamps if there is no real video to seek.
+
+==================================================
+TASK H — REDUCE WALKTHROUGH MINI CARD DENSITY
+==================================================
+
+The walkthrough mini cards are still visually dense.
+
+Improve:
+- spacing
+- line breaks
+- title hierarchy
+- card rhythm
+- height consistency
+- selected/active clarity
+
+Remove meaningless metadata if it implies real media timing when none exists.
+
+==================================================
+TASK I — FINAL TRUTHFULNESS AUDIT
+==================================================
+
+Before finishing, verify all of the following remain true:
+
+- 5 live tools only
+- Digital Signature is Coming Soon
+- no fake testimonials
+- no fake reviews
+- no fake “Team” plan
+- no fake store availability
+- no fake legal guarantee
+- no fake video timestamps
+- no unsupported feature claims
+
+==================================================
+PRICING ACCEPTANCE RULES
+==================================================
+
+The pricing section is only acceptable if ALL are true:
+
+1. pricing header is clean
+2. monthly/yearly toggle sits directly above starter/pro cards
+3. starter/pro cards visually read as one pricing unit
+4. compare-to-attorney-costs is moved BELOW pricing cards
+5. compare block no longer interrupts pricing hierarchy
+6. refer-a-friend follows cleanly after the compare module
+7. desktop/tablet/mobile all render correctly
+8. no overlap
+9. no awkward spacing gaps
+10. no false claims
+
+==================================================
+RETURN FORMAT
+==================================================
+
+When done, return exactly this structure:
+
+1. TARGET CONFIRMATION
+- confirm edited artifact
+- confirm untouched non-target artifact
+
+2. FILES CHANGED
+- exact file list
+- one-line summary per file
+
+3. PRICING HIERARCHY FIX
+- what was wrong before
+- how the hierarchy was corrected
+- where the toggle now sits
+- where the compare module now sits
+- where refer-a-friend now sits
+
+4. COMPARE-TO-ATTORNEY-COSTS IMPROVEMENT
+- what changed visually
+- how it was contained
+- desktop/tablet/mobile behavior
+
+5. WALKTHROUGH / PUBLIC MOTION IMPROVEMENTS
+- what changed in “See PlainPath in action”
+- what changed in mini cards
+
+6. TRUTHFULNESS AUDIT
+- confirm no fake claims
+- confirm no fake video implication
+- confirm no fake plan names
+- confirm Digital Signature remains Coming Soon
+
+7. SCREENSHOTS
+Provide fresh screenshots of:
+- pricing header + toggle + starter/pro cards together
+- compare-to-attorney-costs section in its new location
+- refer-a-friend section
+- full pricing/value area
+- “See PlainPath in action”
+- mobile screenshot of the pricing section
+
+8. FINAL STATUS
+- DONE only if all acceptance criteria passed
