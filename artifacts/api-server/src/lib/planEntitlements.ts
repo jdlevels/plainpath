@@ -1,8 +1,8 @@
 // ─── Plan Definitions — Single Source of Truth ────────────────────────────────
 //
 // Plans:
-//   starter — $4.99/month  — Analyze a Document only
-//   pro     — $19.99/month — All four tools
+//   starter — $4.99/month  — Analyze a Document + Redact Sensitive Info
+//   pro     — $19.99/month — All five tools (Analyze, Trust Check, Contract Builder, Contract Review, Redact)
 //
 // Never duplicate plan or feature logic in pages, routes, or components.
 // All gating must reference TOOL_ACCESS and PLAN_ENTITLEMENTS from here.

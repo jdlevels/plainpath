@@ -293,8 +293,8 @@ const PLANS = [
   },
   {
     name: "Pro",
-    monthly: { price: "$29.99", period: "/month", sub: null },
-    annual:  { price: "$251.99", period: "/year", sub: "billed annually", eq: "≈ $21.00/mo", savings: "Save about 30%" },
+    monthly: { price: "$19.99", period: "/month", sub: null },
+    annual:  { price: "$191.90", period: "/year", sub: "billed annually", eq: "≈ $16.00/mo", savings: "Save 20%" },
     desc: "All 5 live tools in one plan — unlimited use across every workflow.",
     highlight: true,
     badge: "Best Value",
@@ -325,35 +325,35 @@ const ATTORNEY_SCENARIOS = [
     id: "employment",
     label: "Employment contract",
     attyLow: 500, attyHigh: 1500,
-    ppPlan: "Pro", ppPrice: 29.99, ppTool: "Contract Review",
+    ppPlan: "Pro", ppPrice: 19.99, ppTool: "Contract Review",
     note: "Employment attorney review, typically 3–10 hrs.",
   },
   {
     id: "freelance",
     label: "Freelance agreement",
     attyLow: 200, attyHigh: 800,
-    ppPlan: "Pro", ppPrice: 29.99, ppTool: "Build a Contract",
+    ppPlan: "Pro", ppPrice: 19.99, ppTool: "Build a Contract",
     note: "Simple contract drafting, typically 1–4 attorney hrs.",
   },
   {
     id: "nda",
     label: "NDA",
     attyLow: 300, attyHigh: 750,
-    ppPlan: "Pro", ppPrice: 29.99, ppTool: "Contract Review",
+    ppPlan: "Pro", ppPrice: 19.99, ppTool: "Contract Review",
     note: "NDA review or drafting, typically 1–3 attorney hrs.",
   },
   {
     id: "business",
     label: "Business contract",
     attyLow: 500, attyHigh: 2000,
-    ppPlan: "Pro", ppPrice: 29.99, ppTool: "Contract Review",
+    ppPlan: "Pro", ppPrice: 19.99, ppTool: "Contract Review",
     note: "Complex agreement review, typically 2–8 attorney hrs.",
   },
   {
     id: "irs",
     label: "IRS notice response",
     attyLow: 200, attyHigh: 600,
-    ppPlan: "Pro", ppPrice: 29.99, ppTool: "Document Trust Check",
+    ppPlan: "Pro", ppPrice: 19.99, ppTool: "Document Trust Check",
     note: "Tax attorney or CPA review, typically 1–3 hrs.",
   },
   {
@@ -1475,7 +1475,7 @@ export default function Home() {
             </a>
           </motion.div>
           <p className="mt-6 text-xs text-white/30">
-            From $4.99/month &nbsp;·&nbsp; All 5 tools on Pro ($29.99/mo) &nbsp;·&nbsp; Cancel anytime
+            From $4.99/month &nbsp;·&nbsp; All 5 tools on Pro ($19.99/mo) &nbsp;·&nbsp; Cancel anytime
           </p>
         </div>
       </div>

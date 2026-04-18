@@ -28,7 +28,7 @@ const PLAN_CONFIG: Record<PlanKey, { name: string; amount: number; description: 
   pro: {
     name: "PlainPath Pro",
     amount: 1999, // $19.99/month
-    description: "All four tools: Analyze, Trust Check, Contract Builder, Contract Review.",
+    description: "All five tools: Analyze, Trust Check, Contract Builder, Contract Review, Redact Sensitive Info.",
   },
 }
 

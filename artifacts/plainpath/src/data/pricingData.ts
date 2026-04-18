@@ -15,9 +15,10 @@ export const PRICING_PLANS: PricingPlan[] = [
     price: "$4.99",
     period: "/month",
     description:
-      "Analyze any document in plain English — unlimited use of one core workflow.",
+      "Analyze and redact documents in plain English — unlimited use of two core tools.",
     features: [
       "Analyze a Document (unlimited)",
+      "Redact Sensitive Info (automatic PII removal)",
       "Plain-English document summary",
       "Key terms, deadlines, and required actions",
       "Local saved analyses",
@@ -28,7 +29,7 @@ export const PRICING_PLANS: PricingPlan[] = [
   },
   {
     name: "Pro",
-    price: "$29.99",
+    price: "$19.99",
     period: "/month",
     description:
       "All 5 live tools in one plan — unlimited use across every workflow.",

@@ -4,7 +4,7 @@ import { motion } from "framer-motion"
 import {
   CreditCard, CheckCircle2, XCircle, Zap, BarChart3,
   ShieldCheck, PenLine, Scale, ArrowRight, ExternalLink,
-  AlertTriangle, TestTube, Loader2, RefreshCw, Mail,
+  AlertTriangle, TestTube, Loader2, RefreshCw, Mail, EyeOff,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useEntitlements } from "@/hooks/useEntitlements"
@@ -26,7 +26,7 @@ const PLAN_META = {
   },
   pro: {
     label: "Pro",
-    price: "$29.99/month",
+    price: "$19.99/month",
     icon: Zap,
     color: "text-primary",
     bg: "bg-primary/8",
@@ -36,6 +36,7 @@ const PLAN_META = {
 
 const TOOLS = [
   { icon: BarChart3,   key: "analyze",           label: "Analyze a Document",   plans: ["starter", "pro"] },
+  { icon: EyeOff,      key: "redact",             label: "Redact Sensitive Info", plans: ["starter", "pro"] },
   { icon: ShieldCheck, key: "trust-check",        label: "Document Trust Check", plans: ["pro"] },
   { icon: Scale,       key: "contract-review",    label: "Contract Review",      plans: ["pro"] },
   { icon: PenLine,     key: "build-contract",     label: "Build a Contract",     plans: ["pro"] },
@@ -372,7 +373,7 @@ export default function Billing() {
                 </p>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   Starter at <strong>$4.99/mo</strong> gives you unlimited document analysis.
-                  Pro at <strong>$29.99/mo</strong> unlocks all 5 live tools.
+                  Pro at <strong>$19.99/mo</strong> unlocks all 5 live tools.
                 </p>
               </div>
               <Button size="sm" onClick={() => navigate("/subscribe")} className="shrink-0">
@@ -392,7 +393,7 @@ export default function Billing() {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-sm font-semibold text-foreground mb-1">
-                  Upgrade to Pro — $29.99/mo
+                  Upgrade to Pro — $19.99/mo
                 </p>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   Add Trust Check, Contract Review, and Contract Builder to your plan.

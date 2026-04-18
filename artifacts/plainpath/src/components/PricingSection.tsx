@@ -59,32 +59,18 @@ function AttorneyCostCalculator() {
             <span className="text-muted-foreground text-sm font-medium">vs</span>
             <div className="text-center px-4 py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-900/40">
               <p className="text-xs text-muted-foreground mb-0.5">PlainPath Pro</p>
-              <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">$29.99/mo</p>
+              <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">$19.99/mo</p>
             </div>
           </div>
         )}
       </div>
       {cost && (
         <p className="text-xs text-muted-foreground mt-3">
-          One attorney review of a {selected.toLowerCase()} typically costs <strong className="text-foreground">{cost.range}</strong>. PlainPath Pro gives you unlimited access across all 5 tools for <strong className="text-foreground">$29.99/month</strong> — that's a saving of <strong className="text-emerald-600">${cost.low - 30}–${cost.high - 30}</strong> on just the first document.
+          One attorney review of a {selected.toLowerCase()} typically costs <strong className="text-foreground">{cost.range}</strong>. PlainPath Pro gives you unlimited access across all 5 tools for <strong className="text-foreground">$19.99/month</strong> — that's a saving of <strong className="text-emerald-600">${cost.low - 20}–${cost.high - 20}</strong> on just the first document.
         </p>
       )}
     </div>
   )
-}
-
-function getAnnualPrice(plan: PricingPlan): string {
-  if (plan.price === "$0" || plan.price === "Free") return "Free"
-  const monthly = parseFloat(plan.price.replace("$", ""))
-  const annual = (monthly * 12 * 0.8).toFixed(0)
-  const perMonth = (monthly * 0.8).toFixed(2)
-  return `$${perMonth}`
-}
-
-function getAnnualTotal(plan: PricingPlan): string {
-  const monthly = parseFloat(plan.price.replace("$", ""))
-  const annual = (monthly * 12 * 0.8).toFixed(0)
-  return `$${annual}/yr`
 }
 
 function getButtonClasses(plan: PricingPlan) {
@@ -119,7 +105,7 @@ function NativePricingMessage() {
           rel="noopener noreferrer"
           className="mt-8 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
         >
-          View plans at plain-path.app
+          View plans at plainpathapp.com
           <ExternalLink className="h-4 w-4" />
         </a>
         <p className="mt-4 text-xs text-slate-500 dark:text-slate-400">
@@ -133,7 +119,6 @@ function NativePricingMessage() {
 export default function PricingSection() {
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [billing, setBilling] = useState<"monthly" | "annually">("monthly")
 
   if (isNative()) {
     return <NativePricingMessage />
@@ -173,24 +158,6 @@ export default function PricingSection() {
           Start with document analysis on Starter, or unlock every tool with Pro. No contracts, cancel anytime.
         </p>
 
-        {/* Billing period toggle */}
-        <div className="mt-8 inline-flex items-center gap-1 rounded-xl border border-border/50 bg-secondary/50 p-1">
-          <button
-            onClick={() => setBilling("monthly")}
-            className={`rounded-lg px-4 py-1.5 text-sm font-medium transition-all ${billing === "monthly" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
-          >
-            Monthly
-          </button>
-          <button
-            onClick={() => setBilling("annually")}
-            className={`rounded-lg px-4 py-1.5 text-sm font-medium transition-all flex items-center gap-1.5 ${billing === "annually" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"}`}
-          >
-            Annually
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
-              Save 20%
-            </span>
-          </button>
-        </div>
       </div>
 
       <div className="mt-10">
@@ -220,17 +187,12 @@ export default function PricingSection() {
 
               <div className="mt-4 flex items-end gap-1">
                 <span className="text-4xl font-bold tracking-tight">
-                  {billing === "annually" ? getAnnualPrice(plan) : plan.price}
+                  {plan.price}
                 </span>
                 <div className="pb-1">
                   <span className="text-sm text-slate-500 dark:text-slate-400">
                     {plan.period}
                   </span>
-                  {billing === "annually" && plan.price !== "Free" && (
-                    <div className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
-                      {getAnnualTotal(plan)} · save 20%
-                    </div>
-                  )}
                 </div>
               </div>
 
