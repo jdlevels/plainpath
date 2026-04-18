@@ -1,0 +1,108 @@
+We need to correct trust and consistency issues on the PUBLIC marketing page.
+
+Target:
+- artifacts/plainpath-marketing only
+
+Critical problems to fix:
+1. Fake testimonials/reviews on the public site
+2. Inconsistent tool coverage across public sections and demo areas
+
+==================================================
+TASK 1 — REMOVE FAKE TESTIMONIALS / FAKE REVIEWS
+==================================================
+
+If the current testimonial/review section uses invented user quotes, fake names, fake ratings, or fabricated customer stories, remove that section.
+
+Replace it with an honest, product-truthful section instead.
+
+Best replacement options:
+- Common document situations PlainPath handles
+- Real example workflows
+- Sample outcomes by document type
+- What PlainPath helps you do
+
+Preferred replacement:
+A public-facing “Common document situations” section with cards such as:
+- Lease notice
+- Job offer
+- Medical bill
+- Government letter
+- Payment demand
+- Freelance contract
+- Insurance/benefits form
+- Utility shutoff notice
+
+Each card should say:
+- document type
+- recommended tool
+- what PlainPath helps the user do
+
+Do NOT use fake customer quotes.
+
+==================================================
+TASK 2 — TOOL COVERAGE CONSISTENCY AUDIT
+==================================================
+
+Audit every major public marketing section and make the tool story consistent.
+
+Current product truth:
+- 5 live tools
+- Digital Signature = Coming Soon only
+
+The 5 live tools are:
+- Analyze a Document
+- Document Trust Check
+- Build a Contract
+- Contract Review
+- Redact Sensitive Info
+
+Rules:
+- any platform overview section should reflect all 5 live tools
+- any roadmap/showcase section may show Digital Signature only as Coming Soon
+- do not randomly show only 4 tools unless the section is explicitly labeled as “featured tools” or similar
+- if a section says “One demo for each tool,” it must show all 5 live tools
+- if all 5 are not shown, rename that section so it does not overclaim
+
+==================================================
+TASK 3 — FIX DEMO SECTION CLAIMS
+==================================================
+
+Review all demo-related sections such as:
+- Watch each tool work
+- One demo for each tool
+- walkthrough/demo areas
+
+Requirements:
+- either include demos/examples for all 5 live tools
+- or rename the section to something accurate like:
+  - Featured demos
+  - Sample workflows
+  - See PlainPath in action
+
+No section should imply complete tool coverage unless it truly shows all 5 live tools.
+
+==================================================
+TASK 4 — FINAL PUBLIC PAGE CONSISTENCY PASS
+==================================================
+
+After the above fixes, do one clean consistency pass on the marketing site only:
+
+Check:
+- no fake testimonials remain
+- no fake review stars remain
+- all major public sections tell the same product truth
+- 5 live tools messaging is consistent
+- Digital Signature is always clearly Coming Soon
+- no misleading tool counts remain
+- no misleading demo claims remain
+
+==================================================
+RETURN
+==================================================
+
+Return:
+1. exact files changed in artifacts/plainpath-marketing
+2. what fake/review/testimonial content was removed
+3. what honest replacement section was added
+4. which sections were updated for tool-count consistency
+5. screenshots of the corrected public marketing page sections

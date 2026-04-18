@@ -9,7 +9,7 @@ import { PhoneHeroDemo } from "@/components/PhoneHeroDemo";
 import { WebAppDemo } from "@/components/WebAppDemo";
 import StatsBar from "@/components/StatsBar";
 import ToolsShowcase from "@/components/ToolsShowcase";
-import TestimonialsSection from "@/components/TestimonialsSection";
+import DocumentSituations from "@/components/DocumentSituations";
 import FAQSection from "@/components/FAQSection";
 import VideoWalkthrough from "@/components/VideoWalkthrough";
 import { Card } from "@/components/ui/card";
@@ -238,6 +238,20 @@ const DEMOS = [
     tags: ["Score: 28/100", "4 clauses flagged", "Negotiation language"],
     cta: "Review a contract",
     href: "/app/contract-review",
+  },
+  {
+    id: "redact-medical",
+    tool: "Redact Sensitive Info",
+    title: "Medical Intake Form — Before Sharing",
+    desc: "A patient intake form with SSN, insurance number, and date of birth. PlainPath detects all 3 automatically and lets you approve each redaction before export.",
+    icon: EyeOff,
+    color: "text-violet-500 dark:text-violet-400",
+    bg: "bg-violet-50 dark:bg-violet-950/50",
+    hoverBorder: "hover:border-violet-400/50",
+    hoverTitle: "group-hover:text-violet-500 dark:group-hover:text-violet-400",
+    tags: ["3 PII items found", "You approve each", "Export redacted copy"],
+    cta: "Try redaction",
+    href: "/app/redact",
   },
 ]
 
@@ -614,10 +628,10 @@ export default function Home() {
               className="text-3xl md:text-4xl font-bold mb-3" style={{ fontFamily: "var(--font-display)" }}>One demo for each tool</motion.h2>
             <motion.p initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
               transition={{ delay: 0.1 }} className="text-muted-foreground text-lg max-w-xl mx-auto">
-              Four real-world examples. Click any card to try that tool with a pre-loaded scenario.
+              Five real-world examples — one per live tool. Click any card to try it with a pre-loaded scenario.
             </motion.p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
             {DEMOS.map((demo, i) => (
               <motion.div key={demo.id} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }} transition={{ delay: i * 0.08 }} whileHover={{ y: -5, transition: { duration: 0.2 } }}>
@@ -648,11 +662,11 @@ export default function Home() {
       </div>
 
       {/* ════════════════════════════════════════════════
-          TESTIMONIALS
+          DOCUMENT SITUATIONS
       ════════════════════════════════════════════════ */}
-      <div className="w-full bg-gradient-to-br from-violet-50/90 via-purple-50/50 to-slate-50 dark:from-violet-950/20 dark:via-slate-900 dark:to-slate-900 border-y border-violet-100 dark:border-border/40 py-16">
+      <div className="w-full bg-gradient-to-br from-slate-50 via-blue-50/40 to-indigo-50/30 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900 border-y border-slate-200 dark:border-border/40 py-16">
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
-          <TestimonialsSection />
+          <DocumentSituations />
         </div>
       </div>
 

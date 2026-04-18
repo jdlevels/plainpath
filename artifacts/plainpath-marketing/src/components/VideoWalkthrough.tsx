@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
-  Play, X, FileText, ShieldCheck, PenLine, Scale,
+  Play, X, FileText, ShieldCheck, PenLine, Scale, EyeOff,
   Clock, AlertTriangle, Calendar, CheckCircle2, ChevronDown,
 } from "lucide-react"
 
@@ -47,6 +47,16 @@ const CHAPTERS = [
     duration: "0:52",
     label: "Contract Review",
     desc: "Paste a contract you received and get a clause-by-clause fairness review.",
+  },
+  {
+    id: 4,
+    icon: EyeOff,
+    hex: "#8b5cf6",
+    iconColor: "#a78bfa",
+    time: "2:58",
+    duration: "0:38",
+    label: "Redact Sensitive Info",
+    desc: "Auto-detect and remove private details before sharing or analyzing a document.",
   },
 ]
 
@@ -231,7 +241,7 @@ export default function VideoWalkthrough() {
           transition={{ delay: 0.1 }}
           className="text-slate-400 text-lg max-w-xl mx-auto leading-relaxed"
         >
-          A short walkthrough of all 5 tools — from analyzing confusing paperwork to reviewing a contract before you sign.
+          A short walkthrough of all 5 tools — from analyzing paperwork and spotting scams to building contracts, reviewing terms, and redacting private information.
         </motion.p>
       </div>
 
@@ -256,7 +266,7 @@ export default function VideoWalkthrough() {
           </AnimatePresence>
         </div>
 
-        <div className="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="mt-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
           {CHAPTERS.map((ch) => {
             const Icon = ch.icon
             const isActive = activeChapter === ch.id
