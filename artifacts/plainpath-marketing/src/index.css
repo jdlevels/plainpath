@@ -48,12 +48,12 @@
 
 /* ── LIGHT MODE ──────────────────────────────────────────── */
 :root {
-  /* Cool mist background — off-white with a slight blue-gray tint */
-  --background: 214 22% 95%;
+  /* Deeper cool mist — controlled brightness, clearly light but not raw */
+  --background: 214 25% 93%;
   /* Charcoal text */
   --foreground: 214 25% 10%;
 
-  /* Pure white cards — now pops clearly against the cooler background */
+  /* Pure white cards — maximum pop against the deeper mist base */
   --card: 0 0% 100%;
   --card-foreground: 214 25% 10%;
 
@@ -61,16 +61,16 @@
   --primary: 211 39% 49%;
   --primary-foreground: 0 0% 100%;
 
-  /* Soft bluish-gray secondary */
-  --secondary: 214 20% 91%;
+  /* Soft bluish-gray secondary — deeper for more distinction */
+  --secondary: 214 22% 88%;
   --secondary-foreground: 211 39% 28%;
 
-  /* Muted — cooler tint */
-  --muted: 214 18% 90%;
-  --muted-foreground: 214 14% 38%;
+  /* Muted — deeper cool tint */
+  --muted: 214 20% 88%;
+  --muted-foreground: 214 16% 35%;
 
   /* Accents */
-  --accent: 214 20% 91%;
+  --accent: 214 22% 88%;
   --accent-foreground: 211 39% 49%;
 
   /* Destructive/Risks */
@@ -85,9 +85,9 @@
   --warning: 35 70% 55%;
   --warning-foreground: 0 0% 100%;
 
-  /* Stronger, cooler border — more visible on the new mist bg */
-  --border: 214 18% 76%;
-  --input: 214 18% 76%;
+  /* Stronger border — more card edge definition */
+  --border: 214 20% 72%;
+  --input: 214 20% 72%;
   --ring: 211 39% 49%;
 }
 

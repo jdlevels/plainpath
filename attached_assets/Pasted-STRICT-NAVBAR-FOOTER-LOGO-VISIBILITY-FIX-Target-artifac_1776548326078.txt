@@ -1,0 +1,108 @@
+STRICT NAVBAR/FOOTER LOGO VISIBILITY FIX
+Target artifact: artifacts/plainpath-marketing
+Non-target: artifacts/plainpath
+Mode: branding visibility refinement only
+
+GOAL
+The current logo implementation is technically correct but visually too small in the navbar. The full horizontal logo asset is too wide for the navbar slot, so it scales down until it becomes hard to see.
+
+Fix this by creating a navbar/footer brand treatment that is clearly legible, balanced, and premium in both light and dark mode.
+
+IMPORTANT RULES
+1. Do NOT touch product app logic, auth, API, billing, or routes.
+2. Do NOT redesign the page layout.
+3. Do NOT change pricing order or section structure.
+4. Do NOT alter CTA routing.
+5. Do NOT regress the approved dual-theme work.
+6. Do NOT keep the logo tiny just to preserve the full-width PNG in the nav.
+7. This is a visibility/usability fix, not a full rebrand.
+
+PRIMARY ISSUE
+The full horizontal logo is too wide for the navbar and is rendering too small to read comfortably.
+
+REQUIRED FIX
+Create a NAVBAR-SPECIFIC brand lockup and a FOOTER-SPECIFIC brand lockup.
+
+A. NAVBAR BRAND LOCKUP
+Use a compact, readable lockup designed for tight horizontal space:
+- icon mark from the PlainPath logo
+- readable “PlainPath” wordmark beside it
+- do NOT use the tiny scaled full horizontal logo in the navbar
+- size it so it reads clearly at a glance on desktop and mobile
+
+Navbar requirements:
+- icon visible and crisp
+- wordmark clearly readable
+- vertically centered in navbar
+- no collision with nav links
+- no clipping in mobile/header
+- maintain current spacing rhythm
+- preserve blur/transparency behavior if already approved
+
+Recommended visual sizing:
+- icon box approx 28–32px desktop
+- wordmark sized to read clearly without dominating nav
+- total lockup should feel premium and intentional, not cramped
+
+B. FOOTER BRAND LOCKUP
+Footer can be slightly larger than navbar.
+Use either:
+- the same icon + wordmark lockup at a slightly larger scale
+OR
+- the approved horizontal logo if it fits cleanly and remains clearly readable
+
+Priority is readability first, not forced asset consistency.
+
+C. DUAL-THEME SUPPORT
+Light mode:
+- brand should feel crisp on the light nav/footer surface
+- no washed-out icon
+- no tiny unreadable wordmark
+
+Dark mode:
+- retain dark-safe treatment
+- no white box artifact
+- no low-contrast mark/text
+- maintain premium appearance
+
+D. FAVICON
+Keep the new PlainPath-branded favicon if already correct.
+No need to redesign it unless current file is inconsistent with the updated mark.
+
+PREFERRED IMPLEMENTATION DIRECTION
+Do NOT simply enlarge the current full-width PNG in the navbar.
+Instead:
+1. Extract/use the icon mark from the approved logo
+2. Pair it with a clean wordmark “PlainPath”
+3. Build a reusable LogoBrand component or equivalent compact lockup for navbar/footer
+4. Keep it responsive and dual-theme aware
+
+IF A REAL ASSET SPLIT IS NEEDED
+You may create/use:
+- one compact icon asset
+- one horizontal/full logo asset
+- one lockup component that chooses the right treatment by context
+
+SUCCESS CRITERIA
+This pass is successful only if:
+- navbar logo is immediately readable
+- footer logo is readable and balanced
+- light mode and dark mode both look intentional
+- no clipping, collision, or crowding
+- no regressions to approved layout/sections
+- no product artifact touched
+
+MANDATORY RETURN FORMAT
+Return:
+1. files changed
+2. exact logo implementation used in navbar
+3. exact logo implementation used in footer
+4. light-mode screenshot of navbar
+5. dark-mode screenshot of navbar
+6. light-mode screenshot of footer
+7. dark-mode screenshot of footer
+8. confirmation that:
+   - navbar logo is no longer tiny
+   - wordmark is readable
+   - mobile header remains clean
+   - dark mode remains artifact-free
