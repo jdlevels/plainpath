@@ -281,11 +281,11 @@ export default function Home() {
                   comingSoon ? (
                     <span
                       key={label}
-                      className={`${cls} flex items-center gap-1.5 px-3 py-2.5 rounded-xl border text-xs sm:text-sm font-medium w-full pointer-events-none select-none`}
+                      className="relative flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-dashed border-slate-300 dark:border-slate-600 bg-white/60 dark:bg-slate-800/30 text-xs sm:text-sm font-medium w-full pointer-events-none select-none text-slate-400 dark:text-slate-500"
                     >
-                      <Icon className="w-3.5 h-3.5 shrink-0" />
-                      <span className="leading-tight">{label}</span>
-                      <span className="ml-auto text-[10px] font-semibold opacity-60 hidden sm:inline">Soon</span>
+                      <Icon className="w-3.5 h-3.5 shrink-0 opacity-50" />
+                      <span className="leading-tight truncate">{label}</span>
+                      <span className="ml-auto shrink-0 text-[9px] font-bold tracking-wide bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded-full">SOON</span>
                     </span>
                   ) : (
                     <a
