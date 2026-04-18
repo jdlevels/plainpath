@@ -967,7 +967,7 @@ export default function Home() {
               <p className="text-muted-foreground leading-relaxed mb-4">
                 We don't sell your data. We don't train AI on your documents.
                 Your contracts, bills, and notices belong to you.
-                We process them to give you answers — then they stay secure.
+                We process them to give you answers — then we discard them.
               </p>
               <div className="flex flex-wrap gap-5 text-sm font-medium text-foreground">
                 {["Not sold", "Not shared", "Not used for training", "Encrypted in transit"].map(item => (
@@ -1011,7 +1011,7 @@ export default function Home() {
           <div className="flex flex-wrap justify-center gap-4 mb-6">
             <a
               href="/app/analyze"
-              className="inline-flex items-center gap-2 bg-primary text-white rounded-xl px-6 h-13 text-sm font-semibold hover:opacity-90 transition-opacity"
+              className="inline-flex items-center gap-2 bg-primary text-white rounded-xl px-6 py-3 text-sm font-semibold hover:opacity-90 transition-opacity"
             >
               Try it free — no account needed <ArrowRight className="w-4 h-4" />
             </a>

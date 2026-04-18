@@ -74,7 +74,7 @@ export function Navbar() {
         </a>
 
         {/* Desktop nav */}
-        <div className="hidden md:flex items-center gap-1">
+        <div className="hidden lg:flex items-center gap-1">
 
           {/* Tools dropdown */}
           <div className="relative" ref={toolsRef}>
@@ -127,13 +127,13 @@ export function Navbar() {
 
           <a
             href="/app/sign-in"
-            className="hidden md:block text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-2"
+            className="hidden lg:block text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-2"
           >
             Log in
           </a>
 
           <Button
-            className="rounded-full px-5 font-medium shadow-sm hidden md:flex"
+            className="rounded-full px-5 font-medium shadow-sm hidden lg:flex"
             asChild
           >
             <a href="/app/analyze">Get the App</a>
@@ -143,7 +143,7 @@ export function Navbar() {
           <button
             onClick={() => setMobileOpen(v => !v)}
             aria-label={mobileOpen ? "Close menu" : "Open menu"}
-            className="md:hidden w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors border-0 bg-transparent cursor-pointer"
+            className="lg:hidden w-9 h-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors border-0 bg-transparent cursor-pointer"
           >
             {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -152,7 +152,7 @@ export function Navbar() {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="md:hidden bg-background border-b border-border/50 px-5 pt-2 pb-5 space-y-1">
+        <div className="lg:hidden bg-background border-b border-border/50 px-5 pt-2 pb-5 space-y-1">
 
           {/* Tools accordion */}
           <button
