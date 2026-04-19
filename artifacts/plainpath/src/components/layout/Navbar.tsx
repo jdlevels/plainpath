@@ -96,7 +96,7 @@ function UserMenu() {
             Plan &amp; Billing
           </Link>
           <button
-            onClick={() => { setOpen(false); signOut({ redirectUrl: "/" }) }}
+            onClick={async () => { setOpen(false); await signOut(); window.location.href = "/"; }}
             className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
           >
             <LogOut className="w-3.5 h-3.5" />
