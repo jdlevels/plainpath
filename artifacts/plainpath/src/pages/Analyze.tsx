@@ -37,6 +37,7 @@ import { isNative } from "@/lib/platform"
 import { getApiBaseUrl } from "@/lib/api"
 import { saveAnalysis, updateSaved } from "@/lib/savedAnalyses"
 import { saveCloudAnalysis, renameCloudAnalysis } from "@/lib/cloudHistory"
+import { createUserDocument, attachToolRun } from "@/lib/userDocsApi"
 import { useUser } from "@clerk/react"
 import { useEntitlements } from "@/hooks/useEntitlements"
 import UpgradeCard from "@/components/UpgradeCard"
@@ -65,6 +66,7 @@ export default function Analyze() {
   const { analysis, documentTypeHint, setAnalysis, clearAnalysis, updateActionStep, updateRequiredDoc } = useAnalysisContext()
   const [activeTab, setActiveTab] = useState(tabParam ?? "plain-english")
   const [savedId, setSavedId] = useState<string | null>(null)
+  const [documentId, setDocumentId] = useState<string | null>(null)
   const [justSaved, setJustSaved] = useState(false)
   const [guidedReviewCtx, setGuidedReviewCtx] = useState<string | null>(null)
   const tabListRef = useRef<HTMLDivElement>(null)
@@ -174,6 +176,21 @@ export default function Analyze() {
           })
           setSavedId(saved.id)
           triggerFeedback()
+          // Fire-and-forget: create/link a document record in My Documents
+          if (!documentId && !demoId) {
+            createUserDocument({
+              title: analysis.title,
+              sourceKind: "analyze",
+            }).then(doc => {
+              setDocumentId(doc.id)
+              return attachToolRun(doc.id, {
+                tool: "analyze",
+                outputRef: saved.id,
+                outputKind: "analysis",
+                resultSummary: analysis.title,
+              })
+            }).catch(() => {})
+          }
         } catch {
           const saved = saveAnalysis({
             title: analysis.title,

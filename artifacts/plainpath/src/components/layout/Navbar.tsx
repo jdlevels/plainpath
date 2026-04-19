@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter"
 import { Button } from "@/components/ui/button"
 import {
   FileText, Plus, BookMarked, GitCompare, LogOut, User, ChevronDown,
-  LayoutGrid, ShieldCheck, PenLine, Scale, Menu, X, LayoutDashboard, CreditCard, EyeOff, FileSignature,
+  LayoutGrid, ShieldCheck, PenLine, Scale, Menu, X, LayoutDashboard, CreditCard, EyeOff, FileSignature, FolderOpen,
 } from "lucide-react"
 
 import { ThemeToggle } from "@/components/ui/ThemeToggle"
@@ -118,6 +118,7 @@ export function Navbar() {
 
   const isResults = location.startsWith("/results")
   const isMyAnalyses = location === "/my-analyses"
+  const isDocuments = location === "/documents"
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -180,6 +181,17 @@ export function Navbar() {
                 </div>
             )}
           </div>
+
+          {/* My Documents */}
+          {!isDocuments && (
+            <Link
+              href="/documents"
+              className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-2.5 py-1.5 rounded-lg hover:bg-secondary"
+            >
+              <FolderOpen className="w-3.5 h-3.5" />
+              My Documents
+            </Link>
+          )}
 
           {/* My Analyses */}
           {!isMyAnalyses && (
@@ -258,6 +270,15 @@ export function Navbar() {
               </button>
             ))}
             <div className="border-t border-border/30 mt-2 pt-2">
+              <button
+                onClick={() => navigate("/documents")}
+                className={`w-full flex items-center gap-2.5 px-2.5 py-2 text-sm rounded-lg transition-colors text-left ${
+                  isDocuments ? "text-primary bg-primary/8 font-medium" : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                }`}
+              >
+                <FolderOpen className="w-4 h-4 shrink-0" />
+                My Documents
+              </button>
               <button
                 onClick={() => navigate("/my-analyses")}
                 className={`w-full flex items-center gap-2.5 px-2.5 py-2 text-sm rounded-lg transition-colors text-left ${

@@ -18,6 +18,7 @@ import eventsRouter from "./routes/events.js";
 import userHistoryRoutes from "./routes/userHistory/index.js";
 import teamRoutes from "./routes/teams/index.js";
 import signatureRoutes from "./routes/signatures/index.js";
+import userDocsRoutes from "./routes/userDocs/index.js";
 import { logger } from "./lib/logger";
 
 const app: Express = express();
@@ -189,6 +190,7 @@ app.use("/api/help", helpRoutes);
 app.use("/api/user", userHistoryRoutes);
 app.use("/api/teams", teamRoutes);
 app.use("/api/signatures", signatureRoutes);
+app.use("/api/user/documents", userDocsRoutes);
 
 app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
   if (err instanceof multer.MulterError) {

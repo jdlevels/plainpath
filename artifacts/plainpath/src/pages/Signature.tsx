@@ -268,6 +268,24 @@ function NewRequestWizard({
   const [sending, setSending] = useState(false)
   const [sendError, setSendError] = useState<string | null>(null)
 
+  // Pre-load document from My Documents navigation
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem("pp_sig_doc")
+      if (raw) {
+        sessionStorage.removeItem("pp_sig_doc")
+        const doc = JSON.parse(raw) as { title?: string; extractedText?: string | null; originalFilename?: string | null }
+        if (doc.extractedText) {
+          setDocumentText(doc.extractedText)
+          setDocumentName(doc.title ?? doc.originalFilename ?? "Document")
+          setInputMode("text")
+        } else if (doc.title) {
+          setDocumentName(doc.title)
+        }
+      }
+    } catch { /* ignore */ }
+  }, [])
+
   const step1Valid =
     inputMode === "upload" ? Boolean(file) : Boolean(documentText.trim()) && Boolean(documentName.trim())
   const step2Valid = Boolean(signerName.trim()) && Boolean(signerEmail.trim()) && /\S+@\S+\.\S+/.test(signerEmail)
@@ -1081,6 +1099,15 @@ export default function Signature() {
   const { entitlements, isAdmin, loading } = useEntitlements()
   const [view, setView] = useState<"list" | "mode" | "new" | "prepare" | "detail">("list")
   const [selectedId, setSelectedId] = useState<string | null>(null)
+
+  // Auto-navigate to Quick Send if arriving from My Documents
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem("pp_sig_doc")) {
+        setView("new")
+      }
+    } catch { /* ignore */ }
+  }, [])
 
   const canUse =
     isAdmin ||

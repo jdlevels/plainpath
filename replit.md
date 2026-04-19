@@ -111,6 +111,38 @@ PlainPath is built as a monorepo using pnpm workspaces.
 7.  **Document Comparison**: Allows comparison of two document versions, highlighting changes and their significance (added, removed, modified, risk-increased/decreased).
 8.  **Digital Signature** (Pro-only): End-to-end e-signature workflow via Dropbox Sign. Two modes selectable on "New Request": (a) **Quick Send** — 3-step wizard (upload document → signer details → review & send) supporting PDF/DOCX/TXT; (b) **Prepare & Place** — PDF document workspace split-view with click-to-place fields (signature, initials, date_signed, name, title, text), drag-to-reposition, 4-corner resize handles, right sidebar with field palette + signer setup + send. Field coordinates stored as fractions (0..1) of page and converted to PDF points for DS API (with y-flip for bottom-left origin). Status timeline with audit trail, download signed documents, HMAC-SHA256 webhook verification. Tables: `signature_requests` + `signature_request_events` in PostgreSQL (field placements stored in metadata JSONB). Frontend: `Signature.tsx` (ListView + ModePicker + NewRequestWizard + PrepareAndPlace + DetailView), `PrepareAndPlace.tsx`, `PdfSignatureWorkspace.tsx`; client at `signatureApi.ts`. Routes at `/api/signatures` including `/send` and `/send-prepared`. DROPBOX_SIGN_API_KEY required; defaults to test mode (DROPBOX_SIGN_TEST_MODE != "false").
 
+### Document-First Architecture (Sprint 2)
+
+PlainPath is migrating from a tool-first model to a **document-first model** where one uploaded document becomes a persistent, reusable asset across tools.
+
+**Phase 1 (Implemented):**
+- **`documents` table** (PostgreSQL): id, user_id, title, source_kind, mime_type, original_filename, extracted_text, status, created_at, updated_at, metadata — owned per-user, soft-deleted.
+- **`document_tool_runs` table** (PostgreSQL): id, document_id (CASCADE), user_id, tool, output_ref, output_kind, result_summary, created_at, metadata — links any tool run to a document.
+- **`/api/user/documents` routes**: GET (list with tool run aggregation), GET /:id (detail + runs), POST (create), PATCH /:id (rename), DELETE /:id (soft delete), POST /:id/tool-run (attach a run).
+- **`userDocsApi.ts`**: Typed frontend client for all document routes.
+- **`Documents.tsx`** (`/app/documents`): "My Documents" library — shows all user documents with tool badges, rename, delete, "View Analysis" and "Send for Signature" cross-tool actions.
+- **Navbar**: "My Documents" link added to desktop nav and mobile menu.
+- **Analyze → Documents**: When a user cloud-saves an analysis, a document record is auto-created and the analysis tool run is attached (fire-and-forget, no blast radius on existing save flow).
+- **Documents → Signature**: "Send for Signature" sets `pp_sig_doc` sessionStorage key; Signature page reads it to auto-navigate to Quick Send and pre-fill document name/text.
+- **Documents → Analyze**: "View Analysis" reloads the saved analysis into context from cloud history and navigates to /results.
+
+**Phase 2 (Planned — requires object storage):**
+- Store raw binary file content in App Storage (not just extracted text)
+- `document_versions` table for Redact output (redacted vs. original versions)
+- Full document workspace page (`/app/documents/:id`) with embedded PDF viewer
+- Contract Builder output creates a document record
+- Full cross-tool binary file reuse without re-upload
+
+**Phase 3 (Future):**
+- PDF document builder/composer (text fields, checkboxes, date fields, signature fields, reusable templates)
+- Template system for recurring document types
+
+**Cross-tool sessionStorage keys:**
+- `pii_analyze_text` — Redact → Analyze/Trust Check text handoff
+- `pii_contract_review_text` — Redact → Contract Review
+- `pp_sig_doc` — My Documents → Signature (JSON: {id, title, extractedText, originalFilename, mimeType})
+- `pp_doc_open` — My Documents → Analyze (JSON: {id, title, extractedText})
+
 ### Payment and Billing
 -   Full billing architecture implemented in test mode with Stripe, supporting Starter ($4.99/month) and Pro ($19.99/month) tiers. Starter = Analyze a Document + Redact Sensitive Info. Pro = all 6 tools (including Digital Signature). PAYWALL_ENFORCEMENT is ON — gating is live. STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET must be added to secrets before payments go live.
 -   Native billing abstraction scaffold built for iOS/Android using RevenueCat (account setup pending — see `docs/store/05-revenuecat-config.md`).

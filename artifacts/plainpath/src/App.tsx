@@ -29,6 +29,7 @@ import Redact from "@/pages/Redact";
 import Billing from "@/pages/Billing";
 import Upgrade from "@/pages/Upgrade";
 import Signature from "@/pages/Signature";
+import Documents from "@/pages/Documents";
 import Methodology from "@/pages/Methodology";
 import IrsLetter from "@/pages/guides/IrsLetter";
 import LeaseAgreement from "@/pages/guides/LeaseAgreement";
@@ -234,6 +235,7 @@ function Router() {
             <Route path="/billing" component={protect(Billing)} />
             <Route path="/upgrade" component={protect(Upgrade)} />
             <Route path="/signature" component={protect(Signature)} />
+            <Route path="/documents" component={protect(Documents)} />
 
             <Route component={NotFound} />
           </Switch>
