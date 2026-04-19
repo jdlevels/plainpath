@@ -61,6 +61,11 @@ export default function BuilderNew() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  useEffect(() => {
+    document.title = "New Document — Document Builder — PlainPath"
+    return () => { document.title = "PlainPath" }
+  }, [])
+
   // Auto-focus title when entering blank mode
   useEffect(() => {
     if (mode === "blank") {

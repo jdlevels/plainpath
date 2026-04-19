@@ -409,7 +409,13 @@ export default function Documents() {
         {/* Footer hint */}
         {!loading && !error && docs.length > 0 && (
           <p className="text-center text-xs text-muted-foreground mt-8">
-            Documents are saved automatically when you work with them across PlainPath tools.
+            Documents are saved automatically when you work with them across PlainPath tools.{" "}
+            <button
+              onClick={() => navigate("/builder")}
+              className="underline underline-offset-2 hover:text-foreground transition-colors"
+            >
+              Looking for Builder documents?
+            </button>
           </p>
         )}
       </div>

@@ -38,6 +38,11 @@ export default function BuilderList() {
     });
   }, [api.listDocuments]);
 
+  useEffect(() => {
+    document.title = "Document Builder — PlainPath"
+    return () => { document.title = "PlainPath" }
+  }, [])
+
   useEffect(() => { load(); }, [load]);
 
   return (

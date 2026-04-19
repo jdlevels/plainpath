@@ -184,18 +184,7 @@ export function Navbar() {
             )}
           </div>
 
-          {/* My Documents */}
-          {!isDocuments && (
-            <Link
-              href="/documents"
-              className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-2.5 py-1.5 rounded-lg hover:bg-secondary"
-            >
-              <FolderOpen className="w-3.5 h-3.5" />
-              My Documents
-            </Link>
-          )}
-
-          {/* Document Builder */}
+            {/* Document Builder */}
           {BUILDER_ENABLED && (
             <Link
               href="/builder"
@@ -210,16 +199,31 @@ export function Navbar() {
             </Link>
           )}
 
+          {/* My Documents */}
+          <Link
+            href="/documents"
+            className={`flex items-center gap-1.5 text-sm font-medium transition-colors px-2.5 py-1.5 rounded-lg ${
+              isDocuments
+                ? "text-primary bg-primary/8"
+                : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+            }`}
+          >
+            <FolderOpen className="w-3.5 h-3.5" />
+            My Documents
+          </Link>
+
           {/* My Analyses */}
-          {!isMyAnalyses && (
-            <Link
-              href="/my-analyses"
-              className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-2.5 py-1.5 rounded-lg hover:bg-secondary"
-            >
-              <BookMarked className="w-3.5 h-3.5" />
-              My Analyses
-            </Link>
-          )}
+          <Link
+            href="/my-analyses"
+            className={`flex items-center gap-1.5 text-sm font-medium transition-colors px-2.5 py-1.5 rounded-lg ${
+              isMyAnalyses
+                ? "text-primary bg-primary/8"
+                : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+            }`}
+          >
+            <BookMarked className="w-3.5 h-3.5" />
+            My Analyses
+          </Link>
 
           {/* New Analysis — shown on results page */}
           {isResults && (
@@ -287,6 +291,17 @@ export function Navbar() {
               </button>
             ))}
             <div className="border-t border-border/30 mt-2 pt-2">
+              {BUILDER_ENABLED && (
+                <button
+                  onClick={() => navigate("/builder")}
+                  className={`w-full flex items-center gap-2.5 px-2.5 py-2 text-sm rounded-lg transition-colors text-left ${
+                    isBuilder ? "text-primary bg-primary/8 font-medium" : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                  }`}
+                >
+                  <PenLine className="w-4 h-4 shrink-0" />
+                  Builder
+                </button>
+              )}
               <button
                 onClick={() => navigate("/documents")}
                 className={`w-full flex items-center gap-2.5 px-2.5 py-2 text-sm rounded-lg transition-colors text-left ${
@@ -305,17 +320,6 @@ export function Navbar() {
                 <BookMarked className="w-4 h-4 shrink-0" />
                 My Analyses
               </button>
-              {BUILDER_ENABLED && (
-                <button
-                  onClick={() => navigate("/builder")}
-                  className={`w-full flex items-center gap-2.5 px-2.5 py-2 text-sm rounded-lg transition-colors text-left ${
-                    isBuilder ? "text-primary bg-primary/8 font-medium" : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-                  }`}
-                >
-                  <PenLine className="w-4 h-4 shrink-0" />
-                  Document Builder
-                </button>
-              )}
               <a
                 href="/"
                 className="w-full flex items-center gap-2.5 px-2.5 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors"

@@ -4,8 +4,9 @@ import {
   ArrowRight, ShieldCheck, FileSignature,
   PenLine, FileScan, Scale, EyeOff,
   BookMarked, Clock, ChevronRight, CreditCard,
-  LayoutGrid, Pen, GitCompare,
+  LayoutGrid, GitCompare,
 } from "lucide-react"
+import { BUILDER_ENABLED } from "@/lib/builderConfig"
 import { useState, useEffect } from "react"
 import { useUser } from "@clerk/react"
 import { Button } from "@/components/ui/button"
@@ -47,6 +48,17 @@ const TOOLS = [
     bg: "bg-red-50 dark:bg-red-950/50",
     ring: "hover:border-red-400/50 hover:shadow-red-500/10",
     plan: "pro" as const,
+  },
+  {
+    key: "builder" as const,
+    label: "Document Builder",
+    desc: "Create structured documents from scratch or a template, then route them into any PlainPath tool.",
+    icon: PenLine,
+    path: "/builder",
+    color: "text-indigo-500 dark:text-indigo-400",
+    bg: "bg-indigo-50 dark:bg-indigo-950/50",
+    ring: "hover:border-indigo-400/50 hover:shadow-indigo-500/10",
+    plan: null,
   },
   {
     key: "build-contract" as const,
@@ -284,8 +296,8 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {TOOLS.map((tool, i) => {
-              const accessible = canAccessTool(tool.key)
+            {TOOLS.filter(t => t.key !== "builder" || BUILDER_ENABLED).map((tool, i) => {
+              const accessible = tool.key === "builder" ? BUILDER_ENABLED : canAccessTool(tool.key)
               const locked = !accessible && !!entitlements
 
               return (

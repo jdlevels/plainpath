@@ -102,6 +102,12 @@ export default function Workspace({ docId }: WorkspaceProps) {
   // Archive confirm
   const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
 
+  // Dynamic page title
+  useEffect(() => {
+    document.title = title ? `${title} — Document Builder — PlainPath` : "Document Builder — PlainPath"
+    return () => { document.title = "PlainPath" }
+  }, [title])
+
   // Load document
   useEffect(() => {
     let cancelled = false;
