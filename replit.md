@@ -14,6 +14,77 @@ Do not make changes to the file `artifacts/api-server/src/lib/trustCheckDemoData
 Do not make changes to the file `artifacts/api-server/src/lib/demoData.ts`.
 Do not make changes to the file `artifacts/plainpath/APP_STORE_METADATA.md`.
 
+## Standing Engineering Rules
+
+These rules apply to all future PlainPath implementation work unless explicitly overridden.
+
+### 1. Product Architecture Discipline
+- Marketing always at `/`; protected product always under `/app`
+- New tool pages must live inside the `/app` shell unless explicitly approved
+- Reuse existing routing, navigation, page layout, and history patterns
+
+### 2. Server + Client Entitlement Enforcement
+- All plan/tool access enforced in both frontend UX AND backend/API routes — UI locks alone are never sufficient
+- Protected endpoints must verify auth and plan entitlement server-side
+- Do not change the access matrix unless explicitly instructed
+
+### 3. Design System Consistency
+- Reuse the existing PlainPath card system, spacing, button styles, status badges, and locked-tool patterns
+- Do not introduce one-off visual systems without approval
+- New pages must visually match the existing product shell
+
+### 4. TypeScript Contract Discipline
+- Keep shared types aligned across DB, API, and frontend
+- Avoid `any`, `never`, or patch casts unless absolutely necessary
+- Update union types, entity types, response types, and tool keys when features expand
+- Prefer explicit typed contracts over implicit shape assumptions
+
+### 5. Status Normalization
+- Keep normalized app statuses separate from raw provider/vendor statuses
+- Persist workflow states cleanly; timestamp major state transitions
+- Never fabricate status history from UI assumptions
+
+### 6. Audit Trail + Event Logging
+- Workflow-changing actions must persist event history where appropriate
+- Preserve raw provider event names and payloads
+- User-visible timelines must be based on stored events, not invented UI states
+- Implement dedupe/idempotency for webhook/event processing
+
+### 7. Webhook and Integration Safety
+- Verify callback authenticity where supported (HMAC etc.)
+- Handle duplicate deliveries safely with stable dedupe keys
+- Never expose provider secrets to the client
+- Build integrations with clear test-mode/live-mode behavior
+
+### 8. Schema + Data Hygiene
+- New workflow features require explicit schema design
+- Add indexes, constraints, timestamps, and dedupe keys intentionally
+- Avoid loose ad hoc persistence patterns
+- Prefer consistent entity naming and storage conventions
+
+### 9. File Handling Discipline
+- Validate upload type and size; reuse secure upload/storage patterns
+- Do not assume uploaded files are valid
+- Handle download/proxy flows safely and explicitly
+
+### 10. Responsive Completion Standard
+- Do not mark features complete without checking desktop, tablet, and mobile layouts
+- Verify loading, empty, locked, and error states in all views
+
+### 11. Runtime Config State Handling
+- Distinguish clearly between: (a) feature built, (b) feature live, (c) feature blocked by missing credentials/config
+- **Never label a built feature as "coming soon" just because credentials are missing**
+- Show real configuration-dependent states (e.g. "Provider configuration required" banner) instead
+- For all provider-backed features: persist local draft first → persist provider IDs/metadata after send → normalize provider states into app states → persist raw provider events → use webhook-driven updates when available → handle missing credentials as a configuration state
+
+### 12. Regression Prevention
+- Do not rewrite unrelated completed sections unless required
+- Do not disturb marketing, auth, billing, or other stable tools unless explicitly instructed
+- Minimize blast radius on every sprint
+
+### Implementation Sequence (apply to every feature)
+inspect existing architecture → identify exact reuse points → implement with minimal blast radius → verify route/auth/plan enforcement → verify responsive behavior → report exact files read and changed
+
 ## System Architecture
 
 PlainPath is built as a monorepo using pnpm workspaces.
