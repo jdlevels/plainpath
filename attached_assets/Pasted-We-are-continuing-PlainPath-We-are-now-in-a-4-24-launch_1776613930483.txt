@@ -1,0 +1,102 @@
+We are continuing PlainPath.
+
+We are now in a 4/24 launch sprint.
+
+This pass is NOT for a full long-term architecture rewrite.
+Do NOT attempt the full “document operating system” or Adobe-style builder in this pass.
+Do NOT destabilize the app with a deep migration unless absolutely required.
+
+NEW PRIORITY
+Build the minimum strong cross-tool document connectivity needed for launch.
+
+PRODUCT GOAL
+PlainPath should feel document-connected, not like 6 isolated upload tools.
+
+For launch, implement a lightweight cross-tool document bridge so users can reuse the same document or generated output across tools without unnecessary re-uploading.
+
+TARGET TOOLS
+- Analyze a Document
+- Redact Sensitive Info
+- Digital Signature
+- Build a Contract
+
+GOAL OF THIS PASS
+Create the minimum reusable document handoff system that allows users to:
+- open a recent document or generated output
+- send it into another tool
+- continue working without starting over
+
+IMPORTANT SCOPE RULE
+Do not do a full deep shared-document-platform rebuild in this pass.
+Do the smallest stable implementation that creates real cross-tool continuity for launch.
+
+REQUIRED WORK
+
+1. INSPECT CURRENT INPUT/OUTPUT FLOWS
+Read the current flows for:
+- Analyze
+- Redact
+- Digital Signature
+- Build a Contract
+Identify:
+- how each tool accepts input
+- what each tool outputs
+- what recent work/history data already exists
+- what can be reused with minimal blast radius
+
+2. BUILD A LIGHTWEIGHT DOCUMENT HANDOFF LAYER
+Implement a practical launch-safe system so a user can take a current document or recent output and open it in another tool.
+
+At minimum support actions like:
+- Open in Analyze
+- Open in Redact
+- Open in Signature
+- Open in Contract Builder
+
+Use the current data/storage patterns where possible.
+Do not require a full platform migration.
+
+3. RECENT WORK / TOOL HANDOFF
+Upgrade recent work or document result surfaces so supported items can be routed into other tools.
+Examples:
+- an analyzed document can be sent to Redact or Signature
+- a redacted result can be sent to Signature
+- a contract output can be sent to Signature or Analyze
+- a signature source document can be opened in Analyze or Redact where appropriate
+
+4. PRESERVE CURRENT WORKING FLOWS
+Do not break existing single-tool flows.
+This bridge should enhance the app, not replace current working entry paths.
+
+5. KEEP DIGITAL SIGNATURE AS A REAL TOOL
+Do not regress the Digital Signature work.
+The bridge should let Signature consume reusable documents where possible, but do not break the verified send-and-track flow.
+
+6. UI EXPECTATION
+This should feel like a connected product, not a technical hack.
+Use existing PlainPath visual language.
+Prefer simple clear actions over complicated new navigation.
+
+7. LAUNCH-SAFE APPROACH
+If some tools do not yet persist reusable file artifacts in a strong way, implement the best minimal bridge possible using:
+- recent work references
+- source text references
+- saved outputs
+- handoff payloads
+But do not fake continuity.
+Be honest about what is source-file-based vs generated-output-based.
+
+OUTPUT REQUIRED
+When complete, provide:
+1. exact files read
+2. exact files changed
+3. current isolated flows that existed before this pass
+4. what lightweight cross-tool bridge was built
+5. which tools now cross-connect
+6. what type of document/output each tool can hand off
+7. what is still deferred for the full long-term shared document architecture
+8. desktop/tablet/mobile verification summary
+9. any launch risks created or avoided by this approach
+
+SUCCESS CONDITION
+This pass is successful only if PlainPath now feels meaningfully cross-connected for launch without destabilizing the app through an oversized architecture rewrite.

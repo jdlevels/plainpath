@@ -1,0 +1,194 @@
+We are continuing PlainPath.
+
+I need a complete current-state inventory of the app so we can determine exactly what is finished, what is partially finished, what is blocked, and what should be worked on next.
+
+This is an audit/reporting pass only unless you discover a tiny blocking issue that must be fixed to accurately report status.
+Do NOT do a broad rebuild in this pass.
+Do NOT rewrite unrelated code just because you notice possible improvements.
+Do NOT re-open completed work unless it directly affects the accuracy of this inventory.
+
+CONTEXT
+- PlainPath is targeting app-store submission on 4/26/26
+- The app currently presents as having 6 live tools
+- Digital Signature has recently moved from “coming soon” to a live feature path and has been through activation work
+- We need a precise picture of where the product stands today so we can decide the next highest-value sprint
+
+GOAL
+Produce a complete, structured PlainPath status report covering:
+- what is fully complete
+- what is partially complete
+- what is implemented but not yet operationally verified
+- what is blocked by credentials/config/external setup
+- what is still missing
+- what should be worked on next in priority order
+
+REQUIRED INSPECTION AREAS
+
+1. PRODUCT ROUTES + APP STRUCTURE
+Inspect:
+- public marketing routes
+- protected /app routes
+- current tool routes
+- current nav/tool launcher wiring
+- auth guard behavior
+- logout redirect behavior
+
+2. TOOL INVENTORY
+Inspect all 6 live tools and any supporting product pages.
+For each tool, determine:
+- route/path
+- purpose
+- current entry points
+- input flow
+- output flow
+- saved history integration
+- plan gating behavior
+- current completion state
+
+3. PLAN / ENTITLEMENT SYSTEM
+Inspect:
+- Free plan behavior
+- Starter plan behavior
+- Pro plan behavior
+- frontend gating
+- backend/server enforcement
+- any mismatches between copy and real enforcement
+
+4. DIGITAL SIGNATURE
+Inspect specifically:
+- current route/pages
+- request creation flow
+- provider integration
+- status model
+- history/detail/audit trail
+- webhook route
+- signed file retrieval
+- whether it is code-complete, test-mode operational, or still blocked
+
+5. DOCUMENT FLOW / CROSS-TOOL REUSE
+Inspect whether the app is currently:
+- tool-isolated
+- partially cross-connected
+- or using any reusable document handoff pattern already
+Identify what exists right now, not what is planned.
+
+6. STORAGE / DATABASE / FILE HANDLING
+Inspect:
+- document storage approach
+- saved work/history models
+- tool-specific persistence
+- signature tables/events if present
+- contract/redaction/analyze output persistence
+- anything relevant to cross-tool reuse
+
+7. RESPONSIVE / UI COMPLETION
+Inspect overall completion quality for:
+- desktop
+- tablet
+- mobile
+Note any areas that are clearly unfinished, broken, cramped, or inconsistent.
+
+8. INTEGRATION / ENVIRONMENT STATUS
+Inspect actual integrations and runtime dependencies:
+- Dropbox Sign
+- auth
+- payments/gating related runtime dependencies if relevant to live flows
+- any missing env vars or external configuration still required
+
+9. KNOWN BLOCKERS
+Identify only real blockers that affect:
+- launch readiness
+- live-tool integrity
+- app-store readiness
+- operational verification
+
+IMPORTANT REPORTING RULES
+- Report what is ACTUALLY in the codebase now
+- Separate “implemented” from “verified”
+- Separate “built” from “externally activated”
+- Do not exaggerate
+- Do not mark something complete if it still depends on missing config, missing testing, or broken flows
+- Be precise and honest
+
+REQUIRED OUTPUT FORMAT
+
+1. EXACT FILES READ
+List every file inspected during this pass
+
+2. EXACT FILES CHANGED
+List every file changed in this pass
+If none, say NONE
+
+3. CURRENT PRODUCT ROUTE MAP
+List the current important routes and what each one does
+
+4. TOOL-BY-TOOL STATUS TABLE
+For each live tool, provide:
+- tool name
+- route
+- plan access
+- current status:
+  - complete
+  - mostly complete
+  - partial
+  - blocked
+- what works
+- what is not verified yet
+- history/recent-work integration: yes/no
+- mobile/tablet readiness: yes/no/partial
+
+5. DIGITAL SIGNATURE STATUS
+State exactly one:
+- code-complete only
+- test-mode operational
+- fully verified in provider-backed test mode
+- blocked by exact issue
+Then explain:
+- what works
+- what was verified
+- what is still blocked if anything
+
+6. PLAN / GATING STATUS
+State the exact current matrix for:
+- Free
+- Starter
+- Pro
+And confirm whether enforcement is:
+- frontend only
+- backend only
+- both frontend and backend
+
+7. DOCUMENT CONNECTIVITY STATUS
+State whether the app currently has:
+- isolated per-tool uploads
+- lightweight cross-tool reuse
+- partial shared document behavior
+- full shared document architecture
+Then explain exactly what exists today
+
+8. STORAGE / PERSISTENCE STATUS
+Summarize how the app currently stores:
+- uploaded documents
+- saved tool outputs
+- recent work/history
+- digital signature requests/events
+- any reusable artifacts
+
+9. RESPONSIVE / QA STATUS
+Summarize current readiness for:
+- desktop
+- tablet
+- mobile
+And list the top UI/UX issues still remaining
+
+10. LAUNCH BLOCKERS ONLY
+List only blockers that matter for 4/26 submission
+
+11. RECOMMENDED NEXT WORK IN PRIORITY ORDER
+Give the next work items in order, grouped as:
+- Critical before launch
+- Important if time remains
+- Post-submission
+
+SUCCESS CONDITION
+This pass is successful only if it gives a reliable, code-based current-state inventory that we can use to decide the next sprint without guessing.

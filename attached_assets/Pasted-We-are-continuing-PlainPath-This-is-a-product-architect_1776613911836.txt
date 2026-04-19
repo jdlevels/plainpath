@@ -1,0 +1,98 @@
+We are continuing PlainPath.
+
+This is a product architecture shift, not a cosmetic feature tweak.
+
+NEW CORE PRODUCT RULE
+PlainPath must become document-first, not tool-first.
+
+A user should upload a document once, and that same document should be reusable across multiple PlainPath tools:
+- Analyze a Document
+- Redact Sensitive Info
+- Digital Signature
+- Build a Contract
+- future tools as well
+
+This cross-connection is now a key product requirement.
+
+GOAL
+Design and begin implementing a shared document architecture so one uploaded document becomes a persistent reusable asset across tools, with versions, tool runs, and outputs attached to it.
+
+PRODUCT PRINCIPLE
+Do not treat each tool as owning its own isolated upload anymore.
+Instead:
+- one canonical document record
+- tools operate on that document
+- tool outputs become artifacts or versions attached to the same document
+- users can move the document between tools without re-uploading
+
+REQUIRED ARCHITECTURE DIRECTION
+
+1. SHARED DOCUMENT MODEL
+Inspect the current upload/storage patterns across:
+- Analyze
+- Redact
+- Digital Signature
+- Build a Contract
+Then design a shared model with at minimum:
+- documents
+- document_versions
+- tool_runs or tool_artifacts
+- document-to-tool relationships if needed
+
+2. DOCUMENT WORKSPACE DIRECTION
+Plan a document workspace experience where a user can:
+- open a document
+- view it
+- see versions/history
+- open it in Analyze
+- open it in Redact
+- open it in Signature
+- open it in Contract Builder
+without re-uploading
+
+3. DIGITAL SIGNATURE INTEGRATION
+Digital Signature must no longer be treated as a disconnected send form.
+It should be able to use:
+- the original uploaded document
+- or a saved version/artifact of that document
+for field placement and sending
+
+4. CONTRACT BUILDER DIRECTION
+Long-term, Build a Contract should create a real document artifact that enters the same document system and can then be:
+- analyzed
+- redacted
+- signed
+- exported
+
+5. LONG-TERM PDF BUILDER DIRECTION
+Prepare the architecture for a future document builder / interactive PDF composer that supports:
+- text fields
+- checkboxes
+- date fields
+- signature fields
+- custom sections/tabs
+- reusable templates
+Do not build the full composer yet unless there is already a simple reuse path.
+But the architecture should not block it.
+
+6. DELIVERY APPROACH
+Do not attempt an Adobe-scale builder in one pass.
+Instead:
+- preserve current working tools
+- identify the current isolated upload logic
+- define the reusable document spine
+- implement the first practical cross-tool connections with minimal blast radius
+
+OUTPUT REQUIRED
+Provide:
+1. exact files read
+2. exact files changed
+3. what current upload/storage model exists today
+4. proposed shared document architecture
+5. what can be implemented now with minimal risk
+6. how Analyze, Redact, Signature, and Contract Builder will connect to the same document
+7. what must wait for a later document-builder phase
+8. any migration risk or launch risk
+
+SUCCESS CONDITION
+This pass is successful only if PlainPath is clearly moving toward a shared reusable document model instead of isolated per-tool uploads.

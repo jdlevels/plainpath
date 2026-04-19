@@ -369,7 +369,10 @@ router.post("/send", requireAuth, requireSignaturePlan, upload.single("file"), a
 
     const dsReq = dsData.signature_request as Record<string, unknown>;
     const providerRequestId = dsReq?.signature_request_id as string ?? null;
-    const providerSignatureId = (dsReq?.signatures as any[])?.[0]?.signature_id ?? null;
+    const firstSig = (dsReq?.signatures as any[])?.[0] ?? null;
+    const providerSignatureId = firstSig?.signature_id ?? null;
+    // Dropbox Sign returns the signing URL at the top-level "signing_url" field.
+    const signUrl = ((dsReq as any).signing_url ?? null) as string | null;
 
     // ── Update record to sent ─────────────────────────────────────────────────
     await pool.query(
@@ -378,9 +381,11 @@ router.post("/send", requireAuth, requireSignaturePlan, upload.single("file"), a
            provider_request_id = $1,
            provider_signature_id = $2,
            sent_at = NOW(),
-           updated_at = NOW()
+           updated_at = NOW(),
+           metadata = COALESCE(metadata, '{}'::jsonb) || $4::jsonb
        WHERE id = $3`,
-      [providerRequestId, providerSignatureId, signatureRequestId]
+      [providerRequestId, providerSignatureId, signatureRequestId,
+       JSON.stringify({ sign_url: signUrl, test_mode_sign_url: signUrl })]
     );
 
     // ── Record sent event (idempotent) ────────────────────────────────────────
@@ -431,21 +436,26 @@ router.get("/:id/refresh", requireAuth, requireSignaturePlan, async (req: any, r
       return res.json({ status: r.status, refreshed: false, reason: "provider_fetch_failed" });
     }
 
-    // Map Dropbox Sign status_code to app status.
+    // Map Dropbox Sign response to app status.
+    // DS does NOT return a top-level status_code; instead uses boolean flags.
+    // Per-signature status is in signatures[].status_code.
     // IMPORTANT: only advance to terminal states from polling.
-    // Webhook events (signature_request_viewed etc.) provide more granular status —
-    // never regress from "viewed" → "sent" just because the API reports "awaiting_signature".
-    const dsStatus = String(dsReq.status_code ?? "");
+    // Webhook events provide more granular status — never regress viewed→sent.
+    const dsIsComplete = !!(dsReq as any).is_complete;
+    const dsIsDeclined = !!(dsReq as any).is_declined;
+    const dsHasError = !!(dsReq as any).has_error;
+    const dsExpired = !!(dsReq as any).is_expired;
+    const firstSigStatus = String(((dsReq.signatures as any[])?.[0])?.status_code ?? "");
     let newStatus = r.status;
-    if (dsStatus === "signed" || dsStatus === "all_signed") {
+    if (dsIsComplete) {
       newStatus = "signed";
-    } else if (dsStatus === "declined") {
+    } else if (dsIsDeclined) {
       newStatus = "declined";
-    } else if (dsStatus === "expired") {
+    } else if (dsExpired) {
       newStatus = "expired";
-    } else if (dsStatus === "canceled") {
+    } else if (dsHasError) {
       newStatus = "failed";
-    } else if ((dsStatus === "awaiting_signature" || dsStatus === "pending") && r.status === "draft") {
+    } else if (firstSigStatus === "awaiting_signature" && r.status === "draft") {
       // Only advance from draft → sent; preserve sent/viewed (webhook-driven granular state)
       newStatus = "sent";
     }
@@ -473,10 +483,34 @@ router.get("/:id/refresh", requireAuth, requireSignaturePlan, async (req: any, r
       ).catch(() => {});
     }
 
+    // ── Persist sign_url into metadata if in test mode ────────────────────────
+    // Dropbox Sign returns the signing URL as top-level "signing_url" on the
+    // signature_request object (not inside signatures[]).
+    const refreshSignUrl = ((dsReq as any).signing_url ?? null) as string | null;
+    if (refreshSignUrl && r.test_mode) {
+      await pool.query(
+        `UPDATE signature_requests
+         SET metadata = COALESCE(metadata, '{}'::jsonb) || $1::jsonb
+         WHERE id = $2`,
+        [JSON.stringify({ sign_url: refreshSignUrl }), id]
+      ).catch(() => {});
+    }
+
+    const providerStatus = dsIsComplete
+      ? "signed"
+      : dsIsDeclined
+        ? "declined"
+        : dsExpired
+          ? "expired"
+          : dsHasError
+            ? "error"
+            : firstSigStatus || "awaiting_signature";
+
     return res.json({
       status: newStatus,
       refreshed: true,
-      providerStatus: dsStatus,
+      providerStatus,
+      signUrl: r.test_mode ? refreshSignUrl : null,
     });
   } catch (err) {
     logger.error({ err }, "signatures/refresh failed");
