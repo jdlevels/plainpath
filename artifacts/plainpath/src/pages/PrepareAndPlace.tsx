@@ -322,10 +322,10 @@ export default function PrepareAndPlace({ onBack, onSent }: Props) {
         </div>
       </div>
 
-      {/* Main workspace: left = PDF, right = sidebar */}
-      <div className="flex flex-1 overflow-hidden">
+      {/* Main workspace: left = PDF, right = sidebar (stacks on mobile) */}
+      <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
         {/* Left: PDF viewer */}
-        <div className="flex-1 overflow-y-auto bg-muted/20">
+        <div className="flex-1 min-h-[45vh] md:min-h-0 overflow-y-auto bg-muted/20">
           {pdfFile && (
             <PdfSignatureWorkspace
               pdfFile={pdfFile}
@@ -339,8 +339,8 @@ export default function PrepareAndPlace({ onBack, onSent }: Props) {
           )}
         </div>
 
-        {/* Right: sidebar */}
-        <div className="w-72 xl:w-80 flex-shrink-0 border-l border-border/60 flex flex-col overflow-y-auto bg-background">
+        {/* Right: sidebar — full width on mobile, fixed width on desktop */}
+        <div className="w-full md:w-72 xl:w-80 flex-shrink-0 border-t md:border-t-0 md:border-l border-border/60 flex flex-col overflow-y-auto bg-background max-h-80 md:max-h-none">
 
           {/* Field type palette */}
           <div className="p-3 border-b border-border/40">

@@ -4,7 +4,7 @@ import {
   ArrowRight, ShieldCheck, FileSignature,
   PenLine, FileScan, Scale, EyeOff,
   BookMarked, Clock, ChevronRight, CreditCard,
-  LayoutGrid, Pen,
+  LayoutGrid, Pen, GitCompare,
 } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useUser } from "@clerk/react"
@@ -16,10 +16,12 @@ import { fetchCloudAnalyses } from "@/lib/cloudHistory"
 import type { SavedAnalysis } from "@/lib/savedAnalyses"
 import { listSignatureRequests, STATUS_LABELS, STATUS_COLORS, type SignatureListItem } from "@/lib/signatureApi"
 import type { SignatureStatus } from "@/lib/signatureApi"
+import { getRecentWork, type LocalRecentItem } from "@/lib/recentWork"
 
 type RecentItem =
   | { kind: "analysis"; id: string; title: string; savedAt: string }
   | { kind: "signature"; id: string; title: string; savedAt: string; status: SignatureStatus; signerName: string }
+  | { kind: "local"; id: string; title: string; savedAt: string; tool: LocalRecentItem["tool"] }
 
 // ─── Tool definitions ─────────────────────────────────────────────────────────
 
@@ -78,6 +80,17 @@ const TOOLS = [
     bg: "bg-violet-50 dark:bg-violet-950/50",
     ring: "hover:border-violet-400/50 hover:shadow-violet-500/10",
     plan: null,
+  },
+  {
+    key: "compare" as const,
+    label: "Compare Versions",
+    desc: "Spot every change between two versions of a document — additions, deletions, and risk shifts.",
+    icon: GitCompare,
+    path: "/compare",
+    color: "text-sky-500 dark:text-sky-400",
+    bg: "bg-sky-50 dark:bg-sky-950/50",
+    ring: "hover:border-sky-400/50 hover:shadow-sky-500/10",
+    plan: "pro" as const,
   },
 ]
 
@@ -185,9 +198,17 @@ export default function Home() {
               }))
             : []
 
-        const merged = [...analyses, ...sigs]
+        const localWork: RecentItem[] = getRecentWork().map((lw) => ({
+          kind: "local" as const,
+          id: lw.id,
+          title: lw.title,
+          savedAt: lw.savedAt,
+          tool: lw.tool,
+        }))
+
+        const merged = [...analyses, ...sigs, ...localWork]
           .sort((a, b) => new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime())
-          .slice(0, 4)
+          .slice(0, 6)
 
         if (!cancelled) setRecentWork(merged)
       } catch {
@@ -431,7 +452,7 @@ export default function Home() {
                         </div>
                       </div>
                     </Card>
-                  ) : (
+                  ) : item.kind === "signature" ? (
                     <Card
                       className="group border border-border/50 bg-card hover:border-violet-400/40 hover:shadow-md rounded-2xl cursor-pointer transition-all"
                       onClick={() => setLocation("/signature")}
@@ -449,6 +470,35 @@ export default function Home() {
                         </div>
                       </div>
                     </Card>
+                  ) : (
+                    (() => {
+                      const localMeta = {
+                        "redact":           { icon: EyeOff,     color: "text-violet-400",  href: "/redact",           label: "Redacted" },
+                        "contract-builder": { icon: PenLine,    color: "text-emerald-400", href: "/contract-builder", label: "Draft" },
+                        "compare":          { icon: GitCompare, color: "text-sky-400",     href: "/compare",          label: "Compare" },
+                      }
+                      const meta = localMeta[item.tool]
+                      const Icon = meta.icon
+                      return (
+                        <Card
+                          className="group border border-border/50 bg-card hover:border-border hover:shadow-md rounded-2xl cursor-pointer transition-all"
+                          onClick={() => setLocation(meta.href)}
+                        >
+                          <div className="p-4">
+                            <div className="flex items-start gap-2.5">
+                              <Icon className={`w-4 h-4 ${meta.color} mt-0.5 shrink-0`} />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-foreground truncate">{item.title}</p>
+                                <p className="text-xs text-muted-foreground mt-0.5">{timeAgo(item.savedAt)}</p>
+                              </div>
+                              <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground/50 shrink-0">
+                                {meta.label}
+                              </span>
+                            </div>
+                          </div>
+                        </Card>
+                      )
+                    })()
                   )}
                 </motion.div>
               ))}

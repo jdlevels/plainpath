@@ -1,0 +1,115 @@
+We are continuing PlainPath.
+
+From this point until bank approval is confirmed, we are controlling build order around that external dependency.
+
+IMPORTANT RULE
+Do NOT spend active sprint time on live Stripe activation until bank approval is confirmed.
+That means:
+- do not prioritize STRIPE_SECRET_KEY work
+- do not prioritize STRIPE_WEBHOOK_SECRET work
+- do not prioritize Stripe dashboard configuration
+- do not prioritize live checkout verification yet
+
+Also:
+- do NOT duplicate capabilities that are already satisfactorily handled inside the Contract tool
+- if something is already covered in Contract Builder, leave it there unless a tiny launch-safe cross-tool connection is needed
+
+CURRENT SPRINT MODE
+We are in pre-bank-approval launch hardening.
+
+GOAL
+Complete all high-value non-banking launch work first, in the correct order, with minimal blast radius.
+
+PRIORITY ORDER FOR THIS PASS
+
+1. DIGITAL SIGNATURE — TEST MODE END-TO-END
+This is the highest priority non-banking item.
+Verify and finish the full provider-backed TEST MODE flow:
+- create real request
+- upload valid document
+- add signer details
+- send real Dropbox Sign test-mode request
+- persist provider request ID
+- show request in history/recent work
+- populate detail page with provider-backed data
+- confirm webhook events are received and stored
+- confirm normalized status transitions
+- confirm signed file retrieval if reachable in test mode
+
+Do NOT switch to live mode yet.
+Keep production-signature cutover for the post-bank-approval phase.
+
+2. COMPARE TOOL DISCOVERABILITY
+Add Compare to the main Tools navigation / launcher if it is still missing or hidden.
+This should be a small launch-safe discoverability fix.
+
+3. RECENT WORK / HISTORY FOR SESSION-ONLY TOOLS
+Implement the smallest stable recent-work/history visibility improvement for:
+- Redact
+- Contract Builder
+- Compare
+
+Do NOT perform a deep storage rewrite.
+Do NOT build the full long-term document spine here.
+Just make these tools feel launch-ready and not disposable.
+
+4. MOBILE / TABLET POLISH FOR SIGNATURE PREPARE & PLACE
+Polish only:
+- field drag usability
+- resize handle usability
+- spacing and touch friendliness
+- layout sanity on tablet/mobile
+Do not redesign the whole tool.
+
+5. FULL 6-TOOL LAUNCH QA SWEEP
+Run a launch-readiness smoke test across all 6 live tools:
+- route access
+- auth redirect behavior
+- plan gating behavior
+- empty states
+- error states
+- tool launcher entries
+- recent work visibility
+- desktop/tablet/mobile rendering
+
+6. OPTIONAL ONLY IF LAUNCH-VISIBLE
+If reminder emails are visibly exposed in the launch UX, then and only then:
+- inspect RESEND_API_KEY dependency
+- wire it if missing
+If reminder emails are not launch-critical, defer.
+
+DO NOT WORK ON IN THIS PASS
+- live Stripe activation
+- Stripe dashboard webhook setup
+- bank-dependent billing completion
+- full shared document architecture
+- binary file persistence
+- Adobe-style document builder
+- teams UI
+- large Contract tool changes
+- duplicated Contract tool functionality
+
+REQUIRED OUTPUT
+When complete, provide:
+
+1. EXACT FILES READ
+2. EXACT FILES CHANGED
+3. DIGITAL SIGNATURE TEST-MODE STATUS
+   - exact verification completed
+   - whether provider request ID was stored
+   - whether webhook events were received
+   - whether status transitions were verified
+   - whether signed file retrieval was verified
+4. COMPARE NAV STATUS
+5. RECENT WORK / HISTORY STATUS FOR:
+   - Redact
+   - Contract Builder
+   - Compare
+6. MOBILE/TABLET POLISH STATUS FOR SIGNATURE PREPARE & PLACE
+7. 6-TOOL QA SUMMARY
+8. ANY REMAINING NON-BANKING LAUNCH BLOCKERS
+9. POST-BANK-APPROVAL TASKS ONLY
+   - clearly separate anything that must wait for bank approval
+
+SUCCESS CONDITION
+This pass is successful only if all meaningful non-banking launch work is completed or cleanly classified, without spending time on Stripe live activation before bank approval.

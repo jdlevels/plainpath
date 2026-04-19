@@ -33,6 +33,7 @@ import { PiiReview } from "@/components/PiiReview"
 import { PdfRedactViewer } from "@/components/PdfRedactViewer"
 import { getApiBaseUrl } from "@/lib/api"
 import { downloadRedactedPdf, downloadRedactedText } from "@/lib/piiExport"
+import { saveRecentWork } from "@/lib/recentWork"
 import { useEntitlements } from "@/hooks/useEntitlements"
 import UpgradeModal from "@/components/UpgradeModal"
 import { BILLING_CONFIG } from "@/lib/billingConfig"
@@ -410,6 +411,10 @@ export default function Redact() {
       : "redacted_document.txt"
     a.click()
     URL.revokeObjectURL(url)
+    saveRecentWork({
+      tool: "redact",
+      title: activeFileName ? activeFileName.replace(/\.[^.]+$/, "") : "Redacted Document",
+    })
   }
 
   // ── Cancel: return to the originating tool ────────────────────────────────
@@ -437,6 +442,10 @@ export default function Redact() {
     try {
       const apiBase = getApiBaseUrl()
       await downloadRedactedPdf(uploadedFile, pdfApprovedValues, apiBase)
+      saveRecentWork({
+        tool: "redact",
+        title: uploadedFile.name.replace(/\.[^.]+$/, ""),
+      })
     } catch (err) {
       setPdfDownloadError(err instanceof Error ? err.message : "PDF download failed. Please try again.")
     } finally {

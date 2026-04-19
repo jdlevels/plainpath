@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { getApiBaseUrl } from "@/lib/api"
 import { WorkspaceShell } from "@/components/WorkspaceShell"
+import { saveRecentWork } from "@/lib/recentWork"
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
@@ -376,6 +377,7 @@ export default function Compare() {
       const data = await res.json()
       if (!res.ok) throw new Error(data?.message || "Comparison failed. Please try again.")
       setResult(data)
+      saveRecentWork({ tool: "compare", title: "Document Comparison" })
     } catch (e) {
       setError(e instanceof Error ? e.message : "Comparison failed. Please try again.")
     } finally {

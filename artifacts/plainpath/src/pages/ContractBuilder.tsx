@@ -18,6 +18,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useToast } from "@/hooks/use-toast"
 import { getApiBaseUrl } from "@/lib/api"
 import { beforeRunContractDraft, UsageLimitError } from "@/lib/analysisGate"
+import { saveRecentWork } from "@/lib/recentWork"
 import { useEntitlements } from "@/hooks/useEntitlements"
 import UpgradeModal from "@/components/UpgradeModal"
 import SendForSignatureModal from "@/components/SendForSignatureModal"
@@ -2098,6 +2099,17 @@ function DraftResultView({ draft, contractType, onBack, onRestart }: {
   const { toast } = useToast()
   const [showSignatureModal, setShowSignatureModal] = useState(false)
   const [, setLocation] = useLocation()
+
+  useEffect(() => {
+    const labels: Record<ContractType, string> = {
+      freelance: "Freelance Agreement",
+      nda: "Non-Disclosure Agreement",
+      "payment-agreement": "Payment Agreement",
+      "service-agreement": "Service Agreement",
+      lease: "Lease Agreement",
+    }
+    saveRecentWork({ tool: "contract-builder", title: labels[contractType] ?? "Contract Draft" })
+  }, [])
 
   function handleAnalyzeContract() {
     try {
