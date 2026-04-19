@@ -36,7 +36,7 @@ function requireAuth(req: any, res: any, next: any) {
 async function requireSignaturePlan(req: any, res: any, next: any) {
   try {
     const userId = req.userId as string;
-    const user = await clerkClient().users.getUser(userId);
+    const user = await clerkClient.users.getUser(userId);
     const email = (user.emailAddresses?.[0]?.emailAddress ?? "").toLowerCase();
     req.userEmail = email;
 

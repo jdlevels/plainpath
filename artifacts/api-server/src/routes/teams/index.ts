@@ -16,7 +16,7 @@ function requireAuth(req: any, res: any, next: any) {
 
 async function getUserEmail(userId: string): Promise<string | null> {
   try {
-    const user = await clerkClient().users.getUser(userId);
+    const user = await clerkClient.users.getUser(userId);
     return user.emailAddresses?.[0]?.emailAddress ?? null;
   } catch {
     return null;
@@ -25,7 +25,7 @@ async function getUserEmail(userId: string): Promise<string | null> {
 
 async function getUserDisplayName(userId: string): Promise<string | null> {
   try {
-    const user = await clerkClient().users.getUser(userId);
+    const user = await clerkClient.users.getUser(userId);
     const first = user.firstName ?? "";
     const last = user.lastName ?? "";
     const full = `${first} ${last}`.trim();

@@ -1,0 +1,56 @@
+Good. Accept the recent-work, Compare discoverability, and Prepare & Place mobile/tablet improvements.
+
+But there is one critical inconsistency that must be resolved before we proceed:
+
+Earlier, Dropbox Sign production callback testing already succeeded against:
+https://plain-path.replit.app/api/signatures/webhook
+
+Now your summary says the remaining checklist item is to register:
+https://plain-path.replit.app/app/webhooks/hellosign
+
+These cannot both be the production source of truth without explicit explanation.
+
+NEXT PASS GOAL
+Do a strict Digital Signature reconciliation + test-mode smoke-test pass only.
+
+REQUIRED TASKS
+
+1. Determine the exact current Dropbox Sign callback route in the live codebase.
+Do not guess.
+Read the actual route registration and provider integration path.
+
+2. State clearly whether the correct production callback URL is:
+- /api/signatures/webhook
+or
+- /app/webhooks/hellosign
+or both, with explanation
+
+3. If /app/webhooks/hellosign is legacy, stale, unused, or incorrect, say so explicitly.
+Do NOT ask us to change the Dropbox Sign dashboard to the wrong path.
+
+4. Use the already working production callback route as the source of truth unless code proves otherwise.
+
+5. After reconciling the callback route, run the real Dropbox Sign TEST-MODE smoke test end-to-end in the current approved mode:
+- create request
+- upload valid document
+- add signer
+- send test-mode request
+- confirm provider request ID stored
+- confirm request appears in history/recent work
+- confirm detail page renders provider-backed data
+- confirm webhook events are received/stored
+- confirm normalized status transitions
+- confirm signed file retrieval if reachable in test mode
+
+Do NOT switch to live mode yet.
+Do NOT work on Stripe.
+Do NOT broaden scope.
+
+RETURN ONLY:
+1. exact files read
+2. exact files changed
+3. exact Dropbox Sign production callback route
+4. whether /api/signatures/webhook is still the correct source of truth
+5. whether /app/webhooks/hellosign is real, legacy, or incorrect
+6. Digital Signature test-mode smoke test result
+7. any remaining non-banking launch blocker
