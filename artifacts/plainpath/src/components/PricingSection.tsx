@@ -66,7 +66,7 @@ function AttorneyCostCalculator() {
       </div>
       {cost && (
         <p className="text-xs text-muted-foreground mt-3">
-          One attorney review of a {selected.toLowerCase()} typically costs <strong className="text-foreground">{cost.range}</strong>. PlainPath Pro gives you unlimited access across all 5 tools for <strong className="text-foreground">$19.99/month</strong> — that's a saving of <strong className="text-emerald-600">${cost.low - 20}–${cost.high - 20}</strong> on just the first document.
+          One attorney review of a {selected.toLowerCase()} typically costs <strong className="text-foreground">{cost.range}</strong>. PlainPath Pro gives you unlimited access across all 6 tools for <strong className="text-foreground">$19.99/month</strong> — that's a saving of <strong className="text-emerald-600">${cost.low - 20}–${cost.high - 20}</strong> on just the first document.
         </p>
       )}
     </div>

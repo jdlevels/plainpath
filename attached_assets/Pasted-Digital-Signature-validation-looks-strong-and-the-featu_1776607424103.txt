@@ -1,0 +1,116 @@
+Digital Signature validation looks strong and the feature is now considered a REAL PlainPath tool.
+
+This pass is NOT a rebuild.
+This is the final product-positioning + launch-readiness cleanup pass for Digital Signature.
+
+IMPORTANT PRODUCT DECISION
+Digital Signature is NO LONGER a “coming soon” feature.
+It is now part of PlainPath’s live product set before launch.
+
+PlainPath should now be treated as offering:
+- 6 live tools total
+- Digital Signature included as a real Pro tool
+
+Do not revert anything.
+Do not touch unrelated marketing sections, billing logic, auth flows, or unrelated tools.
+Only make the minimum targeted changes required to align the product with this decision.
+
+GOALS FOR THIS PASS
+
+1. REMOVE ANY REMAINING “COMING SOON” FRAMING
+Search the codebase for any remaining:
+- “coming soon”
+- beta
+- limited
+- future tool
+- placeholder badge
+- disabled-tool language
+- fake/unavailable tool-card copy
+Specifically check:
+- /app tool launcher
+- Home.tsx
+- Navbar
+- entitlement labels
+- upgrade prompts
+- tool counts
+- feature lists
+- any docs/user-facing strings related to Digital Signature
+
+Replace any leftover placeholder wording with correct live-tool wording.
+
+2. DIGITAL SIGNATURE MUST BE TREATED AS A LIVE TOOL
+Everywhere the product references live tools, counts, or availability, update the product language so Digital Signature is counted as one of the 6 live tools.
+
+Examples of areas to check:
+- product tool grid / launcher
+- dashboard copy
+- locked/unlocked tool messaging
+- Pro plan messaging
+- feature comparison text inside /app if any
+- internal product summaries shown to the user
+- recent work / history labeling if any count-based text exists
+
+3. DO NOT MISREPRESENT PROVIDER STATUS
+Digital Signature is a live feature, but if provider credentials are not installed yet, the app must not pretend sending is available.
+
+Required behavior:
+- No “coming soon”
+- No fake placeholder
+- No silent failure
+- No false “fully active” send flow without credentials
+
+Instead:
+- If the user can access Digital Signature but provider config is missing, show a real configuration-dependent state such as:
+  - “Digital Signature is enabled, but sending is not configured yet.”
+  - or equivalent product-quality language
+- This must be a real runtime/provider-config state, not a placeholder badge
+
+4. TOOL COUNT + ACCESS MATRIX
+Keep pricing unchanged:
+- Starter: $4.99/month
+- Pro: $19.99/month
+
+Confirm and align the access matrix everywhere it appears:
+- Free: 2 analyses only
+- Starter: Analyze + Redact
+- Pro: all 6 live tools, including Digital Signature
+
+If any copy still says Pro has 5 live tools, update it to 6.
+If any copy still implies Digital Signature is excluded from the live set, fix it.
+
+5. APP UX CLEANUP FOR LIVE STATUS
+Make sure the Digital Signature card and page feel like a real tool:
+- no muted “future” styling
+- no “soon” badge
+- no disabled-card treatment unless plan-locked
+- consistent live-tool visual treatment with the other production tools
+
+If Free/Starter see a locked state, it should be the same locked pattern used for other Pro-only tools — not a “coming soon” pattern.
+
+6. PROVIDER CONFIG MESSAGING
+Check the actual runtime state when:
+- DROPBOX_SIGN_API_KEY is missing
+- webhook is not configured
+- test mode is on
+
+Required:
+- If sending is attempted without provider config, show a clear, real error/config message
+- Do not imply the feature itself is unreleased
+- Do not imply the product is waiting on future build work
+- The wording must reflect that the feature exists and is live, but provider activation is required for outbound requests
+
+7. FINAL VALIDATION REPORT
+When done, provide a short strict report with:
+1. Exact files changed in this pass
+2. Every user-facing string or area updated from “coming soon” / placeholder language to live-tool language
+3. Confirmation that PlainPath now presents as having 6 live tools
+4. Confirmation that Digital Signature is treated as a live Pro feature
+5. Confirmation that missing provider credentials now produce a real configuration state rather than placeholder framing
+6. Any remaining launch blockers for Digital Signature only
+
+SUCCESS CRITERIA
+This pass is successful only if:
+- there is no remaining “coming soon” framing for Digital Signature
+- PlainPath now consistently reflects 6 live tools
+- Digital Signature is positioned as a real live tool
+- missing provider credentials are handled as a real configuration state, not as an unreleased-feature state

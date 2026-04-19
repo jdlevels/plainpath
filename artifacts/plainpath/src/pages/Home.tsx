@@ -506,7 +506,7 @@ export default function Home() {
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">Your Plan</p>
                   <p className="font-bold text-foreground">
-                    {isAdmin ? "Admin — Full Access" : plan === "pro" ? "Pro — All 5 tools" : plan === "starter" ? "Starter — Analyze + Redact" : "Free"}
+                    {isAdmin ? "Admin — Full Access" : plan === "pro" ? "Pro — All 6 tools" : plan === "starter" ? "Starter — Analyze + Redact" : "Free"}
                   </p>
                   {!plan && !isAdmin && (
                     <p className="text-xs text-muted-foreground mt-0.5">2 free analyses included</p>

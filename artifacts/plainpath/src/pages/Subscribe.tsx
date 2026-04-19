@@ -109,7 +109,7 @@ export default function Subscribe() {
                 Subscriptions launching soon
               </p>
               <p className="text-xs text-amber-700/80 dark:text-amber-400/70 mt-0.5 leading-relaxed">
-                Live billing is not yet active. You can explore all 5 tools for free during pre-launch — no checkout required. We'll update this page once subscriptions are open.
+                Live billing is not yet active. You can explore all 6 tools for free during pre-launch — no checkout required. We'll update this page once subscriptions are open.
               </p>
             </div>
           </motion.div>

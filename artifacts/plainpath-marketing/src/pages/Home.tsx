@@ -95,7 +95,7 @@ const TOOLS = [
   { label: "Build a Contract",      icon: FileSignature, cls: "tool-btn-emerald", href: "/app/build-contract", comingSoon: false },
   { label: "Contract Review",       icon: Scale,         cls: "tool-btn-amber",   href: "/app/contract-review", comingSoon: false },
   { label: "Redact Sensitive Info", icon: EyeOff,        cls: "tool-btn-violet",  href: "/app/redact",         comingSoon: false },
-  { label: "Digital Signature",     icon: Pen,           cls: "tool-btn-slate",   href: "",                    comingSoon: true  },
+  { label: "Digital Signature",     icon: Pen,           cls: "tool-btn-violet",  href: "/app/signature",      comingSoon: false },
 ];
 
 /* ─── Feature cards ─────────────────────────────────────── */
@@ -167,17 +167,17 @@ const FEATURES = [
   },
   {
     icon: Pen,
-    color: "text-slate-400 dark:text-slate-500",
-    bg: "bg-slate-100 dark:bg-slate-800/40",
-    border: "border-l-slate-300 dark:border-l-slate-700",
-    accent: "bg-slate-300 dark:bg-slate-700",
-    glow: "from-slate-50 dark:from-slate-900/10",
+    color: "text-violet-600 dark:text-violet-400",
+    bg: "bg-violet-100 dark:bg-violet-900/30",
+    border: "border-l-violet-500 dark:border-l-violet-400",
+    accent: "bg-violet-500 dark:bg-violet-400",
+    glow: "from-violet-50 dark:from-violet-900/10",
     title: "Digital Signature",
-    desc: "Request signatures, track status, and complete multi-party signing workflows — all without leaving PlainPath. Integrates with any document you build or review.",
-    result: null,
-    tags: [],
-    tagCls: "",
-    comingSoon: true,
+    desc: "Send documents for e-signature, track signing status in real time, and download certified signed copies — all without leaving PlainPath. Powered by Dropbox Sign.",
+    result: { label: "Signature Request Sent", value: "Sarah Chen received a secure signing link for the Consulting Agreement.", icon: CheckCircle2, color: "text-violet-600 dark:text-violet-400", bg: "bg-violet-50 dark:bg-violet-900/20" },
+    tags: ["Contracts", "NDAs", "Agreements", "Pro only"],
+    tagCls: "bg-violet-50/80 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300 border border-violet-200/60 dark:border-violet-700/40",
+    comingSoon: false,
   },
 ];
 
@@ -285,7 +285,7 @@ const PLANS = [
       { label: "Build a Contract",      included: false, comingSoon: false },
       { label: "Contract Review",       included: false, comingSoon: false },
       { label: "Redact Sensitive Info", included: true,  comingSoon: false },
-      { label: "Digital Signature",     included: false, comingSoon: true  },
+      { label: "Digital Signature",     included: false, comingSoon: false },
     ],
     extras: [] as string[],
     cta: "Subscribe to Starter",
@@ -295,7 +295,7 @@ const PLANS = [
     name: "Pro",
     monthly: { price: "$19.99", period: "/month", sub: null },
     annual:  { price: "$191.90", period: "/year", sub: "billed annually", eq: "≈ $16.00/mo", savings: "Save 20%" },
-    desc: "All 5 live tools in one plan — unlimited use across every workflow.",
+    desc: "All 6 tools in one plan — unlimited use across every workflow.",
     highlight: true,
     badge: "Best Value",
     tools: [
@@ -304,7 +304,7 @@ const PLANS = [
       { label: "Build a Contract",      included: true,  comingSoon: false },
       { label: "Contract Review",       included: true,  comingSoon: false },
       { label: "Redact Sensitive Info", included: true,  comingSoon: false },
-      { label: "Digital Signature",     included: false, comingSoon: true  },
+      { label: "Digital Signature",     included: true,  comingSoon: false },
     ],
     extras: ["Saved analysis history", "Premium output and workflow tools"],
     cta: "Subscribe to Pro",
@@ -765,7 +765,7 @@ export default function Home() {
                 custom={2} variants={fadeUp}
                 className="text-base md:text-lg text-muted-foreground mb-6 leading-relaxed max-w-lg"
               >
-                Leases, contracts, medical bills, and court notices — PlainPath gives you 5 tools to
+                Leases, contracts, medical bills, and court notices — PlainPath gives you 6 tools to
                 understand what any document means, spot problems before you sign, and know exactly
                 what to do next. All in plain English.
               </motion.p>
@@ -814,7 +814,7 @@ export default function Home() {
 
               <motion.div custom={5} variants={fadeUp}>
                 <p className="text-xs text-muted-foreground">
-                  From $4.99/month &nbsp;·&nbsp; All 5 tools on Pro &nbsp;·&nbsp; Cancel anytime
+                  From $4.99/month &nbsp;·&nbsp; All 6 tools on Pro &nbsp;·&nbsp; Cancel anytime
                 </p>
               </motion.div>
             </motion.div>
@@ -859,13 +859,12 @@ export default function Home() {
       </div>
 
       {/* ════════════════════════════════════════════════
-          FIVE TOOLS — premium feature cards
-          (Digital Signature card is coming soon — not shown here)
+          SIX TOOLS — premium feature cards
       ════════════════════════════════════════════════ */}
       <section id="features" className="py-20 md:py-28 bg-gradient-to-b from-background via-white/70 to-background dark:bg-transparent">
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
           <div className="text-center max-w-2xl mx-auto mb-14">
-            <p className="text-xs font-semibold tracking-[0.12em] uppercase text-muted-foreground mb-3">5 tools live · Digital Signature coming soon</p>
+            <p className="text-xs font-semibold tracking-[0.12em] uppercase text-muted-foreground mb-3">6 tools live</p>
             <h2
               className="text-4xl md:text-5xl font-bold mb-4 text-foreground"
               style={{ fontFamily: "var(--font-display)" }}
@@ -1339,7 +1338,7 @@ export default function Home() {
           </div>
 
           <p className="text-center text-xs text-muted-foreground mt-8">
-            Web access included on all plans &nbsp;·&nbsp; iOS &amp; Android coming soon &nbsp;·&nbsp; Cancel anytime
+            Web access included on all plans &nbsp;·&nbsp; iOS &amp; Android apps coming soon &nbsp;·&nbsp; Cancel anytime
           </p>
         </div>
       </div>
@@ -1487,7 +1486,7 @@ export default function Home() {
             </a>
           </motion.div>
           <p className="mt-6 text-xs text-white/30">
-            From $4.99/month &nbsp;·&nbsp; All 5 tools on Pro ($19.99/mo) &nbsp;·&nbsp; Cancel anytime
+            From $4.99/month &nbsp;·&nbsp; All 6 tools on Pro ($19.99/mo) &nbsp;·&nbsp; Cancel anytime
           </p>
         </div>
       </div>

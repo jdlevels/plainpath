@@ -41,7 +41,7 @@ PlainPath is built as a monorepo using pnpm workspaces.
 8.  **Digital Signature** (Pro-only): End-to-end e-signature workflow via Dropbox Sign. 3-step wizard (upload document → signer details → review & send), status timeline with audit trail, download signed documents, HMAC-SHA256 webhook verification. Tables: `signature_requests` + `signature_request_events` in PostgreSQL. Frontend: `Signature.tsx` with ListView + NewRequestWizard + DetailView; client at `signatureApi.ts`. Routes at `/api/signatures`. DROPBOX_SIGN_API_KEY required; defaults to test mode (DROPBOX_SIGN_TEST_MODE != "false").
 
 ### Payment and Billing
--   Full billing architecture implemented in test mode with Stripe, supporting Starter ($4.99/month) and Pro ($19.99/month) tiers. Starter = Analyze a Document + Redact Sensitive Info. Pro = all 5 live tools. PAYWALL_ENFORCEMENT is ON — gating is live. STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET must be added to secrets before payments go live.
+-   Full billing architecture implemented in test mode with Stripe, supporting Starter ($4.99/month) and Pro ($19.99/month) tiers. Starter = Analyze a Document + Redact Sensitive Info. Pro = all 6 tools (including Digital Signature). PAYWALL_ENFORCEMENT is ON — gating is live. STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET must be added to secrets before payments go live.
 -   Native billing abstraction scaffold built for iOS/Android using RevenueCat (account setup pending — see `docs/store/05-revenuecat-config.md`).
 
 ### Store & Launch Docs (`docs/store/`)

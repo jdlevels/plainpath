@@ -808,6 +808,18 @@ function DetailView({
         </div>
       )}
 
+      {request.status === "draft" && !request.providerRequestId && (
+        <div className="flex items-start gap-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-800/40 rounded-xl px-4 py-4 mb-5">
+          <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">Provider configuration required</p>
+            <p className="text-xs text-amber-700/80 dark:text-amber-400/70 mt-0.5 leading-relaxed">
+              Digital Signature is enabled, but outbound sending requires a Dropbox Sign API key to be configured. This request has been saved as a draft and will be sent once the provider is set up.
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left column — details */}
         <div className="lg:col-span-2 space-y-5">
