@@ -1,0 +1,244 @@
+STRICT FOLLOW-UP: /app MUST BECOME A REAL PRODUCT DASHBOARD
+
+This is a correction pass for the authenticated /app experience only.
+
+The previous pass removed some clutter, but the page still feels too much like a public landing page. It still has a marketing-style hero, public-style CTA language, store badges, and public-nav behavior. That is not acceptable for a logged-in product home.
+
+DO NOT TOUCH
+- public marketing site at /
+- pricing logic
+- access-control logic
+- billing logic
+- Stripe logic
+- plan entitlements
+- analytics
+- legal pages
+- support routes
+unless absolutely required for app-home rendering.
+
+EDIT ONLY
+- authenticated /app home experience
+- components directly used by /app home
+- authenticated app navbar if needed for correct product behavior
+
+CORE REQUIREMENT
+/app must feel like:
+- a logged-in workspace
+- a command center
+- a launcher
+- a recent-work dashboard
+
+/app must NOT feel like:
+- a second homepage
+- a public hero
+- an app-store landing page
+- a generic brochure
+
+CRITICAL FIXES REQUIRED
+
+1. REMOVE PUBLIC HERO BEHAVIOR FROM /app
+The current top section still reads like a public-site hero.
+
+Remove from /app top section:
+- giant public headline treatment
+- public marketing subhead phrasing
+- “Try it free” language
+- “no account needed” language
+- App Store / Google Play badges
+- any waitlist/store-install messaging
+- any public acquisition-oriented CTA framing
+
+Replace with a compact authenticated start panel.
+
+NEW TOP SECTION MUST INCLUDE ONLY:
+- a concise dashboard heading such as:
+  “Welcome back” / “Start with a tool” / “Your document workspace”
+- short practical subhead
+- current plan badge/status if useful
+- primary action buttons that launch real tools
+- maybe one compact secondary action: billing / upgrade / support
+
+2. CHANGE /app NAVBAR TO PRODUCT NAVBAR
+The current navbar still feels like the public site.
+
+Authenticated /app navbar should prioritize product navigation, for example:
+- Tools
+- My Analyses / Recent Work
+- Billing
+- Support
+- Account / Profile
+- Website (small secondary link back to public site if needed)
+
+Remove or demote public-site nav items like:
+- Features
+- How it works
+- Pricing
+These are public-site navigation items and should not dominate the logged-in app.
+
+If “Website” remains, it should be a small utility link, not part of the primary information architecture.
+
+3. MOVE TOOL ACCESS ABOVE THE FOLD
+The most important thing on /app is starting work.
+
+Bring the real tool launcher higher so the user sees it immediately without needing to scroll through marketing-style sections.
+
+Above the fold should show:
+- compact welcome/start area
+- tool launcher grid
+- maybe current plan/access state
+- maybe recent work preview
+
+Not:
+- public persuasion copy
+- badges
+- marketplace/store content
+- long visual storytelling
+
+4. TOOL LAUNCHER MUST FEEL OPERATIONAL, NOT PROMOTIONAL
+The tool cards should feel like real app entry points.
+
+Keep all 5 core tools visible:
+- Analyze a Document
+- Document Trust Check
+- Build a Contract
+- Contract Review
+- Redact Sensitive Info
+- Digital Signature = clearly coming soon if still true
+
+Each card should show:
+- concise description
+- access state for current plan
+- direct action button
+- subtle upgrade cue only when locked
+
+Do NOT make these cards read like marketing feature cards.
+
+5. ADD A REAL “RECENT WORK / CONTINUE” SECTION HIGHER
+If user data exists, show:
+- recent analyses
+- saved analyses
+- drafts
+- last used tool
+- recent outputs
+
+If no real data exists, show a truthful empty state:
+- “No recent analyses yet”
+- “Start by uploading a document”
+- “Your saved work will appear here”
+
+Do NOT fabricate history.
+
+Place this section near the top, after the launcher.
+
+6. REMOVE ALL STORE / INSTALL LANGUAGE FROM /app
+Because this is a logged-in web app area:
+- remove App Store badge
+- remove Google Play badge
+- remove any “iOS/Android coming soon” text from /app top area
+- remove “Get the App” style acquisition CTA framing inside the authenticated home
+
+That language belongs on the public site, not inside the workspace.
+
+7. REMOVE “NO ACCOUNT NEEDED” LANGUAGE FROM /app
+A logged-in user should never see copy like:
+- “Try it free”
+- “no account needed”
+- “start free”
+- similar public acquisition messages
+
+Replace with logged-in product copy like:
+- “Upload a document to begin”
+- “Continue where you left off”
+- “Open your saved analyses”
+- “Manage your plan”
+
+8. KEEP ONLY ONE OPTIONAL GUIDED PRODUCT WALKTHROUGH
+If a walkthrough/demo remains inside /app:
+- keep only one
+- make it instructional
+- keep it product-oriented
+- no public-sales framing
+- no fake video feel
+- no duplicated showcase sections
+
+This must be secondary to the real tool launcher.
+
+9. REMOVE ANY REMAINING PUBLIC-SITE PERSUASION BLOCKS FROM /app
+Specifically remove or rework anything that still feels like:
+- “why choose us”
+- trust-marketing section
+- public persuasion sequence
+- install/waitlist message
+- public conversion CTA block
+- homepage-style footer messaging
+
+Keep only compact product support/help where needed.
+
+10. FOOTER INSIDE /app SHOULD BE MINIMAL
+If /app has a footer, make it a product footer:
+- Support
+- Billing
+- Privacy
+- Terms
+- maybe Website
+Do not end /app like a public marketing page.
+
+DESIRED FINAL /app ORDER
+
+1. Product navbar
+2. Compact authenticated start area
+3. Tool launcher grid
+4. Recent work / continue section
+5. Compact access / plan panel
+6. Optional single walkthrough or help block
+7. Minimal product footer
+
+That is the target order.
+
+COPY RULES
+Use direct product language only.
+
+Bad examples for /app:
+- Stop guessing what your documents mean
+- Try it free
+- No account needed
+- Download on the App Store
+- Get the app
+
+Better examples for /app:
+- Start with a tool
+- Upload a document
+- Continue your recent work
+- Your current plan
+- Upgrade to unlock Trust Check / Build / Review
+- Manage billing
+
+VISUAL RULES
+- keep premium dark look
+- keep brand consistency
+- keep depth and polish
+- reduce homepage spectacle
+- increase dashboard clarity
+- make it feel faster and more operational
+
+SUCCESS CRITERIA
+This pass is successful only if:
+1. /app no longer looks like a public homepage
+2. no App Store / Google Play badges remain on /app
+3. no “Try it free” / “no account needed” language remains on /app
+4. navbar reads as product navigation, not public-site navigation
+5. tool launcher is visible immediately and clearly prioritized
+6. recent work / continue section exists and is truthful
+7. pricing/referral/testimonial/public CTA structures are gone from /app
+8. page feels like a real logged-in workspace
+9. public site at / remains untouched
+
+REQUIRED RETURN FORMAT
+After implementation, return:
+1. files changed
+2. exact public-style elements removed from /app
+3. exact navbar changes
+4. final /app section order
+5. screenshots desktop + mobile
+6. confirmation that / was untouched
+7. final verdict: does /app now read as a true product dashboard

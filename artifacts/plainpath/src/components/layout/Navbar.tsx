@@ -137,10 +137,10 @@ export function Navbar() {
     <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-background/90 border-b border-border/50 transition-all duration-300 safe-top">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
 
-        {/* Logo → app home (analyze) */}
+        {/* Logo → dashboard home */}
         <a
-          href="/app/analyze"
-          aria-label="PlainPath — go to home"
+          href="/app/"
+          aria-label="PlainPath — go to dashboard"
           className="flex items-center shrink-0 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2"
         >
           <LogoBrand />
@@ -207,9 +207,9 @@ export function Navbar() {
 
           <a
             href="/"
-            className="hidden md:flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-2.5 py-1.5 rounded-lg hover:bg-secondary"
+            className="hidden md:flex items-center gap-1 text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors px-2 py-1.5 rounded-lg"
           >
-            <LayoutDashboard className="w-3.5 h-3.5" />
+            <LayoutDashboard className="w-3 h-3" />
             Website
           </a>
 
