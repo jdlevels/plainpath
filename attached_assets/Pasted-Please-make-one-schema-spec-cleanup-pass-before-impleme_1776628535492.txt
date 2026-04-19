@@ -1,0 +1,59 @@
+Please make one schema-spec cleanup pass before implementation starts.
+
+Required corrections:
+
+1. V1 table model consistency
+The document currently conflicts on whether builder_sections and builder_blocks are real V1 tables.
+V1 must use a single-source JSON content model.
+Please update the spec so the V1 table list is fully consistent and includes only the actual V1 tables.
+If the intended V1 tables are:
+- builder_documents
+- builder_document_versions
+- builder_templates
+- builder_export_artifacts
+then remove all references implying builder_sections or builder_blocks are standalone V1 tables.
+
+2. API model consistency
+The spec currently lists nested section/block API endpoints, but the storage model says the full document content JSON is written as a whole unit during autosave.
+Please align the API with the storage model.
+Recommended V1 approach:
+- no separate server endpoints for sections or blocks
+- document CRUD + full-content autosave/update endpoint
+- versions endpoint
+- export endpoint
+- templates endpoint
+- handoff endpoints
+Section/block operations should remain client-side editing concepts in V1.
+
+3. Status semantics cleanup
+The spec currently says “two valid statuses only” while also listing archived.
+Please revise to:
+- user-selectable statuses: draft, final
+- system lifecycle state: archived
+Make this consistent everywhere.
+
+4. current_version_id naming cleanup
+Please either rename current_version_id to latest_snapshot_id or add explicit wording that it points to the most recent milestone snapshot, not the current live autosaved state.
+Recommended rename: latest_snapshot_id.
+
+5. Export artifact version_id requirement
+Because V1 export flow creates a version snapshot before every export, please make builder_export_artifacts.version_id required in V1 and update any related wording accordingly.
+
+6. Template source-of-truth cleanup
+The spec currently allows system templates to be seeded in the DB or bundled as static JSON.
+Please choose one source of truth.
+Recommended V1 decision:
+- system templates are seeded into builder_templates
+- builder_templates is the single source of truth for template browsing and document creation
+
+7. Paragraph marks indexing rule
+Add one explicit rule defining paragraph mark start/end offsets.
+Recommended V1 decision:
+- offsets use UTF-16 string indices to match JS/TS string behavior
+
+After making these corrections, provide a short “Schema Draft Finalization Summary” listing exactly:
+- final V1 tables
+- final V1 API endpoints
+- final document statuses
+- final export/version linkage rule
+- final template source-of-truth rule
