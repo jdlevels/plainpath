@@ -8,6 +8,22 @@ export function useEntitlements() {
   const [data, setData] = useState<EntitlementStatus | null>(null)
   const [loading, setLoading] = useState(true)
 
+  // As soon as Clerk loads a signed-in user, persist their email to localStorage.
+  // This ensures the entitlements fetch always has an email even if the Clerk
+  // session token has issues on production custom domains.
+  useEffect(() => {
+    if (!clerkLoaded) return
+    const clerkEmail = user?.emailAddresses?.[0]?.emailAddress
+    if (clerkEmail) {
+      const stored = getStoredSubscriberEmail()
+      // Only override stored email if there isn't one already set (e.g. from Restore form)
+      // OR if the stored email matches the Clerk email (keep them in sync)
+      if (!stored || stored === clerkEmail.trim().toLowerCase()) {
+        setStoredSubscriberEmail(clerkEmail)
+      }
+    }
+  }, [clerkLoaded, user])
+
   const reload = useCallback(async () => {
     // Priority: stored subscriber email → Clerk signed-in email
     const storedEmail = getStoredSubscriberEmail()
