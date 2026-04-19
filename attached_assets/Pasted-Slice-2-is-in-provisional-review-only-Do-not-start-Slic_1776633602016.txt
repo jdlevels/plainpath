@@ -1,0 +1,62 @@
+Slice 2 is in provisional review only. Do not start Slice 3 yet.
+
+The UX improvements look good, but the required sign-off conditions are still incomplete.
+
+Complete the following closeout pass:
+
+1. Manual signed-in browser verification — required
+Use a real signed-in browser session and verify, through the actual live app flow:
+- open Builder list
+- create a document from blank
+- create a document from a template
+- open an existing Builder document
+- edit title
+- add/edit/delete/reorder blocks
+- add/edit/delete/reorder sections
+- confirm autosave succeeds
+- archive a document
+- confirm archived document leaves active list
+- confirm ownership behavior is correct for the signed-in user
+
+If API writes still fail because of Clerk session propagation in the test environment, then do one of these:
+- resolve the session propagation issue now, or
+- perform the verification using the exact same browser/user context that the live app uses and provide screenshots/evidence from that working signed-in flow
+
+This requirement cannot be deferred again if Slice 2 is to be signed off.
+
+2. Draft/Final clarification
+State explicitly:
+- whether the workspace still uses a static Draft label only
+OR
+- whether real draft/final snapshot behavior was implemented
+
+If still static, say so directly.
+
+3. Exact implementation inventory
+Return the exact:
+- files created
+- files modified
+- UI behaviors changed
+- tests run
+- test results
+- blockers
+- remaining risks
+
+4. Template seeding final statement
+State clearly whether template seeding is now:
+- still boot-time initialization with a guard, or
+- fully moved out of normal startup
+
+5. Recommended Slice 3 scope
+Provide the recommended next slice only after the above verification is complete.
+
+OUTPUT FORMAT
+Return a structured closeout report with:
+- Slice 2 verdict
+- Passed items
+- Failed/unverified items
+- Manual signed-in verification evidence
+- Draft/Final status
+- Template seeding status
+- Remaining blockers
+- Whether Slice 2 is sign-off ready

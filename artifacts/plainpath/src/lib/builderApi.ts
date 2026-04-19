@@ -10,6 +10,31 @@ function base(): string {
   return getApiBaseUrl();
 }
 
+/**
+ * Builds fetch options that include the Clerk session token in the
+ * Authorization header when one is provided.  Falls back to
+ * credentials:"include" (cookie-based) so the API still works in contexts
+ * where getToken() is unavailable (e.g. server-side, tests).
+ */
+function authHeaders(token?: string | null): HeadersInit {
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+  return headers;
+}
+
+function authFetchOptions(token?: string | null, extra?: RequestInit): RequestInit {
+  return {
+    credentials: "include",
+    ...extra,
+    headers: {
+      ...authHeaders(token),
+      ...(extra?.headers ?? {}),
+    },
+  };
+}
+
 async function handleResponse<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
@@ -23,33 +48,40 @@ async function handleResponse<T>(res: Response): Promise<T> {
 }
 
 export const builderApi = {
-  async listDocuments(): Promise<BuilderDocumentMeta[]> {
-    const res = await fetch(`${base()}/api/builder/documents`, {
-      credentials: "include",
-    });
+  async listDocuments(token?: string | null): Promise<BuilderDocumentMeta[]> {
+    const res = await fetch(
+      `${base()}/api/builder/documents`,
+      authFetchOptions(token),
+    );
     return handleResponse(res);
   },
 
-  async createDocument(data: {
-    title: string;
-    category: string;
-    source: "blank" | "template";
-    templateId?: string | null;
-    content: BuilderContent;
-  }): Promise<BuilderDocumentFull> {
-    const res = await fetch(`${base()}/api/builder/documents`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify(data),
-    });
+  async createDocument(
+    data: {
+      title: string;
+      category: string;
+      source: "blank" | "template";
+      templateId?: string | null;
+      content: BuilderContent;
+    },
+    token?: string | null,
+  ): Promise<BuilderDocumentFull> {
+    const res = await fetch(
+      `${base()}/api/builder/documents`,
+      authFetchOptions(token, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      }),
+    );
     return handleResponse(res);
   },
 
-  async getDocument(id: string): Promise<BuilderDocumentFull> {
-    const res = await fetch(`${base()}/api/builder/documents/${id}`, {
-      credentials: "include",
-    });
+  async getDocument(id: string, token?: string | null): Promise<BuilderDocumentFull> {
+    const res = await fetch(
+      `${base()}/api/builder/documents/${id}`,
+      authFetchOptions(token),
+    );
     return handleResponse(res);
   },
 
@@ -61,6 +93,7 @@ export const builderApi = {
       content?: BuilderContent;
       server_version: number;
     },
+    token?: string | null,
   ): Promise<{
     id: string;
     serverVersion: number;
@@ -68,34 +101,46 @@ export const builderApi = {
     status: string;
     title: string;
   }> {
-    const res = await fetch(`${base()}/api/builder/documents/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify(data),
-    });
-    return handleResponse(res);
-  },
-
-  async archiveDocument(id: string): Promise<{ id: string; status: string }> {
     const res = await fetch(
-      `${base()}/api/builder/documents/${id}/archive`,
-      { method: "POST", credentials: "include" },
+      `${base()}/api/builder/documents/${id}`,
+      authFetchOptions(token, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      }),
     );
     return handleResponse(res);
   },
 
-  async listTemplates(category?: string): Promise<BuilderTemplate[]> {
-    const url = new URL(`${base()}/api/builder/templates`);
-    if (category) url.searchParams.set("category", category);
-    const res = await fetch(url.toString(), { credentials: "include" });
+  async archiveDocument(
+    id: string,
+    token?: string | null,
+  ): Promise<{ id: string; status: string }> {
+    const res = await fetch(
+      `${base()}/api/builder/documents/${id}/archive`,
+      authFetchOptions(token, { method: "POST" }),
+    );
     return handleResponse(res);
   },
 
-  async getTemplate(id: string): Promise<BuilderTemplate> {
-    const res = await fetch(`${base()}/api/builder/templates/${id}`, {
-      credentials: "include",
-    });
+  async listTemplates(
+    category?: string,
+    token?: string | null,
+  ): Promise<BuilderTemplate[]> {
+    const url = new URL(`${base()}/api/builder/templates`);
+    if (category) url.searchParams.set("category", category);
+    const res = await fetch(url.toString(), authFetchOptions(token));
+    return handleResponse(res);
+  },
+
+  async getTemplate(
+    id: string,
+    token?: string | null,
+  ): Promise<BuilderTemplate> {
+    const res = await fetch(
+      `${base()}/api/builder/templates/${id}`,
+      authFetchOptions(token),
+    );
     return handleResponse(res);
   },
 };
