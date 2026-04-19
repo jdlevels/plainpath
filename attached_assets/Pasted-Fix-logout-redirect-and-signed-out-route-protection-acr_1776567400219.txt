@@ -1,0 +1,47 @@
+Fix logout redirect and signed-out route protection across the PlainPath app.
+
+Problem:
+Right now, when a user clicks Sign out from the logged-in product area, the app signs them out but leaves them sitting on the current `/app` page. That is incorrect UX and incorrect route protection.
+
+Required behavior:
+
+1. From any logged-in product page under `/app`, clicking Sign out must immediately redirect the user to the public marketing homepage at `/`
+2. If the auth/session state becomes null/invalid while the user is already on any protected `/app` route, the app must automatically redirect to `/`
+3. Signed-out users must never remain on protected `/app`, `/app/results`, tool pages, billing pages, analyses pages, or any other internal app surface
+4. This must be handled globally, not with page-by-page hacks
+
+Implement exactly:
+
+1. Find the central sign-out action used in the navbar/account menu and update it so that after logout completes it routes to `/`
+2. Add a shared protected-route/auth guard for the full `/app` area so that if `user === null` / session missing / auth not ready as signed-in, the user is redirected to `/`
+3. Make sure this applies to all internal app pages, including:
+
+   * `/app`
+   * tool routes
+   * results/review pages
+   * billing/account pages
+   * analyses/history pages
+4. Prevent a flash where protected content remains visible after logout. If needed, show a minimal loading/auth-check state during redirect instead of leaving the page rendered
+5. Preserve normal behavior for logged-in users — no redirect loops, no broken deep links for authenticated sessions
+
+Verification required:
+
+* Sign out from `/app` dashboard → lands on `/`
+* Sign out from each live tool page → lands on `/`
+* Sign out from results/review page → lands on `/`
+* Open a protected `/app/...` route while signed out → redirected to `/`
+* Expire/remove session while on a protected route → redirected to `/`
+* No console errors, no hydration issues, no route flicker
+
+Guardrails:
+
+* Do not modify public marketing pages except where needed for redirect destination
+* Do not change billing logic, tool logic, or layout beyond auth-protection needs
+* This is an auth/routing correctness fix only
+
+Return format:
+
+* exact files changed
+* where logout redirect was fixed
+* where global `/app` auth protection was added or corrected
+* verification summary for dashboard + tool pages + protected deep links

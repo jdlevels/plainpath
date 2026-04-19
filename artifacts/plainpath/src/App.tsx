@@ -156,6 +156,35 @@ function ClerkQueryClientCacheInvalidator() {
   return null;
 }
 
+// Global auth guard — redirects unauthenticated users to the public marketing site.
+// Renders nothing (blank screen) while Clerk is still resolving auth state to
+// prevent any flash of protected content.
+function RequireAuth({ children }: { children: React.ReactNode }) {
+  const { isLoaded, isSignedIn } = useUser();
+
+  if (!isLoaded) {
+    return <div className="min-h-screen bg-background" />;
+  }
+
+  if (!isSignedIn) {
+    window.location.replace("/");
+    return <div className="min-h-screen bg-background" />;
+  }
+
+  return <>{children}</>;
+}
+
+// Convenience wrapper so Route's component prop works with RequireAuth
+function protect(Component: React.ComponentType) {
+  return function ProtectedPage() {
+    return (
+      <RequireAuth>
+        <Component />
+      </RequireAuth>
+    );
+  };
+}
+
 function Router() {
   return (
     <div className="flex flex-col min-h-screen">
@@ -163,35 +192,14 @@ function Router() {
       <main className="flex-1">
         <ErrorBoundary>
           <Switch>
-            <Route path="/" component={Home} />
+            {/* ── Public routes (no auth required) ── */}
             <Route path="/sign-in/*?" component={SignInPage} />
             <Route path="/sign-up/*?" component={SignUpPage} />
-            <Route path="/import" component={Import} />
-            <Route path="/analyze" component={Import} />
-            <Route path="/results" component={Analyze} />
-            <Route path="/trust-check" component={TrustCheck} />
-            <Route path="/my-analyses" component={MyAnalyses} />
             <Route path="/privacy" component={Privacy} />
             <Route path="/terms" component={Terms} />
             <Route path="/support" component={Support} />
-            <Route path="/pricing">{() => { window.location.replace("/#pricing"); return null; }}</Route>
-            <Route path="/subscribe" component={Subscribe} />
-            <Route path="/subscribe/success" component={SubscribeSuccess} />
-            <Route path="/subscribe/cancel" component={SubscribeCancel} />
-            <Route path="/contract-builder" component={ContractBuilder} />
-            <Route path="/build-contract" component={ContractBuilder} />
-            <Route path="/contract-review" component={ContractReview} />
-
-            <Route path="/build" component={ContractBuilder} />
-            <Route path="/review" component={ContractReview} />
-            <Route path="/shared/:token">
-              {(params) => <SharedAnalysis token={(params as { token: string }).token} />}
-            </Route>
-            <Route path="/compare" component={Compare} />
-            <Route path="/redact" component={Redact} />
-            <Route path="/billing" component={Billing} />
-            <Route path="/upgrade" component={Upgrade} />
             <Route path="/methodology" component={Methodology} />
+            <Route path="/pricing">{() => { window.location.replace("/#pricing"); return null; }}</Route>
             <Route path="/guides/irs-letter" component={IrsLetter} />
             <Route path="/guides/lease-agreement" component={LeaseAgreement} />
             <Route path="/guides/job-offer-red-flags" component={JobOffer} />
@@ -200,6 +208,31 @@ function Router() {
             <Route path="/guides/independent-contractor-agreement" component={IndependentContractor} />
             <Route path="/guides/eviction-notice" component={EvictionNotice} />
             <Route path="/guides/medical-billing-dispute" component={MedicalBillingDispute} />
+            {/* Shared analysis links are public — shareable with non-users */}
+            <Route path="/shared/:token">
+              {(params) => <SharedAnalysis token={(params as { token: string }).token} />}
+            </Route>
+
+            {/* ── Protected routes (require sign-in) ── */}
+            <Route path="/" component={protect(Home)} />
+            <Route path="/import" component={protect(Import)} />
+            <Route path="/analyze" component={protect(Import)} />
+            <Route path="/results" component={protect(Analyze)} />
+            <Route path="/trust-check" component={protect(TrustCheck)} />
+            <Route path="/my-analyses" component={protect(MyAnalyses)} />
+            <Route path="/subscribe" component={protect(Subscribe)} />
+            <Route path="/subscribe/success" component={protect(SubscribeSuccess)} />
+            <Route path="/subscribe/cancel" component={protect(SubscribeCancel)} />
+            <Route path="/contract-builder" component={protect(ContractBuilder)} />
+            <Route path="/build-contract" component={protect(ContractBuilder)} />
+            <Route path="/contract-review" component={protect(ContractReview)} />
+            <Route path="/build" component={protect(ContractBuilder)} />
+            <Route path="/review" component={protect(ContractReview)} />
+            <Route path="/compare" component={protect(Compare)} />
+            <Route path="/redact" component={protect(Redact)} />
+            <Route path="/billing" component={protect(Billing)} />
+            <Route path="/upgrade" component={protect(Upgrade)} />
+
             <Route component={NotFound} />
           </Switch>
         </ErrorBoundary>
