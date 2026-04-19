@@ -1103,7 +1103,7 @@ export default function ContractReview() {
             </>
           }
         />
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-5 sm:pt-8 space-y-4">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-5 sm:pt-8 space-y-4">
           <ResultsView result={result} onReset={handleReset} />
         </div>
       </div>

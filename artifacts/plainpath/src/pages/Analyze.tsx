@@ -207,7 +207,7 @@ export default function Analyze() {
 
       {/* ── Sticky header ───────────────────────────── */}
       <div className="no-print bg-background/95 backdrop-blur-md border-b border-border/50 sticky top-0 z-30">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-2.5 sm:py-4">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-2.5 sm:py-4">
           <div className="flex items-center gap-4">
             <button
               onClick={() => setLocation("/analyze")}
@@ -274,7 +274,7 @@ export default function Analyze() {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
 
         {/* ── At-a-glance strip ───────────────────────── */}
         <div className="no-print mt-4 sm:mt-6 mb-5 sm:mb-7">
@@ -305,13 +305,13 @@ export default function Analyze() {
               <button
                 onClick={scrollTabsLeft}
                 aria-label="Scroll tabs left"
-                className="shrink-0 flex items-center justify-center w-8 h-10 text-muted-foreground hover:text-foreground transition-colors rounded-l-2xl hover:bg-secondary/60"
+                className="lg:hidden shrink-0 flex items-center justify-center w-8 h-10 text-muted-foreground hover:text-foreground transition-colors rounded-l-2xl hover:bg-secondary/60"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
             )}
           <div className="flex-1 overflow-hidden rounded-2xl">
-          <Tabs.List ref={tabListRef} onScroll={checkScroll} className="flex overflow-x-auto hide-scrollbar gap-0.5 px-1 py-1 scroll-smooth">
+          <Tabs.List ref={tabListRef} onScroll={checkScroll} className="flex overflow-x-auto lg:overflow-x-visible lg:flex-wrap hide-scrollbar gap-0.5 px-1 py-1 scroll-smooth">
             {TABS.map((tab) => {
               const count = (tab as any).countKey ? (analysis as any)[(tab as any).countKey]?.length : null
               const isMissing = tab.id === "missing"
@@ -321,7 +321,7 @@ export default function Analyze() {
                   key={tab.id}
                   value={tab.id}
                   style={{ touchAction: "manipulation", flex: "0 0 auto" }}
-                  className={`relative flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap outline-none min-h-[44px] ${
+                  className={`relative flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap outline-none min-h-[44px] ${
                     activeTab === tab.id
                       ? "bg-foreground text-background shadow-sm"
                       : "text-foreground/55 dark:text-foreground/50 hover:text-foreground hover:bg-secondary/70"
@@ -352,7 +352,7 @@ export default function Analyze() {
               <button
                 onClick={scrollTabsRight}
                 aria-label="Scroll tabs right"
-                className="shrink-0 flex items-center justify-center w-8 h-10 text-muted-foreground hover:text-foreground transition-colors rounded-r-2xl hover:bg-secondary/60"
+                className="lg:hidden shrink-0 flex items-center justify-center w-8 h-10 text-muted-foreground hover:text-foreground transition-colors rounded-r-2xl hover:bg-secondary/60"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -467,7 +467,7 @@ function SummaryTab({ analysis, onTabChange, onOpenGuidedReview }: { analysis: D
   const urgentCount = highPriority.length + hardDeadlines.length + highRisks.length
 
   return (
-    <div className="space-y-5 max-w-3xl">
+    <div className="space-y-5 max-w-4xl">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="text-xl sm:text-2xl font-display font-bold mb-0.5">Document Overview</h2>
@@ -610,7 +610,7 @@ function PlainEnglishTab({ analysis, onTabChange }: { analysis: DocumentAnalysis
   }
 
   return (
-    <div className="space-y-6 max-w-3xl">
+    <div className="space-y-6 max-w-4xl">
       <div>
         <h2 className="text-xl sm:text-2xl font-display font-bold">Plain English Overview</h2>
         <p className="text-sm text-muted-foreground mt-1">Everything you need to know about this document — in plain, jargon-free language.</p>
@@ -682,7 +682,7 @@ function WhatsMissingTab({
   }
 
   return (
-    <div className="space-y-8 max-w-3xl">
+    <div className="space-y-8 max-w-4xl">
 
       <div className="flex items-start justify-between gap-3">
         <div>
@@ -1609,7 +1609,7 @@ function LoadingScreen() {
     <div className="min-h-screen bg-background pb-24">
       {/* Skeleton header */}
       <div className="bg-background/95 border-b border-border/50 sticky top-0 z-30">
-        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center gap-4">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center gap-4">
           <div className="w-9 h-9 rounded-xl bg-secondary animate-pulse" />
           <div className="flex-1 space-y-2">
             <div className="h-2.5 w-32 rounded-full bg-secondary animate-pulse" />
@@ -1624,7 +1624,7 @@ function LoadingScreen() {
 
       {/* "Still working" message after 15s */}
       {seconds >= 15 && (
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-4">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-4">
           <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground bg-secondary/50 rounded-xl px-4 py-2.5 border border-border/30">
             <span className="inline-block w-2 h-2 rounded-full bg-primary/60 animate-pulse" />
             {seconds >= 30
@@ -1634,7 +1634,7 @@ function LoadingScreen() {
         </div>
       )}
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-6 sm:pt-8 space-y-5 sm:space-y-6">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-6 sm:pt-8 space-y-5 sm:space-y-6">
         {/* Stat pills skeleton */}
         <div className="flex gap-2.5 overflow-x-auto hide-scrollbar">
           {[80, 100, 110, 90].map((w, i) => (
@@ -2096,7 +2096,7 @@ function KeyTermsTab({ analysis }: { analysis: DocumentAnalysis }) {
   }
 
   return (
-    <div className="space-y-5 max-w-3xl">
+    <div className="space-y-5 max-w-4xl">
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
           <h2 className="text-xl sm:text-2xl font-display font-bold">Key Terms & Clauses</h2>

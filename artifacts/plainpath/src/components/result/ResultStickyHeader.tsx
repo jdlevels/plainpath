@@ -24,7 +24,7 @@ export function ResultStickyHeader({
 }: ResultStickyHeaderProps) {
   return (
     <div className="bg-background/95 backdrop-blur-md border-b border-border/50 sticky top-0 z-30 print:hidden">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-2.5 sm:py-4">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-2.5 sm:py-4">
         <div className="flex items-center gap-2 sm:gap-3">
           {onBack && (
             <button

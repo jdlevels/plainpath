@@ -1,0 +1,81 @@
+Apply a global desktop workspace-width refinement across ALL live PlainPath tool screens, not just Analyze.
+
+Goal:
+Every live tool should feel like part of the same professional application workspace. Right now the analysis/results area is too narrow on desktop, and the top tab/action rail becomes cramped enough to require arrow scrolling. This should be fixed as a shared system across all live tools.
+
+Scope:
+Apply this to all live tool experiences and any shared shell/components they use:
+- Analyze a Document
+- Document Trust Check
+- Build a Contract
+- Contract Review
+- Redact Sensitive Info
+
+Also include any shared:
+- tool page shell
+- results/review container
+- tab rail
+- action/header bar
+- inner content card wrapper
+- save/export/progress bar region
+- shared max-width utility or layout wrapper used across tools
+
+Primary objective:
+Create a consistent wider desktop workspace across all live tools so core tabs/actions fit naturally and content panels use screen space better.
+
+What to change:
+
+1. Shared desktop tool shell
+- Identify the shared wrapper/layout used by the live tools
+- Increase desktop/laptop max width so tool pages feel like a full application workspace, not a narrow modal panel
+- Target a premium desktop working-surface feel on large screens
+- Preserve centered alignment and clean left/right padding
+
+2. Shared top rail / tab rail behavior
+- On desktop and large laptops, major tabs and tool sections should not require arrow-scroll unless absolutely unavoidable
+- Prefer full-row visibility
+- If needed, allow graceful wrapping on desktop instead of forced overflow arrows
+- Keep horizontal overflow behavior for tablet/mobile where appropriate
+- Ensure labels remain readable and nothing clips
+
+3. Shared content width
+- Widen the main tool content region across all live tools
+- Main cards/panels should use more of the available workspace
+- Preserve comfortable reading width and internal padding
+- Do not create giant unreadable text lines
+
+4. Tool-specific verification
+After the shared layout change, verify all five live tools individually:
+- Analyze
+- Trust Check
+- Build Contract
+- Contract Review
+- Redact
+
+For each tool, confirm:
+- top rail is no longer overly cramped on desktop
+- main content panel is wider
+- no clipping or overlap
+- save/export/progress/action areas still align correctly
+- no mobile/tablet regressions
+
+5. Responsive rules
+- Desktop (1440px+): full workspace width, no unnecessary arrow-scroll for primary tabs
+- Laptop (1200px+): roomy and usable, not boxed in
+- Tablet/mobile: horizontal scrolling is acceptable where necessary
+- No broken layout at any breakpoint
+
+6. Keep logic untouched
+- No changes to tool logic, gating, save behavior, export behavior, prompts, analysis engine, or entitlements
+- Layout/system refinement only
+
+Preferred implementation strategy:
+- First update shared layout components/utilities if they exist
+- Only add page-specific fixes if a tool does not inherit the shared shell correctly
+- Avoid copy-paste width hacks across individual pages unless absolutely necessary
+
+Return format:
+- exact shared files/components changed
+- any individual tool files changed
+- exact width / max-width / tab behavior changes
+- verification summary for all 5 live tools across desktop/laptop/tablet/mobile

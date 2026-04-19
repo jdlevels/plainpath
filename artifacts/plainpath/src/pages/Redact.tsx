@@ -493,7 +493,7 @@ export default function Redact() {
   if (nextStepText !== null && pdfCompletionActive && uploadedFile) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="max-w-5xl mx-auto py-6 px-4 space-y-4">
+        <div className="max-w-6xl mx-auto py-6 px-4 space-y-4">
 
           {/* Header with back */}
           <div className="flex items-center gap-3">
@@ -739,7 +739,7 @@ export default function Redact() {
   if (activeText !== null) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="max-w-5xl mx-auto py-6 px-4 space-y-4">
+        <div className="max-w-6xl mx-auto py-6 px-4 space-y-4">
           {/* Header */}
           <div className="flex items-center gap-3">
             <button
