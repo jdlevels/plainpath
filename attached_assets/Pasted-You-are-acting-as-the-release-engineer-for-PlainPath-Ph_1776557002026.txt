@@ -1,0 +1,121 @@
+You are acting as the release engineer for PlainPath Phase 5 — Live Billing Cutover Execution.
+
+Goal:
+Move PlainPath from “ready after config” to “controlled soft launch ready” using live Stripe billing.
+
+Strict scope:
+- Primary target: artifacts/plainpath
+- Secondary target: artifacts/api-server
+- Do NOT touch artifacts/plainpath-marketing unless you find a real pricing mismatch that would make the public site untruthful. If found, stop and report before editing.
+- Do NOT touch pitch-deck, mockup-sandbox, or unrelated artifacts.
+
+Context you must treat as canonical:
+- Product: PlainPath
+- Domain: https://plainpathapp.com
+- Product app base: https://plainpathapp.com/app
+- Support email: support@plainpathapp.com
+- Starter plan: $4.99/month
+- Pro plan: $19.99/month
+- Monthly only at launch
+- No annual live checkout yet
+- Digital Signature remains “coming soon”
+- Canonical tool access:
+  - Free / no subscription:
+    - Analyze a Document = 2 per month
+    - All other tools gated immediately
+  - Starter $4.99/mo:
+    - Analyze a Document = unlimited
+    - Redact Sensitive Info = unlimited
+    - Trust Check / Build / Review = locked
+    - Digital Signature = coming soon
+  - Pro $19.99/mo:
+    - Analyze / Trust Check / Build / Review / Redact = all unlimited
+    - Digital Signature = coming soon only, not granted
+
+Assume:
+- Stripe business account is approved
+- I am ready to add live secrets
+- You must verify the codebase and execute only the real cutover/config work required
+- Do not invent architecture changes
+- Do not do broad refactors
+
+Your exact job:
+1. Read all current billing-critical files before editing
+2. Verify no stale $29.99 references remain as product pricing
+3. Verify no annual billing UI/logic is reintroduced
+4. Verify live subscribe CTA behavior on:
+   - /upgrade
+   - /subscribe
+   - /billing
+5. Verify success/cancel pages still reflect Starter $4.99 / Pro $19.99 truthfully
+6. Verify all entitlement matrices still match the canonical access rules above
+7. Verify Stripe webhook handling is still correct
+8. Verify pre-launch banners automatically disappear once live config is enabled
+9. Make only the minimum required code/config changes for live cutover
+10. Produce the exact manual steps I must perform in Stripe and Replit after code validation
+
+Required config targets:
+- In both billingConfig files, confirm or set:
+  - BILLING_ENABLED: true
+  - BILLING_MODE: "live"
+  - STRIPE_TEST_MODE: false
+  - PAYWALL_ENFORCEMENT: true
+- Verify canonical prices remain:
+  - Starter: 499 cents
+  - Pro: 1999 cents
+
+Required Stripe/live checks:
+- Expect secret names:
+  - STRIPE_SECRET_KEY
+  - STRIPE_WEBHOOK_SECRET
+- Verify APP_BASE_URL / success-cancel redirect behavior is correct for production
+- Verify webhook endpoint path
+- Verify Customer Portal flow still works from Billing page
+- Verify lazy Stripe init fails cleanly when keys are missing (do not break graceful handling)
+
+Required event checks:
+Confirm the system still expects and handles:
+- checkout.session.completed
+- customer.subscription.created
+- customer.subscription.updated
+- customer.subscription.deleted
+- invoice.paid
+- invoice.payment_failed
+
+Hard rules:
+- Do not expose secrets in output
+- Do not change pricing strategy
+- Do not add annual plans
+- Do not add RevenueCat
+- Do not touch mobile billing
+- Do not touch Digital Signature access beyond preserving “coming soon”
+- Do not rewrite working code just to “clean it up”
+- If a real blocker appears, report it clearly and fix only if it is in scope
+
+After code/config validation, give me:
+A. Files changed
+B. Exact live-cutover edits made
+C. Secrets required
+D. Stripe dashboard actions I must do manually
+E. Webhook URL and exact events to register
+F. Redeploy requirements
+G. Manual verification sequence for one real Starter purchase
+H. Manual verification sequence for one gated Pro tool
+I. Go / no-go verdict
+
+The manual verification sequence must include:
+1. Add live Stripe secret key
+2. Add live webhook secret
+3. Enable Stripe Customer Portal
+4. Register webhook
+5. Redeploy both artifacts
+6. Make one real Starter purchase with a separate email
+7. Confirm success page
+8. Confirm subscriber record / billing state
+9. Confirm Analyze + Redact are unlocked on Starter
+10. Confirm Trust Check / Build / Review remain locked on Starter
+11. Confirm Upgrade page CTA works
+12. Confirm Billing page portal button works
+13. Confirm no stale pricing/copy remains anywhere
+
+Return the result as a strict production activation report, not a general summary.

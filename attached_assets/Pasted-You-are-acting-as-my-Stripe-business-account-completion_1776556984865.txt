@@ -1,0 +1,55 @@
+You are acting as my Stripe business-account completion operator for PlainPath.
+
+Context:
+- Product name: PlainPath
+- Website: https://plainpathapp.com
+- Support email: support@plainpathapp.com
+- Product type: web SaaS for document analysis / trust check / contract build / contract review / redaction
+- Launch billing model:
+  - Starter: $4.99/month
+  - Pro: $19.99/month
+- No annual billing live yet
+- Digital Signature is still “coming soon”
+- Web billing only for launch
+- Domain and public branding must stay consistent with plainpathapp.com and PlainPath
+
+Your job:
+Help me complete the Stripe business-account setup correctly and prepare the account for a live SaaS launch. Do not touch code. Do not give filler. Give exact operational guidance.
+
+What I need from you:
+1. A strict step-by-step Stripe dashboard setup checklist for PlainPath
+2. The exact fields/settings I should complete tonight
+3. Recommended values/wording for each field where appropriate
+4. Any items that must match my website, privacy policy, pricing page, and support pages
+5. A final “ready / not ready” checklist for moving into live billing cutover
+
+Must cover:
+- Business profile completion
+- Public business details
+- Support email / support URL / business address requirements
+- Branding in Stripe
+- Statement descriptor recommendation for PlainPath
+- Customer Portal settings for a monthly SaaS
+- Allowed cancellation/refund/support language alignment with the site
+- Payment methods appropriate for a basic US web SaaS launch
+- Promotion codes setting
+- Receipt / invoice settings
+- Webhook preparation requirements
+- Where to get live API keys
+- Any compliance or verification blockers that would stop live charges
+- Anything on Stripe that should NOT be enabled yet because PlainPath is monthly-only and does not yet support annual billing or native mobile billing
+
+Important rules:
+- Do not assume annual pricing exists
+- Do not invent product IDs if inline price_data is sufficient
+- Do not recommend enabling native mobile billing, RevenueCat, or Digital Signature billing
+- Keep advice operational, exact, and launch-focused
+- Flag anything that requires my manual decision
+- Separate “required tonight” from “optional later”
+
+Output format:
+A. Required tonight
+B. Stripe dashboard paths + exact settings
+C. Recommended wording/values
+D. Risks/blockers
+E. Ready-for-cutover checklist
