@@ -5,8 +5,29 @@ import {
   FileText, Plus, BookMarked, GitCompare, LogOut, User, ChevronDown,
   LayoutGrid, ShieldCheck, PenLine, Scale, Menu, X, LayoutDashboard, CreditCard, EyeOff,
 } from "lucide-react"
+
 import { ThemeToggle } from "@/components/ui/ThemeToggle"
 import { useUser, useClerk } from "@clerk/react"
+
+function LogoBrand() {
+  return (
+    <div className="flex items-center gap-2">
+      <img
+        src="/images/logo-icon.png"
+        alt=""
+        aria-hidden="true"
+        className="h-8 w-8 shrink-0 object-contain"
+        draggable={false}
+      />
+      <span
+        className="font-display font-bold text-[1.2rem] leading-none tracking-tight text-foreground"
+        style={{ fontFamily: "var(--font-display)" }}
+      >
+        PlainPath
+      </span>
+    </div>
+  )
+}
 
 const TOOL_NAV = [
   { label: "Analyze a Document",   href: "/analyze",                icon: FileText    },
@@ -108,14 +129,9 @@ export function Navbar() {
         <a
           href="/"
           aria-label="PlainPath — go to homepage"
-          className="flex items-center gap-2 group rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2"
+          className="flex items-center shrink-0 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2"
         >
-          <div className="bg-primary/10 p-2 rounded-xl group-hover:bg-primary/20 transition-colors">
-            <FileText className="w-5 h-5 text-primary" strokeWidth={2.5} />
-          </div>
-          <span className="font-display font-bold text-xl tracking-tight text-foreground group-hover:text-primary transition-colors">
-            PlainPath
-          </span>
+          <LogoBrand />
         </a>
 
         {/* Desktop nav */}

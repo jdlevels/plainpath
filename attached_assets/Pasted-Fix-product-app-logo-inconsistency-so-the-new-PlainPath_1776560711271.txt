@@ -1,0 +1,87 @@
+Fix product-app logo inconsistency so the new PlainPath logo appears everywhere, not just on the public homepage.
+
+STRICT SCOPE
+- Target the PRODUCT APP shell, not only the marketing site.
+- Update only the logo/brand rendering used inside actual app routes and tool pages.
+- Do not change pricing, billing, copy, routing, gating, or page layout.
+
+OBJECTIVE
+The new PlainPath logo currently appears on the public home/hero page, but once the user enters the app/tools, the header/logo is still using the old version.
+Make the product app use the same approved new logo treatment consistently across all app pages.
+
+PAGES / SURFACES TO VERIFY
+Check every product-app surface that has a top nav / app header / brand area:
+- /app
+- /import
+- /import?mode=trust-check
+- /trust-check
+- /build-contract
+- /contract-review
+- /redact
+- /billing
+- /upgrade
+- /subscribe
+- /subscribe/success
+- /subscribe/cancel
+- any shared authenticated / app-shell layout
+- any mobile header / collapsed nav version
+- any desktop sidebar/header brand rendering if separate
+
+WHAT TO FIND
+1. Find the shared product-app header/navbar/layout component actually used by tool pages.
+2. Find any old logo asset references, old icon markup, fallback wordmark, or duplicated brand components.
+3. Check whether the marketing site and product app are using different components/assets.
+4. Check light mode and dark mode behavior separately.
+
+REQUIRED FIX
+- Replace the old product-app logo rendering with the same approved new PlainPath logo system already used on the public site.
+- Use a shared reusable logo/brand component if possible so this does not drift again.
+- If the product app needs a compact version for tighter header space, use:
+  - same approved icon
+  - same approved wordmark styling
+  - same brand treatment
+  - just scaled appropriately for app nav
+- Keep it crisp and readable on desktop and mobile.
+- Preserve dark-mode readability.
+- No blurry scaling, no stretched image, no white box artifact, no cropped icon.
+
+IMPLEMENTATION RULES
+- Prefer one canonical logo component used by both marketing and product shells where practical.
+- If separate shells must remain separate, ensure both point to the same current approved asset.
+- Keep dimensions appropriate:
+  - desktop app nav: compact but clearly readable
+  - mobile app nav: icon + readable wordmark or approved compact treatment
+- Maintain alignment with existing nav height; do not break spacing.
+- Do not touch non-logo UI unless required for alignment.
+
+CHECK FOR THESE FAILURE MODES
+- old logo still cached in one layout
+- product shell using old asset path
+- mobile header still old while desktop is new
+- dark mode using old fallback text logo
+- some tool pages bypass shared nav and still use legacy header
+- favicon / browser title unrelatedly changed — do not touch unless needed
+
+MANDATORY VALIDATION
+After the fix, verify with screenshots:
+1. Public homepage header/logo
+2. Product app main/tool page header/logo on desktop
+3. Product app tool page header/logo on mobile width
+4. Dark mode version if supported
+5. At least 3 different tool routes showing the updated logo
+
+RETURN FORMAT
+Provide:
+1. exact files changed
+2. which shared component now controls the logo
+3. old asset/component references removed or replaced
+4. confirmation of routes checked
+5. screenshots proving the logo is now consistent across homepage + app/tool pages
+6. note whether marketing + product now share one canonical logo source
+
+SUCCESS CRITERIA
+- New approved logo appears on homepage AND inside all tool/app pages
+- No old logo remains anywhere in app navigation
+- Desktop and mobile both render correctly
+- Dark mode remains readable
+- No layout breakage
