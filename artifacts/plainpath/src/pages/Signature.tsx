@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react"
+import { useUser } from "@clerk/react"
 import { useLocation } from "wouter"
 import { motion, AnimatePresence } from "framer-motion"
 import {
@@ -13,6 +14,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card } from "@/components/ui/card"
 import { useEntitlements } from "@/hooks/useEntitlements"
+import { consumeToolUsage } from "@/lib/entitlements"
 import {
   listSignatureRequests,
   getSignatureRequest,
@@ -245,6 +247,7 @@ function NewRequestWizard({
   onBack: () => void
   onSent: (id: string) => void
 }) {
+  const { user } = useUser()
   const [step, setStep] = useState<WizardStep>(1)
 
   // Step 1 state
@@ -300,6 +303,11 @@ function NewRequestWizard({
       if (result.error && result.error !== "signature_not_configured") {
         setSendError(result.message || "Failed to send. Please try again.")
         return
+      }
+      // Track tool usage (non-blocking — don't fail the flow if this errors)
+      const email = user?.primaryEmailAddress?.emailAddress
+      if (email) {
+        consumeToolUsage(email, "signature").catch(() => {})
       }
       onSent(result.signatureRequestId)
     } catch (err) {

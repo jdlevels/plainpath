@@ -1,12 +1,22 @@
 import { Router, type Request, type Response } from "express";
 import multer from "multer";
 import crypto from "crypto";
-import { getAuth } from "@clerk/express";
+import { getAuth, clerkClient } from "@clerk/express";
 import { pool } from "@workspace/db";
 import { logger } from "../../lib/logger";
+import { getSubscriberByEmail } from "../../lib/billingDb";
+import { TOOL_ACCESS, normalizePlan } from "../../lib/planEntitlements";
+import { BILLING_CONFIG } from "../../lib/billingConfig";
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
+
+const ADMIN_EMAILS: Set<string> = new Set(
+  (process.env.ADMIN_EMAILS || "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean)
+);
 
 // ─── Auth middleware ──────────────────────────────────────────────────────────
 
@@ -16,6 +26,52 @@ function requireAuth(req: any, res: any, next: any) {
   if (!userId) return res.status(401).json({ error: "unauthorized" });
   req.userId = userId;
   next();
+}
+
+// ─── Plan enforcement middleware ──────────────────────────────────────────────
+// Enforces that the authenticated user's plan includes "signature".
+// When PAYWALL_ENFORCEMENT is false, plan access is logged but never blocked.
+// Admin emails always bypass plan checks.
+
+async function requireSignaturePlan(req: any, res: any, next: any) {
+  try {
+    const userId = req.userId as string;
+    const user = await clerkClient().users.getUser(userId);
+    const email = (user.emailAddresses?.[0]?.emailAddress ?? "").toLowerCase();
+    req.userEmail = email;
+
+    // Admin bypass
+    if (ADMIN_EMAILS.has(email)) return next();
+
+    // If enforcement is off, always proceed (just log)
+    if (!BILLING_CONFIG.PAYWALL_ENFORCEMENT) return next();
+
+    const subscriber = getSubscriberByEmail(email);
+    if (!subscriber || subscriber.status !== "active") {
+      return res.status(403).json({
+        error: "no_active_subscription",
+        message: "An active subscription is required to use Digital Signature.",
+        code: "NO_SUBSCRIPTION",
+      });
+    }
+
+    const plan = normalizePlan(subscriber.plan);
+    const allowedTools = TOOL_ACCESS[plan] ?? [];
+    if (!allowedTools.includes("signature")) {
+      return res.status(403).json({
+        error: "tool_not_in_plan",
+        message: `Your ${plan} plan does not include Digital Signature. Upgrade to Pro for full access.`,
+        code: "TOOL_NOT_IN_PLAN",
+        plan,
+        requiredPlan: "pro",
+      });
+    }
+
+    return next();
+  } catch (err) {
+    logger.error({ err }, "requireSignaturePlan: plan check failed — failing open to avoid outage");
+    return next();
+  }
 }
 
 // ─── DB helpers ───────────────────────────────────────────────────────────────
@@ -109,7 +165,7 @@ async function fetchDropboxSignRequest(providerRequestId: string, authHeader: st
 
 // ─── GET /api/signatures ─ list user's requests ───────────────────────────────
 
-router.get("/", requireAuth, async (req: any, res: Response) => {
+router.get("/", requireAuth, requireSignaturePlan, async (req: any, res: Response) => {
   try {
     const result = await pool.query(
       `SELECT id, document_name, signer_name, signer_email, signer_role,
@@ -142,7 +198,7 @@ router.get("/", requireAuth, async (req: any, res: Response) => {
 
 // ─── GET /api/signatures/:id ─ single request with events ────────────────────
 
-router.get("/:id", requireAuth, async (req: any, res: Response) => {
+router.get("/:id", requireAuth, requireSignaturePlan, async (req: any, res: Response) => {
   try {
     const { id } = req.params;
     const reqResult = await pool.query(
@@ -203,7 +259,7 @@ router.get("/:id", requireAuth, async (req: any, res: Response) => {
 // Accepts multipart/form-data with optional file upload.
 // Fields: signerName, signerEmail, signerRole, requestMessage, documentText
 
-router.post("/send", requireAuth, upload.single("file"), async (req: any, res: Response) => {
+router.post("/send", requireAuth, requireSignaturePlan, upload.single("file"), async (req: any, res: Response) => {
   try {
     const {
       signerName,
@@ -327,12 +383,13 @@ router.post("/send", requireAuth, upload.single("file"), async (req: any, res: R
       [providerRequestId, providerSignatureId, signatureRequestId]
     );
 
-    // ── Record sent event ─────────────────────────────────────────────────────
+    // ── Record sent event (idempotent) ────────────────────────────────────────
     await pool.query(
       `INSERT INTO signature_request_events
-        (signature_request_id, provider_event_name, app_status_after_event, occurred_at)
-       VALUES ($1, 'signature_request_sent', 'sent', NOW())`,
-      [signatureRequestId]
+        (signature_request_id, provider_event_name, app_status_after_event, occurred_at, dedupe_key)
+       VALUES ($1, 'signature_request_sent', 'sent', NOW(), $2)
+       ON CONFLICT (dedupe_key) DO NOTHING`,
+      [signatureRequestId, `${signatureRequestId}:signature_request_sent:send`]
     ).catch(() => {});
 
     return res.json({
@@ -350,7 +407,7 @@ router.post("/send", requireAuth, upload.single("file"), async (req: any, res: R
 
 // ─── GET /api/signatures/:id/refresh ─ refresh status from Dropbox Sign ──────
 
-router.get("/:id/refresh", requireAuth, async (req: any, res: Response) => {
+router.get("/:id/refresh", requireAuth, requireSignaturePlan, async (req: any, res: Response) => {
   try {
     const { id } = req.params;
     const reqResult = await pool.query(
@@ -395,12 +452,13 @@ router.get("/:id/refresh", requireAuth, async (req: any, res: Response) => {
         values
       );
 
+      const refreshDedupeKey = `${id}:refresh_${newStatus}`;
       await pool.query(
         `INSERT INTO signature_request_events
-          (signature_request_id, provider_event_name, app_status_after_event, occurred_at)
-         VALUES ($1, $2, $3, NOW())
+          (signature_request_id, provider_event_name, app_status_after_event, occurred_at, dedupe_key)
+         VALUES ($1, $2, $3, NOW(), $4)
          ON CONFLICT (dedupe_key) DO NOTHING`,
-        [id, `refresh_${newStatus}`, newStatus]
+        [id, `refresh_${newStatus}`, newStatus, refreshDedupeKey]
       ).catch(() => {});
     }
 
@@ -417,7 +475,7 @@ router.get("/:id/refresh", requireAuth, async (req: any, res: Response) => {
 
 // ─── GET /api/signatures/:id/download ─ proxy signed file from Dropbox Sign ──
 
-router.get("/:id/download", requireAuth, async (req: any, res: Response) => {
+router.get("/:id/download", requireAuth, requireSignaturePlan, async (req: any, res: Response) => {
   try {
     const { id } = req.params;
     const reqResult = await pool.query(
@@ -457,7 +515,7 @@ router.get("/:id/download", requireAuth, async (req: any, res: Response) => {
 
 // ─── DELETE /api/signatures/:id ─ delete a draft ─────────────────────────────
 
-router.delete("/:id", requireAuth, async (req: any, res: Response) => {
+router.delete("/:id", requireAuth, requireSignaturePlan, async (req: any, res: Response) => {
   try {
     const { id } = req.params;
     const result = await pool.query(

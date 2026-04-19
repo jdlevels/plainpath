@@ -1,0 +1,105 @@
+Digital Signature looks materially improved, but I am not accepting the sprint as complete yet.
+
+Do NOT rebuild the feature from scratch.
+Do NOT touch unrelated marketing, auth, billing, or other tools.
+This is now a strict validation + gap-close pass only.
+
+I need you to verify the implementation against the original requirements and close any mismatches.
+
+VALIDATE AND REPORT THESE ITEMS EXACTLY:
+
+1. EXACT FILES READ
+Provide the exact full file paths you inspected during this sprint.
+
+2. EXACT FILES CHANGED
+Provide the exact full file paths created, modified, or deleted.
+
+3. ROUTE LOCATION
+Confirm the real route structure now in code.
+I need to know whether Digital Signature lives at:
+- /app/signature
+or
+- /signature
+
+If it is not inside /app, explain why, confirm it is protected, and either move it into /app or justify the architecture.
+
+4. STATUS MODEL
+Show the exact normalized Digital Signature status values now used in code.
+I require confirmation of support for:
+- draft
+- sent
+- viewed
+- signed
+- declined
+- failed
+- expired
+
+If the UI groups some of these into broader visual badges, that is fine, but the underlying status model must still exist and be persisted cleanly.
+
+5. GATING BEHAVIOR
+State exact behavior for:
+- Free
+- Starter
+- Pro
+
+I need both:
+- frontend behavior
+- server-side enforcement behavior
+
+If Digital Signature access is enforced only in the UI and not in API/server logic, fix that.
+
+6. DOCUMENT SOURCE BEHAVIOR
+Confirm exactly what users can do today:
+- upload a new document
+- select an existing saved document
+If existing saved-document selection is not supported, state that clearly and explain whether no reusable document library exists yet.
+
+7. REAL END-TO-END TEST
+Run and document one real provider-backed test-mode flow end-to-end:
+- create local draft
+- upload document
+- add signer
+- send real provider request
+- persist provider request ID
+- confirm request appears in history
+- confirm detail page shows event timeline
+- confirm at least one real provider/webhook status update is stored
+- confirm signed/completed file retrieval behavior if available in test mode
+
+Do not simulate this.
+Use actual test-mode behavior only.
+
+8. AUDIT TRAIL PROOF
+Show how audit events are stored.
+I need confirmation that:
+- raw provider event names are stored
+- webhook payloads are persisted
+- duplicate delivery is handled idempotently
+- timeline UI is based on stored events, not fabricated states
+
+9. COMPLETION RESULT
+Confirm whether the app has a real completion/result screen for a signed request.
+If yes, state what data is shown.
+If not, add it cleanly.
+
+10. PROVIDER CONFIG
+List the exact environment variables currently referenced by the Digital Signature implementation.
+Do not guess.
+Read the code and output the exact env keys.
+
+Also state what remains blocked only by live provider credentials or provider dashboard setup.
+
+11. RESPONSIVE VERIFICATION
+Provide a true verification summary for:
+- desktop
+- tablet
+- mobile
+
+If anything is misaligned or cramped, fix it before reporting back.
+
+12. DIGITAL SIGNATURE LAUNCH BLOCKERS ONLY
+List only blockers specific to this feature.
+Do not include unrelated known project issues.
+
+IMPORTANT:
+If anything above is off-spec, fix it now and then provide a corrected completion report.
