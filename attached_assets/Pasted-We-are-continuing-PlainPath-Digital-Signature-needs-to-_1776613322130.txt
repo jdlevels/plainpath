@@ -1,0 +1,125 @@
+We are continuing PlainPath.
+
+Digital Signature needs to evolve from a basic send-and-track flow into a true in-app document preparation tool.
+
+This is a new product requirement and should be treated as the next Digital Signature build phase.
+
+PRODUCT DIRECTION
+Digital Signature must behave like its own full tool inside /app, similar in importance to Redact Sensitive Info, but purpose-built for signature preparation.
+
+The user must be able to:
+- open a document inside the tool
+- view the document in a left-side document panel
+- select a field type from the tool UI
+- click directly on the document to place the field
+- drag and resize the placed field
+- assign that field to the signer
+- review and send the request with those exact field positions
+
+TARGET UX
+
+Layout:
+- Left side: document viewer/workspace
+- Right side: signer setup, field tools, placed field list, review/send panel
+
+Field types for first build:
+- Signature
+- Initials
+- Date signed
+- Name
+- Title
+- Text field
+
+Core interactions:
+1. Upload PDF
+2. Render PDF in the workspace
+3. Select field type
+4. Click to place field on the page
+5. Drag/resize/move/delete field
+6. Assign field to signer
+7. Save draft
+8. Send using the placed field coordinates
+
+PROVIDER DIRECTION
+Use the current Dropbox Sign integration, but upgrade it to support actual field placement on the document.
+Do not use appended signature-page-only behavior for this mode.
+
+Implement the provider mapping using the field-placement approach that supports page/x/y/width/height/type coordinate mapping for PDFs.
+
+IMPORTANT PRODUCT RULES
+- This should feel like a real PlainPath tool, not a modal or lightweight send form
+- Keep the current send-and-track flow as a fallback “Quick Send” path if helpful
+- Add a second full mode: “Prepare & Place”
+- PDF-only is acceptable for the placement mode in this phase
+- Do not degrade the existing audit trail, history, status tracking, or detail page
+
+BUILD EXPECTATIONS
+
+Inspect first:
+- current /app/signature page structure
+- current signature send payload builder
+- current file upload flow
+- current saved draft/request model
+- current document viewer utilities already in the repo, if any
+
+Then design and build:
+
+1. Document workspace UI
+- PDF render area on left
+- field tool palette on right
+- signer panel
+- placed field inspector/list
+
+2. Placement engine
+- click-to-place
+- drag to reposition
+- resize handles
+- page-aware coordinates
+- selection state
+- delete/edit assigned field
+
+3. Data model
+Persist draft field placements with:
+- request id
+- page number
+- x
+- y
+- width
+- height
+- field type
+- signer reference
+- required flag if applicable
+
+4. Provider mapping
+Translate saved field placements into the Dropbox Sign field-placement payload on send.
+
+5. Validation
+Before send:
+- require at least one signer
+- require at least one signature field
+- require every placed field to be assigned properly
+- block send on invalid/incomplete field mapping
+
+6. Modes
+Support:
+- Quick Send
+- Prepare & Place
+
+7. Responsive behavior
+Desktop must prioritize the split-view workspace.
+Tablet/mobile can stack the panels, but the feature must still work.
+
+OUTPUT REQUIRED
+When complete, provide:
+1. exact files read
+2. exact files changed
+3. what current Digital Signature flow was preserved
+4. what new workspace/placement system was built
+5. how field coordinates are stored
+6. how the provider payload is generated from placed fields
+7. any PDF-only limitations for this phase
+8. desktop/tablet/mobile verification summary
+9. any remaining blockers specific to the placement feature
+
+SUCCESS CONDITION
+This pass is successful only if the user can open a document inside /app/signature, place signature-related fields directly on the document, save that placement, and send the request using those exact positions.
