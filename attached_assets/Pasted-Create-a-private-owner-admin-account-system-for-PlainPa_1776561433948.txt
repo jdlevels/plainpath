@@ -1,0 +1,156 @@
+Create a private owner/admin account system for PlainPath now.
+
+This is the next priority.
+The app is locked down, and we need an internal admin account so the owner can use and test the platform without customer-facing plan restrictions.
+
+==================================================
+GOAL
+==================================================
+
+Create a secure internal admin/owner access path for the app.
+
+This is NOT a public admin signup feature.
+This is a private internal role for the app owner.
+
+==================================================
+REQUIRED OUTCOME
+==================================================
+
+My owner/admin account must be able to:
+1. log into the app normally
+2. be recognized as admin/owner
+3. bypass free/starter/pro gating
+4. access all 5 live tools for testing
+5. not expose that bypass to normal users
+6. not accidentally mark Digital Signature as live for the public
+
+==================================================
+ROLE MODEL
+==================================================
+
+Support these plan/role states:
+- free
+- starter
+- pro
+- admin
+
+Optional later:
+- owner
+
+For now, admin is enough if owner is not already modeled.
+
+Behavior:
+- free = current free restrictions
+- starter = current starter restrictions
+- pro = current pro restrictions
+- admin = bypass product gating for internal testing only
+
+==================================================
+ADMIN BEHAVIOR
+==================================================
+
+Admin should:
+- bypass Analyze free-limit restrictions
+- bypass Starter/Pro paywall restrictions
+- access all 5 currently live tools
+- still see Digital Signature as coming soon unless there is an intentional internal preview state
+- be able to test the product without live subscription status blocking usage
+
+Do NOT:
+- unlock admin access for all users
+- expose an admin toggle in the UI
+- create a public “become admin” path
+- weaken customer gating rules
+
+==================================================
+BEST IMPLEMENTATION DIRECTION
+==================================================
+
+Implement the fastest secure version first.
+
+Preferred path:
+1. use a trusted allowlist via env var such as:
+   ADMIN_EMAILS=comma,separated,emails
+2. when a logged-in user’s email matches ADMIN_EMAILS, assign admin privileges in app access logic
+3. if the database already has user roles/plan states, either:
+   - map allowlisted user to admin role at runtime, or
+   - persist role=admin for that user safely
+
+Use the existing auth/login system.
+Do not create a second unrelated login system if unnecessary.
+
+==================================================
+WHAT TO AUDIT / UPDATE
+==================================================
+
+Find and update all places where access is enforced, including:
+- Analyze limit checks
+- tool access gates
+- upgrade/paywall modals
+- route guards
+- subscribe/billing checks
+- dashboard/tool launcher cards
+- internal product navigation
+
+Admin should bypass those checks cleanly.
+
+==================================================
+ADMIN UX
+==================================================
+
+Keep admin UX subtle.
+Acceptable:
+- tiny badge like “Admin” in account/profile area
+- internal-only admin banner if useful
+
+Do NOT make the public product visually different for normal users.
+
+==================================================
+OPTIONAL BUT HELPFUL
+==================================================
+
+If clean and quick, add:
+- a minimal internal admin panel or account page section showing:
+  - current role
+  - current plan
+  - gating status
+  - whether admin bypass is active
+
+But this is optional.
+The main goal is the working admin account.
+
+==================================================
+SECURITY / SAFETY RULES
+==================================================
+
+- do not expose admin via frontend-only flag that users can spoof
+- do not trust a query param or localStorage flag
+- do not make admin role editable by normal users
+- keep customer billing/plan logic intact for non-admin users
+- keep admin gating bypass limited strictly to allowlisted account(s)
+
+==================================================
+DELIVERABLES
+==================================================
+
+Return:
+1. exact files changed
+2. exact env vars needed
+3. how admin detection works
+4. what access checks were updated
+5. how to add my email as the owner/admin
+6. screenshot(s) proving:
+   - admin account can access all 5 live tools
+   - non-admin/free user still sees correct gating
+7. any optional admin UI added
+
+==================================================
+SUCCESS CRITERIA
+==================================================
+
+This task is complete only if:
+- my allowlisted account can access all 5 live tools
+- free/starter/pro customer behavior remains unchanged
+- Digital Signature is still not public/live
+- there is no public admin signup path
+- the system is secure enough for immediate internal use

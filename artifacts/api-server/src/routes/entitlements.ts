@@ -36,11 +36,12 @@ router.get("/status", (req, res) => {
       return res.status(400).json({ error: "Missing email" })
     }
 
-    // Admin bypass: full Pro, unlimited usage
+    // Admin bypass: full Pro, unlimited usage — no Stripe subscription required
     if (isAdminEmail(email)) {
       const proEntitlements = PLAN_ENTITLEMENTS["pro"]
       return res.json({
         email,
+        role: "admin",
         found: true,
         status: "active",
         plan: "pro",

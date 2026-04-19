@@ -5,6 +5,7 @@ export type ToolKey = "analyze" | "trust-check" | "contract-review" | "build-con
 
 export type EntitlementStatus = {
   email: string
+  role?: "admin" | "free" | "starter" | "pro"
   found: boolean
   status: string
   plan: PlanKey
