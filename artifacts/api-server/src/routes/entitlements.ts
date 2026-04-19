@@ -50,7 +50,7 @@ router.get("/status", (req, res) => {
         usageLimit: proEntitlements.analysesPerMonth,
         usageRemaining: proEntitlements.analysesPerMonth,
         toolAccess: TOOL_ACCESS["pro"],
-        toolUsage: { analyze: 0, "trust-check": 0, "contract-review": 0, "build-contract": 0, redact: 0 },
+        toolUsage: { analyze: 0, "trust-check": 0, "contract-review": 0, "build-contract": 0, redact: 0, signature: 0 },
         features: proEntitlements.features,
         currentPeriodEnd: null,
         cancelAtPeriodEnd: false,
@@ -102,7 +102,7 @@ router.post("/consume", (req, res) => {
     const email = String(req.body?.email || "").trim().toLowerCase()
     const tool = String(req.body?.tool || "") as ToolKey
 
-    const validTools: ToolKey[] = ["analyze", "trust-check", "contract-review", "build-contract", "redact"]
+    const validTools: ToolKey[] = ["analyze", "trust-check", "contract-review", "build-contract", "redact", "signature"]
 
     if (!email) {
       return res.status(400).json({ error: "Missing email" })

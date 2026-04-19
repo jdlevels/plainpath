@@ -1,7 +1,7 @@
 // ─── Client-Side Entitlements ─────────────────────────────────────────────────
 
 export type PlanKey = "starter" | "pro"
-export type ToolKey = "analyze" | "trust-check" | "contract-review" | "build-contract" | "redact"
+export type ToolKey = "analyze" | "trust-check" | "contract-review" | "build-contract" | "redact" | "signature"
 
 export type EntitlementStatus = {
   email: string

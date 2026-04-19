@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter"
 import { Button } from "@/components/ui/button"
 import {
   FileText, Plus, BookMarked, GitCompare, LogOut, User, ChevronDown,
-  LayoutGrid, ShieldCheck, PenLine, Scale, Menu, X, LayoutDashboard, CreditCard, EyeOff,
+  LayoutGrid, ShieldCheck, PenLine, Scale, Menu, X, LayoutDashboard, CreditCard, EyeOff, FileSignature,
 } from "lucide-react"
 
 import { ThemeToggle } from "@/components/ui/ThemeToggle"
@@ -31,12 +31,13 @@ function LogoBrand() {
 }
 
 const TOOL_NAV = [
-  { label: "Analyze a Document",   href: "/analyze",                icon: FileText    },
-  { label: "Document Trust Check", href: "/import?mode=trust-check", icon: ShieldCheck },
-  { label: "Contract Review",      href: "/contract-review",        icon: Scale       },
-  { label: "Build a Contract",     href: "/build-contract",         icon: PenLine     },
-  { label: "Redact Sensitive Info", href: "/redact",                icon: EyeOff      },
-  { label: "Compare Versions",     href: "/compare",                icon: GitCompare  },
+  { label: "Analyze a Document",   href: "/analyze",                icon: FileText       },
+  { label: "Document Trust Check", href: "/import?mode=trust-check", icon: ShieldCheck   },
+  { label: "Contract Review",      href: "/contract-review",        icon: Scale          },
+  { label: "Build a Contract",     href: "/build-contract",         icon: PenLine        },
+  { label: "Redact Sensitive Info", href: "/redact",                icon: EyeOff         },
+  { label: "Digital Signature",    href: "/signature",              icon: FileSignature  },
+  { label: "Compare Versions",     href: "/compare",                icon: GitCompare     },
 ]
 
 function UserMenu() {

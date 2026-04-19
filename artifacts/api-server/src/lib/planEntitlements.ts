@@ -2,7 +2,8 @@
 //
 // Plans:
 //   starter — $4.99/month  — Analyze a Document + Redact Sensitive Info
-//   pro     — $19.99/month — All five tools (Analyze, Trust Check, Contract Builder, Contract Review, Redact)
+//   pro     — $19.99/month — All tools (Analyze, Trust Check, Contract Builder,
+//                            Contract Review, Redact, Digital Signature)
 //
 // Never duplicate plan or feature logic in pages, routes, or components.
 // All gating must reference TOOL_ACCESS and PLAN_ENTITLEMENTS from here.
@@ -19,11 +20,12 @@ export type ToolKey =
   | "contract-review"
   | "build-contract"
   | "redact"
+  | "signature"
 
 /** Which tools each plan can access. This is the canonical feature gate. */
 export const TOOL_ACCESS: Record<PlanKey, ToolKey[]> = {
   starter: ["analyze", "redact"],
-  pro: ["analyze", "trust-check", "contract-review", "build-contract", "redact"],
+  pro: ["analyze", "trust-check", "contract-review", "build-contract", "redact", "signature"],
 }
 
 /** True if the given plan can access the given tool. */

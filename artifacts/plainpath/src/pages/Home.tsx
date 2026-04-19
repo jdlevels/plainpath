@@ -4,7 +4,7 @@ import {
   ArrowRight, ShieldCheck, FileSignature,
   PenLine, FileScan, Scale, EyeOff,
   BookMarked, Clock, ChevronRight, CreditCard,
-  LayoutGrid,
+  LayoutGrid, Pen,
 } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useUser } from "@clerk/react"
@@ -14,6 +14,12 @@ import { useEntitlements } from "@/hooks/useEntitlements"
 import { getAll as getLocalAnalyses } from "@/lib/savedAnalyses"
 import { fetchCloudAnalyses } from "@/lib/cloudHistory"
 import type { SavedAnalysis } from "@/lib/savedAnalyses"
+import { listSignatureRequests, STATUS_LABELS, STATUS_COLORS, type SignatureListItem } from "@/lib/signatureApi"
+import type { SignatureStatus } from "@/lib/signatureApi"
+
+type RecentItem =
+  | { kind: "analysis"; id: string; title: string; savedAt: string }
+  | { kind: "signature"; id: string; title: string; savedAt: string; status: SignatureStatus; signerName: string }
 
 // ─── Tool definitions ─────────────────────────────────────────────────────────
 
@@ -134,23 +140,63 @@ export default function Home() {
   const [, setLocation] = useLocation()
   const { user } = useUser()
   const { entitlements, isAdmin } = useEntitlements()
-  const [recentWork, setRecentWork] = useState<SavedAnalysis[]>([])
+  const [recentWork, setRecentWork] = useState<RecentItem[]>([])
   const [recentLoading, setRecentLoading] = useState(true)
 
   const firstName = user?.firstName ?? null
   const plan = entitlements?.plan ?? null
   const toolAccess = entitlements?.toolAccess ?? []
 
-  // Load recent analyses — cloud first, fallback to localStorage
+  // Load recent work — analyses + signature requests merged by date
   useEffect(() => {
     let cancelled = false
     async function load() {
       setRecentLoading(true)
       try {
-        const cloud = await fetchCloudAnalyses()
-        if (!cancelled) setRecentWork(cloud.slice(0, 3))
+        const [cloudAnalyses, cloudSigs] = await Promise.allSettled([
+          fetchCloudAnalyses(),
+          listSignatureRequests(),
+        ])
+
+        const analyses: RecentItem[] =
+          cloudAnalyses.status === "fulfilled"
+            ? cloudAnalyses.value.map((a: SavedAnalysis) => ({
+                kind: "analysis" as const,
+                id: a.id,
+                title: a.title,
+                savedAt: a.savedAt,
+              }))
+            : getLocalAnalyses().map((a: SavedAnalysis) => ({
+                kind: "analysis" as const,
+                id: a.id,
+                title: a.title,
+                savedAt: a.savedAt,
+              }))
+
+        const sigs: RecentItem[] =
+          cloudSigs.status === "fulfilled"
+            ? cloudSigs.value.map((s: SignatureListItem) => ({
+                kind: "signature" as const,
+                id: s.id,
+                title: s.documentName,
+                savedAt: s.createdAt,
+                status: s.status,
+                signerName: s.signerName,
+              }))
+            : []
+
+        const merged = [...analyses, ...sigs]
+          .sort((a, b) => new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime())
+          .slice(0, 4)
+
+        if (!cancelled) setRecentWork(merged)
       } catch {
-        const local = getLocalAnalyses().slice(0, 3)
+        const local = getLocalAnalyses().slice(0, 4).map((a: SavedAnalysis) => ({
+          kind: "analysis" as const,
+          id: a.id,
+          title: a.title,
+          savedAt: a.savedAt,
+        }))
         if (!cancelled) setRecentWork(local)
       } finally {
         if (!cancelled) setRecentLoading(false)
@@ -270,29 +316,55 @@ export default function Home() {
               )
             })}
 
-            {/* Digital Signature — Coming Soon */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: TOOLS.length * 0.06 }}
-            >
-              <Card className="h-full border border-dashed border-border/40 bg-muted/20 rounded-2xl overflow-hidden">
-                <div className="p-5 flex flex-col h-full gap-3">
-                  <div className="flex items-start justify-between">
-                    <div className="w-10 h-10 rounded-xl bg-muted/40 flex items-center justify-center">
-                      <FileSignature className="w-5 h-5 text-muted-foreground/40" />
+            {/* Digital Signature — Pro tool */}
+            {(() => {
+              const sigAccessible = isAdmin || toolAccess.includes("signature")
+              return (
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: TOOLS.length * 0.06 }}
+                >
+                  <Card
+                    className={`h-full border rounded-2xl overflow-hidden transition-all ${
+                      sigAccessible
+                        ? "border-border/60 hover:border-violet-400/50 hover:shadow-md hover:shadow-violet-500/10 cursor-pointer"
+                        : "border-border/40 bg-muted/10"
+                    }`}
+                    onClick={sigAccessible ? () => setLocation("/signature") : undefined}
+                  >
+                    <div className="p-5 flex flex-col h-full gap-3">
+                      <div className="flex items-start justify-between">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${sigAccessible ? "bg-violet-50 dark:bg-violet-950/50" : "bg-muted/40"}`}>
+                          <FileSignature className={`w-5 h-5 ${sigAccessible ? "text-violet-500 dark:text-violet-400" : "text-muted-foreground/40"}`} />
+                        </div>
+                        {!sigAccessible && (
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 border border-border/30 rounded-full px-2 py-0.5">
+                            Pro
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <h3 className={`font-semibold text-sm mb-1 ${sigAccessible ? "text-foreground" : "text-muted-foreground/70"}`}>
+                          Digital Signature
+                        </h3>
+                        <p className={`text-xs leading-relaxed ${sigAccessible ? "text-muted-foreground" : "text-muted-foreground/50"}`}>
+                          Send legally binding e-signature requests and track signing status.
+                        </p>
+                      </div>
+                      {!sigAccessible && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setLocation("/upgrade") }}
+                          className="text-xs font-semibold text-primary hover:underline text-left"
+                        >
+                          Upgrade to unlock →
+                        </button>
+                      )}
                     </div>
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 border border-border/30 rounded-full px-2 py-0.5">
-                      Coming Soon
-                    </span>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-muted-foreground/60 text-sm mb-1">Digital Signature</h3>
-                    <p className="text-xs text-muted-foreground/50 leading-relaxed">Sign documents electronically — legally binding and secure.</p>
-                  </div>
-                </div>
-              </Card>
-            </motion.div>
+                  </Card>
+                </motion.div>
+              )
+            })()}
           </div>
         </section>
 
@@ -316,8 +388,8 @@ export default function Home() {
           </div>
 
           {recentLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {[0, 1, 2].map((i) => (
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+              {[0, 1, 2, 3].map((i) => (
                 <div key={i} className="h-20 rounded-2xl bg-muted/30 animate-pulse" />
               ))}
             </div>
@@ -335,7 +407,7 @@ export default function Home() {
               </div>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               {recentWork.map((item, i) => (
                 <motion.div
                   key={item.id}
@@ -343,21 +415,41 @@ export default function Home() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}
                 >
-                  <Card
-                    className="group border border-border/50 bg-card hover:border-primary/30 hover:shadow-md rounded-2xl cursor-pointer transition-all"
-                    onClick={() => setLocation("/my-analyses")}
-                  >
-                    <div className="p-4">
-                      <div className="flex items-start gap-2.5">
-                        <FileScan className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground truncate">{item.title}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">{timeAgo(item.savedAt)}</p>
+                  {item.kind === "analysis" ? (
+                    <Card
+                      className="group border border-border/50 bg-card hover:border-primary/30 hover:shadow-md rounded-2xl cursor-pointer transition-all"
+                      onClick={() => setLocation("/my-analyses")}
+                    >
+                      <div className="p-4">
+                        <div className="flex items-start gap-2.5">
+                          <FileScan className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">{item.title}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">{timeAgo(item.savedAt)}</p>
+                          </div>
+                          <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0 group-hover:text-primary/60 transition-colors mt-0.5" />
                         </div>
-                        <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0 group-hover:text-primary/60 transition-colors mt-0.5" />
                       </div>
-                    </div>
-                  </Card>
+                    </Card>
+                  ) : (
+                    <Card
+                      className="group border border-border/50 bg-card hover:border-violet-400/40 hover:shadow-md rounded-2xl cursor-pointer transition-all"
+                      onClick={() => setLocation("/signature")}
+                    >
+                      <div className="p-4">
+                        <div className="flex items-start gap-2.5">
+                          <Pen className="w-4 h-4 text-violet-500 dark:text-violet-400 mt-0.5 shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">{item.title}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5 truncate">→ {item.signerName}</p>
+                          </div>
+                          <span className={`text-[9px] font-bold uppercase tracking-wider border rounded-full px-1.5 py-0.5 flex-shrink-0 ${STATUS_COLORS[item.status]}`}>
+                            {STATUS_LABELS[item.status]}
+                          </span>
+                        </div>
+                      </div>
+                    </Card>
+                  )}
                 </motion.div>
               ))}
             </div>

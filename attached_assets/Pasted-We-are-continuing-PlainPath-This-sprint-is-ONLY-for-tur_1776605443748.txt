@@ -1,0 +1,324 @@
+We are continuing PlainPath.
+
+This sprint is ONLY for turning Digital Signature from “coming soon” into a real working feature inside /app.
+
+Do not re-audit unrelated work.
+Do not rewrite the public marketing site.
+Do not disturb current auth guards, logout behavior, pricing, or unrelated billing code.
+Do not degrade any existing live tools.
+
+CURRENT CONFIRMED PRODUCT RULES
+- Public marketing site at `/` stays untouched unless absolutely required
+- Product area `/app` stays product-focused
+- Global auth protection for `/app` is already live
+- Signed-out users must still be redirected away from protected `/app` routes to `/`
+- Logout must still send users to the marketing homepage
+- Pricing remains:
+  - Starter: $4.99/month
+  - Pro: $19.99/month
+- Current access matrix remains the source of truth unless Digital Signature is added cleanly:
+  - Free: 2 analyses only
+  - Starter: Analyze + Redact
+  - Pro: all live tools
+- Digital Signature is the next product gap to complete
+
+PRIMARY GOAL
+Build a launch-ready MVP Digital Signature tool inside `/app` using the existing product architecture, UI language, routing, entitlement patterns, storage patterns, and history/status patterns.
+
+CRITICAL PRODUCT DECISION
+Implement Digital Signature with a REAL provider-backed workflow, not fake UI.
+If Dropbox Sign / HelloSign scaffolding already exists anywhere in the codebase, use that path first.
+Prefer a NON-EMBEDDED send/sign MVP first, because:
+- it is real
+- it supports test mode
+- it supports statuses and webhooks
+- it avoids blocking the build on embedded signing requirements
+If later embedded signing is already scaffolded and nearly complete, keep architecture ready for it, but do not let embedded complexity block the MVP.
+
+IMPORTANT
+- Real system behavior only
+- No fake “sent”, “signed”, “audit trail”, or completion states
+- If provider credentials are missing, build the full feature in test/scaffold mode so only final provider credentials remain
+- Replace “coming soon” once the test-mode flow is genuinely wired
+
+STEP 1 — INSPECT FIRST
+Before changing code, inspect and then report:
+1. exact files read
+2. exact files you plan to change
+3. what already exists vs what is missing
+
+Inspect these areas first:
+- current Digital Signature placeholder / route / tool card wiring
+- tool launcher architecture
+- current /app route map
+- history / recent work / saved work patterns
+- plan entitlement / subscription access logic
+- database / storage model used for saved work
+- any provider integration scaffolding:
+  - Dropbox Sign
+  - HelloSign
+  - e-sign
+  - webhook/callback routes
+  - env placeholders
+  - SDK installs
+- current document upload / saved document flows that Digital Signature can reuse
+
+Do not guess file names. Read the repo and list the exact files.
+
+STEP 2 — BUILD THE MVP FEATURE
+Implement all of the following:
+
+1. TOOL LAUNCHER ENTRY
+- Replace Digital Signature “coming soon” behavior with a real entry point in the existing tool launcher
+- Keep card visual language consistent with current PlainPath shell
+- Respect existing locked/unlocked tool behavior
+
+2. ROUTE + PAGE
+Create or complete a dedicated Digital Signature route/page inside `/app`
+Preferred structure:
+- `/app/signature` = landing/workspace
+- `/app/signature/new` = new request flow if your routing system supports it
+- `/app/signature/:id` = request detail page
+Reuse existing route conventions if the app already has them
+
+3. NEW REQUEST FLOW
+Build a real flow with these stages:
+- choose document
+- add signer details
+- review and send
+- result / tracking
+
+Document source options:
+A. upload a new PDF/document for signature
+B. select an existing stored document from the user’s app history/library ONLY if such a real source already exists
+If no real reusable document library exists, support upload-first and do not fake “select existing”
+
+Signer fields for MVP:
+- signer full name
+- signer email
+- optional role/title
+- optional message/note to signer
+Keep single-signer MVP acceptable unless multi-signer support already exists cleanly
+
+4. PROVIDER INTEGRATION
+Use Dropbox Sign if present or if no other existing provider scaffold is found.
+
+Backend behavior:
+- create a LOCAL draft record first
+- on send, create a REAL provider signature request
+- use test mode if environment indicates test/sandbox mode
+- persist provider IDs and returned metadata
+- do not fabricate provider responses
+
+Important implementation detail:
+For MVP, use provider flow that works on generic uploaded documents without requiring custom field placement UI. If provider appends a signature page automatically, that is acceptable for MVP.
+
+Store in provider metadata at minimum:
+- app user id
+- local signature request id
+- environment/source marker
+This must allow webhook reconciliation later.
+
+5. STATUS MODEL
+Support these app-level states:
+- draft
+- sent
+- viewed
+- signed
+- declined
+- failed
+- expired
+
+Map provider events/statuses into the app status model.
+Persist both:
+- normalized app status
+- raw provider event/status payload reference where appropriate
+
+6. WEBHOOK / CALLBACK HANDLING
+Create or complete a provider callback endpoint.
+Requirements:
+- verify callback authenticity using provider-supported verification helpers if available
+- parse multipart/form-data callback format correctly
+- persist event history
+- update request status idempotently
+- ignore duplicate event deliveries safely
+- keep raw provider event name and timestamp
+- do not expose secrets to the client
+
+7. REQUEST DETAIL PAGE
+For each signature request, build a real detail page showing:
+- document name
+- signer name/email/role
+- created date
+- sent date
+- current status
+- provider request id
+- event timeline / audit trail
+- actions allowed for current state
+
+Action examples:
+- view status
+- refresh status from provider
+- download final signed file if available
+- download current file if appropriate
+- copy signer email
+- resend is optional ONLY if provider integration and state handling make it safe
+- cancel is optional; only implement if real and safe
+
+8. COMPLETION RESULT
+When a request is completed:
+- show a completion/result state
+- allow access to the signed document if provider file retrieval is available
+- show completion timestamps and signer identity details returned by provider
+- keep this grounded in real provider data, not assumed values
+
+9. HISTORY INTEGRATION
+Integrate Digital Signature into existing saved work/history/recent activity patterns.
+Requirements:
+- recent requests should appear where users expect other work items to appear
+- signature requests should preserve status badges consistent with the product system
+- clicking a history item should open the request detail screen
+
+10. PLAN GATING
+Keep existing matrix intact and add Digital Signature cleanly as:
+- Free: no Digital Signature create/send access
+- Starter: no Digital Signature create/send access
+- Pro: full Digital Signature access
+
+Implementation rules:
+- Free/Starter can see a locked teaser only if the current app already uses that locked pattern
+- Pro can fully enter and use the tool
+- do not break existing gating for Analyze/Redact/other live tools
+
+11. ENV + CONFIG
+Inspect current env setup and reuse existing config patterns.
+If missing, add only the minimum clean environment variables needed, such as:
+- DROPBOX_SIGN_API_KEY
+- DROPBOX_SIGN_CLIENT_ID (only if needed for existing or future embedded flow)
+- DROPBOX_SIGN_TEST_MODE
+- DROPBOX_SIGN_CALLBACK_URL or use app route construction
+- any provider app id / callback secret placeholders if your current architecture uses them
+
+Do not hardcode secrets.
+Do not leak provider keys to the client bundle.
+
+12. DATA MODEL
+Reuse the existing ORM / DB / storage layer.
+Add only the tables/collections/fields needed for real request tracking.
+
+Preferred minimum entities:
+- signature_requests
+- signature_request_events
+
+Recommended fields for signature_requests:
+- id
+- user_id
+- source_document_id nullable
+- source_document_name
+- source_storage_path / blob key if your app already stores files
+- signer_name
+- signer_email
+- signer_role nullable
+- request_message nullable
+- provider_name
+- provider_request_id nullable
+- provider_signature_id nullable if applicable
+- status
+- test_mode boolean
+- created_at
+- updated_at
+- sent_at nullable
+- viewed_at nullable
+- completed_at nullable
+- declined_at nullable
+- expired_at nullable
+- failed_at nullable
+- failure_reason nullable
+- signed_file_storage_path nullable
+- signed_file_download_url nullable only if your existing architecture uses expiring external URLs
+- metadata json nullable
+
+Recommended fields for signature_request_events:
+- id
+- signature_request_id
+- provider_name
+- provider_event_name
+- app_status_after_event
+- payload_json
+- occurred_at
+- received_at
+- dedupe_key or provider event id if available
+
+13. UI / UX RULES
+- Use existing PlainPath dark theme shell
+- Keep widths, cards, typography, and spacing consistent with the current product shell
+- Do not rework unrelated pages
+- No fake badges
+- No fake event logs
+- No fake completion screen
+- Handle error states cleanly:
+  - provider not configured
+  - invalid file
+  - send failed
+  - webhook not configured
+  - signed file not ready yet
+  - expired/declined request
+
+14. TECHNICAL QUALITY RULES
+- Keep server/client boundaries clean
+- No provider secret in the frontend
+- Add robust validation
+- Use existing API helper / server action / route handler conventions
+- Make webhook processing idempotent
+- Make request detail polling/refresh safe
+- If signed file retrieval can temporarily fail because provider is still preparing the PDF, handle it gracefully and let user retry
+
+15. RESPONSIVE VERIFICATION
+Verify and fix layout for:
+- desktop
+- tablet
+- mobile
+Digital Signature pages must remain usable and visually aligned with the rest of `/app`
+
+STEP 3 — FINAL OUTPUT REQUIRED
+When finished, output a strict completion report with these sections:
+
+1. EXACT FILES READ
+List every file you inspected
+
+2. EXACT FILES CHANGED
+List every file created/modified/deleted
+
+3. WHAT ALREADY EXISTED
+Summarize existing relevant wiring, scaffolding, env placeholders, routes, storage, provider code, and UI patterns found in the repo
+
+4. WHAT WAS NEWLY BUILT
+List the new backend pieces, frontend pages/components, DB schema changes, provider integration points, webhook handling, and history integration
+
+5. FINAL DIGITAL SIGNATURE PRODUCT FLOW
+Describe the end-to-end user flow from launcher -> new request -> send -> tracking -> completion
+
+6. GATING BEHAVIOR
+State exact behavior for Free / Starter / Pro
+
+7. WHAT WORKS NOW END-TO-END
+Be explicit about what is truly working right now in test mode or live mode
+
+8. WHAT IS STILL BLOCKED ONLY BY LIVE PROVIDER CREDENTIALS
+Be explicit and narrow. Do not include unrelated product blockers.
+
+9. DESKTOP / TABLET / MOBILE VERIFICATION
+State what was checked and what was fixed
+
+10. DIGITAL SIGNATURE LAUNCH BLOCKERS ONLY
+List only blockers specific to this feature
+
+SUCCESS CRITERIA
+The sprint is successful only if:
+- Digital Signature is no longer a fake placeholder
+- a Pro user can enter a real Digital Signature flow
+- a real request can be created and stored
+- real status changes can be tracked
+- a real event/audit timeline exists
+- history integration exists
+- the rest of PlainPath remains stable

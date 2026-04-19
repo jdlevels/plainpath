@@ -1,0 +1,584 @@
+import { Router, type Request, type Response } from "express";
+import multer from "multer";
+import crypto from "crypto";
+import { getAuth } from "@clerk/express";
+import { pool } from "@workspace/db";
+import { logger } from "../../lib/logger";
+
+const router = Router();
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
+
+// ─── Auth middleware ──────────────────────────────────────────────────────────
+
+function requireAuth(req: any, res: any, next: any) {
+  const auth = getAuth(req);
+  const userId = auth?.userId;
+  if (!userId) return res.status(401).json({ error: "unauthorized" });
+  req.userId = userId;
+  next();
+}
+
+// ─── DB helpers ───────────────────────────────────────────────────────────────
+
+async function initTables() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS signature_requests (
+      id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id             TEXT NOT NULL,
+      document_name       TEXT NOT NULL,
+      signer_name         TEXT NOT NULL,
+      signer_email        TEXT NOT NULL,
+      signer_role         TEXT,
+      request_message     TEXT,
+      provider_name       TEXT NOT NULL DEFAULT 'dropbox_sign',
+      provider_request_id TEXT,
+      provider_signature_id TEXT,
+      status              TEXT NOT NULL DEFAULT 'draft',
+      test_mode           BOOLEAN NOT NULL DEFAULT TRUE,
+      created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      sent_at             TIMESTAMPTZ,
+      viewed_at           TIMESTAMPTZ,
+      completed_at        TIMESTAMPTZ,
+      declined_at         TIMESTAMPTZ,
+      expired_at          TIMESTAMPTZ,
+      failed_at           TIMESTAMPTZ,
+      failure_reason      TEXT,
+      signed_file_url     TEXT,
+      metadata            JSONB
+    );
+  `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS signature_request_events (
+      id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      signature_request_id  UUID NOT NULL REFERENCES signature_requests(id) ON DELETE CASCADE,
+      provider_name         TEXT NOT NULL DEFAULT 'dropbox_sign',
+      provider_event_name   TEXT NOT NULL,
+      app_status_after_event TEXT,
+      payload_json          JSONB,
+      occurred_at           TIMESTAMPTZ NOT NULL,
+      received_at           TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      dedupe_key            TEXT UNIQUE
+    );
+  `);
+}
+
+// Run table init on module load
+initTables().catch((err) => logger.error({ err }, "signature_requests table init failed"));
+
+// ─── Status mapping from Dropbox Sign events ─────────────────────────────────
+
+const EVENT_STATUS_MAP: Record<string, string> = {
+  signature_request_sent: "sent",
+  signature_request_viewed: "viewed",
+  signature_request_signed: "signed",
+  signature_request_all_signed: "signed",
+  signature_request_declined: "declined",
+  signature_request_expired: "expired",
+  signature_request_canceled: "failed",
+  signature_request_invalid: "failed",
+  signature_request_remind: "sent",
+  signature_request_reassigned: "sent",
+};
+
+function mapEventToStatus(eventType: string): string | null {
+  return EVENT_STATUS_MAP[eventType] ?? null;
+}
+
+// ─── Dropbox Sign helpers ─────────────────────────────────────────────────────
+
+function getDropboxSignCredentials() {
+  const apiKey = process.env.DROPBOX_SIGN_API_KEY;
+  if (!apiKey) return null;
+  return {
+    apiKey,
+    authHeader: `Basic ${Buffer.from(`${apiKey}:`).toString("base64")}`,
+    testMode: process.env.DROPBOX_SIGN_TEST_MODE !== "false",
+  };
+}
+
+async function fetchDropboxSignRequest(providerRequestId: string, authHeader: string) {
+  const resp = await fetch(
+    `https://api.hellosign.com/v3/signature_request/${providerRequestId}`,
+    { headers: { Authorization: authHeader } }
+  );
+  if (!resp.ok) return null;
+  const data = await resp.json() as Record<string, unknown>;
+  return data.signature_request as Record<string, unknown> | null;
+}
+
+// ─── GET /api/signatures ─ list user's requests ───────────────────────────────
+
+router.get("/", requireAuth, async (req: any, res: Response) => {
+  try {
+    const result = await pool.query(
+      `SELECT id, document_name, signer_name, signer_email, signer_role,
+              status, provider_request_id, test_mode,
+              created_at, sent_at, completed_at, signed_file_url
+       FROM signature_requests
+       WHERE user_id = $1
+       ORDER BY created_at DESC`,
+      [req.userId]
+    );
+    res.json(result.rows.map((r: any) => ({
+      id: r.id,
+      documentName: r.document_name,
+      signerName: r.signer_name,
+      signerEmail: r.signer_email,
+      signerRole: r.signer_role,
+      status: r.status,
+      providerRequestId: r.provider_request_id,
+      testMode: r.test_mode,
+      createdAt: r.created_at,
+      sentAt: r.sent_at,
+      completedAt: r.completed_at,
+      signedFileUrl: r.signed_file_url,
+    })));
+  } catch (err) {
+    logger.error({ err }, "signatures list failed");
+    res.status(500).json({ error: "server_error" });
+  }
+});
+
+// ─── GET /api/signatures/:id ─ single request with events ────────────────────
+
+router.get("/:id", requireAuth, async (req: any, res: Response) => {
+  try {
+    const { id } = req.params;
+    const reqResult = await pool.query(
+      `SELECT * FROM signature_requests WHERE id = $1 AND user_id = $2`,
+      [id, req.userId]
+    );
+    if (reqResult.rowCount === 0) {
+      return res.status(404).json({ error: "not_found" });
+    }
+    const r = reqResult.rows[0];
+
+    const eventsResult = await pool.query(
+      `SELECT id, provider_event_name, app_status_after_event, occurred_at, received_at
+       FROM signature_request_events
+       WHERE signature_request_id = $1
+       ORDER BY occurred_at ASC`,
+      [id]
+    );
+
+    return res.json({
+      id: r.id,
+      documentName: r.document_name,
+      signerName: r.signer_name,
+      signerEmail: r.signer_email,
+      signerRole: r.signer_role,
+      requestMessage: r.request_message,
+      status: r.status,
+      providerName: r.provider_name,
+      providerRequestId: r.provider_request_id,
+      providerSignatureId: r.provider_signature_id,
+      testMode: r.test_mode,
+      createdAt: r.created_at,
+      updatedAt: r.updated_at,
+      sentAt: r.sent_at,
+      viewedAt: r.viewed_at,
+      completedAt: r.completed_at,
+      declinedAt: r.declined_at,
+      expiredAt: r.expired_at,
+      failedAt: r.failed_at,
+      failureReason: r.failure_reason,
+      signedFileUrl: r.signed_file_url,
+      metadata: r.metadata,
+      events: eventsResult.rows.map((e: any) => ({
+        id: e.id,
+        providerEventName: e.provider_event_name,
+        appStatusAfterEvent: e.app_status_after_event,
+        occurredAt: e.occurred_at,
+        receivedAt: e.received_at,
+      })),
+    });
+  } catch (err) {
+    logger.error({ err }, "signatures get failed");
+    return res.status(500).json({ error: "server_error" });
+  }
+});
+
+// ─── POST /api/signatures/send ─ create + send to Dropbox Sign ───────────────
+// Accepts multipart/form-data with optional file upload.
+// Fields: signerName, signerEmail, signerRole, requestMessage, documentText
+
+router.post("/send", requireAuth, upload.single("file"), async (req: any, res: Response) => {
+  try {
+    const {
+      signerName,
+      signerEmail,
+      signerRole,
+      requestMessage,
+      documentText,
+      documentName: nameOverride,
+    } = req.body;
+
+    if (!signerName?.trim() || !signerEmail?.trim()) {
+      return res.status(400).json({ error: "missing_fields", message: "Signer name and email are required." });
+    }
+    if (!/\S+@\S+\.\S+/.test(signerEmail.trim())) {
+      return res.status(400).json({ error: "invalid_email", message: "Please enter a valid signer email address." });
+    }
+    if (!req.file && !documentText?.trim()) {
+      return res.status(400).json({ error: "missing_document", message: "Please upload a file or paste document text." });
+    }
+
+    const documentName = nameOverride?.trim() || req.file?.originalname || "Document";
+    const creds = getDropboxSignCredentials();
+
+    // ── Create draft record ───────────────────────────────────────────────────
+    const insertResult = await pool.query(
+      `INSERT INTO signature_requests
+        (user_id, document_name, signer_name, signer_email, signer_role,
+         request_message, provider_name, status, test_mode)
+       VALUES ($1, $2, $3, $4, $5, $6, 'dropbox_sign', 'draft', $7)
+       RETURNING id`,
+      [
+        req.userId,
+        documentName,
+        signerName.trim(),
+        signerEmail.trim().toLowerCase(),
+        signerRole?.trim() || null,
+        requestMessage?.trim() || null,
+        creds ? creds.testMode : true,
+      ]
+    );
+    const signatureRequestId = insertResult.rows[0].id;
+
+    // ── If no API key, stay as draft ──────────────────────────────────────────
+    if (!creds) {
+      return res.status(503).json({
+        error: "signature_not_configured",
+        message: "E-signature is not configured. A Dropbox Sign API key is required to send requests.",
+        signatureRequestId,
+      });
+    }
+
+    // ── Build the Dropbox Sign multipart payload ───────────────────────────────
+    const formData = new FormData();
+    formData.append("title", documentName);
+    formData.append("subject", `Please sign: ${documentName}`);
+    formData.append(
+      "message",
+      requestMessage?.trim() || `${signerName.trim()} — please review and sign this document sent via PlainPath.`
+    );
+    formData.append("signers[0][email_address]", signerEmail.trim().toLowerCase());
+    formData.append("signers[0][name]", signerName.trim());
+    formData.append("signers[0][order]", "0");
+
+    if (creds.testMode) {
+      formData.append("test_mode", "1");
+    }
+
+    // Append file or text
+    if (req.file) {
+      formData.append(
+        "files[0]",
+        new Blob([req.file.buffer], { type: req.file.mimetype }),
+        req.file.originalname
+      );
+    } else {
+      const textBuf = Buffer.from(documentText.trim(), "utf-8");
+      formData.append(
+        "files[0]",
+        new Blob([textBuf], { type: "text/plain" }),
+        `${documentName.replace(/[^a-z0-9]/gi, "_")}.txt`
+      );
+    }
+
+    // ── Call Dropbox Sign ─────────────────────────────────────────────────────
+    const dsResponse = await fetch("https://api.hellosign.com/v3/signature_request/send", {
+      method: "POST",
+      headers: { Authorization: creds.authHeader },
+      body: formData,
+    });
+
+    const dsData = await dsResponse.json() as Record<string, unknown>;
+
+    if (!dsResponse.ok) {
+      logger.error({ status: dsResponse.status, dsData }, "Dropbox Sign API error");
+      await pool.query(
+        `UPDATE signature_requests
+         SET status = 'failed', failed_at = NOW(), failure_reason = $1, updated_at = NOW()
+         WHERE id = $2`,
+        [JSON.stringify(dsData), signatureRequestId]
+      );
+      return res.status(502).json({
+        error: "provider_error",
+        message: "Could not send the signature request. Please check your Dropbox Sign configuration.",
+        signatureRequestId,
+      });
+    }
+
+    const dsReq = dsData.signature_request as Record<string, unknown>;
+    const providerRequestId = dsReq?.signature_request_id as string ?? null;
+    const providerSignatureId = (dsReq?.signatures as any[])?.[0]?.signature_id ?? null;
+
+    // ── Update record to sent ─────────────────────────────────────────────────
+    await pool.query(
+      `UPDATE signature_requests
+       SET status = 'sent',
+           provider_request_id = $1,
+           provider_signature_id = $2,
+           sent_at = NOW(),
+           updated_at = NOW()
+       WHERE id = $3`,
+      [providerRequestId, providerSignatureId, signatureRequestId]
+    );
+
+    // ── Record sent event ─────────────────────────────────────────────────────
+    await pool.query(
+      `INSERT INTO signature_request_events
+        (signature_request_id, provider_event_name, app_status_after_event, occurred_at)
+       VALUES ($1, 'signature_request_sent', 'sent', NOW())`,
+      [signatureRequestId]
+    ).catch(() => {});
+
+    return res.json({
+      ok: true,
+      signatureRequestId,
+      providerRequestId,
+      status: "sent",
+      message: "Signature request sent. The signer will receive an email with a secure signing link.",
+    });
+  } catch (err) {
+    logger.error({ err }, "signatures/send failed");
+    return res.status(500).json({ error: "server_error", message: "Failed to send signature request. Please try again." });
+  }
+});
+
+// ─── GET /api/signatures/:id/refresh ─ refresh status from Dropbox Sign ──────
+
+router.get("/:id/refresh", requireAuth, async (req: any, res: Response) => {
+  try {
+    const { id } = req.params;
+    const reqResult = await pool.query(
+      `SELECT * FROM signature_requests WHERE id = $1 AND user_id = $2`,
+      [id, req.userId]
+    );
+    if (reqResult.rowCount === 0) return res.status(404).json({ error: "not_found" });
+    const r = reqResult.rows[0];
+
+    if (!r.provider_request_id) {
+      return res.json({ status: r.status, refreshed: false, reason: "no_provider_id" });
+    }
+
+    const creds = getDropboxSignCredentials();
+    if (!creds) {
+      return res.json({ status: r.status, refreshed: false, reason: "not_configured" });
+    }
+
+    const dsReq = await fetchDropboxSignRequest(r.provider_request_id, creds.authHeader);
+    if (!dsReq) {
+      return res.json({ status: r.status, refreshed: false, reason: "provider_fetch_failed" });
+    }
+
+    // Map Dropbox Sign status to app status
+    const dsStatus = String(dsReq.status_code ?? "");
+    let newStatus = r.status;
+    if (dsStatus === "awaiting_signature" || dsStatus === "pending") newStatus = r.sent_at ? "viewed" : "sent";
+    if (dsStatus === "signed" || dsStatus === "all_signed") newStatus = "signed";
+    if (dsStatus === "declined") newStatus = "declined";
+    if (dsStatus === "expired") newStatus = "expired";
+
+    if (newStatus !== r.status) {
+      const now = new Date().toISOString();
+      const updates: string[] = ["status = $1", "updated_at = NOW()"];
+      const values: unknown[] = [newStatus, id];
+      if (newStatus === "signed") updates.push(`completed_at = COALESCE(completed_at, NOW())`);
+      if (newStatus === "declined") updates.push(`declined_at = COALESCE(declined_at, NOW())`);
+      if (newStatus === "expired") updates.push(`expired_at = COALESCE(expired_at, NOW())`);
+
+      await pool.query(
+        `UPDATE signature_requests SET ${updates.join(", ")} WHERE id = $2`,
+        values
+      );
+
+      await pool.query(
+        `INSERT INTO signature_request_events
+          (signature_request_id, provider_event_name, app_status_after_event, occurred_at)
+         VALUES ($1, $2, $3, NOW())
+         ON CONFLICT (dedupe_key) DO NOTHING`,
+        [id, `refresh_${newStatus}`, newStatus]
+      ).catch(() => {});
+    }
+
+    return res.json({
+      status: newStatus,
+      refreshed: true,
+      providerStatus: dsStatus,
+    });
+  } catch (err) {
+    logger.error({ err }, "signatures/refresh failed");
+    return res.status(500).json({ error: "server_error" });
+  }
+});
+
+// ─── GET /api/signatures/:id/download ─ proxy signed file from Dropbox Sign ──
+
+router.get("/:id/download", requireAuth, async (req: any, res: Response) => {
+  try {
+    const { id } = req.params;
+    const reqResult = await pool.query(
+      `SELECT provider_request_id, status FROM signature_requests WHERE id = $1 AND user_id = $2`,
+      [id, req.userId]
+    );
+    if (reqResult.rowCount === 0) return res.status(404).json({ error: "not_found" });
+    const r = reqResult.rows[0];
+
+    if (r.status !== "signed") {
+      return res.status(409).json({ error: "not_signed", message: "The document has not been fully signed yet." });
+    }
+    if (!r.provider_request_id) {
+      return res.status(409).json({ error: "no_provider_id", message: "No provider request ID found." });
+    }
+
+    const creds = getDropboxSignCredentials();
+    if (!creds) return res.status(503).json({ error: "not_configured" });
+
+    const fileResp = await fetch(
+      `https://api.hellosign.com/v3/signature_request/files/${r.provider_request_id}?file_type=pdf`,
+      { headers: { Authorization: creds.authHeader } }
+    );
+    if (!fileResp.ok) {
+      return res.status(502).json({ error: "download_failed", message: "Signed document is not ready yet. Please try again shortly." });
+    }
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="signed-document.pdf"`);
+    const buffer = await fileResp.arrayBuffer();
+    res.send(Buffer.from(buffer));
+  } catch (err) {
+    logger.error({ err }, "signatures/download failed");
+    res.status(500).json({ error: "server_error" });
+  }
+});
+
+// ─── DELETE /api/signatures/:id ─ delete a draft ─────────────────────────────
+
+router.delete("/:id", requireAuth, async (req: any, res: Response) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query(
+      `DELETE FROM signature_requests WHERE id = $1 AND user_id = $2 AND status IN ('draft', 'failed')`,
+      [id, req.userId]
+    );
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "not_found_or_not_deletable", message: "Only draft or failed requests can be deleted." });
+    }
+    res.json({ ok: true });
+  } catch (err) {
+    logger.error({ err }, "signatures/delete failed");
+    res.status(500).json({ error: "server_error" });
+  }
+});
+
+// ─── POST /api/signatures/webhook ─ Dropbox Sign callback ────────────────────
+// Dropbox Sign sends: POST application/x-www-form-urlencoded with "json" field.
+// Must respond with exactly "Hello API Event Received" and 200.
+
+router.post("/webhook", async (req: Request, res: Response) => {
+  try {
+    // Parse the json payload field (form-encoded body)
+    const rawJson = req.body?.json;
+    if (!rawJson) {
+      logger.warn("Dropbox Sign webhook: missing json field");
+      return res.status(200).send("Hello API Event Received");
+    }
+
+    let payload: Record<string, unknown>;
+    try {
+      payload = JSON.parse(rawJson);
+    } catch {
+      logger.warn("Dropbox Sign webhook: invalid JSON");
+      return res.status(200).send("Hello API Event Received");
+    }
+
+    const event = payload.event as Record<string, unknown> | undefined;
+    const sigReq = payload.signature_request as Record<string, unknown> | undefined;
+
+    if (!event || !sigReq) {
+      logger.warn({ payload }, "Dropbox Sign webhook: unexpected payload shape");
+      return res.status(200).send("Hello API Event Received");
+    }
+
+    const eventType = String(event.event_type ?? "");
+    const eventTime = String(event.event_time ?? "");
+    const eventHash = String(event.event_hash ?? "");
+    const providerRequestId = String(sigReq.signature_request_id ?? "");
+
+    // ── Verify HMAC if API key is present ─────────────────────────────────────
+    const apiKey = process.env.DROPBOX_SIGN_API_KEY;
+    if (apiKey && eventHash) {
+      const expected = crypto
+        .createHmac("sha256", apiKey)
+        .update(eventTime + eventType)
+        .digest("hex");
+      if (expected !== eventHash) {
+        logger.warn({ eventType, providerRequestId }, "Dropbox Sign webhook: HMAC verification failed");
+        return res.status(200).send("Hello API Event Received");
+      }
+    }
+
+    // ── Ignore test events ────────────────────────────────────────────────────
+    if (eventType === "callback_test" || eventType === "test") {
+      logger.info("Dropbox Sign webhook: callback test received");
+      return res.status(200).send("Hello API Event Received");
+    }
+
+    // ── Find local signature request ──────────────────────────────────────────
+    const reqResult = await pool.query(
+      `SELECT id, status FROM signature_requests WHERE provider_request_id = $1`,
+      [providerRequestId]
+    );
+    if (reqResult.rowCount === 0) {
+      logger.warn({ providerRequestId, eventType }, "Dropbox Sign webhook: no matching local request");
+      return res.status(200).send("Hello API Event Received");
+    }
+    const localReq = reqResult.rows[0];
+    const newStatus = mapEventToStatus(eventType);
+
+    // ── Record event idempotently ─────────────────────────────────────────────
+    const dedupeKey = `${providerRequestId}:${eventType}:${eventTime}`;
+    await pool.query(
+      `INSERT INTO signature_request_events
+        (signature_request_id, provider_event_name, app_status_after_event,
+         payload_json, occurred_at, dedupe_key)
+       VALUES ($1, $2, $3, $4, to_timestamp($5::double precision), $6)
+       ON CONFLICT (dedupe_key) DO NOTHING`,
+      [
+        localReq.id,
+        eventType,
+        newStatus,
+        JSON.stringify(payload),
+        Number(eventTime) || Date.now() / 1000,
+        dedupeKey,
+      ]
+    );
+
+    // ── Update request status ─────────────────────────────────────────────────
+    if (newStatus && newStatus !== localReq.status) {
+      const now = "NOW()";
+      let extra = "";
+      if (newStatus === "viewed")   extra = ", viewed_at = COALESCE(viewed_at, NOW())";
+      if (newStatus === "signed")   extra = ", completed_at = COALESCE(completed_at, NOW())";
+      if (newStatus === "declined") extra = ", declined_at = COALESCE(declined_at, NOW())";
+      if (newStatus === "expired")  extra = ", expired_at = COALESCE(expired_at, NOW())";
+      if (newStatus === "failed")   extra = ", failed_at = COALESCE(failed_at, NOW())";
+
+      await pool.query(
+        `UPDATE signature_requests SET status = $1, updated_at = NOW()${extra} WHERE id = $2`,
+        [newStatus, localReq.id]
+      );
+      logger.info({ id: localReq.id, eventType, newStatus }, "Dropbox Sign webhook: status updated");
+    }
+
+    return res.status(200).send("Hello API Event Received");
+  } catch (err) {
+    logger.error({ err }, "signatures/webhook failed");
+    return res.status(200).send("Hello API Event Received");
+  }
+});
+
+export default router;
