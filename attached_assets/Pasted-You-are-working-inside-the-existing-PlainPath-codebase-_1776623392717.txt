@@ -1,0 +1,323 @@
+You are working inside the existing PlainPath codebase and product context.
+
+IMPORTANT OPERATING MODE
+This task is NOT production coding yet.
+Do NOT start implementing the feature.
+Do NOT generate app code, components, routes, database migrations, or patch files yet.
+
+Your job in this step is to produce a serious, implementation-ready PRODUCT SPECIFICATION and ARCHITECTURE PLAN for a new PlainPath tool.
+
+TOOL TO DESIGN
+Document Builder
+(also acceptable in exploration: Document Creator)
+
+PRODUCT CONTEXT
+PlainPath is currently in release-candidate state.
+This new tool must be designed carefully so it can be added later without destabilizing the current release candidate.
+
+The purpose of this thread is to define the tool thoroughly before any implementation begins.
+
+PRIMARY PRODUCT GOAL
+Design a new PlainPath tool that allows users to create structured documents from scratch and from templates, then save, reuse, export, and hand those documents into the rest of the PlainPath ecosystem.
+
+TARGET DOCUMENT TYPES
+At minimum, the specification must account for:
+- SOPs
+- manuals
+- employee handbooks
+- onboarding checklists
+- policies
+- incident reports
+- PRDs
+- proposals
+- operational templates
+- business templates
+- legal-adjacent templates
+
+LONG-TERM DIRECTION
+This tool should later evolve into a broader document builder / interactive PDF creator that may support:
+- sections / tabs
+- text blocks
+- headings
+- tables
+- checklists
+- form fields
+- checkboxes
+- date fields
+- signatures
+- reusable templates
+- export to PDF and other formats
+
+INTEGRATION REQUIREMENT
+Documents created in this tool must be designed to later flow into:
+- Analyze
+- Redact
+- Digital Signature
+- Fair Deal Check / Contract Review
+- Compare
+- My Documents
+
+CRITICAL PRODUCT POSITIONING
+This should NOT be positioned as a generic word processor.
+This should be designed as a structured document authoring system for PlainPath.
+
+The architecture should be based on:
+1. internal structured document model first
+2. render/export layer second
+3. workflow handoff layer third
+
+That foundation is important because the same document should later be able to render as:
+- an editable builder document
+- a previewable print document
+- a PDF export
+- a signable document
+- a document ready for Analyze / Redact / Compare flows
+
+IMPORTANT DISTINCTION
+If there is overlap with any existing or future Contract Builder concept, keep the boundary clear.
+
+Document Builder should be for:
+- SOPs
+- policies
+- manuals
+- handbooks
+- operational docs
+- internal process docs
+- proposals
+- PRDs
+- incident reports
+- business documents
+
+Contract Builder should remain separate as a more specialized legal / agreement drafting flow.
+
+DESIGN REQUIREMENTS
+Please create a full product specification with implementation-ready thinking, but still NO coding.
+
+The output must be structured, serious, and detailed enough that engineering can later build from it safely.
+
+OUTPUT FORMAT REQUIRED
+Produce the output in clear markdown with strong sectioning.
+
+I want the final output to include ALL of the following sections:
+
+1. Executive Summary
+- what the tool is
+- why it belongs in PlainPath
+- what problem it solves
+- why this tool matters strategically
+
+2. Recommended Naming
+- primary recommended name
+- short nav/tool label
+- 3 to 5 viable alternative names
+- recommendation rationale
+
+3. Product Positioning
+- what this tool is
+- what this tool is not
+- who it is for
+- how it differs from Contract Builder
+- why it fits PlainPath’s ecosystem
+
+4. Launch Use Cases
+Provide the strongest launch use cases, ranked in importance.
+At minimum include:
+- build from template
+- build from blank
+- reuse saved template
+- create and hand off to Analyze
+- create and hand off to Signature
+- compare versions
+Also recommend the most important document categories for launch and which categories/features should be deferred.
+
+5. MVP Definition
+Define exactly what belongs in V1 and what must stay out of V1.
+Be explicit.
+I want:
+- launch-safe MVP features
+- non-goals
+- deferred features
+- reasons for deferral
+
+6. Full UX / Screen Blueprint
+Design the major user flow and all primary screens.
+
+At minimum include:
+- entry page
+- blank vs template chooser
+- category selection / starter structure chooser
+- template browser
+- builder/editor workspace
+- section management
+- block editing
+- preview screen
+- save / export / share / handoff flow
+- document detail / management view if needed
+
+For each screen, specify:
+- screen purpose
+- key actions
+- layout recommendation
+- required UI elements
+- optional UI elements
+- what should appear in left rail / center / right rail / top toolbar where relevant
+
+7. Builder Model
+Define how documents should be constructed internally.
+
+I want a structured model covering:
+- document
+- sections
+- blocks
+- fields
+- variables / placeholders
+- templates
+- reusable components
+- versioning
+- optional AI assist
+
+Be specific about why a typed structured model is preferred over a single rich text blob.
+
+8. Recommended V1 Block Types
+Recommend the safest V1 block library.
+At minimum evaluate:
+- heading
+- paragraph
+- bullets
+- numbered list
+- checklist
+- table
+- key-value/info block
+- date field
+- divider
+- note/callout
+- signature placeholder
+
+Identify which of these should definitely be in V1 and which can wait.
+
+9. Data / Storage Model
+Recommend how the system should store:
+- creator documents
+- drafts
+- templates
+- versions
+- exports / artifacts
+- metadata
+- status
+
+Be explicit that editable source and exported artifacts should be stored separately.
+Provide recommended entity/table concepts, but still do NOT write actual schema code.
+
+10. Integration Model
+Explain exactly how Document Builder should integrate with:
+- My Documents
+- Analyze
+- Redact
+- Digital Signature
+- Compare
+- Fair Deal Check / Contract Review
+- any contract-related tools
+
+For each integration, describe:
+- source of truth
+- handoff model
+- safest first implementation
+- what should be deferred
+
+11. Future Interactive Document / Form System
+Explain how the V1 blueprint can later evolve into a stronger Adobe-style document / form builder without forcing a full redesign.
+
+Cover:
+- typed fields
+- fillable fields
+- required fields
+- validation
+- conditional sections
+- repeated sections
+- signature fields
+- fillable PDF direction
+- layout/render engine evolution
+
+12. Phased Roadmap
+Break the tool into:
+- Phase 1: launch-safe MVP
+- Phase 2: stronger document system
+- Phase 3: interactive document / form builder
+
+For each phase include:
+- objective
+- included features
+- excluded features
+- dependencies
+- risk level
+
+13. Engineering Safety Guidance
+This section matters a lot.
+
+Recommend the safest implementation order AFTER this specification is approved.
+
+I want guidance on:
+- feature flag approach
+- isolated module strategy
+- schema/model-first sequencing
+- persistence layer sequencing
+- export sequencing
+- integration sequencing
+- why this tool should not destabilize the current PlainPath release candidate
+
+14. Recommended Information Architecture
+Recommend where this tool lives in the PlainPath product structure.
+
+Answer:
+- what the nav label should be
+- whether it belongs beside Analyze / Redact / Compare / Signature
+- whether it gets its own entry point in My Documents
+- whether “Builder” should be a primary top-level tool
+
+15. Acceptance Criteria for Design Approval
+Create a clear list of what must be true before engineering starts building.
+
+16. Open Questions / Decision Log
+List any meaningful product decisions that still need to be confirmed later, but DO NOT block the spec.
+Where possible, make a recommended default decision now rather than punting.
+
+ADDITIONAL PRODUCT OPINIONS TO INCORPORATE
+Please incorporate these product recommendations into the spec unless you find a stronger reason not to:
+
+- Preferred product name: Document Builder
+- Preferred short label: Builder
+- V1 should be stable, constrained, and structured rather than overly flexible
+- V1 should not attempt to be a full Word replacement
+- “Blank” should still optionally offer category-specific starter structures
+- Sections and typed blocks should be the foundation
+- PDF export should be the first-class launch export
+- Documents created here should be storable in My Documents with clear source labeling
+- Analyze and Compare are likely the cleanest early integrations
+- Signature should initially be a handoff, not full embedded signature authoring inside the builder
+- Redact should initially operate on exported artifacts rather than live block data
+- AI should be assistive later, not a core dependency of V1
+- Contract-related flows must remain clearly separated from this tool
+
+IMPORTANT OUTPUT QUALITY STANDARD
+Do not give a shallow summary.
+Do not give only high-level bullets.
+Do not produce code.
+Do not produce vague “future ideas” without organizing them.
+Do not speak as if implementation has started.
+
+I want a serious product blueprint/specification that could be handed to product + engineering as the basis for a safe implementation plan.
+
+FINAL INSTRUCTION
+At the very end, include a short section titled:
+
+“Recommended Next Step After Spec Approval”
+
+In that section, recommend the exact next artifact to produce after this specification is approved.
+That next artifact should be something like:
+- screen-by-screen UX spec
+- component inventory
+- schema draft
+- implementation sequence plan
+- or another logical next document
+
+Again: this response is SPECIFICATION ONLY. No coding yet.
