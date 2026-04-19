@@ -1,4 +1,5 @@
-import { ChevronUp, ChevronDown, Trash2, GripVertical } from "lucide-react";
+import { useState } from "react";
+import { ChevronUp, ChevronDown, Trash2, GripVertical, Plus } from "lucide-react";
 import type { BuilderSection, BuilderBlock, KnownBlockType } from "@/lib/builderTypes";
 import { BlockEditor } from "./BlockEditor";
 import { AddBlockButton } from "./BlockTypePicker";
@@ -23,6 +24,8 @@ export function SectionEditor({
   onMoveDown,
   onDelete,
 }: Props) {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
   const blocks = [...section.blocks].sort((a, b) => a.order - b.order);
 
   function updateTitle(title: string) {
@@ -88,7 +91,9 @@ export function SectionEditor({
           placeholder="Section title"
           className="flex-1 bg-transparent border-none outline-none font-semibold text-foreground placeholder:text-muted-foreground/40 text-base"
         />
-        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity ml-2">
+
+        {/* Controls — always visible on mobile, hover-reveal on desktop */}
+        <div className="flex items-center gap-0.5 ml-2 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
           <button
             onClick={onMoveUp}
             disabled={isFirst}
@@ -105,35 +110,65 @@ export function SectionEditor({
           >
             <ChevronDown className="w-3.5 h-3.5" />
           </button>
-          <button
-            onClick={onDelete}
-            title="Delete section"
-            className="p-1.5 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors ml-1"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
+
+          {/* Delete with inline confirm */}
+          {showDeleteConfirm ? (
+            <span className="flex items-center gap-1 ml-1">
+              <button
+                onClick={() => { setShowDeleteConfirm(false); onDelete(); }}
+                className="px-2 py-0.5 rounded text-xs font-medium text-destructive border border-destructive/40 hover:bg-destructive hover:text-destructive-foreground transition-colors"
+              >
+                Delete
+              </button>
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="px-2 py-0.5 rounded text-xs font-medium text-muted-foreground hover:bg-secondary transition-colors"
+              >
+                Cancel
+              </button>
+            </span>
+          ) : (
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              title="Delete section"
+              className="p-1.5 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors ml-1"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Blocks */}
+      {/* Blocks area */}
       <div className="p-4 space-y-3">
-        {blocks.length === 0 && (
-          <p className="text-sm text-muted-foreground/50 text-center py-4">
-            No blocks yet. Add one below.
-          </p>
+        {blocks.length === 0 ? (
+          /* Empty state — actionable CTA instead of plain text */
+          <button
+            onClick={() => addBlock("paragraph")}
+            className="w-full flex flex-col items-center gap-2 py-6 rounded-lg border border-dashed border-border/60 text-muted-foreground hover:text-foreground hover:border-border hover:bg-muted/30 transition-colors group/empty"
+          >
+            <span className="flex items-center justify-center w-8 h-8 rounded-full bg-muted group-hover/empty:bg-secondary transition-colors">
+              <Plus className="w-4 h-4" />
+            </span>
+            <span className="text-sm font-medium">Add first block</span>
+            <span className="text-xs opacity-60">
+              Click to add a paragraph, or use the button below for other block types
+            </span>
+          </button>
+        ) : (
+          blocks.map((block, i) => (
+            <BlockEditor
+              key={block.id}
+              block={block}
+              isFirst={i === 0}
+              isLast={i === blocks.length - 1}
+              onChange={(payload) => updateBlock(block.id, payload)}
+              onMoveUp={() => moveBlock(block.id, "up")}
+              onMoveDown={() => moveBlock(block.id, "down")}
+              onDelete={() => deleteBlock(block.id)}
+            />
+          ))
         )}
-        {blocks.map((block, i) => (
-          <BlockEditor
-            key={block.id}
-            block={block}
-            isFirst={i === 0}
-            isLast={i === blocks.length - 1}
-            onChange={(payload) => updateBlock(block.id, payload)}
-            onMoveUp={() => moveBlock(block.id, "up")}
-            onMoveDown={() => moveBlock(block.id, "down")}
-            onDelete={() => deleteBlock(block.id)}
-          />
-        ))}
         <AddBlockButton onSelect={addBlock} />
       </div>
     </div>

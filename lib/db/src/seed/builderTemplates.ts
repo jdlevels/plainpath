@@ -770,3 +770,17 @@ export async function seedBuilderTemplates(): Promise<void> {
     );
   }
 }
+
+/**
+ * One-time initialization: seeds system templates only when the table is empty.
+ * Safe to call on startup — runs one COUNT query and exits immediately if already seeded.
+ * Replaces unconditional seedBuilderTemplates() on every API boot.
+ */
+export async function initBuilderTemplates(): Promise<void> {
+  const { rows } = await pool.query(
+    `SELECT COUNT(*)::int AS count FROM builder_templates WHERE is_system = true`,
+  );
+  const count = rows[0]?.count ?? 0;
+  if (count > 0) return; // already seeded — fast exit
+  await seedBuilderTemplates();
+}

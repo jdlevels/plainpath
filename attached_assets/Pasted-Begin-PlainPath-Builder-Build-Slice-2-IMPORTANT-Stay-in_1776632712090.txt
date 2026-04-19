@@ -1,0 +1,188 @@
+Begin PlainPath Builder — Build Slice 2.
+
+IMPORTANT
+Stay inside Slice 2 only.
+Do not expand into Slice 3 or later-phase work.
+Do not implement preview, PDF export, version history UI, restore UI, Analyze handoff UI, Compare handoff UI, Signature handoff, Redact handoff, save-as-template, or user templates in this slice.
+
+CURRENT STATE
+Slice 1 is approved.
+The following are already in place:
+- 4 approved builder tables
+- feature flag gating
+- system template seeding
+- Builder CRUD endpoints
+- full-content autosave with server_version
+- 9 approved V1 block validators
+- Builder pages/routes/nav
+- Draft/Final toggle removed because snapshot behavior is not implemented yet
+
+GOAL OF SLICE 2
+Make Builder feel stable, usable, and testable as a real top-level PlainPath tool before export/version/handoff features are added.
+
+SLICE 2 SCOPE
+
+1. Entry flow polish
+Improve and tighten:
+- /builder list page
+- /builder/new creation flow
+- blank vs template selection
+- template browsing/filtering
+- empty states
+- loading states
+- error states
+- route transitions
+
+The Builder entry experience should feel product-ready, not scaffolding.
+
+2. Workspace UX stabilization
+Refine the Builder workspace so it is comfortable and reliable for real use.
+
+Include:
+- section navigator behavior
+- add section flow
+- reorder sections
+- delete section rules
+- empty section state
+- block insertion flow
+- block move up/down
+- block deletion rules
+- unsupported block fallback rendering
+- autosave feedback state
+- conflict banner behavior for server_version mismatch
+- archive flow confirmation
+- title editing reliability
+- scroll behavior and spacing
+- sidebar/canvas usability
+
+The workspace should remain aligned to the approved spec:
+- left rail = section navigator
+- center = editing canvas
+- right rail only if already appropriate, otherwise keep V1 minimal
+- no freeform canvas behavior
+- no Word-like formatting expansion
+
+3. Block editor refinement for all 9 approved V1 block types
+Stabilize and polish editing behavior for:
+- heading
+- paragraph
+- bullet-list
+- numbered-list
+- checklist
+- key-value
+- divider
+- note
+- table
+
+For each, verify:
+- default insertion payload works
+- editing behavior is intuitive
+- validation errors are handled cleanly
+- delete/reorder behavior is safe
+- serialization remains valid
+- autosave round-trip works
+
+Table block needs extra care:
+- add/remove rows
+- add/remove columns within approved constraints
+- row width consistency
+- no invalid partial states written to server
+
+4. Manual signed-in browser verification
+This is mandatory in Slice 2.
+
+Use a real signed-in browser session and verify actual authenticated behavior end-to-end through the UI and API path:
+- open Builder list
+- create from blank
+- create from template
+- open an existing Builder doc
+- edit title
+- add/edit/delete/reorder blocks
+- add/edit/delete/reorder sections
+- autosave success
+- server_version conflict behavior if testable
+- archive a document
+- confirm archived doc leaves active list
+- confirm ownership behavior is correct for the signed-in user
+
+Return the exact manual test results.
+This must be real signed-in browser verification, not only code inspection or SQL reasoning.
+
+5. Template seeding cleanup
+If feasible in this slice without destabilizing anything, move system template seeding away from normal API startup and into a safer one-time migration/post-migration or explicit initialization step.
+
+If not feasible safely in Slice 2:
+- leave behavior stable
+- document exact reason
+- create a clearly named follow-up task for the next infrastructure cleanup pass
+
+Do not destabilize the app just to force this change.
+
+6. Draft/Final status handling
+Do NOT reintroduce the Final toggle unless the full snapshot behavior is implemented correctly.
+
+Allowed options for Slice 2:
+- keep static Draft label only
+OR
+- implement the approved draft -> final snapshot pipeline fully and safely
+
+If you choose to implement it in Slice 2, it must include:
+- snapshot creation on draft -> final
+- automatic return to draft on editing a final document
+- no partial or fake status behavior
+- exact adherence to the approved schema/API spec
+
+If there is any uncertainty, keep the static Draft label and defer finalization to the next slice.
+
+7. Product positioning / top-level tool consistency
+Make sure Builder visually behaves like a real top-level PlainPath tool and not like an internal admin page.
+
+Check:
+- nav label consistency
+- page titles
+- badge/status wording
+- card/list presentation
+- spacing and hierarchy
+- consistency with the other PlainPath tools
+
+OUT OF SCOPE FOR SLICE 2
+Do NOT implement:
+- preview screen
+- PDF export
+- export artifact creation workflow
+- version history UI
+- restore UI
+- Analyze UI handoff
+- Compare UI handoff
+- Signature handoff
+- Redact handoff
+- save-as-template
+- user templates
+- advanced collaboration
+- advanced formatting controls
+- page layout engine
+- embedded signature fields
+
+REQUIRED OUTPUT WHEN DONE
+
+Return a structured completion report with these sections:
+
+1. Slice 2 Verdict
+- pass / provisional / blocked
+- brief explanation
+
+2. Exact files created
+3. Exact files modified
+4. Exact UI behaviors improved
+5. Exact manual signed-in browser tests run
+6. Exact test results
+7. Whether template seeding was moved off API startup
+8. Whether Draft/Final remained static or was safely implemented with snapshots
+9. Any blockers or remaining risks
+10. Recommended Slice 3 scope
+
+QUALITY BAR
+Do not give a vague summary.
+Do not say “should work.”
+Actually verify behavior.
+Keep Slice 2 disciplined and stable.

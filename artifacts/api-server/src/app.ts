@@ -21,7 +21,7 @@ import signatureRoutes from "./routes/signatures/index.js";
 import userDocsRoutes from "./routes/userDocs/index.js";
 import builderRoutes from "./routes/builder/index.js";
 import { logger } from "./lib/logger";
-import { seedBuilderTemplates } from "@workspace/db";
+import { initBuilderTemplates } from "@workspace/db";
 
 const app: Express = express();
 
@@ -195,9 +195,11 @@ app.use("/api/signatures", signatureRoutes);
 app.use("/api/user/documents", userDocsRoutes);
 app.use("/api/builder", builderRoutes);
 
-// Seed system templates on startup (idempotent — safe to run every boot)
-seedBuilderTemplates().catch((err) =>
-  logger.error({ err }, "[builder] Failed to seed system templates"),
+// Initialize builder system templates once on first deployment.
+// initBuilderTemplates() runs a single COUNT query and exits immediately if
+// templates already exist. Only seeds from scratch on a fresh database.
+initBuilderTemplates().catch((err) =>
+  logger.error({ err }, "[builder] Failed to initialize system templates"),
 );
 
 app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {

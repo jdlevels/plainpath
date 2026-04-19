@@ -46,8 +46,9 @@ function SectionNav({
   onSelect: (id: string) => void;
 }) {
   const sorted = [...sections].sort((a, b) => a.order - b.order);
+  if (sorted.length === 0) return null;
   return (
-    <nav className="w-56 shrink-0 hidden lg:block">
+    <nav className="w-52 shrink-0 hidden lg:block">
       <div className="sticky top-20 space-y-0.5">
         <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 px-2 mb-2">
           Sections
@@ -62,7 +63,7 @@ function SectionNav({
                 : "text-muted-foreground hover:text-foreground hover:bg-secondary"
             }`}
           >
-            <ChevronRight className="w-3 h-3 shrink-0 opacity-60" />
+            <ChevronRight className={`w-3 h-3 shrink-0 transition-opacity ${activeId === s.id ? "opacity-80" : "opacity-30"}`} />
             <span className="truncate">{s.title || "Untitled section"}</span>
           </button>
         ))}
@@ -80,7 +81,7 @@ export default function Workspace({ docId }: WorkspaceProps) {
 
   // Editable state
   const [title, setTitle] = useState("");
-  const [status, setStatus] = useState<BuilderDocStatus>("draft");
+  const [status] = useState<BuilderDocStatus>("draft");
   const [content, setContent] = useState<BuilderContent>({ sections: [] });
 
   // Autosave
@@ -89,8 +90,10 @@ export default function Workspace({ docId }: WorkspaceProps) {
   const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const conflictRef = useRef(false);
 
-  // Section nav active tracking
+  // Section nav active tracking (scroll-spy via IntersectionObserver)
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const intersectingRef = useRef<Set<string>>(new Set());
 
   // Conflict banner
   const [conflictBanner, setConflictBanner] = useState(false);
@@ -107,23 +110,62 @@ export default function Workspace({ docId }: WorkspaceProps) {
       if (cancelled) return;
       setDoc(d);
       setTitle(d.title);
-      setStatus(d.status as BuilderDocStatus);
       setContent(d.content);
       serverVersionRef.current = d.serverVersion;
-      if (d.content.sections.length > 0) {
-        const sorted = [...d.content.sections].sort((a, b) => a.order - b.order);
-        setActiveSectionId(sorted[0].id);
-      }
+      const sorted = [...d.content.sections].sort((a, b) => a.order - b.order);
+      if (sorted.length > 0) setActiveSectionId(sorted[0].id);
       setLoading(false);
     }).catch((err) => {
       if (cancelled) return;
-      setError(err.status === 404 ? "Document not found." : "Failed to load document.");
+      setError(err?.status === 404 ? "Document not found." : "Failed to load document.");
       setLoading(false);
     });
     return () => { cancelled = true; };
   }, [docId]);
 
-  // Autosave implementation
+  // IntersectionObserver scroll-spy for section nav
+  useEffect(() => {
+    if (loading || !content.sections.length) return;
+
+    observerRef.current?.disconnect();
+    intersectingRef.current = new Set();
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const id = entry.target.getAttribute("data-section-id");
+          if (!id) return;
+          if (entry.isIntersecting) {
+            intersectingRef.current.add(id);
+          } else {
+            intersectingRef.current.delete(id);
+          }
+        });
+        // Pick the topmost intersecting section
+        const sorted = [...content.sections].sort((a, b) => a.order - b.order);
+        for (const s of sorted) {
+          if (intersectingRef.current.has(s.id)) {
+            setActiveSectionId(s.id);
+            return;
+          }
+        }
+      },
+      { rootMargin: "-80px 0px -60% 0px", threshold: 0 },
+    );
+
+    content.sections.forEach((s) => {
+      const el = document.getElementById(`section-${s.id}`);
+      if (el) {
+        el.setAttribute("data-section-id", s.id);
+        observer.observe(el);
+      }
+    });
+
+    observerRef.current = observer;
+    return () => observer.disconnect();
+  }, [loading, content.sections]);
+
+  // Autosave
   const scheduleAutosave = useCallback(
     (newContent: BuilderContent, newTitle: string, newStatus: string) => {
       if (conflictRef.current) return;
@@ -170,15 +212,20 @@ export default function Workspace({ docId }: WorkspaceProps) {
     const sorted = [...content.sections].sort((a, b) => a.order - b.order);
     const newSection: BuilderSection = {
       id: crypto.randomUUID(),
-      title: "New Section",
+      title: "",
       order: sorted.length,
       blocks: [],
     };
     const newContent = { sections: [...content.sections, newSection] };
     handleContentChange(newContent);
+    // Scroll to new section after DOM update
     setTimeout(() => {
-      document.getElementById(`section-${newSection.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
-    }, 100);
+      const el = document.getElementById(`section-${newSection.id}`);
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+      // Focus the section title input
+      const titleInput = el?.querySelector("input[type=text]") as HTMLInputElement;
+      titleInput?.focus();
+    }, 80);
   }
 
   function updateSection(sectionId: string, updated: BuilderSection) {
@@ -209,25 +256,19 @@ export default function Workspace({ docId }: WorkspaceProps) {
   }
 
   async function handleArchive() {
+    setShowArchiveConfirm(false);
     try {
       await builderApi.archiveDocument(docId);
       navigate("/builder");
     } catch {
       alert("Failed to archive document. Please try again.");
     }
-    setShowArchiveConfirm(false);
-  }
-
-  function handleReload() {
-    window.location.reload();
   }
 
   function scrollToSection(sectionId: string) {
     setActiveSectionId(sectionId);
-    document.getElementById(`section-${sectionId}`)?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
+    const el = document.getElementById(`section-${sectionId}`);
+    el?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   // Loading & error states
@@ -267,7 +308,7 @@ export default function Workspace({ docId }: WorkspaceProps) {
               This document was modified in another session. Reload to continue editing.
             </div>
             <button
-              onClick={handleReload}
+              onClick={() => window.location.reload()}
               className="flex items-center gap-1.5 text-sm font-medium text-amber-900 dark:text-amber-200 hover:text-amber-700 shrink-0"
             >
               <RefreshCw className="w-3.5 h-3.5" />
@@ -283,6 +324,7 @@ export default function Workspace({ docId }: WorkspaceProps) {
           <button
             onClick={() => navigate("/builder")}
             className="shrink-0 p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+            title="Back to documents"
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
@@ -292,17 +334,18 @@ export default function Workspace({ docId }: WorkspaceProps) {
             value={title}
             onChange={(e) => handleTitleChange(e.target.value)}
             maxLength={200}
-            placeholder="Document title"
+            placeholder="Untitled document"
             className="flex-1 bg-transparent border-none outline-none text-lg font-semibold text-foreground placeholder:text-muted-foreground/40 min-w-0"
           />
 
           <div className="flex items-center gap-2 shrink-0">
             <AutosaveIndicator status={autosaveStatus} />
 
-            {/* Draft/Final toggle — intentionally hidden in Slice 1.
-                The draft→final transition requires a builder_document_versions snapshot.
-                That behavior is deferred to Slice 2. */}
-            <span className="px-3 py-1 text-xs font-semibold rounded-full border bg-secondary text-muted-foreground border-border select-none">
+            {/* Draft/Final toggle — deferred to Slice 3 (requires snapshot pipeline). Static label only. */}
+            <span
+              className="px-3 py-1 text-xs font-semibold rounded-full border bg-secondary text-muted-foreground border-border select-none"
+              title="Status changes are available in a future update"
+            >
               Draft
             </span>
 
@@ -333,13 +376,19 @@ export default function Workspace({ docId }: WorkspaceProps) {
 
         <div className="flex-1 min-w-0 space-y-4">
           {sortedSections.length === 0 && (
-            <div className="rounded-xl border-2 border-dashed border-border py-16 text-center">
-              <p className="text-muted-foreground mb-4">No sections yet.</p>
+            <div className="rounded-2xl border-2 border-dashed border-border py-20 text-center">
+              <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mx-auto mb-4">
+                <Plus className="w-5 h-5 text-muted-foreground/60" />
+              </div>
+              <h3 className="font-medium text-foreground mb-1">No sections yet</h3>
+              <p className="text-sm text-muted-foreground mb-5">
+                Add your first section to start building your document.
+              </p>
               <button
                 onClick={addSection}
-                className="flex items-center gap-2 mx-auto text-sm text-primary hover:text-primary/80 font-medium"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors"
               >
-                <Plus className="w-4 h-4" /> Add your first section
+                <Plus className="w-4 h-4" /> Add first section
               </button>
             </div>
           )}
@@ -360,7 +409,7 @@ export default function Workspace({ docId }: WorkspaceProps) {
           {sortedSections.length > 0 && (
             <button
               onClick={addSection}
-              className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-border hover:border-primary/40 rounded-xl text-muted-foreground hover:text-primary transition-colors text-sm"
+              className="w-full flex items-center justify-center gap-2 py-3.5 border-2 border-dashed border-border hover:border-primary/40 rounded-xl text-muted-foreground hover:text-primary transition-colors text-sm font-medium"
             >
               <Plus className="w-4 h-4" /> Add section
             </button>
@@ -370,11 +419,14 @@ export default function Workspace({ docId }: WorkspaceProps) {
 
       {/* Archive confirm dialog */}
       {showArchiveConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          onClick={(e) => { if (e.target === e.currentTarget) setShowArchiveConfirm(false); }}
+        >
           <div className="bg-background rounded-2xl border border-border shadow-xl p-6 max-w-sm w-full mx-4">
-            <h3 className="font-semibold text-foreground mb-2">Archive document?</h3>
+            <h3 className="font-semibold text-foreground mb-2">Archive this document?</h3>
             <p className="text-sm text-muted-foreground mb-5">
-              This document will be removed from your active list. Archiving cannot be undone in this version.
+              The document will be removed from your active list. This cannot be undone in this version.
             </p>
             <div className="flex gap-2 justify-end">
               <button
