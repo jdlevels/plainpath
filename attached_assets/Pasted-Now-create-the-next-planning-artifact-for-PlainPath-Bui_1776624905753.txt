@@ -1,0 +1,206 @@
+Now create the next planning artifact for PlainPath Builder:
+
+DOCUMENT REQUEST
+Create a Builder Data Schema Draft and Implementation Sequence Plan.
+
+IMPORTANT
+This is still planning/specification only.
+Do NOT generate migrations, SQL files, ORM code, API handlers, or UI code yet.
+
+GOAL
+Translate the approved Builder product spec and UX spec into an engineering-ready data model and safe implementation sequence that can be reviewed before build starts.
+
+CONTEXT
+The documents.user_id migration has now been structurally and functionally verified.
+Builder must be added as an isolated feature and must not destabilize the current PlainPath release candidate.
+
+REQUIRED OUTPUT
+Provide a detailed markdown document with the following sections:
+
+1. Executive Summary
+- purpose of this schema draft
+- how Builder remains isolated from existing PlainPath document flows
+- why model-first design is required here
+
+2. Isolation Strategy
+Define the isolation boundaries for Builder:
+- route prefix
+- API namespace
+- table prefix
+- component/module directory boundary
+- feature flag name and gating surfaces
+- what existing tables must remain untouched
+
+3. Core Entity Model
+Define the recommended V1 entities/tables conceptually (no actual SQL yet):
+- builder_documents
+- builder_document_versions
+- builder_templates
+- builder_export_artifacts
+- any additional support tables only if truly necessary
+
+For each entity include:
+- purpose
+- why it exists
+- key fields
+- relationships
+- required vs optional fields
+- what belongs in relational columns vs JSON payload
+
+4. Builder Document Model
+Define the canonical editable source model for a Builder document.
+Cover:
+- document-level metadata
+- sections
+- blocks
+- per-block payloads
+- ordering
+- status
+- template origin
+- timestamps
+- version reference
+- export history reference
+
+Be explicit about what should be stored as structured JSON and what should be stored as normal indexed columns.
+
+5. V1 Block Payload Draft
+Define the proposed payload shape for each approved V1 block type:
+- Heading
+- Paragraph
+- Bullet List
+- Numbered List
+- Checklist
+- Key-Value / Info Block
+- Divider
+- Note / Callout
+- Table
+
+For each one specify:
+- block type id
+- required payload fields
+- optional payload fields
+- validation rules
+- export considerations
+- why the shape is intentionally constrained in V1
+
+6. Deferred Block Model Notes
+Document how deferred or unsupported future block types should be represented so the schema can evolve safely later:
+- Date Field
+- Signature Placeholder
+- future unknown block types
+
+Include:
+- payload preservation rule
+- version compatibility rule
+- export/preview rule recommendation
+
+7. Versioning Model
+Define how Builder versions should work:
+- when a version snapshot is created
+- what gets copied into a version record
+- what remains only on the live document
+- restore behavior
+- Compare compatibility
+- why versions should reference the parent builder_document
+
+8. Template Model
+Define the V1 template system:
+- system templates
+- user templates
+- template origin metadata
+- category mapping
+- starter structures
+- whether template content lives as a full document payload or split structures
+
+9. Export Artifact Model
+Define how PDF exports should be represented:
+- artifact metadata
+- artifact relation to source document
+- export timestamp
+- export type
+- status
+- file location/reference
+- why export artifacts must remain separate from the editable source model
+
+10. Integration Mapping
+Map how Builder entities will integrate later with:
+- My Documents
+- Analyze
+- Compare
+- Signature
+- Redact
+
+For each one define:
+- source-of-truth table/entity
+- handoff object or artifact
+- what is V1
+- what is deferred
+
+11. Indexed Fields / Query Strategy
+Recommend which fields likely need indexing/search support in V1.
+Examples:
+- user_id
+- status
+- category
+- updated_at
+- template_id
+- created_from_template
+- etc.
+
+Keep this practical and minimal.
+
+12. Validation Rules
+Define the key server-side validation rules for V1:
+- title requirements
+- section ordering
+- block ordering
+- allowed block types
+- required payload fields by block type
+- maximum sizes/counts where appropriate
+- status transition rules
+- unsupported block preservation rules
+
+13. Implementation Sequence Plan
+Provide the safest build order after approval.
+At minimum sequence:
+- schema finalization
+- migration plan
+- persistence layer
+- document CRUD
+- versioning
+- templates
+- preview/export
+- My Documents integration
+- Analyze/Compare handoff
+- Signature handoff
+- polish
+
+For each step include:
+- objective
+- dependencies
+- risk level
+- why it belongs in that order
+
+14. Non-Goals for Initial Build
+Be explicit about what this schema/model should NOT attempt yet:
+- collaboration
+- advanced permissions
+- full rich text formatting model
+- visual page layout engine
+- embedded signature coordinates
+- conditional block logic
+- external publishing model
+- etc.
+
+15. Design Approval Checklist
+List what must be approved in this schema/model draft before coding begins.
+
+QUALITY BAR
+Be exact and implementation-oriented.
+Do not write SQL or code yet.
+Do not wave away schema decisions.
+Make the output safe for product and engineering review.
+
+At the end include:
+“Recommended First Build Slice”
+and identify the smallest safe implementation slice to build first behind the Builder feature flag.
