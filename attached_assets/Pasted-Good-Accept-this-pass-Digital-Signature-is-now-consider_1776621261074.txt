@@ -1,0 +1,87 @@
+Good. Accept this pass.
+
+Digital Signature is now considered test-mode operational.
+
+Important correction:
+The Dropbox Sign dashboard callback registration should NOT remain on the blocker list if it is already registered and previously passed the production callback test. Treat that item as completed unless current code or dashboard state proves otherwise.
+
+From this point, do NOT return to Stripe work until bank approval is confirmed.
+
+NEXT PASS GOAL
+Run the full non-banking 6-tool launch QA sweep across the live product.
+
+SCOPE
+Audit and verify all 6 live tools plus the supporting product shell:
+- Analyze a Document
+- Document Trust Check
+- PII Redaction
+- Contract Builder
+- Fair Deal Check
+- Digital Signature
+Also verify:
+- Compare tool discoverability
+- My Documents
+- My Analyses
+- Home recent work
+- auth redirects
+- plan gating behavior
+- mobile/tablet/desktop usability
+
+REQUIRED QA CHECKS
+
+1. ROUTES / ACCESS
+- every expected route loads
+- protected routes redirect correctly when signed out
+- logout returns to marketing homepage
+- no dead routes in main launch flows
+
+2. TOOL ENTRY / DISCOVERABILITY
+- each live tool is visible from the product shell where expected
+- Compare is discoverable
+- no hidden live tools that require direct URL knowledge
+
+3. PLAN GATING
+- Free sees only allowed flows
+- Starter sees Analyze + Redact flows
+- Pro sees all 6 live tools
+- locking/upgrade prompts behave correctly
+- no obvious client/server mismatch in normal UX
+
+4. TOOL-BY-TOOL SMOKE TEST
+For each tool, verify:
+- input works
+- main action works
+- output/result page works
+- obvious errors are handled
+- recent work/history behavior is reasonable
+
+5. DIGITAL SIGNATURE
+Keep in current approved test mode.
+Do not switch to live mode.
+Verify:
+- new request still works
+- history still works
+- detail view still works
+- webhook-backed status display is intact
+- prepare & place layout is usable on desktop/tablet/mobile
+
+6. RESPONSIVE QA
+Check:
+- desktop
+- tablet
+- mobile
+List any launch-visible issues only
+
+7. NON-BANKING BLOCKERS ONLY
+At the end, list only remaining blockers that do NOT depend on bank approval.
+
+REQUIRED OUTPUT
+Return only:
+1. exact files read
+2. exact files changed
+3. 6-tool QA summary
+4. any route/discoverability issues
+5. any plan-gating issues
+6. any responsive issues
+7. remaining non-banking launch blockers only
+8. what must wait for bank approval

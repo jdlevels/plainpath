@@ -7,7 +7,7 @@ import { isNative } from "@/lib/platform"
 interface Props {
   open: boolean
   onClose: () => void
-  reason: "analyses" | "trustCheck" | "contractDraft" | "contractReview" | "redact"
+  reason: "analyses" | "trustCheck" | "contractDraft" | "contractReview" | "redact" | "compare"
   used?: number
   limit?: number
   planRequired?: "starter" | "pro"
@@ -43,6 +43,12 @@ const REASON_COPY = {
     sub: "Upgrade to Starter or Pro to automatically detect and redact PII from any document.",
     icon: <ShieldCheck className="w-6 h-6 text-violet-500" />,
     planRequired: "starter" as const,
+  },
+  compare: {
+    title: "Compare Document Versions requires Pro",
+    sub: "Upgrade to Pro to side-by-side compare any two versions of a document and highlight every change.",
+    icon: <BarChart3 className="w-6 h-6 text-blue-500" />,
+    planRequired: "pro" as const,
   },
 }
 

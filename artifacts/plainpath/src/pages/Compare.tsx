@@ -12,6 +12,9 @@ import { Badge } from "@/components/ui/badge"
 import { getApiBaseUrl } from "@/lib/api"
 import { WorkspaceShell } from "@/components/WorkspaceShell"
 import { saveRecentWork } from "@/lib/recentWork"
+import { useEntitlements } from "@/hooks/useEntitlements"
+import UpgradeModal from "@/components/UpgradeModal"
+import { BILLING_CONFIG } from "@/lib/billingConfig"
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
@@ -354,11 +357,23 @@ export default function Compare() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<CompareResult | null>(null)
+  const [upgradeOpen, setUpgradeOpen] = useState(false)
+
+  const { entitlements, loading: entitlementsLoading } = useEntitlements()
+  const canCompareAccess = BILLING_CONFIG.PAYWALL_ENFORCEMENT
+    ? (entitlements?.toolAccess?.includes("compare") ?? false)
+    : true
 
   useEffect(() => {
     document.title = "Compare Document Versions — PlainPath"
     return () => { document.title = "PlainPath" }
   }, [])
+
+  useEffect(() => {
+    if (!entitlementsLoading && BILLING_CONFIG.PAYWALL_ENFORCEMENT && !canCompareAccess) {
+      setUpgradeOpen(true)
+    }
+  }, [entitlementsLoading, canCompareAccess])
 
   async function handleCompare() {
     if (original.trim().length < 50 || revised.trim().length < 50) {
@@ -491,7 +506,10 @@ export default function Compare() {
                   <div className="flex justify-center">
                     <Button
                       size="lg"
-                      onClick={handleCompare}
+                      onClick={() => {
+                        if (!canCompareAccess) { setUpgradeOpen(true); return }
+                        handleCompare()
+                      }}
                       disabled={loading || !canCompare}
                       className="gap-2.5 px-10 rounded-full shadow-md hover:shadow-lg transition-shadow"
                     >
@@ -596,6 +614,12 @@ export default function Compare() {
 
         </AnimatePresence>
       </div>
+
+      <UpgradeModal
+        open={upgradeOpen}
+        onClose={() => setUpgradeOpen(false)}
+        reason="compare"
+      />
     </div>
   )
 }
