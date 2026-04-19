@@ -1,0 +1,79 @@
+Please run a live functional verification for the recently validated documents.user_id migration.
+
+GOAL
+Confirm the schema-safe migration also works in real application behavior with actual rows, not just structural inspection.
+
+IMPORTANT
+Do not make broad schema changes.
+Do not refactor unrelated code.
+This is a controlled verification pass only.
+
+TEST PLAN
+Create and verify one real end-to-end document lifecycle using the current authenticated flow.
+
+Required checks:
+
+1. Create test document
+- Create one real document through the normal app/API path
+- Confirm a row is inserted into documents
+- Confirm these fields are populated correctly:
+  - user_id
+  - title
+  - source_kind
+  - status
+  - extracted_text
+  - created_at / updated_at
+- Report the inserted row shape clearly (redact sensitive values if needed)
+
+2. Read / reopen test document
+- Confirm the same authenticated user can fetch the document normally
+- Confirm ownership gating is enforced through user_id
+- Confirm the document appears correctly in My Documents or equivalent listing path
+
+3. Update test document
+- Update title and/or status through the normal app/API path
+- Confirm the row updates correctly
+- Confirm updated_at changes as expected
+- Confirm no ownership or serialization regression occurs
+
+4. Delete test document or archive if delete is not supported
+- Confirm the current user can complete the action through the normal ownership-gated path
+- Confirm behavior matches intended product logic
+
+5. Analyze flow validation
+- Run one real Analyze flow
+- Confirm analysis is written to user_analyses.analysis, not documents
+- Confirm documents remains document-storage only
+- Confirm no code path assumes analysis belongs on documents
+
+6. Shared analysis / history validation
+- If a share/history path exists and is safe to test, run one minimal check
+- Confirm shared_analyses.analysis still works normally
+- Confirm no ownership regression appears there
+
+7. Ownership negative test
+- Attempt a controlled fetch/update using a mismatched user context if your local/dev test harness supports it
+- Confirm access is denied as expected
+- If not feasible safely, explain why and state the recommended later test
+
+8. Final report
+Provide a concise verification report with:
+- Passed checks
+- Failed checks
+- Any warnings
+- Whether the migration is functionally safe
+- Any cleanup performed on the test rows
+
+IMPORTANT NAMING NOTE
+Use the correct schema names in the report:
+- documents.extracted_text is the document text field
+- user_analyses.analysis stores user analysis output
+- shared_analyses.analysis stores shared analysis output
+- documents.user_id is the ownership field
+
+OUTPUT FORMAT
+Return the result as:
+- Summary verdict
+- Step-by-step findings
+- Any blockers
+- Recommended next action
