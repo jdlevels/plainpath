@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
-  BookMarked, ArrowRight, Trash2, Pencil, Check, X,
+  BookMarked, ArrowRight, Trash2, Pencil, Check, X, Lock,
   FileText, Clock, HardDrive, AlertTriangle, Folders, CreditCard,
   Search, SortAsc, SortDesc, ArrowUpDown, ShieldCheck, Loader2,
 } from "lucide-react"
@@ -574,6 +574,21 @@ export default function MyAnalyses() {
                           Open analysis
                           <ArrowRight className="w-3 h-3" />
                         </Button>
+
+                        <button
+                          onClick={() => {
+                            try {
+                              sessionStorage.setItem("pp_sig_doc", JSON.stringify({ title: saved.title }))
+                            } catch { /* sessionStorage unavailable */ }
+                            setLocation("/signature")
+                          }}
+                          className="flex items-center gap-1.5 h-8 px-2.5 text-xs font-medium rounded-lg text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/30 hover:text-violet-700 dark:hover:text-violet-300 transition-colors border border-violet-200/60 dark:border-violet-800/40"
+                          title="Send for Signature"
+                          style={{ touchAction: "manipulation" }}
+                        >
+                          <Lock className="w-3 h-3" />
+                          <span className="hidden sm:inline">Sign</span>
+                        </button>
 
                         {editingId !== saved.id && (
                           <button

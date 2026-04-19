@@ -139,9 +139,19 @@ PlainPath is migrating from a tool-first model to a **document-first model** whe
 
 **Cross-tool sessionStorage keys:**
 - `pii_analyze_text` — Redact → Analyze/Trust Check text handoff
+- `pii_redact_input` — Analyze/Import/ContractBuilder → Redact text handoff (JSON: {text, source, fileName})
 - `pii_contract_review_text` — Redact → Contract Review
-- `pp_sig_doc` — My Documents → Signature (JSON: {id, title, extractedText, originalFilename, mimeType})
+- `pp_sig_doc` — My Documents/Analyze/Redact/MyAnalyses → Signature (JSON: {title, extractedText?})
 - `pp_doc_open` — My Documents → Analyze (JSON: {id, title, extractedText})
+
+**Cross-tool bridge (Sprint 3 — 4/24 launch):**
+Lightweight handoff actions added across all result surfaces so tools feel connected:
+- **Analyze results (ExportMenu)**: "Send for Signature" (sets `pp_sig_doc` with title → opens Quick Send pre-named); "Redact Sensitive Info" (navigates to /redact for re-upload — honest, no text available)
+- **Redact completion (PDF screen)**: "Send for Signature" tile added to "Continue with redacted text" card — sets `pp_sig_doc` with full `extractedText` (strongest handoff, text already present)
+- **Redact completion (text screen)**: Same "Send for Signature" tile in "Send to a PlainPath tool" card
+- **Contract Builder (DraftResultView)**: "Use this contract with…" card added below action bar — "Analyze" sets `pii_analyze_text` with full contract text; "Redact Info" sets `pii_redact_input` with full contract text
+- **My Analyses cards**: "Sign" button added per card — sets `pp_sig_doc` with analysis title → opens Signature Quick Send
+- `buildDraftText()` helper added in ContractBuilder.tsx to convert draft JSON → plain text for handoff
 
 ### Payment and Billing
 -   Full billing architecture implemented in test mode with Stripe, supporting Starter ($4.99/month) and Pro ($19.99/month) tiers. Starter = Analyze a Document + Redact Sensitive Info. Pro = all 6 tools (including Digital Signature). PAYWALL_ENFORCEMENT is ON — gating is live. STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET must be added to secrets before payments go live.

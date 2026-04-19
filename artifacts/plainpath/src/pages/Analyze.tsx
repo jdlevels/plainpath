@@ -14,7 +14,7 @@ import {
   Printer, ArrowLeft, CheckCircle2, AlertCircle, XCircle,
   ArrowRight, ShieldCheck, Clock, TrendingUp, BookOpen,
   HelpCircle, ChevronDown, ChevronLeft, ChevronRight, Lightbulb, Eye, Shield, Zap,
-  AlignLeft, MessageSquare, X, Flag, Package, Lock,
+  AlignLeft, MessageSquare, X, Flag, Package, Lock, EyeOff,
   FolderOpen, Mail, CheckSquare, Copy, Check,
   Bookmark, BookmarkCheck, Share2, Download, Upload, Bell, BellDot, Link2
 } from "lucide-react"
@@ -2373,6 +2373,18 @@ function DraftMessageCard({ label, draft }: { label: string; draft: string }) {
 function ExportMenu({ analysis }: { analysis: DocumentAnalysis }) {
   const [copiedText, setCopiedText] = useState(false)
   const [shareErr, setShareErr] = useState(false)
+  const [, setLocation] = useLocation()
+
+  function handleSendForSignature() {
+    try {
+      sessionStorage.setItem("pp_sig_doc", JSON.stringify({ title: analysis.title }))
+    } catch { /* sessionStorage unavailable */ }
+    setLocation("/signature")
+  }
+
+  function handleSendToRedact() {
+    setLocation("/redact")
+  }
   const [printUnavailable, setPrintUnavailable] = useState(false)
   const [shareLink, setShareLink] = useState<string | null>(null)
   const [shareLoading, setShareLoading] = useState(false)
@@ -2547,6 +2559,25 @@ function ExportMenu({ analysis }: { analysis: DocumentAnalysis }) {
             </DropdownMenuItem>
           </>
         )}
+        <DropdownMenuSeparator />
+        <DropdownMenuLabel className="text-[11px] uppercase tracking-wide text-muted-foreground font-semibold">
+          Send to tool
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          className="gap-2.5 cursor-pointer"
+          onSelect={(e) => { e.preventDefault(); handleSendForSignature() }}
+        >
+          <Lock className="w-3.5 h-3.5 text-violet-500" />
+          <span>Send for Signature</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="gap-2.5 cursor-pointer"
+          onSelect={(e) => { e.preventDefault(); handleSendToRedact() }}
+        >
+          <EyeOff className="w-3.5 h-3.5 text-amber-500" />
+          <span>Redact Sensitive Info</span>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )

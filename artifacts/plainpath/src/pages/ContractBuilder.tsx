@@ -6,7 +6,7 @@ import {
   ArrowRight, ArrowLeft, Sparkles, AlertTriangle, CheckCircle2,
   Info, ChevronDown, ChevronUp, Save, FileText, RotateCcw,
   Shield, Clock, DollarSign, Users, BookOpen, ClipboardCheck,
-  Loader2, Download, TriangleAlert, Search, Pencil,
+  Loader2, Download, TriangleAlert, Search, Pencil, EyeOff,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -2074,6 +2074,21 @@ function ReviewStep({
 // DRAFT RESULT VIEW
 // ─────────────────────────────────────────────────────────────────────────────
 
+function buildDraftText(d: DraftPayload): string {
+  const lines: string[] = [`${d.contractType}\n`]
+  const parties = Object.values(d.parties).map(p => `${p.label}: ${p.name || "TBD"}`).join(" | ")
+  lines.push(`Parties: ${parties}\n`)
+  for (const section of (d.sections ?? [])) {
+    lines.push(`\n${section.title}`)
+    section.clauses.forEach((c, i) => lines.push(`${i + 1}. ${c}`))
+  }
+  if ((d.defaultClauses ?? []).length) {
+    lines.push("\nStandard Clauses")
+    d.defaultClauses!.forEach(c => lines.push(`• ${c}`))
+  }
+  return lines.join("\n")
+}
+
 function DraftResultView({ draft, contractType, onBack, onRestart }: {
   draft: DraftPayload
   contractType: ContractType
@@ -2082,6 +2097,25 @@ function DraftResultView({ draft, contractType, onBack, onRestart }: {
 }) {
   const { toast } = useToast()
   const [showSignatureModal, setShowSignatureModal] = useState(false)
+  const [, setLocation] = useLocation()
+
+  function handleAnalyzeContract() {
+    try {
+      sessionStorage.setItem("pii_analyze_text", buildDraftText(draft))
+    } catch { /* sessionStorage unavailable */ }
+    setLocation("/analyze")
+  }
+
+  function handleRedactContract() {
+    try {
+      sessionStorage.setItem("pii_redact_input", JSON.stringify({
+        text: buildDraftText(draft),
+        source: "analyze",
+        fileName: `${draft.contractType} Contract`,
+      }))
+    } catch { /* sessionStorage unavailable */ }
+    setLocation("/redact")
+  }
 
   function exportJSON() {
     const blob = new Blob([JSON.stringify(draft, null, 2)], { type: "application/json" })
@@ -2226,6 +2260,22 @@ function DraftResultView({ draft, contractType, onBack, onRestart }: {
           </Button>
           <Button variant="outline" size="default" onClick={exportJSON} className="gap-2 hidden sm:flex">
             <Download className="w-4 h-4" /> Export JSON
+          </Button>
+        </div>
+      </div>
+
+      {/* Use with another tool */}
+      <div className="flex flex-col sm:flex-row gap-3 p-4 bg-muted/20 border border-border/40 rounded-2xl">
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold mb-0.5">Use this contract with…</p>
+          <p className="text-xs text-muted-foreground">Analyze for risks and obligations, or redact sensitive info before sharing.</p>
+        </div>
+        <div className="flex gap-2.5 flex-shrink-0 flex-wrap sm:flex-nowrap">
+          <Button size="sm" variant="outline" onClick={handleAnalyzeContract} className="gap-2">
+            <FileText className="w-3.5 h-3.5" /> Analyze
+          </Button>
+          <Button size="sm" variant="outline" onClick={handleRedactContract} className="gap-2">
+            <EyeOff className="w-3.5 h-3.5" /> Redact Info
           </Button>
         </div>
       </div>
