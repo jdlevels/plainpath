@@ -1,38 +1,32 @@
 // ─── Master Billing Configuration ─────────────────────────────────────────────
 //
-// LIVE ACTIVATION CHECKLIST (do NOT touch until business bank account
-// is approved and Stripe live keys are in the environment):
+// LIVE MODE — activated for controlled soft launch.
 //
-//   1. Add live keys to environment:
-//        STRIPE_SECRET_KEY   = sk_live_...
-//        STRIPE_WEBHOOK_SECRET = whsec_live_...
-//   2. Set BILLING_MODE = "live"
-//   3. Set STRIPE_TEST_MODE = false
-//   4. Set BILLING_ENABLED = true
-//   5. Set PAYWALL_ENFORCEMENT = true  ← this activates tool gating
+// Required secrets in environment:
+//   STRIPE_SECRET_KEY      = sk_live_...
+//   STRIPE_WEBHOOK_SECRET  = whsec_...
 //
-// Nothing else in the codebase needs to change for go-live.
-// All activation points reference this file.
+// To revert to test mode:
+//   BILLING_ENABLED: false
+//   BILLING_MODE: "test"
+//   STRIPE_TEST_MODE: true
 //
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const BILLING_CONFIG = {
-  // Master switch. When false, billing endpoints operate in passive/test mode.
-  // TODO: Set to true when Stripe live keys are active.
-  BILLING_ENABLED: false,
+  // Master switch. When true, live Stripe billing is active.
+  BILLING_ENABLED: true,
 
-  // "test"  → Stripe test mode (no real charges, use sk_test_... keys)
-  // "live"  → Production mode (real charges, use sk_live_... keys)
-  // TODO: Switch to "live" when business account is approved.
-  BILLING_MODE: "test" as "test" | "live",
+  // "live" → Production mode (real charges, sk_live_... keys required)
+  // "test" → Stripe test mode (no real charges, sk_test_... keys)
+  BILLING_MODE: "live" as "test" | "live",
 
-  // When false: all users can use all tools regardless of plan.
-  // When true:  tools are gated by the subscriber's plan.
-  // TODO: Set to true once live billing is confirmed working end-to-end.
+  // When true: tools are gated by the subscriber's active plan.
+  // Free users: 2 analyses/month. Starter: analyze+redact. Pro: all 5 tools.
   PAYWALL_ENFORCEMENT: true,
 
-  // Explicit test-mode guard. Should stay true until go-live.
-  STRIPE_TEST_MODE: true,
+  // Explicit live-mode confirmation. Set to true only when using test keys.
+  STRIPE_TEST_MODE: false,
 } as const
 
 export type BillingMode = typeof BILLING_CONFIG.BILLING_MODE
