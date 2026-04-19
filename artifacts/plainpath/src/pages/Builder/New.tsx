@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { ArrowLeft, FileText, LayoutTemplate, Loader2, CheckCircle2, AlertCircle, Search } from "lucide-react";
-import { builderApi } from "@/lib/builderApi";
 import type { BuilderTemplate } from "@/lib/builderTypes";
+import { useBuilderApi } from "@/hooks/useBuilderApi";
 import { BUILDER_CATEGORIES, CATEGORY_LABELS } from "@/lib/builderConfig";
 import type { BuilderCategory } from "@/lib/builderConfig";
 
@@ -39,6 +39,7 @@ function CategoryPicker({
 
 export default function BuilderNew() {
   const [, navigate] = useLocation();
+  const api = useBuilderApi();
   const [mode, setMode] = useState<Mode>("choose");
   const titleRef = useRef<HTMLInputElement>(null);
 
@@ -72,7 +73,7 @@ export default function BuilderNew() {
     if (mode === "template" && templates.length === 0 && !templatesLoading && !templatesError) {
       setTemplatesLoading(true);
       setTemplatesError(false);
-      builderApi.listTemplates().then((t) => {
+      api.listTemplates().then((t) => {
         setTemplates(t);
         setTemplatesLoading(false);
       }).catch(() => {
@@ -80,7 +81,7 @@ export default function BuilderNew() {
         setTemplatesLoading(false);
       });
     }
-  }, [mode, templates.length, templatesLoading, templatesError]);
+  }, [mode, templates.length, templatesLoading, templatesError, api.listTemplates]);
 
   // Sync template title/category when selection changes
   useEffect(() => {
@@ -98,7 +99,7 @@ export default function BuilderNew() {
     setSubmitting(true);
     setSubmitError(null);
     try {
-      const doc = await builderApi.createDocument({
+      const doc = await api.createDocument({
         title: blankTitle.trim(),
         category: blankCategory as BuilderCategory,
         source: "blank",
@@ -116,7 +117,7 @@ export default function BuilderNew() {
     setSubmitting(true);
     setSubmitError(null);
     try {
-      const doc = await builderApi.createDocument({
+      const doc = await api.createDocument({
         title: templateTitle.trim(),
         category: templateCategory as BuilderCategory,
         source: "template",

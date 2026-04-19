@@ -4,7 +4,7 @@ import {
   ArrowLeft, Plus, AlertCircle, Check,
   Loader2, RefreshCw, Archive, ChevronRight,
 } from "lucide-react";
-import { builderApi } from "@/lib/builderApi";
+import { useBuilderApi } from "@/hooks/useBuilderApi";
 import type {
   BuilderDocumentFull,
   BuilderContent,
@@ -74,6 +74,7 @@ function SectionNav({
 
 export default function Workspace({ docId }: WorkspaceProps) {
   const [, navigate] = useLocation();
+  const api = useBuilderApi();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -106,7 +107,7 @@ export default function Workspace({ docId }: WorkspaceProps) {
     let cancelled = false;
     setLoading(true);
     setError(null);
-    builderApi.getDocument(docId).then((d) => {
+    api.getDocument(docId).then((d) => {
       if (cancelled) return;
       setDoc(d);
       setTitle(d.title);
@@ -121,7 +122,7 @@ export default function Workspace({ docId }: WorkspaceProps) {
       setLoading(false);
     });
     return () => { cancelled = true; };
-  }, [docId]);
+  }, [docId, api.getDocument]);
 
   // IntersectionObserver scroll-spy for section nav
   useEffect(() => {
@@ -174,7 +175,7 @@ export default function Workspace({ docId }: WorkspaceProps) {
       autosaveTimerRef.current = setTimeout(async () => {
         setAutosaveStatus("saving");
         try {
-          const result = await builderApi.updateDocument(docId, {
+          const result = await api.updateDocument(docId, {
             content: newContent,
             title: newTitle,
             status: newStatus,
@@ -194,7 +195,7 @@ export default function Workspace({ docId }: WorkspaceProps) {
         }
       }, 2000);
     },
-    [docId],
+    [docId, api.updateDocument],
   );
 
   function handleContentChange(newContent: BuilderContent) {
@@ -258,7 +259,7 @@ export default function Workspace({ docId }: WorkspaceProps) {
   async function handleArchive() {
     setShowArchiveConfirm(false);
     try {
-      await builderApi.archiveDocument(docId);
+      await api.archiveDocument(docId);
       navigate("/builder");
     } catch {
       alert("Failed to archive document. Please try again.");

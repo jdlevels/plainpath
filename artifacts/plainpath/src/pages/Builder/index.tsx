@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link, useLocation } from "wouter";
 import { Plus, Loader2, AlertCircle, FileText, ChevronRight, RefreshCw } from "lucide-react";
-import { builderApi } from "@/lib/builderApi";
 import type { BuilderDocumentMeta } from "@/lib/builderTypes";
+import { useBuilderApi } from "@/hooks/useBuilderApi";
 import { CATEGORY_LABELS } from "@/lib/builderConfig";
 
 function formatDate(iso: string) {
@@ -21,23 +21,24 @@ function formatDate(iso: string) {
 
 export default function BuilderList() {
   const [, navigate] = useLocation();
+  const api = useBuilderApi();
   const [docs, setDocs] = useState<BuilderDocumentMeta[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  function load() {
+  const load = useCallback(() => {
     setLoading(true);
     setError(null);
-    builderApi.listDocuments().then((d) => {
+    api.listDocuments().then((d) => {
       setDocs(d);
       setLoading(false);
     }).catch(() => {
       setError("Failed to load your documents.");
       setLoading(false);
     });
-  }
+  }, [api.listDocuments]);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [load]);
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 sm:py-12">
