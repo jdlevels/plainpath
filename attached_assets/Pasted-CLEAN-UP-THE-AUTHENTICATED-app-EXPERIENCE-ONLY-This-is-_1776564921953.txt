@@ -1,0 +1,235 @@
+CLEAN UP THE AUTHENTICATED /app EXPERIENCE ONLY
+
+This is a product UX cleanup pass for the logged-in app experience at /app.
+
+IMPORTANT SCOPE RULES
+- Edit ONLY the authenticated /app experience and any components used by it.
+- Do NOT redesign or alter the public marketing site at /. The public site is already doing the selling.
+- Do NOT change billing logic, access-control logic, Stripe logic, pricing values, plan entitlements, analytics wiring, or legal/support pages unless required for a visual/UI cleanup bug inside /app.
+- Do NOT touch working tool functionality.
+- Preserve the current dark premium visual language, brand colors, and general design quality.
+- Keep the new logo treatment consistent anywhere inside /app where branding appears.
+- Before editing, audit the current /app structure and identify which sections are duplicated marketing content versus actual product/dashboard content.
+
+CORE PROBLEM TO SOLVE
+The authenticated /app page currently feels too much like a second marketing website instead of a real product dashboard. It repeats too much public-site persuasion content, includes fake-looking social proof/metrics, and delays the user from getting to actual product actions.
+
+The public site should persuade.
+The /app experience should activate.
+
+GOAL
+Turn /app into a clean, premium, dashboard-style product home for logged-in users:
+- immediate tool access
+- recent work / saved work
+- clear plan/access state
+- one useful product walkthrough at most
+- minimal sales friction
+- no fake-looking social proof inside the product
+
+WHAT TO REMOVE FROM /app
+Remove these from the authenticated /app home:
+1. Fake/social-proof metrics rows such as:
+   - 50,000+
+   - 4.9x
+   - 12,000+
+   - 3,000+
+   or any similar synthetic-looking count/rating blocks
+2. Testimonial/review sections such as “Real documents. Real relief.” and all quote cards
+3. Full public-style pricing section on the /app home
+4. Referral/promo section on the /app home
+5. Repetitive sales/demo sections that duplicate the same message multiple times
+6. Any other public-site persuasion sections that do not help a signed-in user take action immediately
+
+WHAT TO KEEP OR CONDENSE
+You may keep ONLY ONE strong product demo / walkthrough section inside /app, and only if it helps a logged-in user understand the tools quickly.
+- Keep the strongest real interactive walkthrough block
+- Remove the redundant duplicates
+- There should NOT be multiple stacked sections all saying variations of:
+  - “Watch each tool work”
+  - “See PlainPath in action”
+  - “Any document. Any risk. Any contract.”
+  - “One demo for each tool”
+  - “Read it. Trust it. Build it. Review it. Protect it.”
+Pick one best version and remove or drastically reduce the others.
+
+DESIRED /app INFORMATION HIERARCHY
+The authenticated /app landing page should feel like a real dashboard. Rebuild the page around this structure:
+
+SECTION 1 — COMPACT APP HERO / START AREA
+Purpose: orient the user quickly and push them toward action.
+Include:
+- a compact headline focused on action, not marketing hype
+- a short truthful subhead
+- primary CTA = start with a tool
+- plan/access badge if useful
+- no giant public-site hero duplication
+- no public-site “selling” language repeated too heavily
+
+Suggested tone:
+- practical
+- clear
+- premium
+- product-first
+- truthful
+
+SECTION 2 — TOOL LAUNCHER GRID
+This is the most important section.
+Show the 5 tools clearly as product entry points:
+- Analyze a Document
+- Document Trust Check
+- Build a Contract
+- Contract Review
+- Redact Sensitive Info
+- Digital Signature should remain clearly marked as coming soon if that is the live product truth
+
+For each tool card:
+- show concise purpose
+- show access state based on current plan truth
+- show clear CTA
+- keep color-coded system
+- make these feel like launch cards, not marketing cards
+
+If a tool is locked for the user’s plan:
+- show that honestly
+- do not break the layout
+- use subtle upgrade affordance, not aggressive sales noise
+
+SECTION 3 — CONTINUE / RECENT WORK
+Add a real product continuation area if data exists.
+Examples:
+- Recent analyses
+- Saved analyses
+- Recent drafts
+- Last opened tool
+- Recently viewed documents
+If real data is not yet available, create a premium empty state that is clearly product-oriented, not fake activity.
+
+Examples of acceptable empty states:
+- “No recent analyses yet”
+- “Start with Analyze a Document or Redact Sensitive Info”
+- “Your saved work will appear here”
+
+Do NOT generate fake usage history.
+
+SECTION 4 — OPTIONAL SINGLE WALKTHROUGH
+Keep one polished interactive product walkthrough only if it adds real value.
+Rules:
+- must feel like product guidance, not brochure content
+- must use real app-inspired motion
+- must not look like fake video/scrubbing/testimonial marketing
+- should be shorter, tighter, and more instructional than the public-site version if both exist
+
+SECTION 5 — PLAN / ACCESS / UPGRADE PANEL
+If needed, add a compact access panel for logged-in users:
+- current plan
+- what is unlocked
+- what requires Pro
+- manage subscription / upgrade path
+This should be compact and useful.
+Do NOT place a giant public marketing pricing section inside the main /app dashboard.
+
+If pricing needs to be visible in the authenticated experience, route it to:
+- /upgrade
+- /billing
+or a compact side panel / card
+not a full homepage sales section
+
+SECTION 6 — HELP / SUPPORT
+End with a minimal support/help area only if useful:
+- support link
+- billing link
+- privacy / terms if already standard in app footer
+- maybe a short FAQ link, but NOT a giant public FAQ wall on the main dashboard
+
+COPY / POSITIONING RULES
+For /app:
+- Remove overly promotional or repetitive marketing headlines
+- Replace with product-operational language
+- Keep language truthful and direct
+- No fake testimonials
+- No fake counts
+- No vague “everyone loves this” type copy
+- No duplicated phrases across multiple sections
+
+Use copy that answers:
+- what can I do here?
+- what should I do first?
+- what do I have access to?
+- where is my recent work?
+
+DO NOT MIRROR /.com
+The authenticated /app page should not feel like a mirrored copy of the public site.
+It must feel like:
+- the working product
+- the logged-in control center
+- the place where the user actually does things
+
+VISUAL / DESIGN RULES
+- Keep the premium dark mode aesthetic
+- Keep the strong gradients and depth where appropriate
+- Preserve visual quality, but reduce decorative repetition
+- Use more structure and less stacked “showcase” sections
+- Prioritize clarity, tool access, and hierarchy
+- Keep spacing premium and intentional
+- Keep the page feeling substantial, but less sales-heavy
+- Reduce long-scroll fatigue caused by repeated hero/demo/feature sections
+- Ensure the logo/brand mark is consistent across /app screens, not only the public hero
+
+TECHNICAL IMPLEMENTATION RULES
+- Reuse current components when possible, but simplify the page structure
+- Remove dead sections from the /app home rather than just hiding them awkwardly
+- Preserve responsive behavior for desktop, tablet, and mobile
+- Do not introduce placeholder metrics or fabricated user content
+- Do not break routing to tools, billing, or upgrade
+- Do not touch server files unless absolutely necessary for app-home rendering only
+
+LIKELY CLEANUP MOVES
+Use judgment, but likely actions include:
+- delete or remove testimonial/social-proof blocks from /app
+- remove metrics strip from /app
+- remove full pricing block from /app home
+- remove referral block from /app home
+- reduce multiple showcase sections down to one
+- promote tool grid higher on page
+- add a real “recent work / continue” section
+- tighten copy so the page reads like a dashboard, not a sales deck
+
+ACCEPTANCE CRITERIA
+This pass is successful only if all of the following are true:
+
+1. /app no longer feels like a duplicate of the public homepage
+2. A logged-in user can immediately see what tools are available and where to start
+3. Fake-looking metrics and testimonial sections are gone from /app
+4. Repetitive showcase/demo/marketing sections are reduced to one best version max
+5. Pricing/referral are no longer dominating the authenticated app home
+6. The page feels like a real product dashboard with clear action paths
+7. Recent work / empty-state product continuity exists and is truthful
+8. Branding remains premium and consistent
+9. Responsive layout remains clean on desktop/tablet/mobile
+10. Public site at / remains untouched
+
+RETURN FORMAT REQUIRED
+After implementation, return a strict report with:
+1. Files changed
+2. Exact sections removed
+3. Exact sections kept/reworked
+4. Final /app section order
+5. Any copy changes made
+6. Confirmation that / was not touched
+7. Desktop + mobile screenshot verification
+8. Final verdict on whether /app now reads as a true product dashboard
+
+FINAL PRODUCT DIRECTION
+Think of /app as:
+- command center
+- launcher
+- recent work hub
+- access-aware product dashboard
+
+NOT:
+- second marketing site
+- testimonial page
+- pricing brochure
+- repeated showcase deck
+
+Execute now.
