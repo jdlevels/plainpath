@@ -124,6 +124,49 @@ export function getSignatureDownloadUrl(id: string): string {
   return `${base()}/api/signatures/${id}/download`;
 }
 
+export interface SendPreparedPayload {
+  file: File;
+  documentName?: string;
+  signerName: string;
+  signerEmail: string;
+  signerRole?: string;
+  requestMessage?: string;
+  fields: Array<{
+    id: string;
+    type: string;
+    page: number;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    label?: string;
+    required: boolean;
+  }>;
+  pageDimensions: Array<{ w_pts: number; h_pts: number }>;
+}
+
+export async function sendPreparedSignatureRequest(
+  payload: SendPreparedPayload
+): Promise<SendSignatureResult> {
+  const formData = new FormData();
+  formData.append("file", payload.file);
+  if (payload.documentName) formData.append("documentName", payload.documentName);
+  formData.append("signerName", payload.signerName);
+  formData.append("signerEmail", payload.signerEmail);
+  if (payload.signerRole) formData.append("signerRole", payload.signerRole);
+  if (payload.requestMessage) formData.append("requestMessage", payload.requestMessage);
+  formData.append("fieldsJson", JSON.stringify(payload.fields));
+  formData.append("pageDimensionsJson", JSON.stringify(payload.pageDimensions));
+
+  const res = await fetch(`${base()}/api/signatures/send-prepared`, {
+    method: "POST",
+    credentials: "include",
+    body: formData,
+  });
+  const data = await res.json() as SendSignatureResult;
+  return data;
+}
+
 export async function deleteSignatureRequest(id: string): Promise<void> {
   const res = await fetch(`${base()}/api/signatures/${id}`, {
     method: "DELETE",

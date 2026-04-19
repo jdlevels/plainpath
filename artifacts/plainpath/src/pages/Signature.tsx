@@ -6,8 +6,9 @@ import {
   FileSignature, Plus, ArrowLeft, Upload, FileText, X,
   Send, CheckCircle2, AlertCircle, Loader2, RefreshCw,
   Download, Clock, Eye, ChevronRight, Pen, Mail,
-  ClipboardCopy, Lock, Shield, Zap,
+  ClipboardCopy, Lock, Shield, Zap, MousePointer,
 } from "lucide-react"
+import PrepareAndPlace from "./PrepareAndPlace"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -996,11 +997,89 @@ function DetailView({
   )
 }
 
+// ─── Mode picker ─────────────────────────────────────────────────────────────
+
+function ModePicker({
+  onQuickSend,
+  onPrepareAndPlace,
+  onBack,
+}: {
+  onQuickSend: () => void
+  onPrepareAndPlace: () => void
+  onBack: () => void
+}) {
+  return (
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="flex items-center gap-3 mb-8">
+        <button
+          onClick={onBack}
+          className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="w-4 h-4" />
+        </button>
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center">
+            <FileSignature className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+          </div>
+          <h1 className="text-lg font-bold">New Signature Request</h1>
+        </div>
+      </div>
+
+      <div className="max-w-2xl">
+        <div className="mb-6">
+          <h2 className="text-base font-semibold mb-1">Choose a workflow</h2>
+          <p className="text-sm text-muted-foreground">
+            Select how you want to prepare and send this document.
+          </p>
+        </div>
+
+        <div className="grid sm:grid-cols-2 gap-4">
+          <button
+            onClick={onQuickSend}
+            className="group text-left border border-border/60 rounded-2xl p-5 hover:border-violet-300 dark:hover:border-violet-700 hover:shadow-md transition-all duration-150"
+          >
+            <div className="w-10 h-10 rounded-xl bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center mb-4 group-hover:bg-violet-200/70 dark:group-hover:bg-violet-900/50 transition-colors">
+              <Send className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+            </div>
+            <h3 className="font-semibold text-sm mb-1">Quick Send</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Upload any document (PDF, Word, or text) and send it immediately. Dropbox Sign adds a signature block automatically.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-1.5">
+              {["All file types", "Fast", "Auto-placement"].map(t => (
+                <span key={t} className="text-[10px] font-medium bg-muted/60 rounded-full px-2 py-0.5 text-muted-foreground">{t}</span>
+              ))}
+            </div>
+          </button>
+
+          <button
+            onClick={onPrepareAndPlace}
+            className="group text-left border border-border/60 rounded-2xl p-5 hover:border-violet-300 dark:hover:border-violet-700 hover:shadow-md transition-all duration-150"
+          >
+            <div className="w-10 h-10 rounded-xl bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center mb-4 group-hover:bg-violet-200/70 dark:group-hover:bg-violet-900/50 transition-colors">
+              <MousePointer className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+            </div>
+            <h3 className="font-semibold text-sm mb-1">Prepare & Place</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Render your PDF and click to place signature, initials, date, and text fields exactly where you want them.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-1.5">
+              {["PDF only", "Precise placement", "Custom fields"].map(t => (
+                <span key={t} className="text-[10px] font-medium bg-muted/60 rounded-full px-2 py-0.5 text-muted-foreground">{t}</span>
+              ))}
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function Signature() {
   const { entitlements, isAdmin, loading } = useEntitlements()
-  const [view, setView] = useState<"list" | "new" | "detail">("list")
+  const [view, setView] = useState<"list" | "mode" | "new" | "prepare" | "detail">("list")
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
   const canUse =
@@ -1019,24 +1098,47 @@ export default function Signature() {
     return <LockedGate />
   }
 
+  function goToList() {
+    setSelectedId(null)
+    setView("list")
+  }
+
+  function goToDetail(id: string) {
+    setSelectedId(id)
+    setView("detail")
+  }
+
   return (
     <div className="min-h-[calc(100vh-4rem)]">
       {view === "list" && (
         <ListView
-          onNew={() => setView("new")}
-          onSelect={(id) => { setSelectedId(id); setView("detail") }}
+          onNew={() => setView("mode")}
+          onSelect={(id) => goToDetail(id)}
+        />
+      )}
+      {view === "mode" && (
+        <ModePicker
+          onBack={goToList}
+          onQuickSend={() => setView("new")}
+          onPrepareAndPlace={() => setView("prepare")}
         />
       )}
       {view === "new" && (
         <NewRequestWizard
-          onBack={() => setView("list")}
-          onSent={(id) => { setSelectedId(id); setView("detail") }}
+          onBack={() => setView("mode")}
+          onSent={goToDetail}
+        />
+      )}
+      {view === "prepare" && (
+        <PrepareAndPlace
+          onBack={() => setView("mode")}
+          onSent={goToDetail}
         />
       )}
       {view === "detail" && selectedId && (
         <DetailView
           id={selectedId}
-          onBack={() => { setSelectedId(null); setView("list") }}
+          onBack={goToList}
         />
       )}
     </div>

@@ -410,6 +410,215 @@ router.post("/send", requireAuth, requireSignaturePlan, upload.single("file"), a
   }
 });
 
+// ─── POST /api/signatures/send-prepared ─ send with explicit field placement ──
+// Like /send but accepts a JSON array of placed fields and page dimensions.
+// Fields are stored as fractions (0..1) of page dimensions; we convert to
+// PDF points for Dropbox Sign using: x_pts = x_frac * page_width_pts.
+// DS API uses bottom-left origin → y = page_h - (y_top + field_h).
+
+const DS_FIELD_TYPE_MAP: Record<string, string> = {
+  signature: "signature",
+  initials: "initials",
+  date_signed: "date_signed",
+  name: "name",
+  title: "text",
+  text: "text",
+};
+
+router.post("/send-prepared", requireAuth, requireSignaturePlan, upload.single("file"), async (req: any, res: Response) => {
+  try {
+    const {
+      signerName,
+      signerEmail,
+      signerRole,
+      requestMessage,
+      documentName: nameOverride,
+      fieldsJson,
+      pageDimensionsJson,
+    } = req.body;
+
+    if (!signerName?.trim() || !signerEmail?.trim()) {
+      return res.status(400).json({ error: "missing_fields", message: "Signer name and email are required." });
+    }
+    if (!/\S+@\S+\.\S+/.test(signerEmail.trim())) {
+      return res.status(400).json({ error: "invalid_email", message: "A valid signer email address is required." });
+    }
+    if (!req.file) {
+      return res.status(400).json({ error: "missing_document", message: "A PDF file is required for Prepare & Place mode." });
+    }
+
+    let fields: Array<{
+      id: string; type: string; page: number;
+      x: number; y: number; width: number; height: number;
+      label?: string; required: boolean;
+    }> = [];
+    let pageDimensions: Array<{ w_pts: number; h_pts: number }> = [];
+
+    try {
+      fields = JSON.parse(fieldsJson || "[]");
+    } catch {
+      return res.status(400).json({ error: "invalid_fields", message: "Invalid field placement data." });
+    }
+    try {
+      pageDimensions = JSON.parse(pageDimensionsJson || "[]");
+    } catch {
+      return res.status(400).json({ error: "invalid_page_dims", message: "Invalid page dimension data." });
+    }
+
+    if (!Array.isArray(fields) || fields.length === 0) {
+      return res.status(400).json({ error: "no_fields", message: "At least one field must be placed on the document." });
+    }
+
+    const hasSig = fields.some((f) => f.type === "signature" || f.type === "initials");
+    if (!hasSig) {
+      return res.status(400).json({ error: "no_signature_field", message: "At least one signature or initials field is required." });
+    }
+
+    const documentName = nameOverride?.trim() || req.file.originalname || "Document";
+    const creds = getDropboxSignCredentials();
+
+    // ── Create draft record ─────────────────────────────────────────────────
+    const insertResult = await pool.query(
+      `INSERT INTO signature_requests
+        (user_id, document_name, signer_name, signer_email, signer_role,
+         request_message, provider_name, status, test_mode, metadata)
+       VALUES ($1, $2, $3, $4, $5, $6, 'dropbox_sign', 'draft', $7, $8)
+       RETURNING id`,
+      [
+        req.userId,
+        documentName,
+        signerName.trim(),
+        signerEmail.trim().toLowerCase(),
+        signerRole?.trim() || null,
+        requestMessage?.trim() || null,
+        creds ? creds.testMode : true,
+        JSON.stringify({ fields, pageDimensions, workflow: "prepare_and_place" }),
+      ]
+    );
+    const signatureRequestId = insertResult.rows[0].id;
+
+    if (!creds) {
+      return res.status(503).json({
+        error: "signature_not_configured",
+        message: "E-signature is not configured. A Dropbox Sign API key is required to send requests.",
+        signatureRequestId,
+      });
+    }
+
+    // ── Build Dropbox Sign multipart payload ────────────────────────────────
+    const formData = new FormData();
+    formData.append("title", documentName);
+    formData.append("subject", `Please sign: ${documentName}`);
+    formData.append(
+      "message",
+      requestMessage?.trim() || `${signerName.trim()} — please review and sign this document sent via PlainPath.`
+    );
+    formData.append("signers[0][email_address]", signerEmail.trim().toLowerCase());
+    formData.append("signers[0][name]", signerName.trim());
+    formData.append("signers[0][order]", "0");
+
+    if (creds.testMode) {
+      formData.append("test_mode", "1");
+    }
+
+    formData.append(
+      "files[0]",
+      new Blob([req.file.buffer], { type: req.file.mimetype }),
+      req.file.originalname
+    );
+
+    // ── Convert and append form fields ─────────────────────────────────────
+    // DS API coords: bottom-left origin, in PDF points (72 DPI = 1 pt/px).
+    // Our storage: fractions (0..1) of page, top-left origin.
+    // Conversion: ds_x = frac_x * w_pts
+    //             ds_y = (1 - frac_y - frac_h) * h_pts  (y-flip to bottom-left)
+    fields.forEach((field, i) => {
+      const dims = pageDimensions[field.page - 1] || { w_pts: 612, h_pts: 792 };
+      const x_pts = Math.max(0, Math.round(field.x * dims.w_pts));
+      const y_pts = Math.max(0, Math.round((1 - field.y - field.height) * dims.h_pts));
+      const w_pts = Math.max(30, Math.round(field.width * dims.w_pts));
+      const h_pts = Math.max(12, Math.round(field.height * dims.h_pts));
+      const dsType = DS_FIELD_TYPE_MAP[field.type] ?? "text";
+
+      formData.append(`form_fields_per_document[${i}][document_index]`, "0");
+      formData.append(`form_fields_per_document[${i}][api_id]`, `field_${i}`);
+      formData.append(`form_fields_per_document[${i}][type]`, dsType);
+      formData.append(`form_fields_per_document[${i}][x]`, String(x_pts));
+      formData.append(`form_fields_per_document[${i}][y]`, String(y_pts));
+      formData.append(`form_fields_per_document[${i}][width]`, String(w_pts));
+      formData.append(`form_fields_per_document[${i}][height]`, String(h_pts));
+      formData.append(`form_fields_per_document[${i}][page]`, String(field.page));
+      formData.append(`form_fields_per_document[${i}][required]`, "1");
+      formData.append(`form_fields_per_document[${i}][signer]`, "0");
+      if (field.label) {
+        formData.append(`form_fields_per_document[${i}][label]`, field.label);
+      }
+    });
+
+    // ── Call Dropbox Sign ───────────────────────────────────────────────────
+    const dsResponse = await fetch("https://api.hellosign.com/v3/signature_request/send", {
+      method: "POST",
+      headers: { Authorization: creds.authHeader },
+      body: formData,
+    });
+
+    const dsData = await dsResponse.json() as Record<string, unknown>;
+
+    if (!dsResponse.ok) {
+      logger.error({ status: dsResponse.status, dsData }, "Dropbox Sign API error (send-prepared)");
+      await pool.query(
+        `UPDATE signature_requests
+         SET status = 'failed', failed_at = NOW(), failure_reason = $1, updated_at = NOW()
+         WHERE id = $2`,
+        [JSON.stringify(dsData), signatureRequestId]
+      );
+      return res.status(502).json({
+        error: "provider_error",
+        message: "Could not send the signature request. Please check your Dropbox Sign configuration.",
+        signatureRequestId,
+      });
+    }
+
+    const dsReq = dsData.signature_request as Record<string, unknown>;
+    const providerRequestId = dsReq?.signature_request_id as string ?? null;
+    const firstSig = (dsReq?.signatures as any[])?.[0] ?? null;
+    const providerSignatureId = firstSig?.signature_id ?? null;
+    const signUrl = ((dsReq as any).signing_url ?? null) as string | null;
+
+    await pool.query(
+      `UPDATE signature_requests
+       SET status = 'sent',
+           provider_request_id = $1,
+           provider_signature_id = $2,
+           sent_at = NOW(),
+           updated_at = NOW(),
+           metadata = COALESCE(metadata, '{}'::jsonb) || $4::jsonb
+       WHERE id = $3`,
+      [providerRequestId, providerSignatureId, signatureRequestId,
+       JSON.stringify({ sign_url: signUrl, test_mode_sign_url: signUrl })]
+    );
+
+    await pool.query(
+      `INSERT INTO signature_request_events
+        (signature_request_id, provider_event_name, app_status_after_event, occurred_at, dedupe_key)
+       VALUES ($1, 'signature_request_sent', 'sent', NOW(), $2)
+       ON CONFLICT (dedupe_key) DO NOTHING`,
+      [signatureRequestId, `${signatureRequestId}:signature_request_sent:send`]
+    ).catch(() => {});
+
+    return res.json({
+      ok: true,
+      signatureRequestId,
+      providerRequestId,
+      status: "sent",
+      message: "Signature request sent with field placements. The signer will receive a secure signing link by email.",
+    });
+  } catch (err) {
+    logger.error({ err }, "signatures/send-prepared failed");
+    return res.status(500).json({ error: "server_error", message: "Failed to send signature request. Please try again." });
+  }
+});
+
 // ─── GET /api/signatures/:id/refresh ─ refresh status from Dropbox Sign ──────
 
 router.get("/:id/refresh", requireAuth, requireSignaturePlan, async (req: any, res: Response) => {
