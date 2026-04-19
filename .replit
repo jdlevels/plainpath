@@ -30,6 +30,7 @@ timeoutMs = 20000
 [userenv.shared]
 APP_BASE_URL = "https://plain-path.replit.app"
 ADMIN_EMAILS = "support@plainpathapp.com"
+DROPBOX_SIGN_TEST_MODE = "false"
 
 [nix]
 channel = "stable-25_05"

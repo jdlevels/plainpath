@@ -1,0 +1,78 @@
+We are continuing PlainPath.
+
+I reviewed the current-state inventory. We are now in launch-blocker resolution mode only.
+
+IMPORTANT SCOPE RULE
+Do NOT duplicate capabilities already satisfactorily handled inside the Contract tool.
+If Contract Builder already covers a capability, leave it there unless a tiny cross-tool connection is needed for launch.
+Do NOT start a deep architecture rewrite.
+Do NOT work on post-submission platform features.
+
+THIS PASS GOAL
+Resolve the true remaining pre-4/26 launch blockers in the correct order.
+
+PRIORITY ORDER FOR THIS PASS
+
+1. STRIPE ACTIVATION
+This is the highest priority blocker because users currently cannot pay.
+
+Tasks:
+- inspect the live Stripe integration code path
+- confirm the exact env vars required by the running implementation
+- add support checks if needed, but do not rewrite billing architecture
+- verify the correct webhook route is the Stripe route, not the Digital Signature route
+- confirm the exact production webhook URL to register in Stripe
+- verify checkout flow from Free user -> upgrade -> Stripe -> webhook -> plan update
+
+Expected secrets/config:
+- STRIPE_SECRET_KEY
+- STRIPE_WEBHOOK_SECRET
+
+2. DIGITAL SIGNATURE LIVE MODE SWITCH
+After Stripe is verified, finalize production Digital Signature readiness:
+- confirm Dropbox Sign callback is already working on production
+- set production signing mode correctly by using DROPBOX_SIGN_TEST_MODE=false
+- run one real provider-backed live-mode smoke test
+- verify:
+  - request send
+  - provider request ID stored
+  - webhook events received
+  - normalized status transitions
+  - signed file retrieval/download
+
+3. LAUNCH-SAFE POLISH ONLY IF TIME REMAINS
+Only after Stripe and live signature verification:
+- add Compare tool entry to the main Tools navigation if still missing
+- add recent-work/history visibility for Redact / Contract Builder / Compare if quick and safe
+- mobile polish for Signature Prepare & Place only if truly small
+- add RESEND_API_KEY only if the reminder-email feature is visible in launch UX
+
+DO NOT WORK ON
+- full shared document spine
+- binary file persistence
+- Adobe-style builder
+- Teams UI
+- deep storage redesign
+- large Contract tool changes
+- any broad rebuild
+
+REQUIRED OUTPUT
+When complete, provide:
+
+1. EXACT FILES READ
+2. EXACT FILES CHANGED
+3. STRIPE STATUS
+   - exact env vars required
+   - exact Stripe webhook URL
+   - whether real checkout now works end-to-end
+4. DIGITAL SIGNATURE STATUS
+   - whether production live mode is enabled
+   - whether one real live signature flow was verified end-to-end
+5. ANY REMAINING 4/26 LAUNCH BLOCKERS ONLY
+6. FINAL RECOMMENDED NEXT TASK
+
+SUCCESS CONDITION
+This pass is successful only if:
+- Stripe can actually take payment and update plans
+- Digital Signature is verified beyond test mode
+- no unnecessary work is done outside true launch blockers
