@@ -17,7 +17,7 @@ router.use(requireBuilderEnabled);
 function requireAuth(req: any, res: any, next: any) {
   const auth = getAuth(req);
   const userId = auth?.userId;
-  if (!userId) return res.status(401).json({ error: "unauthorized" });
+  if (!userId) { res.status(401).json({ error: "unauthorized" }); return; }
   req.userId = userId;
   next();
 }
@@ -61,7 +61,7 @@ router.get("/documents", requireAuth, async (req: any, res) => {
 
 router.post("/documents", requireAuth, async (req: any, res) => {
   const validationError = validateCreateDocument(req.body);
-  if (validationError) return res.status(422).json(validationError);
+  if (validationError) { res.status(422).json(validationError); return; }
 
   const { title, category, source = "blank", templateId = null, content } = req.body;
 
@@ -109,7 +109,7 @@ router.get("/documents/:id", requireAuth, async (req: any, res) => {
       [req.params.id, req.userId],
     );
 
-    if (result.rowCount === 0) return res.status(404).json({ error: "not_found" });
+    if (result.rowCount === 0) { res.status(404).json({ error: "not_found" }); return; }
 
     const row = result.rows[0];
     res.json({
@@ -140,7 +140,7 @@ router.get("/documents/:id", requireAuth, async (req: any, res) => {
 
 router.put("/documents/:id", requireAuth, async (req: any, res) => {
   const validationError = validateUpdateDocument(req.body);
-  if (validationError) return res.status(422).json(validationError);
+  if (validationError) { res.status(422).json(validationError); return; }
 
   const { server_version: clientVersion, title, status, content } = req.body;
 
@@ -182,14 +182,14 @@ router.put("/documents/:id", requireAuth, async (req: any, res) => {
         [docId, userId],
       );
       if (existing.rowCount === 0) {
-        return res.status(404).json({ error: "not_found" });
+        res.status(404).json({ error: "not_found" }); return;
       }
       // Version mismatch → conflict
-      return res.status(409).json({
+      res.status(409).json({
         error: "conflict",
         message: "Document was modified by another session. Reload to continue editing.",
         currentServerVersion: existing.rows[0].server_version,
-      });
+      }); return;
     }
 
     const row = result.rows[0];
@@ -224,9 +224,9 @@ router.post("/documents/:id/archive", requireAuth, async (req: any, res) => {
         `SELECT id, status FROM builder_documents WHERE id = $1 AND user_id = $2`,
         [req.params.id, req.userId],
       );
-      if (exists.rowCount === 0) return res.status(404).json({ error: "not_found" });
+      if (exists.rowCount === 0) { res.status(404).json({ error: "not_found" }); return; }
       // Already archived — idempotent
-      return res.status(200).json({ id: req.params.id, status: "archived" });
+      res.status(200).json({ id: req.params.id, status: "archived" }); return;
     }
 
     res.json({ id: result.rows[0].id, status: "archived" });
@@ -286,7 +286,7 @@ router.get("/templates/:id", requireAuth, async (req: any, res) => {
       [req.params.id],
     );
 
-    if (result.rowCount === 0) return res.status(404).json({ error: "not_found" });
+    if (result.rowCount === 0) { res.status(404).json({ error: "not_found" }); return; }
 
     const row = result.rows[0];
     res.json({

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
 import {
-  ArrowLeft, Plus, Save, AlertCircle, Check,
+  ArrowLeft, Plus, AlertCircle, Check,
   Loader2, RefreshCw, Archive, ChevronRight,
 } from "lucide-react";
 import { builderApi } from "@/lib/builderApi";
@@ -165,12 +165,6 @@ export default function Workspace({ docId }: WorkspaceProps) {
     scheduleAutosave(content, newTitle, status);
   }
 
-  function handleStatusToggle() {
-    const newStatus: BuilderDocStatus = status === "draft" ? "final" : "draft";
-    setStatus(newStatus);
-    scheduleAutosave(content, title, newStatus);
-  }
-
   // Section operations
   function addSection() {
     const sorted = [...content.sections].sort((a, b) => a.order - b.order);
@@ -305,16 +299,12 @@ export default function Workspace({ docId }: WorkspaceProps) {
           <div className="flex items-center gap-2 shrink-0">
             <AutosaveIndicator status={autosaveStatus} />
 
-            <button
-              onClick={handleStatusToggle}
-              className={`px-3 py-1 text-xs font-semibold rounded-full border transition-colors ${
-                status === "final"
-                  ? "bg-green-100 dark:bg-green-950/50 text-green-700 dark:text-green-400 border-green-300 dark:border-green-800"
-                  : "bg-secondary text-muted-foreground border-border hover:border-foreground/40"
-              }`}
-            >
-              {status === "final" ? "Final" : "Draft"}
-            </button>
+            {/* Draft/Final toggle — intentionally hidden in Slice 1.
+                The draft→final transition requires a builder_document_versions snapshot.
+                That behavior is deferred to Slice 2. */}
+            <span className="px-3 py-1 text-xs font-semibold rounded-full border bg-secondary text-muted-foreground border-border select-none">
+              Draft
+            </span>
 
             {doc?.category && (
               <span className="hidden sm:inline px-2.5 py-1 text-xs bg-secondary text-muted-foreground rounded-full border border-border">

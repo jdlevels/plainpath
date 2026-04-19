@@ -1,0 +1,64 @@
+Builder Slice 1 is in provisional review only. Before moving forward, complete the following verification and cleanup pass.
+
+DO NOT start the next slice yet.
+
+REQUIRED VERIFICATION
+
+1. Real authenticated API verification
+Use a real authenticated browser/user session and verify all of these through the actual app/API path:
+- create a Builder document
+- fetch that Builder document
+- autosave/update that document
+- archive that document
+- confirm ownership is enforced through user_id
+- confirm server_version increments on each successful autosave
+- confirm the row appears/disappears correctly in the Builder list query
+
+2. Draft/Final transition verification
+Because the workspace currently includes a Draft/Final toggle, verify and report:
+- whether draft -> final creates a builder_document_versions snapshot exactly as specified
+- whether editing a final document returns it to draft exactly as specified
+- if this is NOT implemented yet, disable or hide the Final toggle until the snapshot behavior exists
+
+3. Template seeding cleanup
+Clarify whether the “seed on every API startup” behavior is:
+- a temporary implementation shortcut, or
+- the final intended behavior
+
+Recommended final behavior:
+- idempotent seed as migration/post-migration initialization
+- not recurring runtime seeding on every normal API boot
+
+If needed, adjust it now.
+
+4. Exact implementation inventory
+Return the exact:
+- files created
+- files modified
+- routes implemented
+- tables created
+- indexes created
+- environment flags used
+
+5. Scope control confirmation
+Confirm explicitly that the following have NOT been implemented yet:
+- preview
+- PDF export
+- export artifact generation
+- version history UI
+- restore UI
+- Analyze handoff UI
+- Compare handoff UI
+- Signature handoff
+- Redact handoff
+- save-as-template
+- user templates
+
+OUTPUT FORMAT
+Return:
+- Verification verdict
+- Passed checks
+- Failed checks
+- Cleanup applied
+- Remaining blockers
+- Whether Slice 1 is now fully sign-off ready

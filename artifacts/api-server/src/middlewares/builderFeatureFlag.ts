@@ -15,7 +15,8 @@ export function requireBuilderEnabled(
   const enabled = isProduction ? flagValue === "true" : (flagValue !== "false");
 
   if (!enabled) {
-    return res.status(404).json({ error: "not_found" });
+    res.status(404).json({ error: "not_found" });
+    return;
   }
   next();
 }
