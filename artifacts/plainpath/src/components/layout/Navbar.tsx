@@ -9,6 +9,7 @@ import {
 import { ThemeToggle } from "@/components/ui/ThemeToggle"
 import { useUser, useClerk } from "@clerk/react"
 import { useEntitlements } from "@/hooks/useEntitlements"
+import { BUILDER_ENABLED } from "@/lib/builderConfig"
 
 function LogoBrand() {
   return (
@@ -119,6 +120,7 @@ export function Navbar() {
   const isResults = location.startsWith("/results")
   const isMyAnalyses = location === "/my-analyses"
   const isDocuments = location === "/documents"
+  const isBuilder = location.startsWith("/builder")
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -190,6 +192,21 @@ export function Navbar() {
             >
               <FolderOpen className="w-3.5 h-3.5" />
               My Documents
+            </Link>
+          )}
+
+          {/* Document Builder */}
+          {BUILDER_ENABLED && (
+            <Link
+              href="/builder"
+              className={`flex items-center gap-1.5 text-sm font-medium transition-colors px-2.5 py-1.5 rounded-lg ${
+                isBuilder
+                  ? "text-primary bg-primary/8"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+              }`}
+            >
+              <PenLine className="w-3.5 h-3.5" />
+              Builder
             </Link>
           )}
 
@@ -288,6 +305,17 @@ export function Navbar() {
                 <BookMarked className="w-4 h-4 shrink-0" />
                 My Analyses
               </button>
+              {BUILDER_ENABLED && (
+                <button
+                  onClick={() => navigate("/builder")}
+                  className={`w-full flex items-center gap-2.5 px-2.5 py-2 text-sm rounded-lg transition-colors text-left ${
+                    isBuilder ? "text-primary bg-primary/8 font-medium" : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                  }`}
+                >
+                  <PenLine className="w-4 h-4 shrink-0" />
+                  Document Builder
+                </button>
+              )}
               <a
                 href="/"
                 className="w-full flex items-center gap-2.5 px-2.5 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors"

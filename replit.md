@@ -38,6 +38,7 @@ PlainPath is built as a monorepo using pnpm workspaces, separating frontend and 
 6.  **PII Redaction (MVP — FROZEN)**: Pre-processing step to detect and redact PII across the document pipeline, with character-level replacement.
 7.  **Document Comparison**: Highlights changes and their significance between two document versions.
 8.  **Digital Signature (Pro-only)**: End-to-end e-signature workflow via Dropbox Sign, supporting Quick Send and Prepare & Place modes.
+9.  **Document Builder (Slice 1)**: Structured document editor at `/app/builder`. Supports 9 block types (Heading, Paragraph, BulletList, NumberedList, Checklist, KeyValue, Divider, Note, Table) organized into sections. Features: optimistic autosave (2s debounce + server_version concurrency), Draft/Final status toggle, Archive with confirmation, 7 seeded system templates (SOP, Handbook, Policy, Checklist, Incident Report, Proposal, PRD), template-based or blank creation wizard. Feature-flagged via `BUILDER_ENABLED` (backend) and `VITE_BUILDER_ENABLED` (frontend), both default `true` in development.
 
 ### Document-First Architecture
 The project is transitioning to a document-first model where uploaded documents become persistent, reusable assets across tools. This involves a `documents` table for storing user-owned documents and `document_tool_runs` for linking tool outputs to documents. Cross-tool sessionStorage keys facilitate seamless handoffs between features like Redact, Analyze, and Signature.

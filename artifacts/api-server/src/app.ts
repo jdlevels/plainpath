@@ -19,7 +19,9 @@ import userHistoryRoutes from "./routes/userHistory/index.js";
 import teamRoutes from "./routes/teams/index.js";
 import signatureRoutes from "./routes/signatures/index.js";
 import userDocsRoutes from "./routes/userDocs/index.js";
+import builderRoutes from "./routes/builder/index.js";
 import { logger } from "./lib/logger";
+import { seedBuilderTemplates } from "@workspace/db";
 
 const app: Express = express();
 
@@ -191,6 +193,12 @@ app.use("/api/user", userHistoryRoutes);
 app.use("/api/teams", teamRoutes);
 app.use("/api/signatures", signatureRoutes);
 app.use("/api/user/documents", userDocsRoutes);
+app.use("/api/builder", builderRoutes);
+
+// Seed system templates on startup (idempotent — safe to run every boot)
+seedBuilderTemplates().catch((err) =>
+  logger.error({ err }, "[builder] Failed to seed system templates"),
+);
 
 app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
   if (err instanceof multer.MulterError) {

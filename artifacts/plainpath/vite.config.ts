@@ -18,6 +18,7 @@ export default defineConfig({
   define: {
     "import.meta.env.VITE_CLERK_PUBLISHABLE_KEY": JSON.stringify(process.env.VITE_CLERK_PUBLISHABLE_KEY ?? ""),
     "import.meta.env.VITE_CLERK_PROXY_URL": JSON.stringify(process.env.VITE_CLERK_PROXY_URL ?? ""),
+    "import.meta.env.VITE_BUILDER_ENABLED": JSON.stringify(process.env.VITE_BUILDER_ENABLED ?? ""),
   },
   plugins: [
     react(),

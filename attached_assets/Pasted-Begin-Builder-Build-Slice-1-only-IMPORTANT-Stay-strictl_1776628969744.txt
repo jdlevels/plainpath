@@ -1,0 +1,78 @@
+Begin Builder Build Slice 1 only.
+
+IMPORTANT
+Stay strictly within the approved first slice.
+Do not expand scope.
+Do not begin preview/export, version history UI, Analyze/Compare UI handoff, Signature handoff, or Redact handoff yet.
+
+IMPLEMENTATION SCOPE — BUILD SLICE 1 ONLY
+
+1. Feature flag
+- Add BUILDER_ENABLED gating exactly as specified
+- Hide Builder nav/routes when off
+- Return 404 on /api/builder/* when off
+
+2. Schema / persistence
+Create only the approved four V1 Builder tables:
+- builder_documents
+- builder_document_versions
+- builder_templates
+- builder_export_artifacts
+
+Do NOT create builder_sections or builder_blocks tables.
+
+3. System template seeding
+Seed the approved system templates into builder_templates as the single source of truth.
+Use deterministic stable UUIDs and idempotent seed behavior.
+
+4. Builder document CRUD API
+Implement only the finalized V1 endpoints needed for:
+- list owned documents
+- create document
+- get document by id
+- full-content autosave/update with server_version
+- archive document
+
+5. Validation layer
+Implement server-side validation for the approved 9 V1 block types only:
+- heading
+- paragraph
+- bullet-list
+- numbered-list
+- checklist
+- key-value
+- divider
+- note
+- table
+
+Include:
+- document-level validation
+- section-level validation
+- block-level validation
+- payload validation
+- unknown block preservation rules
+- UTF-16 indexing rule for paragraph marks
+- optimistic concurrency via server_version
+
+6. No extra scope
+Do NOT implement:
+- preview
+- PDF export
+- version snapshot triggers beyond what is necessary for schema correctness
+- version history UI
+- Analyze/Compare UI handoff
+- Signature/Redact handoff
+- save-as-template
+- user templates
+- advanced permissions
+- collaborative editing
+
+REQUIRED OUTPUT
+When complete, return:
+1. exact files created/changed
+2. exact endpoints implemented in this slice
+3. exact tables created
+4. seed summary for system templates
+5. validation rules implemented
+6. any blockers or deviations from spec
+7. a short test plan for Build Slice 1 verification

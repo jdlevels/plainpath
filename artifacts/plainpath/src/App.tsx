@@ -31,6 +31,10 @@ import Upgrade from "@/pages/Upgrade";
 import Signature from "@/pages/Signature";
 import Documents from "@/pages/Documents";
 import Methodology from "@/pages/Methodology";
+import BuilderList from "@/pages/Builder/index";
+import BuilderNew from "@/pages/Builder/New";
+import BuilderWorkspace from "@/pages/Builder/Workspace";
+import { BUILDER_ENABLED } from "@/lib/builderConfig";
 import IrsLetter from "@/pages/guides/IrsLetter";
 import LeaseAgreement from "@/pages/guides/LeaseAgreement";
 import JobOffer from "@/pages/guides/JobOffer";
@@ -236,6 +240,20 @@ function Router() {
             <Route path="/upgrade" component={protect(Upgrade)} />
             <Route path="/signature" component={protect(Signature)} />
             <Route path="/documents" component={protect(Documents)} />
+
+            {BUILDER_ENABLED && (
+              <>
+                <Route path="/builder/new" component={protect(BuilderNew)} />
+                <Route path="/builder/:id">
+                  {(params) => (
+                    <RequireAuth>
+                      <BuilderWorkspace docId={params.id!} />
+                    </RequireAuth>
+                  )}
+                </Route>
+                <Route path="/builder" component={protect(BuilderList)} />
+              </>
+            )}
 
             <Route component={NotFound} />
           </Switch>
