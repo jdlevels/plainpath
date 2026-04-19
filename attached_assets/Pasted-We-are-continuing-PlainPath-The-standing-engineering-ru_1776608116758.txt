@@ -1,0 +1,150 @@
+We are continuing PlainPath.
+
+The standing engineering rules have already been adopted and saved.
+Apply them automatically in this pass.
+Do not spend time re-documenting rules, updating project docs, or restating architecture principles.
+
+This pass is ONLY for Digital Signature operational activation and real-flow verification.
+
+DO NOT:
+- rewrite marketing copy
+- revisit “6 live tools” positioning
+- rework pricing
+- rework auth
+- rework unrelated tools
+- re-save standing rules
+- do any broad audit unless strictly required for Digital Signature activation
+
+CURRENT STATE
+- Digital Signature is a live PlainPath tool
+- Route is /app/signature
+- Status model exists
+- Server-side entitlement enforcement exists
+- Audit/event storage exists
+- Completion UI exists
+- Missing provider config is treated as a runtime config state
+- Standing rules are already saved and should be followed automatically
+
+GOAL
+Determine whether Digital Signature is now truly operational in real Dropbox Sign test mode.
+If yes, verify it end-to-end.
+If not, stop at the exact external blocker and report only that.
+
+STEP 1 — READ THE REAL ACTIVATION PATH
+Inspect the exact code path used for:
+- send request
+- provider auth/config lookup
+- webhook callback
+- status refresh
+- signed file download
+
+Do not guess.
+Read the actual files involved.
+
+STEP 2 — VERIFY EXACT PROVIDER REQUIREMENTS
+Read the implementation and report the exact runtime requirements for a real test-mode send:
+- exact env vars referenced by code
+- exact callback/webhook route
+- any dashboard-side setup required
+- any remaining provider-side assumptions
+
+Do not infer from memory.
+Use the code only.
+
+STEP 3 — CHECK WHETHER REAL SEND IS POSSIBLE RIGHT NOW
+Determine whether the environment currently has what is needed for a true test-mode send:
+- valid DROPBOX_SIGN_API_KEY present or not
+- test mode value present or defaulted
+- callback route reachable in current environment
+- any other actual dependency present or missing
+
+Be explicit.
+
+STEP 4 — IF CREDENTIALS ARE PRESENT, RUN A REAL TEST
+If the credentials/config are present, run a true provider-backed test-mode flow:
+1. create a request from /app/signature
+2. upload a valid test document
+3. add signer details
+4. send a real Dropbox Sign request
+5. confirm provider request ID is stored
+6. confirm request appears in history/recent work
+7. open detail page
+8. confirm real provider-backed event/state data is stored
+9. if webhook is active, confirm webhook ingestion updated the request
+10. if completion/signing is reachable in test mode, verify signed state and signed-file retrieval
+
+Do not simulate.
+Do not fabricate.
+Use real provider behavior only.
+
+STEP 5 — IF CREDENTIALS ARE NOT PRESENT, STOP CLEANLY
+If the real test cannot proceed because credentials/dashboard configuration are missing:
+- do not waste time editing unrelated code
+- verify the exact provider boundary and failure behavior
+- verify the exact callback URL that must be registered
+- verify the exact env vars required
+- confirm whether the code path up to the provider boundary is sound
+- give the minimum exact manual steps needed to activate the feature
+
+STEP 6 — ONLY FIX TRUE ACTIVATION ISSUES
+Only make code changes if they are directly required for:
+- real provider send
+- correct provider error handling
+- webhook ingestion
+- signed file retrieval
+- clear runtime config failure messaging
+
+Do not make cosmetic edits unless they are necessary to correctly represent runtime provider state.
+
+STEP 7 — REQUIRED OUTPUT FORMAT
+When finished, provide this exact report structure:
+
+1. EXACT FILES READ
+List every file inspected in this pass
+
+2. EXACT FILES CHANGED
+List every file modified/created/deleted in this pass
+
+3. EXACT PROVIDER ACTIVATION REQUIREMENTS
+List the exact env vars and exact external dashboard/config steps required by the current implementation
+
+4. ENVIRONMENT STATUS
+State whether the current environment is:
+- ready for real test-mode send
+or
+- blocked by missing credentials/config
+
+5. REAL TEST RESULT
+State exactly one:
+- FULL REAL TEST COMPLETED
+or
+- PARTIAL ACTIVATION VERIFIED, BLOCKED BY MISSING CREDENTIALS/WEBHOOK
+
+6. WHAT WORKED END-TO-END
+Be explicit about each of these:
+- draft creation
+- provider send
+- provider request ID persistence
+- history visibility
+- detail page rendering
+- webhook/event ingestion
+- status transition
+- signed file retrieval
+
+7. EXACT CALLBACK / WEBHOOK URL
+Print the exact callback URL that must be registered in Dropbox Sign
+
+8. EXACT BLOCKERS REMAINING
+List only Digital Signature activation blockers
+
+9. FINAL STATUS
+State exactly one:
+- code-complete only
+- test-mode operational
+- fully verified in real provider-backed test mode
+
+SUCCESS CONDITION
+This pass is successful only if:
+A. a real Dropbox Sign test-mode request is executed and verified through the PlainPath flow
+OR
+B. the implementation is proven ready up to the provider boundary and the only remaining blockers are exact external credentials/dashboard steps, clearly identified with no ambiguity

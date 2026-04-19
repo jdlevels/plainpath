@@ -1,0 +1,153 @@
+We are continuing PlainPath.
+
+Digital Signature is now a LIVE PlainPath tool.
+Do not treat it as “coming soon.”
+Do not re-open finished product-positioning work.
+Do not touch unrelated marketing, auth, pricing, or other tools unless required for this Digital Signature activation pass.
+
+CURRENT CONFIRMED STATE
+- PlainPath now presents as having 6 live tools
+- Digital Signature is a real Pro feature
+- Route is /app/signature
+- Status model exists with:
+  - draft
+  - sent
+  - viewed
+  - signed
+  - declined
+  - failed
+  - expired
+- Server-side plan enforcement is in place
+- Audit/event storage is in place
+- Completion/result UI exists
+- Missing provider credentials/config are now treated as a real configuration state, not placeholder framing
+
+THIS PASS GOAL
+Move Digital Signature from code-complete to operationally verified.
+
+This is now an activation + real-flow verification pass.
+The target is a real provider-backed Dropbox Sign test-mode send and lifecycle verification.
+
+PRIMARY OBJECTIVES
+
+1. PROVIDER ACTIVATION CHECK
+Inspect the current Digital Signature implementation and verify the exact runtime requirements for a real send:
+- DROPBOX_SIGN_API_KEY
+- DROPBOX_SIGN_TEST_MODE
+- webhook callback route
+- any other actual env/config dependencies referenced by code
+
+Do not guess.
+Read the exact code path and confirm what is truly required.
+
+2. PREP THE APP FOR REAL TEST-MODE SEND
+Confirm that the Digital Signature backend is ready to:
+- create a local draft record
+- send a real Dropbox Sign request in test mode
+- persist provider request ID and provider metadata
+- receive webhook events
+- persist raw event payloads
+- update normalized app status
+- show event timeline in the detail page
+- retrieve/download the signed file when available
+
+If anything in the code path is still incomplete for a true provider-backed run, fix it now.
+
+3. RUNTIME VALIDATION FOR MISSING/INVALID CONFIG
+Make the activation behavior exact and production-safe:
+- if DROPBOX_SIGN_API_KEY is missing, the app must fail clearly and correctly
+- if the API key is invalid, surface a clean provider/config error
+- if webhook delivery has not happened yet, show a truthful pending state
+- do not mask provider failures as generic placeholder copy
+- do not imply the feature is unreleased
+
+4. END-TO-END REAL TEST MODE FLOW
+If the required provider credentials are available in the environment, run a true end-to-end test-mode flow:
+- create a request from /app/signature
+- upload or provide a valid test document
+- add signer name/email
+- send a real Dropbox Sign request
+- confirm provider request ID is stored
+- confirm the request appears in history/recent work
+- open the request detail page
+- confirm at least one real provider-backed status/event is stored
+- if webhook is active, verify webhook-driven status/event ingestion
+- if signing can be completed in test mode from available workflow, verify signed/completed state
+- verify signed document retrieval/download behavior if available
+
+Do not simulate any of this.
+Use real test mode only.
+
+5. IF LIVE SEND CANNOT BE COMPLETED
+If the full end-to-end run cannot be completed because credentials or dashboard webhook registration are still missing, do not waste time.
+Instead:
+- verify every code path up to the provider boundary
+- verify the exact callback URL the dashboard must use
+- verify the exact env var values/settings needed
+- provide the shortest precise manual step list required to complete activation
+- stop there
+
+6. UX CLEANUP ONLY IF REQUIRED FOR REAL ACTIVATION
+Only make UI changes if needed for real runtime clarity during activation:
+- provider misconfiguration banner
+- invalid key error state
+- webhook pending note if necessary
+- signed-file-not-ready retry messaging if provider file generation lags
+Do not redesign pages.
+
+7. DO NOT CHANGE THESE
+- public marketing positioning
+- 6 live tool messaging
+- pricing:
+  - Starter: $4.99/month
+  - Pro: $19.99/month
+- route architecture
+- auth redirect behavior
+- existing entitlement matrix unless strictly needed for Digital Signature activation
+
+8. EXACT DELIVERABLES REQUIRED
+When finished, provide a strict report with these sections:
+
+1. EXACT FILES READ
+List every file inspected in this pass
+
+2. EXACT FILES CHANGED
+List every file created/modified/deleted in this pass
+
+3. PROVIDER ACTIVATION REQUIREMENTS
+State the exact env vars and external dashboard/config steps required for a real Dropbox Sign send
+
+4. REAL TEST-MODE RESULT
+State one of the following only:
+- FULL REAL TEST COMPLETED
+- PARTIAL ACTIVATION VERIFIED, BLOCKED BY MISSING CREDENTIALS/WEBHOOK
+Do not exaggerate.
+
+5. WHAT WORKED END-TO-END
+Be explicit:
+- draft creation
+- provider send
+- provider ID persistence
+- history visibility
+- detail view
+- webhook ingestion
+- status transition
+- signed file retrieval
+
+6. WHAT FAILED OR REMAINS BLOCKED
+Only list Digital Signature activation blockers
+
+7. EXACT CALLBACK / WEBHOOK URL
+Print the exact callback URL that must be registered in Dropbox Sign
+
+8. FINAL APP STATUS
+State clearly whether Digital Signature is now:
+- code-complete only
+- test-mode operational
+- fully verified in real provider-backed test mode
+
+SUCCESS CRITERIA
+This pass is successful only if one of these is true:
+A. A real Dropbox Sign test-mode request was sent and verified through the PlainPath flow
+OR
+B. The code path is fully verified and the only remaining blockers are exact external credentials/dashboard steps, clearly listed with no ambiguity

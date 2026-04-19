@@ -431,21 +431,32 @@ router.get("/:id/refresh", requireAuth, requireSignaturePlan, async (req: any, r
       return res.json({ status: r.status, refreshed: false, reason: "provider_fetch_failed" });
     }
 
-    // Map Dropbox Sign status to app status
+    // Map Dropbox Sign status_code to app status.
+    // IMPORTANT: only advance to terminal states from polling.
+    // Webhook events (signature_request_viewed etc.) provide more granular status —
+    // never regress from "viewed" → "sent" just because the API reports "awaiting_signature".
     const dsStatus = String(dsReq.status_code ?? "");
     let newStatus = r.status;
-    if (dsStatus === "awaiting_signature" || dsStatus === "pending") newStatus = r.sent_at ? "viewed" : "sent";
-    if (dsStatus === "signed" || dsStatus === "all_signed") newStatus = "signed";
-    if (dsStatus === "declined") newStatus = "declined";
-    if (dsStatus === "expired") newStatus = "expired";
+    if (dsStatus === "signed" || dsStatus === "all_signed") {
+      newStatus = "signed";
+    } else if (dsStatus === "declined") {
+      newStatus = "declined";
+    } else if (dsStatus === "expired") {
+      newStatus = "expired";
+    } else if (dsStatus === "canceled") {
+      newStatus = "failed";
+    } else if ((dsStatus === "awaiting_signature" || dsStatus === "pending") && r.status === "draft") {
+      // Only advance from draft → sent; preserve sent/viewed (webhook-driven granular state)
+      newStatus = "sent";
+    }
 
     if (newStatus !== r.status) {
-      const now = new Date().toISOString();
       const updates: string[] = ["status = $1", "updated_at = NOW()"];
       const values: unknown[] = [newStatus, id];
-      if (newStatus === "signed") updates.push(`completed_at = COALESCE(completed_at, NOW())`);
+      if (newStatus === "signed")   updates.push(`completed_at = COALESCE(completed_at, NOW())`);
       if (newStatus === "declined") updates.push(`declined_at = COALESCE(declined_at, NOW())`);
-      if (newStatus === "expired") updates.push(`expired_at = COALESCE(expired_at, NOW())`);
+      if (newStatus === "expired")  updates.push(`expired_at = COALESCE(expired_at, NOW())`);
+      if (newStatus === "failed")   updates.push(`failed_at = COALESCE(failed_at, NOW())`);
 
       await pool.query(
         `UPDATE signature_requests SET ${updates.join(", ")} WHERE id = $2`,

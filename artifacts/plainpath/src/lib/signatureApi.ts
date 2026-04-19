@@ -168,4 +168,5 @@ export const EVENT_LABELS: Record<string, string> = {
   refresh_signed: "Status refreshed: signed",
   refresh_declined: "Status refreshed: declined",
   refresh_expired: "Status refreshed: expired",
+  refresh_failed: "Status refreshed: failed",
 };
