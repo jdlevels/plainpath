@@ -1,0 +1,150 @@
+Now produce the next planning artifact for PlainPath Builder:
+
+DOCUMENT REQUEST
+Create a full screen-by-screen UX specification and component inventory for the new PlainPath Builder tool.
+
+IMPORTANT
+This is still planning/specification only.
+Do NOT write production code.
+Do NOT generate components, routes, migrations, or implementation patches.
+
+GOAL
+Turn the approved Builder product specification into a precise UX and UI planning document that engineering can later use safely.
+
+OUTPUT REQUIRED
+Provide a detailed markdown document with the following sections:
+
+1. UX Overview
+- core UX principles for Builder
+- how Builder should feel compared to the rest of PlainPath
+- how to keep V1 structured and not overly flexible
+
+2. Primary User Flows
+Include end-to-end flows for:
+- start from blank
+- start from template
+- continue draft
+- save as template
+- preview and export PDF
+- handoff to Analyze
+- handoff to Compare
+- handoff to Signature
+- open from My Documents and continue editing
+
+3. Full Screen Inventory
+For each major screen, define:
+- screen name
+- purpose
+- primary user goal
+- entry points
+- exit points
+- required actions
+- optional actions
+- empty states
+- error states
+- loading states
+
+At minimum cover:
+- Builder entry page
+- recent drafts / continue work state
+- blank vs template mode chooser
+- category and starter structure selector
+- template browser
+- builder workspace
+- section add/reorder modal or panel
+- block selector
+- block editing states
+- preview screen
+- export / handoff modal
+- Builder document detail / management view
+- My Documents Builder item state if relevant
+
+4. Builder Workspace Layout Spec
+Define the workspace in detail:
+- top bar
+- left rail
+- center canvas
+- right rail
+- mobile / tablet adaptation notes
+- what can collapse in V1
+- what should be fixed vs scrollable
+
+Be explicit about:
+- section navigator
+- active section editor
+- block controls
+- metadata/properties panel
+- preview/export/handoff actions
+- save state visibility
+
+5. Component Inventory
+Create a component-level inventory for V1.
+For each component include:
+- component name
+- purpose
+- parent screen
+- priority (required / optional / deferred)
+- notes for implementation safety
+
+At minimum evaluate components such as:
+- entry hero / start card
+- template card
+- category card
+- starter structure card
+- recent draft list
+- document title bar
+- section navigator
+- section card / section row
+- add section control
+- reorder control
+- block toolbar
+- block card/container
+- text block editor
+- checklist editor
+- table editor
+- key-value editor
+- note/callout editor
+- divider block
+- preview page frame
+- export modal
+- handoff action menu
+- save status indicator
+- version snapshot access point
+
+6. UX Rules and Constraints
+Define rules for:
+- when autosave occurs
+- when snapshots are created
+- how destructive actions are confirmed
+- how hidden/deferred blocks should be handled
+- how template-origin documents are labeled
+- how users distinguish draft vs final vs exported
+- how Builder documents are labeled inside My Documents
+
+7. V1 UX Non-Goals
+List what the UX must NOT attempt in V1:
+- full word processor behavior
+- drag-anything-anywhere canvas
+- advanced page layout authoring
+- embedded signature placement
+- multi-user collaboration
+- unrestricted rich text controls
+- etc.
+
+8. Open UX Decisions
+List the remaining UX decisions that still need product sign-off.
+For each, provide:
+- decision
+- recommendation
+- risk if postponed
+
+QUALITY BAR
+Be specific and implementation-ready.
+Avoid vague design language.
+Do not code.
+Do not hand-wave layouts.
+Make this a real UX planning document that product and engineering can review directly.
+
+At the end, include a short section:
+“Recommended Next Artifact After UX Spec”
+and name the exact next planning document that should be created after this one.
