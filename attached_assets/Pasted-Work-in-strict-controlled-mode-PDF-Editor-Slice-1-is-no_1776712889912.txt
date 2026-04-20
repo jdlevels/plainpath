@@ -1,0 +1,111 @@
+Work in strict controlled mode.
+
+PDF Editor Slice 1 is now complete and live inside /app.
+
+CURRENT TASK
+Implement PDF Editor Slice 2 only: core editing on the right pane + save foundation.
+
+Do not expand beyond this scope.
+Do not add export yet.
+Do not add page operations yet.
+Do not add My Documents integration yet.
+Do not add Builder/Redact direct handoff yet.
+Do not attempt true in-place PDF text replacement.
+
+LOCKED PRODUCT RULES
+1. Left pane stays ORIGINAL / read-only
+2. Right pane is the only editable working copy
+3. Save must not rely on constant autosave alone
+4. Add a visible Save button/icon
+5. Save control should visually highlight when there are unsaved changes / user should save
+6. Timed autosave should run about every 60 seconds
+7. Drag/move/resize must not persist every frame — persist on interaction end
+8. Click/place actions can save immediately
+9. Typing should be debounced
+10. V1 highlight means translucent overlay rectangle only — not text-aware highlighting
+
+SLICE 2 MUST INCLUDE
+
+A. Editing tools on the RIGHT pane only
+- Text overlay tool
+- Mask/whiteout rectangle tool
+- Highlight rectangle tool
+
+B. Basic edit interactions
+- click/place text box
+- drag/place mask rectangle
+- drag/place highlight rectangle
+- select an existing edit
+- delete selected edit
+- move existing edit
+- resize existing edit where applicable
+
+C. Save foundation
+- visible Save button/icon in toolbar
+- unsaved changes visual state
+- timed autosave ~60 seconds
+- explicit Save click persists immediately
+- drag/resize/move persists on interaction end
+- typing persists debounced
+- user sees save state clearly (Saved / Unsaved / Saving / Save failed)
+
+D. Undo/redo
+- undo last active edit operation
+- redo last undone operation
+- keyboard shortcuts:
+  - Cmd/Ctrl+Z
+  - Cmd/Ctrl+Shift+Z
+- undo/redo should operate on the op list, not mutate original PDF
+
+E. Persistence foundation
+Implement the minimum backend/data model needed for Slice 2:
+- source PDF storage
+- edit session record
+- edit operation records
+- load current session by ID
+- reload the page and restore the current working copy
+
+F. Routing / session access
+- PDF Editor should now support a real session route
+- choose a clean route structure and state it clearly
+- example acceptable direction:
+  - /pdf-editor            -> list/upload entry
+  - /pdf-editor/:id       -> workspace for a specific session
+But choose one approach and keep it clean
+
+SLICE 2 MUST NOT INCLUDE
+- export/download PDF
+- page delete
+- page reorder
+- page rotate
+- My Documents integration
+- Builder integration
+- Redact integration
+- exact left/right scroll sync polish
+- comment/annotation threads
+- image insertion
+- form editing
+- signature placement
+- in-place PDF text replacement
+
+IMPORTANT IMPLEMENTATION RULES
+- Do not change the left pane into an editable surface
+- Do not collapse the split-screen on desktop
+- Keep the workspace large-format and letter-legible
+- Keep the upload/remove/confirm intake pattern already established in Slice 1
+- Do not silently add extra tool types
+
+REQUIRED OUTPUT BEFORE CODING
+Return first:
+1. exact files you will create/modify
+2. exact DB tables/entities required for Slice 2
+3. exact API routes required for Slice 2
+4. exact route structure for session loading
+5. exact save-state model:
+   - Unsaved
+   - Saving
+   - Saved
+   - Save failed
+6. exact items intentionally deferred to Slice 3
+
+Do not start coding until that plan is returned.
