@@ -1,0 +1,60 @@
+Work in strict controlled mode.
+
+PDF Editor Slice 2 plan is approved with required corrections. Apply these corrections to the plan before coding.
+
+LOCKED CORRECTIONS
+
+1. Source PDF storage
+Do not store the uploaded PDF as base64 text.
+Do not use pdf_b64 text.
+Use binary storage instead (preferred: PostgreSQL bytea as pdf_bytes).
+If bytea is not possible in this stack, stop and explain why before coding.
+
+2. Remove delete-session scope
+Remove DELETE /api/pdf-editor/sessions/:id from Slice 2.
+Session deletion/archive is out of scope for this slice.
+
+3. Session list scope
+If you keep GET /api/pdf-editor/sessions and a list in /pdf-editor, keep it minimal only:
+- title/file name
+- updated time
+- open existing session
+No archive/delete UX, no search/filtering, no extra list features.
+
+4. Save failure behavior
+Lock the save-failure UX:
+- show “Save failed”
+- preserve unsaved local edits in memory
+- keep Save button enabled
+- allow immediate manual retry
+- do not discard local work
+
+5. Typing debounce
+Change typing save debounce from 2s to 750–1000ms.
+
+6. Page count
+Do not include pageCount in regular PATCH /ops saves for Slice 2.
+Set page count once from PDF load/session creation.
+Page operations are deferred, so page count is stable in this slice.
+
+REVISED SLICE 2 SHOULD INCLUDE
+- text overlay
+- mask/whiteout rectangle
+- highlight rectangle
+- selection / move / resize / delete selected edit
+- visible Save button
+- save states: Unsaved / Saving / Saved / Save failed
+- timed autosave around 60 seconds
+- interaction-end save for drag/resize/move
+- debounced typing save
+- session persistence
+- load session by /pdf-editor/:id
+- restore working copy on reload
+
+REQUIRED RESPONSE BEFORE CODING
+Return:
+1. corrected file list
+2. corrected DB schema
+3. corrected API routes
+4. corrected save timing rules
+5. explicit confirmation that export, page ops, My Documents, Builder/Redact handoff, and true in-place text replacement remain deferred
