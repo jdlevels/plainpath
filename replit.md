@@ -69,6 +69,34 @@ On smaller screens and mobile, preserve page proportions but adapt layout respon
 
 Applies to: Document Builder (current), PDF Editor, any future document-rendering tool.
 
+## Compare Versions — Slice Status
+
+### Slice 1 (SHIPPED — commit 5902651)
+DB table, POST/GET session API routes, GCS upload to `compare-versions/{userId}/{sessionId}/original.pdf` + `revised.pdf`, intake form (two PDF slots + manager notes/watchlist editor), session list, placeholder detail scaffold, Pro gating, dashboard card, Navbar entry.
+
+### Slice 2 (SHIPPED)
+**Canonical rename**: "Audit Document Revisions" → "Compare Versions" throughout — dashboard card, Navbar entry, LockedGate header, session list header, page `document.title`.
+
+**Backend additions** (`artifacts/api-server/src/routes/compare-versions/index.ts`):
+- `GET /api/compare-versions/sessions/:id/original` — streams original PDF bytes from object storage
+- `GET /api/compare-versions/sessions/:id/revised` — streams revised PDF bytes from object storage
+- `PATCH /api/compare-versions/sessions/:id/notes` — updates `manager_notes` (freeform + watchlist)
+
+**Frontend additions** (`compareVersionsApi.ts`, `useCompareVersionsApi.ts`):
+- `getOriginalPdf`, `getRevisedPdf`, `updateNotes` — full Clerk-token-injected methods
+
+**CompareVersionsSession.tsx — full rewrite**:
+- `usePdfRenderer` hook (identical approach to PDF Editor — pdfjs, RENDER_SCALE=1.5, JPEG dataUrls)
+- `PdfPane` component — scrollable pages, sticky header, IntersectionObserver page tracking, prev/next navigation
+- Top workspace toolbar: back link, session title, Summary button, Notes button
+- Mobile tab switcher: Baseline | Revised (single pane at a time below `md`)
+- Desktop: two panes side-by-side (48% + 1px gutter + flex-1), independent scroll
+- `SummaryDrawer` — collapsible bottom panel, default closed, "No comparison results yet" empty state
+- `NotesRail` — right-side overlay (absolute, does not shrink document panes), shows/edits `manager_notes`, freeform textarea + read-only watchlist display, Save button calls PATCH endpoint
+
+### Slice 3–6 (PENDING)
+Deterministic comparison engine (visual + text + structural diff), group zones + severity UI + summary polish, AI semantic enrichment, Word (.docx) input + export.
+
 ## External Dependencies
 
 -   **OpenAI**: For AI functionalities (analysis, contract generation, help).

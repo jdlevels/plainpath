@@ -68,7 +68,7 @@ function LockedGate() {
           <Lock className="w-7 h-7 text-teal-500 dark:text-teal-400" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold mb-2">Audit Document Revisions</h1>
+          <h1 className="text-2xl font-bold mb-2">Compare Versions</h1>
           <p className="text-muted-foreground leading-relaxed">
             Upload an original PDF and a revised copy. See exactly what changed — side-by-side, with your own audit notes and watchlist.
           </p>
@@ -578,7 +578,7 @@ function SessionList({
             <ScanSearch className="w-5 h-5 text-teal-600 dark:text-teal-400" />
           </div>
           <div>
-            <h1 className="text-xl font-bold">Audit Document Revisions</h1>
+            <h1 className="text-xl font-bold">Compare Versions</h1>
             <p className="text-sm text-muted-foreground">Upload two PDFs to see what changed between versions</p>
           </div>
         </div>
@@ -673,7 +673,7 @@ export default function CompareVersions() {
     isAdmin || (entitlements?.toolAccess?.includes("compare-versions") ?? false)
 
   useEffect(() => {
-    document.title = "Audit Document Revisions — PlainPath"
+    document.title = "Compare Versions — PlainPath"
     return () => { document.title = "PlainPath" }
   }, [])
 

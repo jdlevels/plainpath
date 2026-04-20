@@ -7,7 +7,7 @@ import { Router } from "express";
 import multer from "multer";
 import { getAuth } from "@clerk/express";
 import { pool } from "@workspace/db";
-import { uploadObject, isObjectStorageAvailable } from "../../lib/pdfObjectStorage";
+import { uploadObject, downloadPdf, isObjectStorageAvailable } from "../../lib/pdfObjectStorage";
 
 const router = Router();
 
@@ -298,6 +298,113 @@ router.get("/sessions/:id", requireAuth, async (req: any, res: any) => {
   } catch (err) {
     console.error("[compare-versions] get session error", err);
     return res.status(500).json({ error: "server_error", message: "Something went wrong." });
+  }
+});
+
+// ─── GET /api/compare-versions/sessions/:id/original ─────────────────────────
+// Stream original PDF bytes. Requires auth + session ownership.
+
+router.get("/sessions/:id/original", async (req: any, res) => {
+  const { userId } = getAuth(req);
+  if (!userId) return res.status(401).json({ error: "unauthorized" });
+  try {
+    const result = await pool.query(
+      `SELECT original_storage_key, original_file_name
+       FROM compare_versions_sessions
+       WHERE id = $1 AND user_id = $2`,
+      [req.params.id, userId],
+    );
+    if (!result.rows.length) {
+      return res.status(404).json({ error: "not_found" });
+    }
+    const row = result.rows[0];
+    if (!row.original_storage_key) {
+      return res.status(404).json({ error: "not_uploaded", message: "Original PDF has not been uploaded yet." });
+    }
+    const buf = await downloadPdf(row.original_storage_key);
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Length", buf.length);
+    res.setHeader(
+      "Content-Disposition",
+      `inline; filename="${encodeURIComponent(row.original_file_name ?? "original.pdf")}"`,
+    );
+    return res.end(buf);
+  } catch (err: any) {
+    console.error("[compare-versions] get original pdf error", err);
+    if (err?.message?.includes("Object storage is not configured")) {
+      return res.status(503).json({ error: "storage_unavailable", message: "Object storage is not configured." });
+    }
+    return res.status(500).json({ error: "server_error" });
+  }
+});
+
+// ─── GET /api/compare-versions/sessions/:id/revised ──────────────────────────
+// Stream revised PDF bytes. Requires auth + session ownership.
+
+router.get("/sessions/:id/revised", async (req: any, res) => {
+  const { userId } = getAuth(req);
+  if (!userId) return res.status(401).json({ error: "unauthorized" });
+  try {
+    const result = await pool.query(
+      `SELECT revised_storage_key, revised_file_name
+       FROM compare_versions_sessions
+       WHERE id = $1 AND user_id = $2`,
+      [req.params.id, userId],
+    );
+    if (!result.rows.length) {
+      return res.status(404).json({ error: "not_found" });
+    }
+    const row = result.rows[0];
+    if (!row.revised_storage_key) {
+      return res.status(404).json({ error: "not_uploaded", message: "Revised PDF has not been uploaded yet." });
+    }
+    const buf = await downloadPdf(row.revised_storage_key);
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Length", buf.length);
+    res.setHeader(
+      "Content-Disposition",
+      `inline; filename="${encodeURIComponent(row.revised_file_name ?? "revised.pdf")}"`,
+    );
+    return res.end(buf);
+  } catch (err: any) {
+    console.error("[compare-versions] get revised pdf error", err);
+    if (err?.message?.includes("Object storage is not configured")) {
+      return res.status(503).json({ error: "storage_unavailable", message: "Object storage is not configured." });
+    }
+    return res.status(500).json({ error: "server_error" });
+  }
+});
+
+// ─── PATCH /api/compare-versions/sessions/:id/notes ──────────────────────────
+// Replace manager_notes (freeform + watchlist). Safe Slice 2 edit.
+
+router.patch("/sessions/:id/notes", async (req: any, res) => {
+  const { userId } = getAuth(req);
+  if (!userId) return res.status(401).json({ error: "unauthorized" });
+  try {
+    const notes = req.body?.managerNotes;
+    if (!notes || typeof notes !== "object") {
+      return res.status(400).json({ error: "invalid_body", message: "managerNotes is required." });
+    }
+    const result = await pool.query(
+      `UPDATE compare_versions_sessions
+       SET manager_notes = $1::jsonb, updated_at = NOW()
+       WHERE id = $2 AND user_id = $3
+       RETURNING id, manager_notes, updated_at`,
+      [JSON.stringify(notes), req.params.id, userId],
+    );
+    if (!result.rows.length) {
+      return res.status(404).json({ error: "not_found" });
+    }
+    const row = result.rows[0];
+    return res.json({
+      id: row.id,
+      managerNotes: row.manager_notes,
+      updatedAt: row.updated_at,
+    });
+  } catch (err) {
+    console.error("[compare-versions] patch notes error", err);
+    return res.status(500).json({ error: "server_error" });
   }
 });
 

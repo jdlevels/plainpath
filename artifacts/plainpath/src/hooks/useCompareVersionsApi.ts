@@ -36,5 +36,21 @@ export function useCompareVersionsApi() {
       async (id: string) => compareVersionsApi.getSession(id, await token()),
       [token],
     ),
+
+    getOriginalPdf: useCallback(
+      async (id: string) => compareVersionsApi.getOriginalPdf(id, await token()),
+      [token],
+    ),
+
+    getRevisedPdf: useCallback(
+      async (id: string) => compareVersionsApi.getRevisedPdf(id, await token()),
+      [token],
+    ),
+
+    updateNotes: useCallback(
+      async (id: string, managerNotes: CVManagerNotes) =>
+        compareVersionsApi.updateNotes(id, managerNotes, await token()),
+      [token],
+    ),
   };
 }

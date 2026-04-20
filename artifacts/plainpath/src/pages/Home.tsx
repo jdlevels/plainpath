@@ -117,7 +117,7 @@ const TOOLS = [
   },
   {
     key: "compare-versions" as const,
-    label: "Audit Document Revisions",
+    label: "Compare Versions",
     desc: "Side-by-side PDF audit workspace — verify exactly what changed between an approved original and a revised copy.",
     icon: ScanSearch,
     path: "/compare-versions",

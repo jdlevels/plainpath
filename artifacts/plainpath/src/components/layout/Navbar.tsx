@@ -38,9 +38,9 @@ const TOOL_NAV = [
   { label: "Build a Contract",     href: "/build-contract",         icon: PenLine        },
   { label: "Redact Sensitive Info", href: "/redact",                icon: EyeOff         },
   { label: "Digital Signature",    href: "/signature",              icon: FileSignature  },
-  { label: "Compare Versions",          href: "/compare",                icon: GitCompare  },
+  { label: "Document Compare",           href: "/compare",                icon: GitCompare  },
   { label: "PDF Editor",                href: "/pdf-editor",             icon: Pen         },
-  { label: "Audit Document Revisions",  href: "/compare-versions",       icon: ScanSearch  },
+  { label: "Compare Versions",          href: "/compare-versions",       icon: ScanSearch  },
 ]
 
 function UserMenu() {

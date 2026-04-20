@@ -52,4 +52,43 @@ export const compareVersionsApi = {
     });
     return handleResponse<CVSessionDetail>(res);
   },
+
+  async getOriginalPdf(id: string, token: string | null): Promise<ArrayBuffer> {
+    const res = await fetch(`/api/compare-versions/sessions/${id}/original`, {
+      headers: authHeaders(token),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      const err: any = new Error(body?.message || body?.error || `HTTP ${res.status}`);
+      err.status = res.status;
+      throw err;
+    }
+    return res.arrayBuffer();
+  },
+
+  async getRevisedPdf(id: string, token: string | null): Promise<ArrayBuffer> {
+    const res = await fetch(`/api/compare-versions/sessions/${id}/revised`, {
+      headers: authHeaders(token),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      const err: any = new Error(body?.message || body?.error || `HTTP ${res.status}`);
+      err.status = res.status;
+      throw err;
+    }
+    return res.arrayBuffer();
+  },
+
+  async updateNotes(
+    id: string,
+    managerNotes: CVManagerNotes,
+    token: string | null,
+  ): Promise<{ id: string; managerNotes: CVManagerNotes; updatedAt: string }> {
+    const res = await fetch(`/api/compare-versions/sessions/${id}/notes`, {
+      method: "PATCH",
+      headers: { ...authHeaders(token), "Content-Type": "application/json" },
+      body: JSON.stringify({ managerNotes }),
+    });
+    return handleResponse(res);
+  },
 };

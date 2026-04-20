@@ -1,0 +1,193 @@
+Work in strict controlled-slice mode.
+
+Implement Compare Versions — Slice 2 only.
+Do not implement Slice 3 or beyond.
+Do not add diffing, AI, severity calculation, summary results, or overlays yet.
+
+GOAL
+Replace the Slice 1 placeholder session page with a real dual-pane document workspace that renders both stored PDFs from object storage and supports document-first review setup.
+
+CRITICAL CORRECTIONS TO APPLY IN THIS SLICE
+1. Standardize the tool’s canonical name everywhere to:
+   Compare Versions
+   - dashboard card title
+   - Tools dropdown label
+   - page headers
+   - LockedGate title/copy
+   - session list copy
+   "Audit Document Revisions" may only appear as subtitle/supporting text if needed.
+
+2. Ensure final authenticated routes resolve as:
+   /app/compare-versions
+   /app/compare-versions/:sessionId
+
+Do not leave this tool on a root /compare-versions route outside the authenticated app namespace.
+
+APPROVED SCOPE FOR THIS SLICE
+
+1. Session workspace rendering
+Modify:
+- artifacts/plainpath/src/pages/CompareVersionsSession.tsx
+
+If needed, create small helper components under compare-versions, but do not over-abstract.
+
+At /app/compare-versions/:sessionId, replace the placeholder scaffold with a true dual-pane workspace:
+
+Left pane:
+- Original document
+- Label: "Baseline · Read only"
+
+Right pane:
+- Revised document
+- Label: "Revised · Read only"
+
+Both panes:
+- render the actual PDF pages
+- use the same pdfjs/pdf rendering approach already proven in PDF Editor
+- fetch source bytes from the stored session files, not local upload state
+- each pane independently scrollable
+- each pane visually letter-scale and document-first
+- neutral stage background + white page cards
+- readable desktop sizing matching current PlainPath workspace standards
+
+2. Data loading
+Use the existing session record + stored files.
+
+Frontend must:
+- load session metadata from GET /api/compare-versions/sessions/:id
+- request original PDF bytes from a dedicated endpoint
+- request revised PDF bytes from a dedicated endpoint
+
+Backend:
+Add only the minimum routes needed for rendering, for example:
+- GET /api/compare-versions/sessions/:id/original
+- GET /api/compare-versions/sessions/:id/revised
+
+These routes must:
+- require auth
+- verify session ownership
+- stream the stored PDF bytes
+- use the same object storage wrapper/fallback logic pattern already used by PDF Editor
+
+Do not add scan/diff routes yet.
+
+3. Page rendering behavior
+Desktop:
+- left and right panes visible side by side
+- each pane ~47–48% width
+- narrow center gutter only
+- no bottom summary drawer content yet
+- no overlay rectangles yet
+
+Tablet:
+- retain two-pane layout if still usable
+- otherwise stack cleanly without breaking rendering
+
+Mobile:
+- single-pane toggle between Original and Revised tabs
+- only one pane rendered visibly at a time
+- stable, not cramped
+
+4. Pane controls
+Each pane gets its own small internal top bar:
+- filename
+- label ("Baseline" or "Revised")
+- page counter: Page N / M
+- Page Up / Page Down buttons
+
+No zoom control yet unless it already comes nearly free from the existing shared renderer.
+No diff navigation yet.
+
+5. Workspace toolbar
+Top workspace toolbar should now exist and be real, but limited:
+
+Include:
+- Back link to My Comparisons
+- session title
+- Summary button
+- Notes button
+
+Behavior in Slice 2:
+- Summary button opens a bottom drawer skeleton only
+- Notes button opens a right-side rail only
+- Both are structural shells, not result-rich tools yet
+
+6. Summary drawer skeleton
+Implement a collapsible bottom drawer, default closed.
+
+For Slice 2 it should show:
+- "No comparison results yet"
+- short helper copy that actual detected changes appear after the scan engine is built in Slice 3
+- no fake data
+- no filters yet unless they are disabled placeholders
+
+7. Notes rail
+Implement the manager notes rail using the already persisted manager_notes from Slice 1.
+
+Requirements:
+- right-side overlay rail
+- default closed
+- opens from Notes button
+- does not permanently shrink document panes
+- shows existing freeform notes + watchlist items from session
+- allow editing and saving manager_notes in this slice if it is low-risk
+- if editing is added, save only manager_notes, not diff results
+- if editing is not added, render read-only but structured cleanly
+
+If editing manager_notes requires too much backend change, keep it read-only in Slice 2 and defer editing to Slice 4.
+Do not invent partial broken save behavior.
+
+8. Exact scope boundaries
+Do NOT implement in this slice:
+- visual diff
+- text diff
+- structural diff
+- scan engine
+- severity model
+- grouped change zones
+- clickable change overlays
+- summary diff list
+- semantic AI
+- export/audit report
+- PDF Editor handoff
+- Word support
+- OCR
+- linked pane jump behavior
+- synchronized scrolling
+- hover/selection sync
+
+This slice is rendering + workspace shell only.
+
+9. Performance / reliability rules
+- Reuse the stable PDF Editor rendering approach wherever possible
+- Do not duplicate fragile PDF logic if a shared helper can be reused safely
+- Do not regress PDF Editor
+- Do not break object-storage-backed PDF serving
+- Show explicit loading and error states per pane
+
+10. Required completion report
+When done, return:
+1. Exact files created
+2. Exact files modified
+3. Exact new backend routes added
+4. Exact frontend route behavior
+5. What the workspace now does end-to-end
+6. Explicit statement of what Slice 3+ was NOT implemented
+7. Screenshots of:
+   - /app/compare-versions session list
+   - intake screen
+   - /app/compare-versions/:sessionId dual-pane workspace on desktop
+   - same workspace showing both panes with real rendered PDFs
+   - mobile/tab toggle state if available
+   - summary drawer skeleton open
+   - notes rail open
+
+11. Guardrails
+- No public marketing page changes
+- No /demo work
+- No comparison engine yet
+- No severity UI yet
+- No speculative AI code
+- No scope creep
+
+Implement Compare Versions Slice 2 only.
