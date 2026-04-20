@@ -35,6 +35,7 @@ import BuilderList from "@/pages/Builder/index";
 import BuilderNew from "@/pages/Builder/New";
 import BuilderWorkspace from "@/pages/Builder/Workspace";
 import { BUILDER_ENABLED } from "@/lib/builderConfig";
+import Demo from "@/pages/Demo";
 import IrsLetter from "@/pages/guides/IrsLetter";
 import LeaseAgreement from "@/pages/guides/LeaseAgreement";
 import JobOffer from "@/pages/guides/JobOffer";
@@ -217,6 +218,10 @@ function Router() {
             {/* Shared analysis links are public — shareable with non-users */}
             <Route path="/shared/:token">
               {(params) => <SharedAnalysis token={(params as { token: string }).token} />}
+            </Route>
+            {/* Public demo — no auth required */}
+            <Route path="/demo/:id">
+              {(params) => <Demo id={(params as { id: string }).id} />}
             </Route>
 
             {/* ── Protected routes (require sign-in) ── */}

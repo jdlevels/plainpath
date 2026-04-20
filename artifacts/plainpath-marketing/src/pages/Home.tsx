@@ -210,7 +210,7 @@ const DEMOS = [
     hoverTitle: "group-hover:text-blue-500 dark:group-hover:text-blue-400",
     tags: ["8 action steps", "6 required docs", "3 deadlines"],
     cta: "Open action plan",
-    href: "/app/analyze?demo=event-permit",
+    href: "/app/demo/event-permit",
   },
   {
     id: "trust-check-irs",
