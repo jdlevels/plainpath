@@ -378,16 +378,16 @@ export default function Workspace({ docId }: WorkspaceProps) {
       <div className="flex">
 
         {/* ── LEFT PANE: live document preview (desktop only) ─────────────── */}
-        <div className="hidden lg:block w-[43%] shrink-0">
+        <div className="hidden lg:block w-[55%] shrink-0">
           <div
             className="sticky overflow-y-auto bg-neutral-100 dark:bg-zinc-900/70 border-r border-border"
             style={{ top: "7.5rem", height: "calc(100vh - 7.5rem)" }}
           >
-            {/* Stage with centred white page */}
-            <div className="py-10 px-6 flex justify-center min-h-full">
+            {/* Stage with centred white page — US Letter proportions */}
+            <div className="py-10 px-8 flex justify-center min-h-full">
               <div
-                className="w-full max-w-[560px] bg-white rounded-[2px] shadow-md"
-                style={{ minHeight: "900px", padding: "60px 56px 80px" }}
+                className="w-full max-w-[720px] bg-white rounded-[2px] shadow-md"
+                style={{ minHeight: "932px", padding: "72px 64px 96px" }}
               >
                 <BuilderPagePreview content={content} title={title} />
               </div>
