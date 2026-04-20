@@ -47,6 +47,24 @@ The project is transitioning to a document-first model where uploaded documents 
 -   Implemented a full billing architecture with Stripe for Starter and Pro tiers, enforcing paywall access.
 -   Scaffold built for native iOS/Android billing using RevenueCat.
 
+## Product Design Rules
+
+These are standing rules that govern all current and future PlainPath tool design. They must be treated as constraints before implementation begins, not as optional polish.
+
+### Rule 1 — Split-Screen Creation Principle
+Any PlainPath tool in which a user is creating, editing, or restructuring a document must default to a split-screen layout when real-time visual feedback improves the quality or confidence of the user's work. Left pane: live document output or reference. Right pane: creation and editing controls. Users must not edit blind. This is the default. Single-pane is the exception and must be justified.
+
+Applies to: Document Builder, PDF Editor, and any future creation/editing tool.
+
+### Rule 2 — Document Surface Proportions and Legibility
+For document-heavy tools, the document surface (the rendered page/canvas area) must appear at realistic US Letter proportions on desktop when possible. The surrounding workspace must be wide enough that the page is comfortably readable and workable — not thumbnail-sized.
+
+Split-screen alone is not sufficient. Pane sizing must prioritize document legibility. A narrow preview pane that renders the page too small to read defeats the purpose of the live preview.
+
+On smaller screens and mobile, preserve page proportions but adapt layout responsively. Stacked or toggled layouts (e.g., preview tab / editor tab) are acceptable if they improve usability. Desktop remains the primary simultaneous split-screen experience.
+
+Applies to: Document Builder (current), PDF Editor, any future document-rendering tool.
+
 ## External Dependencies
 
 -   **OpenAI**: For AI functionalities (analysis, contract generation, help).
