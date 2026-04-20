@@ -91,4 +91,12 @@ export const compareVersionsApi = {
     });
     return handleResponse(res);
   },
+
+  async rescanSession(id: string, token: string | null): Promise<{ id: string; status: string }> {
+    const res = await fetch(`/api/compare-versions/sessions/${id}/scan`, {
+      method: "POST",
+      headers: authHeaders(token),
+    });
+    return handleResponse(res);
+  },
 };

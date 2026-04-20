@@ -1,6 +1,7 @@
-// ─── Compare Versions API Routes — Slice 1 ────────────────────────────────────
-// Intake: accept two PDFs, upload to object storage, create session record.
-// Session list + detail for the audit workspace.
+// ─── Compare Versions API Routes — Slice 3 ────────────────────────────────────
+// Intake + session foundation (Slice 1).
+// Dual-pane workspace, streaming, summary, notes (Slice 2).
+// Async comparison engine, overlays, polling (Slice 3).
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { Router } from "express";
@@ -8,6 +9,7 @@ import multer from "multer";
 import { getAuth } from "@clerk/express";
 import { pool } from "@workspace/db";
 import { uploadObject, downloadPdf, isObjectStorageAvailable } from "../../lib/pdfObjectStorage";
+import { runComparison } from "../../lib/compareVersionsEngine";
 
 const router = Router();
 
@@ -31,6 +33,40 @@ function requireAuth(req: any, res: any, next: any) {
   if (!userId) return res.status(401).json({ error: "unauthorized" });
   req.userId = userId;
   next();
+}
+
+// ─── Background scan ──────────────────────────────────────────────────────────
+// Fire-and-forget: run the comparison engine and persist the result.
+// Must never throw — all errors are caught and recorded as status="error".
+
+async function runBackgroundScan(
+  sessionId: string,
+  originalBuf: Buffer,
+  revisedBuf: Buffer,
+): Promise<void> {
+  try {
+    console.log(`[compare-versions] scan starting for session ${sessionId}`);
+    const diffResult = await runComparison(originalBuf, revisedBuf);
+    await pool.query(
+      `UPDATE compare_versions_sessions
+       SET diff_result = $1::jsonb, status = 'complete', scanned_at = NOW(), updated_at = NOW()
+       WHERE id = $2`,
+      [JSON.stringify(diffResult), sessionId],
+    );
+    console.log(
+      `[compare-versions] scan complete for ${sessionId} — ${diffResult.stats.total} items`,
+    );
+  } catch (err) {
+    console.error(`[compare-versions] scan error for ${sessionId}:`, err);
+    await pool
+      .query(
+        `UPDATE compare_versions_sessions
+         SET status = 'error', updated_at = NOW()
+         WHERE id = $1`,
+        [sessionId],
+      )
+      .catch(() => {});
+  }
 }
 
 // ─── PDF magic-byte validation ─────────────────────────────────────────────────
@@ -203,12 +239,18 @@ router.post(
           originalFile.originalname,
           revisedStorageKey,
           revisedFile.originalname,
-          "pending",
+          "scanning",
           JSON.stringify(managerNotes),
         ],
       );
 
       const row = result.rows[0];
+
+      // Fire background scan (no await — returns 201 immediately)
+      const origBuf = Buffer.from(originalFile.buffer);
+      const revBuf = Buffer.from(revisedFile.buffer);
+      runBackgroundScan(sessionId, origBuf, revBuf).catch(() => {});
+
       return res.status(201).json({
         id: row.id,
         title: row.title,
@@ -269,7 +311,7 @@ router.get("/sessions/:id", requireAuth, async (req: any, res: any) => {
          id, title, status,
          original_storage_key, original_file_name, original_page_count,
          revised_storage_key, revised_file_name, revised_page_count,
-         manager_notes, scanned_at, created_at, updated_at
+         manager_notes, diff_result, scanned_at, created_at, updated_at
        FROM compare_versions_sessions
        WHERE id = $1 AND user_id = $2`,
       [req.params.id, req.userId],
@@ -291,6 +333,7 @@ router.get("/sessions/:id", requireAuth, async (req: any, res: any) => {
       revisedFileName: row.revised_file_name,
       revisedPageCount: row.revised_page_count,
       managerNotes: row.manager_notes ?? { freeform: "", watchlist: [] },
+      diffResult: row.diff_result ?? null,
       scannedAt: row.scanned_at,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
@@ -298,6 +341,56 @@ router.get("/sessions/:id", requireAuth, async (req: any, res: any) => {
   } catch (err) {
     console.error("[compare-versions] get session error", err);
     return res.status(500).json({ error: "server_error", message: "Something went wrong." });
+  }
+});
+
+// ─── POST /api/compare-versions/sessions/:id/scan ────────────────────────────
+// Re-trigger the comparison scan for an existing session.
+// Downloads PDFs from object storage, fires background scan, returns 202.
+
+router.post("/sessions/:id/scan", requireAuth, async (req: any, res: any) => {
+  try {
+    const sessionResult = await pool.query(
+      `SELECT id, status, original_storage_key, revised_storage_key
+       FROM compare_versions_sessions
+       WHERE id = $1 AND user_id = $2`,
+      [req.params.id, req.userId],
+    );
+    if (!sessionResult.rows.length) {
+      return res.status(404).json({ error: "not_found", message: "Session not found." });
+    }
+    const session = sessionResult.rows[0];
+    if (session.status === "scanning") {
+      return res.status(409).json({ error: "already_scanning", message: "Scan already in progress." });
+    }
+
+    // Set status back to scanning
+    await pool.query(
+      `UPDATE compare_versions_sessions SET status = 'scanning', updated_at = NOW() WHERE id = $1`,
+      [req.params.id],
+    );
+
+    // Download and re-scan in background
+    (async () => {
+      try {
+        const [origBuf, revBuf] = await Promise.all([
+          downloadPdf(session.original_storage_key),
+          downloadPdf(session.revised_storage_key),
+        ]);
+        await runBackgroundScan(req.params.id, origBuf, revBuf);
+      } catch (err) {
+        console.error("[compare-versions] rescan download error:", err);
+        await pool.query(
+          `UPDATE compare_versions_sessions SET status = 'error', updated_at = NOW() WHERE id = $1`,
+          [req.params.id],
+        ).catch(() => {});
+      }
+    })().catch(() => {});
+
+    return res.status(202).json({ id: req.params.id, status: "scanning" });
+  } catch (err) {
+    console.error("[compare-versions] rescan error", err);
+    return res.status(500).json({ error: "server_error" });
   }
 });
 

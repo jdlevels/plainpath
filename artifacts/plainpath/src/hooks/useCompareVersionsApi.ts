@@ -52,5 +52,10 @@ export function useCompareVersionsApi() {
         compareVersionsApi.updateNotes(id, managerNotes, await token()),
       [token],
     ),
+
+    rescanSession: useCallback(
+      async (id: string) => compareVersionsApi.rescanSession(id, await token()),
+      [token],
+    ),
   };
 }

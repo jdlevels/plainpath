@@ -1,0 +1,431 @@
+Work in strict controlled-slice mode.
+
+Implement Compare Versions — Slice 3 only.
+Do not implement Slice 4 or beyond.
+Do not add AI enrichment, OpenAI calls, export reports, PDF Editor handoff, Word conversion, OCR, or public-site demo behavior.
+
+GOAL
+Turn Compare Versions from a rendering-only workspace into a real deterministic comparison tool.
+
+This slice must:
+1. scan the two uploaded PDFs server-side
+2. generate a unified deterministic diff_result JSON
+3. persist it to the compare_versions_sessions row
+4. update session status from pending/scanning to complete/error
+5. render real comparison results inside the existing Slice 2 workspace
+
+This slice is NOT AI.
+All detection and severity assignment in Slice 3 must be deterministic and rule-based only.
+
+==================================================
+CANONICAL TOOL RULE
+==================================================
+
+The tool name remains:
+Compare Versions
+
+Do not rename it again.
+Do not restore "Audit Document Revisions" as the primary label.
+
+==================================================
+APPROVED SCOPE FOR SLICE 3
+==================================================
+
+1. BACKEND COMPARISON ENGINE
+Create deterministic comparison processing on the server.
+
+Use the existing compare_versions_sessions table and its diff_result JSONB field.
+
+When a session is created or when scan is explicitly triggered for an existing pending session:
+- status -> "scanning"
+- run deterministic comparison pipeline
+- write unified diff_result
+- status -> "complete"
+- scanned_at set
+- on failure: status -> "error"
+
+If scan currently happens during initial upload flow, keep that model.
+Do not invent a second competing scan path unless needed.
+If a dedicated scan trigger is required, add it cleanly and use one model only.
+
+==================================================
+2. THREE DETERMINISTIC COMPARISON STAGES
+==================================================
+
+Implement all three.
+
+----------------------------------------
+Stage A — Visual diff
+----------------------------------------
+
+Mechanism:
+- render each page of both PDFs to PNG/images at fixed DPI (150 dpi approved)
+- compare same-position pages only in Slice 3
+- use pixelmatch or equivalent deterministic pixel diff
+- cluster changed pixels into bounding rects using connected-component grouping or equivalent
+- output page-level visual changes
+
+Rules:
+- page pairing is positional only in V1:
+  page 1 ↔ page 1
+  page 2 ↔ page 2
+  etc.
+- if revised has extra trailing pages -> added_page
+- if original has extra trailing pages -> removed_page
+- changed page with pixel delta below cosmetic threshold (<1%) = unchanged
+- changed page with meaningful delta -> changed rects emitted
+
+Output per visual item:
+{
+  id,
+  source: "visual",
+  page_original,
+  page_revised,
+  rect_original: { x, y, w, h } | null,
+  rect_revised: { x, y, w, h } | null,
+  change_type: "visual_change" | "added_page" | "removed_page",
+  signal_type: null,
+  original_text: null,
+  revised_text: null,
+  severity: "high" | "medium" | "low",
+  severity_overridden: false,
+  ai_explanation: null,
+  ai_category: null,
+  meta: {
+    pixel_delta_pct: number
+  }
+}
+
+Coordinate model:
+- fractional x/y/w/h
+- top-left origin
+- per-pane independent coordinates allowed later, but for Slice 3 use page-relative fractional coordinates compatible with rendering overlays
+
+----------------------------------------
+Stage B — Text diff
+----------------------------------------
+
+Mechanism:
+- extract text per page from both PDFs
+- split into line-level or text-block-level units
+- diff using deterministic algorithm only (Myers diff / LCS / equivalent)
+- identify:
+  - text_added
+  - text_removed
+  - text_modified
+- compute approximate bounding rects from available PDF text position data when possible
+- if position data is weak, still emit text diff item with page references and null rects rather than skipping
+
+Output per text item:
+{
+  id,
+  source: "text",
+  page_original,
+  page_revised,
+  rect_original,
+  rect_revised,
+  change_type: "text_added" | "text_removed" | "text_modified",
+  signal_type: null,
+  original_text: "...",
+  revised_text: "...",
+  severity: "high" | "medium" | "low",
+  severity_overridden: false,
+  ai_explanation: null,
+  ai_category: null,
+  meta: {
+    edit_distance?: number
+  }
+}
+
+Do not call OpenAI.
+Do not classify meaning semantically in this slice.
+
+----------------------------------------
+Stage C — Structural signals
+----------------------------------------
+
+Mechanism:
+Use extracted text and simple heuristics to detect structural changes:
+- page_count_change
+- heading_added
+- heading_removed
+- heading_renamed
+- section_reordered
+- table_added
+- table_removed
+- appendix_added
+- appendix_removed
+- signature_block_changed
+- version_history_changed
+- header_footer_changed
+
+Use deterministic pattern detection only:
+- heading heuristics from capitalization / numbering / line shape / pdf font hints if available
+- signature block via label patterns like "Signature", "Approved by", "Signed", etc.
+- appendix/version history via common labels
+- table heuristics from aligned multi-column lines / extracted table-like structure if available
+
+Output per structural item:
+{
+  id,
+  source: "structural",
+  page_original,
+  page_revised,
+  rect_original,
+  rect_revised,
+  change_type: "structural_signal",
+  signal_type: "page_count_change" | "heading_added" | "heading_removed" | "heading_renamed" | "section_reordered" | "table_added" | "table_removed" | "appendix_added" | "appendix_removed" | "signature_block_changed" | "version_history_changed" | "header_footer_changed",
+  original_text: "...",
+  revised_text: "...",
+  severity: "high" | "medium" | "low",
+  severity_overridden: false,
+  ai_explanation: null,
+  ai_category: null,
+  meta: {}
+}
+
+==================================================
+3. UNIFIED diff_result JSON
+==================================================
+
+Merge all stage outputs into one unified diff_result array stored on the session row.
+
+Required shape:
+{
+  version: 1,
+  generatedAt: "...iso...",
+  stats: {
+    total: number,
+    high: number,
+    medium: number,
+    low: number,
+    pagesWithDiffs: number
+  },
+  items: [ ...all diff items... ]
+}
+
+Important:
+- preserve manager_notes already stored on the session
+- do not overwrite manager_notes during scan
+- diff_result may be replaced on re-scan only if that action exists
+- ai_explanation and ai_category must remain null in Slice 3
+
+==================================================
+4. DETERMINISTIC SEVERITY RULES
+==================================================
+
+Implement rule-based severity only.
+
+HIGH when any of the following apply:
+- financial value change detected
+  regex examples: $, USD, %, percent, fee, rate, price, total, amount
+- date/deadline change
+  keywords/patterns: effective, expires, due, deadline, date formats
+- legal clause language change
+  keywords: shall, liable, indemnify, warranty, terminate, breach
+- policy/compliance language change
+  keywords: must, required, prohibited, compliance, regulation
+- safety threshold/limit change
+  keywords: maximum, minimum, limit, threshold, psi, ppm
+- signature_block_changed
+- heading_removed for an entire section of substance
+- removed_page
+
+MEDIUM when:
+- text_modified but not matching high rules
+- table_added or table_removed
+- heading_renamed
+- section_reordered
+- appendix_added or appendix_removed
+- added_page
+- visual_change > 10% on a page with no matching high trigger
+
+LOW when:
+- small text substitution / punctuation / typo-like edit
+- header_footer_changed only
+- formatting-like visual change with low delta
+- visual_change > 0 but < 3% with no text match
+
+Manager override UI does NOT need to be implemented in this slice unless it comes nearly free.
+If not already in place, defer actual override controls to Slice 4.
+But keep the data field severity_overridden in the schema output.
+
+==================================================
+5. FRONTEND WORKSPACE UPGRADE
+==================================================
+
+Modify the existing Compare Versions workspace so it now shows real scan output.
+
+Use the current Slice 2 dual-pane layout as the base.
+
+Add:
+
+A. Change overlays on both panes
+- render colored rectangular overlays over changed regions
+- use deterministic color mapping:
+  High -> red
+  Medium -> amber
+  Low -> grey
+  Added (revised only) -> blue
+  Removed (original only) -> red on original, simple "REMOVED" badge on revised if needed
+- no union-grouping yet unless it comes nearly free
+- Slice 3 can render individual change rects first
+- if rect is null, item still appears in summary but no overlay is drawn
+
+B. Summary panel with real data
+Use the existing bottom drawer shell and now populate it.
+
+Include:
+- counts:
+  [All] [High] [Medium] [Low]
+- diff items list
+- each item row shows:
+  - severity
+  - page reference(s)
+  - short label
+  - change type
+  - snippet if available
+
+Suggested row examples:
+- HIGH · Pg 6 · text_modified · "$1,200 → $950"
+- HIGH · Pg 3 · heading_removed · "Section 4.2 Safety Protocol"
+- LOW · Pg 1 · header_footer_changed · "Revision date updated"
+
+C. Click-to-jump navigation
+When user clicks a diff item in the summary:
+- both panes jump to the relevant page(s)
+- relevant overlays get active style
+- if pages differ, left goes to page_original and right goes to page_revised
+- if one side is null (added/removed), jump the side that exists and keep the other pane stable
+
+D. Filter controls
+Implement working filters in the summary panel:
+- All
+- High
+- Medium
+- Low
+
+Optional if low-risk:
+- page dropdown filter
+If page filter adds complexity, defer it to Slice 4.
+
+==================================================
+6. STATUS / UX STATES
+==================================================
+
+Implement honest states.
+
+At session level:
+- pending
+- scanning
+- complete
+- error
+
+Workspace behavior:
+- if session is scanning, show inline comparison progress state
+- if session is complete but diff_result empty, show "No differences found"
+- if session is error, show retry-capable error state if retry already exists; otherwise clear error message
+
+Do not fake results.
+Do not seed mock diffs.
+
+==================================================
+7. ROUTES / API
+==================================================
+
+Add only what this slice truly needs.
+
+Expected minimum:
+- existing session create/list/get routes stay
+- add/adjust scan processing route if necessary
+- keep auth and ownership enforcement on every session route
+
+If the cleanest implementation is:
+- POST create session
+- immediately process scan in same request
+that is acceptable.
+
+If cleaner to separate:
+- POST create session
+- POST /sessions/:id/scan
+that is also acceptable.
+
+Choose one path and keep it consistent.
+
+==================================================
+8. EXACT FILES TO TOUCH
+==================================================
+
+Use best judgment, but likely includes:
+
+Backend
+- lib/db/src/schema/compareVersions.ts
+- artifacts/api-server/src/routes/compare-versions/index.ts
+- possibly one or more helper files for deterministic diffing under compare-versions or shared document logic
+
+Frontend
+- artifacts/plainpath/src/pages/CompareVersions.tsx
+- artifacts/plainpath/src/pages/CompareVersionsSession.tsx
+- artifacts/plainpath/src/lib/compareVersionsApi.ts
+- artifacts/plainpath/src/hooks/useCompareVersionsApi.ts
+
+You may add small focused helper components/utilities if needed.
+Do not sprawl this into unnecessary abstractions.
+
+==================================================
+9. STRICT OUT-OF-SCOPE
+==================================================
+
+Do NOT implement:
+- OpenAI / semantic AI enrichment
+- ai_explanation population
+- ai_category population
+- manager severity override UI if not already trivial
+- grouped zone badges / union-rect grouping
+- bidirectional hover sync
+- zone click ↔ summary hover sync
+- Notes-to-diff linking
+- PDF export report
+- PDF Editor handoff
+- Word conversion
+- OCR fallback
+- metadata diff
+- re-scan history linking
+- team/shared org sessions
+- demo experience
+- public site changes beyond existing card presence
+
+==================================================
+10. REQUIRED COMPLETION REPORT
+==================================================
+
+When done, return:
+1. Exact files created
+2. Exact files modified
+3. Exact route behavior
+4. Exact deterministic comparison stages implemented
+5. Exact diff_result schema now stored
+6. Exact severity rules implemented
+7. Exact frontend behaviors now live
+8. Explicit list of what Slice 4+ was NOT implemented
+9. Real screenshots of:
+   - intake with both files loaded and Scan enabled
+   - scanning/progress state
+   - complete workspace with overlays visible on both panes
+   - summary drawer open with real diff items
+   - click-to-jump state after selecting a diff
+   - no-difference state OR error state if available
+
+==================================================
+11. NON-NEGOTIABLES
+==================================================
+
+- deterministic only
+- no AI in Slice 3
+- preserve existing manager_notes
+- do not regress Compare Versions Slice 1/2
+- do not regress PDF Editor
+- do not rename tool labels again
+- do not add scope beyond this slice
+
+Implement Compare Versions Slice 3 only.
