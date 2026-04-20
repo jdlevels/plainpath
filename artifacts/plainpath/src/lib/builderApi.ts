@@ -127,9 +127,10 @@ export const builderApi = {
     category?: string,
     token?: string | null,
   ): Promise<BuilderTemplate[]> {
-    const url = new URL(`${base()}/api/builder/templates`);
-    if (category) url.searchParams.set("category", category);
-    const res = await fetch(url.toString(), authFetchOptions(token));
+    const path = category
+      ? `${base()}/api/builder/templates?category=${encodeURIComponent(category)}`
+      : `${base()}/api/builder/templates`;
+    const res = await fetch(path, authFetchOptions(token));
     return handleResponse(res);
   },
 

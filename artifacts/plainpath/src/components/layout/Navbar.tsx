@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter"
 import { Button } from "@/components/ui/button"
 import {
   FileText, Plus, BookMarked, GitCompare, LogOut, User, ChevronDown,
-  LayoutGrid, ShieldCheck, PenLine, Scale, Menu, X, LayoutDashboard, CreditCard, EyeOff, FileSignature, FolderOpen,
+  LayoutGrid, ShieldCheck, PenLine, Scale, Menu, X, LayoutDashboard, CreditCard, EyeOff, FileSignature, FolderOpen, Pen,
 } from "lucide-react"
 
 import { ThemeToggle } from "@/components/ui/ThemeToggle"
@@ -39,6 +39,7 @@ const TOOL_NAV = [
   { label: "Redact Sensitive Info", href: "/redact",                icon: EyeOff         },
   { label: "Digital Signature",    href: "/signature",              icon: FileSignature  },
   { label: "Compare Versions",     href: "/compare",                icon: GitCompare     },
+  { label: "PDF Editor",           href: "/pdf-editor",             icon: Pen            },
 ]
 
 function UserMenu() {

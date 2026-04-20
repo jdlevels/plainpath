@@ -4,7 +4,7 @@ import {
   ArrowRight, ShieldCheck, FileSignature,
   PenLine, FileScan, Scale, EyeOff,
   BookMarked, Clock, ChevronRight, CreditCard,
-  LayoutGrid, GitCompare,
+  LayoutGrid, GitCompare, Pen,
 } from "lucide-react"
 import { BUILDER_ENABLED } from "@/lib/builderConfig"
 import { useState, useEffect } from "react"
@@ -102,6 +102,17 @@ const TOOLS = [
     color: "text-sky-500 dark:text-sky-400",
     bg: "bg-sky-50 dark:bg-sky-950/50",
     ring: "hover:border-sky-400/50 hover:shadow-sky-500/10",
+    plan: "pro" as const,
+  },
+  {
+    key: "pdf-editor" as const,
+    label: "PDF Editor",
+    desc: "Open any PDF, add text overlays, mask content, reorder pages, and export a clean modified copy.",
+    icon: Pen,
+    path: "/pdf-editor",
+    color: "text-purple-500 dark:text-purple-400",
+    bg: "bg-purple-50 dark:bg-purple-950/50",
+    ring: "hover:border-purple-400/50 hover:shadow-purple-500/10",
     plan: "pro" as const,
   },
 ]

@@ -49,7 +49,7 @@ function SectionNav({
   const sorted = [...sections].sort((a, b) => a.order - b.order);
   if (sorted.length === 0) return null;
   return (
-    <nav className="w-52 shrink-0 hidden lg:block">
+    <nav data-testid="section-nav" className="w-52 shrink-0 hidden lg:block">
       <div className="sticky top-20 space-y-0.5">
         <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 px-2 mb-2">
           Sections <span className="font-normal normal-case tracking-normal">({sorted.length})</span>
@@ -403,15 +403,16 @@ export default function Workspace({ docId }: WorkspaceProps) {
         </div>
 
         {/* ── RIGHT PANE: editor controls ──────────────────────────────────── */}
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 flex">
 
-          {/* Section nav — shown on lg+ in split mode */}
+          {/* Section nav — shown on lg+ in split mode, sits beside editor */}
           <SectionNav
             sections={content.sections}
             activeId={activeSectionId}
             onSelect={scrollToSection}
           />
 
+          <div data-testid="editor-content" className="flex-1 min-w-0">
           <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
             {sortedSections.length === 0 && (
               <div className="rounded-2xl border-2 border-dashed border-border py-20 text-center">
@@ -452,6 +453,7 @@ export default function Workspace({ docId }: WorkspaceProps) {
                 <Plus className="w-4 h-4" /> Add section
               </button>
             )}
+          </div>
           </div>
         </div>
       </div>
