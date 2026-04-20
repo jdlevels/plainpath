@@ -1,0 +1,77 @@
+Work in strict controlled mode.
+
+CURRENT PRIORITY
+Finish Builder Slice 2 and close the Document Builder checkpoint.
+Do not start split-screen implementation yet.
+Do not start Slice 3.
+Do not work on the public demo.
+Do not work on PDF Editor.
+Do not expand scope.
+
+GOAL
+Verify whether the post-publish autosave/persistence fix is now live in production, and close Builder Slice 2 if it passes.
+
+LIVE ENVIRONMENT ONLY
+Use the real deployed app under:
+https://plain-path.replit.app/app/
+
+TASK 1 — Live verification after publish
+In the live deployed app, signed in:
+
+1. Open the existing Builder document workspace
+2. Wait for the first autosave cycle
+3. Confirm whether the status changes to "Saved"
+4. Edit the document title
+5. Add or edit a paragraph block
+6. Confirm autosave succeeds
+7. Return to /app/builder
+8. Confirm the updated title appears in the list
+9. Reopen the document
+10. Confirm title + content persisted
+11. Archive the document
+12. Confirm it disappears from the active list
+
+TASK 2 — If any save step still fails
+If autosave/save still fails at any point, stop broad investigation and capture the exact failing update request.
+
+Return:
+- request URL
+- request method
+- request payload
+- response status
+- response body
+- whether Authorization header is present
+- whether server_version is present
+- whether backend received the request
+
+Do not guess. Report exact evidence only.
+
+TASK 3 — Confirm current Builder scope/status
+State explicitly:
+- Builder is still Draft-only
+- no draft/final snapshot behavior has been added yet
+- no split-screen implementation was started in this pass
+- no extra Builder features were added
+
+OUTPUT REQUIRED
+Return a strict closeout report with:
+
+1. Exact live URL/path tested
+2. Pass/fail for:
+   - workspace load
+   - autosave
+   - title save
+   - paragraph/content save
+   - persistence after reopen
+   - archive
+3. Screenshots of:
+   - workspace showing Saved
+   - Builder list with updated title
+   - reopened document showing persistence
+   - Builder list after archive
+4. If failed:
+   - exact failing request/response
+   - exact root cause
+   - exact files changed
+5. Final statement:
+   - whether Builder Slice 2 is now fully closed
