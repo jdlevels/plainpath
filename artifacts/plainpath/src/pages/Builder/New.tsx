@@ -8,7 +8,18 @@ import type { BuilderCategory } from "@/lib/builderConfig";
 
 type Mode = "choose" | "blank" | "template";
 
-const EMPTY_CONTENT = { sections: [] };
+function createEmptyContent() {
+  return {
+    sections: [
+      {
+        id: crypto.randomUUID(),
+        title: "Overview",
+        order: 0,
+        blocks: [],
+      },
+    ],
+  };
+}
 
 function CategoryPicker({
   selected,
@@ -108,7 +119,7 @@ export default function BuilderNew() {
         title: blankTitle.trim(),
         category: blankCategory as BuilderCategory,
         source: "blank",
-        content: EMPTY_CONTENT,
+        content: createEmptyContent(),
       });
       navigate(`/builder/${doc.id}`);
     } catch {
