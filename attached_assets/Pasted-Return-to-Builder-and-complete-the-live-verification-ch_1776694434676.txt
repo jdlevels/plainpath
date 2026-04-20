@@ -1,0 +1,63 @@
+Return to Builder and complete the live verification checkpoint only.
+
+IMPORTANT
+Do not work on the public demo anymore in this pass.
+Do not add new Builder features.
+Do not start Slice 3.
+This pass is only to verify Builder is live, visible, and working in the real `/app` environment.
+
+GOAL
+Close the remaining Builder live verification items so the Document Builder checkpoint can be considered complete enough to move on.
+
+REQUIRED CHECKS IN THE LIVE DEPLOYED APP
+
+1. Confirm Builder exposure in the real `/app` environment
+Verify and provide screenshots of:
+- Builder visible in the top nav / tools access
+- Builder visible in the logged-in dashboard tools grid
+- /app/builder loading
+- /app/builder/new loading
+
+2. Real signed-in Builder workflow test
+In the same live deployed `/app` environment, using a real signed-in session:
+- create one Builder document from blank
+- confirm workspace opens
+- change the title
+- add one paragraph block
+- confirm autosave succeeds
+- return to the Builder list and confirm the document appears
+- reopen the document and confirm the edit persisted
+- archive the document
+- confirm it disappears from the active Builder list
+
+3. Confirm current Builder status behavior
+State explicitly:
+- Builder still uses static “Draft” label only
+- no draft/final snapshot behavior has been reintroduced yet
+
+4. Confirm no new feature scope was added
+State explicitly that this pass did NOT add:
+- preview
+- PDF export
+- version history UI
+- restore UI
+- Analyze handoff UI
+- Compare handoff UI
+- Signature handoff
+- Redact handoff
+- save-as-template
+- user templates
+
+OUTPUT REQUIRED
+Return a short closeout report with:
+1. Exact live URL/path used
+2. Screenshots for each required page/state
+3. Pass/fail for:
+   - Builder visibility
+   - create
+   - autosave
+   - reopen/persist
+   - archive
+4. Confirmation of static Draft-only behavior
+5. Confirmation that no extra scope was added
+6. Final statement on whether Builder is now live-verification complete
