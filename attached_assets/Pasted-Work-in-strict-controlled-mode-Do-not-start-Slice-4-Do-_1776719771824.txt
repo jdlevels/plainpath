@@ -1,0 +1,78 @@
+Work in strict controlled mode.
+
+Do not start Slice 4.
+Do not expand scope.
+Do not touch unrelated tools.
+
+CURRENT TASK
+Perform a live verification pass for PDF Editor Slice 3 only.
+
+Slice 3 is not signed off until visual and file-output proof is provided.
+
+REQUIRED LIVE CHECKS
+
+1. Export button / UI states
+Verify and capture screenshots for:
+- idle state ("Download")
+- exporting state
+- complete/reset state
+- failed state only if a real failure occurs
+
+2. Export with saved state
+- Open an existing PDF Editor session
+- Ensure it is already saved
+- Click Export
+- Confirm a real .pdf file downloads
+
+3. Export with unsaved state
+- Make a fresh edit so the session becomes unsaved
+- Click Export immediately
+- Prove the app saves first, then exports
+- Confirm the exported file includes that newest unsaved edit
+
+4. Export content proof
+Using a clearly readable test PDF with visible text, prove the exported PDF contains:
+- text overlay
+- mask/whiteout rectangle
+- highlight rectangle
+
+Do not rely on DB-only proof.
+Open/read the exported PDF and show visual output.
+
+5. Original unchanged proof
+- Show that the original source PDF remains unchanged
+- Show that only the exported file contains the applied edit ops
+
+6. Session continuity
+- After export, confirm the user remains in the same PDF Editor session
+- Confirm session state is still intact after download
+
+REQUIRED OUTPUT FORMAT
+Return only:
+
+1. Exact files changed for Slice 3
+2. Pass/fail table for:
+   - export button idle state
+   - exporting state
+   - export complete state
+   - export with saved session
+   - export with unsaved changes
+   - text overlay present in exported PDF
+   - mask present in exported PDF
+   - highlight present in exported PDF
+   - original unchanged
+   - session continuity after export
+3. Screenshots showing:
+   - workspace before export
+   - export button state(s)
+   - exported PDF opened with visible text overlay
+   - exported PDF opened with visible mask
+   - exported PDF opened with visible highlight
+   - proof original source is unchanged
+4. If any fix was required:
+   - root cause
+   - exact files changed
+   - exact fix applied
+5. Final statement:
+   - either “PDF Editor Slice 3 is fully verified in live app”
+   - or “PDF Editor Slice 3 still has this blocker: …”
