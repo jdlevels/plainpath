@@ -1,0 +1,73 @@
+Work in strict controlled mode.
+
+CURRENT TASK
+Refine the Digital Signature workspace so it meets the same PlainPath large-format document workspace standard now established by Builder and Redact.
+
+IMPORTANT
+Do not start PDF Editor.
+Do not change Builder.
+Do not change Redact.
+Do not redesign unrelated app layout.
+Do not add new signature features in this pass.
+Do not broaden scope beyond workspace sizing, pane balance, and document readability.
+
+CONTEXT
+PlainPath now has an established document-workspace rule for document-heavy tools:
+- realistic letter-style document surface on desktop
+- pane sizing prioritizes document legibility
+- document-heavy tools must not feel thumbnail-sized or cramped
+- mobile/tablet may adapt responsively, but desktop should prioritize simultaneous visibility and usability
+
+Builder and Redact now follow this rule.
+
+GOAL
+Upgrade the Digital Signature workspace so document review and signature placement context feel comfortably workable on desktop.
+
+PRIMARY PROBLEM TO SOLVE
+The signature workflow must give the user enough document visibility to meaningfully inspect page context, placement, and reading flow. The document pane must feel like the primary work surface, not a narrow side preview.
+
+REQUIRED REFINEMENTS
+
+1. DOCUMENT-FIRST PANE PRIORITY
+- Rebalance pane sizing so the document surface has clear priority
+- The document must not feel compressed
+- Signature controls remain usable but secondary
+
+2. LETTER-SCALE DOCUMENT SURFACE
+- Render the document area at a realistic letter-style scale on desktop when possible
+- Preserve page proportions
+- Make the document surface feel like the primary work area
+
+3. LARGE-FORMAT WORKSPACE
+- Increase overall usable workspace width if needed
+- Ensure the document pane supports comfortable reading and signature review
+
+4. CONTROL DENSITY REVIEW
+- Tighten or reorganize signature controls if needed so they consume less critical reading space
+- Keep signing workflow structured and clear
+
+5. RESPONSIVE BEHAVIOR
+- Desktop: split-screen remains primary
+- Tablet/mobile: adapt responsively if needed to preserve usability
+- No regressions in core signature workflow
+
+6. NO FEATURE EXPANSION
+This pass is NOT for:
+- new signing features
+- Dropbox Sign integration changes
+- signature field mapping changes
+- workflow redesign
+- unrelated UI polish
+
+OUTPUT REQUIRED
+Before/with implementation, return:
+1. exact files changed
+2. current vs proposed pane sizing
+3. whether workspace/container width changed
+4. whether mobile/tablet behavior changed
+5. any low-risk follow-up still recommended for Signature only
+
+After implementation, return:
+1. before/after layout summary
+2. screenshots showing the improved Digital Signature workspace on desktop
+3. final statement on whether Digital Signature now meets the PlainPath large-format document workspace rule
