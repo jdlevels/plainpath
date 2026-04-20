@@ -1,0 +1,139 @@
+Work in strict controlled mode.
+
+PDF Editor Slice 3 is complete and verified.
+
+CURRENT TASK
+Implement PDF Editor Slice 4 only:
+1. migrate source PDF storage from database bytea to object storage
+2. add the left-pane mirrored change indicator system
+3. add editor-only visibility improvement for white masks on white pages
+
+Do not expand scope.
+Do not start Compare Versions.
+Do not add page delete/reorder/rotate yet.
+Do not add My Documents integration yet.
+Do not add session rename/archive/trash yet.
+Do not touch unrelated tools.
+
+LOCKED PRODUCT RULES
+1. Original PDF remains untouched and read-only
+2. Right pane remains the only editable working copy
+3. Left pane is still non-destructive — any indicators there are visual overlays only
+4. Mirrored indicators must never alter the original PDF bytes
+5. Split-screen desktop layout and letter-legible workspace rules remain unchanged
+6. Save/export behavior from Slice 2–3 must continue to work exactly as-is
+
+SLICE 4 MUST INCLUDE
+
+A. Object storage migration for source PDFs
+- Stop storing uploaded source PDFs in Postgres bytea for new sessions
+- Store source PDFs in object storage instead
+- Existing sessions that still use bytea must continue to open correctly (backward compatibility)
+- Session model must support both:
+  - legacy DB-backed source PDFs
+  - new object-storage-backed source PDFs
+- Export must continue to work for both old and new sessions
+
+B. Left-pane mirrored change indicator system
+Purpose:
+The left/original pane should visually show where the working-copy edits exist, without becoming editable and without showing full competing stacked edit visuals.
+
+Behavior:
+- Right pane keeps real editable ops exactly as they exist
+- Left pane gets a non-destructive overlay layer
+- For each active edit op in the right pane, the left pane shows a corresponding indicator at the matching page coordinates
+- If multiple edits overlap, do not render messy competing indicators on the left
+- Instead, group overlapping edits into one combined modified zone
+
+Required left-pane indicator logic:
+1. Non-overlapping edits
+- show an indicator box at the corresponding area
+- visually indicate edit type if possible
+
+2. Overlapping edits
+- compute one grouped modified zone (union of overlapping rects on same page)
+- show a count badge, e.g. "2 edits", "3 edits"
+- clicking or hovering the zone should identify the member edits on the right pane
+
+3. Priority/style rules for grouped zones
+If a grouped zone needs one dominant visual style, use:
+- Mask / whiteout = highest priority
+- Text overlay = second
+- Highlight = third
+
+4. Bidirectional hover/selection mapping
+- Hover/select an edit on the right → corresponding left indicator/group highlights
+- Hover/select a left indicator/group → corresponding right-side edit(s) highlight
+
+5. Left pane remains read-only
+- no editing interactions on the left pane
+- no drag handles
+- no text editing
+- no placement on left pane
+
+C. White mask visibility improvement in editor mode only
+- In the right pane editor only, white masks on white pages should remain visibly detectable
+- Use a faint editor-only treatment such as:
+  - subtle checkerboard
+  - striped pattern
+  - or similarly faint visual hint
+- This hint must disappear in export output
+- Exported PDF must remain a true solid white mask
+
+D. Persistence expectations
+- Mirrored left-pane indicators should be derived from active ops, not stored as separate DB records
+- Object storage migration must not break save, reload, reopen, or export
+- Existing sessions created in Slice 2/3 must still load correctly
+
+SLICE 4 MUST NOT INCLUDE
+- page delete
+- page reorder
+- page rotate
+- My Documents integration
+- Compare Versions build
+- semantic diffing
+- risk scoring
+- session rename
+- session delete/archive UI
+- comment/annotation threads
+- image insertion
+- form editing
+- signature placement
+- true in-place PDF text replacement
+
+IMPORTANT IMPLEMENTATION RULES
+
+1. Object storage migration
+- Choose the simplest reliable storage mechanism already available in the project
+- Keep legacy bytea reads working
+- New sessions should prefer object storage
+- Do not break old exports
+
+2. Left-pane overlay architecture
+- Implement the mirrored indicators as a derived visual overlay layer
+- Do not duplicate edit persistence data
+- Do not mutate original PDF rendering
+- Group overlap zones at render time, not by destructive data merge
+
+3. Overlap grouping model
+- Same-page overlapping rectangles belong to the same group
+- Group box = union of member rectangles
+- Member ops remain separate in storage and on the right pane
+
+4. Editor-only whiteout hint
+- Hint visible only in editor workspace
+- Hint absent from exported/downloaded PDF
+- Hint should be subtle, not visually dominant
+
+REQUIRED RESPONSE BEFORE CODING
+Return first:
+1. exact files you will create/modify
+2. exact object storage/data model changes
+3. exact backward-compatibility approach for legacy bytea sessions
+4. exact left-pane mirrored indicator model
+5. exact overlap-grouping logic
+6. exact hover/selection synchronization behavior
+7. exact white-mask editor-only visibility treatment
+8. exact items intentionally deferred to Slice 5
+
+Do not start coding until that plan is returned.
