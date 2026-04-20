@@ -1,0 +1,122 @@
+Work in strict controlled mode.
+
+CURRENT TASK
+Start the dedicated Builder Split-Screen Layout Slice.
+
+IMPORTANT
+This is a scoped Builder layout upgrade only.
+Do not start PDF Editor work yet.
+Do not start the broad Builder Slice 3 bundle.
+Do not add export.
+Do not add version history.
+Do not add draft/final workflow.
+Do not add Signature/Redact/Compare/Analyze handoffs.
+Do not redesign unrelated navigation.
+Do not refactor unrelated Builder logic.
+
+CONTEXT
+Builder Slice 2 is now fully complete and live in production.
+The next approved PlainPath product rule is:
+- creation/editing tools default to split-screen
+- left pane shows the document
+- right pane controls the document
+- users should not build blind
+
+GOAL
+Convert Document Builder from the current single-pane editor into a split-screen Builder workspace.
+
+TARGET LAYOUT
+Document Builder should become:
+
+LEFT PANE
+- live blank-page document preview
+- realistic document page proportions (Letter or A4 style)
+- render the current Builder content as a real page preview
+- read-only preview in this slice
+- no editing controls inside the page preview
+- neutral/dark surrounding stage is acceptable, but the page itself must read clearly as a document page
+
+RIGHT PANE
+- existing Builder controls
+- section list / section controls
+- block controls
+- block editing inputs
+- document settings already in scope
+- keep the editing system structured and guided
+
+CORE RULES
+1. The left pane must render from the same current Builder content state already being autosaved.
+2. No new Builder data model may be introduced for this slice.
+3. No drag-anywhere canvas behavior.
+4. No freeform desktop-publishing behavior.
+5. The page preview must update live as content changes.
+6. The preview should help the user judge spacing, hierarchy, section flow, and readability.
+7. The right pane remains the only editing surface.
+
+IMPLEMENTATION APPROACH
+Use the existing Builder content object as the source of truth.
+Build a preview renderer that consumes the current section/block structure and renders:
+- headings
+- paragraphs
+- bullet lists
+- numbered lists
+- checklists
+- key-value blocks
+- notes/callouts
+- dividers
+- tables
+
+The preview renderer should be a document-output renderer, not a second editor.
+
+SCOPE FOR THIS SLICE
+IN SCOPE
+- split-screen workspace shell
+- resizable left/right pane layout if low risk
+- live page preview renderer
+- mapping current block types into page-preview output
+- keeping current Builder editing logic intact on the right
+- preserving autosave behavior
+- preserving current Builder routes and workflow
+- enough width/height for real readability
+
+OUT OF SCOPE
+- PDF export
+- version history
+- draft/final pipeline
+- compare/analyze/signature/redact integrations
+- form field placement
+- font controls
+- freeform object placement
+- embedded signatures
+- PDF Editor work
+- major Builder feature expansion unrelated to layout/preview
+
+UX REQUIREMENTS
+- The page preview must look like a real page, not a tiny decorative card
+- At least one substantial page region should be visible at standard desktop width
+- Preview updates should be live and quiet
+- No distracting animation
+- Left and right panes may scroll independently
+- The right pane must not overlap the preview
+- If a block has no meaningful content yet, preview behavior should be sensible and not visually broken
+
+TECHNICAL REQUIREMENTS
+Return before implementation:
+1. exact files you will change
+2. whether the split shell will be reusable later for PDF Editor
+3. whether pane resize will be included now or deferred
+4. how preview rendering will reuse the existing Builder content structure
+5. any production-risk notes
+
+THEN IMPLEMENT ONLY THIS LAYOUT SLICE.
+
+OUTPUT REQUIRED AFTER IMPLEMENTATION
+Return:
+1. root layout decision
+2. exact files changed
+3. how each Builder block type is rendered in preview
+4. screenshots of:
+   - split-screen workspace
+   - live preview with multiple block types
+   - preview updating after a content change
+5. final statement on whether Builder now follows the PlainPath split-screen creation rule

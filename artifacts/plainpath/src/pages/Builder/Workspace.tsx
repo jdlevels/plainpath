@@ -14,6 +14,7 @@ import type {
 } from "@/lib/builderTypes";
 import { CATEGORY_LABELS } from "@/lib/builderConfig";
 import { SectionEditor } from "@/components/builder/SectionEditor";
+import { BuilderPagePreview } from "@/components/builder/BuilderPagePreview";
 
 interface WorkspaceProps {
   docId: string;
@@ -373,54 +374,78 @@ export default function Workspace({ docId }: WorkspaceProps) {
         </div>
       </div>
 
-      {/* Body */}
-      <div className="max-w-5xl mx-auto px-4 py-8 flex gap-8">
-        <SectionNav
-          sections={content.sections}
-          activeId={activeSectionId}
-          onSelect={scrollToSection}
-        />
+      {/* Body — split-screen on lg+, single column below */}
+      <div className="flex">
 
-        <div className="flex-1 min-w-0 space-y-4">
-          {sortedSections.length === 0 && (
-            <div className="rounded-2xl border-2 border-dashed border-border py-20 text-center">
-              <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mx-auto mb-4">
-                <Plus className="w-5 h-5 text-muted-foreground/60" />
+        {/* ── LEFT PANE: live document preview (desktop only) ─────────────── */}
+        <div className="hidden lg:block w-[43%] shrink-0">
+          <div
+            className="sticky overflow-y-auto bg-neutral-100 dark:bg-zinc-900/70 border-r border-border"
+            style={{ top: "7.5rem", height: "calc(100vh - 7.5rem)" }}
+          >
+            {/* Stage with centred white page */}
+            <div className="py-10 px-6 flex justify-center min-h-full">
+              <div
+                className="w-full max-w-[560px] bg-white rounded-[2px] shadow-md"
+                style={{ minHeight: "900px", padding: "60px 56px 80px" }}
+              >
+                <BuilderPagePreview content={content} title={title} />
               </div>
-              <h3 className="font-medium text-foreground mb-1">No sections yet</h3>
-              <p className="text-sm text-muted-foreground mb-5">
-                Add your first section to start building your document.
-              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* ── RIGHT PANE: editor controls ──────────────────────────────────── */}
+        <div className="flex-1 min-w-0">
+
+          {/* Section nav — shown on lg+ in split mode */}
+          <SectionNav
+            sections={content.sections}
+            activeId={activeSectionId}
+            onSelect={scrollToSection}
+          />
+
+          <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
+            {sortedSections.length === 0 && (
+              <div className="rounded-2xl border-2 border-dashed border-border py-20 text-center">
+                <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mx-auto mb-4">
+                  <Plus className="w-5 h-5 text-muted-foreground/60" />
+                </div>
+                <h3 className="font-medium text-foreground mb-1">No sections yet</h3>
+                <p className="text-sm text-muted-foreground mb-5">
+                  Add your first section to start building your document.
+                </p>
+                <button
+                  onClick={addSection}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors"
+                >
+                  <Plus className="w-4 h-4" /> Add first section
+                </button>
+              </div>
+            )}
+
+            {sortedSections.map((section, i) => (
+              <SectionEditor
+                key={section.id}
+                section={section}
+                isFirst={i === 0}
+                isLast={i === sortedSections.length - 1}
+                onChange={(updated) => updateSection(section.id, updated)}
+                onMoveUp={() => moveSection(section.id, "up")}
+                onMoveDown={() => moveSection(section.id, "down")}
+                onDelete={() => deleteSection(section.id)}
+              />
+            ))}
+
+            {sortedSections.length > 0 && (
               <button
                 onClick={addSection}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors"
+                className="w-full flex items-center justify-center gap-2 py-3.5 border-2 border-dashed border-border hover:border-primary/40 rounded-xl text-muted-foreground hover:text-primary transition-colors text-sm font-medium"
               >
-                <Plus className="w-4 h-4" /> Add first section
+                <Plus className="w-4 h-4" /> Add section
               </button>
-            </div>
-          )}
-
-          {sortedSections.map((section, i) => (
-            <SectionEditor
-              key={section.id}
-              section={section}
-              isFirst={i === 0}
-              isLast={i === sortedSections.length - 1}
-              onChange={(updated) => updateSection(section.id, updated)}
-              onMoveUp={() => moveSection(section.id, "up")}
-              onMoveDown={() => moveSection(section.id, "down")}
-              onDelete={() => deleteSection(section.id)}
-            />
-          ))}
-
-          {sortedSections.length > 0 && (
-            <button
-              onClick={addSection}
-              className="w-full flex items-center justify-center gap-2 py-3.5 border-2 border-dashed border-border hover:border-primary/40 rounded-xl text-muted-foreground hover:text-primary transition-colors text-sm font-medium"
-            >
-              <Plus className="w-4 h-4" /> Add section
-            </button>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
