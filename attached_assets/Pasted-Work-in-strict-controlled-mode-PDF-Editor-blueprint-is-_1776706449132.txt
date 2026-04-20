@@ -1,0 +1,76 @@
+Work in strict controlled mode.
+
+PDF Editor blueprint is approved with five locked corrections. Apply these corrections to the implementation plan before starting code.
+
+LOCKED CORRECTIONS
+
+1. V1 source rule
+Lock V1 to fresh-upload PDFs only.
+Do not include My Documents import in V1.
+Do not include Builder direct intake in V1.
+Do not include Redact direct handoff in V1.
+Manual upload only for V1.
+
+2. Autosave semantics
+Do not persist every drag/move/resize frame.
+Use this rule:
+- click/place actions: save immediately
+- typing: debounced save
+- drag/move/resize: local live update during interaction, persist on interaction end (mouse-up / drag-end)
+
+3. Highlight definition
+Lock “highlight” to mean translucent overlay rectangle only.
+It is not text-aware highlighting bound to extracted PDF text.
+
+4. Scroll sync scope
+Do not treat exact left/right synchronized scrolling as a Slice 1 blocker.
+Slice 1 may use independent scrolling.
+Loose visible-page sync can be deferred to a later polish slice.
+
+5. Intake pattern
+PDF Editor must follow the PlainPath intake rule from day one:
+- user uploads/selects PDF
+- selected file card is shown
+- file can be removed/replaced via X/remove control
+- tool waits in a pre-run confirmation state
+- user explicitly clicks “Open in PDF Editor”
+- only then is the session created/opened
+
+NOW START IMPLEMENTATION PLANNING FOR PDF EDITOR SLICE 1 ONLY.
+
+PDF EDITOR SLICE 1 GOAL
+Prove the architecture and workspace shell, not the editing tools.
+
+SLICE 1 MUST INCLUDE
+- PDF Editor route/page shell
+- list page
+- fresh upload flow
+- selected-file card with remove/X
+- explicit “Open in PDF Editor” button
+- session creation record
+- split-screen workspace shell
+- left pane renders original PDF
+- right pane renders same PDF as working copy baseline
+- sticky toolbar with placeholder tool controls only
+- loading and error states
+- desktop split-screen primary
+- responsive mobile/tablet shell fallback
+
+SLICE 1 MUST NOT INCLUDE
+- text overlay editing
+- whiteout/mask placement
+- highlight placement
+- page delete/reorder/rotate
+- export
+- undo/redo
+- My Documents integration
+- Builder integration
+- Redact integration
+
+REQUIRED OUTPUT BEFORE CODE
+Return:
+1. exact files you will create/modify
+2. exact Slice 1 route structure
+3. exact high-level data/entities needed for Slice 1 only
+4. exact desktop vs tablet/mobile shell behavior
+5. exact items intentionally deferred to Slice 2
