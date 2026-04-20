@@ -1,0 +1,86 @@
+Create a design/spec refinement pass for PlainPath’s creation-system UI architecture.
+
+IMPORTANT
+This is a product/UX architecture update only.
+Do not implement new code in this pass.
+Do not start PDF Editor build work yet.
+Do not reopen unrelated Builder debugging.
+This pass is to formally lock a standing product rule into the Builder/PDF Editor design direction.
+
+GOAL
+Define split-screen as a core PlainPath creation-system principle.
+
+PRODUCT RULE TO LOCK
+For any PlainPath tool where a user is creating, editing, or restructuring a document, the default experience should prioritize split-screen visual creation.
+
+Clarification:
+The left side should be a live BLANK document canvas / live page preview, not a “black canvas.”
+The user should be able to see the document being built in real time as they use the builder/editor controls.
+
+WHY THIS MATTERS
+PlainPath should differentiate itself by combining:
+- structured document creation
+- real-time visual page feedback
+- clean professional output
+- enough screen space for actual reading and editing
+
+This should become a signature PlainPath behavior for creation tools.
+
+REQUIRED OUTPUT
+
+1. Creation-system design rule
+Write a formal product rule stating that PlainPath creation/editing tools should default to split-screen whenever the user benefits from seeing the document form in real time.
+
+2. Document Builder refinement
+Define the preferred Builder layout as:
+- left pane: live blank-page document canvas / real page preview
+- right pane: builder controls (sections, blocks, settings)
+- preview updates in real time as content is added/edited
+- page should feel like a real document page, not a decorative preview box
+
+Explain:
+- how this differs from the current Builder workspace
+- why this improves usability for visual creators
+- what should remain structured vs what should remain non-freeform
+
+3. Future PDF Editor alignment
+Define the preferred PDF Editor layout as:
+- left pane: original PDF
+- right pane: editable working copy
+Explain how both tools share the same split-screen product identity while serving different workflows:
+- Builder = structured document creation
+- PDF Editor = page/object editing of an existing PDF
+
+4. Global creation-tool principle
+Propose a PlainPath-wide rule for any future creation/editing tool:
+- show visual output and editing controls side by side when possible
+- preserve enough width/height for real readability
+- separate editing controls from final-page visualization
+- avoid cramped modal editing for document-heavy workflows
+
+5. UX rules and constraints
+Define the rules for the live preview/canvas:
+- blank page should look like a real page/sheet
+- surrounding stage can be dark or neutral, but the page itself should read clearly
+- preview should update on meaningful changes
+- preview should be large enough to be useful
+- controls should not crowd the page preview
+- no unnecessary animation that distracts from document readability
+
+6. Implementation recommendation order
+Recommend how this should be introduced without destabilizing current Builder work:
+- whether to fold into the next Builder refinement slice
+- whether to hold as a V-next UI architecture upgrade
+- how to carry the same principle into the PDF Editor blueprint later
+
+7. Output format
+Return:
+- final PlainPath split-screen creation principle
+- Builder-specific refinement note
+- PDF Editor-specific refinement note
+- recommended rollout order
+- whether this should be treated as a standing product rule going forward
+
+IMPORTANT CONSTRAINT
+Do not confuse this with a full freeform desktop publishing canvas.
+The goal is structured creation with live visual feedback, not turning Builder into a chaotic drag-anywhere editor.
