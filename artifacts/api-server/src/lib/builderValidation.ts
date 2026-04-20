@@ -48,7 +48,7 @@ function isStringOfLength(v: unknown, min: number, max: number): v is string {
 function validateHeadingPayload(p: unknown): string | null {
   if (!p || typeof p !== "object") return "heading payload must be an object";
   const { text, level } = p as Record<string, unknown>;
-  if (!isStringOfLength(text, 1, 300)) return "heading.text must be 1–300 characters";
+  if (!isStringOfLength(text, 0, 300)) return "heading.text must be 0–300 characters";
   if (![1, 2, 3].includes(level as number)) return "heading.level must be 1, 2, or 3";
   return null;
 }
@@ -56,7 +56,7 @@ function validateHeadingPayload(p: unknown): string | null {
 function validateParagraphPayload(p: unknown): string | null {
   if (!p || typeof p !== "object") return "paragraph payload must be an object";
   const { text, marks } = p as Record<string, unknown>;
-  if (!isStringOfLength(text, 1, 10000)) return "paragraph.text must be 1–10,000 characters";
+  if (!isStringOfLength(text, 0, 10000)) return "paragraph.text must be 0–10,000 characters";
 
   if (marks !== undefined) {
     if (!Array.isArray(marks)) return "paragraph.marks must be an array";
@@ -94,8 +94,8 @@ function validateBulletListPayload(p: unknown): string | null {
     return "bullet-list.items must be an array of 1–100 items";
   }
   for (let i = 0; i < items.length; i++) {
-    if (!isStringOfLength(items[i], 1, 2000)) {
-      return `bullet-list.items[${i}] must be a non-empty string of 1–2,000 characters`;
+    if (!isStringOfLength(items[i], 0, 2000)) {
+      return `bullet-list.items[${i}] must be a string of 0–2,000 characters`;
     }
   }
   return null;
@@ -108,8 +108,8 @@ function validateNumberedListPayload(p: unknown): string | null {
     return "numbered-list.items must be an array of 1–100 items";
   }
   for (let i = 0; i < items.length; i++) {
-    if (!isStringOfLength(items[i], 1, 2000)) {
-      return `numbered-list.items[${i}] must be a non-empty string of 1–2,000 characters`;
+    if (!isStringOfLength(items[i], 0, 2000)) {
+      return `numbered-list.items[${i}] must be a string of 0–2,000 characters`;
     }
   }
   if (start !== undefined) {
@@ -131,8 +131,8 @@ function validateChecklistPayload(p: unknown): string | null {
     if (!item || typeof item !== "object") {
       return `checklist.items[${i}] must be an object`;
     }
-    if (!isStringOfLength(item.text, 1, 2000)) {
-      return `checklist.items[${i}].text must be 1–2,000 characters`;
+    if (!isStringOfLength(item.text, 0, 2000)) {
+      return `checklist.items[${i}].text must be 0–2,000 characters`;
     }
     if (typeof item.checked !== "boolean") {
       return `checklist.items[${i}].checked must be a boolean`;
@@ -150,8 +150,8 @@ function validateKeyValuePayload(p: unknown): string | null {
   for (let i = 0; i < pairs.length; i++) {
     const pair = pairs[i] as Record<string, unknown>;
     if (!pair || typeof pair !== "object") return `key-value.pairs[${i}] must be an object`;
-    if (!isStringOfLength(pair.key, 1, 100)) {
-      return `key-value.pairs[${i}].key must be 1–100 characters`;
+    if (!isStringOfLength(pair.key, 0, 100)) {
+      return `key-value.pairs[${i}].key must be 0–100 characters`;
     }
     if (typeof pair.value !== "string" || (pair.value as string).length > 1000) {
       return `key-value.pairs[${i}].value must be a string of 0–1,000 characters`;
@@ -175,7 +175,7 @@ function validateDividerPayload(p: unknown): string | null {
 function validateNotePayload(p: unknown): string | null {
   if (!p || typeof p !== "object") return "note payload must be an object";
   const { text, variant } = p as Record<string, unknown>;
-  if (!isStringOfLength(text, 1, 5000)) return "note.text must be 1–5,000 characters";
+  if (!isStringOfLength(text, 0, 5000)) return "note.text must be 0–5,000 characters";
   if (variant !== undefined && !["info", "warning", "tip"].includes(variant as string)) {
     return 'note.variant must be "info", "warning", or "tip"';
   }
@@ -279,8 +279,8 @@ function validateSection(section: unknown, index: number): string | null {
   if (typeof s.id !== "string" || s.id.trim().length === 0) {
     return `sections[${index}].id must be a non-empty string`;
   }
-  if (!isStringOfLength(s.title, 1, 120)) {
-    return `sections[${index}].title must be 1–120 characters`;
+  if (!isStringOfLength(s.title, 0, 120)) {
+    return `sections[${index}].title must be 0–120 characters`;
   }
   if (typeof s.order !== "number" || !Number.isInteger(s.order) || s.order < 0) {
     return `sections[${index}].order must be a non-negative integer`;
@@ -376,8 +376,8 @@ export function validateUpdateDocument(body: unknown): ValidationError | null {
   }
 
   if (b.title !== undefined) {
-    if (!isNonEmptyString(b.title) || (b.title as string).length > 200) {
-      return { error: "validation_error", field: "title", message: "title must be 1–200 non-whitespace characters" };
+    if (typeof b.title !== "string" || (b.title as string).length > 200) {
+      return { error: "validation_error", field: "title", message: "title must be a string of 0–200 characters" };
     }
   }
 
