@@ -309,7 +309,7 @@ export function PdfSignatureWorkspace({
   }
 
   return (
-    <div className="space-y-4 p-3">
+    <div className="space-y-6 p-6">
       {pages.map((pg, pageIndex) => {
         const pageNum = pageIndex + 1
         const pageFields = fields.filter(f => f.page === pageNum)

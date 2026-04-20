@@ -66,7 +66,7 @@ function StatusBadge({ status }: { status: SignatureStatus }) {
 function LockedGate() {
   const [, setLocation] = useLocation()
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center gap-6 max-w-md mx-auto">
         <div className="w-16 h-16 rounded-2xl bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center">
           <Lock className="w-7 h-7 text-violet-500 dark:text-violet-400" />
@@ -141,7 +141,7 @@ function ListView({
   useEffect(() => { void load() }, [load])
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
@@ -337,7 +337,7 @@ function NewRequestWizard({
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
       <div className="flex items-center gap-3 mb-8">
         <button
@@ -750,7 +750,7 @@ function DetailView({
 
   if (loading) {
     return (
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex justify-center">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8 flex justify-center">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
     )
@@ -758,7 +758,7 @@ function DetailView({
 
   if (error || !request) {
     return (
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <button onClick={onBack} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6">
           <ArrowLeft className="w-4 h-4" /> Back
         </button>
@@ -774,7 +774,7 @@ function DetailView({
   const isDone = ["signed", "declined", "expired", "failed"].includes(request.status)
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
       <div className="flex items-center justify-between mb-8 flex-wrap gap-3">
         <div className="flex items-center gap-3">
@@ -1027,7 +1027,7 @@ function ModePicker({
   onBack: () => void
 }) {
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex items-center gap-3 mb-8">
         <button
           onClick={onBack}
@@ -1115,7 +1115,7 @@ export default function Signature() {
 
   if (loading) {
     return (
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex justify-center pt-24">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8 flex justify-center pt-24">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
     )

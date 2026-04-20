@@ -181,7 +181,7 @@ export default function PrepareAndPlace({ onBack, onSent }: Props) {
 
   if (step === "upload") {
     return (
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center gap-3 mb-8">
           <button
             onClick={onBack}
@@ -325,7 +325,7 @@ export default function PrepareAndPlace({ onBack, onSent }: Props) {
       {/* Main workspace: left = PDF, right = sidebar (stacks on mobile) */}
       <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
         {/* Left: PDF viewer */}
-        <div className="flex-1 min-h-[45vh] md:min-h-0 overflow-y-auto bg-muted/20">
+        <div className="flex-1 min-h-[45vh] md:min-h-0 overflow-y-auto bg-neutral-100 dark:bg-zinc-900/70">
           {pdfFile && (
             <PdfSignatureWorkspace
               pdfFile={pdfFile}
