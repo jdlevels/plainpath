@@ -1,0 +1,61 @@
+Work in strict controlled mode.
+
+The previous response was off-task.
+
+It reported Builder cleanup/verification again instead of fixing the approved PDF Editor /app exposure issue.
+
+Do not continue Builder work.
+Do not audit Builder.
+Do not verify Builder.
+Do not touch Builder files unless you can prove PDF Editor visibility depends on one shared nav/config file.
+Do not expand scope.
+Do not add Slice 2 PDF Editor work.
+
+CURRENT TASK
+Fix PDF Editor visibility and access inside the authenticated /app experience.
+
+USER-REPORTED FACT
+After republish, PDF Editor is still not showing inside /app.
+
+That means Slice 1 is not complete from a product exposure standpoint even if some route code exists.
+
+REQUIRED CHECKS
+1. Verify whether /app/pdf-editor resolves in the live authenticated app
+2. Verify whether PdfEditor route is mounted correctly in App.tsx
+3. Verify whether PDF Editor is missing from:
+   - dashboard tool cards
+   - Tools dropdown/menu
+   - billing/tool access / entitlement UI
+4. Verify whether any feature flag, entitlement rule, or visibility filter is hiding it
+5. Verify whether the route exists but has no app entry point
+6. Verify whether the public/app tool lists are driven by a shared config and whether PDF Editor was omitted there
+
+REQUIRED FIX
+Make PDF Editor visibly accessible inside the authenticated /app.
+
+At minimum after the fix:
+- /app/pdf-editor loads for an entitled user
+- PDF Editor appears in the correct authenticated tool navigation surface
+- PDF Editor appears wherever the app’s major tools are meant to appear
+- if PDF Editor is Pro-gated, the access UI reflects that correctly
+
+DO NOT ADD
+- editing tools
+- export
+- persistence
+- backend/db work
+- new product scope
+- Builder cleanup unrelated to PDF Editor exposure
+
+REQUIRED RESPONSE FORMAT
+Return only:
+
+1. Root cause
+2. Exact files changed
+3. Whether direct route /app/pdf-editor now works
+4. Where PDF Editor now appears in the authenticated app UI
+5. Screenshots showing:
+   - dashboard/app visibility
+   - tools menu visibility
+   - direct /app/pdf-editor page load
+6. Final statement confirming PDF Editor Slice 1 is now truly live inside /app

@@ -492,7 +492,7 @@ export default function PdfEditor() {
 
   const canUse =
     isAdmin ||
-    (entitlements?.toolAccess?.includes("pdf_editor" as never) ?? false)
+    (entitlements?.toolAccess?.includes("pdf-editor") ?? false)
 
   if (loading) {
     return (
