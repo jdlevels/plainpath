@@ -29,7 +29,10 @@ router.get("/documents", requireAuth, async (req: any, res) => {
   try {
     const result = await pool.query(
       `SELECT id, user_id, title, category, status, source, template_id,
-              server_version, latest_snapshot_id, created_at, updated_at
+              server_version, latest_snapshot_id, created_at, updated_at,
+              jsonb_array_length(content->'sections') AS section_count,
+              (SELECT COALESCE(SUM(jsonb_array_length(s->'blocks')), 0)::int
+               FROM jsonb_array_elements(content->'sections') AS s) AS block_count
        FROM builder_documents
        WHERE user_id = $1 AND status != 'archived'
        ORDER BY updated_at DESC`,
@@ -48,6 +51,8 @@ router.get("/documents", requireAuth, async (req: any, res) => {
         latestSnapshotId: row.latest_snapshot_id,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
+        sectionCount: row.section_count ?? 0,
+        blockCount: row.block_count ?? 0,
       })),
     );
   } catch (err) {

@@ -51,7 +51,7 @@ function SectionNav({
     <nav className="w-52 shrink-0 hidden lg:block">
       <div className="sticky top-20 space-y-0.5">
         <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 px-2 mb-2">
-          Sections
+          Sections <span className="font-normal normal-case tracking-normal">({sorted.length})</span>
         </p>
         {sorted.map((s) => (
           <button

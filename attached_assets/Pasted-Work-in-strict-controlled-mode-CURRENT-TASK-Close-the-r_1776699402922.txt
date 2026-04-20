@@ -1,0 +1,76 @@
+Work in strict controlled mode.
+
+CURRENT TASK
+Close the remaining Builder Slice 2 implementation gaps only.
+
+Do not start Slice 3.
+Do not work on split-screen.
+Do not work on PDF Editor.
+Do not touch public demo.
+Do not refactor unrelated Builder code.
+Do not broaden scope.
+
+AUTHORITATIVE SLICE 2 STATUS
+Per the reconciliation report:
+- T001 implemented
+- T002 implemented
+- T003 mostly implemented, one gap remains
+- T004 implemented
+- T005 partially implemented, one gap remains
+- T006 not completed and requires final authenticated sign-off
+
+GOAL
+Finish only the remaining implementation gaps for:
+- T003
+- T005
+
+TASK A — T003 remaining gap
+Add the missing section count signal in the Builder section nav.
+
+Requirement:
+- The section nav should show the number of sections for the current document in the nav area, matching the intended T003 acceptance criteria
+- Keep the current section-name list behavior intact
+- Do not redesign the workspace
+- Do not change Builder layout architecture
+
+TASK B — T005 remaining gap
+Add per-document section/block counts to the Builder document list.
+
+Requirement:
+- Each Builder document card/list item should show:
+  - section count
+  - block count
+- Use the cheapest safe implementation
+- If this requires API metadata, make the smallest additive change only
+- If it can be derived safely without heavy overfetch, do it the simpler way
+- Report which path you chose and why
+
+CONSTRAINTS
+- No new Builder features
+- No version history
+- No draft/final workflow
+- No export
+- No compare/analyze/signature/redact handoffs
+- No template expansion
+- No split-screen implementation
+- No UI redesign outside these two acceptance gaps
+
+REQUIRED OUTPUT
+Return:
+1. Exact files changed
+2. For T003:
+   - what was missing
+   - how it was added
+   - whether it is live in production
+3. For T005:
+   - what was missing
+   - how section/block counts are computed
+   - whether API changes were required
+   - whether it is live in production
+4. Screenshots of:
+   - section nav showing the count signal
+   - Builder list showing section/block counts
+5. Final statement:
+   - whether T003 is now fully complete
+   - whether T005 is now fully complete
+   - whether Slice 2 is now blocked only by T006 authenticated sign-off

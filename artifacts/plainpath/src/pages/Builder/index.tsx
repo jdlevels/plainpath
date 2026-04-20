@@ -134,6 +134,14 @@ export default function BuilderList() {
                   )}
                   <span className="text-muted-foreground/40 text-xs hidden sm:inline">·</span>
                   <span className="text-xs text-muted-foreground/60">
+                    {doc.sectionCount} section{doc.sectionCount !== 1 ? "s" : ""}
+                  </span>
+                  <span className="text-muted-foreground/40 text-xs">·</span>
+                  <span className="text-xs text-muted-foreground/60">
+                    {doc.blockCount} block{doc.blockCount !== 1 ? "s" : ""}
+                  </span>
+                  <span className="text-muted-foreground/40 text-xs hidden sm:inline">·</span>
+                  <span className="text-xs text-muted-foreground/60">
                     Edited {formatDate(doc.updatedAt)}
                   </span>
                 </div>

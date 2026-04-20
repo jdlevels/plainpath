@@ -135,6 +135,8 @@ export interface BuilderDocumentMeta {
   latestSnapshotId?: string | null;
   createdAt: string;
   updatedAt: string;
+  sectionCount: number;
+  blockCount: number;
 }
 
 export interface BuilderDocumentFull extends BuilderDocumentMeta {
