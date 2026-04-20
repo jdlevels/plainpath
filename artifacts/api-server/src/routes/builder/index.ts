@@ -61,7 +61,11 @@ router.get("/documents", requireAuth, async (req: any, res) => {
 
 router.post("/documents", requireAuth, async (req: any, res) => {
   const validationError = validateCreateDocument(req.body);
-  if (validationError) { res.status(422).json(validationError); return; }
+  if (validationError) {
+    console.error("[builder] create validation failed", JSON.stringify({ error: validationError, body: req.body }));
+    res.status(422).json(validationError);
+    return;
+  }
 
   const { title, category, source = "blank", templateId = null, content } = req.body;
 

@@ -122,8 +122,9 @@ export default function BuilderNew() {
         content: createEmptyContent(),
       });
       navigate(`/builder/${doc.id}`);
-    } catch {
-      setSubmitError("Failed to create document. Please try again.");
+    } catch (err: any) {
+      const msg = err?.data?.message ?? err?.message ?? null;
+      setSubmitError(msg && msg !== "Request failed" ? msg : "Failed to create document. Please try again.");
       setSubmitting(false);
     }
   }
@@ -141,8 +142,9 @@ export default function BuilderNew() {
         content: selectedTemplate.content,
       });
       navigate(`/builder/${doc.id}`);
-    } catch {
-      setSubmitError("Failed to create document. Please try again.");
+    } catch (err: any) {
+      const msg = err?.data?.message ?? err?.message ?? null;
+      setSubmitError(msg && msg !== "Request failed" ? msg : "Failed to create document. Please try again.");
       setSubmitting(false);
     }
   }
