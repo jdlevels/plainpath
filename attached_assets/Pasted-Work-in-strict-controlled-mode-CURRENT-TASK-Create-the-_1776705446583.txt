@@ -1,0 +1,147 @@
+Work in strict controlled mode.
+
+CURRENT TASK
+Create the PlainPath PDF Editor blueprint/specification only.
+
+Do not implement code in this pass.
+Do not modify existing tools in this pass.
+Do not start UI code, routes, database tables, or API handlers yet.
+This is an architecture and product-spec pass only.
+
+CONTEXT
+PlainPath now has a locked workspace rule for document-heavy tools:
+
+- document-heavy tools should render a realistic US Letter page surface on desktop when possible
+- pane sizing must prioritize document legibility
+- split-screen alone is not sufficient
+- the document surface must feel comfortably readable and workable, not thumbnail-sized
+- on smaller screens/mobile, preserve page proportions and adapt responsively
+- desktop remains the primary simultaneous split-screen experience
+
+Builder, Redact, and Digital Signature now follow this rule.
+
+PRODUCT REQUIREMENT FOR PDF EDITOR
+PDF Editor must be a true split-screen tool from day one.
+
+Left pane:
+- original PDF
+- read-only reference
+- scrollable
+- visually dominant
+- large enough for real reading and comparison
+
+Right pane:
+- editable working copy / edit controls
+- the place where modifications are applied and managed
+
+The user must never edit blind.
+
+GOAL
+Produce a complete V1 blueprint for PDF Editor that fits the PlainPath workspace standard and does not conflict with existing tools.
+
+REQUIRED OUTPUT
+
+1. PRODUCT DEFINITION
+Define what “PDF Editor” means in V1 for PlainPath.
+Be explicit about:
+- what users can edit
+- what users cannot edit yet
+- what counts as a true PDF editor for this product
+
+2. SPLIT-SCREEN LAYOUT SPEC
+Define:
+- left pane purpose
+- right pane purpose
+- pane width priorities
+- desktop behavior
+- tablet/mobile fallback behavior
+- page scaling / legibility expectations
+- how US Letter proportions are handled
+
+3. V1 EDITING CAPABILITIES
+Specify the exact allowed V1 actions.
+For example, decide clearly whether V1 includes or excludes:
+- text replacement
+- text overlay / text box insertion
+- whiteout/redaction-style masking
+- image placement
+- shape placement
+- page reorder
+- page delete
+- page rotate
+- signature placement
+- highlight / annotation
+- export modified PDF
+
+Do not leave these vague.
+Mark each one as:
+- V1 launch
+- deferred
+- out of scope
+
+4. SOURCE VS WORKING COPY MODEL
+Define the editing model clearly:
+- original PDF stays untouched on the left
+- working copy / modified representation on the right
+- how edits are tracked conceptually
+- whether edits are destructive or layered
+- what gets exported
+
+5. DATA / FILE MODEL DRAFT
+High-level only. No SQL yet.
+Define what entities likely exist for PDF Editor V1.
+For example:
+- source PDF record
+- working copy / edit session
+- edit operations
+- export artifact
+But do not write migrations yet.
+
+6. TOOL RELATIONSHIP RULES
+Define how PDF Editor relates to:
+- Redact
+- Digital Signature
+- My Documents
+- Builder export artifacts
+
+Clarify whether PDF Editor edits:
+- uploaded PDFs only
+- Builder-exported PDFs too
+- Redact outputs
+- Signature-prep PDFs
+or some subset in V1
+
+7. UX RULES
+Define:
+- how the user knows what pane is source vs editable
+- how changes are previewed
+- whether changes update live
+- how undo/redo should work in principle
+- save/autosave expectations
+- export expectations
+
+8. V1 RISK CONTROL
+Identify the biggest technical/product risks for PDF Editor V1 and recommend the safest launch scope.
+
+9. IMPLEMENTATION ORDER
+Provide the recommended build order after the blueprint is approved.
+Use a phased sequence such as:
+- shell/layout
+- document loading
+- edit model
+- save model
+- export
+- polish
+
+10. FINAL RECOMMENDATION
+At the end, give a decisive V1 scope recommendation:
+- what should be included now
+- what should be deferred
+- why this is the correct first release for PlainPath
+
+IMPORTANT RULES
+- No code in this pass
+- No migrations in this pass
+- No vague “maybe” answers
+- Be explicit and decisive
+- PDF Editor must begin from the locked PlainPath split-screen workspace standard, not retrofit later
