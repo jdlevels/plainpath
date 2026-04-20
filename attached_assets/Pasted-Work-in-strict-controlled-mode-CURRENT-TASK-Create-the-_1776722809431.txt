@@ -1,0 +1,211 @@
+Work in strict controlled mode.
+
+CURRENT TASK
+Create the full architecture blueprint for PlainPath Compare Versions only.
+Do not write code yet.
+Do not start implementation.
+Do not touch PDF Editor, Builder, Redact, Contract Review, or any unrelated tool.
+
+PRODUCT POSITION
+Compare Versions is a first-class standalone PlainPath tool.
+It is not a generic diff utility.
+It is a manager/supervisor audit and verification workspace.
+
+CORE USE CASE
+A manager/supervisor uploads:
+1. the original approved document
+2. the revised document returned by an intern, contractor, vendor, or outside company
+
+The system scans both documents using the ORIGINAL as the standard/baseline and shows exactly what changed.
+
+The goal is to let the manager immediately see:
+- what was added
+- what was removed
+- what was changed
+- what moved
+- what changed unexpectedly
+- what may be high-risk
+
+This is especially important for:
+- SOPs
+- manuals
+- policies
+- contracts
+- compliance docs
+- vendor-delivered revisions
+
+LOCKED PRODUCT RULES
+1. Compare Versions is a standalone tool with:
+   - its own card/button in the authenticated app
+   - its own entry in the Tools dropdown
+   - its own public-site explanation
+   - its own demo entry later
+2. The workspace is document-first and split-screen:
+   - left pane = original document
+   - right pane = revised document
+3. Both panes must visibly render the documents, not just abstract text summaries
+4. The comparison starts only when the user explicitly presses a Scan / Compare button
+5. The original document is the baseline/source of truth
+6. Manager notes/checklist must be part of the comparison session
+7. Compare Versions is not PDF Editor:
+   - it does not perform full editing
+   - it verifies changes
+8. It should eventually pair naturally with PDF Editor, but that integration is not part of this blueprint unless explicitly stated
+
+V1 TOOL FLOW
+1. User enters Compare Versions
+2. Upload/select original document
+3. Upload/select revised document
+4. Optional: add manager notes / review checklist
+5. Explicitly press Scan / Compare
+6. System compares both documents
+7. Results appear as:
+   - side-by-side synchronized visual comparison
+   - change summary
+   - changed pages/regions
+   - severity grouping
+   - navigation to each difference
+
+REQUIRED ARCHITECTURE TO DEFINE
+
+A. Intake model
+Define exactly how the user provides:
+- original document
+- revised document
+- manager notes / review checklist
+
+Include:
+- explicit Scan / Compare button
+- X/remove control on each uploaded document before scan
+- pre-run confirmation state before processing starts
+
+B. Accepted document types
+Compare Versions must be planned as not PDF-only.
+Include support strategy for:
+- PDF
+- Word (.docx at minimum in roadmap)
+- text/manual where appropriate
+If V1 is PDF-first, say that explicitly, but the blueprint must preserve Word as a first-class future input.
+
+C. Workspace layout
+Define exact workspace structure:
+- left pane = original
+- center action/status area or top toolbar
+- right pane = revised
+- results panel / summary area
+- manager notes area
+State exact desktop/tablet/mobile behavior.
+
+D. Scanning / comparison model
+Define the comparison layers separately:
+
+1. visual diff
+- added/removed/changed/moved regions
+- page-level and region-level comparison
+
+2. semantic diff
+- meaning changes, not just pixel changes
+- especially useful for policy/contract/SOP language
+
+3. structural diff
+- page count changes
+- heading shifts
+- section moves
+- table changes
+- appendix changes
+- approval/signature/version section changes
+
+E. Severity model
+Define V1/V2 severity grouping such as:
+- High
+- Medium
+- Low
+
+Recommend what belongs in each category:
+- money/date/legal/policy/safety/compliance changes = high
+- rewritten paragraph / moved section / changed table values = medium
+- typo / spacing / visual cleanup = low
+
+F. Manager notes / watchlist
+This is required.
+Define a manager note system that supports both:
+- freeform notes
+- structured watchlist items
+
+Examples:
+- "Check section 4 safety language"
+- "Confirm pricing table updated"
+- "Do not change revision history"
+- "Only section 7 should change"
+
+Also define whether the scan should later support:
+- expected changes
+- unexpected changes
+
+G. Navigation model
+Define exactly how users navigate differences:
+- click issue in summary → both panes jump to matching location
+- changed regions highlight in both panes
+- changed pages filter
+- high-risk only filter
+- unexpected changes only filter later
+
+H. Overlap / grouping model
+Use the grouped-zone logic rather than messy overlapping markers.
+Define:
+- how overlapping changes are grouped
+- how a count badge works
+- how hover/selection maps left↔right
+- how grouped zones differ from raw op rendering
+
+I. Session model
+Define whether Compare Versions should have sessions and saved history.
+At minimum explain:
+- whether comparison sessions persist
+- whether notes persist
+- whether results can be reopened later
+- whether reports are exportable later
+
+J. Relationship to PDF Editor
+Define the intended workflow:
+- PDF Editor = make changes
+- Compare Versions = verify what changed
+- if rejected, user goes back to PDF Editor
+Keep this clean in the product definition.
+
+K. Public/app placement
+Define:
+- authenticated dashboard card/button
+- Tools dropdown entry
+- public-site explanation
+- demo position later
+
+L. Items explicitly deferred
+List what is not in V1, such as:
+- inline editing inside Compare Versions
+- manager approval workflow automation
+- comments/threads
+- semantic risk scoring if deferred
+- exportable final audit report if deferred
+- OCR fallback if deferred
+- Word implementation if deferred from V1 but planned
+
+REQUIRED RESPONSE FORMAT
+Return only:
+
+1. Product definition
+2. Exact user workflow
+3. Exact layout/workspace spec
+4. Exact data/session model
+5. Exact intake model
+6. Exact comparison layers
+7. Exact severity model
+8. Exact manager notes/watchlist model
+9. Exact navigation/highlight/grouping model
+10. Exact placement in app/public site
+11. Exact V1 vs deferred scope
+12. Recommended implementation order for Compare Versions slices
+
+Do not write code yet.
+Do not start building.
+This is a blueprint/spec pass only.

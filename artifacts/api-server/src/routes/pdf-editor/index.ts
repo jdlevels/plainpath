@@ -1,6 +1,7 @@
 // ─── PDF Editor API Routes ─────────────────────────────────────────────────────
 // Slice 2: session CRUD + op persistence
 // Slice 3: export/download (apply ops with pdf-lib, return modified PDF)
+// Slice 4: object storage migration for source PDFs (additive, bytea legacy OK)
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { Router } from "express";
@@ -8,11 +9,16 @@ import multer from "multer";
 import { getAuth } from "@clerk/express";
 import { pool } from "@workspace/db";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
+import {
+  uploadPdf,
+  resolvePdfBytes,
+  isObjectStorageAvailable,
+} from "../../lib/pdfObjectStorage";
 
 const router = Router();
 
 // ─── File size / type limits ──────────────────────────────────────────────────
-// 20 MB cap. PDF-only. Stored in memory as Buffer, then written to bytea.
+// 20 MB cap. PDF-only. Stored in memory as Buffer, then written to GCS or bytea.
 
 const MAX_BYTES = 20 * 1024 * 1024; // 20 MB
 
@@ -41,6 +47,10 @@ function requireAuth(req: any, res: any, next: any) {
 
 // ─── POST /api/pdf-editor/sessions ───────────────────────────────────────────
 // Upload a PDF → create session → return { id, fileName, fileSizeBytes, createdAt }
+//
+// Storage strategy (Slice 4):
+//   If object storage is configured → upload to GCS, store key, pdf_bytes=NULL
+//   Otherwise (fallback)            → store file.buffer in pdf_bytes as before
 
 router.post(
   "/sessions",
@@ -68,12 +78,37 @@ router.post(
         file.originalname ||
         "Untitled.pdf";
 
+      // Generate session id up-front so we can use it as the GCS key
+      const sessionIdResult = await pool.query(
+        `SELECT gen_random_uuid()::text AS id`,
+      );
+      const sessionId: string = sessionIdResult.rows[0].id;
+
+      // ── Object storage path (Slice 4) ─────────────────────────────────────
+      let pdfStorageKey: string | null = null;
+      let pdfBytesValue: Buffer | null = file.buffer;
+
+      if (isObjectStorageAvailable()) {
+        pdfStorageKey = await uploadPdf(req.userId, sessionId, file.buffer);
+        if (pdfStorageKey) {
+          pdfBytesValue = null; // new sessions don't need bytea
+        }
+      }
+
       const result = await pool.query(
         `INSERT INTO pdf_editor_sessions
-           (user_id, file_name, file_size_bytes, pdf_bytes, ops)
-         VALUES ($1, $2, $3, $4, $5)
+           (id, user_id, file_name, file_size_bytes, pdf_bytes, pdf_storage_key, ops)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
          RETURNING id, file_name, file_size_bytes, created_at`,
-        [req.userId, fileName, file.size, file.buffer, JSON.stringify([])],
+        [
+          sessionId,
+          req.userId,
+          fileName,
+          file.size,
+          pdfBytesValue,
+          pdfStorageKey,
+          JSON.stringify([]),
+        ],
       );
 
       const row = result.rows[0];
@@ -153,11 +188,12 @@ router.get("/sessions/:id", requireAuth, async (req: any, res) => {
 
 // ─── GET /api/pdf-editor/sessions/:id/pdf ────────────────────────────────────
 // Stream raw PDF bytes. Content-Type: application/pdf.
+// Supports both legacy bytea sessions and new object-storage sessions.
 
 router.get("/sessions/:id/pdf", requireAuth, async (req: any, res) => {
   try {
     const result = await pool.query(
-      `SELECT file_name, pdf_bytes
+      `SELECT file_name, pdf_bytes, pdf_storage_key
        FROM pdf_editor_sessions
        WHERE id = $1 AND user_id = $2`,
       [req.params.id, req.userId],
@@ -165,13 +201,15 @@ router.get("/sessions/:id/pdf", requireAuth, async (req: any, res) => {
     if (!result.rows.length) {
       return res.status(404).json({ error: "not_found" });
     }
-    const { file_name, pdf_bytes } = result.rows[0];
-    const buf: Buffer = pdf_bytes;
+
+    const row = result.rows[0];
+    const buf = await resolvePdfBytes(row);
+
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Length", buf.length);
     res.setHeader(
       "Content-Disposition",
-      `inline; filename="${encodeURIComponent(file_name)}"`,
+      `inline; filename="${encodeURIComponent(row.file_name)}"`,
     );
     return res.end(buf);
   } catch (err) {
@@ -235,6 +273,7 @@ router.patch(
 // ─── GET /api/pdf-editor/sessions/:id/export ─────────────────────────────────
 // Apply edit ops to the original PDF using pdf-lib and stream the result.
 // Content-Type: application/pdf — triggers browser download.
+// Supports both legacy bytea sessions and new object-storage sessions.
 //
 // Coordinate system:
 //   Ops store fractions (0–1) from top-left.
@@ -247,7 +286,7 @@ router.patch(
 router.get("/sessions/:id/export", requireAuth, async (req: any, res) => {
   try {
     const result = await pool.query(
-      `SELECT file_name, pdf_bytes, ops
+      `SELECT file_name, pdf_bytes, pdf_storage_key, ops
        FROM pdf_editor_sessions
        WHERE id = $1 AND user_id = $2`,
       [req.params.id, req.userId],
@@ -256,9 +295,9 @@ router.get("/sessions/:id/export", requireAuth, async (req: any, res) => {
       return res.status(404).json({ error: "not_found" });
     }
 
-    const { file_name, pdf_bytes, ops } = result.rows[0];
-    const pdfBytes: Buffer = pdf_bytes;
-    const editOps: any[] = Array.isArray(ops) ? ops : [];
+    const row = result.rows[0];
+    const pdfBytes = await resolvePdfBytes(row);
+    const editOps: any[] = Array.isArray(row.ops) ? row.ops : [];
 
     // Load the PDF
     const pdfDoc = await PDFDocument.load(pdfBytes);
@@ -283,7 +322,7 @@ router.get("/sessions/:id/export", requireAuth, async (req: any, res) => {
       const y = (1 - op.y - op.h) * H; // bottom of rectangle
 
       if (op.kind === "mask") {
-        // White solid rectangle — covers underlying content
+        // White solid rectangle — covers underlying content (no editor pattern)
         page.drawRectangle({
           x,
           y,
@@ -335,7 +374,7 @@ router.get("/sessions/:id/export", requireAuth, async (req: any, res) => {
     const exportedBuffer = Buffer.from(exportedBytes);
 
     // Safe ASCII filename for Content-Disposition
-    const safeName = file_name.replace(/[^\w.\-]/g, "_");
+    const safeName = row.file_name.replace(/[^\w.\-]/g, "_");
     const downloadName = safeName.endsWith(".pdf")
       ? safeName.replace(/\.pdf$/, "-edited.pdf")
       : `${safeName}-edited.pdf`;

@@ -150,12 +150,15 @@ function ToolBtn({
 
 // ─── EditOpView ────────────────────────────────────────────────────────────────
 // Renders a single edit op. Handles selection outline + resize handles + text edit.
+// hoveredFromLeft: true when a left-pane indicator group is hovered that includes this op.
 
 function EditOpView({
-  op, selected, activeTool, onMoveStart, onResizeStart, onTextChange, onTextBlur,
+  op, selected, hoveredFromLeft, activeTool,
+  onMoveStart, onResizeStart, onTextChange, onTextBlur,
 }: {
   op: EditOp
   selected: boolean
+  hoveredFromLeft: boolean
   activeTool: ActiveTool
   onMoveStart: (e: React.PointerEvent) => void
   onResizeStart: (e: React.PointerEvent, handle: "nw" | "ne" | "sw" | "se") => void
@@ -180,12 +183,27 @@ function EditOpView({
 
   const selRing = selected
     ? "2px solid #7c3aed"
+    : hoveredFromLeft
+    ? "1.5px solid rgba(124,58,237,0.55)"
     : "1.5px dashed rgba(124,58,237,0.25)"
 
   if (op.kind === "mask") {
+    // Editor-only: subtle diagonal stripe pattern makes white masks visible on
+    // white pages. This is a CSS background only — the export draws a solid
+    // white pdf-lib rectangle with no pattern.
     return (
       <div
-        style={{ ...base, backgroundColor: "white", outline: isSelect ? selRing : "none" }}
+        style={{
+          ...base,
+          background: [
+            "repeating-linear-gradient(",
+            "  45deg,",
+            "  rgba(0,0,0,0.05) 0px, rgba(0,0,0,0.05) 1px,",
+            "  transparent 1px, transparent 7px",
+            "), white",
+          ].join(""),
+          outline: isSelect ? selRing : hoveredFromLeft ? selRing : "none",
+        }}
         onPointerDown={isSelect ? (e) => { e.stopPropagation(); onMoveStart(e) } : undefined}
       >
         {selected && isSelect && handles.map((h) => (
@@ -202,7 +220,7 @@ function EditOpView({
           ...base,
           backgroundColor: op.highlightColor ?? "#fde68a",
           opacity: op.opacity ?? 0.4,
-          outline: isSelect ? selRing : "none",
+          outline: isSelect ? selRing : hoveredFromLeft ? selRing : "none",
         }}
         onPointerDown={isSelect ? (e) => { e.stopPropagation(); onMoveStart(e) } : undefined}
       >
@@ -218,7 +236,7 @@ function EditOpView({
     <div
       style={{
         ...base,
-        outline: isSelect ? selRing : "none",
+        outline: isSelect ? selRing : hoveredFromLeft ? selRing : "none",
         overflow: "hidden",
         backgroundColor: "transparent",
       }}
@@ -294,7 +312,7 @@ function ResizeHandle({
 // ─── EditingCanvas — right pane page overlay ───────────────────────────────────
 
 function EditingCanvas({
-  pageIndex, ops, selectedId, activeTool, draftRect,
+  pageIndex, ops, selectedId, hoveredFromLeftIds, activeTool, draftRect,
   pageRef,
   onOverlayPointerDown,
   onMoveStart, onResizeStart, onTextChange, onTextBlur,
@@ -302,6 +320,7 @@ function EditingCanvas({
   pageIndex: number
   ops: EditOp[]
   selectedId: string | null
+  hoveredFromLeftIds: ReadonlySet<string>
   activeTool: ActiveTool
   draftRect: { x: number; y: number; w: number; h: number; pageIndex: number } | null
   pageRef: (el: HTMLDivElement | null) => void
@@ -331,6 +350,7 @@ function EditingCanvas({
           key={op.id}
           op={op}
           selected={selectedId === op.id}
+          hoveredFromLeft={hoveredFromLeftIds.has(op.id)}
           activeTool={activeTool}
           onMoveStart={(e) => onMoveStart(e, op)}
           onResizeStart={(e, h) => onResizeStart(e, op, h)}
@@ -358,9 +378,207 @@ function EditingCanvas({
   )
 }
 
+// ─── ChangeIndicatorOverlay helpers ───────────────────────────────────────────
+// Derives read-only indicator groups for the left (original) pane from the
+// active ops list. Groups are computed at render time — never stored.
+
+interface IndicatorRect {
+  x: number; y: number; w: number; h: number
+}
+
+interface IndicatorGroup {
+  ops: EditOp[]
+  rect: IndicatorRect
+}
+
+function rectsOverlap(a: IndicatorRect, b: IndicatorRect): boolean {
+  return !(a.x + a.w <= b.x || b.x + b.w <= a.x ||
+           a.y + a.h <= b.y || b.y + b.h <= a.y)
+}
+
+function unionRect(a: IndicatorRect, b: IndicatorRect): IndicatorRect {
+  const x = Math.min(a.x, b.x)
+  const y = Math.min(a.y, b.y)
+  return {
+    x, y,
+    w: Math.max(a.x + a.w, b.x + b.w) - x,
+    h: Math.max(a.y + a.h, b.y + b.h) - y,
+  }
+}
+
+function groupOpsForPage(pageOps: EditOp[]): IndicatorGroup[] {
+  let groups: IndicatorGroup[] = pageOps.map((op) => ({
+    ops: [op],
+    rect: { x: op.x, y: op.y, w: op.w, h: op.h },
+  }))
+
+  let merged = true
+  while (merged) {
+    merged = false
+    outer: for (let i = 0; i < groups.length; i++) {
+      for (let j = i + 1; j < groups.length; j++) {
+        if (rectsOverlap(groups[i].rect, groups[j].rect)) {
+          groups[i] = {
+            ops: [...groups[i].ops, ...groups[j].ops],
+            rect: unionRect(groups[i].rect, groups[j].rect),
+          }
+          groups.splice(j, 1)
+          merged = true
+          break outer
+        }
+      }
+    }
+  }
+  return groups
+}
+
+// Style priority: mask > text > highlight
+function groupStyle(group: IndicatorGroup): React.CSSProperties {
+  const hasMask = group.ops.some((o) => o.kind === "mask")
+  const hasText = group.ops.some((o) => o.kind === "text")
+
+  if (hasMask) {
+    return {
+      backgroundColor: "rgba(50,50,50,0.14)",
+      border: "1.5px dashed rgba(50,50,50,0.4)",
+    }
+  }
+  if (hasText) {
+    return {
+      backgroundColor: "rgba(99,102,241,0.14)",
+      border: "1.5px dashed rgba(99,102,241,0.5)",
+    }
+  }
+  // highlight
+  return {
+    backgroundColor: "rgba(253,230,138,0.45)",
+    border: "1.5px dashed rgba(180,150,30,0.5)",
+  }
+}
+
+// ─── ChangeIndicatorOverlay ────────────────────────────────────────────────────
+// Renders non-destructive read-only indicator badges on the left original pane.
+// Uses the exact same x/y/w/h fractional coordinate model as EditOpView.
+// overlay container = pointer-events: none
+// individual badges = pointer-events: auto (for hover callbacks only)
+
+function ChangeIndicatorOverlay({
+  pageIndex,
+  ops,
+  selectedId,
+  hoveredGroupIds,
+  onGroupHover,
+  onGroupLeave,
+}: {
+  pageIndex: number
+  ops: EditOp[]
+  selectedId: string | null
+  hoveredGroupIds: ReadonlySet<string>
+  onGroupHover: (ids: string[]) => void
+  onGroupLeave: () => void
+}) {
+  const pageOps = ops.filter((o) => (o.pageIndex ?? 0) === pageIndex)
+  if (pageOps.length === 0) return null
+
+  const groups = groupOpsForPage(pageOps)
+
+  return (
+    // Container is pointer-events: none so clicks fall through to the PDF image
+    <div className="absolute inset-0" style={{ pointerEvents: "none" }}>
+      {groups.map((group, gi) => {
+        const { rect } = group
+        const groupOpIds = group.ops.map((o) => o.id)
+
+        // Active when the selected right-pane op belongs to this group
+        const activeFromRight = selectedId !== null && groupOpIds.includes(selectedId)
+        // Active when being hovered from the left
+        const activeFromLeft = groupOpIds.some((id) => hoveredGroupIds.has(id))
+        const isActive = activeFromRight || activeFromLeft
+
+        const baseStyle = groupStyle(group)
+
+        return (
+          <div
+            key={gi}
+            style={{
+              position: "absolute",
+              left: `${rect.x * 100}%`,
+              top: `${rect.y * 100}%`,
+              width: `${rect.w * 100}%`,
+              height: `${rect.h * 100}%`,
+              boxSizing: "border-box",
+              borderRadius: 3,
+              transition: "opacity 0.15s, border-color 0.15s",
+              ...baseStyle,
+              ...(isActive
+                ? {
+                    border: "2px solid rgba(124,58,237,0.75)",
+                    backgroundColor: "rgba(124,58,237,0.12)",
+                  }
+                : {}),
+              // Only the badge itself handles pointer events
+              pointerEvents: "none",
+            }}
+          >
+            {/* Hit-target badge — pointer-events: auto */}
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                pointerEvents: "auto",
+                cursor: "default",
+              }}
+              onMouseEnter={() => onGroupHover(groupOpIds)}
+              onMouseLeave={onGroupLeave}
+            />
+
+            {/* Count badge (shown when group has > 1 op or is active) */}
+            {(group.ops.length > 1 || isActive) && (
+              <span
+                style={{
+                  position: "absolute",
+                  top: 2,
+                  right: 3,
+                  fontSize: 8,
+                  fontWeight: 700,
+                  lineHeight: 1,
+                  letterSpacing: "0.04em",
+                  background: isActive
+                    ? "rgba(124,58,237,0.85)"
+                    : "rgba(0,0,0,0.45)",
+                  color: "white",
+                  borderRadius: 3,
+                  padding: "1.5px 3.5px",
+                  pointerEvents: "none",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {group.ops.length === 1 ? "1 edit" : `${group.ops.length} edits`}
+              </span>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 // ─── OriginalPane ──────────────────────────────────────────────────────────────
 
-function OriginalPane({ pages, loading, failed }: { pages: PageRender[]; loading: boolean; failed: boolean }) {
+function OriginalPane({
+  pages, loading, failed,
+  ops, selectedId, hoveredGroupIds,
+  onGroupHover, onGroupLeave,
+}: {
+  pages: PageRender[]
+  loading: boolean
+  failed: boolean
+  ops: EditOp[]
+  selectedId: string | null
+  hoveredGroupIds: ReadonlySet<string>
+  onGroupHover: (ids: string[]) => void
+  onGroupLeave: () => void
+}) {
   if (loading) return (
     <div className="flex items-center justify-center gap-2 py-20 text-muted-foreground">
       <Loader2 className="w-5 h-5 animate-spin" />
@@ -376,13 +594,25 @@ function OriginalPane({ pages, loading, failed }: { pages: PageRender[]; loading
   return (
     <div className="space-y-6 p-6">
       {pages.map((pg, i) => (
-        <div key={i} className="relative rounded-lg overflow-hidden border border-border/30 shadow-sm bg-white">
+        <div
+          key={i}
+          className="relative rounded-lg overflow-hidden border border-border/30 shadow-sm bg-white"
+        >
           <img
             src={pg.dataUrl}
             alt={`Page ${i + 1}`}
             className="block w-full select-none pointer-events-none"
             draggable={false}
             style={{ aspectRatio: `${pg.w} / ${pg.h}` }}
+          />
+          {/* Mirrored change indicators — same coordinate space as right-pane ops */}
+          <ChangeIndicatorOverlay
+            pageIndex={i}
+            ops={ops}
+            selectedId={selectedId}
+            hoveredGroupIds={hoveredGroupIds}
+            onGroupHover={onGroupHover}
+            onGroupLeave={onGroupLeave}
           />
           {pages.length > 1 && (
             <span className="absolute top-2 right-2 text-[9px] font-mono bg-black/50 text-white px-1.5 py-0.5 rounded pointer-events-none">
@@ -421,6 +651,17 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
 
   // Mobile tab
   const [activeTab, setActiveTab] = useState<"original" | "copy">("original")
+
+  // Left-pane hover sync: set of op IDs in the currently-hovered indicator group
+  const [hoveredFromLeft, setHoveredFromLeft] = useState<ReadonlySet<string>>(new Set())
+
+  const handleGroupHover = useCallback((ids: string[]) => {
+    setHoveredFromLeft(new Set(ids))
+  }, [])
+
+  const handleGroupLeave = useCallback(() => {
+    setHoveredFromLeft(new Set())
+  }, [])
 
   // Refs (stable, no re-render needed)
   const liveOpsRef = useRef<EditOp[]>([])          // always current ops
@@ -999,7 +1240,16 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
               Original · Read only
             </span>
           </div>
-          <OriginalPane pages={pages} loading={pdfLoading} failed={pdfFailed} />
+          <OriginalPane
+            pages={pages}
+            loading={pdfLoading}
+            failed={pdfFailed}
+            ops={ops}
+            selectedId={selectedId}
+            hoveredGroupIds={hoveredFromLeft}
+            onGroupHover={handleGroupHover}
+            onGroupLeave={handleGroupLeave}
+          />
         </div>
 
         {/* Divider */}
@@ -1046,6 +1296,7 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
                     pageIndex={i}
                     ops={ops}
                     selectedId={selectedId}
+                    hoveredFromLeftIds={hoveredFromLeft}
                     activeTool={activeTool}
                     draftRect={draftRect}
                     pageRef={(el) => {
