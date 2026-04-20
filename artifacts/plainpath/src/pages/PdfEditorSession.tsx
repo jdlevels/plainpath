@@ -12,7 +12,7 @@ import * as pdfjsLib from "pdfjs-dist"
 import {
   ArrowLeft, Loader2, AlertCircle, Lock, Layers,
   MousePointer2, Type, Square, Highlighter,
-  Save, CheckCircle2, RefreshCw,
+  Save, CheckCircle2, RefreshCw, Download,
 } from "lucide-react"
 import { useEntitlements } from "@/hooks/useEntitlements"
 import { usePdfEditorApi } from "@/hooks/usePdfEditorApi"
@@ -416,6 +416,9 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
   // Save state
   const [saveState, setSaveState] = useState<SaveState>("idle")
 
+  // Export state
+  const [exportState, setExportState] = useState<"idle" | "exporting" | "error">("idle")
+
   // Mobile tab
   const [activeTab, setActiveTab] = useState<"original" | "copy">("original")
 
@@ -513,6 +516,31 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
       saveTimerRef.current = setTimeout(() => saveNow(opsToSave), delayMs)
     }
   }
+
+  // ── Export ─────────────────────────────────────────────────────────────────
+
+  const handleExport = useCallback(async () => {
+    if (exportState === "exporting") return
+    // Flush any pending saves first so the export reflects the latest ops
+    await saveNow(liveOpsRef.current)
+    setExportState("exporting")
+    try {
+      const blob = await api.exportSession(sessionId)
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      const baseName = (sessionMeta?.fileName ?? "document").replace(/\.pdf$/i, "")
+      a.download = `${baseName}-edited.pdf`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      setExportState("idle")
+    } catch {
+      setExportState("error")
+      setTimeout(() => setExportState("idle"), 4000)
+    }
+  }, [exportState, saveNow, api.exportSession, sessionId, sessionMeta?.fileName])
 
   // Autosave every 60s if unsaved
   useEffect(() => {
@@ -880,7 +908,7 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
           <ToolBtn icon={Highlighter} label="Highlight" active={activeTool === "highlight"} onClick={() => setActiveTool("highlight")} />
         </div>
 
-        {/* Right: save */}
+        {/* Right: save + export */}
         <div className="flex items-center gap-2 flex-shrink-0">
           <SaveIndicator state={saveState} onSave={() => saveNow(liveOpsRef.current)} />
           <button
@@ -906,6 +934,31 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
             ) : (
               <Save className="w-3.5 h-3.5" />
             )}
+          </button>
+
+          {/* Download / Export button */}
+          <button
+            onClick={handleExport}
+            disabled={exportState === "exporting"}
+            title={exportState === "error" ? "Export failed — retry" : "Download edited PDF"}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${
+              exportState === "error"
+                ? "bg-red-50 dark:bg-red-950/30 border-red-300 dark:border-red-700 text-red-700 dark:text-red-300"
+                : exportState === "exporting"
+                ? "border-border/50 text-muted-foreground cursor-not-allowed"
+                : "bg-violet-600 hover:bg-violet-700 border-violet-600 hover:border-violet-700 text-white"
+            }`}
+          >
+            {exportState === "exporting" ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : exportState === "error" ? (
+              <AlertCircle className="w-3.5 h-3.5" />
+            ) : (
+              <Download className="w-3.5 h-3.5" />
+            )}
+            <span className="hidden sm:inline">
+              {exportState === "exporting" ? "Exporting…" : exportState === "error" ? "Failed" : "Download"}
+            </span>
           </button>
         </div>
       </div>

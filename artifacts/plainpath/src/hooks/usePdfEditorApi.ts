@@ -42,5 +42,10 @@ export function usePdfEditorApi() {
         pdfEditorApi.setPageCount(id, pageCount, await token()),
       [token],
     ),
+
+    exportSession: useCallback(
+      async (id: string) => pdfEditorApi.exportSession(id, await token()),
+      [token],
+    ),
   }
 }

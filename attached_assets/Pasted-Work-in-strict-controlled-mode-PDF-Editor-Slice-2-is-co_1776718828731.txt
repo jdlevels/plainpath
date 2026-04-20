@@ -1,0 +1,94 @@
+Work in strict controlled mode.
+
+PDF Editor Slice 2 is complete and verified.
+
+CURRENT TASK
+Implement PDF Editor Slice 3 only: export/download the modified PDF from the current working copy.
+
+Do not expand scope.
+Do not start Compare Versions.
+Do not add page delete/reorder/rotate yet.
+Do not add My Documents integration yet.
+Do not add object-storage migration yet unless export is impossible without it.
+Do not change unrelated tools.
+Do not touch Builder except shared utilities if absolutely required.
+
+LOCKED PRODUCT RULES
+1. Original PDF remains untouched and read-only
+2. Export is generated from the original PDF + active edit ops only
+3. The right pane remains the editable working copy
+4. Export must reflect the current saved working copy state
+5. Visible Save button/icon remains the standard interaction pattern
+6. If unsaved changes exist when user clicks Export, handle that explicitly — do not silently export stale data
+7. Desktop split-screen and large letter-legible workspace rules remain unchanged
+
+SLICE 3 MUST INCLUDE
+
+A. Export capability
+- Add a real “Export PDF” action in the PDF Editor toolbar
+- Generate a downloadable modified PDF from:
+  - original source PDF
+  - current active edit ops
+- Download should produce a real PDF file the user can save locally
+
+B. Export behavior
+- Export must apply only currently active ops
+- Original source PDF is never overwritten
+- Export result should visually match the working copy as closely as V1 allows
+- Text overlays, mask/whiteout rectangles, and highlight rectangles must be included in the export
+
+C. Save/export state coordination
+Define the export behavior explicitly:
+- If state is “saved”, export immediately
+- If state is “unsaved”, first save current ops, then export
+- If state is “saving”, either wait for save completion or block export with a clear message
+- If state is “save failed”, block export and tell the user to save successfully first
+
+D. Export UI states
+Add clear user-visible states:
+- Export ready
+- Exporting
+- Export complete
+- Export failed
+
+E. Session continuity
+- Exporting must not destroy or close the current editing session
+- User stays in the session after export
+- Session remains editable after export
+
+F. Audit/basic metadata
+At minimum, clearly define whether Slice 3 does or does not create any export record.
+If you add an export record, keep it minimal and scoped only to export.
+Do not turn this into My Documents integration.
+
+SLICE 3 MUST NOT INCLUDE
+- page delete
+- page reorder
+- page rotate
+- My Documents integration
+- Compare Versions integration
+- Builder/Redact handoff
+- object storage migration unless strictly necessary
+- in-place PDF text replacement
+- comments/annotations
+- image insertion
+- form editing
+- session archive/delete UX
+
+IMPORTANT IMPLEMENTATION RULES
+- Export must be server-side, not a fake screenshot/PDF print hack
+- Use the simplest reliable method that matches the current non-destructive op model
+- Keep op model consistent with Slice 2
+- Do not refactor the entire editor architecture unless required to make export work
+- If export requires a small refactor to avoid stale save/export state, keep it tightly scoped
+
+REQUIRED RESPONSE BEFORE CODING
+Return first:
+1. exact files you will create/modify
+2. exact backend/API routes needed for export
+3. exact data model changes needed, if any
+4. exact export-state model
+5. exact behavior when user clicks Export while unsaved changes exist
+6. exact items intentionally still deferred to Slice 4
+
+Do not start coding until that plan is returned.

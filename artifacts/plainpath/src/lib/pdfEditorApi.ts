@@ -90,4 +90,18 @@ export const pdfEditorApi = {
     })
     // fire-and-forget; errors here are non-critical
   },
+
+  // Export: apply ops server-side and return the modified PDF as a Blob
+  async exportSession(id: string, token: string | null): Promise<Blob> {
+    const res = await fetch(`/api/pdf-editor/sessions/${id}/export`, {
+      headers: authHeaders(token),
+    })
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}))
+      const err: any = new Error(body?.error || `HTTP ${res.status}`)
+      err.status = res.status
+      throw err
+    }
+    return res.blob()
+  },
 }
