@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import type { ParagraphPayload } from "@/lib/builderTypes";
 
 interface Props {
@@ -9,7 +9,7 @@ interface Props {
 export function ParagraphBlock({ payload, onChange }: Props) {
   const ref = useRef<HTMLTextAreaElement>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const ta = ref.current;
     if (!ta) return;
     ta.style.height = "auto";

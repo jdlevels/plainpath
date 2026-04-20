@@ -40,7 +40,7 @@ function BlockTypeMenu({ onSelect, onClose }: PickerProps) {
   return (
     <div
       ref={ref}
-      className="absolute z-50 bottom-full mb-2 left-0 w-52 rounded-xl border border-border/60 bg-background shadow-lg py-1 overflow-hidden"
+      className="absolute z-[200] top-full mt-2 left-0 w-52 rounded-xl border border-border/60 bg-background shadow-lg py-1 overflow-hidden"
     >
       <p className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">
         Block type

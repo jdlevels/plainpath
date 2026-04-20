@@ -81,7 +81,7 @@ export function TableBlock({ payload, onChange }: Props) {
       </div>
 
       <div className="overflow-x-auto rounded-lg border border-border">
-        <table className="text-sm border-collapse w-full" style={{ minWidth: `${columns.length * MIN_CELL_WIDTH}px` }}>
+        <table className="text-sm border-collapse w-full" style={{ minWidth: `${columns.length * MIN_CELL_WIDTH}px`, tableLayout: "fixed" }}>
           <thead>
             <tr>
               {columns.map((col, c) => (

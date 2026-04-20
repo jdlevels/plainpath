@@ -30,6 +30,7 @@ import Billing from "@/pages/Billing";
 import Upgrade from "@/pages/Upgrade";
 import Signature from "@/pages/Signature";
 import Documents from "@/pages/Documents";
+import PdfEditor from "@/pages/PdfEditor";
 import Methodology from "@/pages/Methodology";
 import BuilderList from "@/pages/Builder/index";
 import BuilderNew from "@/pages/Builder/New";
@@ -245,6 +246,7 @@ function Router() {
             <Route path="/upgrade" component={protect(Upgrade)} />
             <Route path="/signature" component={protect(Signature)} />
             <Route path="/documents" component={protect(Documents)} />
+            <Route path="/pdf-editor" component={protect(PdfEditor)} />
 
             {BUILDER_ENABLED && (
               <>

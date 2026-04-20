@@ -131,12 +131,19 @@ export default function Workspace({ docId }: WorkspaceProps) {
     return () => { cancelled = true; };
   }, [docId, api.getDocument]);
 
+  // Stable dep: only changes when section IDs or count change — avoids re-connecting
+  // the observer on every block edit.
+  const sectionIdKey = content.sections.map((s) => s.id).join(",");
+
   // IntersectionObserver scroll-spy for section nav
   useEffect(() => {
     if (loading || !content.sections.length) return;
 
     observerRef.current?.disconnect();
     intersectingRef.current = new Set();
+
+    // Snapshot sorted sections at setup time for the callback
+    const sortedSnapshot = [...content.sections].sort((a, b) => a.order - b.order);
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -150,8 +157,7 @@ export default function Workspace({ docId }: WorkspaceProps) {
           }
         });
         // Pick the topmost intersecting section
-        const sorted = [...content.sections].sort((a, b) => a.order - b.order);
-        for (const s of sorted) {
+        for (const s of sortedSnapshot) {
           if (intersectingRef.current.has(s.id)) {
             setActiveSectionId(s.id);
             return;
@@ -161,7 +167,7 @@ export default function Workspace({ docId }: WorkspaceProps) {
       { rootMargin: "-80px 0px -60% 0px", threshold: 0 },
     );
 
-    content.sections.forEach((s) => {
+    sortedSnapshot.forEach((s) => {
       const el = document.getElementById(`section-${s.id}`);
       if (el) {
         el.setAttribute("data-section-id", s.id);
@@ -171,7 +177,8 @@ export default function Workspace({ docId }: WorkspaceProps) {
 
     observerRef.current = observer;
     return () => observer.disconnect();
-  }, [loading, content.sections]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, sectionIdKey]);
 
   // Autosave
   const scheduleAutosave = useCallback(
