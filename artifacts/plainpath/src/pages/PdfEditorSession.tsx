@@ -152,7 +152,7 @@ function ToolBtn({
 // Renders a single edit op. Handles selection outline + resize handles + text edit.
 
 function EditOpView({
-  op, selected, activeTool, onMoveStart, onResizeStart, onTextChange,
+  op, selected, activeTool, onMoveStart, onResizeStart, onTextChange, onTextBlur,
 }: {
   op: EditOp
   selected: boolean
@@ -160,6 +160,7 @@ function EditOpView({
   onMoveStart: (e: React.PointerEvent) => void
   onResizeStart: (e: React.PointerEvent, handle: "nw" | "ne" | "sw" | "se") => void
   onTextChange: (text: string) => void
+  onTextBlur?: () => void
 }) {
   const isSelect = activeTool === "select"
   const ptrEvts = isSelect ? "auto" : "none"
@@ -228,6 +229,7 @@ function EditOpView({
           autoFocus
           value={op.text ?? ""}
           onChange={(e) => onTextChange(e.target.value)}
+          onBlur={onTextBlur}
           onPointerDown={(e) => e.stopPropagation()}
           placeholder="Type here…"
           style={{
@@ -295,7 +297,7 @@ function EditingCanvas({
   pageIndex, ops, selectedId, activeTool, draftRect,
   pageRef,
   onOverlayPointerDown,
-  onMoveStart, onResizeStart, onTextChange,
+  onMoveStart, onResizeStart, onTextChange, onTextBlur,
 }: {
   pageIndex: number
   ops: EditOp[]
@@ -307,6 +309,7 @@ function EditingCanvas({
   onMoveStart: (e: React.PointerEvent, op: EditOp) => void
   onResizeStart: (e: React.PointerEvent, op: EditOp, handle: "nw" | "ne" | "sw" | "se") => void
   onTextChange: (opId: string, text: string) => void
+  onTextBlur?: () => void
 }) {
   const pageOps = ops.filter((o) => o.pageIndex === pageIndex)
   const cursorMap: Record<ActiveTool, string> = {
@@ -332,6 +335,7 @@ function EditingCanvas({
           onMoveStart={(e) => onMoveStart(e, op)}
           onResizeStart={(e, h) => onResizeStart(e, op, h)}
           onTextChange={(text) => onTextChange(op.id, text)}
+          onTextBlur={onTextBlur}
         />
       ))}
 
@@ -790,6 +794,16 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
     scheduleSave(newOps, TEXT_DEBOUNCE_MS)
   }
 
+  // Immediate save when the text textarea loses focus — ensures typed content
+  // persists even if the user clicks away before the 800ms debounce fires.
+  function handleTextBlur() {
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current)
+      saveTimerRef.current = null
+    }
+    saveNowRef.current(liveOpsRef.current)
+  }
+
   // ── Entitlement gate ───────────────────────────────────────────────────────
 
   const canUse = isAdmin || (entitlements?.toolAccess?.includes("pdf-editor") ?? false)
@@ -989,6 +1003,7 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
                     onMoveStart={handleMoveStart}
                     onResizeStart={handleResizeStart}
                     onTextChange={handleTextChange}
+                    onTextBlur={handleTextBlur}
                   />
                   {pages.length > 1 && (
                     <span className="absolute top-2 right-2 text-[9px] font-mono bg-black/50 text-white px-1.5 py-0.5 rounded pointer-events-none">

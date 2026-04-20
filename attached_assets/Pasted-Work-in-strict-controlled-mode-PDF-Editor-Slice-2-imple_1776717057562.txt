@@ -1,0 +1,91 @@
+Work in strict controlled mode.
+
+PDF Editor Slice 2 implementation is close, but it is not signed off yet.
+
+CURRENT TASK
+Do a focused live verification pass for PDF Editor Slice 2 only.
+
+Do not expand scope.
+Do not start Slice 3.
+Do not touch unrelated tools.
+Do not do Builder work.
+Do not add new features.
+Only verify and fix blockers if the verification proves a real Slice 2 failure.
+
+SLICE 2 MUST BE VISUALLY VERIFIED IN THE LIVE APP
+
+REQUIRED LIVE CHECKS
+1. Session creation flow
+- upload a PDF
+- create/open a session
+- confirm it appears in the session list
+
+2. Tool visibility
+In the workspace, verify all three tools are visibly present and usable:
+- Text
+- Mask / Whiteout
+- Highlight
+
+3. Save-state UI
+Verify the save-state contract visually:
+- Unsaved state appears after edit
+- Saving state appears when save is in flight
+- Saved state appears after success
+- Save failed state only if a real save failure occurs
+
+4. Mask / whiteout visual proof
+This is the critical blocker from the previous pass.
+You must prove the mask/whiteout tool is visibly working on the rendered PDF.
+Do not rely on DB-only evidence.
+Place the mask over clearly non-white content so the result is visually unambiguous.
+
+5. Reload restoration
+Refresh/reopen the session and prove the working copy restores correctly:
+- text op still present
+- highlight still present
+- mask/whiteout still present
+
+6. Undo / delete
+Verify:
+- delete selected edit works
+- undo restores it
+
+RULES
+- If everything passes, report pass only.
+- If one item fails, fix only that failing Slice 2 item and re-run verification.
+- Do not add export.
+- Do not add page operations.
+- Do not add My Documents integration.
+- Do not add compare/audit features.
+- Do not add Builder/Redact handoff.
+
+REQUIRED RESPONSE FORMAT
+Return only:
+
+1. Pass/fail table for:
+   - session creation
+   - tool visibility
+   - unsaved state
+   - saving state
+   - saved state
+   - mask visual proof
+   - reload restoration
+   - delete
+   - undo
+
+2. Exact screenshots showing:
+   - session list with created session
+   - workspace with all 3 tools visible
+   - unsaved state
+   - saved state
+   - visible mask/whiteout over non-white content
+   - reload/restored session
+
+3. If any fix was required:
+   - root cause
+   - exact files changed
+   - exact fix applied
+
+4. Final statement:
+   - either “PDF Editor Slice 2 is fully verified in live app”
+   - or “PDF Editor Slice 2 still has this blocker: …”
