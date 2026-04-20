@@ -4,7 +4,7 @@ import {
   ArrowRight, ShieldCheck, FileSignature,
   PenLine, FileScan, Scale, EyeOff,
   BookMarked, Clock, ChevronRight, CreditCard,
-  LayoutGrid, GitCompare, Pen,
+  LayoutGrid, GitCompare, Pen, ScanSearch,
 } from "lucide-react"
 import { BUILDER_ENABLED } from "@/lib/builderConfig"
 import { useState, useEffect } from "react"
@@ -113,6 +113,17 @@ const TOOLS = [
     color: "text-purple-500 dark:text-purple-400",
     bg: "bg-purple-50 dark:bg-purple-950/50",
     ring: "hover:border-purple-400/50 hover:shadow-purple-500/10",
+    plan: "pro" as const,
+  },
+  {
+    key: "compare-versions" as const,
+    label: "Audit Document Revisions",
+    desc: "Side-by-side PDF audit workspace — verify exactly what changed between an approved original and a revised copy.",
+    icon: ScanSearch,
+    path: "/compare-versions",
+    color: "text-teal-500 dark:text-teal-400",
+    bg: "bg-teal-50 dark:bg-teal-950/50",
+    ring: "hover:border-teal-400/50 hover:shadow-teal-500/10",
     plan: "pro" as const,
   },
 ]

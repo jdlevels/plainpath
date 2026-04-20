@@ -25,6 +25,8 @@ import ContractBuilder from "@/pages/ContractBuilder";
 import ContractReview from "@/pages/ContractReview";
 import SharedAnalysis from "@/pages/SharedAnalysis";
 import Compare from "@/pages/Compare";
+import CompareVersions from "@/pages/CompareVersions";
+import CompareVersionsSession from "@/pages/CompareVersionsSession";
 import Redact from "@/pages/Redact";
 import Billing from "@/pages/Billing";
 import Upgrade from "@/pages/Upgrade";
@@ -251,6 +253,13 @@ function Router() {
             <Route path="/pdf-editor/:id">
               {(params) => {
                 const C = protect(() => <PdfEditorSession sessionId={params.id!} />)
+                return <C />
+              }}
+            </Route>
+            <Route path="/compare-versions" component={protect(CompareVersions)} />
+            <Route path="/compare-versions/:id">
+              {(params) => {
+                const C = protect(() => <CompareVersionsSession sessionId={params.id!} />)
                 return <C />
               }}
             </Route>

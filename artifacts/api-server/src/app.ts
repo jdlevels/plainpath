@@ -21,6 +21,7 @@ import signatureRoutes from "./routes/signatures/index.js";
 import userDocsRoutes from "./routes/userDocs/index.js";
 import builderRoutes from "./routes/builder/index.js";
 import pdfEditorRoutes from "./routes/pdf-editor/index.js";
+import compareVersionsRoutes from "./routes/compare-versions/index.js";
 import { logger } from "./lib/logger";
 import { initBuilderTemplates } from "@workspace/db";
 
@@ -196,6 +197,7 @@ app.use("/api/signatures", signatureRoutes);
 app.use("/api/user/documents", userDocsRoutes);
 app.use("/api/builder", builderRoutes);
 app.use("/api/pdf-editor", pdfEditorRoutes);
+app.use("/api/compare-versions", compareVersionsRoutes);
 
 // Initialize builder system templates once on first deployment.
 // initBuilderTemplates() runs a single COUNT query and exits immediately if

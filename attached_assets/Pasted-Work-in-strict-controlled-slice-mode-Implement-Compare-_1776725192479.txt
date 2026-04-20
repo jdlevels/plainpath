@@ -1,0 +1,246 @@
+Work in strict controlled-slice mode.
+
+Implement Compare Versions — Slice 1 only.
+Do not implement Slice 2 or beyond.
+Do not widen scope.
+Do not “helpfully” add rendering, diffing, overlays, semantic AI, or summary logic yet.
+
+GOAL
+Build the foundation and intake flow for Compare Versions inside the authenticated app.
+
+APPROVED SCOPE FOR THIS SLICE
+
+1. Database / session foundation
+Create the Compare Versions session table and wire it cleanly.
+
+Create:
+- lib/db/src/schema/compareVersions.ts
+
+Modify:
+- lib/db/src/schema/index.ts
+
+Table name:
+- compare_versions_sessions
+
+Columns:
+- id (uuid PK)
+- user_id (text not null)
+- title (text not null)
+- original_storage_key (text not null)
+- original_file_name (text not null)
+- original_page_count (integer nullable for now if extraction is deferred)
+- revised_storage_key (text not null)
+- revised_file_name (text not null)
+- revised_page_count (integer nullable for now if extraction is deferred)
+- status (text not null default 'pending')
+- diff_result (jsonb nullable)
+- manager_notes (jsonb not null default '[]')
+- scanned_at (timestamptz nullable)
+- created_at
+- updated_at
+
+Allowed statuses in Slice 1:
+- pending
+- error
+
+Do not add scan output yet.
+Do not add severity fields yet.
+Do not add AI fields yet.
+
+2. Backend routes
+Create authenticated Compare Versions API routes.
+
+Create:
+- artifacts/api-server/src/routes/compare-versions/index.ts
+
+Modify:
+- artifacts/api-server/src/app.ts
+
+Reuse the same server-side object-storage wrapper pattern already used by PDF Editor.
+If needed, extend the wrapper, but do not break PDF Editor.
+
+Object paths:
+- compare-versions/{userId}/{sessionId}/original.pdf
+- compare-versions/{userId}/{sessionId}/revised.pdf
+
+Required routes for Slice 1:
+
+POST /api/compare-versions/sessions
+Purpose:
+- accept multipart/form-data
+- originalFile
+- revisedFile
+- optional title
+- optional managerNotes JSON
+- validate both files are PDFs in V1
+- upload both to object storage
+- create session record
+- return created session metadata
+
+GET /api/compare-versions/sessions
+Purpose:
+- list current user’s sessions
+- most recent first
+- return: id, title, status, createdAt, updatedAt, originalFileName, revisedFileName
+
+GET /api/compare-versions/sessions/:id
+Purpose:
+- return one session metadata only
+- no rendering
+- no diff processing
+- include persisted manager_notes
+
+Validation rules:
+- both files required
+- both must be MIME application/pdf
+- reject .docx/.txt/images in V1 with explicit error message
+- max 50 MB per file
+- no silent coercion or conversion
+
+3. Frontend client / types / hook
+Create:
+- artifacts/plainpath/src/lib/compareVersionsTypes.ts
+- artifacts/plainpath/src/lib/compareVersionsApi.ts
+- artifacts/plainpath/src/hooks/useCompareVersionsApi.ts
+
+Define only Slice 1 types:
+- CompareVersionsSessionListItem
+- CompareVersionsSessionDetail
+- CompareVersionsNoteRecord (freeform or watchlist only)
+- CreateCompareVersionsSessionInput
+
+Do not add diff item types yet.
+Do not add severity computation models yet beyond note/watchlist severity tag storage.
+
+4. Compare Versions page and route scaffold
+Create:
+- artifacts/plainpath/src/pages/CompareVersions.tsx
+
+Modify:
+- artifacts/plainpath/src/App.tsx
+
+Routes:
+- /app/compare-versions
+- /app/compare-versions/:sessionId
+
+Behavior at /app/compare-versions:
+Default view = session list with “New Comparison” button.
+
+When user clicks “New Comparison”:
+show intake screen with:
+
+A. Original / Baseline card
+- heading
+- PDF-only upload slot
+- drag-and-drop + choose file
+- if loaded: page-1 thumbnail placeholder OR filename/size card if thumbnail generation is not yet available
+- visible X / Remove control
+
+B. Revised Version card
+- same behavior
+
+C. Manager Notes / Watchlist area
+- collapsed by default
+- freeform notes textarea
+- “+ Add watchlist item”
+- structured row:
+  - text
+  - severity dropdown (High / Medium / Low)
+  - resolved toggle default false
+  - remove X
+- persist this into the session on create
+
+D. Scan button
+- disabled until both valid PDFs are loaded
+- grey when disabled
+- violet when enabled
+- label must be exactly: “Scan Documents”
+
+When user clicks Scan Documents:
+- disable button
+- show inline progress state
+- POST to create session
+- on success navigate to /app/compare-versions/:sessionId
+- on failure show inline error and preserve both file cards + notes
+
+5. Session detail route scaffold only
+At /app/compare-versions/:sessionId for Slice 1:
+Do NOT render documents yet.
+Do NOT build workspace yet.
+
+Render a clean placeholder shell only:
+- back link to My Comparisons
+- session title / filenames
+- status badge
+- note that document rendering begins in Slice 2
+- manager notes summary block (read-only is acceptable in Slice 1)
+- no fake diff UI
+
+This page exists only to prove route scaffold + session reopen work.
+
+6. Authenticated app placement
+Compare Versions must appear inside the authenticated app.
+
+Add / confirm:
+- dashboard tool card
+- Tools dropdown entry
+- pro gating aligned with existing app behavior
+
+If the card/dropdown already exists, do not duplicate — verify and fix only if necessary.
+
+7. Public marketing site
+Do NOT modify the public marketing site in this slice.
+No public card.
+No homepage copy changes.
+No /demo work.
+
+8. Strict non-scope items
+Do NOT implement any of the following in this slice:
+- pdfjs rendering
+- dual-pane workspace
+- visual diff
+- text diff
+- structural diff
+- summary panel
+- severity calculation
+- grouped zones
+- overlays
+- linked navigation
+- AI calls
+- semantic enrichment
+- export
+- PDF Editor handoff
+- Word conversion
+- OCR
+
+9. UI requirements
+Keep styling aligned with current PlainPath workspace standards:
+- dark theme
+- clean card surfaces
+- strong spacing
+- remove/X controls clearly visible
+- document-first feel even though rendering is not built yet
+- mobile-safe stacking for the two intake cards
+
+10. Required completion report
+When done, return:
+1. Exact files created
+2. Exact files modified
+3. DB schema summary
+4. API route summary
+5. Route summary
+6. What Slice 1 now does end-to-end
+7. Explicit statement of what was NOT implemented from Slice 2+
+8. Screenshots of:
+   - empty intake state
+   - both files loaded with remove/X visible
+   - successful created session in My Comparisons list
+   - /app/compare-versions/:sessionId placeholder scaffold
+
+11. Guardrails
+- No unrelated cleanup
+- No changes to PDF Editor unless absolutely required for shared storage reuse
+- No speculative abstractions
+- No silent scope creep
+
+Implement Slice 1 only.

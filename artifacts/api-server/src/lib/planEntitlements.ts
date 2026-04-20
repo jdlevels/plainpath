@@ -23,11 +23,12 @@ export type ToolKey =
   | "signature"
   | "compare"
   | "pdf-editor"
+  | "compare-versions"
 
 /** Which tools each plan can access. This is the canonical feature gate. */
 export const TOOL_ACCESS: Record<PlanKey, ToolKey[]> = {
   starter: ["analyze", "redact"],
-  pro: ["analyze", "trust-check", "contract-review", "build-contract", "redact", "signature", "compare", "pdf-editor"],
+  pro: ["analyze", "trust-check", "contract-review", "build-contract", "redact", "signature", "compare", "pdf-editor", "compare-versions"],
 }
 
 /** True if the given plan can access the given tool. */

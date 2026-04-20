@@ -107,6 +107,24 @@ export async function resolvePdfBytes(row: {
 }
 
 /**
+ * Upload any buffer to object storage at an explicit path.
+ * Returns the stored object path, or null if storage is not configured.
+ * Use this for tools that need non-standard storage paths.
+ */
+export async function uploadObject(
+  objectPath: string,
+  buffer: Buffer,
+  contentType = "application/pdf",
+): Promise<string | null> {
+  const bid = bucketId();
+  if (!bid) return null;
+
+  const file = getStorage().bucket(bid).file(objectPath);
+  await file.save(buffer, { contentType, resumable: false });
+  return objectPath;
+}
+
+/**
  * Delete a stored PDF (best-effort, does not throw on failure).
  * Used when cleaning up a session. No-op if storage is not configured.
  */
