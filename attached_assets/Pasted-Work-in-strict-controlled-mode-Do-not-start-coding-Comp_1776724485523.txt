@@ -1,0 +1,125 @@
+Work in strict controlled mode.
+
+Do not start coding Compare Versions yet.
+This is a blueprint tightening pass only.
+
+The current Compare Versions architecture blueprint is directionally correct, but it is too broad for a safe V1. Tighten it using the locked corrections below.
+
+LOCKED CORRECTIONS
+
+1. Narrow V1 scope
+Do not treat V1 as full visual + semantic + structural + watchlist intelligence all at once.
+V1 must be deterministic-first:
+- intake
+- session creation
+- original + revised file storage
+- dual-pane render
+- page mapping
+- visual diff
+- basic extracted text / structural diff
+- summary panel
+- session reopen
+AI semantic classification moves to a later slice.
+
+2. Replace continuous scroll sync with linked navigation
+Do not hard-lock raw continuous scroll mirroring between panes in V1.
+Use:
+- independent pane scrolling
+- page pairing / linked navigation
+- clicking a diff jumps both panes to matching locations
+- optional active-page sync if needed
+This is safer when documents have different page heights or inserted/removed pages.
+
+3. Use AI only on changed chunks later
+Do not run semantic AI blindly across the whole document pair in V1.
+Blueprint must specify:
+- deterministic extraction + diff first
+- AI semantic enrichment only on changed candidate chunks in a later slice
+
+4. Increase document pane priority
+Compare Versions must follow PlainPath’s document-first workspace rule.
+Revise desktop layout so the two document panes dominate the workspace.
+Do not keep each pane at only ~40% if that makes documents too cramped.
+Target a document-first split more like:
+- left ≈ 47–48%
+- right ≈ 47–48%
+- narrow center gutter / controls
+- summary drawer collapsible and closed by default unless opened
+
+5. Notes panel behavior
+Manager Notes panel must be collapsed by default and must not permanently cover or shrink document panes.
+Notes may open from a right-side rail/button.
+
+6. Severity model
+Severity should be deterministic-first in V1:
+- money/date/legal/policy/safety/compliance changes = High
+- table value changes / section reorder / heading rename = Medium
+- formatting/typos/cosmetic = Low
+AI can refine this later, but V1 must not depend on AI to assign baseline severity.
+
+7. Watchlist matching deferral
+V1 may include:
+- freeform manager notes
+- optional structured watchlist entries
+But automated expected/unexpected matching must be deferred beyond V1.
+
+8. Revised slice order
+Rewrite the implementation plan so it follows this safer order:
+
+Slice 1 — Intake + session foundation
+- uploads
+- remove/X controls
+- notes
+- Scan button
+- session creation
+- storage
+- session list/reopen
+
+Slice 2 — Dual-pane render + page mapping
+- render both PDFs
+- page pairing
+- linked navigation
+- no hard continuous scroll sync
+
+Slice 3 — Deterministic comparison engine
+- visual diff
+- extracted text diff
+- structural signals
+- unified diff_result
+
+Slice 4 — Grouping + severity + filters
+- grouped zones
+- High/Medium/Low filters
+- page filter
+- summary polish
+
+Slice 5 — Semantic AI enrichment
+- AI only on changed chunks
+- explanations / meaning-change classification
+
+Slice 6 — V2 items
+- Word .docx
+- expected/unexpected watchlist matching
+- exportable audit report
+- PDF Editor handoff
+- OCR fallback
+- demo
+
+REQUIRED RESPONSE FORMAT
+Return only:
+
+1. Revised product definition
+2. Revised exact user workflow
+3. Revised intake model
+4. Revised layout/workspace spec
+5. Revised data/session model
+6. Revised deterministic comparison model
+7. Revised severity model
+8. Revised notes/watchlist model
+9. Revised navigation/grouping/highlight model
+10. Revised V1 vs deferred scope
+11. Revised implementation slices
+
+Do not write code.
+Do not implement yet.
+Blueprint tightening pass only.
