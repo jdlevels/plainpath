@@ -1,0 +1,80 @@
+Work in strict controlled mode.
+
+CURRENT TASK
+Refine the Builder split-screen workspace so it meets PlainPath’s large-format document workspace standard.
+
+IMPORTANT
+Do not remove the new split-screen architecture.
+Do not start PDF Editor.
+Do not start broad app-wide redesign.
+Do not add new Builder features.
+Do not add export, versioning, handoffs, or workflow expansion.
+This is a Builder workspace sizing and page-surface refinement pass only.
+
+PRODUCT RULE TO APPLY
+For document-heavy PlainPath tools, the document surface should render at realistic US Letter proportions on desktop when possible. The surrounding workspace must be wide enough that the page is comfortably readable and workable, not thumbnail-sized.
+
+Split-screen alone is not sufficient. Pane sizing must prioritize document legibility.
+
+GOAL
+Upgrade the current Builder split-screen from a baseline implementation into a large-format, document-first workspace.
+
+REQUIRED REFINEMENTS
+
+1. LETTER-SIZE DOCUMENT SURFACE
+- The left preview pane should present the document as a realistic US Letter page surface on desktop
+- Preserve page proportions
+- The page should read like a real document page, not a small preview card
+
+2. DESKTOP WORKSPACE WIDTH
+- Increase usable workspace width so the document pane has more presence
+- The preview pane should not feel compressed
+- Re-evaluate the current 43% split if needed
+- Prioritize document readability over compactness
+
+3. PAGE LEGIBILITY
+- Ensure headings, paragraph text, tables, and lists are comfortably readable at normal desktop widths
+- Avoid tiny type or overly reduced scale
+- The page should support real review, not just visual confirmation
+
+4. STAGE / PAGE RELATIONSHIP
+- Keep a neutral surrounding stage
+- Keep the page itself clearly distinct from the stage
+- Maintain realistic page padding/margins
+
+5. RESPONSIVE BEHAVIOR
+- Desktop: split-screen remains default
+- Tablet/mobile: adapt responsively without breaking usability
+- It is acceptable for smaller screens to collapse to a single-pane or stacked experience if that produces better readability
+- Preserve page proportions when shown on smaller screens
+
+6. NO FREEFORM BEHAVIOR
+- Keep Builder structured
+- Do not introduce drag-anywhere placement
+- Do not make the preview editable
+
+7. NO REGRESSION
+- Preserve current autosave
+- Preserve current Builder flow
+- Preserve current section/block editing behavior
+- Preserve current archive/status behavior
+
+SPECIFIC QUESTIONS TO ANSWER BEFORE/AS PART OF IMPLEMENTATION
+Return:
+1. whether you kept or changed the 43% / flex split
+2. the effective desktop page width of the preview surface
+3. whether the workspace container width was expanded
+4. whether mobile/tablet behavior changed
+5. any low-risk follow-up still recommended for Builder only
+
+OUTPUT REQUIRED
+After implementation, return:
+1. exact files changed
+2. before/after layout summary
+3. final preview-pane sizing decision
+4. screenshots showing:
+   - full Builder workspace on desktop
+   - readable letter-style page surface
+   - page with multiple block types visible
+   - responsive behavior if changed
+5. final statement on whether Builder now meets the large-format document workspace rule
