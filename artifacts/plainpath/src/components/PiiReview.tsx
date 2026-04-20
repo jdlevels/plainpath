@@ -96,8 +96,10 @@ function DocumentPreview({ text, spans }: { text: string; spans: PiiSpanWithStat
           </span>
         )}
       </div>
-      <div className="rounded-xl border border-border/50 bg-muted/20 dark:bg-muted/10 p-4 max-h-[65vh] overflow-y-auto">
-        <p className="text-sm leading-relaxed whitespace-pre-wrap font-mono break-words">
+      <div className="rounded-xl border border-border/40 overflow-hidden">
+        <div className="bg-neutral-100 dark:bg-zinc-900/70 p-4 max-h-[75vh] overflow-y-auto">
+          <div className="bg-white dark:bg-zinc-950 rounded-sm shadow-sm px-8 py-8 min-h-[480px]">
+        <p className="text-[13px] leading-[1.75] whitespace-pre-wrap font-mono break-words text-neutral-900 dark:text-neutral-100">
           {segments.map((seg, i) => {
             if (seg.kind === "text") return <span key={i}>{seg.text}</span>
             const meta = PII_TYPE_META[seg.span.type]
@@ -115,6 +117,8 @@ function DocumentPreview({ text, spans }: { text: string; spans: PiiSpanWithStat
             )
           })}
         </p>
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -220,7 +224,7 @@ function AppliedView({
     <div className="flex flex-col lg:flex-row lg:items-start gap-5">
 
       {/* ── LEFT: Final preview ──────────────────────────────────────────── */}
-      <div className="w-full lg:w-[52%] lg:sticky lg:top-20 lg:max-h-[calc(100vh-120px)] lg:overflow-y-auto space-y-3">
+      <div className="w-full lg:w-[60%] lg:sticky lg:top-20 lg:max-h-[calc(100vh-120px)] lg:overflow-y-auto space-y-3">
         <div className="flex items-center gap-2">
           <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
             {isPdfUpload ? "Redacted PDF Preview" : "Redacted Document"}
@@ -565,7 +569,7 @@ export function PiiReview({
     <div className="flex flex-col lg:flex-row lg:items-start gap-5">
 
       {/* ── LEFT: Document preview (sticky on desktop) ───────────────────── */}
-      <div className="w-full lg:w-[52%] lg:sticky lg:top-20 lg:max-h-[calc(100vh-120px)] lg:overflow-y-auto space-y-3">
+      <div className="w-full lg:w-[60%] lg:sticky lg:top-20 lg:max-h-[calc(100vh-120px)] lg:overflow-y-auto space-y-3">
         <div className="flex items-center gap-2 flex-wrap">
           <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
             {isPdfSource ? "Live PDF Preview" : sourceImageFile ? "Source Document" : "Document Preview"}

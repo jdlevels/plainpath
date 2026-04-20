@@ -1,0 +1,70 @@
+Work in strict controlled mode.
+
+CURRENT TASK
+Refine the Redact Sensitive Info workspace so it meets the same PlainPath large-format document workspace standard now established by Builder.
+
+IMPORTANT
+Do not start PDF Editor.
+Do not change Builder.
+Do not redesign unrelated app layout.
+Do not add new redaction features in this pass.
+Do not broaden scope beyond workspace sizing, pane balance, and document readability.
+
+CONTEXT
+Builder now meets the large-format document workspace rule:
+- realistic letter-style document surface on desktop
+- pane sizing prioritizes document legibility
+- document-heavy tools must not feel thumbnail-sized or cramped
+- mobile/tablet may adapt responsively, but desktop should prioritize simultaneous visibility and usability
+
+GOAL
+Upgrade the Redact workspace so document reading and redaction review feel comfortably workable on desktop.
+
+PRIMARY PROBLEM TO SOLVE
+The current Redact split-screen exists, but the document area still feels too small. Split-screen alone is not sufficient. The document pane must be large enough for real reading and review.
+
+REQUIRED REFINEMENTS
+
+1. DOCUMENT-FIRST PANE PRIORITY
+- Rebalance pane sizing so the document surface has clear priority
+- The document must not feel compressed
+- The redaction controls must remain usable, but not at the expense of document readability
+
+2. LETTER-SCALE DOCUMENT SURFACE
+- Render the document area at a realistic letter-style scale on desktop when possible
+- Preserve proper page proportions
+- Make the document surface feel like the primary work area, not a side preview
+
+3. LARGE-FORMAT WORKSPACE
+- Increase overall usable workspace width if needed
+- Ensure the document pane supports comfortable reading without excessive zooming or squinting
+
+4. CONTROL DENSITY REVIEW
+- Tighten or reorganize redaction controls if needed so they consume less critical reading space
+- Keep editing structured and clear
+
+5. RESPONSIVE BEHAVIOR
+- Desktop: split-screen remains primary
+- Tablet/mobile: adapt responsively if needed to preserve usability
+- No regressions in core redact workflow
+
+6. NO FEATURE EXPANSION
+This pass is NOT for:
+- new redact capabilities
+- OCR changes
+- export changes
+- annotation redesign
+- unrelated UI polish
+
+OUTPUT REQUIRED
+Before/with implementation, return:
+1. exact files changed
+2. current vs proposed pane sizing
+3. whether workspace/container width changed
+4. whether mobile/tablet behavior changed
+5. any low-risk follow-up still recommended for Redact only
+
+After implementation, return:
+1. before/after layout summary
+2. screenshots showing the improved Redact workspace on desktop
+3. final statement on whether Redact now meets the PlainPath large-format document workspace rule

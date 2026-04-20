@@ -514,7 +514,7 @@ export default function Redact() {
   if (nextStepText !== null && pdfCompletionActive && uploadedFile) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="max-w-6xl mx-auto py-6 px-4 space-y-4">
+        <div className="max-w-[1440px] mx-auto py-6 px-4 space-y-4">
 
           {/* Header with back */}
           <div className="flex items-center gap-3">
@@ -541,7 +541,7 @@ export default function Redact() {
           <div className="flex flex-col lg:flex-row lg:items-start gap-5">
 
             {/* LEFT: PDF preview */}
-            <div className="w-full lg:w-[52%] lg:sticky lg:top-20 lg:max-h-[calc(100vh-120px)] lg:overflow-y-auto space-y-2">
+            <div className="w-full lg:w-[60%] lg:sticky lg:top-20 lg:max-h-[calc(100vh-120px)] lg:overflow-y-auto space-y-2">
               <div className="flex items-center gap-2">
                 <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Redacted PDF Preview</p>
                 <span className="text-[9px] text-muted-foreground/50">black boxes = permanently hidden</span>
@@ -785,7 +785,7 @@ export default function Redact() {
   if (activeText !== null) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="max-w-6xl mx-auto py-6 px-4 space-y-4">
+        <div className="max-w-[1440px] mx-auto py-6 px-4 space-y-4">
           {/* Header */}
           <div className="flex items-center gap-3">
             <button
