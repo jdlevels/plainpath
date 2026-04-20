@@ -31,6 +31,7 @@ import Upgrade from "@/pages/Upgrade";
 import Signature from "@/pages/Signature";
 import Documents from "@/pages/Documents";
 import PdfEditor from "@/pages/PdfEditor";
+import PdfEditorSession from "@/pages/PdfEditorSession";
 import Methodology from "@/pages/Methodology";
 import BuilderList from "@/pages/Builder/index";
 import BuilderNew from "@/pages/Builder/New";
@@ -247,6 +248,12 @@ function Router() {
             <Route path="/signature" component={protect(Signature)} />
             <Route path="/documents" component={protect(Documents)} />
             <Route path="/pdf-editor" component={protect(PdfEditor)} />
+            <Route path="/pdf-editor/:id">
+              {(params) => {
+                const C = protect(() => <PdfEditorSession sessionId={params.id!} />)
+                return <C />
+              }}
+            </Route>
 
             {BUILDER_ENABLED && (
               <>

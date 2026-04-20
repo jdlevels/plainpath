@@ -1,3 +1,4 @@
+import "./polyfills"
 import { createRoot } from "react-dom/client";
 import * as Sentry from "@sentry/react";
 import App from "./App";

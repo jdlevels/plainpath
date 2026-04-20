@@ -1,0 +1,97 @@
+Work in strict controlled mode.
+
+PDF Editor Slice 2 plan is approved. Start implementation now.
+
+LOCKED SCOPE
+Implement only the approved Slice 2:
+- text overlay
+- mask/whiteout rectangle
+- highlight rectangle
+- selection / move / resize / delete selected edit
+- visible Save button/icon
+- save states
+- timed autosave
+- undo/redo
+- session persistence
+- load session by /pdf-editor/:id
+- restore working copy on reload
+
+DO NOT ADD
+- export/download PDF
+- page delete/reorder/rotate
+- My Documents integration
+- Builder/Redact handoff
+- exact left/right scroll sync polish
+- image insertion
+- comment threads
+- form editing
+- signature placement
+- true in-place PDF text replacement
+- archive/delete session UX
+- list search/filtering
+
+LOCKED IMPLEMENTATION RULES
+
+1. Editing surface
+- Left pane stays ORIGINAL / read-only
+- Right pane is the only editable working copy
+
+2. Save UX
+- Save button always visible
+- Save states:
+  - idle
+  - unsaved
+  - saving
+  - saved
+  - error ("Save failed")
+- unsaved state visually highlights the Save control
+- explicit Save click persists immediately
+
+3. Save timing
+- click/place new op: immediate save
+- drag/move/resize: save on interaction end only
+- typing: debounced 800ms
+- timed autosave: every 60s if state is unsaved
+
+4. Save-failure behavior
+- preserve all local edits in memory
+- keep Save button enabled
+- allow immediate retry
+- do not discard work
+
+5. Upload/storage
+- store source PDF as bytea/binary, not base64 text
+- validate upload server-side as PDF-only
+- enforce file size limit
+- reject unreadable/invalid uploads with clear error
+
+6. Session list
+If /pdf-editor shows session list, keep it minimal only:
+- title/file name
+- updated time
+- open existing session
+No delete/archive, no search, no filter UX.
+
+7. Page count
+- page_count may be set once after first render/load
+- do not treat it as a general mutable field
+- if using PATCH /page-count, only set when null
+
+8. Undo/redo persistence
+- saved current ops restore on reload
+- undo stack history itself does not persist across reload in Slice 2
+- do not pretend otherwise
+
+REQUIRED OUTPUT AFTER IMPLEMENTATION
+Return:
+1. exact files created/modified
+2. exact DB schema added
+3. exact API routes added
+4. screenshots of:
+   - session upload/create flow
+   - PDF Editor workspace with each of the 3 tools visible
+   - unsaved state
+   - saving/saved state
+   - reload/restored working copy
+5. any TypeScript/build issues encountered
+6. final statement confirming Slice 2 stayed within scope

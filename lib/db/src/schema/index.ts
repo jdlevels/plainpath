@@ -3,3 +3,4 @@ export * from "./userHistory";
 export * from "./teams";
 export * from "./signatures";
 export * from "./builder";
+export * from "./pdfEditor";
