@@ -1,0 +1,295 @@
+PLAINPATH — BUILD BLOCK
+STRIPE LIVE BILLING ACTIVATION / CHECKOUT VERIFICATION PASS
+
+You are working inside the existing PlainPath codebase.
+
+IMPORTANT:
+This is an operational billing activation and verification pass.
+It is NOT a feature-build pass.
+Focus on safely activating live Stripe checkout, validating webhook + entitlement flow, and confirming the in-app paywall/upgrade experience works end-to-end with real production-style billing behavior.
+Do not drift into OCR, Word/docx, UI redesign, new AI features, org/team features, approval workflows, or unrelated refactors.
+
+==================================================
+CONTEXT
+==================================================
+
+PlainPath core product flows are already in strong shape.
+The major remaining soft-launch blocker is live billing activation and verification.
+
+Known status from prior pass:
+- PAYWALL_ENFORCEMENT is restored and active
+- BILLING_ENABLED is true
+- BILLING_MODE is "live"
+- pricing copy is now accurate
+- Upgrade page reflects the correct Pro tool set
+- legal/support metadata is present
+- no QA bypass remains
+
+Known deferred blockers:
+- STRIPE_SECRET_KEY not yet set
+- STRIPE_WEBHOOK_SECRET not yet set
+- live checkout not yet verified end-to-end
+- entitlement update after successful purchase not yet proven live
+
+This pass is about safely bringing live billing to a usable, verified state.
+
+==================================================
+PRIMARY GOALS FOR THIS PASS
+==================================================
+
+T001 — Stripe live config activation audit
+T002 — Checkout session creation verification
+T003 — Webhook / entitlement / post-purchase state verification
+T004 — Upgrade/paywall flow sanity after real billing activation
+
+If a better internal order is needed, use judgment, but stay inside this block only.
+
+==================================================
+EXECUTION RULES
+==================================================
+
+Follow this order exactly:
+1. Inspect current Stripe/billing implementation
+2. Produce a tight activation/verification plan grounded in actual code found
+3. Implement only the smallest necessary operational fixes
+4. Run verification
+5. Provide a structured completion report
+
+Do not start speculative coding before inspection.
+Do not redesign billing architecture.
+Only patch real activation blockers or verification-discovered bugs.
+
+==================================================
+REQUIRED INSPECTION TASK
+==================================================
+
+Before coding, inspect and identify:
+
+A) BILLING CONFIG / STRIPE ENTRY POINTS
+- exact files controlling billing config
+- exact route(s) that create Stripe checkout sessions
+- exact webhook route(s)
+- exact entitlement update path after successful purchase
+- any environment variables required
+- whether current code expects live vs test behavior anywhere else
+- whether there are any TODO guards around webhook verification or entitlement sync
+
+B) USER-FACING BILLING SURFACES
+- Upgrade page
+- pricing cards / CTA buttons
+- lock gates / paywall prompts
+- post-checkout return/cancel routes
+- any subscription/account management links if present
+
+C) OPERATIONAL RISK AREAS
+- missing live secrets
+- webhook signature verification assumptions
+- price IDs or product IDs missing/mismatched
+- checkout success/cancel redirect handling
+- entitlement cache invalidation after purchase
+- stale plan state in UI after successful payment
+- broken upgrade CTA routing
+- unsupported states if checkout succeeds but webhook lags
+- placeholder billing copy still visible
+- accidental test-mode assumptions in live flow
+
+Then produce a concise plan ranking issues by:
+1. launch-blocking severity
+2. user trust impact
+3. implementation risk
+
+Keep the plan tight.
+
+==================================================
+T001 — STRIPE LIVE CONFIG ACTIVATION AUDIT
+==================================================
+
+Goal:
+Make sure live billing can actually function in production.
+
+Required:
+- confirm exactly which Stripe env vars are required
+- confirm whether they are currently missing
+- confirm webhook route is wired for live mode
+- inspect whether live product/price IDs are configured or still placeholder/test values
+- patch only real activation blockers that are low-risk and necessary
+- clearly identify anything that still requires external secret entry rather than code changes
+
+Examples:
+- missing env var reads
+- bad fallback behavior
+- wrong mode assumptions
+- stale test-mode branch
+- missing error handling around checkout creation
+
+Do not hardcode secrets.
+Do not invent new billing systems.
+
+==================================================
+T002 — CHECKOUT SESSION CREATION VERIFICATION
+==================================================
+
+Goal:
+A user clicking Upgrade should successfully enter live Stripe checkout.
+
+Required:
+- verify Upgrade CTA path to checkout session creation
+- verify server route creates a valid Stripe checkout session
+- verify failure state is clean if secrets are missing or Stripe rejects the request
+- verify pricing/plan passed to Stripe matches the actual app plan
+- verify cancel behavior returns the user somewhere sensible
+- verify success return route is coherent
+
+If live secrets are not yet present:
+- identify exactly what is blocking checkout creation
+- patch any non-secret code issues found
+- do not pretend checkout is verified if the environment is not ready
+
+If live secrets are added during the pass:
+- verify actual checkout session creation in-browser
+
+==================================================
+T003 — WEBHOOK / ENTITLEMENT / POST-PURCHASE STATE VERIFICATION
+==================================================
+
+Goal:
+After a successful purchase, the app should reflect the new entitlement correctly.
+
+Required:
+- inspect webhook route and signature verification
+- inspect entitlement update logic
+- inspect any database writes / user subscription state updates
+- inspect cache invalidation or refetch behavior after purchase
+- verify the app reflects Pro access after successful billing event
+- verify paywall/locked tools unlock appropriately after entitlement update
+
+Verification target:
+- success path from Stripe checkout completion
+- webhook received and processed
+- entitlement updated
+- user can access Pro tools without stale lock state
+
+If full live purchase is not feasible in this pass:
+- state exactly what prevented it
+- verify as much as possible with the real configured code path
+- distinguish browser-verified vs code-verified clearly
+
+==================================================
+T004 — UPGRADE / PAYWALL FLOW SANITY AFTER REAL BILLING ACTIVATION
+==================================================
+
+Goal:
+The billing experience should feel coherent once activation is done.
+
+Required:
+- confirm Upgrade page reflects correct plans/tools/pricing
+- confirm lock gates still send users to the right upgrade flow
+- confirm post-purchase state feels intentional
+- confirm user is not stuck in stale access state
+- confirm no misleading billing or access copy remains in touched surfaces
+
+Low-risk cleanup allowed only if directly discovered during verification:
+- broken redirect after checkout
+- stale success/cancel copy
+- weak error copy if checkout creation fails
+- missing “refreshing access” or equivalent state if needed
+
+Do not redesign the pricing page.
+Do not introduce a full billing management portal unless already present and needed.
+
+==================================================
+NON-GOALS / OUT OF SCOPE
+==================================================
+
+Unless absolutely required for compatibility, do NOT include:
+- OCR
+- Word/docx implementation
+- major pricing page redesign
+- full subscription management UI
+- RevenueCat implementation work beyond audit mention
+- new analytics features
+- org/team billing
+- approval workflows
+- unrelated product features
+- infrastructure migration
+
+==================================================
+VERIFICATION REQUIREMENTS
+==================================================
+
+After implementation, run verification and report actual results.
+
+At minimum verify:
+1. required Stripe env vars identified correctly
+2. live billing config is coherent
+3. Upgrade CTA path still works
+4. checkout session creation either:
+   - PASS — browser-verified, or
+   - UNABLE — blocked by missing external secrets/prerequisites
+5. webhook route is correctly wired and verified in code
+6. entitlement update path is verified in code and, if possible, browser/live verified
+7. paywall/upgrade flow remains coherent with billing enabled
+8. no regressions in protected tool access
+9. changed files pass TS/build checks
+
+Use these result categories:
+- PASS — browser-verified
+- PASS — code-verified
+- FIXED — issue found and patched
+- UNABLE — blocked by missing secret / external prerequisite / payment environment requirement
+
+==================================================
+FINAL COMPLETION REPORT FORMAT
+==================================================
+
+When done, provide the report in these exact sections:
+
+1. EXACT FILES CREATED
+- list every created file with full relative path
+
+2. EXACT FILES MODIFIED
+- list every modified file with full relative path
+
+3. BILLING / STRIPE FIXES APPLIED
+- one item per fix
+- include exact file/surface
+- include what was improved and why it matters
+
+4. STRIPE / CHECKOUT / WEBHOOK / ENTITLEMENT AUDIT RESULTS
+- grouped findings
+- clearly mark:
+  - fixed now
+  - acceptable as-is
+  - blocked by external prerequisite
+  - deferred
+
+5. WHAT WORKS END-TO-END
+- concise but specific
+- confirm what is actually verified in the live billing flow
+
+6. GO-LIVE BILLING CHECKLIST
+- concrete operational checklist
+- mark each item:
+  - ready
+  - blocked
+  - deferred
+
+7. WHAT REMAINS DEFERRED
+- list anything intentionally deferred
+- explain why it was deferred
+
+8. VERIFICATION RESULTS
+- checklist of tested flows
+- note PASS / FIXED / UNABLE and any caveats
+
+==================================================
+QUALITY BAR
+==================================================
+
+This is a live billing activation pass.
+Be exact.
+Do not over-claim verification.
+If a secret is missing, say so clearly.
+If checkout works, prove the path.
+If webhook/entitlement is only code-verified, say that explicitly.
+Keep the scope tight, realistic, and launch-oriented.
