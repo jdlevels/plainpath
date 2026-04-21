@@ -8,7 +8,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { getApiBaseUrl } from "@/lib/api";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -43,7 +42,6 @@ type AnalyzeState =
 
 const MAX_FILE_SIZE_MB = 10;
 const MAX_PAGES = 10;
-const ACCEPT_TYPES = ["application/pdf"];
 
 // ─── Usage badge ──────────────────────────────────────────────────────────────
 
@@ -166,13 +164,13 @@ function ResultPanel({ data }: { data: DemoResult }) {
             </p>
             <div className="flex gap-2 flex-wrap">
               <Button size="sm" asChild>
-                <a href="/sign-up">
+                <a href="/app/sign-up">
                   <Sparkles className="w-3.5 h-3.5 mr-1.5" />
                   Create free account
                 </a>
               </Button>
               <Button size="sm" variant="outline" asChild>
-                <a href="/sign-in">
+                <a href="/app/sign-in">
                   <LogIn className="w-3.5 h-3.5 mr-1.5" />
                   Sign in
                 </a>
@@ -198,7 +196,7 @@ export default function DemoAnalyze() {
 
   // Load status on mount
   useEffect(() => {
-    fetch(`${getApiBaseUrl()}/api/demo/status`, { credentials: "include" })
+    fetch("/api/demo/status", { credentials: "include" })
       .then((r) => r.json())
       .then((data: DemoStatus) => setStatus(data))
       .catch(() =>
@@ -212,7 +210,7 @@ export default function DemoAnalyze() {
   // File selection
   function handleFileSelect(file: File) {
     setValidationError(null);
-    if (!ACCEPT_TYPES.includes(file.type)) {
+    if (file.type !== "application/pdf") {
       setValidationError("Only PDF files are accepted for the demo.");
       return;
     }
@@ -247,7 +245,7 @@ export default function DemoAnalyze() {
     formData.append("file", selectedFile);
 
     try {
-      const response = await fetch(`${getApiBaseUrl()}/api/demo/analyze`, {
+      const response = await fetch("/api/demo/analyze", {
         method: "POST",
         body: formData,
         credentials: "include",
@@ -270,7 +268,6 @@ export default function DemoAnalyze() {
         return;
       }
 
-      // Update remaining uses from server response
       setStatus((prev) =>
         prev
           ? { ...prev, remainingUses: data.remainingUses, completedUses: data.completedUses, isExhausted: data.isExhausted }
@@ -285,7 +282,7 @@ export default function DemoAnalyze() {
   const canAnalyze = !!selectedFile && !isExhausted && analyzeState.phase !== "loading";
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 dark:from-slate-950 dark:via-slate-900 dark:to-slate-900 px-4 py-8 md:py-12">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 dark:from-slate-950 dark:via-slate-900 dark:to-slate-900 px-4 py-8 md:py-12">
       <div className="max-w-2xl mx-auto">
 
         {/* Top bar */}
@@ -346,19 +343,19 @@ export default function DemoAnalyze() {
             </p>
             <div className="flex gap-3 justify-center flex-wrap">
               <Button asChild size="sm">
-                <a href="/sign-up">
+                <a href="/app/sign-up">
                   <Sparkles className="w-3.5 h-3.5 mr-1.5" />
                   Create free account
                 </a>
               </Button>
               <Button asChild variant="outline" size="sm">
-                <a href="/sign-in">Sign in</a>
+                <a href="/app/sign-in">Sign in</a>
               </Button>
             </div>
           </motion.div>
         )}
 
-        {/* Upload area — show when not exhausted or no result yet */}
+        {/* Upload area */}
         {(!isExhausted || analyzeState.phase === "idle") && analyzeState.phase !== "result" && (
           <motion.div
             initial={{ opacity: 0, y: 12 }}
@@ -367,7 +364,6 @@ export default function DemoAnalyze() {
             className="mb-5"
           >
             {!selectedFile ? (
-              /* Drop zone */
               <div
                 onDrop={handleDrop}
                 onDragOver={(e) => e.preventDefault()}
@@ -491,7 +487,7 @@ export default function DemoAnalyze() {
           )}
         </AnimatePresence>
 
-        {/* Run another / sign up strip after result */}
+        {/* Run another */}
         {analyzeState.phase === "result" && !analyzeState.data.isExhausted && (
           <motion.div
             initial={{ opacity: 0 }}

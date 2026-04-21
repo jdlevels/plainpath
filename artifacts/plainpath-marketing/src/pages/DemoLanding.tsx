@@ -6,9 +6,7 @@ import {
   GitCompare, Lock, ArrowRight, Sparkles, LogIn, Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { getApiBaseUrl } from "@/lib/api";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -121,17 +119,19 @@ export default function DemoLanding() {
   const [status, setStatus] = useState<DemoStatus | null>(null);
 
   useEffect(() => {
-    fetch(`${getApiBaseUrl()}/api/demo/status`, { credentials: "include" })
+    fetch("/api/demo/status", { credentials: "include" })
       .then((r) => r.json())
       .then((data) => setStatus(data))
-      .catch(() => setStatus({ demoGuestPresent: false, completedUses: 0, remainingUses: 2, isExhausted: false }));
+      .catch(() =>
+        setStatus({ demoGuestPresent: false, completedUses: 0, remainingUses: 2, isExhausted: false }),
+      );
   }, []);
 
   const remaining = status?.remainingUses ?? 2;
   const isExhausted = status?.isExhausted ?? false;
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 dark:from-slate-950 dark:via-slate-900 dark:to-slate-900 px-4 py-10 md:py-16">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 dark:from-slate-950 dark:via-slate-900 dark:to-slate-900 px-4 py-10 md:py-16">
       <div className="max-w-3xl mx-auto">
 
         {/* Header */}
@@ -141,6 +141,13 @@ export default function DemoLanding() {
           transition={{ duration: 0.4 }}
           className="text-center mb-10"
         >
+          {/* Logo back link */}
+          <div className="flex justify-center mb-6">
+            <a href="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+              ← Back to PlainPath
+            </a>
+          </div>
+
           <div className="inline-flex items-center gap-2 bg-primary/10 text-primary rounded-full px-4 py-1.5 text-sm font-medium mb-4">
             <Sparkles className="w-4 h-4" />
             Free Trial — no account needed
@@ -184,10 +191,10 @@ export default function DemoLanding() {
             </p>
             <div className="flex gap-3 justify-center flex-wrap">
               <Button asChild size="sm">
-                <a href="/sign-up">Create free account</a>
+                <a href="/app/sign-up">Create free account</a>
               </Button>
               <Button asChild variant="outline" size="sm">
-                <a href="/sign-in">Sign in</a>
+                <a href="/app/sign-in">Sign in</a>
               </Button>
             </div>
           </motion.div>
@@ -274,13 +281,13 @@ export default function DemoLanding() {
           </div>
           <div className="flex gap-2 shrink-0">
             <Button asChild size="sm">
-              <a href="/sign-up">
+              <a href="/app/sign-up">
                 <Sparkles className="w-3.5 h-3.5 mr-1.5" />
                 Create account
               </a>
             </Button>
             <Button asChild variant="outline" size="sm">
-              <a href="/sign-in">
+              <a href="/app/sign-in">
                 <LogIn className="w-3.5 h-3.5 mr-1.5" />
                 Sign in
               </a>

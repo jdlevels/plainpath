@@ -12,6 +12,8 @@ import Support from "@/pages/Support";
 import ReviewingALease from "@/pages/guides/ReviewingALease";
 import UnderstandingAnNDA from "@/pages/guides/UnderstandingAnNDA";
 import EmploymentContractRedFlags from "@/pages/guides/EmploymentContractRedFlags";
+import DemoLanding from "@/pages/DemoLanding";
+import DemoAnalyze from "@/pages/DemoAnalyze";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +26,9 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      {/* Public demo — free trial, no auth required */}
+      <Route path="/demo/analyze" component={DemoAnalyze} />
+      <Route path="/demo" component={DemoLanding} />
       <Route path="/guides/reviewing-a-lease" component={ReviewingALease} />
       <Route path="/guides/understanding-an-nda" component={UnderstandingAnNDA} />
       <Route path="/guides/employment-contract-red-flags" component={EmploymentContractRedFlags} />

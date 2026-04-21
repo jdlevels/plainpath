@@ -1,0 +1,178 @@
+Work in strict correction-only mode.
+
+Do NOT build any new demo features.
+Do NOT move to the next category.
+Do NOT add more tools to demo.
+Do NOT change the quota logic unless required for routing separation.
+Do NOT touch Compare Versions or PDF Editor in this pass.
+
+We are correcting Category 9 only.
+
+==================================================
+PROBLEM TO FIX
+==================================================
+
+The public demo foundation was implemented under:
+
+- /app/demo
+- /app/demo/analyze
+
+That is incorrect.
+
+Approved architecture requires:
+
+- /demo
+- /demo/analyze
+
+These must be true public routes, outside the authenticated /app experience.
+
+==================================================
+GOAL
+==================================================
+
+Convert the current demo foundation into the approved public structure:
+
+1. Primary public routes must be:
+   - /demo
+   - /demo/analyze
+
+2. Marketing CTA must point to:
+   - /demo
+
+3. Demo pages must NOT live inside /app pathing
+
+4. Demo pages must NOT require auth
+
+5. Demo pages must remain fully connected to the existing server-side quota system:
+   - /api/demo/status
+   - /api/demo/analyze
+
+6. Existing backend quota logic, cookie logic, DB tables, and fingerprint backstop should remain intact unless a small correction is necessary
+
+==================================================
+REQUIRED ROUTING CORRECTION
+==================================================
+
+Frontend/public routes:
+- Move DemoLanding from /app/demo to /demo
+- Move DemoAnalyze from /app/demo/analyze to /demo/analyze
+
+Remove /app/demo and /app/demo/analyze as primary public entrypoints.
+
+If needed for safety/backward compatibility:
+- add lightweight redirects
+  /app/demo -> /demo
+  /app/demo/analyze -> /demo/analyze
+
+But the canonical route must be /demo, not /app/demo.
+
+==================================================
+PUBLIC/PRODUCT SEPARATION RULE
+==================================================
+
+The /demo experience must be clearly separate from the authenticated app.
+
+That means:
+- no dependence on app-only route prefixes
+- no implication that demo is part of logged-in /app workflow
+- no requirement to enter /app to use free tries
+
+If the current page is rendering inside an authenticated app shell or app-specific nav wrapper, fix that.
+Use the existing public/marketing routing layer if one exists.
+
+==================================================
+ROUTE COLLISION CHECK
+==================================================
+
+There is an existing /demo/:id style route in the codebase.
+
+You must resolve any collision cleanly.
+
+Priority:
+1. exact /demo
+2. exact /demo/analyze
+3. legacy dynamic demo routes
+
+If necessary, rename the old dynamic route to avoid long-term conflict.
+Use a clear name like:
+- /product-demo/:id
+or equivalent
+
+Do not leave ambiguous route matching in place.
+
+==================================================
+MARKETING CTA CORRECTION
+==================================================
+
+Update all public “Try it free” / free-trial CTAs so they point to:
+
+- /demo
+
+Not:
+- /app/demo
+- /app/analyze
+
+Keep the supporting copy about 2 free tries.
+
+==================================================
+DO NOT CHANGE
+==================================================
+
+Do not rebuild:
+- demo quota tables
+- demo cookie model
+- fingerprint backstop logic
+- analyze demo limits
+- analyze demo result payload
+
+Only change them if absolutely required to make the public routes function correctly.
+
+==================================================
+REQUIRED VERIFICATION
+==================================================
+
+After the fix, verify all of the following:
+
+1. /demo loads publicly
+2. /demo/analyze loads publicly
+3. No auth required for either page
+4. /api/demo/status still returns working usage state
+5. /api/demo/analyze still works with quota enforcement
+6. Marketing CTA goes to /demo
+7. /app/demo no longer acts as the canonical route
+8. Any old /demo route collision is fully resolved
+
+==================================================
+REQUIRED SCREENSHOTS
+==================================================
+
+Provide actual screenshots for all of the following after the correction:
+
+1. Public marketing page showing CTA -> /demo
+2. /demo landing page
+3. /demo/analyze empty state
+4. file selected state with remove/X visible
+5. first successful run showing remaining uses decreased to 1
+6. second successful run showing remaining uses decreased to 0
+7. exhausted state shown to user
+8. blocked third attempt
+9. proof that /app/demo redirects or is no longer the primary route
+10. proof that /demo and /demo/analyze are the canonical public paths
+
+==================================================
+REQUIRED COMPLETION REPORT
+==================================================
+
+Return:
+
+1. Exact files modified
+2. Exact routes changed
+3. Exact collision fix applied
+4. Exact CTA changes
+5. Whether redirect(s) were added
+6. Whether app shell/public shell changed
+7. Proof that quota logic still works after route move
+8. Screenshot set listed above
+
+Correction scope only.
+Do not move to the next category in this pass.

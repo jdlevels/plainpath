@@ -40,8 +40,6 @@ import BuilderNew from "@/pages/Builder/New";
 import BuilderWorkspace from "@/pages/Builder/Workspace";
 import { BUILDER_ENABLED } from "@/lib/builderConfig";
 import Demo from "@/pages/Demo";
-import DemoLanding from "@/pages/DemoLanding";
-import DemoAnalyze from "@/pages/DemoAnalyze";
 import IrsLetter from "@/pages/guides/IrsLetter";
 import LeaseAgreement from "@/pages/guides/LeaseAgreement";
 import JobOffer from "@/pages/guides/JobOffer";
@@ -225,10 +223,11 @@ function Router() {
             <Route path="/shared/:token">
               {(params) => <SharedAnalysis token={(params as { token: string }).token} />}
             </Route>
-            {/* Public free-trial demo — no auth required */}
-            <Route path="/demo/analyze" component={DemoAnalyze} />
-            <Route path="/demo" component={DemoLanding} />
-            {/* Shared demo documents — unrelated to the trial flow above */}
+            {/* Public free-trial demo — canonical route is /demo on the marketing site.
+                Redirect any /app/demo and /app/demo/analyze visitors there. */}
+            <Route path="/demo/analyze">{() => { window.location.replace("/demo/analyze"); return null; }}</Route>
+            <Route path="/demo">{() => { window.location.replace("/demo"); return null; }}</Route>
+            {/* Shared product demo documents — accessible at /app/demo/:id */}
             <Route path="/demo/:id">
               {(params) => <Demo id={(params as { id: string }).id} />}
             </Route>
