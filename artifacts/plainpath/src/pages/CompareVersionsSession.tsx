@@ -720,6 +720,7 @@ function SummaryPanel({
                   <button
                     onClick={(e) => { e.stopPropagation(); onToggleHandoffSelect(item.id) }}
                     title={isHandoffChecked ? "Remove from handoff selection" : "Add to handoff selection"}
+                    aria-label={isHandoffChecked ? "Remove from handoff selection" : "Add to handoff selection"}
                     className="flex items-center px-2 text-muted-foreground hover:text-teal-600 dark:hover:text-teal-400 flex-shrink-0 transition-colors"
                   >
                     {isHandoffChecked
@@ -780,6 +781,7 @@ function SummaryPanel({
                   <button
                     onClick={(e) => { e.stopPropagation(); onRejectToggle(item.id) }}
                     title={isRejected ? "Un-reject this change" : "Mark as rejected (needs action in PDF Editor)"}
+                    aria-label={isRejected ? "Un-reject this change" : "Mark as rejected"}
                     className={`flex items-center px-1.5 flex-shrink-0 transition-colors ${
                       isRejected
                         ? "text-red-500 hover:text-muted-foreground"
@@ -1353,31 +1355,33 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
   //   review_status === "rejected" are extracted from the current (in-memory) diffItems
   //   and passed as diffIds to createHandoff({ mode: "selected", diffIds: [...] }).
   //   Because diffItems is always kept in sync with the persisted diff_result (loaded
-  //   on mount, updated by polling, saved by handleRejectToggle debounce), this
+  //   on mount, updated by polling, saved by handleRejectToggle), this
   //   correctly reflects the current persisted review state.
 
   function handleRejectToggle(itemId: string) {
-    setDiffItems((prev) => {
-      const next = prev.map((item) => {
-        if (item.id !== itemId) return item
-        return {
-          ...item,
-          review_status: item.review_status === "rejected" ? null : ("rejected" as const),
-        }
-      })
-      // Debounce persist — share the same timer as severity overrides
-      if (reviewSaveTimerRef.current) clearTimeout(reviewSaveTimerRef.current)
-      reviewSaveTimerRef.current = setTimeout(() => {
-        if (!session) return
-        const base = diffResultBase ?? session.diffResult
-        if (!base) return
-        const updated = recomputeStats(next, base)
+    // Compute next state directly so we can persist it immediately.
+    // Reject toggle is a deliberate single action (not rapid-fire input), so no
+    // debounce is needed. Persisting without debounce ensures the status survives
+    // navigation away from the page (debounced saves are cancelled when the
+    // browser page context changes on navigation).
+    const nextItems = diffItems.map((item) => {
+      if (item.id !== itemId) return item
+      return {
+        ...item,
+        review_status: item.review_status === "rejected" ? null : ("rejected" as const),
+      }
+    })
+    setDiffItems(nextItems)
+    // Persist immediately
+    if (session) {
+      const base = diffResultBase ?? session.diffResult
+      if (base) {
+        const updated = recomputeStats(nextItems, base)
         api.patchReview(session.id, updated).catch((err) =>
           console.error("[CompareVersions] reject toggle save failed:", err),
         )
-      }, 800)
-      return next
-    })
+      }
+    }
   }
 
   // ── Export report ──────────────────────────────────────────────────────────

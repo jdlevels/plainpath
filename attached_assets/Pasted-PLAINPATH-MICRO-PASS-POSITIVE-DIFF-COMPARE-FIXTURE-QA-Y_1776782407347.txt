@@ -1,0 +1,174 @@
+PLAINPATH — MICRO PASS
+POSITIVE-DIFF COMPARE FIXTURE QA
+
+You are working inside the existing PlainPath codebase.
+
+IMPORTANT:
+This is a very small, targeted QA micro-pass.
+Do NOT drift into new feature work, redesign, OCR, Word/docx, pricing, marketing, org/team features, or broad refactors.
+The goal is only to verify the positive-diff Compare Versions workflow using documents that actually produce real diffs.
+
+==================================================
+CONTEXT
+==================================================
+
+The last live QA pass successfully verified:
+- Compare Versions route/session creation/rendering
+- Compare Versions → PDF Editor handoff chain
+- PDF Editor split view, save state, export initiation
+- paywall restoration and cleanup
+
+Remaining unverified scenario:
+The prior test documents produced 0 diffs, so these live behaviors were not proven with real diff items:
+- issue row click → canvas focus
+- corrected toggle on actual issues
+- selected handoff with real diff IDs
+- rejected handoff with real diff IDs
+
+This micro-pass exists only to verify those positive-diff behaviors with a safe fixture pair.
+
+==================================================
+PRIMARY GOALS
+==================================================
+
+T001 — Create or identify a reliable positive-diff document pair
+T002 — Run a real Compare Versions session that produces real diff items
+T003 — Verify selected/rejected/all handoff flows with actual diffs
+T004 — Verify PDF Editor issue interactions on actual handed-off issues
+
+==================================================
+EXECUTION RULES
+==================================================
+
+Follow this order exactly:
+1. Identify or create a minimal safe positive-diff fixture pair
+2. Run the live Compare Versions flow with those files
+3. Verify the required behaviors
+4. Patch only if a real bug is found
+5. Re-test the exact affected behavior
+6. Return a structured QA report
+
+Do not start speculative coding first.
+Only patch if a real bug appears.
+
+==================================================
+FIXTURE REQUIREMENTS
+==================================================
+
+Use the safest practical fixture pair.
+
+Preferred approach:
+- same base document
+- small intentional changes between original and revised
+- changes should be easy for the comparison engine to detect, such as:
+  - changed clause wording
+  - added sentence
+  - removed sentence
+  - changed payment number/date
+  - changed heading text
+
+Avoid:
+- entirely different PDFs
+- malformed PDFs
+- scanned-image-only documents if not needed
+- noisy documents that make debugging hard
+
+If a suitable fixture pair already exists in the repo, use it.
+If not, create a tiny QA-only pair and note exactly where it was created.
+Keep the files minimal and safe.
+
+==================================================
+REQUIRED LIVE VERIFICATION
+==================================================
+
+A) Compare Versions positive-diff session
+Verify:
+- route opens
+- both files upload correctly
+- session creates successfully
+- real diff items appear
+- Summary / Selected / Rejected / All tabs behave correctly
+- Summary panel renders real items without crashing
+
+B) Selected handoff
+Verify:
+- select one or more real diff items
+- Open selected in PDF Editor works
+- handoff opens revised document
+- issue panel appears with matching issue count
+- handed-off issues correspond to selected diff set
+
+C) Rejected handoff
+Verify:
+- mark one or more real diff items as rejected
+- Open rejected in PDF Editor works
+- handed-off issue count matches rejected set
+
+D) PDF Editor issue behavior with real issues
+Verify:
+- issue rows appear for handed-off issues
+- clicking issue rows focuses the correct page/zone
+- corrected toggle works on actual issues
+- save/unsaved state reacts correctly
+- autosave/manual save still behave correctly
+- Download PDF/export still initiates correctly
+
+E) All handoff
+Verify:
+- Open all in PDF Editor works with real diff items
+- issue count matches full diff set
+
+==================================================
+PATCH RULES
+==================================================
+
+If a real bug is found:
+- patch the smallest safe fix only
+- no unrelated cleanup
+- re-run the exact affected flow
+- include exact file(s) changed and exact bug/fix mapping
+
+==================================================
+FINAL REPORT FORMAT
+==================================================
+
+Return only these sections:
+
+1. FIXTURE USED
+- exact files used or created
+- short description of the intentional differences
+
+2. BROWSER-VERIFIED POSITIVE-DIFF COMPARE FLOW
+- exact checks performed
+- pass/fail/fixed status
+
+3. BROWSER-VERIFIED HANDOFF FLOWS
+- Selected handoff
+- Rejected handoff
+- All handoff
+- exact outcomes and counts
+
+4. BROWSER-VERIFIED PDF EDITOR ISSUE INTERACTIONS
+- issue row click → focus
+- corrected toggle
+- save/autosave
+- export initiation
+
+5. BUGS FOUND AND FIXED
+- exact bug
+- severity
+- exact file(s) modified
+- exact fix
+- re-test result
+
+6. FINAL MICRO-PASS STATUS
+- clearly state whether positive-diff Compare + CV → PDF Editor issue interactions are now fully live-verified
+
+==================================================
+QUALITY BAR
+==================================================
+
+This is a verification micro-pass.
+Prefer precise truth over broad summary.
+If something fails, fix narrowly and prove it.
+If something cannot be verified, say exactly why.
