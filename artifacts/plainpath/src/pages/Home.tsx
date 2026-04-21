@@ -7,8 +7,8 @@ import {
   LayoutGrid, GitCompare, FileEdit, LayoutTemplate,
 } from "lucide-react"
 import { BUILDER_ENABLED } from "@/lib/builderConfig"
-import { useState, useEffect } from "react"
-import { useUser } from "@clerk/react"
+import { useState, useEffect, type ElementType } from "react"
+import { useUser, useAuth } from "@clerk/react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { useEntitlements } from "@/hooks/useEntitlements"
@@ -18,11 +18,17 @@ import type { SavedAnalysis } from "@/lib/savedAnalyses"
 import { listSignatureRequests, STATUS_LABELS, STATUS_COLORS, type SignatureListItem } from "@/lib/signatureApi"
 import type { SignatureStatus } from "@/lib/signatureApi"
 import { getRecentWork, type LocalRecentItem } from "@/lib/recentWork"
+import { pdfEditorApi } from "@/lib/pdfEditorApi"
+import type { SessionMeta } from "@/lib/pdfEditorTypes"
+import { compareVersionsApi } from "@/lib/compareVersionsApi"
+import type { CVSessionListItem } from "@/lib/compareVersionsTypes"
 
 type RecentItem =
-  | { kind: "analysis"; id: string; title: string; savedAt: string }
-  | { kind: "signature"; id: string; title: string; savedAt: string; status: SignatureStatus; signerName: string }
-  | { kind: "local"; id: string; title: string; savedAt: string; tool: LocalRecentItem["tool"] }
+  | { kind: "analysis";      id: string; title: string; savedAt: string }
+  | { kind: "signature";     id: string; title: string; savedAt: string; status: SignatureStatus; signerName: string }
+  | { kind: "local";         id: string; title: string; savedAt: string; tool: LocalRecentItem["tool"] }
+  | { kind: "pdf-editor";    id: string; title: string; savedAt: string; pageCount?: number; pdfType?: string }
+  | { kind: "compare";       id: string; title: string; savedAt: string; status: string; diffTotal?: number; diffHigh?: number; originalFileName?: string; revisedFileName?: string }
 
 // ─── Tool definitions ─────────────────────────────────────────────────────────
 
@@ -176,6 +182,7 @@ function timeAgo(iso: string): string {
 export default function Home() {
   const [, setLocation] = useLocation()
   const { user } = useUser()
+  const { getToken } = useAuth()
   const { entitlements, isAdmin } = useEntitlements()
   const [recentWork, setRecentWork] = useState<RecentItem[]>([])
   const [recentLoading, setRecentLoading] = useState(true)
@@ -184,15 +191,20 @@ export default function Home() {
   const plan = entitlements?.plan ?? null
   const toolAccess = entitlements?.toolAccess ?? []
 
-  // Load recent work — analyses + signature requests merged by date
+  // Load recent work — analyses + signatures + PDF Editor sessions + Compare sessions + local, merged by date
   useEffect(() => {
     let cancelled = false
     async function load() {
       setRecentLoading(true)
       try {
-        const [cloudAnalyses, cloudSigs] = await Promise.allSettled([
+        // Need Bearer token for session APIs
+        const token = await getToken().catch(() => null)
+
+        const [cloudAnalyses, cloudSigs, pdfSessions, compareSessions] = await Promise.allSettled([
           fetchCloudAnalyses(),
           listSignatureRequests(),
+          pdfEditorApi.listSessions(token),
+          compareVersionsApi.listSessions(token, { archived: false }),
         ])
 
         const analyses: RecentItem[] =
@@ -222,15 +234,46 @@ export default function Home() {
               }))
             : []
 
-        const localWork: RecentItem[] = getRecentWork().map((lw) => ({
-          kind: "local" as const,
-          id: lw.id,
-          title: lw.title,
-          savedAt: lw.savedAt,
-          tool: lw.tool,
-        }))
+        const pdfs: RecentItem[] =
+          pdfSessions.status === "fulfilled"
+            ? pdfSessions.value.map((s: SessionMeta) => ({
+                kind: "pdf-editor" as const,
+                id: s.id,
+                title: s.fileName,
+                savedAt: s.updatedAt,
+                pageCount: s.pageCount ?? undefined,
+                pdfType: s.pdfType !== "unknown" ? s.pdfType : undefined,
+              }))
+            : []
 
-        const merged = [...analyses, ...sigs, ...localWork]
+        const compares: RecentItem[] =
+          compareSessions.status === "fulfilled"
+            ? compareSessions.value.map((s: CVSessionListItem) => ({
+                kind: "compare" as const,
+                id: s.id,
+                title: s.title,
+                savedAt: s.updatedAt,
+                status: s.status,
+                diffTotal: s.diffTotal ?? undefined,
+                diffHigh: s.diffHigh ?? undefined,
+                originalFileName: s.originalFileName,
+                revisedFileName: s.revisedFileName,
+              }))
+            : []
+
+        // Local items — keep "redact" and "contract-builder"; skip "compare" since real sessions supersede
+        const hasRealCompareSessions = compares.length > 0
+        const localWork: RecentItem[] = getRecentWork()
+          .filter(lw => !(hasRealCompareSessions && lw.tool === "compare"))
+          .map((lw) => ({
+            kind: "local" as const,
+            id: lw.id,
+            title: lw.title,
+            savedAt: lw.savedAt,
+            tool: lw.tool,
+          }))
+
+        const merged = [...pdfs, ...compares, ...analyses, ...sigs, ...localWork]
           .sort((a, b) => new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime())
           .slice(0, 6)
 
@@ -399,7 +442,7 @@ export default function Home() {
             </div>
             {recentWork.length > 0 && (
               <button
-                onClick={() => setLocation("/my-analyses")}
+                onClick={() => setLocation("/documents")}
                 className="text-xs text-primary font-semibold hover:underline flex items-center gap-1"
               >
                 View all <ChevronRight className="w-3.5 h-3.5" />
@@ -419,35 +462,92 @@ export default function Home() {
                 <BookMarked className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
                 <p className="text-sm font-medium text-muted-foreground mb-1">No saved work yet</p>
                 <p className="text-xs text-muted-foreground/60 mb-4 max-w-xs mx-auto">
-                  Your saved analyses and documents will appear here once you run your first tool.
+                  Your saved work will appear here once you run your first tool — analyze a document, edit a PDF, or compare two versions.
                 </p>
-                <Button size="sm" variant="outline" onClick={() => setLocation("/analyze")} className="rounded-xl text-xs">
-                  Start with Analyze a Document
-                </Button>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  <Button size="sm" variant="outline" onClick={() => setLocation("/analyze")} className="rounded-xl text-xs">
+                    <FileScan className="w-3 h-3 mr-1" /> Analyze a Document
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setLocation("/pdf-editor")} className="rounded-xl text-xs">
+                    <FileEdit className="w-3 h-3 mr-1" /> PDF Editor
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setLocation("/compare-versions")} className="rounded-xl text-xs">
+                    <GitCompare className="w-3 h-3 mr-1" /> Compare Versions
+                  </Button>
+                </div>
               </div>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {recentWork.map((item, i) => (
                 <motion.div
-                  key={item.id}
+                  key={`${item.kind}-${item.id}`}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}
                 >
-                  {item.kind === "analysis" ? (
+                  {item.kind === "pdf-editor" ? (
                     <Card
-                      className="group border border-border/50 bg-card hover:border-primary/30 hover:shadow-md rounded-2xl cursor-pointer transition-all"
+                      className="group border border-border/50 bg-card hover:border-purple-400/40 hover:shadow-md hover:shadow-purple-500/5 rounded-2xl cursor-pointer transition-all"
+                      onClick={() => setLocation(`/pdf-editor/${item.id}`)}
+                    >
+                      <div className="p-4 flex flex-col gap-1.5">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <FileEdit className="w-3 h-3 text-purple-500 shrink-0" />
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-purple-500/80">PDF Editor</span>
+                          <span className="ml-auto text-[10px] text-muted-foreground">{timeAgo(item.savedAt)}</span>
+                        </div>
+                        <p className="text-sm font-medium text-foreground truncate leading-tight">{item.title}</p>
+                        <div className="flex items-center justify-between mt-0.5">
+                          <p className="text-[11px] text-muted-foreground">
+                            {item.pageCount != null ? `${item.pageCount} page${item.pageCount !== 1 ? "s" : ""}` : "PDF"}
+                            {item.pdfType ? ` · ${item.pdfType}` : ""}
+                          </p>
+                          <span className="text-[11px] font-semibold text-purple-500 group-hover:underline">Continue editing →</span>
+                        </div>
+                      </div>
+                    </Card>
+                  ) : item.kind === "compare" ? (
+                    <Card
+                      className="group border border-border/50 bg-card hover:border-teal-400/40 hover:shadow-md hover:shadow-teal-500/5 rounded-2xl cursor-pointer transition-all"
+                      onClick={() => setLocation(`/compare-versions/${item.id}`)}
+                    >
+                      <div className="p-4 flex flex-col gap-1.5">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <GitCompare className="w-3 h-3 text-teal-500 shrink-0" />
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-teal-500/80">Compare Versions</span>
+                          <span className="ml-auto text-[10px] text-muted-foreground">{timeAgo(item.savedAt)}</span>
+                        </div>
+                        <p className="text-sm font-medium text-foreground truncate leading-tight">{item.title}</p>
+                        <div className="flex items-center justify-between mt-0.5">
+                          <p className="text-[11px] text-muted-foreground">
+                            {item.diffTotal != null ? (
+                              <>
+                                {item.diffTotal} diff{item.diffTotal !== 1 ? "s" : ""}
+                                {item.diffHigh != null && item.diffHigh > 0 && (
+                                  <span className="text-red-500 font-medium"> · {item.diffHigh} high</span>
+                                )}
+                              </>
+                            ) : item.status === "scanning" ? "Scanning…" : "Complete"}
+                          </p>
+                          <span className="text-[11px] font-semibold text-teal-600 group-hover:underline">Open comparison →</span>
+                        </div>
+                      </div>
+                    </Card>
+                  ) : item.kind === "analysis" ? (
+                    <Card
+                      className="group border border-border/50 bg-card hover:border-blue-400/30 hover:shadow-md rounded-2xl cursor-pointer transition-all"
                       onClick={() => setLocation("/my-analyses")}
                     >
-                      <div className="p-4">
-                        <div className="flex items-start gap-2.5">
-                          <FileScan className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground truncate">{item.title}</p>
-                            <p className="text-xs text-muted-foreground mt-0.5">{timeAgo(item.savedAt)}</p>
-                          </div>
-                          <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0 group-hover:text-primary/60 transition-colors mt-0.5" />
+                      <div className="p-4 flex flex-col gap-1.5">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <FileScan className="w-3 h-3 text-blue-500 shrink-0" />
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-blue-500/80">Analyze</span>
+                          <span className="ml-auto text-[10px] text-muted-foreground">{timeAgo(item.savedAt)}</span>
+                        </div>
+                        <p className="text-sm font-medium text-foreground truncate leading-tight">{item.title}</p>
+                        <div className="flex items-center justify-end mt-0.5">
+                          <span className="text-[11px] font-semibold text-blue-500 group-hover:underline">View analysis →</span>
                         </div>
                       </div>
                     </Card>
@@ -456,43 +556,41 @@ export default function Home() {
                       className="group border border-border/50 bg-card hover:border-violet-400/40 hover:shadow-md rounded-2xl cursor-pointer transition-all"
                       onClick={() => setLocation("/signature")}
                     >
-                      <div className="p-4">
-                        <div className="flex items-start gap-2.5">
-                          <FileSignature className="w-4 h-4 text-violet-500 dark:text-violet-400 mt-0.5 shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground truncate">{item.title}</p>
-                            <p className="text-xs text-muted-foreground mt-0.5 truncate">→ {item.signerName}</p>
-                          </div>
-                          <span className={`text-[9px] font-bold uppercase tracking-wider border rounded-full px-1.5 py-0.5 flex-shrink-0 ${STATUS_COLORS[item.status]}`}>
+                      <div className="p-4 flex flex-col gap-1.5">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <FileSignature className="w-3 h-3 text-violet-500 shrink-0" />
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-violet-500/80">Signature</span>
+                          <span className={`ml-auto text-[9px] font-bold uppercase tracking-wider border rounded-full px-1.5 py-0.5 ${STATUS_COLORS[item.status]}`}>
                             {STATUS_LABELS[item.status]}
                           </span>
                         </div>
+                        <p className="text-sm font-medium text-foreground truncate leading-tight">{item.title}</p>
+                        <p className="text-[11px] text-muted-foreground truncate">→ {item.signerName}</p>
                       </div>
                     </Card>
                   ) : (
                     (() => {
-                      const localMeta = {
-                        "redact":           { icon: EyeOff,     color: "text-violet-400",  href: "/redact",           label: "Redacted" },
-                        "contract-builder": { icon: PenLine,    color: "text-emerald-400", href: "/build-contract",   label: "Draft" },
-                        "compare":          { icon: GitCompare, color: "text-teal-400",    href: "/compare-versions", label: "Compare" },
+                      const localMeta: Record<string, { icon: ElementType; color: string; href: string; toolLabel: string; cta: string }> = {
+                        "redact":           { icon: EyeOff,     color: "text-violet-400",  href: "/redact",         toolLabel: "Redact",          cta: "Open tool →" },
+                        "contract-builder": { icon: PenLine,    color: "text-emerald-400", href: "/build-contract", toolLabel: "Document Builder", cta: "Continue building →" },
+                        "compare":          { icon: GitCompare, color: "text-teal-400",    href: "/compare-versions", toolLabel: "Compare",       cta: "Open tool →" },
                       }
-                      const meta = localMeta[item.tool]
+                      const meta = localMeta[item.tool] ?? localMeta["redact"]
                       const Icon = meta.icon
                       return (
                         <Card
                           className="group border border-border/50 bg-card hover:border-border hover:shadow-md rounded-2xl cursor-pointer transition-all"
                           onClick={() => setLocation(meta.href)}
                         >
-                          <div className="p-4">
-                            <div className="flex items-start gap-2.5">
-                              <Icon className={`w-4 h-4 ${meta.color} mt-0.5 shrink-0`} />
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-foreground truncate">{item.title}</p>
-                                <p className="text-xs text-muted-foreground mt-0.5">{timeAgo(item.savedAt)}</p>
-                              </div>
-                              <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground/50 shrink-0">
-                                {meta.label}
-                              </span>
+                          <div className="p-4 flex flex-col gap-1.5">
+                            <div className="flex items-center gap-1.5 mb-0.5">
+                              <Icon className={`w-3 h-3 ${meta.color} shrink-0`} />
+                              <span className={`text-[10px] font-bold uppercase tracking-widest ${meta.color} opacity-80`}>{meta.toolLabel}</span>
+                              <span className="ml-auto text-[10px] text-muted-foreground">{timeAgo(item.savedAt)}</span>
+                            </div>
+                            <p className="text-sm font-medium text-foreground truncate leading-tight">{item.title}</p>
+                            <div className="flex items-center justify-end mt-0.5">
+                              <span className={`text-[11px] font-semibold ${meta.color} group-hover:underline`}>{meta.cta}</span>
                             </div>
                           </div>
                         </Card>

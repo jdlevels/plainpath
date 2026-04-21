@@ -1,0 +1,255 @@
+PLAINPATH — NEXT BUILD BLOCK
+DASHBOARD / RECENT WORK / CROSS-SURFACE CONTINUATION PASS
+
+You are working inside the existing PlainPath codebase.
+
+IMPORTANT:
+This is a focused product-completion pass for dashboard usability and work resumption.
+Do NOT drift into Stripe/billing, PDF platform expansion, OCR, Compare Versions engine work, or marketing redesign.
+Do NOT broaden scope into unrelated tool logic unless required for compatibility.
+
+==================================================
+GOAL
+==================================================
+
+Turn the authenticated dashboard and Recent Work into a true resume-work hub.
+
+Users should be able to:
+- immediately understand what they last worked on
+- continue the correct saved item with one click
+- distinguish analysis results from editable sessions
+- see meaningful recent activity across tools
+- trust the dashboard as the fastest place to resume work
+
+This is a completion pass, not a homepage redesign.
+
+==================================================
+PRIMARY TASKS
+==================================================
+
+T001 — Inspect current dashboard / Recent Work architecture
+T002 — Improve Recent Work data coverage and prioritization
+T003 — Add tool-correct continue/open actions
+T004 — Improve metadata, labels, status, and empty-state clarity
+T005 — Final polish of cross-surface continuity between Dashboard, My Documents, and My Analyses
+
+If a better internal order is needed, use judgment, but stay inside this block only.
+
+==================================================
+EXECUTION ORDER
+==================================================
+
+Follow this order exactly:
+1. inspect current codebase
+2. produce a tight implementation plan grounded in what actually exists
+3. implement only the highest-value dashboard/recent-work improvements
+4. run verification
+5. provide the structured completion report
+
+Do not start broad coding before inspection.
+
+==================================================
+INSPECTION REQUIREMENTS
+==================================================
+
+Before coding, inspect and identify:
+
+A) DASHBOARD
+- exact route/page/component powering the authenticated home/dashboard
+- how Recent Work is sourced today
+- whether it currently pulls only analyses, only documents, or a partial mix
+- how demo cards, tool cards, and plan/support cards are composed
+
+B) RECENT WORK
+- current data source(s)
+- sort logic / recency logic
+- what item types are included or excluded
+- whether PDF Editor sessions and Compare sessions are absent, partial, or poorly represented
+- whether Document Builder drafts/results are represented clearly
+- whether Trust Check / Analyze / Contract Review results are represented clearly
+
+C) CROSS-SURFACE RELATIONSHIP
+- how Dashboard Recent Work overlaps with My Documents and My Analyses
+- whether the current "View all" / "See more" destination is correct
+- whether cross-surface naming is inconsistent
+- whether resume/open labels are generic or misleading
+
+D) PRODUCT GAPS
+- weak session identity
+- missing tool icons / badges / labels
+- missing “continue editing” vs “view result” distinction
+- poor empty state
+- no saved-work counts or mixed-type clarity
+- dashboard not surfacing the best recent item types
+
+Then produce a concise ranked plan.
+
+==================================================
+T001 — DASHBOARD / RECENT WORK INSPECTION
+==================================================
+
+Goal:
+Ground the work in the real dashboard architecture.
+
+Required:
+- identify exact files/routes/components involved
+- identify the current Recent Work item shape
+- identify the smallest clean changes that produce the largest usability gain
+- determine whether the dashboard should remain a mixed hub or route users outward more aggressively
+
+Do not speculate. Use the real codebase.
+
+==================================================
+T002 — RECENT WORK DATA COVERAGE AND PRIORITIZATION
+==================================================
+
+Goal:
+Recent Work should reflect the real product, not just a subset.
+
+Add or improve support for the highest-value recent item types, where they exist in current storage:
+- Analyze results
+- Trust Check results
+- Contract Review results if persisted
+- Document Builder drafts/results if applicable
+- PDF Editor sessions
+- Compare Versions sessions
+
+Requirements:
+- inspect current data fetching and extend only where architecturally clean
+- do not duplicate the full My Documents / My Analyses pages inside Dashboard
+- surface a concise, high-signal recent list
+- prefer newest meaningful items first
+- do not let one weak data source suppress the whole section
+
+If needed, use Promise.allSettled-style aggregation so one failing source does not blank the section.
+
+==================================================
+T003 — TOOL-CORRECT CONTINUE / OPEN ACTIONS
+==================================================
+
+Goal:
+Each recent item should reopen in the right way.
+
+Required:
+- PDF Editor session -> Continue editing
+- Compare session -> Open comparison
+- Analyze result -> View analysis
+- Trust Check result -> View trust check
+- Contract Review result -> View review
+- Document Builder draft -> Continue building
+- Signature item only if applicable and meaningful
+
+Make the action label reflect the item type.
+Avoid generic/unhelpful labels like “Open” everywhere unless truly necessary.
+
+If the Recent Work card/row itself is clickable, the visible CTA should still make the behavior obvious.
+
+==================================================
+T004 — METADATA / LABEL / STATUS / EMPTY STATE IMPROVEMENTS
+==================================================
+
+Goal:
+The dashboard should communicate recent work clearly at a glance.
+
+Improve where supported by current data:
+- title
+- tool/source label
+- updated date / relative time
+- status chip if useful
+- icon/category distinction
+- subtitle that tells the user what they will reopen
+
+Examples:
+- “PDF Editor”
+- “Compare Versions”
+- “Analyze a Document”
+- “Trust Check”
+- “Document Builder”
+
+Empty-state goal:
+If there is no recent work, the section should guide the user cleanly toward first actions without feeling dead.
+
+Also inspect whether the current CTA in empty Recent Work is still the right one now that more tools exist.
+
+==================================================
+T005 — CROSS-SURFACE CONTINUITY POLISH
+==================================================
+
+Goal:
+Dashboard, My Documents, and My Analyses should feel like one system.
+
+Required:
+- fix any bad “View all” destination if present
+- ensure naming is consistent with the saved-work pages
+- avoid contradictory language between Dashboard and My Documents / My Analyses
+- improve any weak section subtitle/copy
+- make it obvious when the dashboard is a quick hub and the full pages are the deeper management surfaces
+
+Do NOT do a full dashboard redesign.
+
+==================================================
+NON-GOALS / OUT OF SCOPE
+==================================================
+
+Do NOT include unless absolutely required:
+- Stripe/billing work
+- PDF utility expansion
+- OCR changes
+- Compare Versions engine work
+- marketing/homepage redesign
+- org/team sharing
+- notifications
+- mobile packaging work
+- large card/grid redesign across the entire dashboard
+
+==================================================
+VERIFICATION REQUIREMENTS
+==================================================
+
+After implementation, verify at minimum:
+
+1. authenticated dashboard route loads correctly
+2. Recent Work renders without breaking the dashboard
+3. Recent Work includes broader/high-value item coverage if available
+4. PDF Editor recent item reopens correctly
+5. Compare Versions recent item reopens correctly
+6. analysis recent item reopens correctly
+7. trust check recent item reopens correctly if present
+8. continue/open labels are tool-correct
+9. empty state renders correctly when no recent items exist
+10. My Documents page is not regressed
+11. My Analyses page is not regressed
+12. changed files pass TS/build checks
+
+Use result labels:
+- PASS — browser-verified
+- PASS — code-verified
+- FIXED — bug found and patched
+- UNABLE — blocked by environment/prerequisite
+
+==================================================
+FINAL COMPLETION REPORT FORMAT
+==================================================
+
+Return the report in these exact sections:
+
+1. EXACT FILES CREATED
+2. EXACT FILES MODIFIED
+3. DASHBOARD / RECENT WORK CHANGES APPLIED
+4. CONTINUE / OPEN / VIEW BEHAVIOR
+5. EMPTY STATE / LABEL / METADATA IMPROVEMENTS
+6. WHAT WORKS END-TO-END
+7. WHAT REMAINS DEFERRED
+8. VERIFICATION RESULTS
+
+Be exact with full relative paths and exact route/page names.
+
+==================================================
+QUALITY BAR
+==================================================
+
+This pass should make the dashboard feel like the control center of PlainPath, not just a launch page.
+
+Be selective.
+Favor clarity, continuity, and fast resumption of work.
+Keep the scope tight and product-grade.
