@@ -18,6 +18,7 @@ import {
 } from "lucide-react"
 import { useEntitlements } from "@/hooks/useEntitlements"
 import { usePdfEditorApi } from "@/hooks/usePdfEditorApi"
+import { isPaywallActive } from "@/lib/billingConfig"
 import type { EditOp, ActiveTool, SaveState, SessionDetail } from "@/lib/pdfEditorTypes"
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
@@ -1305,7 +1306,7 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
 
   // ── Entitlement gate ───────────────────────────────────────────────────────
 
-  const canUse = isAdmin || (entitlements?.toolAccess?.includes("pdf-editor") ?? false)
+  const canUse = !isPaywallActive || isAdmin || (entitlements?.toolAccess?.includes("pdf-editor") ?? false)
 
   if (entLoading) {
     return (

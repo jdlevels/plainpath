@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { useEntitlements } from "@/hooks/useEntitlements"
 import { useCompareVersionsApi } from "@/hooks/useCompareVersionsApi"
+import { isPaywallActive } from "@/lib/billingConfig"
 import type {
   CVSessionListItem, CVWatchlistItem, CVManagerNotes, CVNoteSeverity,
 } from "@/lib/compareVersionsTypes"
@@ -740,7 +741,7 @@ export default function CompareVersions() {
   const [archivedSessions, setArchivedSessions] = useState<CVSessionListItem[]>([])
   const [sessionsLoading, setSessionsLoading] = useState(true)
 
-  const canUse = isAdmin || (entitlements?.toolAccess?.includes("compare-versions") ?? false)
+  const canUse = !isPaywallActive || isAdmin || (entitlements?.toolAccess?.includes("compare-versions") ?? false)
 
   useEffect(() => {
     document.title = "Compare Versions — PlainPath"

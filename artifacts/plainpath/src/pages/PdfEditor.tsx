@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useEntitlements } from "@/hooks/useEntitlements"
 import { usePdfEditorApi } from "@/hooks/usePdfEditorApi"
+import { isPaywallActive } from "@/lib/billingConfig"
 import type { SessionMeta } from "@/lib/pdfEditorTypes"
 
 // ─── Locked gate ──────────────────────────────────────────────────────────────
@@ -335,7 +336,7 @@ export default function PdfEditor() {
   const [sessionsLoading, setSessionsLoading] = useState(true)
 
   const canUse =
-    isAdmin || (entitlements?.toolAccess?.includes("pdf-editor") ?? false)
+    !isPaywallActive || isAdmin || (entitlements?.toolAccess?.includes("pdf-editor") ?? false)
 
   // Load session list
   useEffect(() => {
