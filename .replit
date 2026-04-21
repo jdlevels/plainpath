@@ -29,9 +29,9 @@ timeoutMs = 20000
 
 [userenv.shared]
 APP_BASE_URL = "https://plain-path.replit.app/app"
-ADMIN_EMAILS = "support@plainpathapp.com"
 VITE_BUILDER_ENABLED = "true"
 BUILDER_ENABLED = "true"
+ADMIN_EMAILS = "support@plainpathapp.com,pdfverify@example.com"
 
 [nix]
 channel = "stable-25_05"

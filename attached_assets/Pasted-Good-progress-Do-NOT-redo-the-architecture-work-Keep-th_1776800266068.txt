@@ -1,0 +1,81 @@
+Good progress. Do NOT redo the architecture work. Keep the current implementation.
+
+This PDF Platform Expansion block is NOT closed yet because:
+1. the required structured completion report was not delivered
+2. the verification is too weak for a major platform expansion
+3. real authenticated/browser verification of OCR + utilities is still missing
+
+NARROW FOLLOW-UP SCOPE ONLY
+No broad refactors.
+No new feature expansion.
+Patch only if a real bug is found during verification.
+
+Do these steps:
+
+1) RETURN THE REQUIRED COMPLETION REPORT IN EXACT FORMAT
+
+Use these exact sections:
+
+1. EXACT FILES CREATED
+2. EXACT FILES MODIFIED
+3. PDF PLATFORM FOUNDATION CHANGES
+4. OCR / EDIT / SAVE / UTILITY ARCHITECTURE
+5. WHAT WORKS END-TO-END
+6. WHAT REMAINS DEFERRED
+7. VERIFICATION RESULTS
+
+Be exact with full relative paths and exact routes.
+
+2) RUN REAL AUTHENTICATED VERIFICATION
+
+You must verify the actual authenticated PDF platform, not just route registration.
+
+At minimum browser-verify:
+
+A) PDF hub
+- /pdf-editor loads
+- Edit PDF tab renders
+- PDF Tools tab renders
+- session list shows pdf_type badges if sessions exist
+
+B) OCR flow
+- upload a text PDF -> classified as text
+- upload a scanned/image PDF fixture -> classified as scanned or mixed
+- run OCR
+- extracted OCR text appears in the OCR panel
+- OCR text is searchable/editable in-session
+- save session still works after OCR state changes
+
+C) Existing editor preservation
+- normal PDF Editor session still opens
+- save/export still works
+- Compare Versions -> PDF Editor handoff still opens correctly
+
+D) PDF tools
+Run real browser verification for each included utility:
+- Merge PDFs
+- Extract Pages
+- Page Tools:
+  - delete pages
+  - rotate pages
+  - reorder pages
+- Compress PDF
+
+For each one, verify:
+- upload works
+- process runs
+- downloadable output is produced
+- failure states are acceptable
+
+3) IF A REAL BUG IS FOUND
+Patch only that specific bug, then re-test the exact affected flow.
+
+4) REPORT RESULTS CLEARLY
+In VERIFICATION RESULTS, label each item:
+- PASS — browser-verified
+- PASS — code-verified
+- FIXED — bug found, patched, browser re-verified
+- UNABLE — blocked by environment or prerequisite
+
+Do not answer with a narrative summary.
+Return only the structured completion report.
