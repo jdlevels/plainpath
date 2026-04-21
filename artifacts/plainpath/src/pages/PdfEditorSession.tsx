@@ -4,6 +4,10 @@
 //   T002 — Save / autosave / unsaved-state system (tightened)
 //   T003 — Right-panel issue navigation + editing clarity
 //   T004 — Workspace / layout polish
+// PDF Platform Expansion Pass:
+//   T001 — PDF intake classification (type badge)
+//   T002 — OCR / scanned-PDF foundation (banner + review panel)
+//   T003 — Session rename + delete
 // ──────────────────────────────────────────────────────────────────────────────
 
 import {
@@ -15,11 +19,12 @@ import {
   ArrowLeft, Loader2, AlertCircle, Lock, Layers,
   MousePointer2, Type, Square, Highlighter,
   Save, CheckCircle2, Download, ListChecks, ChevronRight,
+  ScanText, ScanLine, Edit3, X, ChevronDown, ChevronUp, FileText,
 } from "lucide-react"
 import { useEntitlements } from "@/hooks/useEntitlements"
 import { usePdfEditorApi } from "@/hooks/usePdfEditorApi"
 import { isPaywallActive } from "@/lib/billingConfig"
-import type { EditOp, ActiveTool, SaveState, SessionDetail } from "@/lib/pdfEditorTypes"
+import type { EditOp, ActiveTool, SaveState, SessionDetail, OcrData, OcrPage } from "@/lib/pdfEditorTypes"
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
@@ -803,6 +808,105 @@ function OriginalPane({
   )
 }
 
+// ─── OcrPanel ─────────────────────────────────────────────────────────────────
+// Shows OCR results per page with inline editing support.
+
+function OcrPanel({
+  ocrData,
+  onSave,
+  onClose,
+}: {
+  ocrData: OcrData
+  onSave: (updated: OcrData) => void
+  onClose: () => void
+}) {
+  const [pages, setPages] = useState<OcrPage[]>(ocrData.pages)
+  const [expandedPage, setExpandedPage] = useState<number | null>(0)
+  const [dirtyPages, setDirtyPages] = useState<Set<number>>(new Set())
+
+  function handleTextChange(pageIndex: number, editedText: string) {
+    setPages((prev) =>
+      prev.map((p) => p.pageIndex === pageIndex ? { ...p, editedText } : p)
+    )
+    setDirtyPages((prev) => new Set([...prev, pageIndex]))
+  }
+
+  function handleSave() {
+    onSave({ ...ocrData, pages })
+    setDirtyPages(new Set())
+  }
+
+  const hasDirty = dirtyPages.size > 0
+
+  return (
+    <div className="flex flex-col h-full overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between px-3 py-2.5 border-b border-border/40 flex-shrink-0 bg-background">
+        <div className="flex items-center gap-2">
+          <ScanLine className="w-3.5 h-3.5 text-violet-500" />
+          <span className="text-xs font-semibold">OCR Text</span>
+          <span className="text-[10px] text-muted-foreground">{pages.length} page{pages.length !== 1 ? "s" : ""}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          {hasDirty && (
+            <button
+              onClick={handleSave}
+              className="flex items-center gap-1 px-2 py-1 text-[10px] font-semibold bg-violet-600 hover:bg-violet-700 text-white rounded-md transition-colors"
+            >
+              <Save className="w-3 h-3" /> Save edits
+            </button>
+          )}
+          <button
+            onClick={onClose}
+            className="p-1 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Pages */}
+      <div className="flex-1 overflow-y-auto p-2 space-y-1">
+        {pages.map((p, idx) => {
+          const isExpanded = expandedPage === p.pageIndex
+          const displayText = p.editedText !== undefined ? p.editedText : p.text
+          const isBlank = p.text === "[blank page]" || p.text === "[OCR failed for this page]"
+          return (
+            <div key={p.pageIndex} className="border border-border/40 rounded-lg overflow-hidden">
+              <button
+                onClick={() => setExpandedPage(isExpanded ? null : p.pageIndex)}
+                className="w-full flex items-center justify-between px-3 py-2 text-xs bg-muted/30 hover:bg-muted/50 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <FileText className="w-3 h-3 text-muted-foreground" />
+                  <span className="font-semibold">Page {p.pageIndex + 1}</span>
+                  {isBlank && <span className="text-muted-foreground/70 italic">— blank</span>}
+                  {dirtyPages.has(p.pageIndex) && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />}
+                </div>
+                {isExpanded ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground" /> : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />}
+              </button>
+              {isExpanded && (
+                <div className="px-2 py-2 bg-background">
+                  <textarea
+                    value={displayText}
+                    onChange={(e) => handleTextChange(p.pageIndex, e.target.value)}
+                    rows={6}
+                    className="w-full px-2 py-2 text-xs font-mono rounded border border-input bg-muted/20 resize-y focus:outline-none focus:ring-1 focus:ring-violet-500/40 focus:border-violet-400 leading-relaxed"
+                    placeholder="No text extracted from this page"
+                  />
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    Edit to correct OCR errors. Changes are saved per-session.
+                  </p>
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 // ─── PdfEditorSession ──────────────────────────────────────────────────────────
 
 export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
@@ -837,6 +941,16 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
   // The panelAutoOpenedRef handles the reopen case (no URL param) once ops load.
   const [showIssuePanel, setShowIssuePanel] = useState(fromCompare)
   const panelAutoOpenedRef = useRef(false)
+
+  // OCR state
+  const [ocrData, setOcrData] = useState<OcrData | null>(null)
+  const [ocrRunState, setOcrRunState] = useState<"idle" | "running" | "done" | "error">("idle")
+  const [ocrRunError, setOcrRunError] = useState<string | null>(null)
+  const [showOcrPanel, setShowOcrPanel] = useState(false)
+
+  // Rename state
+  const [isRenaming, setIsRenaming] = useState(false)
+  const [renameValue, setRenameValue] = useState("")
 
   // Left-pane hover sync: set of op IDs in the currently-hovered indicator group
   const [hoveredFromLeft, setHoveredFromLeft] = useState<ReadonlySet<string>>(new Set())
@@ -901,6 +1015,7 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
         ])
         if (cancelled) return
         setSessionMeta(session)
+        setOcrData(session.ocrData ?? null)
         setOps(session.ops)
         liveOpsRef.current = session.ops
         historyRef.current = [session.ops]
@@ -968,6 +1083,45 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
       saveTimerRef.current = setTimeout(() => saveNow(opsToSave), delayMs)
     }
   }
+
+  // ── OCR ─────────────────────────────────────────────────────────────────────
+
+  async function handleRunOcr() {
+    if (ocrRunState === "running" || !pages.length) return
+    setOcrRunState("running"); setOcrRunError(null)
+    try {
+      const pageImages = pages.map((pg, i) => ({ pageIndex: i, imageDataUrl: pg.dataUrl }))
+      const result = await api.runOcr(sessionId, pageImages)
+      setOcrData(result)
+      setOcrRunState("done")
+      setShowOcrPanel(true)
+    } catch (err: any) {
+      setOcrRunError(err?.message ?? "OCR failed — please try again.")
+      setOcrRunState("error")
+    }
+  }
+
+  async function handleSaveOcrEdits(updated: OcrData) {
+    setOcrData(updated)
+    await api.saveOcrEdits(sessionId, updated).catch(() => {})
+  }
+
+  // ── Rename ──────────────────────────────────────────────────────────────────
+
+  function startRename() {
+    setRenameValue(sessionMeta?.fileName ?? "")
+    setIsRenaming(true)
+  }
+
+  async function commitRename() {
+    const name = renameValue.trim()
+    if (!name || !sessionMeta) { setIsRenaming(false); return }
+    await api.renameSession(sessionId, name).catch(() => {})
+    setSessionMeta({ ...sessionMeta, fileName: name })
+    setIsRenaming(false)
+  }
+
+  function cancelRename() { setIsRenaming(false) }
 
   // ── Export ─────────────────────────────────────────────────────────────────
 
@@ -1365,9 +1519,46 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
             <ArrowLeft className="w-4 h-4" />
           </button>
           <div className="min-w-0">
-            <p className="text-sm font-semibold truncate max-w-[120px] sm:max-w-[200px] lg:max-w-[340px]">
-              {sessionMeta.fileName}
-            </p>
+            {isRenaming ? (
+              <div className="flex items-center gap-1.5">
+                <input
+                  autoFocus
+                  value={renameValue}
+                  onChange={(e) => setRenameValue(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") commitRename(); if (e.key === "Escape") cancelRename() }}
+                  className="text-sm font-semibold px-2 py-0.5 border border-violet-400 rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500/30 max-w-[140px] sm:max-w-[220px]"
+                />
+                <button onClick={commitRename} className="text-[10px] font-semibold text-violet-600 dark:text-violet-400 hover:underline">Save</button>
+                <button onClick={cancelRename} className="text-[10px] text-muted-foreground hover:text-foreground">Cancel</button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5">
+                <p className="text-sm font-semibold truncate max-w-[110px] sm:max-w-[180px] lg:max-w-[300px]">
+                  {sessionMeta.fileName}
+                </p>
+                <button
+                  onClick={startRename}
+                  title="Rename session"
+                  className="p-0.5 text-muted-foreground/50 hover:text-muted-foreground transition-colors flex-shrink-0"
+                >
+                  <Edit3 className="w-3 h-3" />
+                </button>
+                {sessionMeta.pdfType && sessionMeta.pdfType !== "unknown" && (() => {
+                  const styles: Record<string, string> = {
+                    text:    "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300",
+                    scanned: "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300",
+                    mixed:   "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300",
+                  }
+                  const labels: Record<string, string> = { text: "Text", scanned: "Scanned", mixed: "Mixed" }
+                  return (
+                    <span className={`hidden sm:inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${styles[sessionMeta.pdfType] ?? ""}`}>
+                      {sessionMeta.pdfType === "scanned" && <ScanText className="w-2.5 h-2.5" />}
+                      {labels[sessionMeta.pdfType]}
+                    </span>
+                  )
+                })()}
+              </div>
+            )}
             <p className="text-[10px] text-muted-foreground flex items-center gap-1 flex-wrap">
               <span>{pageLabel}</span>
               {editCount > 0 && <span>· {editCount} edit{editCount !== 1 ? "s" : ""}</span>}
@@ -1392,8 +1583,30 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
           <ToolBtn icon={Highlighter} label="Highlight" active={activeTool === "highlight"} onClick={() => setActiveTool("highlight")} />
         </div>
 
-        {/* Right: save indicator + save + export */}
+        {/* Right: OCR + save indicator + save + export */}
         <div className="flex items-center gap-2 flex-shrink-0">
+          {/* OCR button — visible when PDF is scanned/mixed or OCR already exists */}
+          {(sessionMeta.pdfType === "scanned" || sessionMeta.pdfType === "mixed" || ocrData) && (
+            <button
+              onClick={ocrData ? () => setShowOcrPanel((v) => !v) : handleRunOcr}
+              disabled={ocrRunState === "running"}
+              title={ocrData ? (showOcrPanel ? "Close OCR panel" : "View extracted text") : "Extract text from scanned PDF"}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
+                showOcrPanel
+                  ? "bg-violet-100 dark:bg-violet-900/30 border-violet-300 dark:border-violet-700 text-violet-700 dark:text-violet-300"
+                  : ocrRunState === "running"
+                  ? "border-border/50 text-muted-foreground cursor-wait"
+                  : "border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted/60"
+              }`}
+            >
+              {ocrRunState === "running"
+                ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                : <ScanText className="w-3.5 h-3.5" />}
+              <span className="hidden md:inline">
+                {ocrRunState === "running" ? "Running OCR…" : ocrData ? "OCR Text" : "Run OCR"}
+              </span>
+            </button>
+          )}
           <SaveIndicator state={saveState} onSave={() => saveNow(liveOpsRef.current)} />
 
           {/* Save button — amber pulse when unsaved */}
@@ -1519,6 +1732,28 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
               </button>
             )}
           </div>
+        </div>
+      )}
+
+      {/* ── OCR banner — for scanned/mixed PDFs with no OCR data yet ── */}
+      {(sessionMeta.pdfType === "scanned" || sessionMeta.pdfType === "mixed") && !ocrData && ocrRunState !== "running" && (
+        <div className="flex items-center gap-2 px-4 py-2 border-b border-amber-200 dark:border-amber-800/40 bg-amber-50 dark:bg-amber-950/30 text-xs flex-shrink-0">
+          <ScanText className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 flex-shrink-0" />
+          <span className="text-amber-800 dark:text-amber-300 font-medium">
+            {sessionMeta.pdfType === "scanned" ? "This PDF appears to be scanned or image-based." : "This PDF contains a mix of text and scanned pages."}
+          </span>
+          <span className="hidden sm:inline text-amber-700/80 dark:text-amber-400/70">
+            Run OCR to extract selectable text from each page.
+          </span>
+          <button
+            onClick={handleRunOcr}
+            className="ml-auto flex-shrink-0 flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold transition-colors"
+          >
+            <ScanText className="w-3.5 h-3.5" /> Run OCR
+          </button>
+          {ocrRunState === "error" && ocrRunError && (
+            <span className="text-red-600 dark:text-red-400 font-medium">{ocrRunError}</span>
+          )}
         </div>
       )}
 
@@ -1687,6 +1922,17 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
                   selectedId={selectedId}
                   onFocus={focusIssue}
                   onToggleCorrected={toggleCorrected}
+                />
+              </div>
+            )}
+
+            {/* OCR panel sidebar — desktop only, shown when OCR data exists + user toggled it open */}
+            {ocrData && showOcrPanel && (
+              <div className="hidden md:flex flex-col w-64 xl:w-72 flex-shrink-0 border-l border-border/40 bg-background overflow-hidden">
+                <OcrPanel
+                  ocrData={ocrData}
+                  onSave={handleSaveOcrEdits}
+                  onClose={() => setShowOcrPanel(false)}
                 />
               </div>
             )}

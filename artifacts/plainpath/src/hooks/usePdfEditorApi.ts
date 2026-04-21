@@ -2,8 +2,8 @@
 
 import { useAuth } from "@clerk/react"
 import { useCallback } from "react"
-import { pdfEditorApi } from "@/lib/pdfEditorApi"
-import type { EditOp } from "@/lib/pdfEditorTypes"
+import { pdfEditorApi, pdfUtilitiesApi } from "@/lib/pdfEditorApi"
+import type { EditOp, OcrData } from "@/lib/pdfEditorTypes"
 
 export function usePdfEditorApi() {
   const { getToken } = useAuth()
@@ -45,6 +45,69 @@ export function usePdfEditorApi() {
 
     exportSession: useCallback(
       async (id: string) => pdfEditorApi.exportSession(id, await token()),
+      [token],
+    ),
+
+    runOcr: useCallback(
+      async (id: string, pages: Array<{ pageIndex: number; imageDataUrl: string }>) =>
+        pdfEditorApi.runOcr(id, pages, await token()),
+      [token],
+    ),
+
+    saveOcrEdits: useCallback(
+      async (id: string, ocrData: OcrData) =>
+        pdfEditorApi.saveOcrEdits(id, ocrData, await token()),
+      [token],
+    ),
+
+    renameSession: useCallback(
+      async (id: string, fileName: string) =>
+        pdfEditorApi.renameSession(id, fileName, await token()),
+      [token],
+    ),
+
+    deleteSession: useCallback(
+      async (id: string) => pdfEditorApi.deleteSession(id, await token()),
+      [token],
+    ),
+  }
+}
+
+export function usePdfUtilitiesApi() {
+  const { getToken } = useAuth()
+  const token = useCallback(() => getToken(), [getToken])
+
+  return {
+    merge: useCallback(
+      async (files: File[]) => pdfUtilitiesApi.merge(files, await token()),
+      [token],
+    ),
+
+    extractPages: useCallback(
+      async (file: File, pageRange: string) =>
+        pdfUtilitiesApi.extractPages(file, pageRange, await token()),
+      [token],
+    ),
+
+    pageOps: useCallback(
+      async (
+        file: File,
+        ops: Array<
+          | { type: "delete"; pageIndexes: number[] }
+          | { type: "rotate"; pageIndexes: number[]; degrees: 90 | 180 | 270 }
+          | { type: "reorder"; order: number[] }
+        >,
+      ) => pdfUtilitiesApi.pageOps(file, ops, await token()),
+      [token],
+    ),
+
+    compress: useCallback(
+      async (file: File) => pdfUtilitiesApi.compress(file, await token()),
+      [token],
+    ),
+
+    getPageCount: useCallback(
+      async (file: File) => pdfUtilitiesApi.getPageCount(file, await token()),
       [token],
     ),
   }

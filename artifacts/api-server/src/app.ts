@@ -22,6 +22,7 @@ import signatureRoutes from "./routes/signatures/index.js";
 import userDocsRoutes from "./routes/userDocs/index.js";
 import builderRoutes from "./routes/builder/index.js";
 import pdfEditorRoutes from "./routes/pdf-editor/index.js";
+import pdfUtilitiesRoutes from "./routes/pdf-utilities/index.js";
 import compareVersionsRoutes from "./routes/compare-versions/index.js";
 import demoRoutes from "./routes/demo/index.js";
 import { logger } from "./lib/logger";
@@ -201,6 +202,7 @@ app.use("/api/signatures", signatureRoutes);
 app.use("/api/user/documents", userDocsRoutes);
 app.use("/api/builder", builderRoutes);
 app.use("/api/pdf-editor", pdfEditorRoutes);
+app.use("/api/pdf-utilities", pdfUtilitiesRoutes);
 app.use("/api/compare-versions", compareVersionsRoutes);
 app.use("/api/demo", demoRoutes);
 

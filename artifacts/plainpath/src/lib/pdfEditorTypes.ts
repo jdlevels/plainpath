@@ -27,15 +27,36 @@ export type SaveState = "idle" | "unsaved" | "saving" | "saved" | "error"
 
 export type ActiveTool = "select" | "text" | "mask" | "highlight"
 
+// ─── PDF classification ────────────────────────────────────────────────────────
+
+export type PdfType = "text" | "scanned" | "mixed" | "unknown"
+
+// ─── OCR types ────────────────────────────────────────────────────────────────
+
+export interface OcrPage {
+  pageIndex: number
+  text: string
+  editedText?: string  // user correction; undefined = not edited
+}
+
+export interface OcrData {
+  pages: OcrPage[]
+  runAt?: string
+}
+
+// ─── Session types ────────────────────────────────────────────────────────────
+
 export interface SessionMeta {
   id: string
   fileName: string
   fileSizeBytes: number
   pageCount: number | null
   updatedAt: string
+  pdfType?: PdfType
 }
 
 export interface SessionDetail extends SessionMeta {
   ops: EditOp[]
   createdAt: string
+  ocrData?: OcrData | null
 }

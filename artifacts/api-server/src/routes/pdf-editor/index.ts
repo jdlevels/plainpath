@@ -2,6 +2,7 @@
 // Slice 2: session CRUD + op persistence
 // Slice 3: export/download (apply ops with pdf-lib, return modified PDF)
 // Slice 4: object storage migration for source PDFs (additive, bytea legacy OK)
+// Slice 5: PDF classification at upload + OCR foundation + rename/delete
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { Router } from "express";
@@ -13,12 +14,13 @@ import {
   uploadPdf,
   resolvePdfBytes,
   isObjectStorageAvailable,
+  deletePdf,
 } from "../../lib/pdfObjectStorage";
+import { openai } from "@workspace/integrations-openai-ai-server";
 
 const router = Router();
 
 // ─── File size / type limits ──────────────────────────────────────────────────
-// 20 MB cap. PDF-only. Stored in memory as Buffer, then written to GCS or bytea.
 
 const MAX_BYTES = 20 * 1024 * 1024; // 20 MB
 
@@ -45,12 +47,32 @@ function requireAuth(req: any, res: any, next: any) {
   next();
 }
 
+// ─── PDF classification helper ────────────────────────────────────────────────
+// Returns "text" | "scanned" | "mixed" | "unknown".
+// Uses pdf-parse to attempt text extraction; checks text density vs page count.
+
+async function classifyPdf(
+  buffer: Buffer,
+): Promise<"text" | "scanned" | "mixed" | "unknown"> {
+  try {
+    const pdfMod = await import("pdf-parse/lib/pdf-parse.js");
+    const pdfParse: (buf: Buffer) => Promise<{ text: string; numpages: number }> =
+      (pdfMod as any).default ?? (pdfMod as any);
+    const result = await pdfParse(buffer);
+    const text = result.text ?? "";
+    const pages = result.numpages ?? 1;
+    const wordCount = text.split(/\s+/).filter(Boolean).length;
+    const wordsPerPage = wordCount / Math.max(1, pages);
+    if (wordsPerPage >= 15) return "text";
+    if (wordsPerPage >= 2) return "mixed";
+    return "scanned";
+  } catch {
+    return "unknown";
+  }
+}
+
 // ─── POST /api/pdf-editor/sessions ───────────────────────────────────────────
-// Upload a PDF → create session → return { id, fileName, fileSizeBytes, createdAt }
-//
-// Storage strategy (Slice 4):
-//   If object storage is configured → upload to GCS, store key, pdf_bytes=NULL
-//   Otherwise (fallback)            → store file.buffer in pdf_bytes as before
+// Upload a PDF → classify → create session → return { id, fileName, fileSizeBytes, createdAt, pdfType }
 
 router.post(
   "/sessions",
@@ -78,7 +100,10 @@ router.post(
         file.originalname ||
         "Untitled.pdf";
 
-      // Generate session id up-front so we can use it as the GCS key
+      // Classify PDF (non-blocking fallback to "unknown")
+      const pdfType = await classifyPdf(file.buffer).catch(() => "unknown");
+
+      // Generate session id up-front
       const sessionIdResult = await pool.query(
         `SELECT gen_random_uuid()::text AS id`,
       );
@@ -91,15 +116,15 @@ router.post(
       if (isObjectStorageAvailable()) {
         pdfStorageKey = await uploadPdf(req.userId, sessionId, file.buffer);
         if (pdfStorageKey) {
-          pdfBytesValue = null; // new sessions don't need bytea
+          pdfBytesValue = null;
         }
       }
 
       const result = await pool.query(
         `INSERT INTO pdf_editor_sessions
-           (id, user_id, file_name, file_size_bytes, pdf_bytes, pdf_storage_key, ops)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)
-         RETURNING id, file_name, file_size_bytes, created_at`,
+           (id, user_id, file_name, file_size_bytes, pdf_bytes, pdf_storage_key, ops, pdf_type)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         RETURNING id, file_name, file_size_bytes, created_at, pdf_type`,
         [
           sessionId,
           req.userId,
@@ -108,6 +133,7 @@ router.post(
           pdfBytesValue,
           pdfStorageKey,
           JSON.stringify([]),
+          pdfType,
         ],
       );
 
@@ -117,6 +143,7 @@ router.post(
         fileName: row.file_name,
         fileSizeBytes: row.file_size_bytes,
         createdAt: row.created_at,
+        pdfType: row.pdf_type,
       });
     } catch (err: any) {
       if (err?.code === "LIMIT_FILE_SIZE") {
@@ -129,12 +156,11 @@ router.post(
 );
 
 // ─── GET /api/pdf-editor/sessions ────────────────────────────────────────────
-// List user sessions (minimal: id, fileName, fileSizeBytes, pageCount, updatedAt)
 
 router.get("/sessions", requireAuth, async (req: any, res) => {
   try {
     const result = await pool.query(
-      `SELECT id, file_name, file_size_bytes, page_count, updated_at
+      `SELECT id, file_name, file_size_bytes, page_count, updated_at, pdf_type
        FROM pdf_editor_sessions
        WHERE user_id = $1
        ORDER BY updated_at DESC
@@ -148,6 +174,7 @@ router.get("/sessions", requireAuth, async (req: any, res) => {
         fileSizeBytes: r.file_size_bytes,
         pageCount: r.page_count,
         updatedAt: r.updated_at,
+        pdfType: r.pdf_type ?? "unknown",
       })),
     );
   } catch (err) {
@@ -157,12 +184,11 @@ router.get("/sessions", requireAuth, async (req: any, res) => {
 });
 
 // ─── GET /api/pdf-editor/sessions/:id ────────────────────────────────────────
-// Session metadata + ops. No pdf_bytes.
 
 router.get("/sessions/:id", requireAuth, async (req: any, res) => {
   try {
     const result = await pool.query(
-      `SELECT id, file_name, file_size_bytes, page_count, ops, created_at, updated_at
+      `SELECT id, file_name, file_size_bytes, page_count, ops, created_at, updated_at, pdf_type, ocr_data
        FROM pdf_editor_sessions
        WHERE id = $1 AND user_id = $2`,
       [req.params.id, req.userId],
@@ -179,6 +205,8 @@ router.get("/sessions/:id", requireAuth, async (req: any, res) => {
       ops: r.ops ?? [],
       createdAt: r.created_at,
       updatedAt: r.updated_at,
+      pdfType: r.pdf_type ?? "unknown",
+      ocrData: r.ocr_data ?? null,
     });
   } catch (err) {
     console.error("[pdf-editor] get session error", err);
@@ -187,8 +215,6 @@ router.get("/sessions/:id", requireAuth, async (req: any, res) => {
 });
 
 // ─── GET /api/pdf-editor/sessions/:id/pdf ────────────────────────────────────
-// Stream raw PDF bytes. Content-Type: application/pdf.
-// Supports both legacy bytea sessions and new object-storage sessions.
 
 router.get("/sessions/:id/pdf", requireAuth, async (req: any, res) => {
   try {
@@ -219,7 +245,6 @@ router.get("/sessions/:id/pdf", requireAuth, async (req: any, res) => {
 });
 
 // ─── PATCH /api/pdf-editor/sessions/:id/ops ──────────────────────────────────
-// Replace ops array. Body: { ops: EditOp[] }
 
 router.patch("/sessions/:id/ops", requireAuth, async (req: any, res) => {
   try {
@@ -245,7 +270,6 @@ router.patch("/sessions/:id/ops", requireAuth, async (req: any, res) => {
 });
 
 // ─── PATCH /api/pdf-editor/sessions/:id/page-count ───────────────────────────
-// Set page count once (only when null). Body: { pageCount: number }
 
 router.patch(
   "/sessions/:id/page-count",
@@ -270,18 +294,166 @@ router.patch(
   },
 );
 
+// ─── PATCH /api/pdf-editor/sessions/:id/rename ───────────────────────────────
+
+router.patch("/sessions/:id/rename", requireAuth, async (req: any, res) => {
+  try {
+    const { fileName } = req.body;
+    if (!fileName || typeof fileName !== "string" || !fileName.trim()) {
+      return res.status(400).json({ error: "fileName is required" });
+    }
+    const result = await pool.query(
+      `UPDATE pdf_editor_sessions
+       SET file_name = $1, updated_at = NOW()
+       WHERE id = $2 AND user_id = $3
+       RETURNING id`,
+      [fileName.trim(), req.params.id, req.userId],
+    );
+    if (!result.rows.length) {
+      return res.status(404).json({ error: "not_found" });
+    }
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error("[pdf-editor] rename session error", err);
+    return res.status(500).json({ error: "server_error" });
+  }
+});
+
+// ─── DELETE /api/pdf-editor/sessions/:id ─────────────────────────────────────
+
+router.delete("/sessions/:id", requireAuth, async (req: any, res) => {
+  try {
+    const result = await pool.query(
+      `DELETE FROM pdf_editor_sessions
+       WHERE id = $1 AND user_id = $2
+       RETURNING pdf_storage_key`,
+      [req.params.id, req.userId],
+    );
+    if (!result.rows.length) {
+      return res.status(404).json({ error: "not_found" });
+    }
+    // Best-effort: remove GCS object if present
+    const storageKey = result.rows[0].pdf_storage_key;
+    if (storageKey) {
+      deletePdf(storageKey).catch(() => {});
+    }
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error("[pdf-editor] delete session error", err);
+    return res.status(500).json({ error: "server_error" });
+  }
+});
+
+// ─── POST /api/pdf-editor/sessions/:id/ocr ───────────────────────────────────
+// Accept page images from the client (rendered by pdfjs in-browser), run
+// OpenAI Vision OCR per page, store and return results.
+// Body: { pages: Array<{ pageIndex: number; imageDataUrl: string }> }
+
+router.post("/sessions/:id/ocr", requireAuth, async (req: any, res) => {
+  try {
+    const { pages } = req.body;
+    if (!Array.isArray(pages) || pages.length === 0) {
+      return res.status(400).json({ error: "pages array is required" });
+    }
+
+    // Verify session ownership
+    const sessionCheck = await pool.query(
+      `SELECT id FROM pdf_editor_sessions WHERE id = $1 AND user_id = $2`,
+      [req.params.id, req.userId],
+    );
+    if (!sessionCheck.rows.length) {
+      return res.status(404).json({ error: "not_found" });
+    }
+
+    // Run OCR per page (up to 20 pages to stay within timeout)
+    const MAX_PAGES = 20;
+    const pagesToProcess = pages.slice(0, MAX_PAGES);
+    const ocrPages: Array<{ pageIndex: number; text: string }> = [];
+
+    for (const page of pagesToProcess) {
+      const { pageIndex, imageDataUrl } = page;
+      if (typeof pageIndex !== "number" || typeof imageDataUrl !== "string") continue;
+
+      try {
+        // Strip the data URL prefix to get base64 + media type
+        const match = imageDataUrl.match(/^data:(image\/[^;]+);base64,(.+)$/);
+        if (!match) continue;
+        const [, mediaType, b64] = match;
+
+        const response = await openai.chat.completions.create({
+          model: "gpt-4o",
+          max_tokens: 2048,
+          messages: [
+            {
+              role: "user",
+              content: [
+                {
+                  type: "text",
+                  text: "Transcribe ALL visible text from this PDF page exactly as it appears. Include every word, number, date, heading, and body text. Preserve paragraph structure with line breaks. If there is no text, respond with '[blank page]'.",
+                },
+                {
+                  type: "image_url",
+                  image_url: {
+                    url: `data:${mediaType};base64,${b64}`,
+                    detail: "high",
+                  },
+                },
+              ],
+            },
+          ],
+        });
+
+        const text = response.choices?.[0]?.message?.content?.trim() ?? "";
+        ocrPages.push({ pageIndex, text: text || "[blank page]" });
+      } catch (pageErr) {
+        console.error(`[pdf-editor] OCR failed for page ${pageIndex}:`, pageErr);
+        ocrPages.push({ pageIndex, text: "[OCR failed for this page]" });
+      }
+    }
+
+    const ocrData = { pages: ocrPages, runAt: new Date().toISOString() };
+
+    // Persist OCR data in session
+    await pool.query(
+      `UPDATE pdf_editor_sessions SET ocr_data = $1, updated_at = NOW() WHERE id = $2 AND user_id = $3`,
+      [JSON.stringify(ocrData), req.params.id, req.userId],
+    );
+
+    return res.json(ocrData);
+  } catch (err) {
+    console.error("[pdf-editor] OCR error", err);
+    return res.status(500).json({ error: "ocr_failed" });
+  }
+});
+
+// ─── PATCH /api/pdf-editor/sessions/:id/ocr ──────────────────────────────────
+// Save user corrections to OCR data.
+// Body: { ocrData: OcrData }
+
+router.patch("/sessions/:id/ocr", requireAuth, async (req: any, res) => {
+  try {
+    const { ocrData } = req.body;
+    if (!ocrData || typeof ocrData !== "object") {
+      return res.status(400).json({ error: "ocrData is required" });
+    }
+    const result = await pool.query(
+      `UPDATE pdf_editor_sessions
+       SET ocr_data = $1, updated_at = NOW()
+       WHERE id = $2 AND user_id = $3
+       RETURNING id`,
+      [JSON.stringify(ocrData), req.params.id, req.userId],
+    );
+    if (!result.rows.length) {
+      return res.status(404).json({ error: "not_found" });
+    }
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error("[pdf-editor] save OCR edits error", err);
+    return res.status(500).json({ error: "server_error" });
+  }
+});
+
 // ─── GET /api/pdf-editor/sessions/:id/export ─────────────────────────────────
-// Apply edit ops to the original PDF using pdf-lib and stream the result.
-// Content-Type: application/pdf — triggers browser download.
-// Supports both legacy bytea sessions and new object-storage sessions.
-//
-// Coordinate system:
-//   Ops store fractions (0–1) from top-left.
-//   pdf-lib uses points from bottom-left.
-//   Conversion:  x = op.x * W
-//                y = (1 - op.y - op.h) * H  ← bottom of the rectangle
-//                w = op.w * W
-//                h = op.h * H
 
 router.get("/sessions/:id/export", requireAuth, async (req: any, res) => {
   try {
@@ -299,14 +471,10 @@ router.get("/sessions/:id/export", requireAuth, async (req: any, res) => {
     const pdfBytes = await resolvePdfBytes(row);
     const editOps: any[] = Array.isArray(row.ops) ? row.ops : [];
 
-    // Load the PDF
     const pdfDoc = await PDFDocument.load(pdfBytes);
     const pages = pdfDoc.getPages();
-
-    // Embed fonts once
     const helvetica = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
-    // Apply ops per page
     for (const op of editOps) {
       const pageIndex: number = op.pageIndex ?? 0;
       const page = pages[pageIndex];
@@ -315,57 +483,37 @@ router.get("/sessions/:id/export", requireAuth, async (req: any, res) => {
       const W = page.getWidth();
       const H = page.getHeight();
 
-      // Fractional → points (bottom-left origin)
       const x = op.x * W;
       const rectH = op.h * H;
       const rectW = op.w * W;
-      const y = (1 - op.y - op.h) * H; // bottom of rectangle
+      const y = (1 - op.y - op.h) * H;
 
       if (op.kind === "mask") {
-        // White solid rectangle — covers underlying content (no editor pattern)
         page.drawRectangle({
-          x,
-          y,
-          width: rectW,
-          height: rectH,
-          color: rgb(1, 1, 1),
-          opacity: 1,
+          x, y, width: rectW, height: rectH,
+          color: rgb(1, 1, 1), opacity: 1,
         });
       } else if (op.kind === "highlight") {
-        // Use op.highlightColor if set (e.g. CV handoff severity colors), else default yellow
         const hlColor = hexToRgb(op.highlightColor ?? "#fde68a");
         page.drawRectangle({
-          x,
-          y,
-          width: rectW,
-          height: rectH,
-          color: hlColor,
-          opacity: op.opacity ?? 0.4,
+          x, y, width: rectW, height: rectH,
+          color: hlColor, opacity: op.opacity ?? 0.4,
         });
       } else if (op.kind === "text" && op.text) {
         const fontSize: number = op.fontSize ?? 16;
-        const colorHex: string = op.color ?? "#000000";
-        const textColor = hexToRgb(colorHex);
-
-        // Place text at top of the text box (near the top-left)
-        // pdf-lib y = baseline position from bottom
+        const textColor = hexToRgb(op.color ?? "#000000");
         const textY = (1 - op.y) * H - fontSize;
-        const textX = x + 4; // small left padding
-
-        // Handle multi-line (split on newline)
+        const textX = x + 4;
         const lines = op.text.split("\n");
         const lineHeight = fontSize * 1.35;
         for (let li = 0; li < lines.length; li++) {
           const line = lines[li];
           if (!line) continue;
           const lineY = textY - li * lineHeight;
-          if (lineY < 0) break; // off the page
+          if (lineY < 0) break;
           page.drawText(line, {
-            x: textX,
-            y: lineY,
-            size: fontSize,
-            font: helvetica,
-            color: textColor,
+            x: textX, y: lineY, size: fontSize,
+            font: helvetica, color: textColor,
           });
         }
       }
@@ -373,8 +521,6 @@ router.get("/sessions/:id/export", requireAuth, async (req: any, res) => {
 
     const exportedBytes = await pdfDoc.save();
     const exportedBuffer = Buffer.from(exportedBytes);
-
-    // Safe ASCII filename for Content-Disposition
     const safeName = row.file_name.replace(/[^\w.\-]/g, "_");
     const downloadName = safeName.endsWith(".pdf")
       ? safeName.replace(/\.pdf$/, "-edited.pdf")
@@ -382,10 +528,7 @@ router.get("/sessions/:id/export", requireAuth, async (req: any, res) => {
 
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Length", exportedBuffer.length);
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename="${downloadName}"`,
-    );
+    res.setHeader("Content-Disposition", `attachment; filename="${downloadName}"`);
     return res.end(exportedBuffer);
   } catch (err) {
     console.error("[pdf-editor] export error", err);

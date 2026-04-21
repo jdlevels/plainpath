@@ -1,0 +1,388 @@
+PLAINPATH — MAJOR BUILD BLOCK
+PDF PLATFORM EXPANSION — EDITOR + UTILITY FOUNDATION
+
+You are working inside the existing PlainPath codebase.
+
+IMPORTANT:
+This is a major PDF platform expansion block.
+The goal is to evolve PlainPath from a narrow PDF editing surface into a broader PDF workspace that can compete on flexibility while still staying cleaner and more workflow-focused than generic utility sites.
+
+This block must stay centered on:
+- PDF Editor foundation
+- OCR for scanned PDFs
+- real text-editing direction
+- save/export foundation
+- page operations
+- merge/split/compress utility foundation
+
+Do NOT drift into unrelated product areas:
+- Compare Versions feature changes
+- Contract Builder changes
+- Trust Check changes
+- major marketing redesign
+- billing/Stripe work
+- Word/docx full implementation beyond light future-facing prep if architecture requires it
+- org/team features
+- approval workflows
+- unrelated AI feature expansion
+
+==================================================
+PRODUCT DIRECTION
+==================================================
+
+PlainPath PDF should evolve into one shared PDF platform with:
+
+1. EDITOR MODE
+- open PDF
+- detect whether text is selectable or scanned
+- OCR scanned PDFs into searchable text
+- support real text-editing direction
+- support correction/export workflow
+- save session
+- download final PDF
+
+2. UTILITY MODE
+- merge PDFs
+- split PDFs
+- extract pages
+- delete pages
+- reorder pages
+- rotate pages
+- compress PDF
+
+This should NOT become 20 disconnected mini-tools.
+It should feel like one coherent PDF platform using:
+- one shared intake flow
+- one shared file/session model
+- one shared PDF engine
+- one shared OCR layer
+- one shared export model
+- one shared utility framework
+
+==================================================
+PRIMARY GOALS FOR THIS PASS
+==================================================
+
+T001 — PDF intake classification foundation
+T002 — OCR / scanned-PDF foundation
+T003 — session save / export / Save As foundation
+T004 — utility foundation: merge / split / page ops / compress
+T005 — unified PDF platform entry and routing structure
+
+If a better internal implementation order is needed, use judgment, but stay inside this block only.
+
+==================================================
+EXECUTION RULES
+==================================================
+
+Follow this order exactly:
+1. Inspect current PDF Editor architecture first
+2. Produce a tight implementation plan grounded in actual code found
+3. Implement in phases
+4. Run verification
+5. Provide a structured completion report
+
+Do not start coding before inspection and plan.
+Do not answer vaguely.
+Use exact files, exact routes, exact state/model changes, and exact verification results.
+
+==================================================
+REQUIRED INSPECTION TASK
+==================================================
+
+Before coding, inspect and identify:
+
+A) CURRENT PDF PLATFORM STATE
+- current PDF Editor routes/pages/components
+- current PDF session model/storage
+- current upload/open/save/export flow
+- current PDF page rendering engine
+- current Compare Versions → PDF Editor handoff dependency points
+- current edit ops model
+- current file/session persistence model
+- current toolbar and side panel structure
+
+B) OCR / TEXT EXTRACTION READINESS
+- whether any OCR packages already exist in the repo
+- current PDF text extraction logic anywhere in the app
+- whether current editor can distinguish selectable-text PDFs vs scanned/image PDFs
+- whether there is already any page-image rendering pipeline that can support OCR overlays
+- what technical gaps exist for building a searchable text layer
+
+C) PDF UTILITY READINESS
+- whether merge/split/extract/delete/reorder/compress libs/utilities already exist
+- whether current server/client boundaries are suitable for heavier PDF operations
+- whether the current session model can support both editor and utility workflows cleanly
+
+D) UX / PRODUCT STRUCTURE
+- where PDF Editor currently lives in the tools system
+- whether a PDF platform landing/selector already exists or needs to be added
+- how to preserve existing PDF Editor flow while expanding utilities
+- whether split-screen/document-first rules are already reusable for expanded PDF workflows
+
+Then produce a concise implementation plan grounded in the actual codebase.
+
+==================================================
+IMPLEMENTATION PLAN REQUIREMENTS
+==================================================
+
+Plan must include:
+- exact routes/pages/components to create or modify
+- exact editor-vs-utility architecture
+- exact OCR foundation approach
+- exact save/export/session model changes
+- exact utility features included in this pass
+- exact verification checklist
+- clearly marked deferred items
+
+Keep the plan tight. No essay.
+
+==================================================
+T001 — PDF INTAKE CLASSIFICATION FOUNDATION
+==================================================
+
+Goal:
+When a user opens a PDF, PlainPath should understand what kind of PDF it is and route them appropriately.
+
+Required:
+- classify PDFs as one of:
+  - text PDF
+  - scanned/image PDF
+  - mixed PDF
+- make this classification visible enough for the user to understand what happens next
+- preserve current PDF Editor open flow for normal text PDFs
+- if scanned/image PDF is detected, offer the OCR workflow instead of pretending direct text editing is available
+- if mixed PDF is detected, handle it gracefully and explain that some pages may need OCR
+
+The intake should feel like:
+- Open PDF
+- detect file type
+- continue into the correct editing/utility workflow
+
+Do not overcomplicate the first UI.
+Keep the decision clear and stable.
+
+==================================================
+T002 — OCR / SCANNED-PDF FOUNDATION
+==================================================
+
+Goal:
+Scanned PDFs should become searchable and editable through an OCR-backed workflow.
+
+Required:
+- add OCR foundation for scanned/image PDFs
+- extract text from scanned pages
+- create a searchable text layer
+- preserve original page image underneath
+- store OCR results in a session-safe structure
+- expose confidence or “review recommended” signals only if cleanly available
+- allow the user to review/correct OCR text in a practical workflow
+
+At minimum for this pass:
+- scanned PDF opens
+- OCR runs
+- extracted text becomes searchable
+- OCR text can be reviewed/edited in session
+- export path preserves the corrected result directionally
+
+Important:
+This does NOT need to be perfect “desktop PDF editor parity” in one pass.
+But it must be a real foundation, not a fake placeholder.
+
+Also:
+- OCR should be integrated into the PDF platform flow, not treated as a random separate tool card
+- AI may be used only where it meaningfully assists OCR review, not as a vague add-on
+
+==================================================
+T003 — SESSION SAVE / EXPORT / SAVE AS FOUNDATION
+==================================================
+
+Goal:
+Users must be able to work on a PDF and finish with a real output path.
+
+Required:
+- preserve the distinction between:
+  - Save session / work-in-progress
+  - Download final PDF / Save As output
+- allow the user to rename the output file before download if current architecture supports it cleanly
+- ensure session save persists editor state / OCR corrections / page operation state where applicable
+- ensure final export produces a real PDF output, not only a markup shell
+- keep save/export wording clear and consistent
+
+Important product rule:
+PlainPath must move toward exporting a real edited PDF, not just annotations floating above the original.
+
+If browser limitations prevent direct “save anywhere” semantics:
+- implement the correct browser-safe version:
+  - Save session in app
+  - Download / Save As final PDF to user-selected location via browser
+
+==================================================
+T004 — UTILITY FOUNDATION: MERGE / SPLIT / PAGE OPS / COMPRESS
+==================================================
+
+Goal:
+PlainPath PDF should begin supporting core flexible PDF utility actions.
+
+This pass must include a practical first foundation for:
+- Merge PDFs
+- Split PDFs
+- Extract pages
+- Delete pages
+- Reorder pages
+- Rotate pages
+- Compress PDF
+
+Requirements:
+- utilities should feel part of one shared PDF platform, not disconnected experiments
+- use one shared upload/session flow when practical
+- keep the UI clean and non-cluttered
+- preserve document-first usability where it matters
+- use sensible success/failure states
+- avoid overwhelming the user with too many options at once
+
+You may implement this as:
+- a PDF tools landing page with grouped actions
+- or a mode switcher inside the PDF platform
+- or another clean architecture that still preserves product coherence
+
+But it must remain coherent and scalable.
+
+==================================================
+T005 — UNIFIED PDF PLATFORM ENTRY AND ROUTING STRUCTURE
+==================================================
+
+Goal:
+Users should experience PlainPath PDF as a real platform, not a single narrow editor.
+
+Required:
+- define the clean entry structure for PDF platform actions
+- preserve existing PDF Editor route behavior where already linked from other tools
+- add or improve a landing/router layer so users can discover:
+  - Edit PDF
+  - OCR scanned PDF
+  - Merge PDFs
+  - Split PDFs
+  - Page tools
+  - Compress
+- keep naming practical and product-grade
+- avoid bloated utility-card clutter unless it is intentionally grouped and clean
+
+The routing structure should support growth later into:
+- forms
+- fill & sign
+- metadata editing
+- page numbering
+- watermark/flatten/protect
+- conversions
+without needing a total rebuild.
+
+==================================================
+TECHNICAL / UX PRINCIPLES
+==================================================
+
+1. One PDF platform, not scattered tools
+All new functionality should strengthen a unified PDF system.
+
+2. Preserve existing editor flow
+Do not break current PDF Editor or Compare Versions → PDF Editor handoff.
+
+3. OCR is integrated, not bolted on
+Scanned PDF handling must feel native to the editor intake path.
+
+4. Save vs Download distinction remains explicit
+Work-in-progress persistence is not the same as final file export.
+
+5. Flexible but not cluttered
+Compete on capability without becoming visually messy.
+
+6. Low-risk expansion
+Do not destabilize recently completed document flows.
+
+==================================================
+NON-GOALS / DEFERRED UNLESS ABSOLUTELY REQUIRED
+==================================================
+
+Do NOT include in this pass unless required for architecture:
+- PDF to Word / Word to PDF full implementation
+- forms builder overhaul
+- protect/unlock/watermark/flatten unless already trivial
+- batch tools beyond the listed utilities
+- full AI assistant feature expansion
+- Compare Versions feature work
+- billing work
+- team/org features
+- approval workflows
+
+==================================================
+VERIFICATION REQUIREMENTS
+==================================================
+
+After implementation, run verification and report actual results.
+
+At minimum verify:
+1. existing PDF Editor still opens correctly
+2. Compare Versions → PDF Editor handoff still works
+3. text PDF classification works
+4. scanned/image PDF detection works
+5. OCR flow runs on a scanned PDF fixture
+6. OCR text becomes searchable
+7. OCR review/edit state can be saved in session
+8. Download/Save As output path works clearly
+9. Merge flow works
+10. Split flow works
+11. Extract/delete/reorder/rotate page operations work
+12. Compress flow works
+13. unified PDF entry/routing structure works
+14. changed files pass TS/build checks
+15. no regressions in existing PDF Editor save/export behavior
+
+Use these result categories:
+- PASS — browser-verified
+- PASS — code-verified
+- FIXED — bug found and patched
+- UNABLE — blocked by external dependency or environment limitation
+
+==================================================
+FINAL COMPLETION REPORT FORMAT
+==================================================
+
+When done, provide the report in these exact sections:
+
+1. EXACT FILES CREATED
+- list every created file with full relative path
+
+2. EXACT FILES MODIFIED
+- list every modified file with full relative path
+
+3. PDF PLATFORM FOUNDATION CHANGES
+- one item per major change
+- include exact page/tool/route
+- include what was improved and why it matters
+
+4. OCR / EDIT / SAVE / UTILITY ARCHITECTURE
+- exact architecture decisions made
+- exact save/export/session model changes
+- exact OCR foundation details
+- exact utility features included now
+
+5. WHAT WORKS END-TO-END
+- concise but specific
+- cover T001, T002, T003, T004, T005
+
+6. WHAT REMAINS DEFERRED
+- list anything intentionally deferred
+- explain why it was deferred
+
+7. VERIFICATION RESULTS
+- checklist of tested flows
+- note PASS / FIXED / UNABLE and any caveats
+
+==================================================
+QUALITY BAR
+==================================================
+
+This is a major platform expansion pass.
+Be structured.
+Favor clean architecture over scattered additions.
+Compete on flexibility, but keep the product coherent and usable.
