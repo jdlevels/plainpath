@@ -1,0 +1,99 @@
+PLAINPATH — DOCUMENT BUILDER CONTINUITY VERIFICATION PASS
+
+Scope:
+This is a narrow verification pass only for Document Builder continuity.
+Do not touch Compare Versions, PDF Editor, Analyze, Trust Check, Redact, Contract Review, Signature, billing, or marketing.
+Do not do broad cleanup.
+Do not redesign anything.
+
+Context:
+Recent work already added:
+- real Document Builder drafts into Dashboard Recent Work
+- a dedicated Document Builder section in My Documents
+- corrected the mislabeled local “contract-builder” item back to “Contract Builder”
+- Document Builder resumes via /builder/:id
+- My Documents Builder section is gated by BUILDER_ENABLED
+
+Goal:
+Confirm the saved-work loop for Document Builder is fully working end-to-end in the browser.
+
+Execution rules:
+1. Inspect current code first
+2. Verify whether BUILDER_ENABLED is actually on in this environment
+3. Run browser verification
+4. Only if a real bug is found, apply the minimum fix required
+5. Re-test the exact failed path only
+6. Deliver a strict completion report
+
+Verification checklist:
+
+T001 — Environment / feature gate check
+- Confirm whether BUILDER_ENABLED is enabled in the running environment
+- Confirm the Builder section should be visible in My Documents in this environment
+- Report the exact source of truth for this gate
+
+T002 — Create + save Builder draft
+- Open Document Builder
+- Create a brand-new draft
+- Add enough visible content to make restoration obvious:
+  - title
+  - several sections/blocks
+  - at least one obvious text string for proof
+- Save it
+- Capture proof that save completed successfully
+
+T003 — My Documents continuity
+- Open My Documents
+- Confirm the new draft appears in the dedicated Document Builder section
+- Confirm card metadata is correct enough to identify the draft:
+  - title
+  - last modified / updated date
+  - category/section/block metadata if shown
+- Click “Continue building”
+- Confirm it opens the exact same Builder draft at /builder/:id
+- Confirm previously entered content restored correctly
+
+T004 — Dashboard Recent Work continuity
+- Go to Dashboard
+- Confirm the same Builder draft appears in Recent Work
+- Confirm it is labeled as Document Builder, not Contract Builder
+- Use the Recent Work CTA
+- Confirm it resumes the exact same draft at /builder/:id
+- Confirm content restores correctly again
+
+T005 — Archive behavior
+- From My Documents, archive the Builder draft
+- Confirm it disappears from the default active Builder list
+- Confirm it no longer appears incorrectly in Recent Work if the product logic intends active-only surfacing
+- Do not add new archive browsers or restore UI in this pass unless already broken and required
+
+T006 — No regression checks
+- Confirm the local Contract Builder item still displays as “Contract Builder”
+- Confirm no route/path changed unexpectedly:
+  - /builder/new
+  - /builder/:id
+  - /build-contract
+- Confirm no regressions to Documents or Home from this verification/fix pass
+
+Rules if bug is found:
+- Fix only the minimum code required for Builder continuity
+- Do not refactor unrelated data loaders
+- Do not rewrite page structure
+- Do not rename routes
+- Do not introduce new systems
+- Preserve the existing DB-backed Builder persistence model
+
+Required final report format:
+1. EXACT FILES CREATED
+2. EXACT FILES MODIFIED
+3. EXACT ROUTES / PATHS VERIFIED
+4. BUILDER_ENABLED STATUS
+5. WHAT PASSED END-TO-END
+6. WHAT FAILED
+7. IF FIXED: exact root cause + minimal fix applied
+8. WHAT REMAINS DEFERRED
+
+Important:
+This is not a planning pass.
+This is not a broad polish pass.
+This is a focused browser verification pass for Builder saved-work continuity only.
