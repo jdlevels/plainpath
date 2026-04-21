@@ -1,0 +1,273 @@
+PLAINPATH — PDF EDITOR ONLY — NEXT BUILD BLOCK
+
+Work ONLY on the PDF platform/editor surfaces. Do not change Builder, Compare Versions, My Documents, Dashboard, marketing site, billing, auth, or non-PDF tools unless a tiny import/type fix is strictly required to compile.
+
+Before writing code:
+1. Inspect the current PDF codebase end to end.
+2. Preserve all existing verified behaviors.
+3. Then implement the exact block below.
+
+==================================================
+OBJECTIVE
+==================================================
+
+Advance PlainPath’s PDF Editor from a basic editor + utility hub into a stronger practical PDF workspace closer to the flexibility users expect from tools like PDFgear / PDF24 / Sejda, while staying within our current architecture.
+
+This pass must focus on:
+- real text-edit workflow improvements
+- scanned-PDF OCR usability
+- better save/export behavior
+- stronger PDF utility workflow polish
+- no regressions to existing compare→editor handoff
+
+==================================================
+NON-NEGOTIABLE PRODUCT RULES
+==================================================
+
+1. PDF workspaces remain document-first and split-screen by default.
+   - Left = document/page view
+   - Right = editing / OCR / issue / utility controls
+
+2. Keep visible Save.
+   - Manual Save button must remain visible.
+   - Autosave remains around 60 seconds.
+   - Unsaved state must stay visually obvious.
+
+3. Do not fake text editing.
+   - If text is “edited,” it must affect exported output.
+   - Sidebar-only text changes are not acceptable.
+
+4. Preserve all existing verified flows:
+   - /pdf-editor
+   - /pdf-editor/:id
+   - compare→editor handoff with ?fromCompare=1&handoffId=...
+   - OCR badge/banner/panel behavior already shipped
+   - merge / extract / page tools / compress cards already shipped
+   - rename / delete / pdf_type badge / save / download
+
+5. No regressions to Compare Versions handoff, toolbar, or editor save/export.
+
+==================================================
+SCOPE FOR THIS PASS
+==================================================
+
+T001 — TRUE TEXT EDIT MODE INSIDE PDF EDITOR SESSION
+Implement a first practical version of editable text inside /pdf-editor/:id.
+
+Requirements:
+- Add a distinct “Edit Text” mode/tool in PdfEditorSession.
+- It must work for:
+  a) searchable/text PDFs
+  b) scanned PDFs after OCR exists
+- User can click a detected text region/block/line and edit its text in the right pane.
+- Store these edits as real session ops, not temporary UI-only state.
+- Exported PDF must reflect the edited text.
+
+Implementation guidance:
+- Reuse the existing OCR/session model where possible.
+- For text PDFs, inspect existing text extraction paths and derive editable text regions.
+- For scanned PDFs, use OCR data as the editable text source after OCR is run.
+- If exact native glyph replacement is not feasible with current stack, use the acceptable fallback:
+  - cover original region
+  - render replacement text into the same bounding area
+  - preserve readable page output
+- Support at minimum:
+  - replace selected text block
+  - multiline text edit where block supports it
+  - font size adjustment or auto-fit within bounding box
+- Do not over-engineer full word processor behavior in this pass.
+
+Acceptance:
+- Edit text in a text/searchable PDF → save → reload → edit persists
+- Download corrected PDF → edited text appears in exported file
+- Edit OCR text in scanned PDF → save → reload → export reflects the change
+
+--------------------------------------------------
+T002 — OCR WORKFLOW POLISH FOR SCANNED PDFS
+--------------------------------------------------
+
+Improve scanned-PDF usability.
+
+Requirements:
+- When pdf_type = scanned or mixed, OCR controls must be clearer and more actionable.
+- Add a dedicated OCR review/edit panel in the right pane that is easy to use.
+- Per-page OCR results should show:
+  - page number
+  - extracted text
+  - editable textarea
+  - last-updated indicator if available
+- Add clear button states:
+  - Run OCR
+  - Re-run OCR
+  - Save OCR edits
+- Show whether OCR exists, is stale, or still needs to be run.
+- Persist OCR edits to the session and reload them correctly.
+
+Acceptance:
+- Scanned PDF with no OCR shows clear “Run OCR” path
+- OCR result persists after save/reload
+- OCR-edited text is reusable by Edit Text mode and export
+
+--------------------------------------------------
+T003 — SAVE / EXPORT / DEVICE-SAVE POLISH
+--------------------------------------------------
+
+Improve completion/output behavior after a document is edited.
+
+Requirements:
+- Keep current Save and Download PDF behavior.
+- Add stronger output options in the toolbar/right pane:
+  - Save
+  - Download PDF
+  - Save to device (when browser File System Access API is available)
+  - fallback cleanly to normal download where unsupported
+- Show clear distinction:
+  - Save = persist session/work-in-progress
+  - Download PDF = export final current output
+  - Save to device = user chooses a local file destination when supported
+- Improve export naming:
+  - use editable filename/session title
+  - append sensible suffix only when needed
+- Show last saved time in a user-facing way.
+
+Acceptance:
+- User understands difference between Save and Download PDF
+- Save to device works where supported and falls back safely where not
+- Export/download uses current edited state, not stale state
+
+--------------------------------------------------
+T004 — PDF TOOLS HUB POLISH (NO MASSIVE NEW TOOL SPRAWL)
+--------------------------------------------------
+
+Do NOT explode scope into 20+ new tools. Tighten and polish what exists first.
+
+Improve /pdf-editor hub structure:
+- Keep Edit PDF and PDF Tools tabs
+- Make PDF Tools feel more intentional and organized
+- Group cards clearly:
+  - Merge / Extract
+  - Page Tools
+  - Compress
+  - OCR / Text
+- Make each card’s title/subtext explicit and user-facing
+- Make completion feedback more visible (“Downloaded”, “Saved X bytes”, etc.)
+- Keep the already-extended 8s success-state window if present
+
+Where feasible in this pass, add only lightweight/high-value stateless utilities that fit current architecture without risk:
+- PDF → Text extraction/download
+- Delete pages / rotate / reorder polish if needed
+Do NOT start DOCX conversion, Excel conversion, PPT conversion, watermark, flatten, etc. in this pass unless they are already nearly implemented and very low risk.
+
+Acceptance:
+- The tools hub looks like a coherent PDF platform, not a loose set of cards
+- Existing cards remain functional
+- Completion states are easy to see
+
+--------------------------------------------------
+T005 — SESSION LIST / METADATA / CLARITY POLISH
+--------------------------------------------------
+
+Improve /pdf-editor session list clarity.
+
+Requirements:
+- Each saved PDF session card should clearly show:
+  - filename/title
+  - page count
+  - file size
+  - updated time
+  - pdf_type badge (text / scanned / mixed)
+  - OCR status if relevant
+  - whether edited text exists (simple count/badge is enough)
+- Keep delete session behavior.
+- Keep rename behavior.
+- Keep “Open PDF” / continue editing path.
+
+Acceptance:
+- User can tell at a glance which PDF sessions are text vs scanned
+- User can identify which sessions have OCR / text edits
+
+==================================================
+FILES / SURFACES TO INSPECT FIRST
+==================================================
+
+Inspect all relevant files before coding, especially:
+- artifacts/plainpath/src/pages/PdfEditor.tsx
+- artifacts/plainpath/src/pages/PdfEditorSession.tsx
+- artifacts/plainpath/src/components/PdfToolsPanel.tsx
+- artifacts/plainpath/src/lib/pdfEditorApi.ts
+- artifacts/plainpath/src/lib/pdfEditorTypes.ts
+- artifacts/api-server/src/routes/pdf-editor/index.ts
+- artifacts/api-server/src/routes/pdf-utilities/index.ts
+- any OCR/document route currently used by the PDF editor
+- any export code path applying current ops to pdf-lib output
+
+==================================================
+IMPLEMENTATION CONSTRAINTS
+==================================================
+
+- Reuse current DB/session model wherever possible.
+- Add schema fields only if truly necessary.
+- Prefer extending ops/session JSON over risky schema churn unless a new column is clearly justified.
+- Keep backward compatibility with old editor sessions.
+- Do not break compare→editor handoff.
+- Do not break admin/pro/paywall logic.
+- No broad refactors outside PDF surfaces.
+
+==================================================
+REQUIRED VERIFICATION
+==================================================
+
+Use real browser verification where possible.
+
+You must verify at minimum:
+1. text PDF session:
+   - upload/open
+   - edit text
+   - save
+   - reload
+   - download PDF
+   - confirm edited text reflected
+
+2. scanned PDF session:
+   - upload/open
+   - run OCR
+   - edit OCR text
+   - save
+   - reload
+   - export/download
+   - confirm edited result reflected
+
+3. existing compare→editor handoff:
+   - open compare handoff session
+   - confirm existing issue panel/handoff context not broken
+
+4. PDF tools hub:
+   - merge still works
+   - extract still works
+   - page tools still work
+   - compress still works
+   - success feedback visible long enough to verify
+
+5. session list:
+   - text/scanned/mixed badges render correctly
+   - OCR / edit metadata visible
+   - open / rename / delete still work
+
+==================================================
+OUTPUT FORMAT
+==================================================
+
+After completion, provide a strict structured report with:
+
+1. EXACT FILES CREATED
+2. EXACT FILES MODIFIED
+3. ROUTES / ENDPOINTS ADDED OR CHANGED
+4. STATE / MODEL CHANGES
+5. WHAT WORKS END-TO-END
+6. WHAT WAS DEFERRED
+7. VERIFICATION RESULTS
+8. ANY BUG FOUND AND FIXED DURING QA
+
+Do not give a vague summary. Be exact.
+
+Start now.
