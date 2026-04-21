@@ -4,7 +4,7 @@ import {
   ArrowRight, ShieldCheck, FileSignature,
   PenLine, FileScan, Scale, EyeOff,
   BookMarked, Clock, ChevronRight, CreditCard,
-  LayoutGrid, GitCompare, Pen, FileEdit, LayoutTemplate,
+  LayoutGrid, GitCompare, FileEdit, LayoutTemplate,
 } from "lucide-react"
 import { BUILDER_ENABLED } from "@/lib/builderConfig"
 import { useState, useEffect } from "react"
@@ -26,13 +26,14 @@ type RecentItem =
 
 // ─── Tool definitions ─────────────────────────────────────────────────────────
 
+// First-class 8 tools — canonical order and routes
 const TOOLS = [
   {
     key: "analyze" as const,
     label: "Analyze a Document",
     desc: "Understand any paperwork in plain English — deadlines, action steps, risks.",
     icon: FileScan,
-    path: "/import",
+    path: "/analyze",
     color: "text-blue-500 dark:text-blue-400",
     bg: "bg-blue-50 dark:bg-blue-950/50",
     ring: "hover:border-blue-400/50 hover:shadow-blue-500/10",
@@ -50,22 +51,11 @@ const TOOLS = [
     plan: "pro" as const,
   },
   {
-    key: "builder" as const,
-    label: "Document Builder",
-    desc: "Create structured documents from scratch or a template, then route them into any PlainPath tool.",
-    icon: LayoutTemplate,
-    path: "/builder",
-    color: "text-indigo-500 dark:text-indigo-400",
-    bg: "bg-indigo-50 dark:bg-indigo-950/50",
-    ring: "hover:border-indigo-400/50 hover:shadow-indigo-500/10",
-    plan: null,
-  },
-  {
     key: "build-contract" as const,
     label: "Build a Contract",
     desc: "Answer a few questions and get a complete, ready-to-sign contract.",
     icon: PenLine,
-    path: "/contract-builder",
+    path: "/build-contract",
     color: "text-emerald-500 dark:text-emerald-400",
     bg: "bg-emerald-50 dark:bg-emerald-950/50",
     ring: "hover:border-emerald-400/50 hover:shadow-emerald-500/10",
@@ -92,6 +82,17 @@ const TOOLS = [
     bg: "bg-violet-50 dark:bg-violet-950/50",
     ring: "hover:border-violet-400/50 hover:shadow-violet-500/10",
     plan: null,
+  },
+  {
+    key: "signature" as const,
+    label: "Digital Signature",
+    desc: "Send legally binding e-signature requests and track signing status.",
+    icon: FileSignature,
+    path: "/signature",
+    color: "text-violet-500 dark:text-violet-400",
+    bg: "bg-violet-50 dark:bg-violet-950/50",
+    ring: "hover:border-violet-400/50 hover:shadow-violet-500/10",
+    plan: "pro" as const,
   },
   {
     key: "pdf-editor" as const,
@@ -145,7 +146,7 @@ const DEMOS = [
     icon: PenLine,
     color: "text-emerald-500 dark:text-emerald-400",
     bg: "bg-emerald-50 dark:bg-emerald-950/50",
-    path: "/contract-builder",
+    path: "/build-contract",
   },
   {
     id: "contract-review-employment",
@@ -307,8 +308,8 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {TOOLS.filter(t => t.key !== "builder" || BUILDER_ENABLED).map((tool, i) => {
-              const accessible = tool.key === "builder" ? BUILDER_ENABLED : canAccessTool(tool.key)
+            {TOOLS.map((tool, i) => {
+              const accessible = canAccessTool(tool.key)
               const locked = !accessible && !!entitlements
 
               return (
@@ -359,57 +360,32 @@ export default function Home() {
                 </motion.div>
               )
             })}
-
-            {/* Digital Signature — Pro tool */}
-            {(() => {
-              const sigAccessible = isAdmin || toolAccess.includes("signature")
-              return (
-                <motion.div
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: TOOLS.length * 0.06 }}
-                >
-                  <Card
-                    className={`h-full border rounded-2xl overflow-hidden transition-all ${
-                      sigAccessible
-                        ? "border-border/60 hover:border-violet-400/50 hover:shadow-md hover:shadow-violet-500/10 cursor-pointer"
-                        : "border-border/40 bg-muted/10"
-                    }`}
-                    onClick={sigAccessible ? () => setLocation("/signature") : undefined}
-                  >
-                    <div className="p-5 flex flex-col h-full gap-3">
-                      <div className="flex items-start justify-between">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${sigAccessible ? "bg-violet-50 dark:bg-violet-950/50" : "bg-muted/40"}`}>
-                          <FileSignature className={`w-5 h-5 ${sigAccessible ? "text-violet-500 dark:text-violet-400" : "text-muted-foreground/40"}`} />
-                        </div>
-                        {!sigAccessible && (
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 border border-border/30 rounded-full px-2 py-0.5">
-                            Pro
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <h3 className={`font-semibold text-sm mb-1 ${sigAccessible ? "text-foreground" : "text-muted-foreground/70"}`}>
-                          Digital Signature
-                        </h3>
-                        <p className={`text-xs leading-relaxed ${sigAccessible ? "text-muted-foreground" : "text-muted-foreground/50"}`}>
-                          Send legally binding e-signature requests and track signing status.
-                        </p>
-                      </div>
-                      {!sigAccessible && (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setLocation("/upgrade") }}
-                          className="text-xs font-semibold text-primary hover:underline text-left"
-                        >
-                          Upgrade to unlock →
-                        </button>
-                      )}
-                    </div>
-                  </Card>
-                </motion.div>
-              )
-            })()}
           </div>
+
+          {/* Document Builder — separate utility workspace (not a first-class analysis tool) */}
+          {BUILDER_ENABLED && (
+            <div className="mt-6 pt-5 border-t border-border/40">
+              <div className="flex items-center gap-2 mb-3">
+                <LayoutTemplate className="w-3.5 h-3.5 text-muted-foreground" />
+                <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Workspace</span>
+              </div>
+              <Card
+                className="group border border-border/50 bg-card rounded-2xl cursor-pointer hover:border-indigo-400/50 hover:shadow-md hover:shadow-indigo-500/10 transition-all"
+                onClick={() => setLocation("/builder")}
+              >
+                <div className="p-4 flex items-center gap-4">
+                  <div className="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center shrink-0">
+                    <LayoutTemplate className="w-4.5 h-4.5 text-indigo-500 dark:text-indigo-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-foreground text-sm">Document Builder</h3>
+                    <p className="text-xs text-muted-foreground leading-relaxed">Create structured documents from scratch or a template, then route them into any PlainPath tool.</p>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-indigo-400 opacity-0 group-hover:opacity-100 transition-all shrink-0" />
+                </div>
+              </Card>
+            </div>
+          )}
         </section>
 
         {/* ══════════════════════════════════════════════
@@ -445,7 +421,7 @@ export default function Home() {
                 <p className="text-xs text-muted-foreground/60 mb-4 max-w-xs mx-auto">
                   Your saved analyses and documents will appear here once you run your first tool.
                 </p>
-                <Button size="sm" variant="outline" onClick={() => setLocation("/import")} className="rounded-xl text-xs">
+                <Button size="sm" variant="outline" onClick={() => setLocation("/analyze")} className="rounded-xl text-xs">
                   Start with Analyze a Document
                 </Button>
               </div>
@@ -482,7 +458,7 @@ export default function Home() {
                     >
                       <div className="p-4">
                         <div className="flex items-start gap-2.5">
-                          <Pen className="w-4 h-4 text-violet-500 dark:text-violet-400 mt-0.5 shrink-0" />
+                          <FileSignature className="w-4 h-4 text-violet-500 dark:text-violet-400 mt-0.5 shrink-0" />
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-foreground truncate">{item.title}</p>
                             <p className="text-xs text-muted-foreground mt-0.5 truncate">→ {item.signerName}</p>
@@ -497,7 +473,7 @@ export default function Home() {
                     (() => {
                       const localMeta = {
                         "redact":           { icon: EyeOff,     color: "text-violet-400",  href: "/redact",           label: "Redacted" },
-                        "contract-builder": { icon: PenLine,    color: "text-emerald-400", href: "/contract-builder", label: "Draft" },
+                        "contract-builder": { icon: PenLine,    color: "text-emerald-400", href: "/build-contract",   label: "Draft" },
                         "compare":          { icon: GitCompare, color: "text-teal-400",    href: "/compare-versions", label: "Compare" },
                       }
                       const meta = localMeta[item.tool]

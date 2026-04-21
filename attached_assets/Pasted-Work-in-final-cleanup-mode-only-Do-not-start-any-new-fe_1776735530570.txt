@@ -1,0 +1,120 @@
+Work in final cleanup mode only.
+
+Do not start any new feature work.
+Do not touch Compare Versions engine, PDF Editor slices, demo quota, billing, auth logic, or Word support.
+Do not redesign the marketing site.
+This is a strict consistency closeout only.
+
+GOAL:
+Make the tool inventory truly canonical across app + public surfaces + recent work mappings, then provide final proof.
+
+==================================================
+T001 — Canonical 8-tool set
+==================================================
+
+Adopt this exact first-class tool set everywhere:
+
+1. Analyze a Document
+2. Document Trust Check
+3. Build a Contract
+4. Contract Review
+5. Redact Sensitive Info
+6. Digital Signature
+7. PDF Editor
+8. Compare Versions
+
+Rule:
+Document Builder is NOT part of the first-class 8.
+It remains a separate utility/workspace tool.
+
+Apply this rule consistently across:
+- authenticated dashboard first-class tool grid
+- authenticated Tools dropdown
+- public marketing hero/tool surfaces
+- public tools showcase
+- any tool-count labels/copy
+- any inventory/config arrays used to drive these surfaces
+
+==================================================
+T002 — Document Builder placement cleanup
+==================================================
+
+If Document Builder currently occupies a first-class slot in the authenticated dashboard grid:
+- remove it from the first-class 8 grid
+- ensure Digital Signature is present there instead if missing
+- keep Document Builder accessible separately in an appropriate utility/builder area
+- do not delete Builder functionality or routing
+
+==================================================
+T003 — Route + recent-work normalization
+==================================================
+
+Normalize stale legacy route mismatches.
+
+Specifically audit and fix:
+- /build-contract
+- /contract-builder
+
+Choose one canonical route for the contract drafting tool and make all mappings consistent:
+- dashboard grid
+- navbar
+- recent work mapping
+- tool arrays
+- labels/descriptions
+
+Do the same audit for:
+- compare / compare-versions
+- pdf-editor
+- signature
+- redact
+- analyze
+
+Legacy compatibility routes may remain if needed for bookmarks, but they must not appear as active product mappings.
+
+==================================================
+T004 — Final naming consistency audit
+==================================================
+
+Audit for any remaining inconsistent labels such as:
+- Document Compare
+- Compare
+- Compare Versions
+- Audit Document Revisions
+- PDF Editor
+- Document Builder / Builder
+
+Use the intended production names consistently on all visible product surfaces.
+
+==================================================
+T005 — Final proof
+==================================================
+
+Capture real screenshots for:
+
+1. Authenticated dashboard first-class tool grid
+2. Authenticated Tools dropdown
+3. Public marketing hero
+4. Public tools showcase
+5. Public tools section
+6. Recent work area showing corrected mapping behavior if applicable
+
+If authenticated screenshots require manual browser session:
+- use the manual authenticated session
+- do not substitute code-only verification if live capture is possible
+
+==================================================
+FINAL REPORT FORMAT
+==================================================
+
+Return a strict final closeout report with:
+
+1. Exact files modified
+2. Canonical first-class 8-tool list
+3. Confirmation that Document Builder is separate from the first-class 8
+4. Exact canonical route chosen for Build a Contract
+5. Any legacy compatibility routes left in place
+6. Screenshot list with route/state for each
+7. Final explicit statement:
+   - “Tool surface standardization fully closed”
+   OR
+   - “Still blocked by X”
