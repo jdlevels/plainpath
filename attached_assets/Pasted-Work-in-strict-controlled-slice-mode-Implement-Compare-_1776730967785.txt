@@ -1,0 +1,368 @@
+Work in strict controlled-slice mode.
+
+Implement Compare Versions — Slice 5 only.
+Do not implement Slice 6 or any V2 feature.
+Do not add Word (.docx) input, OCR, exportable audit report, PDF Editor handoff, approval workflow, team sharing, demo behavior, or approval/rejection automation.
+
+GOAL
+Add AI semantic enrichment on top of the existing deterministic Compare Versions engine.
+
+The deterministic engine remains the baseline/source of truth.
+AI enriches existing diff items after scan completion.
+AI does NOT replace the deterministic comparison pipeline.
+
+==================================================
+SLICE 5 SCOPE
+==================================================
+
+Implement only these five areas:
+
+A. AI enrichment job for changed text items
+B. Write-back of ai_category + ai_explanation into existing diff_result items
+C. Optional AI severity upgrade logic (never downgrade below deterministic baseline)
+D. Summary UI display of AI explanation/category
+E. Re-enrichment / retry behavior for sessions that already exist
+
+==================================================
+NON-NEGOTIABLE PRODUCT RULE
+==================================================
+
+Deterministic-first remains the architecture.
+
+That means:
+- visual diff still comes from deterministic engine
+- text diff still comes from deterministic engine
+- structural diff still comes from deterministic engine
+- severity baseline is still deterministic
+- AI may enrich and upgrade severity
+- AI may NOT delete deterministic findings
+- AI may NOT rewrite the diff model into a different format
+
+==================================================
+A. AI ENRICHMENT JOB
+==================================================
+
+Trigger model:
+Choose one of these, but keep it simple and consistent:
+
+Preferred:
+- after deterministic scan completes and session status becomes "complete"
+- kick off a separate async enrichment pass
+- enrichment updates existing diff_result items in place
+- UI can show "AI enrichment running..." but the workspace is already usable
+
+Acceptable fallback:
+- user clicks explicit "Run AI Review" button in the summary panel
+
+Do NOT block the base comparison workspace on AI.
+
+Input scope:
+Only enrich existing text-based diff items:
+- text_modified
+- text_added
+- text_removed
+
+Do NOT send the entire document pair to AI.
+Do NOT send every diff item blindly.
+Do NOT send purely visual-only cosmetic items unless they already have text content.
+
+Per-item AI input should include:
+- change_type
+- original_text
+- revised_text
+- page_original
+- page_revised
+- deterministic severity
+- nearby structural label if available (heading/section label)
+- optional manager context/watchlist text if already present and cheap to include
+
+Chunking:
+- batch multiple text diff items into one structured AI call when reasonable
+- preserve per-item IDs in the prompt payload so responses can map back exactly
+- if batching is too risky, use smaller batches
+- prioritize correctness over minimizing call count
+
+==================================================
+B. AI OUTPUT FIELDS
+==================================================
+
+Do NOT invent a second diff store.
+Write AI output back into existing diff_result items.
+
+Each enriched item should now support:
+- ai_category: string | null
+- ai_explanation: string | null
+- ai_confidence: number | null   (0–1 if easy; otherwise omit if not clean)
+- ai_enriched_at: ISO timestamp | null
+
+Keep existing fields intact:
+- id
+- source
+- page_original
+- page_revised
+- rect_original / rect_revised
+- change_type
+- original_text
+- revised_text
+- severity
+- severity_overridden
+- etc.
+
+Accepted ai_category enum for Slice 5:
+- meaning_change
+- policy_change
+- legal_language
+- financial_value
+- date_deadline
+- safety_threshold
+- rewrite_equivalent
+- typo_correction
+- cosmetic_text
+- unclear
+
+Rules:
+- Use only the above categories
+- If AI cannot classify confidently, use "unclear"
+- ai_explanation must be concise, one sentence, plain English, manager-facing
+- no markdown in ai_explanation
+- no legal advice tone
+- describe what changed and why it matters
+
+Examples:
+- "Payment deadline changed from 30 days to 90 days."
+- "A mandatory obligation appears to have been softened from 'shall' to 'may'."
+- "This appears to be a wording cleanup with no clear meaning change."
+
+==================================================
+C. AI SEVERITY UPGRADE LOGIC
+==================================================
+
+Critical rule:
+AI may upgrade severity.
+AI may NOT downgrade below the deterministic baseline.
+
+This means:
+- deterministic High stays High always
+- deterministic Medium may become High
+- deterministic Low may become Medium or High
+- if AI thinks something is less serious, ignore that and preserve deterministic severity
+
+Manager override still wins over AI.
+Order of precedence:
+1. manager override
+2. AI-upgraded severity
+3. deterministic severity baseline
+
+Implementation suggestion:
+Store:
+- severity_deterministic
+- severity_ai (nullable)
+- severity_effective derived in UI/backend
+If current model already uses severity + override flag, adapt cleanly but preserve source-of-truth clarity.
+
+Do not break existing Slice 4 override UX.
+If a manager already manually changed severity:
+- preserve manager choice
+- AI enrichment still writes ai_category / ai_explanation
+- AI may store its suggested severity separately, but must not override manager choice
+
+AI severity upgrade mapping:
+- legal_language => at least High when clause meaning materially shifts
+- financial_value => High
+- date_deadline => High
+- safety_threshold => High
+- policy_change => Medium or High depending on wording
+- meaning_change => Medium by default, High if major obligation/liability wording changed
+- rewrite_equivalent => keep deterministic severity
+- typo_correction => Low
+- cosmetic_text => Low
+- unclear => keep deterministic severity
+
+Keep this logic deterministic in code after AI returns category.
+
+==================================================
+D. SUMMARY UI ENRICHMENT
+==================================================
+
+Upgrade the summary panel rows for enriched text items.
+
+Requirements:
+- show ai_category badge/label when present
+- show ai_explanation below the existing snippet
+- visually distinguish AI-enriched items from non-enriched items without clutter
+- do not overwhelm the row height
+
+Recommended row layout:
+- severity badge
+- change type
+- page reference
+- original/revised short text snippet
+- AI category pill
+- one-line AI explanation
+- override indicator if manager override exists
+- note-link indicator if linked note exists
+
+Filtering:
+No new filter category is required in Slice 5 unless trivial.
+Do not redesign the whole panel.
+
+Loading state:
+- If AI enrichment is in progress, show a subtle banner or inline state:
+  "AI review running..."
+- already-usable deterministic items remain visible
+- enriched items can appear progressively or after full write-back
+
+Failure state:
+- If AI enrichment fails, the session must still remain fully usable
+- show a non-blocking message:
+  "AI review unavailable. Deterministic comparison is still available."
+- add a Retry AI action if simple
+
+==================================================
+E. RE-ENRICH / RETRY BEHAVIOR
+==================================================
+
+Need a way to enrich old sessions or retry failed sessions.
+
+Implement one clean route, such as:
+POST /api/compare-versions/sessions/:id/enrich
+
+Behavior:
+- reload session
+- gather enrichable text items missing ai_category or ai_explanation, or re-run all text items if retry requested
+- write results back into diff_result
+- update updated_at
+- return success summary:
+  { ok: true, enrichedCount, failedCount }
+
+Do not require re-scanning PDFs.
+AI enrichment must work from stored diff_result alone.
+
+Optional:
+- auto-run enrich after initial scan completion
+- manual retry button for already-complete sessions
+
+That is the preferred combination:
+1. auto-enrich on fresh scans
+2. manual Retry AI on existing sessions
+
+==================================================
+BACKEND RULES
+==================================================
+
+Add only what Slice 5 needs.
+
+Allowed:
+- one enrichment helper/service module
+- one enrichment route
+- small session update path if needed
+- OpenAI call using structured JSON output
+- write-back into diff_result JSONB
+
+Not allowed in Slice 5:
+- export PDF audit report
+- PDF Editor handoff
+- Word conversion
+- OCR
+- approval workflow
+- threaded comments
+- team/org sharing
+- rescanning redesign
+- metadata diff beyond what already exists
+
+Do not alter object storage behavior.
+Do not alter Compare Versions scan engine logic except to trigger enrichment after completion if needed.
+
+==================================================
+OPENAI CALL REQUIREMENTS
+==================================================
+
+Use structured output.
+Return strict JSON.
+No freeform blobs.
+
+Expected response shape per item:
+{
+  "id": "diff-item-id",
+  "category": "meaning_change | policy_change | legal_language | financial_value | date_deadline | safety_threshold | rewrite_equivalent | typo_correction | cosmetic_text | unclear",
+  "explanation": "one sentence explanation",
+  "confidence": 0.0
+}
+
+Guardrails:
+- explanation max ~140 chars if possible
+- no hallucinated references to pages not supplied
+- no claims outside the provided text
+- if uncertain, choose "unclear"
+- do not include legal advice or recommendations in explanation
+
+==================================================
+FRONTEND FILES LIKELY TO CHANGE
+==================================================
+
+Use best judgment, but likely:
+- artifacts/plainpath/src/pages/CompareVersionsSession.tsx
+- artifacts/plainpath/src/lib/compareVersionsApi.ts
+- artifacts/plainpath/src/hooks/useCompareVersionsApi.ts
+- backend compare versions route/service files
+
+You may add a small helper for:
+- effective severity calculation
+- AI pill/category rendering
+- enrichment status state
+
+Keep it minimal.
+
+==================================================
+DATA MODEL EXPECTATION
+==================================================
+
+Do not redesign the whole session record.
+Continue using compare_versions_sessions with diff_result JSONB.
+
+If useful, add session-level flags like:
+- ai_status: idle | running | complete | error
+- ai_updated_at
+But only if this is clean and truly helpful.
+
+If you can avoid new DB columns by deriving from diff_result + session status, that is acceptable.
+Do not create new tables for Slice 5.
+
+==================================================
+UI / UX RULES
+==================================================
+
+- Deterministic comparison must remain visible immediately
+- AI output is additive, not replacing
+- Manager override remains editable after AI arrives
+- AI must not clear linked notes, resolved states, or severity overrides
+- Existing summary filters and navigation must continue working
+- No giant new panels
+- No chat-style AI UI
+- Keep it audit-oriented and concise
+
+==================================================
+REQUIRED COMPLETION REPORT
+==================================================
+
+When done, return:
+
+1. Exact files created
+2. Exact files modified
+3. Exact enrichment route(s) added
+4. Exact trigger model used (auto after scan, manual retry, or both)
+5. Exact AI response schema implemented
+6. Exact category enum implemented
+7. Exact severity-upgrade logic implemented
+8. Exact manager-override precedence behavior
+9. Exact UI additions in the summary panel
+10. Exact Slice 6+ items NOT implemented
+11. Real authenticated screenshots showing:
+   - a completed comparison session with deterministic results visible
+   - AI review running state OR retry action
+   - enriched summary rows showing ai_category + ai_explanation
+   - at least one item upgraded by AI severity if applicable
+   - manager override still functioning after AI enrichment
+   - failed/non-blocking AI state if you test that path
+
+Implement Compare Versions Slice 5 only.
