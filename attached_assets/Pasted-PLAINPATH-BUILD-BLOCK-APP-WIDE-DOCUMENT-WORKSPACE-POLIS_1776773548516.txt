@@ -1,0 +1,299 @@
+PLAINPATH — BUILD BLOCK
+APP-WIDE DOCUMENT WORKSPACE POLISH PASS
+
+You are working inside the existing PlainPath codebase.
+
+IMPORTANT:
+This pass is focused on cross-tool workspace usability for document-heavy tools only.
+Do not drift into marketing redesign, pricing/subscription gating, OCR, Word/docx implementation, org/team sharing, approval automation, or unrelated refactors.
+Do not break any completed tool workflows.
+
+==================================================
+CONTEXT
+==================================================
+
+PlainPath now has multiple document-heavy tools that must feel like real working surfaces, not cramped previews.
+
+Standing product rules already established:
+- split-screen is the default rule for creation/editing/review tools
+- left pane = live document surface / original document / output preview
+- right pane = controls / actions / issue context / editing tools
+- single-pane is the exception and must be justified
+- document remains visually primary
+- visible Save controls should exist where editing occurs
+- autosave may support the user, but should not replace explicit save
+- letter-size/document-first readability matters on desktop
+- mobile should remain responsive, but desktop workspace usability is the priority for this pass
+
+This pass is about making the document-heavy workspaces feel consistently spacious, readable, and production-ready across the app.
+
+==================================================
+TOOLS IN SCOPE
+==================================================
+
+Inspect and polish only the document-heavy tools/workspaces that currently exist and are user-facing in the authenticated app.
+
+Expected high-priority surfaces include, if present in codebase:
+- PDF Editor
+- Compare Versions
+- Redact Sensitive Info
+- Document Builder
+- Analyze a Document
+- any other authenticated tool that uses a document viewer/canvas/preview as a primary workspace
+
+If a named tool does not actually have a document-heavy workspace in code, do not invent one.
+Inspect what really exists and polish only those real surfaces.
+
+==================================================
+PRIMARY GOALS FOR THIS PASS
+==================================================
+
+T001 — Workspace consistency audit + normalization
+T002 — Pane sizing / spacing / header hierarchy polish
+T003 — Document-first usability improvements
+T004 — Save / action / confirmation UX consistency where applicable
+
+If a better internal implementation order is needed, use judgment, but stay inside this block only.
+
+==================================================
+EXECUTION RULES
+==================================================
+
+Follow this order exactly:
+1. Inspect current codebase first
+2. Produce a tight implementation plan based on actual code found
+3. Implement
+4. Run verification
+5. Provide a completion report
+
+Do not start coding before inspection and plan.
+Do not give a vague summary. Use exact files, exact pages/components, and exact layout/state changes.
+
+==================================================
+REQUIRED INSPECTION TASK
+==================================================
+
+Before coding, inspect and identify for each in-scope workspace:
+- route/page/component name
+- whether it currently follows split-screen or not
+- current left/right pane width behavior
+- whether document surface is actually large enough to read/work comfortably
+- whether headers/toolbars are crowding the workspace
+- whether primary actions are placed clearly
+- whether Save controls exist where editing occurs
+- whether autosave/manual save patterns are consistent where relevant
+- whether uploaded/opened document state is visually obvious
+- whether pre-run confirmation/action states exist where required
+- whether there are removable-upload / replace-document affordances
+- whether the tool uses placeholder/generic progress instead of actual document preview where a real preview is feasible
+- mobile/tablet behavior and any current breakpoint issues
+
+Then produce a concise implementation plan grounded in the actual codebase.
+
+==================================================
+IMPLEMENTATION PLAN REQUIREMENTS
+==================================================
+
+Plan must include:
+- exact pages/components to modify
+- exact layout changes by workspace
+- exact action/save/toolbar consistency changes
+- exact breakpoint/mobile considerations
+- exact verification checklist
+
+Keep the plan tight. No essay.
+
+==================================================
+T001 — WORKSPACE CONSISTENCY AUDIT + NORMALIZATION
+==================================================
+
+Goal:
+Bring the major document-heavy tools into a coherent, product-consistent workspace model.
+
+Required:
+- normalize split-screen behavior where appropriate
+- make sure left/right responsibility is consistent:
+  - left = document/output/original surface
+  - right = controls/context/actions
+- remove obvious layout inconsistencies that make one tool feel materially different from the others without reason
+- preserve each tool’s purpose, but make the family resemblance strong
+
+Focus on:
+- shared structural consistency
+- consistent toolbar/header rhythm
+- consistent visual priority of the document surface
+- cleaner cross-tool mental model
+
+Do not force identical UI if the tool’s function genuinely differs.
+Normalize intelligently.
+
+==================================================
+T002 — PANE SIZING / SPACING / HEADER HIERARCHY POLISH
+==================================================
+
+Goal:
+Each workspace should have enough room to actually read, review, and work.
+
+Required:
+- tighten pane widths so the document surface has real usable space
+- remove wasted horizontal space where it harms readability
+- keep right pane wide enough for controls without crushing the document
+- reduce oversized headers/blocks/toolbars if they steal too much vertical space
+- ensure button groups and metadata do not crowd the top of the workspace
+- make desktop layouts feel balanced and deliberate
+
+Specific expectations:
+- desktop should favor a roomy letter-size-style reading/editing surface
+- right-side action/context areas should be fixed/sensible width where appropriate
+- top bars should be compact but clear
+- avoid double-wrapping controls that waste space
+
+Do not create brittle pixel-perfect hacks.
+Use stable responsive layout logic.
+
+==================================================
+T003 — DOCUMENT-FIRST USABILITY IMPROVEMENTS
+==================================================
+
+Goal:
+The user should always feel that the document itself is central and workable.
+
+Required:
+- ensure document preview/canvas/original PDF area is easy to read
+- where feasible, show the real uploaded/opened document in scan/progress/review states instead of generic placeholders
+- improve scroll/container behavior so document panes feel natural
+- make page/document surface visually primary
+- improve issue/action-to-document relationship where relevant
+- ensure Compare Versions, PDF Editor, and similar surfaces keep the document obvious and central
+
+Also:
+- if a tool currently has awkward clipping, narrow panes, or unnecessary scrolling caused by layout rather than document size, fix it
+- if a tool’s action panel could be simplified to restore document space, do so carefully
+- preserve current functioning workflows
+
+Do not build new major features here.
+This is a workspace polish pass.
+
+==================================================
+T004 — SAVE / ACTION / CONFIRMATION UX CONSISTENCY
+==================================================
+
+Goal:
+Editing/review tools should have consistent, trustworthy action patterns.
+
+Required where applicable:
+- visible Save button/icon for editing tools
+- highlight Save when unsaved changes exist
+- keep autosave support where already present, but do not rely on it alone
+- uploaded/opened document should remain removable/replacable before processing where product rules require it
+- tools that require a pre-run action should clearly hold at a confirmation state until the user clicks the primary action
+- primary actions should be obvious and consistently placed
+- toolbar/action wording should be practical and not ambiguous
+
+Examples of consistency targets:
+- Save vs Export distinction
+- Analyze / Review / Check button placement
+- remove/replace upload affordance
+- non-destructive action emphasis before destructive actions
+
+Do not over-engineer shared components unless there is a clear low-risk win.
+
+==================================================
+NON-GOALS / OUT OF SCOPE
+==================================================
+
+Unless absolutely required for compatibility, do NOT include:
+- OCR
+- Word/docx implementation
+- pricing/subscription gates
+- Stripe/payment work
+- public-site/marketing redesign
+- new AI analysis pipelines
+- team/org collaboration
+- approval workflows
+- security feature expansion
+- app-wide visual rebrand
+- major backend architecture changes unrelated to workspace usability
+
+==================================================
+ARCHITECTURE PRINCIPLES
+==================================================
+
+1. Document-first priority
+The document/output surface must remain the primary visual element.
+
+2. Split-screen default
+Use split-screen unless there is a strong reason not to.
+
+3. Low-risk normalization
+Polish and normalize without destabilizing completed tool logic.
+
+4. Action clarity
+Primary actions, save behavior, and confirmation states should be easy to understand.
+
+5. Tight scope
+Do not turn this into a general redesign of the whole app.
+
+==================================================
+VERIFICATION REQUIREMENTS
+==================================================
+
+After implementation, run verification and report actual results.
+
+At minimum verify:
+1. each modified workspace still opens correctly
+2. document surface is materially improved in usable size on desktop
+3. right pane remains usable and does not crush the document
+4. split-screen consistency is improved across modified tools
+5. headers/toolbars no longer waste excessive space
+6. document-heavy tools still preserve their specific workflows
+7. Save/action patterns still work correctly where editing exists
+8. pre-run confirmation states still work where applicable
+9. uploaded/opened document remains visible/removable where applicable
+10. Compare Versions handoff behavior is not broken
+11. PDF Editor workflows are not regressed
+12. Redact / Builder / Analyze / other modified tools are not regressed
+13. mobile/tablet layouts still work acceptably
+14. changed files pass TS/build checks
+
+==================================================
+FINAL COMPLETION REPORT FORMAT
+==================================================
+
+When done, provide a completion report with these exact sections:
+
+1. EXACT FILES CREATED
+- list every created file with full relative path
+
+2. EXACT FILES MODIFIED
+- list every modified file with full relative path
+
+3. PAGES / WORKSPACES POLISHED
+- exact page/tool name
+- exact route if applicable
+- concise summary of workspace/layout changes per tool
+
+4. STATE / ACTION / SAVE PATTERN CHANGES
+- exact changes to save/action/confirmation behavior
+- only where modified
+
+5. WHAT WORKS END-TO-END
+- concise but specific
+- cover T001, T002, T003, T004
+
+6. WHAT REMAINS DEFERRED
+- list anything intentionally deferred
+- explain why it was deferred
+
+7. VERIFICATION RESULTS
+- checklist of tested flows
+- note pass/fail and any caveats
+
+==================================================
+QUALITY BAR
+==================================================
+
+This is a polish/completion pass, not a prototype pass.
+Favor clean, production-lean implementation over placeholder UI.
+Reuse existing PlainPath patterns where possible.
+Keep the scope tight and ship the block cleanly.

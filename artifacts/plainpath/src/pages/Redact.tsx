@@ -784,26 +784,30 @@ export default function Redact() {
   // ─── REVIEW PHASE ────────────────────────────────────────────────────────
   if (activeText !== null) {
     return (
-      <div className="min-h-screen bg-background">
-        <div className="max-w-[1440px] mx-auto py-6 px-4 space-y-4">
-          {/* Header */}
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleCancel}
-              className="p-1.5 rounded-lg hover:bg-muted/50 text-muted-foreground transition-colors"
-              aria-label="Back to document input"
-            >
-              <ArrowLeft className="w-4 h-4" />
-            </button>
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-primary" />
-              <h1 className="text-lg font-bold">Review & Redact</h1>
-            </div>
-            {activeFileName && (
-              <span className="text-xs text-muted-foreground font-mono truncate max-w-[200px]">{activeFileName}</span>
-            )}
-          </div>
+      <div className="bg-background flex flex-col" style={{ minHeight: "calc(100vh - 4rem)" }}>
+        {/* Compact sticky workspace header */}
+        <div className="sticky top-16 z-20 flex items-center gap-3 px-4 sm:px-6 py-2.5 border-b border-border/40 bg-background/95 backdrop-blur-sm flex-shrink-0">
+          <button
+            onClick={handleCancel}
+            className="p-1.5 rounded-lg hover:bg-muted/50 text-muted-foreground transition-colors flex-shrink-0"
+            aria-label="Back to document input"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+          <ShieldCheck className="w-4 h-4 text-primary flex-shrink-0" />
+          <h1 className="text-sm font-bold">Review &amp; Redact</h1>
+          {activeFileName && (
+            <span className="text-xs text-muted-foreground font-mono truncate max-w-[160px] sm:max-w-[260px]">{activeFileName}</span>
+          )}
+          {returnTo !== "none" && (
+            <span className="ml-auto text-[10px] text-muted-foreground hidden sm:block">
+              ← Will return to {returnTo === "contract-review" ? "Contract Review" : returnTo === "trust-check" ? "Trust Check" : "Analysis"}
+            </span>
+          )}
+        </div>
 
+        {/* PiiReview workspace */}
+        <div className="flex-1 max-w-[1440px] mx-auto w-full px-4 sm:px-6 py-4">
           <PiiReview
             text={activeText}
             fileName={activeFileName}

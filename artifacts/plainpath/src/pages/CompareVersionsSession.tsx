@@ -558,8 +558,8 @@ function SummaryPanel({
 
   return (
     <div
-      className="flex-shrink-0 border-t border-border/60 bg-background animate-in slide-in-from-bottom-2 duration-200"
-      style={{ height: "290px" }}
+      className="flex-shrink-0 border-t border-border/60 bg-background animate-in slide-in-from-bottom-2 duration-200 flex flex-col"
+      style={{ height: "clamp(300px, 38vh, 520px)" }}
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/40 flex-shrink-0 gap-2">
@@ -648,7 +648,7 @@ function SummaryPanel({
       </div>
 
       {/* Body */}
-      <div className="overflow-y-auto" style={{ height: "calc(290px - 46px)" }}>
+      <div className="flex-1 overflow-y-auto">
         {/* Column legend — only shown when there are items */}
         {diffItems.length > 0 && (
           <div className="flex items-center gap-0 px-2 py-1 bg-muted/20 border-b border-border/20 sticky top-0 z-10">
