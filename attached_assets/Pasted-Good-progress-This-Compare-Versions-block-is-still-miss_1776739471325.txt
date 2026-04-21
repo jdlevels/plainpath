@@ -1,0 +1,67 @@
+Good progress. This Compare Versions block is still missing one required user-facing workflow, so do not close it yet.
+
+REMAINING REQUIRED PATCH ONLY
+Implement the frontend handoff flow so a manager can hand off rejected and/or selected diffs into PDF Editor from the Compare Versions session UI.
+
+Why this is still open:
+Your report states that:
+- backend supports mode: "selected" with diffIds[]
+- frontend handleHandoff currently still calls in "all" mode
+- rejected-diff handoff is conceptual only and would need frontend filtering
+
+That means the required workflow is not fully delivered yet.
+
+PATCH SCOPE — ONLY THIS
+Do not refactor unrelated code.
+Do not reopen export/session-management/list-polish work unless needed for this patch.
+
+REQUIRED OUTCOME
+From the Compare Versions session page, a manager must be able to do at least both of the following:
+
+1. Hand off only selected diffs
+- add clear selection UI for diff rows/cards/zones
+- allow multi-select
+- pass selected diff IDs to:
+  POST /api/compare-versions/sessions/:id/handoff
+  body: { mode: "selected", diffIds: [...] }
+
+2. Hand off rejected diffs
+- define the actual frontend rule for “rejected” using the current persisted review state
+- expose a clear CTA such as:
+  - Open rejected in PDF Editor
+  - Open selected in PDF Editor
+- rejected diff IDs must be derived from the current session review data, then sent with mode: "selected"
+
+IMPORTANT
+- Do not make Compare Versions editable
+- Do not mutate the document
+- Do not change the backend contract unless absolutely necessary
+- Reuse the existing formal handoff record flow
+- Keep the revised document as the handoff target
+- Keep the current “Open all in PDF Editor” flow only if you think it is still useful, but it cannot be the only flow
+
+IMPLEMENTATION DETAILS
+- Add visible selection state in the Compare Versions session workspace
+- Ensure selected count is obvious
+- Add disabled state when no diffs are selected
+- Add a rejected-only action that filters from persisted review state, not ad hoc UI guesses
+- Keep the toolbar clean and production-like
+
+VERIFICATION REQUIRED
+After patching, verify and report pass/fail for:
+1. manually selected diffs can be handed off from the UI
+2. only those selected diff IDs are stored in cv_handoff_records.selected_diff_ids
+3. rejected diffs can be handed off from the UI
+4. rejected diff filtering uses current persisted review state
+5. PDF Editor opens revised document only
+6. highlight count matches the selected/rejected diff set
+7. Compare Versions remains read-only
+8. prior export/session-management/list features still work
+
+FINAL RESPONSE FORMAT
+Return only:
+1. exact files modified for this delta patch
+2. exact frontend behavior added
+3. exact rejected-diff rule used
+4. exact verification results
+5. whether Compare Versions completion pass is now fully closed

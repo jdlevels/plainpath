@@ -95,6 +95,9 @@ export interface CVDiffItem {
   revised_text: string | null;
   severity: CVDiffSeverity;
   severity_overridden: boolean;
+  // Manager review decision — persisted in diff_result.items[] via PATCH /review.
+  // null = unreviewed, "accepted" = approved, "rejected" = flagged as not acceptable.
+  review_status: "accepted" | "rejected" | null;
   // AI enrichment fields (Slice 5) — null until enrichment runs
   ai_category: CVAiCategory | null;
   ai_explanation: string | null;

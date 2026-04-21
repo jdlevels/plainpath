@@ -16,7 +16,7 @@ import {
   Clock, ListChecks, RefreshCw, Scan,
   ChevronRight, Plus, Trash2, Link2, Pencil,
   ChevronDown as ChevDown,
-  Sparkles, Download, ExternalLink,
+  Sparkles, Download, ExternalLink, Square, CheckSquare, XCircle, MousePointerClick,
 } from "lucide-react"
 import { useEntitlements } from "@/hooks/useEntitlements"
 import { useCompareVersionsApi } from "@/hooks/useCompareVersionsApi"
@@ -467,6 +467,9 @@ function SummaryPanel({
   onSelectItem, onHoverItem, onLeaveItem,
   onSeverityChange,
   linkedNoteIds,
+  handoffSelectedIds,
+  onToggleHandoffSelect,
+  onRejectToggle,
 }: {
   open: boolean
   onClose: () => void
@@ -477,6 +480,9 @@ function SummaryPanel({
   onLeaveItem: () => void
   onSeverityChange: (itemId: string, sev: CVDiffSeverity) => void
   linkedNoteIds: Set<string>
+  handoffSelectedIds: Set<string>
+  onToggleHandoffSelect: (id: string) => void
+  onRejectToggle: (id: string) => void
 }) {
   const [sevFilter, setSevFilter] = useState<SevFilter>("all")
   const [pageFilter, setPageFilter] = useState<number | null>(null)
@@ -565,6 +571,17 @@ function SummaryPanel({
               · {stats.total} change{stats.total !== 1 ? "s" : ""}
             </span>
           )}
+          {/* Live selected / rejected counts */}
+          {handoffSelectedIds.size > 0 && (
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300">
+              {handoffSelectedIds.size} selected
+            </span>
+          )}
+          {diffItems.filter((i) => i.review_status === "rejected").length > 0 && (
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400">
+              {diffItems.filter((i) => i.review_status === "rejected").length} rejected
+            </span>
+          )}
         </div>
 
         <div className="flex items-center gap-1.5 flex-wrap justify-end">
@@ -632,6 +649,17 @@ function SummaryPanel({
 
       {/* Body */}
       <div className="overflow-y-auto" style={{ height: "calc(290px - 46px)" }}>
+        {/* Column legend — only shown when there are items */}
+        {diffItems.length > 0 && (
+          <div className="flex items-center gap-0 px-2 py-1 bg-muted/20 border-b border-border/20 sticky top-0 z-10">
+            <div className="w-7 flex-shrink-0 flex items-center justify-center" title="Check to include in handoff">
+              <span className="text-[9px] text-muted-foreground/60 font-semibold uppercase tracking-wider">☑</span>
+            </div>
+            <span className="flex-1 text-[9px] text-muted-foreground/60 font-semibold uppercase tracking-wider pl-2">Change</span>
+            <span className="text-[9px] text-muted-foreground/60 font-semibold uppercase tracking-wider pr-1" title="Click ✕ to reject">✕ reject</span>
+            <div style={{ minWidth: "60px" }} />
+          </div>
+        )}
         {diffItems.length === 0 && (
           <div className="flex flex-col items-center gap-2 py-8 text-center">
             <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
@@ -663,22 +691,42 @@ function SummaryPanel({
               const preview = (item.revised_text ?? item.original_text ?? "").slice(0, 80)
               const hasLinkedNote = linkedNoteIds.has(item.id)
 
+              const isHandoffChecked = handoffSelectedIds.has(item.id)
+              const isRejected = item.review_status === "rejected"
+
               return (
                 <div
                   key={item.id}
                   ref={(el) => { itemRefs.current[item.id] = el }}
                   className={`flex items-stretch gap-0 transition-colors ${
-                    isSelected ? "bg-violet-50 dark:bg-violet-950/30" : "hover:bg-muted/30"
+                    isRejected
+                      ? "bg-red-50/60 dark:bg-red-950/20"
+                      : isSelected
+                      ? "bg-violet-50 dark:bg-violet-950/30"
+                      : "hover:bg-muted/30"
                   }`}
                   onMouseEnter={() => onHoverItem([item.id])}
                   onMouseLeave={() => onLeaveItem()}
                 >
-                  {/* Left accent bar when selected */}
-                  <div className={`w-0.5 flex-shrink-0 rounded-l ${isSelected ? "bg-violet-500" : "bg-transparent"}`} />
+                  {/* Left accent bar: rejected=red, selected=violet, default=transparent */}
+                  <div className={`w-0.5 flex-shrink-0 rounded-l ${
+                    isRejected ? "bg-red-400" : isSelected ? "bg-violet-500" : "bg-transparent"
+                  }`} />
+
+                  {/* Handoff checkbox — transient selection for one-time handoff */}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onToggleHandoffSelect(item.id) }}
+                    title={isHandoffChecked ? "Remove from handoff selection" : "Add to handoff selection"}
+                    className="flex items-center px-2 text-muted-foreground hover:text-teal-600 dark:hover:text-teal-400 flex-shrink-0 transition-colors"
+                  >
+                    {isHandoffChecked
+                      ? <CheckSquare className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+                      : <Square className="w-3.5 h-3.5" />}
+                  </button>
 
                   <button
                     onClick={() => onSelectItem(item.id)}
-                    className="flex-1 flex items-start gap-3 px-3 py-2.5 text-left"
+                    className="flex-1 flex items-start gap-3 pr-3 py-2.5 text-left"
                   >
                     {/* Severity badge */}
                     <span className={`text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded flex-shrink-0 mt-0.5 ${severityBadgeClass(item.severity)}`}>
@@ -686,8 +734,16 @@ function SummaryPanel({
                     </span>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-xs font-medium text-foreground truncate">{severityLabel(item)}</span>
+                        <span className={`text-xs font-medium truncate ${isRejected ? "text-muted-foreground line-through" : "text-foreground"}`}>
+                          {severityLabel(item)}
+                        </span>
                         <span className="text-[10px] text-muted-foreground font-mono flex-shrink-0">{pageLabel}</span>
+                        {/* Rejected badge */}
+                        {isRejected && (
+                          <span className="flex items-center gap-0.5 text-[9px] text-red-600 dark:text-red-400 font-semibold flex-shrink-0">
+                            <XCircle className="w-2.5 h-2.5" /> rejected
+                          </span>
+                        )}
                         {item.severity_overridden && (
                           <span className="flex items-center gap-0.5 text-[9px] text-violet-600 dark:text-violet-400 font-semibold flex-shrink-0">
                             <Pencil className="w-2.5 h-2.5" /> overridden
@@ -698,7 +754,6 @@ function SummaryPanel({
                             <Link2 className="w-2.5 h-2.5" /> note
                           </span>
                         )}
-                        {/* AI category pill (Slice 5) */}
                         {item.ai_category && (
                           <span className={`flex items-center gap-0.5 text-[9px] px-1.5 py-px rounded font-semibold flex-shrink-0 ${aiCategoryColor(item.ai_category)}`}>
                             <Sparkles className="w-2 h-2" />
@@ -709,7 +764,6 @@ function SummaryPanel({
                       {preview && (
                         <p className="text-[11px] text-muted-foreground truncate mt-0.5">{preview}</p>
                       )}
-                      {/* AI explanation (Slice 5) */}
                       {item.ai_explanation && (
                         <p className="text-[10px] text-violet-600/80 dark:text-violet-400/80 mt-0.5 leading-snug line-clamp-2">
                           {item.ai_explanation}
@@ -719,8 +773,21 @@ function SummaryPanel({
                     <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50 flex-shrink-0 mt-0.5" />
                   </button>
 
+                  {/* Reject toggle */}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onRejectToggle(item.id) }}
+                    title={isRejected ? "Un-reject this change" : "Mark as rejected (needs action in PDF Editor)"}
+                    className={`flex items-center px-1.5 flex-shrink-0 transition-colors ${
+                      isRejected
+                        ? "text-red-500 hover:text-muted-foreground"
+                        : "text-muted-foreground/40 hover:text-red-500"
+                    }`}
+                  >
+                    <XCircle className="w-3.5 h-3.5" />
+                  </button>
+
                   {/* Severity override dropdown */}
-                  <div className="flex items-center px-2 flex-shrink-0">
+                  <div className="flex items-center pr-2 flex-shrink-0">
                     <select
                       value={item.severity}
                       onChange={(e) => {
@@ -1098,6 +1165,10 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
   const [summaryOpen, setSummaryOpen] = useState(false)
   const [notesOpen, setNotesOpen] = useState(false)
 
+  // ── Handoff multi-select (transient — not persisted) ──────────────────────
+  // Set of diff IDs the user has checked for selective handoff.
+  const [handoffSelectedIds, setHandoffSelectedIds] = useState<Set<string>>(new Set())
+
   const [jumpOrigPage, setJumpOrigPage] = useState<number | null>(null)
   const [jumpRevPage, setJumpRevPage] = useState<number | null>(null)
 
@@ -1234,18 +1305,76 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
   }
 
   // ── Handoff to PDF Editor ──────────────────────────────────────────────────
+  //
+  // Three modes:
+  //   handleHandoff()                        → mode "all" (pass undefined)
+  //   handleHandoff([...selectedIds])        → mode "selected" — user-checked diffs
+  //   handleHandoff([...rejectedIds])        → mode "selected" — review_status==="rejected" diffs
+  //
+  // The backend uses mode:"all" when diffIds is undefined, mode:"selected" when provided.
 
-  async function handleHandoff() {
+  async function handleHandoff(diffIds?: string[]) {
     if (!session || handoffLoading || session.status !== "complete") return
     setHandoffLoading(true)
     try {
-      const result = await api.createHandoff(session.id, undefined)
+      const result = await api.createHandoff(session.id, diffIds)
       navigate(`/pdf-editor/${result.pdfEditorSessionId}?fromCompare=1&handoffId=${result.handoffId}`)
     } catch (err: any) {
       console.error("[CompareVersions] handoff failed:", err)
     } finally {
       setHandoffLoading(false)
     }
+  }
+
+  // ── Handoff multi-select toggle ────────────────────────────────────────────
+
+  function toggleHandoffSelect(id: string) {
+    setHandoffSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  // ── Reject toggle ──────────────────────────────────────────────────────────
+  //
+  // REJECTED DIFF RULE:
+  //   A diff item is "rejected" when item.review_status === "rejected".
+  //   This is stored as part of diff_result.items[] and persisted to the DB
+  //   via the existing PATCH /sessions/:id/review endpoint (JSONB passthrough).
+  //   Reject is toggled: "rejected" → null → "rejected".
+  //   It is independent of severity and multi-select.
+  //
+  //   When the manager clicks "Open rejected in PDF Editor", all items with
+  //   review_status === "rejected" are extracted from the current (in-memory) diffItems
+  //   and passed as diffIds to createHandoff({ mode: "selected", diffIds: [...] }).
+  //   Because diffItems is always kept in sync with the persisted diff_result (loaded
+  //   on mount, updated by polling, saved by handleRejectToggle debounce), this
+  //   correctly reflects the current persisted review state.
+
+  function handleRejectToggle(itemId: string) {
+    setDiffItems((prev) => {
+      const next = prev.map((item) => {
+        if (item.id !== itemId) return item
+        return {
+          ...item,
+          review_status: item.review_status === "rejected" ? null : ("rejected" as const),
+        }
+      })
+      // Debounce persist — share the same timer as severity overrides
+      if (reviewSaveTimerRef.current) clearTimeout(reviewSaveTimerRef.current)
+      reviewSaveTimerRef.current = setTimeout(() => {
+        if (!session) return
+        const base = diffResultBase ?? session.diffResult
+        if (!base) return
+        const updated = recomputeStats(next, base)
+        api.patchReview(session.id, updated).catch((err) =>
+          console.error("[CompareVersions] reject toggle save failed:", err),
+        )
+      }, 800)
+      return next
+    })
   }
 
   // ── Export report ──────────────────────────────────────────────────────────
@@ -1362,8 +1491,12 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
   )
 
   // Current diff stats from local (possibly overridden) items
-  const highCount = diffItems.filter((i) => i.severity === "high").length
-  const totalCount = diffItems.length
+  const highCount    = diffItems.filter((i) => i.severity === "high").length
+  const totalCount   = diffItems.length
+  // Rejected diff IDs — derived from persisted review_status field in current diffItems
+  const rejectedDiffIds = diffItems.filter((i) => i.review_status === "rejected").map((i) => i.id)
+  const rejectedCount   = rejectedDiffIds.length
+  const selectedCount   = handoffSelectedIds.size
 
   // ── Workspace ─────────────────────────────────────────────────────────────
 
@@ -1455,17 +1588,58 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
             </button>
           )}
 
-          {/* Slice 6: Open in PDF Editor (handoff) */}
+          {/* Slice 6: PDF Editor handoff group — All / Selected / Rejected */}
           {session.status === "complete" && (
-            <button
-              onClick={handleHandoff}
-              disabled={handoffLoading}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border border-teal-300/60 text-teal-700 dark:text-teal-300 hover:bg-teal-50/60 dark:hover:bg-teal-950/30 transition-colors disabled:opacity-50"
-              title="Open revised document in PDF Editor with highlighted changes"
-            >
-              {handoffLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ExternalLink className="w-3.5 h-3.5" />}
-              <span className="hidden sm:inline">Open in PDF Editor</span>
-            </button>
+            <div className="flex items-center gap-1 border border-teal-300/50 dark:border-teal-700/40 rounded-lg overflow-hidden">
+              {/* Open selected diffs — enabled only when checkboxes checked */}
+              <button
+                onClick={() => handleHandoff([...handoffSelectedIds])}
+                disabled={handoffLoading || selectedCount === 0}
+                title={
+                  selectedCount === 0
+                    ? "Check diffs in the Summary panel to enable"
+                    : `Open ${selectedCount} selected diff${selectedCount === 1 ? "" : "s"} in PDF Editor`
+                }
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-teal-700 dark:text-teal-300 hover:bg-teal-50/60 dark:hover:bg-teal-950/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <MousePointerClick className="w-3.5 h-3.5 flex-shrink-0" />
+                <span className="hidden sm:inline">
+                  {selectedCount > 0 ? `${selectedCount} selected` : "Selected"}
+                </span>
+              </button>
+
+              <div className="w-px h-5 bg-teal-200/60 dark:bg-teal-700/40 flex-shrink-0" />
+
+              {/* Open rejected diffs — enabled only when items are rejected */}
+              <button
+                onClick={() => handleHandoff(rejectedDiffIds)}
+                disabled={handoffLoading || rejectedCount === 0}
+                title={
+                  rejectedCount === 0
+                    ? "Mark diffs as rejected in the Summary panel to enable"
+                    : `Open ${rejectedCount} rejected diff${rejectedCount === 1 ? "" : "s"} in PDF Editor`
+                }
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50/60 dark:hover:bg-red-950/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <XCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                <span className="hidden sm:inline">
+                  {rejectedCount > 0 ? `${rejectedCount} rejected` : "Rejected"}
+                </span>
+              </button>
+
+              <div className="w-px h-5 bg-teal-200/60 dark:bg-teal-700/40 flex-shrink-0" />
+
+              {/* Open all diffs — always available */}
+              <button
+                onClick={() => handleHandoff()}
+                disabled={handoffLoading}
+                title="Open all diffs in PDF Editor (all highlights)"
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-teal-700 dark:text-teal-300 hover:bg-teal-50/60 dark:hover:bg-teal-950/30 transition-colors disabled:opacity-50"
+              >
+                {handoffLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ExternalLink className="w-3.5 h-3.5" />}
+                <span className="hidden sm:inline">All</span>
+              </button>
+            </div>
           )}
 
           <button
@@ -1624,6 +1798,9 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
         onLeaveItem={() => setHoveredItemIds([])}
         onSeverityChange={handleSeverityChange}
         linkedNoteIds={linkedNoteIds}
+        handoffSelectedIds={handoffSelectedIds}
+        onToggleHandoffSelect={toggleHandoffSelect}
+        onRejectToggle={handleRejectToggle}
       />
     </div>
   )
