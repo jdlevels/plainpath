@@ -1,0 +1,82 @@
+Good progress. Do NOT redo the architecture work. Keep the current implementation.
+
+This PDF Platform Expansion block is NOT closed yet for four reasons:
+1. the required structured completion report was not delivered
+2. OCR flow is not yet browser-verified
+3. Merge + real page operations are not fully browser-verified
+4. temporary test admin access must be cleaned up unless explicitly intended to remain
+
+NARROW FOLLOW-UP SCOPE ONLY
+No broad refactors.
+No new feature expansion.
+Patch only if a real bug is found during verification.
+
+Do these steps:
+
+1) CLEAN UP TEMP QA ACCESS
+- Check whether the test admin email added to ADMIN_EMAILS is a temporary QA-only addition
+- If it is temporary, remove it and restore ADMIN_EMAILS to its prior state
+- If it is intended to remain permanently, state that explicitly in the report
+- Do not leave ambiguous temporary access behind
+
+2) RETURN THE REQUIRED COMPLETION REPORT IN EXACT FORMAT
+
+Use these exact sections:
+
+1. EXACT FILES CREATED
+2. EXACT FILES MODIFIED
+3. PDF PLATFORM FOUNDATION CHANGES
+4. OCR / EDIT / SAVE / UTILITY ARCHITECTURE
+5. WHAT WORKS END-TO-END
+6. WHAT REMAINS DEFERRED
+7. VERIFICATION RESULTS
+
+Use full relative paths and exact routes.
+
+3) RUN THE MISSING REAL AUTHENTICATED VERIFICATION
+
+A) OCR flow
+Browser-verify all of the following:
+- upload a text PDF -> classified as text
+- upload a scanned/image PDF fixture -> classified as scanned or mixed
+- Run OCR works
+- OCR panel shows extracted text
+- OCR text is searchable
+- OCR text can be reviewed/edited in session
+- OCR state/save still works after OCR edits
+
+B) Merge flow
+Browser-verify:
+- upload at least two PDFs
+- merge runs successfully
+- merged file downloads successfully
+
+C) Page Tools actual operations
+Browser-verify each with real downloadable output:
+- Delete pages
+- Rotate pages
+- Reorder pages
+
+D) Existing editor preservation
+Browser-verify:
+- normal PDF Editor session still opens
+- save/export still works
+
+E) Compare Versions -> PDF Editor handoff
+If the test runner still has timing issues, do one of:
+- rerun serially with a stable authenticated session
+- use the safest practical workaround for one clean browser verification
+If still not possible, mark explicitly as UNABLE and explain exact blocker
+
+4) IF A REAL BUG IS FOUND
+Patch only that bug, then re-test the exact affected flow.
+
+5) REPORT RESULTS CLEARLY
+In VERIFICATION RESULTS, label each item:
+- PASS — browser-verified
+- PASS — code-verified
+- FIXED — bug found, patched, browser re-verified
+- UNABLE — blocked by environment or prerequisite
+
+Do not answer with a narrative summary.
+Return only the structured completion report.

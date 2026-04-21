@@ -31,7 +31,7 @@ timeoutMs = 20000
 APP_BASE_URL = "https://plain-path.replit.app/app"
 VITE_BUILDER_ENABLED = "true"
 BUILDER_ENABLED = "true"
-ADMIN_EMAILS = "support@plainpathapp.com,pdfverify@example.com"
+ADMIN_EMAILS = "support@plainpathapp.com,admin@plainpathapp.com"
 
 [nix]
 channel = "stable-25_05"
