@@ -1,11 +1,15 @@
-// ─── Compare Versions — Workspace (Slice 3) ────────────────────────────────────
-// Dual-pane PDF workspace with async comparison engine results.
-// Slice 3 adds: polling, severity-colored overlays, enriched summary drawer,
-// and rescan button. Stage A/B/C diff items are rendered as positioned rects.
+// ─── Compare Versions — Workspace (Slice 4) ────────────────────────────────────
+// Builds on Slice 3's async engine with:
+//   A. Union-rect group zones per pane
+//   B. Summary ↔ pane selection sync
+//   C. Pane ↔ pane hover sync
+//   D. Group-aware summary with sort + page filter
+//   E. Manager severity override UI (with debounced persist)
+//   F. Notes/watchlist CRUD with diff linking + resolved toggle
 // ──────────────────────────────────────────────────────────────────────────────
 
 import {
-  useState, useEffect, useRef, useCallback,
+  useState, useEffect, useRef, useCallback, useMemo,
 } from "react"
 import { useLocation } from "wouter"
 import * as pdfjsLib from "pdfjs-dist"
@@ -14,14 +18,17 @@ import {
   FileText, ChevronUp, ChevronDown,
   BarChart2, StickyNote, X, CheckCircle2,
   Clock, ListChecks, RefreshCw, Scan,
-  ChevronRight,
+  ChevronRight, Plus, Trash2, Link2, Pencil,
+  ChevronDown as ChevDown,
 } from "lucide-react"
 import { useEntitlements } from "@/hooks/useEntitlements"
 import { useCompareVersionsApi } from "@/hooks/useCompareVersionsApi"
 import type {
   CVSessionDetail, CVManagerNotes,
   CVDiffItem, CVDiffResult, CVDiffSeverity, CVDiffChangeType,
+  CVGroupZone, CVFreeformNote, CVWatchlistItem, CVNoteSeverity,
 } from "@/lib/compareVersionsTypes"
+import { computeGroupZones, groupsForItems } from "@/lib/compareVersionsGrouping"
 
 // ─── pdfjs worker ─────────────────────────────────────────────────────────────
 
@@ -32,57 +39,103 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
 
 const RENDER_SCALE = 1.5
 const POLL_INTERVAL_MS = 2500
+const SEV_RANK: Record<CVDiffSeverity, number> = { high: 0, medium: 1, low: 2 }
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
-interface PageRender {
-  dataUrl: string
-  w: number
-  h: number
-}
+interface PageRender { dataUrl: string; w: number; h: number }
+interface PopoverState { items: CVDiffItem[]; x: number; y: number }
 
-// ─── Overlay helpers ──────────────────────────────────────────────────────────
-
-function overlayClass(severity: CVDiffSeverity, changeType: CVDiffChangeType): string {
-  const base = "absolute rounded border-2 cursor-pointer transition-opacity hover:opacity-90 pointer-events-auto"
-  if (changeType === "text_added" || changeType === "added_page") {
-    return `${base} border-blue-500/70 bg-blue-400/15`
-  }
-  if (changeType === "text_removed" || changeType === "removed_page") {
-    return `${base} border-red-600/70 bg-red-500/15`
-  }
-  switch (severity) {
-    case "high":   return `${base} border-red-500/75 bg-red-400/15`
-    case "medium": return `${base} border-amber-500/70 bg-amber-400/12`
-    case "low":    return `${base} border-neutral-400/60 bg-neutral-400/8`
-  }
-}
+// ─── Helpers ───────────────────────────────────────────────────────────────────
 
 function severityLabel(item: CVDiffItem): string {
   if (item.signal_type) return humanSignalType(item.signal_type)
   switch (item.change_type) {
-    case "visual_change":   return "Layout Change"
-    case "added_page":      return "Page Added"
-    case "removed_page":    return "Page Removed"
-    case "text_added":      return "Text Added"
-    case "text_removed":    return "Text Removed"
-    case "text_modified":   return "Text Modified"
+    case "visual_change":     return "Layout Change"
+    case "added_page":        return "Page Added"
+    case "removed_page":      return "Page Removed"
+    case "text_added":        return "Text Added"
+    case "text_removed":      return "Text Removed"
+    case "text_modified":     return "Text Modified"
     case "structural_signal": return "Structural Change"
   }
 }
 
-function humanSignalType(signal: string): string {
-  return signal
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase())
+function humanSignalType(s: string): string {
+  return s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
 }
 
-function severityBadgeClass(severity: CVDiffSeverity): string {
-  switch (severity) {
+function severityBadgeClass(sev: CVDiffSeverity): string {
+  switch (sev) {
     case "high":   return "bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300 border border-red-300/60 dark:border-red-800/40"
     case "medium": return "bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-300/60 dark:border-amber-800/40"
     case "low":    return "bg-neutral-100 dark:bg-neutral-800/60 text-neutral-600 dark:text-neutral-400 border border-neutral-300/50 dark:border-neutral-700/40"
   }
+}
+
+function normalizeNotes(mn: any): CVManagerNotes {
+  return {
+    freeform: mn?.freeform ?? "",
+    notes: (mn?.notes ?? []).map((n: any): CVFreeformNote => ({
+      id: n.id ?? crypto.randomUUID(),
+      type: "freeform",
+      text: n.text ?? "",
+      resolved: n.resolved ?? false,
+      created_at: n.created_at ?? new Date().toISOString(),
+      linked_diff_id: n.linked_diff_id ?? null,
+    })),
+    watchlist: (mn?.watchlist ?? []).map((w: any): CVWatchlistItem => ({
+      id: w.id ?? crypto.randomUUID(),
+      type: "watchlist",
+      text: w.text ?? "",
+      severity: ((w.severity ?? "low") as string).toLowerCase() as CVNoteSeverity,
+      resolved: w.resolved ?? false,
+      created_at: w.created_at ?? new Date().toISOString(),
+      linked_diff_id: w.linked_diff_id ?? null,
+    })),
+  }
+}
+
+function recomputeStats(items: CVDiffItem[], base: CVDiffResult): CVDiffResult {
+  const pages = new Set<number>()
+  let high = 0, medium = 0, low = 0
+  for (const item of items) {
+    if (item.severity === "high") high++
+    else if (item.severity === "medium") medium++
+    else low++
+    if (item.page_original != null) pages.add(item.page_original)
+    if (item.page_revised != null) pages.add(item.page_revised)
+  }
+  return { ...base, items, stats: { total: items.length, high, medium, low, pagesWithDiffs: pages.size } }
+}
+
+// ─── Group zone visual helpers ─────────────────────────────────────────────────
+
+function groupZoneBase(zone: CVGroupZone, selected: boolean, hovered: boolean): string {
+  const isAdded = zone.containsAdded && !zone.containsRemoved
+  let bg = ""
+  let border = ""
+  if (isAdded) {
+    bg = hovered ? "bg-blue-400/30" : "bg-blue-400/[0.18]"
+    border = "border-blue-500/80 border-dashed"
+  } else {
+    switch (zone.highestSeverity) {
+      case "high":
+        bg = hovered ? "bg-red-400/30" : "bg-red-400/[0.18]"
+        border = "border-red-500/80 border-dashed"
+        break
+      case "medium":
+        bg = hovered ? "bg-amber-400/30" : "bg-amber-400/[0.18]"
+        border = "border-amber-500/80 border-dashed"
+        break
+      case "low":
+        bg = hovered ? "bg-neutral-400/20" : "bg-neutral-400/[0.12]"
+        border = "border-neutral-400/70 border-dashed"
+        break
+    }
+  }
+  const ring = selected ? " ring-2 ring-violet-500 ring-offset-1" : ""
+  return `absolute border-2 cursor-pointer transition-all duration-100 pointer-events-auto rounded ${bg} ${border}${ring}`
 }
 
 // ─── usePdfRenderer ────────────────────────────────────────────────────────────
@@ -124,11 +177,84 @@ function usePdfRenderer(buf: ArrayBuffer | null) {
   return { pages, loading, failed }
 }
 
+// ─── MiniPopover ───────────────────────────────────────────────────────────────
+// Fixed-position small popover listing items in a multi-item group.
+
+function MiniPopover({
+  state, items, onSelect, onClose,
+}: {
+  state: PopoverState
+  items: CVDiffItem[]
+  onSelect: (id: string) => void
+  onClose: () => void
+}) {
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose()
+    }
+    function keyHandler(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose()
+    }
+    document.addEventListener("mousedown", handler)
+    document.addEventListener("keydown", keyHandler)
+    return () => {
+      document.removeEventListener("mousedown", handler)
+      document.removeEventListener("keydown", keyHandler)
+    }
+  }, [onClose])
+
+  // Clamp to viewport
+  const left = Math.min(state.x, window.innerWidth - 260)
+  const top = Math.min(state.y, window.innerHeight - 280)
+
+  return (
+    <div
+      ref={ref}
+      className="fixed z-[200] bg-background border border-border/60 rounded-xl shadow-xl p-2 min-w-[220px] max-w-[280px] max-h-[260px] overflow-y-auto animate-in fade-in zoom-in-95 duration-100"
+      style={{ left, top }}
+    >
+      <div className="flex items-center justify-between px-2 py-1 mb-1 border-b border-border/30">
+        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+          {state.items.length} changes in zone
+        </span>
+        <button onClick={onClose} className="p-0.5 rounded hover:bg-muted text-muted-foreground">
+          <X className="w-3 h-3" />
+        </button>
+      </div>
+      {items.map((item) => (
+        <button
+          key={item.id}
+          onClick={() => { onSelect(item.id); onClose() }}
+          className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left hover:bg-muted/60 transition-colors"
+        >
+          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
+            item.severity === "high" ? "bg-red-500" :
+            item.severity === "medium" ? "bg-amber-500" : "bg-neutral-400"
+          }`} />
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-medium truncate">{severityLabel(item)}</p>
+            {(item.original_text || item.revised_text) && (
+              <p className="text-[10px] text-muted-foreground truncate">
+                {(item.revised_text ?? item.original_text ?? "").slice(0, 50)}
+              </p>
+            )}
+          </div>
+        </button>
+      ))}
+    </div>
+  )
+}
+
 // ─── PdfPane ───────────────────────────────────────────────────────────────────
 
 function PdfPane({
   label, fileName, pages, loading, failed, errorMsg,
-  accentClass, paneType, diffItems, jumpPage, onSelectItem,
+  accentClass, groups,
+  selectedDiffId, hoveredItemIds,
+  jumpPage,
+  onGroupClick, onGroupHover, onGroupLeave,
 }: {
   label: string
   fileName: string | null | undefined
@@ -137,21 +263,25 @@ function PdfPane({
   failed: boolean
   errorMsg?: string | null
   accentClass: string
-  paneType: "original" | "revised"
-  diffItems: CVDiffItem[]
+  groups: CVGroupZone[]
+  selectedDiffId: string | null
+  hoveredItemIds: string[]
   jumpPage: number | null
-  onSelectItem: (item: CVDiffItem) => void
+  onGroupClick: (zone: CVGroupZone, clientX: number, clientY: number) => void
+  onGroupHover: (zone: CVGroupZone) => void
+  onGroupLeave: () => void
 }) {
   const [currentPage, setCurrentPage] = useState(0)
   const pageRefs = useRef<(HTMLDivElement | null)[]>([])
   const scrollRef = useRef<HTMLDivElement>(null)
   const observerRef = useRef<IntersectionObserver | null>(null)
 
+  const hoveredSet = useMemo(() => new Set(hoveredItemIds), [hoveredItemIds])
+
   useEffect(() => {
     pageRefs.current = pageRefs.current.slice(0, pages.length)
   }, [pages.length])
 
-  // Track which page is most visible
   useEffect(() => {
     if (observerRef.current) observerRef.current.disconnect()
     if (!pages.length) return
@@ -171,16 +301,12 @@ function PdfPane({
     return () => observerRef.current?.disconnect()
   }, [pages.length])
 
-  // Jump-to-page from summary clicks
   useEffect(() => {
     if (jumpPage == null || jumpPage < 1) return
     const idx = jumpPage - 1
     if (idx >= pages.length) return
     const el = pageRefs.current[idx]
-    if (el && scrollRef.current) {
-      el.scrollIntoView({ behavior: "smooth", block: "start" })
-      setCurrentPage(idx)
-    }
+    if (el && scrollRef.current) { el.scrollIntoView({ behavior: "smooth", block: "start" }); setCurrentPage(idx) }
   }, [jumpPage])
 
   function scrollToPage(idx: number) {
@@ -190,22 +316,12 @@ function PdfPane({
   function prevPage() { const t = Math.max(0, currentPage - 1); setCurrentPage(t); scrollToPage(t) }
   function nextPage() { const t = Math.min(pages.length - 1, currentPage + 1); setCurrentPage(t); scrollToPage(t) }
 
-  // Items renderable as overlays for a given page (1-based)
-  function overlayItemsForPage(pageNum: number): CVDiffItem[] {
-    return diffItems.filter((item) => {
-      const pg = paneType === "original" ? item.page_original : item.page_revised
-      if (pg !== pageNum) return false
-      const rect = paneType === "original" ? item.rect_original : item.rect_revised
-      if (!rect) return false
-      // Skip full-page rects (not precise enough to be useful overlays)
-      if (rect.x < 0.01 && rect.y < 0.01 && rect.w > 0.98 && rect.h > 0.98) return false
-      return true
-    })
+  function groupsForPage(pageNum: number): CVGroupZone[] {
+    return groups.filter((g) => g.page === pageNum)
   }
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      {/* Sticky pane header */}
       <div className="sticky top-0 z-10 flex items-center gap-2 px-3 py-2 bg-neutral-200/90 dark:bg-zinc-800/90 border-b border-border/30 backdrop-blur-sm flex-shrink-0">
         <span className={`text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full flex-shrink-0 ${accentClass}`}>
           {label}
@@ -229,7 +345,6 @@ function PdfPane({
         </div>
       </div>
 
-      {/* Scrollable page list */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto bg-neutral-100 dark:bg-zinc-900/70">
         {errorMsg && (
           <div className="flex flex-col items-center justify-center gap-3 py-20 px-6 text-center">
@@ -261,7 +376,7 @@ function PdfPane({
           <div className="space-y-5 p-5">
             {pages.map((pg, i) => {
               const pageNum = i + 1
-              const overlays = overlayItemsForPage(pageNum)
+              const pageGroups = groupsForPage(pageNum)
               return (
                 <div
                   key={i}
@@ -269,35 +384,45 @@ function PdfPane({
                   className="relative rounded-lg overflow-hidden border border-border/30 shadow-sm bg-white select-none"
                   style={{ aspectRatio: `${pg.w} / ${pg.h}` }}
                 >
-                  <img
-                    src={pg.dataUrl}
-                    alt={`Page ${pageNum}`}
-                    className="block w-full pointer-events-none"
-                    draggable={false}
-                  />
+                  <img src={pg.dataUrl} alt={`Page ${pageNum}`} className="block w-full pointer-events-none" draggable={false} />
                   {pages.length > 1 && (
                     <span className="absolute top-2 right-2 text-[9px] font-mono bg-black/50 text-white px-1.5 py-0.5 rounded pointer-events-none z-10">
                       {pageNum} / {pages.length}
                     </span>
                   )}
-                  {/* Diff overlays */}
-                  {overlays.map((item) => {
-                    const rect = paneType === "original" ? item.rect_original : item.rect_revised
-                    if (!rect) return null
+                  {/* Group zone overlays */}
+                  {pageGroups.map((zone) => {
+                    const { rect } = zone
+                    const isSelected = selectedDiffId != null && zone.itemIds.includes(selectedDiffId)
+                    const isHovered = zone.itemIds.some((id) => hoveredSet.has(id))
                     return (
                       <div
-                        key={item.id}
-                        onClick={() => onSelectItem(item)}
-                        title={`${severityLabel(item)}${item.original_text || item.revised_text ? `: ${(item.original_text ?? item.revised_text ?? "").slice(0, 80)}` : ""}`}
-                        className={overlayClass(item.severity, item.change_type)}
+                        key={zone.id}
+                        className={groupZoneBase(zone, isSelected, isHovered)}
                         style={{
-                          left:   `${rect.x * 100}%`,
-                          top:    `${rect.y * 100}%`,
-                          width:  `${Math.max(rect.w * 100, 2)}%`,
+                          left: `${rect.x * 100}%`,
+                          top: `${rect.y * 100}%`,
+                          width: `${Math.max(rect.w * 100, 2)}%`,
                           height: `${Math.max(rect.h * 100, 0.5)}%`,
                           minHeight: "4px",
                         }}
-                      />
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onGroupClick(zone, e.clientX, e.clientY + 12)
+                        }}
+                        onMouseEnter={() => onGroupHover(zone)}
+                        onMouseLeave={() => onGroupLeave()}
+                        title={zone.itemIds.length > 1 ? `${zone.itemIds.length} changes in this zone` : severityLabel(
+                          { change_type: "visual_change", signal_type: null, severity: zone.highestSeverity } as any
+                        )}
+                      >
+                        {/* Count badge for multi-item groups */}
+                        {zone.itemIds.length > 1 && (
+                          <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full text-[9px] font-bold bg-violet-600 text-white shadow z-10 pointer-events-none">
+                            {zone.itemIds.length}
+                          </span>
+                        )}
+                      </div>
                     )
                   })}
                 </div>
@@ -310,79 +435,173 @@ function PdfPane({
   )
 }
 
-// ─── SummaryDrawer ─────────────────────────────────────────────────────────────
-// Collapsible bottom drawer showing comparison results with severity filtering.
+// ─── SummaryPanel ──────────────────────────────────────────────────────────────
 
 type SevFilter = "all" | "high" | "medium" | "low"
 
-function SummaryDrawer({
-  open, onClose, diffResult, onJump,
+function SummaryPanel({
+  open, onClose,
+  diffItems, selectedDiffId,
+  onSelectItem, onHoverItem, onLeaveItem,
+  onSeverityChange,
+  linkedNoteIds,
 }: {
   open: boolean
   onClose: () => void
-  diffResult: CVDiffResult | null
-  onJump: (origPage: number | null, revPage: number | null) => void
+  diffItems: CVDiffItem[]
+  selectedDiffId: string | null
+  onSelectItem: (id: string) => void
+  onHoverItem: (ids: string[]) => void
+  onLeaveItem: () => void
+  onSeverityChange: (itemId: string, sev: CVDiffSeverity) => void
+  linkedNoteIds: Set<string>
 }) {
-  const [filter, setFilter] = useState<SevFilter>("all")
-  const [selected, setSelected] = useState<string | null>(null)
+  const [sevFilter, setSevFilter] = useState<SevFilter>("all")
+  const [pageFilter, setPageFilter] = useState<number | null>(null)
+  const [showPageDrop, setShowPageDrop] = useState(false)
+  const itemRefs = useRef<Record<string, HTMLDivElement | null>>({})
+  const pageDropRef = useRef<HTMLDivElement>(null)
+
+  // Close page dropdown on outside click
+  useEffect(() => {
+    if (!showPageDrop) return
+    function handler(e: MouseEvent) {
+      if (pageDropRef.current && !pageDropRef.current.contains(e.target as Node)) setShowPageDrop(false)
+    }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [showPageDrop])
+
+  // Scroll selected item into view
+  useEffect(() => {
+    if (!selectedDiffId) return
+    const el = itemRefs.current[selectedDiffId]
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "nearest" })
+  }, [selectedDiffId])
+
+  // Reset page filter when severity filter changes
+  useEffect(() => { setPageFilter(null) }, [sevFilter])
 
   if (!open) return null
 
-  const items = diffResult?.items ?? []
-  const stats = diffResult?.stats
+  // Severity-filtered items
+  const sevFiltered = sevFilter === "all" ? diffItems : diffItems.filter((i) => i.severity === sevFilter)
 
-  const filtered = filter === "all" ? items : items.filter((i) => i.severity === filter)
+  // Pages with items (in sevFiltered)
+  const pagesWithItems = useMemo(() => {
+    const pSet = new Set<number>()
+    for (const item of sevFiltered) {
+      if (item.page_original != null) pSet.add(item.page_original)
+      if (item.page_revised != null) pSet.add(item.page_revised)
+    }
+    return [...pSet].sort((a, b) => a - b)
+  }, [sevFiltered])
+
+  // Page-filtered + sorted items
+  const visibleItems = useMemo(() => {
+    let list = pageFilter == null ? sevFiltered : sevFiltered.filter((i) =>
+      i.page_original === pageFilter || i.page_revised === pageFilter
+    )
+    return [...list].sort((a, b) => {
+      const sd = SEV_RANK[a.severity] - SEV_RANK[b.severity]
+      if (sd !== 0) return sd
+      const pa = a.page_original ?? a.page_revised ?? 9999
+      const pb = b.page_original ?? b.page_revised ?? 9999
+      return pa - pb
+    })
+  }, [sevFiltered, pageFilter])
+
+  const stats = useMemo(() => {
+    let high = 0, medium = 0, low = 0
+    for (const i of diffItems) {
+      if (i.severity === "high") high++
+      else if (i.severity === "medium") medium++
+      else low++
+    }
+    return { total: diffItems.length, high, medium, low }
+  }, [diffItems])
 
   const TAB_LABELS: { key: SevFilter; label: string; count: number }[] = [
-    { key: "all",    label: "All",    count: items.length },
-    { key: "high",   label: "High",   count: stats?.high ?? 0 },
-    { key: "medium", label: "Med",    count: stats?.medium ?? 0 },
-    { key: "low",    label: "Low",    count: stats?.low ?? 0 },
+    { key: "all",    label: "All",  count: stats.total },
+    { key: "high",   label: "High", count: stats.high },
+    { key: "medium", label: "Med",  count: stats.medium },
+    { key: "low",    label: "Low",  count: stats.low },
   ]
 
-  function handleClick(item: CVDiffItem) {
-    setSelected(item.id)
-    onJump(item.page_original, item.page_revised)
-  }
-
   return (
-    <div className="flex-shrink-0 border-t border-border/60 bg-background animate-in slide-in-from-bottom-2 duration-200" style={{ height: "280px" }}>
+    <div
+      className="flex-shrink-0 border-t border-border/60 bg-background animate-in slide-in-from-bottom-2 duration-200"
+      style={{ height: "290px" }}
+    >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/40 flex-shrink-0">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/40 flex-shrink-0 gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           <BarChart2 className="w-4 h-4 text-muted-foreground" />
-          <span className="text-sm font-semibold">Comparison Summary</span>
-          {stats && (
-            <span className="text-[10px] text-muted-foreground font-mono">
-              — {stats.total} change{stats.total !== 1 ? "s" : ""} across {stats.pagesWithDiffs} page{stats.pagesWithDiffs !== 1 ? "s" : ""}
+          <span className="text-sm font-semibold">Summary</span>
+          {stats.total > 0 && (
+            <span className="text-[10px] text-muted-foreground font-mono hidden sm:block">
+              · {stats.total} change{stats.total !== 1 ? "s" : ""}
             </span>
           )}
         </div>
-        <div className="flex items-center gap-2">
-          {/* Severity filter tabs */}
-          {diffResult && (
-            <div className="flex items-center gap-0.5 bg-muted/60 rounded-lg p-0.5">
-              {TAB_LABELS.map(({ key, label, count }) => (
-                <button
-                  key={key}
-                  onClick={() => setFilter(key)}
-                  className={`px-2 py-0.5 rounded-md text-[10px] font-semibold transition-colors ${
-                    filter === key
-                      ? key === "high"
-                        ? "bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300"
-                        : key === "medium"
-                        ? "bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300"
-                        : key === "low"
-                        ? "bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300"
-                        : "bg-background text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {label} {count > 0 && <span className="opacity-70">({count})</span>}
-                </button>
-              ))}
+
+        <div className="flex items-center gap-1.5 flex-wrap justify-end">
+          {/* Page filter */}
+          {pagesWithItems.length > 1 && (
+            <div ref={pageDropRef} className="relative">
+              <button
+                onClick={() => setShowPageDrop((o) => !o)}
+                className={`flex items-center gap-1 px-2 py-0.5 rounded-md border text-[10px] font-medium transition-colors ${
+                  pageFilter != null
+                    ? "bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 border-violet-300/60"
+                    : "border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                }`}
+              >
+                {pageFilter != null ? `Page ${pageFilter}` : "Page"}
+                <ChevDown className="w-3 h-3" />
+              </button>
+              {showPageDrop && (
+                <div className="absolute right-0 top-full mt-1 z-50 bg-background border border-border/60 rounded-lg shadow-xl py-1 min-w-[100px]">
+                  <button
+                    onClick={() => { setPageFilter(null); setShowPageDrop(false) }}
+                    className={`w-full text-left px-3 py-1 text-xs hover:bg-muted/60 transition-colors ${pageFilter == null ? "font-semibold text-foreground" : "text-muted-foreground"}`}
+                  >
+                    All pages
+                  </button>
+                  {pagesWithItems.map((pg) => (
+                    <button
+                      key={pg}
+                      onClick={() => { setPageFilter(pg); setShowPageDrop(false) }}
+                      className={`w-full text-left px-3 py-1 text-xs hover:bg-muted/60 transition-colors ${pageFilter === pg ? "font-semibold text-foreground" : "text-muted-foreground"}`}
+                    >
+                      Page {pg}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
+
+          {/* Severity filter tabs */}
+          <div className="flex items-center gap-0.5 bg-muted/60 rounded-lg p-0.5">
+            {TAB_LABELS.map(({ key, label, count }) => (
+              <button
+                key={key}
+                onClick={() => setSevFilter(key)}
+                className={`px-2 py-0.5 rounded-md text-[10px] font-semibold transition-colors ${
+                  sevFilter === key
+                    ? key === "high"   ? "bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300"
+                    : key === "medium" ? "bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300"
+                    : key === "low"    ? "bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300"
+                    :                   "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {label} {count > 0 && <span className="opacity-70">({count})</span>}
+              </button>
+            ))}
+          </div>
+
           <button onClick={onClose} className="p-1 rounded-lg hover:bg-muted transition-colors text-muted-foreground" title="Close summary">
             <X className="w-4 h-4" />
           </button>
@@ -390,69 +609,100 @@ function SummaryDrawer({
       </div>
 
       {/* Body */}
-      <div className="overflow-y-auto" style={{ height: "calc(280px - 45px)" }}>
-        {!diffResult && (
-          <div className="flex flex-col items-center gap-3 py-8 text-center">
+      <div className="overflow-y-auto" style={{ height: "calc(290px - 46px)" }}>
+        {diffItems.length === 0 && (
+          <div className="flex flex-col items-center gap-2 py-8 text-center">
             <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
               <BarChart2 className="w-4 h-4 text-muted-foreground opacity-40" />
             </div>
-            <p className="text-sm text-muted-foreground">No comparison results yet</p>
-            <p className="text-xs text-muted-foreground/70 max-w-sm leading-relaxed">
-              Results will appear here once the scan is complete.
-            </p>
+            <p className="text-sm text-muted-foreground">No differences found.</p>
           </div>
         )}
 
-        {diffResult && filtered.length === 0 && (
+        {diffItems.length > 0 && visibleItems.length === 0 && (
           <div className="flex flex-col items-center gap-2 py-8 text-center">
             <p className="text-sm text-muted-foreground">
-              No {filter !== "all" ? filter + " severity " : ""}changes found.
+              No {sevFilter !== "all" ? sevFilter + " severity " : ""}changes
+              {pageFilter != null ? ` on page ${pageFilter}` : ""}.
             </p>
           </div>
         )}
 
-        {diffResult && filtered.length > 0 && (
+        {visibleItems.length > 0 && (
           <div className="divide-y divide-border/30">
-            {filtered.map((item) => {
-              const isSelected = selected === item.id
+            {visibleItems.map((item) => {
+              const isSelected = selectedDiffId === item.id
               const pageLabel =
                 item.page_original != null && item.page_revised != null
-                  ? `p.${item.page_original} → p.${item.page_revised}`
-                  : item.page_original != null
-                  ? `p.${item.page_original} (orig)`
-                  : item.page_revised != null
-                  ? `p.${item.page_revised} (rev)`
+                  ? `p.${item.page_original}→${item.page_revised}`
+                  : item.page_original != null ? `p.${item.page_original} orig`
+                  : item.page_revised != null  ? `p.${item.page_revised} rev`
                   : "—"
-              const preview =
-                item.revised_text
-                  ? item.revised_text.slice(0, 90)
-                  : item.original_text
-                  ? item.original_text.slice(0, 90)
-                  : null
+              const preview = (item.revised_text ?? item.original_text ?? "").slice(0, 80)
+              const hasLinkedNote = linkedNoteIds.has(item.id)
 
               return (
-                <button
+                <div
                   key={item.id}
-                  onClick={() => handleClick(item)}
-                  className={`w-full flex items-start gap-3 px-4 py-2.5 text-left transition-colors hover:bg-muted/40 ${
-                    isSelected ? "bg-muted/60" : ""
+                  ref={(el) => { itemRefs.current[item.id] = el }}
+                  className={`flex items-stretch gap-0 transition-colors ${
+                    isSelected ? "bg-violet-50 dark:bg-violet-950/30" : "hover:bg-muted/30"
                   }`}
+                  onMouseEnter={() => onHoverItem([item.id])}
+                  onMouseLeave={() => onLeaveItem()}
                 >
-                  {/* Severity badge */}
-                  <span className={`text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded flex-shrink-0 mt-0.5 ${severityBadgeClass(item.severity)}`}>
-                    {item.severity}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium text-foreground truncate">{severityLabel(item)}</span>
-                      <span className="text-[10px] text-muted-foreground font-mono flex-shrink-0">{pageLabel}</span>
+                  {/* Left accent bar when selected */}
+                  <div className={`w-0.5 flex-shrink-0 rounded-l ${isSelected ? "bg-violet-500" : "bg-transparent"}`} />
+
+                  <button
+                    onClick={() => onSelectItem(item.id)}
+                    className="flex-1 flex items-start gap-3 px-3 py-2.5 text-left"
+                  >
+                    {/* Severity badge */}
+                    <span className={`text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded flex-shrink-0 mt-0.5 ${severityBadgeClass(item.severity)}`}>
+                      {item.severity}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs font-medium text-foreground truncate">{severityLabel(item)}</span>
+                        <span className="text-[10px] text-muted-foreground font-mono flex-shrink-0">{pageLabel}</span>
+                        {item.severity_overridden && (
+                          <span className="flex items-center gap-0.5 text-[9px] text-violet-600 dark:text-violet-400 font-semibold flex-shrink-0">
+                            <Pencil className="w-2.5 h-2.5" /> overridden
+                          </span>
+                        )}
+                        {hasLinkedNote && (
+                          <span className="flex items-center gap-0.5 text-[9px] text-teal-600 dark:text-teal-400 font-semibold flex-shrink-0">
+                            <Link2 className="w-2.5 h-2.5" /> note
+                          </span>
+                        )}
+                      </div>
+                      {preview && (
+                        <p className="text-[11px] text-muted-foreground truncate mt-0.5">{preview}</p>
+                      )}
                     </div>
-                    {preview && (
-                      <p className="text-[11px] text-muted-foreground truncate mt-0.5 leading-snug">{preview}</p>
-                    )}
+                    <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50 flex-shrink-0 mt-0.5" />
+                  </button>
+
+                  {/* Severity override dropdown */}
+                  <div className="flex items-center px-2 flex-shrink-0">
+                    <select
+                      value={item.severity}
+                      onChange={(e) => {
+                        e.stopPropagation()
+                        onSeverityChange(item.id, e.target.value as CVDiffSeverity)
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      title="Override severity"
+                      className="text-[10px] font-semibold rounded border border-border/50 bg-muted/40 px-1 py-0.5 cursor-pointer focus:outline-none focus:ring-1 focus:ring-violet-400/50 appearance-none text-center"
+                      style={{ minWidth: "56px" }}
+                    >
+                      <option value="high">High</option>
+                      <option value="medium">Med</option>
+                      <option value="low">Low</option>
+                    </select>
                   </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50 flex-shrink-0 mt-0.5" />
-                </button>
+                </div>
               )
             })}
           </div>
@@ -463,121 +713,323 @@ function SummaryDrawer({
 }
 
 // ─── NotesRail ─────────────────────────────────────────────────────────────────
+// Full CRUD: structured freeform notes + watchlist items, with diff linking + resolved toggle.
 
 function NotesRail({
-  open, onClose, session, onSaved,
+  open, onClose, session, selectedDiffId, onSaved,
 }: {
   open: boolean
   onClose: () => void
   session: CVSessionDetail | null
+  selectedDiffId: string | null
   onSaved: (notes: CVManagerNotes) => void
 }) {
   const api = useCompareVersionsApi()
-  const [notes, setNotes] = useState<CVManagerNotes>({ freeform: "", watchlist: [] })
+  const [notes, setNotes] = useState<CVManagerNotes>({ freeform: "", notes: [], watchlist: [] })
   const [saving, setSaving] = useState(false)
-  const [saveOk, setSaveOk] = useState(false)
   const [saveErr, setSaveErr] = useState(false)
+  const [addingNote, setAddingNote] = useState(false)
+  const [addingWatch, setAddingWatch] = useState(false)
+  const [newNoteText, setNewNoteText] = useState("")
+  const [newWatchText, setNewWatchText] = useState("")
+  const [newWatchSev, setNewWatchSev] = useState<CVNoteSeverity>("medium")
 
   useEffect(() => {
-    if (session?.managerNotes) setNotes(session.managerNotes)
+    if (session?.managerNotes) setNotes(normalizeNotes(session.managerNotes))
   }, [session?.id, open])
 
-  async function handleSave() {
+  async function persistNotes(next: CVManagerNotes) {
     if (!session) return
-    setSaving(true); setSaveOk(false); setSaveErr(false)
+    setNotes(next)
+    setSaving(true); setSaveErr(false)
     try {
-      await api.updateNotes(session.id, notes)
-      setSaveOk(true); onSaved(notes)
-      setTimeout(() => setSaveOk(false), 2500)
+      await api.updateNotes(session.id, next)
+      onSaved(next)
     } catch {
       setSaveErr(true)
       setTimeout(() => setSaveErr(false), 3000)
     } finally { setSaving(false) }
   }
 
+  function addNote() {
+    if (!newNoteText.trim()) return
+    const note: CVFreeformNote = {
+      id: crypto.randomUUID(),
+      type: "freeform",
+      text: newNoteText.trim(),
+      resolved: false,
+      created_at: new Date().toISOString(),
+      linked_diff_id: null,
+    }
+    const next = { ...notes, notes: [note, ...(notes.notes ?? [])] }
+    setNewNoteText(""); setAddingNote(false)
+    persistNotes(next)
+  }
+
+  function deleteNote(id: string) {
+    persistNotes({ ...notes, notes: (notes.notes ?? []).filter((n) => n.id !== id) })
+  }
+
+  function toggleNoteResolved(id: string) {
+    persistNotes({
+      ...notes,
+      notes: (notes.notes ?? []).map((n) => n.id === id ? { ...n, resolved: !n.resolved } : n),
+    })
+  }
+
+  function linkNoteToSelected(id: string) {
+    if (!selectedDiffId) return
+    persistNotes({
+      ...notes,
+      notes: (notes.notes ?? []).map((n) => n.id === id ? { ...n, linked_diff_id: n.linked_diff_id === selectedDiffId ? null : selectedDiffId } : n),
+    })
+  }
+
+  function addWatchlistItem() {
+    if (!newWatchText.trim()) return
+    const item: CVWatchlistItem = {
+      id: crypto.randomUUID(),
+      type: "watchlist",
+      text: newWatchText.trim(),
+      severity: newWatchSev,
+      resolved: false,
+      created_at: new Date().toISOString(),
+      linked_diff_id: null,
+    }
+    const next = { ...notes, watchlist: [item, ...notes.watchlist] }
+    setNewWatchText(""); setAddingWatch(false)
+    persistNotes(next)
+  }
+
+  function deleteWatchlistItem(id: string) {
+    persistNotes({ ...notes, watchlist: notes.watchlist.filter((w) => w.id !== id) })
+  }
+
+  function toggleWatchResolved(id: string) {
+    persistNotes({
+      ...notes,
+      watchlist: notes.watchlist.map((w) => w.id === id ? { ...w, resolved: !w.resolved } : w),
+    })
+  }
+
+  function linkWatchToSelected(id: string) {
+    if (!selectedDiffId) return
+    persistNotes({
+      ...notes,
+      watchlist: notes.watchlist.map((w) => w.id === id ? { ...w, linked_diff_id: w.linked_diff_id === selectedDiffId ? null : selectedDiffId } : w),
+    })
+  }
+
+  function saveFreeform() {
+    persistNotes(notes)
+  }
+
   if (!open) return null
 
-  const watchlist = notes.watchlist ?? []
-  const SEV: Record<string, string> = {
-    high:   "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800",
-    medium: "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800",
-    low:    "text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-950/40 border-sky-200 dark:border-sky-800",
+  const sortedNotes = [...(notes.notes ?? [])].sort((a, b) =>
+    Number(a.resolved) - Number(b.resolved) || new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  )
+  const sortedWatch = [...notes.watchlist].sort((a, b) =>
+    Number(a.resolved) - Number(b.resolved) || new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  )
+
+  const SEV_CLS: Record<CVNoteSeverity, string> = {
+    high:   "text-red-600 dark:text-red-400",
+    medium: "text-amber-600 dark:text-amber-400",
+    low:    "text-sky-600 dark:text-sky-400",
   }
 
   return (
-    <div className="absolute inset-y-0 right-0 z-30 flex flex-col w-80 max-w-[90vw] bg-background border-l border-border/60 shadow-xl animate-in slide-in-from-right-2 duration-200">
+    <div className="absolute inset-y-0 right-0 z-30 flex flex-col w-80 max-w-[92vw] bg-background border-l border-border/60 shadow-xl animate-in slide-in-from-right-2 duration-200">
+      {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border/40 flex-shrink-0">
         <div className="flex items-center gap-2">
           <StickyNote className="w-4 h-4 text-muted-foreground" />
           <span className="text-sm font-semibold">Manager Notes</span>
+          {saving && <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />}
+          {saveErr && <span className="text-[10px] text-red-500">Save failed</span>}
         </div>
-        <button onClick={onClose} className="p-1 rounded-lg hover:bg-muted transition-colors text-muted-foreground" title="Close notes">
+        <button onClick={onClose} className="p-1 rounded-lg hover:bg-muted transition-colors text-muted-foreground">
           <X className="w-4 h-4" />
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-6">
+
+        {/* ── Legacy freeform text ── */}
         <div>
           <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5 flex items-center gap-1.5">
-            <Clock className="w-3 h-3" /> Notes
+            <Clock className="w-3 h-3" /> Context Notes
           </label>
           <textarea
             value={notes.freeform ?? ""}
             onChange={(e) => setNotes((n) => ({ ...n, freeform: e.target.value }))}
-            placeholder="Add review notes, context, or observations…"
-            rows={5}
+            onBlur={saveFreeform}
+            placeholder="Add general review context…"
+            rows={3}
             className="w-full text-sm rounded-lg border border-border/60 bg-muted/30 px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-teal-500/40 placeholder:text-muted-foreground/50"
           />
         </div>
-        {watchlist.length > 0 && (
-          <div>
-            <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-1.5">
-              <ListChecks className="w-3 h-3" /> Watchlist ({watchlist.length})
-            </label>
-            <div className="space-y-2">
-              {watchlist.map((item, i) => (
-                <div key={i} className={`flex items-start gap-2 rounded-lg border px-3 py-2 ${SEV[item.severity] ?? SEV.low}`}>
-                  <div className="flex-1 min-w-0">
-                    <p className={`text-xs font-medium leading-snug ${item.resolved ? "line-through opacity-50" : ""}`}>
-                      {item.text || <em className="opacity-50">No description</em>}
-                    </p>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className="text-[9px] font-bold uppercase opacity-70">{item.severity}</span>
-                      {item.resolved && <span className="text-[9px] font-bold uppercase opacity-70">· Resolved</span>}
-                    </div>
-                  </div>
-                  {item.resolved && <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0 opacity-60 mt-0.5" />}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-        {watchlist.length === 0 && !notes.freeform && (
-          <div className="flex flex-col items-center gap-2 py-8 text-center">
-            <StickyNote className="w-7 h-7 text-muted-foreground opacity-25" />
-            <p className="text-xs text-muted-foreground opacity-60 leading-relaxed">
-              No notes were added during intake.<br />Add notes above to save them.
-            </p>
-          </div>
-        )}
-      </div>
 
-      <div className="px-4 py-3 border-t border-border/40 flex-shrink-0">
-        <button
-          onClick={handleSave}
-          disabled={saving || !session}
-          className={`w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-            saveErr   ? "bg-red-600 hover:bg-red-700 text-white"
-            : saveOk  ? "bg-teal-600 text-white"
-            : saving  ? "bg-muted text-muted-foreground cursor-not-allowed"
-            : "bg-teal-600 hover:bg-teal-700 text-white"
-          }`}
-        >
-          {saving  ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving…</>
-          : saveOk ? <><CheckCircle2 className="w-3.5 h-3.5" /> Saved</>
-          : saveErr ? "Save failed — retry"
-          : "Save Notes"}
-        </button>
+        {/* ── Structured notes ── */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+              <StickyNote className="w-3 h-3" /> Notes ({sortedNotes.length})
+            </label>
+            <button
+              onClick={() => { setAddingNote(true); setAddingWatch(false) }}
+              className="flex items-center gap-1 text-[10px] font-semibold text-teal-600 dark:text-teal-400 hover:opacity-80 transition-opacity"
+            >
+              <Plus className="w-3 h-3" /> Add
+            </button>
+          </div>
+
+          {addingNote && (
+            <div className="mb-2 p-2 rounded-lg border border-teal-300/50 bg-teal-50 dark:bg-teal-950/30 space-y-2">
+              <textarea
+                autoFocus
+                value={newNoteText}
+                onChange={(e) => setNewNoteText(e.target.value)}
+                placeholder="Note text…"
+                rows={2}
+                className="w-full text-xs rounded border border-border/60 bg-background px-2 py-1.5 resize-none focus:outline-none focus:ring-1 focus:ring-teal-400"
+              />
+              <div className="flex gap-1.5">
+                <button onClick={addNote} disabled={!newNoteText.trim()} className="flex-1 py-1 rounded bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold disabled:opacity-40 transition-colors">
+                  Add
+                </button>
+                <button onClick={() => { setAddingNote(false); setNewNoteText("") }} className="flex-1 py-1 rounded bg-muted hover:bg-muted/70 text-muted-foreground text-xs font-medium transition-colors">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          {sortedNotes.length === 0 && !addingNote && (
+            <p className="text-[11px] text-muted-foreground/60 italic py-1">No notes yet.</p>
+          )}
+
+          <div className="space-y-2">
+            {sortedNotes.map((note) => (
+              <div key={note.id} className={`rounded-lg border border-border/50 p-2.5 ${note.resolved ? "opacity-50" : ""}`}>
+                <p className={`text-xs leading-snug ${note.resolved ? "line-through" : ""}`}>{note.text}</p>
+                {note.linked_diff_id && (
+                  <p className="text-[9px] text-teal-600 dark:text-teal-400 mt-0.5 flex items-center gap-0.5">
+                    <Link2 className="w-2.5 h-2.5" /> Linked to change
+                  </p>
+                )}
+                <div className="flex items-center gap-1 mt-1.5">
+                  <button
+                    onClick={() => toggleNoteResolved(note.id)}
+                    title={note.resolved ? "Mark unresolved" : "Mark resolved"}
+                    className="p-0.5 rounded hover:bg-muted transition-colors text-muted-foreground"
+                  >
+                    <CheckCircle2 className={`w-3.5 h-3.5 ${note.resolved ? "text-teal-500" : ""}`} />
+                  </button>
+                  <button
+                    onClick={() => linkNoteToSelected(note.id)}
+                    disabled={!selectedDiffId}
+                    title={note.linked_diff_id === selectedDiffId ? "Unlink" : "Link to selected change"}
+                    className={`p-0.5 rounded hover:bg-muted transition-colors disabled:opacity-30 ${note.linked_diff_id ? "text-teal-500" : "text-muted-foreground"}`}
+                  >
+                    <Link2 className="w-3.5 h-3.5" />
+                  </button>
+                  <button onClick={() => deleteNote(note.id)} title="Delete note" className="p-0.5 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-red-500 ml-auto">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Watchlist ── */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+              <ListChecks className="w-3 h-3" /> Watchlist ({sortedWatch.length})
+            </label>
+            <button
+              onClick={() => { setAddingWatch(true); setAddingNote(false) }}
+              className="flex items-center gap-1 text-[10px] font-semibold text-teal-600 dark:text-teal-400 hover:opacity-80 transition-opacity"
+            >
+              <Plus className="w-3 h-3" /> Add
+            </button>
+          </div>
+
+          {addingWatch && (
+            <div className="mb-2 p-2 rounded-lg border border-amber-300/50 bg-amber-50 dark:bg-amber-950/30 space-y-2">
+              <textarea
+                autoFocus
+                value={newWatchText}
+                onChange={(e) => setNewWatchText(e.target.value)}
+                placeholder="Watchlist item…"
+                rows={2}
+                className="w-full text-xs rounded border border-border/60 bg-background px-2 py-1.5 resize-none focus:outline-none focus:ring-1 focus:ring-amber-400"
+              />
+              <select
+                value={newWatchSev}
+                onChange={(e) => setNewWatchSev(e.target.value as CVNoteSeverity)}
+                className="w-full text-xs rounded border border-border/60 bg-background px-2 py-1 focus:outline-none focus:ring-1 focus:ring-amber-400"
+              >
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+              <div className="flex gap-1.5">
+                <button onClick={addWatchlistItem} disabled={!newWatchText.trim()} className="flex-1 py-1 rounded bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold disabled:opacity-40 transition-colors">
+                  Add
+                </button>
+                <button onClick={() => { setAddingWatch(false); setNewWatchText("") }} className="flex-1 py-1 rounded bg-muted hover:bg-muted/70 text-muted-foreground text-xs font-medium transition-colors">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          {sortedWatch.length === 0 && !addingWatch && (
+            <p className="text-[11px] text-muted-foreground/60 italic py-1">No watchlist items yet.</p>
+          )}
+
+          <div className="space-y-2">
+            {sortedWatch.map((item) => (
+              <div key={item.id} className={`rounded-lg border border-border/50 p-2.5 ${item.resolved ? "opacity-50" : ""}`}>
+                <div className="flex items-start gap-1.5">
+                  <span className={`text-[9px] font-bold uppercase mt-0.5 flex-shrink-0 ${SEV_CLS[item.severity] ?? SEV_CLS.low}`}>
+                    {item.severity}
+                  </span>
+                  <p className={`text-xs leading-snug flex-1 ${item.resolved ? "line-through" : ""}`}>{item.text}</p>
+                </div>
+                {item.linked_diff_id && (
+                  <p className="text-[9px] text-teal-600 dark:text-teal-400 mt-0.5 flex items-center gap-0.5">
+                    <Link2 className="w-2.5 h-2.5" /> Linked to change
+                  </p>
+                )}
+                <div className="flex items-center gap-1 mt-1.5">
+                  <button
+                    onClick={() => toggleWatchResolved(item.id)}
+                    title={item.resolved ? "Mark unresolved" : "Mark resolved"}
+                    className="p-0.5 rounded hover:bg-muted transition-colors text-muted-foreground"
+                  >
+                    <CheckCircle2 className={`w-3.5 h-3.5 ${item.resolved ? "text-teal-500" : ""}`} />
+                  </button>
+                  <button
+                    onClick={() => linkWatchToSelected(item.id)}
+                    disabled={!selectedDiffId}
+                    title={item.linked_diff_id === selectedDiffId ? "Unlink" : "Link to selected change"}
+                    className={`p-0.5 rounded hover:bg-muted transition-colors disabled:opacity-30 ${item.linked_diff_id ? "text-teal-500" : "text-muted-foreground"}`}
+                  >
+                    <Link2 className="w-3.5 h-3.5" />
+                  </button>
+                  <button onClick={() => deleteWatchlistItem(item.id)} title="Delete" className="p-0.5 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-red-500 ml-auto">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -590,7 +1042,14 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
   const { isAdmin, entitlements, loading: entLoading } = useEntitlements()
   const api = useCompareVersionsApi()
 
+  // ── Core state ──────────────────────────────────────────────────────────────
   const [session, setSession] = useState<CVSessionDetail | null>(null)
+  const [diffItems, setDiffItems] = useState<CVDiffItem[]>([])
+  const [diffResultBase, setDiffResultBase] = useState<CVDiffResult | null>(null) // for stats recompute
+  const [selectedDiffId, setSelectedDiffId] = useState<string | null>(null)
+  const [hoveredItemIds, setHoveredItemIds] = useState<string[]>([])
+  const [popover, setPopover] = useState<PopoverState | null>(null)
+
   const [originalBuf, setOriginalBuf] = useState<ArrayBuffer | null>(null)
   const [revisedBuf, setRevisedBuf] = useState<ArrayBuffer | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
@@ -602,14 +1061,29 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
   const [summaryOpen, setSummaryOpen] = useState(false)
   const [notesOpen, setNotesOpen] = useState(false)
 
-  // Jump-to-page signals from summary clicks
   const [jumpOrigPage, setJumpOrigPage] = useState<number | null>(null)
   const [jumpRevPage, setJumpRevPage] = useState<number | null>(null)
 
+  const reviewSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   const { pages: origPages, loading: origLoading, failed: origFailed } = usePdfRenderer(originalBuf)
-  const { pages: revPages, loading: revLoading, failed: revFailed } = usePdfRenderer(revisedBuf)
+  const { pages: revPages,  loading: revLoading,  failed: revFailed  } = usePdfRenderer(revisedBuf)
 
   const canUse = isAdmin || (entitlements?.toolAccess?.includes("compare-versions") ?? false)
+
+  // ── Group zones (memoized) ─────────────────────────────────────────────────
+  const origGroups = useMemo(() => computeGroupZones(diffItems, "original"), [diffItems])
+  const revGroups  = useMemo(() => computeGroupZones(diffItems, "revised"),  [diffItems])
+
+  // ── Linked note IDs (memoized from session notes) ──────────────────────────
+  const linkedNoteIds = useMemo((): Set<string> => {
+    const s = new Set<string>()
+    const mn = session?.managerNotes
+    if (!mn) return s
+    ;(mn.notes ?? []).forEach((n) => { if (n.linked_diff_id) s.add(n.linked_diff_id) })
+    mn.watchlist.forEach((w) => { if (w.linked_diff_id) s.add(w.linked_diff_id) })
+    return s
+  }, [session?.managerNotes])
 
   // ── Initial load ──────────────────────────────────────────────────────────
 
@@ -623,39 +1097,32 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
         const sess = await api.getSession(sessionId)
         if (cancelled) return
         setSession(sess)
+        setDiffItems(sess.diffResult?.items ?? [])
+        setDiffResultBase(sess.diffResult)
 
         const [origResult, revResult] = await Promise.allSettled([
           api.getOriginalPdf(sessionId),
           api.getRevisedPdf(sessionId),
         ])
         if (cancelled) return
-
-        if (origResult.status === "fulfilled") {
-          setOriginalBuf(origResult.value)
-        } else {
-          setOriginalError((origResult.reason as any)?.message ?? "Failed to load original PDF")
-        }
-        if (revResult.status === "fulfilled") {
-          setRevisedBuf(revResult.value)
-        } else {
-          setRevisedError((revResult.reason as any)?.message ?? "Failed to load revised PDF")
-        }
+        if (origResult.status === "fulfilled") setOriginalBuf(origResult.value)
+        else setOriginalError((origResult.reason as any)?.message ?? "Failed to load original PDF")
+        if (revResult.status === "fulfilled") setRevisedBuf(revResult.value)
+        else setRevisedError((revResult.reason as any)?.message ?? "Failed to load revised PDF")
       } catch (err: any) {
         if (cancelled) return
         setLoadError(err?.status === 404 ? "Session not found." : "Failed to load session.")
       }
     }
-
     load()
     return () => { cancelled = true }
   }, [sessionId, entLoading])
 
-  // ── Polling (when scanning) ────────────────────────────────────────────────
+  // ── Polling ────────────────────────────────────────────────────────────────
 
   useEffect(() => {
     if (!session || session.status !== "scanning") return
     let cancelled = false
-
     const interval = setInterval(async () => {
       if (cancelled) return
       try {
@@ -663,24 +1130,23 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
         if (cancelled) return
         setSession(updated)
         if (updated.status === "complete") {
-          setSummaryOpen(true) // auto-open summary when scan completes
+          setDiffItems(updated.diffResult?.items ?? [])
+          setDiffResultBase(updated.diffResult)
+          setSummaryOpen(true)
         }
       } catch { /* ignore poll errors */ }
     }, POLL_INTERVAL_MS)
-
     return () => { cancelled = true; clearInterval(interval) }
   }, [session?.status, sessionId])
 
-  // ── Page title ────────────────────────────────────────────────────────────
+  // ── Page title ─────────────────────────────────────────────────────────────
 
   useEffect(() => {
-    document.title = session?.title
-      ? `${session.title} — Compare Versions`
-      : "Compare Versions — PlainPath"
+    document.title = session?.title ? `${session.title} — Compare Versions` : "Compare Versions — PlainPath"
     return () => { document.title = "PlainPath" }
   }, [session?.title])
 
-  // ── Rescan ────────────────────────────────────────────────────────────────
+  // ── Rescan ─────────────────────────────────────────────────────────────────
 
   async function handleRescan() {
     if (!session || rescanning) return
@@ -688,78 +1154,135 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
     try {
       await api.rescanSession(session.id)
       setSession((s) => s ? { ...s, status: "scanning", diffResult: null } : s)
+      setDiffItems([])
       setSummaryOpen(false)
     } catch (err: any) {
       console.error("[CompareVersions] rescan failed:", err)
-    } finally {
-      setRescanning(false)
-    }
+    } finally { setRescanning(false) }
   }
 
-  // ── Jump-to-page from summary ──────────────────────────────────────────────
+  // ── Jump-to-page ──────────────────────────────────────────────────────────
 
   function handleSummaryJump(origPage: number | null, revPage: number | null) {
-    setJumpOrigPage(null)
-    setJumpRevPage(null)
-    // Use timeout so re-clicks on the same page still trigger the useEffect
+    setJumpOrigPage(null); setJumpRevPage(null)
     setTimeout(() => {
       setJumpOrigPage(origPage)
       setJumpRevPage(revPage)
     }, 30)
-    // Switch to the relevant mobile tab
     if (origPage != null) setActiveTab("original")
     else if (revPage != null) setActiveTab("revised")
   }
 
+  // ── Selection ─────────────────────────────────────────────────────────────
+
+  function selectDiffItem(id: string) {
+    setSelectedDiffId(id)
+    setPopover(null)
+    const item = diffItems.find((i) => i.id === id)
+    if (item) handleSummaryJump(item.page_original, item.page_revised)
+  }
+
+  // ── Group click (from pane) ────────────────────────────────────────────────
+
+  function handleGroupClick(zone: CVGroupZone, clientX: number, clientY: number) {
+    if (zone.itemIds.length === 1) {
+      selectDiffItem(zone.itemIds[0])
+    } else {
+      const items = zone.itemIds
+        .map((id) => diffItems.find((i) => i.id === id))
+        .filter((x): x is CVDiffItem => x != null)
+      setPopover({ items, x: clientX, y: clientY })
+    }
+  }
+
+  // ── Hover sync ────────────────────────────────────────────────────────────
+
+  function handleGroupHover(zone: CVGroupZone) {
+    setHoveredItemIds(zone.itemIds)
+  }
+  function handleGroupLeave() { setHoveredItemIds([]) }
+
+  // ── Severity override ─────────────────────────────────────────────────────
+
+  function handleSeverityChange(itemId: string, newSev: CVDiffSeverity) {
+    setDiffItems((prev) => {
+      const next = prev.map((item) => {
+        if (item.id !== itemId) return item
+        const originalSeverity = item.severity_overridden
+          ? (item.meta?.originalSeverity ?? item.severity)
+          : item.severity
+        return {
+          ...item,
+          severity: newSev,
+          severity_overridden: true,
+          meta: { ...item.meta, originalSeverity },
+        }
+      })
+      // Debounce backend persist
+      if (reviewSaveTimerRef.current) clearTimeout(reviewSaveTimerRef.current)
+      reviewSaveTimerRef.current = setTimeout(() => {
+        if (!session) return
+        const base = diffResultBase ?? session.diffResult
+        if (!base) return
+        const updated = recomputeStats(next, base)
+        api.patchReview(session.id, updated).catch((err) =>
+          console.error("[CompareVersions] severity override save failed:", err),
+        )
+      }, 800)
+      return next
+    })
+  }
+
   // ── Guards ────────────────────────────────────────────────────────────────
 
-  if (entLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-      </div>
-    )
-  }
+  if (entLoading) return (
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+    </div>
+  )
 
-  if (!canUse) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <Lock className="w-8 h-8 text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">Compare Versions requires a Pro plan.</p>
-        <button onClick={() => navigate("/upgrade")} className="text-sm text-primary underline">Upgrade →</button>
-      </div>
-    )
-  }
+  if (!canUse) return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+      <Lock className="w-8 h-8 text-muted-foreground" />
+      <p className="text-sm text-muted-foreground">Compare Versions requires a Pro plan.</p>
+      <button onClick={() => navigate("/upgrade")} className="text-sm text-primary underline">Upgrade →</button>
+    </div>
+  )
 
-  if (loadError) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center">
-        <AlertCircle className="w-8 h-8 text-destructive" />
-        <p className="font-medium">{loadError}</p>
-        <button onClick={() => navigate("/compare-versions")} className="text-sm text-muted-foreground underline">
-          ← My Comparisons
-        </button>
-      </div>
-    )
-  }
+  if (loadError) return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center">
+      <AlertCircle className="w-8 h-8 text-destructive" />
+      <p className="font-medium">{loadError}</p>
+      <button onClick={() => navigate("/compare-versions")} className="text-sm text-muted-foreground underline">← My Comparisons</button>
+    </div>
+  )
 
-  if (!session) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-      </div>
-    )
-  }
+  if (!session) return (
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+    </div>
+  )
 
-  const diffResult: CVDiffResult | null = session.diffResult ?? null
-  const allDiffItems: CVDiffItem[] = diffResult?.items ?? []
+  // Current diff stats from local (possibly overridden) items
+  const highCount = diffItems.filter((i) => i.severity === "high").length
+  const totalCount = diffItems.length
 
   // ── Workspace ─────────────────────────────────────────────────────────────
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)]">
 
-      {/* ── Top toolbar ── */}
+      {/* MiniPopover (fixed, rendered at root of workspace) */}
+      {popover && (
+        <MiniPopover
+          state={popover}
+          items={popover.items}
+          onSelect={selectDiffItem}
+          onClose={() => setPopover(null)}
+        />
+      )}
+
+      {/* ── Toolbar ── */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-border/60 bg-background/95 backdrop-blur-sm flex-shrink-0 gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <button
@@ -775,17 +1298,14 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
             </p>
             <div className="flex items-center gap-1.5">
               <p className="text-[10px] text-muted-foreground">Compare Versions</p>
-              {diffResult && (
-                <span className="text-[10px] font-mono text-muted-foreground">
-                  · {diffResult.stats.total} changes
-                </span>
+              {totalCount > 0 && (
+                <span className="text-[10px] font-mono text-muted-foreground">· {totalCount} changes</span>
               )}
             </div>
           </div>
         </div>
 
         <div className="flex items-center gap-1.5 flex-shrink-0">
-          {/* Rescan button — shown when not currently scanning */}
           {session.status !== "scanning" && (
             <button
               onClick={handleRescan}
@@ -799,7 +1319,7 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
           )}
 
           <button
-            onClick={() => { setSummaryOpen((o) => !o); setNotesOpen(false) }}
+            onClick={() => { setSummaryOpen((o) => !o); if (notesOpen) setNotesOpen(false) }}
             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors border ${
               summaryOpen
                 ? "bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 border-violet-300/60 dark:border-violet-700/40"
@@ -808,14 +1328,12 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
             title="Comparison Summary"
           >
             <BarChart2 className="w-3.5 h-3.5" />
-            {diffResult && diffResult.stats.high > 0 && (
-              <span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />
-            )}
+            {highCount > 0 && <span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />}
             <span className="hidden sm:inline">Summary</span>
           </button>
 
           <button
-            onClick={() => { setNotesOpen((o) => !o); setSummaryOpen(false) }}
+            onClick={() => { setNotesOpen((o) => !o); if (summaryOpen) setSummaryOpen(false) }}
             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors border ${
               notesOpen
                 ? "bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300 border-teal-300/60 dark:border-teal-700/40"
@@ -850,13 +1368,9 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
       {/* ── Mobile tab switcher ── */}
       <div className="flex md:hidden border-b border-border/40 flex-shrink-0 bg-background">
         {(["original", "revised"] as const).map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
+          <button key={tab} onClick={() => setActiveTab(tab)}
             className={`flex-1 py-2 text-xs font-semibold transition-colors border-b-2 ${
-              activeTab === tab
-                ? "text-teal-600 dark:text-teal-400 border-teal-500"
-                : "text-muted-foreground border-transparent hover:text-foreground"
+              activeTab === tab ? "text-teal-600 dark:text-teal-400 border-teal-500" : "text-muted-foreground border-transparent hover:text-foreground"
             }`}
           >
             {tab === "original" ? "Baseline" : "Revised"}
@@ -864,7 +1378,7 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
         ))}
       </div>
 
-      {/* ── Pane area + Notes rail overlay ── */}
+      {/* ── Pane area + Notes rail ── */}
       <div className="flex flex-1 overflow-hidden relative">
 
         {/* Left — Baseline (original) */}
@@ -879,10 +1393,13 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
             failed={origFailed}
             errorMsg={originalError}
             accentClass="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300"
-            paneType="original"
-            diffItems={allDiffItems}
+            groups={origGroups}
+            selectedDiffId={selectedDiffId}
+            hoveredItemIds={hoveredItemIds}
             jumpPage={jumpOrigPage}
-            onSelectItem={(item) => handleSummaryJump(item.page_original, item.page_revised)}
+            onGroupClick={handleGroupClick}
+            onGroupHover={handleGroupHover}
+            onGroupLeave={handleGroupLeave}
           />
         </div>
 
@@ -901,28 +1418,40 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
             failed={revFailed}
             errorMsg={revisedError}
             accentClass="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300"
-            paneType="revised"
-            diffItems={allDiffItems}
+            groups={revGroups}
+            selectedDiffId={selectedDiffId}
+            hoveredItemIds={hoveredItemIds}
             jumpPage={jumpRevPage}
-            onSelectItem={(item) => handleSummaryJump(item.page_original, item.page_revised)}
+            onGroupClick={handleGroupClick}
+            onGroupHover={handleGroupHover}
+            onGroupLeave={handleGroupLeave}
           />
         </div>
 
-        {/* Notes rail — absolute overlay */}
+        {/* Notes rail */}
         <NotesRail
           open={notesOpen}
           onClose={() => setNotesOpen(false)}
           session={session}
-          onSaved={(notes) => setSession((s) => (s ? { ...s, managerNotes: notes } : s))}
+          selectedDiffId={selectedDiffId}
+          onSaved={(mn) => setSession((s) => s ? { ...s, managerNotes: mn } : s)}
         />
       </div>
 
-      {/* Summary drawer — bottom collapsible */}
-      <SummaryDrawer
+      {/* Summary panel */}
+      <SummaryPanel
         open={summaryOpen}
         onClose={() => setSummaryOpen(false)}
-        diffResult={diffResult}
-        onJump={handleSummaryJump}
+        diffItems={diffItems}
+        selectedDiffId={selectedDiffId}
+        onSelectItem={(id) => {
+          selectDiffItem(id)
+          setSummaryOpen(true) // keep open
+        }}
+        onHoverItem={setHoveredItemIds}
+        onLeaveItem={() => setHoveredItemIds([])}
+        onSeverityChange={handleSeverityChange}
+        linkedNoteIds={linkedNoteIds}
       />
     </div>
   )

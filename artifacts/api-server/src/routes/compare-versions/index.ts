@@ -468,8 +468,41 @@ router.get("/sessions/:id/revised", async (req: any, res) => {
   }
 });
 
+// ─── PATCH /api/compare-versions/sessions/:id/review ─────────────────────────
+// Persist manager severity overrides and any other diff_result mutations.
+// Body: { diffResult: CVDiffResult }
+// Does NOT re-run the engine — only updates the stored JSONB.
+
+router.patch("/sessions/:id/review", async (req: any, res) => {
+  const { userId } = getAuth(req);
+  if (!userId) return res.status(401).json({ error: "unauthorized" });
+  try {
+    const { diffResult } = req.body ?? {};
+    if (!diffResult || typeof diffResult !== "object") {
+      return res
+        .status(400)
+        .json({ error: "invalid_body", message: "diffResult is required." });
+    }
+    const result = await pool.query(
+      `UPDATE compare_versions_sessions
+       SET diff_result = $1::jsonb, updated_at = NOW()
+       WHERE id = $2 AND user_id = $3
+       RETURNING id, updated_at`,
+      [JSON.stringify(diffResult), req.params.id, userId],
+    );
+    if (!result.rows.length) {
+      return res.status(404).json({ error: "not_found" });
+    }
+    const row = result.rows[0];
+    return res.json({ id: row.id, updatedAt: row.updated_at });
+  } catch (err) {
+    console.error("[compare-versions] patch review error", err);
+    return res.status(500).json({ error: "server_error" });
+  }
+});
+
 // ─── PATCH /api/compare-versions/sessions/:id/notes ──────────────────────────
-// Replace manager_notes (freeform + watchlist). Safe Slice 2 edit.
+// Replace manager_notes (freeform + watchlist + notes). Safe Slice 2/4 edit.
 
 router.patch("/sessions/:id/notes", async (req: any, res) => {
   const { userId } = getAuth(req);

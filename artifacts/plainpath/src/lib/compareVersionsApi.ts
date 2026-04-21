@@ -1,6 +1,11 @@
 // ─── Compare Versions API Client ───────────────────────────────────────────────
 
-import type { CVSessionListItem, CVSessionDetail, CVManagerNotes } from "./compareVersionsTypes";
+import type {
+  CVSessionListItem,
+  CVSessionDetail,
+  CVManagerNotes,
+  CVDiffResult,
+} from "./compareVersionsTypes";
 
 function authHeaders(token: string | null): HeadersInit {
   return token ? { Authorization: `Bearer ${token}` } : {};
@@ -96,6 +101,20 @@ export const compareVersionsApi = {
     const res = await fetch(`/api/compare-versions/sessions/${id}/scan`, {
       method: "POST",
       headers: authHeaders(token),
+    });
+    return handleResponse(res);
+  },
+
+  /** Persist severity overrides (and any diff_result mutations) without re-running the engine */
+  async patchReview(
+    id: string,
+    diffResult: CVDiffResult,
+    token: string | null,
+  ): Promise<{ id: string; updatedAt: string }> {
+    const res = await fetch(`/api/compare-versions/sessions/${id}/review`, {
+      method: "PATCH",
+      headers: { ...authHeaders(token), "Content-Type": "application/json" },
+      body: JSON.stringify({ diffResult }),
     });
     return handleResponse(res);
   },

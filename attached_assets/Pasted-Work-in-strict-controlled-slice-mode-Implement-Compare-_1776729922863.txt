@@ -1,0 +1,363 @@
+Work in strict controlled-slice mode.
+
+Implement Compare Versions — Slice 4 only.
+Do not implement Slice 5 or beyond.
+Do not add AI enrichment, Word conversion, OCR, exportable audit reports, PDF Editor handoff, page-thumbnail navigator, approval workflow, or demo behavior.
+
+GOAL
+Turn the existing Compare Versions deterministic engine into a true review workspace by adding:
+1. grouped change zones
+2. bidirectional hover/selection sync
+3. summary polish with grouping-aware navigation
+4. manager severity override UI
+5. note-to-diff linking
+6. resolved/unresolved watchlist workflow
+
+This slice is UX/workspace logic only on top of the existing Slice 3 engine.
+Do not rewrite the engine.
+Do not add AI.
+
+==================================================
+CANONICAL TOOL RULE
+==================================================
+
+Tool name remains:
+Compare Versions
+
+Do not rename labels.
+Do not change the existing route structure:
+- /app/compare-versions
+- /app/compare-versions/:sessionId
+
+==================================================
+SLICE 4 SCOPE
+==================================================
+
+Implement only these six areas:
+
+A. Union-rect group zones per pane
+B. Summary ↔ pane selection sync
+C. Pane ↔ pane hover sync
+D. Group-aware summary behavior
+E. Manager severity override UI
+F. Notes/watchlist linking + resolved toggle workflow
+
+==================================================
+A. UNION-RECT GROUP ZONES PER PANE
+==================================================
+
+Current state:
+Slice 3 renders individual diff rects.
+
+Replace that with grouped zones.
+
+Rules:
+- grouping is PER PANE, not global
+- original pane groups are computed from rect_original
+- revised pane groups are computed from rect_revised
+- groups are linked by shared diff item IDs, not by raw pixel position
+
+Algorithm:
+- each diff item with a rect starts as its own rect on that pane
+- any overlapping rects merge into a union rect
+- repeat until no more overlaps remain
+- group output:
+  {
+    id: stable group id,
+    pane: "original" | "revised",
+    rect: { x, y, w, h },
+    itemIds: string[],
+    highestSeverity: "high" | "medium" | "low",
+    containsAdded: boolean,
+    containsRemoved: boolean
+  }
+
+Important:
+- If a diff item has null rect on a given pane, it does not create a group on that pane.
+- Removed-only items may exist only on original.
+- Added-only items may exist only on revised.
+- A group with one item shows no count badge.
+- A group with 2+ items shows a count badge in the top-right corner: "2", "3", etc.
+
+Visual style:
+- background color uses highest-severity color in that group
+- border uses highest-severity border style
+- if selected: solid violet 2px outer ring + brief pulse on first selection
+- if hovered: fill brightens slightly + border intensifies
+- keep overlays readable and non-destructive
+
+Color mapping:
+- High: rgba(239,68,68,0.18), red dashed border
+- Medium: rgba(245,158,11,0.18), amber dashed border
+- Low: rgba(107,114,128,0.12), gray dashed border
+- Added-only group on revised: rgba(59,130,246,0.18), blue dashed border
+- Removed-only group on original: red style
+- On revised for removed-only items: show a small "REMOVED" badge at equivalent page position if already supported simply; otherwise defer that visual and do not fake it
+
+Do not regress page rendering.
+Do not change the existing fractional coordinate model.
+
+==================================================
+B. SUMMARY ↔ PANE SELECTION SYNC
+==================================================
+
+Summary list items must now select diff items cleanly.
+
+When a user clicks a summary item:
+- selectedDiffId is set
+- both panes jump to the matching pages
+- the group containing that diff item becomes selected in both panes
+- if a pane has no rect for that diff item, keep that pane on the linked page but do not force a fake group
+
+When a user clicks a group zone in either pane:
+- if the group contains exactly 1 item:
+  - select that diff item
+  - summary scrolls to and highlights it
+- if the group contains 2+ items:
+  - open a small mini-popover near the group listing the member diff items
+  - clicking one member selects it and highlights it in summary
+
+Mini-popover requirements:
+- lightweight only
+- no portal complexity unless already used elsewhere
+- closes on outside click / Escape
+- shows severity dot + short label per item
+
+Summary selected row:
+- stronger background
+- left accent bar
+- severity badge remains visible
+- if item has severity override, show small pencil/edit indicator
+
+==================================================
+C. PANE ↔ PANE HOVER SYNC
+==================================================
+
+Hovering either pane must mirror to the other pane.
+
+State model:
+- hoveredGroupIdsOriginal: string[] or one selected original group id
+- hoveredGroupIdsRevised: string[] or one selected revised group id
+- cleaner option: hoveredItemIds: string[] derived from hovered group
+Choose the cleanest approach.
+
+Behavior:
+- hovering a group in original pane highlights the linked group(s) in revised pane
+- hovering a group in revised pane highlights the linked group(s) in original pane
+- hovering a summary row highlights containing groups in both panes
+- hover never changes selectedDiffId permanently
+- hover is transient and clears on mouseleave
+
+Use the existing PDF Editor mirrored-indicator interaction pattern as the reference style, but adapted for Compare Versions groups.
+
+==================================================
+D. SUMMARY PANEL POLISH
+==================================================
+
+The summary drawer already exists.
+Upgrade it into a grouping-aware review panel.
+
+Required behavior:
+- filters:
+  [All] [High] [Medium] [Low]
+- page dropdown filter:
+  [Page ▾]
+  Shows only pages with diff items.
+  Selecting a page filters the summary list to that page and clicking an item still jumps both panes.
+- item ordering:
+  High first, then Medium, then Low, then page number, then stable order within page
+- each summary item displays:
+  - severity badge
+  - change type label
+  - page reference(s)
+  - short summary/snippet
+  - override indicator if applicable
+  - linked note indicator if applicable
+  - resolved indicator if linked note/watchlist is resolved
+
+If no diffs exist:
+- show honest empty state: "No differences found."
+
+If filters produce no results:
+- show filtered-empty message, not a blank panel.
+
+==================================================
+E. MANAGER SEVERITY OVERRIDE UI
+==================================================
+
+Add real manual override controls in the summary.
+
+Requirements:
+- each diff item row gets a severity dropdown:
+  High / Medium / Low
+- default state uses engine-assigned severity
+- when user changes severity:
+  - update the diff item in session diff_result
+  - set severity_overridden: true
+  - preserve original detected severity in meta.originalSeverity if not already stored
+- if user changes it back to the engine’s original severity:
+  - either keep severity_overridden true with originalSeverity preserved, or clear it only if implementation is clean
+  - choose one consistent model and document it
+- save persists to DB through an existing PATCH path or a new focused session-update path
+- do not create a second giant session mutation system if a small patch is enough
+
+UI:
+- compact dropdown in each row
+- overridden items show small pencil/edit badge
+- summary counts must reflect current displayed severity after override, not raw engine severity
+
+This is NOT AI.
+This is manager-controlled override only.
+
+==================================================
+F. NOTES / WATCHLIST LINKING + RESOLVED TOGGLE
+==================================================
+
+Current state:
+Manager notes/watchlist exists but is not fully linked.
+
+Implement:
+
+1. Freeform notes
+- editable
+- deletable
+- timestamped
+- persist to manager_notes
+- can optionally link to a diff item
+
+2. Watchlist items
+- fields:
+  - text
+  - severity tag
+  - resolved boolean
+  - linked_diff_id nullable
+- editable and deletable
+- resolved toggle must be real and persisted
+
+3. Linking workflow
+- from summary item: "Link to note"
+  OR from note row: "Link to selected diff"
+- choose the simpler UX, but there must be a real way to associate a note/watchlist item with one specific diff item
+- linked rows show an indicator on both sides:
+  - summary item shows note/watchlist icon
+  - note row shows short linked diff reference
+
+4. Resolved/unresolved behavior
+- manual only in Slice 4
+- no automation
+- resolved rows visually de-emphasized but remain visible
+- notes panel defaults to unresolved items first
+
+Data model:
+- continue using manager_notes JSONB
+- do not create a new table in this slice unless absolutely unavoidable
+- preserve backward compatibility with existing note objects
+
+Suggested records:
+freeform:
+{
+  id,
+  type: "freeform",
+  text,
+  resolved: false,
+  created_at,
+  linked_diff_id: string | null
+}
+
+watchlist:
+{
+  id,
+  type: "watchlist",
+  text,
+  severity: "high" | "medium" | "low",
+  resolved: false,
+  created_at,
+  linked_diff_id: string | null
+}
+
+==================================================
+BACKEND / DATA RULES
+==================================================
+
+Do not change the deterministic engine logic in Slice 4.
+Do not add AI fields beyond preserving existing reserved fields.
+
+You may add one focused session-update route if necessary, such as:
+PATCH /api/compare-versions/sessions/:id/review
+or
+PATCH /api/compare-versions/sessions/:id/diff-result
+or
+PATCH /api/compare-versions/sessions/:id/notes
+
+Choose the smallest clean route design.
+
+Allowed persistence updates in Slice 4:
+- severity override changes inside diff_result
+- linked_diff_id updates in manager_notes
+- resolved toggle updates in manager_notes
+
+Do not add new tables for Slice 4.
+Do not add export routes.
+Do not add PDF Editor handoff routes.
+
+==================================================
+FRONTEND FILES LIKELY TO CHANGE
+==================================================
+
+Use best judgment, but likely:
+- artifacts/plainpath/src/pages/CompareVersionsSession.tsx
+- artifacts/plainpath/src/lib/compareVersionsApi.ts
+- artifacts/plainpath/src/hooks/useCompareVersionsApi.ts
+
+You may add small helper components/utilities for:
+- group zone rendering
+- grouping utility
+- mini-popover
+- summary row component
+- notes rail component
+
+Keep abstractions tight.
+No sprawling framework rebuild.
+
+==================================================
+NON-NEGOTIABLES
+==================================================
+
+- Do not add AI
+- Do not add Word support yet
+- Do not add OCR
+- Do not add exportable audit report
+- Do not add PDF Editor handoff
+- Do not add approval workflow
+- Do not restore locked continuous scroll syncing — panes remain independently scrollable, linked by navigation only
+- Do not rename the tool
+- Do not regress Compare Versions Slices 1–3
+- Do not regress PDF Editor
+- Do not fake overlays for items with null rects
+- Do not overwrite manager_notes during unrelated updates
+
+==================================================
+REQUIRED COMPLETION REPORT
+==================================================
+
+When done, return:
+
+1. Exact files created
+2. Exact files modified
+3. Exact API/update behavior added
+4. Exact grouping algorithm implemented
+5. Exact hover/selection sync behavior
+6. Exact severity override persistence behavior
+7. Exact notes/watchlist linking behavior
+8. Exact Slice 5+ items NOT implemented
+9. Real authenticated screenshots of:
+   - grouped zones visible in both panes
+   - multi-item group badge visible
+   - clicked summary item selecting corresponding groups
+   - hovering left pane highlighting right pane
+   - hovering summary row highlighting both panes
+   - severity override dropdown changed and persisted
+   - linked note/watchlist attached to a diff item
+   - resolved toggle state visible
+
+Implement Compare Versions Slice 4 only.

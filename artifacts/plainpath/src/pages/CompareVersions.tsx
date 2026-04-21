@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { useEntitlements } from "@/hooks/useEntitlements"
 import { useCompareVersionsApi } from "@/hooks/useCompareVersionsApi"
-import type { CVSessionListItem, CVWatchlistItem, CVManagerNotes, WatchlistSeverity } from "@/lib/compareVersionsTypes"
+import type { CVSessionListItem, CVWatchlistItem, CVManagerNotes, CVNoteSeverity } from "@/lib/compareVersionsTypes"
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -226,12 +226,12 @@ function FileSlot({ label, side, file, error, onFile, onRemove, disabled }: File
 
 // ─── Manager Notes / Watchlist ─────────────────────────────────────────────────
 
-const SEVERITY_OPTIONS: WatchlistSeverity[] = ["High", "Medium", "Low"]
+const SEVERITY_OPTIONS: CVNoteSeverity[] = ["high", "medium", "low"]
 
-const SEVERITY_STYLE: Record<WatchlistSeverity, string> = {
-  High: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
-  Medium: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
-  Low: "bg-muted text-muted-foreground",
+const SEVERITY_STYLE: Record<CVNoteSeverity, string> = {
+  high: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
+  medium: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+  low: "bg-muted text-muted-foreground",
 }
 
 interface ManagerNotesEditorProps {
@@ -251,9 +251,12 @@ function ManagerNotesEditor({ notes, onChange, disabled }: ManagerNotesEditorPro
   function addWatchlistItem() {
     const item: CVWatchlistItem = {
       id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      type: "watchlist",
       text: "",
-      severity: "Medium",
+      severity: "medium",
       resolved: false,
+      created_at: new Date().toISOString(),
+      linked_diff_id: null,
     }
     onChange({ ...notes, watchlist: [...notes.watchlist, item] })
   }
@@ -357,7 +360,7 @@ function ManagerNotesEditor({ notes, onChange, disabled }: ManagerNotesEditorPro
                 {/* Severity selector */}
                 <select
                   value={item.severity}
-                  onChange={(e) => updateItem(item.id, { severity: e.target.value as WatchlistSeverity })}
+                  onChange={(e) => updateItem(item.id, { severity: e.target.value as CVNoteSeverity })}
                   className={`text-xs font-semibold px-2 py-0.5 rounded-full border-0 cursor-pointer outline-none ${SEVERITY_STYLE[item.severity]}`}
                   disabled={disabled}
                 >
@@ -407,7 +410,7 @@ function IntakeForm({ onCreated, onCancel }: IntakeFormProps) {
   const [revFile, setRevFile] = useState<File | null>(null)
   const [revError, setRevError] = useState<string | null>(null)
 
-  const [notes, setNotes] = useState<CVManagerNotes>({ freeform: "", watchlist: [] })
+  const [notes, setNotes] = useState<CVManagerNotes>({ freeform: "", watchlist: [], notes: [] })
   const [scanning, setScanning] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
 

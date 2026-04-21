@@ -3,7 +3,7 @@
 import { useAuth } from "@clerk/react";
 import { useCallback } from "react";
 import { compareVersionsApi } from "@/lib/compareVersionsApi";
-import type { CVManagerNotes } from "@/lib/compareVersionsTypes";
+import type { CVManagerNotes, CVDiffResult } from "@/lib/compareVersionsTypes";
 
 export function useCompareVersionsApi() {
   const { getToken } = useAuth();
@@ -55,6 +55,12 @@ export function useCompareVersionsApi() {
 
     rescanSession: useCallback(
       async (id: string) => compareVersionsApi.rescanSession(id, await token()),
+      [token],
+    ),
+
+    patchReview: useCallback(
+      async (id: string, diffResult: CVDiffResult) =>
+        compareVersionsApi.patchReview(id, diffResult, await token()),
       [token],
     ),
   };
