@@ -1025,8 +1025,8 @@ export default function Home() {
                   <motion.h2 initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
                     transition={{ delay: 0.06 }}
                     className="text-4xl sm:text-5xl font-bold leading-[1.08] tracking-tight text-white mb-6" style={{ fontFamily: "var(--font-display)" }}>
-                    They wrote<br />every clause.<br />
-                    <span className="text-slate-400">You have to live<br />with every one.</span>
+                    Every clause<br />matters.<br />
+                    <span className="text-slate-400">Know what you're<br />agreeing to.</span>
                   </motion.h2>
                   <motion.p initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
                     transition={{ delay: 0.12 }}
