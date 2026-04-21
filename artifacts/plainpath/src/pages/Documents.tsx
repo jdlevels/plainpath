@@ -21,6 +21,9 @@ import { pdfEditorApi } from "@/lib/pdfEditorApi"
 import type { SessionMeta } from "@/lib/pdfEditorTypes"
 import { compareVersionsApi } from "@/lib/compareVersionsApi"
 import type { CVSessionListItem } from "@/lib/compareVersionsTypes"
+import { builderApi } from "@/lib/builderApi"
+import type { BuilderDocumentMeta } from "@/lib/builderTypes"
+import { BUILDER_ENABLED, CATEGORY_LABELS } from "@/lib/builderConfig"
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -116,6 +119,12 @@ export default function Documents() {
   const [confirmDeleteCompareId, setConfirmDeleteCompareId] = useState<string | null>(null)
   const [deletingCompare, setDeletingCompare] = useState(false)
 
+  // Document Builder drafts state
+  const [builderDocs, setBuilderDocs] = useState<BuilderDocumentMeta[]>([])
+  const [builderLoading, setBuilderLoading] = useState(false)
+  const [confirmArchiveBuilderById, setConfirmArchiveBuilderById] = useState<string | null>(null)
+  const [archivingBuilder, setArchivingBuilder] = useState(false)
+
   useEffect(() => {
     document.title = "My Documents — PlainPath"
   }, [])
@@ -130,16 +139,18 @@ export default function Documents() {
     setLoading(true)
     setPdfLoading(true)
     setCompareLoading(true)
+    if (BUILDER_ENABLED) setBuilderLoading(true)
     setError(null)
 
     // Fetch Clerk token for session APIs
     const token = await getToken().catch(() => null)
 
-    // Parallel fetch all three data sources
-    const [docsResult, pdfResult, compareResult] = await Promise.allSettled([
+    // Parallel fetch all data sources
+    const [docsResult, pdfResult, compareResult, builderResult] = await Promise.allSettled([
       fetchUserDocuments(),
       pdfEditorApi.listSessions(token),
       compareVersionsApi.listSessions(token, { archived: false }),
+      BUILDER_ENABLED ? builderApi.listDocuments(token) : Promise.resolve([]),
     ])
 
     if (docsResult.status === "fulfilled") {
@@ -149,7 +160,6 @@ export default function Documents() {
     }
 
     if (pdfResult.status === "fulfilled") {
-      // Sort by updatedAt desc
       const sorted = [...pdfResult.value].sort((a, b) =>
         b.updatedAt.localeCompare(a.updatedAt)
       )
@@ -163,9 +173,15 @@ export default function Documents() {
       setCompareSessions(sorted)
     }
 
+    if (BUILDER_ENABLED && builderResult.status === "fulfilled") {
+      // Already returned sorted by updatedAt desc from the API
+      setBuilderDocs(builderResult.value)
+    }
+
     setLoading(false)
     setPdfLoading(false)
     setCompareLoading(false)
+    if (BUILDER_ENABLED) setBuilderLoading(false)
   }
 
   // ─── UserDocument filtering ───────────────────────────────────────────────
@@ -276,12 +292,30 @@ export default function Documents() {
     }
   }
 
+  // ─── Builder draft archive ────────────────────────────────────────────────
+
+  async function handleArchiveBuilder(id: string) {
+    setArchivingBuilder(true)
+    try {
+      const token = await getToken().catch(() => null)
+      await builderApi.archiveDocument(id, token)
+      setBuilderDocs(prev => prev.filter(d => d.id !== id))
+    } catch { /* ignore */ }
+    finally {
+      setArchivingBuilder(false)
+      setConfirmArchiveBuilderById(null)
+    }
+  }
+
   // ─── Helpers ──────────────────────────────────────────────────────────────
 
   const hasAnyContent =
-    docs.length > 0 || pdfSessions.length > 0 || compareSessions.length > 0
+    docs.length > 0 || pdfSessions.length > 0 || compareSessions.length > 0 ||
+    (BUILDER_ENABLED && builderDocs.length > 0)
 
-  const totalItemCount = docs.length + pdfSessions.length + compareSessions.length
+  const totalItemCount =
+    docs.length + pdfSessions.length + compareSessions.length +
+    (BUILDER_ENABLED ? builderDocs.length : 0)
 
   // ─── Render ───────────────────────────────────────────────────────────────
 
@@ -833,6 +867,152 @@ export default function Documents() {
                     </motion.div>
                   ))}
                 </AnimatePresence>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ── SECTION: Document Builder Drafts ─────────────────────────────── */}
+        {BUILDER_ENABLED && !loading && (
+          <>
+            {(builderDocs.length > 0 || builderLoading) && (
+              <SectionHeader
+                icon={LayoutTemplate}
+                label="Document Builder"
+                count={builderDocs.length}
+                colorClass="bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400"
+              />
+            )}
+
+            {builderLoading && (
+              <div className="flex items-center gap-2 py-4 text-sm text-muted-foreground">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Loading builder drafts…
+              </div>
+            )}
+
+            {!builderLoading && builderDocs.length > 0 && (
+              <div className="space-y-3">
+                <AnimatePresence initial={false}>
+                  {builderDocs.map(draft => (
+                    <motion.div
+                      key={draft.id}
+                      layout
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.97 }}
+                      className="group relative rounded-xl border border-border/60 bg-card hover:border-indigo-300/60 dark:hover:border-indigo-700/40 hover:shadow-sm transition-all p-4"
+                    >
+                      <div className="flex items-start gap-3">
+                        {/* Icon */}
+                        <div className="shrink-0 w-9 h-9 rounded-lg bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center mt-0.5">
+                          <LayoutTemplate className="w-4.5 h-4.5 text-indigo-600 dark:text-indigo-400" />
+                        </div>
+
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="font-semibold text-sm text-foreground leading-tight truncate pr-10">
+                              {draft.title || "Untitled document"}
+                            </h3>
+                            <span className="shrink-0 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide rounded-full bg-secondary text-muted-foreground border border-border/60">
+                              Draft
+                            </span>
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mb-3">
+                            <Clock className="w-3 h-3" />
+                            <span>{formatDate(draft.updatedAt)}</span>
+                            {draft.category && (
+                              <>
+                                <span>·</span>
+                                <span>{CATEGORY_LABELS[draft.category] ?? draft.category}</span>
+                              </>
+                            )}
+                            {draft.sectionCount > 0 && (
+                              <>
+                                <span>·</span>
+                                <span>{draft.sectionCount} section{draft.sectionCount !== 1 ? "s" : ""}</span>
+                              </>
+                            )}
+                            {draft.blockCount > 0 && (
+                              <>
+                                <span>·</span>
+                                <span>{draft.blockCount} block{draft.blockCount !== 1 ? "s" : ""}</span>
+                              </>
+                            )}
+                          </div>
+
+                          <Button
+                            size="sm"
+                            className="h-7 text-xs gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white border-0 shadow-none"
+                            onClick={() => navigate(`/builder/${draft.id}`)}
+                          >
+                            <LayoutTemplate className="w-3 h-3" />
+                            Continue building
+                            <ArrowRight className="w-3 h-3" />
+                          </Button>
+                        </div>
+
+                        {/* Archive action */}
+                        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => setConfirmArchiveBuilderById(draft.id)}
+                            className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+                            title="Archive draft"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Archive confirm */}
+                      <AnimatePresence>
+                        {confirmArchiveBuilderById === draft.id && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="mt-3 pt-3 border-t border-destructive/20"
+                          >
+                            <p className="text-xs text-muted-foreground mb-2">
+                              Archive this draft? It will be removed from your active list. You can still start a new document from the Builder.
+                            </p>
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                className="h-7 text-xs"
+                                disabled={archivingBuilder}
+                                onClick={() => handleArchiveBuilder(draft.id)}
+                              >
+                                {archivingBuilder ? <Loader2 className="w-3 h-3 animate-spin" /> : "Archive"}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-xs"
+                                onClick={() => setConfirmArchiveBuilderById(null)}
+                              >
+                                Cancel
+                              </Button>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => navigate("/builder/new")}
+                    className="flex items-center gap-1.5 text-xs text-indigo-500 hover:text-indigo-600 transition-colors font-medium"
+                  >
+                    <Plus className="w-3 h-3" />
+                    Start a new document
+                  </button>
+                </div>
               </div>
             )}
           </>

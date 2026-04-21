@@ -6,7 +6,7 @@ import {
   BookMarked, Clock, ChevronRight, CreditCard,
   LayoutGrid, GitCompare, FileEdit, LayoutTemplate,
 } from "lucide-react"
-import { BUILDER_ENABLED } from "@/lib/builderConfig"
+import { BUILDER_ENABLED, CATEGORY_LABELS } from "@/lib/builderConfig"
 import { useState, useEffect, type ElementType } from "react"
 import { useUser, useAuth } from "@clerk/react"
 import { Button } from "@/components/ui/button"
@@ -22,6 +22,8 @@ import { pdfEditorApi } from "@/lib/pdfEditorApi"
 import type { SessionMeta } from "@/lib/pdfEditorTypes"
 import { compareVersionsApi } from "@/lib/compareVersionsApi"
 import type { CVSessionListItem } from "@/lib/compareVersionsTypes"
+import { builderApi } from "@/lib/builderApi"
+import type { BuilderDocumentMeta } from "@/lib/builderTypes"
 
 type RecentItem =
   | { kind: "analysis";      id: string; title: string; savedAt: string }
@@ -29,6 +31,7 @@ type RecentItem =
   | { kind: "local";         id: string; title: string; savedAt: string; tool: LocalRecentItem["tool"] }
   | { kind: "pdf-editor";    id: string; title: string; savedAt: string; pageCount?: number; pdfType?: string }
   | { kind: "compare";       id: string; title: string; savedAt: string; status: string; diffTotal?: number; diffHigh?: number; originalFileName?: string; revisedFileName?: string }
+  | { kind: "builder";       id: string; title: string; savedAt: string; category?: string; sectionCount?: number }
 
 // ─── Tool definitions ─────────────────────────────────────────────────────────
 
@@ -200,11 +203,12 @@ export default function Home() {
         // Need Bearer token for session APIs
         const token = await getToken().catch(() => null)
 
-        const [cloudAnalyses, cloudSigs, pdfSessions, compareSessions] = await Promise.allSettled([
+        const [cloudAnalyses, cloudSigs, pdfSessions, compareSessions, builderDocs] = await Promise.allSettled([
           fetchCloudAnalyses(),
           listSignatureRequests(),
           pdfEditorApi.listSessions(token),
           compareVersionsApi.listSessions(token, { archived: false }),
+          BUILDER_ENABLED ? builderApi.listDocuments(token) : Promise.resolve([]),
         ])
 
         const analyses: RecentItem[] =
@@ -261,7 +265,20 @@ export default function Home() {
               }))
             : []
 
-        // Local items — keep "redact" and "contract-builder"; skip "compare" since real sessions supersede
+        const builders: RecentItem[] =
+          BUILDER_ENABLED && builderDocs.status === "fulfilled"
+            ? (builderDocs.value as BuilderDocumentMeta[]).map((d) => ({
+                kind: "builder" as const,
+                id: d.id,
+                title: d.title || "Untitled document",
+                savedAt: d.updatedAt,
+                category: d.category,
+                sectionCount: d.sectionCount,
+              }))
+            : []
+
+        // Local items — keep "redact" and "contract-builder" (ContractBuilder AI wizard at /build-contract)
+        // Skip local "compare" items when real Compare sessions exist (superseded)
         const hasRealCompareSessions = compares.length > 0
         const localWork: RecentItem[] = getRecentWork()
           .filter(lw => !(hasRealCompareSessions && lw.tool === "compare"))
@@ -273,7 +290,7 @@ export default function Home() {
             tool: lw.tool,
           }))
 
-        const merged = [...pdfs, ...compares, ...analyses, ...sigs, ...localWork]
+        const merged = [...pdfs, ...compares, ...builders, ...analyses, ...sigs, ...localWork]
           .sort((a, b) => new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime())
           .slice(0, 6)
 
@@ -534,6 +551,29 @@ export default function Home() {
                         </div>
                       </div>
                     </Card>
+                  ) : item.kind === "builder" ? (
+                    <Card
+                      className="group border border-border/50 bg-card hover:border-indigo-400/40 hover:shadow-md hover:shadow-indigo-500/5 rounded-2xl cursor-pointer transition-all"
+                      onClick={() => setLocation(`/builder/${item.id}`)}
+                    >
+                      <div className="p-4 flex flex-col gap-1.5">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <LayoutTemplate className="w-3 h-3 text-indigo-500 shrink-0" />
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-500/80">Document Builder</span>
+                          <span className="ml-auto text-[10px] text-muted-foreground">{timeAgo(item.savedAt)}</span>
+                        </div>
+                        <p className="text-sm font-medium text-foreground truncate leading-tight">{item.title}</p>
+                        <div className="flex items-center justify-between mt-0.5">
+                          <p className="text-[11px] text-muted-foreground">
+                            {item.category ? CATEGORY_LABELS[item.category] ?? item.category : "Draft"}
+                            {item.sectionCount != null && item.sectionCount > 0 && (
+                              <> · {item.sectionCount} section{item.sectionCount !== 1 ? "s" : ""}</>
+                            )}
+                          </p>
+                          <span className="text-[11px] font-semibold text-indigo-500 group-hover:underline">Continue building →</span>
+                        </div>
+                      </div>
+                    </Card>
                   ) : item.kind === "analysis" ? (
                     <Card
                       className="group border border-border/50 bg-card hover:border-blue-400/30 hover:shadow-md rounded-2xl cursor-pointer transition-all"
@@ -572,7 +612,7 @@ export default function Home() {
                     (() => {
                       const localMeta: Record<string, { icon: ElementType; color: string; href: string; toolLabel: string; cta: string }> = {
                         "redact":           { icon: EyeOff,     color: "text-violet-400",  href: "/redact",         toolLabel: "Redact",          cta: "Open tool →" },
-                        "contract-builder": { icon: PenLine,    color: "text-emerald-400", href: "/build-contract", toolLabel: "Document Builder", cta: "Continue building →" },
+                        "contract-builder": { icon: PenLine,    color: "text-emerald-400", href: "/build-contract", toolLabel: "Contract Builder", cta: "Continue building →" },
                         "compare":          { icon: GitCompare, color: "text-teal-400",    href: "/compare-versions", toolLabel: "Compare",       cta: "Open tool →" },
                       }
                       const meta = localMeta[item.tool] ?? localMeta["redact"]

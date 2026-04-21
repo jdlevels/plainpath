@@ -1,0 +1,256 @@
+PLAINPATH — NEXT BUILD BLOCK
+DOCUMENT BUILDER DRAFT PERSISTENCE / RESUME FLOW PASS
+
+You are working inside the existing PlainPath codebase.
+
+IMPORTANT:
+This is a focused product-completion pass for Document Builder continuity.
+Do NOT drift into billing, marketing, Compare Versions engine work, PDF utility expansion, OCR, or dashboard redesign beyond what is required for Builder persistence/resume.
+Do NOT redesign the Builder flow unless necessary to support draft save/resume cleanly.
+
+==================================================
+GOAL
+==================================================
+
+Make Document Builder behave like a real saved-work tool.
+
+Users should be able to:
+- save Builder progress intentionally and safely
+- resume a specific Builder draft later
+- see Builder drafts as real persisted items
+- distinguish Builder drafts from finished/generated outputs
+- reopen Builder work from My Documents and Recent Work without confusion
+
+This pass should close the biggest continuity gap still left in PlainPath.
+
+==================================================
+PRIMARY TASKS
+==================================================
+
+T001 — Inspect Builder persistence architecture
+T002 — Add real Builder draft persistence if missing/incomplete
+T003 — Add reopen/resume flow for specific Builder drafts
+T004 — Surface Builder drafts correctly in My Documents and Recent Work
+T005 — Improve Builder save/resume labels, metadata, and empty-state clarity
+
+If a better internal order is needed, use judgment, but stay inside this block only.
+
+==================================================
+EXECUTION ORDER
+==================================================
+
+Follow this order exactly:
+1. inspect current codebase
+2. produce a tight implementation plan grounded in what actually exists
+3. implement only the Builder continuity/persistence improvements
+4. run verification
+5. provide the structured completion report
+
+Do not broad-code before inspection.
+
+==================================================
+INSPECTION REQUIREMENTS
+==================================================
+
+Before coding, inspect and identify:
+
+A) BUILDER FLOW
+- exact Builder route(s)
+- exact page/component powering Builder
+- current step model
+- whether progress is currently localStorage-only, session-only, memory-only, or partially persisted
+- whether a "Save Progress" action exists and what it actually saves
+
+B) DATA LAYER
+- whether a Builder drafts API already exists
+- whether draft IDs already exist anywhere
+- whether Builder data currently lands in user_documents, a dedicated builder table, or nowhere durable
+- whether generated Builder outputs persist differently than in-progress drafts
+
+C) REOPEN FLOW
+- whether Builder already accepts preloaded state via route param, query param, or fetched draft ID
+- whether My Documents / Dashboard / Recent Work can currently resume a specific draft or only open the generic Builder page
+- whether “local contract-builder” recent items are placeholders rather than true drafts
+
+D) PRODUCT GAPS
+- no specific draft persistence
+- no unique Builder draft identity
+- no resume target for a specific draft
+- no saved/updated metadata
+- Save Progress not matching user expectation
+- inability to distinguish “resume draft” from “start new”
+
+Then produce a concise ranked plan.
+
+==================================================
+T001 — BUILDER PERSISTENCE INSPECTION
+==================================================
+
+Goal:
+Ground the work in the real Builder architecture.
+
+Required:
+- identify exact files/routes/components involved
+- identify how Save Progress currently behaves
+- identify the smallest clean persistence model that fits the existing app
+- determine whether drafts should be first-class saved-work items in My Documents
+
+Do not speculate. Use the real codebase.
+
+==================================================
+T002 — REAL BUILDER DRAFT PERSISTENCE
+==================================================
+
+Goal:
+A saved Builder draft must be a real persisted object, not just a vague local breadcrumb.
+
+Implement the cleanest architecture supported by the codebase:
+- either extend an existing draft/document persistence path
+- or add a minimal dedicated Builder drafts persistence model
+
+Requirements:
+- each draft has a stable ID
+- draft includes enough data to fully resume the wizard
+- save must persist current step + entered answers
+- updatedAt / savedAt must be tracked
+- saving must be safe and explicit
+- autosave may exist, but do not rely on autosave alone if current product rules expect visible save behavior
+
+If localStorage remains involved for temporary safety, it must not be the only source of truth for signed-in saved drafts.
+
+==================================================
+T003 — RESUME / REOPEN FLOW
+==================================================
+
+Goal:
+Users must be able to reopen the exact Builder draft they saved.
+
+Required:
+- Builder route accepts a specific persisted draft target
+- opening a saved draft restores the wizard correctly
+- step position restores correctly
+- form answers restore correctly
+- starting a new Builder draft should remain clean and separate
+
+Prefer route clarity over hidden state.
+If needed, introduce a dedicated resume path or a draft ID query/path param — whichever is cleanest in the current architecture.
+
+The reopen flow should support:
+- My Documents -> Continue building
+- Dashboard Recent Work -> Continue building
+- internal Builder page reopen if applicable
+
+==================================================
+T004 — SURFACE BUILDER DRAFTS IN SAVED-WORK SURFACES
+==================================================
+
+Goal:
+Builder drafts should appear as real saved work.
+
+Update the appropriate surfaces:
+- My Documents
+- Dashboard Recent Work
+- any Builder-specific draft/resume entry point if it already exists
+
+Requirements:
+- drafts show clear identity
+- “Continue building” is the correct CTA
+- metadata distinguishes Builder drafts from PDF Editor sessions, Compare sessions, and analysis results
+- do not create duplicate/conflicting Builder entries between local placeholders and real drafts
+
+If old local “contract-builder” Recent Work items become obsolete once real drafts exist, suppress or replace them cleanly.
+
+==================================================
+T005 — LABEL / STATUS / EMPTY STATE / SAVE CLARITY
+==================================================
+
+Goal:
+Builder continuity should be obvious to the user.
+
+Improve where supported:
+- Save Progress label and behavior clarity
+- draft titles or fallback naming
+- updated date / relative time
+- status label such as Draft / In Progress if useful
+- Builder empty state or resume area if needed
+- CTA wording:
+  - Start new
+  - Continue building
+  - Resume draft
+  - Edit answers
+Use whichever wording best matches the actual state
+
+Do not overdesign the Builder page. Keep this a continuity pass.
+
+==================================================
+NON-GOALS / OUT OF SCOPE
+==================================================
+
+Do NOT include unless absolutely required:
+- billing/Stripe
+- marketing site changes
+- PDF utility work
+- OCR work
+- Compare Versions engine changes
+- major dashboard redesign
+- org/team sharing
+- template marketplace
+- document publishing workflow expansion
+- full legal-doc library redesign
+
+==================================================
+VERIFICATION REQUIREMENTS
+==================================================
+
+After implementation, verify at minimum:
+
+1. Builder route loads correctly
+2. starting a new Builder flow still works
+3. Save Progress persists a real draft
+4. saved draft gets a stable ID
+5. reopening a saved draft restores the correct step
+6. reopening a saved draft restores entered answers
+7. My Documents surfaces Builder drafts correctly
+8. Dashboard Recent Work surfaces Builder drafts correctly
+9. Builder CTA wording is state-correct
+10. old local placeholder behavior does not create duplicate/confusing entries
+11. Documents page is not regressed
+12. Dashboard Recent Work is not regressed
+13. changed files pass TS/build checks
+
+Use result labels:
+- PASS — browser-verified
+- PASS — code-verified
+- FIXED — bug found and patched
+- UNABLE — blocked by environment/prerequisite
+
+==================================================
+FINAL COMPLETION REPORT FORMAT
+==================================================
+
+Return the report in these exact sections:
+
+1. EXACT FILES CREATED
+2. EXACT FILES MODIFIED
+3. BUILDER PERSISTENCE MODEL
+4. RESUME / REOPEN FLOW
+5. MY DOCUMENTS / RECENT WORK CHANGES
+6. SAVE / LABEL / METADATA IMPROVEMENTS
+7. WHAT WORKS END-TO-END
+8. WHAT REMAINS DEFERRED
+9. VERIFICATION RESULTS
+
+Be exact with full relative paths and exact route/page names.
+
+==================================================
+QUALITY BAR
+==================================================
+
+After this pass, Document Builder should feel like a first-class saved-work tool, not a temporary wizard.
+
+Favor:
+- stable draft identity
+- low-friction resume
+- clean continuity across Dashboard and My Documents
+- minimal architecture churn
+- product-grade naming and behavior
