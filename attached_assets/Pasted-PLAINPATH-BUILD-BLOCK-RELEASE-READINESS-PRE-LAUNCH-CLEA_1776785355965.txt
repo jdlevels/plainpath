@@ -1,0 +1,283 @@
+PLAINPATH — BUILD BLOCK
+RELEASE-READINESS / PRE-LAUNCH CLEANUP PASS
+
+You are working inside the existing PlainPath codebase.
+
+IMPORTANT:
+This is a release-readiness cleanup pass, not a major feature-build pass.
+Focus on tightening production readiness across the existing app without introducing new product scope.
+Do not drift into OCR, Word/docx implementation, major marketing redesign, Stripe architecture redesign, org/team sharing, approval workflows, or unrelated feature work.
+
+==================================================
+CONTEXT
+==================================================
+
+Recent PlainPath blocks are now complete and live-verified enough to treat the core document flows as working:
+- Contract Builder / Document Builder
+- Compare Versions
+- Compare Versions → PDF Editor handoff
+- PDF Editor correction/save/export flow
+- Redact review flow
+- app-wide document workspace polish
+- positive-diff live verification completed
+- paywall restored and QA bypass removed
+
+The app is now at the point where the highest-value next step is a structured release-readiness cleanup pass.
+
+The goal is to identify and fix the remaining rough edges that could hurt real-user confidence before broader testing or launch preparation.
+
+==================================================
+PRIMARY GOALS FOR THIS PASS
+==================================================
+
+T001 — Route / tool access / state consistency audit
+T002 — Error / empty / loading / no-data UX cleanup
+T003 — Cross-tool action wording and user guidance cleanup
+T004 — Final low-risk production polish for core authenticated flows
+
+If a better internal order is needed, use judgment, but stay inside this cleanup block only.
+
+==================================================
+EXECUTION RULES
+==================================================
+
+Follow this order exactly:
+1. Inspect current app state and identify the highest-value release-readiness gaps
+2. Produce a tight implementation plan grounded in actual code
+3. Implement only the highest-value low-risk fixes
+4. Run verification
+5. Provide a structured completion report
+
+Do not start broad coding before inspection.
+Do not do speculative cleanup everywhere.
+Prioritize fixes that improve user trust, clarity, and production readiness.
+
+==================================================
+REQUIRED INSPECTION TASK
+==================================================
+
+Before coding, inspect and identify:
+
+A) AUTHENTICATED CORE TOOL FLOWS
+- Contract Builder / Document Builder
+- Compare Versions
+- PDF Editor
+- Redact
+- Analyze / Trust Check / related authenticated tools if they are part of the same tool family
+
+B) RELEASE-READINESS RISK AREAS
+- inconsistent route names, labels, or breadcrumbs
+- confusing empty states
+- weak loading states
+- unclear error states
+- ambiguous primary actions
+- missing “back” or return affordances
+- stale wording from earlier prototypes
+- places where save/export/download semantics are still easy to misunderstand
+- places where no-data states feel broken instead of intentional
+- places where session state/identity is weak
+- places where entitlement/gate language is not user-friendly
+- visible technical wording that should be product wording instead
+- any remaining UI rough edges that are low-risk and high-value to fix now
+
+Then produce a concise plan ranking the cleanup items by:
+1. user impact
+2. risk
+3. scope
+
+Keep the plan tight.
+
+==================================================
+T001 — ROUTE / TOOL ACCESS / STATE CONSISTENCY AUDIT
+==================================================
+
+Goal:
+The app should feel coherent and predictable as users move between core tools.
+
+Required:
+- inspect route naming, page titles, breadcrumbs, and back-navigation affordances
+- normalize obvious inconsistencies where low-risk
+- ensure authenticated tool entry states feel intentional
+- ensure lock/gate states use product language, not developer language
+- ensure session/detail pages feel like part of one product family
+
+Examples:
+- “Compare Versions” vs route/page title wording
+- “PDF Editor” vs “Open in PDF Editor” continuity
+- “Redact Info” vs “Redact before sharing” wording consistency
+- builder result labels and action text consistency
+- tool card to workspace naming continuity
+
+Do not rename core products arbitrarily.
+Only fix obvious inconsistency or confusing wording.
+
+==================================================
+T002 — ERROR / EMPTY / LOADING / NO-DATA UX CLEANUP
+==================================================
+
+Goal:
+No major flow should feel broken when there is simply no data, no result, or a blocked state.
+
+Required:
+- improve weak empty states in core tools
+- improve weak loading states that still feel too generic
+- improve low-quality error messages where safe
+- ensure “0 results / 0 differences / no uploaded document / no sessions” states feel intentional
+- ensure locked/gated states explain what the user can do next
+- ensure pages do not look dead or unfinished when they are empty
+
+Focus on real user clarity, not visual decoration.
+
+Examples of acceptable cleanup:
+- better no-session / no-document copy
+- more intentional “no differences found” or “no issues available” state
+- small CTA/support text improvements
+- cleaner loading labels
+- better empty-state spacing/structure
+
+==================================================
+T003 — CROSS-TOOL ACTION WORDING AND USER GUIDANCE CLEANUP
+==================================================
+
+Goal:
+Primary actions across core document tools should feel understandable and consistent.
+
+Required:
+- audit action labels like:
+  - Save
+  - Download PDF
+  - Export
+  - Analyze
+  - Review
+  - Check
+  - Redact
+  - Continue with
+  - Open in PDF Editor
+- tighten any ambiguous or inconsistent wording
+- ensure save vs export vs download remains distinct
+- ensure the user understands the next step after major tool actions
+- add lightweight guidance where a user could otherwise be confused
+
+Examples:
+- “Analyze” vs “Analyze this contract”
+- “Redact Info” vs “Redact before sharing”
+- “Export JSON” placement and wording
+- “Saved just now” / “last saved” / “download final file” distinctions
+- guidance around no auto-save / local-save / persistent-save where relevant
+
+Do not add tutorial overlays or big walkthrough systems here.
+Keep it lightweight.
+
+==================================================
+T004 — FINAL LOW-RISK PRODUCTION POLISH FOR CORE AUTHENTICATED FLOWS
+==================================================
+
+Goal:
+Resolve the remaining small but important rough edges in core flows.
+
+Required:
+- prioritize fixes that are:
+  - low-risk
+  - visible to real users
+  - likely to increase trust or reduce confusion
+- patch any remaining rough edges found during inspection if they clearly fit release-readiness
+- verify no regression in the already-completed core flows
+
+Good examples:
+- awkward button grouping
+- weak status text
+- missing return affordance
+- page title inconsistency
+- confusing session heading
+- empty state that looks broken
+- too-technical copy in a user-facing message
+- action order that obscures the main next step
+
+Avoid:
+- major layout rewrites
+- large new abstractions
+- backend churn without strong reason
+
+==================================================
+NON-GOALS / OUT OF SCOPE
+==================================================
+
+Unless absolutely required for compatibility, do NOT include:
+- OCR
+- Word/docx implementation
+- public-site/marketing redesign
+- pricing architecture redesign
+- new AI features
+- org/team features
+- approval workflows
+- major dashboard redesign
+- security feature expansion
+- analytics instrumentation overhaul
+- release automation / CI work unless already trivial and clearly in scope
+
+==================================================
+VERIFICATION REQUIREMENTS
+==================================================
+
+After implementation, run verification and report actual results.
+
+At minimum verify:
+1. core authenticated tool routes still open correctly
+2. no regressions in Contract Builder flow
+3. no regressions in Compare Versions flow
+4. no regressions in CV → PDF Editor handoff
+5. no regressions in PDF Editor save/export flow
+6. no regressions in Redact review flow
+7. improved empty/loading/error states render correctly
+8. updated action wording appears correctly
+9. changed files pass TS/build checks
+10. any gate/lock state copy remains accurate with paywall restored
+
+Use these result categories:
+- PASS — browser-verified
+- PASS — code-verified
+- FIXED — bug found and patched
+- UNABLE — blocked by environment prerequisite
+
+==================================================
+FINAL COMPLETION REPORT FORMAT
+==================================================
+
+When done, provide the report in these exact sections:
+
+1. EXACT FILES CREATED
+- list every created file with full relative path
+
+2. EXACT FILES MODIFIED
+- list every modified file with full relative path
+
+3. RELEASE-READINESS FIXES APPLIED
+- one item per fix
+- include exact page/tool/route
+- include what was improved and why it matters
+
+4. WORDING / EMPTY / ERROR / LOADING CHANGES
+- exact user-facing text or state changes made
+- group by tool/page
+
+5. WHAT WORKS END-TO-END
+- concise but specific
+- confirm no regression in core flows
+
+6. WHAT REMAINS DEFERRED
+- list anything intentionally deferred
+- explain why it was deferred
+
+7. VERIFICATION RESULTS
+- checklist of tested flows
+- note PASS / FIXED / UNABLE and any caveats
+
+==================================================
+QUALITY BAR
+==================================================
+
+This is a release-readiness cleanup pass.
+Be selective.
+Favor high-value, low-risk improvements over broad “cleanup.”
+Prefer production clarity over cleverness.
+Keep the scope tight and ship the block cleanly.

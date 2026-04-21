@@ -101,7 +101,22 @@ function SessionList({
       </div>
     )
   }
-  if (!sessions.length) return null
+  if (!sessions.length) return (
+    <div className="mt-10">
+      <div className="flex items-center gap-2 mb-3">
+        <FolderOpen className="w-4 h-4 text-muted-foreground" />
+        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-widest">
+          Recent sessions
+        </h2>
+      </div>
+      <div className="flex flex-col items-center gap-2 py-8 text-center border border-dashed border-border/40 rounded-xl">
+        <p className="text-sm text-muted-foreground">No sessions yet</p>
+        <p className="text-xs text-muted-foreground/60 max-w-xs">
+          Upload a PDF above to open it in the editor. Sessions are saved automatically.
+        </p>
+      </div>
+    </div>
+  )
 
   return (
     <div className="mt-10">
@@ -316,7 +331,7 @@ function UploadFlow({
             {uploading ? (
               <><Loader2 className="w-4 h-4 animate-spin" /> Uploading…</>
             ) : (
-              <><Pen className="w-4 h-4" /> Open in PDF Editor</>
+              <><Pen className="w-4 h-4" /> Open PDF</>
             )}
           </Button>
         </div>

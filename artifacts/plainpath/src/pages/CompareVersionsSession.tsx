@@ -1476,10 +1476,25 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
   )
 
   if (!canUse) return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-      <Lock className="w-8 h-8 text-muted-foreground" />
-      <p className="text-sm text-muted-foreground">Compare Versions requires a Pro plan.</p>
-      <button onClick={() => navigate("/upgrade")} className="text-sm text-primary underline">Upgrade →</button>
+    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-5 max-w-sm mx-auto text-center px-4">
+      <div className="w-14 h-14 rounded-2xl bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
+        <Lock className="w-7 h-7 text-teal-500 dark:text-teal-400" />
+      </div>
+      <div>
+        <h2 className="text-lg font-bold mb-1">Pro plan required</h2>
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          Compare Versions is available on the Pro plan. Upgrade to open this comparison and access side-by-side document auditing.
+        </p>
+      </div>
+      <button
+        onClick={() => navigate("/upgrade")}
+        className="px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+      >
+        View plans &amp; pricing
+      </button>
+      <button onClick={() => navigate("/compare-versions")} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+        ← Back to Compare Versions
+      </button>
     </div>
   )
 
@@ -1550,6 +1565,7 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
               disabled={rescanning}
               className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors disabled:opacity-50"
               title="Re-run comparison scan"
+              aria-label="Re-run comparison scan"
             >
               {rescanning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
               <span className="hidden sm:inline">Rescan</span>
@@ -1575,6 +1591,13 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
                   ? "Re-run AI review"
                   : "Run AI review"
               }
+              aria-label={
+                session.aiStatus === "error"
+                  ? "Retry AI review"
+                  : session.aiStatus === "complete"
+                  ? "Re-run AI review"
+                  : "Run AI review"
+              }
             >
               {enriching ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
               <span className="hidden sm:inline">
@@ -1589,6 +1612,7 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
               onClick={handleExport}
               className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
               title="Download PDF audit report"
+              aria-label="Download audit report"
             >
               <Download className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Download Report</span>
@@ -1607,6 +1631,7 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
                     ? "Check diffs in the Summary panel to enable"
                     : `Open ${selectedCount} selected diff${selectedCount === 1 ? "" : "s"} in PDF Editor`
                 }
+                aria-label={selectedCount === 0 ? "Open selected diffs in PDF Editor (none selected)" : `Open ${selectedCount} selected diff${selectedCount === 1 ? "" : "s"} in PDF Editor`}
                 className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-teal-700 dark:text-teal-300 hover:bg-teal-50/60 dark:hover:bg-teal-950/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <MousePointerClick className="w-3.5 h-3.5 flex-shrink-0" />
@@ -1626,6 +1651,7 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
                     ? "Mark diffs as rejected in the Summary panel to enable"
                     : `Open ${rejectedCount} rejected diff${rejectedCount === 1 ? "" : "s"} in PDF Editor`
                 }
+                aria-label={rejectedCount === 0 ? "Open rejected diffs in PDF Editor (none rejected)" : `Open ${rejectedCount} rejected diff${rejectedCount === 1 ? "" : "s"} in PDF Editor`}
                 className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50/60 dark:hover:bg-red-950/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <XCircle className="w-3.5 h-3.5 flex-shrink-0" />
@@ -1641,6 +1667,7 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
                 onClick={() => handleHandoff()}
                 disabled={handoffLoading}
                 title="Open all diffs in PDF Editor (all highlights)"
+                aria-label="Open all diffs in PDF Editor"
                 className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-teal-700 dark:text-teal-300 hover:bg-teal-50/60 dark:hover:bg-teal-950/30 transition-colors disabled:opacity-50"
               >
                 {handoffLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ExternalLink className="w-3.5 h-3.5" />}

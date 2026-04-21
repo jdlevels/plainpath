@@ -94,6 +94,12 @@ function LockedGate() {
         <Button onClick={() => setLocation("/upgrade")} className="w-full">
           <Zap className="w-4 h-4 mr-2" /> Upgrade to Pro
         </Button>
+        <button
+          onClick={() => setLocation("/")}
+          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
+          ← Back to dashboard
+        </button>
       </div>
     </div>
   )
@@ -361,7 +367,7 @@ function IntakeForm({ onCreated, onCancel }: { onCreated: (id: string) => void; 
           <Button size="lg" onClick={handleScan} disabled={!canScan}
             className={`gap-2 ${canScan ? "bg-violet-600 hover:bg-violet-700 text-white shadow-md" : "bg-muted text-muted-foreground cursor-not-allowed"}`}
           >
-            {scanning ? <><Loader2 className="w-4 h-4 animate-spin" /> Uploading…</> : <><ScanSearch className="w-4 h-4" /> Scan Documents</>}
+            {scanning ? <><Loader2 className="w-4 h-4 animate-spin" /> Uploading…</> : <><ScanSearch className="w-4 h-4" /> Compare Documents</>}
           </Button>
         </div>
       </div>
@@ -691,7 +697,7 @@ function SessionList({
                 ? <Archive className="w-8 h-8 text-muted-foreground/40" />
                 : <CheckCircle2 className="w-8 h-8 text-muted-foreground/40" />}
               <p className="text-sm text-muted-foreground">
-                {filter === "active"     ? "No active comparisons running." :
+                {filter === "active"     ? "No comparisons in progress." :
                  filter === "completed"  ? "No completed comparisons yet." :
                  filter === "error"      ? "No failed comparisons." :
                                            "No archived comparisons."}

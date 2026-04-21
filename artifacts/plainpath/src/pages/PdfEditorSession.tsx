@@ -472,7 +472,7 @@ function IssuePanel({
       <div className="flex-1 overflow-y-auto">
         {issues.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-24 text-xs text-muted-foreground px-4 text-center">
-            No issue zones loaded.
+            No review items. Use tools to annotate the PDF.
           </div>
         ) : (
           <div>
