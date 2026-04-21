@@ -22,8 +22,22 @@ export const compareVersionsSessionsTable = pgTable("compare_versions_sessions",
   managerNotes: jsonb("manager_notes").notNull().default([]),
   scannedAt: timestamp("scanned_at", { withTimezone: true }),
   archivedAt: timestamp("archived_at", { withTimezone: true }),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export type CompareVersionsSession = typeof compareVersionsSessionsTable.$inferSelect;
+
+export const cvHandoffRecordsTable = pgTable("cv_handoff_records", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  cvSessionId: uuid("cv_session_id").notNull(),
+  pdfEditorSessionId: uuid("pdf_editor_session_id").notNull(),
+  userId: text("user_id").notNull(),
+  mode: text("mode").notNull().default("all"),
+  selectedDiffIds: jsonb("selected_diff_ids"),
+  highlightCount: integer("highlight_count").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+
+export type CvHandoffRecord = typeof cvHandoffRecordsTable.$inferSelect;

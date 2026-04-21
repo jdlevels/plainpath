@@ -142,6 +142,7 @@ export interface CVSessionListItem {
   originalFileName: string;
   revisedFileName: string;
   archivedAt: string | null;
+  deletedAt: string | null;
   createdAt: string;
   updatedAt: string;
   // Diff stats — null until scan completes

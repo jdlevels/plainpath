@@ -177,11 +177,11 @@ export const compareVersionsApi = {
     id: string,
     diffIds: string[] | undefined,
     token: string | null,
-  ): Promise<{ pdfEditorSessionId: string; highlightCount: number }> {
+  ): Promise<{ handoffId: string; pdfEditorSessionId: string; highlightCount: number }> {
     const res = await fetch(`/api/compare-versions/sessions/${id}/handoff`, {
       method: "POST",
       headers: { ...authHeaders(token), "Content-Type": "application/json" },
-      body: JSON.stringify({ diffIds }),
+      body: JSON.stringify(diffIds ? { diffIds, mode: "selected" } : { mode: "all" }),
     });
     return handleResponse(res);
   },

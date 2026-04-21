@@ -1,0 +1,125 @@
+Good progress. Do NOT redo the completed work. Patch only the missing gaps below and then provide the exact completion report in the required format.
+
+This Compare Versions block is NOT closed yet.
+
+GAPS TO FIX / PROVE
+
+1) REQUIRED FINAL REPORT WAS NOT PROVIDED
+You must provide the final completion report in these exact sections:
+1. EXACT FILES CREATED
+2. EXACT FILES MODIFIED
+3. ROUTES / ENDPOINTS ADDED OR CHANGED
+4. SCHEMA CHANGES
+5. WHAT WORKS END-TO-END
+6. WHAT REMAINS DEFERRED
+7. HANDOFF CONTRACT
+8. VERIFICATION RESULTS
+
+Do not summarize loosely. Use exact paths, exact route strings, exact schema fields, and pass/fail verification items.
+
+2) T002 — HANDOFF CONTRACT IS NOT YET SUFFICIENTLY PROVEN
+The requirement is NOT just “open PDF Editor with highlights” and NOT just a ?fromCompare=1 banner.
+
+You must verify and, if needed, patch the implementation so that:
+- Compare Versions hands off the REVISED document only
+- handoff carries REJECTED and/or explicitly SELECTED diff IDs
+- handoff carries mapped page/region data for those diffs
+- handoff uses a FORMAL server-side handoff payload / linkage record
+- PDF Editor resolves from that formal payload/session linkage
+- Compare Versions remains read-only
+- banner query params may remain for UI context only, but must not be the actual data contract
+
+If current implementation is too loose, fix it now.
+
+Then document the exact handoff contract with:
+- payload shape
+- storage location/table/model
+- how PDF Editor resolves it
+- how selected/rejected diffs are filtered into the payload
+
+3) T003 — SESSION STATUS MODEL / FILTERS STILL NOT COMPLETE
+The requested statuses were:
+- active
+- archived
+- completed
+- error
+
+Your summary only clearly showed Active / Archived / maybe All.
+Inspect current implementation and complete this properly:
+- add status badges/filter support for completed and error if missing
+- ensure archive behavior is distinct from completed/error
+- keep archive as hidden from primary active list
+- keep behavior consistent with PlainPath dashboard patterns
+
+4) DELETE / TRASH SAFETY NEEDS TO BE HARDENED
+Current inline delete is potentially too aggressive for audit history.
+
+Patch this so behavior is safe:
+- archive is the default non-destructive removal path
+- delete should be explicit and safe
+- prefer trash/soft-delete if needed
+- do not make audit history easy to destroy accidentally
+
+Then clearly state whether delete is:
+- soft delete / trash
+- hard delete
+- or disabled in favor of archive only
+
+5) T001 — AUDIT EXPORT MUST BE VERIFIED AGAINST THE EXACT REQUIRED CONTENT
+Verify the exported audit report includes ALL of the following from persisted session state:
+- session title
+- original filename
+- revised filename
+- scan date
+- severity summary counts
+- diff list with page references
+- manager notes / watchlist items
+- resolved/unresolved status
+- severity overrides where applicable
+- AI explanation/category if present
+
+If any are missing, patch the export.
+
+Also explicitly confirm whether the export is generated from:
+- persisted DB/session review state
+and not from:
+- stale in-memory UI state
+
+6) T004 — SESSION DETAIL WORKFLOW NEEDS EXPLICIT VERIFICATION
+Do a final pass on:
+- My Comparisons list
+- reopen flow
+- session detail workflow
+- toolbar actions
+- clarity of filenames, counts, dates, statuses
+
+Then report exactly what changed in the detail workflow, not just the list.
+
+EXECUTION INSTRUCTIONS
+- First inspect the current code as it now stands after your last pass
+- Then patch only missing/weak areas
+- Then run verification
+- Then provide the exact final completion report in the required format
+
+VERIFICATION CHECKLIST
+You must verify and report pass/fail for:
+1. existing compare session still opens correctly
+2. manager notes/watchlist persist after refresh
+3. resolved/unresolved state persists after refresh
+4. severity overrides persist after refresh
+5. export includes all required report sections
+6. export reflects persisted current review state
+7. rejected diffs can be handed off to PDF Editor
+8. explicitly selected diffs can be handed off to PDF Editor
+9. PDF Editor opens revised document only
+10. PDF Editor receives diff IDs + mapped regions through formal handoff record/payload
+11. Compare Versions remains read-only
+12. rename works
+13. archive works
+14. completed/error status badges/filters work
+15. delete/trash behavior is safe and explicit
+16. My Comparisons reopen flow is clean
+17. no previously completed Compare Versions slices broke
+
+Do not answer with a narrative summary first.
+Return the actual final completion report only after patching and verifying.

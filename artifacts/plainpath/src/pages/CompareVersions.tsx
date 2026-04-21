@@ -1,5 +1,5 @@
 // ─── Compare Versions — List + Intake Page (Slice 6) ──────────────────────────
-// T003: session rename, archive, delete with inline UX
+// T003: session rename, archive (primary removal), soft-delete, 4-tab filter
 // T004: polished list — diff counts, severity dots, filter tabs, better metadata
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -9,12 +9,15 @@ import {
   ScanSearch, ArrowLeft, Upload, FileText, X, Loader2, AlertCircle,
   Lock, Zap, CheckCircle2, Plus, Trash2, FolderOpen, Clock,
   ChevronDown, ChevronUp, Archive, ArchiveRestore, Pencil, Check,
+  AlertTriangle,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { useEntitlements } from "@/hooks/useEntitlements"
 import { useCompareVersionsApi } from "@/hooks/useCompareVersionsApi"
-import type { CVSessionListItem, CVWatchlistItem, CVManagerNotes, CVNoteSeverity } from "@/lib/compareVersionsTypes"
+import type {
+  CVSessionListItem, CVWatchlistItem, CVManagerNotes, CVNoteSeverity,
+} from "@/lib/compareVersionsTypes"
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -26,8 +29,7 @@ function fmtBytes(n: number) {
 
 function fmtDate(iso: string) {
   const d = new Date(iso)
-  const now = Date.now()
-  const diff = now - d.getTime()
+  const diff = Date.now() - d.getTime()
   const m = Math.floor(diff / 60_000)
   if (m < 1) return "just now"
   if (m < 60) return `${m}m ago`
@@ -35,7 +37,10 @@ function fmtDate(iso: string) {
   if (h < 24) return `${h}h ago`
   const days = Math.floor(h / 24)
   if (days < 7) return `${days}d ago`
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: d.getFullYear() !== new Date().getFullYear() ? "numeric" : undefined })
+  return d.toLocaleDateString("en-US", {
+    month: "short", day: "numeric",
+    year: d.getFullYear() !== new Date().getFullYear() ? "numeric" : undefined,
+  })
 }
 
 const MAX_BYTES = 50 * 1024 * 1024
@@ -43,21 +48,16 @@ const MAX_BYTES = 50 * 1024 * 1024
 function validatePdf(file: File): string | null {
   const nameLower = file.name.toLowerCase()
   const mime = file.type.toLowerCase()
-  if (nameLower.endsWith(".docx") || mime.includes("wordprocessingml")) {
-    return "Word (.docx) files are not supported yet — PDF only. Word support coming soon."
-  }
-  if (nameLower.endsWith(".txt") || mime === "text/plain") {
+  if (nameLower.endsWith(".docx") || mime.includes("wordprocessingml"))
+    return "Word (.docx) files are not supported yet — PDF only."
+  if (nameLower.endsWith(".txt") || mime === "text/plain")
     return "Plain text files are not accepted — please upload a PDF."
-  }
-  if (mime.startsWith("image/")) {
+  if (mime.startsWith("image/"))
     return "Image files are not accepted — please upload a PDF."
-  }
-  if (!nameLower.endsWith(".pdf") && mime !== "application/pdf") {
+  if (!nameLower.endsWith(".pdf") && mime !== "application/pdf")
     return "Only PDF files are accepted."
-  }
-  if (file.size > MAX_BYTES) {
+  if (file.size > MAX_BYTES)
     return "File exceeds the 50 MB limit."
-  }
   return null
 }
 
@@ -74,7 +74,7 @@ function LockedGate() {
         <div>
           <h1 className="text-2xl font-bold mb-2">Compare Versions</h1>
           <p className="text-muted-foreground leading-relaxed">
-            Upload an original PDF and a revised copy. See exactly what changed — side-by-side, with your own audit notes and watchlist.
+            Upload an original PDF and a revised copy. See exactly what changed — side-by-side, with your own audit notes.
           </p>
         </div>
         <div className="flex flex-col gap-2 text-sm text-muted-foreground w-full max-w-xs">
@@ -82,7 +82,6 @@ function LockedGate() {
             "Side-by-side PDF workspace",
             "Grouped change zones with severity",
             "Manager notes and watchlist",
-            "Deterministic, not AI-guessed",
             "Sessions saved for reopen",
           ].map((f) => (
             <div key={f} className="flex items-center gap-2">
@@ -91,19 +90,9 @@ function LockedGate() {
             </div>
           ))}
         </div>
-        <div className="border border-border/60 bg-muted/30 rounded-xl px-4 py-3 text-sm w-full">
-          <p className="font-semibold mb-0.5">Available on Pro</p>
-          <p className="text-muted-foreground text-xs">$19.99/month — all tools included</p>
-        </div>
         <Button onClick={() => setLocation("/upgrade")} className="w-full">
           <Zap className="w-4 h-4 mr-2" /> Upgrade to Pro
         </Button>
-        <button
-          onClick={() => setLocation("/")}
-          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-        >
-          ← Back to dashboard
-        </button>
       </div>
     </div>
   )
@@ -124,33 +113,16 @@ interface FileSlotProps {
 function FileSlot({ label, side, file, error, onFile, onRemove, disabled }: FileSlotProps) {
   const [dragging, setDragging] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
-
   const isOrig = side === "original"
-  const accentColor = isOrig
-    ? "text-blue-600 dark:text-blue-400"
-    : "text-emerald-600 dark:text-emerald-400"
+
+  const accentColor = isOrig ? "text-blue-600 dark:text-blue-400" : "text-emerald-600 dark:text-emerald-400"
   const accentBadge = isOrig
     ? "bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800/40"
     : "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/40"
   const fileBorder = isOrig
     ? "border-blue-300/60 dark:border-blue-700/40 bg-blue-50/40 dark:bg-blue-950/20"
     : "border-emerald-300/60 dark:border-emerald-700/40 bg-emerald-50/40 dark:bg-emerald-950/20"
-  const dragBorder = isOrig
-    ? "border-blue-400 bg-blue-50/30 dark:bg-blue-950/10"
-    : "border-emerald-400 bg-emerald-50/30 dark:bg-emerald-950/10"
-
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const f = e.target.files?.[0]
-    if (f) onFile(f)
-    e.target.value = ""
-  }
-
-  function handleDrop(e: React.DragEvent) {
-    e.preventDefault()
-    setDragging(false)
-    const f = e.dataTransfer.files?.[0]
-    if (f) onFile(f)
-  }
+  const dragBorder = isOrig ? "border-blue-400 bg-blue-50/30" : "border-emerald-400 bg-emerald-50/30"
 
   return (
     <div className="flex flex-col gap-3">
@@ -158,7 +130,7 @@ function FileSlot({ label, side, file, error, onFile, onRemove, disabled }: File
         <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${accentBadge}`}>
           {isOrig ? "Original" : "Revised"}
         </span>
-        <span className="text-sm font-semibold text-foreground">{label}</span>
+        <span className="text-sm font-semibold">{label}</span>
       </div>
 
       {file ? (
@@ -173,213 +145,144 @@ function FileSlot({ label, side, file, error, onFile, onRemove, disabled }: File
             <p className="text-xs text-muted-foreground mt-0.5">{fmtBytes(file.size)} · PDF</p>
           </div>
           {!disabled && (
-            <button
-              onClick={onRemove}
-              className="p-1.5 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
-              aria-label={`Remove ${label}`}
-            >
+            <button onClick={onRemove} className="p-1.5 rounded-lg hover:bg-muted/60 text-muted-foreground transition-colors flex-shrink-0">
               <X className="w-4 h-4" />
             </button>
           )}
         </div>
       ) : (
-        <div>
+        <>
           <input
-            ref={inputRef}
-            type="file"
-            accept=".pdf,application/pdf"
-            className="hidden"
-            onChange={handleChange}
+            ref={inputRef} type="file" accept=".pdf,application/pdf"
+            className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) onFile(f); e.target.value = "" }}
             disabled={disabled}
           />
           <div
-            onDrop={handleDrop}
+            onDrop={(e) => { e.preventDefault(); setDragging(false); const f = e.dataTransfer.files?.[0]; if (f) onFile(f) }}
             onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
             onDragLeave={() => setDragging(false)}
             onClick={() => !disabled && inputRef.current?.click()}
             className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all select-none ${
-              disabled
-                ? "opacity-50 cursor-not-allowed border-border/30"
-                : dragging
-                ? dragBorder
-                : "border-border/40 hover:border-primary/40 hover:bg-muted/10"
+              disabled ? "opacity-50 cursor-not-allowed border-border/30"
+              : dragging ? dragBorder
+              : "border-border/40 hover:border-primary/40 hover:bg-muted/10"
             }`}
           >
             <Upload className="w-7 h-7 mx-auto mb-2 text-muted-foreground/50" />
-            <p className="text-sm font-medium text-foreground">
-              {dragging ? "Drop to upload" : "Drag and drop, or click to browse"}
-            </p>
+            <p className="text-sm font-medium">{dragging ? "Drop to upload" : "Drag and drop, or click to browse"}</p>
             <p className="text-xs text-muted-foreground mt-1">PDF only · max 50 MB</p>
           </div>
-        </div>
+        </>
       )}
 
       {error && (
         <div className="flex items-start gap-2 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg px-3 py-2.5">
-          <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-          <span>{error}</span>
+          <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" /><span>{error}</span>
         </div>
       )}
     </div>
   )
 }
 
-// ─── Manager Notes / Watchlist ─────────────────────────────────────────────────
+// ─── Manager Notes ─────────────────────────────────────────────────────────────
 
 const SEVERITY_OPTIONS: CVNoteSeverity[] = ["high", "medium", "low"]
-
 const SEVERITY_STYLE: Record<CVNoteSeverity, string> = {
   high: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
   medium: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
   low: "bg-muted text-muted-foreground",
 }
 
-interface ManagerNotesEditorProps {
-  notes: CVManagerNotes
-  onChange: (notes: CVManagerNotes) => void
-  disabled?: boolean
-}
-
-function ManagerNotesEditor({ notes, onChange, disabled }: ManagerNotesEditorProps) {
+function ManagerNotesEditor({ notes, onChange, disabled }: {
+  notes: CVManagerNotes; onChange: (n: CVManagerNotes) => void; disabled?: boolean
+}) {
   const [open, setOpen] = useState(false)
-  const newItemId = useId()
 
-  function updateFreeform(v: string) {
-    onChange({ ...notes, freeform: v })
-  }
+  const hasContent = notes.freeform.trim().length > 0 || notes.watchlist.length > 0
 
-  function addWatchlistItem() {
+  function addItem() {
     const item: CVWatchlistItem = {
       id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-      type: "watchlist",
-      text: "",
-      severity: "medium",
-      resolved: false,
-      created_at: new Date().toISOString(),
-      linked_diff_id: null,
+      type: "watchlist", text: "", severity: "medium", resolved: false,
+      created_at: new Date().toISOString(), linked_diff_id: null,
     }
     onChange({ ...notes, watchlist: [...notes.watchlist, item] })
   }
 
   function updateItem(id: string, patch: Partial<CVWatchlistItem>) {
-    onChange({
-      ...notes,
-      watchlist: notes.watchlist.map((w) => (w.id === id ? { ...w, ...patch } : w)),
-    })
+    onChange({ ...notes, watchlist: notes.watchlist.map((w) => w.id === id ? { ...w, ...patch } : w) })
   }
 
   function removeItem(id: string) {
     onChange({ ...notes, watchlist: notes.watchlist.filter((w) => w.id !== id) })
   }
 
-  const hasContent = notes.freeform.trim().length > 0 || notes.watchlist.length > 0
-
   return (
     <div className="border border-border/40 rounded-xl overflow-hidden">
       <button
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => setOpen((o) => !o)} disabled={disabled}
         className="w-full flex items-center justify-between gap-3 px-4 py-3 hover:bg-muted/30 transition-colors text-left"
-        disabled={disabled}
       >
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold">Manager Notes &amp; Watchlist</span>
-          {hasContent && !open && (
+          {!open && hasContent && (
             <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300">
-              {[notes.freeform.trim() ? 1 : 0, notes.watchlist.length].reduce((a, b) => a + b, 0)} item{(notes.watchlist.length + (notes.freeform.trim() ? 1 : 0)) !== 1 ? "s" : ""}
+              saved
             </span>
           )}
-          {!hasContent && !open && (
-            <span className="text-xs text-muted-foreground">optional — collapsed</span>
-          )}
+          {!open && !hasContent && <span className="text-xs text-muted-foreground">optional</span>}
         </div>
-        {open ? (
-          <ChevronUp className="w-4 h-4 text-muted-foreground" />
-        ) : (
-          <ChevronDown className="w-4 h-4 text-muted-foreground" />
-        )}
+        {open ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
       </button>
 
       {open && (
         <div className="px-4 pb-4 pt-1 space-y-4 border-t border-border/30">
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground uppercase tracking-widest">
-              Freeform Notes
-            </label>
+            <label className="text-xs font-medium text-muted-foreground uppercase tracking-widest">Freeform Notes</label>
             <Textarea
-              value={notes.freeform}
-              onChange={(e) => updateFreeform(e.target.value)}
+              value={notes.freeform} onChange={(e) => onChange({ ...notes, freeform: e.target.value })}
               placeholder="Any general notes about this comparison…"
-              className="h-24 text-sm resize-none bg-muted/20 border-border/50 focus-visible:ring-teal-500/30"
+              className="h-24 text-sm resize-none bg-muted/20 border-border/50"
               disabled={disabled}
             />
           </div>
-
           <div className="space-y-2">
-            <label className="text-xs font-medium text-muted-foreground uppercase tracking-widest">
-              Watchlist Items
-            </label>
-
-            {notes.watchlist.length === 0 && (
-              <p className="text-xs text-muted-foreground/70 italic">No watchlist items yet.</p>
-            )}
-
+            <label className="text-xs font-medium text-muted-foreground uppercase tracking-widest">Watchlist</label>
+            {notes.watchlist.length === 0 && <p className="text-xs text-muted-foreground/70 italic">No items yet.</p>}
             {notes.watchlist.map((item) => (
-              <div
-                key={item.id}
-                className="flex items-start gap-2 bg-muted/20 border border-border/40 rounded-lg p-3"
-              >
+              <div key={item.id} className="flex items-start gap-2 bg-muted/20 border border-border/40 rounded-lg p-3">
                 <button
-                  onClick={() => updateItem(item.id, { resolved: !item.resolved })}
+                  onClick={() => updateItem(item.id, { resolved: !item.resolved })} disabled={disabled}
                   className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
-                    item.resolved
-                      ? "border-teal-500 bg-teal-500"
-                      : "border-border hover:border-teal-400"
+                    item.resolved ? "border-teal-500 bg-teal-500" : "border-border hover:border-teal-400"
                   }`}
-                  title={item.resolved ? "Mark unresolved" : "Mark resolved"}
-                  disabled={disabled}
                 >
                   {item.resolved && <CheckCircle2 className="w-3 h-3 text-white" />}
                 </button>
-
                 <input
-                  type="text"
-                  value={item.text}
+                  type="text" value={item.text}
                   onChange={(e) => updateItem(item.id, { text: e.target.value })}
-                  placeholder="Describe the watchlist item…"
-                  className={`flex-1 text-sm bg-transparent border-none outline-none placeholder:text-muted-foreground/50 ${
-                    item.resolved ? "line-through text-muted-foreground" : ""
-                  }`}
+                  placeholder="Describe the item…"
+                  className={`flex-1 text-sm bg-transparent border-none outline-none placeholder:text-muted-foreground/50 ${item.resolved ? "line-through text-muted-foreground" : ""}`}
                   disabled={disabled}
                 />
-
                 <select
                   value={item.severity}
                   onChange={(e) => updateItem(item.id, { severity: e.target.value as CVNoteSeverity })}
                   className={`text-xs font-semibold px-2 py-0.5 rounded-full border-0 cursor-pointer outline-none ${SEVERITY_STYLE[item.severity]}`}
                   disabled={disabled}
                 >
-                  {SEVERITY_OPTIONS.map((s) => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
+                  {SEVERITY_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
                 </select>
-
-                <button
-                  onClick={() => removeItem(item.id)}
-                  className="p-1 rounded hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
-                  disabled={disabled}
-                >
+                <button onClick={() => removeItem(item.id)} disabled={disabled}
+                  className="p-1 rounded hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors">
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
             ))}
-
-            <button
-              onClick={addWatchlistItem}
-              disabled={disabled}
-              className="flex items-center gap-1.5 text-xs font-medium text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 transition-colors disabled:opacity-50"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              Add watchlist item
+            <button onClick={addItem} disabled={disabled}
+              className="flex items-center gap-1.5 text-xs font-medium text-teal-600 dark:text-teal-400 hover:text-teal-700 disabled:opacity-50 transition-colors">
+              <Plus className="w-3.5 h-3.5" /> Add watchlist item
             </button>
           </div>
         </div>
@@ -390,65 +293,38 @@ function ManagerNotesEditor({ notes, onChange, disabled }: ManagerNotesEditorPro
 
 // ─── Intake Form ──────────────────────────────────────────────────────────────
 
-interface IntakeFormProps {
-  onCreated: (id: string) => void
-  onCancel: () => void
-}
-
-function IntakeForm({ onCreated, onCancel }: IntakeFormProps) {
+function IntakeForm({ onCreated, onCancel }: { onCreated: (id: string) => void; onCancel: () => void }) {
   const api = useCompareVersionsApi()
-
   const [origFile, setOrigFile] = useState<File | null>(null)
   const [origError, setOrigError] = useState<string | null>(null)
   const [revFile, setRevFile] = useState<File | null>(null)
   const [revError, setRevError] = useState<string | null>(null)
-
   const [notes, setNotes] = useState<CVManagerNotes>({ freeform: "", watchlist: [], notes: [] })
   const [scanning, setScanning] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
-
-  function handleOrigFile(file: File) {
-    const err = validatePdf(file)
-    setOrigError(err)
-    setOrigFile(err ? null : file)
-  }
-
-  function handleRevFile(file: File) {
-    const err = validatePdf(file)
-    setRevError(err)
-    setRevFile(err ? null : file)
-  }
 
   const canScan = origFile !== null && revFile !== null && !scanning
 
   async function handleScan() {
     if (!canScan) return
-    setScanning(true)
-    setSubmitError(null)
+    setScanning(true); setSubmitError(null)
     try {
       const title = `${origFile.name} vs ${revFile.name}`
       const session = await api.createSession(origFile, revFile, title, notes)
       onCreated(session.id)
     } catch (err: any) {
-      const msg =
-        err?.status === 413
-          ? "One or both files exceed the 50 MB limit."
-          : err?.status === 422
-          ? (err.message || "One or both files are not valid PDFs.")
-          : err?.message || "Something went wrong. Please try again."
-      setSubmitError(msg)
-      setScanning(false)
+      const msg = err?.status === 413 ? "One or both files exceed the 50 MB limit."
+        : err?.status === 422 ? (err.message || "One or both files are not valid PDFs.")
+        : err?.message || "Something went wrong. Please try again."
+      setSubmitError(msg); setScanning(false)
     }
   }
 
   return (
     <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex items-center gap-3 mb-8">
-        <button
-          onClick={onCancel}
-          className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-          disabled={scanning}
-        >
+        <button onClick={onCancel} disabled={scanning}
+          className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground">
           <ArrowLeft className="w-4 h-4" />
         </button>
         <div className="flex items-center gap-3">
@@ -464,82 +340,35 @@ function IntakeForm({ onCreated, onCancel }: IntakeFormProps) {
 
       <div className="max-w-3xl space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          <FileSlot
-            label="Original / Baseline"
-            side="original"
-            file={origFile}
-            error={origError}
-            onFile={handleOrigFile}
-            onRemove={() => { setOrigFile(null); setOrigError(null) }}
-            disabled={scanning}
-          />
-          <FileSlot
-            label="Revised Version"
-            side="revised"
-            file={revFile}
-            error={revError}
-            onFile={handleRevFile}
-            onRemove={() => { setRevFile(null); setRevError(null) }}
-            disabled={scanning}
-          />
+          <FileSlot label="Original / Baseline" side="original" file={origFile} error={origError}
+            onFile={(f) => { const e = validatePdf(f); setOrigError(e); setOrigFile(e ? null : f) }}
+            onRemove={() => { setOrigFile(null); setOrigError(null) }} disabled={scanning} />
+          <FileSlot label="Revised Version" side="revised" file={revFile} error={revError}
+            onFile={(f) => { const e = validatePdf(f); setRevError(e); setRevFile(e ? null : f) }}
+            onRemove={() => { setRevFile(null); setRevError(null) }} disabled={scanning} />
         </div>
-
-        {(!!origFile !== !!revFile) && !scanning && (
-          <p className="text-center text-xs text-muted-foreground/70">
-            {origFile
-              ? "Original loaded — now upload the revised version."
-              : "Revised loaded — now upload the original / baseline."}
-          </p>
-        )}
 
         <ManagerNotesEditor notes={notes} onChange={setNotes} disabled={scanning} />
 
         {submitError && (
           <div className="flex items-start gap-2 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg px-4 py-3">
-            <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-            <span>{submitError}</span>
+            <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" /><span>{submitError}</span>
           </div>
         )}
 
         <div className="flex items-center gap-4 pt-1">
-          <Button
-            size="lg"
-            onClick={handleScan}
-            disabled={!canScan}
-            className={`gap-2 transition-all ${
-              canScan
-                ? "bg-violet-600 hover:bg-violet-700 text-white shadow-md shadow-violet-500/20"
-                : "bg-muted text-muted-foreground cursor-not-allowed"
-            }`}
+          <Button size="lg" onClick={handleScan} disabled={!canScan}
+            className={`gap-2 ${canScan ? "bg-violet-600 hover:bg-violet-700 text-white shadow-md" : "bg-muted text-muted-foreground cursor-not-allowed"}`}
           >
-            {scanning ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Uploading documents…
-              </>
-            ) : (
-              <>
-                <ScanSearch className="w-4 h-4" />
-                Scan Documents
-              </>
-            )}
+            {scanning ? <><Loader2 className="w-4 h-4 animate-spin" /> Uploading…</> : <><ScanSearch className="w-4 h-4" /> Scan Documents</>}
           </Button>
-          {!canScan && !scanning && (
-            <p className="text-xs text-muted-foreground">
-              {!origFile && !revFile
-                ? "Upload both PDFs to enable scanning."
-                : !origFile
-                ? "Upload the original PDF."
-                : "Upload the revised PDF."}
-            </p>
-          )}
         </div>
       </div>
     </div>
   )
 }
 
-// ─── Status badge helpers ──────────────────────────────────────────────────────
+// ─── Status helpers ─────────────────────────────────────────────────────────────
 
 const STATUS_BADGE: Record<string, string> = {
   pending:  "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
@@ -559,62 +388,41 @@ const STATUS_LABEL: Record<string, string> = {
 
 interface SessionRowProps {
   session: CVSessionListItem
+  isArchivedTab: boolean
   onOpen: (id: string) => void
   onRename: (id: string, title: string) => Promise<void>
   onArchive: (id: string, archived: boolean) => Promise<void>
-  onDelete: (id: string) => Promise<void>
+  onSoftDelete: (id: string) => Promise<void>
 }
 
-function SessionRow({ session: s, onOpen, onRename, onArchive, onDelete }: SessionRowProps) {
+function SessionRow({ session: s, isArchivedTab, onOpen, onRename, onArchive, onSoftDelete }: SessionRowProps) {
   const [renaming, setRenaming] = useState(false)
   const [renameVal, setRenameVal] = useState(s.title)
   const [renameBusy, setRenameBusy] = useState(false)
   const renameRef = useRef<HTMLInputElement>(null)
-
   const [archiveBusy, setArchiveBusy] = useState(false)
   const [deleteBusy, setDeleteBusy] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
-  const isArchived = !!s.archivedAt
-
-  function startRename() {
-    setRenameVal(s.title)
-    setRenaming(true)
-    setTimeout(() => renameRef.current?.select(), 30)
-  }
+  function startRename() { setRenameVal(s.title); setRenaming(true); setTimeout(() => renameRef.current?.select(), 30) }
 
   async function commitRename() {
     const trimmed = renameVal.trim()
     if (!trimmed || trimmed === s.title) { setRenaming(false); return }
     setRenameBusy(true)
-    try {
-      await onRename(s.id, trimmed)
-    } finally {
-      setRenameBusy(false)
-      setRenaming(false)
-    }
+    try { await onRename(s.id, trimmed) } finally { setRenameBusy(false); setRenaming(false) }
   }
 
   async function handleArchiveToggle() {
     setArchiveBusy(true)
-    try {
-      await onArchive(s.id, !isArchived)
-    } finally {
-      setArchiveBusy(false)
-    }
+    try { await onArchive(s.id, !isArchivedTab) } finally { setArchiveBusy(false) }
   }
 
-  async function handleDelete() {
+  async function handleSoftDelete() {
     setDeleteBusy(true)
-    try {
-      await onDelete(s.id)
-    } finally {
-      setDeleteBusy(false)
-      setConfirmDelete(false)
-    }
+    try { await onSoftDelete(s.id) } finally { setDeleteBusy(false); setConfirmDelete(false) }
   }
 
-  // Severity dots
   const high   = s.diffHigh   ?? 0
   const medium = s.diffMedium ?? 0
   const low    = s.diffLow    ?? 0
@@ -623,48 +431,36 @@ function SessionRow({ session: s, onOpen, onRename, onArchive, onDelete }: Sessi
 
   return (
     <div className="group flex items-center gap-3 border border-border/50 rounded-xl px-4 py-3.5 hover:border-teal-400/40 hover:bg-teal-50/20 dark:hover:bg-teal-950/10 transition-colors">
-      {/* Icon */}
       <div className="w-9 h-9 rounded-lg bg-teal-100 dark:bg-teal-900/40 flex items-center justify-center flex-shrink-0">
-        <ScanSearch className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+        {s.status === "error"
+          ? <AlertTriangle className="w-4 h-4 text-red-500" />
+          : <ScanSearch className="w-4 h-4 text-teal-600 dark:text-teal-400" />}
       </div>
 
-      {/* Title + metadata */}
       <div className="flex-1 min-w-0">
         {renaming ? (
           <div className="flex items-center gap-1.5">
             <input
-              ref={renameRef}
-              value={renameVal}
+              ref={renameRef} value={renameVal}
               onChange={(e) => setRenameVal(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") commitRename()
-                if (e.key === "Escape") setRenaming(false)
-              }}
+              onKeyDown={(e) => { if (e.key === "Enter") commitRename(); if (e.key === "Escape") setRenaming(false) }}
               className="flex-1 text-sm font-medium bg-background border border-teal-400/50 rounded-md px-2 py-0.5 outline-none focus:ring-1 focus:ring-teal-500/40 min-w-0"
               disabled={renameBusy}
             />
-            <button
-              onClick={commitRename}
-              disabled={renameBusy}
-              className="p-1 rounded text-teal-600 dark:text-teal-400 hover:bg-teal-100 dark:hover:bg-teal-900/40 transition-colors"
-            >
+            <button onClick={commitRename} disabled={renameBusy}
+              className="p-1 rounded text-teal-600 dark:text-teal-400 hover:bg-teal-100 dark:hover:bg-teal-900/40 transition-colors">
               {renameBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
             </button>
-            <button
-              onClick={() => setRenaming(false)}
-              className="p-1 rounded text-muted-foreground hover:bg-muted/60 transition-colors"
-            >
+            <button onClick={() => setRenaming(false)} className="p-1 rounded text-muted-foreground hover:bg-muted/60 transition-colors">
               <X className="w-3.5 h-3.5" />
             </button>
           </div>
         ) : (
           <div className="flex items-center gap-1.5 min-w-0">
             <p className="text-sm font-medium truncate">{s.title}</p>
-            <button
-              onClick={startRename}
+            <button onClick={startRename}
               className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded text-muted-foreground hover:text-foreground"
-              title="Rename"
-            >
+              title="Rename">
               <Pencil className="w-3 h-3" />
             </button>
           </div>
@@ -674,92 +470,85 @@ function SessionRow({ session: s, onOpen, onRename, onArchive, onDelete }: Sessi
           <Clock className="w-3 h-3 flex-shrink-0" />
           <span>{fmtDate(s.updatedAt)}</span>
           <span>·</span>
-          <span className="truncate max-w-[100px]">{s.originalFileName}</span>
+          <span className="truncate max-w-[90px]">{s.originalFileName}</span>
           <span className="text-muted-foreground/50">vs</span>
-          <span className="truncate max-w-[100px]">{s.revisedFileName}</span>
+          <span className="truncate max-w-[90px]">{s.revisedFileName}</span>
 
-          {/* Severity dots */}
           {hasDiffs && (
             <>
               <span>·</span>
               <span className="flex items-center gap-1">
                 {high > 0 && (
                   <span className="flex items-center gap-0.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
                     <span className="text-red-600 dark:text-red-400 font-medium">{high}</span>
                   </span>
                 )}
                 {medium > 0 && (
                   <span className="flex items-center gap-0.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                     <span className="text-amber-600 dark:text-amber-400 font-medium">{medium}</span>
                   </span>
                 )}
                 {low > 0 && (
                   <span className="flex items-center gap-0.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-slate-400 inline-block" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
                     <span className="font-medium">{low}</span>
                   </span>
                 )}
-                <span className="text-muted-foreground/60">({total} total)</span>
+                <span className="text-muted-foreground/60">({total})</span>
               </span>
             </>
           )}
-          {s.status === "complete" && total === 0 && (
-            <><span>·</span><span>No changes detected</span></>
+          {s.status === "complete" && total === 0 && <><span>·</span><span>No changes detected</span></>}
+          {isArchivedTab && s.archivedAt && (
+            <><span>·</span><span className="italic">Archived {fmtDate(s.archivedAt)}</span></>
           )}
         </div>
       </div>
 
-      {/* Right: status + actions */}
       <div className="flex items-center gap-2 flex-shrink-0">
         <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${STATUS_BADGE[s.status] ?? STATUS_BADGE.pending}`}>
           {STATUS_LABEL[s.status] ?? s.status}
         </span>
 
-        {/* Confirm delete inline */}
         {confirmDelete ? (
           <div className="flex items-center gap-1.5">
-            <span className="text-xs text-red-600 dark:text-red-400 font-medium">Delete?</span>
-            <button
-              onClick={handleDelete}
-              disabled={deleteBusy}
-              className="px-2 py-1 text-xs font-semibold bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors disabled:opacity-50"
-            >
-              {deleteBusy ? <Loader2 className="w-3 h-3 animate-spin" /> : "Yes"}
+            <span className="text-xs text-red-600 dark:text-red-400 font-medium">Permanently delete?</span>
+            <button onClick={handleSoftDelete} disabled={deleteBusy}
+              className="px-2 py-1 text-xs font-semibold bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors disabled:opacity-50">
+              {deleteBusy ? <Loader2 className="w-3 h-3 animate-spin" /> : "Delete"}
             </button>
-            <button
-              onClick={() => setConfirmDelete(false)}
-              className="px-2 py-1 text-xs font-medium border border-border/50 rounded-md hover:bg-muted/60 transition-colors"
-            >
+            <button onClick={() => setConfirmDelete(false)}
+              className="px-2 py-1 text-xs font-medium border border-border/50 rounded-md hover:bg-muted/60 transition-colors">
               Cancel
             </button>
           </div>
         ) : (
           <>
-            <button
-              onClick={handleArchiveToggle}
-              disabled={archiveBusy}
-              title={isArchived ? "Restore" : "Archive"}
-              className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 disabled:opacity-50"
-            >
-              {archiveBusy
-                ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                : isArchived
-                ? <ArchiveRestore className="w-3.5 h-3.5" />
-                : <Archive className="w-3.5 h-3.5" />}
-            </button>
-            <button
-              onClick={() => setConfirmDelete(true)}
-              title="Delete"
-              className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg text-muted-foreground hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onClick={() => onOpen(s.id)}
-              className="px-3 py-1.5 text-xs font-semibold text-teal-600 dark:text-teal-400 border border-teal-300/60 dark:border-teal-700/40 rounded-lg hover:bg-teal-100/50 dark:hover:bg-teal-900/30 transition-colors"
-            >
+            {/* Archive tab: show restore + delete. Other tabs: show archive only */}
+            {isArchivedTab ? (
+              <>
+                <button onClick={handleArchiveToggle} disabled={archiveBusy}
+                  title="Restore to active"
+                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 disabled:opacity-50">
+                  {archiveBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ArchiveRestore className="w-3.5 h-3.5" />}
+                </button>
+                <button onClick={() => setConfirmDelete(true)}
+                  title="Delete permanently"
+                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg text-muted-foreground hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors">
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </>
+            ) : (
+              <button onClick={handleArchiveToggle} disabled={archiveBusy}
+                title="Archive (move out of active list)"
+                className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 disabled:opacity-50">
+                {archiveBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Archive className="w-3.5 h-3.5" />}
+              </button>
+            )}
+            <button onClick={() => onOpen(s.id)}
+              className="px-3 py-1.5 text-xs font-semibold text-teal-600 dark:text-teal-400 border border-teal-300/60 dark:border-teal-700/40 rounded-lg hover:bg-teal-100/50 dark:hover:bg-teal-900/30 transition-colors">
               {s.status === "complete" ? "Open" : "View"}
             </button>
           </>
@@ -770,8 +559,21 @@ function SessionRow({ session: s, onOpen, onRename, onArchive, onDelete }: Sessi
 }
 
 // ─── Session List ─────────────────────────────────────────────────────────────
+//
+// Filter tabs:
+//   Active     — non-archived sessions with status IN (pending, scanning)
+//   Completed  — non-archived sessions with status = complete
+//   Error      — non-archived sessions with status = error
+//   Archived   — sessions with archived_at IS NOT NULL (any status)
+//
+// Archive is the non-destructive removal path (moves to Archived tab).
+// Delete (soft) is only accessible from the Archived tab, with explicit confirm.
 
-type ListFilter = "active" | "archived"
+type ListFilter = "active" | "completed" | "error" | "archived"
+
+const FILTER_LABELS: Record<ListFilter, string> = {
+  active: "Active", completed: "Completed", error: "Error", archived: "Archived",
+}
 
 function SessionList({
   sessions,
@@ -781,7 +583,7 @@ function SessionList({
   onNew,
   onRename,
   onArchive,
-  onDelete,
+  onSoftDelete,
 }: {
   sessions: CVSessionListItem[]
   archivedSessions: CVSessionListItem[]
@@ -790,16 +592,38 @@ function SessionList({
   onNew: () => void
   onRename: (id: string, title: string) => Promise<void>
   onArchive: (id: string, archived: boolean) => Promise<void>
-  onDelete: (id: string) => Promise<void>
+  onSoftDelete: (id: string) => Promise<void>
 }) {
   const [filter, setFilter] = useState<ListFilter>("active")
 
-  const visibleSessions = filter === "archived" ? archivedSessions : sessions
-  const archivedCount = archivedSessions.length
+  // Client-side split by status
+  const activeSessions    = sessions.filter((s) => s.status === "pending" || s.status === "scanning")
+  const completedSessions = sessions.filter((s) => s.status === "complete")
+  const errorSessions     = sessions.filter((s) => s.status === "error")
+
+  const tabCounts: Record<ListFilter, number> = {
+    active:    activeSessions.length,
+    completed: completedSessions.length,
+    error:     errorSessions.length,
+    archived:  archivedSessions.length,
+  }
+
+  const visibleSessions = filter === "archived" ? archivedSessions
+    : filter === "completed" ? completedSessions
+    : filter === "error" ? errorSessions
+    : activeSessions
+
+  const totalNonArchived = sessions.length
+
+  const TAB_BADGE: Record<ListFilter, string> = {
+    active:    "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300",
+    completed: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
+    error:     "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
+    archived:  "bg-muted text-muted-foreground",
+  }
 
   return (
     <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Header */}
       <div className="flex items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
@@ -811,8 +635,7 @@ function SessionList({
           </div>
         </div>
         <Button onClick={onNew} className="gap-2 bg-violet-600 hover:bg-violet-700 text-white shadow-sm">
-          <Plus className="w-4 h-4" />
-          New Comparison
+          <Plus className="w-4 h-4" /> New Comparison
         </Button>
       </div>
 
@@ -820,17 +643,14 @@ function SessionList({
         <div className="flex items-center gap-2 text-sm text-muted-foreground py-6">
           <Loader2 className="w-4 h-4 animate-spin" /> Loading comparisons…
         </div>
-      ) : sessions.length === 0 && archivedSessions.length === 0 ? (
-        /* Empty state */
+      ) : totalNonArchived === 0 && archivedSessions.length === 0 ? (
         <div className="flex flex-col items-center justify-center min-h-[40vh] text-center gap-4">
           <div className="w-14 h-14 rounded-2xl bg-muted/50 flex items-center justify-center">
             <FolderOpen className="w-7 h-7 text-muted-foreground/50" />
           </div>
           <div>
-            <p className="text-base font-semibold text-foreground mb-1">No comparisons yet</p>
-            <p className="text-sm text-muted-foreground max-w-xs">
-              Start a new comparison to audit what changed between your original and revised PDFs.
-            </p>
+            <p className="text-base font-semibold mb-1">No comparisons yet</p>
+            <p className="text-sm text-muted-foreground max-w-xs">Start a new comparison to audit what changed between your PDFs.</p>
           </div>
           <Button onClick={onNew} variant="outline" className="gap-2 mt-1">
             <Plus className="w-4 h-4" /> New Comparison
@@ -838,22 +658,25 @@ function SessionList({
         </div>
       ) : (
         <>
-          {/* Filter tabs */}
-          <div className="flex items-center gap-1 mb-4 border-b border-border/40">
-            {(["active", "archived"] as ListFilter[]).map((f) => (
+          {/* 4 filter tabs */}
+          <div className="flex items-center gap-1 mb-4 border-b border-border/40 overflow-x-auto">
+            {(["active", "completed", "error", "archived"] as ListFilter[]).map((f) => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px flex items-center gap-1.5 ${
+                className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px flex items-center gap-1.5 whitespace-nowrap ${
                   filter === f
                     ? "border-teal-500 text-teal-600 dark:text-teal-400"
                     : "border-transparent text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {f === "active" ? (
-                  <>Active <span className="text-[10px] font-bold bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300 px-1.5 py-0.5 rounded-full">{sessions.length}</span></>
-                ) : (
-                  <>Archived {archivedCount > 0 && <span className="text-[10px] font-bold bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full">{archivedCount}</span>}</>
+                {FILTER_LABELS[f]}
+                {tabCounts[f] > 0 && (
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                    filter === f ? TAB_BADGE[f] : "bg-muted text-muted-foreground"
+                  }`}>
+                    {tabCounts[f]}
+                  </span>
                 )}
               </button>
             ))}
@@ -861,12 +684,22 @@ function SessionList({
 
           {visibleSessions.length === 0 ? (
             <div className="flex flex-col items-center gap-3 py-12 text-center">
-              <Archive className="w-8 h-8 text-muted-foreground/40" />
+              {filter === "error"
+                ? <AlertTriangle className="w-8 h-8 text-red-400/60" />
+                : filter === "archived"
+                ? <Archive className="w-8 h-8 text-muted-foreground/40" />
+                : <CheckCircle2 className="w-8 h-8 text-muted-foreground/40" />}
               <p className="text-sm text-muted-foreground">
-                {filter === "archived"
-                  ? "No archived comparisons."
-                  : "No active comparisons. Start a new one above."}
+                {filter === "active"     ? "No active comparisons running." :
+                 filter === "completed"  ? "No completed comparisons yet." :
+                 filter === "error"      ? "No failed comparisons." :
+                                           "No archived comparisons."}
               </p>
+              {filter === "archived" && (
+                <p className="text-xs text-muted-foreground/70 max-w-xs">
+                  Archive a comparison to move it here. Archived sessions are read-only but preserved.
+                </p>
+              )}
             </div>
           ) : (
             <div className="space-y-2">
@@ -874,13 +707,20 @@ function SessionList({
                 <SessionRow
                   key={s.id}
                   session={s}
+                  isArchivedTab={filter === "archived"}
                   onOpen={onOpen}
                   onRename={onRename}
                   onArchive={onArchive}
-                  onDelete={onDelete}
+                  onSoftDelete={onSoftDelete}
                 />
               ))}
             </div>
+          )}
+
+          {filter !== "archived" && (
+            <p className="text-xs text-muted-foreground/60 mt-6">
+              Archive a session to remove it from the active views without deleting audit history.
+            </p>
           )}
         </>
       )}
@@ -900,8 +740,7 @@ export default function CompareVersions() {
   const [archivedSessions, setArchivedSessions] = useState<CVSessionListItem[]>([])
   const [sessionsLoading, setSessionsLoading] = useState(true)
 
-  const canUse =
-    isAdmin || (entitlements?.toolAccess?.includes("compare-versions") ?? false)
+  const canUse = isAdmin || (entitlements?.toolAccess?.includes("compare-versions") ?? false)
 
   useEffect(() => {
     document.title = "Compare Versions — PlainPath"
@@ -920,9 +759,7 @@ export default function CompareVersions() {
   useEffect(() => {
     if (entLoading || !canUse) return
     let cancelled = false
-    loadSessions()
-      .catch(() => {})
-      .finally(() => { if (!cancelled) setSessionsLoading(false) })
+    loadSessions().catch(() => {}).finally(() => { if (!cancelled) setSessionsLoading(false) })
     return () => { cancelled = true }
   }, [entLoading, canUse])
 
@@ -944,7 +781,6 @@ export default function CompareVersions() {
 
   async function handleArchive(id: string, archived: boolean) {
     await api.archiveSession(id, archived)
-    // Move session between lists
     if (archived) {
       setSessions((prev) => {
         const s = prev.find((x) => x.id === id)
@@ -960,7 +796,7 @@ export default function CompareVersions() {
     }
   }
 
-  async function handleDelete(id: string) {
+  async function handleSoftDelete(id: string) {
     await api.deleteSession(id)
     setSessions((prev) => prev.filter((s) => s.id !== id))
     setArchivedSessions((prev) => prev.filter((s) => s.id !== id))
@@ -987,7 +823,7 @@ export default function CompareVersions() {
         onNew={() => setView("new")}
         onRename={handleRename}
         onArchive={handleArchive}
-        onDelete={handleDelete}
+        onSoftDelete={handleSoftDelete}
       />
     </div>
   )

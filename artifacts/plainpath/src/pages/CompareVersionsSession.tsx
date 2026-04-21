@@ -1240,7 +1240,7 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
     setHandoffLoading(true)
     try {
       const result = await api.createHandoff(session.id, undefined)
-      navigate(`/pdf-editor/${result.pdfEditorSessionId}?fromCompare=1`)
+      navigate(`/pdf-editor/${result.pdfEditorSessionId}?fromCompare=1&handoffId=${result.handoffId}`)
     } catch (err: any) {
       console.error("[CompareVersions] handoff failed:", err)
     } finally {
