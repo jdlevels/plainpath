@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import {
   Menu, X, ChevronDown,
-  FileText, ShieldCheck, Scale, PenLine, LayoutGrid, EyeOff,
+  FileScan, ShieldCheck, Scale, PenLine, LayoutGrid, EyeOff,
+  GitCompare, FileEdit, FileSignature,
 } from "lucide-react";
 
 function smoothScroll(id: string) {
@@ -18,11 +19,14 @@ const NAV_LINKS = [
 ];
 
 const TOOL_LINKS = [
-  { label: "Analyze a Document",    href: "/app/analyze",                icon: FileText    },
-  { label: "Document Trust Check",  href: "/app/import?mode=trust-check", icon: ShieldCheck },
-  { label: "Contract Review",       href: "/app/contract-review",        icon: Scale       },
-  { label: "Build a Contract",      href: "/app/build-contract",         icon: PenLine     },
-  { label: "Redact Sensitive Info", href: "/app/redact",                 icon: EyeOff      },
+  { label: "Analyze a Document",    href: "/app/analyze",                 icon: FileScan       },
+  { label: "Document Trust Check",  href: "/app/import?mode=trust-check", icon: ShieldCheck    },
+  { label: "Contract Review",       href: "/app/contract-review",         icon: Scale          },
+  { label: "Build a Contract",      href: "/app/build-contract",          icon: PenLine        },
+  { label: "Redact Sensitive Info", href: "/app/redact",                  icon: EyeOff         },
+  { label: "Compare Versions",      href: "/app/compare-versions",        icon: GitCompare     },
+  { label: "PDF Editor",            href: "/app/pdf-editor",              icon: FileEdit       },
+  { label: "Digital Signature",     href: "/app/signature",               icon: FileSignature  },
 ];
 
 const LogoBrand = () => (

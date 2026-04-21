@@ -1,0 +1,183 @@
+Work in standardization / cleanup mode only.
+
+Do NOT build new major tools in this pass.
+Do NOT change billing, auth, or pricing.
+Do NOT touch demo quota logic unless required by a direct bug.
+Do NOT start Word support yet.
+Do NOT start Compare Versions V2 items yet.
+
+Goal:
+Lock a single consistent PlainPath product standard across all existing first-class tools.
+
+==================================================
+PASS NAME
+==================================================
+
+PlainPath Tool Surface + Workflow Standardization Pass
+
+==================================================
+PRIMARY OBJECTIVE
+==================================================
+
+Standardize all existing first-class tools so the platform feels like one product, not separate mini-apps.
+
+Target tools:
+- Analyze a Document
+- Document Trust Check
+- Contract Review
+- Build a Contract / Document Builder
+- Redact Sensitive Info
+- Digital Signature
+- PDF Editor
+- Compare Versions
+
+==================================================
+T001 — TOOL SURFACE PARITY
+==================================================
+
+Make sure every first-class tool is represented consistently in all required places:
+
+1. Authenticated dashboard tool grid
+2. Tools dropdown
+3. Public marketing tools section / feature cards
+
+Verify:
+- naming is consistent
+- icon is consistent
+- subtitle/copy is consistent with actual tool purpose
+- route target is correct
+- no old duplicate names remain
+- no legacy hidden tool entries remain
+
+Report exact locations updated.
+
+==================================================
+T002 — STANDARD INTAKE RULE ACROSS ALL TOOLS
+==================================================
+
+For every document-intake tool, enforce this standard interaction:
+
+1. User uploads/selects document
+2. Tool holds in pre-run confirmation state
+3. Uploaded file card shows:
+   - filename
+   - size
+   - document preview if available
+   - X/remove control
+4. No automatic processing starts immediately on upload
+5. Primary CTA is explicit and tool-specific:
+   - Analyze
+   - Check
+   - Review
+   - Scan
+   - Open in Editor
+   etc.
+
+Apply this standard wherever missing.
+
+Important:
+This is a UX standardization pass, not a redesign. Reuse existing card/button patterns where possible.
+
+==================================================
+T003 — REAL DOCUMENT SCAN / PROGRESS PREVIEW
+==================================================
+
+Where a tool has a scan/progress/loading state, replace generic placeholders with the actual uploaded document preview when feasible.
+
+Priority order:
+1. Analyze a Document
+2. Document Trust Check
+3. Contract Review
+4. Compare Versions
+5. Any other scanning tool using placeholders
+
+Rule:
+- If the actual uploaded document is already available client-side or server-side, show that
+- If not feasible in that specific tool without major rework, document exactly why and leave a note
+- Do not fake this with generic images
+
+==================================================
+T004 — SAVE STANDARD FOR EDITING TOOLS
+==================================================
+
+Apply the save interaction standard to all editing/creation tools where relevant:
+
+Required behavior:
+- Visible Save button/icon
+- Autosave every 60 seconds
+- Save button highlights when there are unsaved changes
+- Saving state is visible
+- Failure state is visible and retryable
+- Do not rely on silent autosave alone
+
+Apply to:
+- PDF Editor
+- Document Builder
+- any other editable workspace where this pattern is relevant
+
+Do not break existing save/export logic.
+
+==================================================
+T005 — DOCUMENT-FIRST WORKSPACE STANDARD
+==================================================
+
+Confirm and standardize the document-heavy workspaces so they all follow the same product rule:
+
+- split-screen is default when appropriate
+- document pane is primary
+- controls are secondary
+- document surface is large and readable
+- neutral stage + white page card treatment
+- consistent pane labels / badges
+- no cramped layouts
+
+Audit and normalize for:
+- PDF Editor
+- Compare Versions
+- Redact
+- Digital Signature
+- Builder workspace where applicable
+
+Do not redesign what already works.
+Only fix inconsistencies.
+
+==================================================
+T006 — COPY / LABEL CLEANUP
+==================================================
+
+Clean up inconsistent or legacy wording across the app:
+
+Examples to look for:
+- “Audit Document Revisions” vs “Compare Versions”
+- old demo wording that points to wrong routes
+- mixed tool naming between dashboard / navbar / public site
+- tool descriptions that no longer match actual scope
+
+Keep names product-simple and consistent.
+
+==================================================
+T007 — REPORTING REQUIREMENT
+==================================================
+
+Return a strict completion report with:
+
+1. Exact files modified
+2. Tool-surface parity changes
+3. Intake-flow changes by tool
+4. Real-document scan preview changes by tool
+5. Save-standard changes by tool
+6. Workspace consistency changes by tool
+7. Any tool that could NOT be fully standardized in this pass, with exact reason
+8. Screenshots:
+   - dashboard tool grid
+   - Tools dropdown
+   - public marketing tools section
+   - at least 3 tools showing pre-run confirmation state with X/remove
+   - at least 2 tools showing real document during scan/progress
+   - PDF Editor save state
+   - Builder save state
+   - Compare Versions workspace
+   - Redact workspace
+
+This is a standardization pass only.
+Do not move on to new product slices inside this pass.

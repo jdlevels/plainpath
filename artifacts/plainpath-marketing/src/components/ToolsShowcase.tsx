@@ -1,15 +1,16 @@
 import { motion } from "framer-motion"
 import {
-  BookOpen, ShieldCheck, PenLine, Scale, ArrowRight,
+  FileScan, ShieldCheck, PenLine, Scale, ArrowRight,
   ListTodo, Calendar, AlertTriangle, CheckCircle2,
   Flag, BarChart2, FileCheck, Sparkles, Copy, MessageSquare,
-  EyeOff, Download, ArrowRightLeft, Lock, Clock, Pen, Send, Eye,
+  EyeOff, Download, ArrowRightLeft, Lock, Clock, FileSignature, Send, Eye,
+  GitCompare, FileEdit,
 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 
 const TOOLS = [
   {
-    icon: BookOpen,
+    icon: FileScan,
     title: "Analyze a Document",
     verb: "Read it.",
     tagline: "Turn any document into a structured action plan",
@@ -120,7 +121,7 @@ const TOOLS = [
     comingSoon: false,
   },
   {
-    icon: Pen,
+    icon: FileSignature,
     title: "Digital Signature",
     verb: "Sign it.",
     tagline: "Legally binding e-signatures, built in",
@@ -142,6 +143,52 @@ const TOOLS = [
     verbColor: "text-violet-600 dark:text-violet-400",
     comingSoon: false,
   },
+  {
+    icon: GitCompare,
+    title: "Compare Versions",
+    verb: "Compare it.",
+    tagline: "Spot every change between two document versions",
+    description: "Upload an original and a revised PDF. PlainPath maps every addition, deletion, and structural change with zone-by-zone overlays, severity scoring, and optional AI enrichment.",
+    features: [
+      { icon: ArrowRightLeft, label: "Side-by-side PDF workspace" },
+      { icon: AlertTriangle, label: "Severity-sorted change summary" },
+      { icon: Sparkles, label: "AI enrichment for context" },
+      { icon: FileCheck, label: "Page-by-page zone mapping" },
+    ],
+    cta: "Compare Documents",
+    href: "/app/compare-versions",
+    color: "from-teal-50/80 to-teal-50 dark:from-teal-950/20 dark:to-teal-950/20",
+    badge: "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300",
+    badgeLabel: "Pro",
+    border: "border-teal-200/60 dark:border-teal-900/40",
+    iconBg: "bg-teal-100 dark:bg-teal-900/40",
+    iconColor: "text-teal-600 dark:text-teal-400",
+    verbColor: "text-teal-600 dark:text-teal-400",
+    comingSoon: false,
+  },
+  {
+    icon: FileEdit,
+    title: "PDF Editor",
+    verb: "Edit it.",
+    tagline: "Annotate, mask, and export any PDF",
+    description: "Open any PDF and add text overlays, mask sensitive content, highlight key sections, and export a clean modified copy — all without converting file formats.",
+    features: [
+      { icon: PenLine, label: "Text overlays on any page" },
+      { icon: EyeOff, label: "Content masking built in" },
+      { icon: CheckCircle2, label: "One-click undo / redo" },
+      { icon: Download, label: "Export modified PDF" },
+    ],
+    cta: "Open PDF Editor",
+    href: "/app/pdf-editor",
+    color: "from-purple-50/80 to-purple-50 dark:from-purple-950/20 dark:to-purple-950/20",
+    badge: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300",
+    badgeLabel: "Pro",
+    border: "border-purple-200/60 dark:border-purple-900/40",
+    iconBg: "bg-purple-100 dark:bg-purple-900/40",
+    iconColor: "text-purple-600 dark:text-purple-400",
+    verbColor: "text-purple-600 dark:text-purple-400",
+    comingSoon: false,
+  },
 ]
 
 export default function ToolsShowcase() {
@@ -154,7 +201,7 @@ export default function ToolsShowcase() {
           viewport={{ once: true }}
           className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3"
         >
-          6 tools live
+          8 tools live
         </motion.p>
         <motion.h2
           initial={{ opacity: 0, y: 12 }}
@@ -163,7 +210,7 @@ export default function ToolsShowcase() {
           className="text-3xl md:text-4xl font-bold mb-4"
           style={{ fontFamily: "var(--font-display)" }}
         >
-          Read it. Trust it. Build it. Review it. Protect it. Sign it.
+          Read it. Trust it. Build it. Review it. Protect it. Sign it. Compare it. Edit it.
         </motion.h2>
         <motion.p
           initial={{ opacity: 0, y: 8 }}
@@ -172,7 +219,7 @@ export default function ToolsShowcase() {
           transition={{ delay: 0.08 }}
           className="text-muted-foreground text-lg max-w-2xl mx-auto"
         >
-          Whether you are reading a document, questioning its legitimacy, creating an agreement, reviewing one before you sign, or redacting private information — PlainPath has a dedicated tool for exactly that.
+          Whether you are reading a document, questioning its legitimacy, creating an agreement, reviewing one before you sign, redacting private information, comparing versions, or editing a PDF — PlainPath has a dedicated tool for exactly that.
         </motion.p>
       </div>
 

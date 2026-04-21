@@ -43,6 +43,9 @@ PlainPath is a monorepo built with pnpm workspaces, separating frontend and back
 ### Product Design Rules
 -   **Split-Screen Creation Principle**: Tools involving document creation/editing must default to a split-screen layout for real-time visual feedback (Left pane: live document/reference, Right pane: controls).
 -   **Document Surface Proportions and Legibility**: Document-heavy tools must display document surfaces at realistic US Letter proportions on desktop for readability.
+-   **Tool Surface Parity (Standardization Pass applied)**: All 8 first-class tools must be consistently represented across: (a) authenticated dashboard tool grid, (b) marketing navbar Tools dropdown, (c) marketing ToolsShowcase feature cards. The 8 tools are: Analyze a Document (`FileScan`), Document Trust Check (`ShieldCheck`), Contract Review (`Scale`), Build a Contract (`PenLine`), Redact Sensitive Info (`EyeOff`), Digital Signature (`FileSignature`), PDF Editor (`FileEdit`), Compare Versions (`GitCompare`). Document Builder (`LayoutTemplate`) is a separate utility tool — shown in dashboard but not in the marketing tools surfaces.
+-   **Standard Intake Rule**: All document-intake tools must show: (1) pre-run confirmation state on upload, (2) file card with filename + size, (3) explicit X/remove button, (4) no auto-processing, (5) tool-specific explicit CTA button.
+-   **Save Standard for Editing Tools**: Document Builder and PDF Editor must have a visible Save button, autosave every 60s, amber highlight when unsaved changes are pending, saving state indicator, and retryable failure state. Document Builder has autosave indicator + explicit Save button (added in standardization pass). PDF Editor has amber-highlighted Save button + SaveIndicator + 60s autosave.
 
 ### Payment and Billing
 -   Full billing architecture implemented with Stripe for Starter and Pro tiers.

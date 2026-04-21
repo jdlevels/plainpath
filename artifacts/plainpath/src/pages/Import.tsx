@@ -1135,11 +1135,24 @@ export default function Import() {
                             <input ref={fileInputRef} type="file" accept={ACCEPTED} className="hidden" onChange={onFileChange} />
 
                             {uploadedFile && !uploadError ? (
-                              <div className="text-center space-y-3 p-6 sm:p-8">
+                              <div className="text-center space-y-3 p-6 sm:p-8 relative">
+                                <button
+                                  type="button"
+                                  onClick={() => { setUploadedFile(null); setUploadError(null); }}
+                                  className="absolute top-2 right-2 p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+                                  aria-label="Remove file"
+                                >
+                                  <XIcon className="w-4 h-4" />
+                                </button>
                                 <CheckCircle2 className="w-12 h-12 text-emerald-500 dark:text-emerald-400 mx-auto" />
                                 <div>
                                   <p className="font-bold text-foreground text-sm">File ready</p>
                                   <p className="text-xs text-muted-foreground mt-1">{uploadedFile.name}</p>
+                                  <p className="text-xs text-muted-foreground/60 mt-0.5">
+                                    {uploadedFile.size < 1024 * 1024
+                                      ? `${Math.round(uploadedFile.size / 1024)} KB`
+                                      : `${(uploadedFile.size / 1024 / 1024).toFixed(1)} MB`}
+                                  </p>
                                 </div>
                               </div>
                             ) : (

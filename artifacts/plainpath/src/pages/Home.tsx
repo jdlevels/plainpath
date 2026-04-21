@@ -4,7 +4,7 @@ import {
   ArrowRight, ShieldCheck, FileSignature,
   PenLine, FileScan, Scale, EyeOff,
   BookMarked, Clock, ChevronRight, CreditCard,
-  LayoutGrid, GitCompare, Pen, ScanSearch,
+  LayoutGrid, GitCompare, Pen, FileEdit, LayoutTemplate,
 } from "lucide-react"
 import { BUILDER_ENABLED } from "@/lib/builderConfig"
 import { useState, useEffect } from "react"
@@ -53,7 +53,7 @@ const TOOLS = [
     key: "builder" as const,
     label: "Document Builder",
     desc: "Create structured documents from scratch or a template, then route them into any PlainPath tool.",
-    icon: PenLine,
+    icon: LayoutTemplate,
     path: "/builder",
     color: "text-indigo-500 dark:text-indigo-400",
     bg: "bg-indigo-50 dark:bg-indigo-950/50",
@@ -94,21 +94,10 @@ const TOOLS = [
     plan: null,
   },
   {
-    key: "compare" as const,
-    label: "Compare Versions",
-    desc: "Spot every change between two versions of a document — additions, deletions, and risk shifts.",
-    icon: GitCompare,
-    path: "/compare",
-    color: "text-sky-500 dark:text-sky-400",
-    bg: "bg-sky-50 dark:bg-sky-950/50",
-    ring: "hover:border-sky-400/50 hover:shadow-sky-500/10",
-    plan: "pro" as const,
-  },
-  {
     key: "pdf-editor" as const,
     label: "PDF Editor",
     desc: "Open any PDF, add text overlays, mask content, reorder pages, and export a clean modified copy.",
-    icon: Pen,
+    icon: FileEdit,
     path: "/pdf-editor",
     color: "text-purple-500 dark:text-purple-400",
     bg: "bg-purple-50 dark:bg-purple-950/50",
@@ -118,8 +107,8 @@ const TOOLS = [
   {
     key: "compare-versions" as const,
     label: "Compare Versions",
-    desc: "Side-by-side PDF audit workspace — verify exactly what changed between an approved original and a revised copy.",
-    icon: ScanSearch,
+    desc: "Spot every change between two versions of a document — additions, deletions, and risk shifts.",
+    icon: GitCompare,
     path: "/compare-versions",
     color: "text-teal-500 dark:text-teal-400",
     bg: "bg-teal-50 dark:bg-teal-950/50",
@@ -509,7 +498,7 @@ export default function Home() {
                       const localMeta = {
                         "redact":           { icon: EyeOff,     color: "text-violet-400",  href: "/redact",           label: "Redacted" },
                         "contract-builder": { icon: PenLine,    color: "text-emerald-400", href: "/contract-builder", label: "Draft" },
-                        "compare":          { icon: GitCompare, color: "text-sky-400",     href: "/compare",          label: "Compare" },
+                        "compare":          { icon: GitCompare, color: "text-teal-400",    href: "/compare-versions", label: "Compare" },
                       }
                       const meta = localMeta[item.tool]
                       const Icon = meta.icon

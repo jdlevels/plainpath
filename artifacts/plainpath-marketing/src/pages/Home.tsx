@@ -765,7 +765,7 @@ export default function Home() {
                 custom={2} variants={fadeUp}
                 className="text-base md:text-lg text-muted-foreground mb-6 leading-relaxed max-w-lg"
               >
-                Leases, contracts, medical bills, and court notices — PlainPath gives you 6 tools to
+                Leases, contracts, medical bills, and court notices — PlainPath gives you 8 tools to
                 understand what any document means, spot problems before you sign, and know exactly
                 what to do next. All in plain English.
               </motion.p>

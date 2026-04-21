@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
 import {
   ArrowLeft, Plus, AlertCircle, Check,
-  Loader2, RefreshCw, Archive, ChevronRight,
+  Loader2, RefreshCw, Archive, ChevronRight, Save,
 } from "lucide-react";
 import { useBuilderApi } from "@/hooks/useBuilderApi";
 import type {
@@ -212,6 +212,34 @@ export default function Workspace({ docId }: WorkspaceProps) {
     [docId, api.updateDocument],
   );
 
+  const saveNow = useCallback(async () => {
+    if (conflictRef.current) return;
+    if (autosaveTimerRef.current) {
+      clearTimeout(autosaveTimerRef.current);
+      autosaveTimerRef.current = null;
+    }
+    setAutosaveStatus("saving");
+    try {
+      const result = await api.updateDocument(docId, {
+        content,
+        title,
+        status,
+        server_version: serverVersionRef.current,
+      });
+      serverVersionRef.current = result.serverVersion;
+      setAutosaveStatus("saved");
+      setTimeout(() => setAutosaveStatus("idle"), 2500);
+    } catch (err: any) {
+      if (err?.status === 409) {
+        conflictRef.current = true;
+        setAutosaveStatus("conflict");
+        setConflictBanner(true);
+      } else {
+        setAutosaveStatus("error");
+      }
+    }
+  }, [docId, api.updateDocument, content, title, status]);
+
   function handleContentChange(newContent: BuilderContent) {
     setContent(newContent);
     scheduleAutosave(newContent, title, status);
@@ -355,6 +383,25 @@ export default function Workspace({ docId }: WorkspaceProps) {
 
           <div className="flex items-center gap-2 shrink-0">
             <AutosaveIndicator status={autosaveStatus} />
+
+            <button
+              type="button"
+              onClick={saveNow}
+              disabled={autosaveStatus === "saving" || autosaveStatus === "conflict"}
+              title="Save now"
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                autosaveStatus === "pending" || autosaveStatus === "error"
+                  ? "text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700 shadow-sm shadow-amber-500/10"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary border border-transparent"
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
+              {autosaveStatus === "saving" ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Save className="w-3.5 h-3.5" />
+              )}
+              Save
+            </button>
 
             {/* Draft/Final toggle — deferred to Slice 3 (requires snapshot pipeline). Static label only. */}
             <span
