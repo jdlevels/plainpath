@@ -1,5 +1,6 @@
 import express, { type Express, type Request, type Response, type NextFunction } from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import pinoHttp from "pino-http";
 import multer from "multer";
 import rateLimit from "express-rate-limit";
@@ -22,6 +23,7 @@ import userDocsRoutes from "./routes/userDocs/index.js";
 import builderRoutes from "./routes/builder/index.js";
 import pdfEditorRoutes from "./routes/pdf-editor/index.js";
 import compareVersionsRoutes from "./routes/compare-versions/index.js";
+import demoRoutes from "./routes/demo/index.js";
 import { logger } from "./lib/logger";
 import { initBuilderTemplates } from "@workspace/db";
 
@@ -138,6 +140,7 @@ app.use(
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 app.use(clerkMiddleware());
 
@@ -177,6 +180,7 @@ app.use(
     "/api/documents/explain-section",
     "/api/contracts/draft",
     "/api/contracts/review",
+    "/api/demo/analyze",
   ],
   aiLimiter,
 )
@@ -198,6 +202,7 @@ app.use("/api/user/documents", userDocsRoutes);
 app.use("/api/builder", builderRoutes);
 app.use("/api/pdf-editor", pdfEditorRoutes);
 app.use("/api/compare-versions", compareVersionsRoutes);
+app.use("/api/demo", demoRoutes);
 
 // Initialize builder system templates once on first deployment.
 // initBuilderTemplates() runs a single COUNT query and exits immediately if

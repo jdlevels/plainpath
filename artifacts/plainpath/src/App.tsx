@@ -40,6 +40,8 @@ import BuilderNew from "@/pages/Builder/New";
 import BuilderWorkspace from "@/pages/Builder/Workspace";
 import { BUILDER_ENABLED } from "@/lib/builderConfig";
 import Demo from "@/pages/Demo";
+import DemoLanding from "@/pages/DemoLanding";
+import DemoAnalyze from "@/pages/DemoAnalyze";
 import IrsLetter from "@/pages/guides/IrsLetter";
 import LeaseAgreement from "@/pages/guides/LeaseAgreement";
 import JobOffer from "@/pages/guides/JobOffer";
@@ -223,7 +225,10 @@ function Router() {
             <Route path="/shared/:token">
               {(params) => <SharedAnalysis token={(params as { token: string }).token} />}
             </Route>
-            {/* Public demo — no auth required */}
+            {/* Public free-trial demo — no auth required */}
+            <Route path="/demo/analyze" component={DemoAnalyze} />
+            <Route path="/demo" component={DemoLanding} />
+            {/* Shared demo documents — unrelated to the trial flow above */}
             <Route path="/demo/:id">
               {(params) => <Demo id={(params as { id: string }).id} />}
             </Route>

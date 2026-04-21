@@ -1,0 +1,339 @@
+Work in strict controlled-scope mode.
+
+Build Category 9 only:
+Public /demo foundation with strict separation from /app and server-enforced 2 free uses.
+
+Do NOT build Compare Versions Slice 6.
+Do NOT touch PDF Editor V2.
+Do NOT add Word processing yet.
+Do NOT add Stripe live purchase flow here.
+Do NOT merge /demo into /app auth flows.
+
+==================================================
+GOAL
+==================================================
+
+Create a separate public demo experience under /demo.
+
+This must:
+1. live outside /app
+2. allow a user to try PlainPath without account creation
+3. enforce a hard limit of 2 completed free demo uses
+4. use server-side enforcement, not just client UI
+5. keep demo data isolated from authenticated app data
+6. be designed so more demo-enabled tools can be added later
+
+==================================================
+PRODUCT RULES
+==================================================
+
+- /demo is public-facing and separate from /app
+- /demo uses its own guest identity + quota system
+- /demo usage limits must be enforced on the server
+- clearing frontend state alone must not reset quota
+- demo runs must never appear in My Documents / My Analyses / authenticated history
+- demo runs must not automatically become app sessions
+- public demo must have tighter file/type/page limits than the paid app
+- every demo screen must clearly indicate remaining free uses
+
+==================================================
+SCOPE FOR THIS SLICE
+==================================================
+
+Implement only the foundation.
+
+This slice includes:
+A. /demo route architecture
+B. anonymous guest identity
+C. server-enforced 2-use quota
+D. one real demo-enabled tool flow (Analyze a Document only)
+E. public CTA wiring from marketing page to /demo
+F. exhaustion UX + upgrade/sign-in CTA
+G. security/backstop against trivial reset abuse
+
+This slice does NOT include:
+- all tools in demo
+- Compare Versions demo
+- PDF Editor demo
+- Trust Check demo
+- demo payment handling
+- permanent marketing/polish pass
+- Word support
+- OCR
+- authenticated account migration from demo history
+- advanced anti-fraud system beyond the stated quota controls
+
+==================================================
+ROUTE ARCHITECTURE
+==================================================
+
+Required public routes:
+- /demo
+- /demo/analyze
+
+Behavior:
+- /demo = public landing page for the free trial
+- /demo/analyze = the only working demo tool in this slice
+- future demo tools can later hang off /demo/<tool>
+
+Marketing CTA:
+- homepage “Try it free” should route to /demo, not /app
+- /demo must never redirect into /app unless user explicitly signs in / upgrades
+
+==================================================
+DEMO TOOL SCOPE
+==================================================
+
+Only enable:
+- Analyze a Document demo
+
+Everything else on /demo can be shown as:
+- locked
+- coming soon
+- available in full app
+
+The Analyze demo should support:
+- upload a document
+- remove/X before run
+- explicit Run / Analyze button
+- remaining uses display
+- simplified result view after successful run
+
+Use strict demo limits:
+- accepted type in this slice: PDF only
+- max file size: 10 MB
+- max page count: 10 pages
+- no persistent save to authenticated libraries
+- no export to My Documents
+- no background history beyond demo usage ledger
+
+==================================================
+GUEST IDENTITY MODEL
+==================================================
+
+Implement a server-issued anonymous guest identity.
+
+Required behavior:
+- if no demo cookie exists, server creates one
+- cookie must be opaque, random, and signed or securely validated server-side
+- cookie should be HttpOnly, SameSite=Lax, secure in production
+- frontend must not rely on localStorage as source of truth
+
+Recommended model:
+- demo_guest_id cookie
+- server stores only a hash / lookup-safe identifier
+
+==================================================
+ANTI-RESET BACKSTOP
+==================================================
+
+Need stronger protection than “cookie only”.
+
+Implement a soft server-side backstop:
+- store a fingerprint hash derived from stable low-sensitivity inputs such as:
+  ip prefix + user agent
+- store only the hash, not raw IP in business logic
+- if guest cookie is gone but the same recent exhausted fingerprint appears,
+  continue to enforce exhaustion for a defined period
+
+Recommended exhaustion window:
+- 7 days
+
+Goal:
+- prevent trivial “clear cookies and retry instantly” abuse
+- do not overbuild device fingerprinting
+
+==================================================
+DB MODEL
+==================================================
+
+Use a minimal demo usage model.
+
+Create what is needed, but recommended tables are:
+
+1. demo_guests
+- id uuid pk
+- guest_hash text unique not null
+- fingerprint_hash text nullable
+- completed_uses int not null default 0
+- exhausted_at timestamptz nullable
+- first_seen_at timestamptz not null
+- last_seen_at timestamptz not null
+
+2. demo_runs
+- id uuid pk
+- guest_id uuid fk
+- tool_key text not null
+- status text not null  // started | complete | failed | blocked
+- file_name text nullable
+- file_size_bytes int nullable
+- page_count int nullable
+- created_at timestamptz not null
+- completed_at timestamptz nullable
+- failure_reason text nullable
+
+Quota rule:
+- maximum 2 completed uses per guest/fingerprint window
+
+Use completed runs as the primary quota unit.
+If a run fails due to server error before result generation, do not count it.
+If processing begins and returns a valid result, count it.
+
+==================================================
+SERVER ENFORCEMENT
+==================================================
+
+Server must own the truth.
+
+Required server checks on demo analyze run:
+1. resolve guest from cookie
+2. if none, create guest
+3. compute fingerprint hash
+4. load guest usage state
+5. if completed_uses >= 2 OR exhausted fingerprint is detected:
+   return blocked response
+6. validate file type / size / page count
+7. run demo analysis
+8. only on success, increment completed_uses and write demo_run = complete
+9. if completed_uses hits 2, set exhausted_at
+
+Do NOT trust client-side remaining count.
+
+==================================================
+API ENDPOINTS
+==================================================
+
+Add only what this slice needs.
+
+Recommended:
+- GET /api/demo/status
+  returns:
+  {
+    remainingUses,
+    completedUses,
+    isExhausted,
+    demoGuestPresent
+  }
+
+- POST /api/demo/analyze
+  multipart/form-data with file
+  server validates guest + quota + file
+  returns simplified demo analysis payload
+
+If needed:
+- POST /api/demo/guest/init
+But avoid this if GET /status can lazily initialize.
+
+==================================================
+SIMPLIFIED DEMO RESULT
+==================================================
+
+Do not clone the full paid Analyze workflow yet.
+Use a reduced but real result.
+
+Suggested output:
+- Plain English summary
+- Key risks / watchouts
+- Next steps
+- Missing items
+- “Want full history/export/all tools? Upgrade or sign in.”
+
+The demo result must feel real, but restrained.
+
+==================================================
+UI REQUIREMENTS
+==================================================
+
+/demo landing page:
+- headline explaining free trial
+- clearly states “2 free tries”
+- shows enabled demo card:
+  Analyze a Document
+- shows other tools as full-app / locked
+- CTA into /demo/analyze
+- sign in / upgrade CTA visible
+
+/demo/analyze page:
+- top bar with back to /demo
+- usage badge:
+  “2 free tries” / “1 try left” / “0 tries left”
+- upload card
+- selected-file card with remove/X
+- explicit Analyze button
+- inline validation errors
+- blocked state if exhausted
+- result state on success
+- exhausted state after 2nd success with CTA
+
+Exhausted state copy should clearly say:
+- free trial limit reached
+- create account or upgrade for continued use
+
+==================================================
+SECURITY / ISOLATION RULES
+==================================================
+
+- demo analysis records must not mix with authenticated user tables
+- demo results must not show up in /app
+- demo endpoints must not accept authenticated app session as quota bypass
+- signing in later does not magically import demo history in this slice
+- do not expose raw guest ids to client
+- do not expose fingerprint logic in UI
+
+==================================================
+MARKETING / PUBLIC SITE INTEGRATION
+==================================================
+
+Update the public marketing page:
+- “Try it free” points to /demo
+- do not send the user to /app for this CTA
+- add short supporting copy that it includes 2 free tries
+
+Do not yet redesign the whole marketing page.
+Only make the minimum changes needed to support the new path cleanly.
+
+==================================================
+NON-SCOPE / DO NOT IMPLEMENT
+==================================================
+
+Do not:
+- add Compare Versions to demo
+- add PDF Editor to demo
+- add Trust Check to demo
+- add Word support
+- add OCR
+- add paid checkout
+- add persistent demo-to-user migration
+- add advanced fraud scoring
+- add full public analytics dashboard
+- add export/download of demo session history
+- add more than Analyze in this slice
+
+==================================================
+REQUIRED COMPLETION REPORT
+==================================================
+
+When done, return:
+
+1. Exact files created
+2. Exact files modified
+3. Exact DB tables added
+4. Exact API routes added
+5. Exact quota enforcement rule implemented
+6. Exact cookie / guest identity model
+7. Exact fingerprint/backstop logic
+8. Exact public routes added
+9. Exact marketing CTA changes
+10. Exact Analyze demo limits (type/size/pages)
+11. Exact behaviors NOT implemented
+12. Authenticated and unauthenticated screenshots showing:
+   - /demo landing page
+   - /demo/analyze empty state
+   - file selected with remove/X visible
+   - successful first run result
+   - remaining-use count decrement
+   - exhausted state after second successful run
+   - blocked third attempt
+   - homepage CTA pointing to /demo
+
+Build Category 9 foundation only.

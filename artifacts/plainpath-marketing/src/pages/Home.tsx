@@ -603,10 +603,10 @@ function ReferFriend() {
             {/* CTAs */}
             <div className="flex flex-col sm:flex-row gap-3">
               <a
-                href="/app/analyze"
+                href="/app/demo"
                 className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-xl px-5 py-3 text-sm font-semibold hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-sm shadow-primary/20"
               >
-                Get started free <ArrowRight className="w-4 h-4" />
+                Try free — 2 free analyses <ArrowRight className="w-4 h-4" />
               </a>
 
               {/* Copy link */}
@@ -798,11 +798,12 @@ export default function Home() {
               {/* CTA + App Store badges */}
               <motion.div custom={4} variants={fadeUp} className="flex flex-col gap-3 mb-5" id="download">
                 <a
-                  href="/app/analyze"
+                  href="/app/demo"
                   className="inline-flex items-center gap-2 bg-primary text-white rounded-xl px-5 h-12 sm:h-14 text-sm font-semibold hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-md shadow-primary/20 w-fit"
                 >
                   Try it free — no account needed <ArrowRight className="w-4 h-4" />
                 </a>
+                <p className="text-xs text-muted-foreground/80">2 free analyses included — no sign-up required.</p>
                 <div className="flex items-center gap-2.5 flex-wrap">
                   <AppStoreBadge onClick={() => openWaitlist("ios")} />
                   <PlayStoreBadge onClick={() => openWaitlist("android")} />
@@ -1479,10 +1480,10 @@ export default function Home() {
             className="flex flex-wrap justify-center gap-4 mb-6"
           >
             <a
-              href="/app/analyze"
+              href="/app/demo"
               className="inline-flex items-center gap-2 bg-primary text-white rounded-xl px-8 py-4 text-base font-semibold hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-lg shadow-primary/30"
             >
-              Try it free — no account needed <ArrowRight className="w-5 h-5" />
+              Try it free — 2 free analyses <ArrowRight className="w-5 h-5" />
             </a>
           </motion.div>
           <p className="mt-6 text-xs text-white/30">
