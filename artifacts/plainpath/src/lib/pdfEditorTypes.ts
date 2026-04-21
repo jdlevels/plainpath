@@ -19,6 +19,8 @@ export interface EditOp {
   highlightColor?: string  // CSS hex, default "#fde68a"
   opacity?: number         // 0–1, default 0.4
   // Mask op: solid white rectangle — no extra fields needed
+  // Correction tracking (handoff highlights only)
+  correctedAt?: string     // ISO timestamp set when marked corrected; undefined = open
 }
 
 export type SaveState = "idle" | "unsaved" | "saving" | "saved" | "error"

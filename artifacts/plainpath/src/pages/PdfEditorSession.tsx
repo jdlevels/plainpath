@@ -1,18 +1,20 @@
 // ─── PDF Editor Workspace ──────────────────────────────────────────────────────
-// Slice 2: text overlays, mask, highlight, select/move/resize/delete,
-//          save system (immediate + debounce + autosave), undo/redo.
-// Left pane = original read-only. Right pane = editable working copy.
+// Correction Workflow Completion Pass:
+//   T001 — Handoff issue workflow polish (IssuePanel, focusIssue, corrected state)
+//   T002 — Save / autosave / unsaved-state system (tightened)
+//   T003 — Right-panel issue navigation + editing clarity
+//   T004 — Workspace / layout polish
 // ──────────────────────────────────────────────────────────────────────────────
 
 import {
-  useState, useEffect, useRef, useCallback,
+  useState, useEffect, useRef, useCallback, useMemo,
 } from "react"
 import { useLocation, useSearch } from "wouter"
 import * as pdfjsLib from "pdfjs-dist"
 import {
   ArrowLeft, Loader2, AlertCircle, Lock, Layers,
   MousePointer2, Type, Square, Highlighter,
-  Save, CheckCircle2, RefreshCw, Download,
+  Save, CheckCircle2, Download, ListChecks, ChevronRight,
 } from "lucide-react"
 import { useEntitlements } from "@/hooks/useEntitlements"
 import { usePdfEditorApi } from "@/hooks/usePdfEditorApi"
@@ -30,6 +32,19 @@ const DEFAULT_TEXT_H = 0.06
 const DEFAULT_FONT_SIZE = 16
 const AUTOSAVE_MS = 60_000
 const TEXT_DEBOUNCE_MS = 800
+
+// Reverse-map handoff highlight colors → severity
+const CV_HL_SEVERITY: Record<string, "high" | "medium" | "low"> = {
+  "#fca5a5": "high",
+  "#fcd34d": "medium",
+  "#6ee7b7": "low",
+}
+
+const SEV_STYLES = {
+  high:   { dot: "bg-red-400",     badge: "text-red-600 dark:text-red-400",     label: "High" },
+  medium: { dot: "bg-amber-400",   badge: "text-amber-600 dark:text-amber-400", label: "Medium" },
+  low:    { dot: "bg-emerald-400", badge: "text-emerald-600 dark:text-emerald-400", label: "Low" },
+} as const
 
 function clamp(v: number, lo: number, hi: number) {
   return Math.max(lo, Math.min(hi, v))
@@ -59,6 +74,12 @@ interface DragState {
   origH: number
 }
 
+interface HandoffIssue {
+  op: EditOp
+  ordinal: number
+  severity: "high" | "medium" | "low"
+}
+
 // ─── usePdfRenderer ────────────────────────────────────────────────────────────
 
 function usePdfRenderer(buf: ArrayBuffer | null) {
@@ -72,9 +93,6 @@ function usePdfRenderer(buf: ArrayBuffer | null) {
     setLoading(true); setFailed(false); setPages([])
     ;(async () => {
       try {
-        // Slice the buffer before passing to pdfjs — the worker may transfer
-        // (neuter) the underlying ArrayBuffer. Slicing ensures each call has
-        // its own copy, which is critical in React Strict Mode (double-invoke).
         const pdf = await pdfjsLib.getDocument({ data: buf.slice(0), verbosity: 0 }).promise
         if (cancelled) return
         const renders: PageRender[] = []
@@ -104,14 +122,14 @@ function usePdfRenderer(buf: ArrayBuffer | null) {
 // ─── SaveIndicator ─────────────────────────────────────────────────────────────
 
 function SaveIndicator({ state, onSave }: { state: SaveState; onSave: () => void }) {
-  if (state === "idle") return null
+  if (state === "idle" || state === "unsaved") return null
   if (state === "saving") return (
-    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+    <div className="flex items-center gap-1.5 text-xs text-muted-foreground select-none">
       <Loader2 className="w-3 h-3 animate-spin" /> Saving…
     </div>
   )
   if (state === "saved") return (
-    <div className="flex items-center gap-1.5 text-xs text-green-600 dark:text-green-400">
+    <div className="flex items-center gap-1.5 text-xs text-green-600 dark:text-green-400 select-none">
       <CheckCircle2 className="w-3 h-3" /> Saved
     </div>
   )
@@ -149,8 +167,6 @@ function ToolBtn({
 }
 
 // ─── EditOpView ────────────────────────────────────────────────────────────────
-// Renders a single edit op. Handles selection outline + resize handles + text edit.
-// hoveredFromLeft: true when a left-pane indicator group is hovered that includes this op.
 
 function EditOpView({
   op, selected, hoveredFromLeft, activeTool,
@@ -188,9 +204,6 @@ function EditOpView({
     : "1.5px dashed rgba(124,58,237,0.25)"
 
   if (op.kind === "mask") {
-    // Editor-only: subtle diagonal stripe pattern makes white masks visible on
-    // white pages. This is a CSS background only — the export draws a solid
-    // white pdf-lib rectangle with no pattern.
     return (
       <div
         style={{
@@ -221,12 +234,28 @@ function EditOpView({
           backgroundColor: op.highlightColor ?? "#fde68a",
           opacity: op.opacity ?? 0.4,
           outline: isSelect ? selRing : hoveredFromLeft ? selRing : "none",
+          ...(op.correctedAt ? { filter: "grayscale(0.6)" } : {}),
         }}
         onPointerDown={isSelect ? (e) => { e.stopPropagation(); onMoveStart(e) } : undefined}
       >
         {selected && isSelect && handles.map((h) => (
           <ResizeHandle key={h} handle={h} onStart={(e) => onResizeStart(e, h)} />
         ))}
+        {op.correctedAt && (
+          <span style={{
+            position: "absolute",
+            bottom: 2,
+            right: 3,
+            fontSize: 8,
+            fontWeight: 700,
+            background: "rgba(22,163,74,0.85)",
+            color: "white",
+            borderRadius: 3,
+            padding: "1.5px 4px",
+            pointerEvents: "none",
+            letterSpacing: "0.04em",
+          }}>✓ corrected</span>
+        )}
       </div>
     )
   }
@@ -309,6 +338,138 @@ function ResizeHandle({
   )
 }
 
+// ─── IssueRow ─────────────────────────────────────────────────────────────────
+
+function IssueRow({
+  issue, isSelected, onFocus, onToggleCorrected,
+}: {
+  issue: HandoffIssue
+  isSelected: boolean
+  onFocus: () => void
+  onToggleCorrected: () => void
+}) {
+  const sev = SEV_STYLES[issue.severity]
+  const corrected = !!issue.op.correctedAt
+
+  return (
+    <button
+      type="button"
+      onClick={onFocus}
+      className={`w-full text-left flex items-start gap-2.5 px-3 py-2.5 transition-colors hover:bg-muted/50 border-b border-border/25 last:border-b-0 ${
+        isSelected
+          ? "bg-violet-50 dark:bg-violet-950/30"
+          : corrected
+          ? "opacity-55"
+          : ""
+      }`}
+    >
+      <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${sev.dot}`} />
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between gap-1">
+          <span className="text-xs font-semibold text-foreground">Issue {issue.ordinal}</span>
+          <span className="text-[10px] text-muted-foreground tabular-nums">
+            p.{issue.op.pageIndex + 1}
+          </span>
+        </div>
+        <div className={`text-[10px] font-medium mt-0.5 ${sev.badge}`}>{sev.label} severity</div>
+        {corrected && (
+          <div className="flex items-center gap-1 text-[10px] text-green-600 dark:text-green-400 mt-0.5">
+            <CheckCircle2 className="w-2.5 h-2.5" /> Corrected
+          </div>
+        )}
+      </div>
+      <div
+        role="button"
+        tabIndex={-1}
+        title={corrected ? "Mark as open" : "Mark as corrected"}
+        onClick={(e) => { e.stopPropagation(); onToggleCorrected() }}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.stopPropagation(); onToggleCorrected() } }}
+        className={`flex-shrink-0 w-5 h-5 rounded flex items-center justify-center transition-colors mt-0.5 ${
+          corrected
+            ? "text-green-600 hover:text-muted-foreground"
+            : "text-muted-foreground/30 hover:text-green-600"
+        }`}
+      >
+        <CheckCircle2 className="w-3.5 h-3.5" />
+      </div>
+    </button>
+  )
+}
+
+// ─── IssuePanel ───────────────────────────────────────────────────────────────
+
+function IssuePanel({
+  issues, selectedId, onFocus, onToggleCorrected,
+}: {
+  issues: HandoffIssue[]
+  selectedId: string | null
+  onFocus: (opId: string, pageIndex: number) => void
+  onToggleCorrected: (opId: string) => void
+}) {
+  const openCount = issues.filter((i) => !i.op.correctedAt).length
+  const doneCount = issues.filter((i) => !!i.op.correctedAt).length
+
+  return (
+    <div className="flex flex-col h-full overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center gap-2 px-3 py-2 border-b border-border/40 bg-neutral-200/80 dark:bg-zinc-800/80 flex-shrink-0">
+        <ListChecks className="w-3 h-3 text-muted-foreground" />
+        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Issues</span>
+        <div className="ml-auto flex items-center gap-1.5">
+          {openCount > 0 && (
+            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">
+              {openCount} open
+            </span>
+          )}
+          {doneCount > 0 && (
+            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
+              {doneCount} done
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Tip */}
+      <div className="px-3 py-2 bg-teal-50/60 dark:bg-teal-950/20 border-b border-teal-200/40 dark:border-teal-800/30 flex-shrink-0">
+        <p className="text-[10px] text-teal-700 dark:text-teal-300 leading-relaxed">
+          Click an issue to navigate to its location. Use the editing tools to correct it, then mark it done.
+        </p>
+      </div>
+
+      {/* List */}
+      <div className="flex-1 overflow-y-auto">
+        {issues.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-24 text-xs text-muted-foreground px-4 text-center">
+            No issue zones loaded.
+          </div>
+        ) : (
+          <div>
+            {issues.map((issue) => (
+              <IssueRow
+                key={issue.op.id}
+                issue={issue}
+                isSelected={selectedId === issue.op.id}
+                onFocus={() => onFocus(issue.op.id, issue.op.pageIndex)}
+                onToggleCorrected={() => onToggleCorrected(issue.op.id)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Footer legend */}
+      <div className="flex items-center gap-3 px-3 py-2 border-t border-border/30 flex-shrink-0">
+        {(["high", "medium", "low"] as const).map((s) => (
+          <div key={s} className="flex items-center gap-1">
+            <div className={`w-1.5 h-1.5 rounded-full ${SEV_STYLES[s].dot}`} />
+            <span className="text-[9px] text-muted-foreground">{SEV_STYLES[s].label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ─── EditingCanvas — right pane page overlay ───────────────────────────────────
 
 function EditingCanvas({
@@ -379,8 +540,6 @@ function EditingCanvas({
 }
 
 // ─── ChangeIndicatorOverlay helpers ───────────────────────────────────────────
-// Derives read-only indicator groups for the left (original) pane from the
-// active ops list. Groups are computed at render time — never stored.
 
 interface IndicatorRect {
   x: number; y: number; w: number; h: number
@@ -432,7 +591,6 @@ function groupOpsForPage(pageOps: EditOp[]): IndicatorGroup[] {
   return groups
 }
 
-// Style priority: mask > text > highlight
 function groupStyle(group: IndicatorGroup): React.CSSProperties {
   const hasMask = group.ops.some((o) => o.kind === "mask")
   const hasText = group.ops.some((o) => o.kind === "text")
@@ -449,7 +607,6 @@ function groupStyle(group: IndicatorGroup): React.CSSProperties {
       border: "1.5px dashed rgba(99,102,241,0.5)",
     }
   }
-  // highlight
   return {
     backgroundColor: "rgba(253,230,138,0.45)",
     border: "1.5px dashed rgba(180,150,30,0.5)",
@@ -457,10 +614,6 @@ function groupStyle(group: IndicatorGroup): React.CSSProperties {
 }
 
 // ─── ChangeIndicatorOverlay ────────────────────────────────────────────────────
-// Renders non-destructive read-only indicator badges on the left original pane.
-// Uses the exact same x/y/w/h fractional coordinate model as EditOpView.
-// overlay container = pointer-events: none
-// individual badges = pointer-events: auto (for hover callbacks only)
 
 function ChangeIndicatorOverlay({
   pageIndex,
@@ -483,15 +636,12 @@ function ChangeIndicatorOverlay({
   const groups = groupOpsForPage(pageOps)
 
   return (
-    // Container is pointer-events: none so clicks fall through to the PDF image
     <div className="absolute inset-0" style={{ pointerEvents: "none" }}>
       {groups.map((group, gi) => {
         const { rect } = group
         const groupOpIds = group.ops.map((o) => o.id)
 
-        // Active when the selected right-pane op belongs to this group
         const activeFromRight = selectedId !== null && groupOpIds.includes(selectedId)
-        // Active when being hovered from the left
         const activeFromLeft = groupOpIds.some((id) => hoveredGroupIds.has(id))
         const isActive = activeFromRight || activeFromLeft
 
@@ -516,11 +666,9 @@ function ChangeIndicatorOverlay({
                     backgroundColor: "rgba(124,58,237,0.12)",
                   }
                 : {}),
-              // Only the badge itself handles pointer events
               pointerEvents: "none",
             }}
           >
-            {/* Hit-target badge — pointer-events: auto */}
             <div
               style={{
                 position: "absolute",
@@ -532,7 +680,6 @@ function ChangeIndicatorOverlay({
               onMouseLeave={onGroupLeave}
             />
 
-            {/* Count badge (shown when group has > 1 op or is active) */}
             {(group.ops.length > 1 || isActive) && (
               <span
                 style={{
@@ -592,7 +739,7 @@ function OriginalPane({
     </div>
   )
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-4 md:p-6">
       {pages.map((pg, i) => (
         <div
           key={i}
@@ -605,7 +752,6 @@ function OriginalPane({
             draggable={false}
             style={{ aspectRatio: `${pg.w} / ${pg.h}` }}
           />
-          {/* Mirrored change indicators — same coordinate space as right-pane ops */}
           <ChangeIndicatorOverlay
             pageIndex={i}
             ops={ops}
@@ -652,7 +798,10 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
   const [exportState, setExportState] = useState<"idle" | "exporting" | "error">("idle")
 
   // Mobile tab
-  const [activeTab, setActiveTab] = useState<"original" | "copy">("original")
+  const [activeTab, setActiveTab] = useState<"original" | "copy">("copy")
+
+  // Issue panel (shown when fromCompare)
+  const [showIssuePanel, setShowIssuePanel] = useState(fromCompare)
 
   // Left-pane hover sync: set of op IDs in the currently-hovered indicator group
   const [hoveredFromLeft, setHoveredFromLeft] = useState<ReadonlySet<string>>(new Set())
@@ -666,8 +815,8 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
   }, [])
 
   // Refs (stable, no re-render needed)
-  const liveOpsRef = useRef<EditOp[]>([])          // always current ops
-  const draftRectRef = useRef(draftRect)             // always current draftRect
+  const liveOpsRef = useRef<EditOp[]>([])
+  const draftRectRef = useRef(draftRect)
   const dragStateRef = useRef<DragState | null>(null)
   const pageRefs = useRef<Map<number, HTMLDivElement>>(new Map())
   const historyRef = useRef<EditOp[][]>([[]])
@@ -677,6 +826,7 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
   const activeToolRef = useRef(activeTool)
   const selectedIdRef = useRef(selectedId)
   const saveStateRef = useRef(saveState)
+  const workingCopyScrollRef = useRef<HTMLDivElement>(null)
 
   // Keep refs in sync
   useEffect(() => { liveOpsRef.current = ops }, [ops])
@@ -685,7 +835,17 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
   useEffect(() => { selectedIdRef.current = selectedId }, [selectedId])
   useEffect(() => { saveStateRef.current = saveState }, [saveState])
 
-  // PDF renderer (adapts from Slice 1 hook)
+  // Handoff issues: ops that originated from Compare Versions (id = "cv-...")
+  const handoffIssues = useMemo<HandoffIssue[]>(() => {
+    const cvOps = ops.filter((op) => op.id.startsWith("cv-"))
+    return cvOps.map((op, i) => ({
+      op,
+      ordinal: i + 1,
+      severity: CV_HL_SEVERITY[op.highlightColor ?? ""] ?? "medium",
+    }))
+  }, [ops])
+
+  // PDF renderer
   const { pages, loading: pdfLoading, failed: pdfFailed } = usePdfRenderer(pdfBuf)
 
   // ── Load session + PDF ──────────────────────────────────────────────────────
@@ -764,7 +924,6 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
 
   const handleExport = useCallback(async () => {
     if (exportState === "exporting") return
-    // Flush any pending saves first so the export reflects the latest ops
     await saveNow(liveOpsRef.current)
     setExportState("exporting")
     try {
@@ -842,6 +1001,32 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
     commitOps(newOps)
   }
 
+  // ── Issue navigation (handoff) ─────────────────────────────────────────────
+
+  const focusIssue = useCallback((opId: string, pageIndex: number) => {
+    setSelectedId(opId)
+    setActiveTab("copy")
+    // Slight delay to let mobile tab switch render before scrolling
+    setTimeout(() => {
+      const el = pageRefs.current.get(pageIndex)
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" })
+      }
+    }, 60)
+  }, [])
+
+  const toggleCorrected = useCallback((opId: string) => {
+    const now = new Date().toISOString()
+    const newOps = liveOpsRef.current.map((o) =>
+      o.id === opId
+        ? { ...o, correctedAt: o.correctedAt ? undefined : now }
+        : o
+    )
+    setOps(newOps)
+    liveOpsRef.current = newOps
+    scheduleSave(newOps, 0)
+  }, [])
+
   // ── Keyboard shortcuts ─────────────────────────────────────────────────────
 
   useEffect(() => {
@@ -849,6 +1034,7 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
       const meta = e.metaKey || e.ctrlKey
       if (meta && e.key === "z" && !e.shiftKey) { e.preventDefault(); undo(); return }
       if (meta && (e.key === "Z" || (e.key === "z" && e.shiftKey))) { e.preventDefault(); redo(); return }
+      if (meta && e.key === "s") { e.preventDefault(); saveNowRef.current(liveOpsRef.current); return }
       if (e.key === "Escape") { setSelectedId(null); return }
       if ((e.key === "Delete" || e.key === "Backspace") && selectedIdRef.current) {
         const tag = (document.activeElement as HTMLElement)?.tagName
@@ -954,7 +1140,6 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
         return
       }
 
-      // move or resize: ops already live-updated during pointermove
       const final = liveOpsRef.current
       pushHistory(final)
       saveNowRef.current(final)
@@ -966,7 +1151,7 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
       window.removeEventListener("pointermove", onMove)
       window.removeEventListener("pointerup", onUp)
     }
-  }, []) // empty — reads from refs
+  }, [])
 
   // ── Pointer handlers (per-page overlay) ───────────────────────────────────
 
@@ -985,8 +1170,6 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
     }
 
     if (tool === "text") {
-      // Place text op immediately at click point, then switch to Select so
-      // the textarea becomes active (textarea only renders when isSelect=true).
       const w = DEFAULT_TEXT_W
       const h = DEFAULT_TEXT_H
       const x = clamp(fx - w / 2, 0, 1 - w)
@@ -1002,13 +1185,12 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
       }
       const newOps = [...liveOpsRef.current, newOp]
       setSelectedId(newOp.id)
-      setActiveTool("select")       // show textarea immediately
+      setActiveTool("select")
       activeToolRef.current = "select"
-      commitOps(newOps, 0)          // immediate save on place
+      commitOps(newOps, 0)
       return
     }
 
-    // mask or highlight: begin draw
     dragStateRef.current = {
       kind: "draw",
       pageIndex,
@@ -1065,8 +1247,6 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
     scheduleSave(newOps, TEXT_DEBOUNCE_MS)
   }
 
-  // Immediate save when the text textarea loses focus — ensures typed content
-  // persists even if the user clicks away before the 800ms debounce fires.
   function handleTextBlur() {
     if (saveTimerRef.current) {
       clearTimeout(saveTimerRef.current)
@@ -1117,6 +1297,8 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
 
   const pageLabel = pdfLoading ? "Loading…" : pdfFailed ? "Error" : `${pages.length} page${pages.length !== 1 ? "s" : ""}`
   const editCount = ops.length
+  const issueCount = handoffIssues.length
+  const correctedCount = handoffIssues.filter((i) => !!i.op.correctedAt).length
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)]">
@@ -1133,12 +1315,13 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
             <ArrowLeft className="w-4 h-4" />
           </button>
           <div className="min-w-0">
-            <p className="text-sm font-semibold truncate max-w-[140px] sm:max-w-[240px] lg:max-w-[380px]">
+            <p className="text-sm font-semibold truncate max-w-[120px] sm:max-w-[200px] lg:max-w-[340px]">
               {sessionMeta.fileName}
             </p>
             <p className="text-[10px] text-muted-foreground">
               {pageLabel}
               {editCount > 0 && ` · ${editCount} edit${editCount !== 1 ? "s" : ""}`}
+              {fromCompare && issueCount > 0 && ` · ${correctedCount}/${issueCount} issues done`}
             </p>
           </div>
         </div>
@@ -1151,13 +1334,15 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
           <ToolBtn icon={Highlighter} label="Highlight" active={activeTool === "highlight"} onClick={() => setActiveTool("highlight")} />
         </div>
 
-        {/* Right: save + export */}
+        {/* Right: save indicator + save + export */}
         <div className="flex items-center gap-2 flex-shrink-0">
           <SaveIndicator state={saveState} onSave={() => saveNow(liveOpsRef.current)} />
+
+          {/* Save button — amber pulse when unsaved */}
           <button
             onClick={() => saveNow(liveOpsRef.current)}
             disabled={saveState === "saving"}
-            title="Save"
+            title="Save (⌘S)"
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${
               saveState === "unsaved"
                 ? "bg-amber-50 dark:bg-amber-950/30 border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300 animate-pulse"
@@ -1172,10 +1357,13 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
               <>
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
                 <Save className="w-3.5 h-3.5" />
-                <span className="hidden xs:inline">Save</span>
+                <span className="hidden sm:inline">Save</span>
               </>
             ) : (
-              <Save className="w-3.5 h-3.5" />
+              <>
+                <Save className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Save</span>
+              </>
             )}
           </button>
 
@@ -1206,17 +1394,43 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
         </div>
       </div>
 
-      {/* From-compare context banner */}
+      {/* ── From-compare context banner ── */}
       {fromCompare && (
-        <div className="flex items-center gap-2 px-4 py-2 bg-teal-50 dark:bg-teal-950/40 border-b border-teal-200 dark:border-teal-800/40 text-xs text-teal-700 dark:text-teal-300 flex-shrink-0">
-          <span className="font-semibold">Opened from Compare Versions.</span>
-          <span className="text-teal-600/80 dark:text-teal-400/80">Changes highlighted from your comparison are pre-loaded. Edits here won&rsquo;t affect the original comparison session.</span>
-          <button
-            onClick={() => window.history.back()}
-            className="ml-auto flex-shrink-0 underline font-medium hover:text-teal-900 dark:hover:text-teal-100 transition-colors"
-          >
-            ← Back to comparison
-          </button>
+        <div className="flex items-center gap-2 px-4 py-2 bg-teal-50 dark:bg-teal-950/40 border-b border-teal-200 dark:border-teal-800/40 text-xs flex-shrink-0">
+          <div className="flex items-center gap-1.5 text-teal-700 dark:text-teal-300 min-w-0">
+            <span className="font-semibold flex-shrink-0">Opened from Compare Versions.</span>
+            {issueCount > 0 ? (
+              <span className="text-teal-600/80 dark:text-teal-400/80 hidden sm:inline">
+                {issueCount} issue zone{issueCount !== 1 ? "s" : ""} pre-loaded.
+                Use the <strong className="font-semibold">Issues panel</strong> on the right to navigate and mark corrections.
+              </span>
+            ) : (
+              <span className="text-teal-600/80 dark:text-teal-400/80 hidden sm:inline">
+                Edits here won&rsquo;t affect the original comparison session.
+              </span>
+            )}
+          </div>
+          <div className="ml-auto flex items-center gap-2 flex-shrink-0">
+            {fromCompare && issueCount > 0 && (
+              <button
+                onClick={() => setShowIssuePanel((v) => !v)}
+                className={`flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold transition-colors border ${
+                  showIssuePanel
+                    ? "bg-teal-100 dark:bg-teal-900/40 border-teal-300 dark:border-teal-700 text-teal-700 dark:text-teal-300"
+                    : "border-teal-300/60 dark:border-teal-700/40 text-teal-600 dark:text-teal-400 hover:bg-teal-100/50"
+                }`}
+              >
+                <ListChecks className="w-3 h-3" />
+                {showIssuePanel ? "Hide issues" : `Show ${issueCount} issues`}
+              </button>
+            )}
+            <button
+              onClick={() => window.history.back()}
+              className="flex-shrink-0 text-xs underline font-medium text-teal-700 dark:text-teal-300 hover:text-teal-900 dark:hover:text-teal-100 transition-colors"
+            >
+              ← Back
+            </button>
+          </div>
         </div>
       )}
 
@@ -1243,13 +1457,25 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
             {tab === "original" ? "Original" : "Working Copy"}
           </button>
         ))}
+        {fromCompare && issueCount > 0 && (
+          <button
+            onClick={() => setActiveTab("copy")}
+            className={`flex-1 py-2 text-xs font-semibold transition-colors border-b-2 ${
+              false
+                ? "text-violet-600 dark:text-violet-400 border-violet-500"
+                : "text-muted-foreground border-transparent hover:text-foreground"
+            }`}
+          >
+            Issues ({issueCount})
+          </button>
+        )}
       </div>
 
       {/* ── Pane area ── */}
       <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
 
         {/* Left — Original (read-only) */}
-        <div className={`flex-col w-full md:w-[45%] md:flex-shrink-0 overflow-y-auto bg-neutral-100 dark:bg-zinc-900/70 ${activeTab === "original" ? "flex" : "hidden md:flex"}`}>
+        <div className={`flex-col w-full md:w-[42%] md:flex-shrink-0 overflow-y-auto bg-neutral-100 dark:bg-zinc-900/70 ${activeTab === "original" ? "flex" : "hidden md:flex"}`}>
           <div className="sticky top-0 z-10 flex items-center gap-1.5 px-4 py-2 bg-neutral-200/80 dark:bg-zinc-800/80 border-b border-border/30 backdrop-blur-sm flex-shrink-0">
             <Lock className="w-3 h-3 text-muted-foreground" />
             <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
@@ -1271,69 +1497,105 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
         {/* Divider */}
         <div className="hidden md:block w-px bg-border/50 flex-shrink-0" />
 
-        {/* Right — Working Copy (editable) */}
-        <div className={`flex-col flex-1 overflow-y-auto bg-neutral-100 dark:bg-zinc-900/70 ${activeTab === "copy" ? "flex" : "hidden md:flex"}`}>
+        {/* Right — Working Copy + optional Issue Panel */}
+        <div className={`flex-col flex-1 overflow-hidden bg-neutral-100 dark:bg-zinc-900/70 ${activeTab === "copy" ? "flex" : "hidden md:flex"}`}>
+
+          {/* Right pane header */}
           <div className="sticky top-0 z-10 flex items-center gap-1.5 px-4 py-2 bg-neutral-200/80 dark:bg-zinc-800/80 border-b border-border/30 backdrop-blur-sm flex-shrink-0">
             <Layers className="w-3 h-3 text-muted-foreground" />
             <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
               Working Copy · {editCount} edit{editCount !== 1 ? "s" : ""}
             </span>
+            {/* Issue panel toggle button (desktop only) */}
+            {fromCompare && issueCount > 0 && (
+              <button
+                onClick={() => setShowIssuePanel((v) => !v)}
+                title={showIssuePanel ? "Hide issue panel" : "Show issue panel"}
+                className={`ml-auto flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-semibold transition-colors ${
+                  showIssuePanel
+                    ? "text-violet-700 dark:text-violet-300 bg-violet-100/60 dark:bg-violet-900/30"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                }`}
+              >
+                <ListChecks className="w-3 h-3" />
+                <span>{issueCount} issue{issueCount !== 1 ? "s" : ""}</span>
+                <ChevronRight className={`w-3 h-3 transition-transform ${showIssuePanel ? "rotate-180" : ""}`} />
+              </button>
+            )}
           </div>
 
-          {pdfLoading && (
-            <div className="flex items-center justify-center gap-2 py-20 text-muted-foreground">
-              <Loader2 className="w-5 h-5 animate-spin" />
-              <span className="text-sm">Rendering PDF…</span>
-            </div>
-          )}
-          {pdfFailed && (
-            <div className="flex flex-col items-center justify-center gap-2 py-16 px-6 text-center">
-              <AlertCircle className="w-6 h-6 text-red-500" />
-              <p className="text-sm text-red-500 font-medium">Failed to render PDF</p>
-              <button onClick={() => navigate("/pdf-editor")} className="text-xs text-muted-foreground underline">← Back</button>
-            </div>
-          )}
+          {/* Content row: document canvas + issue sidebar */}
+          <div className="flex flex-1 overflow-hidden">
 
-          {!pdfLoading && !pdfFailed && (
-            <div className="space-y-6 p-6">
-              {pages.map((pg, i) => (
-                <div
-                  key={i}
-                  className="relative rounded-lg overflow-hidden border border-border/30 shadow-sm bg-white select-none"
-                  style={{ aspectRatio: `${pg.w} / ${pg.h}` }}
-                >
-                  <img
-                    src={pg.dataUrl}
-                    alt={`Page ${i + 1}`}
-                    className="block w-full pointer-events-none"
-                    draggable={false}
-                  />
-                  <EditingCanvas
-                    pageIndex={i}
-                    ops={ops}
-                    selectedId={selectedId}
-                    hoveredFromLeftIds={hoveredFromLeft}
-                    activeTool={activeTool}
-                    draftRect={draftRect}
-                    pageRef={(el) => {
-                      if (el) pageRefs.current.set(i, el)
-                      else pageRefs.current.delete(i)
-                    }}
-                    onOverlayPointerDown={handleOverlayPointerDown}
-                    onMoveStart={handleMoveStart}
-                    onResizeStart={handleResizeStart}
-                    onTextChange={handleTextChange}
-                    onTextBlur={handleTextBlur}
-                  />
-                  {pages.length > 1 && (
-                    <span className="absolute top-2 right-2 text-[9px] font-mono bg-black/50 text-white px-1.5 py-0.5 rounded pointer-events-none">
-                      {i + 1} / {pages.length}
-                    </span>
-                  )}
+            {/* Document canvas — scrollable */}
+            <div ref={workingCopyScrollRef} className="flex-1 overflow-y-auto">
+              {pdfLoading && (
+                <div className="flex items-center justify-center gap-2 py-20 text-muted-foreground">
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span className="text-sm">Rendering PDF…</span>
                 </div>
-              ))}
+              )}
+              {pdfFailed && (
+                <div className="flex flex-col items-center justify-center gap-2 py-16 px-6 text-center">
+                  <AlertCircle className="w-6 h-6 text-red-500" />
+                  <p className="text-sm text-red-500 font-medium">Failed to render PDF</p>
+                  <button onClick={() => navigate("/pdf-editor")} className="text-xs text-muted-foreground underline">← Back</button>
+                </div>
+              )}
+              {!pdfLoading && !pdfFailed && (
+                <div className="space-y-6 p-4 md:p-6">
+                  {pages.map((pg, i) => (
+                    <div
+                      key={i}
+                      className="relative rounded-lg overflow-hidden border border-border/30 shadow-sm bg-white select-none"
+                      style={{ aspectRatio: `${pg.w} / ${pg.h}` }}
+                    >
+                      <img
+                        src={pg.dataUrl}
+                        alt={`Page ${i + 1}`}
+                        className="block w-full pointer-events-none"
+                        draggable={false}
+                      />
+                      <EditingCanvas
+                        pageIndex={i}
+                        ops={ops}
+                        selectedId={selectedId}
+                        hoveredFromLeftIds={hoveredFromLeft}
+                        activeTool={activeTool}
+                        draftRect={draftRect}
+                        pageRef={(el) => {
+                          if (el) pageRefs.current.set(i, el)
+                          else pageRefs.current.delete(i)
+                        }}
+                        onOverlayPointerDown={handleOverlayPointerDown}
+                        onMoveStart={handleMoveStart}
+                        onResizeStart={handleResizeStart}
+                        onTextChange={handleTextChange}
+                        onTextBlur={handleTextBlur}
+                      />
+                      {pages.length > 1 && (
+                        <span className="absolute top-2 right-2 text-[9px] font-mono bg-black/50 text-white px-1.5 py-0.5 rounded pointer-events-none">
+                          {i + 1} / {pages.length}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
+
+            {/* Issue panel sidebar — desktop only, shown when fromCompare + issueCount > 0 + showIssuePanel */}
+            {fromCompare && issueCount > 0 && showIssuePanel && (
+              <div className="hidden md:flex flex-col w-60 xl:w-64 flex-shrink-0 border-l border-border/40 bg-background overflow-hidden">
+                <IssuePanel
+                  issues={handoffIssues}
+                  selectedId={selectedId}
+                  onFocus={focusIssue}
+                  onToggleCorrected={toggleCorrected}
+                />
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

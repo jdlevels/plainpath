@@ -1,0 +1,300 @@
+PLAINPATH — BUILD BLOCK
+PDF EDITOR — CORRECTION WORKFLOW COMPLETION PASS
+
+You are working inside the existing PlainPath codebase.
+
+IMPORTANT:
+This pass is limited to PDF Editor only.
+Do not drift into Compare Versions, marketing pages, demo redesign, OCR, Word/docx editing, org/team sharing, signature redesign, or unrelated refactors.
+Preserve all currently working Compare Versions → PDF Editor handoff behavior.
+
+==================================================
+CONTEXT
+==================================================
+
+Current product rules already established:
+- PDF Editor is the correction surface; Compare Versions is read-only
+- Split-screen/document-first is a standing product rule:
+  - left pane = document canvas / page workspace
+  - right pane = controls / editing tools / issue context
+- Document-heavy tools must feel spacious and readable
+- Do not rely on autosave alone
+- Include a visible Save button/icon
+- Add timed autosave around every 60 seconds
+- Visually highlight the Save control when there are unsaved changes
+- Keep mobile responsive, but optimize desktop/workable letter-size experience first
+- Do not break current handoff flow from Compare Versions
+
+Known inbound workflow now already exists:
+Compare Versions → PDF Editor
+- revised document only
+- formal handoff record exists
+- marked zones/highlights can preload into PDF Editor
+- fromCompare context banner exists
+
+This pass is about making the PDF Editor correction experience clean, clear, and production-ready.
+
+==================================================
+PRIMARY GOALS FOR THIS PASS
+==================================================
+
+T001 — Handoff-loaded issue workflow polish
+T002 — Save / autosave / unsaved-state system
+T003 — Right-panel issue navigation + editing clarity
+T004 — Workspace/layout polish for readable document correction flow
+
+If a better internal implementation order is needed, use judgment, but stay inside this block only.
+
+==================================================
+EXECUTION RULES
+==================================================
+
+Follow this order exactly:
+1. Inspect current codebase first
+2. Produce a tight implementation plan based on actual code found
+3. Implement
+4. Run verification
+5. Provide a completion report
+
+Do not start coding before inspection and plan.
+Do not give a vague summary. Use exact files, exact routes, exact state/store changes.
+
+==================================================
+REQUIRED INSPECTION TASK
+==================================================
+
+Before coding, inspect and identify:
+- current PDF Editor routes/pages/components
+- session model/storage for pdf_editor_sessions
+- how ops/highlights/annotations are stored and rendered
+- current save/update API endpoints
+- current autosave logic if any
+- current toolbar structure
+- current left-pane document rendering behavior
+- current right-pane controls and any issue list / layer list / annotation list
+- current Compare Versions handoff intake behavior
+- where fromCompare banner and handoffId context are handled
+- current unsaved-state handling, if any
+- current mobile/desktop layout breakpoints
+- any pre-existing zoom/page nav/sidebar patterns that should be preserved
+
+Then produce a concise implementation plan grounded in the actual codebase.
+
+==================================================
+IMPLEMENTATION PLAN REQUIREMENTS
+==================================================
+
+Plan must include:
+- exact frontend changes
+- exact backend/API changes, if any
+- exact state changes
+- exact save/autosave behavior
+- exact issue-navigation behavior
+- exact verification checklist
+
+Keep the plan tight. No essay.
+
+==================================================
+T001 — HANDOFF-LOADED ISSUE WORKFLOW POLISH
+==================================================
+
+Goal:
+When PDF Editor is opened from Compare Versions, the correction workflow should be immediately understandable.
+
+Required:
+- preserve current fromCompare / handoff flow
+- make preloaded issue zones clearly visible
+- make issue count obvious
+- provide a clean issue list in the right panel
+- selecting an issue in the panel should clearly focus/navigate to the matching marked zone/page in the document
+- current issue / selected issue should be visually obvious
+- show enough issue metadata to make correction practical
+
+Each issue row should include, where available:
+- severity
+- page number
+- short label/title/category
+- optional AI explanation/category if already available in session data
+- source indicator that it came from Compare Versions when applicable
+- corrected/open/pending status if such state exists or can be added cleanly
+
+Do not overload the UI with too much text.
+Favor fast scanability and clear mapping from issue row → document zone.
+
+If needed, add a compact "Issues" panel mode specifically for handoff-loaded sessions.
+
+==================================================
+T002 — SAVE / AUTOSAVE / UNSAVED-STATE SYSTEM
+==================================================
+
+Goal:
+PDF Editor must feel safe and professional during correction work.
+
+Required:
+- visible Save button in toolbar
+- Save control visually highlights when there are unsaved changes
+- timed autosave approximately every 60 seconds
+- clear saved/saving/unsaved indicator
+- avoid noisy UX; keep it clean
+- unsaved changes should be based on real editor state, not guesswork
+- save should not interrupt editing flow
+
+Implementation expectations:
+- manual Save remains primary visible action
+- autosave should be secondary support, not the only mechanism
+- if save fails, surface a clear non-blocking error state
+- if autosave succeeds, show subtle confirmation
+- avoid excessive save calls; debounce/coalesce appropriately
+- do not break current persistence model
+
+If there is already save behavior, tighten it instead of replacing it blindly.
+
+==================================================
+T003 — RIGHT-PANEL ISSUE NAVIGATION + EDITING CLARITY
+==================================================
+
+Goal:
+The right side should help the user work through issues efficiently.
+
+Required:
+- clean issue list / issue navigator on the right
+- obvious current issue selection
+- ability to mark an issue as corrected/resolved if architecture supports it cleanly
+- if “resolved” state is not currently safe to persist, add a clean local/session-only completed indicator only if clearly labeled; otherwise defer it
+- issue row click should jump/focus to the affected zone/page
+- issue detail area should not feel cramped
+- preserve split-screen document-first rule
+
+Also:
+- make it obvious which tool/action the user is expected to use to correct the page
+- do not hide essential controls behind excessive clicks
+- if multiple issue types exist, provide a minimal filter/sort only if it materially improves usability
+
+Do not turn this into a full workflow engine.
+Keep it focused on correction usability.
+
+==================================================
+T004 — WORKSPACE / LAYOUT POLISH
+==================================================
+
+Goal:
+PDF Editor should feel like a proper document correction workspace.
+
+Required:
+- tighten split-screen layout
+- maximize readable page area on desktop
+- ensure left pane feels like a usable page workspace, not a cramped preview
+- ensure right pane width is sufficient for issue/context controls without crushing the document
+- preserve responsiveness
+- improve toolbar spacing/hierarchy if needed
+- make page navigation / zoom / issue focus flow feel coherent
+
+Specific expectations:
+- when coming from Compare Versions, the handoff context should not crowd the workspace
+- document remains visually primary
+- marked zones must be easy to see against the PDF
+- editing controls should feel consistent with PlainPath patterns
+
+Do not redesign the whole editor visually.
+Polish the current workspace into a more production-ready state.
+
+==================================================
+NON-GOALS / OUT OF SCOPE
+==================================================
+
+Unless absolutely required for compatibility, do NOT include:
+- OCR
+- Word/docx editing implementation
+- Compare Versions changes
+- public/demo redesign
+- major annotation-engine rewrite
+- e-signature redesign
+- multiplayer collaboration
+- comments/chat system
+- approval workflow automation
+- broad export feature redesign
+- new AI pipelines
+
+==================================================
+ARCHITECTURE PRINCIPLES
+==================================================
+
+1. Preserve Compare Versions handoff
+Do not break the existing formal handoff flow or revised-document targeting.
+
+2. Manual Save must be visible
+Autosave supports the user; it does not replace explicit Save.
+
+3. Split-screen is the rule
+Left = document workspace. Right = issue/context/edit controls.
+
+4. Document-first UX
+The PDF page must remain readable and central.
+
+5. Low-risk changes
+Do not destabilize current session loading, ops rendering, or persistence.
+
+==================================================
+VERIFICATION REQUIREMENTS
+==================================================
+
+After implementation, run verification and report actual results.
+
+At minimum verify end-to-end:
+1. existing PDF Editor sessions still open correctly
+2. Compare Versions handoff session still opens correctly
+3. preloaded marked zones remain visible
+4. clicking an issue in the right panel focuses the correct page/zone
+5. current issue selection is visually obvious
+6. Save button is visible
+7. unsaved-state indicator appears after changes
+8. manual Save persists changes correctly
+9. autosave triggers approximately every 60 seconds when dirty
+10. autosave does not spam requests when idle
+11. save failure state is handled cleanly if you can simulate it safely
+12. split-screen layout is improved and document area remains primary
+13. mobile/tablet layout still works acceptably
+14. no Compare Versions handoff behavior was broken
+15. no existing PDF Editor capabilities were regressed
+
+==================================================
+FINAL COMPLETION REPORT FORMAT
+==================================================
+
+When done, provide a completion report with these exact sections:
+
+1. EXACT FILES CREATED
+- list every created file with full relative path
+
+2. EXACT FILES MODIFIED
+- list every modified file with full relative path
+
+3. ROUTES / ENDPOINTS ADDED OR CHANGED
+- include page routes
+- include API endpoints
+- note whether added or modified
+
+4. STATE / SAVE MODEL CHANGES
+- exact editor state additions/changes
+- exact save/autosave/dirty-state behavior
+
+5. WHAT WORKS END-TO-END
+- concise but specific
+- cover T001, T002, T003, T004
+
+6. WHAT REMAINS DEFERRED
+- list anything intentionally deferred
+- explain why it was deferred
+
+7. VERIFICATION RESULTS
+- checklist of tested flows
+- note pass/fail and any caveats
+
+==================================================
+QUALITY BAR
+==================================================
+
+This is a completion pass, not a prototype pass.
+Favor clean, production-lean implementation over placeholder UI.
+Reuse existing PlainPath patterns where possible.
+Keep the scope tight and ship the block cleanly.
