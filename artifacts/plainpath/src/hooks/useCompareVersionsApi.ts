@@ -63,5 +63,12 @@ export function useCompareVersionsApi() {
         compareVersionsApi.patchReview(id, diffResult, await token()),
       [token],
     ),
+
+    /** Slice 5: Trigger or retry AI enrichment */
+    enrichSession: useCallback(
+      async (id: string, forceAll = false) =>
+        compareVersionsApi.enrichSession(id, forceAll, await token()),
+      [token],
+    ),
   };
 }

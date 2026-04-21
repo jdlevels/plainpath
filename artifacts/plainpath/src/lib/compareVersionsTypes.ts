@@ -1,6 +1,21 @@
-// ─── Compare Versions — Shared Types (Slices 1–4) ─────────────────────────────
+// ─── Compare Versions — Shared Types (Slices 1–5) ─────────────────────────────
 
 export type CVSessionStatus = "pending" | "scanning" | "complete" | "error";
+export type CVAiStatus = "idle" | "running" | "complete" | "error";
+
+// ─── AI enrichment ─────────────────────────────────────────────────────────────
+
+export type CVAiCategory =
+  | "meaning_change"
+  | "policy_change"
+  | "legal_language"
+  | "financial_value"
+  | "date_deadline"
+  | "safety_threshold"
+  | "rewrite_equivalent"
+  | "typo_correction"
+  | "cosmetic_text"
+  | "unclear";
 
 // ─── Notes & watchlist ─────────────────────────────────────────────────────────
 
@@ -80,9 +95,13 @@ export interface CVDiffItem {
   revised_text: string | null;
   severity: CVDiffSeverity;
   severity_overridden: boolean;
-  ai_explanation: null;
-  ai_category: null;
-  meta: Record<string, unknown>; // meta.originalSeverity set on first override
+  // AI enrichment fields (Slice 5) — null until enrichment runs
+  ai_category: CVAiCategory | null;
+  ai_explanation: string | null;
+  ai_confidence: number | null;
+  ai_enriched_at: string | null;
+  // meta: severity_deterministic, severity_ai, originalSeverity (from Slice 4 override)
+  meta: Record<string, unknown>;
 }
 
 export interface CVDiffStats {
@@ -134,6 +153,9 @@ export interface CVSessionDetail extends CVSessionListItem {
   managerNotes: CVManagerNotes;
   diffResult: CVDiffResult | null;
   scannedAt: string | null;
+  // AI enrichment status (Slice 5)
+  aiStatus: CVAiStatus;
+  aiEnrichedAt: string | null;
 }
 
 export interface CreateCVSessionInput {

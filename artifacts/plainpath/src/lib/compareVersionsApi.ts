@@ -118,4 +118,18 @@ export const compareVersionsApi = {
     });
     return handleResponse(res);
   },
+
+  /** Slice 5: Trigger or retry AI semantic enrichment for a completed session */
+  async enrichSession(
+    id: string,
+    forceAll: boolean,
+    token: string | null,
+  ): Promise<{ id: string; aiStatus: string }> {
+    const res = await fetch(`/api/compare-versions/sessions/${id}/enrich`, {
+      method: "POST",
+      headers: { ...authHeaders(token), "Content-Type": "application/json" },
+      body: JSON.stringify({ forceAll }),
+    });
+    return handleResponse(res);
+  },
 };

@@ -1,11 +1,7 @@
-// ─── Compare Versions — Workspace (Slice 4) ────────────────────────────────────
-// Builds on Slice 3's async engine with:
-//   A. Union-rect group zones per pane
-//   B. Summary ↔ pane selection sync
-//   C. Pane ↔ pane hover sync
-//   D. Group-aware summary with sort + page filter
-//   E. Manager severity override UI (with debounced persist)
-//   F. Notes/watchlist CRUD with diff linking + resolved toggle
+// ─── Compare Versions — Workspace (Slices 4–5) ─────────────────────────────────
+// Slice 4: Group zones, hover/selection sync, severity override, notes CRUD.
+// Slice 5: AI semantic enrichment — auto-run + retry, ai_category pills,
+//          ai_explanation in summary rows, AI status banners.
 // ──────────────────────────────────────────────────────────────────────────────
 
 import {
@@ -20,13 +16,14 @@ import {
   Clock, ListChecks, RefreshCw, Scan,
   ChevronRight, Plus, Trash2, Link2, Pencil,
   ChevronDown as ChevDown,
+  Sparkles,
 } from "lucide-react"
 import { useEntitlements } from "@/hooks/useEntitlements"
 import { useCompareVersionsApi } from "@/hooks/useCompareVersionsApi"
 import type {
   CVSessionDetail, CVManagerNotes,
   CVDiffItem, CVDiffResult, CVDiffSeverity, CVDiffChangeType,
-  CVGroupZone, CVFreeformNote, CVWatchlistItem, CVNoteSeverity,
+  CVGroupZone, CVFreeformNote, CVWatchlistItem, CVNoteSeverity, CVAiCategory,
 } from "@/lib/compareVersionsTypes"
 import { computeGroupZones, groupsForItems } from "@/lib/compareVersionsGrouping"
 
@@ -94,6 +91,30 @@ function normalizeNotes(mn: any): CVManagerNotes {
       linked_diff_id: w.linked_diff_id ?? null,
     })),
   }
+}
+
+// ─── AI Category helpers (Slice 5) ────────────────────────────────────────────
+
+function aiCategoryColor(cat: CVAiCategory): string {
+  switch (cat) {
+    case "financial_value":
+    case "date_deadline":
+    case "safety_threshold":
+      return "bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 border border-red-200/50"
+    case "legal_language":
+    case "policy_change":
+      return "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200/50"
+    case "meaning_change":
+      return "bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400 border border-violet-200/50"
+    case "rewrite_equivalent":
+      return "bg-blue-50 dark:bg-blue-950/40 text-blue-500 dark:text-blue-400 border border-blue-200/50"
+    default:
+      return "bg-neutral-100 dark:bg-neutral-800/60 text-neutral-500 border border-neutral-200/40"
+  }
+}
+
+function aiCategoryLabel(cat: CVAiCategory): string {
+  return cat.replace(/_/g, " ")
 }
 
 function recomputeStats(items: CVDiffItem[], base: CVDiffResult): CVDiffResult {
@@ -676,9 +697,22 @@ function SummaryPanel({
                             <Link2 className="w-2.5 h-2.5" /> note
                           </span>
                         )}
+                        {/* AI category pill (Slice 5) */}
+                        {item.ai_category && (
+                          <span className={`flex items-center gap-0.5 text-[9px] px-1.5 py-px rounded font-semibold flex-shrink-0 ${aiCategoryColor(item.ai_category)}`}>
+                            <Sparkles className="w-2 h-2" />
+                            {aiCategoryLabel(item.ai_category)}
+                          </span>
+                        )}
                       </div>
                       {preview && (
                         <p className="text-[11px] text-muted-foreground truncate mt-0.5">{preview}</p>
+                      )}
+                      {/* AI explanation (Slice 5) */}
+                      {item.ai_explanation && (
+                        <p className="text-[10px] text-violet-600/80 dark:text-violet-400/80 mt-0.5 leading-snug line-clamp-2">
+                          {item.ai_explanation}
+                        </p>
                       )}
                     </div>
                     <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50 flex-shrink-0 mt-0.5" />
@@ -1056,6 +1090,7 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
   const [originalError, setOriginalError] = useState<string | null>(null)
   const [revisedError, setRevisedError] = useState<string | null>(null)
   const [rescanning, setRescanning] = useState(false)
+  const [enriching, setEnriching] = useState(false)
 
   const [activeTab, setActiveTab] = useState<"original" | "revised">("original")
   const [summaryOpen, setSummaryOpen] = useState(false)
@@ -1139,6 +1174,28 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
     return () => { cancelled = true; clearInterval(interval) }
   }, [session?.status, sessionId])
 
+  // ── AI enrichment polling (Slice 5) ────────────────────────────────────────
+  // Runs when ai_status is 'running'. Picks up newly enriched diff items.
+
+  useEffect(() => {
+    if (!session || session.aiStatus !== "running") return
+    let cancelled = false
+    const interval = setInterval(async () => {
+      if (cancelled) return
+      try {
+        const updated = await api.getSession(sessionId)
+        if (cancelled) return
+        setSession(updated)
+        if (updated.aiStatus !== "running") {
+          // Enrichment finished — refresh diff items with AI-enriched data
+          setDiffItems(updated.diffResult?.items ?? diffItems)
+          setDiffResultBase(updated.diffResult)
+        }
+      } catch { /* ignore poll errors */ }
+    }, POLL_INTERVAL_MS)
+    return () => { cancelled = true; clearInterval(interval) }
+  }, [session?.aiStatus, sessionId])
+
   // ── Page title ─────────────────────────────────────────────────────────────
 
   useEffect(() => {
@@ -1159,6 +1216,19 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
     } catch (err: any) {
       console.error("[CompareVersions] rescan failed:", err)
     } finally { setRescanning(false) }
+  }
+
+  // ── AI Enrich (Slice 5) ────────────────────────────────────────────────────
+
+  async function handleEnrich(forceAll = false) {
+    if (!session || enriching || session.aiStatus === "running") return
+    setEnriching(true)
+    try {
+      await api.enrichSession(session.id, forceAll)
+      setSession((s) => s ? { ...s, aiStatus: "running" } : s)
+    } catch (err: any) {
+      console.error("[CompareVersions] enrich failed:", err)
+    } finally { setEnriching(false) }
   }
 
   // ── Jump-to-page ──────────────────────────────────────────────────────────
@@ -1318,6 +1388,33 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
             </button>
           )}
 
+          {/* AI Review button (Slice 5) — visible when scan is complete and AI isn't running */}
+          {session.status === "complete" && session.aiStatus !== "running" && (
+            <button
+              onClick={() => handleEnrich(session.aiStatus === "complete")}
+              disabled={enriching}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors disabled:opacity-50 ${
+                session.aiStatus === "error"
+                  ? "border-amber-300/60 text-amber-700 dark:text-amber-300 hover:bg-amber-50/60 dark:hover:bg-amber-950/30"
+                  : session.aiStatus === "complete"
+                  ? "border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                  : "border-violet-300/60 text-violet-700 dark:text-violet-300 hover:bg-violet-50/60 dark:hover:bg-violet-950/30"
+              }`}
+              title={
+                session.aiStatus === "error"
+                  ? "Retry AI review"
+                  : session.aiStatus === "complete"
+                  ? "Re-run AI review"
+                  : "Run AI review"
+              }
+            >
+              {enriching ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+              <span className="hidden sm:inline">
+                {session.aiStatus === "error" ? "Retry AI" : session.aiStatus === "complete" ? "Re-run AI" : "AI Review"}
+              </span>
+            </button>
+          )}
+
           <button
             onClick={() => { setSummaryOpen((o) => !o); if (notesOpen) setNotesOpen(false) }}
             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors border ${
@@ -1361,6 +1458,28 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
           <span>Analysis failed.</span>
           <button onClick={handleRescan} disabled={rescanning} className="ml-1 underline font-semibold disabled:opacity-50">
             {rescanning ? "Retrying…" : "Retry"}
+          </button>
+        </div>
+      )}
+
+      {/* AI enrichment banners (Slice 5) */}
+      {session.status === "complete" && session.aiStatus === "running" && (
+        <div className="flex items-center gap-2 px-4 py-1.5 bg-violet-50 dark:bg-violet-950/30 border-b border-violet-200/40 dark:border-violet-800/30 text-violet-700 dark:text-violet-300 text-xs flex-shrink-0">
+          <Sparkles className="w-3 h-3 animate-pulse flex-shrink-0" />
+          <span>AI review running — enriching change items with context and category…</span>
+          <Loader2 className="w-3 h-3 animate-spin ml-auto flex-shrink-0" />
+        </div>
+      )}
+      {session.status === "complete" && session.aiStatus === "error" && (
+        <div className="flex items-center gap-2 px-4 py-1.5 bg-amber-50 dark:bg-amber-950/30 border-b border-amber-200/40 dark:border-amber-800/30 text-amber-700 dark:text-amber-300 text-xs flex-shrink-0">
+          <AlertCircle className="w-3 h-3 flex-shrink-0" />
+          <span>AI review unavailable. Deterministic comparison is still available.</span>
+          <button
+            onClick={() => handleEnrich(false)}
+            disabled={enriching}
+            className="ml-auto underline font-semibold disabled:opacity-50 flex-shrink-0"
+          >
+            {enriching ? "Retrying…" : "Retry AI"}
           </button>
         </div>
       )}
