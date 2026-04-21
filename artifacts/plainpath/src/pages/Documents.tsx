@@ -7,15 +7,20 @@ import {
   FileText, Trash2, Pencil, Check, X, Search, Loader2,
   FolderOpen, FileSignature, ShieldCheck, EyeOff, Scale,
   PenLine, GitCompare, ChevronRight, Plus, Clock,
-  AlertTriangle,
+  AlertTriangle, FileEdit, ExternalLink, ArrowRight,
+  LayoutTemplate,
 } from "lucide-react"
 import {
   fetchUserDocuments, deleteUserDocument, renameUserDocument,
   type UserDocument,
 } from "@/lib/userDocsApi"
-import { useUser } from "@clerk/react"
+import { useUser, useAuth } from "@clerk/react"
 import { useAnalysisContext } from "@/context/AnalysisContext"
 import { fetchCloudAnalyses } from "@/lib/cloudHistory"
+import { pdfEditorApi } from "@/lib/pdfEditorApi"
+import type { SessionMeta } from "@/lib/pdfEditorTypes"
+import { compareVersionsApi } from "@/lib/compareVersionsApi"
+import type { CVSessionListItem } from "@/lib/compareVersionsTypes"
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -30,14 +35,20 @@ function formatDate(iso: string): string {
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: diffDays > 365 ? "numeric" : undefined })
 }
 
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
 const TOOL_CONFIG: Record<string, { label: string; icon: React.ElementType; color: string }> = {
-  analyze:          { label: "Analyzed",         icon: FileText,      color: "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300" },
-  trust_check:      { label: "Trust Check",       icon: ShieldCheck,   color: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" },
-  redact:           { label: "Redacted",          icon: EyeOff,        color: "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300" },
-  signature:        { label: "Sent for Sig.",     icon: FileSignature, color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300" },
-  contract_review:  { label: "Reviewed",          icon: Scale,         color: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300" },
-  contract_builder: { label: "From Builder",      icon: PenLine,       color: "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300" },
-  compare:          { label: "Compared",          icon: GitCompare,    color: "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300" },
+  analyze:          { label: "Analyze",           icon: FileText,      color: "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300" },
+  trust_check:      { label: "Trust Check",        icon: ShieldCheck,   color: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" },
+  redact:           { label: "Redacted",           icon: EyeOff,        color: "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300" },
+  signature:        { label: "Signature",          icon: FileSignature, color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300" },
+  contract_review:  { label: "Contract Review",    icon: Scale,         color: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300" },
+  contract_builder: { label: "Document Builder",   icon: PenLine,       color: "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300" },
+  compare:          { label: "Compare Versions",   icon: GitCompare,    color: "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300" },
 }
 
 function ToolBadge({ tool }: { tool: string }) {
@@ -52,13 +63,38 @@ function ToolBadge({ tool }: { tool: string }) {
   )
 }
 
+// ─── Section header ───────────────────────────────────────────────────────────
+
+function SectionHeader({ icon: Icon, label, count, colorClass }: {
+  icon: React.ElementType
+  label: string
+  count?: number
+  colorClass: string
+}) {
+  return (
+    <div className="flex items-center gap-2 mb-3 mt-8 first:mt-0">
+      <div className={`w-6 h-6 rounded-md flex items-center justify-center ${colorClass}`}>
+        <Icon className="w-3.5 h-3.5" />
+      </div>
+      <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{label}</span>
+      {count !== undefined && count > 0 && (
+        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-secondary text-muted-foreground">
+          {count}
+        </span>
+      )}
+    </div>
+  )
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function Documents() {
   const [, navigate] = useLocation()
   const { isSignedIn, isLoaded } = useUser()
+  const { getToken } = useAuth()
   const { setAnalysis, setDocumentTypeHint } = useAnalysisContext()
 
+  // UserDocuments state
   const [docs, setDocs] = useState<UserDocument[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -67,6 +103,18 @@ export default function Documents() {
   const [editValue, setEditValue] = useState("")
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
+
+  // PDF Editor sessions state
+  const [pdfSessions, setPdfSessions] = useState<SessionMeta[]>([])
+  const [pdfLoading, setPdfLoading] = useState(false)
+  const [confirmDeletePdfId, setConfirmDeletePdfId] = useState<string | null>(null)
+  const [deletingPdf, setDeletingPdf] = useState(false)
+
+  // Compare sessions state
+  const [compareSessions, setCompareSessions] = useState<CVSessionListItem[]>([])
+  const [compareLoading, setCompareLoading] = useState(false)
+  const [confirmDeleteCompareId, setConfirmDeleteCompareId] = useState<string | null>(null)
+  const [deletingCompare, setDeletingCompare] = useState(false)
 
   useEffect(() => {
     document.title = "My Documents — PlainPath"
@@ -80,16 +128,47 @@ export default function Documents() {
 
   async function load() {
     setLoading(true)
+    setPdfLoading(true)
+    setCompareLoading(true)
     setError(null)
-    try {
-      const data = await fetchUserDocuments()
-      setDocs(data)
-    } catch {
+
+    // Fetch Clerk token for session APIs
+    const token = await getToken().catch(() => null)
+
+    // Parallel fetch all three data sources
+    const [docsResult, pdfResult, compareResult] = await Promise.allSettled([
+      fetchUserDocuments(),
+      pdfEditorApi.listSessions(token),
+      compareVersionsApi.listSessions(token, { archived: false }),
+    ])
+
+    if (docsResult.status === "fulfilled") {
+      setDocs(docsResult.value)
+    } else {
       setError("Couldn't load your documents. Please try again.")
-    } finally {
-      setLoading(false)
     }
+
+    if (pdfResult.status === "fulfilled") {
+      // Sort by updatedAt desc
+      const sorted = [...pdfResult.value].sort((a, b) =>
+        b.updatedAt.localeCompare(a.updatedAt)
+      )
+      setPdfSessions(sorted)
+    }
+
+    if (compareResult.status === "fulfilled") {
+      const sorted = [...compareResult.value].sort((a, b) =>
+        b.updatedAt.localeCompare(a.updatedAt)
+      )
+      setCompareSessions(sorted)
+    }
+
+    setLoading(false)
+    setPdfLoading(false)
+    setCompareLoading(false)
   }
+
+  // ─── UserDocument filtering ───────────────────────────────────────────────
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -101,14 +180,15 @@ export default function Documents() {
     )
   }, [docs, search])
 
+  // ─── UserDocument actions ─────────────────────────────────────────────────
+
   async function handleDelete(id: string) {
     setDeleting(true)
     try {
       await deleteUserDocument(id)
       setDocs(prev => prev.filter(d => d.id !== id))
-    } catch {
-      // ignore
-    } finally {
+    } catch { /* ignore */ }
+    finally {
       setDeleting(false)
       setConfirmDeleteId(null)
     }
@@ -129,8 +209,6 @@ export default function Documents() {
     setEditingId(null)
   }
 
-  // ─── Open in Analyze ────────────────────────────────────────────────────────
-  // We load the most-recent linked analysis run and restore it in context
   async function openInAnalyze(doc: UserDocument) {
     const analyzeRun = doc.toolRuns.find(r => r.tool === "analyze" && r.outputRef)
     if (analyzeRun?.outputRef) {
@@ -145,7 +223,6 @@ export default function Documents() {
         }
       } catch { /* fall through */ }
     }
-    // No saved analysis — navigate to Analyze with doc title pre-set
     try {
       sessionStorage.setItem("pp_doc_open", JSON.stringify({
         id: doc.id,
@@ -156,7 +233,6 @@ export default function Documents() {
     navigate("/analyze")
   }
 
-  // ─── Send for Signature ─────────────────────────────────────────────────────
   function sendForSignature(doc: UserDocument) {
     try {
       sessionStorage.setItem("pp_sig_doc", JSON.stringify({
@@ -170,7 +246,44 @@ export default function Documents() {
     navigate("/signature")
   }
 
-  // ─── Render ─────────────────────────────────────────────────────────────────
+  // ─── PDF Editor session actions ───────────────────────────────────────────
+
+  async function handleDeletePdf(id: string) {
+    setDeletingPdf(true)
+    try {
+      const token = await getToken().catch(() => null)
+      await pdfEditorApi.deleteSession(id, token)
+      setPdfSessions(prev => prev.filter(s => s.id !== id))
+    } catch { /* ignore */ }
+    finally {
+      setDeletingPdf(false)
+      setConfirmDeletePdfId(null)
+    }
+  }
+
+  // ─── Compare session actions ──────────────────────────────────────────────
+
+  async function handleDeleteCompare(id: string) {
+    setDeletingCompare(true)
+    try {
+      const token = await getToken().catch(() => null)
+      await compareVersionsApi.deleteSession(id, token)
+      setCompareSessions(prev => prev.filter(s => s.id !== id))
+    } catch { /* ignore */ }
+    finally {
+      setDeletingCompare(false)
+      setConfirmDeleteCompareId(null)
+    }
+  }
+
+  // ─── Helpers ──────────────────────────────────────────────────────────────
+
+  const hasAnyContent =
+    docs.length > 0 || pdfSessions.length > 0 || compareSessions.length > 0
+
+  const totalItemCount = docs.length + pdfSessions.length + compareSessions.length
+
+  // ─── Render ───────────────────────────────────────────────────────────────
 
   return (
     <div className="min-h-screen bg-background">
@@ -184,7 +297,9 @@ export default function Documents() {
               My Documents
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Documents you've worked with across PlainPath tools.
+              {hasAnyContent
+                ? `${totalItemCount} saved item${totalItemCount !== 1 ? "s" : ""} across all tools`
+                : "Your saved documents and sessions across PlainPath tools."}
             </p>
           </div>
           <Button
@@ -197,7 +312,7 @@ export default function Documents() {
           </Button>
         </div>
 
-        {/* Search */}
+        {/* Global search — shown when there are documents */}
         {docs.length > 3 && (
           <div className="relative mb-6">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -210,7 +325,7 @@ export default function Documents() {
           </div>
         )}
 
-        {/* States */}
+        {/* Loading state */}
         {loading && (
           <div className="flex items-center justify-center py-20 text-muted-foreground gap-2">
             <Loader2 className="w-5 h-5 animate-spin" />
@@ -218,6 +333,7 @@ export default function Documents() {
           </div>
         )}
 
+        {/* Error state */}
         {error && !loading && (
           <div className="flex items-center gap-2 p-4 rounded-xl border border-destructive/30 bg-destructive/5 text-destructive text-sm">
             <AlertTriangle className="w-4 h-4 shrink-0" />
@@ -226,7 +342,8 @@ export default function Documents() {
           </div>
         )}
 
-        {!loading && !error && docs.length === 0 && (
+        {/* Full empty state — nothing at all */}
+        {!loading && !error && !hasAnyContent && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -235,189 +352,509 @@ export default function Documents() {
             <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center mx-auto mb-4">
               <FolderOpen className="w-8 h-8 text-muted-foreground" />
             </div>
-            <h2 className="text-lg font-semibold text-foreground mb-2">No documents yet</h2>
+            <h2 className="text-lg font-semibold text-foreground mb-2">No saved work yet</h2>
             <p className="text-sm text-muted-foreground max-w-sm mx-auto mb-6">
-              When you analyze or work with a document in PlainPath, it'll appear here so you can reuse it across tools without re-uploading.
+              When you analyze, edit, or compare documents in PlainPath, they'll appear here so you can pick up right where you left off.
             </p>
             <div className="flex flex-wrap gap-2 justify-center">
               <Button onClick={() => navigate("/analyze")} className="gap-1.5">
                 <FileText className="w-4 h-4" /> Analyze a Document
               </Button>
-              <Button variant="outline" onClick={() => navigate("/signature")} className="gap-1.5">
-                <FileSignature className="w-4 h-4" /> Send for Signature
+              <Button variant="outline" onClick={() => navigate("/pdf-editor")} className="gap-1.5">
+                <FileEdit className="w-4 h-4" /> Open PDF Editor
+              </Button>
+              <Button variant="outline" onClick={() => navigate("/compare-versions")} className="gap-1.5">
+                <GitCompare className="w-4 h-4" /> Compare Versions
               </Button>
             </div>
           </motion.div>
         )}
 
-        {!loading && !error && filtered.length === 0 && docs.length > 0 && (
-          <p className="text-center py-12 text-sm text-muted-foreground">
-            No documents match "<span className="font-medium">{search}</span>"
-          </p>
+        {/* ── SECTION: Uploaded Documents ──────────────────────────────────── */}
+        {!loading && !error && docs.length > 0 && (
+          <>
+            <SectionHeader
+              icon={FileText}
+              label="Uploaded Documents"
+              count={docs.length}
+              colorClass="bg-primary/10 text-primary"
+            />
+
+            {/* No search results */}
+            {filtered.length === 0 && search && (
+              <p className="text-center py-12 text-sm text-muted-foreground">
+                No documents match "<span className="font-medium">{search}</span>"
+              </p>
+            )}
+
+            <div className="space-y-3">
+              <AnimatePresence initial={false}>
+                {filtered.map(doc => (
+                  <motion.div
+                    key={doc.id}
+                    layout
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.97 }}
+                    className="group relative rounded-xl border border-border/60 bg-card hover:border-border hover:shadow-sm transition-all p-4"
+                  >
+                    <div className="flex items-start gap-3">
+                      {/* Icon */}
+                      <div className="shrink-0 w-9 h-9 rounded-lg bg-primary/8 flex items-center justify-center mt-0.5">
+                        <FileText className="w-4.5 h-4.5 text-primary" />
+                      </div>
+
+                      {/* Main content */}
+                      <div className="flex-1 min-w-0">
+                        {/* Title row */}
+                        {editingId === doc.id ? (
+                          <div className="flex items-center gap-1.5 mb-1">
+                            <Input
+                              className="h-7 text-sm font-medium"
+                              value={editValue}
+                              onChange={e => setEditValue(e.target.value)}
+                              onKeyDown={e => {
+                                if (e.key === "Enter") commitEdit(doc.id)
+                                if (e.key === "Escape") setEditingId(null)
+                              }}
+                              autoFocus
+                            />
+                            <button onClick={() => commitEdit(doc.id)} className="p-1 text-emerald-600 hover:bg-emerald-50 rounded-md dark:hover:bg-emerald-900/30">
+                              <Check className="w-3.5 h-3.5" />
+                            </button>
+                            <button onClick={() => setEditingId(null)} className="p-1 text-muted-foreground hover:bg-secondary rounded-md">
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ) : (
+                          <h3 className="font-semibold text-sm text-foreground leading-tight mb-1 truncate pr-16">
+                            {doc.title}
+                          </h3>
+                        )}
+
+                        {/* Meta row */}
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2.5">
+                          <Clock className="w-3 h-3" />
+                          <span>{formatDate(doc.updatedAt || doc.createdAt)}</span>
+                          {doc.originalFilename && (
+                            <>
+                              <span>·</span>
+                              <span className="truncate max-w-[160px]">{doc.originalFilename}</span>
+                            </>
+                          )}
+                        </div>
+
+                        {/* Tool run badges */}
+                        {doc.toolRuns.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 mb-3">
+                            {[...new Set(doc.toolRuns.map(r => r.tool))].map(tool => (
+                              <ToolBadge key={tool} tool={tool} />
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Action buttons — contextual per toolRuns */}
+                        <div className="flex flex-wrap gap-2">
+                          {doc.toolRuns.some(r => r.tool === "analyze") ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-7 text-xs gap-1"
+                              onClick={() => openInAnalyze(doc)}
+                            >
+                              <FileText className="w-3 h-3" />
+                              Open Analysis
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-7 text-xs gap-1"
+                              onClick={() => openInAnalyze(doc)}
+                            >
+                              <FileText className="w-3 h-3" />
+                              Analyze
+                            </Button>
+                          )}
+                          {doc.toolRuns.some(r => r.tool === "contract_review") && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-7 text-xs gap-1"
+                              onClick={() => navigate("/contract-review")}
+                            >
+                              <Scale className="w-3 h-3" />
+                              View Review
+                            </Button>
+                          )}
+                          {doc.toolRuns.some(r => r.tool === "trust_check") && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-7 text-xs gap-1"
+                              onClick={() => navigate("/trust-check")}
+                            >
+                              <ShieldCheck className="w-3 h-3" />
+                              View Trust Check
+                            </Button>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 text-xs gap-1 text-muted-foreground"
+                            onClick={() => sendForSignature(doc)}
+                          >
+                            <FileSignature className="w-3 h-3" />
+                            Send for Signature
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Card actions (rename / delete) */}
+                      <div className="absolute top-3 right-3 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => startEdit(doc)}
+                          className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors"
+                          title="Rename"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => setConfirmDeleteId(doc.id)}
+                          className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Delete confirm */}
+                    <AnimatePresence>
+                      {confirmDeleteId === doc.id && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="mt-3 pt-3 border-t border-destructive/20"
+                        >
+                          <p className="text-xs text-muted-foreground mb-2">
+                            Remove this document from your library? Saved analyses and session history won't be affected.
+                          </p>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              className="h-7 text-xs"
+                              disabled={deleting}
+                              onClick={() => handleDelete(doc.id)}
+                            >
+                              {deleting ? <Loader2 className="w-3 h-3 animate-spin" /> : "Remove"}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-xs"
+                              onClick={() => setConfirmDeleteId(null)}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+          </>
         )}
 
-        {/* Document List */}
-        {!loading && !error && filtered.length > 0 && (
-          <div className="space-y-3">
-            <AnimatePresence initial={false}>
-              {filtered.map(doc => (
-                <motion.div
-                  key={doc.id}
-                  layout
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.97 }}
-                  className="group relative rounded-xl border border-border/60 bg-card hover:border-border hover:shadow-sm transition-all p-4"
-                >
-                  <div className="flex items-start gap-3">
-                    {/* Icon */}
-                    <div className="shrink-0 w-9 h-9 rounded-lg bg-primary/8 flex items-center justify-center mt-0.5">
-                      <FileText className="w-4.5 h-4.5 text-primary" />
-                    </div>
+        {/* ── SECTION: PDF Editor Sessions ─────────────────────────────────── */}
+        {!loading && (
+          <>
+            {(pdfSessions.length > 0 || pdfLoading) && (
+              <SectionHeader
+                icon={FileEdit}
+                label="PDF Editor"
+                count={pdfSessions.length}
+                colorClass="bg-purple-100 text-purple-600 dark:bg-purple-900/40 dark:text-purple-400"
+              />
+            )}
 
-                    {/* Main content */}
-                    <div className="flex-1 min-w-0">
-                      {/* Title row */}
-                      {editingId === doc.id ? (
-                        <div className="flex items-center gap-1.5 mb-1">
-                          <Input
-                            className="h-7 text-sm font-medium"
-                            value={editValue}
-                            onChange={e => setEditValue(e.target.value)}
-                            onKeyDown={e => {
-                              if (e.key === "Enter") commitEdit(doc.id)
-                              if (e.key === "Escape") setEditingId(null)
-                            }}
-                            autoFocus
-                          />
-                          <button onClick={() => commitEdit(doc.id)} className="p-1 text-emerald-600 hover:bg-emerald-50 rounded-md dark:hover:bg-emerald-900/30">
-                            <Check className="w-3.5 h-3.5" />
-                          </button>
-                          <button onClick={() => setEditingId(null)} className="p-1 text-muted-foreground hover:bg-secondary rounded-md">
-                            <X className="w-3.5 h-3.5" />
+            {pdfLoading && (
+              <div className="flex items-center gap-2 py-4 text-sm text-muted-foreground">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Loading PDF sessions…
+              </div>
+            )}
+
+            {!pdfLoading && pdfSessions.length > 0 && (
+              <div className="space-y-3">
+                <AnimatePresence initial={false}>
+                  {pdfSessions.map(session => (
+                    <motion.div
+                      key={session.id}
+                      layout
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.97 }}
+                      className="group relative rounded-xl border border-border/60 bg-card hover:border-purple-300/60 dark:hover:border-purple-700/40 hover:shadow-sm transition-all p-4"
+                    >
+                      <div className="flex items-start gap-3">
+                        {/* Icon */}
+                        <div className="shrink-0 w-9 h-9 rounded-lg bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center mt-0.5">
+                          <FileEdit className="w-4.5 h-4.5 text-purple-600 dark:text-purple-400" />
+                        </div>
+
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-sm text-foreground leading-tight mb-1 truncate pr-12">
+                            {session.fileName}
+                          </h3>
+                          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mb-3">
+                            <Clock className="w-3 h-3" />
+                            <span>{formatDate(session.updatedAt)}</span>
+                            {session.pageCount != null && (
+                              <>
+                                <span>·</span>
+                                <span>{session.pageCount} page{session.pageCount !== 1 ? "s" : ""}</span>
+                              </>
+                            )}
+                            {session.fileSizeBytes > 0 && (
+                              <>
+                                <span>·</span>
+                                <span>{formatBytes(session.fileSizeBytes)}</span>
+                              </>
+                            )}
+                            {session.pdfType && session.pdfType !== "unknown" && (
+                              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 capitalize">
+                                {session.pdfType}
+                              </span>
+                            )}
+                          </div>
+
+                          <Button
+                            size="sm"
+                            className="h-7 text-xs gap-1.5 bg-purple-600 hover:bg-purple-700 text-white border-0 shadow-none"
+                            onClick={() => navigate(`/pdf-editor/${session.id}`)}
+                          >
+                            <FileEdit className="w-3 h-3" />
+                            Continue editing
+                            <ArrowRight className="w-3 h-3" />
+                          </Button>
+                        </div>
+
+                        {/* Delete action */}
+                        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => setConfirmDeletePdfId(session.id)}
+                            className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+                            title="Delete session"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
-                      ) : (
-                        <h3 className="font-semibold text-sm text-foreground leading-tight mb-1 truncate pr-16">
-                          {doc.title}
-                        </h3>
-                      )}
+                      </div>
 
-                      {/* Meta row */}
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2.5">
-                        <Clock className="w-3 h-3" />
-                        <span>{formatDate(doc.createdAt)}</span>
-                        {doc.originalFilename && (
-                          <>
-                            <span>·</span>
-                            <span className="truncate max-w-[160px]">{doc.originalFilename}</span>
-                          </>
+                      {/* PDF delete confirm */}
+                      <AnimatePresence>
+                        {confirmDeletePdfId === session.id && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="mt-3 pt-3 border-t border-destructive/20"
+                          >
+                            <p className="text-xs text-muted-foreground mb-2">
+                              Permanently delete this PDF Editor session? The original PDF and all edits will be removed.
+                            </p>
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                className="h-7 text-xs"
+                                disabled={deletingPdf}
+                                onClick={() => handleDeletePdf(session.id)}
+                              >
+                                {deletingPdf ? <Loader2 className="w-3 h-3 animate-spin" /> : "Delete permanently"}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-xs"
+                                onClick={() => setConfirmDeletePdfId(null)}
+                              >
+                                Cancel
+                              </Button>
+                            </div>
+                          </motion.div>
                         )}
-                      </div>
+                      </AnimatePresence>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+            )}
+          </>
+        )}
 
-                      {/* Tool run badges */}
-                      {doc.toolRuns.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 mb-3">
-                          {[...new Set(doc.toolRuns.map(r => r.tool))].map(tool => (
-                            <ToolBadge key={tool} tool={tool} />
-                          ))}
+        {/* ── SECTION: Compare Versions Sessions ───────────────────────────── */}
+        {!loading && (
+          <>
+            {(compareSessions.length > 0 || compareLoading) && (
+              <SectionHeader
+                icon={GitCompare}
+                label="Compare Versions"
+                count={compareSessions.length}
+                colorClass="bg-teal-100 text-teal-600 dark:bg-teal-900/40 dark:text-teal-400"
+              />
+            )}
+
+            {compareLoading && (
+              <div className="flex items-center gap-2 py-4 text-sm text-muted-foreground">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Loading compare sessions…
+              </div>
+            )}
+
+            {!compareLoading && compareSessions.length > 0 && (
+              <div className="space-y-3">
+                <AnimatePresence initial={false}>
+                  {compareSessions.map(session => (
+                    <motion.div
+                      key={session.id}
+                      layout
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.97 }}
+                      className="group relative rounded-xl border border-border/60 bg-card hover:border-teal-300/60 dark:hover:border-teal-700/40 hover:shadow-sm transition-all p-4"
+                    >
+                      <div className="flex items-start gap-3">
+                        {/* Icon */}
+                        <div className="shrink-0 w-9 h-9 rounded-lg bg-teal-100 dark:bg-teal-900/40 flex items-center justify-center mt-0.5">
+                          <GitCompare className="w-4.5 h-4.5 text-teal-600 dark:text-teal-400" />
                         </div>
-                      )}
 
-                      {/* Action buttons */}
-                      <div className="flex flex-wrap gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-7 text-xs gap-1"
-                          onClick={() => openInAnalyze(doc)}
-                        >
-                          <FileText className="w-3 h-3" />
-                          {doc.toolRuns.some(r => r.tool === "analyze") ? "View Analysis" : "Analyze"}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-7 text-xs gap-1"
-                          onClick={() => sendForSignature(doc)}
-                        >
-                          <FileSignature className="w-3 h-3" />
-                          Send for Signature
-                        </Button>
-                      </div>
-                    </div>
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-sm text-foreground leading-tight mb-0.5 truncate pr-12">
+                            {session.title}
+                          </h3>
+                          {/* File names */}
+                          <p className="text-[11px] text-muted-foreground truncate mb-1">
+                            {session.originalFileName} → {session.revisedFileName}
+                          </p>
+                          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mb-3">
+                            <Clock className="w-3 h-3" />
+                            <span>{formatDate(session.updatedAt)}</span>
+                            {session.diffTotal != null && (
+                              <>
+                                <span>·</span>
+                                <span>
+                                  {session.diffTotal} diff{session.diffTotal !== 1 ? "s" : ""}
+                                  {session.diffHigh != null && session.diffHigh > 0 && (
+                                    <span className="ml-1 text-red-500 font-medium">
+                                      ({session.diffHigh} high)
+                                    </span>
+                                  )}
+                                </span>
+                              </>
+                            )}
+                            {session.status === "scanning" && (
+                              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+                                Scanning…
+                              </span>
+                            )}
+                            {session.status === "complete" && (
+                              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300">
+                                Complete
+                              </span>
+                            )}
+                          </div>
 
-                    {/* Card actions (edit/delete) */}
-                    <div className="absolute top-3 right-3 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={() => startEdit(doc)}
-                        className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors"
-                        title="Rename"
-                      >
-                        <Pencil className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => setConfirmDeleteId(doc.id)}
-                        className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
-                        title="Delete"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Delete confirm */}
-                  <AnimatePresence>
-                    {confirmDeleteId === doc.id && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="mt-3 pt-3 border-t border-destructive/20"
-                      >
-                        <p className="text-xs text-muted-foreground mb-2">
-                          Remove this document from your library? This won't affect any signature requests or saved analyses.
-                        </p>
-                        <div className="flex gap-2">
                           <Button
                             size="sm"
-                            variant="destructive"
-                            className="h-7 text-xs"
-                            disabled={deleting}
-                            onClick={() => handleDelete(doc.id)}
+                            className="h-7 text-xs gap-1.5 bg-teal-600 hover:bg-teal-700 text-white border-0 shadow-none"
+                            onClick={() => navigate(`/compare-versions/${session.id}`)}
                           >
-                            {deleting ? <Loader2 className="w-3 h-3 animate-spin" /> : "Remove"}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-7 text-xs"
-                            onClick={() => setConfirmDeleteId(null)}
-                          >
-                            Cancel
+                            <GitCompare className="w-3 h-3" />
+                            Open comparison
+                            <ArrowRight className="w-3 h-3" />
                           </Button>
                         </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
-              ))}
-            </AnimatePresence>
+
+                        {/* Delete action */}
+                        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => setConfirmDeleteCompareId(session.id)}
+                            className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+                            title="Delete session"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Compare delete confirm */}
+                      <AnimatePresence>
+                        {confirmDeleteCompareId === session.id && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="mt-3 pt-3 border-t border-destructive/20"
+                          >
+                            <p className="text-xs text-muted-foreground mb-2">
+                              Permanently delete this Compare session? All diffs, notes, and history will be removed.
+                            </p>
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                className="h-7 text-xs"
+                                disabled={deletingCompare}
+                                onClick={() => handleDeleteCompare(session.id)}
+                              >
+                                {deletingCompare ? <Loader2 className="w-3 h-3 animate-spin" /> : "Delete permanently"}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-xs"
+                                onClick={() => setConfirmDeleteCompareId(null)}
+                              >
+                                Cancel
+                              </Button>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ── Footer ───────────────────────────────────────────────────────── */}
+        {!loading && !error && hasAnyContent && (
+          <div className="mt-10 pt-6 border-t border-border/40 flex flex-wrap items-center justify-between gap-3">
+            <p className="text-xs text-muted-foreground">
+              Documents are saved automatically when you work with them.
+            </p>
+            <button
+              onClick={() => navigate("/builder")}
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors group"
+            >
+              <LayoutTemplate className="w-3.5 h-3.5 text-indigo-400 group-hover:text-indigo-500 transition-colors" />
+              Open Document Builder
+              <ExternalLink className="w-3 h-3 opacity-40" />
+            </button>
           </div>
         )}
 
-        {/* Footer hint */}
-        {!loading && !error && docs.length > 0 && (
-          <p className="text-center text-xs text-muted-foreground mt-8">
-            Documents are saved automatically when you work with them across PlainPath tools.{" "}
-            <button
-              onClick={() => navigate("/builder")}
-              className="underline underline-offset-2 hover:text-foreground transition-colors"
-            >
-              Looking for Builder documents?
-            </button>
-          </p>
-        )}
       </div>
     </div>
   )

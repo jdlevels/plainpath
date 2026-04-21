@@ -638,11 +638,13 @@ export default function MyAnalyses() {
               ))}
             </AnimatePresence>
 
-            {/* Footer storage notice */}
-            <div className="flex items-center justify-center gap-1.5 pt-4 pb-2 text-xs text-muted-foreground/40">
-              <AlertTriangle className="w-3 h-3" />
-              <span>Saved analyses are stored only in this browser. Clearing browser data will remove them.</span>
-            </div>
+            {/* Footer storage notice — only relevant for signed-out users */}
+            {!isSignedIn && (
+              <div className="flex items-center justify-center gap-1.5 pt-4 pb-2 text-xs text-muted-foreground/40">
+                <AlertTriangle className="w-3 h-3" />
+                <span>Saved analyses are stored only in this browser. Clearing browser data will remove them.</span>
+              </div>
+            )}
           </div>
         )}
       </div>

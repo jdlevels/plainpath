@@ -1,0 +1,251 @@
+PLAINPATH — NEXT BUILD BLOCK
+MY DOCUMENTS / MY ANALYSES — COMPLETION PASS
+
+You are working inside the existing PlainPath codebase.
+
+IMPORTANT:
+This is a focused product-completion pass for saved work management.
+Do NOT drift into Stripe/billing, PDF platform expansion, Compare Versions architecture, or major marketing redesign.
+Do NOT broaden scope into unrelated tools unless needed for compatibility.
+
+==================================================
+GOAL
+==================================================
+
+Turn "My Documents" and "My Analyses" into strong, production-grade saved-work surfaces so users can:
+- understand what they saved
+- reopen it confidently
+- manage it safely
+- differentiate document sessions from analysis sessions
+- recover work without confusion
+
+This is a completion pass, not a broad redesign.
+
+==================================================
+PRIMARY TASKS
+==================================================
+
+T001 — Inspect current My Documents / My Analyses architecture
+T002 — Improve saved-work list clarity and metadata
+T003 — Add safe session/file management actions
+T004 — Improve reopen / continue workflow
+T005 — Final polish of empty states, labels, filters, and management UX
+
+If a better internal order is needed, use judgment, but stay inside this block only.
+
+==================================================
+EXECUTION ORDER
+==================================================
+
+Follow this order exactly:
+1. inspect current codebase
+2. produce a tight implementation plan grounded in what actually exists
+3. implement only the highest-value saved-work improvements
+4. run verification
+5. provide the structured completion report
+
+Do not start broad coding before inspection.
+
+==================================================
+INSPECTION REQUIREMENTS
+==================================================
+
+Before coding, inspect and identify:
+
+A) MY DOCUMENTS
+- what item types appear there now
+- how sessions/files are stored and loaded
+- what metadata is already available (title, tool, date, file name, status, size, etc.)
+- whether rename/archive/delete/reopen already exists or partially exists
+- whether saved document types are mixed together confusingly
+
+B) MY ANALYSES
+- what analysis types appear there now
+- how analysis sessions are stored and loaded
+- whether users can distinguish Analyze / Contract Review / Trust Check / Compare / other outputs
+- whether results are reopenable/readable/manageable
+
+C) DASHBOARD / RECENT WORK RELATIONSHIP
+- how Recent Work is sourced
+- whether it is redundant or inconsistent with My Documents / My Analyses
+- whether saved work states are clear enough for first-time testers
+
+D) UX / PRODUCT GAPS
+- unclear labels
+- weak status naming
+- weak session identity
+- missing reopen affordances
+- unsafe delete behavior
+- no archive/recovery path
+- poor empty states
+- poor distinction between work-in-progress vs final output
+
+Then produce a concise ranked plan.
+
+==================================================
+T001 — CURRENT SAVED-WORK INSPECTION
+==================================================
+
+Goal:
+Ground the work in the actual saved-work architecture.
+
+Required:
+- identify exact routes/pages/components for My Documents and My Analyses
+- identify data shape(s), APIs, or local/session persistence involved
+- identify whether document and analysis items should remain separate or need clearer grouping
+- identify the smallest clean changes that produce the largest usability gain
+
+Do not speculate. Use the real codebase.
+
+==================================================
+T002 — SAVED-WORK LIST CLARITY AND METADATA
+==================================================
+
+Goal:
+Each saved item should be immediately understandable.
+
+Required improvements where supported by current data:
+- clear title
+- tool/source label
+- saved/updated date
+- document/session status
+- file name if useful
+- simple icon/category distinction
+- enough metadata to understand what clicking will reopen
+
+Examples:
+- “Compare Versions”
+- “PDF Editor”
+- “Contract Review”
+- “Analyze a Document”
+- “Trust Check”
+- “Document Builder”
+
+Avoid raw/internal names if any still leak through.
+
+If needed, add lightweight formatting such as:
+- grouped badges
+- relative dates
+- short sublabels
+- status chips
+
+==================================================
+T003 — SAFE SESSION / FILE MANAGEMENT
+==================================================
+
+Goal:
+Users should be able to manage saved work without fear of accidental loss.
+
+Required:
+- inspect whether rename exists; add if useful and low-risk
+- inspect whether archive/delete exists; improve if weak
+- prefer safe behavior:
+  - archive/soft-remove before destructive delete where possible
+  - destructive delete must be explicit
+- make management actions obvious but not cluttered
+- preserve audit/history when appropriate
+
+If archive is not architecturally practical in this pass, improve delete confirmation and management clarity instead of forcing a weak archive model.
+
+==================================================
+T004 — REOPEN / CONTINUE WORKFLOW
+==================================================
+
+Goal:
+Users should be able to reopen saved work confidently.
+
+Required:
+- make the primary open/continue action clear
+- ensure reopening behavior is obvious from the list/card/row
+- improve wording like “Open”, “Continue”, “View result”, etc. depending on item type
+- if different item types reopen differently, make that visible in the UI
+- reduce ambiguity about whether an item is editable, view-only, or analysis-only
+
+Examples:
+- PDF Editor session -> Continue editing
+- Compare session -> Open comparison
+- Analysis result -> View analysis
+- Document Builder draft -> Continue building
+
+==================================================
+T005 — EMPTY STATES / FILTERS / FINAL MANAGEMENT POLISH
+==================================================
+
+Goal:
+Saved-work surfaces should feel complete even when empty or lightly used.
+
+Required:
+- improve empty states so users know what belongs in each section
+- add filters/tabs only if clearly useful and low-risk
+- improve section copy and management wording
+- ensure Recent Work / My Documents / My Analyses do not feel contradictory
+- make the surfaces feel production-ready
+
+Do NOT add feature creep.
+No large dashboard redesign.
+
+==================================================
+NON-GOALS / OUT OF SCOPE
+==================================================
+
+Do NOT include unless absolutely required:
+- Stripe/billing work
+- new PDF utility features
+- OCR changes
+- Compare Versions engine changes
+- large dashboard redesign
+- org/team sharing
+- permissions system
+- broad notification system
+- native/mobile packaging work
+
+==================================================
+VERIFICATION REQUIREMENTS
+==================================================
+
+After implementation, verify at minimum:
+
+1. My Documents route/page loads correctly
+2. My Analyses route/page loads correctly
+3. saved items render with clearer metadata
+4. reopen/continue actions work for representative item types
+5. management actions (rename/archive/delete if applicable) work safely
+6. empty states render correctly
+7. dashboard Recent Work still works and is not broken
+8. no regressions in PDF Editor reopening
+9. no regressions in Compare Versions reopening
+10. no regressions in analysis-result viewing
+11. changed files pass TS/build checks
+
+Use result labels:
+- PASS — browser-verified
+- PASS — code-verified
+- FIXED — bug found and patched
+- UNABLE — blocked by environment/prerequisite
+
+==================================================
+FINAL COMPLETION REPORT FORMAT
+==================================================
+
+Return the report in these exact sections:
+
+1. EXACT FILES CREATED
+2. EXACT FILES MODIFIED
+3. SAVED-WORK / MANAGEMENT CHANGES APPLIED
+4. REOPEN / CONTINUE / DELETE / RENAME BEHAVIOR
+5. EMPTY STATE / LABEL / METADATA IMPROVEMENTS
+6. WHAT WORKS END-TO-END
+7. WHAT REMAINS DEFERRED
+8. VERIFICATION RESULTS
+
+Be exact with full relative paths and exact route/page names.
+
+==================================================
+QUALITY BAR
+==================================================
+
+This pass should make PlainPath feel more like a real product and less like a set of disconnected tool sessions.
+
+Be selective.
+Favor clarity, safety, and saved-work usability.
+Keep the scope tight and product-grade.
