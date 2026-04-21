@@ -196,7 +196,7 @@ export function Navbar() {
               }`}
             >
               <PenLine className="w-3.5 h-3.5" />
-              Builder
+              Document Builder
             </Link>
           )}
 
@@ -300,7 +300,7 @@ export function Navbar() {
                   }`}
                 >
                   <PenLine className="w-4 h-4 shrink-0" />
-                  Builder
+                  Document Builder
                 </button>
               )}
               <button
