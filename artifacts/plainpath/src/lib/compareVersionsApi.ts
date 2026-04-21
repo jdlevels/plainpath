@@ -44,8 +44,12 @@ export const compareVersionsApi = {
     return handleResponse<CVSessionListItem>(res);
   },
 
-  async listSessions(token: string | null): Promise<CVSessionListItem[]> {
-    const res = await fetch("/api/compare-versions/sessions", {
+  async listSessions(
+    token: string | null,
+    opts?: { archived?: boolean },
+  ): Promise<CVSessionListItem[]> {
+    const params = opts?.archived != null ? `?archived=${opts.archived}` : "";
+    const res = await fetch(`/api/compare-versions/sessions${params}`, {
       headers: authHeaders(token),
     });
     return handleResponse<CVSessionListItem[]>(res);
@@ -105,7 +109,6 @@ export const compareVersionsApi = {
     return handleResponse(res);
   },
 
-  /** Persist severity overrides (and any diff_result mutations) without re-running the engine */
   async patchReview(
     id: string,
     diffResult: CVDiffResult,
@@ -119,7 +122,6 @@ export const compareVersionsApi = {
     return handleResponse(res);
   },
 
-  /** Slice 5: Trigger or retry AI semantic enrichment for a completed session */
   async enrichSession(
     id: string,
     forceAll: boolean,
@@ -131,5 +133,62 @@ export const compareVersionsApi = {
       body: JSON.stringify({ forceAll }),
     });
     return handleResponse(res);
+  },
+
+  // ── Slice 6: Session management ─────────────────────────────────────────────
+
+  async renameSession(
+    id: string,
+    title: string,
+    token: string | null,
+  ): Promise<{ id: string; title: string; updatedAt: string }> {
+    const res = await fetch(`/api/compare-versions/sessions/${id}/rename`, {
+      method: "PATCH",
+      headers: { ...authHeaders(token), "Content-Type": "application/json" },
+      body: JSON.stringify({ title }),
+    });
+    return handleResponse(res);
+  },
+
+  async archiveSession(
+    id: string,
+    archived: boolean,
+    token: string | null,
+  ): Promise<{ id: string; archivedAt: string | null; updatedAt: string }> {
+    const res = await fetch(`/api/compare-versions/sessions/${id}/archive`, {
+      method: "PATCH",
+      headers: { ...authHeaders(token), "Content-Type": "application/json" },
+      body: JSON.stringify({ archived }),
+    });
+    return handleResponse(res);
+  },
+
+  async deleteSession(id: string, token: string | null): Promise<{ id: string; deleted: boolean }> {
+    const res = await fetch(`/api/compare-versions/sessions/${id}`, {
+      method: "DELETE",
+      headers: authHeaders(token),
+    });
+    return handleResponse(res);
+  },
+
+  // ── Slice 6: Handoff to PDF Editor ──────────────────────────────────────────
+
+  async createHandoff(
+    id: string,
+    diffIds: string[] | undefined,
+    token: string | null,
+  ): Promise<{ pdfEditorSessionId: string; highlightCount: number }> {
+    const res = await fetch(`/api/compare-versions/sessions/${id}/handoff`, {
+      method: "POST",
+      headers: { ...authHeaders(token), "Content-Type": "application/json" },
+      body: JSON.stringify({ diffIds }),
+    });
+    return handleResponse(res);
+  },
+
+  // ── Slice 6: Audit report export ────────────────────────────────────────────
+
+  exportReportUrl(id: string): string {
+    return `/api/compare-versions/sessions/${id}/export`;
   },
 };

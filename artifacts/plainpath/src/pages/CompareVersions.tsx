@@ -1,6 +1,6 @@
-// ─── Compare Versions — List + Intake Page ────────────────────────────────────
-// Slice 1: session list, new comparison intake (two PDF slots + manager notes),
-// Scan Documents button state machine, session create → navigate to workspace.
+// ─── Compare Versions — List + Intake Page (Slice 6) ──────────────────────────
+// T003: session rename, archive, delete with inline UX
+// T004: polished list — diff counts, severity dots, filter tabs, better metadata
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect, useRef, useId } from "react"
@@ -8,7 +8,7 @@ import { useLocation } from "wouter"
 import {
   ScanSearch, ArrowLeft, Upload, FileText, X, Loader2, AlertCircle,
   Lock, Zap, CheckCircle2, Plus, Trash2, FolderOpen, Clock,
-  ChevronDown, ChevronUp,
+  ChevronDown, ChevronUp, Archive, ArchiveRestore, Pencil, Check,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -24,14 +24,18 @@ function fmtBytes(n: number) {
   return `${(n / (1024 * 1024)).toFixed(1)} MB`
 }
 
-function fmtRelative(iso: string) {
-  const diff = Date.now() - new Date(iso).getTime()
+function fmtDate(iso: string) {
+  const d = new Date(iso)
+  const now = Date.now()
+  const diff = now - d.getTime()
   const m = Math.floor(diff / 60_000)
   if (m < 1) return "just now"
   if (m < 60) return `${m}m ago`
   const h = Math.floor(m / 60)
   if (h < 24) return `${h}h ago`
-  return `${Math.floor(h / 24)}d ago`
+  const days = Math.floor(h / 24)
+  if (days < 7) return `${days}d ago`
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: d.getFullYear() !== new Date().getFullYear() ? "numeric" : undefined })
 }
 
 const MAX_BYTES = 50 * 1024 * 1024
@@ -150,7 +154,6 @@ function FileSlot({ label, side, file, error, onFile, onRemove, disabled }: File
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Header */}
       <div className="flex items-center gap-2">
         <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${accentBadge}`}>
           {isOrig ? "Original" : "Revised"}
@@ -158,7 +161,6 @@ function FileSlot({ label, side, file, error, onFile, onRemove, disabled }: File
         <span className="text-sm font-semibold text-foreground">{label}</span>
       </div>
 
-      {/* File loaded card */}
       {file ? (
         <div className={`flex items-start gap-3 border rounded-xl p-4 ${fileBorder}`}>
           <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
@@ -181,7 +183,6 @@ function FileSlot({ label, side, file, error, onFile, onRemove, disabled }: File
           )}
         </div>
       ) : (
-        /* Drop zone */
         <div>
           <input
             ref={inputRef}
@@ -213,7 +214,6 @@ function FileSlot({ label, side, file, error, onFile, onRemove, disabled }: File
         </div>
       )}
 
-      {/* File error */}
       {error && (
         <div className="flex items-start gap-2 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg px-3 py-2.5">
           <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
@@ -276,7 +276,6 @@ function ManagerNotesEditor({ notes, onChange, disabled }: ManagerNotesEditorPro
 
   return (
     <div className="border border-border/40 rounded-xl overflow-hidden">
-      {/* Collapse toggle */}
       <button
         onClick={() => setOpen((o) => !o)}
         className="w-full flex items-center justify-between gap-3 px-4 py-3 hover:bg-muted/30 transition-colors text-left"
@@ -302,7 +301,6 @@ function ManagerNotesEditor({ notes, onChange, disabled }: ManagerNotesEditorPro
 
       {open && (
         <div className="px-4 pb-4 pt-1 space-y-4 border-t border-border/30">
-          {/* Freeform notes */}
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground uppercase tracking-widest">
               Freeform Notes
@@ -316,7 +314,6 @@ function ManagerNotesEditor({ notes, onChange, disabled }: ManagerNotesEditorPro
             />
           </div>
 
-          {/* Watchlist items */}
           <div className="space-y-2">
             <label className="text-xs font-medium text-muted-foreground uppercase tracking-widest">
               Watchlist Items
@@ -331,7 +328,6 @@ function ManagerNotesEditor({ notes, onChange, disabled }: ManagerNotesEditorPro
                 key={item.id}
                 className="flex items-start gap-2 bg-muted/20 border border-border/40 rounded-lg p-3"
               >
-                {/* Resolved toggle */}
                 <button
                   onClick={() => updateItem(item.id, { resolved: !item.resolved })}
                   className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
@@ -345,7 +341,6 @@ function ManagerNotesEditor({ notes, onChange, disabled }: ManagerNotesEditorPro
                   {item.resolved && <CheckCircle2 className="w-3 h-3 text-white" />}
                 </button>
 
-                {/* Text input */}
                 <input
                   type="text"
                   value={item.text}
@@ -357,7 +352,6 @@ function ManagerNotesEditor({ notes, onChange, disabled }: ManagerNotesEditorPro
                   disabled={disabled}
                 />
 
-                {/* Severity selector */}
                 <select
                   value={item.severity}
                   onChange={(e) => updateItem(item.id, { severity: e.target.value as CVNoteSeverity })}
@@ -369,7 +363,6 @@ function ManagerNotesEditor({ notes, onChange, disabled }: ManagerNotesEditorPro
                   ))}
                 </select>
 
-                {/* Remove */}
                 <button
                   onClick={() => removeItem(item.id)}
                   className="p-1 rounded hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
@@ -450,7 +443,6 @@ function IntakeForm({ onCreated, onCancel }: IntakeFormProps) {
 
   return (
     <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Back + header */}
       <div className="flex items-center gap-3 mb-8">
         <button
           onClick={onCancel}
@@ -471,7 +463,6 @@ function IntakeForm({ onCreated, onCancel }: IntakeFormProps) {
       </div>
 
       <div className="max-w-3xl space-y-6">
-        {/* Two-column file slots */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <FileSlot
             label="Original / Baseline"
@@ -493,7 +484,6 @@ function IntakeForm({ onCreated, onCancel }: IntakeFormProps) {
           />
         </div>
 
-        {/* Progress hint when one file loaded */}
         {(!!origFile !== !!revFile) && !scanning && (
           <p className="text-center text-xs text-muted-foreground/70">
             {origFile
@@ -502,10 +492,8 @@ function IntakeForm({ onCreated, onCancel }: IntakeFormProps) {
           </p>
         )}
 
-        {/* Manager notes */}
         <ManagerNotesEditor notes={notes} onChange={setNotes} disabled={scanning} />
 
-        {/* Submit error */}
         {submitError && (
           <div className="flex items-start gap-2 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg px-4 py-3">
             <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
@@ -513,7 +501,6 @@ function IntakeForm({ onCreated, onCancel }: IntakeFormProps) {
           </div>
         )}
 
-        {/* Scan button */}
         <div className="flex items-center gap-4 pt-1">
           <Button
             size="lg"
@@ -552,7 +539,7 @@ function IntakeForm({ onCreated, onCancel }: IntakeFormProps) {
   )
 }
 
-// ─── Session List ─────────────────────────────────────────────────────────────
+// ─── Status badge helpers ──────────────────────────────────────────────────────
 
 const STATUS_BADGE: Record<string, string> = {
   pending:  "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
@@ -561,21 +548,259 @@ const STATUS_BADGE: Record<string, string> = {
   error:    "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
 }
 
+const STATUS_LABEL: Record<string, string> = {
+  pending:  "Pending",
+  scanning: "Scanning…",
+  complete: "Complete",
+  error:    "Error",
+}
+
+// ─── Session Row ───────────────────────────────────────────────────────────────
+
+interface SessionRowProps {
+  session: CVSessionListItem
+  onOpen: (id: string) => void
+  onRename: (id: string, title: string) => Promise<void>
+  onArchive: (id: string, archived: boolean) => Promise<void>
+  onDelete: (id: string) => Promise<void>
+}
+
+function SessionRow({ session: s, onOpen, onRename, onArchive, onDelete }: SessionRowProps) {
+  const [renaming, setRenaming] = useState(false)
+  const [renameVal, setRenameVal] = useState(s.title)
+  const [renameBusy, setRenameBusy] = useState(false)
+  const renameRef = useRef<HTMLInputElement>(null)
+
+  const [archiveBusy, setArchiveBusy] = useState(false)
+  const [deleteBusy, setDeleteBusy] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+
+  const isArchived = !!s.archivedAt
+
+  function startRename() {
+    setRenameVal(s.title)
+    setRenaming(true)
+    setTimeout(() => renameRef.current?.select(), 30)
+  }
+
+  async function commitRename() {
+    const trimmed = renameVal.trim()
+    if (!trimmed || trimmed === s.title) { setRenaming(false); return }
+    setRenameBusy(true)
+    try {
+      await onRename(s.id, trimmed)
+    } finally {
+      setRenameBusy(false)
+      setRenaming(false)
+    }
+  }
+
+  async function handleArchiveToggle() {
+    setArchiveBusy(true)
+    try {
+      await onArchive(s.id, !isArchived)
+    } finally {
+      setArchiveBusy(false)
+    }
+  }
+
+  async function handleDelete() {
+    setDeleteBusy(true)
+    try {
+      await onDelete(s.id)
+    } finally {
+      setDeleteBusy(false)
+      setConfirmDelete(false)
+    }
+  }
+
+  // Severity dots
+  const high   = s.diffHigh   ?? 0
+  const medium = s.diffMedium ?? 0
+  const low    = s.diffLow    ?? 0
+  const total  = s.diffTotal  ?? 0
+  const hasDiffs = s.status === "complete" && total > 0
+
+  return (
+    <div className="group flex items-center gap-3 border border-border/50 rounded-xl px-4 py-3.5 hover:border-teal-400/40 hover:bg-teal-50/20 dark:hover:bg-teal-950/10 transition-colors">
+      {/* Icon */}
+      <div className="w-9 h-9 rounded-lg bg-teal-100 dark:bg-teal-900/40 flex items-center justify-center flex-shrink-0">
+        <ScanSearch className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+      </div>
+
+      {/* Title + metadata */}
+      <div className="flex-1 min-w-0">
+        {renaming ? (
+          <div className="flex items-center gap-1.5">
+            <input
+              ref={renameRef}
+              value={renameVal}
+              onChange={(e) => setRenameVal(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") commitRename()
+                if (e.key === "Escape") setRenaming(false)
+              }}
+              className="flex-1 text-sm font-medium bg-background border border-teal-400/50 rounded-md px-2 py-0.5 outline-none focus:ring-1 focus:ring-teal-500/40 min-w-0"
+              disabled={renameBusy}
+            />
+            <button
+              onClick={commitRename}
+              disabled={renameBusy}
+              className="p-1 rounded text-teal-600 dark:text-teal-400 hover:bg-teal-100 dark:hover:bg-teal-900/40 transition-colors"
+            >
+              {renameBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+            </button>
+            <button
+              onClick={() => setRenaming(false)}
+              className="p-1 rounded text-muted-foreground hover:bg-muted/60 transition-colors"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1.5 min-w-0">
+            <p className="text-sm font-medium truncate">{s.title}</p>
+            <button
+              onClick={startRename}
+              className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded text-muted-foreground hover:text-foreground"
+              title="Rename"
+            >
+              <Pencil className="w-3 h-3" />
+            </button>
+          </div>
+        )}
+
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5 flex-wrap">
+          <Clock className="w-3 h-3 flex-shrink-0" />
+          <span>{fmtDate(s.updatedAt)}</span>
+          <span>·</span>
+          <span className="truncate max-w-[100px]">{s.originalFileName}</span>
+          <span className="text-muted-foreground/50">vs</span>
+          <span className="truncate max-w-[100px]">{s.revisedFileName}</span>
+
+          {/* Severity dots */}
+          {hasDiffs && (
+            <>
+              <span>·</span>
+              <span className="flex items-center gap-1">
+                {high > 0 && (
+                  <span className="flex items-center gap-0.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block" />
+                    <span className="text-red-600 dark:text-red-400 font-medium">{high}</span>
+                  </span>
+                )}
+                {medium > 0 && (
+                  <span className="flex items-center gap-0.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block" />
+                    <span className="text-amber-600 dark:text-amber-400 font-medium">{medium}</span>
+                  </span>
+                )}
+                {low > 0 && (
+                  <span className="flex items-center gap-0.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-slate-400 inline-block" />
+                    <span className="font-medium">{low}</span>
+                  </span>
+                )}
+                <span className="text-muted-foreground/60">({total} total)</span>
+              </span>
+            </>
+          )}
+          {s.status === "complete" && total === 0 && (
+            <><span>·</span><span>No changes detected</span></>
+          )}
+        </div>
+      </div>
+
+      {/* Right: status + actions */}
+      <div className="flex items-center gap-2 flex-shrink-0">
+        <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${STATUS_BADGE[s.status] ?? STATUS_BADGE.pending}`}>
+          {STATUS_LABEL[s.status] ?? s.status}
+        </span>
+
+        {/* Confirm delete inline */}
+        {confirmDelete ? (
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-red-600 dark:text-red-400 font-medium">Delete?</span>
+            <button
+              onClick={handleDelete}
+              disabled={deleteBusy}
+              className="px-2 py-1 text-xs font-semibold bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors disabled:opacity-50"
+            >
+              {deleteBusy ? <Loader2 className="w-3 h-3 animate-spin" /> : "Yes"}
+            </button>
+            <button
+              onClick={() => setConfirmDelete(false)}
+              className="px-2 py-1 text-xs font-medium border border-border/50 rounded-md hover:bg-muted/60 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <>
+            <button
+              onClick={handleArchiveToggle}
+              disabled={archiveBusy}
+              title={isArchived ? "Restore" : "Archive"}
+              className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 disabled:opacity-50"
+            >
+              {archiveBusy
+                ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                : isArchived
+                ? <ArchiveRestore className="w-3.5 h-3.5" />
+                : <Archive className="w-3.5 h-3.5" />}
+            </button>
+            <button
+              onClick={() => setConfirmDelete(true)}
+              title="Delete"
+              className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg text-muted-foreground hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => onOpen(s.id)}
+              className="px-3 py-1.5 text-xs font-semibold text-teal-600 dark:text-teal-400 border border-teal-300/60 dark:border-teal-700/40 rounded-lg hover:bg-teal-100/50 dark:hover:bg-teal-900/30 transition-colors"
+            >
+              {s.status === "complete" ? "Open" : "View"}
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─── Session List ─────────────────────────────────────────────────────────────
+
+type ListFilter = "active" | "archived"
+
 function SessionList({
   sessions,
+  archivedSessions,
   loading,
   onOpen,
   onNew,
+  onRename,
+  onArchive,
+  onDelete,
 }: {
   sessions: CVSessionListItem[]
+  archivedSessions: CVSessionListItem[]
   loading: boolean
   onOpen: (id: string) => void
   onNew: () => void
+  onRename: (id: string, title: string) => Promise<void>
+  onArchive: (id: string, archived: boolean) => Promise<void>
+  onDelete: (id: string) => Promise<void>
 }) {
+  const [filter, setFilter] = useState<ListFilter>("active")
+
+  const visibleSessions = filter === "archived" ? archivedSessions : sessions
+  const archivedCount = archivedSessions.length
+
   return (
     <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Header row */}
-      <div className="flex items-center justify-between gap-4 mb-8">
+      {/* Header */}
+      <div className="flex items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
             <ScanSearch className="w-5 h-5 text-teal-600 dark:text-teal-400" />
@@ -591,12 +816,12 @@ function SessionList({
         </Button>
       </div>
 
-      {/* Sessions */}
       {loading ? (
         <div className="flex items-center gap-2 text-sm text-muted-foreground py-6">
           <Loader2 className="w-4 h-4 animate-spin" /> Loading comparisons…
         </div>
-      ) : sessions.length === 0 ? (
+      ) : sessions.length === 0 && archivedSessions.length === 0 ? (
+        /* Empty state */
         <div className="flex flex-col items-center justify-center min-h-[40vh] text-center gap-4">
           <div className="w-14 h-14 rounded-2xl bg-muted/50 flex items-center justify-center">
             <FolderOpen className="w-7 h-7 text-muted-foreground/50" />
@@ -612,50 +837,52 @@ function SessionList({
           </Button>
         </div>
       ) : (
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <FolderOpen className="w-4 h-4 text-muted-foreground" />
-            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-widest">
-              My Comparisons
-            </h2>
-          </div>
-          <div className="space-y-2">
-            {sessions.map((s) => (
-              <div
-                key={s.id}
-                className="flex items-center justify-between gap-3 border border-border/50 rounded-xl px-4 py-3.5 hover:border-teal-400/40 hover:bg-teal-50/20 dark:hover:bg-teal-950/10 transition-colors"
+        <>
+          {/* Filter tabs */}
+          <div className="flex items-center gap-1 mb-4 border-b border-border/40">
+            {(["active", "archived"] as ListFilter[]).map((f) => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px flex items-center gap-1.5 ${
+                  filter === f
+                    ? "border-teal-500 text-teal-600 dark:text-teal-400"
+                    : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}
               >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-lg bg-teal-100 dark:bg-teal-900/40 flex items-center justify-center flex-shrink-0">
-                    <ScanSearch className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium truncate">{s.title}</p>
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5 flex-wrap">
-                      <Clock className="w-3 h-3" />
-                      <span>{fmtRelative(s.createdAt)}</span>
-                      <span>·</span>
-                      <span className="truncate max-w-[120px]">{s.originalFileName}</span>
-                      <span>vs</span>
-                      <span className="truncate max-w-[120px]">{s.revisedFileName}</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${STATUS_BADGE[s.status] ?? STATUS_BADGE.pending}`}>
-                    {s.status}
-                  </span>
-                  <button
-                    onClick={() => onOpen(s.id)}
-                    className="px-3 py-1.5 text-xs font-semibold text-teal-600 dark:text-teal-400 border border-teal-300/60 dark:border-teal-700/40 rounded-lg hover:bg-teal-100/50 dark:hover:bg-teal-900/30 transition-colors"
-                  >
-                    Open
-                  </button>
-                </div>
-              </div>
+                {f === "active" ? (
+                  <>Active <span className="text-[10px] font-bold bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300 px-1.5 py-0.5 rounded-full">{sessions.length}</span></>
+                ) : (
+                  <>Archived {archivedCount > 0 && <span className="text-[10px] font-bold bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full">{archivedCount}</span>}</>
+                )}
+              </button>
             ))}
           </div>
-        </div>
+
+          {visibleSessions.length === 0 ? (
+            <div className="flex flex-col items-center gap-3 py-12 text-center">
+              <Archive className="w-8 h-8 text-muted-foreground/40" />
+              <p className="text-sm text-muted-foreground">
+                {filter === "archived"
+                  ? "No archived comparisons."
+                  : "No active comparisons. Start a new one above."}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {visibleSessions.map((s) => (
+                <SessionRow
+                  key={s.id}
+                  session={s}
+                  onOpen={onOpen}
+                  onRename={onRename}
+                  onArchive={onArchive}
+                  onDelete={onDelete}
+                />
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
   )
@@ -670,6 +897,7 @@ export default function CompareVersions() {
 
   const [view, setView] = useState<"list" | "new">("list")
   const [sessions, setSessions] = useState<CVSessionListItem[]>([])
+  const [archivedSessions, setArchivedSessions] = useState<CVSessionListItem[]>([])
   const [sessionsLoading, setSessionsLoading] = useState(true)
 
   const canUse =
@@ -680,14 +908,21 @@ export default function CompareVersions() {
     return () => { document.title = "PlainPath" }
   }, [])
 
+  async function loadSessions() {
+    const [active, archived] = await Promise.all([
+      api.listSessions({ archived: false }),
+      api.listSessions({ archived: true }),
+    ])
+    setSessions(active)
+    setArchivedSessions(archived)
+  }
+
   useEffect(() => {
     if (entLoading || !canUse) return
     let cancelled = false
-    api.listSessions().then((list) => {
-      if (!cancelled) setSessions(list)
-    }).catch(() => {}).finally(() => {
-      if (!cancelled) setSessionsLoading(false)
-    })
+    loadSessions()
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setSessionsLoading(false) })
     return () => { cancelled = true }
   }, [entLoading, canUse])
 
@@ -700,6 +935,36 @@ export default function CompareVersions() {
   }
 
   if (!canUse) return <LockedGate />
+
+  async function handleRename(id: string, title: string) {
+    await api.renameSession(id, title)
+    setSessions((prev) => prev.map((s) => s.id === id ? { ...s, title } : s))
+    setArchivedSessions((prev) => prev.map((s) => s.id === id ? { ...s, title } : s))
+  }
+
+  async function handleArchive(id: string, archived: boolean) {
+    await api.archiveSession(id, archived)
+    // Move session between lists
+    if (archived) {
+      setSessions((prev) => {
+        const s = prev.find((x) => x.id === id)
+        if (s) setArchivedSessions((a) => [{ ...s, archivedAt: new Date().toISOString() }, ...a])
+        return prev.filter((x) => x.id !== id)
+      })
+    } else {
+      setArchivedSessions((prev) => {
+        const s = prev.find((x) => x.id === id)
+        if (s) setSessions((a) => [{ ...s, archivedAt: null }, ...a])
+        return prev.filter((x) => x.id !== id)
+      })
+    }
+  }
+
+  async function handleDelete(id: string) {
+    await api.deleteSession(id)
+    setSessions((prev) => prev.filter((s) => s.id !== id))
+    setArchivedSessions((prev) => prev.filter((s) => s.id !== id))
+  }
 
   if (view === "new") {
     return (
@@ -716,9 +981,13 @@ export default function CompareVersions() {
     <div className="min-h-[calc(100vh-4rem)]">
       <SessionList
         sessions={sessions}
+        archivedSessions={archivedSessions}
         loading={sessionsLoading}
         onOpen={(id) => setLocation(`/compare-versions/${id}`)}
         onNew={() => setView("new")}
+        onRename={handleRename}
+        onArchive={handleArchive}
+        onDelete={handleDelete}
       />
     </div>
   )

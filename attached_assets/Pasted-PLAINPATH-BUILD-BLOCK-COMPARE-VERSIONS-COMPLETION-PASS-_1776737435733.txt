@@ -1,0 +1,333 @@
+PLAINPATH — BUILD BLOCK
+COMPARE VERSIONS — COMPLETION PASS
+
+You are working inside the existing PlainPath codebase.
+
+IMPORTANT:
+This pass is limited to Compare Versions only.
+Do not drift into other tools, demo redesign, marketing redesign, Word/docx support, OCR, org sharing, approval automation, or unrelated refactors.
+Preserve all existing completed Compare Versions slices and do not break current behavior.
+
+==================================================
+CONTEXT
+==================================================
+
+Compare Versions already has:
+- intake/session foundation
+- dual-pane workspace
+- deterministic comparison engine
+- grouped change zones
+- manager override controls
+- notes/watchlist linking
+- AI semantic enrichment
+- public/demo foundation exists separately
+- tool surface parity is already fixed across marketing/app/demo
+
+Compare Versions product rules:
+- Compare Versions is read-only
+- It detects/reviews changes, it does not edit documents
+- PDF Editor is where corrections happen
+- Natural workflow:
+  Compare Versions → select rejected diffs → Open in PDF Editor
+- Handoff must pass the revised document plus rejected diff IDs / mapped regions so PDF Editor opens with those issues preloaded for correction
+- Preserve split-screen, document-first design rules
+- Keep Word support deferred unless architecture absolutely requires compatibility prep
+- Keep demo/public work out of scope unless a route/copy dependency is absolutely required
+
+==================================================
+PRIMARY GOALS FOR THIS PASS
+==================================================
+
+T001 — Audit report export
+T002 — Reject → PDF Editor handoff
+T003 — Session management
+T004 — My Comparisons polish
+
+You may use a better internal implementation order for foundations, but the delivered feature set and final report must still clearly cover T001–T004.
+
+==================================================
+EXECUTION RULES
+==================================================
+
+Follow this order exactly:
+1. Inspect current codebase first
+2. Produce a tight implementation plan based on actual code found
+3. Implement
+4. Run verification
+5. Provide a completion report
+
+Do not start coding before inspection and plan.
+Do not give a vague summary. Use exact files, exact routes, and exact schema changes.
+
+==================================================
+REQUIRED INSPECTION TASK
+==================================================
+
+Before coding, inspect and identify:
+- Compare Versions routes/pages/components
+- Compare session schema/models/storage
+- Diff/review persistence model
+- Notes/watchlist persistence
+- Existing export utilities, PDF generation utilities, or document download patterns
+- Existing PDF Editor route, loader pattern, and any existing handoff/session preload patterns
+- Existing dashboard/session list patterns that Compare Versions should match
+- Any existing archive/trash/status badge conventions
+- Any server/client boundaries that matter for persisted review state and export generation
+
+Then produce a concise implementation plan grounded in the actual codebase.
+
+==================================================
+IMPLEMENTATION PLAN REQUIREMENTS
+==================================================
+
+Plan must include:
+- exact backend changes
+- exact frontend changes
+- exact schema/storage changes
+- exact route/API changes
+- exact handoff contract between Compare Versions and PDF Editor
+- verification checklist
+
+Keep the plan tight. No essay.
+
+==================================================
+T001 — AUDIT REPORT EXPORT
+==================================================
+
+Add export/download for a Compare Versions session.
+
+Goal:
+Output a manager-friendly audit report generated from the CURRENT PERSISTED REVIEW STATE, not stale client memory.
+
+Required report contents:
+- session title
+- original filename
+- revised filename
+- scan date
+- severity summary counts
+- diff list with page references
+- manager notes / watchlist items
+- resolved/unresolved status
+- severity overrides where applicable
+- AI explanation/category if present
+
+Implementation guidance:
+- Prefer PDF export unless existing architecture strongly supports a better first implementation
+- Server-generated export is preferred if needed to guarantee persisted-state fidelity
+- The report should look professional and readable, not raw JSON dumped into a file
+- Include stable ordering of diffs
+- Clearly label original vs revised document
+- Use persisted session/diff/review data only
+
+Add:
+- export CTA in session detail view
+- backend endpoint/service for report generation
+- proper file naming for download
+
+Suggested filename pattern:
+compare-audit-{session-slug-or-id}-{yyyy-mm-dd}.pdf
+
+==================================================
+T002 — REJECT → PDF EDITOR HANDOFF
+==================================================
+
+Add explicit CTA in Compare Versions session:
+“Open in PDF Editor”
+
+Behavior:
+- Manager can hand off rejected diffs and/or explicitly selected diffs into PDF Editor
+- PDF Editor must open the REVISED document, not the original
+- Rejected diff IDs and mapped regions must carry over
+- PDF Editor must preload visible marked zones for correction
+- Compare Versions remains read-only and does not mutate the document
+- Avoid fragile query-only state
+- Prefer a formal handoff payload/session linkage if needed
+
+Required outcome:
+Compare Versions creates a clean handoff context that PDF Editor can load safely and deterministically.
+
+You must define and implement the exact data contract.
+
+Data contract must include, at minimum:
+- handoff id
+- compare session id
+- revised document/file reference
+- selected diff ids
+- mapped page/region data needed by PDF Editor
+- source tool = compare-versions
+- created at timestamp
+- optional consumed/opened timestamp if useful
+
+Guidance:
+- Do not create messy architecture coupling between Compare Versions and PDF Editor
+- Use a formal backend-backed handoff record if that is the cleanest solution
+- PDF Editor should be able to fetch handoff context by id and initialize itself from it
+- Keep Compare Versions read-only
+
+Also add:
+- clear UI affordance for handoff
+- sensible empty-state behavior when no rejected/selected diffs exist
+- safe fallback if handoff payload is invalid or stale
+
+At the end of implementation, explicitly document:
+- the exact handoff payload shape
+- where it is stored
+- how PDF Editor resolves it
+
+==================================================
+T003 — SESSION MANAGEMENT
+==================================================
+
+Add session management for Compare Versions.
+
+Required:
+- rename session
+- archive session
+- trash/delete behavior only if safe and explicit
+- cleaner My Comparisons management flow
+
+Safe behavior rules:
+- archive = hidden from primary active list
+- trash/delete must be explicit and safe
+- do not make accidental destructive deletion easy
+- audit history should not be casually destroyed
+
+Add useful status badges/filters for:
+- active
+- archived
+- completed
+- error
+
+Implementation guidance:
+- Prefer soft-delete/trash over hard delete unless there is already a safe pattern in the codebase
+- Reuse existing app conventions if present
+- Keep session state transitions understandable and predictable
+
+==================================================
+T004 — MY COMPARISONS POLISH
+==================================================
+
+Tighten and polish My Comparisons list + session detail workflow.
+
+Required improvements:
+- tighter session list layout
+- better titles
+- filenames visible and clean
+- better dates
+- diff counts
+- severity indicators
+- obvious reopen/open session flow
+- production-ready row/card treatment
+- consistency with PlainPath dashboard patterns
+
+Focus:
+- clean hierarchy
+- readable metadata
+- fast scanability
+- clear active vs archived vs completed vs error states
+- smooth reopen workflow into session detail
+
+Do not redesign the whole app.
+Polish only the Compare Versions list/detail workflow.
+
+==================================================
+ARCHITECTURE / DATA EXPECTATIONS
+==================================================
+
+Use your judgment, but satisfy these principles:
+
+1. Persisted-state truth
+Audit export must reflect persisted review state, not stale in-memory UI state.
+
+2. Read-only Compare Versions boundary
+No document editing inside Compare Versions.
+
+3. Clean handoff boundary
+PDF Editor receives context via a clean contract, not brittle ad hoc client state.
+
+4. Split-screen/document-first integrity
+Do not break existing compare workspace design rules.
+
+5. Low-risk change set
+Do not destabilize existing completed Compare Versions features.
+
+==================================================
+OUT OF SCOPE
+==================================================
+
+Unless absolutely required for compatibility, do NOT include:
+- new demo tools
+- Word/docx support implementation
+- OCR
+- full approval workflow automation
+- team/org sharing
+- continuous scroll sync
+- major marketing redesign
+- major PDF Editor redesign outside handoff/preload support
+
+==================================================
+VERIFICATION REQUIREMENTS
+==================================================
+
+After implementation, run verification and report actual results.
+
+At minimum verify end-to-end:
+1. Existing Compare Versions session still opens correctly
+2. Manager notes/watchlist and overrides persist after refresh
+3. Export generates from persisted current review state
+4. Export includes required report sections and accurate counts
+5. Rejected/selected diffs can be handed off to PDF Editor
+6. PDF Editor opens revised document with marked zones preloaded
+7. Compare Versions remains read-only
+8. Rename works
+9. Archive works and removes session from active list
+10. Filters/status badges work
+11. My Comparisons list shows improved metadata and clean reopen flow
+12. No existing completed Compare Versions slices are broken
+
+==================================================
+FINAL COMPLETION REPORT FORMAT
+==================================================
+
+When done, provide a completion report with these exact sections:
+
+1. EXACT FILES CREATED
+- list every created file with full relative path
+
+2. EXACT FILES MODIFIED
+- list every modified file with full relative path
+
+3. ROUTES / ENDPOINTS ADDED OR CHANGED
+- include page routes
+- include API endpoints
+- note whether added or modified
+
+4. SCHEMA CHANGES
+- exact tables/models/fields added/changed
+- include enums/status fields/indexes if added
+- include migrations if created
+
+5. WHAT WORKS END-TO-END
+- concise but specific
+- cover T001, T002, T003, T004
+
+6. WHAT REMAINS DEFERRED
+- list anything intentionally deferred
+- explain why it was deferred
+
+7. HANDOFF CONTRACT
+- show the exact Compare Versions → PDF Editor data contract used
+- specify where it is stored and how it is resolved
+
+8. VERIFICATION RESULTS
+- checklist of tested flows
+- note pass/fail and any caveats
+
+==================================================
+QUALITY BAR
+==================================================
+
+This is a completion pass, not a prototype pass.
+Favor clean, production-lean implementation over placeholder UI.
+Reuse existing PlainPath patterns where possible.
+Keep the scope tight and ship the block cleanly.

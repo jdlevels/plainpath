@@ -141,8 +141,14 @@ export interface CVSessionListItem {
   status: CVSessionStatus;
   originalFileName: string;
   revisedFileName: string;
+  archivedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  // Diff stats — null until scan completes
+  diffTotal:  number | null;
+  diffHigh:   number | null;
+  diffMedium: number | null;
+  diffLow:    number | null;
 }
 
 export interface CVSessionDetail extends CVSessionListItem {

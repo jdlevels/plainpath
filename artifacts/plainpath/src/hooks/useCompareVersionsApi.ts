@@ -28,7 +28,8 @@ export function useCompareVersionsApi() {
     ),
 
     listSessions: useCallback(
-      async () => compareVersionsApi.listSessions(await token()),
+      async (opts?: { archived?: boolean }) =>
+        compareVersionsApi.listSessions(await token(), opts),
       [token],
     ),
 
@@ -64,11 +65,37 @@ export function useCompareVersionsApi() {
       [token],
     ),
 
-    /** Slice 5: Trigger or retry AI enrichment */
     enrichSession: useCallback(
       async (id: string, forceAll = false) =>
         compareVersionsApi.enrichSession(id, forceAll, await token()),
       [token],
     ),
+
+    // ── Slice 6 ─────────────────────────────────────────────────────────────
+
+    renameSession: useCallback(
+      async (id: string, title: string) =>
+        compareVersionsApi.renameSession(id, title, await token()),
+      [token],
+    ),
+
+    archiveSession: useCallback(
+      async (id: string, archived: boolean) =>
+        compareVersionsApi.archiveSession(id, archived, await token()),
+      [token],
+    ),
+
+    deleteSession: useCallback(
+      async (id: string) => compareVersionsApi.deleteSession(id, await token()),
+      [token],
+    ),
+
+    createHandoff: useCallback(
+      async (id: string, diffIds?: string[]) =>
+        compareVersionsApi.createHandoff(id, diffIds, await token()),
+      [token],
+    ),
+
+    exportReportUrl: compareVersionsApi.exportReportUrl,
   };
 }

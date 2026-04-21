@@ -7,7 +7,7 @@
 import {
   useState, useEffect, useRef, useCallback,
 } from "react"
-import { useLocation } from "wouter"
+import { useLocation, useSearch } from "wouter"
 import * as pdfjsLib from "pdfjs-dist"
 import {
   ArrowLeft, Loader2, AlertCircle, Lock, Layers,
@@ -629,6 +629,8 @@ function OriginalPane({
 
 export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
   const [, navigate] = useLocation()
+  const search = useSearch()
+  const fromCompare = new URLSearchParams(search).get("fromCompare") === "1"
   const { isAdmin, entitlements, loading: entLoading } = useEntitlements()
   const api = usePdfEditorApi()
 
@@ -1203,6 +1205,20 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
           </button>
         </div>
       </div>
+
+      {/* From-compare context banner */}
+      {fromCompare && (
+        <div className="flex items-center gap-2 px-4 py-2 bg-teal-50 dark:bg-teal-950/40 border-b border-teal-200 dark:border-teal-800/40 text-xs text-teal-700 dark:text-teal-300 flex-shrink-0">
+          <span className="font-semibold">Opened from Compare Versions.</span>
+          <span className="text-teal-600/80 dark:text-teal-400/80">Changes highlighted from your comparison are pre-loaded. Edits here won&rsquo;t affect the original comparison session.</span>
+          <button
+            onClick={() => window.history.back()}
+            className="ml-auto flex-shrink-0 underline font-medium hover:text-teal-900 dark:hover:text-teal-100 transition-colors"
+          >
+            ← Back to comparison
+          </button>
+        </div>
+      )}
 
       {/* Mobile tools bar */}
       <div className="flex sm:hidden items-center gap-1 px-3 py-1.5 border-b border-border/40 bg-background flex-shrink-0 overflow-x-auto">

@@ -21,6 +21,7 @@ export const compareVersionsSessionsTable = pgTable("compare_versions_sessions",
   diffResult: jsonb("diff_result"),
   managerNotes: jsonb("manager_notes").notNull().default([]),
   scannedAt: timestamp("scanned_at", { withTimezone: true }),
+  archivedAt: timestamp("archived_at", { withTimezone: true }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

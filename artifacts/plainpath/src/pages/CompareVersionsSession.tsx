@@ -16,10 +16,11 @@ import {
   Clock, ListChecks, RefreshCw, Scan,
   ChevronRight, Plus, Trash2, Link2, Pencil,
   ChevronDown as ChevDown,
-  Sparkles,
+  Sparkles, Download, ExternalLink,
 } from "lucide-react"
 import { useEntitlements } from "@/hooks/useEntitlements"
 import { useCompareVersionsApi } from "@/hooks/useCompareVersionsApi"
+import { useAuth } from "@clerk/react"
 import type {
   CVSessionDetail, CVManagerNotes,
   CVDiffItem, CVDiffResult, CVDiffSeverity, CVDiffChangeType,
@@ -1091,6 +1092,7 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
   const [revisedError, setRevisedError] = useState<string | null>(null)
   const [rescanning, setRescanning] = useState(false)
   const [enriching, setEnriching] = useState(false)
+  const [handoffLoading, setHandoffLoading] = useState(false)
 
   const [activeTab, setActiveTab] = useState<"original" | "revised">("original")
   const [summaryOpen, setSummaryOpen] = useState(false)
@@ -1229,6 +1231,32 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
     } catch (err: any) {
       console.error("[CompareVersions] enrich failed:", err)
     } finally { setEnriching(false) }
+  }
+
+  // ── Handoff to PDF Editor ──────────────────────────────────────────────────
+
+  async function handleHandoff() {
+    if (!session || handoffLoading || session.status !== "complete") return
+    setHandoffLoading(true)
+    try {
+      const result = await api.createHandoff(session.id, undefined)
+      navigate(`/pdf-editor/${result.pdfEditorSessionId}?fromCompare=1`)
+    } catch (err: any) {
+      console.error("[CompareVersions] handoff failed:", err)
+    } finally {
+      setHandoffLoading(false)
+    }
+  }
+
+  // ── Export report ──────────────────────────────────────────────────────────
+
+  function handleExport() {
+    if (!session) return
+    const url = api.exportReportUrl(session.id)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `compare-audit-${session.id.slice(0, 8)}.pdf`
+    a.click()
   }
 
   // ── Jump-to-page ──────────────────────────────────────────────────────────
@@ -1412,6 +1440,31 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
               <span className="hidden sm:inline">
                 {session.aiStatus === "error" ? "Retry AI" : session.aiStatus === "complete" ? "Re-run AI" : "AI Review"}
               </span>
+            </button>
+          )}
+
+          {/* Slice 6: Download Audit Report */}
+          {session.status === "complete" && (
+            <button
+              onClick={handleExport}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+              title="Download PDF audit report"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Download Report</span>
+            </button>
+          )}
+
+          {/* Slice 6: Open in PDF Editor (handoff) */}
+          {session.status === "complete" && (
+            <button
+              onClick={handleHandoff}
+              disabled={handoffLoading}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border border-teal-300/60 text-teal-700 dark:text-teal-300 hover:bg-teal-50/60 dark:hover:bg-teal-950/30 transition-colors disabled:opacity-50"
+              title="Open revised document in PDF Editor with highlighted changes"
+            >
+              {handoffLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ExternalLink className="w-3.5 h-3.5" />}
+              <span className="hidden sm:inline">Open in PDF Editor</span>
             </button>
           )}
 
