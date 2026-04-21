@@ -1,0 +1,69 @@
+Good progress. Keep the current implementation.
+
+This PDF Platform Expansion block is still NOT closed for four narrow reasons:
+
+1. scanned/text classification is not yet proven end-to-end on real uploaded fixtures
+2. Merge is still marked PROBABLE instead of browser-verified
+3. Page operations are not fully browser-verified with downloadable output
+4. OCR searchable-text behavior is not yet explicitly proven
+
+NARROW FINAL VERIFICATION PASS ONLY
+No broad refactors.
+No new feature expansion.
+Patch only if a real bug is found during this final verification.
+
+Do these steps:
+
+1) RETURN ONLY THE REMAINING GAP VERIFICATION
+Do not repeat the whole build history.
+Focus only on the unresolved gaps.
+
+2) REAL CLASSIFICATION VERIFICATION
+Use real uploaded fixtures, not DB forcing, for at least:
+- one selectable-text PDF -> verify classified as Text
+- one scanned/image-based PDF -> verify classified as Scanned or Mixed
+
+If synthetic fixtures are the blocker, generate or use a real rasterized/scanned PDF that the actual upload path can classify.
+If classification still fails, mark FAIL and patch only if the bug is real and local.
+
+3) OCR SEARCHABILITY VERIFICATION
+Prove that OCR output is meaningfully searchable after OCR runs.
+Show exactly how searchability is exposed in the current product.
+If there is no actual search affordance yet, say that explicitly and mark it deferred rather than implying it is complete.
+
+4) MERGE FLOW FINAL VERIFICATION
+Browser-verify end-to-end:
+- upload 2 PDFs
+- click Merge
+- merged file download is produced
+- success state is captured clearly
+
+If the success indicator is too transient, patch only that UI feedback issue if needed.
+
+5) PAGE TOOLS FINAL VERIFICATION
+Browser-verify each with real downloadable output:
+- Delete pages
+- Rotate pages
+- Reorder pages
+
+For each:
+- upload file
+- run operation
+- downloadable output produced
+- note PASS/FIXED/UNABLE
+
+6) FINAL MINI-REPORT FORMAT
+Return only these sections:
+
+1. REMAINING GAPS VERIFIED
+2. BUGS FOUND AND FIXED
+3. WHAT IS NOW FULLY BROWSER-VERIFIED
+4. WHAT REMAINS DEFERRED
+5. FINAL CLOSE/NO-CLOSE RECOMMENDATION
+
+Use result labels exactly:
+- PASS — browser-verified
+- FIXED — bug found, patched, browser re-verified
+- FAIL — verified broken
+- UNABLE — blocked by environment/prerequisite
+- DEFERRED — intentionally not included in this pass

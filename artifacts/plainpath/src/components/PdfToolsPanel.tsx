@@ -187,7 +187,7 @@ function MergeTool() {
       const blob = await api.merge(files)
       downloadBlob(blob, "merged.pdf")
       setState("done")
-      setTimeout(() => setState("idle"), 4000)
+      setTimeout(() => setState("idle"), 8000)
     } catch (err: any) {
       setError(err?.message ?? "Merge failed — please try again.")
       setState("error")
@@ -284,7 +284,7 @@ function ExtractPagesTool() {
       const baseName = file.name.replace(/\.pdf$/i, "")
       downloadBlob(blob, `${baseName}-extracted.pdf`)
       setState("done")
-      setTimeout(() => setState("idle"), 4000)
+      setTimeout(() => setState("idle"), 8000)
     } catch (err: any) {
       setError(err?.message ?? "Extraction failed — check your page range and try again.")
       setState("error")
@@ -393,7 +393,7 @@ function PageToolsCard() {
       const baseName = file.name.replace(/\.pdf$/i, "")
       downloadBlob(blob, `${baseName}-modified.pdf`)
       setState("done")
-      setTimeout(() => setState("idle"), 4000)
+      setTimeout(() => setState("idle"), 8000)
     } catch (err: any) {
       setError(err?.message ?? "Operation failed — please check your inputs and try again.")
       setState("error")
