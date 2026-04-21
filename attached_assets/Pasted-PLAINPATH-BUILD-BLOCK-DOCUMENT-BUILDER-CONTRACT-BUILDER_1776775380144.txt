@@ -1,0 +1,304 @@
+PLAINPATH — BUILD BLOCK
+DOCUMENT BUILDER / CONTRACT BUILDER — FINAL WORKFLOW POLISH PASS
+
+You are working inside the existing PlainPath codebase.
+
+IMPORTANT:
+This pass is limited to Document Builder / Contract Builder workflow polish only.
+Do not drift into Compare Versions, PDF Editor, Redact, marketing pages, OCR, Word/docx implementation, org/team sharing, approval workflows, or unrelated refactors.
+Preserve the recently improved DraftResultView split-screen workspace and the fixed upgrade modal behavior.
+
+==================================================
+CONTEXT
+==================================================
+
+Contract Builder / Document Builder is one of the main creation tools in PlainPath.
+It now has a stronger document-first output workspace, but the end-to-end creation flow still needs final polish so it feels clear, trustworthy, and production-ready.
+
+Standing product rules already established:
+- creation/editing/review tools should follow split-screen/document-first patterns where applicable
+- visible Save controls should exist where editing occurs
+- users should have a clear pre-run confirmation state before processing/generation begins
+- uploaded/opened document or source context should be visible/removable where applicable
+- action wording must be practical and unambiguous
+- save/export/download actions should be distinct and understandable
+- desktop usability is priority, but mobile should remain acceptable
+
+This pass is about tightening the creation workflow before, during, and after draft generation.
+
+==================================================
+TOOLS / SURFACES IN SCOPE
+==================================================
+
+Only the actual Document Builder / Contract Builder surfaces in code that govern:
+- builder form / intake flow
+- pre-generation confirmation state
+- generation trigger / gating flow
+- generated draft result workspace
+- post-generation actions (save, export, sign, analyze, redact, etc. where already present)
+- any related session/title/output metadata that affects user understanding
+
+If there are multiple builder routes/aliases, inspect and polish the real shared implementation.
+
+==================================================
+PRIMARY GOALS FOR THIS PASS
+==================================================
+
+T001 — Pre-run intake and confirmation polish
+T002 — Generation / gating / error-state polish
+T003 — Post-generation output workflow clarity
+T004 — Save / export / session identity consistency
+
+If a better internal implementation order is needed, use judgment, but stay inside this block only.
+
+==================================================
+EXECUTION RULES
+==================================================
+
+Follow this order exactly:
+1. Inspect current codebase first
+2. Produce a tight implementation plan based on actual code found
+3. Implement
+4. Run verification
+5. Provide a completion report
+
+Do not start coding before inspection and plan.
+Do not give a vague summary. Use exact files, exact routes, and exact state/action changes.
+
+==================================================
+REQUIRED INSPECTION TASK
+==================================================
+
+Before coding, inspect and identify:
+- all real routes/aliases for Contract Builder / Document Builder
+- current builder form/intake states
+- how document type / template / builder options are chosen
+- whether there is currently a true pre-run confirmation state before generation
+- current generate-draft button behavior
+- current usage gate / upgrade modal behavior
+- current loading/progress/generating state
+- current error handling during generation
+- current result workspace actions:
+  - save
+  - download/export
+  - sign
+  - analyze
+  - redact
+  - export JSON / other actions if present
+- how session/document title is determined and shown
+- whether the user can rename the generated result/session cleanly
+- whether the difference between “save work” vs “download output” is clear
+- whether the output result workspace makes next steps obvious
+- any current mobile/desktop issues in the builder flow
+
+Then produce a concise implementation plan grounded in the actual codebase.
+
+==================================================
+IMPLEMENTATION PLAN REQUIREMENTS
+==================================================
+
+Plan must include:
+- exact pages/components to modify
+- exact flow improvements before generation
+- exact gating/error-state improvements
+- exact post-generation action/output changes
+- exact session/title/save/export clarifications
+- exact verification checklist
+
+Keep the plan tight. No essay.
+
+==================================================
+T001 — PRE-RUN INTAKE AND CONFIRMATION POLISH
+==================================================
+
+Goal:
+Before the user clicks generate, the builder should feel clear, intentional, and ready.
+
+Required:
+- ensure there is a true pre-run state before generation
+- make the primary action obvious
+- make selected builder options / template / document type clearly visible
+- if source inputs or builder selections can be removed/changed before generation, make that clear
+- reduce ambiguity about what will be generated
+- if title/name is relevant before generation, make it clearer or easier to understand
+
+Focus on:
+- confidence before clicking Generate
+- visible readiness state
+- less clutter or ambiguity in the intake area
+- clear primary CTA placement
+
+Do not redesign the entire form.
+Polish the existing workflow.
+
+==================================================
+T002 — GENERATION / GATING / ERROR-STATE POLISH
+==================================================
+
+Goal:
+Generation should fail gracefully, gate clearly, and never feel broken.
+
+Required:
+- preserve the fixed upgrade modal behavior
+- ensure gating states are user-readable and intentional
+- loading/generating state should feel distinct from idle
+- error states should be clear and non-confusing
+- if generation is blocked, user should understand why and what next action exists
+- avoid runtime-overlay-style failures and ambiguous silent failures
+
+Also:
+- if progress text/loading copy is weak or generic, improve it
+- if button disabling/loading states can be tightened, do so
+- if retry behavior exists or can be safely improved, do so carefully
+
+Do not add new billing systems or gate logic.
+Polish the existing behavior.
+
+==================================================
+T003 — POST-GENERATION OUTPUT WORKFLOW CLARITY
+==================================================
+
+Goal:
+Once the draft is generated, the user should immediately understand what they can do next.
+
+Required:
+- make next actions clear in the result workspace
+- ensure action hierarchy is sensible:
+  - primary next step(s)
+  - secondary actions
+  - utility actions
+- avoid a cluttered or equally-weighted action bar if everything currently competes
+- make it easier to understand what each action does:
+  - download/export final file
+  - sign
+  - analyze
+  - redact
+  - export JSON / utility outputs
+- if some actions should be grouped or visually de-emphasized, do that
+- preserve the improved split-screen output workspace
+
+Also:
+- if output metadata (title, generated time, saved state, template type, etc.) helps clarity, surface it lightly
+- make sure the result does not feel like a dead-end after generation
+
+==================================================
+T004 — SAVE / EXPORT / SESSION IDENTITY CONSISTENCY
+==================================================
+
+Goal:
+The generated document/session should feel like a real, understandable object.
+
+Required:
+- make session/document identity clear
+- if title is weak, improve how it is surfaced
+- if rename is easy and safe to add, do so only if the underlying architecture already supports it or the change is truly small
+- clarify save vs download/export semantics
+- if current save behavior is invisible or confusing, improve it
+- preserve any existing autosave/manual save patterns where relevant
+- if the output is already persisted, make that understandable without clutter
+
+Do not add a whole new session management system here.
+Keep this focused and low-risk.
+
+==================================================
+NON-GOALS / OUT OF SCOPE
+==================================================
+
+Unless absolutely required for compatibility, do NOT include:
+- Compare Versions changes
+- PDF Editor changes
+- Redact changes beyond already-linked action labels if needed
+- OCR
+- Word/docx implementation
+- public/marketing redesign
+- Stripe/payment architecture work
+- organization/team collaboration
+- approval workflows
+- broad dashboard redesign
+- major backend re-architecture
+
+==================================================
+ARCHITECTURE PRINCIPLES
+==================================================
+
+1. Builder flow clarity
+The user should understand what they are about to generate, when generation is happening, and what to do after it completes.
+
+2. Graceful gating/errors
+Blocked generation should feel intentional, not broken.
+
+3. Post-generation action hierarchy
+Not every action should compete equally.
+
+4. Clear save vs output distinction
+Work-in-progress persistence and final file export should not feel ambiguous.
+
+5. Tight scope
+This is a workflow polish pass, not a new builder system.
+
+==================================================
+VERIFICATION REQUIREMENTS
+==================================================
+
+After implementation, run verification and report actual results.
+
+At minimum verify:
+1. builder route(s) still open correctly
+2. intake/pre-run state is clearer before generation
+3. primary generate CTA remains obvious
+4. generation loading state is clear
+5. upgrade/gating flow still works correctly
+6. generation errors are handled cleanly
+7. post-generation result workspace still opens correctly
+8. next-step actions are clearer and still functional
+9. save vs download/export distinction is clearer
+10. session/document identity is clearer
+11. DraftResultView split-screen workspace is not regressed
+12. mobile/tablet layouts still work acceptably
+13. changed files pass TS/build checks
+
+If a live gating constraint blocks full visual verification, state that explicitly, verify everything possible, and distinguish:
+- code-verified
+- browser-verified
+- environment-gated
+
+==================================================
+FINAL COMPLETION REPORT FORMAT
+==================================================
+
+When done, provide a completion report with these exact sections:
+
+1. EXACT FILES CREATED
+- list every created file with full relative path
+
+2. EXACT FILES MODIFIED
+- list every modified file with full relative path
+
+3. ROUTES / BUILDER SURFACES POLISHED
+- exact route/page/tool name
+- concise summary of workflow changes per surface
+
+4. STATE / ACTION / SAVE / GATING CHANGES
+- exact state/action changes
+- exact save/export/gating clarifications
+
+5. WHAT WORKS END-TO-END
+- concise but specific
+- cover T001, T002, T003, T004
+
+6. WHAT REMAINS DEFERRED
+- list anything intentionally deferred
+- explain why it was deferred
+
+7. VERIFICATION RESULTS
+- checklist of tested flows
+- note pass/fail and any caveats
+
+==================================================
+QUALITY BAR
+==================================================
+
+This is a polish/completion pass, not a prototype pass.
+Favor clean, production-lean implementation over placeholder UI.
+Reuse existing PlainPath patterns where possible.
+Keep the scope tight and ship the block cleanly.

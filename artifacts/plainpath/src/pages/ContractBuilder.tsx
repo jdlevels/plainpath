@@ -1923,9 +1923,12 @@ function ReviewStep({
   return (
     <div className="space-y-6">
       <div>
-        <Badge variant="outline" className="mb-3">{contractLabel(contractType)}</Badge>
-        <h2 className="text-2xl font-display font-bold mb-1">Review Summary</h2>
-        <p className="text-muted-foreground text-sm">Review your answers and fill any gaps before generating your draft.</p>
+        <div className="flex items-center gap-2 mb-2">
+          <Badge variant="outline">{contractLabel(contractType)}</Badge>
+          <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">Step 6 of 6</span>
+        </div>
+        <h2 className="text-2xl font-display font-bold mb-1">Review Your {contractLabel(contractType)}</h2>
+        <p className="text-muted-foreground text-sm">Check your answers and fill any gaps before generating. You can edit any step.</p>
       </div>
 
       <div className="space-y-3">
@@ -2053,19 +2056,34 @@ function ReviewStep({
         </div>
       )}
 
-      {error && <p className="text-sm text-red-500 text-center">{error}</p>}
+      {error && (
+        <div className="flex items-start gap-2.5 rounded-lg border border-red-300/60 dark:border-red-800/50 bg-red-50/60 dark:bg-red-950/20 px-4 py-3">
+          <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-semibold text-red-700 dark:text-red-400">Generation failed</p>
+            <p className="text-xs text-red-600/80 dark:text-red-400/70 mt-0.5">{error}</p>
+          </div>
+        </div>
+      )}
 
-      <div className="flex flex-col sm:flex-row gap-3 pt-2">
-        <Button variant="outline" onClick={onSave} className="gap-2">
-          <Save className="w-4 h-4" /> Save Draft
-        </Button>
-        <Button variant="outline" onClick={() => onEdit(1)} className="gap-2">
-          <ArrowLeft className="w-4 h-4" /> Edit Answers
-        </Button>
-        <Button onClick={onGenerate} disabled={generating || missingPartyNames} className="gap-2 flex-1 sm:flex-initial">
+      <div className="flex flex-col gap-2.5 pt-1">
+        <Button
+          onClick={onGenerate}
+          disabled={generating || missingPartyNames}
+          size="lg"
+          className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white h-11 text-base"
+        >
           {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-          {generating ? "Generating…" : "Generate Draft"}
+          {generating ? "Drafting your contract…" : "Generate Draft"}
         </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={onSave} className="gap-1.5 flex-1 text-xs">
+            <Save className="w-3.5 h-3.5" /> Save Progress
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => onEdit(1)} className="gap-1.5 flex-1 text-xs">
+            <ArrowLeft className="w-3.5 h-3.5" /> Edit Answers
+          </Button>
+        </div>
       </div>
     </div>
   )
@@ -2099,6 +2117,7 @@ function DraftResultView({ draft, contractType, onBack, onRestart }: {
   const { toast } = useToast()
   const [showSignatureModal, setShowSignatureModal] = useState(false)
   const [, setLocation] = useLocation()
+  const generatedAt = useMemo(() => new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }), [])
 
   useEffect(() => {
     const labels: Record<ContractType, string> = {
@@ -2248,15 +2267,25 @@ function DraftResultView({ draft, contractType, onBack, onRestart }: {
           <button
             onClick={onBack}
             className="p-1.5 rounded-lg hover:bg-muted/60 text-muted-foreground transition-colors flex-shrink-0"
-            title="Back to form"
+            title="Edit answers"
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
           <div className="min-w-0">
-            <div className="flex items-center gap-2 mb-0.5">
-              <Badge variant="secondary" className="text-[10px] py-0">{draft.contractType}</Badge>
+            <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+              <Badge variant="secondary" className="text-[10px] py-0 flex-shrink-0">Draft</Badge>
+              <span className="text-[10px] text-muted-foreground flex-shrink-0">Generated {generatedAt}</span>
             </div>
-            <h2 className="text-lg font-display font-bold leading-tight truncate">Your Contract Draft</h2>
+            <h2 className="text-lg font-display font-bold leading-tight truncate">{contractLabel(contractType)}</h2>
+            {(() => {
+              const partyA = Object.values(draft.parties)[0]?.name?.trim()
+              const partyB = Object.values(draft.parties)[1]?.name?.trim()
+              return (partyA || partyB) ? (
+                <p className="text-xs text-muted-foreground truncate mt-0.5">
+                  {[partyA, partyB].filter(Boolean).join(" × ")}
+                </p>
+              ) : null
+            })()}
           </div>
         </div>
         <button
@@ -2373,7 +2402,7 @@ function DraftResultView({ draft, contractType, onBack, onRestart }: {
 
           {/* Primary actions */}
           <div className="rounded-xl border border-border/40 bg-card p-4 space-y-2.5">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Download & Sign</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Save &amp; Sign</p>
             <Button
               size="sm"
               onClick={downloadPDF}
@@ -2388,19 +2417,14 @@ function DraftResultView({ draft, contractType, onBack, onRestart }: {
             >
               <Lock className="w-3.5 h-3.5" /> Send for Signature
             </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={exportJSON}
-              className="w-full gap-2 h-8 text-xs"
-            >
-              <Download className="w-3 h-3" /> Export JSON
-            </Button>
+            <p className="text-[10px] text-muted-foreground/70 text-center leading-snug pt-0.5">
+              Download to keep your draft — it's not stored on our servers.
+            </p>
           </div>
 
           {/* Use with another tool */}
           <div className="rounded-xl border border-border/40 bg-card p-4 space-y-2">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Use this contract with</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Continue with</p>
             <button
               onClick={handleAnalyzeContract}
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border border-border/40 hover:bg-muted/40 transition-colors text-left group"
@@ -2409,7 +2433,7 @@ function DraftResultView({ draft, contractType, onBack, onRestart }: {
                 <FileText className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold">Analyze</p>
+                <p className="text-xs font-semibold">Analyze this contract</p>
                 <p className="text-[10px] text-muted-foreground">Spot risks and obligations</p>
               </div>
             </button>
@@ -2421,8 +2445,8 @@ function DraftResultView({ draft, contractType, onBack, onRestart }: {
                 <EyeOff className="w-3.5 h-3.5 text-violet-600 dark:text-violet-400" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold">Redact Info</p>
-                <p className="text-[10px] text-muted-foreground">Remove sensitive data before sharing</p>
+                <p className="text-xs font-semibold">Redact before sharing</p>
+                <p className="text-[10px] text-muted-foreground">Remove sensitive data</p>
               </div>
             </button>
           </div>
@@ -2459,12 +2483,22 @@ function DraftResultView({ draft, contractType, onBack, onRestart }: {
             </div>
           )}
 
-          {/* Navigation */}
-          <div className="flex items-center gap-2 pt-1">
-            <Button variant="ghost" size="sm" onClick={onBack} className="gap-1.5 text-xs text-muted-foreground">
-              <ArrowLeft className="w-3.5 h-3.5" /> Edit draft
-            </Button>
+          {/* Utility */}
+          <div className="rounded-xl border border-border/30 bg-muted/30 p-3 space-y-1.5">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">Utility</p>
+            <button
+              onClick={exportJSON}
+              className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted/60 transition-colors text-left"
+            >
+              <Download className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+              <span className="text-[11px] text-muted-foreground">Export raw JSON</span>
+            </button>
           </div>
+
+          {/* Edit */}
+          <Button variant="outline" size="sm" onClick={onBack} className="w-full gap-1.5 text-xs">
+            <ArrowLeft className="w-3.5 h-3.5" /> Edit answers
+          </Button>
         </div>
       </div>
 
@@ -2682,6 +2716,23 @@ export default function ContractBuilder() {
             onBack={() => setDraft(null)}
             onRestart={handleRestart}
           />
+        ) : generating ? (
+          <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 text-center">
+            <div className="relative flex items-center justify-center w-16 h-16">
+              <div className="absolute inset-0 rounded-full border-4 border-emerald-200 dark:border-emerald-900" />
+              <div className="absolute inset-0 rounded-full border-4 border-t-emerald-600 animate-spin" />
+              <Sparkles className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-xl font-display font-bold">Drafting your {contractLabel(contractType ?? "freelance")}…</h2>
+              <p className="text-muted-foreground text-sm max-w-sm">PlainPath is building a structured contract draft based on your answers. This usually takes 10–20 seconds.</p>
+            </div>
+            <div className="flex flex-col gap-1.5 text-xs text-muted-foreground max-w-xs">
+              <span className="flex items-center gap-2"><CheckCircle2 className="w-3 h-3 text-emerald-500 flex-shrink-0" /> Structuring contract sections</span>
+              <span className="flex items-center gap-2"><CheckCircle2 className="w-3 h-3 text-emerald-500 flex-shrink-0" /> Adding legal protections</span>
+              <span className="flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin flex-shrink-0" /> Writing your clauses…</span>
+            </div>
+          </div>
         ) : (
           <>
             {/* ── Page header (step 0 only) ── */}
