@@ -1018,8 +1018,8 @@ export default function Home() {
               <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 opacity-80 pointer-events-none" />
               <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full bg-primary/10 blur-3xl pointer-events-none" />
               <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-violet-500/8 blur-3xl pointer-events-none" />
-              <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-                <div>
+              <div className="relative z-10">
+                <div className="mb-10">
                   <motion.p initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
                     className="text-xs font-bold uppercase tracking-[0.2em] text-primary/80 mb-5">The problem</motion.p>
                   <motion.h2 initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
@@ -1030,26 +1030,30 @@ export default function Home() {
                   </motion.h2>
                   <motion.p initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
                     transition={{ delay: 0.12 }}
-                    className="text-slate-400 leading-relaxed text-base sm:text-lg max-w-md">
+                    className="text-slate-400 leading-relaxed text-base sm:text-lg max-w-2xl">
                     Contracts, notices, and government forms are written by specialists with one goal: protecting the organization that issued them. Nobody writes them for you.
                   </motion.p>
                 </div>
-                <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {[
-                    { icon: CalendarX, title: "Deadlines buried in fine print",          desc: "A 30-day window in paragraph 8 that nobody told you about. Once it passes, your options disappear. Analyze a Document surfaces every one.", tool: "Analyze a Document",   iconBg: "rgba(59,130,246,0.15)",  iconColor: "#60a5fa", badgeBorder: "rgba(59,130,246,0.35)",  badgeColor: "#93c5fd" },
-                    { icon: FileScan,  title: "Fake notices designed to pressure you",   desc: "Scam notices look identical to real ones. Same formatting, same urgency. Document Trust Check scores legitimacy and flags every red flag.", tool: "Document Trust Check", iconBg: "rgba(239,68,68,0.15)",   iconColor: "#f87171", badgeBorder: "rgba(239,68,68,0.35)",   badgeColor: "#fca5a5" },
-                    { icon: PenLine,   title: "Signing the other party's boilerplate",   desc: "When you don't have your own contract, you sign theirs — and every clause was written to protect them. Build a Contract creates a fair agreement from scratch.", tool: "Build a Contract",     iconBg: "rgba(16,185,129,0.15)", iconColor: "#34d399", badgeBorder: "rgba(16,185,129,0.35)", badgeColor: "#6ee7b7" },
-                    { icon: Eye,       title: "Clauses that shift all the risk to you",  desc: "One paragraph waives your right to dispute. Another transfers liability quietly. Contract Review reads it clause by clause and tells you exactly what you're agreeing to.", tool: "Contract Review",      iconBg: "rgba(245,158,11,0.15)", iconColor: "#fbbf24", badgeBorder: "rgba(245,158,11,0.35)", badgeColor: "#fcd34d" },
+                    { icon: CalendarX,     title: "Deadlines buried in fine print",              desc: "A 30-day window in paragraph 8 that nobody told you about. Once it passes, your options disappear. Analyze a Document surfaces every one.",                                                  tool: "Analyze a Document",    iconBg: "rgba(59,130,246,0.15)",   iconColor: "#60a5fa", badgeBorder: "rgba(59,130,246,0.35)",   badgeColor: "#93c5fd"  },
+                    { icon: FileScan,      title: "Fake notices designed to pressure you",        desc: "Scam notices look identical to real ones. Same formatting, same urgency. Document Trust Check scores legitimacy and flags every red flag.",                                                 tool: "Document Trust Check",  iconBg: "rgba(239,68,68,0.15)",    iconColor: "#f87171", badgeBorder: "rgba(239,68,68,0.35)",    badgeColor: "#fca5a5"  },
+                    { icon: PenLine,       title: "Signing the other party's boilerplate",        desc: "When you don't have your own contract, you sign theirs — and every clause was written to protect them. Build a Contract creates a fair agreement from scratch.",                           tool: "Build a Contract",      iconBg: "rgba(16,185,129,0.15)",   iconColor: "#34d399", badgeBorder: "rgba(16,185,129,0.35)",   badgeColor: "#6ee7b7"  },
+                    { icon: Eye,           title: "Clauses that shift all the risk to you",       desc: "One paragraph waives your right to dispute. Another transfers liability quietly. Contract Review reads it clause by clause and tells you exactly what you're agreeing to.",                 tool: "Contract Review",       iconBg: "rgba(245,158,11,0.15)",   iconColor: "#fbbf24", badgeBorder: "rgba(245,158,11,0.35)",   badgeColor: "#fcd34d"  },
+                    { icon: EyeOff,        title: "Your private details go wherever the doc goes", desc: "Names, SSNs, account numbers — once you share a document they go with it. Redact Sensitive Info lets you strip them before anyone else sees the file.",                                   tool: "Redact Sensitive Info", iconBg: "rgba(139,92,246,0.15)",   iconColor: "#a78bfa", badgeBorder: "rgba(139,92,246,0.35)",   badgeColor: "#c4b5fd"  },
+                    { icon: FileSignature, title: "Print, sign, scan — for every signature",      desc: "The old workflow adds days and creates unsigned copies nobody can track. Digital Signature sends a secure link and gives you a real-time audit trail.",                                    tool: "Digital Signature",     iconBg: "rgba(99,102,241,0.15)",   iconColor: "#818cf8", badgeBorder: "rgba(99,102,241,0.35)",   badgeColor: "#a5b4fc"  },
+                    { icon: GitCompare,    title: "New contract version — what actually changed?", desc: "They sent a revised draft. You have no idea what moved. Compare Versions maps every addition, deletion, and structural change with severity scoring.",                                    tool: "Compare Versions",      iconBg: "rgba(20,184,166,0.15)",   iconColor: "#2dd4bf", badgeBorder: "rgba(20,184,166,0.35)",   badgeColor: "#5eead4"  },
+                    { icon: FileEdit,      title: "You need to annotate but can't edit the PDF",  desc: "The file is locked. You can't add notes, mask a section, or fill in a field. PDF Editor lets you overlay text, mask content, and export a clean copy.",                                   tool: "PDF Editor",            iconBg: "rgba(168,85,247,0.15)",   iconColor: "#d8b4fe", badgeBorder: "rgba(168,85,247,0.35)",   badgeColor: "#e9d5ff"  },
                   ].map((item, i) => (
-                    <motion.div key={i} initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true }} transition={{ delay: i * 0.08 }}
-                      className="flex items-start gap-4 bg-white/5 hover:bg-white/8 transition-colors rounded-2xl px-5 py-4">
-                      <div style={{ backgroundColor: item.iconBg }} className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5">
-                        <item.icon style={{ width: 18, height: 18, color: item.iconColor }} />
+                    <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }} transition={{ delay: i * 0.06 }}
+                      className="flex items-start gap-3.5 bg-white/5 hover:bg-white/8 transition-colors rounded-2xl px-4 py-3.5">
+                      <div style={{ backgroundColor: item.iconBg }} className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5">
+                        <item.icon style={{ width: 16, height: 16, color: item.iconColor }} />
                       </div>
                       <div>
-                        <p className="font-semibold text-white text-sm mb-0.5">{item.title}</p>
-                        <p className="text-slate-400 text-sm leading-relaxed mb-2">{item.desc}</p>
+                        <p className="font-semibold text-white text-sm mb-0.5 leading-snug">{item.title}</p>
+                        <p className="text-slate-400 text-xs leading-relaxed mb-2">{item.desc}</p>
                         <span style={{ color: item.badgeColor, borderColor: item.badgeBorder }} className="inline-block text-[10px] font-bold uppercase tracking-widest border rounded-full px-2 py-0.5">{item.tool}</span>
                       </div>
                     </motion.div>
