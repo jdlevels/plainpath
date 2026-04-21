@@ -1,0 +1,46 @@
+Fix the “See PlainPath in action” marketing section so it is accurate and consistent with the actual live-demo states.
+
+Problem:
+This section currently says “6 TOOLS • LIVE DEMO” but the visible tool selector row does not match that claim, and the broader product now has 8 tools. We must not overstate what is actually interactive in this specific live-demo module.
+
+Required approach:
+1. Audit the exact source for:
+   - the small badge text above “See PlainPath in action”
+   - the live-demo tool selector array/cards under the preview
+   - the state machine / mock preview config that drives this section
+2. Determine the TRUE number of demo states currently implemented in this module.
+3. Make the section truthful and internally consistent.
+
+Decision rule:
+- If this live-demo module currently supports fewer than 8 real interactive demo states, DO NOT label it as 8 tools.
+- Update the badge and supporting copy to reflect the real implemented count.
+- Preferred wording if it is not all 8:
+  “CORE WORKFLOW DEMO”
+  or
+  “{N} TOOLS • LIVE DEMO”
+  where N equals the actual number of working states.
+- If only 5 states are implemented, the badge must say 5, not 6 or 8.
+
+Also do the following:
+4. Ensure the selector row count matches the badge count exactly.
+5. Remove any stale/hardcoded “6 tools” references tied to this section.
+6. Keep layout, styling, spacing, card design, glow, and responsiveness unchanged unless minor alignment fixes are needed.
+7. Do not fake placeholder tools inside this live-demo module just to reach 8.
+8. If Compare Versions and PDF Editor are not yet part of this specific live demo, leave them out of this module for now and keep the wording honest.
+
+Optional improvement:
+9. If there is a clean subtitle/caption under the heading, adjust it so it implies this is a featured demo set, not necessarily every tool in the product. Example direction:
+   “Explore a sample workflow from PlainPath’s core document tools.”
+
+Verification:
+10. After the change, confirm:
+   - badge count matches actual selector count
+   - no stale “6 tools” text remains in this module
+   - desktop/tablet/mobile still render cleanly
+   - no overflow or wrapping issues
+
+Return:
+- exact files changed
+- exact before/after badge text
+- exact number of real demo states found
+- confirmation that this section is now truthful and consistent

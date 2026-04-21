@@ -814,7 +814,7 @@ export default function VideoWalkthrough() {
           className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/15 border border-primary/30 mb-5"
         >
           <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-          <span className="text-xs font-semibold uppercase tracking-widest text-primary">6 tools · live demo</span>
+          <span className="text-xs font-semibold uppercase tracking-widest text-primary">5 tools · live demo</span>
         </motion.div>
         <motion.h2
           initial={{ opacity: 0, y: 12 }}
@@ -832,7 +832,7 @@ export default function VideoWalkthrough() {
           transition={{ delay: 0.1 }}
           className="text-slate-400 text-lg max-w-xl mx-auto leading-relaxed"
         >
-          Each tool cycles through a real workflow. Click any card below to explore that tool.
+          Explore a sample workflow from five of PlainPath's core document tools. Click any card to jump to that tool.
         </motion.p>
       </div>
 
