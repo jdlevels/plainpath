@@ -20,6 +20,7 @@ import {
 } from "lucide-react"
 import { useEntitlements } from "@/hooks/useEntitlements"
 import { useCompareVersionsApi } from "@/hooks/useCompareVersionsApi"
+import { isPaywallActive } from "@/lib/billingConfig"
 import { useAuth } from "@clerk/react"
 import type {
   CVSessionDetail, CVManagerNotes,
@@ -510,9 +511,8 @@ function SummaryPanel({
   // Reset page filter when severity filter changes
   useEffect(() => { setPageFilter(null) }, [sevFilter])
 
-  if (!open) return null
-
-  // Severity-filtered items
+  // Severity-filtered items — must be computed before early return so useMemo
+  // calls below are always invoked in the same order (Rules of Hooks).
   const sevFiltered = sevFilter === "all" ? diffItems : diffItems.filter((i) => i.severity === sevFilter)
 
   // Pages with items (in sevFiltered)
@@ -548,6 +548,9 @@ function SummaryPanel({
     }
     return { total: diffItems.length, high, medium, low }
   }, [diffItems])
+
+  // Early return AFTER all hooks have been called
+  if (!open) return null
 
   const TAB_LABELS: { key: SevFilter; label: string; count: number }[] = [
     { key: "all",    label: "All",  count: stats.total },
@@ -1177,7 +1180,7 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
   const { pages: origPages, loading: origLoading, failed: origFailed } = usePdfRenderer(originalBuf)
   const { pages: revPages,  loading: revLoading,  failed: revFailed  } = usePdfRenderer(revisedBuf)
 
-  const canUse = isAdmin || (entitlements?.toolAccess?.includes("compare-versions") ?? false)
+  const canUse = !isPaywallActive || isAdmin || (entitlements?.toolAccess?.includes("compare-versions") ?? false)
 
   // ── Group zones (memoized) ─────────────────────────────────────────────────
   const origGroups = useMemo(() => computeGroupZones(diffItems, "original"), [diffItems])

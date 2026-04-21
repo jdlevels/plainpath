@@ -34,6 +34,11 @@ function requireAuth(req: any, res: any, next: any) {
   next();
 }
 
+function resolveUserId(req: any): string | null {
+  const { userId } = getAuth(req);
+  return userId ?? null;
+}
+
 async function runBackgroundScan(
   sessionId: string,
   originalBuf: Buffer,
@@ -381,7 +386,7 @@ router.post("/sessions/:id/enrich", requireAuth, async (req: any, res: any) => {
 // ─── GET /api/compare-versions/sessions/:id/original ──────────────────────────
 
 router.get("/sessions/:id/original", async (req: any, res) => {
-  const { userId } = getAuth(req);
+  const userId = resolveUserId(req);
   if (!userId) return res.status(401).json({ error: "unauthorized" });
   try {
     const result = await pool.query(
@@ -405,7 +410,7 @@ router.get("/sessions/:id/original", async (req: any, res) => {
 // ─── GET /api/compare-versions/sessions/:id/revised ───────────────────────────
 
 router.get("/sessions/:id/revised", async (req: any, res) => {
-  const { userId } = getAuth(req);
+  const userId = resolveUserId(req);
   if (!userId) return res.status(401).json({ error: "unauthorized" });
   try {
     const result = await pool.query(
@@ -429,7 +434,7 @@ router.get("/sessions/:id/revised", async (req: any, res) => {
 // ─── PATCH /api/compare-versions/sessions/:id/review ──────────────────────────
 
 router.patch("/sessions/:id/review", async (req: any, res) => {
-  const { userId } = getAuth(req);
+  const userId = resolveUserId(req);
   if (!userId) return res.status(401).json({ error: "unauthorized" });
   try {
     const { diffResult } = req.body ?? {};
@@ -454,7 +459,7 @@ router.patch("/sessions/:id/review", async (req: any, res) => {
 // ─── PATCH /api/compare-versions/sessions/:id/notes ───────────────────────────
 
 router.patch("/sessions/:id/notes", async (req: any, res) => {
-  const { userId } = getAuth(req);
+  const userId = resolveUserId(req);
   if (!userId) return res.status(401).json({ error: "unauthorized" });
   try {
     const notes = req.body?.managerNotes;
