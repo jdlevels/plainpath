@@ -1,0 +1,298 @@
+PLAINPATH — BUILD BLOCK
+PDF EDITOR — SAVE / EXPORT / SESSION CONTINUITY POLISH PASS
+
+You are working inside the existing PlainPath codebase.
+
+IMPORTANT:
+This pass is limited to PDF Editor only.
+Do not drift into Compare Versions, marketing/demo pages, OCR, Word/docx editing, signature redesign, org/team sharing, collaboration, or unrelated refactors.
+Preserve all currently working Compare Versions → PDF Editor handoff behavior and the newly completed issue workflow.
+
+==================================================
+CONTEXT
+==================================================
+
+PDF Editor now already has:
+- split-screen/document-first workspace
+- Compare Versions handoff intake
+- right-side issue navigator for handoff sessions
+- corrected/open issue tracking via ops JSON
+- visible Save button
+- dirty/unsaved state
+- autosave around every 60 seconds
+- save indicator / retry handling
+- working page focus from issue list
+- preserved mobile tab-switching behavior
+
+Standing product rules:
+- PDF Editor is the correction surface
+- document remains visually primary
+- split-screen is the default rule
+- visible Save button must remain
+- autosave supports the user, but does not replace explicit save
+- document-heavy tools should feel spacious and production-ready
+- do not break Compare Versions handoff or existing PDF editing capabilities
+
+This pass is about tightening confidence around:
+1. saved-session continuity
+2. export/final output clarity
+3. reopen reliability
+4. completion-oriented user flow after correction work
+
+==================================================
+PRIMARY GOALS FOR THIS PASS
+==================================================
+
+T001 — Session continuity and reopen polish
+T002 — Export / final output workflow clarity
+T003 — Correction completion UX
+T004 — Save-state and session-status polish
+
+If a better internal implementation order is needed, use judgment, but stay inside this block only.
+
+==================================================
+EXECUTION RULES
+==================================================
+
+Follow this order exactly:
+1. Inspect current codebase first
+2. Produce a tight implementation plan based on actual code found
+3. Implement
+4. Run verification
+5. Provide a completion report
+
+Do not start coding before inspection and plan.
+Do not give a vague summary. Use exact files, exact routes/endpoints, and exact state changes.
+
+==================================================
+REQUIRED INSPECTION TASK
+==================================================
+
+Before coding, inspect and identify:
+- current PDF Editor session list / reopen entry flow, if any
+- current persistence model for pdf_editor_sessions
+- current export/download endpoints and toolbar actions
+- whether export currently reflects latest saved ops or in-memory state
+- how reopen currently restores:
+  - page position
+  - selected tool
+  - zoom
+  - ops
+  - issue/corrected state
+- whether there is any session status model already
+- current “fromCompare” and handoff-origin session behavior after later reopen
+- current session naming / metadata shown to the user
+- current final export button labels and user understanding
+- whether there is already any “done / complete / corrected” concept in PDF Editor
+- any pre-existing patterns in other PlainPath tools for export/download state, completion status, or recent sessions
+
+Then produce a concise implementation plan grounded in the actual codebase.
+
+==================================================
+IMPLEMENTATION PLAN REQUIREMENTS
+==================================================
+
+Plan must include:
+- exact frontend changes
+- exact backend/API changes, if any
+- exact state/model changes
+- exact export behavior
+- exact reopen/session continuity behavior
+- exact verification checklist
+
+Keep the plan tight. No essay.
+
+==================================================
+T001 — SESSION CONTINUITY AND REOPEN POLISH
+==================================================
+
+Goal:
+A user should be able to leave a PDF Editor session and return later without confusion.
+
+Required:
+- tighten reopen reliability for saved sessions
+- ensure persisted ops, corrected state, and issue state restore cleanly
+- make session title/identity clearer if current UI is weak
+- if appropriate, surface last saved time in a subtle but visible way
+- if page/zoom/selected context can be persisted safely with minimal risk, do so
+- if not safe, defer explicitly and preserve current stable behavior
+
+Focus on:
+- confidence that work is not lost
+- easy understanding of what session the user is in
+- cleaner continuity for sessions opened from Compare Versions
+
+If the editor already has a session reopen path, polish it.
+If there is no dedicated reopen entry point in PDF Editor scope, do not invent a whole new product area unless needed; stay tight.
+
+==================================================
+T002 — EXPORT / FINAL OUTPUT WORKFLOW CLARITY
+==================================================
+
+Goal:
+When a user finishes correction work, the save/export flow should be obvious and trustworthy.
+
+Required:
+- clarify the difference between:
+  - saving the session/work-in-progress
+  - exporting/downloading the corrected PDF output
+- ensure export uses the correct/latest saved editor state
+- export action should have clear labeling and status feedback
+- if the current export button/flow is ambiguous, fix the wording and toolbar grouping
+- if export is disabled until a valid state exists, make that obvious
+- avoid user confusion between “Save” and “Download/Export”
+
+Implementation expectations:
+- preserve existing export capability if already working
+- if current export reads in-memory state and that is acceptable/safe, document it
+- if export should first flush pending changes, implement that safely
+- if exporting should preserve corrected highlights/annotations/edits exactly as visible, ensure that is true
+- provide subtle but clear success/failure feedback
+
+Do not redesign all export architecture.
+Polish and harden the current flow.
+
+==================================================
+T003 — CORRECTION COMPLETION UX
+==================================================
+
+Goal:
+After working through issues, the user should understand progress and feel confident closing/exporting.
+
+Required:
+- make correction progress more legible
+- if issue tracking already supports corrected/open state, surface a compact completion summary
+- provide a clean “done” sense without creating a heavyweight workflow engine
+- when all handoff issues are marked corrected, reflect that state clearly
+- if session came from Compare Versions, preserve source context but avoid clutter
+
+Possible acceptable solutions:
+- toolbar or banner summary like:
+  - “7 of 7 issues corrected”
+  - “All handoff issues marked corrected”
+- lightweight completion badge/state
+- subtle completion styling for fully corrected handoff sessions
+
+Do NOT build a full approval workflow.
+Keep it lightweight and editing-focused.
+
+==================================================
+T004 — SAVE-STATE AND SESSION-STATUS POLISH
+==================================================
+
+Goal:
+Make state/status legible at a glance.
+
+Required:
+- improve clarity of save status, export status, and session identity
+- if useful, add a lightweight session status concept such as:
+  - in progress
+  - all handoff issues corrected
+  - exported
+  only if it can be done safely without backend churn
+- if not safe, defer explicitly and use UI-level summaries instead
+- make toolbar hierarchy cleaner if Save / Export / issue progress compete visually
+- ensure status language is plain and practical
+
+Do not add bloated workflow/state machinery unless clearly justified.
+
+==================================================
+NON-GOALS / OUT OF SCOPE
+==================================================
+
+Unless absolutely required for compatibility, do NOT include:
+- OCR
+- Word/docx editing implementation
+- Compare Versions changes
+- public/demo redesign
+- collaboration/chat/comments
+- signature redesign
+- approval workflow automation
+- major PDF engine rewrite
+- broad dashboard redesign
+- whole new session-management product area outside what is needed for PDF Editor continuity
+
+==================================================
+ARCHITECTURE PRINCIPLES
+==================================================
+
+1. Preserve handoff behavior
+Do not break Compare Versions → PDF Editor.
+
+2. Save vs export must be distinct
+Users should clearly understand work-in-progress save versus final output export.
+
+3. Low-risk persistence
+Only persist additional editor continuity state if it is clean and stable.
+
+4. Document-first UX
+Any toolbar/status improvements must not crowd the workspace.
+
+5. Tight scope
+Do not turn this into a new workflow management system.
+
+==================================================
+VERIFICATION REQUIREMENTS
+==================================================
+
+After implementation, run verification and report actual results.
+
+At minimum verify end-to-end:
+1. existing PDF Editor sessions still open correctly
+2. Compare Versions handoff sessions still open correctly
+3. corrected/open issue state restores correctly after refresh/reopen
+4. save state remains accurate after reopen
+5. session title/identity is clearer if modified
+6. export/download action is clearly distinguishable from Save
+7. export uses the correct latest editor state
+8. pending unsaved changes are handled correctly before export
+9. export success/failure feedback works
+10. completion summary/progress is accurate for handoff-loaded sessions
+11. fully corrected handoff sessions show a clear completed state
+12. no Compare Versions handoff behavior is broken
+13. no existing PDF Editor capabilities are regressed
+14. mobile/tablet layout still works acceptably
+15. changed files pass TS checks
+
+==================================================
+FINAL COMPLETION REPORT FORMAT
+==================================================
+
+When done, provide a completion report with these exact sections:
+
+1. EXACT FILES CREATED
+- list every created file with full relative path
+
+2. EXACT FILES MODIFIED
+- list every modified file with full relative path
+
+3. ROUTES / ENDPOINTS ADDED OR CHANGED
+- include page routes
+- include API endpoints
+- note whether added or modified
+
+4. STATE / SESSION / EXPORT MODEL CHANGES
+- exact editor state additions/changes
+- exact save/export/continuity behavior
+- exact distinction between Save and Export
+
+5. WHAT WORKS END-TO-END
+- concise but specific
+- cover T001, T002, T003, T004
+
+6. WHAT REMAINS DEFERRED
+- list anything intentionally deferred
+- explain why it was deferred
+
+7. VERIFICATION RESULTS
+- checklist of tested flows
+- note pass/fail and any caveats
+
+==================================================
+QUALITY BAR
+==================================================
+
+This is a polish/completion pass, not a prototype pass.
+Favor clean, production-lean implementation over placeholder UI.
+Reuse existing PlainPath patterns where possible.
+Keep the scope tight and ship the block cleanly.

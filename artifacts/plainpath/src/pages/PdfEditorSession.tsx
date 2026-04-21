@@ -50,6 +50,16 @@ function clamp(v: number, lo: number, hi: number) {
   return Math.max(lo, Math.min(hi, v))
 }
 
+function fmtRelative(iso: string | Date) {
+  const diff = Date.now() - new Date(iso).getTime()
+  const m = Math.floor(diff / 60_000)
+  if (m < 1) return "just now"
+  if (m < 60) return `${m}m ago`
+  const h = Math.floor(m / 60)
+  if (h < 24) return `${h}h ago`
+  return `${Math.floor(h / 24)}d ago`
+}
+
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
 interface PageRender {
@@ -408,13 +418,25 @@ function IssuePanel({
 }) {
   const openCount = issues.filter((i) => !i.op.correctedAt).length
   const doneCount = issues.filter((i) => !!i.op.correctedAt).length
+  const allDone = openCount === 0 && doneCount > 0
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Header */}
-      <div className="flex items-center gap-2 px-3 py-2 border-b border-border/40 bg-neutral-200/80 dark:bg-zinc-800/80 flex-shrink-0">
-        <ListChecks className="w-3 h-3 text-muted-foreground" />
-        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Issues</span>
+      <div className={`flex items-center gap-2 px-3 py-2 border-b border-border/40 flex-shrink-0 ${
+        allDone
+          ? "bg-green-100/80 dark:bg-green-900/30"
+          : "bg-neutral-200/80 dark:bg-zinc-800/80"
+      }`}>
+        {allDone
+          ? <CheckCircle2 className="w-3 h-3 text-green-600 dark:text-green-400" />
+          : <ListChecks className="w-3 h-3 text-muted-foreground" />
+        }
+        <span className={`text-[10px] font-bold uppercase tracking-widest ${
+          allDone ? "text-green-700 dark:text-green-300" : "text-muted-foreground"
+        }`}>
+          {allDone ? "All corrected" : "Issues"}
+        </span>
         <div className="ml-auto flex items-center gap-1.5">
           {openCount > 0 && (
             <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">
@@ -429,12 +451,21 @@ function IssuePanel({
         </div>
       </div>
 
-      {/* Tip */}
-      <div className="px-3 py-2 bg-teal-50/60 dark:bg-teal-950/20 border-b border-teal-200/40 dark:border-teal-800/30 flex-shrink-0">
-        <p className="text-[10px] text-teal-700 dark:text-teal-300 leading-relaxed">
-          Click an issue to navigate to its location. Use the editing tools to correct it, then mark it done.
-        </p>
-      </div>
+      {/* Tip / completion message */}
+      {allDone ? (
+        <div className="px-3 py-2.5 bg-green-50/80 dark:bg-green-950/20 border-b border-green-200/40 dark:border-green-800/30 flex-shrink-0">
+          <p className="text-[10px] text-green-700 dark:text-green-300 leading-relaxed font-medium">
+            All {doneCount} issue{doneCount !== 1 ? "s" : ""} marked corrected.
+            Download the corrected PDF when ready.
+          </p>
+        </div>
+      ) : (
+        <div className="px-3 py-2 bg-teal-50/60 dark:bg-teal-950/20 border-b border-teal-200/40 dark:border-teal-800/30 flex-shrink-0">
+          <p className="text-[10px] text-teal-700 dark:text-teal-300 leading-relaxed">
+            Click an issue to navigate to its location. Use the editing tools to correct it, then mark it done.
+          </p>
+        </div>
+      )}
 
       {/* List */}
       <div className="flex-1 overflow-y-auto">
@@ -793,6 +824,7 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
 
   // Save state
   const [saveState, setSaveState] = useState<SaveState>("idle")
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null)
 
   // Export state
   const [exportState, setExportState] = useState<"idle" | "exporting" | "error">("idle")
@@ -800,8 +832,10 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
   // Mobile tab
   const [activeTab, setActiveTab] = useState<"original" | "copy">("copy")
 
-  // Issue panel (shown when fromCompare)
+  // Issue panel: initialize open if coming directly from Compare Versions.
+  // The panelAutoOpenedRef handles the reopen case (no URL param) once ops load.
   const [showIssuePanel, setShowIssuePanel] = useState(fromCompare)
+  const panelAutoOpenedRef = useRef(false)
 
   // Left-pane hover sync: set of op IDs in the currently-hovered indicator group
   const [hoveredFromLeft, setHoveredFromLeft] = useState<ReadonlySet<string>>(new Set())
@@ -845,6 +879,9 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
     }))
   }, [ops])
 
+  // True when this session has CV-origin highlights (survives reopen without URL params)
+  const isHandoffSession = handoffIssues.length > 0
+
   // PDF renderer
   const { pages, loading: pdfLoading, failed: pdfFailed } = usePdfRenderer(pdfBuf)
 
@@ -885,6 +922,16 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
     api.setPageCount(sessionId, pages.length).catch(() => {})
   }, [pages.length, sessionMeta])
 
+  // ── Auto-open issue panel on reopen (when URL has no ?fromCompare=1) ────────
+  // Fires once after ops load and cv- highlights are detected.
+
+  useEffect(() => {
+    if (!panelAutoOpenedRef.current && handoffIssues.length > 0) {
+      panelAutoOpenedRef.current = true
+      setShowIssuePanel(true)
+    }
+  }, [handoffIssues.length])
+
   // ── Document title ─────────────────────────────────────────────────────────
 
   useEffect(() => {
@@ -900,6 +947,7 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
     setSaveState("saving")
     try {
       await api.saveOps(sessionId, opsToSave)
+      setLastSavedAt(new Date())
       setSaveState("saved")
       setTimeout(() => setSaveState((prev) => prev === "saved" ? "idle" : prev), 3000)
     } catch {
@@ -1299,6 +1347,7 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
   const editCount = ops.length
   const issueCount = handoffIssues.length
   const correctedCount = handoffIssues.filter((i) => !!i.op.correctedAt).length
+  const allIssuesCorrected = isHandoffSession && issueCount > 0 && correctedCount === issueCount
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)]">
@@ -1318,10 +1367,18 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
             <p className="text-sm font-semibold truncate max-w-[120px] sm:max-w-[200px] lg:max-w-[340px]">
               {sessionMeta.fileName}
             </p>
-            <p className="text-[10px] text-muted-foreground">
-              {pageLabel}
-              {editCount > 0 && ` · ${editCount} edit${editCount !== 1 ? "s" : ""}`}
-              {fromCompare && issueCount > 0 && ` · ${correctedCount}/${issueCount} issues done`}
+            <p className="text-[10px] text-muted-foreground flex items-center gap-1 flex-wrap">
+              <span>{pageLabel}</span>
+              {editCount > 0 && <span>· {editCount} edit{editCount !== 1 ? "s" : ""}</span>}
+              {lastSavedAt && <span>· saved {fmtRelative(lastSavedAt)}</span>}
+              {isHandoffSession && issueCount > 0 && !allIssuesCorrected && (
+                <span>· {correctedCount}/{issueCount} corrected</span>
+              )}
+              {allIssuesCorrected && (
+                <span className="inline-flex items-center gap-0.5 text-green-600 dark:text-green-400 font-semibold">
+                  · <CheckCircle2 className="w-2.5 h-2.5" /> All issues corrected
+                </span>
+              )}
             </p>
           </div>
         </div>
@@ -1367,11 +1424,15 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
             )}
           </button>
 
-          {/* Download / Export button */}
+          {/* Download PDF — generates the final corrected PDF file (distinct from Save) */}
           <button
             onClick={handleExport}
             disabled={exportState === "exporting"}
-            title={exportState === "error" ? "Export failed — retry" : "Download edited PDF"}
+            title={
+              exportState === "error"
+                ? "Export failed — click to retry"
+                : "Download corrected PDF — applies all edits to a new file"
+            }
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${
               exportState === "error"
                 ? "bg-red-50 dark:bg-red-950/30 border-red-300 dark:border-red-700 text-red-700 dark:text-red-300"
@@ -1388,48 +1449,74 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
               <Download className="w-3.5 h-3.5" />
             )}
             <span className="hidden sm:inline">
-              {exportState === "exporting" ? "Exporting…" : exportState === "error" ? "Failed" : "Download"}
+              {exportState === "exporting" ? "Exporting…" : exportState === "error" ? "Failed" : "Download PDF"}
             </span>
           </button>
         </div>
       </div>
 
-      {/* ── From-compare context banner ── */}
-      {fromCompare && (
-        <div className="flex items-center gap-2 px-4 py-2 bg-teal-50 dark:bg-teal-950/40 border-b border-teal-200 dark:border-teal-800/40 text-xs flex-shrink-0">
-          <div className="flex items-center gap-1.5 text-teal-700 dark:text-teal-300 min-w-0">
-            <span className="font-semibold flex-shrink-0">Opened from Compare Versions.</span>
-            {issueCount > 0 ? (
-              <span className="text-teal-600/80 dark:text-teal-400/80 hidden sm:inline">
-                {issueCount} issue zone{issueCount !== 1 ? "s" : ""} pre-loaded.
-                Use the <strong className="font-semibold">Issues panel</strong> on the right to navigate and mark corrections.
-              </span>
+      {/* ── Handoff context banner — shown whenever this is a CV-origin session ── */}
+      {isHandoffSession && (
+        <div className={`flex items-center gap-2 px-4 py-2 border-b text-xs flex-shrink-0 transition-colors ${
+          allIssuesCorrected
+            ? "bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800/40"
+            : "bg-teal-50 dark:bg-teal-950/40 border-teal-200 dark:border-teal-800/40"
+        }`}>
+          <div className={`flex items-center gap-1.5 min-w-0 ${
+            allIssuesCorrected
+              ? "text-green-700 dark:text-green-300"
+              : "text-teal-700 dark:text-teal-300"
+          }`}>
+            {allIssuesCorrected ? (
+              <>
+                <CheckCircle2 className="w-3 h-3 flex-shrink-0" />
+                <span className="font-semibold flex-shrink-0">All {issueCount} issues corrected.</span>
+                <span className="hidden sm:inline opacity-80">Ready to download the corrected PDF.</span>
+              </>
             ) : (
-              <span className="text-teal-600/80 dark:text-teal-400/80 hidden sm:inline">
-                Edits here won&rsquo;t affect the original comparison session.
-              </span>
+              <>
+                <span className="font-semibold flex-shrink-0">Compare Versions session.</span>
+                {issueCount > 0 && (
+                  <span className="hidden sm:inline opacity-80">
+                    {correctedCount > 0
+                      ? `${correctedCount} of ${issueCount} issue${issueCount !== 1 ? "s" : ""} corrected.`
+                      : `${issueCount} issue zone${issueCount !== 1 ? "s" : ""} loaded.`}{" "}
+                    Use the Issues panel to navigate and mark corrections.
+                  </span>
+                )}
+              </>
             )}
           </div>
           <div className="ml-auto flex items-center gap-2 flex-shrink-0">
-            {fromCompare && issueCount > 0 && (
+            {issueCount > 0 && (
               <button
                 onClick={() => setShowIssuePanel((v) => !v)}
                 className={`flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold transition-colors border ${
                   showIssuePanel
-                    ? "bg-teal-100 dark:bg-teal-900/40 border-teal-300 dark:border-teal-700 text-teal-700 dark:text-teal-300"
+                    ? allIssuesCorrected
+                      ? "bg-green-100 dark:bg-green-900/40 border-green-300 dark:border-green-700 text-green-700 dark:text-green-300"
+                      : "bg-teal-100 dark:bg-teal-900/40 border-teal-300 dark:border-teal-700 text-teal-700 dark:text-teal-300"
+                    : allIssuesCorrected
+                    ? "border-green-300/60 dark:border-green-700/40 text-green-600 dark:text-green-400 hover:bg-green-100/50"
                     : "border-teal-300/60 dark:border-teal-700/40 text-teal-600 dark:text-teal-400 hover:bg-teal-100/50"
                 }`}
               >
                 <ListChecks className="w-3 h-3" />
-                {showIssuePanel ? "Hide issues" : `Show ${issueCount} issues`}
+                {showIssuePanel ? "Hide" : `${issueCount} issues`}
               </button>
             )}
-            <button
-              onClick={() => window.history.back()}
-              className="flex-shrink-0 text-xs underline font-medium text-teal-700 dark:text-teal-300 hover:text-teal-900 dark:hover:text-teal-100 transition-colors"
-            >
-              ← Back
-            </button>
+            {fromCompare && (
+              <button
+                onClick={() => window.history.back()}
+                className={`flex-shrink-0 text-xs underline font-medium transition-colors ${
+                  allIssuesCorrected
+                    ? "text-green-700 dark:text-green-300 hover:text-green-900 dark:hover:text-green-100"
+                    : "text-teal-700 dark:text-teal-300 hover:text-teal-900 dark:hover:text-teal-100"
+                }`}
+              >
+                ← Back
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -1507,18 +1594,25 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
               Working Copy · {editCount} edit{editCount !== 1 ? "s" : ""}
             </span>
             {/* Issue panel toggle button (desktop only) */}
-            {fromCompare && issueCount > 0 && (
+            {isHandoffSession && issueCount > 0 && (
               <button
                 onClick={() => setShowIssuePanel((v) => !v)}
                 title={showIssuePanel ? "Hide issue panel" : "Show issue panel"}
                 className={`ml-auto flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-semibold transition-colors ${
                   showIssuePanel
-                    ? "text-violet-700 dark:text-violet-300 bg-violet-100/60 dark:bg-violet-900/30"
+                    ? allIssuesCorrected
+                      ? "text-green-700 dark:text-green-300 bg-green-100/60 dark:bg-green-900/30"
+                      : "text-violet-700 dark:text-violet-300 bg-violet-100/60 dark:bg-violet-900/30"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
                 }`}
               >
-                <ListChecks className="w-3 h-3" />
-                <span>{issueCount} issue{issueCount !== 1 ? "s" : ""}</span>
+                {allIssuesCorrected
+                  ? <CheckCircle2 className="w-3 h-3" />
+                  : <ListChecks className="w-3 h-3" />
+                }
+                <span>
+                  {allIssuesCorrected ? "All corrected" : `${issueCount} issue${issueCount !== 1 ? "s" : ""}`}
+                </span>
                 <ChevronRight className={`w-3 h-3 transition-transform ${showIssuePanel ? "rotate-180" : ""}`} />
               </button>
             )}
@@ -1584,8 +1678,8 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
               )}
             </div>
 
-            {/* Issue panel sidebar — desktop only, shown when fromCompare + issueCount > 0 + showIssuePanel */}
-            {fromCompare && issueCount > 0 && showIssuePanel && (
+            {/* Issue panel sidebar — desktop only, shown when isHandoffSession + issueCount > 0 + showIssuePanel */}
+            {isHandoffSession && issueCount > 0 && showIssuePanel && (
               <div className="hidden md:flex flex-col w-60 xl:w-64 flex-shrink-0 border-l border-border/40 bg-background overflow-hidden">
                 <IssuePanel
                   issues={handoffIssues}

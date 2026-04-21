@@ -332,13 +332,14 @@ router.get("/sessions/:id/export", requireAuth, async (req: any, res) => {
           opacity: 1,
         });
       } else if (op.kind === "highlight") {
-        // Yellow (#fde68a = 253,230,138) semi-transparent
+        // Use op.highlightColor if set (e.g. CV handoff severity colors), else default yellow
+        const hlColor = hexToRgb(op.highlightColor ?? "#fde68a");
         page.drawRectangle({
           x,
           y,
           width: rectW,
           height: rectH,
-          color: rgb(253 / 255, 230 / 255, 138 / 255),
+          color: hlColor,
           opacity: op.opacity ?? 0.4,
         });
       } else if (op.kind === "text" && op.text) {
