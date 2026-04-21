@@ -1,0 +1,137 @@
+PLAINPATH — MICRO PASS
+PDF PLATFORM UTILITY SMOKE VERIFICATION CAPTURE
+
+You are working inside the existing PlainPath codebase.
+
+IMPORTANT:
+The PDF Platform Expansion foundation is already approved.
+Do NOT refactor architecture.
+Do NOT add new features.
+Do NOT broaden scope.
+
+This micro-pass exists only to capture the last lightweight browser-level verification evidence for already-built flows.
+
+==================================================
+GOAL
+==================================================
+
+Capture final browser verification for these 3 items only:
+
+1. Merge utility — final downloaded confirmation state
+2. Page Tools utility — final downloaded confirmation state for:
+   - delete pages
+   - rotate pages
+   - reorder pages
+3. Compare Versions → PDF Editor handoff — fresh browser verification when auth/test environment is stable
+
+==================================================
+RULES
+==================================================
+
+- No broad code changes
+- No architecture work
+- No cleanup beyond tiny test-stability fixes if absolutely necessary
+- Only patch if a real micro-bug is found during this pass
+- If auth/test instability prevents capture, say so clearly and stop
+
+==================================================
+STEP 1 — TEST ENVIRONMENT STABILITY CHECK
+==================================================
+
+Before running browser tests:
+- verify server is stable
+- verify authenticated session is stable
+- avoid restarting services mid-test unless absolutely necessary
+- if auth instability is known, wait for stable window first
+
+Do not make speculative changes to auth.
+
+==================================================
+STEP 2 — MERGE BROWSER CAPTURE
+==================================================
+
+Browser-verify end-to-end:
+- open PDF Tools tab
+- upload at least 2 PDFs into Merge
+- run Merge
+- capture the actual success/download confirmation state in browser
+- capture that downloadable output is produced
+
+If success indicator is still too short-lived, only patch the timeout if necessary and minimal.
+
+==================================================
+STEP 3 — PAGE TOOLS BROWSER CAPTURE
+==================================================
+
+Browser-verify each sub-mode with real downloadable output:
+
+A) Delete pages
+- upload file
+- enter delete range/pages
+- run operation
+- capture success/download state
+
+B) Rotate pages
+- upload file
+- select rotation
+- run operation
+- capture success/download state
+
+C) Reorder pages
+- upload file
+- change order
+- run operation
+- capture success/download state
+
+Be careful that the file is loaded into the correct card/sub-mode, not accidentally into Merge.
+
+==================================================
+STEP 4 — COMPARE → EDITOR HANDOFF BROWSER CAPTURE
+==================================================
+
+Browser-verify the existing already-built handoff path:
+- open a Compare Versions session
+- trigger Open in PDF Editor handoff
+- confirm PDF Editor opens with handoff context
+- capture the resulting editor state in browser
+
+Do not change Compare Versions logic unless a real bug appears.
+
+==================================================
+STEP 5 — FINAL MICRO REPORT
+==================================================
+
+Return only these sections:
+
+1. MERGE VERIFICATION
+- PASS / FIXED / FAIL / UNABLE
+- short evidence summary
+
+2. PAGE TOOLS VERIFICATION
+- Delete pages
+- Rotate pages
+- Reorder pages
+- PASS / FIXED / FAIL / UNABLE for each
+- short evidence summary
+
+3. COMPARE → EDITOR HANDOFF VERIFICATION
+- PASS / FIXED / FAIL / UNABLE
+- short evidence summary
+
+4. BUGS FOUND AND FIXED
+- exact file(s)
+- exact tiny fix if any
+- or “None”
+
+5. FINAL STATUS
+- clearly state whether the pending screenshot/smoke-verification caveats are now closed
+
+==================================================
+QUALITY BAR
+==================================================
+
+This is not a build pass.
+It is only a browser smoke-verification capture pass.
+Be exact.
+Be narrow.
+Do not expand scope.
