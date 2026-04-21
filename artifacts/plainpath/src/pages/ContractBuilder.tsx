@@ -2580,7 +2580,7 @@ export default function ContractBuilder() {
       return
     }
     try {
-      beforeRunContractDraft(entitlements?.plan ?? null)
+      await beforeRunContractDraft(entitlements?.plan ?? null)
     } catch (err) {
       if (err instanceof UsageLimitError) { setUpgradeModal(true); return }
     }
