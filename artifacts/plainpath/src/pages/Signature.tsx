@@ -1100,6 +1100,11 @@ export default function Signature() {
   const [view, setView] = useState<"list" | "mode" | "new" | "prepare" | "detail">("list")
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
+  useEffect(() => {
+    document.title = "Digital Signature — PlainPath"
+    return () => { document.title = "PlainPath" }
+  }, [])
+
   // Auto-navigate to Quick Send if arriving from My Documents
   useEffect(() => {
     try {

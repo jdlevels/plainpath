@@ -244,7 +244,7 @@ function UploadFlow({
           </div>
           <div>
             <h1 className="text-lg font-bold">PDF Editor</h1>
-            <p className="text-sm text-muted-foreground">Open a PDF to view and edit</p>
+            <p className="text-sm text-muted-foreground">Add text, mask content, highlight sections, and export a clean copy</p>
           </div>
         </div>
       </div>
@@ -349,6 +349,11 @@ export default function PdfEditor() {
 
   const [sessions, setSessions] = useState<SessionMeta[]>([])
   const [sessionsLoading, setSessionsLoading] = useState(true)
+
+  useEffect(() => {
+    document.title = "PDF Editor — PlainPath"
+    return () => { document.title = "PlainPath" }
+  }, [])
 
   const canUse =
     !isPaywallActive || isAdmin || (entitlements?.toolAccess?.includes("pdf-editor") ?? false)

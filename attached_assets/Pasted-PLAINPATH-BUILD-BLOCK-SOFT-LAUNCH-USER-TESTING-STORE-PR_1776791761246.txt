@@ -1,0 +1,284 @@
+PLAINPATH — BUILD BLOCK
+SOFT-LAUNCH USER TESTING / STORE-PREP NON-BILLING PASS
+
+You are working inside the existing PlainPath codebase.
+
+IMPORTANT:
+Stripe/live billing is externally blocked pending bank approval.
+Do NOT work on Stripe activation, checkout, webhook secrets, or billing architecture in this pass.
+This is a non-billing readiness pass focused on broader user testing and store-prep quality for the current web app/product experience.
+
+==================================================
+CONTEXT
+==================================================
+
+Core document flows are now in strong shape:
+- Contract Builder / Document Builder
+- Compare Versions
+- Compare Versions → PDF Editor handoff
+- PDF Editor correction/save/export flow
+- Redact review flow
+- workspace polish
+- live positive-diff Compare QA completed
+- paywall restored
+- release-readiness and go-live cleanup completed
+
+Billing remains blocked externally because bank approval is still pending.
+So the highest-value next step is to improve non-billing readiness for:
+1. broader real-user testing
+2. store-prep quality and trust surfaces
+3. final operational polish unrelated to live checkout
+
+==================================================
+PRIMARY GOALS FOR THIS PASS
+==================================================
+
+T001 — User-testing readiness audit
+T002 — App/store-prep metadata and trust-surface audit
+T003 — In-app help / onboarding / clarity polish (non-billing only)
+T004 — Final low-risk non-billing readiness fixes + testing checklist
+
+If a better internal order is needed, use judgment, but stay inside this block only.
+
+==================================================
+EXECUTION RULES
+==================================================
+
+Follow this order exactly:
+1. Inspect current non-billing readiness surfaces
+2. Produce a tight implementation plan grounded in actual code found
+3. Implement only the highest-value low-risk fixes
+4. Run verification
+5. Provide a structured completion report
+
+Do not start broad coding before inspection.
+Do not drift into billing, OCR, Word/docx, new feature work, or major redesign.
+
+==================================================
+REQUIRED INSPECTION TASK
+==================================================
+
+Before coding, inspect and identify:
+
+A) REAL USER TESTING SURFACES
+- authenticated dashboard / tools entry
+- tool cards / route entry points
+- in-app support/help surfaces
+- empty states / no-data states / locked states
+- obvious places where a first-time tester could get confused
+- any missing “what to do next” guidance in core flows
+- any weak success states after major actions
+
+B) STORE-PREP / TRUST SURFACES
+- app title / meta / favicon / icon usage already present
+- privacy / terms / support surfaces
+- support email / support page clarity
+- any visible placeholder or overly technical wording
+- any trust issues that could hurt beta testers or store prep
+- any product naming mismatch between dashboard/tools/pages
+
+C) NON-BILLING RISK AREAS
+- confusing first-run states
+- weak upload guidance
+- weak post-action confirmation
+- missing “back” or “return” affordances
+- inconsistent naming between tool cards and tool pages
+- unclear session identity / title / saved status
+- low-quality support/help language
+- missing “testing-ready” checklist for the user/admin
+
+Then produce a concise plan ranked by:
+1. user-testing impact
+2. trust/clarity impact
+3. implementation risk
+
+Keep the plan tight.
+
+==================================================
+T001 — USER-TESTING READINESS AUDIT
+==================================================
+
+Goal:
+A first external tester should be able to enter the app and understand how to try the core tools without confusion.
+
+Required:
+- inspect first-run dashboard/tool-entry clarity
+- identify confusing entry points or weak empty states
+- identify where users may not know what to upload, click, or expect
+- improve low-risk copy or guidance where needed
+- ensure major tools feel understandable at first contact
+
+Examples:
+- upload guidance text
+- better empty-state support copy
+- cleaner “what this tool does” in tool entry states
+- clearer post-upload / pre-run CTA copy
+- better return/back guidance
+
+Do not add full tutorial systems.
+Keep it lightweight and practical.
+
+==================================================
+T002 — APP / STORE-PREP METADATA AND TRUST-SURFACE AUDIT
+==================================================
+
+Goal:
+The app should feel trustworthy and presentation-ready for broader testing.
+
+Required:
+- inspect app-facing metadata/trust surfaces already present
+- inspect visible support/privacy/terms/help surfaces
+- inspect brand/product naming consistency
+- fix low-risk trust issues if found
+- ensure no obvious placeholder language remains in touched surfaces
+
+Examples:
+- inconsistent naming between PlainPath / Document Action Plan where visible
+- unclear support/help copy
+- unfinished-looking footer/help/account text
+- awkward technical wording in user-facing places
+
+Do not invent a whole new marketing system.
+This is a cleanup/polish pass.
+
+==================================================
+T003 — IN-APP HELP / ONBOARDING / CLARITY POLISH (NON-BILLING ONLY)
+==================================================
+
+Goal:
+The app should guide a new tester just enough without becoming cluttered.
+
+Required:
+- improve lightweight guidance in major core flows where confusion is likely
+- improve success-state clarity after key actions
+- improve “what next” guidance after major outputs where helpful
+- improve support/help entry wording if weak
+- keep all changes low-risk and subtle
+
+Examples:
+- “Upload two versions to compare changes”
+- “Open the revised document in PDF Editor to correct marked issues”
+- “Download the corrected PDF when you are done”
+- “Sessions save automatically” where relevant
+- clearer first-use tool subtext
+
+Do not add modal tours or complex onboarding systems.
+
+==================================================
+T004 — FINAL LOW-RISK NON-BILLING READINESS FIXES + TESTING CHECKLIST
+==================================================
+
+Goal:
+Finish with a concrete tester-ready state and a practical checklist.
+
+Required:
+- implement only the highest-value low-risk fixes found
+- verify no regressions in core non-billing flows
+- produce a concrete broader-testing checklist
+- clearly separate:
+  - fixed now
+  - ready for broader testing
+  - deferred until billing is active
+  - deferred until later product phase
+
+Examples of acceptable fixes:
+- wording clarity
+- success/empty/help copy
+- route title consistency
+- support/help link polish
+- return affordance polish
+- first-run UX clarity
+
+Avoid:
+- feature creep
+- layout rewrites
+- backend churn without strong reason
+
+==================================================
+NON-GOALS / OUT OF SCOPE
+==================================================
+
+Unless absolutely required for compatibility, do NOT include:
+- Stripe/live billing activation
+- webhook work
+- OCR
+- Word/docx implementation
+- major UI redesign
+- new AI features
+- org/team collaboration
+- approval workflows
+- major marketing rewrite
+- infrastructure migration
+
+==================================================
+VERIFICATION REQUIREMENTS
+==================================================
+
+After implementation, run verification and report actual results.
+
+At minimum verify:
+1. dashboard/tools entry still works
+2. no regressions in Contract Builder
+3. no regressions in Compare Versions
+4. no regressions in CV → PDF Editor handoff
+5. no regressions in PDF Editor
+6. no regressions in Redact
+7. updated help/empty/success wording renders correctly
+8. support/privacy/terms/help surfaces still work
+9. changed files pass TS/build checks
+10. final broader-testing checklist is explicit and actionable
+
+Use these result categories:
+- PASS — browser-verified
+- PASS — code-verified
+- FIXED — issue found and patched
+- UNABLE — blocked by environment prerequisite
+
+==================================================
+FINAL COMPLETION REPORT FORMAT
+==================================================
+
+When done, provide the report in these exact sections:
+
+1. EXACT FILES CREATED
+- list every created file with full relative path
+
+2. EXACT FILES MODIFIED
+- list every modified file with full relative path
+
+3. NON-BILLING READINESS FIXES APPLIED
+- one item per fix
+- include exact page/tool/surface
+- include what was improved and why it matters
+
+4. HELP / EMPTY / SUCCESS / TRUST-SURFACE CHANGES
+- exact user-facing text or guidance changes made
+- grouped by page/tool
+
+5. WHAT WORKS END-TO-END
+- concise but specific
+- confirm no regression in core non-billing flows
+
+6. BROADER-TESTING CHECKLIST
+- concrete checklist for external testers / admin
+- mark each item:
+  - ready
+  - deferred
+  - blocked by billing
+
+7. WHAT REMAINS DEFERRED
+- list anything intentionally deferred
+- explain why it was deferred
+
+8. VERIFICATION RESULTS
+- checklist of tested flows
+- note PASS / FIXED / UNABLE and any caveats
+
+==================================================
+QUALITY BAR
+==================================================
+
+This is a non-billing readiness pass.
+Be selective.
+Favor clarity, trust, and tester usability.
+Keep the scope tight and realistic while billing remains blocked.

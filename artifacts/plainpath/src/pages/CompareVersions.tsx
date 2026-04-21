@@ -355,6 +355,10 @@ function IntakeForm({ onCreated, onCancel }: { onCreated: (id: string) => void; 
             onRemove={() => { setRevFile(null); setRevError(null) }} disabled={scanning} />
         </div>
 
+        <p className="text-xs text-muted-foreground/70">
+          PlainPath will compare both PDFs and show every addition, deletion, and text change — grouped by severity and mapped to the original pages.
+        </p>
+
         <ManagerNotesEditor notes={notes} onChange={setNotes} disabled={scanning} />
 
         {submitError && (

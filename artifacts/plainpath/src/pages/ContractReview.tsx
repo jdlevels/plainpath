@@ -920,6 +920,11 @@ export default function ContractReview() {
   const [result, setResult] = useState<ReviewResult | null>(null)
   const [redactedNotice, setRedactedNotice] = useState(false)
 
+  useEffect(() => {
+    document.title = "Contract Review — PlainPath"
+    return () => { document.title = "PlainPath" }
+  }, [])
+
   // URL-based demo loading: /contract-review?demo=freelance-design
   useEffect(() => {
     const demoId = new URLSearchParams(searchString).get("demo")

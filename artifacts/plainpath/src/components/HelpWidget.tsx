@@ -57,6 +57,30 @@ const PAGE_ACTIONS: Record<string, { label: string; message: string }[]> = {
     { label: "How do I get help?", message: "What's the fastest way to get support?" },
     { label: "Report a problem", message: "How do I report a bug or problem with PlainPath?" },
   ],
+  "/compare-versions": [
+    { label: "What do I upload?", message: "What should I upload to Compare Versions? What's the difference between the original and revised PDF?" },
+    { label: "What do the colors mean?", message: "What do the red, amber, and grey severity colors mean in Compare Versions?" },
+    { label: "How do I use manager notes?", message: "How do I use the Manager Notes and Watchlist in Compare Versions?" },
+    { label: "How do I open a session?", message: "How do I reopen a previous comparison session?" },
+  ],
+  "/pdf-editor": [
+    { label: "What can I do here?", message: "What can I do with the PDF Editor? What kinds of edits are supported?" },
+    { label: "How do sessions work?", message: "How do PDF Editor sessions work? Are my edits saved automatically?" },
+    { label: "How do I download?", message: "How do I download my edited PDF when I'm done?" },
+    { label: "What file size is allowed?", message: "What is the maximum file size for the PDF Editor?" },
+  ],
+  "/redact": [
+    { label: "What gets detected?", message: "What types of personal information does the Redact tool automatically detect?" },
+    { label: "What file types work?", message: "What file types can I upload to Redact Sensitive Info?" },
+    { label: "How do I download the result?", message: "How do I download my redacted document after I'm done?" },
+    { label: "Can I redact a PDF?", message: "Can I redact a PDF file and download a redacted PDF?" },
+  ],
+  "/build-contract": [
+    { label: "What contracts can I build?", message: "What types of contracts can I create with Build a Contract?" },
+    { label: "What does each step do?", message: "Can you walk me through each step of the contract builder?" },
+    { label: "Can I save my progress?", message: "Is my progress saved as I go through the contract builder steps?" },
+    { label: "What happens at the end?", message: "What do I get at the end of the contract builder? Can I download it?" },
+  ],
 }
 
 const DEFAULT_ACTIONS = [
@@ -76,6 +100,10 @@ const PAGE_CONTEXT_LABELS: Record<string, string> = {
   "/my-analyses": "My Analyses page — the user is browsing their saved analysis history",
   "/subscribe": "Subscribe / Pricing page — the user is reviewing plan options",
   "/support": "Support page — the user is looking for help or contact information",
+  "/compare-versions": "Compare Versions page — the user is uploading two PDF versions to compare changes, or reviewing a previous comparison session",
+  "/pdf-editor": "PDF Editor page — the user is uploading a PDF to add text overlays, mask sensitive content, highlight sections, reorder pages, and export a clean modified copy",
+  "/redact": "Redact Sensitive Info page — the user is reviewing and removing personally identifiable information from a document before sharing it",
+  "/build-contract": "Build a Contract page — the user is creating a legal document using a multi-step guided wizard covering contract type, parties, scope, payment, and protections",
 }
 
 // ── Lightweight inline markdown renderer ────────────────────────────────────
