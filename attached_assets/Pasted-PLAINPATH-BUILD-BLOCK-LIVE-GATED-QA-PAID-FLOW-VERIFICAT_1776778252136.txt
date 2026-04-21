@@ -1,0 +1,289 @@
+PLAINPATH — BUILD BLOCK
+LIVE GATED QA / PAID-FLOW VERIFICATION PASS
+
+You are working inside the existing PlainPath codebase.
+
+IMPORTANT:
+This pass is NOT a feature-build pass first. It is a live-flow verification pass for recently completed, environment-gated work.
+Your primary job is to run real authenticated/gated flows, verify behavior in-browser, identify any real bugs, and patch only what is necessary to make the verified flows correct.
+Do not drift into unrelated redesigns, new features, marketing, OCR, Word/docx, pricing architecture changes, org/team features, or broad refactors.
+
+==================================================
+CONTEXT
+==================================================
+
+Recent PlainPath blocks are engineering-complete, but some browser verification was partially blocked by environment gates.
+
+Now the goal is to validate the real paid/unlocked workflows in-browser and fix only true bugs found during that verification.
+
+High-priority flows to verify live:
+1. Contract Builder generated output live verification
+2. Redact review-phase live verification
+3. Compare Versions live session rendering verification
+4. Compare Versions → PDF Editor handoff live verification
+5. PDF Editor live correction/save/export continuity spot-check
+
+This is a production-style QA pass, not a speculative polish pass.
+
+==================================================
+PRIMARY GOALS FOR THIS PASS
+==================================================
+
+T001 — Contract Builder paid/gated live-flow verification
+T002 — Redact review-phase live verification
+T003 — Compare Versions live session verification
+T004 — Compare Versions → PDF Editor handoff live verification
+T005 — Regression patching only if real bugs are found
+
+If a better internal order is needed, use judgment, but stay inside this verification block only.
+
+==================================================
+EXECUTION RULES
+==================================================
+
+Follow this order exactly:
+1. Inspect current routes / test prerequisites
+2. Run live browser verification on the target flows
+3. Patch only real bugs discovered
+4. Re-test the affected flow(s)
+5. Provide a structured verification report
+
+Do not start broad coding before running the live checks.
+Do not pad the report with speculative items.
+Differentiate clearly between:
+- browser-verified
+- code-verified only
+- blocked by environment/data precondition
+
+==================================================
+REQUIRED INSPECTION TASK
+==================================================
+
+Before testing, inspect and identify:
+- exact routes for each target flow
+- what account/plan/entitlement state is required
+- what seed data or uploaded files are required
+- whether there are existing demo/sample documents or test fixtures already in the codebase
+- whether authenticated test user setup is needed
+- whether the app currently has billing/test-gate conditions that block access
+- whether there are any helper routes or seeded sessions that can be safely used for QA
+
+Then produce a brief test plan before executing.
+
+==================================================
+TARGET FLOW 1 — CONTRACT BUILDER LIVE VERIFICATION
+==================================================
+
+Goal:
+Verify the actual paid/unlocked Contract Builder generation flow in-browser.
+
+Required live checks:
+- route opens correctly
+- multi-step builder works
+- review step layout is correct
+- Generate Draft CTA remains primary
+- paid/unlocked generation actually proceeds
+- dedicated generating screen appears during generation
+- generated DraftResultView actually renders in-browser
+- DraftResultView split-screen still looks correct
+- title/subtitle/timestamp appear as designed
+- action hierarchy in right panel is correct
+- Download PDF works if available in the test environment
+- upgrade modal still appears correctly when access is intentionally blocked
+- no runtime overlay / unhandled promise behavior
+
+If access is blocked by plan state:
+- determine whether it can be safely enabled for QA
+- if yes, enable only what is needed
+- if no, state exactly what blocked live verification
+
+==================================================
+TARGET FLOW 2 — REDACT REVIEW-PHASE LIVE VERIFICATION
+==================================================
+
+Goal:
+Verify the actual Redact review workspace in-browser, not just code.
+
+Required live checks:
+- route opens correctly
+- upload/select document works
+- review phase is reachable
+- compact sticky workspace header is visible
+- sticky header behaves correctly while scrolling
+- left-pane / document area remains usable
+- PiiReview sticky offset is correct
+- no clipping or awkward double-scroll problems
+- primary review/redact actions still work
+- no regressions in the review flow
+
+If a billing or entitlement gate blocks the review phase:
+- determine whether it can be safely enabled for QA
+- if yes, enable only what is needed
+- if no, state exactly what blocked live verification
+
+==================================================
+TARGET FLOW 3 — COMPARE VERSIONS LIVE SESSION VERIFICATION
+==================================================
+
+Goal:
+Verify a real live Compare Versions session in-browser.
+
+Required live checks:
+- compare route opens
+- file upload/session creation works
+- rendered comparison session opens
+- split-screen workspace still looks correct
+- SummaryPanel clamp/flex behavior feels right in a real session
+- diff list fills remaining panel space correctly
+- session management UI still works (at least open/list rendering)
+- selected/rejected/all handoff controls still appear as expected
+- no layout regressions introduced by recent workspace polish
+
+Use real or safe test documents to create a session if needed.
+
+==================================================
+TARGET FLOW 4 — COMPARE VERSIONS → PDF EDITOR HANDOFF LIVE VERIFICATION
+==================================================
+
+Goal:
+Verify the full handoff chain in-browser.
+
+Required live checks:
+- handoff from Compare Versions creates/open session correctly
+- PDF Editor opens revised document only
+- issue panel appears for handoff session
+- issue count is accurate
+- clicking issue rows focuses the correct page/zone
+- selected/rejected/all handoff flows still work if accessible in the session
+- corrected state can be toggled
+- Save button / unsaved indicator / autosave still behave correctly
+- Download PDF/export still works
+- no handoff-context regression
+
+==================================================
+TARGET FLOW 5 — REGRESSION PATCHING ONLY
+==================================================
+
+If real bugs are found during live QA:
+- patch the smallest safe fix only
+- do not opportunistically redesign
+- re-test the exact affected flow
+- include exact file(s) modified and exact bug/fix mapping in the report
+
+Examples of acceptable patch scope:
+- broken loading state
+- wrong sticky offset
+- broken button handler
+- missing await / runtime exception
+- incorrect route/useEffect/state restoration bug
+- layout regression visible in real browser use
+
+Unacceptable scope creep:
+- feature additions unrelated to the bug
+- broad UI redesign
+- backend rewrites not required by the bug
+
+==================================================
+TEST DATA / QA SETUP GUIDANCE
+==================================================
+
+Use the safest practical route to run live QA:
+- existing authenticated test account if available
+- temporary entitlement override only if needed and safe
+- seed/sample docs if present
+- small safe PDFs/documents for upload tests
+
+If you must create or use a temporary QA-only bypass to verify a paid flow:
+- keep it minimal
+- note exactly what was changed
+- remove it after verification unless explicitly intended to remain
+- document it clearly in the report
+
+==================================================
+NON-GOALS / OUT OF SCOPE
+==================================================
+
+Unless absolutely required to fix a real verified bug, do NOT include:
+- new product features
+- OCR
+- Word/docx implementation
+- pricing/Stripe architecture changes
+- marketing/public-site redesign
+- dashboard redesign
+- security expansion
+- org/team features
+- approval workflows
+- broad refactors
+
+==================================================
+VERIFICATION REQUIREMENTS
+==================================================
+
+You must provide real verification outcomes for each target flow using these categories:
+- PASS — browser-verified
+- PASS — code-verified only
+- UNABLE — blocked by environment/data prerequisite
+- FAIL — real bug found
+- FIXED — bug found, patched, and browser re-verified
+
+For each flow, explicitly state:
+- exact route
+- preconditions
+- what was tested
+- result
+- if blocked, exact blocker
+- if fixed, exact bug and exact file changed
+
+==================================================
+FINAL COMPLETION REPORT FORMAT
+==================================================
+
+When done, provide the report in these exact sections:
+
+1. TEST PRECONDITIONS
+- exact routes tested
+- account/plan/entitlement assumptions
+- uploaded/sample docs used
+- any temporary QA setup used
+
+2. BROWSER-VERIFIED FLOWS
+- one subsection per flow
+- exact checks performed
+- pass/fail/fixed status
+
+3. CODE-VERIFIED ONLY ITEMS
+- anything not fully browser-verified
+- why it remained code-verified only
+
+4. BUGS FOUND AND FIXED
+- exact bug
+- severity
+- exact file(s) modified
+- exact fix
+- re-test result
+
+5. BLOCKERS / UNABLE ITEMS
+- exact blocker
+- what prevented completion
+- whether the blocker is environmental or architectural
+
+6. REGRESSION SUMMARY
+- confirm whether recent completed blocks remain intact:
+  - Contract Builder
+  - Redact
+  - Compare Versions
+  - PDF Editor
+  - CV → PDF Editor handoff
+
+7. FINAL QA STATUS
+- clearly state which flows are now fully live-verified
+- clearly state which flows still need later live verification, if any
+
+==================================================
+QUALITY BAR
+==================================================
+
+This is a real QA pass.
+Prefer verified truth over optimistic summary.
+If something could not be verified, say so exactly.
+If something broke, fix it narrowly and prove the fix.
