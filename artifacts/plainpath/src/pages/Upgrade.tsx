@@ -3,7 +3,7 @@ import { useLocation } from "wouter"
 import { motion } from "framer-motion"
 import {
   Check, Zap, BarChart3, ShieldCheck, PenLine, Scale, EyeOff,
-  ArrowRight, Sparkles, Clock,
+  ArrowRight, Sparkles, Clock, GitCompare, Pen,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { PRICING_PLANS } from "@/data/pricingData"
@@ -20,10 +20,12 @@ const PLAN_COLORS: Record<string, string> = {
 
 const TOOL_BREAKDOWN = [
   { icon: BarChart3,   name: "Analyze a Document",    starter: true,  pro: true, desc: "Plain-English summary, key terms, deadlines, and required actions" },
+  { icon: EyeOff,      name: "Redact Sensitive Info", starter: true,  pro: true, desc: "Automatically remove sensitive info before sharing or review" },
   { icon: ShieldCheck, name: "Document Trust Check",  starter: false, pro: true, desc: "Verify legitimacy, surface red flags, and detect fraud" },
   { icon: PenLine,     name: "Build a Contract",      starter: false, pro: true, desc: "Guided wizard that outputs a professional, ready-to-send draft" },
   { icon: Scale,       name: "Contract Review",       starter: false, pro: true, desc: "Clause-by-clause risk analysis with negotiation language" },
-  { icon: EyeOff,      name: "Redact Sensitive Info", starter: true,  pro: true, desc: "Redact sensitive info before sharing or uploading for review" },
+  { icon: GitCompare,  name: "Compare Versions",      starter: false, pro: true, desc: "Side-by-side document comparison with AI-powered change audit" },
+  { icon: Pen,         name: "PDF Editor",            starter: false, pro: true, desc: "Annotate, redline, and export corrected PDFs with tracked changes" },
 ]
 
 export default function Upgrade() {
@@ -52,7 +54,7 @@ export default function Upgrade() {
             Simple pricing. Powerful tools.
           </h1>
           <p className="text-muted-foreground text-base sm:text-lg max-w-xl mx-auto leading-relaxed">
-            Start with document analysis on Starter, or unlock all 5 live tools with Pro. No contracts, cancel anytime.
+            Start with document analysis on Starter, or unlock every tool with Pro. No contracts, cancel anytime.
           </p>
         </motion.div>
 

@@ -1,0 +1,295 @@
+PLAINPATH — BUILD BLOCK
+PRE-LAUNCH OPERATIONS / GO-LIVE CHECKLIST PASS
+
+You are working inside the existing PlainPath codebase.
+
+IMPORTANT:
+This is a pre-launch operations and go-live readiness pass.
+It is NOT a feature-build pass.
+Focus on production configuration, launch readiness, app metadata/legal/support completeness, redirect/gate sanity, and operational safety.
+Do not drift into OCR, Word/docx implementation, major UI redesign, new AI features, team/org features, approval workflows, or unrelated refactors.
+
+==================================================
+CONTEXT
+==================================================
+
+Core product flows are now in good shape:
+- Contract Builder / Document Builder
+- Compare Versions
+- Compare Versions → PDF Editor handoff
+- PDF Editor save/export/correction flow
+- Redact review flow
+- workspace polish and release-readiness copy/accessibility cleanup
+- paywall restored
+- positive-diff live QA completed
+
+The next highest-value step is to prepare the app for broader real-user testing / soft launch by auditing operational readiness.
+
+This pass is about:
+- production config sanity
+- route/auth/gate sanity
+- billing and entitlement behavior sanity
+- legal/support/policy completeness
+- final user-facing metadata and go-live checklist quality
+- identifying and fixing only the highest-value low-risk operational issues
+
+==================================================
+PRIMARY GOALS FOR THIS PASS
+==================================================
+
+T001 — Production config / environment audit
+T002 — Auth / billing / gate / redirect sanity audit
+T003 — App metadata / legal / support readiness audit
+T004 — Final go-live checklist and low-risk fixes
+
+If a better internal order is needed, use judgment, but stay inside this block only.
+
+==================================================
+EXECUTION RULES
+==================================================
+
+Follow this order exactly:
+1. Inspect current production-facing config and operational surfaces
+2. Produce a tight implementation plan grounded in actual code found
+3. Implement only high-value low-risk readiness fixes
+4. Run verification
+5. Provide a structured completion report
+
+Do not start broad coding before inspection.
+Do not speculate.
+Be exact about what is production-ready vs what remains deferred.
+
+==================================================
+REQUIRED INSPECTION TASK
+==================================================
+
+Before coding, inspect and identify:
+
+A) ENV / CONFIG / APP ENTRY
+- production vs development env usage
+- billing/paywall config points
+- auth config points
+- base URLs / routing assumptions
+- any QA/test-only bypass remnants
+- app title / manifest / metadata / favicon / share metadata if present
+- support email / contact / footer links if present
+
+B) USER-FACING OPERATIONAL SURFACES
+- sign-in / sign-out / post-auth redirect behavior
+- locked/gated flows
+- billing / upgrade flows
+- pricing/plan copy shown in-app
+- legal/policy links (privacy, terms, etc.) if present
+- help/support/contact entry points if present
+- empty states that touch account/subscription/tool access
+- app/store/launch-facing metadata if present in codebase
+
+C) PRE-LAUNCH RISK AREAS
+- mismatched plan names or pricing wording
+- broken/missing legal links
+- support/contact placeholders
+- stale prototype copy
+- redirects that feel wrong after sign-in/sign-out
+- access states that could confuse real users
+- production config values hardcoded incorrectly
+- debug/dev text visible to users
+- test/QA artifacts that should not remain
+
+Then produce a concise plan ranking issues by:
+1. launch risk
+2. user trust impact
+3. implementation risk
+
+Keep the plan tight.
+
+==================================================
+T001 — PRODUCTION CONFIG / ENVIRONMENT AUDIT
+==================================================
+
+Goal:
+Make sure the app is not carrying risky dev/test assumptions into launch.
+
+Required:
+- inspect production config touchpoints
+- confirm no QA bypass/test helper logic remains
+- confirm paywall/auth enforcement is restored and consistent
+- inspect env/config names and usage for obvious risks
+- fix any low-risk production-facing config mistakes if found
+- identify anything that is operationally important but still missing
+
+Do not invent new infrastructure.
+Audit and patch only what is already in-app and low-risk to correct.
+
+==================================================
+T002 — AUTH / BILLING / GATE / REDIRECT SANITY AUDIT
+==================================================
+
+Goal:
+A real user should encounter clean, intentional access behavior.
+
+Required:
+- inspect sign-in / sign-out / redirect behavior
+- inspect locked/gated states for consistency
+- inspect plan/access wording for accuracy
+- inspect billing-related user-facing messages for obvious inconsistency
+- verify tool access behavior feels coherent with paywall restored
+- fix any low-risk but high-confusion issues
+
+Examples:
+- wrong redirect after sign-out
+- stale gate wording
+- mismatched plan names
+- misleading “free” or “starter/pro” copy
+- broken back-to-dashboard or back-to-tools affordances
+
+Do not redesign billing architecture.
+Fix only real operational clarity issues.
+
+==================================================
+T003 — APP METADATA / LEGAL / SUPPORT READINESS AUDIT
+==================================================
+
+Goal:
+The app should not feel incomplete or risky from a trust/compliance standpoint.
+
+Required:
+- inspect visible legal/policy/support surfaces in the app
+- confirm privacy policy / terms / support/help links are present where expected
+- check whether obvious placeholder content remains
+- check app title / metadata / branding text for launch readiness
+- fix small but important trust issues if low-risk
+
+Examples:
+- missing or placeholder support email
+- broken policy links
+- app title mismatch
+- footer/account/help copy that looks unfinished
+- obvious template leftovers
+
+Do not write an entirely new legal framework unless a tiny placeholder fix is clearly needed.
+Prefer auditing and fixing surfaced trust issues.
+
+==================================================
+T004 — FINAL GO-LIVE CHECKLIST AND LOW-RISK FIXES
+==================================================
+
+Goal:
+End this pass with a clear go-live status and only minimal safe changes applied.
+
+Required:
+- implement only the highest-value low-risk fixes found
+- verify no regressions in core document flows
+- produce a concrete go-live readiness checklist
+- clearly separate:
+  - fixed now
+  - acceptable for soft launch
+  - deferred before broader/public launch
+
+This checklist should be operational, not theoretical.
+
+Examples:
+- auth/gate ready
+- paywall restored
+- support link present
+- privacy/terms present
+- no QA artifacts remain
+- sign-out redirect correct
+- pricing/plan wording consistent
+- known deferred items explicitly listed
+
+==================================================
+NON-GOALS / OUT OF SCOPE
+==================================================
+
+Unless absolutely required for compatibility, do NOT include:
+- OCR
+- Word/docx implementation
+- major UI redesign
+- public-site/marketing overhaul
+- Stripe architecture rewrite
+- new feature development
+- team/org collaboration
+- approval workflows
+- security expansion beyond obvious in-app readiness issues
+- CI/CD automation build-out
+- infrastructure migration
+
+==================================================
+VERIFICATION REQUIREMENTS
+==================================================
+
+After implementation, run verification and report actual results.
+
+At minimum verify:
+1. no QA/test bypass remains
+2. paywall/auth enforcement is active and coherent
+3. sign-in / sign-out / redirect behavior is acceptable
+4. core tool access states are consistent
+5. legal/support/policy surfaces are present or clearly documented as deferred
+6. no misleading/stale plan wording remains in touched areas
+7. no regressions in:
+   - Contract Builder
+   - Compare Versions
+   - CV → PDF Editor handoff
+   - PDF Editor
+   - Redact
+8. changed files pass TS/build checks
+9. final go-live checklist is explicit and actionable
+
+Use these result categories:
+- PASS — browser-verified
+- PASS — code-verified
+- FIXED — issue found and patched
+- UNABLE — blocked by environment or external prerequisite
+
+==================================================
+FINAL COMPLETION REPORT FORMAT
+==================================================
+
+When done, provide the report in these exact sections:
+
+1. EXACT FILES CREATED
+- list every created file with full relative path
+
+2. EXACT FILES MODIFIED
+- list every modified file with full relative path
+
+3. PRE-LAUNCH FIXES APPLIED
+- one item per fix
+- include exact page/tool/config surface
+- include what was improved and why it matters
+
+4. CONFIG / AUTH / BILLING / LEGAL / SUPPORT AUDIT RESULTS
+- grouped findings
+- clearly mark:
+  - fixed now
+  - acceptable as-is
+  - deferred
+
+5. WHAT WORKS END-TO-END
+- concise but specific
+- confirm no regression in core flows
+
+6. GO-LIVE CHECKLIST
+- concrete operational checklist
+- mark each item:
+  - ready
+  - deferred
+  - blocked
+
+7. WHAT REMAINS DEFERRED
+- list anything intentionally deferred
+- explain why it was deferred
+
+8. VERIFICATION RESULTS
+- checklist of tested flows
+- note PASS / FIXED / UNABLE and any caveats
+
+==================================================
+QUALITY BAR
+==================================================
+
+This is a pre-launch operations pass.
+Be selective.
+Favor trust, clarity, and operational safety.
+Keep the scope tight, realistic, and launch-oriented.

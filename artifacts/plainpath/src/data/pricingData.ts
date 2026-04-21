@@ -32,13 +32,14 @@ export const PRICING_PLANS: PricingPlan[] = [
     price: "$19.99",
     period: "/month",
     description:
-      "All 5 live tools in one plan — unlimited use across every workflow.",
+      "Every tool in one plan — unlimited use across every workflow.",
     features: [
       "Everything in Starter",
       "Document Trust Check — verify legitimacy and detect fraud",
       "Contract Review — clause-by-clause risk and negotiation analysis",
       "Build a Contract — guided wizard with professional draft output",
-      "Redact sensitive info before sharing or review",
+      "Compare Versions — side-by-side document comparison and audit",
+      "PDF Editor — annotate, redline, and export corrections",
       "Saved analysis history",
       "Premium output and workflow tools"
     ],
