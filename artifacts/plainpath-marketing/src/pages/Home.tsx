@@ -14,9 +14,9 @@ import FAQSection from "@/components/FAQSection";
 import VideoWalkthrough from "@/components/VideoWalkthrough";
 import { Card } from "@/components/ui/card";
 import {
-  FileText, ShieldAlert, FileSignature, ShieldCheck,
+  FileText, FileSignature, ShieldCheck,
   ArrowRight, Upload, Sparkles, Scale,
-  AlertTriangle, CheckCircle2, Clock, Lock, X as XIcon, EyeOff, Pen,
+  AlertTriangle, CheckCircle2, Clock, Lock, X as XIcon, EyeOff,
   CalendarX, Eye, PenLine, FileScan, FileEdit, GitCompare,
   DollarSign, Copy, Users, ChevronDown,
 } from "lucide-react";
@@ -103,7 +103,7 @@ const TOOLS = [
 /* ─── Feature cards ─────────────────────────────────────── */
 const FEATURES = [
   {
-    icon: FileText,
+    icon: FileScan,
     color: "text-blue-600 dark:text-blue-400",
     bg: "bg-blue-100 dark:bg-blue-900/30",
     border: "border-l-blue-500 dark:border-l-blue-400",
@@ -116,7 +116,7 @@ const FEATURES = [
     tagCls: "bg-blue-50/80 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-700/40",
   },
   {
-    icon: ShieldAlert,
+    icon: ShieldCheck,
     color: "text-red-600 dark:text-red-400",
     bg: "bg-red-100 dark:bg-red-900/30",
     border: "border-l-red-500 dark:border-l-red-400",
@@ -142,7 +142,7 @@ const FEATURES = [
     tagCls: "bg-amber-50/80 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-700/40",
   },
   {
-    icon: FileSignature,
+    icon: PenLine,
     color: "text-emerald-600 dark:text-emerald-400",
     bg: "bg-emerald-100 dark:bg-emerald-900/30",
     border: "border-l-emerald-500 dark:border-l-emerald-400",
@@ -168,7 +168,7 @@ const FEATURES = [
     tagCls: "bg-violet-50/80 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300 border border-violet-200/60 dark:border-violet-700/40",
   },
   {
-    icon: Pen,
+    icon: FileSignature,
     color: "text-violet-600 dark:text-violet-400",
     bg: "bg-violet-100 dark:bg-violet-900/30",
     border: "border-l-violet-500 dark:border-l-violet-400",
@@ -179,7 +179,32 @@ const FEATURES = [
     result: { label: "Signature Request Sent", value: "Sarah Chen received a secure signing link for the Consulting Agreement.", icon: CheckCircle2, color: "text-violet-600 dark:text-violet-400", bg: "bg-violet-50 dark:bg-violet-900/20" },
     tags: ["Contracts", "NDAs", "Agreements", "Pro only"],
     tagCls: "bg-violet-50/80 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300 border border-violet-200/60 dark:border-violet-700/40",
-    comingSoon: false,
+  },
+  {
+    icon: GitCompare,
+    color: "text-teal-600 dark:text-teal-400",
+    bg: "bg-teal-100 dark:bg-teal-900/30",
+    border: "border-l-teal-500 dark:border-l-teal-400",
+    accent: "bg-teal-500 dark:bg-teal-400",
+    glow: "from-teal-50 dark:from-teal-900/10",
+    title: "Compare Versions",
+    desc: "Upload an original and a revised document. PlainPath maps every addition, deletion, and structural change — with zone-by-zone overlays and severity scoring.",
+    result: { label: "Changes Found", value: "14 changes detected — 3 high-severity clause deletions identified.", icon: AlertTriangle, color: "text-teal-600 dark:text-teal-400", bg: "bg-teal-50 dark:bg-teal-900/20" },
+    tags: ["Contract revisions", "Lease renewals", "Policy updates", "Legal amendments"],
+    tagCls: "bg-teal-50/80 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300 border border-teal-200/60 dark:border-teal-700/40",
+  },
+  {
+    icon: FileEdit,
+    color: "text-purple-600 dark:text-purple-400",
+    bg: "bg-purple-100 dark:bg-purple-900/30",
+    border: "border-l-purple-500 dark:border-l-purple-400",
+    accent: "bg-purple-500 dark:bg-purple-400",
+    glow: "from-purple-50 dark:from-purple-900/10",
+    title: "PDF Editor",
+    desc: "Open any PDF and add text overlays, mask sensitive content, highlight key sections, and export a clean modified copy — without converting file formats.",
+    result: { label: "PDF Modified", value: "2 text annotations added, 1 section masked. Export ready.", icon: CheckCircle2, color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-50 dark:bg-purple-900/20" },
+    tags: ["Annotations", "Content masking", "Form fill-ins", "Redlined edits"],
+    tagCls: "bg-purple-50/80 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 border border-purple-200/60 dark:border-purple-700/40",
   },
 ];
 
@@ -862,12 +887,12 @@ export default function Home() {
       </div>
 
       {/* ════════════════════════════════════════════════
-          SIX TOOLS — premium feature cards
+          8 TOOLS — premium feature cards
       ════════════════════════════════════════════════ */}
       <section id="features" className="py-20 md:py-28 bg-gradient-to-b from-background via-white/70 to-background dark:bg-transparent">
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
           <div className="text-center max-w-2xl mx-auto mb-14">
-            <p className="text-xs font-semibold tracking-[0.12em] uppercase text-muted-foreground mb-3">6 tools live</p>
+            <p className="text-xs font-semibold tracking-[0.12em] uppercase text-muted-foreground mb-3">8 tools live</p>
             <h2
               className="text-4xl md:text-5xl font-bold mb-4 text-foreground"
               style={{ fontFamily: "var(--font-display)" }}
@@ -881,7 +906,7 @@ export default function Home() {
               </span>
             </h2>
             <p className="text-lg text-muted-foreground">
-              Whether you're reading, verifying, building, reviewing, or redacting — PlainPath has a tool for it.
+              Whether you're reading, verifying, building, reviewing, redacting, signing, comparing, or editing — PlainPath has a tool for it.
             </p>
           </div>
 
