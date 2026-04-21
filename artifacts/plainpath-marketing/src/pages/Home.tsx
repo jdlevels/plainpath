@@ -308,11 +308,13 @@ const PLANS = [
     badge: null as string | null,
     tools: [
       { label: "Analyze a Document",    included: true,  comingSoon: false },
+      { label: "Redact Sensitive Info", included: true,  comingSoon: false },
       { label: "Document Trust Check",  included: false, comingSoon: false },
       { label: "Build a Contract",      included: false, comingSoon: false },
       { label: "Contract Review",       included: false, comingSoon: false },
-      { label: "Redact Sensitive Info", included: true,  comingSoon: false },
       { label: "Digital Signature",     included: false, comingSoon: false },
+      { label: "Compare Versions",      included: false, comingSoon: false },
+      { label: "PDF Editor",            included: false, comingSoon: false },
     ],
     extras: [] as string[],
     cta: "Subscribe to Starter",
@@ -322,7 +324,7 @@ const PLANS = [
     name: "Pro",
     monthly: { price: "$19.99", period: "/month", sub: null },
     annual:  { price: "$191.90", period: "/year", sub: "billed annually", eq: "≈ $16.00/mo", savings: "Save 20%" },
-    desc: "All 6 tools in one plan — unlimited use across every workflow.",
+    desc: "All 8 tools in one plan — unlimited use across every workflow.",
     highlight: true,
     badge: "Best Value",
     tools: [
@@ -332,6 +334,8 @@ const PLANS = [
       { label: "Contract Review",       included: true,  comingSoon: false },
       { label: "Redact Sensitive Info", included: true,  comingSoon: false },
       { label: "Digital Signature",     included: true,  comingSoon: false },
+      { label: "Compare Versions",      included: true,  comingSoon: false },
+      { label: "PDF Editor",            included: true,  comingSoon: false },
     ],
     extras: ["Saved analysis history", "Premium output and workflow tools"],
     cta: "Subscribe to Pro",
@@ -842,7 +846,7 @@ export default function Home() {
 
               <motion.div custom={5} variants={fadeUp}>
                 <p className="text-xs text-muted-foreground">
-                  From $4.99/month &nbsp;·&nbsp; All 6 tools on Pro &nbsp;·&nbsp; Cancel anytime
+                  From $4.99/month &nbsp;·&nbsp; All 8 tools on Pro &nbsp;·&nbsp; Cancel anytime
                 </p>
               </motion.div>
             </motion.div>
@@ -1518,7 +1522,7 @@ export default function Home() {
             </a>
           </motion.div>
           <p className="mt-6 text-xs text-white/30">
-            From $4.99/month &nbsp;·&nbsp; All 6 tools on Pro ($19.99/mo) &nbsp;·&nbsp; Cancel anytime
+            From $4.99/month &nbsp;·&nbsp; All 8 tools on Pro ($19.99/mo) &nbsp;·&nbsp; Cancel anytime
           </p>
         </div>
       </div>
