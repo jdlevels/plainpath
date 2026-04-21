@@ -17,7 +17,7 @@ import {
   FileText, ShieldAlert, FileSignature, ShieldCheck,
   ArrowRight, Upload, Sparkles, Scale,
   AlertTriangle, CheckCircle2, Clock, Lock, X as XIcon, EyeOff, Pen,
-  CalendarX, Eye, PenLine, FileScan,
+  CalendarX, Eye, PenLine, FileScan, FileEdit, GitCompare,
   DollarSign, Copy, Users, ChevronDown,
 } from "lucide-react";
 
@@ -90,12 +90,14 @@ function RotatingBadge() {
 
 /* ─── Tool pill data ─────────────────────────────────────── */
 const TOOLS = [
-  { label: "Analyze a Document",    icon: FileText,      cls: "tool-btn-blue",    href: "/app/analyze",       comingSoon: false },
-  { label: "Document Trust Check",  icon: ShieldAlert,   cls: "tool-btn-red",     href: "/app/import?mode=trust-check", comingSoon: false },
-  { label: "Build a Contract",      icon: FileSignature, cls: "tool-btn-emerald", href: "/app/build-contract", comingSoon: false },
-  { label: "Contract Review",       icon: Scale,         cls: "tool-btn-amber",   href: "/app/contract-review", comingSoon: false },
-  { label: "Redact Sensitive Info", icon: EyeOff,        cls: "tool-btn-violet",  href: "/app/redact",         comingSoon: false },
-  { label: "Digital Signature",     icon: Pen,           cls: "tool-btn-violet",  href: "/app/signature",      comingSoon: false },
+  { label: "Analyze a Document",    icon: FileScan,       cls: "tool-btn-blue",    href: "/app/analyze",                 comingSoon: false },
+  { label: "Document Trust Check",  icon: ShieldCheck,    cls: "tool-btn-red",     href: "/app/import?mode=trust-check", comingSoon: false },
+  { label: "Build a Contract",      icon: PenLine,        cls: "tool-btn-emerald", href: "/app/build-contract",          comingSoon: false },
+  { label: "Contract Review",       icon: Scale,          cls: "tool-btn-amber",   href: "/app/contract-review",         comingSoon: false },
+  { label: "Redact Sensitive Info", icon: EyeOff,         cls: "tool-btn-violet",  href: "/app/redact",                  comingSoon: false },
+  { label: "Digital Signature",     icon: FileSignature,  cls: "tool-btn-teal",    href: "/app/signature",               comingSoon: false },
+  { label: "PDF Editor",            icon: FileEdit,       cls: "tool-btn-orange",  href: "/app/pdf-editor",              comingSoon: false },
+  { label: "Compare Versions",      icon: GitCompare,     cls: "tool-btn-sky",     href: "/app/compare-versions",        comingSoon: false },
 ];
 
 /* ─── Feature cards ─────────────────────────────────────── */

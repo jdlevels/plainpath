@@ -1,0 +1,107 @@
+Work in closeout mode only for the Tool Surface + Workflow Standardization Pass.
+
+Do not start new tools.
+Do not redesign layouts.
+Do not touch billing, auth, Compare Versions engine, PDF Editor slices, or demo quota logic.
+Do not introduce Word support in this pass.
+
+Goal:
+Fully close the remaining gaps from the standardization pass and provide visual proof.
+
+==================================================
+CLOSEOUT TARGETS
+==================================================
+
+T001 — Finish public parity
+The public marketing experience is still inconsistent because the hero quick-link pill row still reflects the older 6-tool surface.
+
+Required:
+1. Audit the public marketing homepage hero quick-link pills / shortcut row.
+2. Decide one of these two options only:
+   A. Expand the row so all 8 first-class tools are represented cleanly
+   OR
+   B. If layout cannot support 8 cleanly without degradation, replace the old pill row with a smaller curated row plus an explicit “View all tools” link that opens the full tools section below.
+3. Do NOT leave the old 6-tool row pretending it is the full product surface.
+
+Rule:
+Public home must no longer visually imply the app only has 6 tools.
+
+==================================================
+T002 — Live screenshot proof, not code-proof
+==================================================
+
+Provide actual visual screenshots for the following states:
+
+1. Authenticated dashboard tool grid showing all first-class tools
+2. Authenticated Tools dropdown showing all first-class tools
+3. Public marketing tools section showing all first-class tools
+4. Compare Versions intake screen
+5. Compare Versions workspace
+6. PDF Editor workspace
+7. Builder workspace with visible Save button state
+8. Analyze/Import pre-run state with file card + X/remove
+9. Contract Review pre-run state
+10. Digital Signature intake/pre-run state
+
+If any screenshot cannot be captured because of auth/session tooling issues:
+- explain exact blocker
+- provide the exact route and exact UI state reached manually
+- do not substitute code inspection unless absolutely unavoidable
+
+==================================================
+T003 — Deferred-item documentation cleanup
+==================================================
+
+For the unresolved “real document during scan” issue in:
+- Analyze a Document
+- Document Trust Check
+- Contract Review
+
+Do not attempt a major rearchitecture.
+
+Instead:
+1. Add a documented deferred note in replit.md / project notes:
+   - why current architecture prevents true live-document scan preview
+   - what would be required to support it later
+2. Mark it explicitly as deferred product work, not “completed”
+
+==================================================
+T004 — Final tool inventory verification
+==================================================
+
+Verify there are no remaining naming mismatches anywhere across:
+- dashboard grid
+- navbar Tools dropdown
+- public tools section
+- recent work mappings
+- tool subtitles / descriptions
+
+Specifically verify:
+- Compare Versions
+- PDF Editor
+- Digital Signature
+- Document Builder naming
+- no duplicate legacy /compare naming collisions remain
+
+==================================================
+FINAL REPORT FORMAT
+==================================================
+
+Return a strict closeout report with:
+
+1. Exact files modified
+2. Whether public hero parity is now resolved
+3. Final inventory list of all first-class tools across:
+   - dashboard
+   - navbar
+   - public tools section
+4. Deferred-item note for real-document scan preview limitation
+5. Required screenshots list with each screenshot labeled by route/state
+6. Explicit statement:
+   - “Standardization pass fully closed”
+   OR
+   - “Still blocked by X”
+
+This is a cleanup closeout only.
+No new features.
+No extra roadmap work.

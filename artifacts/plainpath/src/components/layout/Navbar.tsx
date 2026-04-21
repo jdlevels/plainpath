@@ -2,8 +2,8 @@ import { useState, useRef, useEffect } from "react"
 import { Link, useLocation } from "wouter"
 import { Button } from "@/components/ui/button"
 import {
-  FileText, Plus, BookMarked, GitCompare, LogOut, User, ChevronDown,
-  LayoutGrid, ShieldCheck, PenLine, Scale, Menu, X, LayoutDashboard, CreditCard, EyeOff, FileSignature, FolderOpen, Pen, ScanSearch,
+  FileScan, FileEdit, Plus, BookMarked, GitCompare, LogOut, User, ChevronDown,
+  LayoutGrid, ShieldCheck, PenLine, Scale, Menu, X, LayoutDashboard, CreditCard, EyeOff, FileSignature, FolderOpen,
 } from "lucide-react"
 
 import { ThemeToggle } from "@/components/ui/ThemeToggle"
@@ -32,15 +32,14 @@ function LogoBrand() {
 }
 
 const TOOL_NAV = [
-  { label: "Analyze a Document",   href: "/analyze",                icon: FileText       },
-  { label: "Document Trust Check", href: "/import?mode=trust-check", icon: ShieldCheck   },
-  { label: "Contract Review",      href: "/contract-review",        icon: Scale          },
-  { label: "Build a Contract",     href: "/build-contract",         icon: PenLine        },
-  { label: "Redact Sensitive Info", href: "/redact",                icon: EyeOff         },
-  { label: "Digital Signature",    href: "/signature",              icon: FileSignature  },
-  { label: "Document Compare",           href: "/compare",                icon: GitCompare  },
-  { label: "PDF Editor",                href: "/pdf-editor",             icon: Pen         },
-  { label: "Compare Versions",          href: "/compare-versions",       icon: ScanSearch  },
+  { label: "Analyze a Document",    href: "/analyze",                 icon: FileScan      },
+  { label: "Document Trust Check",  href: "/import?mode=trust-check", icon: ShieldCheck   },
+  { label: "Contract Review",       href: "/contract-review",         icon: Scale         },
+  { label: "Build a Contract",      href: "/build-contract",          icon: PenLine       },
+  { label: "Redact Sensitive Info", href: "/redact",                  icon: EyeOff        },
+  { label: "Digital Signature",     href: "/signature",               icon: FileSignature },
+  { label: "PDF Editor",            href: "/pdf-editor",              icon: FileEdit      },
+  { label: "Compare Versions",      href: "/compare-versions",        icon: GitCompare    },
 ]
 
 function UserMenu() {
