@@ -219,7 +219,7 @@ export default function ToolsShowcase() {
           transition={{ delay: 0.08 }}
           className="text-muted-foreground text-lg max-w-2xl mx-auto"
         >
-          Whether you are reading a document, questioning its legitimacy, creating an agreement, reviewing one before you sign, redacting private information, comparing versions, or editing a PDF — PlainPath has a dedicated tool for exactly that.
+          Whether you are reading a document, questioning its legitimacy, creating an agreement, reviewing one before you sign, redacting private information, sending for e-signature, comparing versions, or editing a PDF — PlainPath has a dedicated tool for exactly that.
         </motion.p>
       </div>
 

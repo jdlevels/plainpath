@@ -1,0 +1,121 @@
+Run a FINAL STORE-PREP / PRODUCT-SURFACE POLISH PASS for PlainPath.
+
+Objective:
+Do a high-discipline, user-facing polish pass only. Focus on visual consistency, wording consistency, spacing, hierarchy, empty states, section subtitles, CTA labels, and screenshot-readiness across both the marketing site and authenticated app surfaces. This is not a feature-build pass unless a tiny surface bug blocks polish.
+
+Priority:
+1. Marketing site polish
+2. Authenticated app shell polish
+3. Saved-work surfaces consistency
+4. Screenshot readiness for store / launch materials
+
+Hard rules:
+- Do NOT add new features unless required to fix a visible surface defect.
+- Do NOT change pricing, billing logic, auth logic, entitlements, routes, DB schema, or backend APIs unless a tiny user-facing bug absolutely requires it.
+- Do NOT add temporary bypasses or QA-only code.
+- Do NOT regress any already-verified surfaces.
+- Preserve current dark visual system and current product structure.
+- Keep names canonical everywhere:
+  - Analyze a Document
+  - Document Trust Check
+  - Build a Contract
+  - Contract Review
+  - Redact Sensitive Info
+  - Digital Signature
+  - Compare Versions
+  - PDF Editor
+  - Document Builder
+  - My Documents
+  - My Analyses
+
+Audit and polish these surfaces carefully:
+
+A) Marketing site
+- Hero
+- “Every document situation, covered”
+- Problem / trust / workflow sections
+- Demo section
+- Live demos section
+- Common situations section
+- FAQ
+- Pricing section
+- Footer / support / legal links
+
+Check for:
+- inconsistent tool naming
+- outdated counts (must reflect all 8 tools where appropriate)
+- awkward line breaks
+- uneven card heights
+- excessive empty space
+- weak CTA wording
+- inconsistent feature bullets
+- misleading or stale tool descriptions
+- any “coming soon” wording that conflicts with live tools
+- screenshot-readiness at desktop widths
+
+B) Authenticated app shell
+- Top nav
+- Tools grid on dashboard
+- Workspace section
+- Recent Work
+- Try a Demo
+- Plan / support cards
+- My Documents
+- My Analyses
+
+Check for:
+- consistent naming with marketing site
+- button/CTA verb consistency
+- empty-state clarity
+- section subtitle clarity
+- card spacing / rhythm / vertical alignment
+- no confusing duplicate wording between Document Builder and Build a Contract
+- correct capitalization and punctuation
+- no misleading saved-work wording
+
+C) Cross-surface consistency
+Make sure these match everywhere:
+- tool names
+- tool one-line descriptions
+- empty-state phrasing
+- “View analysis” / “View trust check” / “View review” / “Continue editing” / “Open comparison” / “Continue building”
+- “My Documents” vs “My Analyses” responsibilities
+- “Build a Contract” vs “Document Builder” distinction
+
+D) Screenshot readiness
+Prepare the UI so the following screens are visually clean and presentation-ready without further cleanup:
+- Marketing hero
+- Marketing tools section
+- Pricing section
+- Dashboard
+- My Documents
+- My Analyses
+
+If any one of those pages has obvious spacing, alignment, overflow, subtitle, or CTA inconsistencies, fix them.
+
+Specific review questions to answer while working:
+1. Does every surface use the exact same canonical tool names?
+2. Does every section tell the user clearly what belongs there?
+3. Are the CTAs action-first and specific?
+4. Are there any cards whose descriptions are stale, vague, or too long?
+5. Are there any layout gaps or awkward empty spaces that hurt screenshot quality?
+6. Are there any places where “Document Builder” and “Build a Contract” are still confused?
+7. Are there any pricing/tool-count statements that are stale or inconsistent?
+
+Execution method:
+- First inspect all relevant files before editing.
+- Then make only the smallest clean edits needed.
+- Restart/rebuild and verify the changed surfaces.
+- Take screenshots where useful to confirm.
+- Deliver a structured completion report.
+
+Deliverables required in the final report:
+1. Exact files modified
+2. Exact user-facing copy changed
+3. Any visual/layout changes made
+4. Screenshot verification summary
+5. Anything intentionally deferred
+6. Explicit statement whether the product surface is now store-prep clean
+
+Success standard:
+When done, PlainPath should feel like one cohesive product across marketing + app, with clean screenshot-ready surfaces and no lingering naming/copy inconsistencies.
