@@ -1,0 +1,59 @@
+Run a narrow LIVE QA pass on My Documents only. Do not make speculative code changes. Do not broaden scope to other pages. First test the current build exactly as-is in an authenticated browser session, then only patch if a bug is reproduced.
+
+GOAL
+Verify that My Documents now behaves correctly with section-scoped failures:
+- Uploaded Documents
+- PDF Editor
+- Compare Versions
+- Document Builder
+
+REQUIRED BEHAVIOR TO PROVE
+1. If one section fails, the other successful sections still render.
+2. Only the failed section shows its own inline error + Retry control.
+3. The page-level/global red failure banner appears ONLY if all sections fail simultaneously.
+4. Empty state does NOT appear when at least one section has content or one successful section loaded.
+5. Footer still renders correctly and is no longer tied to the removed global error state.
+
+TEST METHOD
+A. Start with a clean authenticated browser session.
+B. Load /documents and capture the baseline state.
+C. Create controlled failure scenarios one section at a time:
+   - fail Uploaded Documents only
+   - fail PDF Editor only
+   - fail Compare Versions only
+   - fail Document Builder only
+D. For each scenario, verify:
+   - unaffected sections remain visible
+   - failed section shows inline error only
+   - Retry for that section refetches only that section
+   - no full-page empty state
+   - no global red banner unless all sections are failed
+E. Then create an all-sections-fail scenario and verify:
+   - global red banner appears
+   - page does not misleadingly show “empty”
+   - section retries remain discoverable if applicable
+F. Restore normal behavior and verify the page fully recovers.
+
+GUARDRAILS
+- No refactors.
+- No copy edits.
+- No unrelated UI polish.
+- No route changes.
+- No changes outside Documents.tsx unless a reproduced bug proves they are required.
+- If no bug is found, stop and report PASS.
+
+IF A BUG IS FOUND
+1. State exact reproduction steps.
+2. State exact root cause.
+3. Patch the minimum code necessary.
+4. Re-run the failed scenario plus one regression pass on the normal happy path.
+5. Deliver a structured completion report.
+
+DELIVERABLE FORMAT
+Return:
+1. Exact files modified
+2. Exact bug found, if any
+3. Reproduction steps
+4. Fix applied
+5. Browser-verified results for each of the 5 required behaviors
+6. Whether the issue is now fully closed
