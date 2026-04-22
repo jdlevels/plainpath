@@ -17,14 +17,14 @@ import { useLocation, useSearch } from "wouter"
 import * as pdfjsLib from "pdfjs-dist"
 import {
   ArrowLeft, Loader2, AlertCircle, Lock, Layers,
-  MousePointer2, Type, Square, Highlighter,
+  MousePointer2, Type, Square, Highlighter, TextCursorInput,
   Save, CheckCircle2, Download, ListChecks, ChevronRight,
-  ScanText, ScanLine, Edit3, X, ChevronDown, ChevronUp, FileText,
+  ScanText, ScanLine, Edit3, X, ChevronDown, ChevronUp, FileText, Copy, RefreshCw,
 } from "lucide-react"
 import { useEntitlements } from "@/hooks/useEntitlements"
 import { usePdfEditorApi } from "@/hooks/usePdfEditorApi"
 import { isPaywallActive } from "@/lib/billingConfig"
-import type { EditOp, ActiveTool, SaveState, SessionDetail, OcrData, OcrPage } from "@/lib/pdfEditorTypes"
+import type { EditOp, ActiveTool, SaveState, SessionDetail, OcrData, OcrPage, TextRegion } from "@/lib/pdfEditorTypes"
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
@@ -133,6 +133,90 @@ function usePdfRenderer(buf: ArrayBuffer | null) {
   }, [buf])
 
   return { pages, loading, failed }
+}
+
+// ─── useTextRegions ─────────────────────────────────────────────────────────────
+// Extracts text line regions from a text PDF using pdf.js getTextContent().
+// Used by the "Edit Text" tool to show clickable text regions.
+// Returns TextRegion[][] (index = pageIndex).
+
+function useTextRegions(buf: ArrayBuffer | null): TextRegion[][] {
+  const [regions, setRegions] = useState<TextRegion[][]>([])
+
+  useEffect(() => {
+    if (!buf) { setRegions([]); return }
+    let cancelled = false
+    ;(async () => {
+      try {
+        const pdf = await pdfjsLib.getDocument({ data: buf.slice(0), verbosity: 0 }).promise
+        if (cancelled) return
+        const allPages: TextRegion[][] = []
+
+        for (let pn = 1; pn <= pdf.numPages; pn++) {
+          if (cancelled) break
+          const page = await pdf.getPage(pn)
+          const vp = page.getViewport({ scale: 1 })
+          const pw = vp.width
+          const ph = vp.height
+          const content = await page.getTextContent()
+
+          interface RawItem { x: number; y: number; w: number; h: number; text: string }
+          const rawItems: RawItem[] = (content.items as any[])
+            .filter((it) => it.str?.trim())
+            .map((it) => {
+              const t: number[] = it.transform
+              const itemH = it.height > 0 ? it.height : Math.abs(t[3])
+              const rawY = t[5]
+              return {
+                x: t[4] / pw,
+                y: (ph - rawY - itemH) / ph,
+                w: it.width / pw,
+                h: Math.max(itemH / ph, 0.01),
+                text: it.str as string,
+              }
+            })
+            .filter((it) => it.w > 0.002 && it.h > 0)
+
+          // Cluster adjacent items into line groups by similar y-position
+          const CLUSTER_THRESHOLD = 0.012
+          const lines: RawItem[][] = []
+          for (const item of rawItems) {
+            const match = lines.find((line) => Math.abs(line[0].y - item.y) < CLUSTER_THRESHOLD)
+            if (match) match.push(item)
+            else lines.push([item])
+          }
+
+          // Convert each line cluster into a single TextRegion bounding box
+          const pageRegions: TextRegion[] = lines
+            .filter((line) => line.some((it) => it.text.trim()))
+            .map((line) => {
+              const minX = Math.max(0, Math.min(...line.map((it) => it.x)))
+              const minY = Math.max(0, Math.min(...line.map((it) => it.y)))
+              const maxX = Math.min(1, Math.max(...line.map((it) => it.x + it.w)))
+              const maxY = Math.min(1, Math.max(...line.map((it) => it.y + it.h)))
+              return {
+                pageIndex: pn - 1,
+                x: minX,
+                y: minY,
+                w: Math.max(maxX - minX, 0.04),
+                h: Math.max(maxY - minY, 0.012),
+                text: line.map((it) => it.text).join(" ").trim(),
+              }
+            })
+
+          allPages.push(pageRegions)
+          page.cleanup()
+        }
+
+        if (!cancelled) setRegions(allPages)
+      } catch {
+        // Silently fail — text extraction is best-effort; scanned PDFs have no text content
+      }
+    })()
+    return () => { cancelled = true }
+  }, [buf])
+
+  return regions
 }
 
 // ─── SaveIndicator ─────────────────────────────────────────────────────────────
@@ -511,9 +595,11 @@ function IssuePanel({
 
 function EditingCanvas({
   pageIndex, ops, selectedId, hoveredFromLeftIds, activeTool, draftRect,
+  textRegions,
   pageRef,
   onOverlayPointerDown,
   onMoveStart, onResizeStart, onTextChange, onTextBlur,
+  onEditRegionClick,
 }: {
   pageIndex: number
   ops: EditOp[]
@@ -521,19 +607,25 @@ function EditingCanvas({
   hoveredFromLeftIds: ReadonlySet<string>
   activeTool: ActiveTool
   draftRect: { x: number; y: number; w: number; h: number; pageIndex: number } | null
+  textRegions?: TextRegion[][]
   pageRef: (el: HTMLDivElement | null) => void
   onOverlayPointerDown: (e: React.PointerEvent, pi: number) => void
   onMoveStart: (e: React.PointerEvent, op: EditOp) => void
   onResizeStart: (e: React.PointerEvent, op: EditOp, handle: "nw" | "ne" | "sw" | "se") => void
   onTextChange: (opId: string, text: string) => void
   onTextBlur?: () => void
+  onEditRegionClick?: (region: TextRegion) => void
 }) {
   const pageOps = ops.filter((o) => o.pageIndex === pageIndex)
+  const isEditText = activeTool === "edit-text"
+  const pageTextRegions = isEditText ? (textRegions?.[pageIndex] ?? []) : []
+
   const cursorMap: Record<ActiveTool, string> = {
     select: "default",
     text: "text",
     mask: "crosshair",
     highlight: "crosshair",
+    "edit-text": "default",
   }
 
   return (
@@ -541,7 +633,7 @@ function EditingCanvas({
       ref={pageRef}
       className="absolute inset-0"
       style={{ cursor: cursorMap[activeTool] }}
-      onPointerDown={(e) => onOverlayPointerDown(e, pageIndex)}
+      onPointerDown={(e) => !isEditText && onOverlayPointerDown(e, pageIndex)}
     >
       {pageOps.map((op) => (
         <EditOpView
@@ -556,6 +648,46 @@ function EditingCanvas({
           onTextBlur={onTextBlur}
         />
       ))}
+
+      {/* Edit-text mode: clickable text line regions */}
+      {isEditText && pageTextRegions.map((region, i) => (
+        <div
+          key={i}
+          onClick={(e) => { e.stopPropagation(); onEditRegionClick?.(region) }}
+          title={`Click to edit: "${region.text.slice(0, 60)}${region.text.length > 60 ? "…" : ""}"`}
+          style={{
+            position: "absolute",
+            left: `${region.x * 100}%`,
+            top: `${region.y * 100}%`,
+            width: `${region.w * 100}%`,
+            height: `${region.h * 100}%`,
+            cursor: "text",
+            border: "1.5px solid rgba(59,130,246,0.45)",
+            borderRadius: 2,
+            backgroundColor: "rgba(219,234,254,0.18)",
+            transition: "background-color 0.1s, border-color 0.1s",
+          }}
+          onMouseEnter={(e) => {
+            const el = e.currentTarget as HTMLDivElement
+            el.style.backgroundColor = "rgba(219,234,254,0.55)"
+            el.style.borderColor = "rgba(59,130,246,0.75)"
+          }}
+          onMouseLeave={(e) => {
+            const el = e.currentTarget as HTMLDivElement
+            el.style.backgroundColor = "rgba(219,234,254,0.18)"
+            el.style.borderColor = "rgba(59,130,246,0.45)"
+          }}
+        />
+      ))}
+
+      {/* "Edit Text" mode — no regions found hint */}
+      {isEditText && pageTextRegions.length === 0 && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <span className="text-[11px] text-blue-500/60 font-medium bg-white/60 px-2 py-1 rounded">
+            No text detected on this page
+          </span>
+        </div>
+      )}
 
       {draftRect && draftRect.pageIndex === pageIndex && (
         <div
@@ -813,16 +945,27 @@ function OriginalPane({
 
 function OcrPanel({
   ocrData,
+  ocrRunState,
   onSave,
   onClose,
+  onRerun,
 }: {
   ocrData: OcrData
+  ocrRunState: "idle" | "running" | "done" | "error"
   onSave: (updated: OcrData) => void
   onClose: () => void
+  onRerun: () => void
 }) {
   const [pages, setPages] = useState<OcrPage[]>(ocrData.pages)
   const [expandedPage, setExpandedPage] = useState<number | null>(0)
   const [dirtyPages, setDirtyPages] = useState<Set<number>>(new Set())
+  const [copiedPage, setCopiedPage] = useState<number | null>(null)
+
+  // Sync if ocrData changes externally (re-run)
+  useEffect(() => {
+    setPages(ocrData.pages)
+    setDirtyPages(new Set())
+  }, [ocrData])
 
   function handleTextChange(pageIndex: number, editedText: string) {
     setPages((prev) =>
@@ -836,26 +979,54 @@ function OcrPanel({
     setDirtyPages(new Set())
   }
 
+  async function handleCopy(pageIndex: number, text: string) {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopiedPage(pageIndex)
+      setTimeout(() => setCopiedPage(null), 2000)
+    } catch { /* ignore */ }
+  }
+
   const hasDirty = dirtyPages.size > 0
+  const totalWords = pages.reduce((acc, p) => {
+    const t = p.editedText ?? p.text
+    return acc + t.split(/\s+/).filter(Boolean).length
+  }, 0)
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2.5 border-b border-border/40 flex-shrink-0 bg-background">
-        <div className="flex items-center gap-2">
-          <ScanLine className="w-3.5 h-3.5 text-violet-500" />
+        <div className="flex items-center gap-2 min-w-0">
+          <ScanLine className="w-3.5 h-3.5 text-violet-500 flex-shrink-0" />
           <span className="text-xs font-semibold">OCR Text</span>
-          <span className="text-[10px] text-muted-foreground">{pages.length} page{pages.length !== 1 ? "s" : ""}</span>
+          <span className="text-[10px] text-muted-foreground truncate">
+            {pages.length}p · {totalWords.toLocaleString()} words
+          </span>
         </div>
-        <div className="flex items-center gap-2">
-          {hasDirty && (
-            <button
-              onClick={handleSave}
-              className="flex items-center gap-1 px-2 py-1 text-[10px] font-semibold bg-violet-600 hover:bg-violet-700 text-white rounded-md transition-colors"
-            >
-              <Save className="w-3 h-3" /> Save edits
-            </button>
-          )}
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          <button
+            onClick={onRerun}
+            disabled={ocrRunState === "running"}
+            title="Re-run OCR on all pages"
+            className="p-1 text-muted-foreground hover:text-violet-600 dark:hover:text-violet-400 transition-colors disabled:opacity-40"
+          >
+            {ocrRunState === "running"
+              ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              : <RefreshCw className="w-3.5 h-3.5" />}
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={!hasDirty}
+            title={hasDirty ? "Save OCR edits to session" : "No unsaved changes"}
+            className={`flex items-center gap-1 px-2 py-1 text-[10px] font-semibold rounded-md transition-colors ${
+              hasDirty
+                ? "bg-violet-600 hover:bg-violet-700 text-white"
+                : "bg-muted/40 text-muted-foreground/50 cursor-default"
+            }`}
+          >
+            <Save className="w-3 h-3" /> Save
+          </button>
           <button
             onClick={onClose}
             className="p-1 text-muted-foreground hover:text-foreground transition-colors"
@@ -865,12 +1036,21 @@ function OcrPanel({
         </div>
       </div>
 
+      {ocrData.runAt && (
+        <div className="px-3 py-1.5 bg-muted/20 border-b border-border/30 flex-shrink-0">
+          <p className="text-[10px] text-muted-foreground">
+            Last run {new Date(ocrData.runAt).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+          </p>
+        </div>
+      )}
+
       {/* Pages */}
       <div className="flex-1 overflow-y-auto p-2 space-y-1">
-        {pages.map((p, idx) => {
+        {pages.map((p) => {
           const isExpanded = expandedPage === p.pageIndex
           const displayText = p.editedText !== undefined ? p.editedText : p.text
           const isBlank = p.text === "[blank page]" || p.text === "[OCR failed for this page]"
+          const wordCount = displayText.split(/\s+/).filter(Boolean).length
           return (
             <div key={p.pageIndex} className="border border-border/40 rounded-lg overflow-hidden">
               <button
@@ -881,12 +1061,14 @@ function OcrPanel({
                   <FileText className="w-3 h-3 text-muted-foreground" />
                   <span className="font-semibold">Page {p.pageIndex + 1}</span>
                   {isBlank && <span className="text-muted-foreground/70 italic">— blank</span>}
+                  {!isBlank && <span className="text-muted-foreground/60">{wordCount}w</span>}
+                  {p.editedText !== undefined && <span className="text-[9px] font-bold text-violet-500">edited</span>}
                   {dirtyPages.has(p.pageIndex) && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />}
                 </div>
                 {isExpanded ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground" /> : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />}
               </button>
               {isExpanded && (
-                <div className="px-2 py-2 bg-background">
+                <div className="px-2 py-2 bg-background space-y-1.5">
                   <textarea
                     value={displayText}
                     onChange={(e) => handleTextChange(p.pageIndex, e.target.value)}
@@ -894,9 +1076,20 @@ function OcrPanel({
                     className="w-full px-2 py-2 text-xs font-mono rounded border border-input bg-muted/20 resize-y focus:outline-none focus:ring-1 focus:ring-violet-500/40 focus:border-violet-400 leading-relaxed"
                     placeholder="No text extracted from this page"
                   />
-                  <p className="text-[10px] text-muted-foreground mt-1">
-                    Edit to correct OCR errors. Changes are saved per-session.
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] text-muted-foreground">
+                      {p.editedText !== undefined ? "Showing your edited version" : "Showing OCR output — edit to correct errors"}
+                    </p>
+                    <button
+                      onClick={() => handleCopy(p.pageIndex, displayText)}
+                      title="Copy page text"
+                      className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {copiedPage === p.pageIndex
+                        ? <><CheckCircle2 className="w-3 h-3 text-green-500" /><span className="text-green-600">Copied</span></>
+                        : <><Copy className="w-3 h-3" />Copy</>}
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -999,6 +1192,9 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
 
   // PDF renderer
   const { pages, loading: pdfLoading, failed: pdfFailed } = usePdfRenderer(pdfBuf)
+
+  // Text regions for "Edit Text" mode (extracted from text PDFs via pdf.js)
+  const textRegions = useTextRegions(pdfBuf)
 
   // ── Load session + PDF ──────────────────────────────────────────────────────
 
@@ -1123,6 +1319,40 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
 
   function cancelRename() { setIsRenaming(false) }
 
+  // ── Edit text region click ─────────────────────────────────────────────────
+  // Creates a mask + text op pair at the clicked region position.
+
+  const handleEditRegionClick = useCallback((region: TextRegion) => {
+    const maskId = crypto.randomUUID()
+    const textId = crypto.randomUUID()
+    const maskOp: EditOp = {
+      id: maskId,
+      kind: "mask",
+      pageIndex: region.pageIndex,
+      x: region.x,
+      y: region.y,
+      w: region.w,
+      h: Math.max(region.h, DEFAULT_TEXT_H),
+    }
+    const textOp: EditOp = {
+      id: textId,
+      kind: "text",
+      pageIndex: region.pageIndex,
+      x: region.x,
+      y: region.y,
+      w: region.w,
+      h: Math.max(region.h, DEFAULT_TEXT_H),
+      text: region.text,
+      fontSize: DEFAULT_FONT_SIZE,
+      color: "#000000",
+    }
+    const newOps = [...liveOpsRef.current, maskOp, textOp]
+    setSelectedId(textId)
+    setActiveTool("select")
+    activeToolRef.current = "select"
+    commitOps(newOps, 0)
+  }, [])
+
   // ── Export ─────────────────────────────────────────────────────────────────
 
   const handleExport = useCallback(async () => {
@@ -1131,11 +1361,36 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
     setExportState("exporting")
     try {
       const blob = await api.exportSession(sessionId)
+      const baseName = (sessionMeta?.fileName ?? "document").replace(/\.pdf$/i, "")
+      const suggestedName = `${baseName}-edited.pdf`
+
+      // Try File System Access API first (Chrome/Edge) for a native save dialog
+      if (typeof window !== "undefined" && "showSaveFilePicker" in window) {
+        try {
+          const handle = await (window as any).showSaveFilePicker({
+            suggestedName,
+            types: [{ description: "PDF files", accept: { "application/pdf": [".pdf"] } }],
+          })
+          const writable = await handle.createWritable()
+          await writable.write(blob)
+          await writable.close()
+          setExportState("idle")
+          return
+        } catch (err: any) {
+          if (err?.name === "AbortError") {
+            // User cancelled the picker — treat as idle, not error
+            setExportState("idle")
+            return
+          }
+          // Other error — fall through to anchor download
+        }
+      }
+
+      // Fallback: traditional anchor download
       const url = URL.createObjectURL(blob)
       const a = document.createElement("a")
       a.href = url
-      const baseName = (sessionMeta?.fileName ?? "document").replace(/\.pdf$/i, "")
-      a.download = `${baseName}-edited.pdf`
+      a.download = suggestedName
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
@@ -1578,15 +1833,18 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
         {/* Centre: tools */}
         <div className="hidden sm:flex items-center gap-1 flex-shrink-0">
           <ToolBtn icon={MousePointer2} label="Select" active={activeTool === "select"} onClick={() => setActiveTool("select")} />
-          <ToolBtn icon={Type} label="Text" active={activeTool === "text"} onClick={() => setActiveTool("text")} />
+          {textRegions.length > 0 && (
+            <ToolBtn icon={TextCursorInput} label="Edit Text" active={activeTool === "edit-text"} onClick={() => setActiveTool("edit-text")} />
+          )}
+          <ToolBtn icon={Type} label="Add Text" active={activeTool === "text"} onClick={() => setActiveTool("text")} />
           <ToolBtn icon={Square} label="Mask" active={activeTool === "mask"} onClick={() => setActiveTool("mask")} />
           <ToolBtn icon={Highlighter} label="Highlight" active={activeTool === "highlight"} onClick={() => setActiveTool("highlight")} />
         </div>
 
         {/* Right: OCR + save indicator + save + export */}
         <div className="flex items-center gap-2 flex-shrink-0">
-          {/* OCR button — visible when PDF is scanned/mixed or OCR already exists */}
-          {(sessionMeta.pdfType === "scanned" || sessionMeta.pdfType === "mixed" || ocrData) && (
+          {/* OCR button — always visible */}
+          {(
             <button
               onClick={ocrData ? () => setShowOcrPanel((v) => !v) : handleRunOcr}
               disabled={ocrRunState === "running"}
@@ -1760,7 +2018,10 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
       {/* Mobile tools bar */}
       <div className="flex sm:hidden items-center gap-1 px-3 py-1.5 border-b border-border/40 bg-background flex-shrink-0 overflow-x-auto">
         <ToolBtn icon={MousePointer2} label="Select" active={activeTool === "select"} onClick={() => setActiveTool("select")} />
-        <ToolBtn icon={Type} label="Text" active={activeTool === "text"} onClick={() => setActiveTool("text")} />
+        {textRegions.length > 0 && (
+          <ToolBtn icon={TextCursorInput} label="Edit Text" active={activeTool === "edit-text"} onClick={() => setActiveTool("edit-text")} />
+        )}
+        <ToolBtn icon={Type} label="Add Text" active={activeTool === "text"} onClick={() => setActiveTool("text")} />
         <ToolBtn icon={Square} label="Mask" active={activeTool === "mask"} onClick={() => setActiveTool("mask")} />
         <ToolBtn icon={Highlighter} label="Highlight" active={activeTool === "highlight"} onClick={() => setActiveTool("highlight")} />
       </div>
@@ -1893,6 +2154,7 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
                         hoveredFromLeftIds={hoveredFromLeft}
                         activeTool={activeTool}
                         draftRect={draftRect}
+                        textRegions={textRegions}
                         pageRef={(el) => {
                           if (el) pageRefs.current.set(i, el)
                           else pageRefs.current.delete(i)
@@ -1902,6 +2164,7 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
                         onResizeStart={handleResizeStart}
                         onTextChange={handleTextChange}
                         onTextBlur={handleTextBlur}
+                        onEditRegionClick={handleEditRegionClick}
                       />
                       {pages.length > 1 && (
                         <span className="absolute top-2 right-2 text-[9px] font-mono bg-black/50 text-white px-1.5 py-0.5 rounded pointer-events-none">
@@ -1931,8 +2194,10 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
               <div className="hidden md:flex flex-col w-64 xl:w-72 flex-shrink-0 border-l border-border/40 bg-background overflow-hidden">
                 <OcrPanel
                   ocrData={ocrData}
+                  ocrRunState={ocrRunState}
                   onSave={handleSaveOcrEdits}
                   onClose={() => setShowOcrPanel(false)}
+                  onRerun={handleRunOcr}
                 />
               </div>
             )}

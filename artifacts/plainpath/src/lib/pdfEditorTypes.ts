@@ -25,7 +25,19 @@ export interface EditOp {
 
 export type SaveState = "idle" | "unsaved" | "saving" | "saved" | "error"
 
-export type ActiveTool = "select" | "text" | "mask" | "highlight"
+export type ActiveTool = "select" | "text" | "mask" | "highlight" | "edit-text"
+
+// ─── Text region (from pdf.js text extraction) ─────────────────────────────────
+// Used by the "Edit Text" mode to show clickable line regions over text PDFs.
+
+export interface TextRegion {
+  pageIndex: number
+  x: number   // fraction of page width
+  y: number   // fraction of page height (top-down)
+  w: number
+  h: number
+  text: string
+}
 
 // ─── PDF classification ────────────────────────────────────────────────────────
 
@@ -53,6 +65,8 @@ export interface SessionMeta {
   pageCount: number | null
   updatedAt: string
   pdfType?: PdfType
+  hasOcr?: boolean
+  opCount?: number
 }
 
 export interface SessionDetail extends SessionMeta {

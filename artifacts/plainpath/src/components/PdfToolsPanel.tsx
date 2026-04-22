@@ -4,13 +4,19 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { useState, useRef } from "react"
+import * as pdfjsLib from "pdfjs-dist"
 import {
   Upload, FileText, X, Loader2, Download, AlertCircle,
   CheckCircle2, Layers, Scissors, SlidersHorizontal, Minimize2,
-  Trash2, RotateCw, ArrowUpDown, Plus,
+  Trash2, RotateCw, ArrowUpDown, Plus, FileDown,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { usePdfUtilitiesApi } from "@/hooks/usePdfEditorApi"
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+  "pdfjs-dist/build/pdf.worker.min.mjs",
+  import.meta.url,
+).toString()
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -598,6 +604,97 @@ function CompressTool() {
   )
 }
 
+// ─── PDF to Text Tool ─────────────────────────────────────────────────────────
+
+function PdfToTextTool() {
+  const [file, setFile] = useState<File | null>(null)
+  const [fileError, setFileError] = useState<string | null>(null)
+  const [state, setState] = useState<ToolState>("idle")
+  const [error, setError] = useState("")
+  const [wordCount, setWordCount] = useState<number | null>(null)
+
+  function acceptFile(f: File) {
+    const err = validatePdf(f)
+    setFileError(err)
+    setFile(err ? null : f)
+    setWordCount(null)
+  }
+
+  async function handleExtract() {
+    if (!file || state === "processing") return
+    setState("processing"); setError(""); setWordCount(null)
+    try {
+      const buf = await file.arrayBuffer()
+      const pdf = await pdfjsLib.getDocument({ data: buf, verbosity: 0 }).promise
+      const parts: string[] = []
+
+      for (let pn = 1; pn <= pdf.numPages; pn++) {
+        const page = await pdf.getPage(pn)
+        const content = await page.getTextContent()
+        const pageText = (content.items as any[]).map((it) => it.str ?? "").join(" ")
+        if (pageText.trim()) parts.push(`--- Page ${pn} ---\n${pageText}`)
+        page.cleanup()
+      }
+
+      if (!parts.length) {
+        setError("No text found — this PDF may be scanned or image-based. Use OCR in the editor instead.")
+        setState("error")
+        return
+      }
+
+      const fullText = parts.join("\n\n")
+      const words = fullText.split(/\s+/).filter(Boolean).length
+      setWordCount(words)
+      const blob = new Blob([fullText], { type: "text/plain;charset=utf-8" })
+      const baseName = file.name.replace(/\.pdf$/i, "")
+      downloadBlob(blob, `${baseName}.txt`)
+      setState("done")
+      setTimeout(() => setState("idle"), 8000)
+    } catch (err: any) {
+      setError("Text extraction failed — the file may be corrupted or password-protected.")
+      setState("error")
+    }
+  }
+
+  return (
+    <ToolCard
+      icon={FileDown}
+      title="PDF to Text"
+      description="Extract all text content from a PDF and save as a plain .txt file."
+      accentClass="bg-teal-100 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400"
+    >
+      <div className="space-y-3">
+        <FileDropZone
+          file={file}
+          onFile={acceptFile}
+          onRemove={() => { setFile(null); setFileError(null); setWordCount(null) }}
+          disabled={state === "processing"}
+        />
+        {fileError && <p className="text-xs text-red-500">{fileError}</p>}
+        <p className="text-xs text-muted-foreground">
+          Best for text-based PDFs. Scanned PDFs require OCR — use the editor for those.
+        </p>
+        <div className="flex items-center gap-3 pt-1">
+          <Button
+            onClick={handleExtract}
+            disabled={!file || state === "processing"}
+            className="gap-2 bg-teal-600 hover:bg-teal-700 text-white"
+            size="sm"
+          >
+            {state === "processing" ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
+            Extract Text
+          </Button>
+          <ResultRow
+            state={state}
+            error={error}
+            extra={wordCount ? `${wordCount.toLocaleString()} words` : undefined}
+          />
+        </div>
+      </div>
+    </ToolCard>
+  )
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function parsePageNumbers(input: string): number[] {
@@ -615,6 +712,17 @@ function parsePageNumbers(input: string): number[] {
   return Array.from(indexes).sort((a, b) => a - b)
 }
 
+// ─── Section header ────────────────────────────────────────────────────────────
+
+function SectionHeader({ title, description }: { title: string; description: string }) {
+  return (
+    <div className="col-span-full pt-2 pb-1">
+      <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+      <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
+    </div>
+  )
+}
+
 // ─── Main export ──────────────────────────────────────────────────────────────
 
 export default function PdfToolsPanel() {
@@ -627,9 +735,18 @@ export default function PdfToolsPanel() {
         </p>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <SectionHeader
+          title="Document structure"
+          description="Combine, split, and reorganize PDF files."
+        />
         <MergeTool />
         <ExtractPagesTool />
         <PageToolsCard />
+        <SectionHeader
+          title="Content &amp; optimization"
+          description="Extract text content or reduce file size."
+        />
+        <PdfToTextTool />
         <CompressTool />
       </div>
     </div>

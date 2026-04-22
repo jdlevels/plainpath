@@ -176,7 +176,7 @@ function SessionList({
                   <p className="text-sm font-medium truncate">{s.fileName}</p>
                   <PdfTypeBadge pdfType={s.pdfType} />
                 </div>
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5 flex-wrap">
                   <Clock className="w-3 h-3" />
                   <span>{fmtRelative(s.updatedAt)}</span>
                   <span>·</span>
@@ -186,6 +186,17 @@ function SessionList({
                       <span>·</span>
                       <span>{s.pageCount} page{s.pageCount !== 1 ? "s" : ""}</span>
                     </>
+                  )}
+                  {(s.opCount ?? 0) > 0 && (
+                    <>
+                      <span>·</span>
+                      <span>{s.opCount} edit{s.opCount !== 1 ? "s" : ""}</span>
+                    </>
+                  )}
+                  {s.hasOcr && (
+                    <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300">
+                      <ScanText className="w-2.5 h-2.5" />OCR
+                    </span>
                   )}
                 </div>
               </div>

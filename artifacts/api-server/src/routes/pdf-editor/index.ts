@@ -160,7 +160,9 @@ router.post(
 router.get("/sessions", requireAuth, async (req: any, res) => {
   try {
     const result = await pool.query(
-      `SELECT id, file_name, file_size_bytes, page_count, updated_at, pdf_type
+      `SELECT id, file_name, file_size_bytes, page_count, updated_at, pdf_type,
+              ocr_data IS NOT NULL AS has_ocr,
+              jsonb_array_length(ops) AS op_count
        FROM pdf_editor_sessions
        WHERE user_id = $1
        ORDER BY updated_at DESC
@@ -175,6 +177,8 @@ router.get("/sessions", requireAuth, async (req: any, res) => {
         pageCount: r.page_count,
         updatedAt: r.updated_at,
         pdfType: r.pdf_type ?? "unknown",
+        hasOcr: r.has_ocr ?? false,
+        opCount: r.op_count ?? 0,
       })),
     );
   } catch (err) {
