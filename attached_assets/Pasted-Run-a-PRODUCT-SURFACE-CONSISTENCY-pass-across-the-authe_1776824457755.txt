@@ -1,0 +1,99 @@
+Run a PRODUCT-SURFACE CONSISTENCY pass across the authenticated saved-work surfaces. This is a polish / UX coherence pass, not a backend feature pass. Do not change working routing or business logic unless a real UI bug requires it.
+
+SURFACES IN SCOPE
+- Home.tsx (dashboard / Recent Work)
+- Documents.tsx (My Documents)
+- MyAnalyses.tsx
+- Navbar.tsx
+- any small shared config/constants used only for labels or empty-state wording
+
+OBJECTIVE
+Make saved work feel consistent, obvious, and product-grade across Dashboard, My Documents, and My Analyses.
+
+RULES
+- No database/schema changes
+- No auth/billing changes
+- No API contract changes unless required for tiny presentational metadata already available
+- Preserve existing routing
+- Preserve all verified My Documents error-handling behavior
+- Focus on labels, CTA wording, visual hierarchy, section naming, empty states, and card consistency
+
+TARGET OUTCOMES
+
+1. DASHBOARD / RECENT WORK
+- Keep Recent Work compact, but ensure item labels are crystal clear:
+  - Analyze
+  - Trust Check
+  - Build a Contract
+  - Document Builder
+  - PDF Editor
+  - Compare Versions
+  - Signature
+- CTA verbs should stay action-specific and consistent:
+  - View analysis
+  - Continue editing
+  - Open comparison
+  - Continue building
+  - Review contract
+  - Open tool
+- Make timestamp / metadata hierarchy cleaner and easier to scan
+- Ensure no misleading “local compare” or ambiguous labels remain
+
+2. MY DOCUMENTS
+- Preserve section-scoped errors exactly as implemented
+- Tighten section hierarchy so the page clearly reads as:
+  - Uploaded Documents
+  - PDF Editor
+  - Compare Versions
+  - Document Builder
+- Make section headers, counts, and inline metadata visually consistent
+- Ensure footer/help text is concise and product-facing, not internal
+- Ensure empty-state copy explains what belongs here:
+  uploaded docs, editor sessions, comparisons, builder drafts
+
+3. MY ANALYSES
+- Make it unmistakable that this page is for saved AI results, not editor/comparison sessions
+- Clean up spacing and card hierarchy
+- Tighten empty-state messaging:
+  saved analyses + trust checks live here
+- Remove any wording that overlaps with My Documents
+- Ensure CTA cards point to the correct first actions
+
+4. GLOBAL LABEL CONSISTENCY
+Standardize wording everywhere user-facing:
+- “Build a Contract” = AI contract wizard
+- “Document Builder” = structured drafting workspace
+- “Compare Versions” = comparison tool
+- “PDF Editor” = editor tool
+- “Analyze a Document” = analysis tool
+Do a quick search and fix only user-facing labels that are still inconsistent
+
+5. EMPTY STATES / HELP STATES
+Each page should answer:
+- what belongs here
+- what does not
+- what the user should do next
+Do not use vague copy like “Nothing here yet” unless paired with useful guidance.
+
+6. VISUAL / LAYOUT POLISH
+- Improve scanability of headings, counts, and CTA rows
+- Reduce any awkward dead space
+- Keep dark-theme visual language consistent with existing product
+- Do not redesign the whole page; do a targeted polish pass
+
+VERIFICATION REQUIRED
+After edits:
+1. Run TypeScript/build checks
+2. Verify Dashboard loads
+3. Verify My Documents loads
+4. Verify My Analyses loads
+5. Confirm no regressions in:
+   - /pdf-editor/:id
+   - /compare-versions/:id
+   - /builder/:id
+   - /build-contract
+6. Return a concise structured report with:
+   - exact files modified
+   - exact user-facing copy changed
+   - any route/path changes (should be none)
+   - what was intentionally left unchanged

@@ -467,7 +467,7 @@ export default function Documents() {
             </div>
             <h2 className="text-lg font-semibold text-foreground mb-2">No saved work yet</h2>
             <p className="text-sm text-muted-foreground max-w-sm mx-auto mb-6">
-              When you analyze, edit, or compare documents in PlainPath, they'll appear here so you can pick up right where you left off.
+              Uploaded documents, PDF Editor sessions, and Compare Versions comparisons all live here. Start a tool below to save your first item.
             </p>
             <div className="flex flex-wrap gap-2 justify-center">
               <Button onClick={() => navigate("/analyze")} className="gap-1.5">

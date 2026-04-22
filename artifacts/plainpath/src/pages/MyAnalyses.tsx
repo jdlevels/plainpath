@@ -179,7 +179,7 @@ export default function MyAnalyses() {
             </div>
             <p className="text-sm text-muted-foreground">
               {items.length === 0
-                ? "Save an analysis to review it anytime — without reprocessing."
+                ? "Saved analyses and Trust Checks live here — review them anytime without reprocessing."
                 : `${items.length} saved ${items.length === 1 ? "analysis" : "analyses"}`}
             </p>
           </div>
@@ -362,9 +362,9 @@ export default function MyAnalyses() {
               <div className="bg-secondary rounded-xl p-4 w-fit mx-auto mb-4">
                 <Folders className="w-7 h-7 text-muted-foreground/50" />
               </div>
-              <h2 className="text-lg font-bold text-foreground mb-1.5">Nothing saved yet</h2>
+              <h2 className="text-lg font-bold text-foreground mb-1.5">No saved AI results yet</h2>
               <p className="text-sm text-muted-foreground max-w-xs mx-auto leading-relaxed">
-                Analyze a document, then tap <strong>Save</strong> on the results page to keep it here.
+                Analyses and Document Trust Checks live here. Run a tool and tap <strong>Save</strong> on the results page to keep it. Editor sessions and drafts are in My Documents.
               </p>
             </div>
 
@@ -388,15 +388,6 @@ export default function MyAnalyses() {
                   bg: "bg-red-50 dark:bg-red-950/20",
                   border: "hover:border-red-200 dark:hover:border-red-900/50",
                   path: "/trust-check",
-                },
-                {
-                  icon: BookMarked,
-                  label: "Build a Contract",
-                  desc: "Generate a professional agreement in minutes by answering plain-English questions.",
-                  color: "text-emerald-500",
-                  bg: "bg-emerald-50 dark:bg-emerald-950/20",
-                  border: "hover:border-emerald-200 dark:hover:border-emerald-900/50",
-                  path: "/build-contract",
                 },
                 {
                   icon: AlertTriangle,

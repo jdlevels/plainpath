@@ -611,9 +611,9 @@ export default function Home() {
                   ) : (
                     (() => {
                       const localMeta: Record<string, { icon: ElementType; color: string; href: string; toolLabel: string; cta: string }> = {
-                        "redact":           { icon: EyeOff,     color: "text-violet-400",  href: "/redact",         toolLabel: "Redact",          cta: "Open tool →" },
-                        "contract-builder": { icon: PenLine,    color: "text-emerald-400", href: "/build-contract", toolLabel: "Build a Contract", cta: "Continue building →" },
-                        "compare":          { icon: GitCompare, color: "text-teal-400",    href: "/compare-versions", toolLabel: "Compare",       cta: "Open tool →" },
+                        "redact":           { icon: EyeOff,     color: "text-violet-400",  href: "/redact",         toolLabel: "Redact Sensitive Info", cta: "Open tool →" },
+                        "contract-builder": { icon: PenLine,    color: "text-emerald-400", href: "/build-contract", toolLabel: "Build a Contract",      cta: "Continue building →" },
+                        "compare":          { icon: GitCompare, color: "text-teal-400",    href: "/compare-versions", toolLabel: "Compare Versions",    cta: "Open comparison →" },
                       }
                       const meta = localMeta[item.tool] ?? localMeta["redact"]
                       const Icon = meta.icon
