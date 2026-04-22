@@ -1,0 +1,50 @@
+Production billing blocker:
+
+The live subscribe page now loads, but both plan buttons show:
+“Stripe is not configured. Billing is unavailable.”
+
+So routing is fixed, but the live Stripe connector is still not active from the app’s perspective.
+
+Please diagnose and fix the exact production issue.
+
+Check all of the following:
+
+1. LIVE CONNECTOR DETECTION
+- verify how the app determines whether Stripe is configured
+- identify the exact check that is currently failing in production
+- confirm whether the published deployment can actually see the Replit Stripe connector
+
+2. DEPLOYMENT CONTEXT
+- verify the live published deployment is running with the correct production/deployment flags
+- verify REPLIT_DEPLOYMENT / any equivalent production context is actually present at runtime
+- verify the billing code is not still behaving like preview/dev
+
+3. CONNECTOR INSTALLATION / ACCESS
+- verify the Replit Integrated Payments app is properly installed and accessible to this deployment
+- verify the published app has access to the live Stripe connector data
+- verify there is no missing deployment-side permission or connector binding
+
+4. STRIPE ACCOUNT STATUS
+- verify whether the app is intentionally blocking checkout because Stripe business verification is still incomplete
+- if so, identify the exact condition/message source in code
+
+5. EXACT FILES / CHECKS
+- identify the exact files and functions responsible for producing:
+  “Stripe is not configured. Billing is unavailable.”
+- fix the production detection so live billing works when the connector is present
+
+6. VERIFICATION AFTER FIX
+After fixing, verify all of the following in the live deployed app:
+- /app/subscribe loads
+- Starter button is enabled
+- Pro button is enabled
+- clicking Starter opens Stripe checkout
+- clicking Pro opens Stripe checkout
+
+Return:
+1. exact root cause
+2. exact files changed
+3. exact condition that was failing
+4. confirmation that Starter checkout opens in production
+5. confirmation that Pro checkout opens in production
+6. screenshot of the fixed live /app/subscribe page
