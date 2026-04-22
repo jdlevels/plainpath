@@ -1,0 +1,89 @@
+Run one final closure pass for PDF Editor only. No new features. No refactors. Bug-fix only if a real blocker is found.
+
+GOAL
+Fully close the remaining unproven items for the searchable-text PDF editing path.
+
+STRICT SCOPE
+Only verify these two things:
+1) real clickable text-region editing on a dense searchable PDF
+2) exported PDF file actually contains the edited text
+
+USE A REAL DENSE SEARCHABLE PDF
+Requirements:
+- multiple paragraphs of machine-readable text
+- not image-only
+- not a PDF where pdf.js returns zero extractable text items
+- choose a page where textRegions are definitely produced
+
+TEST D — REAL TEXT-REGION EDIT PATH
+1. Open /pdf-editor
+2. Upload the dense searchable PDF
+3. Open the created session
+4. Confirm pdf_type is text
+5. Confirm Edit Text button is visible immediately
+6. Enter Edit Text mode
+7. Confirm blue clickable text-region overlays appear on at least one page
+8. Click one real text region
+9. Confirm the text field is prefilled from the clicked region
+10. Change the text to a very obvious marker like:
+   PLAINPATH QA EDIT 2026
+11. Save
+12. Reload the session
+13. Confirm the edited text is still present in the working editor state
+
+TEST E — EXPORTED PDF CONTENT PROOF
+1. From the same edited session, click Download PDF / Save to Device
+2. Save the file successfully
+3. Re-open the exported PDF itself
+4. Confirm the exported PDF visibly contains:
+   PLAINPATH QA EDIT 2026
+5. Capture a screenshot of the reopened exported file showing that exact text
+
+REQUIRED EVIDENCE
+Capture screenshots for:
+1. dense searchable source PDF opened in editor
+2. Edit Text mode with visible blue text-region overlays
+3. clicked region showing prefilled text
+4. edited text visible before save
+5. same edited text visible after reload
+6. reopened exported PDF showing “PLAINPATH QA EDIT 2026”
+
+REQUIRED REPORT FORMAT
+Use exactly:
+
+PDF EDITOR FINAL CLOSURE PASS — REPORT
+
+1. EXACT FILES MODIFIED
+- list files changed
+- say “None” if verification-only
+
+2. TEST D — REAL TEXT-REGION EDIT PATH
+- PASS / FAIL
+- browser-verified or not
+- screenshot references
+
+3. TEST E — EXPORTED PDF CONTENT PROOF
+- PASS / FAIL
+- browser-verified or not
+- screenshot references
+
+4. BUGS FOUND AND FIXED
+- file
+- root cause
+- exact fix
+- re-test result
+
+5. FINAL CLOSURE DECISION
+One of:
+- CLOSED
+- PARTIALLY CLOSED
+- BLOCKED
+
+RULE
+Do not mark CLOSED unless:
+- blue text-region overlays are visibly present on a real searchable PDF
+- click-to-prefill works
+- edited text persists after reload
+- reopened exported PDF visibly shows the changed text
+
+Start now.

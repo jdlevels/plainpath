@@ -656,7 +656,10 @@ function EditingCanvas({
       {isEditText && pageTextRegions.map((region, i) => (
         <div
           key={i}
-          onClick={(e) => { e.stopPropagation(); onEditRegionClick?.(region) }}
+          data-testid="text-region-overlay"
+          data-region-text={region.text.slice(0, 80)}
+          onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); onEditRegionClick?.(region) }}
+          onClick={(e) => { e.stopPropagation(); }}
           title={`Click to edit: "${region.text.slice(0, 60)}${region.text.length > 60 ? "…" : ""}"`}
           style={{
             position: "absolute",
