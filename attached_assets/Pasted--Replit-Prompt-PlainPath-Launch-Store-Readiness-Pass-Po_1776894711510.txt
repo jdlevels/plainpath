@@ -1,0 +1,162 @@
+## Replit Prompt — PlainPath Launch / Store-Readiness Pass
+### Post-Clause-Extractor completion
+
+Clause Extractor & Obligation Tracker is now accepted.
+Do not continue polishing that tool unless a launch blocker is found.
+
+We are now moving into the next phase:
+**launch-readiness / store-readiness review**
+
+## Goal
+Run a full production-readiness audit across PlainPath and return exact blockers, grouped by severity, so we can close launch issues efficiently.
+
+Focus on:
+- product readiness
+- app store readiness
+- billing readiness
+- auth/account readiness
+- legal/compliance copy
+- navigation consistency
+- export/download behavior
+- mobile responsiveness
+- production safety
+
+---
+
+## Review all of the following areas
+
+### 1. Auth / account / subscription flow
+Verify:
+- signed-out user flow
+- signed-in user flow
+- auth-first pricing flow
+- selected plan persistence through auth
+- success page account linking
+- upgrade/downgrade/cancel entry points
+- subscription state reflected correctly in UI
+- no dead upgrade prompts
+- no misleading locked/unlocked states
+
+### 2. Billing / Stripe production readiness
+Verify:
+- live billing flow paths
+- customer/subscription persistence
+- success/cancel handling
+- plan entitlement checks
+- no stale pricing copy
+- no duplicate billing CTAs
+- no dev/test wording visible
+- no hidden broken billing edge cases
+
+### 3. Tool navigation and product consistency
+Verify:
+- public site tool list
+- authenticated app tool list
+- tools dropdown
+- demo entries
+- pricing/features references
+- help/support references
+- no missing cards
+- no duplicate cards
+- no orphan routes
+
+### 4. Export / download / document handling
+Verify:
+- all document tools with save/export actions
+- filenames
+- download behavior
+- PDF/Word handling where applicable
+- error states
+- empty states
+- whether export actions are discoverable and production-grade
+
+### 5. Mobile / tablet / desktop readiness
+Audit:
+- homepage
+- pricing
+- tools grid
+- Clause Extractor
+- Analyze a Document
+- Document Trust Check
+- Contract Review / Fair Deal
+- Compare Versions
+- Document Builder
+- Digital Signature if present
+
+Return layout issues by breakpoint:
+- mobile
+- tablet
+- desktop
+
+### 6. Legal / trust / store-facing copy
+Verify:
+- privacy policy alignment with actual behavior
+- terms copy consistency
+- support/help wording
+- no misleading AI claims
+- no misleading security claims
+- no misleading storage claims
+- no leftover experimental/internal language
+
+### 7. Production safety / cleanup
+Check for:
+- dead routes
+- stale components
+- unused feature flags
+- placeholder text
+- mock/demo text leaking into real app surfaces
+- console errors
+- obvious error-boundary gaps
+- broken loading states
+- broken empty states
+
+### 8. Store-readiness specific concerns
+Flag anything that could affect:
+- Apple review
+- Google Play review
+- trust/compliance perception
+- billing/account confusion
+- document/privacy perception
+
+---
+
+## Required response format
+
+### A. Launch blockers
+Only issues that should block launch.
+For each:
+- severity: blocker
+- area
+- exact issue
+- exact file(s) if known
+- recommended fix
+
+### B. Important but non-blocking issues
+For each:
+- severity: medium
+- area
+- exact issue
+- recommended fix
+
+### C. Nice-to-have post-launch items
+For each:
+- severity: low
+- area
+- exact issue
+- recommended fix
+
+### D. Screenshot evidence
+Provide screenshots for the most important issues found.
+
+### E. Final readiness summary
+Return:
+- Ready for limited launch: YES / NO
+- Ready for store submission review: YES / NO
+- Number of true blockers remaining
+- Top 3 things to fix next
+
+## Constraints
+- Do not re-open the Clause Extractor design unless there is a true launch blocker
+- Do not give vague summaries
+- Be exact and production-oriented
+- Prioritize real launch risk over stylistic preferences
