@@ -24,7 +24,7 @@ const TOOLS = [
     key: "trust-check",
     label: "Document Trust Check",
     scenario: "Fake IRS payment demand — scored 18/100",
-    desc: "See how PlainPath flags a scam letter pretending to be from the IRS, with 3 critical red flags surfaced instantly.",
+    desc: "See how PlainPath flags a scam letter pretending to be from the IRS, with 4 flags detected — 3 critical, 1 high.",
     icon: ShieldCheck,
     color: "text-red-600 dark:text-red-400",
     bg: "bg-red-50 dark:bg-red-950/40",
