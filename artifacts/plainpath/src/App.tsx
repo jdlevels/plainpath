@@ -33,7 +33,7 @@ import Upgrade from "@/pages/Upgrade";
 import Signature from "@/pages/Signature";
 import Documents from "@/pages/Documents";
 import PdfEditor from "@/pages/PdfEditor";
-import PdfEditorSession from "@/pages/PdfEditorSession";
+import PdfEditorSession from "@/pages/PdfEditorSession"
 import Methodology from "@/pages/Methodology";
 import BuilderList from "@/pages/Builder/index";
 import BuilderNew from "@/pages/Builder/New";
