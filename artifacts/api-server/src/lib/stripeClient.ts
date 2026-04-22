@@ -22,6 +22,25 @@ async function fetchConnection(hostname: string, token: string, environment: str
 }
 
 async function getCredentials() {
+  const isProduction = process.env.REPLIT_DEPLOYMENT === "1"
+
+  // ── Production: prefer explicit live keys set as Replit Secrets ──────────
+  // Add STRIPE_SECRET_KEY (sk_live_...) and STRIPE_PUBLISHABLE_KEY (pk_live_...)
+  // in the Replit Secrets pane to enable live payments.
+  if (isProduction) {
+    const secretKey = process.env.STRIPE_SECRET_KEY
+    const publishableKey = process.env.STRIPE_PUBLISHABLE_KEY
+    if (secretKey && publishableKey) {
+      return { secretKey, publishableKey }
+    }
+    // No live keys configured — billing unavailable in production.
+    throw new Error(
+      "Live Stripe keys not configured. Add STRIPE_SECRET_KEY and STRIPE_PUBLISHABLE_KEY " +
+      "to Replit Secrets to enable live payments."
+    )
+  }
+
+  // ── Development: use the Replit Stripe connector (sandbox) ───────────────
   const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME
   const xReplitToken = process.env.REPL_IDENTITY
     ? "repl " + process.env.REPL_IDENTITY
@@ -29,26 +48,24 @@ async function getCredentials() {
       ? "depl " + process.env.WEB_REPL_RENEWAL
       : null
 
-  if (!xReplitToken) {
-    throw new Error("X-Replit-Token not found for repl/depl")
-  }
-
-  if (!hostname) {
-    throw new Error("REPLIT_CONNECTORS_HOSTNAME not set")
-  }
-
-  const isProduction = process.env.REPLIT_DEPLOYMENT === "1"
-  const targetEnvironment = isProduction ? "production" : "development"
-
-  const conn = await fetchConnection(hostname, xReplitToken, targetEnvironment)
-  if (conn) {
-    return {
-      publishableKey: conn.settings.publishable as string,
-      secretKey: conn.settings.secret as string,
+  if (hostname && xReplitToken) {
+    const conn = await fetchConnection(hostname, xReplitToken, "development")
+    if (conn) {
+      return {
+        publishableKey: conn.settings.publishable as string,
+        secretKey: conn.settings.secret as string,
+      }
     }
   }
 
-  throw new Error(`Stripe ${targetEnvironment} connector not configured`)
+  // Also allow manual overrides in dev via env vars (useful for local testing)
+  const secretKey = process.env.STRIPE_SECRET_KEY
+  const publishableKey = process.env.STRIPE_PUBLISHABLE_KEY
+  if (secretKey && publishableKey) {
+    return { secretKey, publishableKey }
+  }
+
+  throw new Error("Stripe development connection not found")
 }
 
 // WARNING: Never cache this client. Always call fresh — tokens may rotate.
