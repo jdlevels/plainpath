@@ -239,3 +239,9 @@ id = "6wl3CNlAJ8mJxdPYa3faD"
 uri = "file://docs/store/submission/ios/screenshots/06-redact-detection.jpg"
 type = "image"
 title = "iOS Shot 6 — Redact: Sample Docs + Input"
+
+[[outputs]]
+id = "GjNKZHISqsZwHjk_YWJnF"
+uri = "file://screenshots/documents-4section-final.jpeg"
+type = "image"
+title = "My Documents — Authenticated 4-Section View (Final)"
