@@ -68,22 +68,28 @@ function ToolBadge({ tool }: { tool: string }) {
 
 // ─── Section header ───────────────────────────────────────────────────────────
 
-function SectionHeader({ icon: Icon, label, count, colorClass }: {
+function SectionHeader({ icon: Icon, label, count, colorClass, desc }: {
   icon: React.ElementType
   label: string
   count?: number
   colorClass: string
+  desc?: string
 }) {
   return (
-    <div className="flex items-center gap-2 mb-3 mt-8 first:mt-0">
-      <div className={`w-6 h-6 rounded-md flex items-center justify-center ${colorClass}`}>
-        <Icon className="w-3.5 h-3.5" />
+    <div className="mb-3 mt-8 first:mt-0">
+      <div className="flex items-center gap-2">
+        <div className={`w-6 h-6 rounded-md flex items-center justify-center ${colorClass}`}>
+          <Icon className="w-3.5 h-3.5" />
+        </div>
+        <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{label}</span>
+        {count !== undefined && count > 0 && (
+          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-secondary text-muted-foreground">
+            {count}
+          </span>
+        )}
       </div>
-      <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{label}</span>
-      {count !== undefined && count > 0 && (
-        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-secondary text-muted-foreground">
-          {count}
-        </span>
+      {desc && (
+        <p className="text-[11px] text-muted-foreground/55 mt-1 ml-8 leading-snug">{desc}</p>
       )}
     </div>
   )
@@ -494,6 +500,7 @@ export default function Documents() {
               icon={FileText}
               label="Uploaded Documents"
               colorClass="bg-primary/10 text-primary"
+              desc="Files you've imported into PlainPath for analysis, signing, or review."
             />
             <div className="flex items-center gap-2 p-3 rounded-xl border border-destructive/20 bg-destructive/5 text-destructive text-sm mb-6">
               <AlertTriangle className="w-4 h-4 shrink-0" />
@@ -509,6 +516,7 @@ export default function Documents() {
               label="Uploaded Documents"
               count={docs.length}
               colorClass="bg-primary/10 text-primary"
+              desc="Files you've imported into PlainPath for analysis, signing, or review."
             />
 
             {/* No search results */}
@@ -594,7 +602,7 @@ export default function Documents() {
                               onClick={() => openInAnalyze(doc)}
                             >
                               <FileText className="w-3 h-3" />
-                              Open Analysis
+                              View analysis
                             </Button>
                           ) : (
                             <Button
@@ -604,7 +612,7 @@ export default function Documents() {
                               onClick={() => openInAnalyze(doc)}
                             >
                               <FileText className="w-3 h-3" />
-                              Analyze
+                              Analyze a Document
                             </Button>
                           )}
                           {doc.toolRuns.some(r => r.tool === "contract_review") && (
@@ -615,7 +623,7 @@ export default function Documents() {
                               onClick={() => navigate("/contract-review")}
                             >
                               <Scale className="w-3 h-3" />
-                              View Review
+                              View review
                             </Button>
                           )}
                           {doc.toolRuns.some(r => r.tool === "trust_check") && (
@@ -626,7 +634,7 @@ export default function Documents() {
                               onClick={() => navigate("/trust-check")}
                             >
                               <ShieldCheck className="w-3 h-3" />
-                              View Trust Check
+                              View trust check
                             </Button>
                           )}
                           <Button
@@ -704,12 +712,13 @@ export default function Documents() {
         {/* ── SECTION: PDF Editor Sessions ─────────────────────────────────── */}
         {!loading && (
           <>
-            {(pdfSessions.length > 0 || pdfLoading || (!showGlobalBanner && !!pdfError)) && (
+            {(pdfSessions.length > 0 || pdfLoading || (!showGlobalBanner && !!pdfError) || (!pdfLoading && !pdfError && pdfSessions.length === 0 && hasAnyContent)) && (
               <SectionHeader
                 icon={FileEdit}
                 label="PDF Editor"
                 count={pdfSessions.length}
                 colorClass="bg-purple-100 text-purple-600 dark:bg-purple-900/40 dark:text-purple-400"
+                desc="Active editing sessions with your annotations and text overlays."
               />
             )}
 
@@ -725,6 +734,19 @@ export default function Documents() {
                 <AlertTriangle className="w-4 h-4 shrink-0" />
                 <span className="flex-1">{pdfError}</span>
                 <Button variant="ghost" size="sm" onClick={reloadPdf}>Retry</Button>
+              </div>
+            )}
+
+            {!pdfLoading && !pdfError && pdfSessions.length === 0 && hasAnyContent && (
+              <div className="flex items-center gap-3 py-3 px-4 rounded-xl border border-dashed border-border/40 bg-card/60 mb-3">
+                <FileEdit className="w-4 h-4 shrink-0 text-purple-400/50" />
+                <span className="flex-1 text-xs text-muted-foreground">No PDF Editor sessions yet.</span>
+                <button
+                  onClick={() => navigate("/pdf-editor")}
+                  className="text-xs font-medium text-purple-500 hover:text-purple-600 transition-colors shrink-0"
+                >
+                  Open PDF Editor →
+                </button>
               </div>
             )}
 
@@ -841,12 +863,13 @@ export default function Documents() {
         {/* ── SECTION: Compare Versions Sessions ───────────────────────────── */}
         {!loading && (
           <>
-            {(compareSessions.length > 0 || compareLoading || (!showGlobalBanner && !!compareError)) && (
+            {(compareSessions.length > 0 || compareLoading || (!showGlobalBanner && !!compareError) || (!compareLoading && !compareError && compareSessions.length === 0 && hasAnyContent)) && (
               <SectionHeader
                 icon={GitCompare}
                 label="Compare Versions"
                 count={compareSessions.length}
                 colorClass="bg-teal-100 text-teal-600 dark:bg-teal-900/40 dark:text-teal-400"
+                desc="Side-by-side version comparisons saved for later review."
               />
             )}
 
@@ -862,6 +885,19 @@ export default function Documents() {
                 <AlertTriangle className="w-4 h-4 shrink-0" />
                 <span className="flex-1">{compareError}</span>
                 <Button variant="ghost" size="sm" onClick={reloadCompare}>Retry</Button>
+              </div>
+            )}
+
+            {!compareLoading && !compareError && compareSessions.length === 0 && hasAnyContent && (
+              <div className="flex items-center gap-3 py-3 px-4 rounded-xl border border-dashed border-border/40 bg-card/60 mb-3">
+                <GitCompare className="w-4 h-4 shrink-0 text-teal-400/50" />
+                <span className="flex-1 text-xs text-muted-foreground">No Compare Versions sessions yet.</span>
+                <button
+                  onClick={() => navigate("/compare-versions")}
+                  className="text-xs font-medium text-teal-500 hover:text-teal-600 transition-colors shrink-0"
+                >
+                  Compare two versions →
+                </button>
               </div>
             )}
 
@@ -988,12 +1024,13 @@ export default function Documents() {
         {/* ── SECTION: Document Builder Drafts ─────────────────────────────── */}
         {BUILDER_ENABLED && !loading && (
           <>
-            {(builderDocs.length > 0 || builderLoading || (!showGlobalBanner && !!builderError)) && (
+            {(builderDocs.length > 0 || builderLoading || (!showGlobalBanner && !!builderError) || (!builderLoading && !builderError && builderDocs.length === 0 && hasAnyContent)) && (
               <SectionHeader
                 icon={LayoutTemplate}
                 label="Document Builder"
                 count={builderDocs.length}
                 colorClass="bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400"
+                desc="Draft documents created in the Document Builder workspace."
               />
             )}
 
@@ -1009,6 +1046,19 @@ export default function Documents() {
                 <AlertTriangle className="w-4 h-4 shrink-0" />
                 <span className="flex-1">{builderError}</span>
                 <Button variant="ghost" size="sm" onClick={reloadBuilder}>Retry</Button>
+              </div>
+            )}
+
+            {!builderLoading && !builderError && builderDocs.length === 0 && hasAnyContent && (
+              <div className="flex items-center gap-3 py-3 px-4 rounded-xl border border-dashed border-border/40 bg-card/60 mb-3">
+                <LayoutTemplate className="w-4 h-4 shrink-0 text-indigo-400/50" />
+                <span className="flex-1 text-xs text-muted-foreground">No Document Builder drafts yet.</span>
+                <button
+                  onClick={() => navigate("/builder/new")}
+                  className="text-xs font-medium text-indigo-500 hover:text-indigo-600 transition-colors shrink-0"
+                >
+                  Start a new document →
+                </button>
               </div>
             )}
 

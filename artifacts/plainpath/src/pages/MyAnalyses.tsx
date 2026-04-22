@@ -32,7 +32,7 @@ function formatDate(iso: string): string {
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
   if (diffDays === 0) return "Today"
   if (diffDays === 1) return "Yesterday"
-  if (diffDays < 7) return `${diffDays} days ago`
+  if (diffDays < 7) return `${diffDays}d ago`
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: diffDays > 365 ? "numeric" : undefined })
 }
 
@@ -180,7 +180,7 @@ export default function MyAnalyses() {
             <p className="text-sm text-muted-foreground">
               {items.length === 0
                 ? "Saved analyses and Trust Checks live here — review them anytime without reprocessing."
-                : `${items.length} saved ${items.length === 1 ? "analysis" : "analyses"}`}
+                : `${items.length} ${items.length === 1 ? "analysis" : "analyses"}${trustChecks.length > 0 ? ` · ${trustChecks.length} trust check${trustChecks.length !== 1 ? "s" : ""}` : ""}`}
             </p>
           </div>
           <Button
@@ -298,7 +298,7 @@ export default function MyAnalyses() {
                             onClick={() => handleOpenTrustCheck(tc)}
                             style={{ touchAction: "manipulation" }}
                           >
-                            Open <ArrowRight className="w-3 h-3" />
+                            View trust check <ArrowRight className="w-3 h-3" />
                           </Button>
                           {confirmDeleteTrustCheckId === tc.id ? (
                             <div className="flex items-center gap-1.5">
@@ -562,7 +562,7 @@ export default function MyAnalyses() {
                           onClick={() => handleOpen(saved)}
                           style={{ touchAction: "manipulation" }}
                         >
-                          Open analysis
+                          View analysis
                           <ArrowRight className="w-3 h-3" />
                         </Button>
 

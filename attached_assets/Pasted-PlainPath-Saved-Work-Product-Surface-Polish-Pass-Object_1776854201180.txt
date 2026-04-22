@@ -1,0 +1,181 @@
+PlainPath — Saved Work / Product-Surface Polish Pass
+
+Objective:
+Run a focused product-surface polish pass on the authenticated saved-work surfaces so they feel complete, consistent, and production-ready. This is a UX/presentation pass only. Do not change routing logic, billing, entitlements, APIs, DB schema, or tool behavior unless required for harmless display cleanup.
+
+Primary goal:
+Make Dashboard Recent Work, My Documents, and My Analyses feel like one coherent system with:
+- clear hierarchy
+- consistent labels
+- consistent CTA language
+- strong empty states
+- clean spacing/alignment
+- no misleading wording
+- no regressions to already-working saved-work flows
+
+Scope:
+Work only on the product surfaces related to saved work and surfacing previously created items.
+
+Target surfaces:
+1. Authenticated dashboard Recent Work
+2. My Documents
+3. My Analyses
+
+Hard constraints:
+- Do NOT touch billing, paywall, pricing, auth, or route protection
+- Do NOT change API contracts or DB schema
+- Do NOT change any working reopen/resume logic
+- Do NOT rename routes
+- Do NOT break previously fixed distinctions:
+  - “Document Builder” = builder workspace
+  - “Build a Contract” = AI contract wizard
+- Do NOT remove the section-scoped error handling already implemented on My Documents
+- Preserve all existing CTA destinations that are already correct
+
+Canonical product labels to enforce everywhere on these surfaces:
+- Analyze a Document
+- Document Trust Check
+- Build a Contract
+- Contract Review
+- Redact Sensitive Info
+- Digital Signature
+- Compare Versions
+- PDF Editor
+- Document Builder
+
+Canonical CTA language to enforce where applicable:
+- Analyze result: “View analysis →”
+- Trust Check result: “View trust check →”
+- PDF Editor session: “Continue editing →”
+- Compare session: “Open comparison →”
+- Document Builder draft: “Continue building →”
+- Local utility/tool shortcut with no saved session: “Open tool →”
+- Contract-builder local item: “Build a Contract” label only, never “Document Builder”
+
+Pass requirements:
+
+A) Dashboard — Recent Work polish
+Improve Recent Work so it feels like a real saved-work hub preview, not a loose collection of cards.
+
+Requirements:
+- Keep the current data sources and logic intact
+- Preserve inclusion of:
+  - cloud analyses
+  - trust-check/analysis outputs already shown there
+  - PDF Editor sessions
+  - Compare Versions sessions
+  - builder drafts if already surfaced
+- Improve card presentation:
+  - clearer tool label chip
+  - stronger title hierarchy
+  - tighter metadata row
+  - clearer CTA verb per item type
+- Make the visual language consistent across all card kinds:
+  - same height logic
+  - same spacing rhythm
+  - same CTA placement
+  - same timestamp position
+- Ensure “View all” points to the correct canonical saved-work surface
+- Empty state must clearly mention that saved work can come from:
+  - analysis results
+  - PDF Editor sessions
+  - Compare Versions sessions
+  - builder drafts (if feature enabled)
+- Local “compare” item wording must remain canonical:
+  - tool label = “Compare Versions”
+  - CTA = “Open comparison →”
+- Local “contract-builder” item must remain:
+  - tool label = “Build a Contract”
+  - NOT “Document Builder”
+
+B) My Documents polish
+This page should feel like the main workbench for uploaded docs + editor/comparison/builder work.
+
+Requirements:
+- Keep section-scoped retry/error logic exactly as currently working
+- Keep the global-banner de-duplication fix intact
+- Improve visual hierarchy for each section:
+  - Uploaded Documents
+  - PDF Editor
+  - Compare Versions
+  - Document Builder (when enabled)
+- Each section should have:
+  - consistent section header styling
+  - count badge if count > 0
+  - compact descriptive subcopy
+  - clean spacing above and below cards
+- Each card should follow a consistent structure:
+  1. tool/category label
+  2. title
+  3. metadata row
+  4. primary CTA on the right or bottom-right
+- Tighten empty-state wording:
+  - clearly explain what lives on this page
+  - do not sound vague or generic
+- If a section is empty but other sections have content, render a compact empty state for that section instead of making the overall page feel broken
+- Keep the footer accurate and concise
+- Keep builder drafts clearly distinguished from Build a Contract wizard items
+
+C) My Analyses polish
+Make this page clearly about saved AI outputs, not general saved work.
+
+Requirements:
+- Preserve current purpose:
+  - analyses
+  - trust checks
+- Do NOT surface PDF Editor / Compare / Builder sessions here
+- Strengthen the page heading/subtitle so users immediately understand what belongs here
+- Improve empty state:
+  - explain that saved analyses and Trust Checks live here
+  - clearly state that drafts/sessions live in My Documents
+- Remove any leftover confusing CTA or wording that implies builder drafts belong here
+- Make section headers/cards/subcopy feel consistent with My Documents and Dashboard Recent Work
+
+D) Cross-surface consistency system
+Apply one final consistency pass across all three surfaces:
+- same capitalization
+- same tool names
+- same CTA verb patterns
+- same timestamp style
+- same badge style logic
+- same spacing scale
+- same empty-state tone
+- same distinction between:
+  - Document Builder
+  - Build a Contract
+
+E) Visual quality bar
+This is a product-surface polish pass, not just text edits.
+Make the pages feel more complete by improving:
+- spacing
+- card rhythm
+- alignment
+- section separation
+- hierarchy of headings/subcopy/meta/CTA
+- consistency of chips and small labels
+
+Avoid overdesign. Keep current PlainPath style system and dark theme. Refine, don’t redesign.
+
+Files likely in scope:
+- src/pages/Home.tsx
+- src/pages/Documents.tsx
+- src/pages/MyAnalyses.tsx
+- any small shared component needed for consistency, only if necessary
+Do not modify unrelated systems.
+
+Required verification:
+1. TypeScript/build check passes with zero new errors
+2. Confirm no route/path changes
+3. Confirm existing CTA destinations still work
+4. Take screenshots of:
+   - Dashboard Recent Work
+   - My Documents
+   - My Analyses
+5. Deliver a structured completion report with:
+   - exact files modified
+   - exact wording changes
+   - exact UI/polish changes
+   - anything intentionally left unchanged
+
+Important:
+This is a polish/clarity pass only. Do not sneak in new features, backend work, or architecture changes.

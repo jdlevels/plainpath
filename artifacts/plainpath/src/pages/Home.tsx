@@ -462,7 +462,7 @@ export default function Home() {
                 onClick={() => setLocation("/documents")}
                 className="text-xs text-primary font-semibold hover:underline flex items-center gap-1"
               >
-                View all <ChevronRight className="w-3.5 h-3.5" />
+                My Documents <ChevronRight className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
@@ -479,7 +479,7 @@ export default function Home() {
                 <BookMarked className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
                 <p className="text-sm font-medium text-muted-foreground mb-1">No saved work yet</p>
                 <p className="text-xs text-muted-foreground/60 mb-4 max-w-xs mx-auto">
-                  Your saved work will appear here once you run your first tool — analyze a document, edit a PDF, or compare two versions.
+                  Saved analyses, Trust Checks, PDF Editor sessions, Compare Versions comparisons{BUILDER_ENABLED ? ", and Document Builder drafts" : ""} will appear here once you start working.
                 </p>
                 <div className="flex flex-wrap gap-2 justify-center">
                   <Button size="sm" variant="outline" onClick={() => setLocation("/analyze")} className="rounded-xl text-xs">
@@ -491,6 +491,11 @@ export default function Home() {
                   <Button size="sm" variant="outline" onClick={() => setLocation("/compare-versions")} className="rounded-xl text-xs">
                     <GitCompare className="w-3 h-3 mr-1" /> Compare Versions
                   </Button>
+                  {BUILDER_ENABLED && (
+                    <Button size="sm" variant="outline" onClick={() => setLocation("/builder")} className="rounded-xl text-xs">
+                      <LayoutTemplate className="w-3 h-3 mr-1" /> Document Builder
+                    </Button>
+                  )}
                 </div>
               </div>
             </Card>
@@ -582,7 +587,7 @@ export default function Home() {
                       <div className="p-4 flex flex-col gap-1.5">
                         <div className="flex items-center gap-1.5 mb-0.5">
                           <FileScan className="w-3 h-3 text-blue-500 shrink-0" />
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-blue-500/80">Analyze</span>
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-blue-500/80">Analyze a Document</span>
                           <span className="ml-auto text-[10px] text-muted-foreground">{timeAgo(item.savedAt)}</span>
                         </div>
                         <p className="text-sm font-medium text-foreground truncate leading-tight">{item.title}</p>
@@ -599,7 +604,7 @@ export default function Home() {
                       <div className="p-4 flex flex-col gap-1.5">
                         <div className="flex items-center gap-1.5 mb-0.5">
                           <FileSignature className="w-3 h-3 text-violet-500 shrink-0" />
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-violet-500/80">Signature</span>
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-violet-500/80">Digital Signature</span>
                           <span className={`ml-auto text-[9px] font-bold uppercase tracking-wider border rounded-full px-1.5 py-0.5 ${STATUS_COLORS[item.status]}`}>
                             {STATUS_LABELS[item.status]}
                           </span>
