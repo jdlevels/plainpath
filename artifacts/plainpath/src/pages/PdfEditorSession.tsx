@@ -140,12 +140,14 @@ function usePdfRenderer(buf: ArrayBuffer | null) {
 // Used by the "Edit Text" tool to show clickable text regions.
 // Returns TextRegion[][] (index = pageIndex).
 
-function useTextRegions(buf: ArrayBuffer | null): TextRegion[][] {
+function useTextRegions(buf: ArrayBuffer | null): { regions: TextRegion[][]; extracting: boolean } {
   const [regions, setRegions] = useState<TextRegion[][]>([])
+  const [extracting, setExtracting] = useState(false)
 
   useEffect(() => {
-    if (!buf) { setRegions([]); return }
+    if (!buf) { setRegions([]); setExtracting(false); return }
     let cancelled = false
+    setExtracting(true)
     ;(async () => {
       try {
         const pdf = await pdfjsLib.getDocument({ data: buf.slice(0), verbosity: 0 }).promise
@@ -208,15 +210,16 @@ function useTextRegions(buf: ArrayBuffer | null): TextRegion[][] {
           page.cleanup()
         }
 
-        if (!cancelled) setRegions(allPages)
+        if (!cancelled) { setRegions(allPages); setExtracting(false) }
       } catch {
         // Silently fail — text extraction is best-effort; scanned PDFs have no text content
+        if (!cancelled) setExtracting(false)
       }
     })()
     return () => { cancelled = true }
   }, [buf])
 
-  return regions
+  return { regions, extracting }
 }
 
 // ─── SaveIndicator ─────────────────────────────────────────────────────────────
@@ -248,11 +251,11 @@ function SaveIndicator({ state, onSave }: { state: SaveState; onSave: () => void
 // ─── ToolButton ────────────────────────────────────────────────────────────────
 
 function ToolBtn({
-  icon: Icon, label, active, onClick,
-}: { icon: React.ElementType; label: string; active: boolean; onClick: () => void }) {
+  icon: Icon, label, active, onClick, title,
+}: { icon: React.ElementType; label: string; active: boolean; onClick: () => void; title?: string }) {
   return (
     <button
-      title={label}
+      title={title ?? label}
       onClick={onClick}
       className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
         active
@@ -1194,7 +1197,7 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
   const { pages, loading: pdfLoading, failed: pdfFailed } = usePdfRenderer(pdfBuf)
 
   // Text regions for "Edit Text" mode (extracted from text PDFs via pdf.js)
-  const textRegions = useTextRegions(pdfBuf)
+  const { regions: textRegions, extracting: textRegionsExtracting } = useTextRegions(pdfBuf)
 
   // ── Load session + PDF ──────────────────────────────────────────────────────
 
@@ -1833,8 +1836,8 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
         {/* Centre: tools */}
         <div className="hidden sm:flex items-center gap-1 flex-shrink-0">
           <ToolBtn icon={MousePointer2} label="Select" active={activeTool === "select"} onClick={() => setActiveTool("select")} />
-          {textRegions.length > 0 && (
-            <ToolBtn icon={TextCursorInput} label="Edit Text" active={activeTool === "edit-text"} onClick={() => setActiveTool("edit-text")} />
+          {(sessionMeta?.pdfType === "text" || sessionMeta?.pdfType === "mixed" || textRegions.length > 0) && (
+            <ToolBtn icon={TextCursorInput} label="Edit Text" active={activeTool === "edit-text"} onClick={() => setActiveTool("edit-text")} title={textRegionsExtracting ? "Preparing text regions…" : undefined} />
           )}
           <ToolBtn icon={Type} label="Add Text" active={activeTool === "text"} onClick={() => setActiveTool("text")} />
           <ToolBtn icon={Square} label="Mask" active={activeTool === "mask"} onClick={() => setActiveTool("mask")} />
@@ -2018,8 +2021,8 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
       {/* Mobile tools bar */}
       <div className="flex sm:hidden items-center gap-1 px-3 py-1.5 border-b border-border/40 bg-background flex-shrink-0 overflow-x-auto">
         <ToolBtn icon={MousePointer2} label="Select" active={activeTool === "select"} onClick={() => setActiveTool("select")} />
-        {textRegions.length > 0 && (
-          <ToolBtn icon={TextCursorInput} label="Edit Text" active={activeTool === "edit-text"} onClick={() => setActiveTool("edit-text")} />
+        {(sessionMeta?.pdfType === "text" || sessionMeta?.pdfType === "mixed" || textRegions.length > 0) && (
+          <ToolBtn icon={TextCursorInput} label="Edit Text" active={activeTool === "edit-text"} onClick={() => setActiveTool("edit-text")} title={textRegionsExtracting ? "Preparing text regions…" : undefined} />
         )}
         <ToolBtn icon={Type} label="Add Text" active={activeTool === "text"} onClick={() => setActiveTool("text")} />
         <ToolBtn icon={Square} label="Mask" active={activeTool === "mask"} onClick={() => setActiveTool("mask")} />

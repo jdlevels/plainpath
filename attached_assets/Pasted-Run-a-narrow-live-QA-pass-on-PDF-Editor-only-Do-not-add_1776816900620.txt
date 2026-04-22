@@ -1,0 +1,152 @@
+Run a narrow live QA pass on PDF Editor only. Do not add new features unless a bug is proven during this QA. Scope is verification, bug fixing only if needed, then structured completion report.
+
+GOAL
+Confirm the new PDF Editor work is actually usable in-browser for:
+1) searchable/text PDF edit flow
+2) scanned PDF OCR edit flow
+3) Save to Device / export flow
+
+STRICT RULES
+- Do not touch Compare Versions, Builder, Documents, My Analyses, or marketing pages.
+- Do not redesign UI.
+- Do not expand utilities.
+- Fix only bugs directly blocking this QA.
+- If a bug is found, patch the minimum code necessary, then re-run the exact failed test.
+- Keep PAYWALL_ENFORCEMENT as-is unless the current test admin path already allows access. Do not introduce temporary QA bypass code.
+- Use a real authenticated admin/test account that already has access.
+- Provide screenshots for every browser-verified PASS item.
+- Distinguish clearly between:
+  - browser-verified
+  - code-verified only
+  - unable due to environment/tooling
+
+TEST A — SEARCHABLE PDF TEXT EDIT FLOW
+Use a real searchable text PDF, not a synthetic PDF that pdf-parse cannot classify reliably.
+
+Steps:
+1. Open /pdf-editor
+2. Upload a real searchable PDF
+3. Confirm session is created and appears in the session list
+4. Open the session
+5. Confirm toolbar shows correct pdf_type badge for text/searchable PDF
+6. Confirm Edit Text button appears
+7. Click Edit Text
+8. Click one actual text region/line in the working copy
+9. Change the text visibly
+10. Save
+11. Reload the page/session
+12. Confirm the edited text persists in the editor state after reload
+13. Download / Save to Device
+14. Confirm exported file is produced successfully
+15. Re-open exported file and confirm the visible text change is present
+
+Acceptance:
+- PASS only if the text change is visible before export, persists after reload, and is visible in the exported PDF.
+
+TEST B — SCANNED PDF OCR EDIT FLOW
+Use a real scanned/raster PDF.
+
+Steps:
+1. Open /pdf-editor
+2. Upload scanned PDF
+3. Open session
+4. Confirm pdf_type badge shows scanned
+5. Confirm OCR control/banner/button appears
+6. Run OCR
+7. Confirm OCR loading/progress state appears
+8. Confirm OCR panel opens with page entries/results
+9. Edit OCR text for at least one page
+10. Save
+11. Reload session
+12. Confirm OCR edits persisted
+13. Export / Save to Device
+14. Confirm exported file is produced successfully
+15. Confirm resulting output reflects the edited OCR-driven replacement in the visible document
+
+Acceptance:
+- PASS only if OCR runs, OCR text can be edited, save persists after reload, and exported output reflects the change.
+
+TEST C — SAVE TO DEVICE / EXPORT UX
+Verify the new download/save behavior directly.
+
+Steps:
+1. From an edited PDF session, click Download PDF / Save to Device
+2. In Chrome/Edge, confirm native save dialog behavior where supported
+3. Confirm canceling the dialog does not produce a false error state
+4. Confirm successful save shows the correct success state
+5. Confirm unsupported-browser fallback behavior is graceful and non-blocking
+6. Confirm success/idle timing is long enough to be seen by a human user
+
+Acceptance:
+- PASS only if save is understandable, stable, and not misleading.
+
+REQUIRED SCREENSHOTS
+Capture at minimum:
+1. /pdf-editor hub with session list
+2. searchable PDF session with Edit Text mode visible
+3. searchable PDF edited line before save
+4. searchable PDF after reload proving persistence
+5. scanned PDF session with OCR banner/button visible
+6. OCR panel with extracted text entries
+7. OCR edited text after save/reload
+8. native save/download state or fallback state
+9. exported output reopened showing changed content
+10. any bug before/after screenshots if fixes were needed
+
+REQUIRED STRUCTURED REPORT FORMAT
+Use exactly this structure:
+
+PDF EDITOR LIVE QA — COMPLETION REPORT
+
+1. EXACT FILES MODIFIED
+- list only files actually changed
+- say "None" if QA-only and no code changed
+
+2. TEST A — SEARCHABLE PDF TEXT EDIT FLOW
+- step-by-step result summary
+- PASS / FAIL / PARTIAL
+- whether browser-verified or code-verified
+- screenshot references
+
+3. TEST B — SCANNED PDF OCR EDIT FLOW
+- step-by-step result summary
+- PASS / FAIL / PARTIAL
+- whether browser-verified or code-verified
+- screenshot references
+
+4. TEST C — SAVE TO DEVICE / EXPORT UX
+- step-by-step result summary
+- PASS / FAIL / PARTIAL
+- browser support notes
+- screenshot references
+
+5. BUGS FOUND AND FIXED
+For each bug:
+- file
+- root cause
+- exact fix
+- re-test result
+
+6. WHAT IS NOW FULLY PROVEN
+- list only items confirmed by live browser QA
+
+7. WHAT IS STILL NOT PROVEN
+- be strict and explicit
+- do not claim anything beyond the evidence
+
+8. FINAL STATUS
+One of:
+- CLOSED
+- PARTIALLY CLOSED
+- BLOCKED
+
+DECISION RULE
+Do not mark CLOSED unless all three tests are browser-verified end-to-end with screenshots.
+
+IMPORTANT
+I do not want a broad platform report. I only want PDF Editor live QA for:
+- searchable PDF text edit
+- scanned PDF OCR edit
+- save/export behavior
+
+Start now.
