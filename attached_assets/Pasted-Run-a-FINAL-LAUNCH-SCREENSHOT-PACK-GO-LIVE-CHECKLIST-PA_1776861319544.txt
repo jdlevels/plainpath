@@ -1,0 +1,86 @@
+Run a FINAL LAUNCH SCREENSHOT PACK + GO-LIVE CHECKLIST PASS for PlainPath.
+
+Objective:
+Prepare PlainPath for launch presentation and store-prep by producing a clean, consistent screenshot-ready set of surfaces and a final go-live checklist review. This is a polish/documentation/verification pass — not a feature build.
+
+Scope:
+1. Marketing site screenshot pack readiness
+2. Authenticated app screenshot pack readiness
+3. Final copy/layout consistency check on the specific screenshot surfaces
+4. Final launch checklist review for user-facing readiness
+
+Hard rules:
+- Do NOT add new product features.
+- Do NOT change billing/auth/database/backend behavior unless a tiny visible bug blocks screenshot quality.
+- Do NOT introduce QA bypasses or temp/dev-only hacks.
+- Do NOT touch working flows unless needed to fix a screenshot-surface defect.
+- Preserve current canonical names and current visual design language.
+
+Part A — Build the screenshot target list
+Audit and verify these exact screenshot targets:
+
+MARKETING
+1. Hero section
+2. “Every document situation, covered”
+3. “See PlainPath in action”
+4. “One demo for each tool”
+5. “Documents people bring to PlainPath”
+6. FAQ section
+7. Pricing section
+
+AUTHENTICATED APP
+8. Dashboard
+9. My Documents
+10. My Analyses
+11. PDF Editor hub/session list
+12. Compare Versions session
+13. Document Builder workspace/list entry if visible and production-valid
+
+Part B — For each target surface, verify:
+- no stale tool counts
+- no stale tool names
+- no awkward wrapping in headlines/subtitles
+- no clipped text
+- no uneven card heights that look sloppy in screenshots
+- no inconsistent CTA verbs
+- no unnecessary dead space
+- no contradictory copy between marketing and app
+- no “coming soon” wording for live tools
+- no confusion between “Build a Contract” and “Document Builder”
+- no confusion between “My Documents” and “My Analyses”
+
+Part C — Screenshot polish rules
+Only make small, high-value edits if needed:
+- tighten headline/subtitle line breaks
+- normalize section subtitles
+- tighten card descriptions if too long
+- normalize CTA wording
+- fix spacing/alignment that hurts screenshot quality
+- improve section framing so screenshots look intentional and balanced
+
+Do NOT redesign sections. Only polish.
+
+Part D — Final launch checklist review
+Review and report status for:
+- canonical tool naming consistency
+- pricing copy consistency
+- support/legal links visible and correct
+- FAQ accuracy
+- marketing-to-app copy consistency
+- dashboard readiness
+- My Documents readiness
+- My Analyses readiness
+- screenshot readiness of each target surface
+- anything still intentionally deferred
+
+Required output:
+1. Exact files modified
+2. Exact copy/layout changes made
+3. Screenshot target list with PASS / FIXED / DEFERRED status
+4. Final launch checklist with READY / DEFERRED status
+5. Explicit recommendation:
+   - “Ready for screenshot capture”
+   - or “One more polish pass needed”
+
+Success standard:
+At the end of this pass, PlainPath should be fully ready for clean marketing/app screenshots and final launch-review conversations, with no stale copy, inconsistent labels, or obvious visual distractions on the key surfaces.

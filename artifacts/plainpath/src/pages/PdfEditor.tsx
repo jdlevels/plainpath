@@ -30,7 +30,7 @@ function LockedGate() {
           <Lock className="w-7 h-7 text-violet-500 dark:text-violet-400" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold mb-2">PDF Platform</h1>
+          <h1 className="text-2xl font-bold mb-2">PDF Editor</h1>
           <p className="text-muted-foreground leading-relaxed">
             Edit PDFs, extract text from scanned documents, merge, split, and more — all in one place.
           </p>
@@ -440,7 +440,7 @@ export default function PdfEditor() {
               <Pen className="w-4 h-4 text-violet-600 dark:text-violet-400" />
             </div>
             <div>
-              <h1 className="text-lg font-bold">PDF Platform</h1>
+              <h1 className="text-lg font-bold">PDF Editor</h1>
               <p className="text-sm text-muted-foreground">
                 {tab === "editor"
                   ? "Add text, mask content, highlight sections, and export a clean copy"
