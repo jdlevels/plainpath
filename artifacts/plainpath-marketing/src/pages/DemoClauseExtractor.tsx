@@ -141,22 +141,22 @@ const CLAUSE_LABELS: Record<string, string> = {
 function ClauseCard({ clauseKey, clause }: { clauseKey: string; clause: typeof DEMO.results.legalClauses.governingLaw }) {
   const [open, setOpen] = useState(false)
   return (
-    <div className={`rounded-xl border p-3 transition-colors ${
+    <div className={`rounded-xl border p-4 transition-colors ${
       clause.present
-        ? "border-emerald-200 dark:border-emerald-800 bg-emerald-50/60 dark:bg-emerald-950/30"
-        : "border-border/50 bg-muted/30"
+        ? "border-emerald-200 dark:border-emerald-700 bg-emerald-50/80 dark:bg-emerald-950/30"
+        : "border-border/60 bg-muted/40"
     }`}>
       <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           {clause.present
-            ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-            : <XCircle className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />}
-          <span className={`text-xs font-medium ${clause.present ? "text-foreground" : "text-muted-foreground"}`}>
+            ? <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+            : <XCircle className="w-4 h-4 text-muted-foreground/40 shrink-0" />}
+          <span className={`text-xs font-medium leading-tight ${clause.present ? "text-foreground" : "text-muted-foreground/70"}`}>
             {CLAUSE_LABELS[clauseKey] ?? clauseKey}
           </span>
         </div>
         {clause.present && clause.summary && (
-          <button onClick={() => setOpen(o => !o)} className="text-muted-foreground hover:text-foreground">
+          <button onClick={() => setOpen(o => !o)} className="text-muted-foreground hover:text-foreground transition-colors shrink-0 ml-auto">
             {open ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
           </button>
         )}
@@ -164,9 +164,9 @@ function ClauseCard({ clauseKey, clause }: { clauseKey: string; clause: typeof D
       <AnimatePresence>
         {open && clause.summary && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-            <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{clause.summary}</p>
+            <p className="text-xs text-muted-foreground mt-3 leading-relaxed">{clause.summary}</p>
             {clause.snippet && (
-              <p className="text-[11px] text-muted-foreground/70 mt-1 italic border-l-2 border-emerald-400/50 pl-2">
+              <p className="text-[11px] text-muted-foreground/60 mt-2 italic border-l-2 border-emerald-400/60 pl-2.5 leading-relaxed">
                 "{clause.snippet}"
               </p>
             )}
@@ -179,11 +179,11 @@ function ClauseCard({ clauseKey, clause }: { clauseKey: string; clause: typeof D
 
 function SectionHeader({ icon: Icon, label, color }: { icon: any; label: string; color: string }) {
   return (
-    <div className="flex items-center gap-2 mb-3">
-      <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${color}`}>
-        <Icon className="w-3.5 h-3.5" />
+    <div className="flex items-center gap-2.5 mb-4">
+      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${color}`}>
+        <Icon className="w-4 h-4" />
       </div>
-      <h3 className="text-sm font-semibold text-foreground">{label}</h3>
+      <h3 className="text-sm font-semibold text-foreground tracking-tight">{label}</h3>
     </div>
   )
 }
@@ -191,9 +191,9 @@ function SectionHeader({ icon: Icon, label, color }: { icon: any; label: string;
 function DateRow({ label, value }: { label: string; value: string | null }) {
   if (!value) return null
   return (
-    <div className="flex items-start justify-between py-1.5 border-b border-border/40 last:border-0 gap-4">
-      <span className="text-xs text-muted-foreground shrink-0">{label}</span>
-      <span className="text-xs font-medium text-foreground text-right">{value}</span>
+    <div className="flex items-start justify-between py-2.5 border-b border-border/40 last:border-0 gap-6">
+      <span className="text-xs text-muted-foreground shrink-0 pt-px">{label}</span>
+      <span className="text-xs font-medium text-foreground text-right leading-relaxed">{value}</span>
     </div>
   )
 }
@@ -210,7 +210,7 @@ export default function DemoClauseExtractor() {
       <main className="flex-1 mt-16 pb-20">
         {/* Hero */}
         <section className="border-b border-border/40 bg-gradient-to-b from-purple-50/60 to-background dark:from-purple-950/20 py-10 px-4 sm:px-6">
-          <div className="max-w-3xl mx-auto">
+          <div className="max-w-[900px] mx-auto">
             <div className="flex items-center gap-2 mb-3">
               <Badge className="bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 text-[11px]">Live Demo</Badge>
               <Badge variant="outline" className="text-[11px]">Clause Extractor</Badge>
@@ -240,11 +240,11 @@ export default function DemoClauseExtractor() {
         </section>
 
         {/* Results */}
-        <section className="max-w-3xl mx-auto px-4 sm:px-6 mt-8 space-y-4">
+        <section className="max-w-[900px] mx-auto px-4 sm:px-6 mt-8 space-y-5">
 
           {/* Key Dates */}
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-            <Card className="p-4 rounded-2xl border border-border/50">
+            <Card className="p-5 rounded-2xl border border-border/50">
               <SectionHeader icon={Calendar} label="Key Dates" color="bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400" />
               <div className="divide-y divide-border/30">
                 <DateRow label="Effective date" value={r.keyDates.effectiveDate} />
@@ -258,11 +258,11 @@ export default function DemoClauseExtractor() {
 
           {/* Parties */}
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.10 }}>
-            <Card className="p-4 rounded-2xl border border-border/50">
+            <Card className="p-5 rounded-2xl border border-border/50">
               <SectionHeader icon={Users} label="Parties" color="bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400" />
               <div className="space-y-2">
                 {r.parties.map((p, i) => (
-                  <div key={i} className="flex items-center justify-between gap-2 rounded-lg bg-muted/40 px-3 py-2">
+                  <div key={i} className="flex items-center justify-between gap-3 rounded-lg bg-muted/40 px-4 py-2.5">
                     <div>
                       <span className="text-xs font-medium text-foreground">{p.name}</span>
                       <span className="text-[11px] text-muted-foreground ml-2">· {p.role}</span>
@@ -279,7 +279,7 @@ export default function DemoClauseExtractor() {
 
           {/* Financial Terms */}
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-            <Card className="p-4 rounded-2xl border border-border/50">
+            <Card className="p-5 rounded-2xl border border-border/50">
               <SectionHeader icon={DollarSign} label="Financial Terms" color="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400" />
               <div className="divide-y divide-border/30">
                 <DateRow label="Monthly rent" value={r.financialTerms.paymentAmount} />
@@ -287,10 +287,10 @@ export default function DemoClauseExtractor() {
                 <DateRow label="Late fees" value={r.financialTerms.lateFees} />
                 <DateRow label="Security deposit" value={r.financialTerms.refundLanguage} />
               </div>
-              <ul className="mt-2 space-y-1">
+              <ul className="mt-3 space-y-1.5 pt-1">
                 {r.financialTerms.otherTerms.map((t, i) => (
-                  <li key={i} className="text-xs text-muted-foreground flex items-start gap-1.5">
-                    <span className="text-emerald-500 mt-0.5">·</span>{t}
+                  <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
+                    <span className="text-emerald-500 mt-0.5 shrink-0">·</span>{t}
                   </li>
                 ))}
               </ul>
@@ -299,12 +299,17 @@ export default function DemoClauseExtractor() {
 
           {/* Legal Clauses */}
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.20 }}>
-            <Card className="p-4 rounded-2xl border border-border/50">
-              <div className="flex items-center justify-between mb-3">
-                <SectionHeader icon={Gavel} label="Legal Clauses" color="bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400" />
-                <span className="text-[11px] text-muted-foreground -mt-3">{presentCount} / {clauses.length} present</span>
+            <Card className="p-5 rounded-2xl border border-border/50">
+              <div className="flex items-center gap-2.5 justify-between mb-4">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400">
+                    <Gavel className="w-4 h-4" />
+                  </div>
+                  <h3 className="text-sm font-semibold text-foreground tracking-tight">Legal Clauses</h3>
+                </div>
+                <span className="text-[11px] text-muted-foreground shrink-0">{presentCount} / {clauses.length} present</span>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {clauses.map(([key, clause]) => (
                   <ClauseCard key={key} clauseKey={key} clause={clause} />
                 ))}
@@ -314,35 +319,35 @@ export default function DemoClauseExtractor() {
 
           {/* Obligations */}
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
-            <Card className="p-4 rounded-2xl border border-border/50">
+            <Card className="p-5 rounded-2xl border border-border/50">
               <SectionHeader icon={ListChecks} label={`Obligations (${r.obligations.length})`} color="bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400" />
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {r.obligations.map((ob, i) => (
                   <motion.div
                     key={i}
                     initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.28 + i * 0.04 }}
-                    className="rounded-xl border border-border/50 bg-card p-3 flex gap-3"
+                    className="rounded-xl border border-border/50 bg-card p-4 flex gap-4"
                   >
-                    <div className="w-5 h-5 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-300 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                    <div className="w-6 h-6 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-300 text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">
                       {i + 1}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs text-foreground leading-relaxed">{ob.obligation}</p>
-                      <div className="flex flex-wrap gap-2 mt-1.5">
+                      <div className="flex flex-wrap gap-2 mt-2">
                         {ob.party && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 font-medium">{ob.party}</span>
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 font-medium">{ob.party}</span>
                         )}
                         {ob.deadline && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 font-medium flex items-center gap-1">
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 font-medium flex items-center gap-1">
                             <Clock className="w-2.5 h-2.5" />{ob.deadline}
                           </span>
                         )}
                       </div>
                       {ob.consequence && (
-                        <p className="text-[11px] text-muted-foreground mt-1 flex items-start gap-1">
-                          <AlertTriangle className="w-2.5 h-2.5 text-amber-500 mt-0.5 shrink-0" />
+                        <p className="text-[11px] text-muted-foreground mt-2 flex items-start gap-1.5 leading-relaxed">
+                          <AlertTriangle className="w-3 h-3 text-amber-500 mt-px shrink-0" />
                           {ob.consequence}
                         </p>
                       )}
@@ -353,13 +358,13 @@ export default function DemoClauseExtractor() {
             </Card>
           </motion.div>
 
-          {/* Missing Fields */}
+          {/* Missing / Not Found */}
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.40 }}>
-            <Card className="p-4 rounded-2xl border border-amber-200/60 dark:border-amber-800/40 bg-amber-50/40 dark:bg-amber-950/20">
-              <SectionHeader icon={AlertTriangle} label="Fields Not Found" color="bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400" />
-              <div className="flex flex-wrap gap-1.5">
+            <Card className="p-5 rounded-2xl border border-amber-200/60 dark:border-amber-800/40 bg-amber-50/40 dark:bg-amber-950/20">
+              <SectionHeader icon={AlertTriangle} label="Missing / Not Found" color="bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400" />
+              <div className="flex flex-wrap gap-2">
                 {r.missingFields.map((f, i) => (
-                  <Badge key={i} variant="outline" className="text-[11px] text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-700">{f}</Badge>
+                  <Badge key={i} variant="outline" className="text-[11px] px-2.5 py-0.5 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-700">{f}</Badge>
                 ))}
               </div>
             </Card>
