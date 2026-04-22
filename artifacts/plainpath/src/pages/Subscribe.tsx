@@ -1,17 +1,22 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { motion } from "framer-motion"
 import {
   Check, ArrowLeft, Sparkles, Loader2,
-  ExternalLink, Lock, Mail, Clock,
+  ExternalLink, Lock, Clock, LogIn,
 } from "lucide-react"
-import { Input } from "@/components/ui/input"
+import { useUser } from "@clerk/react"
 import { PRICING_PLANS } from "@/data/pricingData"
 import { startStripeCheckout } from "@/lib/stripe"
-import { getStoredSubscriberEmail } from "@/lib/subscriberStorage"
 import { isNative } from "@/lib/platform"
 import { BILLING_CONFIG } from "@/lib/billingConfig"
 import { trackEvent } from "@/lib/analytics"
 import { getApiBaseUrl } from "@/lib/api"
+
+const basePath = import.meta.env.BASE_URL.replace(/\/$/, "")
+
+function isPlanKey(value: unknown): value is "starter" | "pro" {
+  return value === "starter" || value === "pro"
+}
 
 // ─── Native fallback ────────────────────────────────────────────────────────
 
@@ -42,15 +47,17 @@ function NativeMessage() {
 // ─── Main page ───────────────────────────────────────────────────────────────
 
 export default function Subscribe() {
-  const [email, setEmail] = useState("")
+  const { isLoaded, isSignedIn, user } = useUser()
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [billingAvailable, setBillingAvailable] = useState<boolean | null>(null)
+  const autoTriggeredRef = useRef(false)
+
+  // Read ?plan= from URL (set by the sign-in redirect flow)
+  const planFromUrl = new URLSearchParams(window.location.search).get("plan")
 
   useEffect(() => {
     document.title = "Subscribe — PlainPath"
-    const stored = getStoredSubscriberEmail()
-    if (stored) setEmail(stored)
 
     const apiBase = getApiBaseUrl()
     fetch(`${apiBase}/api/stripe/billing-status`)
@@ -61,22 +68,47 @@ export default function Subscribe() {
     return () => { document.title = "PlainPath" }
   }, [])
 
+  // Auto-trigger checkout when user returns here after sign-in with ?plan= in URL
+  useEffect(() => {
+    if (
+      autoTriggeredRef.current ||
+      !isLoaded ||
+      !isSignedIn ||
+      billingAvailable !== true ||
+      !planFromUrl ||
+      !isPlanKey(planFromUrl)
+    ) return
+    autoTriggeredRef.current = true
+    void handleSubscribe(planFromUrl)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoaded, isSignedIn, billingAvailable, planFromUrl])
+
   if (isNative()) return <NativeMessage />
 
   async function handleSubscribe(planKey?: string) {
     if (!planKey) return
+
+    // Gate on auth — redirect to sign-up preserving plan selection
+    if (!isSignedIn) {
+      const redirectBack = `${basePath}/subscribe?plan=${planKey}`
+      window.location.href = `${basePath}/sign-up?redirect_url=${encodeURIComponent(redirectBack)}`
+      return
+    }
+
     setError(null)
     setLoadingPlan(planKey)
     trackEvent("subscribe_started", { plan: planKey })
+
+    const email = user?.primaryEmailAddress?.emailAddress
+    const clerkUserId = user?.id
+
     try {
-      await startStripeCheckout(planKey as "starter" | "pro", email || undefined)
+      await startStripeCheckout(planKey as "starter" | "pro", email, clerkUserId)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to start checkout. Please try again.")
       setLoadingPlan(null)
     }
   }
-
-  const emailValid = email.includes("@") && email.includes(".")
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -103,6 +135,11 @@ export default function Subscribe() {
           <p className="text-muted-foreground text-base max-w-xl mx-auto leading-relaxed">
             Start with unlimited document analysis on Starter, or unlock every tool with Pro.
           </p>
+          {isLoaded && isSignedIn && user?.primaryEmailAddress?.emailAddress && (
+            <p className="mt-3 text-sm text-muted-foreground/70">
+              Signed in as <span className="font-medium text-foreground">{user.primaryEmailAddress.emailAddress}</span>
+            </p>
+          )}
         </div>
 
         {/* ── Billing not activated notice ── */}
@@ -124,31 +161,12 @@ export default function Subscribe() {
           </motion.div>
         )}
 
-        {/* ── Email field ── */}
-        <div className="max-w-sm mx-auto mb-10">
-          <label className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-            <Mail className="w-3 h-3" />
-            Your email
-          </label>
-          <Input
-            type="email"
-            placeholder="you@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="rounded-xl bg-card border-border/70 text-sm"
-            autoComplete="email"
-          />
-          <p className="mt-1.5 text-[11px] text-muted-foreground/60">
-            Used to activate your subscription after checkout.
-          </p>
-        </div>
-
         {/* ── Plan cards ── */}
         <div className="grid gap-5 md:grid-cols-3">
           {PRICING_PLANS.map((plan, i) => {
             const isLoading = loadingPlan === plan.planKey
             const billingBlocked = billingAvailable === false || !BILLING_CONFIG.BILLING_ENABLED
-            const disabled = isLoading || billingBlocked || (!plan.planned && !emailValid)
+            const disabled = isLoading || billingBlocked || !isLoaded
 
             return (
               <motion.div
@@ -213,14 +231,16 @@ export default function Subscribe() {
                       <><Loader2 className="w-4 h-4 animate-spin" /> Redirecting to Stripe…</>
                     ) : plan.planned ? (
                       <>{plan.ctaLabel} <ExternalLink className="w-3.5 h-3.5" /></>
+                    ) : !isSignedIn && isLoaded ? (
+                      <><LogIn className="w-3.5 h-3.5" /> Sign in to get started</>
                     ) : (
                       plan.ctaLabel
                     )}
                   </button>
 
-                  {!plan.planned && !emailValid && (
+                  {!plan.planned && !isSignedIn && isLoaded && (
                     <p className="mt-2 text-center text-[11px] text-muted-foreground/60">
-                      Enter your email above to subscribe
+                      Free to create an account
                     </p>
                   )}
                 </div>
@@ -259,8 +279,8 @@ export default function Subscribe() {
               a: "Monthly subscription charged via Stripe. You can cancel anytime from your billing portal.",
             },
             {
-              q: "How do I activate my plan after checkout?",
-              a: "After payment, return to PlainPath and enter the same email on the My Analyses page to restore your plan.",
+              q: "Is my subscription tied to my account?",
+              a: "Yes. After checkout, your plan is automatically linked to the account you signed in with — no manual activation needed.",
             },
             {
               q: "Do you store my documents?",

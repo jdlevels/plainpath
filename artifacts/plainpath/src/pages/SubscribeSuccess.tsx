@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react"
 import { Link } from "wouter"
-import { CheckCircle2, ArrowRight } from "lucide-react"
+import { CheckCircle2, ArrowRight, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { setStoredSubscriberEmail } from "../lib/subscriberStorage"
+import { useUser } from "@clerk/react"
 import { getApiBaseUrl } from "@/lib/api"
 
 type SessionStatus = {
@@ -13,6 +13,7 @@ type SessionStatus = {
 }
 
 export default function SubscribeSuccess() {
+  const { isLoaded, isSignedIn, user } = useUser()
   const [sessionData, setSessionData] = useState<SessionStatus | null>(null)
 
   useEffect(() => {
@@ -25,15 +26,23 @@ export default function SubscribeSuccess() {
       .then((res) => res.json())
       .then((data: SessionStatus) => {
         setSessionData(data)
-        if (data?.customer_email) {
-          setStoredSubscriberEmail(data.customer_email)
-        }
       })
       .catch(() => {})
   }, [])
 
   const plan = sessionData?.metadata?.plan ?? "starter"
   const planLabel = plan === "pro" ? "Pro" : "Starter"
+
+  // Prefer the signed-in account email; fall back to Stripe session email
+  const accountEmail =
+    (isLoaded && isSignedIn ? user?.primaryEmailAddress?.emailAddress : null) ||
+    sessionData?.customer_email ||
+    null
+
+  const accountName =
+    isLoaded && isSignedIn && (user?.firstName || user?.fullName)
+      ? user?.firstName || user?.fullName
+      : null
 
   return (
     <div className="min-h-[70vh] flex items-center justify-center px-4 py-20">
@@ -43,9 +52,11 @@ export default function SubscribeSuccess() {
           <CheckCircle2 className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
         </div>
 
-        <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 mb-2">Subscription started</p>
+        <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 mb-2">
+          Subscription active
+        </p>
         <h1 className="text-2xl font-display font-bold text-foreground mb-3">
-          Welcome to PlainPath
+          {accountName ? `Welcome, ${accountName}!` : "Welcome to PlainPath!"}
         </h1>
         <p className="text-muted-foreground text-sm leading-relaxed mb-6">
           Your <strong className="text-foreground">{planLabel}</strong> plan is now active.
@@ -54,18 +65,25 @@ export default function SubscribeSuccess() {
             : " You now have unlimited document analyses and access to Redact Sensitive Info."}
         </p>
 
-        {sessionData?.customer_email && (
-          <div className="rounded-xl border border-border/50 bg-secondary/30 px-4 py-3 text-sm text-left mb-6 space-y-1">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Email</span>
-              <span className="font-medium text-foreground">{sessionData.customer_email}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Plan</span>
-              <span className="font-medium text-foreground">{planLabel}</span>
-            </div>
+        {/* ── Account confirmation box ── */}
+        <div className="rounded-xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50 dark:bg-emerald-950/20 px-4 py-3.5 text-sm text-left mb-6 space-y-2">
+          <div className="flex items-center gap-2 mb-1">
+            <User className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+            <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wide">
+              Subscription linked to your account
+            </span>
           </div>
-        )}
+          {accountEmail && (
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Account</span>
+              <span className="font-medium text-foreground">{accountEmail}</span>
+            </div>
+          )}
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Plan</span>
+            <span className="font-medium text-foreground">{planLabel} · ${ plan === "pro" ? "19.99" : "4.99" }/mo</span>
+          </div>
+        </div>
 
         <Button asChild className="w-full gap-1.5">
           <Link href="/import">
@@ -73,7 +91,7 @@ export default function SubscribeSuccess() {
           </Link>
         </Button>
         <Button asChild variant="ghost" size="sm" className="mt-2 w-full text-muted-foreground">
-          <Link href="/">Return to home</Link>
+          <Link href="/">Go to dashboard</Link>
         </Button>
       </div>
     </div>

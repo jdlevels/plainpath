@@ -58,7 +58,7 @@ router.post("/create-checkout-session", async (req, res) => {
   }
 
   try {
-    const { plan, email } = req.body as { plan?: string; email?: string }
+    const { plan, email, clerkUserId } = req.body as { plan?: string; email?: string; clerkUserId?: string }
 
     if (!isPlanKey(plan)) {
       return res.status(400).json({ error: "Invalid plan. Must be 'starter' or 'pro'." })
@@ -66,6 +66,12 @@ router.post("/create-checkout-session", async (req, res) => {
 
     const selectedPlan = PLAN_CONFIG[plan]
     const billingMode = BILLING_CONFIG.BILLING_MODE
+
+    const sharedMetadata: Record<string, string> = {
+      plan,
+      billingMode,
+      ...(clerkUserId ? { clerkUserId } : {}),
+    }
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
@@ -86,8 +92,8 @@ router.post("/create-checkout-session", async (req, res) => {
           },
         },
       ],
-      metadata: { plan, billingMode },
-      subscription_data: { metadata: { plan, billingMode } },
+      metadata: sharedMetadata,
+      subscription_data: { metadata: sharedMetadata },
       allow_promotion_codes: true,
     })
 
