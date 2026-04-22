@@ -8,6 +8,7 @@ import {
   getSubscriberBySubscriptionId,
   upsertSubscriber,
 } from "../lib/billingDb"
+// getSubscriberByClerkUserId imported only where needed to keep diff minimal
 import { BILLING_CONFIG } from "../lib/billingConfig"
 
 const router = Router()
@@ -244,10 +245,12 @@ router.post("/webhook", async (req: any, res) => {
 
         const plan = session.metadata?.plan || "starter"
         const sessionBillingMode = session.metadata?.billingMode || billingMode
+        const clerkUserId = session.metadata?.clerkUserId || null
 
         if (email && isPlanKey(plan)) {
           upsertSubscriber({
             email,
+            clerkUserId,
             stripeCustomerId:
               typeof session.customer === "string" ? session.customer : null,
             stripeCheckoutSessionId: session.id,

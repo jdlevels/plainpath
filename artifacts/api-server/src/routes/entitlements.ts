@@ -1,5 +1,5 @@
 import { Router } from "express"
-import { getSubscriberByEmail } from "../lib/billingDb"
+import { getSubscriberByEmail, getSubscriberByClerkUserId } from "../lib/billingDb"
 import { PLAN_ENTITLEMENTS, TOOL_ACCESS, normalizePlan, type PlanKey, type ToolKey } from "../lib/planEntitlements"
 import { BILLING_CONFIG } from "../lib/billingConfig"
 import {
@@ -31,13 +31,25 @@ function isAdminEmail(email: string): boolean {
 router.get("/status", (req, res) => {
   try {
     const email = String(req.query.email || "").trim().toLowerCase()
+    const clerkUserId = String(req.query.clerkUserId || "").trim() || null
 
-    if (!email) {
-      return res.status(400).json({ error: "Missing email" })
+    if (!email && !clerkUserId) {
+      return res.status(400).json({ error: "Missing email or clerkUserId" })
+    }
+
+    // If only clerkUserId provided, resolve to email via DB
+    let resolvedEmail = email
+    if (!resolvedEmail && clerkUserId) {
+      const byClerk = getSubscriberByClerkUserId(clerkUserId)
+      if (byClerk) {
+        resolvedEmail = byClerk.email
+      } else {
+        return res.json({ email: null, found: false, status: "inactive", plan: "starter" })
+      }
     }
 
     // Admin bypass: full Pro, unlimited usage — no Stripe subscription required
-    if (isAdminEmail(email)) {
+    if (isAdminEmail(resolvedEmail)) {
       const proEntitlements = PLAN_ENTITLEMENTS["pro"]
       return res.json({
         email,

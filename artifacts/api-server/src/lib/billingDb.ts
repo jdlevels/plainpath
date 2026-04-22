@@ -51,11 +51,17 @@ if (!existingColumns.has("currentPeriodStart")) {
     `ALTER TABLE subscribers ADD COLUMN currentPeriodStart TEXT`
   )
 }
+if (!existingColumns.has("clerkUserId")) {
+  billingDb.exec(
+    `ALTER TABLE subscribers ADD COLUMN clerkUserId TEXT`
+  )
+}
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type SubscriberRecord = {
   id: number
   email: string
+  clerkUserId: string | null
   stripeCustomerId: string | null
   stripeSubscriptionId: string | null
   stripeCheckoutSessionId: string | null
@@ -72,6 +78,7 @@ export type SubscriberRecord = {
 
 export function upsertSubscriber(input: {
   email: string
+  clerkUserId?: string | null
   stripeCustomerId?: string | null
   stripeSubscriptionId?: string | null
   stripeCheckoutSessionId?: string | null
@@ -94,6 +101,7 @@ export function upsertSubscriber(input: {
       .prepare(`
         UPDATE subscribers
         SET
+          clerkUserId             = COALESCE(?, clerkUserId),
           stripeCustomerId        = COALESCE(?, stripeCustomerId),
           stripeSubscriptionId    = COALESCE(?, stripeSubscriptionId),
           stripeCheckoutSessionId = COALESCE(?, stripeCheckoutSessionId),
@@ -108,6 +116,7 @@ export function upsertSubscriber(input: {
         WHERE email = ?
       `)
       .run(
+        input.clerkUserId ?? null,
         input.stripeCustomerId ?? null,
         input.stripeSubscriptionId ?? null,
         input.stripeCheckoutSessionId ?? null,
@@ -125,13 +134,15 @@ export function upsertSubscriber(input: {
     billingDb
       .prepare(`
         INSERT INTO subscribers (
-          email, stripeCustomerId, stripeSubscriptionId, stripeCheckoutSessionId,
-          plan, status, currentPeriodStart, currentPeriodEnd, cancelAtPeriodEnd,
-          billingMode, billingProvider, createdAt, updatedAt
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          email, clerkUserId, stripeCustomerId, stripeSubscriptionId,
+          stripeCheckoutSessionId, plan, status, currentPeriodStart,
+          currentPeriodEnd, cancelAtPeriodEnd, billingMode, billingProvider,
+          createdAt, updatedAt
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `)
       .run(
         input.email,
+        input.clerkUserId ?? null,
         input.stripeCustomerId ?? null,
         input.stripeSubscriptionId ?? null,
         input.stripeCheckoutSessionId ?? null,
@@ -164,4 +175,10 @@ export function getSubscriberBySubscriptionId(subscriptionId: string) {
   return billingDb
     .prepare("SELECT * FROM subscribers WHERE stripeSubscriptionId = ?")
     .get(subscriptionId) as SubscriberRecord | undefined
+}
+
+export function getSubscriberByClerkUserId(clerkUserId: string) {
+  return billingDb
+    .prepare("SELECT * FROM subscribers WHERE clerkUserId = ?")
+    .get(clerkUserId) as SubscriberRecord | undefined
 }
