@@ -1,0 +1,56 @@
+Run a narrow bug-fix pass on My Documents only.
+
+BUG OBSERVED IN LIVE UI
+The My Documents page is still showing the GLOBAL red error banner at the top (“Couldn't load your documents. Please try again.”) while PDF Editor and Compare Versions sections are rendering successfully underneath.
+
+That is incorrect. The page should only show the global banner when the page is in a true all-sections-failed state. If one or more sections render successfully, only the failed section(s) should show inline section-level errors.
+
+OBJECTIVE
+Fix the global banner / all-failed logic in Documents.tsx so the top-level red banner only appears when every active section has failed and no section content is available.
+
+STRICT SCOPE
+- Touch Documents.tsx only unless absolutely required
+- Do not rewrite the whole page
+- Do not change routes
+- Do not change APIs
+- Do not change the already-working section-level retry functions except where required for correctness
+
+WHAT TO CHECK
+1. Re-read the derived booleans:
+   - hasAnyContent
+   - hasAnySectionError
+   - allSectionsFailed
+   - any banner render conditions
+2. Verify that “content exists” includes ALL active section types, not just uploaded docs:
+   - uploaded documents
+   - PDF Editor sessions
+   - Compare Versions sessions
+   - Document Builder drafts (when enabled)
+3. Verify the global banner render condition is truly:
+   - not loading
+   - allSectionsFailed === true
+   - no renderable content across any active section
+4. Verify empty-state suppression still works correctly when any section error exists
+5. Verify inline section errors still render in their own section headers/blocks
+
+EXPECTED LIVE RESULT
+Given the current state shown in the screenshot:
+- PDF Editor section visible
+- Compare Versions section visible
+- global red banner should NOT render
+
+VERIFICATION REQUIRED
+After the fix:
+1. Run TypeScript/build check
+2. Verify My Documents with mixed state:
+   - at least one successful section
+   - one failed section if reproducible
+3. Confirm:
+   - no global banner when partial content exists
+   - inline section error still appears only in failed section
+   - empty state does not appear incorrectly
+4. Return a concise report with:
+   - exact condition before
+   - exact condition after
+   - exact file/lines changed
+   - whether any other saved-work surfaces were touched (should be no)

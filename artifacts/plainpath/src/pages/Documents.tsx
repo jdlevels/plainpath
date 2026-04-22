@@ -396,6 +396,10 @@ export default function Documents() {
   const hasAnySectionError =
     !!docsError || !!pdfError || !!compareError || (BUILDER_ENABLED && !!builderError)
 
+  // True only when every active section failed AND there is no renderable content at all.
+  // In this state we show the global banner instead of individual section-level errors.
+  const showGlobalBanner = !loading && allSectionsFailed && !hasAnyContent
+
   // ─── Render ───────────────────────────────────────────────────────────────
 
   return (
@@ -447,7 +451,7 @@ export default function Documents() {
         )}
 
         {/* Global error state — only when every section failed simultaneously */}
-        {!loading && allSectionsFailed && !hasAnyContent && (
+        {showGlobalBanner && (
           <div className="flex items-center gap-2 p-4 rounded-xl border border-destructive/30 bg-destructive/5 text-destructive text-sm">
             <AlertTriangle className="w-4 h-4 shrink-0" />
             Couldn't load your documents. Check your connection and try again.
@@ -484,7 +488,7 @@ export default function Documents() {
         )}
 
         {/* ── SECTION: Uploaded Documents ──────────────────────────────────── */}
-        {!loading && docsError && (
+        {!loading && docsError && !showGlobalBanner && (
           <>
             <SectionHeader
               icon={FileText}
@@ -700,7 +704,7 @@ export default function Documents() {
         {/* ── SECTION: PDF Editor Sessions ─────────────────────────────────── */}
         {!loading && (
           <>
-            {(pdfSessions.length > 0 || pdfLoading || !!pdfError) && (
+            {(pdfSessions.length > 0 || pdfLoading || (!showGlobalBanner && !!pdfError)) && (
               <SectionHeader
                 icon={FileEdit}
                 label="PDF Editor"
@@ -716,7 +720,7 @@ export default function Documents() {
               </div>
             )}
 
-            {!pdfLoading && pdfError && (
+            {!pdfLoading && pdfError && !showGlobalBanner && (
               <div className="flex items-center gap-2 p-3 rounded-xl border border-destructive/20 bg-destructive/5 text-destructive text-sm mb-3">
                 <AlertTriangle className="w-4 h-4 shrink-0" />
                 <span className="flex-1">{pdfError}</span>
@@ -837,7 +841,7 @@ export default function Documents() {
         {/* ── SECTION: Compare Versions Sessions ───────────────────────────── */}
         {!loading && (
           <>
-            {(compareSessions.length > 0 || compareLoading || !!compareError) && (
+            {(compareSessions.length > 0 || compareLoading || (!showGlobalBanner && !!compareError)) && (
               <SectionHeader
                 icon={GitCompare}
                 label="Compare Versions"
@@ -853,7 +857,7 @@ export default function Documents() {
               </div>
             )}
 
-            {!compareLoading && compareError && (
+            {!compareLoading && compareError && !showGlobalBanner && (
               <div className="flex items-center gap-2 p-3 rounded-xl border border-destructive/20 bg-destructive/5 text-destructive text-sm mb-3">
                 <AlertTriangle className="w-4 h-4 shrink-0" />
                 <span className="flex-1">{compareError}</span>
@@ -984,7 +988,7 @@ export default function Documents() {
         {/* ── SECTION: Document Builder Drafts ─────────────────────────────── */}
         {BUILDER_ENABLED && !loading && (
           <>
-            {(builderDocs.length > 0 || builderLoading || !!builderError) && (
+            {(builderDocs.length > 0 || builderLoading || (!showGlobalBanner && !!builderError)) && (
               <SectionHeader
                 icon={LayoutTemplate}
                 label="Document Builder"
@@ -1000,7 +1004,7 @@ export default function Documents() {
               </div>
             )}
 
-            {!builderLoading && builderError && (
+            {!builderLoading && builderError && !showGlobalBanner && (
               <div className="flex items-center gap-2 p-3 rounded-xl border border-destructive/20 bg-destructive/5 text-destructive text-sm mb-3">
                 <AlertTriangle className="w-4 h-4 shrink-0" />
                 <span className="flex-1">{builderError}</span>
