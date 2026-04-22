@@ -1,0 +1,62 @@
+The PDF Editor is still not acceptable and needs a proper correction pass.
+
+Problem shown in current live/editor screenshot:
+- the right-side editable working copy does NOT visually match the original PDF page
+- header/title content is shifted, reflowed, and misaligned
+- the editable surface is not behaving like a true letter-size page replica
+- there is too much dead space and weak vertical anchoring
+- current behavior looks like a loose overlay/canvas, not a document-faithful editable copy
+
+This must be fixed to match PlainPath’s standing PDF Editor requirement:
+
+REQUIRED PRODUCT RULE
+1. Left pane = original PDF, read-only
+2. Right pane = editable working copy
+3. Both panes must use true document-first layout with comfortable reading/editing space
+4. Right pane must preserve page geometry as closely as possible to the original
+5. The editor should feel like editing a page, not dragging text on a blank canvas
+
+Implement the correction with these requirements:
+
+A. PAGE SURFACE / LAYOUT
+- Use a true centered letter-size page surface in both panes on desktop
+- Keep both panes top-aligned and scaled consistently
+- Reduce dead space around the editable page
+- Preserve split-screen, but make the document surfaces larger and more readable
+- Toolbar should not steal excessive horizontal room from the page surface
+
+B. VISUAL FIDELITY
+- The editable working copy must inherit the original page width, margins, and major block positions
+- Prevent header/title areas from drifting downward or reflowing unpredictably
+- Preserve relative spacing between title, subheading, notices, and body text
+- If text layer editing cannot perfectly preserve original typography, preserve layout/position first and make deviations minimal
+
+C. EDITING MODEL
+- Do not treat this like a freeform design canvas
+- Use bounded page-aware editing regions
+- Keep edits constrained to the page frame
+- Text blocks should remain anchored to their original document positions unless the user intentionally edits/moves them
+
+D. DOCUMENT COMPARISON UX
+- User must be able to visually compare left original vs right edited version comfortably
+- Scrolling should feel synchronized or at least naturally comparable
+- Keep page number / page state obvious
+- Preserve the “original vs working copy” mental model clearly
+
+E. SAVE / EXPORT / TRUST
+- Keep visible Save control
+- Keep timed autosave behavior if already implemented
+- Do not break Download PDF
+- Do not degrade existing edit tools (select, edit text, add text, mask, highlight) unless replacement behavior is cleaner and more stable
+
+F. IMPLEMENTATION GUIDANCE
+- Do not do a shallow CSS-only patch if the root issue is renderer/text-layer mismatch
+- If needed, normalize page scaling and rebuild the editable layer positioning logic so the right-side working page is generated from the same page box metrics as the left-side original render
+- Prioritize page fidelity and usability over visual effects
+
+Return:
+1. exact root cause of the right-side mismatch
+2. exact files changed
+3. what was corrected in page scaling / positioning / editing layer behavior
+4. before/after screenshots of the same PDF page in the editor
+5. confirmation that the right-side working copy now stays visually aligned with the left-side original

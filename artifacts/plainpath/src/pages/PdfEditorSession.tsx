@@ -914,7 +914,8 @@ function OriginalPane({
     </div>
   )
   return (
-    <div className="space-y-6 p-4 md:p-6">
+    <div className="p-4 md:p-6">
+      <div className="space-y-6 max-w-2xl mx-auto">
       {pages.map((pg, i) => (
         <div
           key={i}
@@ -942,6 +943,7 @@ function OriginalPane({
           )}
         </div>
       ))}
+      </div>
     </div>
   )
 }
@@ -2065,7 +2067,7 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
       <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
 
         {/* Left — Original (read-only) */}
-        <div className={`flex-col w-full md:w-[42%] md:flex-shrink-0 overflow-y-auto bg-neutral-100 dark:bg-zinc-900/70 ${activeTab === "original" ? "flex" : "hidden md:flex"}`}>
+        <div className={`flex-col w-full md:w-1/2 md:flex-shrink-0 overflow-y-auto bg-neutral-100 dark:bg-zinc-900/70 ${activeTab === "original" ? "flex" : "hidden md:flex"}`}>
           <div className="sticky top-0 z-10 flex items-center gap-1.5 px-4 py-2 bg-neutral-200/80 dark:bg-zinc-800/80 border-b border-border/30 backdrop-blur-sm flex-shrink-0">
             <Lock className="w-3 h-3 text-muted-foreground" />
             <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
@@ -2140,18 +2142,19 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
                 </div>
               )}
               {!pdfLoading && !pdfFailed && (
-                <div className="space-y-6 p-4 md:p-6">
+                <div className="p-4 md:p-6">
+                  <div className="space-y-6 max-w-2xl mx-auto">
                   {pages.map((pg, i) => (
                     <div
                       key={i}
                       className="relative rounded-lg overflow-hidden border border-border/30 shadow-sm bg-white select-none"
-                      style={{ aspectRatio: `${pg.w} / ${pg.h}` }}
                     >
                       <img
                         src={pg.dataUrl}
                         alt={`Page ${i + 1}`}
                         className="block w-full pointer-events-none"
                         draggable={false}
+                        style={{ aspectRatio: `${pg.w} / ${pg.h}` }}
                       />
                       <EditingCanvas
                         pageIndex={i}
@@ -2179,6 +2182,7 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
                       )}
                     </div>
                   ))}
+                  </div>
                 </div>
               )}
             </div>
