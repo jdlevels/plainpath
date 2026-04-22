@@ -1,6 +1,7 @@
 import { Router } from "express"
 import Stripe from "stripe"
-import { stripe } from "../lib/stripe"
+import { getStripeClient } from "../lib/stripe"
+import { getWebhookSecret } from "../lib/stripeWebhookSecret"
 import {
   getSubscriberByCustomerId,
   getSubscriberByEmail,
@@ -12,13 +13,9 @@ import { BILLING_CONFIG } from "../lib/billingConfig"
 const router = Router()
 
 const APP_BASE_URL = process.env.APP_BASE_URL || "https://plainpathapp.com/app"
-const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET
 
 type PlanKey = "starter" | "pro"
 
-// ─── Plan → Stripe product config ────────────────────────────────────────────
-// These create inline products in Stripe checkout.
-// NOTE: Pro is $19.99/month (1999 cents). Starter is $4.99/month (499 cents).
 const PLAN_CONFIG: Record<PlanKey, { name: string; amount: number; description: string }> = {
   starter: {
     name: "PlainPath Starter",
@@ -27,7 +24,7 @@ const PLAN_CONFIG: Record<PlanKey, { name: string; amount: number; description: 
   },
   pro: {
     name: "PlainPath Pro",
-    amount: 1999, // $19.99/month
+    amount: 1999,
     description: "All tools: Analyze, Trust Check, Contract Builder, Contract Review, Redact, Compare Versions, and PDF Editor.",
   },
 }
@@ -41,17 +38,14 @@ function toIsoFromUnix(unixSeconds?: number | null): string | null {
   return new Date(unixSeconds * 1000).toISOString()
 }
 
-/** Returns true only when a live Stripe key is present. */
-function isStripeReady(): boolean {
-  return Boolean(process.env.STRIPE_SECRET_KEY)
-}
-
 // ─── Create Checkout Session ──────────────────────────────────────────────────
 
 router.post("/create-checkout-session", async (req, res) => {
-  // TODO: remove this guard when STRIPE_SECRET_KEY is added for go-live
-  if (!isStripeReady()) {
-    return res.status(503).json({ error: "Stripe is not configured. Billing is in test mode — no real charges possible." })
+  let stripe: Stripe
+  try {
+    stripe = await getStripeClient()
+  } catch {
+    return res.status(503).json({ error: "Stripe is not configured. Billing is unavailable." })
   }
 
   try {
@@ -102,10 +96,13 @@ router.post("/create-checkout-session", async (req, res) => {
 // ─── Checkout Session Status ──────────────────────────────────────────────────
 
 router.get("/checkout-session-status", async (req, res) => {
-  // TODO: remove this guard when STRIPE_SECRET_KEY is added for go-live
-  if (!isStripeReady()) {
+  let stripe: Stripe
+  try {
+    stripe = await getStripeClient()
+  } catch {
     return res.status(503).json({ error: "Stripe is not configured." })
   }
+
   try {
     const sessionId = req.query.session_id
     if (typeof sessionId !== "string") {
@@ -132,10 +129,13 @@ router.get("/checkout-session-status", async (req, res) => {
 // ─── Billing Portal ───────────────────────────────────────────────────────────
 
 router.post("/billing-portal", async (req, res) => {
-  // TODO: remove this guard when STRIPE_SECRET_KEY is added for go-live
-  if (!isStripeReady()) {
-    return res.status(503).json({ error: "Stripe is not configured. Billing is in test mode." })
+  let stripe: Stripe
+  try {
+    stripe = await getStripeClient()
+  } catch {
+    return res.status(503).json({ error: "Stripe is not configured. Billing is unavailable." })
   }
+
   try {
     const { email } = req.body as { email?: string }
 
@@ -163,7 +163,7 @@ router.post("/billing-portal", async (req, res) => {
   }
 })
 
-// ─── Subscriber Status (quick lookup, no entitlement details) ─────────────────
+// ─── Subscriber Status ────────────────────────────────────────────────────────
 
 router.get("/subscriber-status", (req, res) => {
   try {
@@ -195,15 +195,20 @@ router.get("/subscriber-status", (req, res) => {
 })
 
 // ─── Webhook ──────────────────────────────────────────────────────────────────
-// Handles all Stripe events and keeps the local billing DB in sync.
-// Raw body parsing is required for signature verification (configured in app.ts).
 
 router.post("/webhook", async (req: any, res) => {
   try {
-    // TODO: Remove this guard when STRIPE_WEBHOOK_SECRET is added for go-live
-    if (!WEBHOOK_SECRET) {
-      console.warn("STRIPE_WEBHOOK_SECRET not set — webhook rejected (test mode)")
+    const webhookSecret = getWebhookSecret()
+    if (!webhookSecret) {
+      console.warn("Stripe webhook secret not yet initialized — webhook rejected")
       return res.status(400).send("Webhook not configured")
+    }
+
+    let stripe: Stripe
+    try {
+      stripe = await getStripeClient()
+    } catch {
+      return res.status(503).send("Stripe not configured")
     }
 
     const signature = req.headers["stripe-signature"]
@@ -211,11 +216,10 @@ router.post("/webhook", async (req: any, res) => {
       return res.status(400).send("Missing Stripe signature")
     }
 
-    const event = stripe.webhooks.constructEvent(req.body, signature, WEBHOOK_SECRET)
+    const event = stripe.webhooks.constructEvent(req.body, signature, webhookSecret)
     const billingMode = BILLING_CONFIG.BILLING_MODE
 
     switch (event.type) {
-      // ── Checkout completed: initial subscription creation ─────────────────
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session
 
@@ -241,7 +245,6 @@ router.post("/webhook", async (req: any, res) => {
         break
       }
 
-      // ── Subscription created or updated ───────────────────────────────────
       case "customer.subscription.created":
       case "customer.subscription.updated": {
         const subscription = event.data.object as Stripe.Subscription
@@ -277,10 +280,10 @@ router.post("/webhook", async (req: any, res) => {
             plan: isPlanKey(plan) ? plan : "starter",
             status: subscription.status,
             currentPeriodStart: toIsoFromUnix(
-              (subscription as any).current_period_start
+              (subscription as any).current_period_start,
             ),
             currentPeriodEnd: toIsoFromUnix(
-              (subscription as any).current_period_end
+              (subscription as any).current_period_end,
             ),
             cancelAtPeriodEnd: Boolean(subscription.cancel_at_period_end),
             billingMode: subBillingMode,
@@ -290,7 +293,6 @@ router.post("/webhook", async (req: any, res) => {
         break
       }
 
-      // ── Subscription cancelled ────────────────────────────────────────────
       case "customer.subscription.deleted": {
         const subscription = event.data.object as Stripe.Subscription
 
@@ -307,7 +309,7 @@ router.post("/webhook", async (req: any, res) => {
             plan: existing.plan,
             status: "canceled",
             currentPeriodEnd: toIsoFromUnix(
-              (subscription as any).current_period_end
+              (subscription as any).current_period_end,
             ),
             cancelAtPeriodEnd: Boolean(subscription.cancel_at_period_end),
             billingMode: existing.billingMode,
@@ -317,7 +319,6 @@ router.post("/webhook", async (req: any, res) => {
         break
       }
 
-      // ── Invoice paid: subscription renewed ───────────────────────────────
       case "invoice.paid": {
         const invoice = event.data.object as Stripe.Invoice
 
@@ -334,7 +335,6 @@ router.post("/webhook", async (req: any, res) => {
         }
 
         if (subscriber) {
-          // Re-activate in case of past_due → paid recovery
           upsertSubscriber({
             email: subscriber.email,
             stripeCustomerId: customerId,
@@ -348,7 +348,6 @@ router.post("/webhook", async (req: any, res) => {
         break
       }
 
-      // ── Invoice payment failed: mark past_due ─────────────────────────────
       case "invoice.payment_failed": {
         const invoice = event.data.object as Stripe.Invoice
 
