@@ -31,7 +31,7 @@ export const BILLING_PROVIDERS: Record<BillingProvider, ProviderConfig> = {
     provider: "stripe",
     displayName: "Stripe",
     active: true,
-    testMode: true, // TODO: Set to false when going live
+    testMode: false,
   },
   storekit: {
     provider: "storekit",

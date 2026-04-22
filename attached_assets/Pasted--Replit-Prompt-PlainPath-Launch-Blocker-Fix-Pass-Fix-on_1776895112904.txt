@@ -1,0 +1,171 @@
+## Replit Prompt — PlainPath Launch Blocker Fix Pass
+### Fix only the true launch blockers first
+
+We are now doing a strict blocker-resolution pass.
+
+Do not widen scope into medium or low issues in this pass unless a blocker fix directly touches them.
+
+## Goal
+Resolve the 4 true launch blockers identified in the readiness audit, verify them with evidence, and return exact proof that PlainPath is safe to move into a limited web-launch readiness recheck.
+
+---
+
+## Fix these blockers in this exact order
+
+### 1. Stripe webhook secret / live provisioning
+Issue:
+- `STRIPE_WEBHOOK_SECRET` is missing
+- live billing events are being rejected
+- paid users will not receive plan provisioning
+
+### Required actions
+- confirm the production webhook endpoint path
+- confirm the correct Stripe webhook signing secret has been added to environment secrets
+- verify webhook signature validation now passes
+- verify these event types are handled successfully:
+  - `checkout.session.completed`
+  - `customer.subscription.updated`
+  - `customer.subscription.deleted`
+  - `invoice.paid`
+  - `invoice.payment_failed`
+- verify a successful paid checkout now results in plan entitlement being provisioned correctly
+
+### Return proof
+- exact env var name used
+- exact route file touched if any
+- whether code changed or env-only change
+- screenshot or log proof showing webhook is no longer rejected
+- confirmation that entitlement provisioning now works end-to-end
+
+---
+
+### 2. Clerk production keys
+Issue:
+- app is still using Clerk development keys
+- dev-instance rate limits will break production auth
+
+### Required actions
+- switch app and server to production Clerk keys
+- verify both marketing site and main app use production instance values
+- verify sign-in/sign-up still works
+- verify protected routes still behave correctly
+- verify no console warning about development keys remains
+
+### Return proof
+- exact env vars updated
+- whether any code changed
+- screenshot or console proof that dev-key warning is gone
+- confirmation that auth flow still works across:
+  - signed-out marketing flow
+  - auth-first pricing flow
+  - signed-in app flow
+
+---
+
+### 3. Privacy policy correction
+Issue:
+- privacy policy contains materially false statements about device-only storage
+
+### Required actions
+Update both privacy policy surfaces so they accurately describe current behavior.
+
+Files previously identified:
+- `artifacts/plainpath-marketing/src/pages/Privacy.tsx`
+- `artifacts/plainpath/src/pages/Privacy.tsx`
+
+### Required policy content
+Add a clearly written section explaining current server-side behavior for Pro tools, including at minimum:
+
+- Clause Extractor:
+  - uploaded PDF/DOCX is processed server-side
+  - extracted results/session data are stored server-side until deleted
+
+- Compare Versions:
+  - uploaded files and comparison session results are processed/stored server-side
+
+- Document Builder:
+  - created document content is stored server-side
+
+- Digital Signatures:
+  - documents are sent to Dropbox Sign / third-party e-sign provider
+  - session/request metadata may be stored by PlainPath
+
+- user deletion behavior:
+  - explain what users can delete from Documents / sessions
+  - explain any retention behavior if applicable
+
+### Constraints
+- do not overclaim security/privacy
+- do not say “device only” where that is no longer true
+- keep wording professional, clear, and user-facing
+- align marketing and in-app privacy pages
+
+### Return proof
+- exact files changed
+- exact sections changed
+- before/after screenshots
+- final privacy text snippet for the new Pro tools storage section
+
+---
+
+### 4. billingProvider Stripe testMode inconsistency
+Issue:
+- `billingProvider.ts` still has Stripe `testMode: true`
+- this can mislead downstream logic even with live mode elsewhere
+
+### Required actions
+- change Stripe provider registry to production-safe value
+- remove the TODO comment if it is no longer valid
+- confirm no billing logic now reports Stripe as test mode
+
+### Return proof
+- exact file changed
+- exact line/value changed
+- confirmation of final effective Stripe mode across config
+- grep/result proof that no stale `testMode: true` remains for Stripe provider config
+
+---
+
+## Verification required after all 4 are fixed
+
+Return a short recheck summary for these items:
+
+### A. Billing
+- live checkout provisions entitlements: YES / NO
+- webhook secret configured: YES / NO
+- subscription updates propagate: YES / NO
+- cancellations propagate: YES / NO
+
+### B. Auth
+- production Clerk keys active: YES / NO
+- no dev-key warning remains: YES / NO
+- sign-in/up works: YES / NO
+
+### C. Privacy / compliance
+- marketing privacy page corrected: YES / NO
+- in-app privacy page corrected: YES / NO
+- no false “device only” statements remain: YES / NO
+
+### D. Config consistency
+- Stripe provider no longer marked test mode: YES / NO
+
+---
+
+## Deliverables
+Return exactly:
+
+1. files changed
+2. env/config changes made
+3. screenshots/log proof
+4. blocker-by-blocker PASS / FAIL
+5. updated final summary:
+   - Ready for limited web-launch recheck: YES / NO
+   - Remaining true blockers count
+
+---
+
+## Constraints
+- do not work on medium/low items in this pass unless directly required
+- do not give vague summaries
+- do not say “should work”
+- provide proof, not assumptions
