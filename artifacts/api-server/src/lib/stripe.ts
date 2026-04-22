@@ -1,1 +1,1 @@
-export { getUncachableStripeClient as getStripeClient } from "./stripeClient"
+export { getUncachableStripeClient as getStripeClient, isStripeAvailable } from "./stripeClient"

@@ -1,6 +1,6 @@
 import { Router } from "express"
 import Stripe from "stripe"
-import { getStripeClient } from "../lib/stripe"
+import { getStripeClient, isStripeAvailable } from "../lib/stripe"
 import { getWebhookSecret } from "../lib/stripeWebhookSecret"
 import {
   getSubscriberByCustomerId,
@@ -32,6 +32,15 @@ const PLAN_CONFIG: Record<PlanKey, { name: string; amount: number; description: 
 function isPlanKey(value: unknown): value is PlanKey {
   return value === "starter" || value === "pro"
 }
+
+// ─── Billing Status ───────────────────────────────────────────────────────────
+// Frontend checks this on Subscribe page load. Returns { available: true } when
+// the live Stripe connector is configured, { available: false } when not.
+
+router.get("/billing-status", async (_req, res) => {
+  const available = await isStripeAvailable()
+  return res.json({ available })
+})
 
 function toIsoFromUnix(unixSeconds?: number | null): string | null {
   if (!unixSeconds) return null

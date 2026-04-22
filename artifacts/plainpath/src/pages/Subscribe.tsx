@@ -11,6 +11,7 @@ import { getStoredSubscriberEmail } from "@/lib/subscriberStorage"
 import { isNative } from "@/lib/platform"
 import { BILLING_CONFIG } from "@/lib/billingConfig"
 import { trackEvent } from "@/lib/analytics"
+import { getApiBaseUrl } from "@/lib/api"
 
 // ─── Native fallback ────────────────────────────────────────────────────────
 
@@ -44,11 +45,19 @@ export default function Subscribe() {
   const [email, setEmail] = useState("")
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [billingAvailable, setBillingAvailable] = useState<boolean | null>(null)
 
   useEffect(() => {
     document.title = "Subscribe — PlainPath"
     const stored = getStoredSubscriberEmail()
     if (stored) setEmail(stored)
+
+    const apiBase = getApiBaseUrl()
+    fetch(`${apiBase}/api/stripe/billing-status`)
+      .then((r) => r.json())
+      .then((data: { available: boolean }) => setBillingAvailable(data.available ?? false))
+      .catch(() => setBillingAvailable(false))
+
     return () => { document.title = "PlainPath" }
   }, [])
 
@@ -96,8 +105,8 @@ export default function Subscribe() {
           </p>
         </div>
 
-        {/* ── Pre-launch notice ── */}
-        {!BILLING_CONFIG.BILLING_ENABLED && (
+        {/* ── Billing not activated notice ── */}
+        {(!BILLING_CONFIG.BILLING_ENABLED || billingAvailable === false) && (
           <motion.div
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
@@ -106,10 +115,10 @@ export default function Subscribe() {
             <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
             <div>
               <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
-                Subscriptions launching soon
+                Live billing is not activated yet
               </p>
               <p className="text-xs text-amber-700/80 dark:text-amber-400/70 mt-0.5 leading-relaxed">
-                Live billing is not yet active. You can explore all 6 tools for free during pre-launch — no checkout required. We'll update this page once subscriptions are open.
+                Subscriptions are coming soon. Pricing is shown below so you know what to expect — checkout will be enabled once billing is fully active.
               </p>
             </div>
           </motion.div>
@@ -138,7 +147,8 @@ export default function Subscribe() {
         <div className="grid gap-5 md:grid-cols-3">
           {PRICING_PLANS.map((plan, i) => {
             const isLoading = loadingPlan === plan.planKey
-            const disabled = isLoading || (!plan.planned && !emailValid)
+            const billingBlocked = billingAvailable === false || !BILLING_CONFIG.BILLING_ENABLED
+            const disabled = isLoading || billingBlocked || (!plan.planned && !emailValid)
 
             return (
               <motion.div

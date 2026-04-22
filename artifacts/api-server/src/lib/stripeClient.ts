@@ -38,37 +38,17 @@ async function getCredentials() {
   }
 
   const isProduction = process.env.REPLIT_DEPLOYMENT === "1"
+  const targetEnvironment = isProduction ? "production" : "development"
 
-  if (isProduction) {
-    const prodConn = await fetchConnection(hostname, xReplitToken, "production")
-    if (prodConn) {
-      return {
-        publishableKey: prodConn.settings.publishable as string,
-        secretKey: prodConn.settings.secret as string,
-      }
-    }
-    const devConn = await fetchConnection(hostname, xReplitToken, "development")
-    if (devConn) {
-      console.warn(
-        "[Stripe] Production connector not configured — using sandbox keys. " +
-        "Complete Stripe business verification and configure live keys in the Replit Stripe integration to accept real payments."
-      )
-      return {
-        publishableKey: devConn.settings.publishable as string,
-        secretKey: devConn.settings.secret as string,
-      }
-    }
-    throw new Error("Stripe connector not found (tried production and development)")
-  }
-
-  const devConn = await fetchConnection(hostname, xReplitToken, "development")
-  if (devConn) {
+  const conn = await fetchConnection(hostname, xReplitToken, targetEnvironment)
+  if (conn) {
     return {
-      publishableKey: devConn.settings.publishable as string,
-      secretKey: devConn.settings.secret as string,
+      publishableKey: conn.settings.publishable as string,
+      secretKey: conn.settings.secret as string,
     }
   }
-  throw new Error("Stripe development connection not found")
+
+  throw new Error(`Stripe ${targetEnvironment} connector not configured`)
 }
 
 // WARNING: Never cache this client. Always call fresh — tokens may rotate.
@@ -85,6 +65,15 @@ export async function getStripePublishableKey(): Promise<string> {
 export async function getStripeSecretKey(): Promise<string> {
   const { secretKey } = await getCredentials()
   return secretKey
+}
+
+export async function isStripeAvailable(): Promise<boolean> {
+  try {
+    await getCredentials()
+    return true
+  } catch {
+    return false
+  }
 }
 
 let stripeSyncInstance: any = null

@@ -1,0 +1,46 @@
+New evidence from Stripe:
+
+In Stripe > Settings > Business > Account status:
+- Active tab shows: "No active tasks for your account"
+- Completed tab shows the business address, representative info, and identity document are all completed
+
+So Stripe verification no longer appears to be the blocker.
+
+That means the remaining issue is likely the Replit live Stripe connector itself, not Stripe account onboarding.
+
+Please diagnose the production connector layer specifically.
+
+Check all of the following:
+
+1. LIVE CONNECTOR BINDING
+- verify whether the live Stripe connector is actually provisioned and attached to this deployed Replit app
+- verify the deployment can read the production connector credentials at runtime
+- verify this is not still pointing at stale connector metadata from before Stripe activation completed
+
+2. CONNECTOR REFRESH / REBIND
+- determine whether the Replit Integrated Payments app needs to be re-synced, reconnected, or refreshed now that Stripe account status is complete
+- if a reconnect/rebind is required, do that
+
+3. RUNTIME CREDENTIAL RESOLUTION
+- identify exactly why production credential lookup is still failing even though the Stripe account is now fully verified
+- verify whether the connector hostname/identity variables exist at runtime in the published deployment
+
+4. REMOVE SANDBOX FALLBACK FROM PUBLIC PRODUCTION
+- do not leave sandbox checkout reachable from the public production site
+- production should either use live Stripe successfully or show a controlled disabled state
+
+5. END-TO-END VERIFICATION
+After fixing, confirm all of the following on the live site:
+- /app/subscribe loads
+- Starter button is enabled
+- Pro button is enabled
+- Starter opens real live Stripe checkout
+- Pro opens real live Stripe checkout
+- no “Stripe is not configured” message appears
+
+Return:
+1. exact root cause
+2. exact files/config changed
+3. whether the connector had to be refreshed/rebound
+4. confirmation that live checkout now opens from production
+5. screenshot of the fixed live /app/subscribe page
