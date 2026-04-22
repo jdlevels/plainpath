@@ -1,0 +1,88 @@
+PlainPath — Final Authenticated Surface Verification Pass
+Dashboard / My Documents / My Analyses
+
+Objective:
+Do a narrow, authenticated, screenshot-backed verification pass for the three saved-work surfaces that were just polished:
+1. Dashboard Recent Work
+2. My Documents
+3. My Analyses
+
+This is NOT a new build pass.
+Do NOT change code unless a real visual mismatch is found.
+First verify current behavior exactly as shipped.
+
+Rules:
+- Use a real authenticated in-app session
+- Stay inside the authenticated app shell
+- Do not stop at marketing-page redirects
+- Do not use wrong base paths
+- If auth expires, re-authenticate and continue
+- Capture screenshots only after the target authenticated page fully renders
+- If a page fails to render, diagnose whether it is auth/session, wrong route, or real UI regression
+- Do not report “looks correct” without a screenshot of the actual authenticated page
+
+Verification checklist:
+
+A. Dashboard (/)
+Confirm with screenshot:
+- Recent Work renders inside authenticated dashboard
+- Recent Work chip labels show:
+  - “Analyze a Document”
+  - “Digital Signature”
+  - “Compare Versions” where applicable
+- “View all” / saved-work destination wording is explicit and correct
+- Empty-state text mentions all intended saved-work surfaces
+- Document Builder quick-start button appears only when feature flag allows it
+- No text overflow, broken alignment, or CTA wrapping
+
+B. My Documents (/documents)
+Confirm with screenshot:
+- Page loads authenticated, not marketing page
+- Uploaded Documents section shows its new descriptive subcopy
+- PDF Editor section shows its descriptive subcopy
+- Compare Versions section shows its descriptive subcopy
+- Document Builder section shows its descriptive subcopy when enabled
+- Compact section-level empty states render correctly when a section is empty but others have content
+- Action verbs are correct:
+  - View analysis
+  - View trust check
+  - View review
+  - Analyze a document
+  - Continue editing
+  - Open comparison
+  - Continue building
+- No duplicate/global error-banner regression
+- No spacing collapse between sections
+
+C. My Analyses (/my-analyses)
+Confirm with screenshot:
+- Page loads authenticated
+- Subtitle clearly mentions both analyses and trust checks
+- Empty-state heading/body use the updated wording
+- “Build a Contract” empty-state CTA is gone
+- Remaining CTA verbs are correct:
+  - View analysis
+  - View trust check
+- Page clearly reads as AI-results-only, not general saved work
+
+If a mismatch is found:
+- Fix only that mismatch
+- Re-run the screenshot proof
+- Keep scope narrow
+
+Required output:
+1. Screenshot of authenticated Dashboard
+2. Screenshot of authenticated My Documents
+3. Screenshot of authenticated My Analyses
+4. Structured report with:
+   - PASS/FAIL for each page
+   - any mismatch found
+   - exact file modified if a fix was needed
+   - exact wording/UI issue corrected
+5. Final verdict:
+   - “visually closed”
+   - or “code-correct but visual proof still missing”
+
+Important:
+Do not give a code-only conclusion this time.
+This pass is only complete with authenticated screenshots of all three pages.
