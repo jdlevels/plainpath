@@ -1,7 +1,7 @@
 import { useLocation } from "wouter"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Zap, ShieldCheck, PenLine, BarChart3, ArrowRight, X, Scale } from "lucide-react"
+import { Zap, ShieldCheck, PenLine, GitCompare, ArrowRight, X, Scale } from "lucide-react"
 import { isNative } from "@/lib/platform"
 
 interface Props {
@@ -16,8 +16,8 @@ interface Props {
 const REASON_COPY = {
   analyses: {
     title: "You've used your 2 free analyses this month",
-    sub: "Upgrade to Starter for unlimited document analyses — or Pro for all 5 live tools.",
-    icon: <BarChart3 className="w-6 h-6 text-primary" />,
+    sub: "Upgrade to Starter for unlimited document analyses — or Pro for all 8 tools.",
+    icon: <GitCompare className="w-6 h-6 text-primary" />,
     planRequired: "starter" as const,
   },
   trustCheck: {
@@ -47,7 +47,7 @@ const REASON_COPY = {
   compare: {
     title: "Compare Document Versions requires Pro",
     sub: "Upgrade to Pro to side-by-side compare any two versions of a document and highlight every change.",
-    icon: <BarChart3 className="w-6 h-6 text-blue-500" />,
+    icon: <GitCompare className="w-6 h-6 text-teal-500" />,
     planRequired: "pro" as const,
   },
 }
@@ -65,7 +65,7 @@ const PLAN_HIGHLIGHTS = {
     "Unlimited Document Trust Checks",
     "Build a Contract (AI-drafted)",
     "AI Contract Review",
-    "Digital Signature (coming soon)",
+    "Compare Versions & PDF Editor",
   ],
 }
 

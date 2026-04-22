@@ -1,0 +1,291 @@
+PLAINPATH — POLISH / PRODUCT SURFACE WORK PASS
+Mode: polish + UI/product-surface only
+Priority: high
+Risk tolerance: low
+Do not broaden scope. Inspect first, then implement carefully.
+
+OBJECTIVE
+Run a product-surface polish pass across the authenticated app and public-facing surfaces now that PDF Editor core work is closed. This pass is for consistency, clarity, trust, and presentation quality — not new platform architecture.
+
+IMPORTANT RULES
+1. Do NOT change billing, entitlements, Stripe, auth flow, database schema, OCR pipeline, compare engine, or core document-processing logic unless a tiny UI bug fix is absolutely required to complete this pass.
+2. Do NOT remove or rename routes unless explicitly listed below.
+3. Preserve all existing working tool flows.
+4. Prefer surgical edits over refactors.
+5. Keep Document Builder and Contract Builder clearly distinct.
+6. Preserve the standing product language:
+   - “Document Builder” = document creation workspace
+   - “Build a Contract” / “Contract Builder” = AI contract wizard
+7. Maintain desktop-first document-heavy usability. Do not shrink working areas.
+8. If you find a conflict, choose the most user-facing, plain-English wording.
+
+PRIMARY GOAL
+Make PlainPath feel like a finished product surface:
+- consistent names
+- consistent tool descriptions
+- cleaner dashboard
+- stronger trust/support copy
+- consistent empty states
+- clearer saved-work surfaces
+- polished public/app alignment
+- no broken or misleading text
+
+WORK ORDER
+Inspect first, then implement in this order:
+
+==================================================
+PHASE 1 — DASHBOARD / TOOLS SURFACE CONSISTENCY
+==================================================
+
+Audit the authenticated dashboard/home/tools experience and make it product-grade.
+
+Tasks:
+1. Ensure the authenticated dashboard tool cards use fully consistent naming/copy:
+   - Analyze a Document
+   - Document Trust Check
+   - Build a Contract
+   - Contract Review
+   - Redact Sensitive Info
+   - Digital Signature
+   - PDF Editor
+   - Compare Versions
+   - Document Builder
+
+2. Review every tool card subtitle on the dashboard.
+   Make them:
+   - plain English
+   - benefit-first
+   - similar length
+   - non-overlapping
+   - no awkward developer phrasing
+
+3. Make sure the “Workspace” / “Document Builder” area visually fits the rest of the product.
+   It should feel intentional, not like a separate product bolted on.
+
+4. Review “Recent Work” section:
+   - make sure labels, CTA verbs, timestamps, and empty state language are clean
+   - keep the existing logic already built for PDF Editor / Compare Versions / Builder drafts
+   - improve visual hierarchy only if needed
+   - do not regress any recent-work logic
+
+5. Ensure all tool labels match across:
+   - dashboard cards
+   - nav dropdown
+   - My Documents
+   - My Analyses
+   - locked/upgrade states
+   - help widget context
+   - public site tool surfaces
+
+Acceptance for Phase 1:
+- no inconsistent naming remains
+- dashboard reads like one unified product
+- no “Builder” ambiguity between Document Builder and Contract Builder
+
+==================================================
+PHASE 2 — MY DOCUMENTS / MY ANALYSES SURFACE POLISH
+==================================================
+
+Polish saved-work surfaces without changing core behavior.
+
+Tasks:
+1. Review Documents.tsx and MyAnalyses.tsx for:
+   - section headers
+   - subtitles
+   - empty states
+   - footer text
+   - CTA wording
+   - label consistency
+   - metadata readability
+
+2. Make My Documents feel like the canonical saved-work hub for:
+   - uploaded/source documents
+   - PDF Editor sessions
+   - Compare Versions sessions
+   - Document Builder drafts
+
+3. Make My Analyses feel clearly scoped to AI analysis results only.
+   Remove any text that implies it is the master location for all work.
+
+4. Improve empty states so each page tells the user exactly what belongs there and what action to take next.
+
+5. Review metadata wording:
+   - “last updated”
+   - “saved”
+   - “status”
+   - “draft”
+   - “scanned/text/mixed”
+   Keep terminology consistent.
+
+Acceptance for Phase 2:
+- My Documents and My Analyses are clearly differentiated
+- empty states feel intentional and helpful
+- metadata is readable and consistent
+
+==================================================
+PHASE 3 — NAVIGATION / HEADER / PRODUCT LANGUAGE
+==================================================
+
+Polish the product shell.
+
+Tasks:
+1. Review Navbar and any global header/dropdown/menu surfaces.
+2. Confirm “Document Builder” is used everywhere user-facing for the builder workspace.
+3. Confirm “Build a Contract” / “Contract Builder” remains distinct everywhere relevant.
+4. Review top-nav labels for clarity and spacing:
+   - Tools
+   - Document Builder
+   - My Documents
+   - My Analyses
+   - Website
+   - support/account areas
+5. Ensure mobile nav mirrors desktop wording exactly where appropriate.
+6. Look for any leftover stale labels like:
+   - Builder
+   - View Analysis when it should be Analyze / Open Analysis / etc.
+   - internal names exposed to users
+
+Acceptance for Phase 3:
+- user-facing labels are final-quality
+- no ambiguous product naming remains
+- desktop and mobile wording stay in sync
+
+==================================================
+PHASE 4 — LOCKED / UPGRADE / EMPTY / TRUST STATES
+==================================================
+
+Polish all “non-happy-path” user-facing surfaces.
+
+Tasks:
+1. Review locked/upgrade states for Compare Versions, PDF Editor, Contract Builder, and any other gated tools.
+2. Make sure they:
+   - explain the value of the locked tool
+   - use consistent styling
+   - include a clear primary CTA
+   - include a secondary path back to dashboard/tools when appropriate
+   - do not feel like raw placeholder modals or plain text
+
+3. Review zero-state / no-data states across key tools:
+   - PDF Editor
+   - Compare Versions
+   - My Documents
+   - My Analyses
+   - dashboard recent work
+   - any remaining obvious empty-state surfaces
+
+4. Replace any developer-ish copy with user-facing product language.
+
+Acceptance for Phase 4:
+- no raw or awkward gate states remain
+- trust/clarity is improved in every empty or locked surface
+
+==================================================
+PHASE 5 — PUBLIC SITE / APP ALIGNMENT
+==================================================
+
+Now align the public-facing product explanation with the authenticated app.
+
+Tasks:
+1. Audit public marketing/product surfaces that mention tools.
+2. Ensure the visible tool set and naming match the actual authenticated app.
+3. Make sure Compare Versions and PDF Editor are represented clearly as first-class tools.
+4. Make sure Document Builder is explained as a creation workspace, not confused with contract generation.
+5. Review tool descriptions for consistency with the authenticated app cards.
+6. Clean any stale counts or outdated phrasing.
+7. Preserve existing metadata/OG work already completed.
+
+Acceptance for Phase 5:
+- public site and app tell the same product story
+- no tool is missing, mislabeled, or inconsistently described
+
+==================================================
+PHASE 6 — PAGE TITLES / MICROCOPY / FINAL SURFACE SWEEP
+==================================================
+
+Do a final product-language pass.
+
+Tasks:
+1. Verify document.title is correct on all major surfaces touched in previous passes, especially:
+   - Dashboard
+   - My Documents
+   - My Analyses
+   - PDF Editor
+   - Compare Versions
+   - Document Builder
+   - Contract Review
+   - Digital Signature
+   - Redact
+   - Trust Check
+   - Contract Builder
+
+2. Sweep for:
+   - awkward grammar
+   - inconsistent capitalization
+   - missing spaces
+   - stale product terms
+   - duplicate punctuation
+   - “stored only in this browser” language where incorrect
+   - internal/dev wording shown to users
+
+3. Keep copy concise and product-grade. Plain English only.
+
+Acceptance for Phase 6:
+- titles and microcopy feel release-ready
+- no stale or developer-facing text remains in touched surfaces
+
+NON-GOALS
+Do NOT in this pass:
+- add new tools
+- add new routes
+- change billing logic
+- change DB schema
+- rebuild layouts
+- refactor working flows
+- touch compare detection logic
+- touch OCR engine logic except visible wording
+- change export/save implementation
+- change auth/Clerk behavior
+- add security work
+
+FILES/SURFACES TO EXPECT
+Likely relevant, but inspect first:
+- artifacts/plainpath/src/pages/Home.tsx
+- artifacts/plainpath/src/pages/Documents.tsx
+- artifacts/plainpath/src/pages/MyAnalyses.tsx
+- artifacts/plainpath/src/components/layout/Navbar.tsx
+- tool card / config files
+- help/support widget context files
+- public/marketing tool explanation surfaces
+- upgrade / locked-state components
+- page title logic in touched pages
+
+IMPLEMENTATION STANDARD
+- inspect first
+- make small, deliberate edits
+- run TypeScript/build check on changed files
+- verify no regressions in:
+  - Dashboard
+  - My Documents
+  - My Analyses
+  - PDF Editor entry/session
+  - Compare Versions entry/session
+  - Document Builder access
+  - Contract Builder access
+  - public site tool descriptions
+
+DELIVERABLE FORMAT
+After completion, provide a structured report with:
+1. exact files modified
+2. wording changes by surface
+3. any label/name changes made
+4. verification results
+5. anything intentionally deferred
+
+SUCCESS CRITERIA
+At the end of this pass:
+- PlainPath feels like one cohesive product
+- names are stable
+- tool surfaces are aligned
+- saved-work surfaces are clear
+- public/app copy matches
+- no user-facing stale terminology remains

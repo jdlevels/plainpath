@@ -391,7 +391,7 @@ export default function MyAnalyses() {
                 },
                 {
                   icon: BookMarked,
-                  label: "Contract Builder",
+                  label: "Build a Contract",
                   desc: "Generate a professional agreement in minutes by answering plain-English questions.",
                   color: "text-emerald-500",
                   bg: "bg-emerald-50 dark:bg-emerald-950/20",

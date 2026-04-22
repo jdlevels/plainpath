@@ -50,7 +50,7 @@ const TOOL_CONFIG: Record<string, { label: string; icon: React.ElementType; colo
   redact:           { label: "Redacted",           icon: EyeOff,        color: "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300" },
   signature:        { label: "Signature",          icon: FileSignature, color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300" },
   contract_review:  { label: "Contract Review",    icon: Scale,         color: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300" },
-  contract_builder: { label: "Document Builder",   icon: PenLine,       color: "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300" },
+  contract_builder: { label: "Build a Contract",   icon: PenLine,       color: "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300" },
   compare:          { label: "Compare Versions",   icon: GitCompare,    color: "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300" },
 }
 

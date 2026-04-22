@@ -106,7 +106,7 @@ const TOOLS = [
   {
     key: "pdf-editor" as const,
     label: "PDF Editor",
-    desc: "Open any PDF, add text overlays, mask content, reorder pages, and export a clean modified copy.",
+    desc: "Open any PDF, add text overlays, mask content, and export a clean modified copy.",
     icon: FileEdit,
     path: "/pdf-editor",
     color: "text-purple-500 dark:text-purple-400",
@@ -612,7 +612,7 @@ export default function Home() {
                     (() => {
                       const localMeta: Record<string, { icon: ElementType; color: string; href: string; toolLabel: string; cta: string }> = {
                         "redact":           { icon: EyeOff,     color: "text-violet-400",  href: "/redact",         toolLabel: "Redact",          cta: "Open tool →" },
-                        "contract-builder": { icon: PenLine,    color: "text-emerald-400", href: "/build-contract", toolLabel: "Contract Builder", cta: "Continue building →" },
+                        "contract-builder": { icon: PenLine,    color: "text-emerald-400", href: "/build-contract", toolLabel: "Build a Contract", cta: "Continue building →" },
                         "compare":          { icon: GitCompare, color: "text-teal-400",    href: "/compare-versions", toolLabel: "Compare",       cta: "Open tool →" },
                       }
                       const meta = localMeta[item.tool] ?? localMeta["redact"]
@@ -693,7 +693,7 @@ export default function Home() {
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">Your Plan</p>
                   <p className="font-bold text-foreground">
-                    {isAdmin ? "Admin — Full Access" : plan === "pro" ? "Pro — All 6 tools" : plan === "starter" ? "Starter — Analyze + Redact" : "Free"}
+                    {isAdmin ? "Admin — Full Access" : plan === "pro" ? "Pro — All 8 tools" : plan === "starter" ? "Starter — Analyze + Redact" : "Free"}
                   </p>
                   {!plan && !isAdmin && (
                     <p className="text-xs text-muted-foreground mt-0.5">2 free analyses included</p>
