@@ -1,0 +1,96 @@
+Run the FINAL SCREENSHOT PRODUCTION + ASSET PACK PASS for PlainPath.
+
+Objective:
+Produce the real screenshot pack and asset manifest for launch use. This is a capture/export/documentation pass, not a feature-build pass.
+
+Hard rules:
+- Do NOT redesign anything.
+- Do NOT touch working product logic unless a screenshot-blocking visual bug appears.
+- Do NOT change canonical tool names or CTA wording unless a screenshot surface still shows stale copy.
+- Do NOT add dev-only bypasses or temporary hacks.
+- If a surface cannot be captured cleanly because of auth/data state, solve it in a production-safe way only.
+
+Primary goal:
+Create a clean, organized screenshot set for:
+1. marketing/site use
+2. authenticated app/product use
+3. future App Store / Google Play planning
+
+Required screenshot set
+
+A. MARKETING SURFACES
+Capture clean full-resolution screenshots for:
+1. Hero
+2. “Every document situation, covered”
+3. “See PlainPath in action”
+4. Live demos section
+5. “Documents people bring to PlainPath”
+6. FAQ
+7. Pricing
+
+B. AUTHENTICATED APP SURFACES
+Capture clean full-resolution screenshots for:
+8. Dashboard
+9. My Documents
+10. My Analyses
+11. PDF Editor hub
+12. Compare Versions
+13. Document Builder (only if production-valid and visible in this environment)
+
+C. OPTIONAL DETAIL SHOTS
+If they look strong, also capture:
+14. PDF Editor session workspace
+15. Compare Versions session diff view
+16. Document Builder workspace draft view
+
+Capture standards
+- Use consistent browser width and zoom
+- Prefer clean centered framing
+- No dev console, no side panels, no agent output visible
+- No partial scroll cutoffs unless intentionally capturing a section
+- No empty/broken states unless the empty state is itself a target
+- Use data/examples that make the product look real and understandable
+- Make sure no private/sensitive real user data appears
+
+File naming convention
+Export screenshots with a strict naming system:
+
+marketing-01-hero.png
+marketing-02-covered.png
+marketing-03-see-it-in-action.png
+marketing-04-live-demos.png
+marketing-05-common-documents.png
+marketing-06-faq.png
+marketing-07-pricing.png
+
+app-01-dashboard.png
+app-02-my-documents.png
+app-03-my-analyses.png
+app-04-pdf-editor-hub.png
+app-05-compare-versions.png
+app-06-document-builder.png
+
+optional-01-pdf-editor-session.png
+optional-02-compare-session.png
+optional-03-builder-workspace.png
+
+Manifest required
+Create a screenshot manifest/report containing:
+1. filename
+2. surface name
+3. intended use (marketing / app / optional)
+4. what the screenshot demonstrates
+5. whether it is approved for launch deck use
+6. whether it is strong enough for future store listing use
+
+Also include:
+- a “top 5 hero screenshots” shortlist
+- a “best 3 app proof screenshots” shortlist
+- any screenshots that should NOT be used publicly
+
+If a screenshot is weak:
+- either re-capture it
+- or mark it “deferred” with a brief reason
+
+Success standard:
+At the end of this pass, PlainPath should have a clean screenshot asset pack with organized filenames and a manifest, ready for launch-review, pitch/deck usage, website reuse, and future app-store packaging.

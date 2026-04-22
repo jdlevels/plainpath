@@ -245,3 +245,63 @@ id = "GjNKZHISqsZwHjk_YWJnF"
 uri = "file://screenshots/documents-4section-final.jpeg"
 type = "image"
 title = "My Documents — Authenticated 4-Section View (Final)"
+
+[[outputs]]
+id = "yz6NMpCia04kGO6mZPUTw"
+uri = "file://screenshots/asset-pack/marketing-01-hero.jpeg"
+type = "image"
+title = "marketing-01-hero — Hero Section"
+
+[[outputs]]
+id = "hvgNRHD-8IR_F42AWJP7V"
+uri = "file://screenshots/asset-pack/marketing-02-covered.jpeg"
+type = "image"
+title = "marketing-02-covered — Every Document Situation, Covered"
+
+[[outputs]]
+id = "wKLfjHQNIXMqbSmsGyqcT"
+uri = "file://screenshots/asset-pack/marketing-03-see-it-in-action.jpeg"
+type = "image"
+title = "marketing-03-see-it-in-action — Video Walkthrough"
+
+[[outputs]]
+id = "nx-VCnFrEvI2IfRhfYDPc"
+uri = "file://screenshots/asset-pack/marketing-04-live-demos.jpeg"
+type = "image"
+title = "marketing-04-live-demos — Live Demos"
+
+[[outputs]]
+id = "8IPAFlhxqNmDIuaOFkBaM"
+uri = "file://screenshots/asset-pack/marketing-05-common-documents.jpeg"
+type = "image"
+title = "marketing-05-common-documents — Document Situations"
+
+[[outputs]]
+id = "vyUwS5FWhBzKCwGTO2-dc"
+uri = "file://screenshots/asset-pack/marketing-06-faq.jpeg"
+type = "image"
+title = "marketing-06-faq — FAQ"
+
+[[outputs]]
+id = "E847Jlwv-RjjbijOrupK0"
+uri = "file://screenshots/asset-pack/marketing-07-pricing.jpeg"
+type = "image"
+title = "marketing-07-pricing — Pricing"
+
+[[outputs]]
+id = "O7gk6-N4o3cu8pH3SNWVL"
+uri = "file://screenshots/asset-pack/app-02-my-documents.jpeg"
+type = "image"
+title = "app-02-my-documents — My Documents (Authenticated)"
+
+[[outputs]]
+id = "s3dGy1ekhrCn4QHQCy_1G"
+uri = "file://screenshots/asset-pack/optional-01-analyze-session.jpeg"
+type = "image"
+title = "optional-01-analyze-session — Analyze Session (Authenticated)"
+
+[[outputs]]
+id = "-lVp2KqR0O7N2fiaYADPV"
+uri = "file://screenshots/asset-pack/MANIFEST.md"
+type = "text"
+title = "Screenshot Asset Pack Manifest"

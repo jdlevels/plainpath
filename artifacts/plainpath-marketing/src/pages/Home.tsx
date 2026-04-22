@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -748,6 +748,14 @@ export default function Home() {
   const [waitlistPlatform, setWaitlistPlatform] = useState<"ios" | "android" | "both">("both")
   const [billing, setBilling] = useState<"monthly" | "yearly">("monthly")
 
+  useLayoutEffect(() => {
+    const hash = window.location.hash.slice(1)
+    if (hash) {
+      const el = document.getElementById(hash)
+      if (el) el.scrollIntoView({ behavior: "instant" })
+    }
+  }, [])
+
   function openWaitlist(platform: "ios" | "android" | "both") {
     setWaitlistPlatform(platform)
     setWaitlistOpen(true)
@@ -1081,7 +1089,7 @@ export default function Home() {
       {/* ════════════════════════════════════════════════
           VIDEO WALKTHROUGH — dark cinematic
       ════════════════════════════════════════════════ */}
-      <div className="w-full bg-gradient-to-b from-slate-950 via-[#0d1526] to-slate-950 py-20">
+      <div id="walkthrough" className="w-full bg-gradient-to-b from-slate-950 via-[#0d1526] to-slate-950 py-20">
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
           <VideoWalkthrough />
         </div>
@@ -1135,7 +1143,7 @@ export default function Home() {
       {/* ════════════════════════════════════════════════
           DOCUMENT SITUATIONS
       ════════════════════════════════════════════════ */}
-      <div className="w-full bg-gradient-to-br from-slate-200/70 via-blue-100/55 to-indigo-200/65 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900 border-y border-slate-300/55 dark:border-border/40 py-16">
+      <div id="common-documents" className="w-full bg-gradient-to-br from-slate-200/70 via-blue-100/55 to-indigo-200/65 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900 border-y border-slate-300/55 dark:border-border/40 py-16">
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
           <DocumentSituations />
         </div>
@@ -1183,7 +1191,7 @@ export default function Home() {
       {/* ════════════════════════════════════════════════
           FAQ
       ════════════════════════════════════════════════ */}
-      <div className="w-full bg-gradient-to-b from-sky-200/65 via-blue-100/55 to-indigo-200/55 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900 border-y border-sky-300/45 dark:border-border/40 py-16">
+      <div id="faq" className="w-full bg-gradient-to-b from-sky-200/65 via-blue-100/55 to-indigo-200/55 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900 border-y border-sky-300/45 dark:border-border/40 py-16">
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
           <FAQSection />
         </div>
