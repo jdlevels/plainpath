@@ -1,0 +1,52 @@
+Run a TEST-ONLY closure pass for My Documents section-scoped error handling. Do not modify product code unless you can prove a real app bug. The current implementation is considered correct; this pass is only to close the remaining QA methodology gap.
+
+OBJECTIVE
+Close the remaining evidence gap for:
+- D — Compare section fails only
+- E — All sections fail
+- F — Docs retry recovers
+
+KNOWN ISSUE TO FIX IN TEST HARNESS
+Previous Playwright intercept missed the Compare request because:
+- the real request included query params (notably archived=false)
+- the response was served as 304/cached real data before the intercept took effect
+
+RULES
+- No changes to Documents.tsx unless a real reproducible product bug is found
+- Prefer test harness / interception fixes only
+- If all behaviors are confirmed, explicitly mark My Documents error-handling QA CLOSED
+
+TEST HARNESS REQUIREMENTS
+1. Register all route intercepts BEFORE navigating to /documents
+2. Match the full compare request pattern broadly enough to include query strings:
+   - /api/compare-versions/sessions*
+3. Prevent cache-related misses:
+   - use cache-busting on the intercepted request if needed
+   - or force a fresh context / disable browser cache for the test run
+4. Keep auth stable before starting failure scenarios
+5. Capture screenshots for each scenario
+
+SCENARIOS TO RUN
+A. Happy path baseline
+B. Uploaded Documents fails only
+C. PDF Editor fails only
+D. Compare Versions fails only
+E. All sections fail simultaneously
+F. Docs retry recovers after prior docs-only failure
+
+VERIFY FOR EACH
+- unaffected sections still render
+- only failed section shows inline error
+- global red banner appears only when all sections fail
+- empty state does not appear incorrectly
+- Retry only reloads the failed section and clears its error on success
+
+DELIVERABLE
+Return a concise structured report with:
+1. Files modified
+2. Whether any product bug was found
+3. Exact test-harness fix applied
+4. Screenshot-backed result for A–F
+5. Final verdict:
+   - “My Documents section-scoped error handling CLOSED”
+   - or exact remaining blocker
