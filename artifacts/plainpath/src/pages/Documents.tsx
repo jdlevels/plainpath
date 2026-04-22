@@ -341,7 +341,7 @@ export default function Documents() {
     navigate("/signature")
   }
 
-  // ─── PDF Editor session actions ───────────────────────────────────────────
+  // ─── Clause Extractor session actions ────────────────────────────────────
 
   async function handleDeletePdf(id: string) {
     setDeletingPdf(true)

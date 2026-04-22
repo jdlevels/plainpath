@@ -1280,15 +1280,6 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
     } finally { setEnriching(false) }
   }
 
-  // ── Handoff to PDF Editor ──────────────────────────────────────────────────
-  //
-  // Three modes:
-  //   handleHandoff()                        → mode "all" (pass undefined)
-  //   handleHandoff([...selectedIds])        → mode "selected" — user-checked diffs
-  //   handleHandoff([...rejectedIds])        → mode "selected" — review_status==="rejected" diffs
-  //
-  // The backend uses mode:"all" when diffIds is undefined, mode:"selected" when provided.
-
   // ── Reject toggle ──────────────────────────────────────────────────────────
   //
   // REJECTED DIFF RULE:
@@ -1297,13 +1288,6 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
   //   via the existing PATCH /sessions/:id/review endpoint (JSONB passthrough).
   //   Reject is toggled: "rejected" → null → "rejected".
   //   It is independent of severity and multi-select.
-  //
-  //   When the manager clicks "Open rejected in PDF Editor", all items with
-  //   review_status === "rejected" are extracted from the current (in-memory) diffItems
-  //   and passed as diffIds to createHandoff({ mode: "selected", diffIds: [...] }).
-  //   Because diffItems is always kept in sync with the persisted diff_result (loaded
-  //   on mount, updated by polling, saved by handleRejectToggle), this
-  //   correctly reflects the current persisted review state.
 
   function handleRejectToggle(itemId: string) {
     // Compute next state directly so we can persist it immediately.

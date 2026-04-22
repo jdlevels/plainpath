@@ -171,22 +171,7 @@ export const compareVersionsApi = {
     return handleResponse(res);
   },
 
-  // ── Slice 6: Handoff to PDF Editor ──────────────────────────────────────────
-
-  async createHandoff(
-    id: string,
-    diffIds: string[] | undefined,
-    token: string | null,
-  ): Promise<{ handoffId: string; pdfEditorSessionId: string; highlightCount: number }> {
-    const res = await fetch(`/api/compare-versions/sessions/${id}/handoff`, {
-      method: "POST",
-      headers: { ...authHeaders(token), "Content-Type": "application/json" },
-      body: JSON.stringify(diffIds ? { diffIds, mode: "selected" } : { mode: "all" }),
-    });
-    return handleResponse(res);
-  },
-
-  // ── Slice 6: Audit report export ────────────────────────────────────────────
+  // ── Audit report export ──────────────────────────────────────────────────────
 
   exportReportUrl(id: string): string {
     return `/api/compare-versions/sessions/${id}/export`;

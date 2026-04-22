@@ -90,12 +90,6 @@ export function useCompareVersionsApi() {
       [token],
     ),
 
-    createHandoff: useCallback(
-      async (id: string, diffIds?: string[]) =>
-        compareVersionsApi.createHandoff(id, diffIds, await token()),
-      [token],
-    ),
-
     exportReportUrl: compareVersionsApi.exportReportUrl,
   };
 }

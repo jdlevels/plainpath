@@ -1,0 +1,270 @@
+## Replit Prompt — Final Closure Pass
+
+### PlainPath: Clause Extractor & Obligation Tracker
+
+We are now in the **final closure pass** for this replacement.
+
+Your previous verification package was much better and showed real progress. However, this is **not fully accepted yet**.
+
+### Current acceptance status
+
+* Clause Extractor build direction: acceptable
+* V1 extraction scope: acceptable
+* PDF + DOCX direction: acceptable
+* upload → confirm → process → results flow: acceptable
+* CSV export direction: acceptable
+
+### Remaining blockers
+
+1. deferred PDF Editor code still exists
+2. actual UI screenshots were not fully provided as direct evidence
+3. final grep proof is still needed
+4. premium polish is not yet fully proven
+
+This pass is to close those blockers.
+
+---
+
+## Required goals for this pass
+
+You must complete all of the following:
+
+1. **Remove the remaining deferred PDF Editor code**, not just user-visible references
+2. **Provide actual UI screenshots**, not textual descriptions of screenshots
+3. **Provide final grep/audit proof** for all PDF Editor legacy strings
+4. **Confirm premium-quality readiness** of the Clause Extractor UI
+
+---
+
+## 1. Remove the remaining deferred PDF Editor code
+
+Your previous report explicitly said these still existed as deferred dead code:
+
+* `artifacts/api-server/src/routes/pdf-editor/index.ts`
+* `artifacts/api-server/src/lib/pdfObjectStorage.ts`
+* `artifacts/plainpath/src/hooks/usePdfEditorApi.ts`
+
+You also reported code comments referencing old PDF Editor naming in:
+
+* `Documents.tsx`
+* `Home.tsx`
+* `CompareVersionsSession.tsx`
+
+### Required action
+
+Remove or rename all of the above now unless there is a truly unavoidable dependency.
+
+### Return:
+
+For each item, provide:
+
+* file path
+* action taken: removed / renamed / retained
+* exact reason if retained
+* whether user-visible or internal-only
+
+### Acceptance standard
+
+I do **not** want PDF Editor dead code hanging around in a premium product unless there is a clearly justified technical dependency.
+
+---
+
+## 2. Provide actual UI screenshots
+
+I need real screenshots from the live product.
+Do **not** describe the screenshots in text only.
+
+### Required screenshots
+
+#### A. Authenticated tool placement
+
+Show where Clause Extractor & Obligation Tracker appears in the signed-in app:
+
+* tools/dashboard placement
+* tools dropdown or tool cards if applicable
+
+#### B. Public/demo placement
+
+Show where it appears in the public site/demo flow if applicable.
+
+#### C. Upload idle state
+
+Show:
+
+* upload area
+* accepted file types visible
+* layout width/readability
+
+#### D. File selected pre-run confirmation state
+
+Show:
+
+* selected file card
+* remove/X control
+* explicit CTA button
+* confirmation state before processing begins
+
+#### E. Processing state
+
+Show:
+
+* extraction running
+* loading/progress state
+* any document-aware UI if present
+
+#### F. Final results state
+
+Show the actual results UI with these sections visible:
+
+* Key Dates
+* Parties
+* Financial Terms
+* Legal Clauses
+* Obligations
+* Missing / Not Found
+
+Also clearly show:
+
+* Copy action
+* CSV export action
+
+### Important
+
+These must be actual screenshots, not bullet descriptions of what the screenshots would show.
+
+---
+
+## 3. Final grep / audit proof
+
+Run a final search across the codebase for all legacy PDF Editor strings.
+
+### Search terms
+
+* `PDF Editor`
+* `pdf editor`
+* `pdf-editor`
+* `FileEdit`
+* `edit pdf`
+* `pdf editing`
+* `usePdfEditorApi`
+
+### Return results in two groups
+
+#### A. User-visible matches
+
+Must be:
+
+* exact matched text
+* file path
+* line/reference if possible
+* fixed or still remaining
+
+#### B. Internal-only matches
+
+Must be:
+
+* exact matched text
+* file path
+* why it still exists
+* whether it will be removed now
+
+### Acceptance standard
+
+* **User-visible matches must be zero**
+* **Internal-only matches should ideally be zero**
+* If any internal-only matches remain, justify them explicitly
+
+---
+
+## 4. Premium product polish review
+
+Now that the functional pieces are in place, I need a final premium-quality review based on the actual live UI.
+
+### Rate each category:
+
+* PASS
+* PARTIAL
+* FAIL
+
+### Categories
+
+1. layout/readability
+2. results hierarchy
+3. export usability
+4. legal/professional tone
+5. trustworthiness of the interface
+6. distinction from other tools
+7. overall polish
+
+For each category provide:
+
+* rating
+* short explanation
+* exact file(s) needing improvement if not PASS
+
+### Also answer directly:
+
+Does the Clause Extractor currently feel like:
+
+* premium contract intelligence / obligation management software
+
+Or does any part still feel:
+
+* too generic
+* too cramped
+* too consumer/basic
+* too prototype-like
+* too similar to Analyze a Document
+
+Be direct.
+
+---
+
+## 5. Final route cleanup confirmation
+
+List every old PDF Editor route and confirm its final state.
+
+For each route provide:
+
+* old path
+* current behavior
+* removed or redirected
+* safe for production: YES / NO
+
+Also confirm:
+
+* no broken links
+* no dead nav items
+* no orphan demo links
+* no pricing references left behind
+
+---
+
+## 6. Final acceptance checklist
+
+End with this exact checklist:
+
+* Deferred PDF Editor code removed: PASS / FAIL
+* No user-visible PDF Editor copy remains: PASS / FAIL
+* Internal PDF Editor leftovers removed or justified: PASS / FAIL
+* Authenticated placement screenshot provided: PASS / FAIL
+* Public/demo placement screenshot provided: PASS / FAIL
+* Upload/pre-run/processing/results screenshots provided: PASS / FAIL
+* Copy and CSV export visibly confirmed: PASS / FAIL
+* Routes/nav fully cleaned: PASS / FAIL
+* Premium quality bar met: PASS / FAIL
+* Ready for next launch/store-readiness pass: PASS / FAIL
+
+If any item is FAIL, list the exact blockers directly underneath it.
+
+---
+
+## Constraints
+
+* Do **not** give another general summary
+* Do **not** say “mostly done”
+* Do **not** substitute screenshot descriptions for screenshots
+* Do **not** leave deferred PDF Editor code without explicit explanation
+* Be exact and production-oriented
+
+This is the final closure pass before we decide whether PlainPath can move into the next launch/store-readiness review.
