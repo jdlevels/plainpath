@@ -16,7 +16,7 @@ import {
   Clock, ListChecks, RefreshCw, Scan,
   ChevronRight, Plus, Trash2, Link2, Pencil,
   ChevronDown as ChevDown,
-  Sparkles, Download, ExternalLink, Square, CheckSquare, XCircle, MousePointerClick,
+  Sparkles, Download, XCircle,
 } from "lucide-react"
 import { useEntitlements } from "@/hooks/useEntitlements"
 import { useCompareVersionsApi } from "@/hooks/useCompareVersionsApi"
@@ -468,8 +468,6 @@ function SummaryPanel({
   onSelectItem, onHoverItem, onLeaveItem,
   onSeverityChange,
   linkedNoteIds,
-  handoffSelectedIds,
-  onToggleHandoffSelect,
   onRejectToggle,
 }: {
   open: boolean
@@ -481,8 +479,6 @@ function SummaryPanel({
   onLeaveItem: () => void
   onSeverityChange: (itemId: string, sev: CVDiffSeverity) => void
   linkedNoteIds: Set<string>
-  handoffSelectedIds: Set<string>
-  onToggleHandoffSelect: (id: string) => void
   onRejectToggle: (id: string) => void
 }) {
   const [sevFilter, setSevFilter] = useState<SevFilter>("all")
@@ -572,12 +568,6 @@ function SummaryPanel({
           {stats.total > 0 && (
             <span className="text-[10px] text-muted-foreground font-mono hidden sm:block">
               · {stats.total} change{stats.total !== 1 ? "s" : ""}
-            </span>
-          )}
-          {/* Live selected / rejected counts */}
-          {handoffSelectedIds.size > 0 && (
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300">
-              {handoffSelectedIds.size} selected
             </span>
           )}
           {diffItems.filter((i) => i.review_status === "rejected").length > 0 && (
@@ -694,7 +684,6 @@ function SummaryPanel({
               const preview = (item.revised_text ?? item.original_text ?? "").slice(0, 80)
               const hasLinkedNote = linkedNoteIds.has(item.id)
 
-              const isHandoffChecked = handoffSelectedIds.has(item.id)
               const isRejected = item.review_status === "rejected"
 
               return (
@@ -715,18 +704,6 @@ function SummaryPanel({
                   <div className={`w-0.5 flex-shrink-0 rounded-l ${
                     isRejected ? "bg-red-400" : isSelected ? "bg-violet-500" : "bg-transparent"
                   }`} />
-
-                  {/* Handoff checkbox — transient selection for one-time handoff */}
-                  <button
-                    onClick={(e) => { e.stopPropagation(); onToggleHandoffSelect(item.id) }}
-                    title={isHandoffChecked ? "Remove from handoff selection" : "Add to handoff selection"}
-                    aria-label={isHandoffChecked ? "Remove from handoff selection" : "Add to handoff selection"}
-                    className="flex items-center px-2 text-muted-foreground hover:text-teal-600 dark:hover:text-teal-400 flex-shrink-0 transition-colors"
-                  >
-                    {isHandoffChecked
-                      ? <CheckSquare className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
-                      : <Square className="w-3.5 h-3.5" />}
-                  </button>
 
                   <button
                     onClick={() => onSelectItem(item.id)}
@@ -780,7 +757,7 @@ function SummaryPanel({
                   {/* Reject toggle */}
                   <button
                     onClick={(e) => { e.stopPropagation(); onRejectToggle(item.id) }}
-                    title={isRejected ? "Un-reject this change" : "Mark as rejected (needs action in PDF Editor)"}
+                    title={isRejected ? "Un-reject this change" : "Mark as rejected"}
                     aria-label={isRejected ? "Un-reject this change" : "Mark as rejected"}
                     className={`flex items-center px-1.5 flex-shrink-0 transition-colors ${
                       isRejected
@@ -1164,15 +1141,9 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
   const [revisedError, setRevisedError] = useState<string | null>(null)
   const [rescanning, setRescanning] = useState(false)
   const [enriching, setEnriching] = useState(false)
-  const [handoffLoading, setHandoffLoading] = useState(false)
-
   const [activeTab, setActiveTab] = useState<"original" | "revised">("original")
   const [summaryOpen, setSummaryOpen] = useState(false)
   const [notesOpen, setNotesOpen] = useState(false)
-
-  // ── Handoff multi-select (transient — not persisted) ──────────────────────
-  // Set of diff IDs the user has checked for selective handoff.
-  const [handoffSelectedIds, setHandoffSelectedIds] = useState<Set<string>>(new Set())
 
   const [jumpOrigPage, setJumpOrigPage] = useState<number | null>(null)
   const [jumpRevPage, setJumpRevPage] = useState<number | null>(null)
@@ -1317,30 +1288,6 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
   //   handleHandoff([...rejectedIds])        → mode "selected" — review_status==="rejected" diffs
   //
   // The backend uses mode:"all" when diffIds is undefined, mode:"selected" when provided.
-
-  async function handleHandoff(diffIds?: string[]) {
-    if (!session || handoffLoading || session.status !== "complete") return
-    setHandoffLoading(true)
-    try {
-      const result = await api.createHandoff(session.id, diffIds)
-      navigate(`/pdf-editor/${result.pdfEditorSessionId}?fromCompare=1&handoffId=${result.handoffId}`)
-    } catch (err: any) {
-      console.error("[CompareVersions] handoff failed:", err)
-    } finally {
-      setHandoffLoading(false)
-    }
-  }
-
-  // ── Handoff multi-select toggle ────────────────────────────────────────────
-
-  function toggleHandoffSelect(id: string) {
-    setHandoffSelectedIds((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }
 
   // ── Reject toggle ──────────────────────────────────────────────────────────
   //
@@ -1515,10 +1462,6 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
   // Current diff stats from local (possibly overridden) items
   const highCount    = diffItems.filter((i) => i.severity === "high").length
   const totalCount   = diffItems.length
-  // Rejected diff IDs — derived from persisted review_status field in current diffItems
-  const rejectedDiffIds = diffItems.filter((i) => i.review_status === "rejected").map((i) => i.id)
-  const rejectedCount   = rejectedDiffIds.length
-  const selectedCount   = handoffSelectedIds.size
 
   // ── Workspace ─────────────────────────────────────────────────────────────
 
@@ -1619,62 +1562,6 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
             </button>
           )}
 
-          {/* Slice 6: PDF Editor handoff group — All / Selected / Rejected */}
-          {session.status === "complete" && (
-            <div className="flex items-center gap-1 border border-teal-300/50 dark:border-teal-700/40 rounded-lg overflow-hidden">
-              {/* Open selected diffs — enabled only when checkboxes checked */}
-              <button
-                onClick={() => handleHandoff([...handoffSelectedIds])}
-                disabled={handoffLoading || selectedCount === 0}
-                title={
-                  selectedCount === 0
-                    ? "Check diffs in the Summary panel to enable"
-                    : `Open ${selectedCount} selected diff${selectedCount === 1 ? "" : "s"} in PDF Editor`
-                }
-                aria-label={selectedCount === 0 ? "Open selected diffs in PDF Editor (none selected)" : `Open ${selectedCount} selected diff${selectedCount === 1 ? "" : "s"} in PDF Editor`}
-                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-teal-700 dark:text-teal-300 hover:bg-teal-50/60 dark:hover:bg-teal-950/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                <MousePointerClick className="w-3.5 h-3.5 flex-shrink-0" />
-                <span className="hidden sm:inline">
-                  {selectedCount > 0 ? `${selectedCount} selected` : "Selected"}
-                </span>
-              </button>
-
-              <div className="w-px h-5 bg-teal-200/60 dark:bg-teal-700/40 flex-shrink-0" />
-
-              {/* Open rejected diffs — enabled only when items are rejected */}
-              <button
-                onClick={() => handleHandoff(rejectedDiffIds)}
-                disabled={handoffLoading || rejectedCount === 0}
-                title={
-                  rejectedCount === 0
-                    ? "Mark diffs as rejected in the Summary panel to enable"
-                    : `Open ${rejectedCount} rejected diff${rejectedCount === 1 ? "" : "s"} in PDF Editor`
-                }
-                aria-label={rejectedCount === 0 ? "Open rejected diffs in PDF Editor (none rejected)" : `Open ${rejectedCount} rejected diff${rejectedCount === 1 ? "" : "s"} in PDF Editor`}
-                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50/60 dark:hover:bg-red-950/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                <XCircle className="w-3.5 h-3.5 flex-shrink-0" />
-                <span className="hidden sm:inline">
-                  {rejectedCount > 0 ? `${rejectedCount} rejected` : "Rejected"}
-                </span>
-              </button>
-
-              <div className="w-px h-5 bg-teal-200/60 dark:bg-teal-700/40 flex-shrink-0" />
-
-              {/* Open all diffs — always available */}
-              <button
-                onClick={() => handleHandoff()}
-                disabled={handoffLoading}
-                title="Open all diffs in PDF Editor (all highlights)"
-                aria-label="Open all diffs in PDF Editor"
-                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-teal-700 dark:text-teal-300 hover:bg-teal-50/60 dark:hover:bg-teal-950/30 transition-colors disabled:opacity-50"
-              >
-                {handoffLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ExternalLink className="w-3.5 h-3.5" />}
-                <span className="hidden sm:inline">All</span>
-              </button>
-            </div>
-          )}
 
           <button
             onClick={() => { setSummaryOpen((o) => !o); if (notesOpen) setNotesOpen(false) }}
@@ -1832,8 +1719,6 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
         onLeaveItem={() => setHoveredItemIds([])}
         onSeverityChange={handleSeverityChange}
         linkedNoteIds={linkedNoteIds}
-        handoffSelectedIds={handoffSelectedIds}
-        onToggleHandoffSelect={toggleHandoffSelect}
         onRejectToggle={handleRejectToggle}
       />
     </div>

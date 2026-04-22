@@ -26,7 +26,7 @@ const PLAN_CONFIG: Record<PlanKey, { name: string; amount: number; description: 
   pro: {
     name: "PlainPath Pro",
     amount: 1999,
-    description: "All tools: Analyze, Trust Check, Contract Builder, Contract Review, Redact, Compare Versions, and PDF Editor.",
+    description: "All tools: Analyze, Trust Check, Contract Builder, Contract Review, Redact, Compare Versions, and Clause Extractor.",
   },
 }
 

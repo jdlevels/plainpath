@@ -1,0 +1,338 @@
+## Replit Prompt — Verification Pass with Premium Product Standard
+### PlainPath: Clause Extractor & Obligation Tracker
+
+We are now in verification, cleanup, and premium-quality review mode.
+
+### Locked decisions
+- Billing is not the priority.
+- PDF Editor is permanently removed.
+- Do not revisit or defend the old PDF Editor.
+- The replacement tool is:
+  Clause Extractor & Obligation Tracker
+
+### Important
+Your last update showed implementation activity, but it did not provide the full verification evidence required for acceptance.
+
+This pass is not another build summary.
+This pass is a proof and audit pass.
+
+# Primary goal
+
+Provide a complete verification package proving that:
+
+1. the old PDF Editor is fully removed,
+2. the new Clause Extractor & Obligation Tracker is fully integrated,
+3. all misleading PDF Editor references are gone,
+4. the new tool is visually and functionally positioned as a premium product feature,
+5. the app is ready to move toward launch/store-readiness after any remaining blockers are addressed.
+
+# Premium standard
+
+Treat this as a premium legal/workflow product, not a basic extraction widget.
+
+The tool should feel like:
+- contract intelligence
+- obligation management
+- business/legal operations software
+
+It should not feel like:
+- a generic AI uploader
+- a renamed Analyze tool
+- a rough internal prototype
+
+Use this quality bar when reviewing and reporting:
+
+- document-first layout
+- wide readable workspace
+- structured professional outputs
+- clear hierarchy
+- strong missing-state handling
+- clean export actions
+- polished product copy
+- high-trust visual design
+- clear distinction from other PlainPath tools
+
+# Required response format
+
+Return your answer in the exact structure below.
+
+## 1. PDF Editor removal report
+
+Provide the exact files, routes, and references removed, replaced, or disabled.
+
+### A. Frontend removals
+Include:
+- page files removed
+- route definitions removed
+- nav entries removed
+- tool card entries removed
+- demo page entries removed
+- CTA buttons removed
+- helper text / tooltips / empty-state copy removed
+- pricing/features/marketing references removed
+
+### B. Backend removals
+Include:
+- API endpoints removed
+- services/processors removed
+- utilities removed
+- schemas/types removed
+- import references removed
+- conditionals/feature flags removed
+
+### C. Shared cleanup
+Include:
+- components deleted
+- hooks deleted
+- types/interfaces deleted
+- constants/config entries deleted
+- any dead code intentionally deferred
+
+For each item provide:
+- file path
+- action taken: removed / replaced / refactored / deprecated
+- short explanation
+
+## 2. Clause Extractor integration report
+
+Provide the exact files and routes created or modified for the new tool.
+
+### A. Frontend
+Include:
+- main page file
+- route registration
+- dashboard/tool grid placement
+- public/demo placement
+- upload/pre-run UI
+- processing state UI
+- structured results UI
+- copy/export UI
+
+### B. Backend
+Include:
+- upload handling
+- PDF support
+- Word doc support
+- extraction pipeline
+- normalization logic
+- CSV export logic
+- persistence/session storage if used
+- data schema/model if used
+
+For each item provide:
+- file path
+- purpose
+- new or modified
+
+## 3. Actual UI screenshots
+
+Provide real screenshots of the live UI, not logs.
+
+### A. Tool placement
+Show where Clause Extractor & Obligation Tracker appears in:
+- authenticated tools/dashboard
+- any tools/cards page
+- any public/demo listing if applicable
+
+### B. Upload / pre-run state
+Show:
+- PDF upload option
+- Word upload option
+- pre-run confirmation state
+- remove/X control before processing
+- clear primary action button
+
+### C. Processing state
+Show:
+- loading/progress state
+- extraction in progress
+- document-aware UI if present
+
+### D. Final results view
+Show one complete result example with visible sections for:
+- Key Dates
+- Parties
+- Financial Terms
+- Legal Clauses
+- Obligations
+- Missing / Not Found
+
+Also visibly show:
+- copy actions
+- CSV export action
+- overall layout/readability
+
+## 4. V1 extraction scope confirmation
+
+State exactly what V1 extracts today.
+
+Use this structure:
+
+### Supported in V1
+- Key Dates:
+  - ...
+- Parties:
+  - ...
+- Financial Terms:
+  - ...
+- Legal Clauses:
+  - ...
+- Obligations:
+  - ...
+- Missing / Not Found:
+  - ...
+
+### Not yet supported in V1
+List anything not implemented.
+
+### Limitations
+List current extraction or formatting limitations.
+
+### File support confirmation
+State explicitly whether these are supported in production now:
+- PDF: YES / NO
+- Word (.doc/.docx): YES / NO
+
+If Word is not truly working end-to-end, say so directly.
+
+## 5. Distinction audit against other tools
+
+Confirm how this tool is clearly distinct from:
+
+- Analyze a Document
+- Document Trust Check
+- Build a Contract
+- Contract Review / Fair Deal
+- Compare Versions
+
+For each one, provide:
+- one-line functional distinction
+- one-line UI/UX distinction if applicable
+
+## 6. Misleading copy audit
+
+Search the codebase and report whether any of the following still exist:
+
+- PDF Editor
+- FileEdit
+- edit pdf
+- pdf editing
+- pdf editor
+
+Check all of these surfaces:
+- authenticated app
+- public site
+- pricing
+- features list
+- help content
+- FAQs
+- marketing copy
+- tooltips
+- empty states
+- tool cards
+- demo entries
+- metadata/title strings
+- route labels
+- internal fallback labels visible in UI
+
+Return:
+
+### A. Confirmed removed/replaced
+List all occurrences found and fixed.
+
+### B. Still remaining
+List any remaining occurrences with:
+- exact text
+- exact file path
+- whether user-visible or internal-only
+
+### C. Temporary placeholders
+List anything intentionally deferred.
+
+## 7. Route and navigation audit
+
+List every old PDF Editor route and its current status.
+
+For each old route provide:
+- old path
+- current behavior
+- redirect destination if any
+- safe for production: YES / NO
+
+Also confirm:
+- no broken links
+- no dead nav items
+- no orphan demo links
+- no stale pricing references
+
+## 8. Premium product quality review
+
+Review the current implementation against a premium standard.
+
+Rate each category:
+- PASS
+- PARTIAL
+- FAIL
+
+### Categories
+1. layout/readability
+2. results presentation
+3. export usability
+4. legal/professional tone
+5. distinction from other tools
+6. trustworthiness of the UI
+7. overall polish
+
+For each category:
+- rating
+- short explanation
+- exact files likely needing improvement if not PASS
+
+Also identify any parts that still feel:
+- too generic
+- too cramped
+- too consumer/basic
+- too similar to existing tools
+- too prototype-like
+
+## 9. Acceptance checklist
+
+End with this exact pass/fail checklist:
+
+- PDF Editor fully removed: PASS / FAIL
+- Clause Extractor fully integrated: PASS / FAIL
+- PDF accepted: PASS / FAIL
+- Word accepted: PASS / FAIL
+- Required V1 sections visible: PASS / FAIL
+- Copy/export including CSV present: PASS / FAIL
+- No misleading PDF Editor copy remains: PASS / FAIL
+- Routes/nav cleaned: PASS / FAIL
+- Premium quality bar met: PASS / FAIL
+- Ready for next launch/store-readiness pass: PASS / FAIL
+
+If any item is FAIL, list the blockers directly under it.
+
+# Constraints
+
+- Do not give a vague summary.
+- Do not say “mostly done.”
+- Do not omit file paths.
+- Do not omit screenshots.
+- Do not omit blockers.
+- Do not replace evidence with narrative.
+- Be exact and production-oriented.
+
+# Acceptance standard
+
+This pass is not complete unless all of the following are proven:
+
+1. zero visible PDF Editor references remain
+2. old PDF Editor routes are removed or safely redirected
+3. Clause Extractor appears as a first-class tool
+4. PDF and Word support are explicitly confirmed
+5. upload state follows PlainPath’s pre-run confirmation pattern
+6. results are structured and readable
+7. CSV export is visible and real
+8. the tool is clearly distinct from Analyze a Document
+9. no dead cards/demo/pricing/help references remain
+10. the UI is credible as a premium legal/workflow product

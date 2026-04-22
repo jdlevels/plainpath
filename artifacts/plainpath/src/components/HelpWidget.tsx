@@ -63,11 +63,11 @@ const PAGE_ACTIONS: Record<string, { label: string; message: string }[]> = {
     { label: "How do I use manager notes?", message: "How do I use the Manager Notes and Watchlist in Compare Versions?" },
     { label: "How do I open a session?", message: "How do I reopen a previous comparison session?" },
   ],
-  "/pdf-editor": [
-    { label: "What can I do here?", message: "What can I do with the PDF Editor? What kinds of edits are supported?" },
-    { label: "How do sessions work?", message: "How do PDF Editor sessions work? Are my edits saved automatically?" },
-    { label: "How do I download?", message: "How do I download my edited PDF when I'm done?" },
-    { label: "What file size is allowed?", message: "What is the maximum file size for the PDF Editor?" },
+  "/clause-extractor": [
+    { label: "What does it extract?", message: "What does the Clause Extractor pull from a contract? What sections does it identify?" },
+    { label: "What file types work?", message: "What file types does Clause Extractor support? Can I upload a Word document?" },
+    { label: "How do I export results?", message: "How do I copy or export the Clause Extractor results? Is there a CSV export?" },
+    { label: "How does it handle missing fields?", message: "What happens when the Clause Extractor can't find a field like a termination clause or expiration date?" },
   ],
   "/redact": [
     { label: "What gets detected?", message: "What types of personal information does the Redact tool automatically detect?" },
@@ -101,7 +101,7 @@ const PAGE_CONTEXT_LABELS: Record<string, string> = {
   "/subscribe": "Subscribe / Pricing page — the user is reviewing plan options",
   "/support": "Support page — the user is looking for help or contact information",
   "/compare-versions": "Compare Versions page — the user is uploading two PDF versions to compare changes, or reviewing a previous comparison session",
-  "/pdf-editor": "PDF Editor page — the user is uploading a PDF to add text overlays, mask sensitive content, highlight sections, reorder pages, and export a clean modified copy",
+  "/clause-extractor": "Clause Extractor page — the user is uploading a PDF or DOCX contract to extract key dates, parties, financial terms, legal clauses, and obligations in a structured format",
   "/redact": "Redact Sensitive Info page — the user is reviewing and removing personally identifiable information from a document before sharing it",
   "/build-contract": "Build a Contract page — the user is creating a legal document using a multi-step guided wizard covering contract type, parties, scope, payment, and protections",
 }

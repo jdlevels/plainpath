@@ -6,7 +6,7 @@ import {
   Upload, FileText, ListChecks, Calendar, Users, DollarSign,
   Gavel, AlertTriangle, CheckCircle2, XCircle, Clock, ChevronDown,
   ChevronUp, Trash2, ArrowLeft, Loader2, AlertCircle,
-  RefreshCw,
+  RefreshCw, Copy, Download, Check, FileType2,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -17,6 +17,7 @@ import type {
   ClauseExtractionResults,
   ClausePresence,
 } from "@/lib/clauseExtractorTypes"
+
 /* ─── Helpers ─────────────────────────────────────────────── */
 function fmtBytes(b: number) {
   if (b < 1024) return `${b} B`
@@ -35,10 +36,105 @@ const CLAUSE_LABELS: Record<string, string> = {
   disputeResolution: "Dispute Resolution",
 }
 
+/* ─── Copy hook ────────────────────────────────────────────── */
+function useCopy() {
+  const [copied, setCopied] = useState(false)
+  const copy = useCallback((text: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }, [])
+  return { copied, copy }
+}
+
+/* ─── Export helpers ────────────────────────────────────────── */
+function buildSummaryText(session: ClauseExtractorSessionDetail): string {
+  const r = session.results!
+  const lines: string[] = [
+    `Clause Extractor — ${session.fileName}`,
+    `Document type: ${r.documentType ?? "Unknown"}`,
+    `Extraction confidence: ${r.extractionConfidence}`,
+    "",
+  ]
+
+  lines.push("=== KEY DATES ===")
+  const kd = r.keyDates
+  if (kd.effectiveDate) lines.push(`Effective date: ${kd.effectiveDate}`)
+  if (kd.executionDate) lines.push(`Execution date: ${kd.executionDate}`)
+  if (kd.expirationDate) lines.push(`Expiration date: ${kd.expirationDate}`)
+  if (kd.renewalDate) lines.push(`Renewal date: ${kd.renewalDate}`)
+  if (kd.noticeDeadline) lines.push(`Notice deadline: ${kd.noticeDeadline}`)
+  if (kd.noticePeriod) lines.push(`Notice period: ${kd.noticePeriod}`)
+  lines.push("")
+
+  lines.push("=== PARTIES ===")
+  r.parties.forEach(p => {
+    lines.push(`${p.name} — ${p.role ?? p.type}${p.isSigner ? " (Signer)" : ""}`)
+  })
+  lines.push("")
+
+  lines.push("=== FINANCIAL TERMS ===")
+  const ft = r.financialTerms
+  if (ft.paymentAmount) lines.push(`Payment amount: ${ft.paymentAmount}`)
+  if (ft.paymentSchedule) lines.push(`Payment schedule: ${ft.paymentSchedule}`)
+  if (ft.lateFees) lines.push(`Late fees: ${ft.lateFees}`)
+  if (ft.refundLanguage) lines.push(`Refund language: ${ft.refundLanguage}`)
+  ft.otherTerms.forEach(t => lines.push(`Other: ${t}`))
+  lines.push("")
+
+  lines.push("=== LEGAL CLAUSES ===")
+  Object.entries(r.legalClauses).forEach(([key, clause]) => {
+    const label = CLAUSE_LABELS[key] ?? key
+    if ((clause as ClausePresence).present) {
+      lines.push(`✓ ${label}: ${(clause as ClausePresence).summary ?? ""}`)
+    } else {
+      lines.push(`✗ ${label}: Not present`)
+    }
+  })
+  lines.push("")
+
+  lines.push("=== OBLIGATIONS ===")
+  r.obligations.forEach((ob, i) => {
+    lines.push(`${i + 1}. [${ob.party ?? ""}] ${ob.obligation}`)
+    if (ob.deadline) lines.push(`   Deadline: ${ob.deadline}`)
+    if (ob.consequence) lines.push(`   Consequence: ${ob.consequence}`)
+  })
+  lines.push("")
+
+  if (r.missingFields.length > 0) {
+    lines.push("=== NOT FOUND ===")
+    r.missingFields.forEach(f => lines.push(`• ${f}`))
+  }
+
+  return lines.join("\n")
+}
+
+function exportObligationsCSV(session: ClauseExtractorSessionDetail) {
+  const r = session.results!
+  const header = ["#", "Party", "Obligation", "Deadline", "Consequence"]
+  const rows = r.obligations.map((ob, i) => [
+    String(i + 1),
+    ob.party ?? "",
+    `"${ob.obligation.replace(/"/g, '""')}"`,
+    ob.deadline ?? "",
+    ob.consequence ? `"${ob.consequence.replace(/"/g, '""')}"` : "",
+  ])
+  const csv = [header, ...rows].map(r => r.join(",")).join("\n")
+  const blob = new Blob([csv], { type: "text/csv" })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement("a")
+  a.href = url
+  const baseName = session.fileName.replace(/\.[^.]+$/, "")
+  a.download = `${baseName}-obligations.csv`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 /* ─── Sub-components ───────────────────────────────────────── */
 function SectionHeader({ icon: Icon, label, color }: { icon: any; label: string; color: string }) {
   return (
-    <div className={`flex items-center gap-2 mb-3`}>
+    <div className="flex items-center gap-2 mb-3">
       <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${color}`}>
         <Icon className="w-3.5 h-3.5" />
       </div>
@@ -148,6 +244,7 @@ function ResultsPanel({
   onDelete: () => void
 }) {
   const [, setLocation] = useLocation()
+  const { copied, copy } = useCopy()
   const r = session.results!
 
   const confidenceColor =
@@ -186,14 +283,38 @@ function ResultsPanel({
             <span className="text-[11px] text-muted-foreground">{fmtBytes(session.fileSizeBytes)}</span>
           </div>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onDelete}
-          className="text-muted-foreground hover:text-rose-500 shrink-0"
-        >
-          <Trash2 className="w-3.5 h-3.5" />
-        </Button>
+
+        {/* Export actions */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 px-2.5 text-xs gap-1.5"
+            onClick={() => copy(buildSummaryText(session))}
+          >
+            {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+            <span className="hidden sm:inline">{copied ? "Copied" : "Copy"}</span>
+          </Button>
+          {r.obligations.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 px-2.5 text-xs gap-1.5"
+              onClick={() => exportObligationsCSV(session)}
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">CSV</span>
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2.5 text-muted-foreground hover:text-rose-500"
+            onClick={onDelete}
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </Button>
+        </div>
       </div>
 
       {/* Key Dates */}
@@ -272,7 +393,15 @@ function ResultsPanel({
       {/* Obligations */}
       {r.obligations.length > 0 && (
         <Card className="p-4 rounded-2xl border border-border/50">
-          <SectionHeader icon={ListChecks} label={`Obligations (${r.obligations.length})`} color="bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400" />
+          <div className="flex items-center justify-between mb-3">
+            <SectionHeader icon={ListChecks} label={`Obligations (${r.obligations.length})`} color="bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400" />
+            <button
+              onClick={() => exportObligationsCSV(session)}
+              className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors -mt-3"
+            >
+              <Download className="w-3 h-3" /> Export CSV
+            </button>
+          </div>
           <div className="space-y-2">
             {r.obligations.map((ob, i) => (
               <ObligationCard key={i} ob={ob} i={i} />
@@ -299,14 +428,17 @@ function ResultsPanel({
 }
 
 /* ─── Upload / entry point ──────────────────────────────────── */
+type UploadStage = "idle" | "selected" | "uploading"
+
 function UploadView({ onUploaded }: { onUploaded: (s: ClauseExtractorSessionDetail) => void }) {
   const { getToken } = useAuth()
+  const [stage, setStage] = useState<UploadStage>("idle")
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [dragging, setDragging] = useState(false)
-  const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const handleFile = useCallback(async (file: File) => {
+  const validateAndSelect = useCallback((file: File) => {
     const ext = file.name.split(".").pop()?.toLowerCase()
     if (!ext || !["pdf", "docx"].includes(ext)) {
       setError("Only PDF and DOCX files are supported.")
@@ -317,24 +449,37 @@ function UploadView({ onUploaded }: { onUploaded: (s: ClauseExtractorSessionDeta
       return
     }
     setError(null)
-    setUploading(true)
+    setSelectedFile(file)
+    setStage("selected")
+  }, [])
+
+  const handleExtract = useCallback(async () => {
+    if (!selectedFile) return
+    setError(null)
+    setStage("uploading")
     try {
       const token = await getToken().catch(() => null)
-      const session = await clauseExtractorApi.createSession(file, token)
+      const session = await clauseExtractorApi.createSession(selectedFile, token)
       onUploaded(session)
     } catch (e: any) {
       setError(e.message || "Upload failed. Please try again.")
-    } finally {
-      setUploading(false)
+      setStage("selected")
     }
-  }, [getToken, onUploaded])
+  }, [selectedFile, getToken, onUploaded])
+
+  const clearFile = useCallback(() => {
+    setSelectedFile(null)
+    setStage("idle")
+    setError(null)
+    if (inputRef.current) inputRef.current.value = ""
+  }, [])
 
   const onDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     setDragging(false)
     const file = e.dataTransfer.files[0]
-    if (file) handleFile(file)
-  }, [handleFile])
+    if (file) validateAndSelect(file)
+  }, [validateAndSelect])
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -345,47 +490,98 @@ function UploadView({ onUploaded }: { onUploaded: (s: ClauseExtractorSessionDeta
         </p>
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className={`relative border-2 border-dashed rounded-2xl p-10 text-center cursor-pointer transition-colors ${
-          dragging
-            ? "border-purple-400 bg-purple-50/60 dark:bg-purple-950/20"
-            : "border-border/60 hover:border-purple-400/60 hover:bg-muted/40"
-        }`}
-        onClick={() => !uploading && inputRef.current?.click()}
-        onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
-        onDragLeave={() => setDragging(false)}
-        onDrop={onDrop}
-      >
-        <input
-          ref={inputRef}
-          type="file"
-          accept=".pdf,.docx"
-          className="hidden"
-          onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f) }}
-        />
+      <input
+        ref={inputRef}
+        type="file"
+        accept=".pdf,.docx"
+        className="hidden"
+        onChange={(e) => { const f = e.target.files?.[0]; if (f) validateAndSelect(f) }}
+      />
 
-        {uploading ? (
-          <div className="flex flex-col items-center gap-3">
-            <Loader2 className="w-10 h-10 text-purple-500 animate-spin" />
-            <p className="text-sm font-medium text-foreground">Extracting clauses…</p>
-            <p className="text-xs text-muted-foreground">This usually takes 10–20 seconds</p>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center gap-3">
-            <div className="w-14 h-14 rounded-2xl bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center">
-              <Upload className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+      <AnimatePresence mode="wait">
+        {stage === "idle" && (
+          <motion.div
+            key="dropzone"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className={`border-2 border-dashed rounded-2xl p-10 text-center cursor-pointer transition-colors ${
+              dragging
+                ? "border-purple-400 bg-purple-50/60 dark:bg-purple-950/20"
+                : "border-border/60 hover:border-purple-400/60 hover:bg-muted/40"
+            }`}
+            onClick={() => inputRef.current?.click()}
+            onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={onDrop}
+          >
+            <div className="flex flex-col items-center gap-3">
+              <div className="w-14 h-14 rounded-2xl bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center">
+                <Upload className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-foreground mb-0.5">
+                  Drop a contract here or <span className="text-purple-600 dark:text-purple-400">browse files</span>
+                </p>
+                <p className="text-xs text-muted-foreground">PDF or DOCX · up to 25 MB</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-medium text-foreground mb-0.5">
-                Drop a contract here or <span className="text-purple-600 dark:text-purple-400">browse files</span>
-              </p>
-              <p className="text-xs text-muted-foreground">PDF or DOCX · up to 25 MB</p>
-            </div>
-          </div>
+          </motion.div>
         )}
-      </motion.div>
+
+        {(stage === "selected" || stage === "uploading") && selectedFile && (
+          <motion.div
+            key="selected"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="space-y-4"
+          >
+            {/* File card */}
+            <div className="flex items-center gap-3 rounded-2xl border border-border/60 bg-card px-4 py-3.5">
+              <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center shrink-0">
+                <FileType2 className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground truncate">{selectedFile.name}</p>
+                <p className="text-xs text-muted-foreground">{fmtBytes(selectedFile.size)} · {selectedFile.name.split(".").pop()?.toUpperCase()}</p>
+              </div>
+              {stage === "selected" && (
+                <button
+                  onClick={clearFile}
+                  className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
+                  aria-label="Remove file"
+                >
+                  <XCircle className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            {/* CTA */}
+            <Button
+              className="w-full h-11 gap-2 bg-purple-600 hover:bg-purple-700 text-white"
+              onClick={handleExtract}
+              disabled={stage === "uploading"}
+            >
+              {stage === "uploading" ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Extracting clauses…
+                </>
+              ) : (
+                <>
+                  <ListChecks className="w-4 h-4" />
+                  Extract Clauses
+                </>
+              )}
+            </Button>
+
+            <p className="text-xs text-muted-foreground text-center">
+              OpenAI analyzes the document text — usually 15–30 seconds
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {error && (
         <motion.div
@@ -397,19 +593,21 @@ function UploadView({ onUploaded }: { onUploaded: (s: ClauseExtractorSessionDeta
         </motion.div>
       )}
 
-      <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[
-          { icon: Calendar, label: "Key Dates", color: "text-blue-500" },
-          { icon: Users, label: "Parties", color: "text-violet-500" },
-          { icon: DollarSign, label: "Financial Terms", color: "text-emerald-500" },
-          { icon: ListChecks, label: "Obligations", color: "text-purple-500" },
-        ].map(({ icon: Icon, label, color }) => (
-          <div key={label} className="rounded-xl border border-border/50 bg-card p-3 text-center">
-            <Icon className={`w-4 h-4 mx-auto mb-1 ${color}`} />
-            <p className="text-[11px] font-medium text-muted-foreground">{label}</p>
-          </div>
-        ))}
-      </div>
+      {stage === "idle" && (
+        <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[
+            { icon: Calendar, label: "Key Dates", color: "text-blue-500" },
+            { icon: Users, label: "Parties", color: "text-violet-500" },
+            { icon: DollarSign, label: "Financial Terms", color: "text-emerald-500" },
+            { icon: ListChecks, label: "Obligations", color: "text-purple-500" },
+          ].map(({ icon: Icon, label, color }) => (
+            <div key={label} className="rounded-xl border border-border/50 bg-card p-3 text-center">
+              <Icon className={`w-4 h-4 mx-auto mb-1 ${color}`} />
+              <p className="text-[11px] font-medium text-muted-foreground">{label}</p>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -448,9 +646,29 @@ function ProcessingView({
 
   return (
     <div className="max-w-2xl mx-auto text-center py-16">
-      <Loader2 className="w-12 h-12 text-purple-500 animate-spin mx-auto mb-4" />
-      <h2 className="text-base font-semibold text-foreground mb-1">Extracting clauses…</h2>
-      <p className="text-sm text-muted-foreground">OpenAI is analyzing your document. This takes about 15–30 seconds.</p>
+      <motion.div
+        animate={{ rotate: 360 }}
+        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+        className="inline-block mb-6"
+      >
+        <div className="w-14 h-14 rounded-2xl bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center">
+          <ListChecks className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+        </div>
+      </motion.div>
+      <h2 className="text-base font-semibold text-foreground mb-2">Extracting clauses…</h2>
+      <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+        OpenAI is reading your contract. Key dates, parties, financial terms, legal clauses, and obligations are being structured. This takes about 15–30 seconds.
+      </p>
+      <div className="mt-6 flex items-center justify-center gap-1.5">
+        {[0, 0.2, 0.4].map((delay, i) => (
+          <motion.div
+            key={i}
+            className="w-1.5 h-1.5 rounded-full bg-purple-400"
+            animate={{ opacity: [0.3, 1, 0.3] }}
+            transition={{ duration: 1.2, repeat: Infinity, delay }}
+          />
+        ))}
+      </div>
     </div>
   )
 }

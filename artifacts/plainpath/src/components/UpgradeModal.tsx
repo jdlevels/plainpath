@@ -65,7 +65,7 @@ const PLAN_HIGHLIGHTS = {
     "Unlimited Document Trust Checks",
     "Build a Contract (AI-drafted)",
     "AI Contract Review",
-    "Compare Versions & PDF Editor",
+    "Compare Versions & Clause Extractor",
   ],
 }
 

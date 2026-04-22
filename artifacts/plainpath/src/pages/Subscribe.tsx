@@ -288,7 +288,7 @@ export default function Subscribe() {
             },
             {
               q: "What's the difference between plans?",
-              a: "Starter covers unlimited document analysis and redacting sensitive info. Pro unlocks every tool: Analysis, Trust Check, Contract Builder, Contract Review, Compare Versions, and PDF Editor.",
+              a: "Starter covers unlimited document analysis and redacting sensitive info. Pro unlocks every tool: Analysis, Trust Check, Contract Builder, Contract Review, Compare Versions, and Clause Extractor.",
             },
           ].map((item) => (
             <div key={item.q} className="rounded-2xl border border-border/50 bg-card p-4">

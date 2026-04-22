@@ -17,7 +17,7 @@ const FAQS = [
   },
   {
     q: "What's the difference between the eight tools?",
-    a: "Analyze a Document breaks down paperwork you already have — extracting action steps, deadlines, risks, and required documents in plain English. Document Trust Check scores whether a document appears legitimate or shows scam and fraud indicators. Build a Contract creates a new agreement from scratch based on your deal terms, with a gap analysis. Contract Review reads a contract someone else wrote, flags risky or missing clauses, scores it, and gives you negotiation language. Redact Sensitive Info detects and removes personal information — names, SSNs, account numbers, and more — before you share or analyze a document. Digital Signature lets you send documents for legally binding e-signature, track signing status in real time, and download certified signed copies. Compare Versions maps every addition, deletion, and structural change between two document versions with zone-by-zone overlays and severity scoring. PDF Editor lets you open any PDF, add text overlays, mask content, and export a clean modified copy — without converting file formats.",
+    a: "Analyze a Document breaks down paperwork you already have — extracting action steps, deadlines, risks, and required documents in plain English. Document Trust Check scores whether a document appears legitimate or shows scam and fraud indicators. Build a Contract creates a new agreement from scratch based on your deal terms, with a gap analysis. Contract Review reads a contract someone else wrote, flags risky or missing clauses, scores it, and gives you negotiation language. Redact Sensitive Info detects and removes personal information — names, SSNs, account numbers, and more — before you share or analyze a document. Digital Signature lets you send documents for legally binding e-signature, track signing status in real time, and download certified signed copies. Compare Versions maps every addition, deletion, and structural change between two document versions with zone-by-zone overlays and severity scoring. Clause Extractor pulls every obligation, key date, party, and financial term from a contract — and tells you exactly who owes what by when.",
   },
   {
     q: "Is the output legal advice?",
@@ -33,7 +33,7 @@ const FAQS = [
   },
   {
     q: "Which plan do I need for each tool?",
-    a: "Analyze a Document and Redact Sensitive Info are available on all plans, including Starter. Document Trust Check, Build a Contract, Contract Review, Digital Signature, Compare Versions, and PDF Editor require a Pro plan. You'll see an upgrade prompt if you try to use them without Pro, and you can switch plans at any time.",
+    a: "Analyze a Document and Redact Sensitive Info are available on all plans, including Starter. Document Trust Check, Build a Contract, Contract Review, Digital Signature, Compare Versions, and Clause Extractor require a Pro plan. You'll see an upgrade prompt if you try to use them without Pro, and you can switch plans at any time.",
   },
 ]
 

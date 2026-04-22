@@ -39,7 +39,7 @@ export const PRICING_PLANS: PricingPlan[] = [
       "Contract Review — clause-by-clause risk and negotiation analysis",
       "Build a Contract — guided wizard with professional draft output",
       "Compare Versions — side-by-side document comparison and audit",
-      "PDF Editor — annotate, redline, and export corrections",
+      "Clause Extractor — obligations, key dates, parties, and legal clauses",
       "Saved analysis history",
       "Premium output and workflow tools"
     ],

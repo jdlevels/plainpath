@@ -3,7 +3,7 @@ import { useLocation } from "wouter"
 import { motion } from "framer-motion"
 import {
   Check, Zap, BarChart3, ShieldCheck, PenLine, Scale, EyeOff,
-  ArrowRight, Sparkles, Clock, GitCompare, Pen,
+  ArrowRight, Sparkles, Clock, GitCompare, ListChecks, FileSignature,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { PRICING_PLANS } from "@/data/pricingData"
@@ -24,8 +24,9 @@ const TOOL_BREAKDOWN = [
   { icon: ShieldCheck, name: "Document Trust Check",  starter: false, pro: true, desc: "Verify legitimacy, surface red flags, and detect fraud" },
   { icon: PenLine,     name: "Build a Contract",      starter: false, pro: true, desc: "Guided wizard that outputs a professional, ready-to-send draft" },
   { icon: Scale,       name: "Contract Review",       starter: false, pro: true, desc: "Clause-by-clause risk analysis with negotiation language" },
-  { icon: GitCompare,  name: "Compare Versions",      starter: false, pro: true, desc: "Side-by-side document comparison with AI-powered change audit" },
-  { icon: Pen,         name: "PDF Editor",            starter: false, pro: true, desc: "Annotate, redline, and export corrected PDFs with tracked changes" },
+  { icon: GitCompare,    name: "Compare Versions",   starter: false, pro: true, desc: "Side-by-side document comparison with AI-powered change audit" },
+  { icon: ListChecks,   name: "Clause Extractor",   starter: false, pro: true, desc: "Extract obligations, key dates, parties, and legal clauses from any contract" },
+  { icon: FileSignature, name: "Digital Signature", starter: false, pro: true, desc: "Send for legally binding e-signature with real-time tracking" },
 ]
 
 export default function Upgrade() {
