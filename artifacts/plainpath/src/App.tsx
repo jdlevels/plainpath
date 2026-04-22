@@ -232,6 +232,11 @@ function Router() {
               {(params) => <Demo id={(params as { id: string }).id} />}
             </Route>
 
+            {/* ── Subscribe routes — public (no sign-in required to start checkout) ── */}
+            <Route path="/subscribe" component={Subscribe} />
+            <Route path="/subscribe/success" component={SubscribeSuccess} />
+            <Route path="/subscribe/cancel" component={SubscribeCancel} />
+
             {/* ── Protected routes (require sign-in) ── */}
             <Route path="/" component={protect(Home)} />
             <Route path="/import" component={protect(Import)} />
@@ -239,9 +244,6 @@ function Router() {
             <Route path="/results" component={protect(Analyze)} />
             <Route path="/trust-check" component={protect(TrustCheck)} />
             <Route path="/my-analyses" component={protect(MyAnalyses)} />
-            <Route path="/subscribe" component={protect(Subscribe)} />
-            <Route path="/subscribe/success" component={protect(SubscribeSuccess)} />
-            <Route path="/subscribe/cancel" component={protect(SubscribeCancel)} />
             <Route path="/contract-builder" component={protect(ContractBuilder)} />
             <Route path="/build-contract" component={protect(ContractBuilder)} />
             <Route path="/contract-review" component={protect(ContractReview)} />
