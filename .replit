@@ -29,7 +29,7 @@ timeoutMs = 20000
 [userenv]
 
 [userenv.shared]
-APP_BASE_URL = "https://plain-path.replit.app/app"
+APP_BASE_URL = "https://plainpathapp.com/app"
 VITE_BUILDER_ENABLED = "true"
 BUILDER_ENABLED = "true"
 ADMIN_EMAILS = "support@plainpathapp.com,admin@plainpathapp.com"
