@@ -1,0 +1,271 @@
+PLAINPATH — BUILD A SEPARATE PUBLIC DEMO SYSTEM
+
+Objective
+Create a fully separate public demo experience for PlainPath so visitors can preview each tool in a realistic unlocked-looking, read-only state without signing in, without touching billing, and without mixing demo logic into the live authenticated app. This must stay separate from the purchase/pricing page and separate from the real user workspace.
+
+PRIMARY PRODUCT DECISION
+Build a dedicated public demo route family:
+
+/demo
+/demo/analyze
+/demo/trust-check
+/demo/build-contract
+/demo/contract-review
+/demo/redact
+/demo/signature
+/demo/compare
+/demo/pdf-editor
+
+Do NOT send public demo users into the authenticated /app tool routes.
+Do NOT require auth for demo pages.
+Do NOT reuse real user sessions, DB records, or paid entitlements.
+Do NOT mix demo state with production user data.
+
+GOAL
+When a public visitor clicks a demo card anywhere on the marketing site, they should open a clean, dedicated demo page that shows how that tool looks when “unlocked” and already populated with a realistic sample scenario. The experience must feel real, polished, and trustworthy, but remain strictly read-only / non-destructive.
+
+ARCHITECTURE RULES
+
+1. Demo system must be public
+- No auth required
+- No paywall
+- No billing checks
+- No Clerk dependency for demo viewing
+- No redirects into /app routes
+
+2. Demo system must be isolated
+- No writes to user documents
+- No writes to live tool session tables
+- No use of authenticated saved-work APIs
+- No live uploads to production user storage
+- No saving demo changes across sessions
+- Refresh should reset to default built-in demo state
+
+3. Demo system must feel real
+- Use realistic seeded demo content for each tool
+- Show actual UI states that resemble the real product
+- Each demo should show a believable document/result/workflow snapshot
+- Let the user inspect the tool visually
+- Prefer preloaded state over blank empty pages
+
+4. Demo system must stay read-only
+- If a tool normally edits content, expose controls visually but either:
+  a) disable destructive actions, or
+  b) allow temporary local-only interactions that reset on refresh
+- Never let public demo users alter real app data
+
+ROUTE / PAGE REQUIREMENTS
+
+A. /demo (Demo Hub)
+Create a public demo hub page with:
+- headline
+- short explanation: “See how each PlainPath tool works before you start”
+- 8 demo cards, one per tool
+- each card includes:
+  - canonical tool name
+  - one-line description
+  - scenario label
+  - CTA: “Open demo”
+- clean visual separation from pricing
+- include top CTA buttons:
+  - “Start free”
+  - “See pricing”
+- include bottom CTA:
+  - “Use your own document in the full app”
+
+B. Individual demo pages
+Build one dedicated page per tool. Each should have:
+- canonical tool title
+- short subtitle explaining what the demo is showing
+- visible “Demo mode” badge
+- realistic sample content already loaded
+- strong end CTA area:
+  - “Start free”
+  - “See pricing”
+  - optionally “Back to all demos”
+
+DEMO CONTENT / STATES PER TOOL
+
+1. /demo/analyze
+Show a realistic analyzed document example, such as a lease, event permit, or medical bill.
+Display:
+- plain-English summary
+- deadlines
+- action items
+- key risks
+- supporting sections
+Read-only. No save.
+
+2. /demo/trust-check
+Show a suspicious sample document with:
+- authenticity score / risk score
+- red/yellow flags
+- reason cards
+- “why this matters” explanation
+Read-only. No save.
+
+3. /demo/build-contract
+Show the contract builder experience with a completed sample workflow.
+Recommended:
+- show prior wizard answers in summary form
+- show the generated contract preview/result
+- optionally allow viewing steps but not changing persistent data
+CTA should push user toward creating their own in the real app.
+
+4. /demo/contract-review
+Show a reviewed agreement with:
+- clause issue list
+- negotiation flags
+- risk cards
+- summary panel
+Read-only.
+
+5. /demo/redact
+Show:
+- original sample document
+- redacted output preview
+- highlighted sensitive findings
+- “before / after” comparison feel
+Read-only. Do not allow export of live files.
+
+6. /demo/signature
+Show:
+- request created
+- recipient/signer flow preview
+- signature status timeline
+- completed or in-progress visual state
+This is only a preview. No real send action.
+
+7. /demo/compare
+Show two built-in versions and the comparison result:
+- additions
+- deletions
+- changed sections
+- severity / issue callouts
+Read-only comparison view.
+
+8. /demo/pdf-editor
+Show a sample PDF editing workspace with realistic loaded state:
+- visible pages
+- sample annotations / overlays / masking / text edit indicators
+- show editing toolbar
+- optionally allow temporary local interactions only if safe
+- no persistent save, no real export, no session writes
+
+IMPORTANT UX RULES
+
+1. Canonical naming
+Use only the official tool names everywhere:
+- Analyze a Document
+- Document Trust Check
+- Build a Contract
+- Contract Review
+- Redact Sensitive Info
+- Digital Signature
+- Compare Versions
+- PDF Editor
+
+2. Demo badge language
+Use wording like:
+- Demo mode
+- Sample scenario
+- Read-only preview
+
+Avoid language that sounds broken or limited in a negative way.
+
+3. CTA consistency
+Each demo page should end with:
+- Primary CTA: Start free
+- Secondary CTA: See pricing
+- Tertiary CTA: Back to all demos
+
+4. Visual separation from pricing
+Do not place these demos inside the pricing page.
+Do not make them modal popups attached to the pricing cards.
+Public users should feel they entered a separate product-preview area.
+
+MARKETING SITE INTEGRATION
+
+Update all existing “live demo” / “see it in action” / similar public demo cards so they link to the new /demo routes instead of any mixed or embedded placeholder behavior.
+
+Where appropriate:
+- “See PlainPath in action” should point to /demo or relevant /demo/:tool routes
+- demo cards on the public site should open dedicated public demo pages
+- keep purchase/pricing flow separate
+
+TECHNICAL IMPLEMENTATION GUIDELINES
+
+1. Build demo data locally in the marketing/public layer or a dedicated demo module
+Suggested pattern:
+- src/demo/demoData.ts
+- tool-specific demo config objects
+- no dependency on user auth/session APIs
+
+2. If shared UI components from the real app are reused, do so safely
+- pass demoMode=true
+- disable save/export/send/upload persistence
+- do not call real mutation APIs in demo mode
+
+3. Add route guards only if needed to PREVENT demo pages from using live APIs
+Demo pages should be self-contained.
+
+4. Avoid dead-end empty states
+Each demo page must open with something meaningful already on screen.
+
+5. Keep demo pages responsive
+Need good desktop layout first, but still usable on mobile.
+
+DESIGN DIRECTION
+Match current PlainPath visual language:
+- dark premium UI
+- strong card hierarchy
+- clear section spacing
+- subtle trust-oriented product feel
+- same brand colors and icon system
+But demo pages should feel focused, not cluttered.
+
+DELIVERABLES
+
+1. Public demo hub page at /demo
+2. 8 public individual demo pages
+3. Marketing-site demo cards routed into the new demo system
+4. Demo-safe data/config layer
+5. Read-only protections so no real writes occur
+6. Clean polished CTA areas on every demo page
+
+ACCEPTANCE CRITERIA
+
+A. Public access
+- Visiting /demo and all /demo/:tool routes works without auth
+- No login prompt required
+- No billing/purchase gate blocks access
+
+B. Separation
+- Pricing page remains focused on purchase
+- Demo pages remain focused on preview
+- No mixing between the two flows
+
+C. No data contamination
+- No new live user documents created
+- No live tool sessions written
+- No accidental persistent saves
+- Refresh resets demo state
+
+D. Product quality
+- Each demo page opens with realistic sample content
+- Tool names are canonical everywhere
+- CTAs are present and consistent
+- Pages feel like real unlocked product previews
+
+E. Routing
+- Marketing demo links go to the new /demo system
+- No public demo card routes into the authenticated /app tool pages
+
+OUTPUT FORMAT
+After implementation, provide:
+1. exact files created
+2. exact files modified
+3. route list added
+4. which existing links were repointed
+5. proof that no live session/document write paths are used by demo routes
+6. any deferred items, if any

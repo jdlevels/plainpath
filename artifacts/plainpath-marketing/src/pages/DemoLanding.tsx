@@ -1,301 +1,205 @@
-import { useEffect, useState } from "react";
-import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import {
-  FileText, ShieldAlert, FileSignature, Scale, EyeOff,
-  GitCompare, Lock, ArrowRight, Sparkles, LogIn, Zap,
+  FileScan, ShieldCheck, PenLine, Scale, EyeOff,
+  FileSignature, GitCompare, FileEdit, ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
 
-// ─── Types ───────────────────────────────────────────────────────────────────
-
-interface DemoStatus {
-  demoGuestPresent: boolean;
-  completedUses: number;
-  remainingUses: number;
-  isExhausted: boolean;
-}
-
-// ─── Tool definitions ─────────────────────────────────────────────────────────
-
-const DEMO_TOOLS = [
+const TOOLS = [
   {
     key: "analyze",
     label: "Analyze a Document",
-    description: "Upload a PDF and get a plain-English breakdown — risks, obligations, next steps.",
-    icon: FileText,
+    scenario: "Residential lease — Unit 4B, Austin TX",
+    desc: "Get a plain-English breakdown of a 12-page lease: risks, deadlines, action items, and what to ask before signing.",
+    icon: FileScan,
     color: "text-blue-600 dark:text-blue-400",
     bg: "bg-blue-50 dark:bg-blue-950/40",
     border: "border-blue-200 dark:border-blue-800",
+    ring: "hover:ring-blue-300 dark:hover:ring-blue-700",
     href: "/demo/analyze",
-    enabled: true,
   },
   {
     key: "trust-check",
     label: "Document Trust Check",
-    description: "Verify authenticity signals and flag suspicious document patterns.",
-    icon: ShieldAlert,
+    scenario: "Fake IRS payment demand — scored 18/100",
+    desc: "See how PlainPath flags a scam letter pretending to be from the IRS, with 3 critical red flags surfaced instantly.",
+    icon: ShieldCheck,
     color: "text-red-600 dark:text-red-400",
     bg: "bg-red-50 dark:bg-red-950/40",
     border: "border-red-200 dark:border-red-800",
-    href: null,
-    enabled: false,
+    ring: "hover:ring-red-300 dark:hover:ring-red-700",
+    href: "/demo/trust-check",
   },
   {
-    key: "compare",
-    label: "Compare Versions",
-    description: "See exactly what changed between two document versions, word by word.",
-    icon: GitCompare,
-    color: "text-violet-600 dark:text-violet-400",
-    bg: "bg-violet-50 dark:bg-violet-950/40",
-    border: "border-violet-200 dark:border-violet-800",
-    href: null,
-    enabled: false,
+    key: "build-contract",
+    label: "Build a Contract",
+    scenario: "Freelance web design — Meridian Coffee Roasters",
+    desc: "A 6-question wizard produced a complete Freelance Services Agreement with IP ownership, payment terms, and revision policy.",
+    icon: PenLine,
+    color: "text-emerald-600 dark:text-emerald-400",
+    bg: "bg-emerald-50 dark:bg-emerald-950/40",
+    border: "border-emerald-200 dark:border-emerald-800",
+    ring: "hover:ring-emerald-300 dark:hover:ring-emerald-700",
+    href: "/demo/build-contract",
   },
   {
-    key: "contract",
+    key: "contract-review",
     label: "Contract Review",
-    description: "AI-powered review of contract terms, red flags, and negotiation points.",
+    scenario: "Employment offer — scored 28/100",
+    desc: "PlainPath flags a 5-year global non-compete, overly broad IP assignment, and mandatory arbitration — with negotiation language ready.",
     icon: Scale,
     color: "text-amber-600 dark:text-amber-400",
     bg: "bg-amber-50 dark:bg-amber-950/40",
     border: "border-amber-200 dark:border-amber-800",
-    href: null,
-    enabled: false,
+    ring: "hover:ring-amber-300 dark:hover:ring-amber-700",
+    href: "/demo/contract-review",
   },
   {
     key: "redact",
     label: "Redact Sensitive Info",
-    description: "Automatically find and redact personal or sensitive information.",
+    scenario: "Medical intake form — 3 PII items found",
+    desc: "PlainPath detects a SSN, insurance ID, and date of birth automatically. Review and approve each redaction before exporting.",
     icon: EyeOff,
-    color: "text-slate-600 dark:text-slate-400",
-    bg: "bg-slate-50 dark:bg-slate-950/40",
-    border: "border-slate-200 dark:border-slate-800",
-    href: null,
-    enabled: false,
+    color: "text-violet-600 dark:text-violet-400",
+    bg: "bg-violet-50 dark:bg-violet-950/40",
+    border: "border-violet-200 dark:border-violet-800",
+    ring: "hover:ring-violet-300 dark:hover:ring-violet-700",
+    href: "/demo/redact",
   },
   {
-    key: "sign",
+    key: "signature",
     label: "Digital Signature",
-    description: "Request and collect legally binding electronic signatures.",
+    scenario: "Freelance agreement — 1 of 2 signers complete",
+    desc: "A freelance contract sent to two parties: one signed, one pending. See the real-time signing status and timeline.",
     icon: FileSignature,
-    color: "text-emerald-600 dark:text-emerald-400",
-    bg: "bg-emerald-50 dark:bg-emerald-950/40",
-    border: "border-emerald-200 dark:border-emerald-800",
-    href: null,
-    enabled: false,
+    color: "text-teal-600 dark:text-teal-400",
+    bg: "bg-teal-50 dark:bg-teal-950/40",
+    border: "border-teal-200 dark:border-teal-800",
+    ring: "hover:ring-teal-300 dark:hover:ring-teal-700",
+    href: "/demo/signature",
+  },
+  {
+    key: "compare",
+    label: "Compare Versions",
+    scenario: "NDA v1 vs v2 — 3 changes, 1 critical",
+    desc: "A confidentiality term quietly changed from 2 years to perpetuity. PlainPath surfaces the change and explains why it matters.",
+    icon: GitCompare,
+    color: "text-sky-600 dark:text-sky-400",
+    bg: "bg-sky-50 dark:bg-sky-950/40",
+    border: "border-sky-200 dark:border-sky-800",
+    ring: "hover:ring-sky-300 dark:hover:ring-sky-700",
+    href: "/demo/compare",
+  },
+  {
+    key: "pdf-editor",
+    label: "PDF Editor",
+    scenario: "Patient consent form — annotated workspace",
+    desc: "See the PDF editor with a real document: a filled text field, a highlighted section, and a masked area — all pre-loaded.",
+    icon: FileEdit,
+    color: "text-orange-600 dark:text-orange-400",
+    bg: "bg-orange-50 dark:bg-orange-950/40",
+    border: "border-orange-200 dark:border-orange-800",
+    ring: "hover:ring-orange-300 dark:hover:ring-orange-700",
+    href: "/demo/pdf-editor",
   },
 ];
 
-// ─── Usage badge ──────────────────────────────────────────────────────────────
-
-function UsageBadge({ remaining, isExhausted }: { remaining: number; isExhausted: boolean }) {
-  if (isExhausted) {
-    return (
-      <Badge variant="destructive" className="text-xs px-2.5 py-1">
-        Free trial used up
-      </Badge>
-    );
-  }
-  if (remaining === 1) {
-    return (
-      <Badge className="text-xs px-2.5 py-1 bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 border border-amber-300 dark:border-amber-700">
-        1 free try left
-      </Badge>
-    );
-  }
-  return (
-    <Badge className="text-xs px-2.5 py-1 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">
-      {remaining} free {remaining === 1 ? "try" : "tries"} included
-    </Badge>
-  );
-}
-
-// ─── Main component ───────────────────────────────────────────────────────────
+const fadeUp = {
+  hidden: { opacity: 0, y: 18 },
+  visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.07, duration: 0.4 } }),
+};
 
 export default function DemoLanding() {
-  const [, navigate] = useLocation();
-  const [status, setStatus] = useState<DemoStatus | null>(null);
-
-  useEffect(() => {
-    fetch("/api/demo/status", { credentials: "include" })
-      .then((r) => r.json())
-      .then((data) => setStatus(data))
-      .catch(() =>
-        setStatus({ demoGuestPresent: false, completedUses: 0, remainingUses: 2, isExhausted: false }),
-      );
-  }, []);
-
-  const remaining = status?.remainingUses ?? 2;
-  const isExhausted = status?.isExhausted ?? false;
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 dark:from-slate-950 dark:via-slate-900 dark:to-slate-900 px-4 py-10 md:py-16">
-      <div className="max-w-3xl mx-auto">
+    <div className="min-h-screen bg-background flex flex-col">
+      <Navbar />
 
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="text-center mb-10"
-        >
-          {/* Logo back link */}
-          <div className="flex justify-center mb-6">
-            <a href="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-              ← Back to PlainPath
-            </a>
-          </div>
-
-          <div className="inline-flex items-center gap-2 bg-primary/10 text-primary rounded-full px-4 py-1.5 text-sm font-medium mb-4">
-            <Sparkles className="w-4 h-4" />
-            Free Trial — no account needed
-          </div>
-          <h1
-            className="text-3xl md:text-4xl font-bold text-foreground mb-3"
-            style={{ fontFamily: "var(--font-display, inherit)" }}
-          >
-            Try PlainPath free
-          </h1>
-          <p className="text-muted-foreground text-base md:text-lg max-w-xl mx-auto leading-relaxed">
-            Upload a real document and see what PlainPath finds — in plain English.
-            No sign-up required.
-          </p>
-
-          {/* Remaining uses strip */}
-          <div className="mt-5 flex items-center justify-center gap-3">
-            {status ? (
-              <UsageBadge remaining={remaining} isExhausted={isExhausted} />
-            ) : (
-              <div className="h-6 w-32 rounded-full bg-muted animate-pulse" />
-            )}
-            <span className="text-xs text-muted-foreground">
-              Includes 2 free analyses — results visible instantly.
-            </span>
-          </div>
-        </motion.div>
-
-        {/* Exhausted banner */}
-        {isExhausted && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.97 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="mb-8 rounded-xl border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30 p-5 text-center"
-          >
-            <p className="font-semibold text-amber-900 dark:text-amber-200 mb-1">
-              You've used your 2 free trial analyses.
+      <main className="flex-1 mt-16">
+        {/* Hero */}
+        <section className="pt-14 pb-10 px-4 text-center bg-gradient-to-b from-blue-50/60 via-background to-background dark:from-slate-900 dark:to-background border-b border-border/40">
+          <div className="max-w-2xl mx-auto">
+            <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-primary bg-primary/10 rounded-full px-4 py-1.5 mb-5">
+              8 tools · all pre-loaded
+            </div>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4 leading-tight" style={{ fontFamily: "var(--font-display)" }}>
+              See PlainPath in action
+            </h1>
+            <p className="text-muted-foreground text-lg max-w-xl mx-auto mb-7 leading-relaxed">
+              Each demo opens a realistic sample scenario — already populated with results. No sign-up, no upload needed.
             </p>
-            <p className="text-sm text-amber-800 dark:text-amber-300 mb-4">
-              Create a free account to keep going — no credit card required.
-            </p>
-            <div className="flex gap-3 justify-center flex-wrap">
-              <Button asChild size="sm">
-                <a href="/app/sign-up">Create free account</a>
+            <div className="flex items-center justify-center gap-3 flex-wrap">
+              <Button asChild size="lg" className="rounded-full px-7 gap-2 font-semibold shadow-sm">
+                <a href="/app/sign-up">
+                  Start free
+                  <ArrowRight className="w-4 h-4" />
+                </a>
               </Button>
-              <Button asChild variant="outline" size="sm">
-                <a href="/app/sign-in">Sign in</a>
+              <Button asChild variant="outline" size="lg" className="rounded-full px-7 font-medium">
+                <a href="/#pricing">See pricing</a>
               </Button>
             </div>
-          </motion.div>
-        )}
+          </div>
+        </section>
 
         {/* Tool cards */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
-          className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10"
-        >
-          {DEMO_TOOLS.map((tool) => {
-            const Icon = tool.icon;
-            const canUse = tool.enabled && !isExhausted;
+        <section className="py-14 px-4">
+          <div className="max-w-5xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              {TOOLS.map((tool, i) => {
+                const Icon = tool.icon;
+                return (
+                  <motion.a
+                    key={tool.key}
+                    href={tool.href}
+                    custom={i}
+                    initial="hidden"
+                    animate="visible"
+                    variants={fadeUp}
+                    className={`group flex flex-col rounded-2xl border ${tool.border} ${tool.bg} p-5 transition-all duration-200 hover:shadow-lg hover:ring-2 ${tool.ring} cursor-pointer`}
+                  >
+                    <div className={`w-10 h-10 rounded-xl ${tool.bg} border ${tool.border} flex items-center justify-center mb-3 shrink-0`}>
+                      <Icon className={`w-5 h-5 ${tool.color}`} />
+                    </div>
+                    <p className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${tool.color}`}>
+                      {tool.label}
+                    </p>
+                    <p className="text-xs font-semibold text-muted-foreground mb-2 leading-snug">{tool.scenario}</p>
+                    <p className="text-sm text-muted-foreground leading-relaxed flex-1 mb-4">{tool.desc}</p>
+                    <div className={`flex items-center gap-1.5 text-sm font-semibold ${tool.color} mt-auto`}>
+                      Open demo
+                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </motion.a>
+                );
+              })}
+            </div>
+          </div>
+        </section>
 
-            return (
-              <div
-                key={tool.key}
-                onClick={() => canUse && tool.href && navigate(tool.href)}
-                className={[
-                  "relative rounded-xl border p-5 transition-all duration-200",
-                  tool.enabled
-                    ? canUse
-                      ? `${tool.border} ${tool.bg} hover:shadow-md cursor-pointer hover:scale-[1.01]`
-                      : `${tool.border} ${tool.bg} opacity-60 cursor-not-allowed`
-                    : "border-border bg-muted/30 opacity-50 cursor-not-allowed",
-                ].join(" ")}
-              >
-                {/* Enabled badge */}
-                {tool.enabled && (
-                  <span className="absolute top-3 right-3">
-                    {canUse ? (
-                      <Badge className="text-[10px] px-1.5 py-0.5 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 border-emerald-300">
-                        <Zap className="w-2.5 h-2.5 mr-1" />
-                        Try free
-                      </Badge>
-                    ) : (
-                      <Badge className="text-[10px] px-1.5 py-0.5 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 border-amber-300">
-                        Trial used
-                      </Badge>
-                    )}
-                  </span>
-                )}
-
-                {/* Locked badge */}
-                {!tool.enabled && (
-                  <span className="absolute top-3 right-3">
-                    <Badge variant="outline" className="text-[10px] px-1.5 py-0.5 text-muted-foreground">
-                      <Lock className="w-2.5 h-2.5 mr-1" />
-                      Full app
-                    </Badge>
-                  </span>
-                )}
-
-                <div className={`inline-flex rounded-lg p-2.5 mb-3 ${tool.bg}`}>
-                  <Icon className={`w-5 h-5 ${tool.color}`} />
-                </div>
-                <h3 className="font-semibold text-foreground text-sm mb-1">{tool.label}</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">{tool.description}</p>
-
-                {tool.enabled && canUse && (
-                  <div className={`mt-3 flex items-center gap-1 text-xs font-medium ${tool.color}`}>
-                    Try it now <ArrowRight className="w-3 h-3" />
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </motion.div>
-
-        {/* Sign-in CTA strip */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
-          className="rounded-xl border border-border bg-card p-6 flex flex-col sm:flex-row items-center justify-between gap-4"
-        >
-          <div>
-            <p className="font-semibold text-foreground text-sm">Want the full experience?</p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Unlimited analyses, history, export, all 6 tools — free to start.
+        {/* Bottom CTA */}
+        <section className="py-12 px-4 border-t border-border/40 bg-gradient-to-b from-background to-indigo-50/40 dark:to-slate-900/60">
+          <div className="max-w-xl mx-auto text-center">
+            <h2 className="text-2xl font-bold mb-3" style={{ fontFamily: "var(--font-display)" }}>
+              Use your own document in the full app
+            </h2>
+            <p className="text-muted-foreground mb-6">
+              Upload any PDF — lease, contract, medical bill, or letter — and get results in under 2 minutes. Free to start.
             </p>
+            <div className="flex items-center justify-center gap-3 flex-wrap">
+              <Button asChild className="rounded-full px-8 font-semibold gap-2 shadow-sm">
+                <a href="/app/sign-up">Start free <ArrowRight className="w-4 h-4" /></a>
+              </Button>
+              <Button asChild variant="outline" className="rounded-full px-8 font-medium">
+                <a href="/#pricing">See pricing</a>
+              </Button>
+            </div>
           </div>
-          <div className="flex gap-2 shrink-0">
-            <Button asChild size="sm">
-              <a href="/app/sign-up">
-                <Sparkles className="w-3.5 h-3.5 mr-1.5" />
-                Create account
-              </a>
-            </Button>
-            <Button asChild variant="outline" size="sm">
-              <a href="/app/sign-in">
-                <LogIn className="w-3.5 h-3.5 mr-1.5" />
-                Sign in
-              </a>
-            </Button>
-          </div>
-        </motion.div>
+        </section>
+      </main>
 
-      </div>
+      <Footer />
     </div>
   );
 }

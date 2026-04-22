@@ -14,6 +14,13 @@ import UnderstandingAnNDA from "@/pages/guides/UnderstandingAnNDA";
 import EmploymentContractRedFlags from "@/pages/guides/EmploymentContractRedFlags";
 import DemoLanding from "@/pages/DemoLanding";
 import DemoAnalyze from "@/pages/DemoAnalyze";
+import DemoTrustCheck from "@/pages/DemoTrustCheck";
+import DemoBuildContract from "@/pages/DemoBuildContract";
+import DemoContractReview from "@/pages/DemoContractReview";
+import DemoRedact from "@/pages/DemoRedact";
+import DemoSignature from "@/pages/DemoSignature";
+import DemoCompare from "@/pages/DemoCompare";
+import DemoPdfEditor from "@/pages/DemoPdfEditor";
 
 const queryClient = new QueryClient();
 
@@ -26,9 +33,18 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
-      {/* Public demo — free trial, no auth required */}
-      <Route path="/demo/analyze" component={DemoAnalyze} />
+
+      {/* Public demo — pre-loaded read-only snapshots, no auth required */}
       <Route path="/demo" component={DemoLanding} />
+      <Route path="/demo/analyze" component={DemoAnalyze} />
+      <Route path="/demo/trust-check" component={DemoTrustCheck} />
+      <Route path="/demo/build-contract" component={DemoBuildContract} />
+      <Route path="/demo/contract-review" component={DemoContractReview} />
+      <Route path="/demo/redact" component={DemoRedact} />
+      <Route path="/demo/signature" component={DemoSignature} />
+      <Route path="/demo/compare" component={DemoCompare} />
+      <Route path="/demo/pdf-editor" component={DemoPdfEditor} />
+
       <Route path="/guides/reviewing-a-lease" component={ReviewingALease} />
       <Route path="/guides/understanding-an-nda" component={UnderstandingAnNDA} />
       <Route path="/guides/employment-contract-red-flags" component={EmploymentContractRedFlags} />
