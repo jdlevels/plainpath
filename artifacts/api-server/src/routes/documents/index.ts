@@ -471,7 +471,7 @@ router.post("/upload", upload.single("file"), async (req, res, next) => {
       extractedText = extractedText.slice(0, 60000);
     }
 
-    console.log("[upload] extracted", extractedText.length, "chars from", file.originalname, "— starting analysis");
+    console.debug("[upload] extracted", extractedText.length, "chars from", file.originalname, "— starting analysis");
 
     const documentTypeHint = typeof req.body?.documentTypeHint === "string" ? req.body.documentTypeHint : undefined;
 
@@ -538,14 +538,14 @@ router.post("/scan-images", async (req, res) => {
     }
   }
 
-  console.log(`[scan-images] Extracting text from ${images.length} page(s)`);
+  console.debug(`[scan-images] Extracting text from ${images.length} page(s)`);
 
   try {
     const extractedTexts: string[] = [];
 
     for (let i = 0; i < images.length; i++) {
       const imageData = images[i];
-      console.log(`[scan-images] Processing page ${i + 1}/${images.length}`);
+      console.debug(`[scan-images] Processing page ${i + 1}/${images.length}`);
 
       const response = await openai.chat.completions.create({
         model: "gpt-4o",
@@ -582,7 +582,7 @@ router.post("/scan-images", async (req, res) => {
     let combinedText = extractedTexts.join("\n\n");
     if (combinedText.length > 60000) combinedText = combinedText.slice(0, 60000);
 
-    console.log(`[scan-images] Extracted ${combinedText.length} chars — running analysis`);
+    console.debug(`[scan-images] Extracted ${combinedText.length} chars — running analysis`);
 
     const hint = typeof documentTypeHint === "string" ? documentTypeHint : undefined;
     const analysis = await runAnalysis(combinedText, undefined, hint);
@@ -637,7 +637,7 @@ router.post("/scan-images-trust", async (req, res) => {
     }
   }
 
-  console.log(`[scan-images-trust] Extracting text from ${images.length} page(s)`);
+  console.debug(`[scan-images-trust] Extracting text from ${images.length} page(s)`);
 
   try {
     const extractedTexts: string[] = [];
@@ -664,7 +664,7 @@ router.post("/scan-images-trust", async (req, res) => {
     let text = extractedTexts.join("\n\n");
     if (text.length > 60000) text = text.slice(0, 60000);
 
-    console.log(`[scan-images-trust] Extracted ${text.length} chars — running trust check`);
+    console.debug(`[scan-images-trust] Extracted ${text.length} chars — running trust check`);
 
     const lower = text.toLowerCase();
     const ruleData = extractRuleData(text);
@@ -2182,7 +2182,7 @@ router.post("/trust-check-upload", upload.single("file"), async (req, res) => {
     let text = extracted.text;
     if (text.length > 60000) text = text.slice(0, 60000);
 
-    console.log("[trust-check-upload] extracted", text.length, "chars from", file.originalname);
+    console.debug("[trust-check-upload] extracted", text.length, "chars from", file.originalname);
 
     try {
       const lower = text.toLowerCase();

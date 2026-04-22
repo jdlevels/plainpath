@@ -45,7 +45,7 @@ async function runBackgroundScan(
   revisedBuf: Buffer,
 ): Promise<void> {
   try {
-    console.log(`[compare-versions] scan starting for session ${sessionId}`);
+    console.debug(`[compare-versions] scan starting for session ${sessionId}`);
     const diffResult = await runComparison(originalBuf, revisedBuf);
     await pool.query(
       `UPDATE compare_versions_sessions
@@ -53,7 +53,7 @@ async function runBackgroundScan(
        WHERE id = $2`,
       [JSON.stringify(diffResult), sessionId],
     );
-    console.log(`[compare-versions] scan complete for ${sessionId} — ${diffResult.stats.total} items`);
+    console.debug(`[compare-versions] scan complete for ${sessionId} — ${diffResult.stats.total} items`);
     runBackgroundEnrich(sessionId, false).catch((err) =>
       console.error(`[compare-versions] enrichment post-scan error for ${sessionId}:`, err),
     );

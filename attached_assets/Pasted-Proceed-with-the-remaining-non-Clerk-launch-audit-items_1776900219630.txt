@@ -1,0 +1,50 @@
+Proceed with the remaining non-Clerk launch-audit items while Clerk recovery is pending.
+
+Do not touch:
+- Clerk auth config
+- Stripe webhook setup
+- billing provider logic
+- Clause Extractor design/polish unless a new launch blocker is found
+
+Focus only on the remaining medium-priority launch items that do not depend on Clerk.
+
+Priority order:
+
+1. Fix misleading App Store / Google Play badge behavior
+- If the badges currently link to non-existent store listings, disable them or change them to a non-link / waitlist / “coming soon” behavior
+- Do not leave broken or misleading store links live
+
+2. Fix pricing/features accuracy
+- Make pricing/features copy match the real current tool set and plan entitlements
+- Ensure Starter and Pro descriptions are accurate
+- Remove stale or incomplete feature copy
+
+3. Fix tablet marketing-home tool-grid visibility
+- The tool grid must render correctly at tablet breakpoint
+- Audit the md breakpoint layout and fix any hidden/overflow issue
+
+4. Add Compare Versions export action
+- Add a production-grade export/copy action in the Compare Versions session header
+- Follow the same premium action pattern used in Clause Extractor where appropriate
+
+5. Add Document Builder export/download action
+- Surface a real user-facing export/download action for completed Builder output
+- Keep it consistent with the other document tools
+
+6. Clean up noisy console logging in production-sensitive API routes
+- Replace noisy console.log usage with cleaner operational logging or remove low-value logs
+- Do not over-engineer this pass
+
+7. Tighten any remaining trust/compliance copy mismatches found during the audit
+- Only if directly user-visible and launch-relevant
+
+Required output:
+1. exact files changed
+2. screenshots of each fixed issue
+3. pass/fail for each of the 6 items above
+4. updated readiness summary with:
+   - remaining true blockers
+   - remaining medium issues
+   - whether PlainPath is ready for limited web launch once Clerk is resolved
+
+Keep this as a launch-refinement pass only. Do not widen scope.

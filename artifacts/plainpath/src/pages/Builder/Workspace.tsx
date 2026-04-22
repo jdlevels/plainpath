@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
 import {
   ArrowLeft, Plus, AlertCircle, Check,
-  Loader2, RefreshCw, Archive, ChevronRight, Save,
+  Loader2, RefreshCw, Archive, ChevronRight, Save, Download,
 } from "lucide-react";
 import { useBuilderApi } from "@/hooks/useBuilderApi";
 import type {
@@ -308,6 +308,45 @@ export default function Workspace({ docId }: WorkspaceProps) {
     }
   }
 
+  function handleDownload() {
+    const sorted = [...content.sections].sort((a, b) => a.order - b.order);
+    const lines: string[] = [];
+    if (title.trim()) lines.push(title.trim(), "");
+    for (const section of sorted) {
+      if (section.title.trim()) lines.push(`\n${section.title.trim()}`, "");
+      const sortedBlocks = [...section.blocks].sort((a, b) => a.order - b.order);
+      for (const block of sortedBlocks) {
+        const p = block.payload;
+        if (block.type === "heading" || block.type === "paragraph" || block.type === "note") {
+          if (typeof p.text === "string" && p.text.trim()) lines.push(p.text.trim(), "");
+        } else if (block.type === "bullet-list" && Array.isArray(p.items)) {
+          for (const item of p.items as string[]) {
+            if (typeof item === "string" && item.trim()) lines.push(`• ${item.trim()}`);
+          }
+          lines.push("");
+        } else if (block.type === "numbered-list" && Array.isArray(p.items)) {
+          (p.items as string[]).forEach((item, idx) => {
+            if (typeof item === "string" && item.trim()) lines.push(`${idx + 1}. ${item.trim()}`);
+          });
+          lines.push("");
+        } else if (block.type === "checklist" && Array.isArray(p.items)) {
+          for (const item of p.items as { text: string; checked?: boolean }[]) {
+            if (item?.text?.trim()) lines.push(`[${item.checked ? "x" : " "}] ${item.text.trim()}`);
+          }
+          lines.push("");
+        }
+      }
+    }
+    const text = lines.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${(title.trim() || "document").replace(/[^a-z0-9]/gi, "-").toLowerCase()}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   function scrollToSection(sectionId: string) {
     setActiveSectionId(sectionId);
     const el = document.getElementById(`section-${sectionId}`);
@@ -416,6 +455,14 @@ export default function Workspace({ docId }: WorkspaceProps) {
                 {CATEGORY_LABELS[doc.category] ?? doc.category}
               </span>
             )}
+
+            <button
+              onClick={handleDownload}
+              title="Download as .txt"
+              className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+            >
+              <Download className="w-4 h-4" />
+            </button>
 
             <button
               onClick={() => setShowArchiveConfirm(true)}

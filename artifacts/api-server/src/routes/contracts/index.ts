@@ -260,7 +260,7 @@ router.post("/scan-images", async (req: Request, res: Response) => {
     }
   }
 
-  console.log(`[contracts/scan-images] Extracting text from ${images.length} page(s)`);
+  console.debug(`[contracts/scan-images] Extracting text from ${images.length} page(s)`);
 
   try {
     const extractedTexts: string[] = [];
@@ -285,7 +285,7 @@ router.post("/scan-images", async (req: Request, res: Response) => {
       return res.status(422).json({ message: "Could not extract readable text from the photo. Please try a clearer, well-lit image." });
     }
 
-    console.log(`[contracts/scan-images] Extracted ${text.length} chars — running review`);
+    console.debug(`[contracts/scan-images] Extracted ${text.length} chars — running review`);
 
     const systemPrompt = `You are a contract review expert working on behalf of the person who received this contract — they did NOT write it and need to know if it's fair, what risks they're taking on, and what to negotiate before signing.
 

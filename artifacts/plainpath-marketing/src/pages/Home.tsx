@@ -850,7 +850,7 @@ export default function Home() {
               </motion.p>
 
               {/* Tool pills */}
-              <motion.div custom={3} variants={fadeUp} className="grid grid-cols-2 gap-2 mb-6">
+              <motion.div custom={3} variants={fadeUp} className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-6">
                 {TOOLS.map(({ label, icon: Icon, cls, href, comingSoon }) => (
                   comingSoon ? (
                     <span
