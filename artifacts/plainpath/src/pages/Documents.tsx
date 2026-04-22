@@ -100,7 +100,7 @@ export default function Documents() {
   // UserDocuments state
   const [docs, setDocs] = useState<UserDocument[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [docsError, setDocsError] = useState<string | null>(null)
   const [search, setSearch] = useState("")
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editValue, setEditValue] = useState("")
@@ -110,18 +110,21 @@ export default function Documents() {
   // PDF Editor sessions state
   const [pdfSessions, setPdfSessions] = useState<SessionMeta[]>([])
   const [pdfLoading, setPdfLoading] = useState(false)
+  const [pdfError, setPdfError] = useState<string | null>(null)
   const [confirmDeletePdfId, setConfirmDeletePdfId] = useState<string | null>(null)
   const [deletingPdf, setDeletingPdf] = useState(false)
 
   // Compare sessions state
   const [compareSessions, setCompareSessions] = useState<CVSessionListItem[]>([])
   const [compareLoading, setCompareLoading] = useState(false)
+  const [compareError, setCompareError] = useState<string | null>(null)
   const [confirmDeleteCompareId, setConfirmDeleteCompareId] = useState<string | null>(null)
   const [deletingCompare, setDeletingCompare] = useState(false)
 
   // Document Builder drafts state
   const [builderDocs, setBuilderDocs] = useState<BuilderDocumentMeta[]>([])
   const [builderLoading, setBuilderLoading] = useState(false)
+  const [builderError, setBuilderError] = useState<string | null>(null)
   const [confirmArchiveBuilderById, setConfirmArchiveBuilderById] = useState<string | null>(null)
   const [archivingBuilder, setArchivingBuilder] = useState(false)
 
@@ -140,7 +143,10 @@ export default function Documents() {
     setPdfLoading(true)
     setCompareLoading(true)
     if (BUILDER_ENABLED) setBuilderLoading(true)
-    setError(null)
+    setDocsError(null)
+    setPdfError(null)
+    setCompareError(null)
+    if (BUILDER_ENABLED) setBuilderError(null)
 
     // Fetch Clerk token for session APIs
     const token = await getToken().catch(() => null)
@@ -156,7 +162,7 @@ export default function Documents() {
     if (docsResult.status === "fulfilled") {
       setDocs(docsResult.value)
     } else {
-      setError("Couldn't load your documents. Please try again.")
+      setDocsError("Couldn't load your documents.")
     }
 
     if (pdfResult.status === "fulfilled") {
@@ -164,6 +170,8 @@ export default function Documents() {
         b.updatedAt.localeCompare(a.updatedAt)
       )
       setPdfSessions(sorted)
+    } else {
+      setPdfError("Couldn't load PDF Editor sessions.")
     }
 
     if (compareResult.status === "fulfilled") {
@@ -171,17 +179,82 @@ export default function Documents() {
         b.updatedAt.localeCompare(a.updatedAt)
       )
       setCompareSessions(sorted)
+    } else {
+      setCompareError("Couldn't load Compare Versions sessions.")
     }
 
-    if (BUILDER_ENABLED && builderResult.status === "fulfilled") {
-      // Already returned sorted by updatedAt desc from the API
-      setBuilderDocs(builderResult.value)
+    if (BUILDER_ENABLED) {
+      if (builderResult.status === "fulfilled") {
+        setBuilderDocs(builderResult.value)
+      } else {
+        setBuilderError("Couldn't load Document Builder drafts.")
+      }
     }
 
     setLoading(false)
     setPdfLoading(false)
     setCompareLoading(false)
     if (BUILDER_ENABLED) setBuilderLoading(false)
+  }
+
+  // ─── Section-level retry functions ────────────────────────────────────────
+
+  async function reloadDocs() {
+    setLoading(true)
+    setDocsError(null)
+    try {
+      const result = await fetchUserDocuments()
+      setDocs(result)
+    } catch {
+      setDocsError("Couldn't load your documents.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function reloadPdf() {
+    setPdfLoading(true)
+    setPdfError(null)
+    try {
+      const token = await getToken().catch(() => null)
+      const sessions = await pdfEditorApi.listSessions(token)
+      const sorted = [...sessions].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+      setPdfSessions(sorted)
+    } catch {
+      setPdfError("Couldn't load PDF Editor sessions.")
+    } finally {
+      setPdfLoading(false)
+    }
+  }
+
+  async function reloadCompare() {
+    setCompareLoading(true)
+    setCompareError(null)
+    try {
+      const token = await getToken().catch(() => null)
+      const sessions = await compareVersionsApi.listSessions(token, { archived: false })
+      const sorted = [...sessions].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+      setCompareSessions(sorted)
+    } catch {
+      setCompareError("Couldn't load Compare Versions sessions.")
+    } finally {
+      setCompareLoading(false)
+    }
+  }
+
+  async function reloadBuilder() {
+    if (!BUILDER_ENABLED) return
+    setBuilderLoading(true)
+    setBuilderError(null)
+    try {
+      const token = await getToken().catch(() => null)
+      const result = await builderApi.listDocuments(token)
+      setBuilderDocs(result)
+    } catch {
+      setBuilderError("Couldn't load Document Builder drafts.")
+    } finally {
+      setBuilderLoading(false)
+    }
   }
 
   // ─── UserDocument filtering ───────────────────────────────────────────────
@@ -317,6 +390,12 @@ export default function Documents() {
     docs.length + pdfSessions.length + compareSessions.length +
     (BUILDER_ENABLED ? builderDocs.length : 0)
 
+  const allSectionsFailed =
+    !!docsError && !!pdfError && !!compareError && (!BUILDER_ENABLED || !!builderError)
+
+  const hasAnySectionError =
+    !!docsError || !!pdfError || !!compareError || (BUILDER_ENABLED && !!builderError)
+
   // ─── Render ───────────────────────────────────────────────────────────────
 
   return (
@@ -367,17 +446,17 @@ export default function Documents() {
           </div>
         )}
 
-        {/* Error state */}
-        {error && !loading && (
+        {/* Global error state — only when every section failed simultaneously */}
+        {!loading && allSectionsFailed && !hasAnyContent && (
           <div className="flex items-center gap-2 p-4 rounded-xl border border-destructive/30 bg-destructive/5 text-destructive text-sm">
             <AlertTriangle className="w-4 h-4 shrink-0" />
-            {error}
-            <Button variant="ghost" size="sm" onClick={load} className="ml-auto">Retry</Button>
+            Couldn't load your documents. Check your connection and try again.
+            <Button variant="ghost" size="sm" onClick={load} className="ml-auto">Retry all</Button>
           </div>
         )}
 
         {/* Full empty state — nothing at all */}
-        {!loading && !error && !hasAnyContent && (
+        {!loading && !hasAnyContent && !hasAnySectionError && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -405,7 +484,21 @@ export default function Documents() {
         )}
 
         {/* ── SECTION: Uploaded Documents ──────────────────────────────────── */}
-        {!loading && !error && docs.length > 0 && (
+        {!loading && docsError && (
+          <>
+            <SectionHeader
+              icon={FileText}
+              label="Uploaded Documents"
+              colorClass="bg-primary/10 text-primary"
+            />
+            <div className="flex items-center gap-2 p-3 rounded-xl border border-destructive/20 bg-destructive/5 text-destructive text-sm mb-6">
+              <AlertTriangle className="w-4 h-4 shrink-0" />
+              <span className="flex-1">{docsError}</span>
+              <Button variant="ghost" size="sm" onClick={reloadDocs}>Retry</Button>
+            </div>
+          </>
+        )}
+        {!loading && !docsError && docs.length > 0 && (
           <>
             <SectionHeader
               icon={FileText}
@@ -607,7 +700,7 @@ export default function Documents() {
         {/* ── SECTION: PDF Editor Sessions ─────────────────────────────────── */}
         {!loading && (
           <>
-            {(pdfSessions.length > 0 || pdfLoading) && (
+            {(pdfSessions.length > 0 || pdfLoading || !!pdfError) && (
               <SectionHeader
                 icon={FileEdit}
                 label="PDF Editor"
@@ -620,6 +713,14 @@ export default function Documents() {
               <div className="flex items-center gap-2 py-4 text-sm text-muted-foreground">
                 <Loader2 className="w-4 h-4 animate-spin" />
                 Loading PDF sessions…
+              </div>
+            )}
+
+            {!pdfLoading && pdfError && (
+              <div className="flex items-center gap-2 p-3 rounded-xl border border-destructive/20 bg-destructive/5 text-destructive text-sm mb-3">
+                <AlertTriangle className="w-4 h-4 shrink-0" />
+                <span className="flex-1">{pdfError}</span>
+                <Button variant="ghost" size="sm" onClick={reloadPdf}>Retry</Button>
               </div>
             )}
 
@@ -736,7 +837,7 @@ export default function Documents() {
         {/* ── SECTION: Compare Versions Sessions ───────────────────────────── */}
         {!loading && (
           <>
-            {(compareSessions.length > 0 || compareLoading) && (
+            {(compareSessions.length > 0 || compareLoading || !!compareError) && (
               <SectionHeader
                 icon={GitCompare}
                 label="Compare Versions"
@@ -749,6 +850,14 @@ export default function Documents() {
               <div className="flex items-center gap-2 py-4 text-sm text-muted-foreground">
                 <Loader2 className="w-4 h-4 animate-spin" />
                 Loading compare sessions…
+              </div>
+            )}
+
+            {!compareLoading && compareError && (
+              <div className="flex items-center gap-2 p-3 rounded-xl border border-destructive/20 bg-destructive/5 text-destructive text-sm mb-3">
+                <AlertTriangle className="w-4 h-4 shrink-0" />
+                <span className="flex-1">{compareError}</span>
+                <Button variant="ghost" size="sm" onClick={reloadCompare}>Retry</Button>
               </div>
             )}
 
@@ -875,7 +984,7 @@ export default function Documents() {
         {/* ── SECTION: Document Builder Drafts ─────────────────────────────── */}
         {BUILDER_ENABLED && !loading && (
           <>
-            {(builderDocs.length > 0 || builderLoading) && (
+            {(builderDocs.length > 0 || builderLoading || !!builderError) && (
               <SectionHeader
                 icon={LayoutTemplate}
                 label="Document Builder"
@@ -888,6 +997,14 @@ export default function Documents() {
               <div className="flex items-center gap-2 py-4 text-sm text-muted-foreground">
                 <Loader2 className="w-4 h-4 animate-spin" />
                 Loading builder drafts…
+              </div>
+            )}
+
+            {!builderLoading && builderError && (
+              <div className="flex items-center gap-2 p-3 rounded-xl border border-destructive/20 bg-destructive/5 text-destructive text-sm mb-3">
+                <AlertTriangle className="w-4 h-4 shrink-0" />
+                <span className="flex-1">{builderError}</span>
+                <Button variant="ghost" size="sm" onClick={reloadBuilder}>Retry</Button>
               </div>
             )}
 
@@ -1019,7 +1136,7 @@ export default function Documents() {
         )}
 
         {/* ── Footer ───────────────────────────────────────────────────────── */}
-        {!loading && !error && hasAnyContent && (
+        {!loading && hasAnyContent && (
           <div className="mt-10 pt-6 border-t border-border/40 flex flex-wrap items-center justify-between gap-3">
             <p className="text-xs text-muted-foreground">
               Documents are saved automatically when you work with them.
