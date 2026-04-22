@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import {
   FileScan, ShieldCheck, PenLine, Scale, EyeOff,
-  FileSignature, GitCompare, FileEdit, ArrowRight,
+  FileSignature, GitCompare, ListChecks, ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/layout/Navbar";
@@ -93,16 +93,16 @@ const TOOLS = [
     href: "/demo/compare",
   },
   {
-    key: "pdf-editor",
-    label: "PDF Editor",
-    scenario: "Patient consent form — annotated workspace",
-    desc: "See the PDF editor with a real document: a filled text field, a highlighted section, and a masked area — all pre-loaded.",
-    icon: FileEdit,
-    color: "text-orange-600 dark:text-orange-400",
-    bg: "bg-orange-50 dark:bg-orange-950/40",
-    border: "border-orange-200 dark:border-orange-800",
-    ring: "hover:ring-orange-300 dark:hover:ring-orange-700",
-    href: "/demo/pdf-editor",
+    key: "clause-extractor",
+    label: "Clause Extractor",
+    scenario: "Residential lease — 6 obligations extracted",
+    desc: "See how PlainPath structures a 12-page lease into key dates, party roles, financial terms, and a plain-English obligation checklist.",
+    icon: ListChecks,
+    color: "text-purple-600 dark:text-purple-400",
+    bg: "bg-purple-50 dark:bg-purple-950/40",
+    border: "border-purple-200 dark:border-purple-800",
+    ring: "hover:ring-purple-300 dark:hover:ring-purple-700",
+    href: "/demo/clause-extractor",
   },
 ];
 

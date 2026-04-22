@@ -4,7 +4,7 @@ import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import {
   Menu, X, ChevronDown,
   FileScan, ShieldCheck, Scale, PenLine, LayoutGrid, EyeOff,
-  GitCompare, FileEdit, FileSignature,
+  GitCompare, ListChecks, FileSignature,
 } from "lucide-react";
 
 function smoothScroll(id: string) {
@@ -25,7 +25,7 @@ const TOOL_LINKS = [
   { label: "Build a Contract",      href: "/app/build-contract",          icon: PenLine        },
   { label: "Redact Sensitive Info", href: "/app/redact",                  icon: EyeOff         },
   { label: "Compare Versions",      href: "/app/compare-versions",        icon: GitCompare     },
-  { label: "PDF Editor",            href: "/app/pdf-editor",              icon: FileEdit       },
+  { label: "Clause Extractor",       href: "/app/clause-extractor",        icon: ListChecks     },
   { label: "Digital Signature",     href: "/app/signature",               icon: FileSignature  },
 ];
 

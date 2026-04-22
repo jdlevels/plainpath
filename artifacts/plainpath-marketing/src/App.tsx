@@ -20,7 +20,7 @@ import DemoContractReview from "@/pages/DemoContractReview";
 import DemoRedact from "@/pages/DemoRedact";
 import DemoSignature from "@/pages/DemoSignature";
 import DemoCompare from "@/pages/DemoCompare";
-import DemoPdfEditor from "@/pages/DemoPdfEditor";
+import DemoClauseExtractor from "@/pages/DemoClauseExtractor";
 
 const queryClient = new QueryClient();
 
@@ -43,7 +43,7 @@ function Router() {
       <Route path="/demo/redact" component={DemoRedact} />
       <Route path="/demo/signature" component={DemoSignature} />
       <Route path="/demo/compare" component={DemoCompare} />
-      <Route path="/demo/pdf-editor" component={DemoPdfEditor} />
+      <Route path="/demo/clause-extractor" component={DemoClauseExtractor} />
 
       <Route path="/guides/reviewing-a-lease" component={ReviewingALease} />
       <Route path="/guides/understanding-an-nda" component={UnderstandingAnNDA} />

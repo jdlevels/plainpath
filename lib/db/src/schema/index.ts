@@ -5,3 +5,4 @@ export * from "./signatures";
 export * from "./builder";
 export * from "./pdfEditor";
 export * from "./compareVersions";
+export * from "./clauseExtractor";

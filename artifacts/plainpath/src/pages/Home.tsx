@@ -4,7 +4,7 @@ import {
   ArrowRight, ShieldCheck, FileSignature,
   PenLine, FileScan, Scale, EyeOff,
   BookMarked, Clock, ChevronRight, CreditCard,
-  LayoutGrid, GitCompare, FileEdit, LayoutTemplate,
+  LayoutGrid, GitCompare, ListChecks, LayoutTemplate,
 } from "lucide-react"
 import { BUILDER_ENABLED, CATEGORY_LABELS } from "@/lib/builderConfig"
 import { useState, useEffect, type ElementType } from "react"
@@ -18,8 +18,8 @@ import type { SavedAnalysis } from "@/lib/savedAnalyses"
 import { listSignatureRequests, STATUS_LABELS, STATUS_COLORS, type SignatureListItem } from "@/lib/signatureApi"
 import type { SignatureStatus } from "@/lib/signatureApi"
 import { getRecentWork, type LocalRecentItem } from "@/lib/recentWork"
-import { pdfEditorApi } from "@/lib/pdfEditorApi"
-import type { SessionMeta } from "@/lib/pdfEditorTypes"
+import { clauseExtractorApi } from "@/lib/clauseExtractorApi"
+import type { ClauseExtractorSessionMeta } from "@/lib/clauseExtractorTypes"
 import { compareVersionsApi } from "@/lib/compareVersionsApi"
 import type { CVSessionListItem } from "@/lib/compareVersionsTypes"
 import { builderApi } from "@/lib/builderApi"
@@ -29,7 +29,7 @@ type RecentItem =
   | { kind: "analysis";      id: string; title: string; savedAt: string }
   | { kind: "signature";     id: string; title: string; savedAt: string; status: SignatureStatus; signerName: string }
   | { kind: "local";         id: string; title: string; savedAt: string; tool: LocalRecentItem["tool"] }
-  | { kind: "pdf-editor";    id: string; title: string; savedAt: string; pageCount?: number; pdfType?: string }
+  | { kind: "clause-extractor"; id: string; title: string; savedAt: string; fileType?: string; documentType?: string }
   | { kind: "compare";       id: string; title: string; savedAt: string; status: string; diffTotal?: number; diffHigh?: number; originalFileName?: string; revisedFileName?: string }
   | { kind: "builder";       id: string; title: string; savedAt: string; category?: string; sectionCount?: number }
 
@@ -104,11 +104,11 @@ const TOOLS = [
     plan: "pro" as const,
   },
   {
-    key: "pdf-editor" as const,
-    label: "PDF Editor",
-    desc: "Open any PDF, add text overlays, mask content, and export a clean modified copy.",
-    icon: FileEdit,
-    path: "/pdf-editor",
+    key: "clause-extractor" as const,
+    label: "Clause Extractor",
+    desc: "Extract key clauses, deadlines, and obligations from contracts and agreements.",
+    icon: ListChecks,
+    path: "/clause-extractor",
     color: "text-purple-500 dark:text-purple-400",
     bg: "bg-purple-50 dark:bg-purple-950/50",
     ring: "hover:border-purple-400/50 hover:shadow-purple-500/10",
@@ -203,10 +203,10 @@ export default function Home() {
         // Need Bearer token for session APIs
         const token = await getToken().catch(() => null)
 
-        const [cloudAnalyses, cloudSigs, pdfSessions, compareSessions, builderDocs] = await Promise.allSettled([
+        const [cloudAnalyses, cloudSigs, clauseSessions, compareSessions, builderDocs] = await Promise.allSettled([
           fetchCloudAnalyses(),
           listSignatureRequests(),
-          pdfEditorApi.listSessions(token),
+          clauseExtractorApi.listSessions(token),
           compareVersionsApi.listSessions(token, { archived: false }),
           BUILDER_ENABLED ? builderApi.listDocuments(token) : Promise.resolve([]),
         ])
@@ -238,15 +238,15 @@ export default function Home() {
               }))
             : []
 
-        const pdfs: RecentItem[] =
-          pdfSessions.status === "fulfilled"
-            ? pdfSessions.value.map((s: SessionMeta) => ({
-                kind: "pdf-editor" as const,
+        const clauses: RecentItem[] =
+          clauseSessions.status === "fulfilled"
+            ? clauseSessions.value.map((s: ClauseExtractorSessionMeta) => ({
+                kind: "clause-extractor" as const,
                 id: s.id,
                 title: s.fileName,
                 savedAt: s.updatedAt,
-                pageCount: s.pageCount ?? undefined,
-                pdfType: s.pdfType !== "unknown" ? s.pdfType : undefined,
+                fileType: s.fileType,
+                documentType: (s as any).results?.documentType ?? undefined,
               }))
             : []
 
@@ -290,7 +290,7 @@ export default function Home() {
             tool: lw.tool,
           }))
 
-        const merged = [...pdfs, ...compares, ...builders, ...analyses, ...sigs, ...localWork]
+        const merged = [...clauses, ...compares, ...builders, ...analyses, ...sigs, ...localWork]
           .sort((a, b) => new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime())
           .slice(0, 6)
 
@@ -479,14 +479,14 @@ export default function Home() {
                 <BookMarked className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
                 <p className="text-sm font-medium text-muted-foreground mb-1">No saved work yet</p>
                 <p className="text-xs text-muted-foreground/60 mb-4 max-w-xs mx-auto">
-                  Saved analyses, Trust Checks, PDF Editor sessions, Compare Versions comparisons{BUILDER_ENABLED ? ", and Document Builder drafts" : ""} will appear here once you start working.
+                  Saved analyses, Trust Checks, Clause Extractor results, Compare Versions comparisons{BUILDER_ENABLED ? ", and Document Builder drafts" : ""} will appear here once you start working.
                 </p>
                 <div className="flex flex-wrap gap-2 justify-center">
                   <Button size="sm" variant="outline" onClick={() => setLocation("/analyze")} className="rounded-xl text-xs">
                     <FileScan className="w-3 h-3 mr-1" /> Analyze a Document
                   </Button>
-                  <Button size="sm" variant="outline" onClick={() => setLocation("/pdf-editor")} className="rounded-xl text-xs">
-                    <FileEdit className="w-3 h-3 mr-1" /> PDF Editor
+                  <Button size="sm" variant="outline" onClick={() => setLocation("/clause-extractor")} className="rounded-xl text-xs">
+                    <ListChecks className="w-3 h-3 mr-1" /> Clause Extractor
                   </Button>
                   <Button size="sm" variant="outline" onClick={() => setLocation("/compare-versions")} className="rounded-xl text-xs">
                     <GitCompare className="w-3 h-3 mr-1" /> Compare Versions
@@ -508,24 +508,23 @@ export default function Home() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}
                 >
-                  {item.kind === "pdf-editor" ? (
+                  {item.kind === "clause-extractor" ? (
                     <Card
                       className="group border border-border/50 bg-card hover:border-purple-400/40 hover:shadow-md hover:shadow-purple-500/5 rounded-2xl cursor-pointer transition-all"
-                      onClick={() => setLocation(`/pdf-editor/${item.id}`)}
+                      onClick={() => setLocation(`/clause-extractor/${item.id}`)}
                     >
                       <div className="p-4 flex flex-col gap-1.5">
                         <div className="flex items-center gap-1.5 mb-0.5">
-                          <FileEdit className="w-3 h-3 text-purple-500 shrink-0" />
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-purple-500/80">PDF Editor</span>
+                          <ListChecks className="w-3 h-3 text-purple-500 shrink-0" />
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-purple-500/80">Clause Extractor</span>
                           <span className="ml-auto text-[10px] text-muted-foreground">{timeAgo(item.savedAt)}</span>
                         </div>
                         <p className="text-sm font-medium text-foreground truncate leading-tight">{item.title}</p>
                         <div className="flex items-center justify-between mt-0.5">
                           <p className="text-[11px] text-muted-foreground">
-                            {item.pageCount != null ? `${item.pageCount} page${item.pageCount !== 1 ? "s" : ""}` : "PDF"}
-                            {item.pdfType ? ` · ${item.pdfType}` : ""}
+                            {item.documentType ?? (item.fileType === "docx" ? "Word Document" : "PDF")}
                           </p>
-                          <span className="text-[11px] font-semibold text-purple-500 group-hover:underline">Continue editing →</span>
+                          <span className="text-[11px] font-semibold text-purple-500 group-hover:underline">View results →</span>
                         </div>
                       </div>
                     </Card>

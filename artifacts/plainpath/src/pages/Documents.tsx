@@ -7,7 +7,7 @@ import {
   FileText, Trash2, Pencil, Check, X, Search, Loader2,
   FolderOpen, FileSignature, ShieldCheck, EyeOff, Scale,
   PenLine, GitCompare, ChevronRight, Plus, Clock,
-  AlertTriangle, FileEdit, ExternalLink, ArrowRight,
+  AlertTriangle, ListChecks, ExternalLink, ArrowRight,
   LayoutTemplate,
 } from "lucide-react"
 import {
@@ -17,8 +17,8 @@ import {
 import { useUser, useAuth } from "@clerk/react"
 import { useAnalysisContext } from "@/context/AnalysisContext"
 import { fetchCloudAnalyses } from "@/lib/cloudHistory"
-import { pdfEditorApi } from "@/lib/pdfEditorApi"
-import type { SessionMeta } from "@/lib/pdfEditorTypes"
+import { clauseExtractorApi } from "@/lib/clauseExtractorApi"
+import type { ClauseExtractorSessionMeta } from "@/lib/clauseExtractorTypes"
 import { compareVersionsApi } from "@/lib/compareVersionsApi"
 import type { CVSessionListItem } from "@/lib/compareVersionsTypes"
 import { builderApi } from "@/lib/builderApi"
@@ -113,8 +113,8 @@ export default function Documents() {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
 
-  // PDF Editor sessions state
-  const [pdfSessions, setPdfSessions] = useState<SessionMeta[]>([])
+  // Clause Extractor sessions state
+  const [clauseSessions, setClauseSessions] = useState<ClauseExtractorSessionMeta[]>([])
   const [pdfLoading, setPdfLoading] = useState(false)
   const [pdfError, setPdfError] = useState<string | null>(null)
   const [confirmDeletePdfId, setConfirmDeletePdfId] = useState<string | null>(null)
@@ -158,9 +158,9 @@ export default function Documents() {
     const token = await getToken().catch(() => null)
 
     // Parallel fetch all data sources
-    const [docsResult, pdfResult, compareResult, builderResult] = await Promise.allSettled([
+    const [docsResult, clauseResult, compareResult, builderResult] = await Promise.allSettled([
       fetchUserDocuments(),
-      pdfEditorApi.listSessions(token),
+      clauseExtractorApi.listSessions(token),
       compareVersionsApi.listSessions(token, { archived: false }),
       BUILDER_ENABLED ? builderApi.listDocuments(token) : Promise.resolve([]),
     ])
@@ -171,13 +171,13 @@ export default function Documents() {
       setDocsError("Couldn't load your documents.")
     }
 
-    if (pdfResult.status === "fulfilled") {
-      const sorted = [...pdfResult.value].sort((a, b) =>
+    if (clauseResult.status === "fulfilled") {
+      const sorted = [...clauseResult.value].sort((a, b) =>
         b.updatedAt.localeCompare(a.updatedAt)
       )
-      setPdfSessions(sorted)
+      setClauseSessions(sorted)
     } else {
-      setPdfError("Couldn't load PDF Editor sessions.")
+      setPdfError("Couldn't load Clause Extractor sessions.")
     }
 
     if (compareResult.status === "fulfilled") {
@@ -223,11 +223,11 @@ export default function Documents() {
     setPdfError(null)
     try {
       const token = await getToken().catch(() => null)
-      const sessions = await pdfEditorApi.listSessions(token)
+      const sessions = await clauseExtractorApi.listSessions(token)
       const sorted = [...sessions].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
-      setPdfSessions(sorted)
+      setClauseSessions(sorted)
     } catch {
-      setPdfError("Couldn't load PDF Editor sessions.")
+      setPdfError("Couldn't load Clause Extractor sessions.")
     } finally {
       setPdfLoading(false)
     }
@@ -347,8 +347,8 @@ export default function Documents() {
     setDeletingPdf(true)
     try {
       const token = await getToken().catch(() => null)
-      await pdfEditorApi.deleteSession(id, token)
-      setPdfSessions(prev => prev.filter(s => s.id !== id))
+      await clauseExtractorApi.deleteSession(id, token)
+      setClauseSessions(prev => prev.filter(s => s.id !== id))
     } catch { /* ignore */ }
     finally {
       setDeletingPdf(false)
@@ -389,11 +389,11 @@ export default function Documents() {
   // ─── Helpers ──────────────────────────────────────────────────────────────
 
   const hasAnyContent =
-    docs.length > 0 || pdfSessions.length > 0 || compareSessions.length > 0 ||
+    docs.length > 0 || clauseSessions.length > 0 || compareSessions.length > 0 ||
     (BUILDER_ENABLED && builderDocs.length > 0)
 
   const totalItemCount =
-    docs.length + pdfSessions.length + compareSessions.length +
+    docs.length + clauseSessions.length + compareSessions.length +
     (BUILDER_ENABLED ? builderDocs.length : 0)
 
   const allSectionsFailed =
@@ -477,14 +477,14 @@ export default function Documents() {
             </div>
             <h2 className="text-lg font-semibold text-foreground mb-2">No saved work yet</h2>
             <p className="text-sm text-muted-foreground max-w-sm mx-auto mb-6">
-              Uploaded documents, PDF Editor sessions, and Compare Versions comparisons all live here. Start a tool below to save your first item.
+              Uploaded documents, Clause Extractor sessions, and Compare Versions comparisons all live here. Start a tool below to save your first item.
             </p>
             <div className="flex flex-wrap gap-2 justify-center">
               <Button onClick={() => navigate("/analyze")} className="gap-1.5">
                 <FileText className="w-4 h-4" /> Analyze a Document
               </Button>
-              <Button variant="outline" onClick={() => navigate("/pdf-editor")} className="gap-1.5">
-                <FileEdit className="w-4 h-4" /> Open PDF Editor
+              <Button variant="outline" onClick={() => navigate("/clause-extractor")} className="gap-1.5">
+                <ListChecks className="w-4 h-4" /> Clause Extractor
               </Button>
               <Button variant="outline" onClick={() => navigate("/compare-versions")} className="gap-1.5">
                 <GitCompare className="w-4 h-4" /> Compare Versions
@@ -709,23 +709,23 @@ export default function Documents() {
           </>
         )}
 
-        {/* ── SECTION: PDF Editor Sessions ─────────────────────────────────── */}
+        {/* ── SECTION: Clause Extractor Sessions ───────────────────────────── */}
         {!loading && (
           <>
-            {(pdfSessions.length > 0 || pdfLoading || (!showGlobalBanner && !!pdfError) || (!pdfLoading && !pdfError && pdfSessions.length === 0 && hasAnyContent)) && (
+            {(clauseSessions.length > 0 || pdfLoading || (!showGlobalBanner && !!pdfError) || (!pdfLoading && !pdfError && clauseSessions.length === 0 && hasAnyContent)) && (
               <SectionHeader
-                icon={FileEdit}
-                label="PDF Editor"
-                count={pdfSessions.length}
+                icon={ListChecks}
+                label="Clause Extractor"
+                count={clauseSessions.length}
                 colorClass="bg-purple-100 text-purple-600 dark:bg-purple-900/40 dark:text-purple-400"
-                desc="Active editing sessions with your annotations and text overlays."
+                desc="Contract clause extractions with key dates, obligations, and legal clause breakdowns."
               />
             )}
 
             {pdfLoading && (
               <div className="flex items-center gap-2 py-4 text-sm text-muted-foreground">
                 <Loader2 className="w-4 h-4 animate-spin" />
-                Loading PDF sessions…
+                Loading clause sessions…
               </div>
             )}
 
@@ -737,23 +737,23 @@ export default function Documents() {
               </div>
             )}
 
-            {!pdfLoading && !pdfError && pdfSessions.length === 0 && hasAnyContent && (
+            {!pdfLoading && !pdfError && clauseSessions.length === 0 && hasAnyContent && (
               <div className="flex items-center gap-3 py-3 px-4 rounded-xl border border-dashed border-border/40 bg-card/60 mb-3">
-                <FileEdit className="w-4 h-4 shrink-0 text-purple-400/50" />
-                <span className="flex-1 text-xs text-muted-foreground">No PDF Editor sessions yet.</span>
+                <ListChecks className="w-4 h-4 shrink-0 text-purple-400/50" />
+                <span className="flex-1 text-xs text-muted-foreground">No Clause Extractor sessions yet.</span>
                 <button
-                  onClick={() => navigate("/pdf-editor")}
+                  onClick={() => navigate("/clause-extractor")}
                   className="text-xs font-medium text-purple-500 hover:text-purple-600 transition-colors shrink-0"
                 >
-                  Open PDF Editor →
+                  Extract Clauses →
                 </button>
               </div>
             )}
 
-            {!pdfLoading && pdfSessions.length > 0 && (
+            {!pdfLoading && clauseSessions.length > 0 && (
               <div className="space-y-3">
                 <AnimatePresence initial={false}>
-                  {pdfSessions.map(session => (
+                  {clauseSessions.map(session => (
                     <motion.div
                       key={session.id}
                       layout
@@ -765,7 +765,7 @@ export default function Documents() {
                       <div className="flex items-start gap-3">
                         {/* Icon */}
                         <div className="shrink-0 w-9 h-9 rounded-lg bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center mt-0.5">
-                          <FileEdit className="w-4.5 h-4.5 text-purple-600 dark:text-purple-400" />
+                          <ListChecks className="w-4.5 h-4.5 text-purple-600 dark:text-purple-400" />
                         </div>
 
                         {/* Content */}
@@ -776,32 +776,31 @@ export default function Documents() {
                           <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mb-3">
                             <Clock className="w-3 h-3" />
                             <span>{formatDate(session.updatedAt)}</span>
-                            {session.pageCount != null && (
-                              <>
-                                <span>·</span>
-                                <span>{session.pageCount} page{session.pageCount !== 1 ? "s" : ""}</span>
-                              </>
-                            )}
                             {session.fileSizeBytes > 0 && (
                               <>
                                 <span>·</span>
                                 <span>{formatBytes(session.fileSizeBytes)}</span>
                               </>
                             )}
-                            {session.pdfType && session.pdfType !== "unknown" && (
-                              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 capitalize">
-                                {session.pdfType}
-                              </span>
-                            )}
+                            <span className="px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 uppercase">
+                              {session.fileType}
+                            </span>
+                            <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium capitalize ${
+                              session.status === "done"
+                                ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
+                                : session.status === "error"
+                                ? "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
+                                : "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
+                            }`}>{session.status}</span>
                           </div>
 
                           <Button
                             size="sm"
                             className="h-7 text-xs gap-1.5 bg-purple-600 hover:bg-purple-700 text-white border-0 shadow-none"
-                            onClick={() => navigate(`/pdf-editor/${session.id}`)}
+                            onClick={() => navigate(`/clause-extractor/${session.id}`)}
                           >
-                            <FileEdit className="w-3 h-3" />
-                            Continue editing
+                            <ListChecks className="w-3 h-3" />
+                            View results
                             <ArrowRight className="w-3 h-3" />
                           </Button>
                         </div>
@@ -828,7 +827,7 @@ export default function Documents() {
                             className="mt-3 pt-3 border-t border-destructive/20"
                           >
                             <p className="text-xs text-muted-foreground mb-2">
-                              Permanently delete this PDF Editor session? The original PDF and all edits will be removed.
+                              Permanently delete this Clause Extractor session? The file and all extracted data will be removed.
                             </p>
                             <div className="flex gap-2">
                               <Button

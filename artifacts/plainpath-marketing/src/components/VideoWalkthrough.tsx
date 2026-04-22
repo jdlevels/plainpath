@@ -12,7 +12,8 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 import {
   FileText, ShieldAlert, PenLine, Scale, EyeOff,
   AlertTriangle, CheckCircle2, Lock, Sparkles, Download,
-  FileSignature, GitCompare, FileEdit, Send, ArrowRightLeft,
+  FileSignature, GitCompare, ListChecks, Send, ArrowRightLeft,
+  CalendarClock, Users, Layers,
 } from "lucide-react"
 
 const INTERVAL_MS = 5200
@@ -126,15 +127,15 @@ const TOOLS = [
   },
   {
     id: 7,
-    name: "PDF Editor",
-    shortName: "Edit PDF",
-    desc: "Annotate, mask, and export any PDF.",
-    icon: FileEdit,
+    name: "Clause Extractor",
+    shortName: "Extract",
+    desc: "Pull key clauses, dates, and obligations.",
+    icon: ListChecks,
     hex: "#a855f7",
     iconHex: "#d8b4fe",
-    docName: "Medical_Summary.pdf",
-    docMeta: "628 words · 4 pages",
-    badgeLabel: "2 edits",
+    docName: "Lease_Agreement.pdf",
+    docMeta: "2,840 words · 12 pages",
+    badgeLabel: "6 obligations",
     badgeText: "#a855f7",
     badgeBg: "rgba(168,85,247,0.12)",
     badgeBorder: "rgba(168,85,247,0.3)",
@@ -660,35 +661,34 @@ function CompareOutput({ reduced }: { reduced: boolean }) {
   )
 }
 
-function PdfEditorOutput({ reduced }: { reduced: boolean }) {
+function ClauseExtractorOutput({ reduced }: { reduced: boolean }) {
   return (
     <div className="space-y-1.5">
-      <p className="text-[8px] font-semibold tracking-widest uppercase mb-2" style={{ color: "#475569" }}>Annotations</p>
+      <p className="text-[8px] font-semibold tracking-widest uppercase mb-2" style={{ color: "#475569" }}>Extracted Fields</p>
       {[
-        { label: "Text overlay: 'Revised 4/21'", type: "Text" },
-        { label: "Section 3.2 content masked",    type: "Mask" },
-      ].map(({ label, type }, i) => (
+        { icon: CalendarClock, label: "Lease start: Jun 1 2025 · End: May 31 2026", color: "#a855f7" },
+        { icon: Users,         label: "Landlord: Park Ave LLC · Tenant: J. Brooks",  color: "#a855f7" },
+        { icon: Layers,        label: "Auto-renewal clause · 60-day notice required", color: "#a855f7" },
+      ].map(({ icon: Icon, label, color }, i) => (
         <motion.div key={label}
           initial={reduced ? false : { opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: reduced ? 0 : 0.90 + i * 0.28, duration: 0.35 }}
+          transition={{ delay: reduced ? 0 : 0.70 + i * 0.28, duration: 0.35 }}
           className="rounded-lg border p-2"
           style={{ backgroundColor: "rgba(168,85,247,0.09)", borderColor: "rgba(168,85,247,0.26)" }}
         >
           <div className="flex items-center gap-1 mb-0.5">
-            <FileEdit style={{ width: 9, height: 9, color: "#a855f7" }} className="shrink-0" />
-            <span className="text-[8px] font-bold uppercase tracking-wide" style={{ color: "#a855f7" }}>{type}</span>
+            <Icon style={{ width: 9, height: 9, color }} className="shrink-0" />
           </div>
-          <p className="text-[8px] leading-snug ml-[17px]" style={{ color: "#94a3b8" }}>{label}</p>
+          <p className="text-[8px] leading-snug" style={{ color: "#94a3b8" }}>{label}</p>
         </motion.div>
       ))}
       <motion.div
         initial={reduced ? false : { opacity: 0 }} animate={{ opacity: 1 }}
-        transition={{ delay: reduced ? 0 : 1.52, duration: 0.35 }}
-        className="flex items-center gap-1.5 p-2 rounded-lg border"
-        style={{ backgroundColor: "rgba(59,130,246,0.08)", borderColor: "rgba(59,130,246,0.25)" }}
+        transition={{ delay: reduced ? 0 : 1.62, duration: 0.35 }}
+        className="flex items-center gap-1.5 pt-0.5"
       >
-        <Download style={{ width: 10, height: 10, color: "#93c5fd" }} />
-        <span className="text-[8px] font-semibold" style={{ color: "#93c5fd" }}>Export modified PDF</span>
+        <Sparkles style={{ width: 9, height: 9, color: "#a855f7" }} />
+        <span className="text-[8px] font-medium" style={{ color: "#c084fc" }}>6 obligations · 3 require action before signing</span>
       </motion.div>
     </div>
   )
@@ -702,7 +702,7 @@ function ToolOutput({ toolId, reduced }: { toolId: ToolId; reduced: boolean }) {
   if (toolId === 4) return <RedactOutput reduced={reduced} />
   if (toolId === 5) return <SignatureOutput reduced={reduced} />
   if (toolId === 6) return <CompareOutput reduced={reduced} />
-  return <PdfEditorOutput reduced={reduced} />
+  return <ClauseExtractorOutput reduced={reduced} />
 }
 
 /* ─── Processing view (brief scan state on tool switch) ───── */
@@ -714,7 +714,7 @@ const PROCESSING_LABELS: Record<number, string> = {
   4: "Detecting sensitive data…",
   5: "Sending signature request…",
   6: "Mapping document changes…",
-  7: "Loading PDF for editing…",
+  7: "Extracting clauses and obligations…",
 }
 
 function ProcessingView({ tool }: { tool: typeof TOOLS[number] }) {

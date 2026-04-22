@@ -1,0 +1,211 @@
+We are making a product-level change to PlainPath:
+
+Remove the current PDF Editor completely and replace it with a new tool called:
+
+Clause Extractor & Obligation Tracker
+
+This must be a full cleanup + replacement, not a cosmetic rename.
+
+GOAL
+The old PDF Editor is not trustworthy enough to ship as true PDF text editing. We are removing it and replacing that tool slot with a structured extraction/tracking tool that adds a genuinely different capability to the platform.
+
+==================================================
+PART 1 — REMOVE PDF EDITOR COMPLETELY
+==================================================
+
+Fully remove the current PDF Editor from the product wherever it appears:
+
+1. UI / NAV / TOOLING
+- remove tool cards/buttons for PDF Editor
+- remove routes/pages for PDF Editor
+- remove dashboard/workspace entries
+- remove tools dropdown entries
+- remove demo entries for PDF Editor
+- remove any CTA or upsell line referencing PDF Editor
+- remove FAQ/help copy mentioning PDF Editor
+
+2. BACKEND / DATA / DEAD CODE
+- remove unused PDF editor routes/endpoints
+- remove editor-only storage/session logic
+- remove unused components/hooks/types/utils used only by PDF Editor
+- remove dead export logic tied only to PDF editor
+- remove any obsolete API references and feature flags tied to PDF Editor
+
+3. PRODUCT COPY
+- ensure no public or in-app copy implies PlainPath offers a true PDF text editor
+- if PDF Review/Redaction still exists separately, keep only the honest/reliable parts
+- do not leave misleading “Edit Text” language anywhere
+
+Return a list of every route, file, card, nav item, demo entry, and copy location removed or changed.
+
+==================================================
+PART 2 — ADD THE NEW TOOL
+==================================================
+
+Create a new first-class tool:
+
+Clause Extractor & Obligation Tracker
+
+This tool must be visibly distinct from:
+- Analyze a Document
+- Document Trust Check
+- Build a Contract
+- Contract Review / Fair Deal Check
+- Compare Versions
+
+Its purpose is:
+Extract structured clause data and obligations from contracts/agreements and turn them into actionable fields.
+
+==================================================
+PART 3 — V1 TOOL SPEC
+==================================================
+
+INPUT
+- accept PDF and Word documents
+- support drag/drop + click upload
+- support single-document upload for V1
+- hold at a pre-run confirmation state after upload with a primary action button:
+  “Extract Clauses” or “Analyze Clauses”
+- allow remove/X on uploaded file before processing
+
+OUTPUT SECTIONS
+Build a structured results workspace with these sections:
+
+1. Key Dates
+- effective date
+- execution date if found
+- expiration date
+- renewal date
+- notice deadline / notice period
+
+2. Parties
+- party names
+- roles if identifiable (client/vendor, landlord/tenant, employer/employee, etc.)
+- signer names if present
+
+3. Financial Terms
+- payment amount
+- payment schedule
+- late fees if found
+- refund language if found
+
+4. Legal Clauses
+- governing law
+- termination clause
+- auto-renewal
+- liability cap
+- indemnity
+- confidentiality / NDA
+- assignment / transfer
+- dispute resolution / arbitration
+
+5. Obligations
+- clear bullet list of who must do what
+- obligations should be attributed to the relevant party when possible
+
+6. Missing / Not Found
+- clearly show important fields not detected
+- do not hallucinate; if not found, say not found
+
+RESULT BEHAVIOR
+- every extracted item should include:
+  a. label
+  b. extracted value
+  c. confidence or source snippet if feasible
+  d. source section reference/snippet if available
+- show plain-English meaning where useful, but keep this tool more structured/data-first than Analyze a Document
+- allow copy/export of results
+
+EXPORT
+For V1, support:
+- Copy all results
+- Export CSV
+- optionally export structured JSON if easy
+- do not block V1 on PDF report export if that slows delivery
+
+==================================================
+PART 4 — UI / UX REQUIREMENTS
+==================================================
+
+This should feel like a major product surface, not a small utility.
+
+1. LAYOUT
+- use a document-first workspace
+- if split-screen helps, left = uploaded document preview, right = extracted structured results
+- if split-screen is not useful for this tool, use a strong single-workspace layout with document preview toggle
+- prioritize readability and actionable structured output
+
+2. DESIGN
+- match PlainPath’s existing high-quality app styling
+- clean cards/sections
+- strong hierarchy
+- easy scanning for dates, financial terms, and obligations
+- visual emphasis on deadlines and renewal-related risk
+- missing items should be clearly shown, not buried
+
+3. INTERACTION PATTERNS
+- visible Save button if results can be saved
+- timed autosave only if already standard
+- uploaded document removable before processing
+- progress/loading state should reference the actual uploaded document, not a generic placeholder
+
+==================================================
+PART 5 — PRODUCT POSITIONING / COPY
+==================================================
+
+User-facing explanation should make clear that this tool:
+- extracts important clauses
+- tracks obligations and deadlines
+- turns dense agreements into structured data
+
+It should NOT be described as:
+- a reviewer replacing Contract Review
+- a summary tool replacing Analyze a Document
+- an editor
+- a contract builder
+
+Suggested tool subtitle:
+“Extract key clauses, deadlines, and obligations from contracts and agreements.”
+
+==================================================
+PART 6 — PLATFORM ALIGNMENT
+==================================================
+
+Update all relevant app surfaces so this new tool is fully integrated:
+
+- public marketing site
+- authenticated app dashboard
+- tools dropdown
+- feature cards
+- demos section if applicable
+- pricing/plan descriptions if tool counts are referenced
+- support/help copy where relevant
+
+If the app currently references PDF Editor in pricing/features, replace it with Clause Extractor & Obligation Tracker.
+
+==================================================
+PART 7 — DELIVERY ORDER
+==================================================
+
+Do this in order:
+1. remove PDF Editor product references and route exposure
+2. build the new Clause Extractor & Obligation Tracker page/workflow
+3. connect it into app nav/cards/routes
+4. update public-site/product copy
+5. run a full verification pass
+
+==================================================
+RETURN
+==================================================
+
+When done, return:
+
+1. exact files/routes removed for PDF Editor cleanup
+2. exact new files/routes created for Clause Extractor & Obligation Tracker
+3. screenshots of:
+   - tool card/button placement
+   - upload/pre-run state
+   - processing state
+   - final extracted results view
+4. confirmation of which fields are extracted in V1
+5. confirmation that no misleading PDF Editor copy remains anywhere in the app

@@ -32,8 +32,7 @@ import Billing from "@/pages/Billing";
 import Upgrade from "@/pages/Upgrade";
 import Signature from "@/pages/Signature";
 import Documents from "@/pages/Documents";
-import PdfEditor from "@/pages/PdfEditor";
-import PdfEditorSession from "@/pages/PdfEditorSession"
+import ClauseExtractor from "@/pages/ClauseExtractor"
 import Methodology from "@/pages/Methodology";
 import BuilderList from "@/pages/Builder/index";
 import BuilderNew from "@/pages/Builder/New";
@@ -255,13 +254,8 @@ function Router() {
             <Route path="/upgrade" component={protect(Upgrade)} />
             <Route path="/signature" component={protect(Signature)} />
             <Route path="/documents" component={protect(Documents)} />
-            <Route path="/pdf-editor" component={protect(PdfEditor)} />
-            <Route path="/pdf-editor/:id">
-              {(params) => {
-                const C = protect(() => <PdfEditorSession sessionId={params.id!} />)
-                return <C />
-              }}
-            </Route>
+            <Route path="/clause-extractor" component={protect(ClauseExtractor)} />
+            <Route path="/clause-extractor/:id" component={protect(ClauseExtractor)} />
             <Route path="/compare-versions" component={protect(CompareVersions)} />
             <Route path="/compare-versions/:id">
               {(params) => {

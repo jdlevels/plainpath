@@ -2,8 +2,8 @@ import { useState, useRef, useEffect } from "react"
 import { Link, useLocation } from "wouter"
 import { Button } from "@/components/ui/button"
 import {
-  FileScan, FileEdit, Plus, BookMarked, GitCompare, LogOut, User, ChevronDown,
-  LayoutGrid, ShieldCheck, PenLine, Scale, Menu, X, LayoutDashboard, CreditCard, EyeOff, FileSignature, FolderOpen,
+  FileScan, Plus, BookMarked, GitCompare, LogOut, User, ChevronDown,
+  LayoutGrid, ShieldCheck, PenLine, Scale, Menu, X, LayoutDashboard, CreditCard, EyeOff, FileSignature, FolderOpen, ListChecks,
 } from "lucide-react"
 
 import { ThemeToggle } from "@/components/ui/ThemeToggle"
@@ -38,7 +38,7 @@ const TOOL_NAV = [
   { label: "Build a Contract",      href: "/build-contract",          icon: PenLine       },
   { label: "Redact Sensitive Info", href: "/redact",                  icon: EyeOff        },
   { label: "Digital Signature",     href: "/signature",               icon: FileSignature },
-  { label: "PDF Editor",            href: "/pdf-editor",              icon: FileEdit      },
+  { label: "Clause Extractor",       href: "/clause-extractor",        icon: ListChecks    },
   { label: "Compare Versions",      href: "/compare-versions",        icon: GitCompare    },
 ]
 

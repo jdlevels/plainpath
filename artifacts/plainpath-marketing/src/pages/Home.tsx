@@ -17,7 +17,7 @@ import {
   FileText, FileSignature, ShieldCheck,
   ArrowRight, Upload, Sparkles, Scale,
   AlertTriangle, CheckCircle2, Clock, Lock, X as XIcon, EyeOff,
-  CalendarX, Eye, PenLine, FileScan, FileEdit, GitCompare,
+  CalendarX, Eye, PenLine, FileScan, ListChecks, GitCompare,
   DollarSign, Copy, Users, ChevronDown,
 } from "lucide-react";
 
@@ -96,7 +96,7 @@ const TOOLS = [
   { label: "Contract Review",       icon: Scale,          cls: "tool-btn-amber",   href: "/app/contract-review",         comingSoon: false },
   { label: "Redact Sensitive Info", icon: EyeOff,         cls: "tool-btn-violet",  href: "/app/redact",                  comingSoon: false },
   { label: "Digital Signature",     icon: FileSignature,  cls: "tool-btn-teal",    href: "/app/signature",               comingSoon: false },
-  { label: "PDF Editor",            icon: FileEdit,       cls: "tool-btn-orange",  href: "/app/pdf-editor",              comingSoon: false },
+  { label: "Clause Extractor",       icon: ListChecks,     cls: "tool-btn-purple",  href: "/app/clause-extractor",        comingSoon: false },
   { label: "Compare Versions",      icon: GitCompare,     cls: "tool-btn-sky",     href: "/app/compare-versions",        comingSoon: false },
 ];
 
@@ -194,16 +194,16 @@ const FEATURES = [
     tagCls: "bg-teal-50/80 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300 border border-teal-200/60 dark:border-teal-700/40",
   },
   {
-    icon: FileEdit,
+    icon: ListChecks,
     color: "text-purple-600 dark:text-purple-400",
     bg: "bg-purple-100 dark:bg-purple-900/30",
     border: "border-l-purple-500 dark:border-l-purple-400",
     accent: "bg-purple-500 dark:bg-purple-400",
     glow: "from-purple-50 dark:from-purple-900/10",
-    title: "PDF Editor",
-    desc: "Open any PDF and add text overlays, mask sensitive content, highlight key sections, and export a clean modified copy — without converting file formats.",
-    result: { label: "PDF Modified", value: "2 text annotations added, 1 section masked. Export ready.", icon: CheckCircle2, color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-50 dark:bg-purple-900/20" },
-    tags: ["Annotations", "Content masking", "Form fill-ins", "Redlined edits"],
+    title: "Clause Extractor",
+    desc: "Upload any contract or agreement and get a structured breakdown of critical dates, party roles, financial terms, legal clauses, and a plain-English obligation list.",
+    result: { label: "Extraction Complete", value: "6 obligations found, 6 of 8 clauses present. Auto-renewal clause detected.", icon: CheckCircle2, color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-50 dark:bg-purple-900/20" },
+    tags: ["Key dates", "Obligations", "Legal clauses", "Party roles"],
     tagCls: "bg-purple-50/80 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 border border-purple-200/60 dark:border-purple-700/40",
   },
 ];
@@ -324,18 +324,18 @@ const DEMOS = [
     href: "/demo/compare",
   },
   {
-    id: "pdf-editor-consent",
-    tool: "PDF Editor",
-    title: "Patient Consent Form — Annotated",
-    desc: "A two-page consent form with a filled text field, a highlighted consent clause, and a masked insurance ID — all pre-loaded in the editor.",
-    icon: FileEdit,
-    color: "text-orange-500 dark:text-orange-400",
-    bg: "bg-orange-50 dark:bg-orange-950/50",
-    hoverBorder: "hover:border-orange-400/50",
-    hoverTitle: "group-hover:text-orange-500 dark:group-hover:text-orange-400",
-    tags: ["Text · Highlight · Mask", "2 pages", "Interactive toolbar"],
-    cta: "Open editor",
-    href: "/demo/pdf-editor",
+    id: "clause-extractor-lease",
+    tool: "Clause Extractor",
+    title: "Residential Lease — 6 Obligations Found",
+    desc: "A 12-page lease broken down into structured fields: key dates, party roles, financial terms, auto-renewal clause, and a plain-English obligation list.",
+    icon: ListChecks,
+    color: "text-purple-500 dark:text-purple-400",
+    bg: "bg-purple-50 dark:bg-purple-950/50",
+    hoverBorder: "hover:border-purple-400/50",
+    hoverTitle: "group-hover:text-purple-500 dark:group-hover:text-purple-400",
+    tags: ["Key dates · Parties", "Obligations", "Legal clauses"],
+    cta: "See extraction",
+    href: "/demo/clause-extractor",
   },
 ]
 
@@ -356,7 +356,7 @@ const PLANS = [
       { label: "Contract Review",       included: false, comingSoon: false },
       { label: "Digital Signature",     included: false, comingSoon: false },
       { label: "Compare Versions",      included: false, comingSoon: false },
-      { label: "PDF Editor",            included: false, comingSoon: false },
+      { label: "Clause Extractor",      included: false, comingSoon: false },
     ],
     extras: [] as string[],
     cta: "Subscribe to Starter",
@@ -377,7 +377,7 @@ const PLANS = [
       { label: "Redact Sensitive Info", included: true,  comingSoon: false },
       { label: "Digital Signature",     included: true,  comingSoon: false },
       { label: "Compare Versions",      included: true,  comingSoon: false },
-      { label: "PDF Editor",            included: true,  comingSoon: false },
+      { label: "Clause Extractor",      included: true,  comingSoon: false },
     ],
     extras: ["Saved analysis history", "Premium output and workflow tools"],
     cta: "Subscribe to Pro",
@@ -1095,7 +1095,7 @@ export default function Home() {
                     { icon: EyeOff,        title: "Your private details go wherever the doc goes", desc: "Names, SSNs, account numbers — once you share a document they go with it. Redact Sensitive Info lets you strip them before anyone else sees the file.",                                   tool: "Redact Sensitive Info", iconBg: "rgba(139,92,246,0.15)",   iconColor: "#a78bfa", badgeBorder: "rgba(139,92,246,0.35)",   badgeColor: "#c4b5fd"  },
                     { icon: FileSignature, title: "Print, sign, scan — for every signature",      desc: "The old workflow adds days and creates unsigned copies nobody can track. Digital Signature sends a secure link and gives you a real-time audit trail.",                                    tool: "Digital Signature",     iconBg: "rgba(99,102,241,0.15)",   iconColor: "#818cf8", badgeBorder: "rgba(99,102,241,0.35)",   badgeColor: "#a5b4fc"  },
                     { icon: GitCompare,    title: "New contract version — what actually changed?", desc: "They sent a revised draft. You have no idea what moved. Compare Versions maps every addition, deletion, and structural change with severity scoring.",                                    tool: "Compare Versions",      iconBg: "rgba(20,184,166,0.15)",   iconColor: "#2dd4bf", badgeBorder: "rgba(20,184,166,0.35)",   badgeColor: "#5eead4"  },
-                    { icon: FileEdit,      title: "You need to annotate but can't edit the PDF",  desc: "The file is locked. You can't add notes, mask a section, or fill in a field. PDF Editor lets you overlay text, mask content, and export a clean copy.",                                   tool: "PDF Editor",            iconBg: "rgba(168,85,247,0.15)",   iconColor: "#d8b4fe", badgeBorder: "rgba(168,85,247,0.35)",   badgeColor: "#e9d5ff"  },
+                    { icon: ListChecks,    title: "Obligations buried in the fine print",         desc: "You're about to sign but you don't know who owes what by when. Clause Extractor pulls every obligation, assigns it to a party, and flags any that require action before signing.", tool: "Clause Extractor",      iconBg: "rgba(168,85,247,0.15)",   iconColor: "#d8b4fe", badgeBorder: "rgba(168,85,247,0.35)",   badgeColor: "#e9d5ff"  },
                   ].map((item, i) => (
                     <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true }} transition={{ delay: i * 0.06 }}
