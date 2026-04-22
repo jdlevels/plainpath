@@ -35,7 +35,10 @@ const RENDER_SCALE = 1.5
 const MIN_OP_FRAC = 0.01
 const DEFAULT_TEXT_W = 0.25
 const DEFAULT_TEXT_H = 0.06
-const DEFAULT_FONT_SIZE = 16
+// Stored as fraction of page height (0-1); ≈16 pt on a 792 pt letter page.
+// Legacy ops that were saved with absolute screen-px values (>= 1) are
+// detected at render-time and handled with a px fallback.
+const DEFAULT_FONT_SIZE = 0.020
 const AUTOSAVE_MS = 60_000
 const TEXT_DEBOUNCE_MS = 800
 
@@ -269,6 +272,15 @@ function ToolBtn({
   )
 }
 
+// Converts a stored fontSize to a CSS value.
+// New ops store fontSize as a fraction of page height (0 < v < 1).
+// Legacy ops stored absolute screen pixels (v >= 1).
+// cqh resolves against the EditingCanvas container (container-type: size),
+// so text scales with the page across all screen sizes and zoom levels.
+function resolveFontSize(v: number): string {
+  return v < 1 ? `${(v * 100).toFixed(3)}cqh` : `${v}px`
+}
+
 // ─── EditOpView ────────────────────────────────────────────────────────────────
 
 function EditOpView({
@@ -390,7 +402,7 @@ function EditOpView({
             border: "none",
             outline: "none",
             background: "transparent",
-            fontSize: `${op.fontSize ?? DEFAULT_FONT_SIZE}px`,
+            fontSize: resolveFontSize(op.fontSize ?? DEFAULT_FONT_SIZE),
             color: op.color ?? "#000",
             lineHeight: 1.35,
             padding: "2px 4px",
@@ -400,7 +412,7 @@ function EditOpView({
       ) : (
         <div
           style={{
-            fontSize: `${op.fontSize ?? DEFAULT_FONT_SIZE}px`,
+            fontSize: resolveFontSize(op.fontSize ?? DEFAULT_FONT_SIZE),
             color: op.color ?? "#000",
             lineHeight: 1.35,
             padding: "2px 4px",
@@ -635,7 +647,7 @@ function EditingCanvas({
     <div
       ref={pageRef}
       className="absolute inset-0"
-      style={{ cursor: cursorMap[activeTool] }}
+      style={{ cursor: cursorMap[activeTool], containerType: "size" }}
       onPointerDown={(e) => !isEditText && onOverlayPointerDown(e, pageIndex)}
     >
       {pageOps.map((op) => (
@@ -1351,7 +1363,10 @@ export default function PdfEditorSession({ sessionId }: { sessionId: string }) {
       w: region.w,
       h: Math.max(region.h, DEFAULT_TEXT_H),
       text: region.text,
-      fontSize: DEFAULT_FONT_SIZE,
+      // Derive font size from the extracted line height so replacement text
+      // visually matches the original document.  region.h is already a page
+      // fraction; multiply by 0.85 (cap-height / bounding-box ratio).
+      fontSize: region.h * 0.85,
       color: "#000000",
     }
     const newOps = [...liveOpsRef.current, maskOp, textOp]

@@ -504,7 +504,11 @@ router.get("/sessions/:id/export", requireAuth, async (req: any, res) => {
           color: hlColor, opacity: op.opacity ?? 0.4,
         });
       } else if (op.kind === "text" && op.text) {
-        const fontSize: number = op.fontSize ?? 16;
+        const rawSize: number = op.fontSize ?? 16;
+        // New ops store fontSize as a page-height fraction (0 < v < 1).
+        // Legacy ops store absolute screen pixels (v >= 1 — treated as pts
+        // because the original default of 16px happened to be acceptable).
+        const fontSize: number = rawSize < 1 ? rawSize * H : rawSize;
         const textColor = hexToRgb(op.color ?? "#000000");
         const textY = (1 - op.y) * H - fontSize;
         const textX = x + 4;
