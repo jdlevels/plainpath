@@ -52,7 +52,7 @@ router.get("/status", (req, res) => {
     if (isAdminEmail(resolvedEmail)) {
       const proEntitlements = PLAN_ENTITLEMENTS["pro"]
       return res.json({
-        email,
+        email: resolvedEmail,
         role: "admin",
         found: true,
         status: "active",
@@ -71,15 +71,15 @@ router.get("/status", (req, res) => {
       })
     }
 
-    const subscriber = getSubscriberByEmail(email)
+    const subscriber = getSubscriberByEmail(resolvedEmail)
     const plan = normalizePlan(subscriber?.plan)
     const status = subscriber?.status || "inactive"
     const entitlements = PLAN_ENTITLEMENTS[plan]
-    const usageCount = getUsageForCurrentMonth(email)
-    const toolUsage = getAllToolUsageForCurrentMonth(email)
+    const usageCount = getUsageForCurrentMonth(resolvedEmail)
+    const toolUsage = getAllToolUsageForCurrentMonth(resolvedEmail)
 
     return res.json({
-      email,
+      email: resolvedEmail,
       found: Boolean(subscriber),
       status,
       plan,

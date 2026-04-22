@@ -37,10 +37,15 @@ export type EntitlementStatus = {
 
 // ─── Fetch full entitlements ──────────────────────────────────────────────────
 
-export async function fetchEntitlements(email: string): Promise<EntitlementStatus> {
-  const response = await fetch(
-    `/api/entitlements/status?email=${encodeURIComponent(email)}`
-  )
+export async function fetchEntitlements(
+  email: string,
+  clerkUserId?: string | null,
+): Promise<EntitlementStatus> {
+  const params = new URLSearchParams()
+  if (email) params.set("email", email)
+  if (clerkUserId) params.set("clerkUserId", clerkUserId)
+
+  const response = await fetch(`/api/entitlements/status?${params.toString()}`)
   const data = await response.json()
 
   if (!response.ok) {

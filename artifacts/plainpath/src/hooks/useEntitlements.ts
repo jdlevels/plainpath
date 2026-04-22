@@ -29,8 +29,9 @@ export function useEntitlements() {
     const storedEmail = getStoredSubscriberEmail()
     const clerkEmail = user?.emailAddresses?.[0]?.emailAddress ?? null
     const email = storedEmail || clerkEmail
+    const clerkUserId = user?.id ?? null
 
-    if (!email) {
+    if (!email && !clerkUserId) {
       setData(null)
       setLoading(false)
       return
@@ -38,7 +39,7 @@ export function useEntitlements() {
 
     try {
       setLoading(true)
-      const result = await fetchEntitlements(email)
+      const result = await fetchEntitlements(email ?? "", clerkUserId)
 
       // Admin: server returns role="admin", found=true, status="active", plan="pro"
       // Auto-store email so subsequent page loads don't require Clerk fallback
