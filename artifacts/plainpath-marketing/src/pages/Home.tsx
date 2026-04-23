@@ -12,6 +12,7 @@ import ToolsShowcase from "@/components/ToolsShowcase";
 import DocumentSituations from "@/components/DocumentSituations";
 import FAQSection from "@/components/FAQSection";
 import VideoWalkthrough from "@/components/VideoWalkthrough";
+import { BackToTop } from "@/components/BackToTop";
 import { Card } from "@/components/ui/card";
 import {
   FileText, FileSignature, ShieldCheck,
@@ -1519,6 +1520,8 @@ export default function Home() {
       </div>
 
       <Footer />
+
+      <BackToTop />
 
       <WaitlistModal
         open={waitlistOpen}
