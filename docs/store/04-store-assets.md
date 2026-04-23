@@ -41,16 +41,20 @@ Complete asset checklist and design briefs for App Store and Google Play submiss
 
 | # | Priority | Screen | Caption Overlay |
 |---|---|---|---|
-| 1 | Required | Home / Tool Grid (5 live tools + Digital Signature Coming Soon card) | "5 tools for every document you face" |
-| 2 | Required | Analyze — Plain English result | "Understand any document instantly" |
-| 3 | Required | Trust Check — flagged clause view | "Know what you're signing" |
-| 4 | Recommended | Contract Builder — draft output | "Build clear contracts in minutes" |
-| 5 | Recommended | Redact — PII detection list (grouped detection, demo doc loaded) | "Remove sensitive info before sharing" |
-| 6 | Recommended | Redact — Applied summary (green panel) | "Clean redacted output. Original untouched." |
+| 1 | Required | Home / Tool Grid (all 8 live tools) | "8 tools for every document you face" |
+| 2 | Required | Analyze — Plain English result | "Plain English — not legal jargon" |
+| 3 | Required | Trust Check — flagged clause view | "See what you're really signing" |
+| 4 | Required | Contract Review — clause breakdown | "Know before you sign" |
+| 5 | Recommended | Clause Extractor — structured output | "Every clause. Every obligation. Found." |
+| 6 | Recommended | Compare Versions — diff view | "See exactly what changed" |
+| 7 | Recommended | Redact — PII detection list (grouped detection, demo doc loaded) | "Find and remove sensitive info" |
+| 8 | Recommended | Digital Signature — signing flow | "Sign anything. Legally. Instantly." |
 
-> **Note on Shot 1:** The home screen displays 5 live tool cards (Analyze, Trust Check, Contract Builder, Contract Review, Redact Sensitive Info) plus a 6th card for "Digital Signature — Coming Soon." Include all 6 cards in the screenshot to show the product roadmap. The caption "5 tools for every document you face" correctly reflects the 5 live tools.
+> **Note on Shot 1:** The home screen now displays all 8 live tools. All 8 tool cards should be visible. Digital Signature is live — there is no "Coming Soon" badge.
 
-> **Note on Shot 5:** The Redact tool now includes 3 built-in sample documents (Personal Info Letter, Freelance Contract, Medical Benefits Form). Use one of these to populate the demo without showing real user PII.
+> **Note on Shot 7:** The Redact tool includes 3 built-in sample documents (Personal Info Letter, Freelance Contract, Medical Benefits Form). Use one of these to populate the demo without showing real user PII.
+
+> **Minimum submission:** Use shots 1, 2, 3, 4, 7, 8 for a 6-shot set. See `08-phase3-store-prep.md` for full per-screen capture guidance.
 
 ### Screenshot Sizes Required
 
@@ -98,7 +102,7 @@ Shot 6: "Redacted. Protected. Ready to share."
 **Content:**
 ```
 Headline: "Read every document in plain English"
-Subline:  "Analyze, Trust Check, Review, Build, Redact"
+Subline:  "Analyze, Trust Check, Review, Build, Redact, Extract, Compare, Sign"
 Visual:   Phone showing tool grid or Analyze result
 ```
 

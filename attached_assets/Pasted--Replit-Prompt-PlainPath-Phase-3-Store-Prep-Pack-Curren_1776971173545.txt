@@ -1,0 +1,133 @@
+## Replit Prompt — PlainPath Phase 3 Store-Prep Pack
+
+Current status:
+- live web domain/auth/billing foundation is stable
+- premium polish and product refinement pass are accepted and locked
+- do not reopen solved infrastructure
+- do not touch Clerk/Replit domain setup
+- do not touch Stripe webhook logic
+- do not change live entitlement logic
+
+## Goal
+Create a complete, current, premium-quality store-prep package for future App Store / Google Play submission.
+
+This is preparation only.
+Do not submit anything.
+Do not pretend native release is live today.
+
+---
+
+## Scope
+
+### 1. App metadata pack
+Prepare a current metadata set for PlainPath using the real live product state:
+- App name
+- Subtitle / short title
+- Short description
+- Long description
+- Feature bullets
+- Value proposition summary
+- “What’s new” draft
+- Category recommendation
+- Keyword set / ASO starter set
+
+Use the current reality:
+- 8 tools
+- Starter $4.99/month
+- Pro $19.99/month
+- web app live now
+- mobile/native planned later
+
+### 2. Screenshot plan
+Create a screenshot plan for future store submission:
+- screen-by-screen list
+- what each screenshot should show
+- caption copy for each screenshot
+- recommended order
+- what device frames/orientations make sense
+- which tools/features should be highlighted first
+
+Prioritize the strongest consumer-facing flows:
+- Analyze a Document
+- Document Trust Check
+- Contract Review
+- Clause Extractor
+- Compare Versions
+- Digital Signature
+- Document Builder
+
+### 3. Store-safe messaging audit
+Audit all existing marketing/store-facing copy and identify what must change before actual store submission:
+- anything that still implies the wrong platform state
+- anything that overclaims privacy/security
+- anything that is too web-specific for future native listing text
+- anything that would raise App Store / Google Play review concerns
+
+Return:
+- exact files reviewed
+- exact copy that should later be revised
+- why
+
+### 4. Privacy / compliance store-prep checklist
+Create a later-use checklist for store submission covering:
+- privacy wording
+- account creation/sign-in wording
+- payment/subscription wording
+- AI/document-processing disclosures
+- Dropbox Sign / third-party disclosure considerations
+- screenshots and metadata review
+- anything platform-review-sensitive
+
+### 5. Store asset gap list
+List what still needs to be created later:
+- screenshots
+- icons if needed
+- preview video if recommended
+- promotional text
+- support URL / marketing URL / privacy URL confirmation
+- anything else required for clean submission
+
+---
+
+## Constraints
+- No infrastructure changes
+- No auth/domain changes
+- No billing changes
+- No product logic changes
+- This is documentation/content/planning only unless a tiny copy fix is absolutely necessary and clearly justified
+
+---
+
+## Required output format
+
+### A. Store Metadata Pack
+Return polished final copy for:
+- App name
+- Subtitle
+- Short description
+- Long description
+- Feature bullets
+- Keywords / ASO starter list
+
+### B. Screenshot Plan
+Return:
+- screenshot number
+- screen/content to show
+- exact caption text
+- purpose of the screenshot
+
+### C. Store-Submission Risk Notes
+Return:
+- current wording/issues that must be revised before real submission
+- why each item matters
+
+### D. Asset / Readiness Checklist
+Return:
+- what already exists
+- what is missing
+- what should be produced next
+
+### E. Stability statement
+Confirm:
+- no live app/auth/billing/domain logic was changed
+- this was store-prep only

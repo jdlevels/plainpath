@@ -1,7 +1,7 @@
 # PlainPath — Finalized Store Metadata Pack
 ## Single source of truth — copy-paste ready for App Store Connect and Google Play Console
 
-Last updated: April 2026 · Pricing frozen: Starter $4.99/mo · Pro $29.99/mo
+Last updated: April 2026 · Pricing: Starter $4.99/mo · Pro $19.99/mo · 8 tools live
 
 ---
 
@@ -43,15 +43,15 @@ Whether you're signing a lease, reviewing a job offer, navigating a medical form
 
 ---
 
-5 TOOLS. ONE APP.
+8 TOOLS. ONE APP.
 
 ANALYZE
 Paste or upload any document and get a full plain-English breakdown: what it says, key terms defined, deadlines, required actions, and risks you should know about. No legal jargon. No guesswork.
 
-TRUST CHECK
+DOCUMENT TRUST CHECK
 Get an honest second opinion on any document before you sign. PlainPath flags language designed to limit your rights, confusing clauses, and patterns worth questioning — so you know exactly what you're agreeing to.
 
-CONTRACT BUILDER
+BUILD A CONTRACT
 Answer a few plain-English questions and PlainPath drafts a complete, professional contract — NDAs, service agreements, freelance contracts, and more — in language both sides can actually understand.
 
 CONTRACT REVIEW
@@ -59,6 +59,15 @@ Upload a contract you received. PlainPath reviews it clause by clause: what's st
 
 REDACT SENSITIVE INFO
 Before sharing any document, scan it for personal information — names, Social Security Numbers, account numbers, email addresses, phone numbers, and more. Review each detected item, choose what to remove, and export a clean redacted text version. Original uploaded files are not modified.
+
+CLAUSE EXTRACTOR
+Pull every clause, key date, obligation, and named party from any contract into a clean, structured breakdown — so nothing gets buried in the fine print.
+
+COMPARE VERSIONS
+Paste two versions of a document side by side. PlainPath highlights exactly what changed, what was added, what was removed, and what those changes mean for you.
+
+DIGITAL SIGNATURE
+Sign documents electronically with a legally binding e-signature. Send signature requests to others, track status, and download signed copies — powered by Dropbox Sign.
 
 ---
 
@@ -75,21 +84,23 @@ WHO IT'S FOR
 
 PRIVACY BY DESIGN
 
-Your documents are processed to generate your analysis and then discarded. PlainPath does not store your document content long-term. Redacted output is a plain-text version — your original uploaded files remain unchanged.
+Your documents are processed to generate your analysis and then discarded. PlainPath does not store your document content long-term. Pro workspace tools (Document Builder, Compare Versions, Clause Extractor) store working data only for your active session — you can delete it at any time.
 
-PlainPath uses OpenAI to power document analysis. See our Privacy Policy at plainpathapp.com/privacy for full details.
+Redacted output is a plain-text version — your original uploaded files remain unchanged.
+
+PlainPath uses OpenAI to power document analysis and Dropbox Sign for e-signature workflows. See our Privacy Policy at plainpathapp.com/privacy for full details.
 ```
 
-### Keywords *(100 chars max — 94 characters)*
+### Keywords *(100 chars max)*
 ```
-legal,contract,document,analyze,review,lease,NDA,plain english,redact,privacy,sign,pdf,terms
+legal,contract,document,analyze,review,lease,NDA,plain english,redact,sign,clause,compare,pdf
 ```
 
 ### What's New (first release)
 ```
 PlainPath — read, review, and protect any document in plain English.
 
-5 tools: Analyze, Trust Check, Contract Builder, Contract Review, and Redact Sensitive Info.
+8 tools: Analyze, Document Trust Check, Build a Contract, Contract Review, Redact Sensitive Info, Clause Extractor, Compare Versions, and Digital Signature.
 
 Plain English breakdowns. No legal degree required.
 ```
@@ -100,12 +111,14 @@ PlainPath is a document analysis and privacy tool. Users paste or upload documen
 The app calls an OpenAI-powered API to analyze the document and return plain-English results.
 No document content is stored long-term. No social features. No user-generated content visible to others.
 
+Digital Signature is powered by Dropbox Sign (an established third-party e-signature provider).
+Users sign documents and can send requests to others — no camera, microphone, or location access required.
+
 Test account:
 Email: [add test@plainpathapp.com before submission]
 Password: [add before submission]
 
-In-app purchases: Starter ($4.99/month), Pro ($29.99/month). Use Apple Sandbox environment to test.
-Redact tool works entirely from pasted text — no camera, microphone, or location access required.
+In-app purchases: Starter ($4.99/month), Pro ($19.99/month). Use Apple Sandbox environment to test.
 Built-in sample documents are available for testing all tools without requiring a real document.
 ```
 
@@ -114,7 +127,7 @@ Built-in sample documents are available for testing all tools without requiring 
 | Product ID | Type | Price | Display Name |
 |---|---|---|---|
 | com.plainpath.app.starter_monthly | Auto-Renewable Subscription | $4.99/month | PlainPath Starter |
-| com.plainpath.app.pro_monthly | Auto-Renewable Subscription | $29.99/month | PlainPath Pro |
+| com.plainpath.app.pro_monthly | Auto-Renewable Subscription | $19.99/month | PlainPath Pro |
 
 **Subscription Group:** PlainPath Plans
 
@@ -141,15 +154,15 @@ Whether you're signing a lease, reviewing a job offer, navigating a medical form
 
 ---
 
-5 TOOLS. ONE APP.
+8 TOOLS. ONE APP.
 
 📄 ANALYZE
 Paste or upload any document and get a full plain-English breakdown: what it says, key terms defined, deadlines, required actions, and risks you should know about. No legal jargon. No guesswork.
 
-🔍 TRUST CHECK
+🔍 DOCUMENT TRUST CHECK
 Get an honest second opinion on any document before you sign. PlainPath flags language designed to limit your rights, confusing clauses, and patterns worth questioning — so you know exactly what you're agreeing to.
 
-✍️ CONTRACT BUILDER
+✍️ BUILD A CONTRACT
 Answer a few plain-English questions and PlainPath drafts a complete, professional contract — NDAs, service agreements, freelance contracts, and more — in language both sides can actually understand.
 
 📋 CONTRACT REVIEW
@@ -157,6 +170,15 @@ Upload a contract you received. PlainPath reviews it clause by clause: what's st
 
 🛡️ REDACT SENSITIVE INFO
 Before sharing any document, scan it for personal information — names, Social Security Numbers, account numbers, email addresses, phone numbers, and more. Review each detected item, choose what to remove, and export a clean redacted text version. Original uploaded files are not modified.
+
+🔎 CLAUSE EXTRACTOR
+Pull every clause, key date, obligation, and named party from any contract into a clean, structured breakdown — so nothing gets buried in the fine print.
+
+📊 COMPARE VERSIONS
+Paste two versions of a document side by side. PlainPath highlights exactly what changed, what was added, what was removed, and what those changes mean for you.
+
+✒️ DIGITAL SIGNATURE
+Sign documents electronically with a legally binding e-signature. Send signature requests to others, track status, and download signed copies — powered by Dropbox Sign.
 
 ---
 
@@ -173,9 +195,11 @@ WHO IT'S FOR
 
 PRIVACY BY DESIGN
 
-Your documents are processed to generate your analysis and then discarded. PlainPath does not store your document content long-term. Redacted output is a plain-text version — your original uploaded files remain unchanged.
+Your documents are processed to generate your analysis and then discarded. PlainPath does not store your document content long-term. Pro workspace data is stored only for your active session — you can delete it at any time.
 
-PlainPath uses AI to power document analysis. See our Privacy Policy at plainpathapp.com/privacy for full details.
+Redacted output is a plain-text version — your original uploaded files remain unchanged.
+
+PlainPath uses AI to power document analysis and Dropbox Sign for e-signature workflows. See our Privacy Policy at plainpathapp.com/privacy for full details.
 ```
 
 ### Category
@@ -188,7 +212,7 @@ Productivity
 document analysis
 contract review
 legal document reader
-PDF reader
+e-signature
 privacy protection
 ```
 
@@ -197,7 +221,9 @@ privacy protection
 | Data Type | Collected? | Shared? | Purpose |
 |---|---|---|---|
 | Email address | Yes (account) | No | App functionality, account management |
-| Document text | Yes (processing only) | No | Core feature — AI analysis, discarded after |
+| Name | Yes (account) | No | Account management |
+| Document text | Yes (processing only) | Third party (OpenAI — transient) | Core feature — AI analysis, discarded after |
+| Signature data | Yes (when using Digital Signature) | Third party (Dropbox Sign) | E-signature workflow |
 | Usage analytics | Yes | No | App improvement |
 | Payment info | No (Play Billing handles) | — | — |
 
@@ -210,7 +236,7 @@ privacy protection
 | Product ID | Type | Price | Display Name |
 |---|---|---|---|
 | plainpath_starter_monthly | Auto-Renewable Subscription | $4.99/month | PlainPath Starter |
-| plainpath_pro_monthly | Auto-Renewable Subscription | $29.99/month | PlainPath Pro |
+| plainpath_pro_monthly | Auto-Renewable Subscription | $19.99/month | PlainPath Pro |
 
 **Subscription Group:** PlainPath Plans
 
@@ -220,33 +246,37 @@ privacy protection
 
 | Shot | Screen | Caption overlay text |
 |---|---|---|
-| 1 | Home — tool grid | 5 tools for every document you face |
+| 1 | Home — tool grid (all 8 tools) | 8 tools for every document you face |
 | 2 | Analyze — plain English result | Plain English — not legal jargon |
-| 3 | Trust Check — scam verdict | See what you're really signing |
-| 4 | Contract Review — fairness score | Know before you sign |
-| 5 | Redact — PII detection list | Find and remove sensitive info |
-| 6 | Redact — applied summary | Redacted. Protected. Ready to share. |
+| 3 | Document Trust Check — flagged clause | See what you're really signing |
+| 4 | Contract Review — clause breakdown | Know before you sign |
+| 5 | Clause Extractor — structured output | Every clause. Every obligation. Found. |
+| 6 | Compare Versions — diff view | See exactly what changed |
+| 7 | Redact — PII detection list | Find and remove sensitive info |
+| 8 | Digital Signature — signing flow | Sign anything. Legally. Instantly. |
 
-> Caption style: Short, punchy, no punctuation. White bold text on a dark semi-transparent bar at bottom of shot.
+> Caption style: Short, punchy, no terminal punctuation (except as part of phrasing). White bold text on a dark semi-transparent bar at the bottom of each shot. Consistent padding, consistent font, consistent bar height across all shots.
+
+> For a 6-shot submission (minimum for both stores), use shots 1, 2, 3, 4, 7, 8.
 
 ---
 
 ## 5. FEATURE GRAPHIC (Google Play — 1024×500)
 
 **Headline:** Read every document in plain English
-**Subline:** Analyze · Trust Check · Review · Build · Redact
-**Asset file:** `docs/store/assets/feature-graphic-final.png` (16:9 — crop to 1024×500 before upload)
+**Subline:** Analyze · Trust Check · Review · Build · Redact · Extract · Compare · Sign
+**Asset file:** `docs/store/assets/feature-graphic-final.png` (create before submission)
 
 ---
 
 ## 6. PRICING SUMMARY (frozen)
 
-| Plan | Monthly | Annual | Annual savings |
+| Plan | Monthly | Annual | Annual note |
 |---|---|---|---|
-| Starter | $4.99/month | $47.99/year | Save about 20% vs monthly |
-| Pro | $29.99/month | $251.99/year | Save about 30% vs monthly |
+| Starter | $4.99/month | $47.99/year | ~$4.00/mo, save ~20% |
+| Pro | $19.99/month | $191.90/year | ~$16.00/mo, save 20% |
 
-> Annual plans are out of scope for MVP. Add after launch. Use "save about 20%" and "save about 30%" — do not claim exact percentages, as prices are charm-priced ($47.99, $251.99). Actual savings: 19.85% and 29.98% respectively.
+> Annual plans are optional for MVP. Add after launch if desired.
 
 ---
 

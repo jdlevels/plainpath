@@ -1,5 +1,7 @@
 # PlainPath — Apple App Store Listing
 
+Last updated: April 2026 · 8 tools live · Pro $19.99/month
+
 ## Required Fields
 
 ### Name
@@ -18,53 +20,19 @@ Business
 
 ## Description *(4,000 chars max)*
 
-PlainPath turns complex documents into plain English — instantly, privately, and without a lawyer.
+See `07-metadata-pack-final.md` → Section 2 for full copy-paste-ready description.
 
-Whether you're signing a lease, reviewing a job offer, navigating a medical form, or protecting your information before sharing, PlainPath gives you a clear, honest breakdown of what a document actually says — and what it means for you.
-
----
-
-5 TOOLS. ONE APP.
-
-ANALYZE
-Paste or upload any document and get a full plain-English breakdown: what it says, key terms defined, deadlines, required actions, and risks you should know about. No legal jargon. No guesswork.
-
-TRUST CHECK
-Get an honest second opinion on any document before you sign. PlainPath flags language designed to limit your rights, confusing clauses, and patterns worth questioning — so you know exactly what you're agreeing to.
-
-CONTRACT BUILDER
-Answer a few plain-English questions and PlainPath drafts a complete, professional contract — NDAs, service agreements, freelance contracts, and more — in language both sides can actually understand.
-
-CONTRACT REVIEW
-Upload a contract you received. PlainPath reviews it clause by clause: what's standard, what's unusual, what's missing, and what you may want to negotiate or push back on.
-
-REDACT SENSITIVE INFO
-Before sharing any document, scan it for personal information — names, Social Security Numbers, account numbers, email addresses, phone numbers, and more. Review each detected item, choose what to remove, and export a clean redacted text version. Original uploaded files are not modified.
-
----
-
-WHO IT'S FOR
-
-• Renters reviewing leases before signing
-• Freelancers reading client contracts
-• Job seekers evaluating offer letters
-• Small business owners reviewing vendor agreements
-• Caregivers navigating healthcare and insurance paperwork
-• Anyone who regularly receives legal documents and wants to understand them
-
----
-
-PRIVACY BY DESIGN
-
-Your documents are processed to generate your analysis and then discarded. PlainPath does not store your document content long-term. Redacted output is a plain-text version — your original uploaded files remain unchanged.
-
-PlainPath uses OpenAI to power document analysis. See our Privacy Policy at plainpathapp.com/privacy for full details.
+Summary of sections:
+- Intro paragraph
+- 8 TOOLS. ONE APP. (Analyze, Document Trust Check, Build a Contract, Contract Review, Redact Sensitive Info, Clause Extractor, Compare Versions, Digital Signature)
+- WHO IT'S FOR
+- PRIVACY BY DESIGN (OpenAI + Dropbox Sign disclosure)
 
 ---
 
 ## Keywords *(100 chars max)*
 ```
-legal,contract,document,analyze,review,lease,NDA,plain english,redact,privacy,sign,pdf,terms
+legal,contract,document,analyze,review,lease,NDA,plain english,redact,sign,clause,compare,pdf
 ```
 
 ## Support URL
@@ -93,22 +61,28 @@ https://plainpathapp.com/privacy
 
 ---
 
-## Screenshot Content Plan (6 shots)
+## Screenshot Content Plan (8 shots — use 6 minimum)
 
-| # | Screen | Caption |
-|---|---|---|
-| 1 | Home tool grid (all 5 tools visible) | "5 tools for every document you face" |
-| 2 | Analyze result — plain English overview | "What does this actually say?" |
-| 3 | Trust Check verdict — flagged clauses | "Know what you're signing before you sign" |
-| 4 | Contract Builder — draft output | "Build a clear contract in minutes" |
-| 5 | Redact — detection screen (grouped PII list) | "Remove sensitive info before sharing" |
-| 6 | Redact — applied summary (green panel) | "Clean redacted output. Original untouched." |
+| # | Priority | Screen | Caption |
+|---|---|---|---|
+| 1 | Required | Home tool grid (all 8 tools visible) | "8 tools for every document you face" |
+| 2 | Required | Analyze result — plain English overview | "Plain English — not legal jargon" |
+| 3 | Required | Trust Check verdict — flagged clauses | "See what you're really signing" |
+| 4 | Required | Contract Review — clause breakdown | "Know before you sign" |
+| 5 | Recommended | Clause Extractor — structured output | "Every clause. Every obligation. Found." |
+| 6 | Recommended | Compare Versions — diff view | "See exactly what changed" |
+| 7 | Recommended | Redact — PII detection list | "Find and remove sensitive info" |
+| 8 | Recommended | Digital Signature — signing flow | "Sign anything. Legally. Instantly." |
+
+> For a 6-shot set (minimum): use shots 1, 2, 3, 4, 7, 8.
+> For a full 8-shot set: include all.
+> See `08-phase3-store-prep.md` for full per-screen capture guidance.
 
 ---
 
 ## App Preview Video (optional but recommended)
 - Duration: 15–30 seconds
-- See: `03-store-assets.md` for full preview video script
+- See `08-phase3-store-prep.md` for updated 8-tool video script
 
 ---
 
@@ -118,12 +92,16 @@ PlainPath is a document analysis and privacy tool. Users paste or upload documen
 The app calls an OpenAI-powered API to analyze the document and return plain-English results.
 No document content is stored long-term. No social features. No user-generated content visible to others.
 
+Digital Signature is powered by Dropbox Sign (an established third-party e-signature provider).
+Users sign documents and can send signature requests to others.
+No camera, microphone, or location access required.
+
 Test account:
 Email: [add test@plainpathapp.com before submission]
 Password: [add before submission]
 
-In-app purchases: Starter ($4.99/month), Pro ($29.99/month). Use Apple Sandbox environment to test.
-Redact tool works entirely from pasted text — no camera, microphone, or location access required.
+In-app purchases: Starter ($4.99/month), Pro ($19.99/month). Use Apple Sandbox environment to test.
+Built-in sample documents are available for testing all tools without requiring a real document.
 ```
 
 ---
@@ -133,7 +111,7 @@ Redact tool works entirely from pasted text — no camera, microphone, or locati
 | Product ID | Type | Price | Display Name |
 |---|---|---|---|
 | com.plainpath.app.starter_monthly | Auto-Renewable Subscription | $4.99/month | PlainPath Starter |
-| com.plainpath.app.pro_monthly | Auto-Renewable Subscription | $29.99/month | PlainPath Pro |
+| com.plainpath.app.pro_monthly | Auto-Renewable Subscription | $19.99/month | PlainPath Pro |
 
 **Subscription Group:** PlainPath Plans
 **Free Trial:** Configure in App Store Connect after account setup (RevenueCat reads trial metadata automatically)
