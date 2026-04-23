@@ -1,8 +1,63 @@
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { ChevronDown } from "lucide-react"
+import React from "react"
 
-const FAQS = [
+const TOOL_ROWS: { color: string; name: string; desc: string }[] = [
+  {
+    color: "text-blue-600 dark:text-blue-400",
+    name: "Analyze a Document",
+    desc: "breaks down paperwork you already have — extracting action steps, deadlines, risks, and required items in plain English.",
+  },
+  {
+    color: "text-red-600 dark:text-red-400",
+    name: "Document Trust Check",
+    desc: "scores whether a document appears legitimate or shows scam and fraud indicators. Get a clear verdict before paying or responding.",
+  },
+  {
+    color: "text-emerald-600 dark:text-emerald-400",
+    name: "Build a Contract",
+    desc: "creates a new agreement from scratch based on your deal terms — with a gap analysis to flag what's missing.",
+  },
+  {
+    color: "text-amber-600 dark:text-amber-400",
+    name: "Contract Review",
+    desc: "reads a contract someone else wrote, flags risky or missing clauses, scores it for fairness, and gives you negotiation language.",
+  },
+  {
+    color: "text-violet-600 dark:text-violet-400",
+    name: "Redact Sensitive Info",
+    desc: "detects and removes personal information — names, SSNs, account numbers, and more — before you share or analyze a document.",
+  },
+  {
+    color: "text-indigo-600 dark:text-indigo-400",
+    name: "Digital Signature",
+    desc: "lets you send documents for legally binding e-signature, track signing status in real time, and download certified signed copies.",
+  },
+  {
+    color: "text-sky-600 dark:text-sky-400",
+    name: "Compare Versions",
+    desc: "maps every addition, deletion, and structural change between two document versions — with severity scoring so you see what actually matters.",
+  },
+  {
+    color: "text-purple-600 dark:text-purple-400",
+    name: "Clause Extractor",
+    desc: "pulls every obligation, key date, party, and financial term from a contract — and tells you exactly who owes what by when.",
+  },
+]
+
+const TOOLS_ANSWER: React.ReactNode = (
+  <ul className="space-y-3 mt-1">
+    {TOOL_ROWS.map(({ color, name, desc }) => (
+      <li key={name} className="flex gap-2 text-sm leading-relaxed">
+        <span className={`font-semibold shrink-0 ${color}`}>{name}</span>
+        <span className="text-muted-foreground dark:text-muted-foreground/85">— {desc}</span>
+      </li>
+    ))}
+  </ul>
+)
+
+const FAQS: { q: string; a: React.ReactNode }[] = [
   {
     q: "Does PlainPath store my documents?",
     a: "No. Your document text is sent to our AI for analysis and then discarded — we never permanently store the content of your documents. Your analysis results are saved to your private history so you can reference them later. They are never shared or used for AI training.",
@@ -17,7 +72,7 @@ const FAQS = [
   },
   {
     q: "What's the difference between the eight tools?",
-    a: "Analyze a Document breaks down paperwork you already have — extracting action steps, deadlines, risks, and required documents in plain English. Document Trust Check scores whether a document appears legitimate or shows scam and fraud indicators. Build a Contract creates a new agreement from scratch based on your deal terms, with a gap analysis. Contract Review reads a contract someone else wrote, flags risky or missing clauses, scores it, and gives you negotiation language. Redact Sensitive Info detects and removes personal information — names, SSNs, account numbers, and more — before you share or analyze a document. Digital Signature lets you send documents for legally binding e-signature, track signing status in real time, and download certified signed copies. Compare Versions maps every addition, deletion, and structural change between two document versions with zone-by-zone overlays and severity scoring. Clause Extractor pulls every obligation, key date, party, and financial term from a contract — and tells you exactly who owes what by when.",
+    a: TOOLS_ANSWER,
   },
   {
     q: "Is the output legal advice?",
@@ -37,7 +92,7 @@ const FAQS = [
   },
 ]
 
-function FAQItem({ q, a, index }: { q: string; a: string; index: number }) {
+function FAQItem({ q, a, index }: { q: string; a: React.ReactNode; index: number }) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -68,9 +123,9 @@ function FAQItem({ q, a, index }: { q: string; a: string; index: number }) {
             transition={{ duration: 0.22 }}
             className="overflow-hidden"
           >
-            <p className="text-sm text-muted-foreground dark:text-muted-foreground/85 leading-relaxed pb-5">
+            <div className="text-sm text-muted-foreground dark:text-muted-foreground/85 leading-relaxed pb-5">
               {a}
-            </p>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

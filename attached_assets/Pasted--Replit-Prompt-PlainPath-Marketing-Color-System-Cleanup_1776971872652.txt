@@ -1,0 +1,146 @@
+## Replit Prompt — PlainPath Marketing Color-System Cleanup + FAQ Tool Mapping
+
+The marketing page still has a major consistency issue:
+the pills, feature cards, and demo cards are not following one clean shared tool-color system.
+
+This is not a copy-only pass.
+This is a visual-system cleanup pass.
+
+## Goal
+Create one strict color identity per tool and apply it consistently across the marketing site so the page feels premium, deliberate, and easier to scan.
+
+Do not touch:
+- auth/domain/billing logic
+- Clerk/Replit setup
+- Stripe/webhook logic
+- live product logic
+
+Marketing/UI only.
+
+---
+
+## Main problem to solve
+Right now:
+- too many pills/cards use colors that feel too similar
+- demo cards do not consistently match the same tool-color mapping as the hero/tool cards
+- FAQ explanation for “difference between the eight tools” is a long paragraph and does not visually connect to the tool system
+
+We need one color system that stays consistent everywhere.
+
+---
+
+## Required execution
+
+### 1. Define one locked color token per tool
+Create or normalize one marketing accent token for each tool:
+
+- Analyze a Document
+- Document Trust Check
+- Build a Contract
+- Contract Review
+- Redact Sensitive Info
+- Digital Signature
+- Compare Versions
+- Clause Extractor
+
+Use existing brand direction where possible, but reduce collisions.
+Important:
+- Compare Versions and Clause Extractor must feel clearly different
+- Digital Signature and Build a Contract must feel clearly different
+- Each tool should be recognizable from color + icon + label, not color alone
+
+### 2. Apply the tool-color system consistently across all marketing surfaces
+Audit and normalize all of these:
+- hero tool pills
+- full tool cards in features/tools section
+- demo card tabs / active states
+- any tool chips/badges
+- tool references inside FAQ where appropriate
+
+For each tool, the same color family should drive:
+- icon tint
+- border tint
+- accent line/underline
+- active state
+- badge/chip tint
+- demo selection state
+
+Do not make each section invent its own color interpretation.
+
+### 3. FAQ fix — “What’s the difference between the eight tools?”
+This answer must be rewritten.
+
+Current issue:
+- long paragraph
+- hard to scan
+- no visual tie to tool system
+
+Required replacement:
+- convert into 8 short rows / mini-items
+- each row starts with:
+  - the tool icon or small chip
+  - the tool name in its mapped tool color
+- then a short neutral-color explanation in plain English
+
+Example structure:
+[Analyze a Document chip/icon] Analyze a Document — breaks down paperwork you already have into action steps, deadlines, risks, and plain-English explanations.
+
+Rules:
+- only the tool name / chip gets the tool accent color
+- body text stays neutral for readability
+- do not rely on color alone; include icon/chip + text label
+- spacing should make the list easy to scan quickly
+
+### 4. Clean up color collisions and saturation
+Some cards currently feel too close in color weight/intensity.
+
+Required:
+- normalize glow/border saturation
+- reduce overuse of same/similar hues
+- ensure all 8 tools feel distinct but still part of one premium system
+- preserve dark premium look
+
+### 5. Consistency check
+After implementing, verify:
+- hero pills match feature cards
+- feature cards match demo cards
+- FAQ tool references match the same tool mapping
+- no section uses an out-of-family version of a tool color
+
+### 6. Accessibility guardrails
+While doing this pass:
+- maintain readable contrast
+- do not use color as the only distinguishing signal
+- keep labels/icons/chips readable and short
+- avoid low-contrast colored text on dark surfaces
+
+---
+
+## Required output
+
+### A. Color-system report
+For each tool:
+- tool name
+- final accent color/family used
+- where it was applied
+
+### B. Files changed
+List exact files touched.
+
+### C. Before/after summary
+Explain:
+- what color collisions were fixed
+- how the FAQ answer changed
+- how demo cards were aligned to the main tool-color system
+
+### D. Screenshot proof
+Provide updated screenshots for:
+- hero pills
+- tools/features cards
+- demo section
+- FAQ “difference between the eight tools” answer
+
+### E. Stability statement
+Confirm:
+- no auth/domain/billing/product logic changed
+- marketing/UI only

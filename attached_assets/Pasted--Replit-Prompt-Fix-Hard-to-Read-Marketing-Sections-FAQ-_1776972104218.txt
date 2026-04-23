@@ -1,0 +1,70 @@
+## Replit Prompt — Fix Hard-to-Read Marketing Sections + FAQ Tool Color Mapping
+
+The marketing page still has two sections with hard-to-read text because the contrast is too weak against the light/washed background.
+
+This is a readability and premium-polish fix.
+Do not touch auth, billing, domain, or app logic.
+
+### Problem sections
+1. “Built for real people, not lawyers”
+2. “One platform, every device”
+
+From the screenshots:
+- headline/subtitle/body text are too washed out against the pale gradient background
+- the sections feel visually soft instead of intentionally premium
+- readability is the problem, not content quantity
+
+## Required fixes
+
+### 1. Raise contrast in both sections
+For both sections:
+- increase contrast of eyebrow, headline, subtitle, and body copy
+- stop using weak muted/light text directly on the pale gradient
+- create a stronger reading surface behind text:
+  - either a darker translucent content panel
+  - or a darker local gradient/overlay behind the text area
+- preserve the overall premium look, but optimize for readability first
+
+### 2. Normalize text tokens
+Audit the text color tokens used in these two sections.
+Replace any washed-out foreground choices with stronger semantic text tokens so:
+- body copy is clearly readable
+- secondary copy is still secondary, but not faded
+- CTA text is clearly visible
+
+### 3. “One platform, every device” layout refinement
+Make the text column clearly readable and separate from the visual/mockup area:
+- stronger text contrast
+- stronger bullet/icon contrast
+- stronger CTA contrast
+- cleaner separation between image region and copy region
+
+### 4. FAQ fix — “What’s the difference between the eight tools?”
+Rewrite this answer from one long paragraph into 8 short rows.
+
+Required structure for each row:
+- tool chip or icon
+- tool name in that tool’s mapped accent color
+- short neutral-color plain-English explanation
+
+Rules:
+- tool accent color only on label/chip/name
+- explanation text stays neutral for readability
+- do not rely on color alone; include icon/chip + text label
+- keep spacing tight and easy to scan
+
+### 5. Accessibility guardrails
+Make these fixes with readable contrast in mind:
+- normal text should read clearly at AA-level contrast
+- large headings should also be visibly strong
+- color is not the only meaning cue in the FAQ rows
+
+## Output required
+1. Exact files changed
+2. What text/color tokens were changed
+3. What background/overlay/panel changes were made
+4. Before/after screenshots for:
+   - “Built for real people, not lawyers”
+   - “One platform, every device”
+   - FAQ “difference between the eight tools”
+5. Confirmation that no auth/domain/billing/app logic was touched
