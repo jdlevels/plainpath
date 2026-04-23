@@ -1,0 +1,60 @@
+## Replit Prompt — Give Clause Extractor its own marketing accent color
+
+Clause Extractor still does not have a strong visible color identity on the marketing page.
+
+### Problem
+Across the marketing page, Clause Extractor currently reads too neutral/dark compared with the other 7 tools.
+It needs a real accent color so it feels like a first-class tool in the same system.
+
+## Goal
+Assign Clause Extractor its own distinct accent color and apply it consistently anywhere Clause Extractor appears on the marketing site.
+
+## Requirements
+
+### 1. Give Clause Extractor a dedicated accent color
+Pick a color family that is:
+- clearly distinct from Compare Versions
+- clearly distinct from Digital Signature
+- clearly distinct from the neutral card background
+- still consistent with the premium dark PlainPath palette
+
+Good direction:
+- a vivid violet / magenta-leaning purple
+- or another premium accent that does not collide with existing tool colors
+
+### 2. Apply Clause Extractor color consistently everywhere it appears
+Audit and update all Clause Extractor appearances on the marketing page, including:
+- hero pill/button
+- tools/features card
+- demo card / demo tab / active state
+- FAQ “difference between the eight tools” answer
+- any supporting chips/badges where Clause Extractor appears
+
+For Clause Extractor, the same color family should drive:
+- icon tint
+- border tint
+- accent underline
+- chip/badge tint
+- demo active-state accent
+
+### 3. Keep contrast/readability strong
+Important:
+- do not make the Clause Extractor label hard to read
+- keep text/background contrast strong
+- do not rely on color alone; preserve icon + label + structure
+
+### 4. Keep the rest of the system stable
+This is a targeted fix, not a redesign.
+Do not reshuffle other tool colors unless a direct collision is discovered.
+If you do need to slightly rebalance one neighboring tool color, explain exactly why.
+
+## Output required
+1. Exact files changed
+2. Final Clause Extractor accent color/family used
+3. Where it was applied
+4. Before/after screenshots showing:
+   - hero pill
+   - tools/features card
+   - demo section
+   - FAQ tool reference
+5. Confirmation that only marketing/UI was touched

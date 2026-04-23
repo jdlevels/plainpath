@@ -1192,19 +1192,21 @@ export default function Home() {
       {/* ════════════════════════════════════════════════
           TRUST / CREDIBILITY
       ════════════════════════════════════════════════ */}
-      <section className="py-20 md:py-24 bg-gradient-to-b from-white via-blue-50/50 to-white border-b border-slate-200/60 dark:border-transparent dark:bg-transparent">
+      <section className="py-20 md:py-24 bg-gradient-to-b from-slate-100 via-blue-50/90 to-slate-50 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-900 border-b border-slate-200/80 dark:border-border/40">
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
           <div className="text-center mb-12">
-            <p className="text-xs font-semibold tracking-[0.12em] uppercase text-muted-foreground mb-3">Why PlainPath</p>
-            <h2
-              className="text-3xl md:text-4xl font-bold mb-4 text-foreground"
-              style={{ fontFamily: "var(--font-display)" }}
-            >
-              Built for real people, not lawyers.
-            </h2>
-            <p className="text-muted-foreground max-w-lg mx-auto">
-              Confusing documents shouldn't require hiring a professional every time.
-            </p>
+            <div className="inline-block bg-white/70 dark:bg-card/60 backdrop-blur-sm rounded-2xl px-8 py-6 border border-slate-200/70 dark:border-border/40 shadow-sm mb-4">
+              <p className="text-xs font-semibold tracking-[0.12em] uppercase text-foreground/60 dark:text-foreground/55 mb-3">Why PlainPath</p>
+              <h2
+                className="text-3xl md:text-4xl font-bold mb-3 text-foreground"
+                style={{ fontFamily: "var(--font-display)" }}
+              >
+                Built for real people, not lawyers.
+              </h2>
+              <p className="text-foreground/70 dark:text-foreground/65 max-w-lg mx-auto">
+                Confusing documents shouldn't require hiring a professional every time.
+              </p>
+            </div>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {TRUST.map(({ icon: Icon, title, desc }) => (
@@ -1382,36 +1384,38 @@ export default function Home() {
               <WebAppDemo />
             </div>
             <div className="max-w-lg order-1 lg:order-2">
-              <p className="text-xs font-semibold tracking-[0.12em] uppercase text-muted-foreground mb-3">Works on Every Device</p>
-              <h2
-                className="text-3xl md:text-4xl font-bold mb-5 text-foreground"
-                style={{ fontFamily: "var(--font-display)" }}
-              >
-                One platform, every device.
-              </h2>
-              <p className="text-muted-foreground mb-7 leading-relaxed">
-                Available on any device — phone, tablet, or laptop. No app to install — open it in any browser and start immediately.
-              </p>
-              <div className="space-y-4 mb-8">
-                {[
-                  { icon: Upload,       text: "Upload a PDF, Word file, or paste text" },
-                  { icon: Sparkles,     text: "AI analyzes in under 2 minutes" },
-                  { icon: CheckCircle2, text: "Plain English summary + action plan" },
-                ].map(({ icon: Icon, text }, idx) => (
-                  <div key={idx} className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                      <Icon className="w-4 h-4 text-primary" />
+              <div className="bg-white/65 dark:bg-card/70 backdrop-blur-md rounded-2xl px-7 py-8 border border-white/90 dark:border-border/40 shadow-sm">
+                <p className="text-xs font-semibold tracking-[0.12em] uppercase text-foreground/60 dark:text-foreground/55 mb-3">Works on Every Device</p>
+                <h2
+                  className="text-3xl md:text-4xl font-bold mb-5 text-foreground"
+                  style={{ fontFamily: "var(--font-display)" }}
+                >
+                  One platform, every device.
+                </h2>
+                <p className="text-foreground/70 dark:text-foreground/65 mb-7 leading-relaxed">
+                  Available on any device — phone, tablet, or laptop. No app to install — open it in any browser and start immediately.
+                </p>
+                <div className="space-y-4 mb-8">
+                  {[
+                    { icon: Upload,       text: "Upload a PDF, Word file, or paste text" },
+                    { icon: Sparkles,     text: "AI analyzes in under 2 minutes" },
+                    { icon: CheckCircle2, text: "Plain English summary + action plan" },
+                  ].map(({ icon: Icon, text }, idx) => (
+                    <div key={idx} className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-primary/15 dark:bg-primary/20 flex items-center justify-center shrink-0">
+                        <Icon className="w-4 h-4 text-primary" />
+                      </div>
+                      <span className="text-sm text-foreground font-medium">{text}</span>
                     </div>
-                    <span className="text-sm text-foreground font-medium">{text}</span>
-                  </div>
-                ))}
+                  ))}
+                </div>
+                <a
+                  href="/app/analyze"
+                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
+                >
+                  Open the web app <ArrowRight className="w-4 h-4" />
+                </a>
               </div>
-              <a
-                href="/app/analyze"
-                className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
-              >
-                Open the web app <ArrowRight className="w-4 h-4" />
-              </a>
             </div>
           </div>
         </div>
