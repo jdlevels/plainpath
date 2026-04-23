@@ -54,13 +54,23 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { HelpWidget } from "@/components/HelpWidget";
 
-const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-// NOTE: in dev this env var will be empty, in prod it will be automatically set
+// VITE_CLERK_PUBLISHABLE_KEY must be just the key value (pk_live_... or pk_test_...).
+// Guard against a common misconfiguration where the entire shell assignment line
+// ("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_...") was pasted as the secret value.
+// In that case we extract everything after the first "=" so Clerk receives a valid key.
+const _rawClerkKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY ?? "";
+const clerkPubKey = _rawClerkKey.includes("=")
+  ? _rawClerkKey.slice(_rawClerkKey.indexOf("=") + 1).trim()
+  : _rawClerkKey.trim();
+
 const clerkProxyUrl = import.meta.env.VITE_CLERK_PROXY_URL;
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-if (!clerkPubKey) {
-  throw new Error("Missing VITE_CLERK_PUBLISHABLE_KEY");
+if (!clerkPubKey || (!clerkPubKey.startsWith("pk_live_") && !clerkPubKey.startsWith("pk_test_"))) {
+  throw new Error(
+    `VITE_CLERK_PUBLISHABLE_KEY is missing or invalid. ` +
+    `Expected a value starting with pk_live_ or pk_test_, got: "${_rawClerkKey.slice(0, 20)}..."`
+  );
 }
 
 // Clerk passes full paths but wouter's setLocation prepends the base — strip it
