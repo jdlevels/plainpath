@@ -3,15 +3,12 @@ import { motion, AnimatePresence } from "framer-motion"
 import {
   ListChecks, Calendar, Users, DollarSign, Gavel,
   AlertTriangle, CheckCircle2, XCircle, Clock,
-  ChevronDown, ChevronUp, ArrowRight,
+  ChevronDown, ChevronUp,
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Navbar } from "@/components/layout/Navbar"
-import { Footer } from "@/components/layout/Footer"
+import { DemoShell } from "@/demo/DemoShell"
 
-/* ─── Static demo data ─────────────────────────────────────── */
 const DEMO = {
   fileName: "Residential_Lease_Unit4B.pdf",
   fileSizeBytes: 186400,
@@ -204,189 +201,163 @@ export default function DemoClauseExtractor() {
   const presentCount = clauses.filter(([, c]) => c.present).length
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <Navbar />
-
-      <main className="flex-1 mt-16 pb-20">
-        {/* Hero */}
-        <section className="border-b border-border/40 bg-gradient-to-b from-fuchsia-50/60 to-background dark:from-fuchsia-950/20 py-10 px-4 sm:px-6">
-          <div className="max-w-[900px] mx-auto">
-            <div className="flex items-center gap-2 mb-3">
-              <Badge className="bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-900/40 dark:text-fuchsia-300 text-[11px]">Live Demo</Badge>
-              <Badge variant="outline" className="text-[11px]">Clause Extractor</Badge>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-              Residential Lease — Unit 4B
-            </h1>
-            <p className="text-sm text-muted-foreground mb-4">
-              This is a real extraction from a sample 12-page residential lease. Every field below was pulled automatically by OpenAI from the raw PDF text — no templates, no rules engine.
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <ListChecks className="w-3.5 h-3.5 text-fuchsia-500" />
-                <span>6 obligations found</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Calendar className="w-3.5 h-3.5 text-blue-500" />
-                <span>5 key dates extracted</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                <span>{presentCount} of 8 clauses present</span>
-              </div>
-              <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 text-[10px]">high confidence</Badge>
-            </div>
+    <DemoShell
+      toolName="Clause Extractor"
+      subtitle="Upload any contract and get a structured breakdown of key dates, parties, financial terms, legal clauses, and obligations — in under 30 seconds."
+      scenarioLabel="Residential lease · Unit 4B, Austin TX · 6 obligations · 5 of 8 clauses present"
+    >
+      {/* Summary banner */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+        className="flex flex-wrap items-center gap-3 mb-6 p-4 rounded-2xl border border-fuchsia-200 dark:border-fuchsia-800 bg-fuchsia-50/50 dark:bg-fuchsia-950/15"
+      >
+        <div className="flex items-center gap-2">
+          <ListChecks className="w-5 h-5 text-fuchsia-600 dark:text-fuchsia-400" />
+          <span className="text-sm font-semibold text-fuchsia-800 dark:text-fuchsia-200">Residential_Lease_Unit4B.pdf</span>
+        </div>
+        <div className="flex items-center gap-2 ml-auto flex-wrap">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Calendar className="w-3.5 h-3.5 text-blue-500" />
+            <span>5 key dates</span>
           </div>
-        </section>
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+            <span>{presentCount}/8 clauses present</span>
+          </div>
+          <Badge className="text-[10px] bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-900/30 dark:text-fuchsia-300 border-fuchsia-300">6 obligations</Badge>
+          <Badge className="text-[10px] bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 border-emerald-300">high confidence</Badge>
+        </div>
+      </motion.div>
 
-        {/* Results */}
-        <section className="max-w-[900px] mx-auto px-4 sm:px-6 mt-8 space-y-5">
+      <div className="space-y-5">
+        {/* Key Dates */}
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+          <Card className="p-5 rounded-2xl border border-border/50">
+            <SectionHeader icon={Calendar} label="Key Dates" color="bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400" />
+            <div className="divide-y divide-border/30">
+              <DateRow label="Effective date" value={r.keyDates.effectiveDate} />
+              <DateRow label="Execution date" value={r.keyDates.executionDate} />
+              <DateRow label="Expiration date" value={r.keyDates.expirationDate} />
+              <DateRow label="Notice deadline" value={r.keyDates.noticeDeadline} />
+              <DateRow label="Notice period" value={r.keyDates.noticePeriod} />
+            </div>
+          </Card>
+        </motion.div>
 
-          {/* Key Dates */}
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-            <Card className="p-5 rounded-2xl border border-border/50">
-              <SectionHeader icon={Calendar} label="Key Dates" color="bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400" />
-              <div className="divide-y divide-border/30">
-                <DateRow label="Effective date" value={r.keyDates.effectiveDate} />
-                <DateRow label="Execution date" value={r.keyDates.executionDate} />
-                <DateRow label="Expiration date" value={r.keyDates.expirationDate} />
-                <DateRow label="Notice deadline" value={r.keyDates.noticeDeadline} />
-                <DateRow label="Notice period" value={r.keyDates.noticePeriod} />
-              </div>
-            </Card>
-          </motion.div>
-
-          {/* Parties */}
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.10 }}>
-            <Card className="p-5 rounded-2xl border border-border/50">
-              <SectionHeader icon={Users} label="Parties" color="bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400" />
-              <div className="space-y-2">
-                {r.parties.map((p, i) => (
-                  <div key={i} className="flex items-center justify-between gap-3 rounded-lg bg-muted/40 px-4 py-2.5">
-                    <div>
-                      <span className="text-xs font-medium text-foreground">{p.name}</span>
-                      <span className="text-[11px] text-muted-foreground ml-2">· {p.role}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <Badge variant="outline" className="text-[10px] capitalize">{p.type}</Badge>
-                      {p.isSigner && <Badge className="text-[10px] bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300">Signer</Badge>}
-                    </div>
+        {/* Parties */}
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.10 }}>
+          <Card className="p-5 rounded-2xl border border-border/50">
+            <SectionHeader icon={Users} label="Parties" color="bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400" />
+            <div className="space-y-2">
+              {r.parties.map((p, i) => (
+                <div key={i} className="flex items-center justify-between gap-3 rounded-lg bg-muted/40 px-4 py-2.5">
+                  <div>
+                    <span className="text-xs font-medium text-foreground">{p.name}</span>
+                    <span className="text-[11px] text-muted-foreground ml-2">· {p.role}</span>
                   </div>
-                ))}
-              </div>
-            </Card>
-          </motion.div>
-
-          {/* Financial Terms */}
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-            <Card className="p-5 rounded-2xl border border-border/50">
-              <SectionHeader icon={DollarSign} label="Financial Terms" color="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400" />
-              <div className="divide-y divide-border/30">
-                <DateRow label="Monthly rent" value={r.financialTerms.paymentAmount} />
-                <DateRow label="Payment schedule" value={r.financialTerms.paymentSchedule} />
-                <DateRow label="Late fees" value={r.financialTerms.lateFees} />
-                <DateRow label="Security deposit" value={r.financialTerms.refundLanguage} />
-              </div>
-              <ul className="mt-3 space-y-1.5 pt-1">
-                {r.financialTerms.otherTerms.map((t, i) => (
-                  <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
-                    <span className="text-emerald-500 mt-0.5 shrink-0">·</span>{t}
-                  </li>
-                ))}
-              </ul>
-            </Card>
-          </motion.div>
-
-          {/* Legal Clauses */}
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.20 }}>
-            <Card className="p-5 rounded-2xl border border-border/50">
-              <div className="flex items-center gap-2.5 justify-between mb-4">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400">
-                    <Gavel className="w-4 h-4" />
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <Badge variant="outline" className="text-[10px] capitalize">{p.type}</Badge>
+                    {p.isSigner && <Badge className="text-[10px] bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300">Signer</Badge>}
                   </div>
-                  <h3 className="text-sm font-semibold text-foreground tracking-tight">Legal Clauses</h3>
                 </div>
-                <span className="text-[11px] text-muted-foreground shrink-0">{presentCount} / {clauses.length} present</span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {clauses.map(([key, clause]) => (
-                  <ClauseCard key={key} clauseKey={key} clause={clause} />
-                ))}
-              </div>
-            </Card>
-          </motion.div>
+              ))}
+            </div>
+          </Card>
+        </motion.div>
 
-          {/* Obligations */}
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
-            <Card className="p-5 rounded-2xl border border-border/50">
-              <SectionHeader icon={ListChecks} label={`Obligations (${r.obligations.length})`} color="bg-fuchsia-100 dark:bg-fuchsia-900/40 text-fuchsia-600 dark:text-fuchsia-400" />
-              <div className="space-y-3">
-                {r.obligations.map((ob, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.28 + i * 0.04 }}
-                    className="rounded-xl border border-border/50 bg-card p-4 flex gap-4"
-                  >
-                    <div className="w-6 h-6 rounded-full bg-fuchsia-100 dark:bg-fuchsia-900/40 text-fuchsia-600 dark:text-fuchsia-300 text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">
-                      {i + 1}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-foreground leading-relaxed">{ob.obligation}</p>
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {ob.party && (
-                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 font-medium">{ob.party}</span>
-                        )}
-                        {ob.deadline && (
-                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 font-medium flex items-center gap-1">
-                            <Clock className="w-2.5 h-2.5" />{ob.deadline}
-                          </span>
-                        )}
-                      </div>
-                      {ob.consequence && (
-                        <p className="text-[11px] text-muted-foreground mt-2 flex items-start gap-1.5 leading-relaxed">
-                          <AlertTriangle className="w-3 h-3 text-amber-500 mt-px shrink-0" />
-                          {ob.consequence}
-                        </p>
+        {/* Financial Terms */}
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+          <Card className="p-5 rounded-2xl border border-border/50">
+            <SectionHeader icon={DollarSign} label="Financial Terms" color="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400" />
+            <div className="divide-y divide-border/30">
+              <DateRow label="Monthly rent" value={r.financialTerms.paymentAmount} />
+              <DateRow label="Payment schedule" value={r.financialTerms.paymentSchedule} />
+              <DateRow label="Late fees" value={r.financialTerms.lateFees} />
+              <DateRow label="Security deposit" value={r.financialTerms.refundLanguage} />
+            </div>
+            <ul className="mt-3 space-y-1.5 pt-1">
+              {r.financialTerms.otherTerms.map((t, i) => (
+                <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
+                  <span className="text-emerald-500 mt-0.5 shrink-0">·</span>{t}
+                </li>
+              ))}
+            </ul>
+          </Card>
+        </motion.div>
+
+        {/* Legal Clauses */}
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.20 }}>
+          <Card className="p-5 rounded-2xl border border-border/50">
+            <div className="flex items-center gap-2.5 justify-between mb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400">
+                  <Gavel className="w-4 h-4" />
+                </div>
+                <h3 className="text-sm font-semibold text-foreground tracking-tight">Legal Clauses</h3>
+              </div>
+              <span className="text-[11px] text-muted-foreground shrink-0">{presentCount} / {clauses.length} present</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {clauses.map(([key, clause]) => (
+                <ClauseCard key={key} clauseKey={key} clause={clause} />
+              ))}
+            </div>
+          </Card>
+        </motion.div>
+
+        {/* Obligations */}
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+          <Card className="p-5 rounded-2xl border border-border/50">
+            <SectionHeader icon={ListChecks} label={`Obligations (${r.obligations.length})`} color="bg-fuchsia-100 dark:bg-fuchsia-900/40 text-fuchsia-600 dark:text-fuchsia-400" />
+            <div className="space-y-3">
+              {r.obligations.map((ob, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.28 + i * 0.04 }}
+                  className="rounded-xl border border-border/50 bg-card p-4 flex gap-4"
+                >
+                  <div className="w-6 h-6 rounded-full bg-fuchsia-100 dark:bg-fuchsia-900/40 text-fuchsia-600 dark:text-fuchsia-300 text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                    {i + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-foreground leading-relaxed">{ob.obligation}</p>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {ob.party && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 font-medium">{ob.party}</span>
+                      )}
+                      {ob.deadline && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 font-medium flex items-center gap-1">
+                          <Clock className="w-2.5 h-2.5" />{ob.deadline}
+                        </span>
                       )}
                     </div>
-                  </motion.div>
-                ))}
-              </div>
-            </Card>
-          </motion.div>
+                    {ob.consequence && (
+                      <p className="text-[11px] text-muted-foreground mt-2 flex items-start gap-1.5 leading-relaxed">
+                        <AlertTriangle className="w-3 h-3 text-amber-500 mt-px shrink-0" />
+                        {ob.consequence}
+                      </p>
+                    )}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </Card>
+        </motion.div>
 
-          {/* Missing / Not Found */}
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.40 }}>
-            <Card className="p-5 rounded-2xl border border-amber-200/60 dark:border-amber-800/40 bg-amber-50/40 dark:bg-amber-950/20">
-              <SectionHeader icon={AlertTriangle} label="Missing / Not Found" color="bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400" />
-              <div className="flex flex-wrap gap-2">
-                {r.missingFields.map((f, i) => (
-                  <Badge key={i} variant="outline" className="text-[11px] px-2.5 py-0.5 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-700">{f}</Badge>
-                ))}
-              </div>
-            </Card>
-          </motion.div>
-
-          {/* CTA */}
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.48 }}>
-            <Card className="p-6 rounded-2xl border border-fuchsia-200/60 dark:border-fuchsia-800/40 bg-gradient-to-br from-fuchsia-50 to-background dark:from-fuchsia-950/20 text-center">
-              <ListChecks className="w-8 h-8 text-fuchsia-500 mx-auto mb-3" />
-              <h3 className="text-base font-semibold text-foreground mb-1">Extract clauses from your contract</h3>
-              <p className="text-sm text-muted-foreground mb-4">Upload any PDF or DOCX and get the same structured breakdown — key dates, obligations, and legal clauses — in under 30 seconds.</p>
-              <Button asChild className="rounded-xl">
-                <a href="/app/clause-extractor">
-                  Try Clause Extractor <ArrowRight className="w-4 h-4 ml-2" />
-                </a>
-              </Button>
-            </Card>
-          </motion.div>
-        </section>
-      </main>
-
-      <Footer />
-    </div>
+        {/* Missing / Not Found */}
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.40 }}>
+          <Card className="p-5 rounded-2xl border border-amber-200/60 dark:border-amber-800/40 bg-amber-50/40 dark:bg-amber-950/20">
+            <SectionHeader icon={AlertTriangle} label="Missing / Not Found" color="bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400" />
+            <div className="flex flex-wrap gap-2">
+              {r.missingFields.map((f, i) => (
+                <Badge key={i} variant="outline" className="text-[11px] px-2.5 py-0.5 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-700">{f}</Badge>
+              ))}
+            </div>
+          </Card>
+        </motion.div>
+      </div>
+    </DemoShell>
   )
 }

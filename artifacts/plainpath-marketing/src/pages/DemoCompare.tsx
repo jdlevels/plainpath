@@ -64,11 +64,11 @@ export default function DemoCompare() {
       {/* File pair banner */}
       <motion.div
         initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-5 rounded-2xl border border-sky-200 dark:border-sky-800 bg-sky-50/40 dark:bg-sky-950/15 mb-6"
+        className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-5 rounded-2xl border border-teal-200 dark:border-teal-800 bg-teal-50/40 dark:bg-teal-950/15 mb-6"
       >
         <div className="flex items-center gap-3 flex-1">
-          <div className="rounded-xl bg-sky-100 dark:bg-sky-950/50 p-3 shrink-0">
-            <GitCompare className="w-6 h-6 text-sky-600 dark:text-sky-400" />
+          <div className="rounded-xl bg-teal-100 dark:bg-teal-950/50 p-3 shrink-0">
+            <GitCompare className="w-6 h-6 text-teal-600 dark:text-teal-400" />
           </div>
           <div className="grid sm:grid-cols-2 gap-2 flex-1">
             <div className="rounded-lg bg-white dark:bg-slate-900 border border-border px-3 py-2">

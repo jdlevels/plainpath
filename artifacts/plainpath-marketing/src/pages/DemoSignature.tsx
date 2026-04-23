@@ -86,11 +86,11 @@ export default function DemoSignature() {
       {/* Status banner */}
       <motion.div
         initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-5 rounded-2xl border border-amber-200 dark:border-amber-800 bg-amber-50/40 dark:bg-amber-950/15 mb-6"
+        className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-5 rounded-2xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50/40 dark:bg-indigo-950/15 mb-6"
       >
         <div className="flex items-center gap-3">
-          <div className="rounded-xl bg-amber-100 dark:bg-amber-950/50 p-3 shrink-0">
-            <FileSignature className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+          <div className="rounded-xl bg-indigo-100 dark:bg-indigo-950/50 p-3 shrink-0">
+            <FileSignature className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
           </div>
           <div>
             <p className="text-sm font-bold text-foreground">Freelance_Services_Agreement_Meridian.pdf</p>

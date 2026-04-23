@@ -1,0 +1,110 @@
+## Replit Prompt — PlainPath Marketing Demo System Unification Pass
+
+The marketing/demo experience still has major inconsistency.
+
+### Current problems
+1. Some demos show a “Back to all demos” / “All demos” return action and others do not
+2. Different demos feel like different products instead of one demo system
+3. Demo shells / top bars / spacing / status labels / entry/exit behavior are inconsistent
+4. Some demos feel premium and complete, others feel like standalone partial mockups
+5. The overall demo system no longer feels unified
+
+## Goal
+Rebuild/refine the marketing demo experience so all 8 tools behave like one coordinated demo system.
+
+This is a consistency/system pass, not a rewrite of product logic.
+
+Do not touch:
+- auth/domain/billing
+- Clerk/Replit setup
+- Stripe/webhook logic
+- entitlement logic
+- live production infrastructure
+
+Marketing/demo UI only.
+
+---
+
+## Required fixes
+
+### 1. One shared demo shell
+All opened demos should use the same overall shell structure.
+
+Required:
+- consistent top header area
+- consistent placement for tool name
+- consistent placement for demo status / preview label
+- consistent placement for the return action
+- consistent vertical spacing and section rhythm
+
+If one demo currently has “All demos” in the header, all demo views should follow the same pattern.
+
+### 2. Standardize the return/navigation pattern
+Every demo needs the same way back.
+
+Required:
+- one consistent “Back to all demos” or “All demos” action
+- same placement across all demo views
+- same label across all demo views
+- same visual style across all demo views
+
+No demo should feel trapped or use a different return pattern.
+
+### 3. One shared active demo system
+All 8 demo cards and all opened demo views must be tied to one shared demo state.
+
+Required:
+- selecting a demo card opens the corresponding demo in the same system
+- all 8 tools are represented
+- same entry behavior regardless of which demo is opened
+- same exit behavior regardless of which demo is opened
+
+### 4. Normalize demo-page structure
+Audit all 8 demo views and normalize:
+- heading hierarchy
+- badge/chip treatment
+- section spacing
+- icon sizing
+- accent-color use
+- action/recommendation card treatment
+- “what this means” / “recommended action” sections where applicable
+
+The demos can still differ by content, but they should clearly belong to one family.
+
+### 5. Preserve each tool’s identity without breaking the system
+Keep:
+- each tool’s accent color
+- each tool’s distinct content pattern
+
+But normalize:
+- border weight
+- spacing
+- card radius
+- status-chip style
+- section-title placement
+- top-bar behavior
+
+### 6. Make the demos feel premium and complete
+Any demo that currently feels like it has missing scaffolding compared with the others should be upgraded to the same level of polish.
+
+No demo should feel like a loose screenshot while another feels like a fully designed workspace.
+
+### 7. Accessibility / interaction consistency
+Because this behaves like a demo/carousel/navigation system:
+- use one coherent interaction model
+- if there is autoplay/rotation anywhere, it must remain user-controllable
+- hover/focus/manual selection behavior should stay consistent
+- no conflicting moving regions
+
+---
+
+## Output required
+1. Exact files changed
+2. What shared demo shell/pattern was introduced or normalized
+3. How the return action was standardized
+4. Which inconsistencies were fixed across the 8 demos
+5. Before/after screenshots showing:
+   - demo grid
+   - one opened demo before/after
+   - at least two different tools after normalization
+6. Confirmation that only marketing/demo UI was touched
