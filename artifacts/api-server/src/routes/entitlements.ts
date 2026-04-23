@@ -3,21 +3,29 @@
 //   role        = internal privilege  ("admin" | "member")
 //   accessTier  = product entitlement ("starter" | "pro")
 //
-//   Admin   → { role: "admin",  accessTier: "pro"     }
-//   Starter → { role: "member", accessTier: "starter" }
-//   Pro     → { role: "member", accessTier: "pro"     }
+//   Admin   → { role: "admin",  accessTier: "pro"     }   (support@plainpathapp.com)
+//   Pro     → { role: "member", accessTier: "pro"     }   (yelevels@gmail.com)
+//   Starter → { role: "member", accessTier: "starter" }   (future paid accounts)
 //
-// ADMIN_EMAILS is the server-side authority for admin status.
-// When an admin is detected, their Clerk publicMetadata is bootstrapped
-// automatically (eventual consistency — fires on first entitlements check
-// when clerkUserId is available).
+// Sources of truth (in priority order):
+//   1. ALLOWED_EMAILS env var — who is permitted to use the app at all
+//   2. ADMIN_EMAILS env var   — which of those are admins (admin/pro)
+//   3. Clerk publicMetadata   — role + accessTier (written by /bootstrap)
 //
 // unsafeMetadata is NEVER used for access control.
 //
+// Audit log events:
+//   entitlement.status.granted   — /status returned data
+//   entitlement.status.denied    — /status returned unauthorized
+//   entitlement.bootstrap.noop   — metadata already set; no-op
+//   entitlement.bootstrap.wrote  — metadata written for first time
+//   entitlement.bootstrap.denied — caller not in allowlist; denied
+//   entitlement.bootstrap.error  — unexpected error during bootstrap
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { Router } from "express"
 import { getAuth, clerkClient } from "@clerk/express"
+import { logger } from "../lib/logger"
 import { getSubscriberByEmail, getSubscriberByClerkUserId } from "../lib/billingDb"
 import { PLAN_ENTITLEMENTS, TOOL_ACCESS, normalizePlan, type PlanKey, type ToolKey } from "../lib/planEntitlements"
 import { BILLING_CONFIG } from "../lib/billingConfig"
@@ -31,8 +39,23 @@ import {
 
 const router = Router()
 
-// Admin emails receive unlimited Pro access without a Stripe subscription.
-// Set ADMIN_EMAILS as a comma-separated list in the environment.
+// ── Allowlist helpers ─────────────────────────────────────────────────────────
+//
+// ALLOWED_EMAILS — the set of every email address allowed to use PlainPath.
+// Any authenticated user NOT in this set receives 403 on every route.
+// This is defense-in-depth on top of the global allowlistEnforcement middleware.
+//
+// ADMIN_EMAILS — subset of ALLOWED_EMAILS with admin role + pro access.
+// All other allowed emails get member role; their accessTier comes from
+// their Clerk publicMetadata (written by /bootstrap).
+
+const ALLOWED_EMAILS: Set<string> = new Set(
+  (process.env.ALLOWED_EMAILS || "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean)
+)
+
 const ADMIN_EMAILS: Set<string> = new Set(
   (process.env.ADMIN_EMAILS || "")
     .split(",")
@@ -40,27 +63,33 @@ const ADMIN_EMAILS: Set<string> = new Set(
     .filter(Boolean)
 )
 
+function isAllowedEmail(email: string): boolean {
+  // If ALLOWED_EMAILS is empty, enforcement is disabled (logged at startup by middleware).
+  if (ALLOWED_EMAILS.size === 0) return true
+  return ALLOWED_EMAILS.has(email.toLowerCase())
+}
+
 function isAdminEmail(email: string): boolean {
   return ADMIN_EMAILS.has(email.toLowerCase())
 }
 
 // Bootstrap publicMetadata for admin users the first time the entitlements
 // endpoint is called with their Clerk userId. Fire-and-forget — never blocks.
-//
-// Merge-safe: we spread the existing publicMetadata before writing new keys so
-// any future keys added to the object are never accidentally overwritten.
-async function bootstrapAdminMetadata(clerkUserId: string) {
+// Merge-safe: spreads existing publicMetadata before writing role/accessTier.
+async function bootstrapAdminMetadata(clerkUserId: string, email: string) {
   try {
     const user = await clerkClient.users.getUser(clerkUserId)
     const existing = user.publicMetadata as Record<string, unknown>
-    // Short-circuit if already correct — avoids an unnecessary write.
     if (existing.role === "admin" && existing.accessTier === "pro") return
-    // Spread existing keys first so only role/accessTier are touched.
     await clerkClient.users.updateUser(clerkUserId, {
       publicMetadata: { ...existing, role: "admin", accessTier: "pro" },
     })
+    logger.info(
+      { event: "entitlement.bootstrap.wrote", email, userId: clerkUserId, role: "admin", accessTier: "pro" },
+      "Bootstrap: admin metadata written"
+    )
   } catch {
-    // Non-blocking: metadata bootstrap failure never affects the response
+    // Non-blocking — metadata bootstrap failure never affects the response.
   }
 }
 
@@ -68,22 +97,15 @@ async function bootstrapAdminMetadata(clerkUserId: string) {
 // Returns full entitlement data for the requesting user.
 //
 // Security model:
-//   - clerkUserId is sourced from the Clerk session JWT (via getAuth) when an
-//     authenticated session is present. This is the authoritative source.
-//   - If no session is present (email-only restore flow), the client-supplied
-//     clerkUserId from the query string is used as a fallback, but it carries
-//     no elevated privilege — the admin check still requires the email to be
-//     in the server-side ADMIN_EMAILS env var.
-//   - Admin status is determined solely by ADMIN_EMAILS (env var) on the
-//     server. The client cannot assert its own role or accessTier through
-//     this endpoint.
+//   - Allowlist check first: if the resolved email is not in ALLOWED_EMAILS, 403.
+//   - clerkUserId is sourced from the Clerk session JWT (via getAuth) when present.
+//   - email-only fallback is permitted for the subscription-restore flow ONLY
+//     and carries no elevated privilege — admin check still requires ADMIN_EMAILS.
 
 router.get("/status", (req, res) => {
   try {
     const email = String(req.query.email || "").trim().toLowerCase()
 
-    // Use the session-JWT-validated userId as the authoritative clerkUserId.
-    // This prevents a client from supplying a different user's ID in the query string.
     const sessionUserId = getAuth(req)?.userId ?? null
     const clerkUserId = sessionUserId ?? (String(req.query.clerkUserId || "").trim() || null)
 
@@ -91,7 +113,6 @@ router.get("/status", (req, res) => {
       return res.status(400).json({ error: "Missing email or clerkUserId" })
     }
 
-    // If only clerkUserId provided, resolve to email via DB
     let resolvedEmail = email
     if (!resolvedEmail && clerkUserId) {
       const byClerk = getSubscriberByClerkUserId(clerkUserId)
@@ -102,14 +123,44 @@ router.get("/status", (req, res) => {
       }
     }
 
-    // Admin bypass: full Pro, unlimited usage — no Stripe subscription required.
-    // role = "admin" (internal privilege), accessTier = "pro" (product entitlement).
-    // Bootstrap publicMetadata asynchronously if clerkUserId is available.
+    // ── Allowlist check (defense-in-depth at route level) ──────────────────
+    // The allowlistEnforcement middleware already blocks non-allowlisted
+    // authenticated sessions. This check also covers the email-only flow.
+    if (resolvedEmail && !isAllowedEmail(resolvedEmail)) {
+      logger.warn(
+        {
+          event: "entitlement.status.denied",
+          email: resolvedEmail,
+          userId: clerkUserId,
+          allowlistMatch: false,
+          accessGranted: false,
+        },
+        "Entitlement status denied: email not in allowlist"
+      )
+      return res.status(403).json({
+        error: "unauthorized_user",
+        message: "This application is invite-only. Your account is not authorized.",
+      })
+    }
+
+    // ── Admin bypass ───────────────────────────────────────────────────────
     if (isAdminEmail(resolvedEmail)) {
       const proEntitlements = PLAN_ENTITLEMENTS["pro"]
       if (clerkUserId) {
-        void bootstrapAdminMetadata(clerkUserId)
+        void bootstrapAdminMetadata(clerkUserId, resolvedEmail)
       }
+      logger.info(
+        {
+          event: "entitlement.status.granted",
+          email: resolvedEmail,
+          userId: clerkUserId,
+          role: "admin",
+          accessTier: "pro",
+          allowlistMatch: true,
+          accessGranted: true,
+        },
+        "Entitlement status granted: admin"
+      )
       return res.json({
         email: resolvedEmail,
         role: "admin",
@@ -138,7 +189,20 @@ router.get("/status", (req, res) => {
     const usageCount = getUsageForCurrentMonth(resolvedEmail)
     const toolUsage = getAllToolUsageForCurrentMonth(resolvedEmail)
 
-    // role = "member" for normal paid users; accessTier mirrors their billing plan.
+    logger.info(
+      {
+        event: "entitlement.status.granted",
+        email: resolvedEmail,
+        userId: clerkUserId,
+        role: "member",
+        accessTier: plan,
+        allowlistMatch: true,
+        accessGranted: true,
+        billingStatus: status,
+      },
+      "Entitlement status granted: member"
+    )
+
     return res.json({
       email: resolvedEmail,
       role: "member",
@@ -169,15 +233,18 @@ router.get("/status", (req, res) => {
 
 // ─── POST /bootstrap ──────────────────────────────────────────────────────────
 // Called once by the frontend when a newly signed-in user has no publicMetadata.
-// Writes the correct role + accessTier to Clerk publicMetadata (merge-safe).
+// Writes role + accessTier to Clerk publicMetadata (merge-safe).
 //
-// New user (non-admin): { role: "member", accessTier: "starter" }
-// Admin email:          { role: "admin",  accessTier: "pro"     }
+// Identity rules:
+//   ADMIN_EMAILS           → { role: "admin",  accessTier: "pro" }
+//   ALLOWED_EMAILS (other) → { role: "member", accessTier: "pro" }
+//     ↑ All currently-allowed non-admin accounts are Pro members.
+//       If future accounts should be Starter, this logic can be updated.
 //
-// If metadata is already set, returns immediately (no-op) so it is safe to
-// call on every sign-in without risk of overwriting later updates.
+// NOT in ALLOWED_EMAILS → 403 unauthorized (defense-in-depth)
 //
-// Requires a valid Clerk session (JWT). Returns 401 if unauthenticated.
+// Already bootstrapped → returns current values without writing (no-op).
+// Requires a valid Clerk session JWT. Returns 401 if unauthenticated.
 
 router.post("/bootstrap", async (req, res) => {
   const auth = getAuth(req)
@@ -185,13 +252,48 @@ router.post("/bootstrap", async (req, res) => {
     return res.status(401).json({ error: "unauthorized" })
   }
 
-  try {
-    const user = await clerkClient.users.getUser(auth.userId)
-    const email = (user.emailAddresses?.[0]?.emailAddress ?? "").toLowerCase()
-    const existing = user.publicMetadata as Record<string, unknown>
+  const userId = auth.userId
 
-    // Already bootstrapped — return current values without writing anything.
+  try {
+    const clerkUser = await clerkClient.users.getUser(userId)
+    const email = (clerkUser.emailAddresses?.[0]?.emailAddress ?? "").trim().toLowerCase()
+    const existing = clerkUser.publicMetadata as Record<string, unknown>
+
+    // ── Allowlist check — defense-in-depth at bootstrap ───────────────────
+    // The allowlistEnforcement middleware runs first, but this provides a
+    // second hard stop in the route itself in case the middleware config
+    // changes or ALLOWED_EMAILS is populated differently at route level.
+    if (ALLOWED_EMAILS.size > 0 && !isAllowedEmail(email)) {
+      logger.warn(
+        {
+          event: "entitlement.bootstrap.denied",
+          email,
+          userId,
+          allowlistMatch: false,
+          accessGranted: false,
+        },
+        "Bootstrap denied: email not in allowlist"
+      )
+      return res.status(403).json({
+        error: "unauthorized_user",
+        message: "This application is invite-only. Your account is not authorized.",
+      })
+    }
+
+    // ── No-op if metadata already set ────────────────────────────────────
     if (existing.role && existing.accessTier) {
+      logger.info(
+        {
+          event: "entitlement.bootstrap.noop",
+          email,
+          userId,
+          role: existing.role,
+          accessTier: existing.accessTier,
+          allowlistMatch: true,
+          accessGranted: true,
+        },
+        "Bootstrap: metadata already set; no-op"
+      )
       return res.json({
         role: existing.role,
         accessTier: existing.accessTier,
@@ -199,21 +301,39 @@ router.post("/bootstrap", async (req, res) => {
       })
     }
 
-    // Determine correct identity:
-    //   Admin email → internal privilege + Pro access
-    //   Everyone else → member + Starter (default free tier)
+    // ── Determine correct identity ─────────────────────────────────────────
+    //   Admin email (ADMIN_EMAILS)  → admin + pro
+    //   Any other allowed email     → member + pro
+    //     (all currently-allowed non-admin accounts are Pro members;
+    //      change to "starter" here if future free accounts are added)
     const newMeta = isAdminEmail(email)
       ? { role: "admin", accessTier: "pro" }
-      : { role: "member", accessTier: "starter" }
+      : { role: "member", accessTier: "pro" }
 
     // Merge-safe: spread existing keys so no other metadata is overwritten.
-    await clerkClient.users.updateUser(auth.userId, {
+    await clerkClient.users.updateUser(userId, {
       publicMetadata: { ...existing, ...newMeta },
     })
 
+    logger.info(
+      {
+        event: "entitlement.bootstrap.wrote",
+        email,
+        userId,
+        role: newMeta.role,
+        accessTier: newMeta.accessTier,
+        allowlistMatch: true,
+        accessGranted: true,
+      },
+      "Bootstrap: metadata written for first time"
+    )
+
     return res.json({ ...newMeta, bootstrapped: true })
   } catch (err) {
-    console.error("Bootstrap error:", err)
+    logger.error(
+      { event: "entitlement.bootstrap.error", userId, err: String(err) },
+      "Bootstrap error"
+    )
     return res.status(500).json({ error: "Bootstrap failed" })
   }
 })
@@ -239,7 +359,7 @@ router.post("/consume", (req, res) => {
 
     // Admin bypass: never consume quota
     if (isAdminEmail(email)) {
-      incrementToolUsage(email, tool)
+      incrementToolUsage(email, tool as Parameters<typeof incrementToolUsage>[1])
       return res.json({
         ok: true,
         plan: "pro",
@@ -254,7 +374,7 @@ router.post("/consume", (req, res) => {
 
     // When enforcement is off, always allow — just track
     if (!BILLING_CONFIG.PAYWALL_ENFORCEMENT) {
-      incrementToolUsage(email, tool)
+      incrementToolUsage(email, tool as Parameters<typeof incrementToolUsage>[1])
       if (tool === "analyze") {
         incrementUsageForCurrentMonth(email)
       }
@@ -265,8 +385,6 @@ router.post("/consume", (req, res) => {
         tool,
         toolUsage,
         enforced: false,
-        // TODO: When PAYWALL_ENFORCEMENT = true, this endpoint will block
-        // access for subscribers missing the required plan.
       })
     }
 
@@ -289,7 +407,7 @@ router.post("/consume", (req, res) => {
       })
     }
 
-    incrementToolUsage(email, tool)
+    incrementToolUsage(email, tool as Parameters<typeof incrementToolUsage>[1])
     if (tool === "analyze") {
       incrementUsageForCurrentMonth(email)
     }

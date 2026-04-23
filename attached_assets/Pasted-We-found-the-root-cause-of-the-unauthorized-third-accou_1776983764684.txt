@@ -1,0 +1,60 @@
+We found the root cause of the unauthorized third account.
+
+Only these two email addresses should ever be able to create or use PlainPath accounts:
+- support@plainpathapp.com
+- yelevels@gmail.com
+
+Any other account is unauthorized, even if it was created during testing.
+
+## Required fixes
+
+### 1. Trace and remove the unauthorized account
+Audit both Clerk instances:
+- Development
+- Production
+
+Because Clerk keeps separate user tables by environment, check both and identify the third account that was created.
+Delete any account that is not:
+- support@plainpathapp.com
+- yelevels@gmail.com
+
+### 2. Lock future signup at the auth layer
+We are enabling Clerk Restrictions / Allowlist with only these two exact email addresses.
+
+Update the app so it assumes signup is restricted to those two identities only.
+Do not rely on invitations alone.
+
+### 3. Fix backend entitlement fallback
+The unauthorized account was able to create an account and access 3 tools.
+That means the backend/default entitlement logic is wrong.
+
+Correct behavior:
+- If user email is support@plainpathapp.com -> role=admin, accessTier=pro
+- If user email is yelevels@gmail.com -> role=member, accessTier=pro
+- If any other email somehow reaches the app -> treat as unauthorized
+- Do not grant starter, free, partial, or fallback tool access to unknown users
+- Missing/null accessTier must resolve to locked/no-access, not partial access
+
+### 4. Add explicit allowlist enforcement in app code too
+Even after Clerk allowlist is enabled, add a backend defensive check:
+- If current authenticated email is not in the approved allowlist, deny access and show unauthorized/internal-only message
+This is defense in depth.
+
+### 5. Add audit logging
+Log:
+- user created
+- first login
+- email
+- derived role
+- derived accessTier
+- allowlist match result
+- whether access was denied or granted
+
+### 6. Output required
+1. Which instance the third account was found in
+2. Exact unauthorized email found
+3. Exact files changed
+4. Where app-side allowlist enforcement now lives
+5. Where unknown-user access is denied
+6. Confirmation that only the two approved accounts can sign in/use the app now
+7. Proof that unknown accounts no longer receive 3-tool access

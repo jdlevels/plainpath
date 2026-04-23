@@ -31,7 +31,8 @@ timeoutMs = 20000
 APP_BASE_URL = "https://plainpathapp.com/app"
 VITE_BUILDER_ENABLED = "true"
 BUILDER_ENABLED = "true"
-ADMIN_EMAILS = "support@plainpathapp.com,admin@plainpathapp.com,yelevels@gmail.com"
+ADMIN_EMAILS = "support@plainpathapp.com"
+ALLOWED_EMAILS = "support@plainpathapp.com,yelevels@gmail.com"
 
 [nix]
 channel = "stable-25_05"

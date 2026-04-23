@@ -6,6 +6,7 @@ import multer from "multer";
 import rateLimit from "express-rate-limit";
 import { clerkMiddleware } from "@clerk/express";
 import { CLERK_PROXY_PATH, clerkProxyMiddleware } from "./middlewares/clerkProxyMiddleware";
+import { allowlistEnforcement } from "./middlewares/allowlistEnforcement";
 import router from "./routes";
 import stripeRoutes from "./routes/stripe";
 import entitlementRoutes from "./routes/entitlements";
@@ -144,6 +145,16 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.use(clerkMiddleware());
+
+// ---------------------------------------------------------------------------
+// Allowlist enforcement
+//
+// Runs after Clerk has parsed the session JWT. Any signed-in user whose email
+// is not in ALLOWED_EMAILS receives a 403 immediately — before reaching any
+// route handler. Unauthenticated requests pass through (routes require auth
+// themselves). This is defense-in-depth on top of Clerk's own allowlist.
+// ---------------------------------------------------------------------------
+app.use("/api", allowlistEnforcement());
 
 // ---------------------------------------------------------------------------
 // Rate limiting
