@@ -648,14 +648,15 @@ export default function Home() {
         </section>
 
         {/* ══════════════════════════════════════════════
-            SECTION 4 — TRY A DEMO
+            SECTION 4 — QUICK START
         ══════════════════════════════════════════════ */}
         <section>
           <div className="flex items-center gap-2 mb-4">
-            <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">Try a Demo</h2>
+            <ArrowRight className="w-4 h-4 text-muted-foreground" />
+            <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">Quick Start</h2>
           </div>
           <p className="text-xs text-muted-foreground mb-4">
-            Pre-loaded real-world scenarios — click any to run it through the tool.
+            Jump into a tool with a real-world scenario — no setup needed.
           </p>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">

@@ -1,0 +1,237 @@
+## Replit Prompt — PlainPath Premium Polish + Product Refinement + Store-Prep Master Pass
+
+PlainPath’s web launch foundation is now considered stable:
+- live domain working
+- production Clerk working
+- billing/webhook path reconciled
+- limited web launch ready
+
+Do NOT reopen solved infrastructure unless you find a real regression.
+
+## Locked / do not disturb
+Do not change unless a real bug is discovered:
+- plainpathapp.com live domain attachment
+- auth.plainpathapp.com Clerk production domain setup
+- Replit publishing/domain routing
+- Stripe managed webhook architecture
+- billing live-mode logic
+- current webhook secret implementation
+- existing entitlement logic
+- existing stable launch-ready Clause Extractor flow
+
+---
+
+# Objective
+Run the next high-value workstream in this exact order:
+
+1. Premium polish
+2. Product refinement
+3. Store-prep
+4. Real paid-event operational verification prep
+
+This is a structured execution pass, not a rebuild.
+
+---
+
+# PHASE 1 — Premium Polish
+Goal: make the live product and marketing site feel more premium, intentional, and visually/systematically unified.
+
+## 1A. Marketing system unification
+Audit and normalize the live marketing page across:
+- hero
+- tools/features sections
+- live demo section
+- trust/proof sections
+- pricing/CTA sections
+- FAQ/support sections touched by prior cleanup
+
+Required:
+- unify copy voice
+- normalize badge usage/taxonomy
+- normalize card treatment
+- normalize panel/border/glow intensity
+- normalize section spacing/rhythm
+- preserve tool color identity but reduce visual inconsistency
+- keep wording truthful to the actual live product
+
+Focus on premium consistency, not extra decoration.
+
+## 1B. Premium UI detail pass on the live app
+Audit the authenticated product for premium polish:
+- toolbar/button consistency
+- export/download action presentation
+- section header consistency
+- spacing/padding rhythm
+- icon sizing consistency
+- empty state quality
+- loading state quality
+- error state quality
+- “save / export / delete” action hierarchy
+- desktop readability and panel balance
+
+Prioritize the highest-traffic areas:
+- dashboard/home
+- tools navigation
+- Clause Extractor
+- Compare Versions
+- Document Builder
+- Signature
+- pricing/upgrade surfaces if still visible
+
+Required:
+- no logic rewrites unless required for polish
+- preserve current workflows
+- tighten visual hierarchy
+- make the product feel like premium contract/document software
+
+---
+
+# PHASE 2 — Product Refinement
+Goal: improve clarity and usability inside the live app without destabilizing infrastructure.
+
+## 2A. Workflow clarity audit
+Check each core tool for:
+- overly vague CTA labels
+- duplicate status labels
+- weak pre-run instructions
+- inconsistent “remove file / run / export / save” patterns
+- confusing free vs paid messaging inside the product
+- confusing demo vs live workflow language
+
+Fix only what materially improves user clarity.
+
+## 2B. Output/action consistency
+Normalize how output tools behave:
+- copy
+- export
+- download
+- delete
+- reset / run again
+- save / autosave indicators where applicable
+
+Required:
+- make action placement consistent across tools where practical
+- avoid one-off UI patterns unless there is a strong reason
+
+## 2C. Desktop/mobile responsiveness check
+Run a refinement pass on:
+- desktop wide
+- laptop
+- tablet
+- mobile
+
+Required:
+- identify cramped layouts
+- fix overflow/compression
+- improve touch-target quality where needed
+- do not create brand-new mobile architecture
+
+---
+
+# PHASE 3 — Store-Prep
+Goal: prepare PlainPath for later App Store / Google Play submission without pretending submission is happening now.
+
+## 3A. Store messaging cleanup
+Audit all public-facing language for store-prep readiness:
+- no misleading native-app claims
+- no broken app store assumptions
+- no “download app” style wording unless accurate
+- clean distinction between live web app and future mobile apps
+
+## 3B. Store asset prep package
+Prepare a store-prep package for later use:
+- recommended app subtitle/tagline
+- short description
+- long description
+- feature bullets
+- screenshot plan
+- screenshot caption copy
+- app-store-safe trust/compliance wording
+- mobile value proposition summary
+
+Do not submit anything. Just prepare the package.
+
+## 3C. Mobile/store readiness checklist
+Create a clean readiness checklist for future submission covering:
+- metadata
+- screenshots
+- privacy wording
+- payment/platform considerations
+- account/auth expectations
+- any store-review-sensitive wording still needing revision later
+
+---
+
+# PHASE 4 — Real Paid Event Verification Prep
+Goal: preserve the operational readiness step for the first real paid subscriber event.
+
+Do not simulate fake billing architecture changes.
+Do not rewrite the current managed webhook system.
+
+Required:
+- preserve the existing deployment note and verification checklist
+- make sure the checklist remains easy to find
+- if useful, add a short operator-facing “after first real subscriber” note in the appropriate internal docs/replit.md area
+- do not change the webhook logic itself
+
+If there is any low-risk documentation improvement to make the first paid-event verification clearer, do it.
+
+---
+
+# Constraints
+- This is a refinement/system pass, not a rebuild
+- No auth/domain rebasing
+- No billing architecture changes
+- No Clerk reconfiguration
+- No Stripe webhook redesign
+- No widening scope into unrelated features
+- Prefer targeted edits over broad churn
+- Keep the live site stable
+
+---
+
+# Required output format
+
+## A. Premium Polish Report
+For each meaningful area changed:
+- PASS / PARTIAL / FAIL
+- exact files changed
+- what was normalized
+- before/after summary
+- screenshot proof where relevant
+
+## B. Product Refinement Report
+For each workflow/usability refinement:
+- exact files changed
+- issue found
+- fix applied
+- why it improves the live product
+
+## C. Store-Prep Package
+Return:
+- prepared store copy set
+- screenshot plan
+- later submission checklist
+- anything intentionally deferred
+
+## D. Regressions Check
+Confirm after this pass:
+- plainpathapp.com still loads correctly
+- auth still works
+- protected routes still work
+- pricing/gating still work
+- no new launch blocker was introduced
+
+## E. Final Summary
+Return:
+- what is complete now
+- what is still medium-priority
+- what is low-priority
+- whether the live web app remains stable after this pass
+
+---
+
+# Execution guidance
+Start with the highest-impact premium polish and product refinement items first.
+Do not spend time restating already-solved infrastructure unless you discover a real regression.
+Keep PlainPath feeling premium, accurate, stable, and ready for continued growth.

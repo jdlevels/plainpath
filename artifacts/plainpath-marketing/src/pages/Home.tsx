@@ -292,7 +292,7 @@ const DEMOS = [
     hoverBorder: "hover:border-violet-400/50",
     hoverTitle: "group-hover:text-violet-500 dark:group-hover:text-violet-400",
     tags: ["3 PII items found", "You approve each", "Export redacted copy"],
-    cta: "Try redaction",
+    cta: "Redact a document",
     href: "/demo/redact",
   },
   {
@@ -334,7 +334,7 @@ const DEMOS = [
     hoverBorder: "hover:border-purple-400/50",
     hoverTitle: "group-hover:text-purple-500 dark:group-hover:text-purple-400",
     tags: ["Key dates · Parties", "Obligations", "Legal clauses"],
-    cta: "See extraction",
+    cta: "Extract clauses",
     href: "/demo/clause-extractor",
   },
 ]
@@ -487,7 +487,7 @@ function AttorneyComparison() {
         >
           One attorney hour or a full month of PlainPath?
         </h3>
-        <p className="text-foreground/55 text-base max-w-md mx-auto">
+        <p className="text-muted-foreground text-base max-w-md mx-auto">
           Select a document type to see a typical cost comparison.
         </p>
       </div>
@@ -651,7 +651,7 @@ function ReferFriend() {
             >
               Know someone drowning in confusing paperwork?
             </h3>
-            <p className="text-foreground/60 text-base leading-relaxed mb-7">
+            <p className="text-muted-foreground text-base leading-relaxed mb-7">
               Share PlainPath with anyone dealing with a lease, contract, government notice, or medical bill.
               They can try it immediately — no account required.
             </p>
@@ -1275,9 +1275,9 @@ export default function Home() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: 0.08 }}
-              className="text-lg text-foreground/60"
+              className="text-lg text-muted-foreground"
             >
-              Start with document analysis, or unlock every tool with Pro. No contracts — cancel anytime.
+              Start with document analysis, or unlock every tool with Pro. No commitment — cancel anytime.
             </motion.p>
           </div>
 
@@ -1436,7 +1436,7 @@ export default function Home() {
               <p className="text-muted-foreground leading-relaxed mb-4">
                 We don't sell your data. We don't train AI on your documents.
                 For standard analyses, documents are processed in memory and discarded after your results are returned.
-                Pro workspaces (Builder, Compare Versions, Clause Extractor) store your working data so you can access it across sessions — you can delete it at any time.
+                Pro workspaces (Document Builder, Compare Versions, Clause Extractor) store your working data so you can access it across sessions — you can delete it at any time.
               </p>
               <div className="flex flex-wrap gap-5 text-sm font-medium text-foreground">
                 {["Not sold", "Not shared", "Not used for training", "Encrypted in transit"].map(item => (

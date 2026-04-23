@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter"
 import { Button } from "@/components/ui/button"
 import {
   FileScan, Plus, BookMarked, GitCompare, LogOut, User, ChevronDown,
-  LayoutGrid, ShieldCheck, PenLine, Scale, Menu, X, LayoutDashboard, CreditCard, EyeOff, FileSignature, FolderOpen, ListChecks,
+  LayoutGrid, ShieldCheck, PenLine, Scale, Menu, X, LayoutDashboard, CreditCard, EyeOff, FileSignature, FolderOpen, ListChecks, LayoutTemplate,
 } from "lucide-react"
 
 import { ThemeToggle } from "@/components/ui/ThemeToggle"
@@ -195,7 +195,7 @@ export function Navbar() {
                   : "text-muted-foreground hover:text-foreground hover:bg-secondary"
               }`}
             >
-              <PenLine className="w-3.5 h-3.5" />
+              <LayoutTemplate className="w-3.5 h-3.5" />
               Document Builder
             </Link>
           )}
@@ -299,7 +299,7 @@ export function Navbar() {
                     isBuilder ? "text-primary bg-primary/8 font-medium" : "text-muted-foreground hover:text-foreground hover:bg-secondary"
                   }`}
                 >
-                  <PenLine className="w-4 h-4 shrink-0" />
+                  <LayoutTemplate className="w-4 h-4 shrink-0" />
                   Document Builder
                 </button>
               )}
