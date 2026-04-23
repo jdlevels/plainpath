@@ -1,0 +1,83 @@
+## Replit Prompt — Make the workspace top bar stationary across all tools
+
+The top workspace bar should be stationary across all tool workspaces.
+
+### Problem
+Right now, the strip that contains:
+- the back button on the far left
+- the workspace/document title
+- the tool actions on the right
+
+moves away when the user scrolls, so it is no longer visible/detected.
+Also:
+- the back arrow is too small
+- the heading/title text is too small
+- the whole bar feels too light for a document-heavy premium workspace
+
+## Goal
+Turn this strip into a persistent workspace command bar that stays visible across all relevant tools.
+
+## Required changes
+
+### 1. Make the workspace bar stationary
+For document-heavy tools/workspaces, make this top strip remain visible while scrolling.
+
+Preferred behavior:
+- sticky at the top of the workspace/app content area
+- remains visible while document panes/content scroll underneath
+- same behavior across all relevant tools, not just one page
+
+Use the correct layout approach so it stays visible reliably:
+- check scroll container ownership
+- ensure sticky/fixed behavior is attached to the correct container
+- avoid cases where overflow settings break sticky behavior
+
+### 2. Standardize across tools
+Apply the same top-bar behavior/pattern across all comparable tools/workspaces:
+- Compare Versions
+- Document Builder
+- Clause Extractor (where relevant)
+- other document workspace surfaces using this same shell
+
+This should become a standard workspace header pattern.
+
+### 3. Increase readability
+The back control and title are too small.
+
+Required:
+- enlarge the back arrow icon
+- enlarge the clickable hit area for the back button
+- enlarge the title text
+- improve weight/contrast so the document/tool heading is easier to read
+
+### 4. Improve action usability on the right
+The tool buttons/actions on the right should remain visible and feel easier to use.
+
+Required:
+- keep them in the same stationary bar
+- improve spacing/alignment if needed
+- make sure the bar remains readable and not cramped
+
+### 5. Keep it premium and unobtrusive
+This is a premium workspace header, not a bulky nav.
+
+Required:
+- dark subtle surface
+- strong separation from the content below
+- small shadow or border if needed
+- do not let it take excessive vertical space
+- keep it visually consistent with PlainPath’s workspace chrome
+
+### 6. Accessibility / interaction
+Required:
+- ensure the back control has a comfortably clickable target
+- keep text legible
+- do not allow sticky behavior to cover important content without proper offset/padding
+
+## Output required
+1. Exact files changed
+2. Whether sticky or fixed was used, and why
+3. Which tools/pages now share this stationary workspace bar
+4. What size/readability changes were made to the back control and title
+5. Screenshot showing the bar remaining visible while scrolled
+6. Confirmation that only workspace UI/layout behavior was touched

@@ -258,66 +258,71 @@ function ResultsPanel({
   const presentCount = legalClauses.filter(([, c]) => c.present).length
 
   return (
-    <div className="space-y-5 max-w-[900px] mx-auto">
-      {/* Document header */}
-      <div className="flex items-start justify-between gap-4 pb-1">
-        {/* Left: identity */}
-        <div className="min-w-0">
-          <div className="flex items-center gap-2 mb-2">
-            <button
-              onClick={() => setLocation("/clause-extractor")}
-              className="p-1 -ml-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
-              aria-label="Back"
-            >
-              <ArrowLeft className="w-4 h-4" />
-            </button>
-            <h2 className="text-base font-semibold text-foreground truncate">
-              {session.fileName}
-            </h2>
-          </div>
-          <div className="flex flex-wrap items-center gap-2 pl-7">
-            {r.documentType && (
-              <Badge variant="secondary" className="text-[11px] px-2">{r.documentType}</Badge>
-            )}
-            <Badge className={`text-[11px] px-2 ${confidenceColor}`}>
-              {r.extractionConfidence} confidence
-            </Badge>
-            <span className="text-[11px] text-muted-foreground">{fmtBytes(session.fileSizeBytes)}</span>
-          </div>
-        </div>
-
-        {/* Right: actions */}
-        <div className="flex items-center gap-2 shrink-0 pt-0.5">
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 px-3 text-xs gap-1.5"
-            onClick={() => copy(buildSummaryText(session))}
+    <div>
+      {/* ── Workspace command bar — sticky top-16, sticks below 4rem navbar ── */}
+      <div className="sticky top-16 z-20 border-b border-border/70 bg-background/98 backdrop-blur-sm shadow-sm -mx-4 sm:-mx-6 px-4 sm:px-6 mb-6">
+        <div className="max-w-[900px] mx-auto py-2.5 flex items-center gap-3">
+          {/* Back */}
+          <button
+            onClick={() => setLocation("/clause-extractor")}
+            className="shrink-0 p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+            aria-label="Back to Clause Extractor"
           >
-            {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-            <span>{copied ? "Copied" : "Copy"}</span>
-          </Button>
-          {r.obligations.length > 0 && (
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+
+          {/* Title + meta */}
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold text-foreground truncate leading-tight">{session.fileName}</p>
+            <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+              <span className="text-[11px] font-medium text-muted-foreground">Clause Extractor</span>
+              {r.documentType && (
+                <Badge variant="secondary" className="text-[10px] px-1.5 py-px h-auto">
+                  {r.documentType}
+                </Badge>
+              )}
+              <Badge className={`text-[10px] px-1.5 py-px h-auto ${confidenceColor}`}>
+                {r.extractionConfidence} confidence
+              </Badge>
+              <span className="text-[10px] text-muted-foreground">{fmtBytes(session.fileSizeBytes)}</span>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center gap-1.5 shrink-0">
             <Button
               variant="outline"
               size="sm"
               className="h-8 px-3 text-xs gap-1.5"
-              onClick={() => exportObligationsCSV(session)}
+              onClick={() => copy(buildSummaryText(session))}
             >
-              <Download className="w-3.5 h-3.5" />
-              <span>Export CSV</span>
+              {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+              <span>{copied ? "Copied" : "Copy"}</span>
             </Button>
-          )}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 px-2.5 text-muted-foreground hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30"
-            onClick={onDelete}
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </Button>
+            {r.obligations.length > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 px-3 text-xs gap-1.5"
+                onClick={() => exportObligationsCSV(session)}
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Export CSV</span>
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 px-2.5 text-muted-foreground hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30"
+              onClick={onDelete}
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </Button>
+          </div>
         </div>
       </div>
+
+      <div className="space-y-5 max-w-[900px] mx-auto">
 
       {/* Key Dates */}
       {Object.values(r.keyDates).some(Boolean) && (
@@ -422,6 +427,7 @@ function ResultsPanel({
           </div>
         </Card>
       )}
+      </div>
     </div>
   )
 }

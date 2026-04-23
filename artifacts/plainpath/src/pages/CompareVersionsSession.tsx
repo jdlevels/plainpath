@@ -1458,6 +1458,12 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
     ? (diffNavIdx >= 0 ? `${diffNavIdx + 1}/${sortedByPage.length}` : `${sortedByPage.length} diff${sortedByPage.length !== 1 ? "s" : ""}`)
     : null
 
+  // ── Lock body scroll so the fixed-height workspace never scrolls away ─────────
+  useEffect(() => {
+    document.body.style.overflow = "hidden"
+    return () => { document.body.style.overflow = "" }
+  }, [])
+
   // ── Workspace ─────────────────────────────────────────────────────────────────
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)]">
@@ -1471,28 +1477,28 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
         />
       )}
 
-      {/* ── Thin sticky toolbar ── */}
-      <div className="flex items-center justify-between px-2.5 py-1 border-b border-border/60 bg-background/95 backdrop-blur-sm flex-shrink-0 gap-1.5 min-h-0">
+      {/* ── Workspace command bar — stationary (body overflow locked) ── */}
+      <div className="flex items-center justify-between px-3 py-2 border-b border-border/70 bg-background/98 shadow-sm flex-shrink-0 gap-2 backdrop-blur-sm">
         {/* Left: back + title */}
-        <div className="flex items-center gap-1.5 min-w-0">
+        <div className="flex items-center gap-2 min-w-0">
           <button
             onClick={() => navigate("/compare-versions")}
-            className="p-1 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground flex-shrink-0"
+            className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground flex-shrink-0"
             title="Back to My Comparisons"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
+            <ArrowLeft className="w-4 h-4" />
           </button>
           <div className="min-w-0 leading-none">
-            <p className="text-[13px] font-semibold truncate max-w-[120px] sm:max-w-[220px] lg:max-w-[380px] leading-tight">
+            <p className="text-sm font-bold truncate max-w-[130px] sm:max-w-[240px] lg:max-w-[400px] leading-tight text-foreground">
               {session.title}
             </p>
-            <div className="flex items-center gap-1.5 mt-px">
-              <p className="text-[10px] text-muted-foreground leading-none">Compare Versions</p>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <p className="text-[11px] text-muted-foreground leading-none font-medium">Compare Versions</p>
               {totalCount > 0 && (
-                <span className="text-[10px] font-mono text-muted-foreground leading-none">· {totalCount} changes</span>
+                <span className="text-[11px] font-mono text-muted-foreground leading-none">· {totalCount} changes</span>
               )}
               {highCount > 0 && (
-                <span className="text-[10px] font-semibold text-red-600 dark:text-red-400 leading-none">· {highCount} high</span>
+                <span className="text-[11px] font-semibold text-red-600 dark:text-red-400 leading-none">· {highCount} high</span>
               )}
             </div>
           </div>

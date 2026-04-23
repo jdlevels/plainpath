@@ -400,12 +400,12 @@ export default function Workspace({ docId }: WorkspaceProps) {
         </div>
       )}
 
-      {/* Header */}
-      <div className="sticky top-16 z-20 border-b border-border/50 bg-background/95 backdrop-blur-sm">
-        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center gap-3">
+      {/* Workspace command bar — sticky top-16, sticks below the 4rem navbar */}
+      <div className="sticky top-16 z-20 border-b border-border/70 bg-background/98 backdrop-blur-sm shadow-sm">
+        <div className="max-w-5xl mx-auto px-4 py-2.5 flex items-center gap-3">
           <button
             onClick={() => navigate("/builder")}
-            className="shrink-0 p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+            className="shrink-0 p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
             title="Back to documents"
           >
             <ArrowLeft className="w-4 h-4" />

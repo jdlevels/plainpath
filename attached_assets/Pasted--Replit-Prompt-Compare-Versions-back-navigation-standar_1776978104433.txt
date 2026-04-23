@@ -1,0 +1,96 @@
+## Replit Prompt — Compare Versions back-navigation standard + document viewer flashing fix
+
+Two issues need to be fixed as standard workspace behavior, not one-off page patches.
+
+### Issue 1 — No clear way back to Dashboard
+On Compare Versions, including the empty state page, there is no clear/persistent way to go back to the Dashboard.
+
+### Issue 2 — Document viewer flashes while reading/comparing
+When viewing documents, the screen flashes several times.
+This suggests a viewer stability problem: likely unnecessary re-renders, remounts, or layout churn.
+
+## Goal
+Standardize workspace navigation and stabilize the document viewing experience.
+
+---
+
+## Part A — Back to Dashboard standard
+
+### Required behavior
+Add a clear, consistent Back to Dashboard pattern across Compare Versions states:
+- empty state
+- list/history state
+- active comparison/document workspace
+
+Preferred pattern:
+- visible back control on the left side of the workspace header
+- same placement and label across these states
+- easy to reach and clearly readable
+
+Requirements:
+- larger back icon
+- larger hit area
+- clearer title hierarchy
+- same workspace-shell behavior as other document-heavy tools
+
+Do not make users rely on browser back for core navigation.
+
+---
+
+## Part B — Sticky workspace header
+
+The top workspace/header strip should remain visible while content scrolls.
+
+Requirements:
+- make the workspace command bar sticky across relevant Compare Versions/document states
+- keep back control, title, and core actions visible while scrolling
+- ensure sticky behavior is attached to the correct scroll container
+- do not let document content hide or detach the header
+
+Also:
+- increase title readability
+- improve spacing/alignment of right-side actions
+- keep the bar premium and compact
+
+---
+
+## Part C — Flashing / viewer stability diagnosis and fix
+
+The document screen flashes during reading/comparison.
+Treat this as a real stability/performance bug.
+
+### Investigate specifically
+1. Whether the PDF/document viewer is being remounted unnecessarily
+2. Whether unstable `key` props are causing subtree resets
+3. Whether summary toggles / layout changes are forcing full viewer rerenders
+4. Whether scroll/zoom/page-state updates are triggering broad rerenders
+5. Whether conditional rendering is replacing the viewer instead of preserving it
+6. Whether expensive derived data/functions need memoization
+
+### Likely fix directions
+- preserve viewer component identity across state changes
+- remove unstable/changing keys from viewer shells unless truly required
+- avoid remounting the document pane on summary toggle, scroll, or toolbar updates
+- memoize expensive derived values where appropriate
+- memoize callbacks passed deep into the viewer where appropriate
+- reduce layout churn that could cause repaint/flicker
+
+Important:
+Do not paper over the flashing with cosmetic animation changes only.
+Find the actual rerender/remount cause.
+
+---
+
+## Part D — Output required
+
+1. Exact files changed
+2. What Back to Dashboard pattern was introduced
+3. Which Compare Versions states now include it
+4. Whether sticky or fixed was used for the workspace header, and why
+5. Root cause of the flashing
+6. What was changed to stop the flashing
+7. Screenshot/video-proof style verification summary for:
+   - Compare Versions empty state
+   - active comparison workspace
+   - scrolled document state with header still visible
+8. Confirmation that no billing/auth/domain logic was touched
