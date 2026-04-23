@@ -1,0 +1,89 @@
+## Replit Prompt — Fix new-user entitlement bootstrap and signup plan flow
+
+We found a backend entitlement bug.
+
+### What happened
+A brand-new user created an account in incognito mode.
+They were NOT asked to choose Starter or Pro.
+After account creation, they still had access to 3 tools.
+
+That means the current new-user bootstrap / entitlement fallback is wrong.
+
+## Correct behavior we want
+
+### Identity model
+- Admin = internal privilege only
+- Starter = normal member with starter access
+- Pro = normal member with pro access
+
+Use Clerk public metadata as the source of truth:
+- Admin: { role: "admin", accessTier: "pro" }
+- Starter: { role: "member", accessTier: "starter" }
+- Pro: { role: "member", accessTier: "pro" }
+
+## Required fixes
+
+### 1. New-user default bootstrap
+For any brand-new NON-admin user, automatically assign:
+{
+  "role": "member",
+  "accessTier": "starter"
+}
+
+This must happen reliably on account creation / first sign-in bootstrap.
+A new user must never remain in a null or undefined accessTier state.
+
+### 2. Admin allowlist bootstrap
+If the email is on the admin allowlist, assign:
+{
+  "role": "admin",
+  "accessTier": "pro"
+}
+
+### 3. Remove permissive fallback behavior
+Audit all tool gating and entitlement logic.
+If accessTier is missing/null/undefined, do NOT grant partial tool access.
+Missing entitlement must resolve to a safe locked/default state, not 3-tool access.
+
+### 4. Starter access must be explicit
+Do not infer Starter from vague legacy logic.
+Starter access should come from explicit normalized metadata or a single entitlement source of truth.
+
+### 5. Plan selection flow
+Implement one of these cleanly:
+- Preferred: create account -> default to Starter -> upgrade to Pro via billing
+OR
+- Optional: after sign-up, show a custom onboarding step to choose plan before entering app
+
+Do not assume Clerk sign-up itself will ask for Starter vs Pro unless we explicitly built that app flow.
+
+### 6. Session refresh after metadata write
+If metadata is written during first sign-in/bootstrap, ensure the app refreshes session/token before rendering gated tools so the user immediately sees the correct access tier.
+
+### 7. Metadata write safety
+If metadata is being written in a way that replaces the whole object, switch to merge-safe Clerk metadata updates.
+
+### 8. Audit every place access is enforced
+Check:
+- useEntitlements
+- billing page
+- tool access page
+- route guards
+- API routes
+- dashboard tool cards
+- menu/dropdown visibility
+- upgrade CTA logic
+
+### 9. Output required
+1. Exact files changed
+2. Where new-user bootstrap happens
+3. Where admin bootstrap happens
+4. What happens when accessTier is missing
+5. What Starter unlocks
+6. What Pro unlocks
+7. Whether session refresh is forced after metadata changes
+8. Screenshot/video proof of:
+   - brand-new user signup
+   - resulting Starter access only
+   - Pro user access
+   - Admin access

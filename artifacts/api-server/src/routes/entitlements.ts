@@ -167,6 +167,57 @@ router.get("/status", (req, res) => {
   }
 })
 
+// ─── POST /bootstrap ──────────────────────────────────────────────────────────
+// Called once by the frontend when a newly signed-in user has no publicMetadata.
+// Writes the correct role + accessTier to Clerk publicMetadata (merge-safe).
+//
+// New user (non-admin): { role: "member", accessTier: "starter" }
+// Admin email:          { role: "admin",  accessTier: "pro"     }
+//
+// If metadata is already set, returns immediately (no-op) so it is safe to
+// call on every sign-in without risk of overwriting later updates.
+//
+// Requires a valid Clerk session (JWT). Returns 401 if unauthenticated.
+
+router.post("/bootstrap", async (req, res) => {
+  const auth = getAuth(req)
+  if (!auth?.userId) {
+    return res.status(401).json({ error: "unauthorized" })
+  }
+
+  try {
+    const user = await clerkClient.users.getUser(auth.userId)
+    const email = (user.emailAddresses?.[0]?.emailAddress ?? "").toLowerCase()
+    const existing = user.publicMetadata as Record<string, unknown>
+
+    // Already bootstrapped — return current values without writing anything.
+    if (existing.role && existing.accessTier) {
+      return res.json({
+        role: existing.role,
+        accessTier: existing.accessTier,
+        bootstrapped: false,
+      })
+    }
+
+    // Determine correct identity:
+    //   Admin email → internal privilege + Pro access
+    //   Everyone else → member + Starter (default free tier)
+    const newMeta = isAdminEmail(email)
+      ? { role: "admin", accessTier: "pro" }
+      : { role: "member", accessTier: "starter" }
+
+    // Merge-safe: spread existing keys so no other metadata is overwritten.
+    await clerkClient.users.updateUser(auth.userId, {
+      publicMetadata: { ...existing, ...newMeta },
+    })
+
+    return res.json({ ...newMeta, bootstrapped: true })
+  } catch (err) {
+    console.error("Bootstrap error:", err)
+    return res.status(500).json({ error: "Bootstrap failed" })
+  }
+})
+
 // ─── POST /consume ────────────────────────────────────────────────────────────
 // Records a tool usage event. When PAYWALL_ENFORCEMENT is true, this also
 // validates the subscriber has access to the tool and has not exceeded limits.

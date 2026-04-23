@@ -186,7 +186,7 @@ export default function Home() {
   const [, setLocation] = useLocation()
   const { user } = useUser()
   const { getToken } = useAuth()
-  const { entitlements, isAdmin } = useEntitlements()
+  const { entitlements, isAdmin, loading: entLoading } = useEntitlements()
   const [recentWork, setRecentWork] = useState<RecentItem[]>([])
   const [recentLoading, setRecentLoading] = useState(true)
 
@@ -370,7 +370,11 @@ export default function Home() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {TOOLS.map((tool, i) => {
               const accessible = canAccessTool(tool.key)
-              const locked = !accessible && !!entitlements
+              // Lock when loading is done and the tool isn't accessible.
+              // When entLoading=true, we don't show the lock icon yet (avoids flash),
+              // but accessible=false so the card is still not clickable.
+              // Safe default: missing entitlements after load → locked.
+              const locked = !entLoading && !accessible
 
               return (
                 <motion.div
