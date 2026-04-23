@@ -3,8 +3,14 @@
 // LIVE MODE — activated for controlled soft launch.
 //
 // Required secrets in environment:
-//   STRIPE_SECRET_KEY      = sk_live_...
-//   STRIPE_WEBHOOK_SECRET  = whsec_...
+//   STRIPE_SECRET_KEY  = sk_live_...   (via Replit Stripe integration)
+//
+// NOTE: STRIPE_WEBHOOK_SECRET is NOT a required environment variable.
+// The webhook signing secret is managed by the stripe-replit-sync package.
+// On startup, initStripe() calls findOrCreateManagedWebhook() which registers
+// the webhook with Stripe and stores the signing secret in the
+// stripe._managed_webhooks table. The secret is then loaded into memory via
+// setWebhookSecret(). No manual whsec_... env var is needed or used.
 //
 // To revert to test mode:
 //   BILLING_ENABLED: false

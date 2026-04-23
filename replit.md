@@ -51,10 +51,21 @@ PlainPath is a monorepo built with pnpm workspaces, separating frontend and back
 ### Payment and Billing
 -   Full billing architecture implemented with Stripe for Starter and Pro tiers.
 -   Scaffold for native iOS/Android billing using RevenueCat.
+-   **Webhook secret — managed flow (no env var required)**: `STRIPE_WEBHOOK_SECRET` is NOT a required or used environment variable. On server startup, `initStripe()` in `index.ts` uses `stripe-replit-sync`'s `findOrCreateManagedWebhook()` to register the `/api/stripe/webhook` endpoint with Stripe. The signing secret is stored in the `stripe._managed_webhooks` table and loaded into memory via `setWebhookSecret()`. If the DB row is missing at startup, webhooks are safely rejected (400 "Webhook not configured") until the next restart. Source of truth: `artifacts/api-server/src/lib/stripeWebhookSecret.ts` and `artifacts/api-server/src/lib/billingConfig.ts`.
+-   **Billing status: SAFE for real paid subscribers.** The managed webhook flow is active in production.
 
 ## Deployment Notes
 
 - **Custom domain reattachment / auth changes → republish required**: After reattaching a custom domain in Replit Publishing, or after major Clerk/auth configuration changes (e.g. switching from dev to production keys, resolving a Clerk tenant domain conflict), always trigger a fresh republish from the Replit Publishing panel. This forces Replit to finalize its internal routing table against the current production build and bind the custom domain correctly. Without this step, the domain may resolve to Replit infrastructure but return a "This app isn't live yet" 404 even though DNS and SSL are correctly configured.
+
+- **Stripe webhook — managed by stripe-replit-sync (no env var needed)**: The webhook signing secret is never set via `STRIPE_WEBHOOK_SECRET`. It is registered and persisted automatically by `stripe-replit-sync` in `stripe._managed_webhooks`. After any deployment or server restart, check API server logs for `"Stripe managed webhook configured"` or `"Stripe initialized and backfill complete"` to confirm the webhook loaded correctly.
+
+- **Verifying the live webhook after the first real subscriber**: After the first paid checkout completes in production, confirm the full event chain landed correctly:
+  1. **Check the managed webhook row**: `SELECT url, created_at FROM stripe._managed_webhooks;` — should show one row for `https://<replit-domain>/api/stripe/webhook`.
+  2. **Check the subscriber was written**: `SELECT email, plan, status, billing_provider, created_at FROM stripe.subscribers ORDER BY created_at DESC LIMIT 5;` (or the equivalent `subscribers` table in your public schema if using billingDb).
+  3. **Check Stripe Dashboard → Developers → Webhooks**: Open the managed webhook endpoint, look at the event log — `checkout.session.completed` and `customer.subscription.created` should both appear with status 200.
+  4. **Check API server logs**: Look for `"Stripe managed webhook configured"` on startup, and no 400 webhook-rejected errors around the time of the checkout.
+  5. If the subscriber row is missing despite a successful checkout: restart the API server (which re-runs `initStripe()` and reloads the secret from DB), then re-trigger the webhook from the Stripe Dashboard event log using "Resend".
 
 ## External Dependencies
 -   **OpenAI**: AI functionalities.
