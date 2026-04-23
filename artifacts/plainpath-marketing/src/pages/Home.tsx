@@ -177,7 +177,7 @@ const FEATURES = [
     title: "Digital Signature",
     desc: "Send documents for e-signature, track signing status in real time, and download certified signed copies — all without leaving PlainPath. Powered by Dropbox Sign.",
     result: { label: "Signature Request Sent", value: "Sarah Chen received a secure signing link for the Consulting Agreement.", icon: CheckCircle2, color: "text-violet-600 dark:text-violet-400", bg: "bg-violet-50 dark:bg-violet-900/20" },
-    tags: ["Contracts", "NDAs", "Agreements", "Pro only"],
+    tags: ["Contracts", "NDAs", "Agreements"],
     tagCls: "bg-violet-50/80 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300 border border-violet-200/60 dark:border-violet-700/40",
   },
   {
@@ -305,7 +305,7 @@ const DEMOS = [
     bg: "bg-teal-50 dark:bg-teal-950/50",
     hoverBorder: "hover:border-teal-400/50",
     hoverTitle: "group-hover:text-teal-500 dark:group-hover:text-teal-400",
-    tags: ["1 of 2 signed", "Status timeline", "No account needed"],
+    tags: ["1 of 2 signed", "Status timeline", "Pre-loaded demo"],
     cta: "See signing status",
     href: "/demo/signature",
   },
@@ -932,7 +932,7 @@ export default function Home() {
       {/* ════════════════════════════════════════════════
           STATS BAR
       ════════════════════════════════════════════════ */}
-      <div className="w-full bg-gradient-to-b from-sky-200/70 via-blue-100/60 to-slate-200/65 dark:from-zinc-900/80 dark:via-blue-950/20 dark:to-zinc-900/60 border-y border-sky-300/50 dark:border-zinc-800/60 py-14">
+      <div className="w-full bg-gradient-to-b from-sky-200/70 via-blue-100/60 to-slate-200/65 dark:from-zinc-900/80 dark:via-blue-950/20 dark:to-zinc-900/60 border-y border-sky-300/50 dark:border-zinc-800/60 py-16">
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
           <StatsBar />
         </div>
@@ -1144,7 +1144,7 @@ export default function Home() {
             <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
               className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Live demos</motion.p>
             <motion.h2 initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-              className="text-3xl md:text-4xl font-bold mb-3" style={{ fontFamily: "var(--font-display)" }}>Real scenarios — pre-loaded and ready to run</motion.h2>
+              className="text-3xl md:text-4xl font-bold mb-3" style={{ fontFamily: "var(--font-display)" }}>Pre-loaded examples — ready to run</motion.h2>
             <motion.p initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
               transition={{ delay: 0.1 }} className="text-muted-foreground text-lg max-w-xl mx-auto">
               Real documents, real scenarios — one per live tool. Click any card to open a pre-loaded example in the web app.
@@ -1215,7 +1215,7 @@ export default function Home() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.45 }}
                 whileHover={{ y: -4 }}
-                className="bg-card rounded-2xl border border-border/90 p-6 shadow-md hover:shadow-lg transition-shadow duration-300"
+                className="bg-card rounded-2xl border border-border/70 p-6 shadow-md hover:shadow-lg transition-shadow duration-300"
               >
                 <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
                   <Icon className="w-5 h-5 text-primary" />

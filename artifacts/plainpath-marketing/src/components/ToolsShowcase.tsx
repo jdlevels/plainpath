@@ -201,7 +201,7 @@ export default function ToolsShowcase() {
           viewport={{ once: true }}
           className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3"
         >
-          8 tools live
+          Every tool, in detail
         </motion.p>
         <motion.h2
           initial={{ opacity: 0, y: 12 }}

@@ -33,7 +33,7 @@ const FAQS = [
   },
   {
     q: "Which plan do I need for each tool?",
-    a: "Analyze a Document and Redact Sensitive Info are available on all plans, including Starter. Document Trust Check, Build a Contract, Contract Review, Digital Signature, Compare Versions, and Clause Extractor require a Pro plan. You'll see an upgrade prompt if you try to use them without Pro, and you can switch plans at any time.",
+    a: "Analyze a Document and Redact Sensitive Info are available on Starter and Pro plans. Document Trust Check, Build a Contract, Contract Review, Digital Signature, Compare Versions, and Clause Extractor require a Pro plan. You'll see an upgrade prompt if you try to use them without Pro, and you can switch plans at any time.",
   },
 ]
 
