@@ -1,0 +1,61 @@
+## Replit Prompt — Fix Plan & Billing Tool Access card to reflect all tools consistently
+
+The Tool Access section on the Plan & Billing page is currently incomplete and inconsistent.
+
+### Problem
+It is not reflecting all live PlainPath tools.
+It currently shows only a partial subset, while the product is being presented elsewhere as 8 live tools.
+
+Also, the labeling model is inconsistent:
+- some tools show a Pro badge
+- some do not
+- access state is not clearly separated from plan designation
+
+### Goal
+Make the Tool Access card accurate, complete, and consistent with the rest of PlainPath.
+
+## Required changes
+
+### 1. Reflect all live tools
+Update the Tool Access card so it shows all 8 current tools:
+
+- Analyze a Document
+- Redact Sensitive Info
+- Document Trust Check
+- Contract Review
+- Build a Contract
+- Digital Signature
+- Compare Versions
+- Clause Extractor
+
+### 2. Separate tool name from plan/access state
+Each tool row should clearly show:
+- tool name
+- plan badge if relevant (`Starter`, `Pro`, or `Starter + Pro`)
+- current access state on the right
+
+### 3. Use a consistent access model
+For a Pro user, all tools should display as available/included.
+
+Recommended right-side state:
+- Included
+
+Do not use a mixed system where some rows only have a green check and others only have a badge with no clear access state.
+
+### 4. Use consistent badge logic
+Recommended:
+- Analyze a Document → Starter + Pro
+- Redact Sensitive Info → Starter + Pro
+- all remaining premium tools → Pro
+
+If there is a centralized entitlement source in code, use that source of truth so the billing page stays synchronized with pricing and tool gating.
+
+### 5. Keep wording premium and simple
+Do not over-explain.
+Keep the card clean and readable.
+
+### 6. Output required
+1. Exact files changed
+2. Source of truth used for tool list and plan labeling
+3. Screenshot showing all 8 tools in Tool Access
+4. Confirmation that the billing page now matches pricing/marketing/app tool inventory

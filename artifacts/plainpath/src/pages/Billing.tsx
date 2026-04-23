@@ -5,6 +5,7 @@ import {
   CreditCard, CheckCircle2, XCircle, Zap, BarChart3,
   ShieldCheck, PenLine, Scale, ArrowRight, ExternalLink,
   AlertTriangle, TestTube, Loader2, RefreshCw, Mail, EyeOff,
+  FileScan, FileSignature, GitCompare, ListChecks,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useEntitlements } from "@/hooks/useEntitlements"
@@ -35,12 +36,16 @@ const PLAN_META = {
   },
 } as const
 
+// Source of truth: TOOL_ACCESS in artifacts/api-server/src/lib/planEntitlements.ts
 const TOOLS = [
-  { icon: BarChart3,   key: "analyze",           label: "Analyze a Document",   plans: ["starter", "pro"] },
-  { icon: EyeOff,      key: "redact",             label: "Redact Sensitive Info", plans: ["starter", "pro"] },
-  { icon: ShieldCheck, key: "trust-check",        label: "Document Trust Check", plans: ["pro"] },
-  { icon: Scale,       key: "contract-review",    label: "Contract Review",      plans: ["pro"] },
-  { icon: PenLine,     key: "build-contract",     label: "Build a Contract",     plans: ["pro"] },
+  { icon: FileScan,       key: "analyze",          label: "Analyze a Document",   plans: ["starter", "pro"] },
+  { icon: EyeOff,         key: "redact",           label: "Redact Sensitive Info", plans: ["starter", "pro"] },
+  { icon: ShieldCheck,    key: "trust-check",      label: "Document Trust Check", plans: ["pro"] },
+  { icon: Scale,          key: "contract-review",  label: "Contract Review",      plans: ["pro"] },
+  { icon: PenLine,        key: "build-contract",   label: "Build a Contract",     plans: ["pro"] },
+  { icon: FileSignature,  key: "signature",        label: "Digital Signature",    plans: ["pro"] },
+  { icon: GitCompare,     key: "compare-versions", label: "Compare Versions",     plans: ["pro"] },
+  { icon: ListChecks,     key: "clause-extractor", label: "Clause Extractor",     plans: ["pro"] },
 ] as const
 
 // ─── Native message ───────────────────────────────────────────────────────────
@@ -317,31 +322,36 @@ export default function Billing() {
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">
             Tool access
           </p>
-          <div className="space-y-2">
+          <div className="space-y-0">
             {TOOLS.map((tool) => {
               const hasAccess = isEnforced
                 ? Boolean(plan && (tool.plans as readonly string[]).includes(plan))
-                : true // when enforcement is off, all tools are accessible
-              const requiresPro = !(tool.plans as readonly string[]).includes("starter")
+                : true
+              const isStarterTool = (tool.plans as readonly string[]).includes("starter")
+              const planBadge = isStarterTool ? "Starter + Pro" : "Pro"
+              const planBadgeClass = isStarterTool
+                ? "text-blue-600 dark:text-blue-400 bg-blue-500/10"
+                : "text-primary bg-primary/10"
 
               return (
                 <div
                   key={tool.key}
-                  className="flex items-center justify-between py-2.5 border-b border-border/30 last:border-0"
+                  className="flex items-center justify-between py-2.5 border-b border-border/25 last:border-0"
                 >
-                  <div className="flex items-center gap-2.5">
-                    <tool.icon className="w-4 h-4 text-muted-foreground shrink-0" />
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <tool.icon className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                     <span className="text-sm text-foreground">{tool.label}</span>
-                    {requiresPro && (
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/10 px-1.5 py-0.5 rounded-md">
-                        Pro
-                      </span>
-                    )}
+                    <span className={`shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-md leading-none ${planBadgeClass}`}>
+                      {planBadge}
+                    </span>
                   </div>
                   {hasAccess ? (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                      <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">Included</span>
+                    </div>
                   ) : (
-                    <XCircle className="w-4 h-4 text-muted-foreground/40 shrink-0" />
+                    <XCircle className="w-3.5 h-3.5 text-muted-foreground/35 shrink-0" />
                   )}
                 </div>
               )
@@ -351,7 +361,7 @@ export default function Billing() {
           {isEnforced && plan === "starter" && (
             <div className="mt-4 rounded-xl border border-primary/20 bg-primary/5 p-3 flex items-center justify-between gap-3">
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Upgrade to <span className="font-semibold text-primary">Pro</span> to unlock Trust Check, Contract Review, and Contract Builder.
+                Upgrade to <span className="font-semibold text-primary">Pro</span> to unlock all 8 tools — including Contract Review, Digital Signature, Compare Versions, and more.
               </p>
               <Button size="sm" onClick={() => navigate("/subscribe")} className="shrink-0">
                 Upgrade <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
@@ -374,8 +384,8 @@ export default function Billing() {
                   Subscribe to PlainPath
                 </p>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  Starter at <strong>$4.99/mo</strong> gives you unlimited document analysis.
-                  Pro at <strong>$19.99/mo</strong> unlocks all 5 live tools.
+                  Starter at <strong>$4.99/mo</strong> gives you Analyze and Redact.
+                  Pro at <strong>$19.99/mo</strong> unlocks all 8 tools.
                 </p>
               </div>
               <Button size="sm" onClick={() => navigate("/subscribe")} className="shrink-0">
@@ -398,7 +408,7 @@ export default function Billing() {
                   Upgrade to Pro — $19.99/mo
                 </p>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  Add Trust Check, Contract Review, and Contract Builder to your plan.
+                  Unlock all 8 tools — Trust Check, Contract Review, Signature, Compare Versions, Clause Extractor, and more.
                 </p>
               </div>
               <Button size="sm" onClick={() => navigate("/subscribe")} className="shrink-0">
