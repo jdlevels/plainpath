@@ -209,10 +209,10 @@ export default function DemoClauseExtractor() {
 
       <main className="flex-1 mt-16 pb-20">
         {/* Hero */}
-        <section className="border-b border-border/40 bg-gradient-to-b from-purple-50/60 to-background dark:from-purple-950/20 py-10 px-4 sm:px-6">
+        <section className="border-b border-border/40 bg-gradient-to-b from-fuchsia-50/60 to-background dark:from-fuchsia-950/20 py-10 px-4 sm:px-6">
           <div className="max-w-[900px] mx-auto">
             <div className="flex items-center gap-2 mb-3">
-              <Badge className="bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 text-[11px]">Live Demo</Badge>
+              <Badge className="bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-900/40 dark:text-fuchsia-300 text-[11px]">Live Demo</Badge>
               <Badge variant="outline" className="text-[11px]">Clause Extractor</Badge>
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
@@ -223,7 +223,7 @@ export default function DemoClauseExtractor() {
             </p>
             <div className="flex flex-wrap gap-3">
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <ListChecks className="w-3.5 h-3.5 text-purple-500" />
+                <ListChecks className="w-3.5 h-3.5 text-fuchsia-500" />
                 <span>6 obligations found</span>
               </div>
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -320,7 +320,7 @@ export default function DemoClauseExtractor() {
           {/* Obligations */}
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
             <Card className="p-5 rounded-2xl border border-border/50">
-              <SectionHeader icon={ListChecks} label={`Obligations (${r.obligations.length})`} color="bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400" />
+              <SectionHeader icon={ListChecks} label={`Obligations (${r.obligations.length})`} color="bg-fuchsia-100 dark:bg-fuchsia-900/40 text-fuchsia-600 dark:text-fuchsia-400" />
               <div className="space-y-3">
                 {r.obligations.map((ob, i) => (
                   <motion.div
@@ -330,7 +330,7 @@ export default function DemoClauseExtractor() {
                     transition={{ delay: 0.28 + i * 0.04 }}
                     className="rounded-xl border border-border/50 bg-card p-4 flex gap-4"
                   >
-                    <div className="w-6 h-6 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-300 text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                    <div className="w-6 h-6 rounded-full bg-fuchsia-100 dark:bg-fuchsia-900/40 text-fuchsia-600 dark:text-fuchsia-300 text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">
                       {i + 1}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -372,8 +372,8 @@ export default function DemoClauseExtractor() {
 
           {/* CTA */}
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.48 }}>
-            <Card className="p-6 rounded-2xl border border-purple-200/60 dark:border-purple-800/40 bg-gradient-to-br from-purple-50 to-background dark:from-purple-950/20 text-center">
-              <ListChecks className="w-8 h-8 text-purple-500 mx-auto mb-3" />
+            <Card className="p-6 rounded-2xl border border-fuchsia-200/60 dark:border-fuchsia-800/40 bg-gradient-to-br from-fuchsia-50 to-background dark:from-fuchsia-950/20 text-center">
+              <ListChecks className="w-8 h-8 text-fuchsia-500 mx-auto mb-3" />
               <h3 className="text-base font-semibold text-foreground mb-1">Extract clauses from your contract</h3>
               <p className="text-sm text-muted-foreground mb-4">Upload any PDF or DOCX and get the same structured breakdown — key dates, obligations, and legal clauses — in under 30 seconds.</p>
               <Button asChild className="rounded-xl">

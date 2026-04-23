@@ -97,7 +97,7 @@ const TOOLS = [
   { label: "Contract Review",       icon: Scale,          cls: "tool-btn-amber",   href: "/app/contract-review",         comingSoon: false },
   { label: "Redact Sensitive Info", icon: EyeOff,         cls: "tool-btn-violet",  href: "/app/redact",                  comingSoon: false },
   { label: "Digital Signature",     icon: FileSignature,  cls: "tool-btn-indigo",  href: "/app/signature",               comingSoon: false },
-  { label: "Clause Extractor",       icon: ListChecks,     cls: "tool-btn-purple",  href: "/app/clause-extractor",        comingSoon: false },
+  { label: "Clause Extractor",       icon: ListChecks,     cls: "tool-btn-fuchsia", href: "/app/clause-extractor",        comingSoon: false },
   { label: "Compare Versions",      icon: GitCompare,     cls: "tool-btn-sky",     href: "/app/compare-versions",        comingSoon: false },
 ];
 
@@ -196,16 +196,16 @@ const FEATURES = [
   },
   {
     icon: ListChecks,
-    color: "text-purple-600 dark:text-purple-400",
-    bg: "bg-purple-100 dark:bg-purple-900/30",
-    border: "border-l-purple-500 dark:border-l-purple-400",
-    accent: "bg-purple-500 dark:bg-purple-400",
-    glow: "from-purple-50 dark:from-purple-900/10",
+    color: "text-fuchsia-600 dark:text-fuchsia-400",
+    bg: "bg-fuchsia-100 dark:bg-fuchsia-900/30",
+    border: "border-l-fuchsia-500 dark:border-l-fuchsia-400",
+    accent: "bg-fuchsia-500 dark:bg-fuchsia-400",
+    glow: "from-fuchsia-50 dark:from-fuchsia-900/10",
     title: "Clause Extractor",
     desc: "Upload any contract or agreement and get a structured breakdown of critical dates, party roles, financial terms, legal clauses, and a plain-English obligation list.",
-    result: { label: "Extraction Complete", value: "6 obligations found, 6 of 8 clauses present. Auto-renewal clause detected.", icon: CheckCircle2, color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-50 dark:bg-purple-900/20" },
+    result: { label: "Extraction Complete", value: "6 obligations found, 6 of 8 clauses present. Auto-renewal clause detected.", icon: CheckCircle2, color: "text-fuchsia-600 dark:text-fuchsia-400", bg: "bg-fuchsia-50 dark:bg-fuchsia-900/20" },
     tags: ["Key dates", "Obligations", "Legal clauses", "Party roles"],
-    tagCls: "bg-purple-50/80 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 border border-purple-200/60 dark:border-purple-700/40",
+    tagCls: "bg-fuchsia-50/80 dark:bg-fuchsia-900/20 text-fuchsia-700 dark:text-fuchsia-300 border border-fuchsia-200/60 dark:border-fuchsia-700/40",
   },
 ];
 
@@ -1096,7 +1096,7 @@ export default function Home() {
                     { icon: EyeOff,        title: "Your private details go wherever the doc goes", desc: "Names, SSNs, account numbers — once you share a document they go with it. Redact Sensitive Info lets you strip them before anyone else sees the file.",                                   tool: "Redact Sensitive Info", iconBg: "rgba(139,92,246,0.15)",   iconColor: "#a78bfa", badgeBorder: "rgba(139,92,246,0.35)",   badgeColor: "#c4b5fd"  },
                     { icon: FileSignature, title: "Print, sign, scan — for every signature",      desc: "The old workflow adds days and creates unsigned copies nobody can track. Digital Signature sends a secure link and gives you a real-time audit trail.",                                    tool: "Digital Signature",     iconBg: "rgba(99,102,241,0.15)",   iconColor: "#818cf8", badgeBorder: "rgba(99,102,241,0.35)",   badgeColor: "#a5b4fc"  },
                     { icon: GitCompare,    title: "New contract version — what actually changed?", desc: "They sent a revised draft. You have no idea what moved. Compare Versions maps every addition, deletion, and structural change with severity scoring.",                                    tool: "Compare Versions",      iconBg: "rgba(20,184,166,0.15)",   iconColor: "#2dd4bf", badgeBorder: "rgba(20,184,166,0.35)",   badgeColor: "#5eead4"  },
-                    { icon: ListChecks,    title: "Obligations buried in the fine print",         desc: "You're about to sign but you don't know who owes what by when. Clause Extractor pulls every obligation, assigns it to a party, and flags any that require action before signing.", tool: "Clause Extractor",      iconBg: "rgba(168,85,247,0.15)",   iconColor: "#d8b4fe", badgeBorder: "rgba(168,85,247,0.35)",   badgeColor: "#e9d5ff"  },
+                    { icon: ListChecks,    title: "Obligations buried in the fine print",         desc: "You're about to sign but you don't know who owes what by when. Clause Extractor pulls every obligation, assigns it to a party, and flags any that require action before signing.", tool: "Clause Extractor",      iconBg: "rgba(192,38,211,0.15)",   iconColor: "#f0abfc", badgeBorder: "rgba(192,38,211,0.35)",   badgeColor: "#fae8ff"  },
                   ].map((item, i) => (
                     <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true }} transition={{ delay: i * 0.06 }}

@@ -40,7 +40,7 @@ const TOOL_ROWS: { color: string; name: string; desc: string }[] = [
     desc: "maps every addition, deletion, and structural change between two document versions — with severity scoring so you see what actually matters.",
   },
   {
-    color: "text-purple-600 dark:text-purple-400",
+    color: "text-fuchsia-600 dark:text-fuchsia-400",
     name: "Clause Extractor",
     desc: "pulls every obligation, key date, party, and financial term from a contract — and tells you exactly who owes what by when.",
   },

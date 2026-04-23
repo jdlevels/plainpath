@@ -164,6 +164,7 @@
   .tool-btn-indigo  { border-color: #a5b4fc; color: #3730a3; background-color: rgba(238, 242, 255, 0.9); }
   .tool-btn-orange  { border-color: #fdba74; color: #c2410c; background-color: rgba(255, 247, 237, 0.9); }
   .tool-btn-sky     { border-color: #7dd3fc; color: #0369a1; background-color: rgba(240, 249, 255, 0.9); }
+  .tool-btn-fuchsia { border-color: #f0abfc; color: #a21caf; background-color: rgba(253, 244, 255, 0.9); }
   .tool-btn-slate   { border-color: #cbd5e1; color: #94a3b8; background-color: rgba(248, 250, 252, 0.8); opacity: 0.7; cursor: default; }
 
   /* ── Hero tool pill buttons — dark ─── */
@@ -176,6 +177,7 @@
   .dark .tool-btn-indigo  { border-color: #6366f1; color: #a5b4fc; background-color: rgba(55, 48, 163, 0.25); }
   .dark .tool-btn-orange  { border-color: #f97316; color: #fdba74; background-color: rgba(124, 45, 18, 0.25); }
   .dark .tool-btn-sky     { border-color: #38bdf8; color: #7dd3fc; background-color: rgba(12, 74, 110, 0.25); }
+  .dark .tool-btn-fuchsia { border-color: #d946ef; color: #f0abfc; background-color: rgba(112, 26, 117, 0.25); }
   .dark .tool-btn-slate   { border-color: #475569; color: #64748b; background-color: rgba(30, 41, 59, 0.25); opacity: 0.7; cursor: default; }
 
   /* ── Hide scrollbar ─── */
