@@ -1,0 +1,107 @@
+## Replit Prompt — Rebuild the marketing demo section as one shared live demo system
+
+The current “One platform, every device” / demo area took a step backward.
+
+### Current problems
+1. The left demo is no longer feeling premium
+2. It has too much dead/empty space
+3. It looks like one hard-coded mockup instead of a live demo system
+4. It no longer gives the feeling that all tools are active/running
+5. The left demo is not filling the panel correctly
+6. The overall section feels disconnected from the rest of the live demo experience
+
+## Goal
+Rework this section so the marketing demos feel like one coordinated live system again.
+
+We want:
+- all demo examples synced
+- all 8 tools represented
+- one shared active state
+- a left demo stage that fully uses its available space
+- a premium split-layout with no awkward empty area
+
+## Required implementation
+
+### 1. Use one shared active demo/tool state
+The left demo stage, demo tabs/cards, and any rotating example states must all use the same source of truth.
+
+Required:
+- one shared `activeTool` or `activeDemo` state
+- if the active tool changes, all linked demo surfaces update
+- if the user manually selects a tool/demo, the left stage updates immediately
+- do not create a separate isolated animation/state for the left demo
+
+### 2. All 8 tools must be represented
+Map live demo states for all 8 tools:
+- Analyze a Document
+- Document Trust Check
+- Build a Contract
+- Contract Review
+- Redact Sensitive Info
+- Digital Signature
+- Compare Versions
+- Clause Extractor
+
+Each tool should have a clearly different demo state:
+- title
+- accent color
+- main content pattern
+- visible result/action state
+- supporting labels/chips
+
+### 3. Make the left demo fill the space properly
+The current left area has too much unused space.
+
+Required:
+- the active demo should visually occupy the panel in a deliberate way
+- no tiny demo floating in a large empty box
+- use the available width/height better
+- preserve premium spacing, but avoid dead space
+- if needed, rebuild the left side as a full “demo workspace” rather than a small device mockup
+
+Important:
+- do not distort the demo UI
+- do not shrink everything just to fit a device frame
+- prioritize a premium, readable, full-surface demo
+
+### 4. Choose the right visual container
+If the phone/device frame is what is causing the wasted space and weak presentation, remove or rethink it.
+
+You may:
+- replace it with a larger app-window/workspace frame
+- or create a better full-panel stage that still feels like a live product demo
+
+The result should feel premium and intentional, not decorative.
+
+### 5. Keep the section visually balanced
+The left demo stage and right text panel should still feel like paired companion panels.
+
+Required:
+- matched height/weight on desktop
+- stronger visual balance
+- cleaner use of panel space
+- no obvious “large card + undersized demo” mismatch
+
+### 6. Rotation / interaction behavior
+If demos auto-rotate:
+- they must stay synced
+- they should pause appropriately on hover/focus/manual interaction
+- user selection should override cleanly
+
+### 7. Accessibility / UX
+Because this behaves like a rotating demo/carousel:
+- do not create multiple conflicting moving regions
+- keep one coordinated interaction model
+- preserve clear labels and readable contrast
+
+## Output required
+1. Exact files changed
+2. Where the shared demo state lives
+3. How all 8 tools were mapped
+4. What changed about the left demo container/layout
+5. Why the new approach is more premium and fills space better
+6. Before/after screenshots of:
+   - full section
+   - one auto/demo state
+   - one manually selected tool state
+7. Confirmation that only marketing/demo UI was touched

@@ -330,10 +330,10 @@ const DEMOS = [
     title: "Residential Lease — 6 Obligations Found",
     desc: "A 12-page lease broken down into structured fields: key dates, party roles, financial terms, auto-renewal clause, and a plain-English obligation list.",
     icon: ListChecks,
-    color: "text-purple-500 dark:text-purple-400",
-    bg: "bg-purple-50 dark:bg-purple-950/50",
-    hoverBorder: "hover:border-purple-400/50",
-    hoverTitle: "group-hover:text-purple-500 dark:group-hover:text-purple-400",
+    color: "text-fuchsia-600 dark:text-fuchsia-400",
+    bg: "bg-fuchsia-50 dark:bg-fuchsia-950/50",
+    hoverBorder: "hover:border-fuchsia-400/50",
+    hoverTitle: "group-hover:text-fuchsia-600 dark:group-hover:text-fuchsia-400",
     tags: ["Key dates · Parties", "Obligations", "Legal clauses"],
     cta: "Extract clauses",
     href: "/demo/clause-extractor",
@@ -786,9 +786,18 @@ function ReferFriend() {
 }
 
 /* ─── Component ──────────────────────────────────────────── */
+const DEMO_INTERVAL_MS = 5200
+
 export default function Home() {
   const [waitlistOpen, setWaitlistOpen] = useState(false)
   const [waitlistPlatform, setWaitlistPlatform] = useState<"ios" | "android" | "both">("both")
+  const [activeDemoTool, setActiveDemoTool] = useState(0)
+
+  useEffect(() => {
+    const id = setInterval(() => setActiveDemoTool(prev => (prev + 1) % 8), DEMO_INTERVAL_MS)
+    return () => clearInterval(id)
+  }, [])
+
   useLayoutEffect(() => {
     const hash = window.location.hash.slice(1)
     if (hash) {
@@ -910,7 +919,7 @@ export default function Home() {
               >
                 <div className="absolute -inset-8 bg-gradient-to-tr from-primary/15 via-violet-200/20 dark:via-violet-900/10 to-transparent rounded-[4rem] blur-3xl -z-10" />
 
-                <PhoneHeroDemo />
+                <PhoneHeroDemo toolIndex={activeDemoTool} />
 
                 {/* Single rotating floating badge — bottom-right, clear of phone content */}
                 <motion.div
@@ -1132,7 +1141,7 @@ export default function Home() {
       ════════════════════════════════════════════════ */}
       <div id="walkthrough" className="w-full bg-gradient-to-b from-slate-950 via-[#0d1526] to-slate-950 py-20">
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
-          <VideoWalkthrough />
+          <VideoWalkthrough activeTool={activeDemoTool} onToolChange={setActiveDemoTool} />
         </div>
       </div>
 

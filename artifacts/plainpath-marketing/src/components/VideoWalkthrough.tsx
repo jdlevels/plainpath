@@ -1005,23 +1005,34 @@ function ChapterCards({
 }
 
 /* ─── Main export ────────────────────────────────────────── */
-export default function VideoWalkthrough() {
-  const [active, setActive] = useState<ToolId>(0)
+type VideoWalkthroughProps = {
+  activeTool?: number
+  onToolChange?: (id: number) => void
+}
+
+export default function VideoWalkthrough({ activeTool, onToolChange }: VideoWalkthroughProps = {}) {
+  const isControlled = activeTool !== undefined
+  const [internalActive, setInternalActive] = useState<ToolId>(0)
+  const active: ToolId = isControlled ? (activeTool as ToolId) : internalActive
   const [isProcessing, setIsProcessing] = useState(false)
   const reduced = useReducedMotion() ?? false
   const isFirstRender = useRef(true)
+  const prevActive = useRef<ToolId>(active)
 
-  /* Auto-advance */
+  /* Auto-advance — only when uncontrolled */
   useEffect(() => {
+    if (isControlled) return
     if (reduced) return
     const id = setInterval(() => {
-      setActive((prev) => ((prev + 1) % 8) as ToolId)
+      setInternalActive((prev) => ((prev + 1) % 8) as ToolId)
     }, INTERVAL_MS)
     return () => clearInterval(id)
-  }, [reduced])
+  }, [reduced, isControlled])
 
-  /* Show brief processing state on every tool change except the first render */
+  /* Processing flash on every tool change */
   useEffect(() => {
+    if (prevActive.current === active) return
+    prevActive.current = active
     if (isFirstRender.current) {
       isFirstRender.current = false
       return
@@ -1033,7 +1044,8 @@ export default function VideoWalkthrough() {
   }, [active, reduced])
 
   function handleSelect(id: ToolId) {
-    setActive(id)
+    if (onToolChange) onToolChange(id)
+    else setInternalActive(id)
   }
 
   return (
