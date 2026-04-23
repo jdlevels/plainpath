@@ -1,0 +1,55 @@
+## Replit Prompt — Fix support page navbar click blocking bug
+
+On the Support page, the top navbar is partially broken:
+
+- "Tools" dropdown works
+- "Features" and "Pricing" are not clickable
+- this appears to be page-specific to Support
+
+This is likely not a route problem. It looks like a click-blocking overlay / z-index / pointer-events issue on the Support page.
+
+## Goal
+Make the standard top navbar fully clickable on the Support page, with the same behavior as the rest of the marketing site.
+
+## What to check first
+1. Inspect the Support page layout for any element overlapping the header/nav area:
+   - absolute / fixed / sticky wrappers
+   - full-width containers
+   - invisible overlays
+   - pseudo-elements
+   - cards/sections with incorrect z-index
+2. Use devtools or code-level diagnostics to confirm which element is receiving the click over the "Features" and "Pricing" nav items.
+3. Compare the Support page layout structure to a marketing page where nav works correctly.
+
+## Strong suspicion
+A Support-page element is covering the nav hit area, while the Tools dropdown still works because its menu trigger or portal has a different z-index / stacking behavior.
+
+## Required fix
+- Ensure the navbar layer is above any page content that should not block it
+- If a decorative/support wrapper overlaps the navbar area, either:
+  - lower its z-index, or
+  - move it below the nav stacking context, or
+  - set pointer-events appropriately so it does not intercept clicks
+- Keep the support page visual layout unchanged unless a tiny spacing adjustment is required
+
+## Diagnostic requirement
+Before finalizing, verify:
+- Features is clickable
+- Pricing is clickable
+- Tools dropdown still works
+- Support still works
+- Log in / Open App still work
+
+## Suggested debugging method
+Use the browser to identify the actual clicked element in the blocked area and compare it with a working page.
+If helpful, temporarily test with:
+- outline on suspected overlapping containers
+- pointer-events toggles
+- z-index inspection
+
+## Output required
+1. Exact files changed
+2. Root cause found
+3. What z-index / overlay / pointer-events fix was applied
+4. Confirmation that the navbar is fully clickable on Support
+5. Confirmation that only UI/layout behavior was touched

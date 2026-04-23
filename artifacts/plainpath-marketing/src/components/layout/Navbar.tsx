@@ -9,7 +9,11 @@ import {
 
 function smoothScroll(id: string) {
   const el = document.getElementById(id);
-  if (el) el.scrollIntoView({ behavior: "smooth" });
+  if (el) {
+    el.scrollIntoView({ behavior: "smooth" });
+  } else {
+    window.location.href = `/#${id}`;
+  }
 }
 
 const NAV_LINKS = [
