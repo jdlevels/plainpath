@@ -1,0 +1,98 @@
+## Replit Prompt — Add Account & Security entry to the user menu and move password management out of Support
+
+We are keeping the current decision to NOT enable self-service account deletion for existing users yet.
+
+### Goal
+Clean up the user menu and account-management structure so it feels premium and logically separated:
+
+- Support = help/contact/billing help
+- Account & Security = password, login/security settings, sessions/MFA later
+- Sign out = standalone action
+
+Do not put password reset/change inside Support as the main location.
+
+---
+
+## Required UX changes
+
+### 1. Update the user dropdown menu
+Current menu is too limited and mixes support/admin identity with account actions.
+
+Update it to this structure:
+
+- Account & Security
+- Plan & Billing
+- Support
+- Sign out
+
+If needed, keep the email/admin badge area at the top, but the action list should follow the structure above.
+
+### 2. Add a new Account & Security destination
+Create a dedicated Account & Security page/modal/sheet in the app.
+
+This should be the place for:
+- Change password
+- Reset password / forgot password backup path
+- Security settings foundation for later additions
+- MFA placeholder or future-ready section if easy to support cleanly
+
+### 3. Use Clerk-native account/security management where appropriate
+Do not build a fragile custom password-management flow if Clerk already provides the correct account/security UI.
+
+Preferred direction:
+- use Clerk UserProfile / account-management UI for password/security management where it fits the app cleanly
+- keep the experience branded/styled to PlainPath if possible
+- preserve a premium in-app experience
+
+### 4. Password management behavior
+If the user is signed in and knows their password:
+- provide Change password inside Account & Security
+
+If the user forgot their password:
+- provide Reset password / Forgot password path
+- route that flow correctly using Clerk-supported reset behavior
+
+### 5. Keep Support focused
+Support should remain for:
+- help/contact
+- support email
+- billing help / subscription help
+- general troubleshooting
+
+Do not make Support the main home for password management.
+
+### 6. Keep current account-deletion decision
+Do NOT turn on or expose self-service account deletion for existing users in this pass.
+If there is any placeholder text for deletion, remove it or keep it hidden until the real app-side deletion workflow is ready.
+
+### 7. Maintain consistency with current auth configuration
+Current Clerk config now supports:
+- email
+- username
+- password
+
+The new Account & Security surface should reflect that cleanly without introducing conflicting terminology.
+
+---
+
+## Design requirements
+- Premium dark UI consistent with PlainPath
+- Clear section hierarchy
+- Strong readability
+- No cramped dropdown layout
+- Security actions should feel deliberate and trustworthy
+- Keep this simple and polished, not overbuilt
+
+---
+
+## Output required
+1. Exact files changed
+2. What menu structure changed
+3. What Account & Security surface was added
+4. Whether Clerk UserProfile / Clerk-native security UI was used
+5. How Change password and Reset password are now accessed
+6. Confirmation that account deletion for existing users was NOT enabled in this pass
+7. Screenshots of:
+   - updated user dropdown
+   - Account & Security screen
+   - Support screen after cleanup

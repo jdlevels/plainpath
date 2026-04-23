@@ -32,6 +32,7 @@ import Billing from "@/pages/Billing";
 import Upgrade from "@/pages/Upgrade";
 import Signature from "@/pages/Signature";
 import Documents from "@/pages/Documents";
+import AccountSecurity from "@/pages/AccountSecurity";
 import ClauseExtractor from "@/pages/ClauseExtractor"
 import Methodology from "@/pages/Methodology";
 import BuilderList from "@/pages/Builder/index";
@@ -254,6 +255,7 @@ function Router() {
             <Route path="/upgrade" component={protect(Upgrade)} />
             <Route path="/signature" component={protect(Signature)} />
             <Route path="/documents" component={protect(Documents)} />
+            <Route path="/account-security" component={protect(AccountSecurity)} />
             <Route path="/clause-extractor" component={protect(ClauseExtractor)} />
             <Route path="/clause-extractor/:id" component={protect(ClauseExtractor)} />
             <Route path="/compare-versions" component={protect(CompareVersions)} />

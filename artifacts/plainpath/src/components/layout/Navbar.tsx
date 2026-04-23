@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter"
 import { Button } from "@/components/ui/button"
 import {
   FileScan, Plus, BookMarked, GitCompare, LogOut, User, ChevronDown,
-  LayoutGrid, ShieldCheck, PenLine, Scale, Menu, X, LayoutDashboard, CreditCard, EyeOff, FileSignature, FolderOpen, ListChecks, LayoutTemplate,
+  LayoutGrid, ShieldCheck, PenLine, Scale, Menu, X, LayoutDashboard, CreditCard, EyeOff, FileSignature, FolderOpen, ListChecks, LayoutTemplate, MessageCircle,
 } from "lucide-react"
 
 import { ThemeToggle } from "@/components/ui/ThemeToggle"
@@ -78,10 +78,12 @@ function UserMenu() {
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-1.5 w-52 rounded-xl border border-border/60 bg-background shadow-lg z-50 py-1 overflow-hidden">
-          <div className="px-3 py-2 border-b border-border/40">
+        <div className="absolute right-0 mt-1.5 w-56 rounded-xl border border-border/60 bg-background shadow-lg z-50 py-1 overflow-hidden">
+
+          {/* Identity header */}
+          <div className="px-3 py-2.5 border-b border-border/40">
             <div className="flex items-center gap-1.5 mb-0.5">
-              <p className="text-xs font-medium text-foreground truncate">{displayName}</p>
+              <p className="text-xs font-semibold text-foreground truncate">{displayName}</p>
               {isAdmin && (
                 <span className="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400 leading-none">
                   Admin
@@ -90,6 +92,18 @@ function UserMenu() {
             </div>
             <p className="text-xs text-muted-foreground truncate">{user?.emailAddresses?.[0]?.emailAddress}</p>
           </div>
+
+          {/* Account & Security */}
+          <Link
+            href="/account-security"
+            onClick={() => setOpen(false)}
+            className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+          >
+            <ShieldCheck className="w-3.5 h-3.5" />
+            Account &amp; Security
+          </Link>
+
+          {/* Plan & Billing */}
           <Link
             href="/billing"
             onClick={() => setOpen(false)}
@@ -98,13 +112,27 @@ function UserMenu() {
             <CreditCard className="w-3.5 h-3.5" />
             Plan &amp; Billing
           </Link>
-          <button
-            onClick={async () => { setOpen(false); await signOut(); window.location.href = "/"; }}
+
+          {/* Support */}
+          <Link
+            href="/support"
+            onClick={() => setOpen(false)}
             className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
           >
-            <LogOut className="w-3.5 h-3.5" />
-            Sign out
-          </button>
+            <MessageCircle className="w-3.5 h-3.5" />
+            Support
+          </Link>
+
+          {/* Divider + Sign out */}
+          <div className="border-t border-border/40 mt-1 pt-1">
+            <button
+              onClick={async () => { setOpen(false); await signOut(); window.location.href = "/"; }}
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              Sign out
+            </button>
+          </div>
         </div>
       )}
     </div>
