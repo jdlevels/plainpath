@@ -33,6 +33,7 @@ VITE_BUILDER_ENABLED = "true"
 BUILDER_ENABLED = "true"
 ADMIN_EMAILS = "support@plainpathapp.com"
 ALLOWED_EMAILS = "support@plainpathapp.com,yelevels@gmail.com"
+ACCESS_MODE = "internal_only"
 
 [nix]
 channel = "stable-25_05"

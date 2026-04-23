@@ -39,15 +39,37 @@ import {
 
 const router = Router()
 
-// ── Allowlist helpers ─────────────────────────────────────────────────────────
+// ── Access mode + allowlist helpers ───────────────────────────────────────────
 //
-// ALLOWED_EMAILS — the set of every email address allowed to use PlainPath.
-// Any authenticated user NOT in this set receives 403 on every route.
-// This is defense-in-depth on top of the global allowlistEnforcement middleware.
+// ACCESS_MODE controls which users can bootstrap into the app.
 //
-// ADMIN_EMAILS — subset of ALLOWED_EMAILS with admin role + pro access.
-// All other allowed emails get member role; their accessTier comes from
-// their Clerk publicMetadata (written by /bootstrap).
+//   "internal_only" (default, current operating mode):
+//     Only emails explicitly in ALLOWED_EMAILS can enter.
+//     Admin emails    (ADMIN_EMAILS)   → role=admin,  accessTier=pro
+//     Allowed members (ALLOWED_EMAILS) → role=member, accessTier=pro
+//     All other emails                 → 403 blocked; no tool access granted.
+//     This mode makes it impossible for any new unknown user to receive
+//     even partial (starter) access — there is no open default tier.
+//
+//   "public_signup" (future, when PlainPath opens to the public):
+//     Admin emails  → role=admin,  accessTier=pro
+//     All new users → role=member, accessTier=starter   (free tier)
+//     Switch by setting ACCESS_MODE=public_signup in the environment.
+//
+// Changing ACCESS_MODE is the single switch that controls open vs. closed signup.
+// ALLOWED_EMAILS and the allowlistEnforcement middleware still enforce a hard
+// deny for unapproved users regardless of ACCESS_MODE.
+//
+// ADMIN_EMAILS — emails that receive the admin role + pro access.
+//   Currently: support@plainpathapp.com
+//
+// ALLOWED_EMAILS — every email permitted to use the app (includes admins).
+//   Currently: support@plainpathapp.com, yelevels@gmail.com
+
+type AccessMode = "internal_only" | "public_signup"
+
+const ACCESS_MODE: AccessMode =
+  process.env.ACCESS_MODE === "public_signup" ? "public_signup" : "internal_only"
 
 const ALLOWED_EMAILS: Set<string> = new Set(
   (process.env.ALLOWED_EMAILS || "")
@@ -301,14 +323,33 @@ router.post("/bootstrap", async (req, res) => {
       })
     }
 
-    // ── Determine correct identity ─────────────────────────────────────────
-    //   Admin email (ADMIN_EMAILS)  → admin + pro
-    //   Any other allowed email     → member + pro
-    //     (all currently-allowed non-admin accounts are Pro members;
-    //      change to "starter" here if future free accounts are added)
-    const newMeta = isAdminEmail(email)
-      ? { role: "admin", accessTier: "pro" }
-      : { role: "member", accessTier: "pro" }
+    // ── Determine correct identity based on ACCESS_MODE ───────────────────
+    //
+    // internal_only (current):
+    //   ADMIN_EMAILS              → role=admin,  accessTier=pro
+    //   ALLOWED_EMAILS (non-admin)→ role=member, accessTier=pro
+    //   All other emails          → already blocked above by allowlist check
+    //   There is NO fallback to starter — unknown users get nothing.
+    //
+    // public_signup (future, when ALLOWED to open PlainPath to the public):
+    //   ADMIN_EMAILS  → role=admin,  accessTier=pro
+    //   All new users → role=member, accessTier=starter   (free tier on-ramp)
+    let newMeta: { role: string; accessTier: string }
+
+    if (ACCESS_MODE === "internal_only") {
+      // Hard allowlist mode: only explicitly approved emails can enter.
+      // Non-admin allowed emails (e.g. yelevels@gmail.com) get Pro directly.
+      // Any email not in ALLOWED_EMAILS was already rejected above.
+      newMeta = isAdminEmail(email)
+        ? { role: "admin", accessTier: "pro" }
+        : { role: "member", accessTier: "pro" }
+    } else {
+      // public_signup: open signup with Starter as the default free tier.
+      // Admins still get Pro regardless.
+      newMeta = isAdminEmail(email)
+        ? { role: "admin", accessTier: "pro" }
+        : { role: "member", accessTier: "starter" }
+    }
 
     // Merge-safe: spread existing keys so no other metadata is overwritten.
     await clerkClient.users.updateUser(userId, {
@@ -322,6 +363,7 @@ router.post("/bootstrap", async (req, res) => {
         userId,
         role: newMeta.role,
         accessTier: newMeta.accessTier,
+        accessMode: ACCESS_MODE,
         allowlistMatch: true,
         accessGranted: true,
       },
