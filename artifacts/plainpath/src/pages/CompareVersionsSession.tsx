@@ -1,7 +1,9 @@
-// ─── Compare Versions — Workspace (Slices 4–5) ─────────────────────────────────
+// ─── Compare Versions — Workspace (Slices 4–5 + Premium Reader Pass) ──────────
 // Slice 4: Group zones, hover/selection sync, severity override, notes CRUD.
 // Slice 5: AI semantic enrichment — auto-run + retry, ai_category pills,
 //          ai_explanation in summary rows, AI status banners.
+// Premium Reader: resizable split panes, per-pane zoom, density toggle,
+//                 diff navigator, summary as right-side drawer.
 // ──────────────────────────────────────────────────────────────────────────────
 
 import {
@@ -17,17 +19,18 @@ import {
   ChevronRight, Plus, Trash2, Link2, Pencil,
   ChevronDown as ChevDown,
   Sparkles, Download, XCircle,
+  ZoomIn, ZoomOut,
+  AlignJustify, AlignLeft,
 } from "lucide-react"
 import { useEntitlements } from "@/hooks/useEntitlements"
 import { useCompareVersionsApi } from "@/hooks/useCompareVersionsApi"
 import { isPaywallActive } from "@/lib/billingConfig"
-import { useAuth } from "@clerk/react"
 import type {
   CVSessionDetail, CVManagerNotes,
   CVDiffItem, CVDiffResult, CVDiffSeverity, CVDiffChangeType,
   CVGroupZone, CVFreeformNote, CVWatchlistItem, CVNoteSeverity, CVAiCategory,
 } from "@/lib/compareVersionsTypes"
-import { computeGroupZones, groupsForItems } from "@/lib/compareVersionsGrouping"
+import { computeGroupZones } from "@/lib/compareVersionsGrouping"
 
 // ─── pdfjs worker ─────────────────────────────────────────────────────────────
 
@@ -39,6 +42,8 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
 const RENDER_SCALE = 1.5
 const POLL_INTERVAL_MS = 2500
 const SEV_RANK: Record<CVDiffSeverity, number> = { high: 0, medium: 1, low: 2 }
+
+type Density = "compact" | "comfortable"
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -201,7 +206,6 @@ function usePdfRenderer(buf: ArrayBuffer | null) {
 }
 
 // ─── MiniPopover ───────────────────────────────────────────────────────────────
-// Fixed-position small popover listing items in a multi-item group.
 
 function MiniPopover({
   state, items, onSelect, onClose,
@@ -228,7 +232,6 @@ function MiniPopover({
     }
   }, [onClose])
 
-  // Clamp to viewport
   const left = Math.min(state.x, window.innerWidth - 260)
   const top = Math.min(state.y, window.innerHeight - 280)
 
@@ -271,6 +274,9 @@ function MiniPopover({
 }
 
 // ─── PdfPane ───────────────────────────────────────────────────────────────────
+// Manages its own zoom state. Exposes fit-width (default) and percentage zoom.
+
+type ZoomMode = "fit-width" | "fit-page" | "custom"
 
 function PdfPane({
   label, fileName, pages, loading, failed, errorMsg,
@@ -295,11 +301,37 @@ function PdfPane({
   onGroupLeave: () => void
 }) {
   const [currentPage, setCurrentPage] = useState(0)
+  const [zoomMode, setZoomMode] = useState<ZoomMode>("fit-width")
+  const [zoomPct, setZoomPct] = useState(100)
   const pageRefs = useRef<(HTMLDivElement | null)[]>([])
   const scrollRef = useRef<HTMLDivElement>(null)
   const observerRef = useRef<IntersectionObserver | null>(null)
 
   const hoveredSet = useMemo(() => new Set(hoveredItemIds), [hoveredItemIds])
+
+  function applyZoom(mode: ZoomMode, pct?: number) {
+    setZoomMode(mode)
+    if (pct !== undefined) setZoomPct(pct)
+  }
+
+  function zoomIn() {
+    const steps = [50, 75, 100, 125, 150, 175, 200, 250, 300]
+    const cur = zoomMode === "fit-width" ? 100 : zoomPct
+    const next = steps.find((s) => s > cur) ?? 300
+    applyZoom("custom", next)
+  }
+
+  function zoomOut() {
+    const steps = [300, 250, 200, 175, 150, 125, 100, 75, 50]
+    const cur = zoomMode === "fit-width" ? 100 : zoomPct
+    const next = steps.find((s) => s < cur) ?? 50
+    applyZoom("custom", next)
+  }
+
+  function fitWidth() { applyZoom("fit-width") }
+
+  const pageWidthStyle: React.CSSProperties =
+    zoomMode === "fit-width" ? { width: "100%" } : { width: `${zoomPct}%` }
 
   useEffect(() => {
     pageRefs.current = pageRefs.current.slice(0, pages.length)
@@ -343,32 +375,63 @@ function PdfPane({
     return groups.filter((g) => g.page === pageNum)
   }
 
+  const zoomLabel = zoomMode === "fit-width" ? "Fit" : `${zoomPct}%`
+  const canZoomOut = zoomMode === "fit-width" ? false : zoomPct > 50
+  const canZoomIn  = zoomMode === "custom" ? zoomPct < 300 : true
+
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      <div className="sticky top-0 z-10 flex items-center gap-2 px-3 py-2 bg-neutral-200/90 dark:bg-zinc-800/90 border-b border-border/30 backdrop-blur-sm flex-shrink-0">
-        <span className={`text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full flex-shrink-0 ${accentClass}`}>
+      {/* ── Pane header ── */}
+      <div className="sticky top-0 z-10 flex items-center gap-1.5 px-2.5 py-1.5 bg-neutral-100/95 dark:bg-zinc-800/95 border-b border-border/30 backdrop-blur-sm flex-shrink-0">
+        <span className={`text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full flex-shrink-0 ${accentClass}`}>
           {label}
         </span>
-        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+        <div className="flex items-center gap-1 min-w-0 flex-1">
           <FileText className="w-3 h-3 text-muted-foreground flex-shrink-0" />
-          <span className="text-xs text-muted-foreground truncate">{fileName ?? "—"}</span>
+          <span className="text-[11px] text-muted-foreground truncate">{fileName ?? "—"}</span>
         </div>
+
+        {/* Page nav */}
         <div className="flex items-center gap-0.5 flex-shrink-0">
-          <span className="text-[10px] text-muted-foreground font-mono mr-1 tabular-nums">
-            {loading ? "…" : failed || errorMsg ? "—" : `${pages.length > 0 ? currentPage + 1 : 0} / ${pages.length}`}
+          <span className="text-[10px] text-muted-foreground font-mono tabular-nums mr-0.5">
+            {loading ? "…" : failed || errorMsg ? "—" : `${pages.length > 0 ? currentPage + 1 : 0}/${pages.length}`}
           </span>
-          <button onClick={prevPage} disabled={currentPage <= 0 || loading || failed || !!errorMsg} title="Previous page"
-            className="p-0.5 rounded hover:bg-muted/60 disabled:opacity-30 transition-colors">
-            <ChevronUp className="w-3.5 h-3.5 text-muted-foreground" />
+          <button onClick={prevPage} disabled={currentPage <= 0 || loading || failed || !!errorMsg}
+            className="p-0.5 rounded hover:bg-muted/70 disabled:opacity-30 transition-colors" title="Previous page">
+            <ChevronUp className="w-3 h-3 text-muted-foreground" />
           </button>
-          <button onClick={nextPage} disabled={currentPage >= pages.length - 1 || loading || failed || !!errorMsg} title="Next page"
-            className="p-0.5 rounded hover:bg-muted/60 disabled:opacity-30 transition-colors">
-            <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+          <button onClick={nextPage} disabled={currentPage >= pages.length - 1 || loading || failed || !!errorMsg}
+            className="p-0.5 rounded hover:bg-muted/70 disabled:opacity-30 transition-colors" title="Next page">
+            <ChevronDown className="w-3 h-3 text-muted-foreground" />
+          </button>
+        </div>
+
+        {/* Zoom controls */}
+        <div className="flex items-center gap-0 border border-border/50 rounded-md overflow-hidden flex-shrink-0">
+          <button onClick={zoomOut} disabled={!canZoomOut}
+            className="px-1 py-0.5 text-muted-foreground hover:text-foreground hover:bg-muted/60 disabled:opacity-30 transition-colors" title="Zoom out">
+            <ZoomOut className="w-3 h-3" />
+          </button>
+          <button onClick={fitWidth}
+            className={`px-1.5 py-0.5 text-[9px] font-mono font-semibold transition-colors border-x border-border/40 ${
+              zoomMode === "fit-width" ? "bg-muted/80 text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+            }`}
+            title="Fit to pane width"
+          >
+            {zoomLabel}
+          </button>
+          <button onClick={zoomIn} disabled={!canZoomIn}
+            className="px-1 py-0.5 text-muted-foreground hover:text-foreground hover:bg-muted/60 disabled:opacity-30 transition-colors" title="Zoom in">
+            <ZoomIn className="w-3 h-3" />
           </button>
         </div>
       </div>
 
-      <div ref={scrollRef} className="flex-1 overflow-y-auto bg-neutral-100 dark:bg-zinc-900/70">
+      {/* ── Page scroll area ── */}
+      <div
+        ref={scrollRef}
+        className={`flex-1 bg-neutral-200/60 dark:bg-zinc-900/70 ${zoomMode === "custom" && zoomPct > 100 ? "overflow-auto" : "overflow-y-auto overflow-x-hidden"}`}
+      >
         {errorMsg && (
           <div className="flex flex-col items-center justify-center gap-3 py-20 px-6 text-center">
             <AlertCircle className="w-6 h-6 text-red-500" />
@@ -396,7 +459,7 @@ function PdfPane({
           </div>
         )}
         {!errorMsg && !loading && !failed && pages.length > 0 && (
-          <div className="space-y-5 p-5">
+          <div className="space-y-4 p-4">
             {pages.map((pg, i) => {
               const pageNum = i + 1
               const pageGroups = groupsForPage(pageNum)
@@ -404,8 +467,8 @@ function PdfPane({
                 <div
                   key={i}
                   ref={(el) => { pageRefs.current[i] = el }}
-                  className="relative rounded-lg overflow-hidden border border-border/30 shadow-sm bg-white select-none"
-                  style={{ aspectRatio: `${pg.w} / ${pg.h}` }}
+                  className="relative rounded-lg overflow-hidden border border-border/30 shadow-sm bg-white select-none mx-auto"
+                  style={{ ...pageWidthStyle, aspectRatio: `${pg.w} / ${pg.h}` }}
                 >
                   <img src={pg.dataUrl} alt={`Page ${pageNum}`} className="block w-full pointer-events-none" draggable={false} />
                   {pages.length > 1 && (
@@ -413,7 +476,6 @@ function PdfPane({
                       {pageNum} / {pages.length}
                     </span>
                   )}
-                  {/* Group zone overlays */}
                   {pageGroups.map((zone) => {
                     const { rect } = zone
                     const isSelected = selectedDiffId != null && zone.itemIds.includes(selectedDiffId)
@@ -439,7 +501,6 @@ function PdfPane({
                           { change_type: "visual_change", signal_type: null, severity: zone.highestSeverity } as any
                         )}
                       >
-                        {/* Count badge for multi-item groups */}
                         {zone.itemIds.length > 1 && (
                           <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full text-[9px] font-bold bg-violet-600 text-white shadow z-10 pointer-events-none">
                             {zone.itemIds.length}
@@ -459,6 +520,7 @@ function PdfPane({
 }
 
 // ─── SummaryPanel ──────────────────────────────────────────────────────────────
+// Right-side drawer (replaces the old bottom tray).
 
 type SevFilter = "all" | "high" | "medium" | "low"
 
@@ -469,6 +531,7 @@ function SummaryPanel({
   onSeverityChange,
   linkedNoteIds,
   onRejectToggle,
+  density,
 }: {
   open: boolean
   onClose: () => void
@@ -480,6 +543,7 @@ function SummaryPanel({
   onSeverityChange: (itemId: string, sev: CVDiffSeverity) => void
   linkedNoteIds: Set<string>
   onRejectToggle: (id: string) => void
+  density: Density
 }) {
   const [sevFilter, setSevFilter] = useState<SevFilter>("all")
   const [pageFilter, setPageFilter] = useState<number | null>(null)
@@ -487,7 +551,6 @@ function SummaryPanel({
   const itemRefs = useRef<Record<string, HTMLDivElement | null>>({})
   const pageDropRef = useRef<HTMLDivElement>(null)
 
-  // Close page dropdown on outside click
   useEffect(() => {
     if (!showPageDrop) return
     function handler(e: MouseEvent) {
@@ -497,21 +560,16 @@ function SummaryPanel({
     return () => document.removeEventListener("mousedown", handler)
   }, [showPageDrop])
 
-  // Scroll selected item into view
   useEffect(() => {
     if (!selectedDiffId) return
     const el = itemRefs.current[selectedDiffId]
     if (el) el.scrollIntoView({ behavior: "smooth", block: "nearest" })
   }, [selectedDiffId])
 
-  // Reset page filter when severity filter changes
   useEffect(() => { setPageFilter(null) }, [sevFilter])
 
-  // Severity-filtered items — must be computed before early return so useMemo
-  // calls below are always invoked in the same order (Rules of Hooks).
   const sevFiltered = sevFilter === "all" ? diffItems : diffItems.filter((i) => i.severity === sevFilter)
 
-  // Pages with items (in sevFiltered)
   const pagesWithItems = useMemo(() => {
     const pSet = new Set<number>()
     for (const item of sevFiltered) {
@@ -521,7 +579,6 @@ function SummaryPanel({
     return [...pSet].sort((a, b) => a - b)
   }, [sevFiltered])
 
-  // Page-filtered + sorted items
   const visibleItems = useMemo(() => {
     let list = pageFilter == null ? sevFiltered : sevFiltered.filter((i) =>
       i.page_original === pageFilter || i.page_revised === pageFilter
@@ -545,7 +602,6 @@ function SummaryPanel({
     return { total: diffItems.length, high, medium, low }
   }, [diffItems])
 
-  // Early return AFTER all hooks have been called
   if (!open) return null
 
   const TAB_LABELS: { key: SevFilter; label: string; count: number }[] = [
@@ -555,19 +611,18 @@ function SummaryPanel({
     { key: "low",    label: "Low",  count: stats.low },
   ]
 
+  const rowPy = density === "compact" ? "py-1.5" : "py-2.5"
+
   return (
-    <div
-      className="flex-shrink-0 border-t border-border/60 bg-background animate-in slide-in-from-bottom-2 duration-200 flex flex-col"
-      style={{ height: "clamp(300px, 38vh, 520px)" }}
-    >
+    <div className="absolute inset-y-0 right-0 z-30 flex flex-col w-[340px] max-w-[92vw] bg-background border-l border-border/60 shadow-xl animate-in slide-in-from-right-2 duration-200">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/40 flex-shrink-0 gap-2">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-border/40 flex-shrink-0 gap-2">
         <div className="flex items-center gap-2 flex-shrink-0">
-          <BarChart2 className="w-4 h-4 text-muted-foreground" />
+          <BarChart2 className="w-3.5 h-3.5 text-muted-foreground" />
           <span className="text-sm font-semibold">Summary</span>
           {stats.total > 0 && (
-            <span className="text-[10px] text-muted-foreground font-mono hidden sm:block">
-              · {stats.total} change{stats.total !== 1 ? "s" : ""}
+            <span className="text-[10px] text-muted-foreground font-mono">
+              {stats.total} change{stats.total !== 1 ? "s" : ""}
             </span>
           )}
           {diffItems.filter((i) => i.review_status === "rejected").length > 0 && (
@@ -577,23 +632,22 @@ function SummaryPanel({
           )}
         </div>
 
-        <div className="flex items-center gap-1.5 flex-wrap justify-end">
-          {/* Page filter */}
+        <div className="flex items-center gap-1 flex-shrink-0">
           {pagesWithItems.length > 1 && (
             <div ref={pageDropRef} className="relative">
               <button
                 onClick={() => setShowPageDrop((o) => !o)}
-                className={`flex items-center gap-1 px-2 py-0.5 rounded-md border text-[10px] font-medium transition-colors ${
+                className={`flex items-center gap-1 px-1.5 py-0.5 rounded border text-[10px] font-medium transition-colors ${
                   pageFilter != null
                     ? "bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 border-violet-300/60"
                     : "border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted/60"
                 }`}
               >
-                {pageFilter != null ? `Page ${pageFilter}` : "Page"}
+                {pageFilter != null ? `p.${pageFilter}` : "Page"}
                 <ChevDown className="w-3 h-3" />
               </button>
               {showPageDrop && (
-                <div className="absolute right-0 top-full mt-1 z-50 bg-background border border-border/60 rounded-lg shadow-xl py-1 min-w-[100px]">
+                <div className="absolute right-0 top-full mt-1 z-50 bg-background border border-border/60 rounded-lg shadow-xl py-1 min-w-[90px]">
                   <button
                     onClick={() => { setPageFilter(null); setShowPageDrop(false) }}
                     className={`w-full text-left px-3 py-1 text-xs hover:bg-muted/60 transition-colors ${pageFilter == null ? "font-semibold text-foreground" : "text-muted-foreground"}`}
@@ -614,13 +668,13 @@ function SummaryPanel({
             </div>
           )}
 
-          {/* Severity filter tabs */}
-          <div className="flex items-center gap-0.5 bg-muted/60 rounded-lg p-0.5">
+          {/* Severity tabs */}
+          <div className="flex items-center gap-0.5 bg-muted/60 rounded-md p-0.5">
             {TAB_LABELS.map(({ key, label, count }) => (
               <button
                 key={key}
                 onClick={() => setSevFilter(key)}
-                className={`px-2 py-0.5 rounded-md text-[10px] font-semibold transition-colors ${
+                className={`px-1.5 py-0.5 rounded text-[10px] font-semibold transition-colors ${
                   sevFilter === key
                     ? key === "high"   ? "bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300"
                     : key === "medium" ? "bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300"
@@ -629,32 +683,33 @@ function SummaryPanel({
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {label} {count > 0 && <span className="opacity-70">({count})</span>}
+                {label}{count > 0 && <span className="opacity-60 ml-0.5">({count})</span>}
               </button>
             ))}
           </div>
 
-          <button onClick={onClose} className="p-1 rounded-lg hover:bg-muted transition-colors text-muted-foreground" title="Close summary">
-            <X className="w-4 h-4" />
+          <button onClick={onClose} className="p-1 rounded hover:bg-muted transition-colors text-muted-foreground" title="Close">
+            <X className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
 
+      {/* Column header */}
+      {diffItems.length > 0 && (
+        <div className="flex items-center gap-0 px-2 py-1 bg-muted/20 border-b border-border/20 flex-shrink-0">
+          <div className="w-7 flex-shrink-0 flex items-center justify-center">
+            <span className="text-[9px] text-muted-foreground/60 font-semibold uppercase tracking-wider">☑</span>
+          </div>
+          <span className="flex-1 text-[9px] text-muted-foreground/60 font-semibold uppercase tracking-wider pl-2">Change</span>
+          <span className="text-[9px] text-muted-foreground/60 font-semibold uppercase tracking-wider pr-1">✕</span>
+          <div style={{ minWidth: "60px" }} />
+        </div>
+      )}
+
       {/* Body */}
       <div className="flex-1 overflow-y-auto">
-        {/* Column legend — only shown when there are items */}
-        {diffItems.length > 0 && (
-          <div className="flex items-center gap-0 px-2 py-1 bg-muted/20 border-b border-border/20 sticky top-0 z-10">
-            <div className="w-7 flex-shrink-0 flex items-center justify-center" title="Check to include in handoff">
-              <span className="text-[9px] text-muted-foreground/60 font-semibold uppercase tracking-wider">☑</span>
-            </div>
-            <span className="flex-1 text-[9px] text-muted-foreground/60 font-semibold uppercase tracking-wider pl-2">Change</span>
-            <span className="text-[9px] text-muted-foreground/60 font-semibold uppercase tracking-wider pr-1" title="Click ✕ to reject">✕ reject</span>
-            <div style={{ minWidth: "60px" }} />
-          </div>
-        )}
         {diffItems.length === 0 && (
-          <div className="flex flex-col items-center gap-2 py-8 text-center">
+          <div className="flex flex-col items-center gap-2 py-10 text-center px-4">
             <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
               <BarChart2 className="w-4 h-4 text-muted-foreground opacity-40" />
             </div>
@@ -663,7 +718,7 @@ function SummaryPanel({
         )}
 
         {diffItems.length > 0 && visibleItems.length === 0 && (
-          <div className="flex flex-col items-center gap-2 py-8 text-center">
+          <div className="flex flex-col items-center gap-2 py-10 text-center px-4">
             <p className="text-sm text-muted-foreground">
               No {sevFilter !== "all" ? sevFilter + " severity " : ""}changes
               {pageFilter != null ? ` on page ${pageFilter}` : ""}.
@@ -681,15 +736,14 @@ function SummaryPanel({
                   : item.page_original != null ? `p.${item.page_original} orig`
                   : item.page_revised != null  ? `p.${item.page_revised} rev`
                   : "—"
-              const preview = (item.revised_text ?? item.original_text ?? "").slice(0, 80)
+              const preview = (item.revised_text ?? item.original_text ?? "").slice(0, density === "compact" ? 60 : 80)
               const hasLinkedNote = linkedNoteIds.has(item.id)
-
               const isRejected = item.review_status === "rejected"
 
               return (
                 <div
                   key={item.id}
-                  ref={(el) => { itemRefs.current[item.id] = el }}
+                  ref={(el) => { itemRefs.current[item.id] = el as HTMLDivElement | null }}
                   className={`flex items-stretch gap-0 transition-colors ${
                     isRejected
                       ? "bg-red-50/60 dark:bg-red-950/20"
@@ -700,26 +754,23 @@ function SummaryPanel({
                   onMouseEnter={() => onHoverItem([item.id])}
                   onMouseLeave={() => onLeaveItem()}
                 >
-                  {/* Left accent bar: rejected=red, selected=violet, default=transparent */}
                   <div className={`w-0.5 flex-shrink-0 rounded-l ${
                     isRejected ? "bg-red-400" : isSelected ? "bg-violet-500" : "bg-transparent"
                   }`} />
 
                   <button
                     onClick={() => onSelectItem(item.id)}
-                    className="flex-1 flex items-start gap-3 pr-3 py-2.5 text-left"
+                    className={`flex-1 flex items-start gap-2 pr-2 ${rowPy} text-left`}
                   >
-                    {/* Severity badge */}
                     <span className={`text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded flex-shrink-0 mt-0.5 ${severityBadgeClass(item.severity)}`}>
                       {item.severity}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         <span className={`text-xs font-medium truncate ${isRejected ? "text-muted-foreground line-through" : "text-foreground"}`}>
                           {severityLabel(item)}
                         </span>
                         <span className="text-[10px] text-muted-foreground font-mono flex-shrink-0">{pageLabel}</span>
-                        {/* Rejected badge */}
                         {isRejected && (
                           <span className="flex items-center gap-0.5 text-[9px] text-red-600 dark:text-red-400 font-semibold flex-shrink-0">
                             <XCircle className="w-2.5 h-2.5" /> rejected
@@ -742,44 +793,36 @@ function SummaryPanel({
                           </span>
                         )}
                       </div>
-                      {preview && (
+                      {preview && density !== "compact" && (
                         <p className="text-[11px] text-muted-foreground truncate mt-0.5">{preview}</p>
                       )}
-                      {item.ai_explanation && (
+                      {item.ai_explanation && density !== "compact" && (
                         <p className="text-[10px] text-violet-600/80 dark:text-violet-400/80 mt-0.5 leading-snug line-clamp-2">
                           {item.ai_explanation}
                         </p>
                       )}
                     </div>
-                    <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/50 flex-shrink-0 mt-0.5" />
+                    <ChevronRight className="w-3 h-3 text-muted-foreground/50 flex-shrink-0 mt-0.5" />
                   </button>
 
-                  {/* Reject toggle */}
                   <button
                     onClick={(e) => { e.stopPropagation(); onRejectToggle(item.id) }}
-                    title={isRejected ? "Un-reject this change" : "Mark as rejected"}
-                    aria-label={isRejected ? "Un-reject this change" : "Mark as rejected"}
-                    className={`flex items-center px-1.5 flex-shrink-0 transition-colors ${
-                      isRejected
-                        ? "text-red-500 hover:text-muted-foreground"
-                        : "text-muted-foreground/40 hover:text-red-500"
+                    title={isRejected ? "Un-reject" : "Reject"}
+                    className={`flex items-center px-1 flex-shrink-0 transition-colors ${
+                      isRejected ? "text-red-500 hover:text-muted-foreground" : "text-muted-foreground/40 hover:text-red-500"
                     }`}
                   >
                     <XCircle className="w-3.5 h-3.5" />
                   </button>
 
-                  {/* Severity override dropdown */}
-                  <div className="flex items-center pr-2 flex-shrink-0">
+                  <div className="flex items-center pr-1.5 flex-shrink-0">
                     <select
                       value={item.severity}
-                      onChange={(e) => {
-                        e.stopPropagation()
-                        onSeverityChange(item.id, e.target.value as CVDiffSeverity)
-                      }}
+                      onChange={(e) => { e.stopPropagation(); onSeverityChange(item.id, e.target.value as CVDiffSeverity) }}
                       onClick={(e) => e.stopPropagation()}
                       title="Override severity"
-                      className="text-[10px] font-semibold rounded border border-border/50 bg-muted/40 px-1 py-0.5 cursor-pointer focus:outline-none focus:ring-1 focus:ring-violet-400/50 appearance-none text-center"
-                      style={{ minWidth: "56px" }}
+                      className="text-[10px] font-semibold rounded border border-border/50 bg-muted/40 px-1 py-0.5 cursor-pointer focus:outline-none appearance-none text-center"
+                      style={{ minWidth: "52px" }}
                     >
                       <option value="high">High</option>
                       <option value="medium">Med</option>
@@ -797,7 +840,6 @@ function SummaryPanel({
 }
 
 // ─── NotesRail ─────────────────────────────────────────────────────────────────
-// Full CRUD: structured freeform notes + watchlist items, with diff linking + resolved toggle.
 
 function NotesRail({
   open, onClose, session, selectedDiffId, onSaved,
@@ -838,16 +880,11 @@ function NotesRail({
   function addNote() {
     if (!newNoteText.trim()) return
     const note: CVFreeformNote = {
-      id: crypto.randomUUID(),
-      type: "freeform",
-      text: newNoteText.trim(),
-      resolved: false,
-      created_at: new Date().toISOString(),
-      linked_diff_id: null,
+      id: crypto.randomUUID(), type: "freeform", text: newNoteText.trim(),
+      resolved: false, created_at: new Date().toISOString(), linked_diff_id: null,
     }
-    const next = { ...notes, notes: [note, ...(notes.notes ?? [])] }
+    persistNotes({ ...notes, notes: [note, ...(notes.notes ?? [])] })
     setNewNoteText(""); setAddingNote(false)
-    persistNotes(next)
   }
 
   function deleteNote(id: string) {
@@ -855,10 +892,7 @@ function NotesRail({
   }
 
   function toggleNoteResolved(id: string) {
-    persistNotes({
-      ...notes,
-      notes: (notes.notes ?? []).map((n) => n.id === id ? { ...n, resolved: !n.resolved } : n),
-    })
+    persistNotes({ ...notes, notes: (notes.notes ?? []).map((n) => n.id === id ? { ...n, resolved: !n.resolved } : n) })
   }
 
   function linkNoteToSelected(id: string) {
@@ -872,17 +906,11 @@ function NotesRail({
   function addWatchlistItem() {
     if (!newWatchText.trim()) return
     const item: CVWatchlistItem = {
-      id: crypto.randomUUID(),
-      type: "watchlist",
-      text: newWatchText.trim(),
-      severity: newWatchSev,
-      resolved: false,
-      created_at: new Date().toISOString(),
-      linked_diff_id: null,
+      id: crypto.randomUUID(), type: "watchlist", text: newWatchText.trim(),
+      severity: newWatchSev, resolved: false, created_at: new Date().toISOString(), linked_diff_id: null,
     }
-    const next = { ...notes, watchlist: [item, ...notes.watchlist] }
+    persistNotes({ ...notes, watchlist: [item, ...notes.watchlist] })
     setNewWatchText(""); setAddingWatch(false)
-    persistNotes(next)
   }
 
   function deleteWatchlistItem(id: string) {
@@ -890,10 +918,7 @@ function NotesRail({
   }
 
   function toggleWatchResolved(id: string) {
-    persistNotes({
-      ...notes,
-      watchlist: notes.watchlist.map((w) => w.id === id ? { ...w, resolved: !w.resolved } : w),
-    })
+    persistNotes({ ...notes, watchlist: notes.watchlist.map((w) => w.id === id ? { ...w, resolved: !w.resolved } : w) })
   }
 
   function linkWatchToSelected(id: string) {
@@ -904,9 +929,7 @@ function NotesRail({
     })
   }
 
-  function saveFreeform() {
-    persistNotes(notes)
-  }
+  function saveFreeform() { persistNotes(notes) }
 
   if (!open) return null
 
@@ -925,7 +948,6 @@ function NotesRail({
 
   return (
     <div className="absolute inset-y-0 right-0 z-30 flex flex-col w-80 max-w-[92vw] bg-background border-l border-border/60 shadow-xl animate-in slide-in-from-right-2 duration-200">
-      {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border/40 flex-shrink-0">
         <div className="flex items-center gap-2">
           <StickyNote className="w-4 h-4 text-muted-foreground" />
@@ -939,8 +961,6 @@ function NotesRail({
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-6">
-
-        {/* ── Legacy freeform text ── */}
         <div>
           <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5 flex items-center gap-1.5">
             <Clock className="w-3 h-3" /> Context Notes
@@ -955,16 +975,13 @@ function NotesRail({
           />
         </div>
 
-        {/* ── Structured notes ── */}
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
               <StickyNote className="w-3 h-3" /> Notes ({sortedNotes.length})
             </label>
-            <button
-              onClick={() => { setAddingNote(true); setAddingWatch(false) }}
-              className="flex items-center gap-1 text-[10px] font-semibold text-teal-600 dark:text-teal-400 hover:opacity-80 transition-opacity"
-            >
+            <button onClick={() => { setAddingNote(true); setAddingWatch(false) }}
+              className="flex items-center gap-1 text-[10px] font-semibold text-teal-600 dark:text-teal-400 hover:opacity-80 transition-opacity">
               <Plus className="w-3 h-3" /> Add
             </button>
           </div>
@@ -972,20 +989,13 @@ function NotesRail({
           {addingNote && (
             <div className="mb-2 p-2 rounded-lg border border-teal-300/50 bg-teal-50 dark:bg-teal-950/30 space-y-2">
               <textarea
-                autoFocus
-                value={newNoteText}
-                onChange={(e) => setNewNoteText(e.target.value)}
-                placeholder="Note text…"
-                rows={2}
+                autoFocus value={newNoteText} onChange={(e) => setNewNoteText(e.target.value)}
+                placeholder="Note text…" rows={2}
                 className="w-full text-xs rounded border border-border/60 bg-background px-2 py-1.5 resize-none focus:outline-none focus:ring-1 focus:ring-teal-400"
               />
               <div className="flex gap-1.5">
-                <button onClick={addNote} disabled={!newNoteText.trim()} className="flex-1 py-1 rounded bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold disabled:opacity-40 transition-colors">
-                  Add
-                </button>
-                <button onClick={() => { setAddingNote(false); setNewNoteText("") }} className="flex-1 py-1 rounded bg-muted hover:bg-muted/70 text-muted-foreground text-xs font-medium transition-colors">
-                  Cancel
-                </button>
+                <button onClick={addNote} disabled={!newNoteText.trim()} className="flex-1 py-1 rounded bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold disabled:opacity-40">Add</button>
+                <button onClick={() => { setAddingNote(false); setNewNoteText("") }} className="flex-1 py-1 rounded bg-muted text-muted-foreground text-xs font-medium">Cancel</button>
               </div>
             </div>
           )}
@@ -1004,22 +1014,16 @@ function NotesRail({
                   </p>
                 )}
                 <div className="flex items-center gap-1 mt-1.5">
-                  <button
-                    onClick={() => toggleNoteResolved(note.id)}
-                    title={note.resolved ? "Mark unresolved" : "Mark resolved"}
-                    className="p-0.5 rounded hover:bg-muted transition-colors text-muted-foreground"
-                  >
+                  <button onClick={() => toggleNoteResolved(note.id)} title={note.resolved ? "Mark unresolved" : "Mark resolved"}
+                    className="p-0.5 rounded hover:bg-muted transition-colors text-muted-foreground">
                     <CheckCircle2 className={`w-3.5 h-3.5 ${note.resolved ? "text-teal-500" : ""}`} />
                   </button>
-                  <button
-                    onClick={() => linkNoteToSelected(note.id)}
-                    disabled={!selectedDiffId}
-                    title={note.linked_diff_id === selectedDiffId ? "Unlink" : "Link to selected change"}
-                    className={`p-0.5 rounded hover:bg-muted transition-colors disabled:opacity-30 ${note.linked_diff_id ? "text-teal-500" : "text-muted-foreground"}`}
-                  >
+                  <button onClick={() => linkNoteToSelected(note.id)} disabled={!selectedDiffId}
+                    title={note.linked_diff_id === selectedDiffId ? "Unlink" : "Link to selected"}
+                    className={`p-0.5 rounded hover:bg-muted transition-colors disabled:opacity-30 ${note.linked_diff_id ? "text-teal-500" : "text-muted-foreground"}`}>
                     <Link2 className="w-3.5 h-3.5" />
                   </button>
-                  <button onClick={() => deleteNote(note.id)} title="Delete note" className="p-0.5 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-red-500 ml-auto">
+                  <button onClick={() => deleteNote(note.id)} className="p-0.5 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-red-500 ml-auto">
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -1028,61 +1032,48 @@ function NotesRail({
           </div>
         </div>
 
-        {/* ── Watchlist ── */}
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
               <ListChecks className="w-3 h-3" /> Watchlist ({sortedWatch.length})
             </label>
-            <button
-              onClick={() => { setAddingWatch(true); setAddingNote(false) }}
-              className="flex items-center gap-1 text-[10px] font-semibold text-teal-600 dark:text-teal-400 hover:opacity-80 transition-opacity"
-            >
+            <button onClick={() => { setAddingWatch(true); setAddingNote(false) }}
+              className="flex items-center gap-1 text-[10px] font-semibold text-teal-600 dark:text-teal-400 hover:opacity-80">
               <Plus className="w-3 h-3" /> Add
             </button>
           </div>
 
           {addingWatch && (
-            <div className="mb-2 p-2 rounded-lg border border-amber-300/50 bg-amber-50 dark:bg-amber-950/30 space-y-2">
+            <div className="mb-2 p-2 rounded-lg border border-teal-300/50 bg-teal-50 dark:bg-teal-950/30 space-y-2">
               <textarea
-                autoFocus
-                value={newWatchText}
-                onChange={(e) => setNewWatchText(e.target.value)}
-                placeholder="Watchlist item…"
-                rows={2}
-                className="w-full text-xs rounded border border-border/60 bg-background px-2 py-1.5 resize-none focus:outline-none focus:ring-1 focus:ring-amber-400"
+                autoFocus value={newWatchText} onChange={(e) => setNewWatchText(e.target.value)}
+                placeholder="Item to watch…" rows={2}
+                className="w-full text-xs rounded border border-border/60 bg-background px-2 py-1.5 resize-none focus:outline-none focus:ring-1 focus:ring-teal-400"
               />
-              <select
-                value={newWatchSev}
-                onChange={(e) => setNewWatchSev(e.target.value as CVNoteSeverity)}
-                className="w-full text-xs rounded border border-border/60 bg-background px-2 py-1 focus:outline-none focus:ring-1 focus:ring-amber-400"
-              >
-                <option value="high">High</option>
-                <option value="medium">Medium</option>
-                <option value="low">Low</option>
-              </select>
+              <div className="flex items-center gap-1.5">
+                <select value={newWatchSev} onChange={(e) => setNewWatchSev(e.target.value as CVNoteSeverity)}
+                  className="text-xs rounded border border-border/60 bg-background px-1 py-1">
+                  <option value="high">High</option>
+                  <option value="medium">Medium</option>
+                  <option value="low">Low</option>
+                </select>
+              </div>
               <div className="flex gap-1.5">
-                <button onClick={addWatchlistItem} disabled={!newWatchText.trim()} className="flex-1 py-1 rounded bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold disabled:opacity-40 transition-colors">
-                  Add
-                </button>
-                <button onClick={() => { setAddingWatch(false); setNewWatchText("") }} className="flex-1 py-1 rounded bg-muted hover:bg-muted/70 text-muted-foreground text-xs font-medium transition-colors">
-                  Cancel
-                </button>
+                <button onClick={addWatchlistItem} disabled={!newWatchText.trim()} className="flex-1 py-1 rounded bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold disabled:opacity-40">Add</button>
+                <button onClick={() => { setAddingWatch(false); setNewWatchText("") }} className="flex-1 py-1 rounded bg-muted text-muted-foreground text-xs font-medium">Cancel</button>
               </div>
             </div>
           )}
 
           {sortedWatch.length === 0 && !addingWatch && (
-            <p className="text-[11px] text-muted-foreground/60 italic py-1">No watchlist items yet.</p>
+            <p className="text-[11px] text-muted-foreground/60 italic py-1">No items yet.</p>
           )}
 
           <div className="space-y-2">
             {sortedWatch.map((item) => (
               <div key={item.id} className={`rounded-lg border border-border/50 p-2.5 ${item.resolved ? "opacity-50" : ""}`}>
-                <div className="flex items-start gap-1.5">
-                  <span className={`text-[9px] font-bold uppercase mt-0.5 flex-shrink-0 ${SEV_CLS[item.severity] ?? SEV_CLS.low}`}>
-                    {item.severity}
-                  </span>
+                <div className="flex items-start gap-2">
+                  <span className={`text-[9px] font-bold uppercase flex-shrink-0 mt-0.5 ${SEV_CLS[item.severity]}`}>{item.severity}</span>
                   <p className={`text-xs leading-snug flex-1 ${item.resolved ? "line-through" : ""}`}>{item.text}</p>
                 </div>
                 {item.linked_diff_id && (
@@ -1091,22 +1082,14 @@ function NotesRail({
                   </p>
                 )}
                 <div className="flex items-center gap-1 mt-1.5">
-                  <button
-                    onClick={() => toggleWatchResolved(item.id)}
-                    title={item.resolved ? "Mark unresolved" : "Mark resolved"}
-                    className="p-0.5 rounded hover:bg-muted transition-colors text-muted-foreground"
-                  >
+                  <button onClick={() => toggleWatchResolved(item.id)} className="p-0.5 rounded hover:bg-muted transition-colors text-muted-foreground">
                     <CheckCircle2 className={`w-3.5 h-3.5 ${item.resolved ? "text-teal-500" : ""}`} />
                   </button>
-                  <button
-                    onClick={() => linkWatchToSelected(item.id)}
-                    disabled={!selectedDiffId}
-                    title={item.linked_diff_id === selectedDiffId ? "Unlink" : "Link to selected change"}
-                    className={`p-0.5 rounded hover:bg-muted transition-colors disabled:opacity-30 ${item.linked_diff_id ? "text-teal-500" : "text-muted-foreground"}`}
-                  >
+                  <button onClick={() => linkWatchToSelected(item.id)} disabled={!selectedDiffId}
+                    className={`p-0.5 rounded hover:bg-muted transition-colors disabled:opacity-30 ${item.linked_diff_id ? "text-teal-500" : "text-muted-foreground"}`}>
                     <Link2 className="w-3.5 h-3.5" />
                   </button>
-                  <button onClick={() => deleteWatchlistItem(item.id)} title="Delete" className="p-0.5 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-red-500 ml-auto">
+                  <button onClick={() => deleteWatchlistItem(item.id)} className="p-0.5 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-red-500 ml-auto">
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -1129,7 +1112,7 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
   // ── Core state ──────────────────────────────────────────────────────────────
   const [session, setSession] = useState<CVSessionDetail | null>(null)
   const [diffItems, setDiffItems] = useState<CVDiffItem[]>([])
-  const [diffResultBase, setDiffResultBase] = useState<CVDiffResult | null>(null) // for stats recompute
+  const [diffResultBase, setDiffResultBase] = useState<CVDiffResult | null>(null)
   const [selectedDiffId, setSelectedDiffId] = useState<string | null>(null)
   const [hoveredItemIds, setHoveredItemIds] = useState<string[]>([])
   const [popover, setPopover] = useState<PopoverState | null>(null)
@@ -1148,6 +1131,11 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
   const [jumpOrigPage, setJumpOrigPage] = useState<number | null>(null)
   const [jumpRevPage, setJumpRevPage] = useState<number | null>(null)
 
+  // ── Premium reader state ────────────────────────────────────────────────────
+  const [splitPct, setSplitPct] = useState(50)
+  const [density, setDensity] = useState<Density>("comfortable")
+  const [diffNavIdx, setDiffNavIdx] = useState<number>(-1)
+  const paneContainerRef = useRef<HTMLDivElement>(null)
   const reviewSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const { pages: origPages, loading: origLoading, failed: origFailed } = usePdfRenderer(originalBuf)
@@ -1155,11 +1143,11 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
 
   const canUse = !isPaywallActive || isAdmin || (entitlements?.toolAccess?.includes("compare-versions") ?? false)
 
-  // ── Group zones (memoized) ─────────────────────────────────────────────────
+  // ── Group zones ──────────────────────────────────────────────────────────────
   const origGroups = useMemo(() => computeGroupZones(diffItems, "original"), [diffItems])
   const revGroups  = useMemo(() => computeGroupZones(diffItems, "revised"),  [diffItems])
 
-  // ── Linked note IDs (memoized from session notes) ──────────────────────────
+  // ── Linked note IDs ──────────────────────────────────────────────────────────
   const linkedNoteIds = useMemo((): Set<string> => {
     const s = new Set<string>()
     const mn = session?.managerNotes
@@ -1169,8 +1157,42 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
     return s
   }, [session?.managerNotes])
 
-  // ── Initial load ──────────────────────────────────────────────────────────
+  // ── Diff navigator (sorted by page, by severity within page) ─────────────────
+  const sortedByPage = useMemo(() =>
+    [...diffItems].sort((a, b) => {
+      const pa = a.page_original ?? a.page_revised ?? 9999
+      const pb = b.page_original ?? b.page_revised ?? 9999
+      if (pa !== pb) return pa - pb
+      return SEV_RANK[a.severity] - SEV_RANK[b.severity]
+    }),
+    [diffItems]
+  )
 
+  // ── Resizable split pane ─────────────────────────────────────────────────────
+  function startResize(e: React.PointerEvent) {
+    e.preventDefault()
+    const startX = e.clientX
+    const startSplit = splitPct
+    const container = paneContainerRef.current
+    if (!container) return
+    const totalW = container.getBoundingClientRect().width
+
+    function onMove(me: PointerEvent) {
+      const dx = me.clientX - startX
+      const newSplit = Math.max(22, Math.min(78, startSplit + (dx / totalW) * 100))
+      setSplitPct(newSplit)
+    }
+
+    function onUp() {
+      window.removeEventListener("pointermove", onMove)
+      window.removeEventListener("pointerup", onUp)
+    }
+
+    window.addEventListener("pointermove", onMove)
+    window.addEventListener("pointerup", onUp)
+  }
+
+  // ── Initial load ─────────────────────────────────────────────────────────────
   useEffect(() => {
     if (entLoading) return
     let cancelled = false
@@ -1202,8 +1224,7 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
     return () => { cancelled = true }
   }, [sessionId, entLoading])
 
-  // ── Polling ────────────────────────────────────────────────────────────────
-
+  // ── Scan polling ─────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!session || session.status !== "scanning") return
     let cancelled = false
@@ -1223,9 +1244,7 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
     return () => { cancelled = true; clearInterval(interval) }
   }, [session?.status, sessionId])
 
-  // ── AI enrichment polling (Slice 5) ────────────────────────────────────────
-  // Runs when ai_status is 'running'. Picks up newly enriched diff items.
-
+  // ── AI enrichment polling ────────────────────────────────────────────────────
   useEffect(() => {
     if (!session || session.aiStatus !== "running") return
     let cancelled = false
@@ -1236,7 +1255,6 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
         if (cancelled) return
         setSession(updated)
         if (updated.aiStatus !== "running") {
-          // Enrichment finished — refresh diff items with AI-enriched data
           setDiffItems(updated.diffResult?.items ?? diffItems)
           setDiffResultBase(updated.diffResult)
         }
@@ -1245,15 +1263,13 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
     return () => { cancelled = true; clearInterval(interval) }
   }, [session?.aiStatus, sessionId])
 
-  // ── Page title ─────────────────────────────────────────────────────────────
-
+  // ── Page title ───────────────────────────────────────────────────────────────
   useEffect(() => {
     document.title = session?.title ? `${session.title} — Compare Versions` : "Compare Versions — PlainPath"
     return () => { document.title = "PlainPath" }
   }, [session?.title])
 
-  // ── Rescan ─────────────────────────────────────────────────────────────────
-
+  // ── Rescan ───────────────────────────────────────────────────────────────────
   async function handleRescan() {
     if (!session || rescanning) return
     setRescanning(true)
@@ -1267,8 +1283,7 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
     } finally { setRescanning(false) }
   }
 
-  // ── AI Enrich (Slice 5) ────────────────────────────────────────────────────
-
+  // ── AI Enrich ────────────────────────────────────────────────────────────────
   async function handleEnrich(forceAll = false) {
     if (!session || enriching || session.aiStatus === "running") return
     setEnriching(true)
@@ -1280,30 +1295,13 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
     } finally { setEnriching(false) }
   }
 
-  // ── Reject toggle ──────────────────────────────────────────────────────────
-  //
-  // REJECTED DIFF RULE:
-  //   A diff item is "rejected" when item.review_status === "rejected".
-  //   This is stored as part of diff_result.items[] and persisted to the DB
-  //   via the existing PATCH /sessions/:id/review endpoint (JSONB passthrough).
-  //   Reject is toggled: "rejected" → null → "rejected".
-  //   It is independent of severity and multi-select.
-
+  // ── Reject toggle ────────────────────────────────────────────────────────────
   function handleRejectToggle(itemId: string) {
-    // Compute next state directly so we can persist it immediately.
-    // Reject toggle is a deliberate single action (not rapid-fire input), so no
-    // debounce is needed. Persisting without debounce ensures the status survives
-    // navigation away from the page (debounced saves are cancelled when the
-    // browser page context changes on navigation).
     const nextItems = diffItems.map((item) => {
       if (item.id !== itemId) return item
-      return {
-        ...item,
-        review_status: item.review_status === "rejected" ? null : ("rejected" as const),
-      }
+      return { ...item, review_status: item.review_status === "rejected" ? null : ("rejected" as const) }
     })
     setDiffItems(nextItems)
-    // Persist immediately
     if (session) {
       const base = diffResultBase ?? session.diffResult
       if (base) {
@@ -1315,8 +1313,7 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
     }
   }
 
-  // ── Export report ──────────────────────────────────────────────────────────
-
+  // ── Export report ─────────────────────────────────────────────────────────────
   function handleExport() {
     if (!session) return
     const url = api.exportReportUrl(session.id)
@@ -1326,8 +1323,7 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
     a.click()
   }
 
-  // ── Jump-to-page ──────────────────────────────────────────────────────────
-
+  // ── Jump-to-page ─────────────────────────────────────────────────────────────
   function handleSummaryJump(origPage: number | null, revPage: number | null) {
     setJumpOrigPage(null); setJumpRevPage(null)
     setTimeout(() => {
@@ -1338,17 +1334,18 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
     else if (revPage != null) setActiveTab("revised")
   }
 
-  // ── Selection ─────────────────────────────────────────────────────────────
-
+  // ── Selection ─────────────────────────────────────────────────────────────────
   function selectDiffItem(id: string) {
     setSelectedDiffId(id)
     setPopover(null)
     const item = diffItems.find((i) => i.id === id)
     if (item) handleSummaryJump(item.page_original, item.page_revised)
+    // Sync nav index
+    const idx = sortedByPage.findIndex((i) => i.id === id)
+    if (idx >= 0) setDiffNavIdx(idx)
   }
 
-  // ── Group click (from pane) ────────────────────────────────────────────────
-
+  // ── Group click ──────────────────────────────────────────────────────────────
   function handleGroupClick(zone: CVGroupZone, clientX: number, clientY: number) {
     if (zone.itemIds.length === 1) {
       selectDiffItem(zone.itemIds[0])
@@ -1360,15 +1357,11 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
     }
   }
 
-  // ── Hover sync ────────────────────────────────────────────────────────────
-
-  function handleGroupHover(zone: CVGroupZone) {
-    setHoveredItemIds(zone.itemIds)
-  }
+  // ── Hover sync ───────────────────────────────────────────────────────────────
+  function handleGroupHover(zone: CVGroupZone) { setHoveredItemIds(zone.itemIds) }
   function handleGroupLeave() { setHoveredItemIds([]) }
 
-  // ── Severity override ─────────────────────────────────────────────────────
-
+  // ── Severity override ────────────────────────────────────────────────────────
   function handleSeverityChange(itemId: string, newSev: CVDiffSeverity) {
     setDiffItems((prev) => {
       const next = prev.map((item) => {
@@ -1376,14 +1369,8 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
         const originalSeverity = item.severity_overridden
           ? (item.meta?.originalSeverity ?? item.severity)
           : item.severity
-        return {
-          ...item,
-          severity: newSev,
-          severity_overridden: true,
-          meta: { ...item.meta, originalSeverity },
-        }
+        return { ...item, severity: newSev, severity_overridden: true, meta: { ...item.meta, originalSeverity } }
       })
-      // Debounce backend persist
       if (reviewSaveTimerRef.current) clearTimeout(reviewSaveTimerRef.current)
       reviewSaveTimerRef.current = setTimeout(() => {
         if (!session) return
@@ -1398,8 +1385,30 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
     })
   }
 
-  // ── Guards ────────────────────────────────────────────────────────────────
+  // ── Diff navigator ────────────────────────────────────────────────────────────
+  function jumpToPrevDiff() {
+    if (sortedByPage.length === 0) return
+    const newIdx = diffNavIdx <= 0 ? 0 : diffNavIdx - 1
+    const item = sortedByPage[newIdx]
+    if (!item) return
+    setDiffNavIdx(newIdx)
+    selectDiffItem(item.id)
+    setSummaryOpen(true)
+    if (notesOpen) setNotesOpen(false)
+  }
 
+  function jumpToNextDiff() {
+    if (sortedByPage.length === 0) return
+    const newIdx = diffNavIdx < 0 ? 0 : Math.min(sortedByPage.length - 1, diffNavIdx + 1)
+    const item = sortedByPage[newIdx]
+    if (!item) return
+    setDiffNavIdx(newIdx)
+    selectDiffItem(item.id)
+    setSummaryOpen(true)
+    if (notesOpen) setNotesOpen(false)
+  }
+
+  // ── Guards ───────────────────────────────────────────────────────────────────
   if (entLoading) return (
     <div className="flex items-center justify-center min-h-[60vh]">
       <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
@@ -1414,7 +1423,7 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
       <div>
         <h2 className="text-lg font-bold mb-1">Pro plan required</h2>
         <p className="text-sm text-muted-foreground leading-relaxed">
-          Compare Versions is available on the Pro plan. Upgrade to open this comparison and access side-by-side document auditing.
+          Compare Versions is available on the Pro plan. Upgrade to open this comparison.
         </p>
       </div>
       <button
@@ -1443,16 +1452,16 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
     </div>
   )
 
-  // Current diff stats from local (possibly overridden) items
-  const highCount    = diffItems.filter((i) => i.severity === "high").length
-  const totalCount   = diffItems.length
+  const highCount  = diffItems.filter((i) => i.severity === "high").length
+  const totalCount = diffItems.length
+  const navLabel   = sortedByPage.length > 0
+    ? (diffNavIdx >= 0 ? `${diffNavIdx + 1}/${sortedByPage.length}` : `${sortedByPage.length} diff${sortedByPage.length !== 1 ? "s" : ""}`)
+    : null
 
-  // ── Workspace ─────────────────────────────────────────────────────────────
-
+  // ── Workspace ─────────────────────────────────────────────────────────────────
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)]">
 
-      {/* MiniPopover (fixed, rendered at root of workspace) */}
       {popover && (
         <MiniPopover
           state={popover}
@@ -1462,115 +1471,141 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
         />
       )}
 
-      {/* ── Toolbar ── */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-border/60 bg-background/95 backdrop-blur-sm flex-shrink-0 gap-2">
-        <div className="flex items-center gap-2 min-w-0">
+      {/* ── Thin sticky toolbar ── */}
+      <div className="flex items-center justify-between px-2.5 py-1 border-b border-border/60 bg-background/95 backdrop-blur-sm flex-shrink-0 gap-1.5 min-h-0">
+        {/* Left: back + title */}
+        <div className="flex items-center gap-1.5 min-w-0">
           <button
             onClick={() => navigate("/compare-versions")}
-            className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground flex-shrink-0"
+            className="p-1 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground flex-shrink-0"
             title="Back to My Comparisons"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-3.5 h-3.5" />
           </button>
-          <div className="min-w-0">
-            <p className="text-sm font-semibold truncate max-w-[140px] sm:max-w-[260px] lg:max-w-[420px]">
+          <div className="min-w-0 leading-none">
+            <p className="text-[13px] font-semibold truncate max-w-[120px] sm:max-w-[220px] lg:max-w-[380px] leading-tight">
               {session.title}
             </p>
-            <div className="flex items-center gap-1.5">
-              <p className="text-[10px] text-muted-foreground">Compare Versions</p>
+            <div className="flex items-center gap-1.5 mt-px">
+              <p className="text-[10px] text-muted-foreground leading-none">Compare Versions</p>
               {totalCount > 0 && (
-                <span className="text-[10px] font-mono text-muted-foreground">· {totalCount} changes</span>
+                <span className="text-[10px] font-mono text-muted-foreground leading-none">· {totalCount} changes</span>
+              )}
+              {highCount > 0 && (
+                <span className="text-[10px] font-semibold text-red-600 dark:text-red-400 leading-none">· {highCount} high</span>
               )}
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 flex-shrink-0">
+        {/* Right: controls */}
+        <div className="flex items-center gap-1 flex-shrink-0 flex-wrap justify-end">
+
+          {/* Diff navigator */}
+          {sortedByPage.length > 0 && (
+            <div className="flex items-center gap-0 border border-border/50 rounded-md overflow-hidden flex-shrink-0">
+              <button
+                onClick={jumpToPrevDiff}
+                disabled={diffNavIdx <= 0 && diffNavIdx !== -1 || (diffNavIdx === -1 && sortedByPage.length === 0)}
+                className="px-1 py-0.5 text-muted-foreground hover:text-foreground hover:bg-muted/60 disabled:opacity-30 transition-colors"
+                title="Previous diff"
+              >
+                <ChevronUp className="w-3 h-3" />
+              </button>
+              <span className="px-1.5 text-[10px] font-mono text-muted-foreground border-x border-border/40 select-none whitespace-nowrap py-0.5">
+                {navLabel}
+              </span>
+              <button
+                onClick={jumpToNextDiff}
+                disabled={diffNavIdx >= sortedByPage.length - 1 && diffNavIdx !== -1}
+                className="px-1 py-0.5 text-muted-foreground hover:text-foreground hover:bg-muted/60 disabled:opacity-30 transition-colors"
+                title="Next diff"
+              >
+                <ChevronDown className="w-3 h-3" />
+              </button>
+            </div>
+          )}
+
+          {/* Density toggle */}
+          <button
+            onClick={() => setDensity((d) => d === "compact" ? "comfortable" : "compact")}
+            className={`flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium border transition-colors ${
+              density === "compact"
+                ? "bg-muted/80 border-border/60 text-foreground"
+                : "border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted/60"
+            }`}
+            title={density === "compact" ? "Switch to comfortable density" : "Switch to compact density"}
+          >
+            {density === "compact" ? <AlignLeft className="w-3 h-3" /> : <AlignJustify className="w-3 h-3" />}
+            <span className="hidden sm:inline">{density === "compact" ? "Compact" : "Comfy"}</span>
+          </button>
+
           {session.status !== "scanning" && (
             <button
-              onClick={handleRescan}
-              disabled={rescanning}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors disabled:opacity-50"
+              onClick={handleRescan} disabled={rescanning}
+              className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium border border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors disabled:opacity-50"
               title="Re-run comparison scan"
-              aria-label="Re-run comparison scan"
             >
-              {rescanning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+              {rescanning ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
               <span className="hidden sm:inline">Rescan</span>
             </button>
           )}
 
-          {/* AI Review button (Slice 5) — visible when scan is complete and AI isn't running */}
           {session.status === "complete" && session.aiStatus !== "running" && (
             <button
               onClick={() => handleEnrich(session.aiStatus === "complete")}
               disabled={enriching}
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors disabled:opacity-50 ${
+              className={`flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium border transition-colors disabled:opacity-50 ${
                 session.aiStatus === "error"
-                  ? "border-amber-300/60 text-amber-700 dark:text-amber-300 hover:bg-amber-50/60 dark:hover:bg-amber-950/30"
+                  ? "border-amber-300/60 text-amber-700 dark:text-amber-300 hover:bg-amber-50/60"
                   : session.aiStatus === "complete"
                   ? "border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted/60"
-                  : "border-violet-300/60 text-violet-700 dark:text-violet-300 hover:bg-violet-50/60 dark:hover:bg-violet-950/30"
+                  : "border-violet-300/60 text-violet-700 dark:text-violet-300 hover:bg-violet-50/60"
               }`}
-              title={
-                session.aiStatus === "error"
-                  ? "Retry AI review"
-                  : session.aiStatus === "complete"
-                  ? "Re-run AI review"
-                  : "Run AI review"
-              }
-              aria-label={
-                session.aiStatus === "error"
-                  ? "Retry AI review"
-                  : session.aiStatus === "complete"
-                  ? "Re-run AI review"
-                  : "Run AI review"
-              }
+              title={session.aiStatus === "error" ? "Retry AI review" : session.aiStatus === "complete" ? "Re-run AI review" : "Run AI review"}
             >
-              {enriching ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+              {enriching ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
               <span className="hidden sm:inline">
                 {session.aiStatus === "error" ? "Retry AI" : session.aiStatus === "complete" ? "Re-run AI" : "AI Review"}
               </span>
             </button>
           )}
 
-          {/* Slice 6: Download Audit Report */}
           {session.status === "complete" && (
             <button
               onClick={handleExport}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+              className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium border border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
               title="Download PDF audit report"
-              aria-label="Download audit report"
             >
-              <Download className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Download Report</span>
+              <Download className="w-3 h-3" />
+              <span className="hidden sm:inline">Report</span>
             </button>
           )}
 
-
           <button
             onClick={() => { setSummaryOpen((o) => !o); if (notesOpen) setNotesOpen(false) }}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors border ${
+            className={`flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium transition-colors border ${
               summaryOpen
-                ? "bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 border-violet-300/60 dark:border-violet-700/40"
+                ? "bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 border-violet-300/60"
                 : "border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted/60"
             }`}
             title="Comparison Summary"
           >
-            <BarChart2 className="w-3.5 h-3.5" />
+            <BarChart2 className="w-3 h-3" />
             {highCount > 0 && <span className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />}
             <span className="hidden sm:inline">Summary</span>
           </button>
 
           <button
             onClick={() => { setNotesOpen((o) => !o); if (summaryOpen) setSummaryOpen(false) }}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors border ${
+            className={`flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium transition-colors border ${
               notesOpen
-                ? "bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300 border-teal-300/60 dark:border-teal-700/40"
+                ? "bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300 border-teal-300/60"
                 : "border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted/60"
             }`}
             title="Manager Notes"
           >
-            <StickyNote className="w-3.5 h-3.5" />
+            <StickyNote className="w-3 h-3" />
             <span className="hidden sm:inline">Notes</span>
           </button>
         </div>
@@ -1578,14 +1613,14 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
 
       {/* ── Status banners ── */}
       {session.status === "scanning" && (
-        <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-950/40 border-b border-blue-200/50 dark:border-blue-800/40 text-blue-700 dark:text-blue-300 text-xs flex-shrink-0">
+        <div className="flex items-center gap-2 px-4 py-1.5 bg-blue-50 dark:bg-blue-950/40 border-b border-blue-200/50 text-blue-700 dark:text-blue-300 text-xs flex-shrink-0">
           <Scan className="w-3.5 h-3.5 animate-pulse" />
           <span>Analyzing documents — detecting changes across all pages…</span>
           <Loader2 className="w-3 h-3 animate-spin ml-auto" />
         </div>
       )}
       {session.status === "error" && (
-        <div className="flex items-center gap-2 px-4 py-2 bg-red-50 dark:bg-red-950/40 border-b border-red-200/50 dark:border-red-800/40 text-red-700 dark:text-red-300 text-xs flex-shrink-0">
+        <div className="flex items-center gap-2 px-4 py-1.5 bg-red-50 dark:bg-red-950/40 border-b border-red-200/50 text-red-700 dark:text-red-300 text-xs flex-shrink-0">
           <AlertCircle className="w-3.5 h-3.5" />
           <span>Analysis failed.</span>
           <button onClick={handleRescan} disabled={rescanning} className="ml-1 underline font-semibold disabled:opacity-50">
@@ -1593,24 +1628,18 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
           </button>
         </div>
       )}
-
-      {/* AI enrichment banners (Slice 5) */}
       {session.status === "complete" && session.aiStatus === "running" && (
-        <div className="flex items-center gap-2 px-4 py-1.5 bg-violet-50 dark:bg-violet-950/30 border-b border-violet-200/40 dark:border-violet-800/30 text-violet-700 dark:text-violet-300 text-xs flex-shrink-0">
+        <div className="flex items-center gap-2 px-4 py-1 bg-violet-50 dark:bg-violet-950/30 border-b border-violet-200/40 text-violet-700 dark:text-violet-300 text-xs flex-shrink-0">
           <Sparkles className="w-3 h-3 animate-pulse flex-shrink-0" />
-          <span>AI review running — enriching change items with context and category…</span>
+          <span>AI review running — enriching change items…</span>
           <Loader2 className="w-3 h-3 animate-spin ml-auto flex-shrink-0" />
         </div>
       )}
       {session.status === "complete" && session.aiStatus === "error" && (
-        <div className="flex items-center gap-2 px-4 py-1.5 bg-amber-50 dark:bg-amber-950/30 border-b border-amber-200/40 dark:border-amber-800/30 text-amber-700 dark:text-amber-300 text-xs flex-shrink-0">
+        <div className="flex items-center gap-2 px-4 py-1 bg-amber-50 dark:bg-amber-950/30 border-b border-amber-200/40 text-amber-700 dark:text-amber-300 text-xs flex-shrink-0">
           <AlertCircle className="w-3 h-3 flex-shrink-0" />
-          <span>AI review unavailable. Deterministic comparison is still available.</span>
-          <button
-            onClick={() => handleEnrich(false)}
-            disabled={enriching}
-            className="ml-auto underline font-semibold disabled:opacity-50 flex-shrink-0"
-          >
+          <span>AI review unavailable. Deterministic comparison still available.</span>
+          <button onClick={() => handleEnrich(false)} disabled={enriching} className="ml-auto underline font-semibold disabled:opacity-50 flex-shrink-0">
             {enriching ? "Retrying…" : "Retry AI"}
           </button>
         </div>
@@ -1620,7 +1649,7 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
       <div className="flex md:hidden border-b border-border/40 flex-shrink-0 bg-background">
         {(["original", "revised"] as const).map((tab) => (
           <button key={tab} onClick={() => setActiveTab(tab)}
-            className={`flex-1 py-2 text-xs font-semibold transition-colors border-b-2 ${
+            className={`flex-1 py-1.5 text-xs font-semibold transition-colors border-b-2 ${
               activeTab === tab ? "text-teal-600 dark:text-teal-400 border-teal-500" : "text-muted-foreground border-transparent hover:text-foreground"
             }`}
           >
@@ -1629,13 +1658,16 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
         ))}
       </div>
 
-      {/* ── Pane area + Notes rail ── */}
-      <div className="flex flex-1 overflow-hidden relative">
+      {/* ── Pane area with right drawers ── */}
+      <div ref={paneContainerRef} className="flex flex-1 overflow-hidden relative">
 
         {/* Left — Baseline (original) */}
-        <div className={`flex-col h-full overflow-hidden md:w-[48%] md:flex-shrink-0 ${
-          activeTab === "original" ? "flex w-full" : "hidden md:flex"
-        }`}>
+        <div
+          className={`flex-col h-full overflow-hidden flex-shrink-0 ${
+            activeTab === "original" ? "flex w-full md:w-auto" : "hidden md:flex"
+          }`}
+          style={{ width: window.innerWidth >= 768 ? `${splitPct}%` : undefined }}
+        >
           <PdfPane
             label="Baseline · Read only"
             fileName={session.originalFileName}
@@ -1654,8 +1686,14 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
           />
         </div>
 
-        {/* Gutter */}
-        <div className="hidden md:block w-px bg-border/50 flex-shrink-0" />
+        {/* Resizable drag handle */}
+        <div
+          className="hidden md:flex items-center justify-center w-2 flex-shrink-0 cursor-col-resize bg-border/40 hover:bg-teal-400/50 active:bg-teal-500/60 transition-colors group select-none"
+          onPointerDown={startResize}
+          title="Drag to resize"
+        >
+          <div className="w-0.5 h-8 rounded-full bg-border/80 group-hover:bg-teal-500/70 transition-colors" />
+        </div>
 
         {/* Right — Revised */}
         <div className={`flex-col h-full overflow-hidden flex-1 ${
@@ -1679,7 +1717,21 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
           />
         </div>
 
-        {/* Notes rail */}
+        {/* Right drawers — mutually exclusive */}
+        <SummaryPanel
+          open={summaryOpen}
+          onClose={() => setSummaryOpen(false)}
+          diffItems={diffItems}
+          selectedDiffId={selectedDiffId}
+          onSelectItem={(id) => { selectDiffItem(id); setSummaryOpen(true) }}
+          onHoverItem={setHoveredItemIds}
+          onLeaveItem={() => setHoveredItemIds([])}
+          onSeverityChange={handleSeverityChange}
+          linkedNoteIds={linkedNoteIds}
+          onRejectToggle={handleRejectToggle}
+          density={density}
+        />
+
         <NotesRail
           open={notesOpen}
           onClose={() => setNotesOpen(false)}
@@ -1688,23 +1740,6 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
           onSaved={(mn) => setSession((s) => s ? { ...s, managerNotes: mn } : s)}
         />
       </div>
-
-      {/* Summary panel */}
-      <SummaryPanel
-        open={summaryOpen}
-        onClose={() => setSummaryOpen(false)}
-        diffItems={diffItems}
-        selectedDiffId={selectedDiffId}
-        onSelectItem={(id) => {
-          selectDiffItem(id)
-          setSummaryOpen(true) // keep open
-        }}
-        onHoverItem={setHoveredItemIds}
-        onLeaveItem={() => setHoveredItemIds([])}
-        onSeverityChange={handleSeverityChange}
-        linkedNoteIds={linkedNoteIds}
-        onRejectToggle={handleRejectToggle}
-      />
     </div>
   )
 }

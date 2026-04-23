@@ -1,0 +1,78 @@
+## Replit Prompt — Compare Versions Demo Parity + Premium Shell Pass
+
+The current public demo for Compare Versions feels too different from the real app.
+
+### Problem
+Screenshot 1 (real app) feels premium because it has:
+- real workspace structure
+- split-screen document panes
+- visible highlighted differences
+- summary/action layer
+
+Screenshot 3 (public demo) feels weaker because it:
+- looks like a different product
+- uses a narrower centered layout
+- has too much dead space left/right
+- changes the information architecture too much
+- risks confusing users because the demo does not match the live app closely enough
+
+This is now a product-parity / premium-shell issue.
+
+## Goal
+Make the public Compare Versions demo feel like a read-only version of the real Compare Versions app, not a separate simplified page.
+
+## Required changes
+
+### 1. Rebuild the public Compare Versions demo to match the live app shell
+Use the real app’s structure as the reference:
+- same top rail/header pattern
+- same title placement
+- same split-screen document comparison layout
+- same diff context presentation
+- same summary/action model
+
+It can remain read-only, but the page structure should closely match the real app.
+
+### 2. Remove the narrow centered-column layout
+The active demo canvas should use the available width better.
+Requirements:
+- reduce dead space on left/right
+- make the demo feel like a real workspace
+- use a wider container and stronger content occupancy
+- do not leave the comparison experience floating in the middle of a mostly empty page
+
+### 3. Pick one default summary state
+For the public demo:
+- default to the richer, more premium state
+- keep the summary visible by default
+- allow collapse if needed, but the initial state should communicate value immediately
+
+### 4. Standardize the demo shell
+The Compare Versions demo must follow the same demo-shell rules as the rest of the marketing demos:
+- same “All demos” / “Back to all demos” pattern
+- same status-chip placement
+- same CTA/footer logic
+- same spacing rhythm
+- same overall chrome language
+
+### 5. Preserve parity with the live product
+Hard rule:
+Marketing demos may be read-only, but they should preserve the live app’s visual information architecture as closely as possible.
+Do not invent a separate demo-only layout unless absolutely necessary.
+
+### 6. Keep it premium
+Use the real product as the premium reference:
+- serious workspace feel
+- dense but readable
+- subtle dark chrome
+- intentional borders/shadows
+- no unnecessary dead space
+- footer CTA should not overpower the workspace
+
+## Output required
+1. Exact files changed
+2. What was changed to improve parity with the live app
+3. What layout changes were made to remove dead space
+4. What summary behavior was chosen by default
+5. Before/after screenshots of the Compare Versions public demo
+6. Confirmation that only marketing/demo UI was touched
