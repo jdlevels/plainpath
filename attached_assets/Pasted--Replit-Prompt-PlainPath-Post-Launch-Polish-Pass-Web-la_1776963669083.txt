@@ -1,0 +1,183 @@
+## Replit Prompt — PlainPath Post-Launch Polish Pass
+### Web launch is complete. Now clean up the remaining non-blocking polish items.
+
+PlainPath is now ready for limited web launch.
+Do not reopen or destabilize the live domain/auth/billing setup unless a regression is discovered.
+
+## Locked / do not disturb
+Do not change unless a real bug is found:
+- plainpathapp.com live domain attachment
+- Clerk production auth domain setup
+- Replit publishing/domain binding
+- Stripe webhook flow
+- billing provider live mode
+- current launch-ready Clause Extractor flow
+
+## Goal
+Complete the remaining post-launch polish items that improve trust, usability, and consistency without risking the live web launch.
+
+---
+
+## Priority order
+
+### 1. Fix App Store / Google Play badge behavior
+Problem:
+The site should not imply live mobile store listings if they do not exist.
+
+Required:
+- If badges currently link nowhere, disable the links
+- Or convert them to a non-link / modal / waitlist / “coming soon” action
+- Keep the visual treatment professional
+- Do not allow broken or misleading store clicks
+
+Return:
+- exact files changed
+- before/after screenshots
+- final behavior description
+
+---
+
+### 2. Fix pricing/features accuracy everywhere
+Problem:
+Pricing/features copy must match the actual live product and current entitlements.
+
+Required:
+- Audit all public pricing/plan copy
+- Ensure Starter and Pro accurately reflect the real tool access
+- Remove stale/incomplete feature bullets
+- Make sure Clause Extractor and other live tools are represented correctly
+- Align public pricing copy with actual entitlement logic
+
+Return:
+- exact files changed
+- list of corrected feature statements
+- screenshots of updated pricing sections
+
+---
+
+### 3. Fix tablet breakpoint issue on marketing home
+Problem:
+The tool grid/hero layout had a tablet visibility/layout issue.
+
+Required:
+- Audit the 768px-ish tablet breakpoint
+- Ensure the tool grid remains visible and usable
+- Fix hidden/overflow/compression problems
+- Preserve desktop and mobile layouts
+
+Return:
+- exact files changed
+- screenshots at mobile / tablet / desktop
+- short explanation of root cause and fix
+
+---
+
+### 4. Add Compare Versions export/copy action
+Problem:
+Compare Versions is a powerful tool but still lacks a polished user-facing export action.
+
+Required:
+- Add a production-grade summary/export action in the Compare Versions session header
+- Prefer a pattern consistent with Clause Extractor
+- Keep the UI clean and premium
+- Export can be copy summary, download report, or both — choose the strongest practical implementation already supported by the codebase
+- Do not overbuild
+
+Return:
+- exact files changed
+- screenshot of the new action
+- explanation of export behavior
+
+---
+
+### 5. Add Document Builder export/download action
+Problem:
+Builder output needs an obvious user-facing export/download action.
+
+Required:
+- Surface a real export/download action for completed Builder output
+- Reuse existing preview/export capability if already present
+- Keep the interaction consistent with other document tools
+- Do not create a confusing print-only hack unless that is the only safe option and clearly labeled
+
+Return:
+- exact files changed
+- screenshot of the new Builder export action
+- explanation of final file/output behavior
+
+---
+
+### 6. Clean up noisy production-sensitive console logging
+Problem:
+Some API routes still have noisy console.log usage.
+
+Required:
+- Remove or reduce low-value noisy logs in production-sensitive routes
+- Keep only useful operational/error logging
+- Do not over-engineer a full logging framework in this pass
+
+Target areas previously identified included routes such as:
+- documents
+- compare-versions
+- contracts
+- clause-extractor
+
+Return:
+- exact files changed
+- list of log statements removed or replaced
+- short note on remaining intentional logs
+
+---
+
+### 7. Final trust/compliance copy sweep
+Problem:
+Now that launch blockers are resolved, do one more pass on visible trust/copy consistency.
+
+Required:
+- Check public-facing trust/security/storage phrasing for accuracy
+- Do not overclaim privacy/security
+- Do not contradict the updated privacy policy
+- Tighten any remaining visible wording mismatches
+
+Return:
+- files changed
+- exact copy updates made
+- screenshots if user-visible
+
+---
+
+## Additional cleanup rule
+If the old root-domain Clerk DNS records are now safely obsolete, do not remove them in this pass unless you are certain auth on the live site remains stable and you can prove they are unused.
+If you do remove any old Clerk DNS guidance/copy in-app, explain why.
+
+---
+
+## Required output format
+
+### A. Completed items
+For each of the 7 items above:
+- PASS / PARTIAL / FAIL
+- exact files changed
+- short explanation
+- screenshot proof where relevant
+
+### B. Regressions check
+Confirm that after this polish pass:
+- plainpathapp.com still loads correctly
+- auth still works
+- protected routes still work
+- pricing/gating still work
+- no new launch blocker was introduced
+
+### C. Final post-launch summary
+Return:
+- remaining medium issues
+- remaining low-priority issues
+- whether the live web app is still stable after this pass
+
+## Constraints
+- This is a post-launch polish pass, not a rebuild
+- Do not widen scope
+- Do not destabilize the current live domain/auth setup
+- Prefer reuse of existing components/flows over new architecture
+- Keep the product premium, accurate, and stable
