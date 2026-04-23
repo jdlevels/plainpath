@@ -1379,13 +1379,17 @@ export default function Home() {
       ════════════════════════════════════════════════ */}
       <section className="py-20 md:py-24 bg-gradient-to-br from-emerald-100/70 via-sky-100/60 to-blue-100/55 dark:bg-transparent border-y border-emerald-200/50 dark:border-transparent">
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
-          <div className="grid lg:grid-cols-2 gap-14 items-center">
-            <div className="relative order-2 lg:order-1">
-              <div className="absolute -inset-3 bg-gradient-to-tr from-emerald-100/40 dark:from-emerald-900/10 via-blue-50/30 dark:via-blue-900/10 to-transparent rounded-3xl blur-xl -z-10" />
+          <div className="grid lg:grid-cols-2 gap-6 lg:gap-8 items-stretch">
+
+            {/* ── Left: demo panel ── */}
+            <div className="relative order-2 lg:order-1 bg-white/55 dark:bg-card/60 backdrop-blur-sm rounded-2xl border border-white/85 dark:border-border/40 shadow-sm flex items-center justify-center p-6 overflow-hidden min-h-[340px]">
+              <div className="absolute inset-0 bg-gradient-to-tr from-emerald-100/30 dark:from-emerald-900/10 via-blue-50/20 dark:via-blue-900/10 to-transparent rounded-2xl -z-10" />
               <WebAppDemo />
             </div>
-            <div className="max-w-lg order-1 lg:order-2">
-              <div className="bg-white/65 dark:bg-card/70 backdrop-blur-md rounded-2xl px-7 py-8 border border-white/90 dark:border-border/40 shadow-sm">
+
+            {/* ── Right: content panel ── */}
+            <div className="order-1 lg:order-2 flex">
+              <div className="bg-white/65 dark:bg-card/70 backdrop-blur-md rounded-2xl px-7 py-8 border border-white/90 dark:border-border/40 shadow-sm flex-1 flex flex-col justify-center">
                 <p className="text-xs font-semibold tracking-[0.12em] uppercase text-foreground/60 dark:text-foreground/55 mb-3">Works on Every Device</p>
                 <h2
                   className="text-3xl md:text-4xl font-bold mb-5 text-foreground"
@@ -1418,6 +1422,7 @@ export default function Home() {
                 </a>
               </div>
             </div>
+
           </div>
         </div>
       </section>

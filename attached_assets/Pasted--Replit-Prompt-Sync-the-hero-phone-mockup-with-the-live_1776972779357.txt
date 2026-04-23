@@ -1,0 +1,72 @@
+## Replit Prompt — Sync the hero phone mockup with the live demo system
+
+The hero phone mockup is still showing only one tool.
+It should be driven by the same live rotating demo system as the other marketing demos.
+
+### Goal
+Make the phone preview sync with the current active tool/demo state instead of being hard-coded to one static screen.
+
+## What needs to happen
+
+### 1. Use one shared demo state
+Find the source of truth for the active marketing demo/tool rotation.
+The hero phone should subscribe to that same state.
+
+Required behavior:
+- when the active demo/tool changes elsewhere, the phone preview changes too
+- if the user manually selects a demo/tool, the phone updates immediately
+- do not maintain a separate hard-coded phone-only tool state unless absolutely required
+
+### 2. Map all 8 tools to a phone preview state
+The phone should have a preview for each tool:
+
+- Analyze a Document
+- Document Trust Check
+- Build a Contract
+- Contract Review
+- Redact Sensitive Info
+- Digital Signature
+- Compare Versions
+- Clause Extractor
+
+Each one does not need a totally different phone shell, but the visible content must clearly reflect the active tool:
+- title / labels
+- badges
+- accent color
+- key callout card
+- action step / result state
+
+### 3. Keep it visually premium
+The phone should feel like one polished demo device, not eight disconnected screens.
+
+Required:
+- preserve the phone frame
+- swap the inner preview content cleanly
+- use the correct accent color per tool
+- transitions should be subtle and smooth
+- no jumpy re-layouts
+
+### 4. Keep the autoplay/manual behavior aligned
+If the live demos rotate automatically:
+- the phone rotates with them
+- if the user interacts manually, the phone follows the selected demo
+- if there is hover/focus pause behavior in the demo area, the phone respects the same state
+
+### 5. Accessibility / UX
+Because this behaves like a carousel/demo rotator:
+- do not create a separate uncontrolled animation just for the phone
+- if the main demo pauses on hover/focus/manual selection, the phone should pause too
+- keep the implementation tied to the main demo’s control pattern
+
+### 6. Responsive behavior
+- desktop/tablet: fully synced live phone preview
+- mobile: preserve performance and readability
+- do not let the phone content overflow or crop awkwardly
+
+## Output required
+1. Exact files changed
+2. Where the shared demo state lives
+3. How the phone now subscribes to it
+4. Which tool views were added/mapped
+5. Before/after screenshot or short verification summary
+6. Confirmation that only marketing/demo UI behavior was touched
