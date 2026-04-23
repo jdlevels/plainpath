@@ -1,0 +1,149 @@
+## Replit Prompt — Standardize PlainPath identity model for all 3 user types: Admin / Starter / Pro
+
+We need PlainPath’s identity and access model made explicit and consistent everywhere in the app.
+
+### Final model
+Use Clerk `publicMetadata` as the source of truth, with two separate dimensions:
+
+1. **role** = internal privilege
+2. **accessTier** = product entitlement
+
+### Supported users
+#### 1) Admin
+Internal only. Not a billing tier.
+Use:
+{
+  "role": "admin",
+  "accessTier": "pro"
+}
+
+Meaning:
+- full internal/admin control
+- full product access
+- can access internal admin-only surfaces
+
+#### 2) Starter
+Normal user on Starter plan.
+Use:
+{
+  "role": "member",
+  "accessTier": "starter"
+}
+
+Meaning:
+- no admin privileges
+- only Starter tool access
+
+#### 3) Pro
+Normal user on Pro plan.
+Use:
+{
+  "role": "member",
+  "accessTier": "pro"
+}
+
+Meaning:
+- no admin privileges
+- full paid product access
+- not treated as admin anywhere
+
+---
+
+## Required implementation rules
+
+### A. Authorization model
+Use this exact split everywhere:
+
+- `role === "admin"` controls internal/admin-only access
+- `accessTier === "starter"` or `accessTier === "pro"` controls product/tool access
+
+Do NOT use `role` to represent billing tier.
+Do NOT use `accessTier` to grant admin powers.
+
+### B. Metadata source
+Use Clerk `publicMetadata` for this model.
+Do NOT use `unsafeMetadata` for any privilege or access logic.
+
+### C. Session claims
+Do NOT inject the entire `user.public_metadata` object into the session token.
+
+Instead, only include the specific needed fields:
+- role
+- accessTier
+
+If current session claim config is using the full metadata object, replace it with individual claims.
+
+### D. Refresh handling
+If metadata is changed server-side (for example changing a user from starter to pro, or member to admin), ensure the app handles the fact that Clerk session claims may require refresh/reload/re-auth before the new values appear.
+
+### E. App behavior by user type
+
+#### Admin
+- can access all product tools
+- can access internal admin pages/surfaces
+- can manage internal privileged operations if those exist
+- should still clearly show product tier separately from admin privilege when appropriate
+
+#### Starter
+- can access only Starter-included tools
+- cannot access Pro-only tools
+- cannot access admin-only areas
+
+#### Pro
+- can access all paid product tools
+- cannot access admin-only areas
+- must not be treated as admin in any screen, menu, or route
+
+---
+
+## Required app-wide cleanup
+
+### 1. Fix gating logic
+Audit all route guards, feature guards, pricing checks, and tool access checks so they follow this model consistently.
+
+### 2. Fix user-facing labels
+Anywhere the app currently confuses role with paid access, correct it.
+
+Examples to check:
+- Account & Security
+- Plan & Billing
+- Tool Access section
+- user dropdown/menu
+- support/account identity treatment
+- hidden or internal routes
+- upgrade/pricing surfaces
+
+### 3. Fix Plan & Billing / Tool Access
+Billing page must reflect all current tools and use `accessTier` as the product entitlement source of truth.
+
+Expected behavior:
+- Starter user sees Starter access
+- Pro user sees Pro access
+- Admin user should not be shown as “admin plan”
+- admin is privilege, not a subscription tier
+
+### 4. Preserve admin isolation
+Admin-only controls/pages must remain protected by role checks.
+Pro users must not see or inherit admin surfaces.
+
+### 5. Document the model in code
+Add a small internal comment/doc near auth logic that states:
+
+- role = internal privilege
+- accessTier = product entitlement
+- admin/starter/pro behavior definitions
+- member + pro is valid and is not admin
+
+---
+
+## Output required
+1. Exact files changed
+2. Where `role` is checked
+3. Where `accessTier` is checked
+4. What session claims are now being used
+5. Which screens were updated for identity clarity
+6. Confirmation that `unsafeMetadata` is not used for access control
+7. Confirmation that all 3 user types now work correctly:
+   - Admin
+   - Starter
+   - Pro

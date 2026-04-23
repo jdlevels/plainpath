@@ -1,11 +1,33 @@
-// ─── Client-Side Entitlements ─────────────────────────────────────────────────
+// ─── PlainPath Identity Model ─────────────────────────────────────────────────
+//
+// Two separate dimensions stored in Clerk publicMetadata:
+//
+//   role        = internal privilege  ("admin" | "member")
+//   accessTier  = product entitlement ("starter" | "pro")
+//
+// User types:
+//   Admin   → { role: "admin",  accessTier: "pro"     } — full internal + product access
+//   Starter → { role: "member", accessTier: "starter" } — Starter plan tools only
+//   Pro     → { role: "member", accessTier: "pro"     } — all paid tools, NOT admin
+//
+// Rules:
+//   • role === "admin"  → grants admin-only surfaces; is NOT a billing tier
+//   • accessTier        → controls product/tool gating; never grants admin powers
+//   • unsafeMetadata    → NEVER used for any privilege or access logic
+//
+// ─────────────────────────────────────────────────────────────────────────────
 
 export type PlanKey = "starter" | "pro"
+export type RoleKey = "admin" | "member"
+export type AccessTier = "starter" | "pro"
 export type ToolKey = "analyze" | "trust-check" | "contract-review" | "build-contract" | "redact" | "signature" | "compare" | "clause-extractor" | "compare-versions"
 
 export type EntitlementStatus = {
   email: string
-  role?: "admin" | "free" | "starter" | "pro"
+  /** Internal privilege. "admin" = internal-only access. NOT a billing/plan tier. */
+  role?: RoleKey
+  /** Product entitlement. Controls which tools are accessible. */
+  accessTier?: AccessTier
   found: boolean
   status: string
   plan: PlanKey

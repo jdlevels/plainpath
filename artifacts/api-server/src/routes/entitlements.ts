@@ -1,4 +1,23 @@
+// ─── PlainPath Identity Model (server-side) ────────────────────────────────────
+//
+//   role        = internal privilege  ("admin" | "member")
+//   accessTier  = product entitlement ("starter" | "pro")
+//
+//   Admin   → { role: "admin",  accessTier: "pro"     }
+//   Starter → { role: "member", accessTier: "starter" }
+//   Pro     → { role: "member", accessTier: "pro"     }
+//
+// ADMIN_EMAILS is the server-side authority for admin status.
+// When an admin is detected, their Clerk publicMetadata is bootstrapped
+// automatically (eventual consistency — fires on first entitlements check
+// when clerkUserId is available).
+//
+// unsafeMetadata is NEVER used for access control.
+//
+// ─────────────────────────────────────────────────────────────────────────────
+
 import { Router } from "express"
+import { clerkClient } from "@clerk/express"
 import { getSubscriberByEmail, getSubscriberByClerkUserId } from "../lib/billingDb"
 import { PLAN_ENTITLEMENTS, TOOL_ACCESS, normalizePlan, type PlanKey, type ToolKey } from "../lib/planEntitlements"
 import { BILLING_CONFIG } from "../lib/billingConfig"
@@ -25,6 +44,21 @@ function isAdminEmail(email: string): boolean {
   return ADMIN_EMAILS.has(email.toLowerCase())
 }
 
+// Bootstrap publicMetadata for admin users the first time the entitlements
+// endpoint is called with their Clerk userId. Fire-and-forget — never blocks.
+async function bootstrapAdminMetadata(clerkUserId: string, email: string) {
+  try {
+    const user = await clerkClient.users.getUser(clerkUserId)
+    const meta = user.publicMetadata as { role?: string; accessTier?: string }
+    if (meta.role === "admin" && meta.accessTier === "pro") return // already set
+    await clerkClient.users.updateUser(clerkUserId, {
+      publicMetadata: { role: "admin", accessTier: "pro" },
+    })
+  } catch {
+    // Non-blocking: metadata bootstrap failure never affects the response
+  }
+}
+
 // ─── GET /status ──────────────────────────────────────────────────────────────
 // Returns full entitlement data for the given email.
 
@@ -48,12 +82,18 @@ router.get("/status", (req, res) => {
       }
     }
 
-    // Admin bypass: full Pro, unlimited usage — no Stripe subscription required
+    // Admin bypass: full Pro, unlimited usage — no Stripe subscription required.
+    // role = "admin" (internal privilege), accessTier = "pro" (product entitlement).
+    // Bootstrap publicMetadata asynchronously if clerkUserId is available.
     if (isAdminEmail(resolvedEmail)) {
       const proEntitlements = PLAN_ENTITLEMENTS["pro"]
+      if (clerkUserId) {
+        void bootstrapAdminMetadata(clerkUserId, resolvedEmail)
+      }
       return res.json({
         email: resolvedEmail,
         role: "admin",
+        accessTier: "pro",
         found: true,
         status: "active",
         plan: "pro",
@@ -78,8 +118,11 @@ router.get("/status", (req, res) => {
     const usageCount = getUsageForCurrentMonth(resolvedEmail)
     const toolUsage = getAllToolUsageForCurrentMonth(resolvedEmail)
 
+    // role = "member" for normal paid users; accessTier mirrors their billing plan.
     return res.json({
       email: resolvedEmail,
+      role: "member",
+      accessTier: plan,
       found: Boolean(subscriber),
       status,
       plan,

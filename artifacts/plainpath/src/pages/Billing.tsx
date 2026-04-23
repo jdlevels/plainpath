@@ -143,7 +143,7 @@ export default function Billing() {
   const [email, setEmail] = useState<string | null>(null)
   const [portalLoading, setPortalLoading] = useState(false)
   const [portalError, setPortalError] = useState<string | null>(null)
-  const { entitlements, loading, reload } = useEntitlements()
+  const { entitlements, loading, reload, isAdmin } = useEntitlements()
 
   useEffect(() => {
     document.title = "Plan & Billing — PlainPath"
@@ -156,7 +156,9 @@ export default function Billing() {
   const isTestMode = BILLING_CONFIG.BILLING_MODE === "test"
   const isEnforced = BILLING_CONFIG.PAYWALL_ENFORCEMENT
 
-  const hasSub = Boolean(entitlements?.found && entitlements.status === "active")
+  // Admin is an internal role, not a billing tier. They always have Pro-equivalent access
+  // but are NOT shown as having a Stripe subscription.
+  const hasSub = !isAdmin && Boolean(entitlements?.found && entitlements.status === "active")
   const plan = hasSub ? (entitlements!.plan as "starter" | "pro") : null
   const meta = plan ? PLAN_META[plan] : null
 
@@ -235,6 +237,17 @@ export default function Billing() {
             <div className="flex items-center gap-2 text-sm text-muted-foreground py-4">
               <Loader2 className="w-4 h-4 animate-spin" />
               Loading subscription…
+            </div>
+          ) : isAdmin ? (
+            <div className="space-y-3">
+              <div className="inline-flex items-center gap-2 rounded-xl px-3.5 py-2 bg-amber-500/8 border border-amber-500/20">
+                <ShieldCheck className="w-4 h-4 text-amber-500" />
+                <span className="text-sm font-bold text-amber-600 dark:text-amber-400">Admin Access</span>
+                <span className="text-xs text-muted-foreground">Internal role</span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                You have full product access as an internal admin. Admin is a privilege, not a billing plan.
+              </p>
             </div>
           ) : hasSub && meta ? (
             <>
@@ -324,9 +337,10 @@ export default function Billing() {
           </p>
           <div className="space-y-0">
             {TOOLS.map((tool) => {
-              const hasAccess = isEnforced
+              // Admin (role) always has full access — accessTier is "pro" for admins
+              const hasAccess = isAdmin || (isEnforced
                 ? Boolean(plan && (tool.plans as readonly string[]).includes(plan))
-                : true
+                : true)
               const isStarterTool = (tool.plans as readonly string[]).includes("starter")
               const planBadge = isStarterTool ? "Starter + Pro" : "Pro"
               const planBadgeClass = isStarterTool
@@ -370,8 +384,8 @@ export default function Billing() {
           )}
         </motion.div>
 
-        {/* ── Upgrade CTA (no active plan or on Starter) ── */}
-        {!hasSub && (
+        {/* ── Upgrade CTA (no active plan or on Starter; never for admins) ── */}
+        {!isAdmin && !hasSub && (
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}

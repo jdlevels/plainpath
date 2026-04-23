@@ -1,9 +1,17 @@
 // ─── Plan Definitions — Single Source of Truth ────────────────────────────────
 //
-// Plans:
+// Plans (accessTier = product entitlement):
 //   starter — $4.99/month  — Analyze a Document + Redact Sensitive Info
 //   pro     — $19.99/month — All tools (Analyze, Trust Check, Contract Builder,
 //                            Contract Review, Redact, Digital Signature)
+//
+// Identity model (see routes/entitlements.ts for full spec):
+//   role        = internal privilege  ("admin" | "member")
+//   accessTier  = product entitlement ("starter" | "pro")
+//
+//   Admin   → role:"admin"  + accessTier:"pro"    — internal + full product access
+//   Starter → role:"member" + accessTier:"starter" — Starter plan tools only
+//   Pro     → role:"member" + accessTier:"pro"    — all paid tools; NOT admin
 //
 // Never duplicate plan or feature logic in pages, routes, or components.
 // All gating must reference TOOL_ACCESS and PLAN_ENTITLEMENTS from here.
