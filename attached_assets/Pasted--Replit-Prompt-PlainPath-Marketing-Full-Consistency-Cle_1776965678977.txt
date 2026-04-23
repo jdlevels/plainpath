@@ -1,0 +1,145 @@
+## Replit Prompt — PlainPath Marketing Full Consistency Cleanup Pass
+
+We need a full marketing-page cleanup pass focused on consistency, premium polish, and message discipline.
+
+This is not a rebuild. It is a design/copy/system cleanup across the live marketing page.
+
+## Goal
+Make the marketing site feel like one deliberate premium product system instead of multiple iteration layers stacked together.
+
+## What to audit and clean up
+
+### 1. Messaging hierarchy cleanup
+Unify the top-level story across the page.
+
+Current problem:
+- Hero says “WEB APP — iOS & Android coming soon”
+- Other sections say “8 tools live” / “live demo”
+- Some sections are plain-English document help
+- Other sections use command-style headlines like “Read it. Trust it. Build it.”
+
+Required:
+- Create one clear message hierarchy from hero through demos and tools
+- Keep the tone premium, clear, and consumer-legible
+- Remove any contradictory or redundant statements
+- Ensure mobile/app-coming-soon messaging does not conflict with current live web status
+- Standardize capitalization like “iOS”, not inconsistent variants
+
+### 2. Tool naming and copy consistency
+Current problem:
+- Tool sections alternate between product names and command-style names
+- This creates two competing brand voices
+
+Required:
+- Decide on the system and apply it consistently:
+  - either “Analyze a Document / Document Trust Check / Build a Contract…”
+  - or “Read it / Trust it / Build it…” with product names clearly secondary
+- Keep the product names visible and consistent everywhere
+- Make sure tool summaries, chips, and CTA text all align
+
+### 3. Badge system cleanup
+Current problem:
+- Multiple badge styles and meanings are mixed together
+
+Required:
+Create one consistent badge system for:
+- product status: Live / Demo / Coming Soon
+- plan access: Free / Starter / Pro
+
+Rules:
+- Same size family
+- Same spacing/padding rules
+- Same placement logic
+- Same casing conventions
+- Same meaning everywhere
+
+Audit all current badge text and normalize it.
+
+### 4. Card system normalization
+Current problem:
+- Hero pills, tool cards, proof cards, and demo cards feel like separate systems
+
+Required:
+Normalize:
+- border radius
+- border opacity
+- glow intensity
+- internal padding
+- icon sizing
+- title spacing
+- body copy width
+- CTA placement
+- hover/focus behavior
+
+The goal is that every marketing card feels like it belongs to the same product family.
+
+### 5. Color consistency cleanup
+Current problem:
+- Tool colors are useful, but border glows and panel backgrounds vary in intensity and style
+
+Required:
+- Preserve tool color-coding
+- Reduce visual noise
+- Normalize glow strength and contrast
+- Keep dark premium feel
+- Ensure no section looks brighter/flatter/cheaper than adjacent sections
+
+### 6. Section spacing and page rhythm
+Current problem:
+- Some sections feel tightly packed, others too loose
+- Width and visual density shift too much between blocks
+
+Required:
+- Normalize top/bottom spacing between sections
+- Align max-width behavior
+- Make hero, tools, demos, and trust sections feel intentionally sequenced
+- Remove any awkward dead space or cramped transitions
+
+### 7. Trust/compliance wording consistency
+Current problem:
+- Trust wording must exactly match actual product behavior
+
+Required:
+- Audit all visible storage/privacy/AI-training/account requirement claims
+- Ensure they match the current live web app and privacy policy
+- No overclaiming
+- No contradiction between free-trial behavior and Pro workspace behavior
+
+### 8. CTA consistency
+Current problem:
+- Hero CTA, nav CTA, tool CTAs, and app-store/waitlist CTAs feel slightly different in weight and intent
+
+Required:
+- Standardize primary CTA style
+- Standardize secondary CTA style
+- Ensure “Get the App” / waitlist / live web usage messaging is coherent
+- Avoid implying live app-store availability if not true
+
+## Output required
+
+### A. Visual/copy cleanup report
+For each section changed:
+- exact files changed
+- what was normalized
+- what wording changed
+- why
+
+### B. Screenshot set
+Provide before/after screenshots for:
+- hero
+- tools section
+- trust/proof strip
+- live demo section
+- any pricing or CTA section touched
+
+### C. Stability check
+Confirm:
+- no auth/domain/billing logic was changed
+- this was marketing-only cleanup
+- live site remains stable
+
+## Constraints
+- Do not widen scope into app logic
+- Do not touch live Clerk/Replit domain setup
+- Do not touch billing/webhook logic
+- Keep it premium, consistent, and truthful

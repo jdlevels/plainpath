@@ -25,7 +25,7 @@ const TOOLS = [
     href: "/app/analyze",
     color: "from-blue-50/80 to-blue-50 dark:from-blue-950/20 dark:to-blue-950/20",
     badge: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
-    badgeLabel: "Free · Starter · Pro",
+    badgeLabel: "Starter · Pro",
     border: "border-blue-200/60 dark:border-blue-900/40",
     iconBg: "bg-blue-100 dark:bg-blue-900/40",
     iconColor: "text-blue-600 dark:text-blue-400",
@@ -210,7 +210,7 @@ export default function ToolsShowcase() {
           className="text-3xl md:text-4xl font-bold mb-4"
           style={{ fontFamily: "var(--font-display)" }}
         >
-          Read it. Trust it. Build it. Review it. Protect it. Sign it. Compare it. Edit it.
+          Read it. Trust it. Build it. Review it. Protect it. Sign it. Compare it. Decode it.
         </motion.h2>
         <motion.p
           initial={{ opacity: 0, y: 8 }}

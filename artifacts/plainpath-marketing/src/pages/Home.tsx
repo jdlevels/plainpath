@@ -659,7 +659,7 @@ function ReferFriend() {
             {/* Value bullets */}
             <div className="space-y-2.5 mb-8">
               {[
-                { text: "No account needed to start", detail: "First analysis is free, no sign-up" },
+                { text: "No account needed to start", detail: "Two free analyses included — no sign-up" },
                 { text: "Results in under 2 minutes",  detail: "Upload, analyze, done" },
                 { text: "Works on any document type",  detail: "Contracts, bills, notices, and more" },
               ].map(({ text, detail }) => (
@@ -1147,7 +1147,7 @@ export default function Home() {
               className="text-3xl md:text-4xl font-bold mb-3" style={{ fontFamily: "var(--font-display)" }}>Real scenarios — pre-loaded and ready to run</motion.h2>
             <motion.p initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
               transition={{ delay: 0.1 }} className="text-muted-foreground text-lg max-w-xl mx-auto">
-              Real documents, real scenarios — one per live tool. Click any card to open a pre-loaded example in the app.
+              Real documents, real scenarios — one per live tool. Click any card to open a pre-loaded example in the web app.
             </motion.p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
@@ -1382,7 +1382,7 @@ export default function Home() {
               <WebAppDemo />
             </div>
             <div className="max-w-lg order-1 lg:order-2">
-              <p className="text-xs font-semibold tracking-[0.12em] uppercase text-muted-foreground mb-3">Web &amp; Mobile</p>
+              <p className="text-xs font-semibold tracking-[0.12em] uppercase text-muted-foreground mb-3">Works on Every Device</p>
               <h2
                 className="text-3xl md:text-4xl font-bold mb-5 text-foreground"
                 style={{ fontFamily: "var(--font-display)" }}

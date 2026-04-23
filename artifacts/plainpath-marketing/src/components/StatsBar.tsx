@@ -24,7 +24,7 @@ const PILLARS = [
   {
     icon: CheckCircle2,
     label: "No account required to start",
-    desc: "Try your first document analysis immediately — no sign-up, no credit card.",
+    desc: "Try your first two analyses immediately — no sign-up, no credit card.",
     color: "text-emerald-500",
   },
 ]

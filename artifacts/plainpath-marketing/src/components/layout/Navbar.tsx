@@ -150,7 +150,7 @@ export function Navbar() {
             className="rounded-full px-5 font-medium shadow-sm hidden lg:flex"
             asChild
           >
-            <a href="/app/analyze">Get the App</a>
+            <a href="/app/analyze">Open App</a>
           </Button>
 
           {/* Mobile hamburger */}
@@ -224,7 +224,7 @@ export function Navbar() {
               className="w-full rounded-xl font-medium"
               asChild
             >
-              <a href="/app/analyze">Get the App</a>
+              <a href="/app/analyze">Open App</a>
             </Button>
           </div>
         </div>
