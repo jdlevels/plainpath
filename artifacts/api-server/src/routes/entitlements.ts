@@ -17,7 +17,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { Router } from "express"
-import { clerkClient } from "@clerk/express"
+import { getAuth, clerkClient } from "@clerk/express"
 import { getSubscriberByEmail, getSubscriberByClerkUserId } from "../lib/billingDb"
 import { PLAN_ENTITLEMENTS, TOOL_ACCESS, normalizePlan, type PlanKey, type ToolKey } from "../lib/planEntitlements"
 import { BILLING_CONFIG } from "../lib/billingConfig"
@@ -46,13 +46,18 @@ function isAdminEmail(email: string): boolean {
 
 // Bootstrap publicMetadata for admin users the first time the entitlements
 // endpoint is called with their Clerk userId. Fire-and-forget — never blocks.
-async function bootstrapAdminMetadata(clerkUserId: string, email: string) {
+//
+// Merge-safe: we spread the existing publicMetadata before writing new keys so
+// any future keys added to the object are never accidentally overwritten.
+async function bootstrapAdminMetadata(clerkUserId: string) {
   try {
     const user = await clerkClient.users.getUser(clerkUserId)
-    const meta = user.publicMetadata as { role?: string; accessTier?: string }
-    if (meta.role === "admin" && meta.accessTier === "pro") return // already set
+    const existing = user.publicMetadata as Record<string, unknown>
+    // Short-circuit if already correct — avoids an unnecessary write.
+    if (existing.role === "admin" && existing.accessTier === "pro") return
+    // Spread existing keys first so only role/accessTier are touched.
     await clerkClient.users.updateUser(clerkUserId, {
-      publicMetadata: { role: "admin", accessTier: "pro" },
+      publicMetadata: { ...existing, role: "admin", accessTier: "pro" },
     })
   } catch {
     // Non-blocking: metadata bootstrap failure never affects the response
@@ -60,12 +65,27 @@ async function bootstrapAdminMetadata(clerkUserId: string, email: string) {
 }
 
 // ─── GET /status ──────────────────────────────────────────────────────────────
-// Returns full entitlement data for the given email.
+// Returns full entitlement data for the requesting user.
+//
+// Security model:
+//   - clerkUserId is sourced from the Clerk session JWT (via getAuth) when an
+//     authenticated session is present. This is the authoritative source.
+//   - If no session is present (email-only restore flow), the client-supplied
+//     clerkUserId from the query string is used as a fallback, but it carries
+//     no elevated privilege — the admin check still requires the email to be
+//     in the server-side ADMIN_EMAILS env var.
+//   - Admin status is determined solely by ADMIN_EMAILS (env var) on the
+//     server. The client cannot assert its own role or accessTier through
+//     this endpoint.
 
 router.get("/status", (req, res) => {
   try {
     const email = String(req.query.email || "").trim().toLowerCase()
-    const clerkUserId = String(req.query.clerkUserId || "").trim() || null
+
+    // Use the session-JWT-validated userId as the authoritative clerkUserId.
+    // This prevents a client from supplying a different user's ID in the query string.
+    const sessionUserId = getAuth(req)?.userId ?? null
+    const clerkUserId = sessionUserId ?? (String(req.query.clerkUserId || "").trim() || null)
 
     if (!email && !clerkUserId) {
       return res.status(400).json({ error: "Missing email or clerkUserId" })
@@ -88,7 +108,7 @@ router.get("/status", (req, res) => {
     if (isAdminEmail(resolvedEmail)) {
       const proEntitlements = PLAN_ENTITLEMENTS["pro"]
       if (clerkUserId) {
-        void bootstrapAdminMetadata(clerkUserId, resolvedEmail)
+        void bootstrapAdminMetadata(clerkUserId)
       }
       return res.json({
         email: resolvedEmail,
