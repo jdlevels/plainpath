@@ -67,39 +67,56 @@ function validatePdf(file: File): string | null {
 function LockedGate() {
   const [, setLocation] = useLocation()
   return (
-    <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center gap-6 max-w-md mx-auto">
-        <div className="w-16 h-16 rounded-2xl bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
-          <Lock className="w-7 h-7 text-teal-500 dark:text-teal-400" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold mb-2">Compare Versions</h1>
-          <p className="text-muted-foreground leading-relaxed">
-            Upload an original PDF and a revised copy. See exactly what changed — side-by-side, with your own audit notes.
-          </p>
-        </div>
-        <div className="flex flex-col gap-2 text-sm text-muted-foreground w-full max-w-xs">
-          {[
-            "Side-by-side PDF workspace",
-            "Grouped change zones with severity",
-            "Manager notes and watchlist",
-            "Sessions saved for reopen",
-          ].map((f) => (
-            <div key={f} className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-teal-500 flex-shrink-0" />
-              <span>{f}</span>
+    <div className="min-h-[calc(100vh-4rem)]">
+      {/* Sticky command bar — consistent with unlocked list/session views */}
+      <div className="sticky top-16 z-20 border-b border-border/70 bg-background/98 backdrop-blur-sm shadow-sm">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center gap-3">
+          <button
+            onClick={() => setLocation("/")}
+            className="shrink-0 p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+            title="Back to Dashboard"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-7 h-7 rounded-lg bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center shrink-0">
+              <ScanSearch className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
             </div>
-          ))}
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-foreground leading-tight">Compare Versions</p>
+              <p className="text-[11px] text-muted-foreground leading-none font-medium">Dashboard</p>
+            </div>
+          </div>
         </div>
-        <Button onClick={() => setLocation("/upgrade")} className="w-full">
-          <Zap className="w-4 h-4 mr-2" /> Upgrade to Pro
-        </Button>
-        <button
-          onClick={() => setLocation("/")}
-          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-        >
-          ← Back to dashboard
-        </button>
+      </div>
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="flex flex-col items-center justify-center min-h-[50vh] text-center gap-6 max-w-md mx-auto">
+          <div className="w-16 h-16 rounded-2xl bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
+            <Lock className="w-7 h-7 text-teal-500 dark:text-teal-400" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold mb-2">Compare Versions</h1>
+            <p className="text-muted-foreground leading-relaxed">
+              Upload an original PDF and a revised copy. See exactly what changed — side-by-side, with your own audit notes.
+            </p>
+          </div>
+          <div className="flex flex-col gap-2 text-sm text-muted-foreground w-full max-w-xs">
+            {[
+              "Side-by-side PDF workspace",
+              "Grouped change zones with severity",
+              "Manager notes and watchlist",
+              "Sessions saved for reopen",
+            ].map((f) => (
+              <div key={f} className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-teal-500 flex-shrink-0" />
+                <span>{f}</span>
+              </div>
+            ))}
+          </div>
+          <Button onClick={() => setLocation("/upgrade")} className="w-full">
+            <Zap className="w-4 h-4 mr-2" /> Upgrade to Pro
+          </Button>
+        </div>
       </div>
     </div>
   )
@@ -634,20 +651,9 @@ function SessionList({
   }
 
   return (
-    <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
-            <ScanSearch className="w-5 h-5 text-teal-600 dark:text-teal-400" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold">Compare Versions</h1>
-            <p className="text-sm text-muted-foreground">Upload two PDFs to see what changed between versions</p>
-          </div>
-        </div>
-        <Button onClick={onNew} className="gap-2 bg-violet-600 hover:bg-violet-700 text-white shadow-sm">
-          <Plus className="w-4 h-4" /> New Comparison
-        </Button>
+    <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="mb-6">
+        <p className="text-sm text-muted-foreground">Upload two PDFs to see exactly what changed between versions.</p>
       </div>
 
       {loading ? (
@@ -816,6 +822,33 @@ export default function CompareVersions() {
   if (view === "new") {
     return (
       <div className="min-h-[calc(100vh-4rem)]">
+        {/* Sticky page-level command bar */}
+        <div className="sticky top-16 z-20 border-b border-border/70 bg-background/98 backdrop-blur-sm shadow-sm">
+          <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center gap-3">
+            <button
+              onClick={() => setLocation("/")}
+              className="shrink-0 p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+              title="Back to Dashboard"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <div className="w-7 h-7 rounded-lg bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center shrink-0">
+                <ScanSearch className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-foreground leading-tight">Compare Versions</p>
+                <p className="text-[11px] text-muted-foreground leading-none font-medium">New Comparison</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setView("list")}
+              className="shrink-0 text-xs text-muted-foreground hover:text-foreground transition-colors font-medium"
+            >
+              My Comparisons
+            </button>
+          </div>
+        </div>
         <IntakeForm
           onCreated={(id) => setLocation(`/compare-versions/${id}`)}
           onCancel={() => setView("list")}
@@ -826,6 +859,34 @@ export default function CompareVersions() {
 
   return (
     <div className="min-h-[calc(100vh-4rem)]">
+      {/* Sticky page-level command bar — persists across list, empty, and tab states */}
+      <div className="sticky top-16 z-20 border-b border-border/70 bg-background/98 backdrop-blur-sm shadow-sm">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center gap-3">
+          <button
+            onClick={() => setLocation("/")}
+            className="shrink-0 p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+            title="Back to Dashboard"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <div className="w-7 h-7 rounded-lg bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center shrink-0">
+              <ScanSearch className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-foreground leading-tight">Compare Versions</p>
+              <p className="text-[11px] text-muted-foreground leading-none font-medium">Dashboard</p>
+            </div>
+          </div>
+          <Button
+            onClick={() => setView("new")}
+            size="sm"
+            className="shrink-0 gap-1.5 bg-violet-600 hover:bg-violet-700 text-white shadow-sm h-8 text-xs px-3"
+          >
+            <Plus className="w-3.5 h-3.5" /> New Comparison
+          </Button>
+        </div>
+      </div>
       <SessionList
         sessions={sessions}
         archivedSessions={archivedSessions}

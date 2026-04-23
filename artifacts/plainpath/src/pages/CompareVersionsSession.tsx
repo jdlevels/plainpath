@@ -7,7 +7,7 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 import {
-  useState, useEffect, useRef, useCallback, useMemo,
+  useState, useEffect, useRef, useCallback, useMemo, memo,
 } from "react"
 import { useLocation } from "wouter"
 import * as pdfjsLib from "pdfjs-dist"
@@ -275,10 +275,13 @@ function MiniPopover({
 
 // ─── PdfPane ───────────────────────────────────────────────────────────────────
 // Manages its own zoom state. Exposes fit-width (default) and percentage zoom.
+// Wrapped in React.memo with a custom comparator so parent state changes that
+// don't affect viewer content (summaryOpen, density, diffNavIdx…) don't
+// cause the expensive page image list to re-render and flash.
 
 type ZoomMode = "fit-width" | "fit-page" | "custom"
 
-function PdfPane({
+const PdfPane = memo(function PdfPane({
   label, fileName, pages, loading, failed, errorMsg,
   accentClass, groups,
   selectedDiffId, hoveredItemIds,
@@ -517,7 +520,27 @@ function PdfPane({
       </div>
     </div>
   )
-}
+}, (prev, next) => {
+  // Only re-render if viewer-relevant props changed.
+  // Comparator returns true = equal = skip re-render.
+  if (prev.pages       !== next.pages)       return false
+  if (prev.loading     !== next.loading)     return false
+  if (prev.failed      !== next.failed)      return false
+  if (prev.errorMsg    !== next.errorMsg)    return false
+  if (prev.groups      !== next.groups)      return false
+  if (prev.jumpPage    !== next.jumpPage)    return false
+  if (prev.selectedDiffId !== next.selectedDiffId) return false
+  // Callback identity — stable when wrapped in useCallback
+  if (prev.onGroupClick !== next.onGroupClick) return false
+  if (prev.onGroupHover !== next.onGroupHover) return false
+  if (prev.onGroupLeave !== next.onGroupLeave) return false
+  // Compare hoveredItemIds by content, not reference
+  if (prev.hoveredItemIds.length !== next.hoveredItemIds.length) return false
+  for (let i = 0; i < prev.hoveredItemIds.length; i++) {
+    if (prev.hoveredItemIds[i] !== next.hoveredItemIds[i]) return false
+  }
+  return true
+})
 
 // ─── SummaryPanel ──────────────────────────────────────────────────────────────
 // Right-side drawer (replaces the old bottom tray).
@@ -1323,8 +1346,9 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
     a.click()
   }
 
-  // ── Jump-to-page ─────────────────────────────────────────────────────────────
-  function handleSummaryJump(origPage: number | null, revPage: number | null) {
+  // ── Jump-to-page ──────────────────────────────────────────────────────────────
+  // Stable — only uses setState setters (always stable refs).
+  const handleSummaryJump = useCallback((origPage: number | null, revPage: number | null) => {
     setJumpOrigPage(null); setJumpRevPage(null)
     setTimeout(() => {
       setJumpOrigPage(origPage)
@@ -1332,21 +1356,20 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
     }, 30)
     if (origPage != null) setActiveTab("original")
     else if (revPage != null) setActiveTab("revised")
-  }
+  }, [])
 
   // ── Selection ─────────────────────────────────────────────────────────────────
-  function selectDiffItem(id: string) {
+  const selectDiffItem = useCallback((id: string) => {
     setSelectedDiffId(id)
     setPopover(null)
     const item = diffItems.find((i) => i.id === id)
     if (item) handleSummaryJump(item.page_original, item.page_revised)
-    // Sync nav index
     const idx = sortedByPage.findIndex((i) => i.id === id)
     if (idx >= 0) setDiffNavIdx(idx)
-  }
+  }, [diffItems, sortedByPage, handleSummaryJump])
 
-  // ── Group click ──────────────────────────────────────────────────────────────
-  function handleGroupClick(zone: CVGroupZone, clientX: number, clientY: number) {
+  // ── Group click ───────────────────────────────────────────────────────────────
+  const handleGroupClick = useCallback((zone: CVGroupZone, clientX: number, clientY: number) => {
     if (zone.itemIds.length === 1) {
       selectDiffItem(zone.itemIds[0])
     } else {
@@ -1355,14 +1378,15 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
         .filter((x): x is CVDiffItem => x != null)
       setPopover({ items, x: clientX, y: clientY })
     }
-  }
+  }, [diffItems, selectDiffItem])
 
-  // ── Hover sync ───────────────────────────────────────────────────────────────
-  function handleGroupHover(zone: CVGroupZone) { setHoveredItemIds(zone.itemIds) }
-  function handleGroupLeave() { setHoveredItemIds([]) }
+  // ── Hover sync — stable; setState setters are always stable refs ─────────────
+  const handleGroupHover = useCallback((zone: CVGroupZone) => setHoveredItemIds(zone.itemIds), [])
+  const handleGroupLeave = useCallback(() => setHoveredItemIds([]), [])
 
-  // ── Severity override ────────────────────────────────────────────────────────
-  function handleSeverityChange(itemId: string, newSev: CVDiffSeverity) {
+  // ── Severity override ─────────────────────────────────────────────────────────
+  // Reads session/diffResultBase via closure — include in deps so it's fresh.
+  const handleSeverityChange = useCallback((itemId: string, newSev: CVDiffSeverity) => {
     setDiffItems((prev) => {
       const next = prev.map((item) => {
         if (item.id !== itemId) return item
@@ -1383,7 +1407,7 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
       }, 800)
       return next
     })
-  }
+  }, [session, diffResultBase])
 
   // ── Diff navigator ────────────────────────────────────────────────────────────
   function jumpToPrevDiff() {
