@@ -52,6 +52,10 @@ PlainPath is a monorepo built with pnpm workspaces, separating frontend and back
 -   Full billing architecture implemented with Stripe for Starter and Pro tiers.
 -   Scaffold for native iOS/Android billing using RevenueCat.
 
+## Deployment Notes
+
+- **Custom domain reattachment / auth changes → republish required**: After reattaching a custom domain in Replit Publishing, or after major Clerk/auth configuration changes (e.g. switching from dev to production keys, resolving a Clerk tenant domain conflict), always trigger a fresh republish from the Replit Publishing panel. This forces Replit to finalize its internal routing table against the current production build and bind the custom domain correctly. Without this step, the domain may resolve to Replit infrastructure but return a "This app isn't live yet" 404 even though DNS and SSL are correctly configured.
+
 ## External Dependencies
 -   **OpenAI**: AI functionalities.
 -   **PostgreSQL**: Primary database (Drizzle ORM).
