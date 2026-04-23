@@ -1431,12 +1431,12 @@ export default function Home() {
                 className="text-2xl md:text-3xl font-bold mb-3 text-foreground"
                 style={{ fontFamily: "var(--font-display)" }}
               >
-                Your documents aren't permanently stored.
+                Your data is never sold or used for AI training.
               </h2>
               <p className="text-muted-foreground leading-relaxed mb-4">
                 We don't sell your data. We don't train AI on your documents.
-                Your contracts, bills, and notices belong to you.
-                We process them to give you answers — then we discard them.
+                For standard analyses, documents are processed in memory and discarded after your results are returned.
+                Pro workspaces (Builder, Compare Versions, Clause Extractor) store your working data so you can access it across sessions — you can delete it at any time.
               </p>
               <div className="flex flex-wrap gap-5 text-sm font-medium text-foreground">
                 {["Not sold", "Not shared", "Not used for training", "Encrypted in transit"].map(item => (

@@ -113,7 +113,7 @@ const TOOLS = [
     href: "/app/redact",
     color: "from-violet-50/80 to-purple-50 dark:from-violet-950/20 dark:to-purple-950/20",
     badge: "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300",
-    badgeLabel: "Free · Starter · Pro",
+    badgeLabel: "Starter · Pro",
     border: "border-violet-200/60 dark:border-violet-900/40",
     iconBg: "bg-violet-100 dark:bg-violet-900/40",
     iconColor: "text-violet-600 dark:text-violet-400",
