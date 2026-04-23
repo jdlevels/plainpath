@@ -1386,27 +1386,26 @@ export default function Home() {
       {/* ════════════════════════════════════════════════
           APP SHOWCASE — web + mobile
       ════════════════════════════════════════════════ */}
-      <section className="py-20 md:py-24 bg-gradient-to-br from-emerald-100/70 via-sky-100/60 to-blue-100/55 dark:bg-transparent border-y border-emerald-200/50 dark:border-transparent">
+      <section id="app-showcase" className="py-20 md:py-24 bg-gradient-to-b from-slate-950 via-[#0c1525] to-slate-950 border-y border-slate-800/50">
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
           <div className="grid lg:grid-cols-2 gap-6 lg:gap-8 items-stretch">
 
-            {/* ── Left: demo panel ── */}
-            <div className="relative order-2 lg:order-1 bg-white/55 dark:bg-card/60 backdrop-blur-sm rounded-2xl border border-white/85 dark:border-border/40 shadow-sm flex items-center justify-center p-6 overflow-hidden min-h-[340px]">
-              <div className="absolute inset-0 bg-gradient-to-tr from-emerald-100/30 dark:from-emerald-900/10 via-blue-50/20 dark:via-blue-900/10 to-transparent rounded-2xl -z-10" />
-              <WebAppDemo />
+            {/* ── Left: live demo panel — no padding, fills fully ── */}
+            <div className="relative order-2 lg:order-1 rounded-2xl overflow-hidden shadow-2xl ring-1 ring-zinc-800/60 min-h-[360px]">
+              <WebAppDemo activeTool={activeDemoTool} onToolChange={setActiveDemoTool} />
             </div>
 
             {/* ── Right: content panel ── */}
             <div className="order-1 lg:order-2 flex">
-              <div className="bg-white/65 dark:bg-card/70 backdrop-blur-md rounded-2xl px-7 py-8 border border-white/90 dark:border-border/40 shadow-sm flex-1 flex flex-col justify-center">
-                <p className="text-xs font-semibold tracking-[0.12em] uppercase text-foreground/60 dark:text-foreground/55 mb-3">Works on Every Device</p>
+              <div className="bg-zinc-900/70 backdrop-blur-md rounded-2xl px-7 py-8 border border-zinc-800/50 shadow-xl flex-1 flex flex-col justify-center">
+                <p className="text-xs font-semibold tracking-[0.12em] uppercase text-zinc-500 mb-3">Works on Every Device</p>
                 <h2
-                  className="text-3xl md:text-4xl font-bold mb-5 text-foreground"
+                  className="text-3xl md:text-4xl font-bold mb-5 text-white"
                   style={{ fontFamily: "var(--font-display)" }}
                 >
                   One platform, every device.
                 </h2>
-                <p className="text-foreground/70 dark:text-foreground/65 mb-7 leading-relaxed">
+                <p className="text-zinc-400 mb-7 leading-relaxed">
                   Available on any device — phone, tablet, or laptop. No app to install — open it in any browser and start immediately.
                 </p>
                 <div className="space-y-4 mb-8">
@@ -1416,10 +1415,10 @@ export default function Home() {
                     { icon: CheckCircle2, text: "Plain English summary + action plan" },
                   ].map(({ icon: Icon, text }, idx) => (
                     <div key={idx} className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-primary/15 dark:bg-primary/20 flex items-center justify-center shrink-0">
+                      <div className="w-8 h-8 rounded-xl bg-primary/20 flex items-center justify-center shrink-0">
                         <Icon className="w-4 h-4 text-primary" />
                       </div>
-                      <span className="text-sm text-foreground font-medium">{text}</span>
+                      <span className="text-sm text-zinc-300 font-medium">{text}</span>
                     </div>
                   ))}
                 </div>

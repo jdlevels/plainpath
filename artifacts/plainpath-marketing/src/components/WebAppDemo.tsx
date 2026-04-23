@@ -1,382 +1,612 @@
 /**
- * WebAppDemo
- * ──────────
- * Looping demo showing all 4 PlainPath tools cycling through.
- * Pure React + Framer Motion — no video files.
+ * WebAppDemo — 8-tool live workspace demo
  *
- * Loop (14 s total, 3.5 s per phase):
- *  Phase 0 — Analyze a Document   (scanning + results)
- *  Phase 1 — Document Trust Check (scam verdict)
- *  Phase 2 — Contract Review      (flagged clauses)
- *  Phase 3 — Build a Contract     (fields populating)
+ * Controlled mode: pass activeTool (0–7) + onToolChange from Home.tsx's
+ * shared demo rotation state so all surfaces stay in sync.
+ * Uncontrolled mode: self-rotates through all 8 tools every 3 500 ms.
  *
- * Reduced-motion: renders Phase 0 results as a static snapshot.
+ * Dark-themed — designed to sit inside the dark "One platform" section.
  */
 
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 import {
-  FileText,
-  CheckCircle2,
-  AlertTriangle,
-  Shield,
-  ShieldAlert,
-  Scale,
-  FileSignature,
-  Download,
-  Sparkles,
+  AlertTriangle, CheckCircle2, Shield, ShieldAlert, Scale,
+  FileText, EyeOff, FileSignature, GitCompare, ListChecks,
+  PenLine, Download, Sparkles, Clock,
 } from "lucide-react"
 
-const PHASE_MS = 3500
-const PHASES = 4
+const TOOL_MS = 3500
 
-const rise = {
-  hidden:  { opacity: 0, y: 8 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.16, 1, 0.3, 1] } },
-  exit:    { opacity: 0, transition: { duration: 0.28 } },
+const slide = {
+  hidden:  { opacity: 0, y: 8  },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.42, ease: [0.16, 1, 0.3, 1] } },
+  exit:    { opacity: 0, y: -6, transition: { duration: 0.26 } },
 }
 
-/* ─── Tool tab config ─────────────────────────────────────── */
-const TABS = [
-  { label: "Analyze",     icon: FileText,     phase: 0 },
-  { label: "Trust Check", icon: ShieldAlert,  phase: 1 },
-  { label: "Review",      icon: Scale,        phase: 2 },
-  { label: "Build",       icon: FileSignature,phase: 3 },
-]
+/* ─── Tool config ────────────────────────────────────────────── */
+const TOOLS = [
+  { id: 0, shortName: "Analyze",  icon: FileText,      hex: "#3b82f6", iconHex: "#93c5fd", docName: "Lease Agreement — Unit 4B.pdf",  docMeta: "847 words · 12 pages",   badge: { label: "3 issues",      dot: "#f59e0b" } },
+  { id: 1, shortName: "Trust",    icon: ShieldAlert,   hex: "#ef4444", iconHex: "#fca5a5", docName: "IRS Notice — CP2000.pdf",        docMeta: "312 words · 2 pages",    badge: { label: "High risk",     dot: "#ef4444" } },
+  { id: 2, shortName: "Build",    icon: PenLine,       hex: "#10b981", iconHex: "#6ee7b7", docName: "Freelance Services Agreement",   docMeta: "New contract · 6 fields", badge: { label: "Building…",     dot: "#10b981" } },
+  { id: 3, shortName: "Review",   icon: Scale,         hex: "#f59e0b", iconHex: "#fcd34d", docName: "Employment Agreement.pdf",       docMeta: "1,240 words · 8 pages",  badge: { label: "Score: 28/100", dot: "#f59e0b" } },
+  { id: 4, shortName: "Redact",   icon: EyeOff,        hex: "#8b5cf6", iconHex: "#c4b5fd", docName: "Patient Intake Form.pdf",        docMeta: "423 words · 3 pages",    badge: { label: "3 items",       dot: "#8b5cf6" } },
+  { id: 5, shortName: "Sign",     icon: FileSignature, hex: "#6366f1", iconHex: "#a5b4fc", docName: "Consulting Agreement Final.pdf", docMeta: "1,820 words · 6 pages",  badge: { label: "Awaiting",      dot: "#6366f1" } },
+  { id: 6, shortName: "Compare",  icon: GitCompare,    hex: "#14b8a6", iconHex: "#5eead4", docName: "NDA v1.pdf → NDA v2.pdf",       docMeta: "2 versions · 14 changes", badge: { label: "1 critical",    dot: "#ef4444" } },
+  { id: 7, shortName: "Extract",  icon: ListChecks,    hex: "#c026d3", iconHex: "#f0abfc", docName: "Lease Agreement.pdf",           docMeta: "2,840 words · 12 pages", badge: { label: "6 obligations", dot: "#c026d3" } },
+] as const
 
-/* ─── Mini nav bar ─────────────────────────────────────────── */
-function MiniNav({ activePhase }: { activePhase: number }) {
+type ToolId = 0|1|2|3|4|5|6|7
+
+/* ─── App nav bar ────────────────────────────────────────────── */
+function MiniNav({
+  active,
+  onSelect,
+}: {
+  active: ToolId
+  onSelect: (id: ToolId) => void
+}) {
+  const tool = TOOLS[active]
   return (
-    <div className="flex items-center gap-1.5 px-3 py-2 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 shrink-0">
-      <div className="flex items-center gap-1.5 mr-2 shrink-0">
-        <div className="w-4 h-4 bg-primary rounded flex items-center justify-center shrink-0">
-          <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" className="w-2.5 h-2.5">
+    <div className="flex items-center gap-1 px-3 py-2 border-b border-zinc-800 shrink-0 bg-zinc-950">
+      {/* Logo */}
+      <div className="flex items-center gap-1.5 mr-1 shrink-0">
+        <div className="w-5 h-5 bg-primary rounded flex items-center justify-center shrink-0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" className="w-3 h-3">
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
         </div>
-        <span className="text-[10px] font-bold text-zinc-800 dark:text-zinc-100">PlainPath</span>
+        <span className="text-[10px] font-bold text-zinc-200">PlainPath</span>
       </div>
-      {TABS.map(({ label, phase }) => (
-        <motion.span
-          key={label}
-          animate={{
-            backgroundColor: activePhase === phase ? "rgb(var(--primary) / 0.1)" : "transparent",
-            color: activePhase === phase ? "rgb(var(--primary))" : "",
-          }}
-          transition={{ duration: 0.3 }}
-          className={`text-[9px] font-medium px-1.5 py-0.5 rounded-md whitespace-nowrap transition-colors ${
-            activePhase === phase
-              ? "bg-primary/10 text-primary"
-              : "text-zinc-400 dark:text-zinc-500"
-          }`}
-        >
-          {label}
-        </motion.span>
-      ))}
-      <div className="ml-auto w-5 h-5 rounded-full bg-zinc-200 dark:bg-zinc-700 shrink-0" />
+
+      {/* Tool tabs */}
+      {TOOLS.map((t) => {
+        const Icon = t.icon
+        const isActive = t.id === active
+        return (
+          <button
+            key={t.id}
+            onClick={() => onSelect(t.id as ToolId)}
+            className="relative flex items-center justify-center rounded-md transition-all shrink-0"
+            style={{
+              width: 26,
+              height: 22,
+              background: isActive ? `${t.hex}22` : "transparent",
+            }}
+            title={t.shortName}
+            type="button"
+          >
+            <Icon
+              className="transition-colors"
+              style={{
+                width: 11,
+                height: 11,
+                color: isActive ? t.hex : "#52525b",
+              }}
+            />
+            {isActive && (
+              <motion.div
+                layoutId="nav-indicator"
+                className="absolute -bottom-[1px] left-1/2 -translate-x-1/2 rounded-full"
+                style={{ width: 14, height: 2, background: t.hex }}
+                transition={{ type: "spring", stiffness: 500, damping: 40 }}
+              />
+            )}
+          </button>
+        )
+      })}
+
+      {/* Active label */}
+      <span
+        className="text-[9px] font-semibold ml-1 hidden sm:block shrink-0"
+        style={{ color: tool.hex }}
+      >
+        {tool.shortName}
+      </span>
+
+      {/* Spacer + avatar */}
+      <div className="flex-1" />
+      <div className="w-5 h-5 rounded-full bg-zinc-700 shrink-0" />
     </div>
   )
 }
 
-/* ─── Document header ─────────────────────────────────────── */
-const DOC_HEADERS = [
-  { name: "Lease Agreement — Unit 4B.pdf",    meta: "847 words · 12 pages", icon: FileText,      iconBg: "bg-blue-50 dark:bg-blue-900/30",    iconColor: "text-blue-600 dark:text-blue-400",    badge: { label: "3 issues",     bg: "bg-amber-50 dark:bg-amber-900/20",  border: "border-amber-200 dark:border-amber-800/40",  dot: "bg-amber-500",   text: "text-amber-700 dark:text-amber-400"  } },
-  { name: "IRS Notice — CP2000.pdf",          meta: "312 words · 2 pages",  icon: ShieldAlert,   iconBg: "bg-red-50 dark:bg-red-900/30",      iconColor: "text-red-600 dark:text-red-400",      badge: { label: "High risk",    bg: "bg-red-50 dark:bg-red-900/20",      border: "border-red-200 dark:border-red-800/40",      dot: "bg-red-500",     text: "text-red-700 dark:text-red-400"      } },
-  { name: "Employment Agreement.pdf",         meta: "1,240 words · 8 pages",icon: Scale,         iconBg: "bg-amber-50 dark:bg-amber-900/30",  iconColor: "text-amber-600 dark:text-amber-400",  badge: { label: "2 clauses",    bg: "bg-amber-50 dark:bg-amber-900/20",  border: "border-amber-200 dark:border-amber-800/40",  dot: "bg-amber-500",   text: "text-amber-700 dark:text-amber-400"  } },
-  { name: "Freelance Services Agreement",     meta: "New contract · 6 fields",icon: FileSignature,iconBg: "bg-emerald-50 dark:bg-emerald-900/30",iconColor: "text-emerald-600 dark:text-emerald-400",badge: { label: "Building…",  bg: "bg-primary/5 dark:bg-primary/10",   border: "border-primary/20",                          dot: "bg-primary",     text: "text-primary"                        } },
-]
-
-function DocHeader({ phase }: { phase: number }) {
-  const h = DOC_HEADERS[phase]
-  const Icon = h.icon
+/* ─── Doc header bar ─────────────────────────────────────────── */
+function DocHeader({ toolId }: { toolId: ToolId }) {
+  const t = TOOLS[toolId]
+  const Icon = t.icon
   return (
     <AnimatePresence mode="wait">
       <motion.div
-        key={phase}
-        variants={rise}
-        initial="hidden"
-        animate="visible"
-        exit="exit"
-        className="flex items-center gap-2.5 px-4 py-2.5 bg-[#F8F7F4] dark:bg-zinc-900 border-b border-zinc-200/70 dark:border-zinc-800 shrink-0"
+        key={toolId}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.3 }}
+        className="flex items-center gap-2.5 px-4 py-2.5 border-b border-zinc-800 bg-[#0d0d12] shrink-0"
       >
-        <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${h.iconBg}`}>
-          <Icon className={`w-3.5 h-3.5 ${h.iconColor}`} />
+        <div
+          className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+          style={{ background: `${t.hex}1a` }}
+        >
+          <Icon style={{ width: 13, height: 13, color: t.hex }} />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[11px] font-semibold text-zinc-800 dark:text-zinc-200 truncate leading-tight">{h.name}</p>
-          <p className="text-[9px] text-zinc-400 dark:text-zinc-500 leading-tight">{h.meta}</p>
+          <p className="text-[11px] font-semibold text-zinc-200 truncate leading-tight">{t.docName}</p>
+          <p className="text-[9px] text-zinc-500 leading-tight">{t.docMeta}</p>
         </div>
-        <div className={`flex items-center gap-1.5 border rounded-full px-2.5 py-0.5 shrink-0 ${h.badge.bg} ${h.badge.border}`}>
+        <div
+          className="flex items-center gap-1.5 rounded-full px-2.5 py-0.5 shrink-0"
+          style={{
+            background: `${t.badge.dot}1a`,
+            border: `1px solid ${t.badge.dot}44`,
+          }}
+        >
           <motion.div
-            animate={phase === 3 ? { opacity: [1, 0.3, 1] } : {}}
+            animate={toolId === 2 ? { opacity: [1, 0.3, 1] } : {}}
             transition={{ duration: 1.1, repeat: Infinity, ease: "easeInOut" }}
-            className={`w-1.5 h-1.5 rounded-full ${h.badge.dot}`}
+            className="w-1.5 h-1.5 rounded-full shrink-0"
+            style={{ background: t.badge.dot }}
           />
-          <span className={`text-[9px] font-semibold whitespace-nowrap ${h.badge.text}`}>{h.badge.label}</span>
+          <span className="text-[9px] font-semibold whitespace-nowrap" style={{ color: t.badge.dot }}>
+            {t.badge.label}
+          </span>
         </div>
       </motion.div>
     </AnimatePresence>
   )
 }
 
-/* ─── Left pane: doc text lines ────────────────────────────── */
-function DocLines({ phase }: { phase: number }) {
-  const highlighted = phase === 0 || phase === 2
+/* ─── Doc panes ──────────────────────────────────────────────── */
+
+function DocLines({ highlighted = false, hlColor = "rgba(245,158,11,0.35)" }: { highlighted?: boolean; hlColor?: string }) {
   return (
     <div className="space-y-1.5">
-      <p className="text-[9px] font-semibold tracking-widest uppercase text-zinc-400 dark:text-zinc-600 mb-2">
-        {phase === 3 ? "Contract Fields" : "Document Preview"}
-      </p>
-      {phase === 3 ? (
-        /* Contract builder — field rows */
-        <div className="space-y-2">
-          {[
-            { label: "Party A", done: true },
-            { label: "Party B", done: true },
-            { label: "Scope of work", done: true },
-            { label: "Payment terms", done: false },
-          ].map(({ label, done }, i) => (
-            <motion.div
-              key={label}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: i * 0.15, duration: 0.35 }}
-              className="flex items-center gap-1.5"
-            >
-              <div className={`w-3 h-3 rounded border flex items-center justify-center shrink-0 ${done ? "bg-emerald-500 border-emerald-500" : "border-zinc-300 dark:border-zinc-600"}`}>
-                {done && (
-                  <svg viewBox="0 0 12 12" className="w-1.5 h-1.5" fill="none">
-                    <path d="M2.5 6L5 8.5L9.5 4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                )}
-              </div>
-              <div className={`h-[5px] flex-1 rounded-full ${done ? "bg-emerald-200 dark:bg-emerald-800/50" : "bg-zinc-200 dark:bg-zinc-700"}`} />
-              <span className="text-[8px] text-zinc-400 shrink-0">{label}</span>
-            </motion.div>
+      {[80, 92, 68].map((w, i) => (
+        <div key={i} className="h-[5px] rounded-full bg-zinc-800" style={{ width: `${w}%` }} />
+      ))}
+      <div
+        className="rounded-md p-1.5 border transition-all"
+        style={{ background: highlighted ? hlColor : "transparent", borderColor: highlighted ? hlColor : "#27272a" }}
+      >
+        <div className="space-y-1">
+          {[88, 70].map((w, i) => (
+            <div key={i} className="h-[5px] rounded-full" style={{ width: `${w}%`, background: highlighted ? "rgba(255,255,255,0.18)" : "#3f3f46" }} />
           ))}
         </div>
-      ) : (
-        /* Document text lines */
-        <>
-          {[80, 92, 68, 85].map((w, i) => (
-            <div key={i} className="h-[5px] rounded-full bg-zinc-200 dark:bg-zinc-700" style={{ width: `${w}%` }} />
-          ))}
-          <motion.div
-            animate={{
-              backgroundColor: highlighted ? "rgb(254 243 199)" : "rgb(244 244 245)",
-              borderColor: highlighted ? "rgb(252 211 77)" : "rgb(228 228 231)",
-            }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-            className="rounded-lg border p-1.5 mt-1"
-            style={{ backgroundColor: "rgb(244 244 245)", borderColor: "rgb(228 228 231)" }}
-          >
-            <div className="space-y-1">
-              {[90, 72].map((w, i) => (
-                <div key={i} className="h-[5px] rounded-full" style={{ width: `${w}%`, backgroundColor: highlighted ? "rgb(252 211 77 / 0.55)" : "rgb(212 212 216)" }} />
-              ))}
-            </div>
-          </motion.div>
-          <div className="space-y-1.5 pt-0.5">
-            {[60, 75, 88].map((w, i) => (
-              <div key={i} className="h-[5px] rounded-full bg-zinc-200 dark:bg-zinc-700" style={{ width: `${w}%` }} />
-            ))}
-          </div>
-        </>
-      )}
+      </div>
+      {[60, 75, 88, 50].map((w, i) => (
+        <div key={i} className="h-[5px] rounded-full bg-zinc-800" style={{ width: `${w}%` }} />
+      ))}
     </div>
   )
 }
 
-/* ─── Scan line (phase 0 only) ──────────────────────────────── */
-function ScanLine() {
+function RedactedDocLines() {
+  const rows = [
+    { w: 72, r: false }, { w: 88, r: false }, { w: 55, r: true },
+    { w: 100, r: false }, { w: 90, r: false }, { w: 42, r: true },
+    { w: 82, r: false }, { w: 100, r: false }, { w: 60, r: true },
+    { w: 70, r: false },
+  ]
   return (
-    <motion.div
-      initial={{ top: "10%" }}
-      animate={{ top: "75%" }}
-      transition={{ duration: 3, ease: "easeInOut" }}
-      className="absolute left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-primary/30 to-transparent pointer-events-none"
-      style={{ position: "absolute" }}
-    />
+    <div className="space-y-1.5">
+      {rows.map(({ w, r }, i) => (
+        <div key={i} className={`h-[5px] rounded-full ${r ? "bg-zinc-200" : "bg-zinc-800"}`} style={{ width: `${w}%` }} />
+      ))}
+    </div>
   )
 }
 
-/* ─── Phase 0 right: Analyze results ───────────────────────── */
-function AnalyzeResults() {
-  const items = [
-    { icon: AlertTriangle, label: "3 risks flagged",        color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-900/20",    border: "border-amber-200 dark:border-amber-800/40"    },
-    { icon: Shield,        label: "No-notice entry clause", color: "text-red-600 dark:text-red-400",     bg: "bg-red-50 dark:bg-red-900/20",        border: "border-red-200 dark:border-red-800/40"        },
-    { icon: CheckCircle2,  label: "2 protections confirmed",color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-900/20", border: "border-emerald-200 dark:border-emerald-800/40" },
+function DiffDocLines() {
+  const lines = [
+    { type: "same",    w: 82 }, { type: "same",    w: 66 },
+    { type: "removed", w: 90 }, { type: "added",   w: 90 },
+    { type: "same",    w: 75 }, { type: "same",    w: 60 },
+    { type: "same",    w: 88 },
   ]
   return (
-    <motion.div key="analyze" variants={rise} initial="hidden" animate="visible" exit="exit" className="space-y-2">
-      <p className="text-[9px] font-semibold tracking-widest uppercase text-zinc-400 dark:text-zinc-600 mb-2">Analysis Summary</p>
-      {items.map(({ icon: Icon, label, color, bg, border }, i) => (
+    <div className="space-y-1">
+      {lines.map(({ type, w }, i) => (
+        <div key={i} className="flex items-center gap-1.5">
+          <span className="text-[9px] font-mono w-2.5 shrink-0" style={{ color: type === "removed" ? "#ef4444" : type === "added" ? "#10b981" : "transparent" }}>
+            {type === "removed" ? "−" : type === "added" ? "+" : "·"}
+          </span>
+          <div
+            className="h-[5px] rounded-full"
+            style={{
+              width: `${w}%`,
+              background: type === "removed" ? "rgba(239,68,68,0.3)" : type === "added" ? "rgba(16,185,129,0.3)" : "#3f3f46",
+            }}
+          />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function WizardDocLines() {
+  const fields = [
+    { label: "Party A", done: true },
+    { label: "Party B", done: true },
+    { label: "Scope of work", done: true },
+    { label: "Payment terms", done: false },
+  ]
+  return (
+    <div className="space-y-2">
+      {fields.map(({ label, done }, i) => (
         <motion.div
           key={label}
-          initial={{ opacity: 0, x: -5 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: i * 0.12, duration: 0.35 }}
-          className={`flex items-center gap-2 p-2 rounded-lg border ${bg} ${border}`}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: i * 0.12, duration: 0.3 }}
+          className="flex items-center gap-1.5"
         >
-          <Icon className={`w-3 h-3 shrink-0 ${color}`} />
-          <span className={`text-[10px] font-medium leading-tight ${color}`}>{label}</span>
+          <div
+            className="w-3 h-3 rounded border flex items-center justify-center shrink-0"
+            style={{ background: done ? "#10b981" : "transparent", borderColor: done ? "#10b981" : "#3f3f46" }}
+          >
+            {done && (
+              <svg viewBox="0 0 12 12" className="w-1.5 h-1.5" fill="none">
+                <path d="M2.5 6L5 8.5L9.5 4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            )}
+          </div>
+          <div className="h-[5px] flex-1 rounded-full" style={{ background: done ? "rgba(16,185,129,0.25)" : "#3f3f46" }} />
+          <span className="text-[8px] text-zinc-500 shrink-0">{label}</span>
         </motion.div>
       ))}
+    </div>
+  )
+}
+
+function DocPane({ toolId }: { toolId: ToolId }) {
+  const t = TOOLS[toolId]
+  return (
+    <div className="relative h-full px-3 pt-3 overflow-hidden border-r border-zinc-800">
+      <p className="text-[9px] font-semibold tracking-widest uppercase mb-2.5" style={{ color: "#52525b" }}>
+        {toolId === 2 ? "Contract Fields" : toolId === 6 ? "Version Diff" : "Document Preview"}
+      </p>
+      <AnimatePresence mode="wait">
+        <motion.div key={toolId} variants={slide} initial="hidden" animate="visible" exit="exit">
+          {toolId === 2 ? <WizardDocLines /> :
+           toolId === 4 ? <RedactedDocLines /> :
+           toolId === 6 ? <DiffDocLines /> :
+           <DocLines
+             highlighted={[0, 1, 3, 7].includes(toolId)}
+             hlColor={
+               toolId === 1 ? "rgba(239,68,68,0.25)" :
+               toolId === 7 ? "rgba(192,38,211,0.25)" :
+               "rgba(245,158,11,0.25)"
+             }
+           />}
+        </motion.div>
+      </AnimatePresence>
+      {toolId === 0 && (
+        <motion.div
+          key="scan"
+          initial={{ top: "10%" }}
+          animate={{ top: "80%" }}
+          transition={{ duration: 3.2, ease: "easeInOut" }}
+          className="absolute left-0 right-0 pointer-events-none"
+          style={{ height: 1, background: "linear-gradient(90deg,transparent,rgba(59,130,246,0.35),transparent)" }}
+        />
+      )}
+      <div className="absolute bottom-0 left-0 right-0 h-8 pointer-events-none" style={{ background: "linear-gradient(to top, #0a0a0f, transparent)" }} />
+    </div>
+  )
+}
+
+/* ─── Results panes ──────────────────────────────────────────── */
+
+function ResultRow({
+  icon: Icon,
+  label,
+  hex,
+  delay = 0,
+}: {
+  icon: React.ElementType
+  label: string
+  hex: string
+  delay?: number
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -5 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay, duration: 0.32 }}
+      className="flex items-center gap-2 p-1.5 rounded-lg"
+      style={{ background: `${hex}18`, border: `1px solid ${hex}30` }}
+    >
+      <Icon style={{ width: 11, height: 11, color: hex }} className="shrink-0" />
+      <span className="text-[10px] font-medium leading-tight" style={{ color: hex }}>{label}</span>
     </motion.div>
   )
 }
 
-/* ─── Phase 1 right: Trust Check verdict ───────────────────── */
-function TrustCheckResults() {
+function ResultsAnalyze() {
+  return (
+    <div className="space-y-2">
+      <p className="text-[9px] font-semibold tracking-widest uppercase text-zinc-600 mb-2">Analysis Summary</p>
+      <ResultRow icon={AlertTriangle} label="3 risks flagged"         hex="#f59e0b" delay={0}    />
+      <ResultRow icon={Shield}        label="No-notice entry clause"   hex="#ef4444" delay={0.1}  />
+      <ResultRow icon={CheckCircle2}  label="2 protections confirmed"  hex="#10b981" delay={0.2}  />
+    </div>
+  )
+}
+
+function ResultsTrustCheck() {
   const flags = ["Requests payment via gift card", "Urgent language + threats", "Unverified sender address"]
   return (
-    <motion.div key="trust" variants={rise} initial="hidden" animate="visible" exit="exit" className="space-y-2">
-      <p className="text-[9px] font-semibold tracking-widest uppercase text-zinc-400 dark:text-zinc-600 mb-2">Trust Verdict</p>
-      <motion.div
-        initial={{ opacity: 0, scale: 0.96 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.4 }}
-        className="flex items-center gap-2 p-2 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/40 mb-2"
-      >
-        <ShieldAlert className="w-3.5 h-3.5 text-red-600 dark:text-red-400 shrink-0" />
-        <span className="text-[10px] font-bold text-red-700 dark:text-red-400">Scam Detected — Do not pay</span>
+    <div className="space-y-2">
+      <p className="text-[9px] font-semibold tracking-widest uppercase text-zinc-600 mb-2">Trust Verdict</p>
+      <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.38 }}
+        className="flex items-center gap-2 p-2 rounded-lg"
+        style={{ background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)" }}>
+        <ShieldAlert style={{ width: 12, height: 12, color: "#ef4444" }} className="shrink-0" />
+        <span className="text-[10px] font-bold" style={{ color: "#ef4444" }}>Scam Detected — Do not pay</span>
       </motion.div>
       <div className="space-y-1.5">
         {flags.map((f, i) => (
-          <motion.div
-            key={f}
-            initial={{ opacity: 0, x: -4 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.15 + i * 0.1, duration: 0.3 }}
-            className="flex items-start gap-1.5"
-          >
-            <div className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0 mt-1" />
-            <span className="text-[9px] text-zinc-600 dark:text-zinc-400 leading-snug">{f}</span>
+          <motion.div key={f} initial={{ opacity: 0, x: -4 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15 + i * 0.1 }}
+            className="flex items-start gap-1.5">
+            <div className="w-1.5 h-1.5 rounded-full shrink-0 mt-[3px]" style={{ background: "#ef4444" }} />
+            <span className="text-[9px] text-zinc-400 leading-snug">{f}</span>
           </motion.div>
         ))}
       </div>
-    </motion.div>
+    </div>
   )
 }
 
-/* ─── Phase 2 right: Contract Review ───────────────────────── */
-function ContractReviewResults() {
-  const clauses = [
-    { label: "5-yr global non-compete",   severity: "Unfair",   color: "text-red-600 dark:text-red-400",   bg: "bg-red-50 dark:bg-red-900/20",    border: "border-red-200 dark:border-red-800/40"    },
-    { label: "No severance on termination",severity: "Missing", color: "text-amber-600 dark:text-amber-400",bg: "bg-amber-50 dark:bg-amber-900/20",border: "border-amber-200 dark:border-amber-800/40" },
-  ]
+function ResultsBuild() {
   return (
-    <motion.div key="review" variants={rise} initial="hidden" animate="visible" exit="exit" className="space-y-2">
-      <p className="text-[9px] font-semibold tracking-widest uppercase text-zinc-400 dark:text-zinc-600 mb-2">Contract Review</p>
-      {clauses.map(({ label, severity, color, bg, border }, i) => (
-        <motion.div
-          key={label}
-          initial={{ opacity: 0, x: -5 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: i * 0.15, duration: 0.35 }}
-          className={`p-2 rounded-lg border ${bg} ${border}`}
-        >
-          <div className="flex items-center gap-1.5 mb-1">
-            <AlertTriangle className={`w-2.5 h-2.5 shrink-0 ${color}`} />
-            <span className={`text-[9px] font-bold uppercase tracking-wide ${color}`}>{severity}</span>
-          </div>
-          <p className="text-[9px] text-zinc-600 dark:text-zinc-400 leading-snug ml-4">{label}</p>
-        </motion.div>
-      ))}
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.45, duration: 0.4 }}
-        className="text-[9px] text-primary font-medium flex items-center gap-1 mt-1"
-      >
-        <Sparkles className="w-2.5 h-2.5" /> Negotiation language included
-      </motion.p>
-    </motion.div>
-  )
-}
-
-/* ─── Phase 3 right: Contract Builder ──────────────────────── */
-function ContractBuilderResults() {
-  return (
-    <motion.div key="build" variants={rise} initial="hidden" animate="visible" exit="exit" className="space-y-2">
-      <p className="text-[9px] font-semibold tracking-widest uppercase text-zinc-400 dark:text-zinc-600 mb-2">Contract Ready</p>
-      <motion.div
-        initial={{ opacity: 0, scale: 0.97 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.4 }}
-        className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/40"
-      >
+    <div className="space-y-2">
+      <p className="text-[9px] font-semibold tracking-widest uppercase text-zinc-600 mb-2">Contract Ready</p>
+      <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.38 }}
+        className="p-2 rounded-lg"
+        style={{ background: "rgba(16,185,129,0.15)", border: "1px solid rgba(16,185,129,0.3)" }}>
         <div className="flex items-center gap-1.5 mb-1.5">
-          <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-          <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400">Freelance Agreement</span>
+          <CheckCircle2 style={{ width: 11, height: 11, color: "#10b981" }} />
+          <span className="text-[10px] font-bold" style={{ color: "#10b981" }}>Freelance Agreement</span>
         </div>
-        <div className="space-y-1 ml-4">
-          {["6 clauses drafted", "Gap analysis complete"].map((t, i) => (
-            <p key={t} className="text-[9px] text-emerald-700 dark:text-emerald-400">{t}</p>
+        <div className="space-y-0.5 ml-4">
+          {["6 clauses drafted", "Gap analysis complete", "IP & revisions included"].map((t, i) => (
+            <p key={t} className="text-[9px] text-zinc-400">{t}</p>
           ))}
         </div>
       </motion.div>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.3, duration: 0.35 }}
-        className="flex items-center gap-1.5 p-2 rounded-lg bg-primary/5 dark:bg-primary/10 border border-primary/20"
-      >
-        <Download className="w-3 h-3 text-primary" />
-        <span className="text-[10px] font-semibold text-primary">Download as PDF / Word</span>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
+        className="flex items-center gap-1.5 p-2 rounded-lg"
+        style={{ background: "rgba(59,130,246,0.12)", border: "1px solid rgba(59,130,246,0.25)" }}>
+        <Download style={{ width: 11, height: 11, color: "#3b82f6" }} />
+        <span className="text-[10px] font-semibold" style={{ color: "#3b82f6" }}>Download as PDF / Word</span>
       </motion.div>
-    </motion.div>
+    </div>
   )
 }
 
-/* ─── Main component ───────────────────────────────────────── */
-export function WebAppDemo() {
-  const [phase, setPhase] = useState(0)
+function ResultsReview() {
+  const clauses = [
+    { label: "5-yr global non-compete",    severity: "Unfair",   hex: "#ef4444" },
+    { label: "No severance on termination",severity: "Missing",  hex: "#f59e0b" },
+  ]
+  return (
+    <div className="space-y-2">
+      <p className="text-[9px] font-semibold tracking-widest uppercase text-zinc-600 mb-2">Contract Review</p>
+      <div className="flex items-center gap-3 p-2 rounded-lg mb-1" style={{ background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.25)" }}>
+        <div>
+          <p className="text-[9px] text-zinc-500">Fairness score</p>
+          <p className="text-[22px] font-black leading-none" style={{ color: "#f59e0b" }}>28</p>
+          <p className="text-[9px]" style={{ color: "#f59e0b" }}>/100</p>
+        </div>
+        <div className="flex-1">
+          <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(245,158,11,0.15)" }}>
+            <div className="h-full rounded-full" style={{ width: "28%", background: "#f59e0b" }} />
+          </div>
+          <p className="text-[9px] text-zinc-500 mt-1">Heavily one-sided</p>
+        </div>
+      </div>
+      {clauses.map(({ label, severity, hex }, i) => (
+        <motion.div key={label} initial={{ opacity: 0, x: -5 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.12 }}
+          className="p-1.5 rounded-lg" style={{ background: `${hex}15`, border: `1px solid ${hex}30` }}>
+          <div className="flex items-center gap-1 mb-0.5">
+            <AlertTriangle style={{ width: 9, height: 9, color: hex }} />
+            <span className="text-[8px] font-bold uppercase tracking-wide" style={{ color: hex }}>{severity}</span>
+          </div>
+          <p className="text-[9px] text-zinc-400 ml-3.5 leading-snug">{label}</p>
+        </motion.div>
+      ))}
+      <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
+        className="text-[9px] font-medium flex items-center gap-1 mt-1" style={{ color: "#3b82f6" }}>
+        <Sparkles style={{ width: 9, height: 9 }} /> Negotiation language included
+      </motion.p>
+    </div>
+  )
+}
+
+function ResultsRedact() {
+  const items = ["SSN — ███-██-████", "Date of Birth — ██/██/████", "Insurance # — ███████████"]
+  return (
+    <div className="space-y-2">
+      <p className="text-[9px] font-semibold tracking-widest uppercase text-zinc-600 mb-2">Detected Items</p>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-1.5 rounded-lg" style={{ background: "rgba(139,92,246,0.15)", border: "1px solid rgba(139,92,246,0.3)" }}>
+        <span className="text-[10px] font-bold" style={{ color: "#8b5cf6" }}>3 PII items auto-detected</span>
+      </motion.div>
+      <div className="space-y-1.5">
+        {items.map((item, i) => (
+          <motion.div key={item} initial={{ opacity: 0, x: -4 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 + i * 0.1 }}
+            className="flex items-center justify-between gap-2 p-1.5 rounded-lg" style={{ background: "#111118", border: "1px solid #27272a" }}>
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-2 rounded-sm bg-zinc-200 shrink-0" />
+              <span className="text-[8px] font-mono text-zinc-400">{item}</span>
+            </div>
+            <span className="text-[8px] font-semibold shrink-0" style={{ color: "#8b5cf6" }}>Approve</span>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function ResultsSignature() {
+  return (
+    <div className="space-y-2">
+      <p className="text-[9px] font-semibold tracking-widest uppercase text-zinc-600 mb-2">Signature Status</p>
+      <motion.div initial={{ opacity: 0, x: -4 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 }}
+        className="flex items-center gap-2 p-2 rounded-lg" style={{ background: "rgba(16,185,129,0.15)", border: "1px solid rgba(16,185,129,0.3)" }}>
+        <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ background: "#10b981" }}>
+          <CheckCircle2 style={{ width: 11, height: 11, color: "white" }} />
+        </div>
+        <div>
+          <p className="text-[10px] font-semibold" style={{ color: "#10b981" }}>Sarah Chen — Client</p>
+          <p className="text-[9px] text-zinc-500">Signed · May 2, 2:34 PM</p>
+        </div>
+      </motion.div>
+      <motion.div initial={{ opacity: 0, x: -4 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.18 }}
+        className="flex items-center gap-2 p-2 rounded-lg" style={{ background: "rgba(99,102,241,0.15)", border: "1px solid rgba(99,102,241,0.3)" }}>
+        <div className="w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0" style={{ borderColor: "#6366f1" }}>
+          <Clock style={{ width: 9, height: 9, color: "#6366f1" }} />
+        </div>
+        <div>
+          <p className="text-[10px] font-semibold" style={{ color: "#6366f1" }}>Marcus Lee — Contractor</p>
+          <p className="text-[9px] text-zinc-500">Awaiting signature</p>
+        </div>
+      </motion.div>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
+        className="flex items-center gap-1.5 p-1.5 rounded-lg" style={{ background: "#111118", border: "1px solid #27272a" }}>
+        <FileSignature style={{ width: 10, height: 10, color: "#6366f1" }} />
+        <span className="text-[9px] text-zinc-400">Secure signing link sent via email</span>
+      </motion.div>
+    </div>
+  )
+}
+
+function ResultsCompare() {
+  return (
+    <div className="space-y-2">
+      <p className="text-[9px] font-semibold tracking-widest uppercase text-zinc-600 mb-2">Change Summary</p>
+      <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }}
+        className="flex items-center gap-2 p-2 rounded-lg" style={{ background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)" }}>
+        <AlertTriangle style={{ width: 12, height: 12, color: "#ef4444" }} />
+        <span className="text-[10px] font-bold" style={{ color: "#ef4444" }}>1 Critical Change Found</span>
+      </motion.div>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }}
+        className="p-2 rounded-lg" style={{ background: "#111118", border: "1px solid #27272a" }}>
+        <p className="text-[9px] font-semibold text-zinc-400 mb-1">Section 4 — Duration</p>
+        <div className="space-y-1">
+          <div className="flex items-start gap-1.5 p-1 rounded" style={{ background: "rgba(239,68,68,0.12)" }}>
+            <span className="text-[9px] font-bold" style={{ color: "#ef4444" }}>−</span>
+            <p className="text-[9px] text-zinc-400 line-through leading-tight">Period: 2 years from execution</p>
+          </div>
+          <div className="flex items-start gap-1.5 p-1 rounded" style={{ background: "rgba(16,185,129,0.12)" }}>
+            <span className="text-[9px] font-bold" style={{ color: "#10b981" }}>+</span>
+            <p className="text-[9px] font-semibold leading-tight" style={{ color: "#10b981" }}>Period: Perpetual — no expiration</p>
+          </div>
+        </div>
+      </motion.div>
+      <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }}
+        className="text-[9px] text-zinc-500 leading-snug">
+        Confidentiality now has no end date — a significant departure from the original terms.
+      </motion.p>
+    </div>
+  )
+}
+
+function ResultsClauseExtractor() {
+  const items = [
+    { n: 1, party: "Tenant",   text: "Pay $1,850/mo by 1st of month" },
+    { n: 2, party: "Tenant",   text: "Provide 60-day notice to vacate" },
+    { n: 3, party: "Landlord", text: "Enter only with 24-hr notice" },
+  ]
+  return (
+    <div className="space-y-2">
+      <p className="text-[9px] font-semibold tracking-widest uppercase text-zinc-600 mb-2">Extracted Obligations</p>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+        className="flex items-center gap-1.5 p-1.5 rounded-lg" style={{ background: "rgba(192,38,211,0.15)", border: "1px solid rgba(192,38,211,0.3)" }}>
+        <ListChecks style={{ width: 11, height: 11, color: "#c026d3" }} />
+        <span className="text-[10px] font-bold" style={{ color: "#c026d3" }}>6 obligations extracted</span>
+      </motion.div>
+      <div className="space-y-1.5">
+        {items.map(({ n, party, text }, i) => (
+          <motion.div key={n} initial={{ opacity: 0, x: -4 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 + i * 0.1 }}
+            className="flex gap-2">
+            <div className="w-4.5 h-4.5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 mt-0.5"
+              style={{ background: "rgba(192,38,211,0.2)", color: "#c026d3", minWidth: 18, height: 18 }}>
+              {n}
+            </div>
+            <div>
+              <p className="text-[9px] font-semibold leading-tight" style={{ color: "#c026d3" }}>{party}</p>
+              <p className="text-[9px] text-zinc-400 leading-tight">{text}</p>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function ResultsPane({ toolId }: { toolId: ToolId }) {
+  return (
+    <div className="h-full px-3 pt-3 overflow-hidden relative">
+      <AnimatePresence mode="wait">
+        <motion.div key={toolId} variants={slide} initial="hidden" animate="visible" exit="exit">
+          {toolId === 0 && <ResultsAnalyze />}
+          {toolId === 1 && <ResultsTrustCheck />}
+          {toolId === 2 && <ResultsBuild />}
+          {toolId === 3 && <ResultsReview />}
+          {toolId === 4 && <ResultsRedact />}
+          {toolId === 5 && <ResultsSignature />}
+          {toolId === 6 && <ResultsCompare />}
+          {toolId === 7 && <ResultsClauseExtractor />}
+        </motion.div>
+      </AnimatePresence>
+      <div className="absolute bottom-0 left-0 right-0 h-8 pointer-events-none" style={{ background: "linear-gradient(to top,#0a0a0f,transparent)" }} />
+    </div>
+  )
+}
+
+/* ─── Main export ────────────────────────────────────────────── */
+type Props = {
+  activeTool?: number
+  onToolChange?: (id: number) => void
+}
+
+export function WebAppDemo({ activeTool, onToolChange }: Props = {}) {
+  const isControlled = activeTool !== undefined
+  const [internalTool, setInternalTool] = useState<ToolId>(0)
   const shouldReduce = useReducedMotion()
+  const tool: ToolId = isControlled ? (activeTool as ToolId) : internalTool
 
   useEffect(() => {
+    if (isControlled) return
     if (shouldReduce) return
-    const id = setInterval(() => setPhase(p => (p + 1) % PHASES), PHASE_MS)
+    const id = setInterval(() => setInternalTool(t => ((t + 1) % 8) as ToolId), TOOL_MS)
     return () => clearInterval(id)
-  }, [shouldReduce])
+  }, [isControlled, shouldReduce])
 
-  const activePhase = shouldReduce ? 0 : phase
+  function handleSelect(id: ToolId) {
+    if (onToolChange) onToolChange(id)
+    else setInternalTool(id)
+  }
 
   return (
     <div
-      className="w-full rounded-2xl shadow-2xl border border-border/50 overflow-hidden bg-[#F8F7F4] dark:bg-zinc-900 select-none"
-      style={{ aspectRatio: "16 / 10" }}
+      className="w-full h-full min-h-[360px] flex flex-col select-none overflow-hidden rounded-2xl"
+      style={{ background: "#0a0a0f" }}
       aria-hidden="true"
     >
-      <MiniNav activePhase={activePhase} />
-      <DocHeader phase={activePhase} />
+      <MiniNav active={tool} onSelect={handleSelect} />
+      <DocHeader toolId={tool} />
 
-      {/* Content body */}
-      <div className="flex" style={{ height: "calc(100% - 74px)" }}>
-
-        {/* Left: doc preview */}
-        <div className="relative flex-1 px-4 pt-3 overflow-hidden border-r border-zinc-200/70 dark:border-zinc-800">
-          <AnimatePresence mode="wait">
-            <motion.div key={activePhase} variants={rise} initial="hidden" animate="visible" exit="exit">
-              <DocLines phase={activePhase} />
-            </motion.div>
-          </AnimatePresence>
-          <AnimatePresence>
-            {activePhase === 0 && <ScanLine key="scan" />}
-          </AnimatePresence>
-          <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-[#F8F7F4] dark:from-zinc-900 to-transparent pointer-events-none" />
+      {/* Two-column content */}
+      <div className="flex flex-1 overflow-hidden min-h-0">
+        <div className="w-[42%]">
+          <DocPane toolId={tool} />
         </div>
-
-        {/* Right: tool output */}
-        <div className="flex-1 px-4 pt-3 overflow-hidden">
-          <AnimatePresence mode="wait">
-            {activePhase === 0 && <AnalyzeResults key="analyze" />}
-            {activePhase === 1 && <TrustCheckResults key="trust" />}
-            {activePhase === 2 && <ContractReviewResults key="review" />}
-            {activePhase === 3 && <ContractBuilderResults key="build" />}
-          </AnimatePresence>
+        <div className="flex-1">
+          <ResultsPane toolId={tool} />
         </div>
-
       </div>
     </div>
   )
