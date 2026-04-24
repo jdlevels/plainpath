@@ -1,0 +1,169 @@
+PlainPath — Design-first canvas pass for new tool: “Ask This Document”
+
+We are NOT building the full feature yet.
+This pass is DESIGN ONLY in Replit canvas/prototype mode so we can review layout, flow, hierarchy, and interaction before any serious implementation.
+
+## Product goal
+Create a new PlainPath tool called:
+
+Ask This Document
+
+Purpose:
+A user uploads one document and asks natural-language questions about it.
+The tool answers based only on that document, shows where the answer came from, and makes the document easier to understand without leaving PlainPath.
+
+This is a SINGLE-DOCUMENT tool only.
+Do not mix in:
+- multi-document chat
+- packet splitting
+- obligation tracking
+- signature features
+- SOP/manual creation
+
+Keep the scope tight.
+
+---
+
+## What I want designed in canvas first
+
+### 1. Main workspace concept
+Design a premium split-screen document Q&A workspace.
+
+Recommended layout:
+- Left side: document viewer
+- Right side: AI chat / answer panel
+
+The experience should feel premium, readable, and document-first.
+
+### 2. Required states to design
+Show all major UI states in canvas:
+
+#### A. Empty state
+Before upload:
+- strong title
+- short explanation
+- upload area
+- note on supported files
+- example questions
+- visually premium empty state, not generic
+
+#### B. Document loaded / no question asked yet
+After upload:
+- document visible on left
+- right panel shows:
+  - suggested questions
+  - “summarize this document”
+  - “what are the deadlines?”
+  - “what are the risks?”
+  - “what do I need to do next?”
+- make this feel guided, not blank
+
+#### C. Answer state
+After user asks a question:
+- answer appears in clean, readable sections
+- citations/chips next to answer blocks
+- clicking a citation should conceptually highlight/jump to the relevant source area in the document
+- show follow-up question suggestions under the answer
+
+#### D. Loading state
+While answer is generating:
+- refined skeleton/loading state
+- do not use a cheap spinner-only approach
+- preserve layout stability
+
+#### E. Error state
+If answer fails:
+- clean retry state
+- clear wording
+- no ugly raw error blocks
+
+#### F. No-answer / low-confidence state
+If the document doesn’t clearly contain the answer:
+- show a graceful response
+- explain that the answer was not clearly found
+- suggest better next prompts
+
+### 3. Right panel design
+The Q&A panel should include:
+- prompt input
+- suggested prompts
+- answer cards/sections
+- citation chips
+- follow-up suggestions
+- optional quick actions like:
+  - summarize
+  - key dates
+  - obligations
+  - risks
+  - plain English
+
+Do not make it feel like a generic chatbot.
+It should feel like a document intelligence panel.
+
+### 4. Left document viewer design
+Document viewer should feel real and usable:
+- sticky top viewer bar
+- zoom
+- page controls
+- fit width / fit page
+- file name
+- clean highlighted source references when citations are selected
+
+Keep the document readable.
+Do not shrink it too much.
+
+### 5. Citation interaction design
+This is a key part of the tool.
+
+Design how citations should work:
+- citation chips in the answer
+- click citation -> corresponding source area is highlighted in the document
+- optional small source preview popover/card
+- make traceability feel trustworthy and premium
+
+### 6. Tone and visual language
+Keep this consistent with PlainPath:
+- dark premium UI
+- clean spacing
+- strong hierarchy
+- document-first experience
+- not a generic AI chat clone
+- not overly colorful
+- trust-focused visual tone
+
+### 7. Naming / copy
+Use this naming in the design:
+- Tool name: Ask This Document
+- Subtitle: Ask questions about one document and get source-backed answers
+
+Use refined sample copy throughout.
+Keep it professional and premium.
+
+### 8. Canvas deliverables required
+I want a design/prototype pass only, not backend implementation.
+
+Please produce:
+1. Main desktop canvas mockup
+2. Empty state mockup
+3. Loaded state mockup
+4. Answer-with-citations mockup
+5. Error state mockup
+6. Mobile/responsive concept
+7. Notes on interaction behavior
+8. Recommendation on whether split-screen or stacked mobile layout is best
+
+### 9. Important constraints
+- Do NOT build the backend yet
+- Do NOT wire LLM calls yet
+- Do NOT implement document parsing yet
+- Do NOT implement multi-document support
+- Do NOT add features from other planned tools
+
+This is a canvas/UX approval pass only.
+
+### 10. Final output I want from this pass
+- screenshots/mockups from canvas
+- explanation of layout decisions
+- explanation of citation interaction
+- explanation of mobile behavior
+- recommendation for the final production layout after review
