@@ -16,7 +16,61 @@ async function ensureTable() {
   `)
 }
 
-ensureTable().catch(console.error)
+async function sanitizeExistingRows() {
+  try {
+    const { rows } = await pool.query<{ token: string; analysis: Record<string, unknown> }>(
+      "SELECT token, analysis FROM shared_analyses WHERE expires_at > NOW()"
+    )
+    for (const row of rows) {
+      if (typeof row.analysis === "object" && row.analysis !== null) {
+        const hadSections = "sections" in row.analysis
+        const hadEvidence =
+          hasSourceEvidence(row.analysis.actionSteps) ||
+          hasSourceEvidence(row.analysis.requiredDocuments) ||
+          hasSourceEvidence(row.analysis.deadlines) ||
+          hasSourceEvidence(row.analysis.risks)
+        if (hadSections || hadEvidence) {
+          const clean = stripDocumentContent(row.analysis)
+          await pool.query("UPDATE shared_analyses SET analysis = $1 WHERE token = $2", [
+            JSON.stringify(clean),
+            row.token,
+          ])
+        }
+      }
+    }
+  } catch (err) {
+    console.error("shares sanitize-existing error:", err)
+  }
+}
+
+function hasSourceEvidence(arr: unknown): boolean {
+  if (!Array.isArray(arr)) return false
+  return arr.some(
+    (item) => item && typeof item === "object" && "sourceEvidence" in (item as object)
+  )
+}
+
+function stripDocumentContent(analysis: Record<string, unknown>): Record<string, unknown> {
+  const { sections: _sections, ...rest } = analysis
+
+  const stripEvidence = (item: unknown): unknown => {
+    if (!item || typeof item !== "object") return item
+    const { sourceEvidence: _se, ...clean } = item as Record<string, unknown>
+    return clean
+  }
+
+  return {
+    ...rest,
+    ...(Array.isArray(rest.actionSteps)       ? { actionSteps:       rest.actionSteps.map(stripEvidence)       } : {}),
+    ...(Array.isArray(rest.requiredDocuments)  ? { requiredDocuments:  rest.requiredDocuments.map(stripEvidence)  } : {}),
+    ...(Array.isArray(rest.deadlines)          ? { deadlines:          rest.deadlines.map(stripEvidence)          } : {}),
+    ...(Array.isArray(rest.risks)              ? { risks:              rest.risks.map(stripEvidence)              } : {}),
+  }
+}
+
+ensureTable()
+  .then(() => sanitizeExistingRows())
+  .catch(console.error)
 
 router.post("/shares", async (req, res) => {
   try {
@@ -24,11 +78,12 @@ router.post("/shares", async (req, res) => {
     if (!analysis || typeof analysis !== "object") {
       return res.status(400).json({ error: "analysis object required" })
     }
+    const sanitized = stripDocumentContent(analysis as Record<string, unknown>)
     const token = randomBytes(8).toString("hex")
-    const title = (analysis as Record<string, unknown>).title as string | undefined
+    const title = sanitized.title as string | undefined
     await pool.query(
       "INSERT INTO shared_analyses (token, analysis, title) VALUES ($1, $2, $3)",
-      [token, JSON.stringify(analysis), title ?? null]
+      [token, JSON.stringify(sanitized), title ?? null]
     )
     return res.json({ token, url: `/shared/${token}` })
   } catch (err) {
@@ -47,7 +102,11 @@ router.get("/shares/:token", async (req, res) => {
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Share link not found or expired" })
     }
-    return res.json({ analysis: result.rows[0].analysis, title: result.rows[0].title, createdAt: result.rows[0].created_at })
+    const raw = result.rows[0].analysis as Record<string, unknown>
+    const analysis = typeof raw === "object" && raw !== null
+      ? stripDocumentContent(raw)
+      : raw
+    return res.json({ analysis, title: result.rows[0].title, createdAt: result.rows[0].created_at })
   } catch (err) {
     console.error("shares GET error:", err)
     return res.status(500).json({ error: "Failed to load shared analysis" })

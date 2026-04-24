@@ -2368,6 +2368,24 @@ function DraftMessageCard({ label, draft }: { label: string; draft: string }) {
 }
 
 /* ────────────────────────────────────────────────
+   SHARE SANITIZATION
+   Strip raw document material (sections and sourceEvidence fields) from the
+   analysis object before publishing it via a share link.  The privacy policy
+   guarantees that shared analyses contain only "structured analysis output"
+   with "no document text attached."
+──────────────────────────────────────────────── */
+function sanitizeAnalysisForShare(analysis: DocumentAnalysis): Omit<DocumentAnalysis, "sections"> & { sections?: never } {
+  const { sections: _sections, ...rest } = analysis
+  return {
+    ...rest,
+    actionSteps: rest.actionSteps?.map(({ sourceEvidence: _se, ...s }) => s) ?? [],
+    requiredDocuments: rest.requiredDocuments?.map(({ sourceEvidence: _se, ...d }) => d) ?? [],
+    deadlines: rest.deadlines?.map(({ sourceEvidence: _se, ...d }) => d) ?? [],
+    risks: rest.risks?.map(({ sourceEvidence: _se, ...r }) => r) ?? [],
+  }
+}
+
+/* ────────────────────────────────────────────────
    EXPORT MENU
 ──────────────────────────────────────────────── */
 function ExportMenu({ analysis }: { analysis: DocumentAnalysis }) {
@@ -2436,10 +2454,11 @@ function ExportMenu({ analysis }: { analysis: DocumentAnalysis }) {
     setShareLoading(true)
     try {
       const base = getApiBaseUrl()
+      const sanitized = sanitizeAnalysisForShare(analysis)
       const res = await fetch(`${base}/api/shares`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ analysis }),
+        body: JSON.stringify({ analysis: sanitized }),
       })
       const data = await res.json() as { token?: string }
       if (!data.token) throw new Error("No token")
