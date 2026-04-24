@@ -215,9 +215,15 @@ const userOutboundLimiter = rateLimit({
   max: 20,
   standardHeaders: "draft-7",
   legacyHeaders: false,
+  // Key by Clerk userId — this is a user-based limiter, not IP-based.
+  // The "anonymous" fallback is a safe catch-all; all protected routes
+  // already require auth so unauthenticated callers are rejected before
+  // this limit is applied. Suppress the IPv6-IP validation check since
+  // we are intentionally not using IP as the primary key.
+  validate: { keyGeneratorIpFallback: false },
   keyGenerator: (req) => {
     const { userId } = getAuth(req)
-    return userId ?? req.ip ?? "anonymous"
+    return userId ?? "anonymous"
   },
   message: { error: "rate_limited", message: "You have sent too many emails or signature requests. Please wait an hour and try again." },
   skip: () => process.env.NODE_ENV !== "production",
