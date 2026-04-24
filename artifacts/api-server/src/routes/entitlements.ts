@@ -42,6 +42,10 @@ const router = Router()
 // ADMIN_EMAILS — emails that receive admin role + pro access without needing
 //   a Stripe subscription. Set via ADMIN_EMAILS env var (comma-separated).
 //   Currently: support@plainpathapp.com
+//
+// MANUAL_PRO_EMAILS — emails that receive member role + pro access without
+//   a Stripe subscription (e.g. manually granted Pro seats, beta testers).
+//   Set via MANUAL_PRO_EMAILS env var (comma-separated).
 
 const ADMIN_EMAILS: Set<string> = new Set(
   (process.env.ADMIN_EMAILS || "")
@@ -50,8 +54,19 @@ const ADMIN_EMAILS: Set<string> = new Set(
     .filter(Boolean)
 )
 
+const MANUAL_PRO_EMAILS: Set<string> = new Set(
+  (process.env.MANUAL_PRO_EMAILS || "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean)
+)
+
 function isAdminEmail(email: string): boolean {
   return ADMIN_EMAILS.has(email.toLowerCase())
+}
+
+function isManualProEmail(email: string): boolean {
+  return MANUAL_PRO_EMAILS.has(email.toLowerCase())
 }
 
 // Bootstrap publicMetadata for admin users the first time the entitlements
@@ -149,6 +164,48 @@ router.get("/status", async (req, res) => {
         usageRemaining: proEntitlements.analysesPerMonth,
         toolAccess: TOOL_ACCESS["pro"],
         toolUsage: { analyze: 0, "trust-check": 0, "contract-review": 0, "build-contract": 0, redact: 0, signature: 0 },
+        features: proEntitlements.features,
+        currentPeriodEnd: null,
+        cancelAtPeriodEnd: false,
+        billingMode: BILLING_CONFIG.BILLING_MODE,
+        paywallEnforcement: BILLING_CONFIG.PAYWALL_ENFORCEMENT,
+      })
+    }
+
+    // ── Manual Pro grant bypass ────────────────────────────────────────────
+    // MANUAL_PRO_EMAILS are member-role users granted Pro without Stripe.
+    // Usage is tracked normally; all Pro tools and limits apply.
+    if (sessionEmail && isManualProEmail(sessionEmail)) {
+      const proEntitlements = PLAN_ENTITLEMENTS["pro"]
+      const usageCount = getUsageForCurrentMonth(sessionEmail)
+      const toolUsage = getAllToolUsageForCurrentMonth(sessionEmail)
+      logger.info(
+        {
+          event: "entitlement.status.granted",
+          email: sessionEmail,
+          userId: sessionUserId,
+          role: "member",
+          accessTier: "pro",
+          grantType: "manual",
+        },
+        "Entitlement status granted: manual pro"
+      )
+      return res.json({
+        email: sessionEmail,
+        role: "member",
+        accessTier: "pro",
+        found: true,
+        status: "active",
+        plan: "pro",
+        monthKey: getCurrentMonthKey(),
+        usageCount,
+        usageLimit: proEntitlements.analysesPerMonth,
+        usageRemaining:
+          proEntitlements.analysesPerMonth === Infinity
+            ? Infinity
+            : Math.max(proEntitlements.analysesPerMonth - usageCount, 0),
+        toolAccess: TOOL_ACCESS["pro"],
+        toolUsage,
         features: proEntitlements.features,
         currentPeriodEnd: null,
         cancelAtPeriodEnd: false,
@@ -263,9 +320,12 @@ router.post("/bootstrap", async (req, res) => {
 
     // ── Determine role + tier ─────────────────────────────────────────────
     // Admins (ADMIN_EMAILS) get Pro access immediately.
+    // Manual pro grant (MANUAL_PRO_EMAILS) get member/pro without Stripe.
     // Everyone else starts as a Starter member and upgrades via Stripe.
     const newMeta: { role: string; accessTier: string } = isAdminEmail(email)
       ? { role: "admin", accessTier: "pro" }
+      : isManualProEmail(email)
+      ? { role: "member", accessTier: "pro" }
       : { role: "member", accessTier: "starter" }
 
     // Merge-safe: spread existing keys so no other metadata is overwritten.
