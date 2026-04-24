@@ -140,6 +140,12 @@ export type TrustCheckVerdict =
   | "High scam risk"
   | "Cannot verify authenticity";
 
+export interface TrustCheckSection {
+  id: string;
+  title?: string;
+  content: string;
+}
+
 export interface TrustCheckContactDetail {
   type: "phone" | "email" | "url" | "address";
   value: string;
@@ -157,6 +163,8 @@ export interface TrustCheckScamIndicator {
   indicator: string;
   severity: "high" | "medium" | "low";
   sourceEvidence?: string;
+  sourceRef?: string;
+  sourceSectionId?: string;
 }
 
 export interface TrustCheckScores {
@@ -175,7 +183,10 @@ export interface TrustCheckMetadataFinding {
 export interface TrustCheckAnalysis {
   id: string;
   processedAt: string;
+  title?: string;
+  documentType?: string;
   riskScore: number;
+  scanQuality?: "good" | "partial" | "poor";
   verdict: TrustCheckVerdict;
   verdictExplanation: string;
   whatItClaims: string;
@@ -191,4 +202,5 @@ export interface TrustCheckAnalysis {
   scores?: TrustCheckScores;
   metadataFindings?: TrustCheckMetadataFinding[];
   structuralFindings?: string[];
+  sections?: TrustCheckSection[];
 }

@@ -1,0 +1,107 @@
+Document Trust Check canvas is approved for implementation.
+
+Please now implement the approved Document Trust Check design into the actual PlainPath app.
+
+Do not redesign further in canvas.
+Do not move to Contract Review yet.
+Do not add new tools.
+Do not add SOP/manual builder language.
+Do not add Document Classifier or Packet Splitter.
+
+Implementation requirements:
+
+1. Follow the approved PlainPath Scan Workspace Standard.
+- Left panel: document viewer, about 55–60%
+- Right panel: Trust Intelligence panel, about 40–45%
+- Both panels should support independent scrolling
+- Mobile should use Trust Check tab first, Document tab second
+
+2. Preserve all approved states:
+- Empty State
+- Processing State
+- Completed Trust Overview
+- Source chip active / evidence highlighted state
+- Low Confidence State
+- Error State
+- Mobile Trust View
+- Mobile Document View
+
+3. Completed Trust Overview panel order must be:
+A. Trust Summary
+B. Trust Score / Confidence
+C. Major Trust Concerns
+D. Verification Checklist
+E. Document Consistency
+F. Metadata / Structure Signals
+G. Source Traceability
+
+4. Keep the approved cautious language.
+Use:
+- possible risk indicator
+- suspicious signal
+- may not match
+- needs verification
+- requires independent verification
+- confirm with the original source
+- not a legal or forensic determination
+
+Avoid:
+- this is fake
+- this is fraud
+- verified authentic
+- forged
+- proven fraudulent
+
+5. Trust score label:
+Use:
+“Needs verification”
+
+Example:
+“31/100 — Needs verification”
+
+6. Include the trust score explanation:
+“Trust score reflects document consistency, source clarity, metadata signals, and risk indicators. It is not a legal or forensic determination.”
+
+7. Source chips must be functional.
+When clicked:
+- scroll the document viewer to the referenced page/section
+- highlight the matching document area
+- show the evidence banner
+- keep the related trust concern active
+- preserve the active chip state
+
+If exact coordinates are not available:
+- scroll to the closest available section
+- highlight the nearest matching text block
+
+8. Use fictional demo/mock content only.
+Approved examples:
+- Northstar Cloud Services
+- Meridian Group LLC
+- Atlas Vendor Services
+- ClearPoint Agreement
+- Coastal Pacific Bank Singapore
+
+Do not use real company names in demo/mock trust-check examples.
+
+9. Keep visual hierarchy calm.
+- Red only for the highest-risk signal
+- Amber for caution / verification needed
+- Purple for source evidence and traceability
+- Green only for clean/confirmed consistency checks
+- Avoid report-dump layouts
+
+10. After implementation, provide live screenshots of:
+- Empty State
+- Processing State
+- Completed Trust Overview
+- Source chip active / evidence highlighted
+- Low Confidence State
+- Error State
+- Mobile Trust View
+- Mobile Document View
+
+Also confirm:
+- the authenticated route is protected
+- no mock/demo route exposes real user document analysis
+- no new TypeScript/runtime errors were introduced by this implementation

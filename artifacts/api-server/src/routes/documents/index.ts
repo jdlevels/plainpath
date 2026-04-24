@@ -1833,11 +1833,20 @@ Return ONLY a valid JSON object — no markdown, no code fences, just raw JSON.
   "verdictExplanation": "string - 2-4 sentences explaining the primary risk level using risk-based language. Distinguish between authenticity concerns (scam/impersonation risk) and contract-term concerns — do not conflate the two.",
   "whatItClaims": "string - 2-4 sentences: what organization or authority this document claims to be from, and what situation it describes",
   "demandedAction": "string - 2-4 sentences: what the letter/contract asks the recipient to do — pay, call, respond, sign, provide information, etc.",
+  "documentType": "string - short label for the document type, e.g. Invoice, Notice, Contract, Collection Letter, IRS Letter, Grant Deed. Leave null if unclear.",
+  "sections": [
+    {
+      "id": "string - short unique id like section-1, section-2",
+      "title": "string - brief section label, e.g. Header, Payment Instructions, Terms, Signature Block",
+      "content": "string - verbatim or near-verbatim text of this section (max 400 chars per section)"
+    }
+  ],
   "scamIndicators": [
     {
       "indicator": "string - clear description of the authenticity or scam-risk signal",
       "severity": "high|medium|low",
-      "sourceEvidence": "string - brief quote or paraphrase from the document supporting this indicator"
+      "sourceEvidence": "string - brief quote or paraphrase from the document supporting this indicator",
+      "sourceRef": "string or null - short location label like 'p.1 · Header' or 'p.2 · §4' pointing to where in the document this signal appears"
     }
   ],
   "structuralFindings": [
@@ -2017,6 +2026,7 @@ async function runTrustCheckAnalysis(
         indicator: si.indicator || "",
         severity: (si.severity as "high" | "medium" | "low") || "medium",
         sourceEvidence: si.sourceEvidence,
+        sourceRef: si.sourceRef ?? undefined,
       }))
     : [];
 
@@ -2064,10 +2074,31 @@ async function runTrustCheckAnalysis(
     ? parsed.legitimacyIndicators.filter((s: unknown) => typeof s === "string" && (s as string).trim().length > 0)
     : [];
 
+  const parsedSections: Array<{ id: string; title?: string; content: string }> =
+    Array.isArray(parsed.sections)
+      ? parsed.sections
+          .filter((s: any) => s && typeof s.content === "string" && s.content.trim().length > 0)
+          .map((s: any, idx: number) => ({
+            id: typeof s.id === "string" && s.id.trim() ? s.id.trim() : `section-${idx + 1}`,
+            title: typeof s.title === "string" && s.title.trim() ? s.title.trim() : undefined,
+            content: s.content.trim(),
+          }))
+      : [];
+
+  const parsedDocumentType: string | undefined =
+    typeof parsed.documentType === "string" && parsed.documentType.trim()
+      ? parsed.documentType.trim()
+      : undefined;
+
+  const scanQuality: "good" | "partial" | "poor" =
+    verificationConfidence < 30 ? "poor" : verificationConfidence < 50 ? "partial" : "good";
+
   return {
     id: uuidv4(),
     processedAt: new Date().toISOString(),
+    documentType: parsedDocumentType,
     riskScore,
+    scanQuality,
     verdict: finalVerdict,
     verdictExplanation: parsed.verdictExplanation || "",
     whatItClaims: parsed.whatItClaims || "",
@@ -2083,6 +2114,7 @@ async function runTrustCheckAnalysis(
     scores,
     metadataFindings: significantMetadataFindings.length > 0 ? significantMetadataFindings : undefined,
     structuralFindings: allStructuralFindings.length > 0 ? allStructuralFindings : undefined,
+    sections: parsedSections.length > 0 ? parsedSections : undefined,
   };
 }
 

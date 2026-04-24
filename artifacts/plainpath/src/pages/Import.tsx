@@ -610,6 +610,16 @@ export default function Import() {
           let data: any = {}
           try { data = await res.json() } catch { /* non-JSON */ }
           if (!res.ok) {
+            const errCode: string = data?.error ?? ""
+            if (res.status === 422 && (errCode === "corrupt_pdf" || errCode === "scanned_pdf")) {
+              const fname = encodeURIComponent(p.file?.name ?? "")
+              setIsAnalyzing(false)
+              setStep("input")
+              setUploadedFile(null)
+              if (fileInputRef.current) fileInputRef.current.value = ""
+              setLocation(`/trust-check?error=encrypted&filename=${fname}`)
+              return
+            }
             const msg = data?.message || (res.status === 413
               ? "File is too large. Maximum allowed size is 20 MB."
               : res.status === 422
