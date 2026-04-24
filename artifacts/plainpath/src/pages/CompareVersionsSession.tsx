@@ -238,14 +238,14 @@ function MiniPopover({
   return (
     <div
       ref={ref}
-      className="fixed z-[200] bg-background border border-border/60 rounded-xl shadow-xl p-2 min-w-[220px] max-w-[280px] max-h-[260px] overflow-y-auto animate-in fade-in zoom-in-95 duration-100"
+      className="fixed z-[200] bg-slate-800 border border-slate-700 rounded-xl shadow-2xl p-2 min-w-[220px] max-w-[280px] max-h-[260px] overflow-y-auto animate-in fade-in zoom-in-95 duration-100"
       style={{ left, top }}
     >
-      <div className="flex items-center justify-between px-2 py-1 mb-1 border-b border-border/30">
-        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+      <div className="flex items-center justify-between px-2 py-1 mb-1 border-b border-slate-700/50">
+        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
           {state.items.length} changes in zone
         </span>
-        <button onClick={onClose} className="p-0.5 rounded hover:bg-muted text-muted-foreground">
+        <button onClick={onClose} className="p-0.5 rounded hover:bg-slate-700 text-slate-400">
           <X className="w-3 h-3" />
         </button>
       </div>
@@ -253,16 +253,16 @@ function MiniPopover({
         <button
           key={item.id}
           onClick={() => { onSelect(item.id); onClose() }}
-          className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left hover:bg-muted/60 transition-colors"
+          className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left hover:bg-slate-700/60 transition-colors"
         >
           <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
             item.severity === "high" ? "bg-red-500" :
-            item.severity === "medium" ? "bg-amber-500" : "bg-neutral-400"
+            item.severity === "medium" ? "bg-amber-500" : "bg-slate-400"
           }`} />
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-medium truncate">{severityLabel(item)}</p>
+            <p className="text-xs font-medium truncate text-slate-100">{severityLabel(item)}</p>
             {(item.original_text || item.revised_text) && (
-              <p className="text-[10px] text-muted-foreground truncate">
+              <p className="text-[10px] text-slate-400 truncate">
                 {(item.revised_text ?? item.original_text ?? "").slice(0, 50)}
               </p>
             )}
@@ -385,46 +385,46 @@ const PdfPane = memo(function PdfPane({
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* ── Pane header ── */}
-      <div className="sticky top-0 z-10 flex items-center gap-1.5 px-2.5 py-1.5 bg-neutral-100/95 dark:bg-zinc-800/95 border-b border-border/30 backdrop-blur-sm flex-shrink-0">
+      <div className="sticky top-0 z-10 flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-900 border-b border-slate-700/50 backdrop-blur-sm flex-shrink-0">
         <span className={`text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full flex-shrink-0 ${accentClass}`}>
           {label}
         </span>
         <div className="flex items-center gap-1 min-w-0 flex-1">
-          <FileText className="w-3 h-3 text-muted-foreground flex-shrink-0" />
-          <span className="text-[11px] text-muted-foreground truncate">{fileName ?? "—"}</span>
+          <FileText className="w-3 h-3 text-slate-500 flex-shrink-0" />
+          <span className="text-[11px] text-slate-400 truncate">{fileName ?? "—"}</span>
         </div>
 
         {/* Page nav */}
         <div className="flex items-center gap-0.5 flex-shrink-0">
-          <span className="text-[10px] text-muted-foreground font-mono tabular-nums mr-0.5">
+          <span className="text-[10px] text-slate-400 font-mono tabular-nums mr-0.5">
             {loading ? "…" : failed || errorMsg ? "—" : `${pages.length > 0 ? currentPage + 1 : 0}/${pages.length}`}
           </span>
           <button onClick={prevPage} disabled={currentPage <= 0 || loading || failed || !!errorMsg}
-            className="p-0.5 rounded hover:bg-muted/70 disabled:opacity-30 transition-colors" title="Previous page">
-            <ChevronUp className="w-3 h-3 text-muted-foreground" />
+            className="p-0.5 rounded hover:bg-slate-700 disabled:opacity-30 transition-colors" title="Previous page">
+            <ChevronUp className="w-3 h-3 text-slate-400" />
           </button>
           <button onClick={nextPage} disabled={currentPage >= pages.length - 1 || loading || failed || !!errorMsg}
-            className="p-0.5 rounded hover:bg-muted/70 disabled:opacity-30 transition-colors" title="Next page">
-            <ChevronDown className="w-3 h-3 text-muted-foreground" />
+            className="p-0.5 rounded hover:bg-slate-700 disabled:opacity-30 transition-colors" title="Next page">
+            <ChevronDown className="w-3 h-3 text-slate-400" />
           </button>
         </div>
 
         {/* Zoom controls */}
-        <div className="flex items-center gap-0 border border-border/50 rounded-md overflow-hidden flex-shrink-0">
+        <div className="flex items-center gap-0 border border-slate-600/50 rounded-md overflow-hidden flex-shrink-0">
           <button onClick={zoomOut} disabled={!canZoomOut}
-            className="px-1 py-0.5 text-muted-foreground hover:text-foreground hover:bg-muted/60 disabled:opacity-30 transition-colors" title="Zoom out">
+            className="px-1 py-0.5 text-slate-400 hover:text-slate-100 hover:bg-slate-700 disabled:opacity-30 transition-colors" title="Zoom out">
             <ZoomOut className="w-3 h-3" />
           </button>
           <button onClick={fitWidth}
-            className={`px-1.5 py-0.5 text-[9px] font-mono font-semibold transition-colors border-x border-border/40 ${
-              zoomMode === "fit-width" ? "bg-muted/80 text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+            className={`px-1.5 py-0.5 text-[9px] font-mono font-semibold transition-colors border-x border-slate-600/40 ${
+              zoomMode === "fit-width" ? "bg-slate-700 text-slate-100" : "text-slate-400 hover:text-slate-100 hover:bg-slate-700/60"
             }`}
             title="Fit to pane width"
           >
             {zoomLabel}
           </button>
           <button onClick={zoomIn} disabled={!canZoomIn}
-            className="px-1 py-0.5 text-muted-foreground hover:text-foreground hover:bg-muted/60 disabled:opacity-30 transition-colors" title="Zoom in">
+            className="px-1 py-0.5 text-slate-400 hover:text-slate-100 hover:bg-slate-700 disabled:opacity-30 transition-colors" title="Zoom in">
             <ZoomIn className="w-3 h-3" />
           </button>
         </div>
@@ -433,30 +433,45 @@ const PdfPane = memo(function PdfPane({
       {/* ── Page scroll area ── */}
       <div
         ref={scrollRef}
-        className={`flex-1 bg-neutral-200/60 dark:bg-zinc-900/70 ${zoomMode === "custom" && zoomPct > 100 ? "overflow-auto" : "overflow-y-auto overflow-x-hidden"}`}
+        className={`flex-1 bg-slate-950 ${zoomMode === "custom" && zoomPct > 100 ? "overflow-auto" : "overflow-y-auto overflow-x-hidden"}`}
       >
         {errorMsg && (
           <div className="flex flex-col items-center justify-center gap-3 py-20 px-6 text-center">
-            <AlertCircle className="w-6 h-6 text-red-500" />
-            <p className="text-sm text-red-500 font-medium">PDF unavailable</p>
-            <p className="text-xs text-muted-foreground">{errorMsg}</p>
+            <AlertCircle className="w-6 h-6 text-red-400" />
+            <p className="text-sm text-red-400 font-medium">PDF unavailable</p>
+            <p className="text-xs text-slate-500">{errorMsg}</p>
           </div>
         )}
         {!errorMsg && loading && (
-          <div className="flex flex-col items-center justify-center gap-3 py-24 text-muted-foreground">
-            <Loader2 className="w-6 h-6 animate-spin" />
-            <span className="text-sm">Rendering PDF…</span>
+          <div className="flex flex-col items-center justify-center gap-5 py-24">
+            {/* Command Center scanning animation */}
+            <div className="relative w-12 h-12">
+              <div className="absolute inset-0 rounded-full border-2 border-slate-800" />
+              <div className="absolute inset-0 rounded-full border-2 border-t-teal-500 border-r-teal-500/30 animate-spin" />
+              <div className="absolute inset-1.5 rounded-full border border-slate-700/60" />
+            </div>
+            <div className="space-y-2 w-36">
+              {[100, 72, 88, 56, 80].map((w, i) => (
+                <div key={i} className="h-1 rounded-full bg-slate-800 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-slate-600 animate-pulse"
+                    style={{ width: `${w}%`, animationDelay: `${i * 120}ms` }}
+                  />
+                </div>
+              ))}
+            </div>
+            <span className="text-xs text-slate-500 tracking-wide">Rendering PDF…</span>
           </div>
         )}
         {!errorMsg && failed && (
           <div className="flex flex-col items-center justify-center gap-3 py-20 px-6 text-center">
-            <AlertCircle className="w-6 h-6 text-red-500" />
-            <p className="text-sm text-red-500 font-medium">Failed to render PDF</p>
-            <p className="text-xs text-muted-foreground">The file may be corrupted or in an unsupported format.</p>
+            <AlertCircle className="w-6 h-6 text-red-400" />
+            <p className="text-sm text-red-400 font-medium">Failed to render PDF</p>
+            <p className="text-xs text-slate-500">The file may be corrupted or in an unsupported format.</p>
           </div>
         )}
         {!errorMsg && !loading && !failed && pages.length === 0 && (
-          <div className="flex flex-col items-center justify-center gap-3 py-24 text-muted-foreground">
+          <div className="flex flex-col items-center justify-center gap-3 py-24 text-slate-500">
             <FileText className="w-8 h-8 opacity-30" />
             <span className="text-sm">No pages to display</span>
           </div>
@@ -470,7 +485,7 @@ const PdfPane = memo(function PdfPane({
                 <div
                   key={i}
                   ref={(el) => { pageRefs.current[i] = el }}
-                  className="relative rounded-lg overflow-hidden border border-border/30 shadow-sm bg-white select-none mx-auto"
+                  className="relative rounded-lg overflow-hidden border border-slate-700/30 shadow-lg bg-white select-none mx-auto"
                   style={{ ...pageWidthStyle, aspectRatio: `${pg.w} / ${pg.h}` }}
                 >
                   <img src={pg.dataUrl} alt={`Page ${pageNum}`} className="block w-full pointer-events-none" draggable={false} />
@@ -637,19 +652,19 @@ function SummaryPanel({
   const rowPy = density === "compact" ? "py-1.5" : "py-2.5"
 
   return (
-    <div className="absolute inset-y-0 right-0 z-30 flex flex-col w-[340px] max-w-[92vw] bg-background border-l border-border/60 shadow-xl animate-in slide-in-from-right-2 duration-200">
+    <div className="absolute inset-y-0 right-0 z-30 flex flex-col w-[340px] max-w-[92vw] bg-slate-900 border-l border-slate-800 shadow-2xl animate-in slide-in-from-right-2 duration-200">
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-border/40 flex-shrink-0 gap-2">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-slate-800 flex-shrink-0 gap-2">
         <div className="flex items-center gap-2 flex-shrink-0">
-          <BarChart2 className="w-3.5 h-3.5 text-muted-foreground" />
-          <span className="text-sm font-semibold">Summary</span>
+          <BarChart2 className="w-3.5 h-3.5 text-slate-400" />
+          <span className="text-sm font-semibold text-slate-100">Summary</span>
           {stats.total > 0 && (
-            <span className="text-[10px] text-muted-foreground font-mono">
+            <span className="text-[10px] text-slate-500 font-mono">
               {stats.total} change{stats.total !== 1 ? "s" : ""}
             </span>
           )}
           {diffItems.filter((i) => i.review_status === "rejected").length > 0 && (
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400">
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-950/60 text-red-400">
               {diffItems.filter((i) => i.review_status === "rejected").length} rejected
             </span>
           )}
@@ -662,18 +677,18 @@ function SummaryPanel({
                 onClick={() => setShowPageDrop((o) => !o)}
                 className={`flex items-center gap-1 px-1.5 py-0.5 rounded border text-[10px] font-medium transition-colors ${
                   pageFilter != null
-                    ? "bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 border-violet-300/60"
-                    : "border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                    ? "bg-violet-900/40 text-violet-300 border-violet-700/60"
+                    : "border-slate-700 text-slate-400 hover:text-slate-100 hover:bg-slate-800"
                 }`}
               >
                 {pageFilter != null ? `p.${pageFilter}` : "Page"}
                 <ChevDown className="w-3 h-3" />
               </button>
               {showPageDrop && (
-                <div className="absolute right-0 top-full mt-1 z-50 bg-background border border-border/60 rounded-lg shadow-xl py-1 min-w-[90px]">
+                <div className="absolute right-0 top-full mt-1 z-50 bg-slate-800 border border-slate-700 rounded-lg shadow-2xl py-1 min-w-[90px]">
                   <button
                     onClick={() => { setPageFilter(null); setShowPageDrop(false) }}
-                    className={`w-full text-left px-3 py-1 text-xs hover:bg-muted/60 transition-colors ${pageFilter == null ? "font-semibold text-foreground" : "text-muted-foreground"}`}
+                    className={`w-full text-left px-3 py-1 text-xs hover:bg-slate-700 transition-colors ${pageFilter == null ? "font-semibold text-slate-100" : "text-slate-400"}`}
                   >
                     All pages
                   </button>
@@ -681,7 +696,7 @@ function SummaryPanel({
                     <button
                       key={pg}
                       onClick={() => { setPageFilter(pg); setShowPageDrop(false) }}
-                      className={`w-full text-left px-3 py-1 text-xs hover:bg-muted/60 transition-colors ${pageFilter === pg ? "font-semibold text-foreground" : "text-muted-foreground"}`}
+                      className={`w-full text-left px-3 py-1 text-xs hover:bg-slate-700 transition-colors ${pageFilter === pg ? "font-semibold text-slate-100" : "text-slate-400"}`}
                     >
                       Page {pg}
                     </button>
@@ -692,18 +707,18 @@ function SummaryPanel({
           )}
 
           {/* Severity tabs */}
-          <div className="flex items-center gap-0.5 bg-muted/60 rounded-md p-0.5">
+          <div className="flex items-center gap-0.5 bg-slate-800 rounded-md p-0.5">
             {TAB_LABELS.map(({ key, label, count }) => (
               <button
                 key={key}
                 onClick={() => setSevFilter(key)}
                 className={`px-1.5 py-0.5 rounded text-[10px] font-semibold transition-colors ${
                   sevFilter === key
-                    ? key === "high"   ? "bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300"
-                    : key === "medium" ? "bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300"
-                    : key === "low"    ? "bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300"
-                    :                   "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? key === "high"   ? "bg-red-950/80 text-red-300"
+                    : key === "medium" ? "bg-amber-950/70 text-amber-300"
+                    : key === "low"    ? "bg-slate-700 text-slate-300"
+                    :                   "bg-slate-700 text-slate-100 shadow-sm"
+                    : "text-slate-500 hover:text-slate-100"
                 }`}
               >
                 {label}{count > 0 && <span className="opacity-60 ml-0.5">({count})</span>}
@@ -711,7 +726,7 @@ function SummaryPanel({
             ))}
           </div>
 
-          <button onClick={onClose} className="p-1 rounded hover:bg-muted transition-colors text-muted-foreground" title="Close">
+          <button onClick={onClose} className="p-1 rounded hover:bg-slate-800 transition-colors text-slate-400" title="Close">
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -719,12 +734,12 @@ function SummaryPanel({
 
       {/* Column header */}
       {diffItems.length > 0 && (
-        <div className="flex items-center gap-0 px-2 py-1 bg-muted/20 border-b border-border/20 flex-shrink-0">
+        <div className="flex items-center gap-0 px-2 py-1 bg-slate-800/50 border-b border-slate-800 flex-shrink-0">
           <div className="w-7 flex-shrink-0 flex items-center justify-center">
-            <span className="text-[9px] text-muted-foreground/60 font-semibold uppercase tracking-wider">☑</span>
+            <span className="text-[9px] text-slate-600 font-semibold uppercase tracking-wider">☑</span>
           </div>
-          <span className="flex-1 text-[9px] text-muted-foreground/60 font-semibold uppercase tracking-wider pl-2">Change</span>
-          <span className="text-[9px] text-muted-foreground/60 font-semibold uppercase tracking-wider pr-1">✕</span>
+          <span className="flex-1 text-[9px] text-slate-600 font-semibold uppercase tracking-wider pl-2">Change</span>
+          <span className="text-[9px] text-slate-600 font-semibold uppercase tracking-wider pr-1">✕</span>
           <div style={{ minWidth: "60px" }} />
         </div>
       )}
@@ -733,16 +748,16 @@ function SummaryPanel({
       <div className="flex-1 overflow-y-auto">
         {diffItems.length === 0 && (
           <div className="flex flex-col items-center gap-2 py-10 text-center px-4">
-            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-              <BarChart2 className="w-4 h-4 text-muted-foreground opacity-40" />
+            <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center">
+              <BarChart2 className="w-4 h-4 text-slate-500 opacity-60" />
             </div>
-            <p className="text-sm text-muted-foreground">No differences found.</p>
+            <p className="text-sm text-slate-500">No differences found.</p>
           </div>
         )}
 
         {diffItems.length > 0 && visibleItems.length === 0 && (
           <div className="flex flex-col items-center gap-2 py-10 text-center px-4">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-slate-500">
               No {sevFilter !== "all" ? sevFilter + " severity " : ""}changes
               {pageFilter != null ? ` on page ${pageFilter}` : ""}.
             </p>
@@ -750,7 +765,7 @@ function SummaryPanel({
         )}
 
         {visibleItems.length > 0 && (
-          <div className="divide-y divide-border/30">
+          <div className="divide-y divide-slate-800/60">
             {visibleItems.map((item) => {
               const isSelected = selectedDiffId === item.id
               const pageLabel =
@@ -769,10 +784,10 @@ function SummaryPanel({
                   ref={(el) => { itemRefs.current[item.id] = el as HTMLDivElement | null }}
                   className={`flex items-stretch gap-0 transition-colors ${
                     isRejected
-                      ? "bg-red-50/60 dark:bg-red-950/20"
+                      ? "bg-red-950/20"
                       : isSelected
-                      ? "bg-violet-50 dark:bg-violet-950/30"
-                      : "hover:bg-muted/30"
+                      ? "bg-violet-950/30"
+                      : "hover:bg-slate-800/40"
                   }`}
                   onMouseEnter={() => onHoverItem([item.id])}
                   onMouseLeave={() => onLeaveItem()}
@@ -790,22 +805,22 @@ function SummaryPanel({
                     </span>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className={`text-xs font-medium truncate ${isRejected ? "text-muted-foreground line-through" : "text-foreground"}`}>
+                        <span className={`text-xs font-medium truncate ${isRejected ? "text-slate-500 line-through" : "text-slate-100"}`}>
                           {severityLabel(item)}
                         </span>
-                        <span className="text-[10px] text-muted-foreground font-mono flex-shrink-0">{pageLabel}</span>
+                        <span className="text-[10px] text-slate-500 font-mono flex-shrink-0">{pageLabel}</span>
                         {isRejected && (
                           <span className="flex items-center gap-0.5 text-[9px] text-red-600 dark:text-red-400 font-semibold flex-shrink-0">
                             <XCircle className="w-2.5 h-2.5" /> rejected
                           </span>
                         )}
                         {item.severity_overridden && (
-                          <span className="flex items-center gap-0.5 text-[9px] text-violet-600 dark:text-violet-400 font-semibold flex-shrink-0">
+                          <span className="flex items-center gap-0.5 text-[9px] text-violet-400 font-semibold flex-shrink-0">
                             <Pencil className="w-2.5 h-2.5" /> overridden
                           </span>
                         )}
                         {hasLinkedNote && (
-                          <span className="flex items-center gap-0.5 text-[9px] text-teal-600 dark:text-teal-400 font-semibold flex-shrink-0">
+                          <span className="flex items-center gap-0.5 text-[9px] text-teal-400 font-semibold flex-shrink-0">
                             <Link2 className="w-2.5 h-2.5" /> note
                           </span>
                         )}
@@ -817,22 +832,22 @@ function SummaryPanel({
                         )}
                       </div>
                       {preview && density !== "compact" && (
-                        <p className="text-[11px] text-muted-foreground truncate mt-0.5">{preview}</p>
+                        <p className="text-[11px] text-slate-500 truncate mt-0.5">{preview}</p>
                       )}
                       {item.ai_explanation && density !== "compact" && (
-                        <p className="text-[10px] text-violet-600/80 dark:text-violet-400/80 mt-0.5 leading-snug line-clamp-2">
+                        <p className="text-[10px] text-violet-400/80 mt-0.5 leading-snug line-clamp-2">
                           {item.ai_explanation}
                         </p>
                       )}
                     </div>
-                    <ChevronRight className="w-3 h-3 text-muted-foreground/50 flex-shrink-0 mt-0.5" />
+                    <ChevronRight className="w-3 h-3 text-slate-600 flex-shrink-0 mt-0.5" />
                   </button>
 
                   <button
                     onClick={(e) => { e.stopPropagation(); onRejectToggle(item.id) }}
                     title={isRejected ? "Un-reject" : "Reject"}
                     className={`flex items-center px-1 flex-shrink-0 transition-colors ${
-                      isRejected ? "text-red-500 hover:text-muted-foreground" : "text-muted-foreground/40 hover:text-red-500"
+                      isRejected ? "text-red-500 hover:text-slate-500" : "text-slate-700 hover:text-red-500"
                     }`}
                   >
                     <XCircle className="w-3.5 h-3.5" />
@@ -844,7 +859,7 @@ function SummaryPanel({
                       onChange={(e) => { e.stopPropagation(); onSeverityChange(item.id, e.target.value as CVDiffSeverity) }}
                       onClick={(e) => e.stopPropagation()}
                       title="Override severity"
-                      className="text-[10px] font-semibold rounded border border-border/50 bg-muted/40 px-1 py-0.5 cursor-pointer focus:outline-none appearance-none text-center"
+                      className="text-[10px] font-semibold rounded border border-slate-700 bg-slate-800 text-slate-300 px-1 py-0.5 cursor-pointer focus:outline-none appearance-none text-center"
                       style={{ minWidth: "52px" }}
                     >
                       <option value="high">High</option>
@@ -964,28 +979,28 @@ function NotesRail({
   )
 
   const SEV_CLS: Record<CVNoteSeverity, string> = {
-    high:   "text-red-600 dark:text-red-400",
-    medium: "text-amber-600 dark:text-amber-400",
-    low:    "text-sky-600 dark:text-sky-400",
+    high:   "text-red-400",
+    medium: "text-amber-400",
+    low:    "text-sky-400",
   }
 
   return (
-    <div className="absolute inset-y-0 right-0 z-30 flex flex-col w-80 max-w-[92vw] bg-background border-l border-border/60 shadow-xl animate-in slide-in-from-right-2 duration-200">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border/40 flex-shrink-0">
+    <div className="absolute inset-y-0 right-0 z-30 flex flex-col w-80 max-w-[92vw] bg-slate-900 border-l border-slate-800 shadow-2xl animate-in slide-in-from-right-2 duration-200">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 flex-shrink-0">
         <div className="flex items-center gap-2">
-          <StickyNote className="w-4 h-4 text-muted-foreground" />
-          <span className="text-sm font-semibold">Manager Notes</span>
-          {saving && <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />}
-          {saveErr && <span className="text-[10px] text-red-500">Save failed</span>}
+          <StickyNote className="w-4 h-4 text-slate-400" />
+          <span className="text-sm font-semibold text-slate-100">Manager Notes</span>
+          {saving && <Loader2 className="w-3 h-3 animate-spin text-slate-400" />}
+          {saveErr && <span className="text-[10px] text-red-400">Save failed</span>}
         </div>
-        <button onClick={onClose} className="p-1 rounded-lg hover:bg-muted transition-colors text-muted-foreground">
+        <button onClick={onClose} className="p-1 rounded-lg hover:bg-slate-800 transition-colors text-slate-400">
           <X className="w-4 h-4" />
         </button>
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-6">
         <div>
-          <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5 flex items-center gap-1.5">
+          <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1.5 flex items-center gap-1.5">
             <Clock className="w-3 h-3" /> Context Notes
           </label>
           <textarea
@@ -994,59 +1009,59 @@ function NotesRail({
             onBlur={saveFreeform}
             placeholder="Add general review context…"
             rows={3}
-            className="w-full text-sm rounded-lg border border-border/60 bg-muted/30 px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-teal-500/40 placeholder:text-muted-foreground/50"
+            className="w-full text-sm rounded-lg border border-slate-700 bg-slate-800 text-slate-100 px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-teal-500/40 placeholder:text-slate-600"
           />
         </div>
 
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 flex items-center gap-1.5">
               <StickyNote className="w-3 h-3" /> Notes ({sortedNotes.length})
             </label>
             <button onClick={() => { setAddingNote(true); setAddingWatch(false) }}
-              className="flex items-center gap-1 text-[10px] font-semibold text-teal-600 dark:text-teal-400 hover:opacity-80 transition-opacity">
+              className="flex items-center gap-1 text-[10px] font-semibold text-teal-400 hover:opacity-80 transition-opacity">
               <Plus className="w-3 h-3" /> Add
             </button>
           </div>
 
           {addingNote && (
-            <div className="mb-2 p-2 rounded-lg border border-teal-300/50 bg-teal-50 dark:bg-teal-950/30 space-y-2">
+            <div className="mb-2 p-2 rounded-lg border border-teal-800/50 bg-teal-950/30 space-y-2">
               <textarea
                 autoFocus value={newNoteText} onChange={(e) => setNewNoteText(e.target.value)}
                 placeholder="Note text…" rows={2}
-                className="w-full text-xs rounded border border-border/60 bg-background px-2 py-1.5 resize-none focus:outline-none focus:ring-1 focus:ring-teal-400"
+                className="w-full text-xs rounded border border-slate-700 bg-slate-800 text-slate-100 px-2 py-1.5 resize-none focus:outline-none focus:ring-1 focus:ring-teal-500 placeholder:text-slate-600"
               />
               <div className="flex gap-1.5">
                 <button onClick={addNote} disabled={!newNoteText.trim()} className="flex-1 py-1 rounded bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold disabled:opacity-40">Add</button>
-                <button onClick={() => { setAddingNote(false); setNewNoteText("") }} className="flex-1 py-1 rounded bg-muted text-muted-foreground text-xs font-medium">Cancel</button>
+                <button onClick={() => { setAddingNote(false); setNewNoteText("") }} className="flex-1 py-1 rounded bg-slate-800 text-slate-400 text-xs font-medium">Cancel</button>
               </div>
             </div>
           )}
 
           {sortedNotes.length === 0 && !addingNote && (
-            <p className="text-[11px] text-muted-foreground/60 italic py-1">No notes yet.</p>
+            <p className="text-[11px] text-slate-600 italic py-1">No notes yet.</p>
           )}
 
           <div className="space-y-2">
             {sortedNotes.map((note) => (
-              <div key={note.id} className={`rounded-lg border border-border/50 p-2.5 ${note.resolved ? "opacity-50" : ""}`}>
-                <p className={`text-xs leading-snug ${note.resolved ? "line-through" : ""}`}>{note.text}</p>
+              <div key={note.id} className={`rounded-lg border border-slate-700/60 bg-slate-800/40 p-2.5 ${note.resolved ? "opacity-50" : ""}`}>
+                <p className={`text-xs leading-snug text-slate-100 ${note.resolved ? "line-through" : ""}`}>{note.text}</p>
                 {note.linked_diff_id && (
-                  <p className="text-[9px] text-teal-600 dark:text-teal-400 mt-0.5 flex items-center gap-0.5">
+                  <p className="text-[9px] text-teal-400 mt-0.5 flex items-center gap-0.5">
                     <Link2 className="w-2.5 h-2.5" /> Linked to change
                   </p>
                 )}
                 <div className="flex items-center gap-1 mt-1.5">
                   <button onClick={() => toggleNoteResolved(note.id)} title={note.resolved ? "Mark unresolved" : "Mark resolved"}
-                    className="p-0.5 rounded hover:bg-muted transition-colors text-muted-foreground">
+                    className="p-0.5 rounded hover:bg-slate-700 transition-colors text-slate-500">
                     <CheckCircle2 className={`w-3.5 h-3.5 ${note.resolved ? "text-teal-500" : ""}`} />
                   </button>
                   <button onClick={() => linkNoteToSelected(note.id)} disabled={!selectedDiffId}
                     title={note.linked_diff_id === selectedDiffId ? "Unlink" : "Link to selected"}
-                    className={`p-0.5 rounded hover:bg-muted transition-colors disabled:opacity-30 ${note.linked_diff_id ? "text-teal-500" : "text-muted-foreground"}`}>
+                    className={`p-0.5 rounded hover:bg-slate-700 transition-colors disabled:opacity-30 ${note.linked_diff_id ? "text-teal-500" : "text-slate-500"}`}>
                     <Link2 className="w-3.5 h-3.5" />
                   </button>
-                  <button onClick={() => deleteNote(note.id)} className="p-0.5 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-red-500 ml-auto">
+                  <button onClick={() => deleteNote(note.id)} className="p-0.5 rounded hover:bg-slate-700 transition-colors text-slate-500 hover:text-red-400 ml-auto">
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -1057,25 +1072,25 @@ function NotesRail({
 
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 flex items-center gap-1.5">
               <ListChecks className="w-3 h-3" /> Watchlist ({sortedWatch.length})
             </label>
             <button onClick={() => { setAddingWatch(true); setAddingNote(false) }}
-              className="flex items-center gap-1 text-[10px] font-semibold text-teal-600 dark:text-teal-400 hover:opacity-80">
+              className="flex items-center gap-1 text-[10px] font-semibold text-teal-400 hover:opacity-80">
               <Plus className="w-3 h-3" /> Add
             </button>
           </div>
 
           {addingWatch && (
-            <div className="mb-2 p-2 rounded-lg border border-teal-300/50 bg-teal-50 dark:bg-teal-950/30 space-y-2">
+            <div className="mb-2 p-2 rounded-lg border border-teal-800/50 bg-teal-950/30 space-y-2">
               <textarea
                 autoFocus value={newWatchText} onChange={(e) => setNewWatchText(e.target.value)}
                 placeholder="Item to watch…" rows={2}
-                className="w-full text-xs rounded border border-border/60 bg-background px-2 py-1.5 resize-none focus:outline-none focus:ring-1 focus:ring-teal-400"
+                className="w-full text-xs rounded border border-slate-700 bg-slate-800 text-slate-100 px-2 py-1.5 resize-none focus:outline-none focus:ring-1 focus:ring-teal-500 placeholder:text-slate-600"
               />
               <div className="flex items-center gap-1.5">
                 <select value={newWatchSev} onChange={(e) => setNewWatchSev(e.target.value as CVNoteSeverity)}
-                  className="text-xs rounded border border-border/60 bg-background px-1 py-1">
+                  className="text-xs rounded border border-slate-700 bg-slate-800 text-slate-300 px-1 py-1">
                   <option value="high">High</option>
                   <option value="medium">Medium</option>
                   <option value="low">Low</option>
@@ -1083,36 +1098,36 @@ function NotesRail({
               </div>
               <div className="flex gap-1.5">
                 <button onClick={addWatchlistItem} disabled={!newWatchText.trim()} className="flex-1 py-1 rounded bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold disabled:opacity-40">Add</button>
-                <button onClick={() => { setAddingWatch(false); setNewWatchText("") }} className="flex-1 py-1 rounded bg-muted text-muted-foreground text-xs font-medium">Cancel</button>
+                <button onClick={() => { setAddingWatch(false); setNewWatchText("") }} className="flex-1 py-1 rounded bg-slate-800 text-slate-400 text-xs font-medium">Cancel</button>
               </div>
             </div>
           )}
 
           {sortedWatch.length === 0 && !addingWatch && (
-            <p className="text-[11px] text-muted-foreground/60 italic py-1">No items yet.</p>
+            <p className="text-[11px] text-slate-600 italic py-1">No items yet.</p>
           )}
 
           <div className="space-y-2">
             {sortedWatch.map((item) => (
-              <div key={item.id} className={`rounded-lg border border-border/50 p-2.5 ${item.resolved ? "opacity-50" : ""}`}>
+              <div key={item.id} className={`rounded-lg border border-slate-700/60 bg-slate-800/40 p-2.5 ${item.resolved ? "opacity-50" : ""}`}>
                 <div className="flex items-start gap-2">
                   <span className={`text-[9px] font-bold uppercase flex-shrink-0 mt-0.5 ${SEV_CLS[item.severity]}`}>{item.severity}</span>
-                  <p className={`text-xs leading-snug flex-1 ${item.resolved ? "line-through" : ""}`}>{item.text}</p>
+                  <p className={`text-xs leading-snug flex-1 text-slate-100 ${item.resolved ? "line-through" : ""}`}>{item.text}</p>
                 </div>
                 {item.linked_diff_id && (
-                  <p className="text-[9px] text-teal-600 dark:text-teal-400 mt-0.5 flex items-center gap-0.5">
+                  <p className="text-[9px] text-teal-400 mt-0.5 flex items-center gap-0.5">
                     <Link2 className="w-2.5 h-2.5" /> Linked to change
                   </p>
                 )}
                 <div className="flex items-center gap-1 mt-1.5">
-                  <button onClick={() => toggleWatchResolved(item.id)} className="p-0.5 rounded hover:bg-muted transition-colors text-muted-foreground">
+                  <button onClick={() => toggleWatchResolved(item.id)} className="p-0.5 rounded hover:bg-slate-700 transition-colors text-slate-500">
                     <CheckCircle2 className={`w-3.5 h-3.5 ${item.resolved ? "text-teal-500" : ""}`} />
                   </button>
                   <button onClick={() => linkWatchToSelected(item.id)} disabled={!selectedDiffId}
-                    className={`p-0.5 rounded hover:bg-muted transition-colors disabled:opacity-30 ${item.linked_diff_id ? "text-teal-500" : "text-muted-foreground"}`}>
+                    className={`p-0.5 rounded hover:bg-slate-700 transition-colors disabled:opacity-30 ${item.linked_diff_id ? "text-teal-500" : "text-slate-500"}`}>
                     <Link2 className="w-3.5 h-3.5" />
                   </button>
-                  <button onClick={() => deleteWatchlistItem(item.id)} className="p-0.5 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-red-500 ml-auto">
+                  <button onClick={() => deleteWatchlistItem(item.id)} className="p-0.5 rounded hover:bg-slate-700 transition-colors text-slate-500 hover:text-red-400 ml-auto">
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -1490,7 +1505,7 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
 
   // ── Workspace ─────────────────────────────────────────────────────────────────
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)]">
+    <div className="flex flex-col h-[calc(100vh-4rem)] bg-slate-950 text-slate-100">
 
       {popover && (
         <MiniPopover
@@ -1502,27 +1517,27 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
       )}
 
       {/* ── Workspace command bar — stationary (body overflow locked) ── */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-border/70 bg-background/98 shadow-sm flex-shrink-0 gap-2 backdrop-blur-sm">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-slate-800 bg-slate-900 shadow-md flex-shrink-0 gap-2">
         {/* Left: back + title */}
         <div className="flex items-center gap-2 min-w-0">
           <button
             onClick={() => navigate("/compare-versions")}
-            className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground flex-shrink-0"
+            className="p-2 rounded-lg hover:bg-slate-800 transition-colors text-slate-400 hover:text-slate-100 flex-shrink-0"
             title="Back to My Comparisons"
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
           <div className="min-w-0 leading-none">
-            <p className="text-sm font-bold truncate max-w-[130px] sm:max-w-[240px] lg:max-w-[400px] leading-tight text-foreground">
+            <p className="text-sm font-bold truncate max-w-[130px] sm:max-w-[240px] lg:max-w-[400px] leading-tight text-slate-100">
               {session.title}
             </p>
             <div className="flex items-center gap-1.5 mt-0.5">
-              <p className="text-[11px] text-muted-foreground leading-none font-medium">Compare Versions</p>
+              <p className="text-[11px] text-slate-500 leading-none font-medium">Compare Versions</p>
               {totalCount > 0 && (
-                <span className="text-[11px] font-mono text-muted-foreground leading-none">· {totalCount} changes</span>
+                <span className="text-[11px] font-mono text-slate-500 leading-none">· {totalCount} changes</span>
               )}
               {highCount > 0 && (
-                <span className="text-[11px] font-semibold text-red-600 dark:text-red-400 leading-none">· {highCount} high</span>
+                <span className="text-[11px] font-semibold text-red-400 leading-none">· {highCount} high</span>
               )}
             </div>
           </div>
@@ -1533,22 +1548,22 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
 
           {/* Diff navigator */}
           {sortedByPage.length > 0 && (
-            <div className="flex items-center gap-0 border border-border/50 rounded-md overflow-hidden flex-shrink-0">
+            <div className="flex items-center gap-0 border border-slate-700 rounded-md overflow-hidden flex-shrink-0">
               <button
                 onClick={jumpToPrevDiff}
                 disabled={diffNavIdx <= 0 && diffNavIdx !== -1 || (diffNavIdx === -1 && sortedByPage.length === 0)}
-                className="px-1 py-0.5 text-muted-foreground hover:text-foreground hover:bg-muted/60 disabled:opacity-30 transition-colors"
+                className="px-1 py-0.5 text-slate-400 hover:text-slate-100 hover:bg-slate-800 disabled:opacity-30 transition-colors"
                 title="Previous diff"
               >
                 <ChevronUp className="w-3 h-3" />
               </button>
-              <span className="px-1.5 text-[10px] font-mono text-muted-foreground border-x border-border/40 select-none whitespace-nowrap py-0.5">
+              <span className="px-1.5 text-[10px] font-mono text-slate-400 border-x border-slate-700 select-none whitespace-nowrap py-0.5">
                 {navLabel}
               </span>
               <button
                 onClick={jumpToNextDiff}
                 disabled={diffNavIdx >= sortedByPage.length - 1 && diffNavIdx !== -1}
-                className="px-1 py-0.5 text-muted-foreground hover:text-foreground hover:bg-muted/60 disabled:opacity-30 transition-colors"
+                className="px-1 py-0.5 text-slate-400 hover:text-slate-100 hover:bg-slate-800 disabled:opacity-30 transition-colors"
                 title="Next diff"
               >
                 <ChevronDown className="w-3 h-3" />
@@ -1561,8 +1576,8 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
             onClick={() => setDensity((d) => d === "compact" ? "comfortable" : "compact")}
             className={`flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium border transition-colors ${
               density === "compact"
-                ? "bg-muted/80 border-border/60 text-foreground"
-                : "border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                ? "bg-slate-700 border-slate-600 text-slate-100"
+                : "border-slate-700 text-slate-400 hover:text-slate-100 hover:bg-slate-800"
             }`}
             title={density === "compact" ? "Switch to comfortable density" : "Switch to compact density"}
           >
@@ -1573,7 +1588,7 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
           {session.status !== "scanning" && (
             <button
               onClick={handleRescan} disabled={rescanning}
-              className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium border border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors disabled:opacity-50"
+              className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium border border-slate-700 text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-colors disabled:opacity-50"
               title="Re-run comparison scan"
             >
               {rescanning ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
@@ -1587,10 +1602,10 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
               disabled={enriching}
               className={`flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium border transition-colors disabled:opacity-50 ${
                 session.aiStatus === "error"
-                  ? "border-amber-300/60 text-amber-700 dark:text-amber-300 hover:bg-amber-50/60"
+                  ? "border-amber-700/60 text-amber-400 hover:bg-amber-950/40"
                   : session.aiStatus === "complete"
-                  ? "border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted/60"
-                  : "border-violet-300/60 text-violet-700 dark:text-violet-300 hover:bg-violet-50/60"
+                  ? "border-slate-700 text-slate-400 hover:text-slate-100 hover:bg-slate-800"
+                  : "border-violet-700/60 text-violet-400 hover:bg-violet-950/40"
               }`}
               title={session.aiStatus === "error" ? "Retry AI review" : session.aiStatus === "complete" ? "Re-run AI review" : "Run AI review"}
             >
@@ -1604,7 +1619,7 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
           {session.status === "complete" && (
             <button
               onClick={handleExport}
-              className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium border border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+              className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium border border-slate-700 text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-colors"
               title="Download PDF audit report"
             >
               <Download className="w-3 h-3" />
@@ -1616,8 +1631,8 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
             onClick={() => { setSummaryOpen((o) => !o); if (notesOpen) setNotesOpen(false) }}
             className={`flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium transition-colors border ${
               summaryOpen
-                ? "bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 border-violet-300/60"
-                : "border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                ? "bg-violet-900/40 text-violet-300 border-violet-700/60"
+                : "border-slate-700 text-slate-400 hover:text-slate-100 hover:bg-slate-800"
             }`}
             title="Comparison Summary"
           >
@@ -1630,8 +1645,8 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
             onClick={() => { setNotesOpen((o) => !o); if (summaryOpen) setSummaryOpen(false) }}
             className={`flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium transition-colors border ${
               notesOpen
-                ? "bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300 border-teal-300/60"
-                : "border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                ? "bg-teal-900/40 text-teal-300 border-teal-700/60"
+                : "border-slate-700 text-slate-400 hover:text-slate-100 hover:bg-slate-800"
             }`}
             title="Manager Notes"
           >
@@ -1643,15 +1658,23 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
 
       {/* ── Status banners ── */}
       {session.status === "scanning" && (
-        <div className="flex items-center gap-2 px-4 py-1.5 bg-blue-50 dark:bg-blue-950/40 border-b border-blue-200/50 text-blue-700 dark:text-blue-300 text-xs flex-shrink-0">
-          <Scan className="w-3.5 h-3.5 animate-pulse" />
-          <span>Analyzing documents — detecting changes across all pages…</span>
-          <Loader2 className="w-3 h-3 animate-spin ml-auto" />
+        <div className="flex items-center gap-2 px-4 py-2 bg-blue-950/70 border-b border-blue-800/50 text-blue-300 text-xs flex-shrink-0">
+          <Scan className="w-3.5 h-3.5 animate-pulse flex-shrink-0" />
+          <span className="flex-1">Analyzing documents — detecting changes across all pages…</span>
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            <div className="flex gap-0.5">
+              {[1,2,3,4].map((i) => (
+                <div key={i} className="w-0.5 rounded-full bg-blue-400 animate-pulse"
+                  style={{ height: `${6 + (i % 3) * 3}px`, animationDelay: `${i * 100}ms` }} />
+              ))}
+            </div>
+            <Loader2 className="w-3 h-3 animate-spin" />
+          </div>
         </div>
       )}
       {session.status === "error" && (
-        <div className="flex items-center gap-2 px-4 py-1.5 bg-red-50 dark:bg-red-950/40 border-b border-red-200/50 text-red-700 dark:text-red-300 text-xs flex-shrink-0">
-          <AlertCircle className="w-3.5 h-3.5" />
+        <div className="flex items-center gap-2 px-4 py-1.5 bg-red-950/60 border-b border-red-800/50 text-red-300 text-xs flex-shrink-0">
+          <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
           <span>Analysis failed.</span>
           <button onClick={handleRescan} disabled={rescanning} className="ml-1 underline font-semibold disabled:opacity-50">
             {rescanning ? "Retrying…" : "Retry"}
@@ -1659,14 +1682,14 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
         </div>
       )}
       {session.status === "complete" && session.aiStatus === "running" && (
-        <div className="flex items-center gap-2 px-4 py-1 bg-violet-50 dark:bg-violet-950/30 border-b border-violet-200/40 text-violet-700 dark:text-violet-300 text-xs flex-shrink-0">
+        <div className="flex items-center gap-2 px-4 py-1 bg-violet-950/50 border-b border-violet-800/40 text-violet-300 text-xs flex-shrink-0">
           <Sparkles className="w-3 h-3 animate-pulse flex-shrink-0" />
           <span>AI review running — enriching change items…</span>
           <Loader2 className="w-3 h-3 animate-spin ml-auto flex-shrink-0" />
         </div>
       )}
       {session.status === "complete" && session.aiStatus === "error" && (
-        <div className="flex items-center gap-2 px-4 py-1 bg-amber-50 dark:bg-amber-950/30 border-b border-amber-200/40 text-amber-700 dark:text-amber-300 text-xs flex-shrink-0">
+        <div className="flex items-center gap-2 px-4 py-1 bg-amber-950/50 border-b border-amber-800/40 text-amber-300 text-xs flex-shrink-0">
           <AlertCircle className="w-3 h-3 flex-shrink-0" />
           <span>AI review unavailable. Deterministic comparison still available.</span>
           <button onClick={() => handleEnrich(false)} disabled={enriching} className="ml-auto underline font-semibold disabled:opacity-50 flex-shrink-0">
@@ -1676,11 +1699,11 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
       )}
 
       {/* ── Mobile tab switcher ── */}
-      <div className="flex md:hidden border-b border-border/40 flex-shrink-0 bg-background">
+      <div className="flex md:hidden border-b border-slate-800 flex-shrink-0 bg-slate-900">
         {(["original", "revised"] as const).map((tab) => (
           <button key={tab} onClick={() => setActiveTab(tab)}
             className={`flex-1 py-1.5 text-xs font-semibold transition-colors border-b-2 ${
-              activeTab === tab ? "text-teal-600 dark:text-teal-400 border-teal-500" : "text-muted-foreground border-transparent hover:text-foreground"
+              activeTab === tab ? "text-teal-400 border-teal-500" : "text-slate-500 border-transparent hover:text-slate-100"
             }`}
           >
             {tab === "original" ? "Baseline" : "Revised"}
@@ -1705,7 +1728,7 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
             loading={origLoading}
             failed={origFailed}
             errorMsg={originalError}
-            accentClass="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300"
+            accentClass="bg-blue-900/60 text-blue-300"
             groups={origGroups}
             selectedDiffId={selectedDiffId}
             hoveredItemIds={hoveredItemIds}
@@ -1718,11 +1741,11 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
 
         {/* Resizable drag handle */}
         <div
-          className="hidden md:flex items-center justify-center w-2 flex-shrink-0 cursor-col-resize bg-border/40 hover:bg-teal-400/50 active:bg-teal-500/60 transition-colors group select-none"
+          className="hidden md:flex items-center justify-center w-1.5 flex-shrink-0 cursor-col-resize bg-slate-800 hover:bg-teal-800/50 active:bg-teal-700/50 transition-colors group select-none"
           onPointerDown={startResize}
           title="Drag to resize"
         >
-          <div className="w-0.5 h-8 rounded-full bg-border/80 group-hover:bg-teal-500/70 transition-colors" />
+          <div className="w-0.5 h-8 rounded-full bg-slate-600 group-hover:bg-teal-500 transition-colors" />
         </div>
 
         {/* Right — Revised */}
@@ -1736,7 +1759,7 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
             loading={revLoading}
             failed={revFailed}
             errorMsg={revisedError}
-            accentClass="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300"
+            accentClass="bg-emerald-900/60 text-emerald-300"
             groups={revGroups}
             selectedDiffId={selectedDiffId}
             hoveredItemIds={hoveredItemIds}
