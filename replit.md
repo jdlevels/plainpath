@@ -91,7 +91,7 @@ Same scan-workspace layout, right panel adapts per tool:
 - **Compare Versions**: modified layout — original viewer + revised viewer + change/risk intelligence panel or drawer + source-backed change references
 - **Redact Sensitive Info**: modified layout — document viewer + detected sensitive items + redaction controls + preview before export + source/highlight for detected items
 - **Ask This Document**: document-first — document viewer + question/answer intelligence panel; every answer includes source chips when possible
-- **Build a Contract / Document Builder**: creation layout (not scan) — left: live document preview; right: builder controls/questions; same premium PlainPath design language
+- **Build a Contract / Document Builder**: creation layout (not a scan tool) — left: live document preview/output; right: builder controls, questions, clauses, and export options. Same premium PlainPath visual language and split-screen philosophy, but adapted for document creation — not the same intelligence-panel structure as scan tools. Feels related to scan tools but serves building, not reviewing.
 
 **8. Product focus rule**
 PlainPath stays focused on: document scanning, document meaning, extraction, risk review, trust review, source-backed explanations, action steps. Do not add SOP/manual builder language. Do not add generic document-writing language. Do not add Document Classifier or Packet Splitter until current core tool redesigns are complete.
