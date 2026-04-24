@@ -376,11 +376,8 @@ function PlanGate({ children }: { children: React.ReactNode }) {
     return <>{children}</>;
   }
 
-  // Signed in but entitlements still loading on the INITIAL fetch (no cached data yet).
-  // On subsequent reloads (e.g. session-token refresh mid-analysis) we keep the Router
-  // mounted using the previous entitlements value — unmounting here caused every
-  // in-progress analysis to reset when Clerk refreshed its session token (~60s).
-  if (entLoading && !entitlements) {
+  // Signed in but entitlements still loading
+  if (entLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="w-7 h-7 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
@@ -431,32 +428,6 @@ function protect(Component: React.ComponentType) {
   };
 }
 
-// ── Stable protected page references ─────────────────────────────────────────
-// These MUST be defined at module level (outside Router) so their identity is
-// constant across re-renders. Defining them inline with protect(X) inside the
-// Router JSX creates a new component type on every render, which causes React
-// to unmount + remount the page, resetting all local state (the PDF "screen
-// reset" bug: step resets to "input" on every re-render mid-upload).
-const ProtectedHome            = protect(Home)
-const ProtectedImport          = protect(Import)
-const ProtectedAnalyze         = protect(Analyze)
-const ProtectedTrustCheck      = protect(TrustCheck)
-const ProtectedMyAnalyses      = protect(MyAnalyses)
-const ProtectedContractBuilder = protect(ContractBuilder)
-const ProtectedContractReview  = protect(ContractReview)
-const ProtectedCompare         = protect(Compare)
-const ProtectedRedact          = protect(Redact)
-const ProtectedBilling         = protect(Billing)
-const ProtectedUpgrade         = protect(Upgrade)
-const ProtectedTeamManage      = protect(TeamManage)
-const ProtectedSignature       = protect(Signature)
-const ProtectedDocuments       = protect(Documents)
-const ProtectedAccountSecurity = protect(AccountSecurity)
-const ProtectedClauseExtractor = protect(ClauseExtractor)
-const ProtectedCompareVersions = protect(CompareVersions)
-const ProtectedBuilderNew      = protect(BuilderNew)
-const ProtectedBuilderList     = protect(BuilderList)
-
 function Router() {
   return (
     <div className="flex flex-col min-h-screen">
@@ -500,39 +471,38 @@ function Router() {
             <Route path="/join/:token" component={JoinTeam} />
 
             {/* ── Protected routes (require sign-in) ── */}
-            <Route path="/" component={ProtectedHome} />
-            <Route path="/import" component={ProtectedImport} />
-            <Route path="/analyze" component={ProtectedImport} />
-            <Route path="/results" component={ProtectedAnalyze} />
-            <Route path="/trust-check" component={ProtectedTrustCheck} />
-            <Route path="/my-analyses" component={ProtectedMyAnalyses} />
-            <Route path="/contract-builder" component={ProtectedContractBuilder} />
-            <Route path="/build-contract" component={ProtectedContractBuilder} />
-            <Route path="/contract-review" component={ProtectedContractReview} />
-            <Route path="/build" component={ProtectedContractBuilder} />
-            <Route path="/review" component={ProtectedContractReview} />
-            <Route path="/compare" component={ProtectedCompare} />
-            <Route path="/redact" component={ProtectedRedact} />
-            <Route path="/billing" component={ProtectedBilling} />
-            <Route path="/upgrade" component={ProtectedUpgrade} />
-            <Route path="/team" component={ProtectedTeamManage} />
-            <Route path="/signature" component={ProtectedSignature} />
-            <Route path="/documents" component={ProtectedDocuments} />
-            <Route path="/account-security" component={ProtectedAccountSecurity} />
-            <Route path="/clause-extractor" component={ProtectedClauseExtractor} />
-            <Route path="/clause-extractor/:id" component={ProtectedClauseExtractor} />
-            <Route path="/compare-versions" component={ProtectedCompareVersions} />
+            <Route path="/" component={protect(Home)} />
+            <Route path="/import" component={protect(Import)} />
+            <Route path="/analyze" component={protect(Import)} />
+            <Route path="/results" component={protect(Analyze)} />
+            <Route path="/trust-check" component={protect(TrustCheck)} />
+            <Route path="/my-analyses" component={protect(MyAnalyses)} />
+            <Route path="/contract-builder" component={protect(ContractBuilder)} />
+            <Route path="/build-contract" component={protect(ContractBuilder)} />
+            <Route path="/contract-review" component={protect(ContractReview)} />
+            <Route path="/build" component={protect(ContractBuilder)} />
+            <Route path="/review" component={protect(ContractReview)} />
+            <Route path="/compare" component={protect(Compare)} />
+            <Route path="/redact" component={protect(Redact)} />
+            <Route path="/billing" component={protect(Billing)} />
+            <Route path="/upgrade" component={protect(Upgrade)} />
+            <Route path="/team" component={protect(TeamManage)} />
+            <Route path="/signature" component={protect(Signature)} />
+            <Route path="/documents" component={protect(Documents)} />
+            <Route path="/account-security" component={protect(AccountSecurity)} />
+            <Route path="/clause-extractor" component={protect(ClauseExtractor)} />
+            <Route path="/clause-extractor/:id" component={protect(ClauseExtractor)} />
+            <Route path="/compare-versions" component={protect(CompareVersions)} />
             <Route path="/compare-versions/:id">
-              {(params) => (
-                <RequireAuth>
-                  <CompareVersionsSession sessionId={params.id!} />
-                </RequireAuth>
-              )}
+              {(params) => {
+                const C = protect(() => <CompareVersionsSession sessionId={params.id!} />)
+                return <C />
+              }}
             </Route>
 
             {BUILDER_ENABLED && (
               <>
-                <Route path="/builder/new" component={ProtectedBuilderNew} />
+                <Route path="/builder/new" component={protect(BuilderNew)} />
                 <Route path="/builder/:id">
                   {(params) => (
                     <RequireAuth>
@@ -540,7 +510,7 @@ function Router() {
                     </RequireAuth>
                   )}
                 </Route>
-                <Route path="/builder" component={ProtectedBuilderList} />
+                <Route path="/builder" component={protect(BuilderList)} />
               </>
             )}
 
