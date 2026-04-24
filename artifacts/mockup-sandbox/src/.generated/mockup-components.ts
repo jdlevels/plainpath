@@ -22,6 +22,6 @@ export const modules: ModuleMap = {
   "./components/mockups/document-overview-hub/OverviewProcessing.tsx": () => import("../components/mockups/document-overview-hub/OverviewProcessing.tsx"),
   "./components/mockups/sig-dashboard/Dashboard.tsx": () => import("../components/mockups/sig-dashboard/Dashboard.tsx"),
   "./components/mockups/sig-detail/RequestDetail.tsx": () => import("../components/mockups/sig-detail/RequestDetail.tsx"),
-  "./components/mockups/sig-wizard/WizardFlow.tsx": () => import("../components/mockups/sig-wizard/WizardFlow.tsx"),
-  "./components/mockups/sig-prepare/PrepareWorkspace.tsx": () => import("../components/mockups/sig-prepare/PrepareWorkspace.tsx")
+  "./components/mockups/sig-prepare/PrepareWorkspace.tsx": () => import("../components/mockups/sig-prepare/PrepareWorkspace.tsx"),
+  "./components/mockups/sig-wizard/WizardFlow.tsx": () => import("../components/mockups/sig-wizard/WizardFlow.tsx")
 };
