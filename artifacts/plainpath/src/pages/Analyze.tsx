@@ -223,199 +223,201 @@ export default function Analyze() {
     }
   }
 
+  const riskScore = (() => {
+    const aiScore = typeof analysis.overallRisk === "number" ? analysis.overallRisk : null
+    return aiScore ?? computeRiskScore({ risks, deadlines, overallConfidence: analysis.overallConfidence })
+  })()
+  const riskScoreResult = getRiskScoreResult(riskScore)
+
   return (
-    <div className="min-h-screen bg-background" style={{ paddingBottom: "max(6rem, env(safe-area-inset-bottom) + 6rem)" }}>
+    <Tabs.Root
+      value={activeTab}
+      onValueChange={setActiveTab}
+      className="h-screen flex flex-col bg-slate-950 text-slate-100 overflow-hidden"
+    >
+      {/* ── Header ───────────────────────────── */}
+      <div className="no-print flex-shrink-0 flex items-center gap-3 px-4 sm:px-5 py-3 bg-slate-900 border-b border-slate-800 z-30">
+        <button
+          onClick={() => setLocation("/analyze")}
+          style={{ touchAction: "manipulation" }}
+          className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:bg-slate-800 hover:text-slate-300 transition-colors shrink-0"
+        >
+          <ArrowLeft className="w-4 h-4" />
+        </button>
 
-      {/* ── Sticky header ───────────────────────────── */}
-      <div className="no-print bg-background/95 backdrop-blur-md border-b border-border/50 sticky top-0 z-30">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-2.5 sm:py-4">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setLocation("/analyze")}
-              style={{ touchAction: "manipulation" }}
-              className="w-10 h-10 sm:w-9 sm:h-9 flex items-center justify-center hover:bg-secondary active:bg-secondary rounded-xl transition-colors shrink-0"
-            >
-              <ArrowLeft className="w-4 h-4 text-muted-foreground" />
-            </button>
-
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                {documentTypeHint && (
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-primary/70 bg-primary/8 px-1.5 py-0.5 rounded-md">
-                    {documentTypeHint}
-                  </span>
-                )}
-                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">{analysis.documentType}</span>
-              </div>
-              <h1 className="text-base font-bold truncate text-foreground leading-tight">{analysis.title}</h1>
-              {getAttorneyCostEstimate(analysis.documentType) && (
-                <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold leading-tight hidden sm:block">
-                  Saved you {getAttorneyCostEstimate(analysis.documentType)} vs. an attorney
-                </p>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2 sm:gap-4 shrink-0">
-              <div className="hidden sm:block text-right">
-                <div className="flex items-center justify-between gap-3 mb-1.5">
-                  <div className="flex items-center gap-1.5">
-                    <TrendingUp className="w-3 h-3 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground font-medium">Progress</span>
-                  </div>
-                  <span className="text-xs font-bold text-foreground tabular-nums">{progress}%</span>
-                </div>
-                <Progress value={progress} className="h-1.5 w-32" />
-              </div>
-              <div className="sm:hidden flex items-center gap-1.5">
-                <TrendingUp className="w-3 h-3 text-muted-foreground" />
-                <span className="text-xs font-bold text-foreground tabular-nums">{progress}%</span>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleSave}
-                style={{ touchAction: "manipulation" }}
-                className={`gap-1.5 text-xs h-8 border-border/60 transition-all ${
-                  justSaved
-                    ? "bg-green-50 dark:bg-green-950/30 border-green-300 dark:border-green-700 text-green-700 dark:text-green-400"
-                    : "bg-card"
-                }`}
-              >
-                {justSaved
-                  ? <BookmarkCheck className="w-3.5 h-3.5" />
-                  : <Bookmark className="w-3.5 h-3.5" />
-                }
-                <span className="hidden sm:inline">
-                  {justSaved ? "Saved" : savedId ? "Update" : "Save"}
-                </span>
-              </Button>
-              <ExportMenu analysis={analysis} />
-            </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+            {documentTypeHint && (
+              <span className="text-[10px] font-bold uppercase tracking-widest text-violet-400 bg-violet-900/40 px-1.5 py-0.5 rounded">
+                {documentTypeHint}
+              </span>
+            )}
+            <span className="text-[10px] text-slate-600 font-medium uppercase tracking-widest">{analysis.documentType}</span>
           </div>
+          <h1 className="text-sm font-bold text-slate-100 truncate leading-tight">{analysis.title}</h1>
+          {getAttorneyCostEstimate(analysis.documentType) && (
+            <p className="text-[10px] text-emerald-400 font-semibold leading-tight hidden sm:block">
+              Saved you {getAttorneyCostEstimate(analysis.documentType)} vs. an attorney
+            </p>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => setActiveTab("risks")}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-colors"
+            title="Document Risk Score"
+          >
+            <TrendingUp className="w-3.5 h-3.5 text-slate-400" />
+            <span className="text-xs font-bold text-slate-300 tabular-nums">{riskScore}</span>
+            <span className={`text-[10px] font-medium hidden sm:inline ${riskScoreResult.color}`}>{riskScoreResult.label}</span>
+          </button>
+          <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-700">
+            <span className="text-xs font-bold text-slate-300 tabular-nums">{progress}%</span>
+            <span className="text-[10px] text-slate-500 font-medium">done</span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1.5 shrink-0">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSave}
+            style={{ touchAction: "manipulation" }}
+            className={`gap-1.5 text-xs h-8 transition-all border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700 hover:border-slate-600 hover:text-slate-100 ${
+              justSaved ? "border-emerald-700 bg-emerald-900/40 text-emerald-300" : ""
+            }`}
+          >
+            {justSaved ? <BookmarkCheck className="w-3.5 h-3.5" /> : <Bookmark className="w-3.5 h-3.5" />}
+            <span className="hidden sm:inline">{justSaved ? "Saved" : savedId ? "Update" : "Save"}</span>
+          </Button>
+          <ExportMenu analysis={analysis} />
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-
-        {/* ── At-a-glance strip ───────────────────────── */}
-        <div className="no-print mt-4 sm:mt-6 mb-5 sm:mb-7">
-          <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar pb-0.5">
-            <StatPill label="Steps" value={actionSteps.length} onClick={() => setActiveTab("checklist")} />
-            <StatPill label="Docs" value={requiredDocuments.length} onClick={() => setActiveTab("documents")} />
-            <StatPill label="Deadlines" value={hardDeadlines.length} warn={hardDeadlines.length > 0} onClick={() => setActiveTab("deadlines")} />
-            <StatPill label="Risks" value={highRisks.length} warn={highRisks.length > 0} onClick={() => setActiveTab("risks")} />
-            {(() => {
-              // Prefer the AI-provided risk score; fall back to the computed score
-              const aiScore = typeof analysis.overallRisk === "number" ? analysis.overallRisk : null
-              const score = aiScore ?? computeRiskScore({ risks, deadlines, overallConfidence: analysis.overallConfidence })
-              const sr = getRiskScoreResult(score)
-              return (
-                <button
-                  onClick={() => setActiveTab("risks")}
-                  className={`shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-bold transition-colors hover:opacity-80 ${sr.bg} ${sr.color}`}
-                  title="Document Risk Score — click to view risks"
-                >
-                  <span className="font-mono">{score}</span>
-                  <span className="hidden sm:inline">{sr.label}</span>
-                </button>
-              )
-            })()}
-            <div className="flex items-center gap-1.5 shrink-0 ml-auto pl-2">
-              <ConfidenceBadge level={analysis.overallConfidence} />
-              <span className="text-xs text-muted-foreground hidden sm:inline">overall confidence</span>
-            </div>
-          </div>
-        </div>
-
-        {/* ── Red Flags banner ─────────────────────────── */}
-        {analysis.redFlags && analysis.redFlags.length > 0 && (
-          <div className="no-print mb-5 rounded-xl border border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-950/30 px-4 py-3 flex items-start gap-3">
-            <OctagonAlert className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
-            <div className="min-w-0 flex-1">
-              <p className="text-xs font-bold uppercase tracking-wide text-red-700 dark:text-red-400 mb-1.5">Critical issues to review</p>
-              <ul className="space-y-1">
-                {analysis.redFlags.map((flag, i) => (
-                  <li key={i} className="flex items-start gap-1.5 text-sm text-red-800 dark:text-red-300">
-                    <span className="shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full bg-red-500 dark:bg-red-400" />
-                    {flag}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        )}
-
-        {/* ── Attorney badge ──────────────────────────── */}
-        <div className="no-print flex items-center justify-end mb-3">
-          <a href="/methodology" className="inline-flex items-center gap-1.5 text-[10px] text-muted-foreground/60 hover:text-muted-foreground transition-colors">
-            <Shield className="w-3 h-3" />
-            Methodology reviewed by licensed attorneys
-          </a>
-        </div>
-
-        {/* ── Tab bar ──────────────────────────────────── */}
-        <Tabs.Root value={activeTab} onValueChange={setActiveTab}>
-          <div className="no-print flex items-center gap-0 bg-card border border-border/40 rounded-2xl shadow-sm mb-4 sm:mb-6">
-            {canScrollLeft && (
-              <button
-                onClick={scrollTabsLeft}
-                aria-label="Scroll tabs left"
-                className="lg:hidden shrink-0 flex items-center justify-center w-8 h-10 text-muted-foreground hover:text-foreground transition-colors rounded-l-2xl hover:bg-secondary/60"
-              >
-                <ChevronLeft className="w-4 h-4" />
+      {/* ── Red Flags slim bar ── */}
+      {analysis.redFlags && analysis.redFlags.length > 0 && (
+        <div className="no-print flex-shrink-0 flex items-start gap-2.5 px-4 sm:px-5 py-2 bg-red-950/50 border-b border-red-900/60">
+          <OctagonAlert className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" />
+          <div className="flex items-baseline gap-2 flex-wrap min-w-0">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-red-400 shrink-0">Critical</span>
+            {analysis.redFlags.slice(0, 2).map((flag, i) => (
+              <span key={i} className="text-xs text-red-200">{flag}{i < Math.min(analysis.redFlags!.length, 2) - 1 ? " •" : ""}</span>
+            ))}
+            {analysis.redFlags.length > 2 && (
+              <button onClick={() => setActiveTab("risks")} className="text-[10px] font-semibold text-red-400 hover:text-red-300 shrink-0">
+                +{analysis.redFlags.length - 2} more
               </button>
             )}
-          <div className="flex-1 overflow-hidden rounded-2xl">
-          <Tabs.List ref={tabListRef} onScroll={checkScroll} className="flex overflow-x-auto lg:overflow-x-visible lg:flex-wrap hide-scrollbar gap-0.5 px-1 py-1 scroll-smooth">
+          </div>
+        </div>
+      )}
+
+      {/* ── Body: Sidebar + Content ── */}
+      <div className="flex-1 flex overflow-hidden">
+
+        {/* ── Left Sidebar ── */}
+        <aside className="no-print w-[200px] lg:w-[224px] flex-shrink-0 flex flex-col bg-slate-900 border-r border-slate-800 overflow-y-auto">
+
+          {/* At-a-glance stat tiles */}
+          <div className="px-3 pt-4 pb-3 border-b border-slate-800/80 grid grid-cols-2 gap-1.5">
+            {[
+              { label: "Steps",     value: actionSteps.length,        warn: false,                   tab: "checklist" },
+              { label: "Deadlines", value: hardDeadlines.length,      warn: hardDeadlines.length > 0, tab: "deadlines" },
+              { label: "Req. Docs", value: requiredDocuments.length,   warn: false,                   tab: "documents" },
+              { label: "Risks",     value: highRisks.length,          warn: highRisks.length > 0,    tab: "risks"     },
+            ].map(stat => (
+              <button
+                key={stat.label}
+                onClick={() => setActiveTab(stat.tab)}
+                className={`rounded-lg p-2 text-left transition-colors hover:bg-slate-800 border ${
+                  stat.warn && stat.value > 0
+                    ? "border-amber-800/50 bg-amber-950/20"
+                    : "border-slate-800 bg-slate-800/40"
+                }`}
+              >
+                <div className={`text-lg font-bold tabular-nums leading-none mb-0.5 ${stat.warn && stat.value > 0 ? "text-amber-300" : "text-slate-200"}`}>
+                  {stat.value}
+                </div>
+                <div className="text-[9px] text-slate-500 font-medium leading-tight">{stat.label}</div>
+              </button>
+            ))}
+          </div>
+
+          {/* Confidence */}
+          <div className="px-3 py-2 border-b border-slate-800/80 flex items-center gap-2">
+            <ConfidenceBadge level={analysis.overallConfidence} />
+            <span className="text-[10px] text-slate-600">confidence</span>
+          </div>
+
+          {/* Nav tabs */}
+          <Tabs.List className="flex flex-col py-2 flex-1">
+            <p className="text-[9px] font-bold uppercase tracking-widest text-slate-600 px-3 mb-1 mt-1">Sections</p>
             {TABS.map((tab) => {
               const count = (tab as any).countKey ? (analysis as any)[(tab as any).countKey]?.length : null
               const isMissing = tab.id === "missing"
               const isLocked = isTabLocked(tab.id)
+              const isActive = activeTab === tab.id
               return (
                 <Tabs.Trigger
                   key={tab.id}
                   value={tab.id}
-                  style={{ touchAction: "manipulation", flex: "0 0 auto" }}
-                  className={`relative flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap outline-none min-h-[44px] ${
-                    activeTab === tab.id
-                      ? "bg-foreground text-background shadow-sm"
-                      : "text-foreground/55 dark:text-foreground/50 hover:text-foreground hover:bg-secondary/70"
+                  style={{ touchAction: "manipulation" }}
+                  className={`relative w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors outline-none ${
+                    isActive
+                      ? "bg-violet-900/40 text-violet-300"
+                      : "text-slate-400 hover:bg-slate-800/70 hover:text-slate-300"
                   }`}
                 >
-                  <tab.icon className="w-3.5 h-3.5 shrink-0" />
-                  <span className="whitespace-nowrap">{tab.label}</span>
-                  {isLocked && (
-                    <Lock className="w-3 h-3 text-amber-500 shrink-0" />
+                  {isActive && (
+                    <div className="absolute left-0 top-1 bottom-1 w-[3px] rounded-r-full bg-violet-500" />
                   )}
+                  <tab.icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? "text-violet-400" : "text-slate-500"}`} />
+                  <span className="text-xs font-medium flex-1 truncate text-left">{tab.label}</span>
+                  {isLocked && <Lock className="w-3 h-3 text-amber-600 shrink-0" />}
                   {count != null && count > 0 && !isLocked && (
-                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold leading-none shrink-0 ${activeTab === tab.id ? "bg-background/20 text-background" : "bg-border/50 text-muted-foreground"}`}>
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none shrink-0 ${
+                      isActive ? "bg-violet-800 text-violet-200" : "bg-slate-800 text-slate-500"
+                    }`}>
                       {count}
                     </span>
                   )}
-                  {isMissing && missingCount > 0 && activeTab !== "missing" && !isLocked && (
-                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[9px] font-bold text-white flex items-center justify-center shrink-0">
+                  {isMissing && missingCount > 0 && !isActive && !isLocked && (
+                    <span className="w-4 h-4 bg-red-500 rounded-full text-[9px] font-bold text-white flex items-center justify-center shrink-0">
                       {missingCount > 9 ? "9+" : missingCount}
                     </span>
                   )}
                 </Tabs.Trigger>
               )
             })}
-            <div className="shrink-0" style={{ width: '4px' }} aria-hidden="true" />
           </Tabs.List>
-          </div>
-            {canScrollRight && (
-              <button
-                onClick={scrollTabsRight}
-                aria-label="Scroll tabs right"
-                className="lg:hidden shrink-0 flex items-center justify-center w-8 h-10 text-muted-foreground hover:text-foreground transition-colors rounded-r-2xl hover:bg-secondary/60"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            )}
-          </div>
 
-          {/* ── Content pane ────────────────────────────── */}
-          <div className="no-print bg-card rounded-3xl border border-border/30 shadow-lg shadow-black/[0.04] dark:shadow-black/20 overflow-hidden min-h-[400px] sm:min-h-[540px]">
+          {/* Upgrade nudge */}
+          {!isPro && !entitlementsLoading && (
+            <div className="mx-3 mb-3 p-3 rounded-xl bg-gradient-to-br from-violet-900/40 to-slate-800/80 border border-violet-800/40">
+              <div className="flex items-center gap-1.5 mb-1">
+                <Zap className="w-3 h-3 text-amber-400" />
+                <span className="text-[10px] font-bold text-violet-300 uppercase tracking-wide">Pro</span>
+              </div>
+              <p className="text-[11px] text-slate-400 leading-tight mb-2">Unlock Risks, Checklist, Source Sections + more</p>
+              <a href="/upgrade" className="block w-full py-1.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold text-center transition-colors">
+                Upgrade
+              </a>
+            </div>
+          )}
+
+          {/* Attorney badge */}
+          <div className="px-3 pb-3">
+            <a href="/methodology" className="flex items-center gap-1.5 text-[9px] text-slate-700 hover:text-slate-600 transition-colors">
+              <Shield className="w-3 h-3" />
+              Reviewed by licensed attorneys
+            </a>
+          </div>
+        </aside>
+
+        {/* ── Main Content ── */}
+        <main className="flex-1 overflow-y-auto bg-slate-950 dark">
+          <div className="max-w-4xl mx-auto px-5 sm:px-8 py-6" style={{ paddingBottom: "max(3rem, env(safe-area-inset-bottom) + 3rem)" }}>
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}
@@ -423,9 +425,7 @@ export default function Analyze() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -5 }}
                 transition={{ duration: 0.14 }}
-                className="p-4 sm:p-7 md:p-10"
               >
-
                 {activeTab === "plain-english"   && <PlainEnglishTab analysis={analysis} onTabChange={setActiveTab} />}
                 {activeTab === "source-sections" && (isTabLocked("source-sections")
                   ? <UpgradeCard title="Source Sections — Pro" description="See exactly which part of the original document backs every requirement, risk, and deadline." />
@@ -466,18 +466,16 @@ export default function Analyze() {
                         </a>
                       </div>
                 )}
-
               </motion.div>
             </AnimatePresence>
           </div>
-        </Tabs.Root>
-
-        {/* ── Print-only report (hidden in screen, shown in print) ── */}
-        <PrintReport analysis={analysis} documentTypeHint={documentTypeHint} />
-
+        </main>
       </div>
 
-      {/* ── Guided Review Overlay ────────────────────── */}
+      {/* ── Print-only report ── */}
+      <PrintReport analysis={analysis} documentTypeHint={documentTypeHint} />
+
+      {/* ── Guided Review Overlay ── */}
       <AnimatePresence>
         {guidedReviewCtx && (
           <GuidedReviewOverlay
@@ -489,7 +487,7 @@ export default function Analyze() {
           />
         )}
       </AnimatePresence>
-    </div>
+    </Tabs.Root>
   )
 }
 
