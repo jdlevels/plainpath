@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
   FileText, Trash2, Pencil, Check, X, Search, Loader2,
-  FolderOpen, FileSignature, ShieldCheck, EyeOff, Scale,
+  FolderOpen, ShieldCheck, EyeOff, Scale,
   PenLine, GitCompare, ChevronRight, Plus, Clock,
   AlertTriangle, ListChecks, ExternalLink, ArrowRight,
   LayoutTemplate,
@@ -48,7 +48,6 @@ const TOOL_CONFIG: Record<string, { label: string; icon: React.ElementType; colo
   analyze:          { label: "Analyze",           icon: FileText,      color: "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300" },
   trust_check:      { label: "Trust Check",        icon: ShieldCheck,   color: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" },
   redact:           { label: "Redacted",           icon: EyeOff,        color: "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300" },
-  signature:        { label: "Signature",          icon: FileSignature, color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300" },
   contract_review:  { label: "Contract Review",    icon: Scale,         color: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300" },
   contract_builder: { label: "Build a Contract",   icon: PenLine,       color: "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300" },
   compare:          { label: "Compare Versions",   icon: GitCompare,    color: "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300" },
@@ -326,19 +325,6 @@ export default function Documents() {
       }))
     } catch { /* ignore */ }
     navigate("/analyze")
-  }
-
-  function sendForSignature(doc: UserDocument) {
-    try {
-      sessionStorage.setItem("pp_sig_doc", JSON.stringify({
-        id: doc.id,
-        title: doc.title,
-        extractedText: doc.extractedText ?? null,
-        originalFilename: doc.originalFilename ?? null,
-        mimeType: doc.mimeType ?? null,
-      }))
-    } catch { /* ignore */ }
-    navigate("/signature")
   }
 
   // ─── Clause Extractor session actions ────────────────────────────────────
@@ -637,15 +623,6 @@ export default function Documents() {
                               View trust check
                             </Button>
                           )}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 text-xs gap-1 text-muted-foreground"
-                            onClick={() => sendForSignature(doc)}
-                          >
-                            <FileSignature className="w-3 h-3" />
-                            Send for Signature
-                          </Button>
                         </div>
                       </div>
 

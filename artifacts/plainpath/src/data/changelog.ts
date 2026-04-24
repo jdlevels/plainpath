@@ -17,9 +17,8 @@ export const CHANGELOG: ChangelogEntry[] = [
   },
   {
     date: "Mar 2025",
-    title: "Digital Signature & Pro plan",
+    title: "Pro plan & billing",
     items: [
-      "New: Digital Signature — request legally binding e-signatures",
       "Starter and Pro plans now live with Stripe billing",
       "Subscription management portal — view plan, cancel anytime",
     ],

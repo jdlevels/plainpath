@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import {
   UploadCloud, ArrowRight, Loader2, AlertCircle,
   ClipboardList, GraduationCap, Banknote, CheckCircle2, FileText, Type, File,
-  ArrowLeft, Building2, Scale, Heart, FileSignature,
+  ArrowLeft, Building2, Scale, Heart,
   Mail, HelpCircle, ShieldCheck, AlertTriangle, XCircle,
   Camera, X as XIcon, Plus, ScanLine, RotateCcw, Clock, Link as LinkIcon,
 } from "lucide-react"
@@ -129,7 +129,7 @@ const DOC_TYPES = [
   { id: "Tax & Government Form",     label: "Tax & Government Form",    icon: Building2,    color: "text-blue-500",    bg: "bg-blue-50 dark:bg-blue-950/60"    },
   { id: "Legal / Business Filing",   label: "Legal / Business Filing",  icon: Scale,        color: "text-purple-500",  bg: "bg-purple-50 dark:bg-purple-950/60" },
   { id: "Healthcare / Insurance",    label: "Healthcare / Insurance",   icon: Heart,        color: "text-red-500",     bg: "bg-red-50 dark:bg-red-950/60"      },
-  { id: "Contract / Agreement",      label: "Contract / Agreement",     icon: FileSignature, color: "text-amber-500",  bg: "bg-amber-50 dark:bg-amber-950/60"  },
+  { id: "Contract / Agreement",      label: "Contract / Agreement",     icon: FileText,      color: "text-amber-500",  bg: "bg-amber-50 dark:bg-amber-950/60"  },
   { id: "Bill / Notice / Summons",   label: "Bill / Notice / Summons",  icon: Mail,         color: "text-orange-500",  bg: "bg-orange-50 dark:bg-orange-950/60" },
   { id: "Application / Permit",      label: "Application / Permit",     icon: ClipboardList, color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-950/60" },
   { id: "School / Enrollment",       label: "School / Enrollment",      icon: GraduationCap, color: "text-indigo-500", bg: "bg-indigo-50 dark:bg-indigo-950/60" },

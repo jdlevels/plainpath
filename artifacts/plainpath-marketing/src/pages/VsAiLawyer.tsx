@@ -30,7 +30,6 @@ export default function VsAiLawyer() {
     { feature: "IRS letter analysis", plainpath: true, ailawyer: "partial" },
     { feature: "Document Trust Check (scam detection)", plainpath: true, ailawyer: false },
     { feature: "PII Redaction", plainpath: true, ailawyer: false },
-    { feature: "Digital Signatures", plainpath: true, ailawyer: false },
     { feature: "Contract Builder", plainpath: true, ailawyer: false },
     { feature: "Version Comparison", plainpath: true, ailawyer: false },
     { feature: "Clause Extractor", plainpath: true, ailawyer: false },

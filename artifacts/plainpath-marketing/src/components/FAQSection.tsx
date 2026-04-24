@@ -30,11 +30,6 @@ const TOOL_ROWS: { color: string; name: string; desc: string }[] = [
     desc: "detects and removes personal information — names, SSNs, account numbers, and more — before you share or analyze a document.",
   },
   {
-    color: "text-indigo-600 dark:text-indigo-400",
-    name: "Digital Signature",
-    desc: "lets you send documents for legally binding e-signature, track signing status in real time, and download certified signed copies.",
-  },
-  {
     color: "text-sky-600 dark:text-sky-400",
     name: "Compare Versions",
     desc: "maps every addition, deletion, and structural change between two document versions — with severity scoring so you see what actually matters.",
@@ -71,7 +66,7 @@ const FAQS: { q: string; a: React.ReactNode }[] = [
     a: "PlainPath works with leases, employment contracts, healthcare forms, government applications, grant packets, legal agreements, tax notices, and more. If it's text-based and has requirements, deadlines, or legalese — it works.",
   },
   {
-    q: "What's the difference between the eight tools?",
+    q: "What's the difference between the seven tools?",
     a: TOOLS_ANSWER,
   },
   {
@@ -88,7 +83,7 @@ const FAQS: { q: string; a: React.ReactNode }[] = [
   },
   {
     q: "Which plan do I need for each tool?",
-    a: "Analyze a Document and Redact Sensitive Info are available on Starter and Pro plans. Document Trust Check, Build a Contract, Contract Review, Digital Signature, Compare Versions, and Clause Extractor require a Pro plan. You'll see an upgrade prompt if you try to use them without Pro, and you can switch plans at any time.",
+    a: "Analyze a Document and Redact Sensitive Info are available on Starter and Pro plans. Document Trust Check, Build a Contract, Contract Review, Compare Versions, and Clause Extractor require a Pro plan. You'll see an upgrade prompt if you try to use them without Pro, and you can switch plans at any time.",
   },
 ]
 

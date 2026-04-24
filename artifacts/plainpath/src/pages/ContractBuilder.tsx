@@ -21,7 +21,6 @@ import { beforeRunContractDraft, UsageLimitError } from "@/lib/analysisGate"
 import { saveRecentWork } from "@/lib/recentWork"
 import { useEntitlements } from "@/hooks/useEntitlements"
 import UpgradeModal from "@/components/UpgradeModal"
-import SendForSignatureModal from "@/components/SendForSignatureModal"
 import { WorkspaceShell } from "@/components/WorkspaceShell"
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2115,7 +2114,6 @@ function DraftResultView({ draft, contractType, onBack, onRestart }: {
   onRestart: () => void
 }) {
   const { toast } = useToast()
-  const [showSignatureModal, setShowSignatureModal] = useState(false)
   const [, setLocation] = useLocation()
   const generatedAt = useMemo(() => new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }), [])
 
@@ -2410,13 +2408,6 @@ function DraftResultView({ draft, contractType, onBack, onRestart }: {
             >
               <Download className="w-3.5 h-3.5" /> Download PDF
             </Button>
-            <Button
-              size="sm"
-              onClick={() => setShowSignatureModal(true)}
-              className="w-full gap-2 bg-violet-600 hover:bg-violet-700 text-white h-9"
-            >
-              <Lock className="w-3.5 h-3.5" /> Send for Signature
-            </Button>
             <p className="text-[10px] text-muted-foreground/70 text-center leading-snug pt-0.5">
               Download to keep your draft — it's not stored on our servers.
             </p>
@@ -2502,12 +2493,6 @@ function DraftResultView({ draft, contractType, onBack, onRestart }: {
         </div>
       </div>
 
-      <SendForSignatureModal
-        open={showSignatureModal}
-        onClose={() => setShowSignatureModal(false)}
-        draft={draft as unknown as Record<string, unknown>}
-        parties={draft.parties as unknown as Record<string, { label: string; name: string; type?: string }>}
-      />
     </div>
   )
 }

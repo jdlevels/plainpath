@@ -1,5 +1,5 @@
 /**
- * PhoneHeroDemo — 8-tool animated phone preview
+ * PhoneHeroDemo — 7-tool animated phone preview
  *
  * Accepts optional `toolIndex` (0–7) from a parent that owns the
  * shared demo-rotation state.  When omitted it self-rotates.
@@ -12,7 +12,7 @@ import React, { useEffect, useState } from "react"
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 import {
   AlertTriangle, CheckCircle2, ChevronLeft, Shield,
-  Wifi, BatteryFull, Signal, EyeOff, FileSignature,
+  Wifi, BatteryFull, Signal, EyeOff,
   GitCompare, ListChecks, Clock,
 } from "lucide-react"
 
@@ -31,7 +31,6 @@ const TOOL_HEADERS = [
   { docName: "Freelance Agreement",     docMeta: "New contract · Step 3/6",    badgeLabel: "Building…",      badgeBg: "rgba(16,185,129,0.15)", badgeBorder: "rgba(16,185,129,0.40)", badgeColor: "#065f46", badgeDot: "#10b981" },
   { docName: "Employment Offer Letter", docMeta: "1,240 words · 8 pages",      badgeLabel: "Score: 28/100",  badgeBg: "rgba(245,158,11,0.15)", badgeBorder: "rgba(245,158,11,0.40)", badgeColor: "#92400e", badgeDot: "#f59e0b" },
   { docName: "Patient Intake Form",     docMeta: "423 words · 3 pages",        badgeLabel: "3 items found",  badgeBg: "rgba(139,92,246,0.15)", badgeBorder: "rgba(139,92,246,0.40)", badgeColor: "#5b21b6", badgeDot: "#8b5cf6" },
-  { docName: "Consulting Agreement",    docMeta: "1,820 words · 6 pages",      badgeLabel: "Awaiting",       badgeBg: "rgba(99,102,241,0.15)", badgeBorder: "rgba(99,102,241,0.40)", badgeColor: "#3730a3", badgeDot: "#6366f1" },
   { docName: "NDA v1 → NDA v2",         docMeta: "2 versions · 14 changes",    badgeLabel: "1 critical",     badgeBg: "rgba(239,68,68,0.15)",  badgeBorder: "rgba(239,68,68,0.40)",  badgeColor: "#991b1b", badgeDot: "#ef4444" },
   { docName: "Lease Agreement",         docMeta: "2,840 words · 12 pages",     badgeLabel: "6 obligations",  badgeBg: "rgba(192,38,211,0.15)", badgeBorder: "rgba(192,38,211,0.40)", badgeColor: "#701a75", badgeDot: "#c026d3" },
 ]
@@ -250,38 +249,7 @@ function RedactScreen() {
   )
 }
 
-/* ─── Tool 5: Digital Signature ──────────────────────────── */
-function SignatureScreen() {
-  return (
-    <div className="px-3 pt-3 space-y-2">
-      <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Signature Status</p>
-      <div className="rounded-xl border border-emerald-200 dark:border-emerald-700/40 bg-emerald-50 dark:bg-emerald-900/20 p-2.5 flex items-center gap-2">
-        <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center shrink-0">
-          <CheckCircle2 className="w-3.5 h-3.5 text-white" />
-        </div>
-        <div>
-          <p className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">Sarah Chen — Client</p>
-          <p className="text-[9px] text-zinc-400">Signed · May 2, 2:34 PM</p>
-        </div>
-      </div>
-      <div className="rounded-xl border border-indigo-200 dark:border-indigo-700/40 bg-indigo-50 dark:bg-indigo-900/20 p-2.5 flex items-center gap-2">
-        <div className="w-6 h-6 rounded-full border-2 border-indigo-400 flex items-center justify-center shrink-0">
-          <Clock className="w-3 h-3 text-indigo-500" />
-        </div>
-        <div>
-          <p className="text-[10px] font-semibold text-indigo-700 dark:text-indigo-400">Marcus Lee — Contractor</p>
-          <p className="text-[9px] text-zinc-400">Awaiting signature</p>
-        </div>
-      </div>
-      <div className="flex items-center gap-2 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200/80 dark:border-zinc-700/40 px-2.5 py-2">
-        <FileSignature className="w-3 h-3 text-indigo-500 shrink-0" />
-        <p className="text-[9px] text-zinc-500">Secure signing link sent via email</p>
-      </div>
-    </div>
-  )
-}
-
-/* ─── Tool 6: Compare Versions ───────────────────────────── */
+/* ─── Tool 5: Compare Versions ───────────────────────────── */
 function CompareScreen() {
   const lines = [
     { type: "same",    text: "This agreement is binding upon…" },
@@ -320,7 +288,7 @@ function CompareScreen() {
   )
 }
 
-/* ─── Tool 7: Clause Extractor ───────────────────────────── */
+/* ─── Tool 6: Clause Extractor ───────────────────────────── */
 function ClauseExtractorScreen() {
   const obligations = [
     { party: "Tenant",   text: "Pay $1,850/mo by 1st of month" },
@@ -362,9 +330,8 @@ function ToolScreen({ toolId }: { toolId: number }) {
     case 2:  return <BuildContractScreen />
     case 3:  return <ContractReviewScreen />
     case 4:  return <RedactScreen />
-    case 5:  return <SignatureScreen />
-    case 6:  return <CompareScreen />
-    case 7:  return <ClauseExtractorScreen />
+    case 5:  return <CompareScreen />
+    case 6:  return <ClauseExtractorScreen />
     default: return <AnalyzeScreen />
   }
 }
@@ -379,7 +346,7 @@ export function PhoneHeroDemo({ toolIndex }: { toolIndex?: number } = {}) {
   useEffect(() => {
     if (toolIndex !== undefined) return
     if (shouldReduce) return
-    const id = setInterval(() => setInternalIdx(i => (i + 1) % 8), PHASE_MS)
+    const id = setInterval(() => setInternalIdx(i => (i + 1) % 7), PHASE_MS)
     return () => clearInterval(id)
   }, [toolIndex, shouldReduce])
 

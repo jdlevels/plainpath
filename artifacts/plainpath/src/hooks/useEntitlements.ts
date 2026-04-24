@@ -18,7 +18,7 @@
 // Access rules:
 //   Admin     → always granted; role === "admin"
 //   Starter   → metadata alone grants Starter tools (analyze + redact); no billing required
-//   Pro       → metadata + active Stripe subscription grants all 8 tools
+//   Pro       → metadata + active Stripe subscription grants all 7 tools
 //   Pro (no billing) → graceful downgrade to Starter tool set
 //   No metadata → null state (locked; safe default)
 //

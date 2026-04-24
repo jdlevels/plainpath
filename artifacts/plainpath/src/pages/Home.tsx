@@ -1,7 +1,7 @@
 import { useLocation } from "wouter"
 import { motion } from "framer-motion"
 import {
-  ArrowRight, ShieldCheck, FileSignature,
+  ArrowRight, ShieldCheck,
   PenLine, FileScan, Scale, EyeOff,
   BookMarked, Clock, ChevronRight, CreditCard,
   LayoutGrid, GitCompare, ListChecks, LayoutTemplate,
@@ -15,8 +15,6 @@ import { useEntitlements } from "@/hooks/useEntitlements"
 import { getAll as getLocalAnalyses } from "@/lib/savedAnalyses"
 import { fetchCloudAnalyses } from "@/lib/cloudHistory"
 import type { SavedAnalysis } from "@/lib/savedAnalyses"
-import { listSignatureRequests, STATUS_LABELS, STATUS_COLORS, type SignatureListItem } from "@/lib/signatureApi"
-import type { SignatureStatus } from "@/lib/signatureApi"
 import { getRecentWork, type LocalRecentItem } from "@/lib/recentWork"
 import { clauseExtractorApi } from "@/lib/clauseExtractorApi"
 import type { ClauseExtractorSessionMeta } from "@/lib/clauseExtractorTypes"
@@ -27,7 +25,6 @@ import type { BuilderDocumentMeta } from "@/lib/builderTypes"
 
 type RecentItem =
   | { kind: "analysis";      id: string; title: string; savedAt: string }
-  | { kind: "signature";     id: string; title: string; savedAt: string; status: SignatureStatus; signerName: string }
   | { kind: "local";         id: string; title: string; savedAt: string; tool: LocalRecentItem["tool"] }
   | { kind: "clause-extractor"; id: string; title: string; savedAt: string; fileType?: string; documentType?: string }
   | { kind: "compare";       id: string; title: string; savedAt: string; status: string; diffTotal?: number; diffHigh?: number; originalFileName?: string; revisedFileName?: string }
@@ -35,7 +32,7 @@ type RecentItem =
 
 // ─── Tool definitions ─────────────────────────────────────────────────────────
 
-// First-class 8 tools — canonical order and routes
+// First-class 7 tools — canonical order and routes
 const TOOLS = [
   {
     key: "analyze" as const,
@@ -91,17 +88,6 @@ const TOOLS = [
     bg: "bg-violet-50 dark:bg-violet-950/50",
     ring: "hover:border-violet-400/50 hover:shadow-violet-500/10",
     plan: null,
-  },
-  {
-    key: "signature" as const,
-    label: "Digital Signature",
-    desc: "Send legally binding e-signature requests and track signing status.",
-    icon: FileSignature,
-    path: "/signature",
-    color: "text-violet-500 dark:text-violet-400",
-    bg: "bg-violet-50 dark:bg-violet-950/50",
-    ring: "hover:border-violet-400/50 hover:shadow-violet-500/10",
-    plan: "pro" as const,
   },
   {
     key: "clause-extractor" as const,
@@ -194,7 +180,7 @@ export default function Home() {
   const plan = entitlements?.plan ?? null
   const toolAccess = entitlements?.toolAccess ?? []
 
-  // Load recent work — analyses + signatures + Clause Extractor sessions + Compare sessions + local, merged by date
+  // Load recent work — analyses + Clause Extractor sessions + Compare sessions + local, merged by date
   useEffect(() => {
     let cancelled = false
     async function load() {
@@ -203,9 +189,8 @@ export default function Home() {
         // Need Bearer token for session APIs
         const token = await getToken().catch(() => null)
 
-        const [cloudAnalyses, cloudSigs, clauseSessions, compareSessions, builderDocs] = await Promise.allSettled([
+        const [cloudAnalyses, clauseSessions, compareSessions, builderDocs] = await Promise.allSettled([
           fetchCloudAnalyses(),
-          listSignatureRequests(),
           clauseExtractorApi.listSessions(token),
           compareVersionsApi.listSessions(token, { archived: false }),
           BUILDER_ENABLED ? builderApi.listDocuments(token) : Promise.resolve([]),
@@ -225,18 +210,6 @@ export default function Home() {
                 title: a.title,
                 savedAt: a.savedAt,
               }))
-
-        const sigs: RecentItem[] =
-          cloudSigs.status === "fulfilled"
-            ? cloudSigs.value.map((s: SignatureListItem) => ({
-                kind: "signature" as const,
-                id: s.id,
-                title: s.documentName,
-                savedAt: s.createdAt,
-                status: s.status,
-                signerName: s.signerName,
-              }))
-            : []
 
         const clauses: RecentItem[] =
           clauseSessions.status === "fulfilled"
@@ -290,7 +263,7 @@ export default function Home() {
             tool: lw.tool,
           }))
 
-        const merged = [...clauses, ...compares, ...builders, ...analyses, ...sigs, ...localWork]
+        const merged = [...clauses, ...compares, ...builders, ...analyses, ...localWork]
           .sort((a, b) => new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime())
           .slice(0, 6)
 
@@ -599,23 +572,6 @@ export default function Home() {
                         </div>
                       </div>
                     </Card>
-                  ) : item.kind === "signature" ? (
-                    <Card
-                      className="group border border-border/50 bg-card hover:border-violet-400/40 hover:shadow-md rounded-2xl cursor-pointer transition-all"
-                      onClick={() => setLocation("/signature")}
-                    >
-                      <div className="p-4 flex flex-col gap-1.5">
-                        <div className="flex items-center gap-1.5 mb-0.5">
-                          <FileSignature className="w-3 h-3 text-violet-500 shrink-0" />
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-violet-500/80">Digital Signature</span>
-                          <span className={`ml-auto text-[9px] font-bold uppercase tracking-wider border rounded-full px-1.5 py-0.5 ${STATUS_COLORS[item.status]}`}>
-                            {STATUS_LABELS[item.status]}
-                          </span>
-                        </div>
-                        <p className="text-sm font-medium text-foreground truncate leading-tight">{item.title}</p>
-                        <p className="text-[11px] text-muted-foreground truncate">→ {item.signerName}</p>
-                      </div>
-                    </Card>
                   ) : (
                     (() => {
                       const localMeta: Record<string, { icon: ElementType; color: string; href: string; toolLabel: string; cta: string }> = {
@@ -702,7 +658,7 @@ export default function Home() {
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">Your Plan</p>
                   <p className="font-bold text-foreground">
-                    {isAdmin ? "Admin — Full Access" : plan === "pro" ? "Pro — All 8 tools" : plan === "starter" ? "Starter — Analyze + Redact" : "Free"}
+                    {isAdmin ? "Admin — Full Access" : plan === "pro" ? "Pro — All 7 tools" : plan === "starter" ? "Starter — Analyze + Redact" : "Free"}
                   </p>
                   {!plan && !isAdmin && (
                     <p className="text-xs text-muted-foreground mt-0.5">2 free analyses included</p>

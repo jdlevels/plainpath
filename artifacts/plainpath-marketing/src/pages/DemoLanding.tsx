@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import {
   FileScan, ShieldCheck, PenLine, Scale, EyeOff,
-  FileSignature, GitCompare, ListChecks, ArrowRight,
+  GitCompare, ListChecks, ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/layout/Navbar";
@@ -69,18 +69,6 @@ const TOOLS = [
     href: "/demo/redact",
   },
   {
-    key: "signature",
-    label: "Digital Signature",
-    scenario: "Freelance agreement — 1 of 2 signers complete",
-    desc: "A freelance contract sent to two parties: one signed, one pending. See the real-time signing status and timeline.",
-    icon: FileSignature,
-    color: "text-indigo-600 dark:text-indigo-400",
-    bg: "bg-indigo-50 dark:bg-indigo-950/40",
-    border: "border-indigo-200 dark:border-indigo-800",
-    ring: "hover:ring-indigo-300 dark:hover:ring-indigo-700",
-    href: "/demo/signature",
-  },
-  {
     key: "compare",
     label: "Compare Versions",
     scenario: "NDA v1 vs v2 — 3 changes, 1 critical",
@@ -121,7 +109,7 @@ export default function DemoLanding() {
         <section className="pt-14 pb-10 px-4 text-center bg-gradient-to-b from-blue-50/60 via-background to-background dark:from-slate-900 dark:to-background border-b border-border/40">
           <div className="max-w-2xl mx-auto">
             <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-primary bg-primary/10 rounded-full px-4 py-1.5 mb-5">
-              8 tools · all pre-loaded
+              7 tools · all pre-loaded
             </div>
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4 leading-tight" style={{ fontFamily: "var(--font-display)" }}>
               See PlainPath in action
