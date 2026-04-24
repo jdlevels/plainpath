@@ -1,8 +1,18 @@
 import { useState } from "react"
 
+const sensitive = [
+  { id: "name-1",    text: "James R. Holloway",        category: "Name",      confidence: "High", source: "§1·p.1" },
+  { id: "email-1",  text: "j.holloway@linmore.com",    category: "Contact",   confidence: "High", source: "§1·p.1" },
+  { id: "phone-1",  text: "(555) 391-8823",            category: "Contact",   confidence: "High", source: "§1·p.1" },
+  { id: "account-1",text: "Account No. 7841",          category: "Financial", confidence: "High", source: "§2·p.2" },
+  { id: "ssn-1",    text: "SSN: 482-00-7731",          category: "ID",        confidence: "Med",  source: "§4·p.4" },
+  { id: "dob-1",    text: "DOB: 14/03/1987",           category: "Personal",  confidence: "Med",  source: "§4·p.4" },
+]
+
 export function RedactCompleted() {
-  const [activeSection, setActiveSection] = useState<string | null>(null)
-  const [selected, setSelected] = useState<Set<string>>(new Set(["name-1", "email-1", "phone-1", "account-1"]))
+  const [selected, setSelected] = useState<Set<string>>(new Set(["name-1", "email-1", "account-1"]))
+  const [activeId, setActiveId] = useState<string | null>(null)
+  const [viewMode, setViewMode] = useState<"original" | "preview">("original")
 
   const toggle = (id: string) => {
     const next = new Set(selected)
@@ -10,24 +20,35 @@ export function RedactCompleted() {
     setSelected(next)
   }
 
-  const docSections = [
-    { id: "§1", title: "Parties & Services", content: "Service agreement between Linmore Group LLC ("Client") and Brightfield Creative ("Provider"). Client contact: James R. Holloway, 742 Evergreen Terrace, Suite 4B, Springfield.", hasItem: true },
-    { id: "§2", title: "Fees & Schedule", content: "Project fee: $12,000, due in three equal installments. Kickoff, mid-project, and delivery. Bank: First National, Account No. ••••7841.", hasItem: true },
-    { id: "§3", title: "Intellectual Property", content: "All work created by the Provider is owned by the Client upon full payment. Provider retains rights to portfolio display. No third-party disclosure.", hasItem: false },
-    { id: "§4", title: "Confidentiality", content: "Provider agrees not to disclose proprietary information. SSN on file: •••-••-••••. DOB: ••/••/••••. Obligations survive agreement for two years.", hasItem: true },
-  ]
+  const activate = (id: string) => setActiveId(id === activeId ? null : id)
 
-  const suggestedRedactions = [
-    { id: "name-1",    label: "Full name",      category: "Name",      masked: "James R. H•••••••", reason: "Personal identifier in party clause", conf: "High", src: "§1·p.1" },
-    { id: "email-1",  label: "Email address",   category: "Contact",   masked: "j.holloway@•••••.com", reason: "Direct contact detail", conf: "High", src: "§1·p.1" },
-    { id: "phone-1",  label: "Phone number",    category: "Contact",   masked: "(555) •••-••••",   reason: "Personal phone number", conf: "High", src: "§1·p.1" },
-    { id: "account-1",label: "Account number",  category: "Financial", masked: "Account No. ••••7841", reason: "Financial account reference", conf: "High", src: "§2·p.2" },
-    { id: "ssn-1",    label: "SSN (partial)",   category: "ID",        masked: "•••-••-••••", reason: "Social Security number detected", conf: "Med",  src: "§4·p.4" },
-    { id: "dob-1",    label: "Date of birth",   category: "Personal",  masked: "••/••/••••", reason: "Date of birth in personal data section", conf: "Med", src: "§4·p.4" },
-  ]
+  const highlight = (id: string) => {
+    const isActive = id === activeId
+    const isSelected = selected.has(id)
+    if (viewMode === "preview" && isSelected) return null // render black bar instead
+    if (isActive) return "bg-violet-500/40 border border-violet-400 rounded px-0.5"
+    if (isSelected) return "bg-amber-400/20 border border-amber-400/50 rounded px-0.5"
+    return "bg-amber-300/10 border border-amber-400/30 rounded px-0.5"
+  }
 
   const confColor = (c: string) => c === "High" ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/25" : "text-amber-400 bg-amber-500/10 border-amber-500/25"
-  const catColor = (c: string) => c === "Financial" ? "text-amber-400 bg-amber-500/10 border-amber-500/20" : c === "ID" ? "text-red-400 bg-red-500/10 border-red-500/20" : "text-white/50 bg-white/[0.05] border-white/10"
+  const catColor  = (c: string) => c === "Financial" ? "text-amber-400 bg-amber-500/10 border-amber-500/20" : c === "ID" ? "text-red-400 bg-red-500/10 border-red-500/20" : "text-white/50 bg-white/[0.05] border-white/10"
+
+  const Redacted = ({ id, text }: { id: string, text: string }) => {
+    const isActive   = id === activeId
+    const isSelected = selected.has(id)
+    if (viewMode === "preview" && isSelected) {
+      return (
+        <span className={`inline-flex items-center mx-0.5 align-middle ${isActive ? "ring-2 ring-violet-400 rounded" : ""}`}>
+          <span className="bg-black border border-white/10 text-transparent select-none rounded px-1 text-xs leading-5" style={{minWidth: `${text.length * 5.5}px`}}>{text}</span>
+        </span>
+      )
+    }
+    const hlClass = highlight(id)
+    return (
+      <span onClick={() => activate(id)} className={`cursor-pointer mx-0.5 ${hlClass || ""}`}>{text}</span>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-[#0c0c0f] text-white flex flex-col">
@@ -38,17 +59,24 @@ export function RedactCompleted() {
         <span className="text-white/20 text-xs">/</span>
         <span className="text-sm text-white/80">Redact Sensitive Info</span>
         <span className="text-white/20 text-xs">/</span>
-        <span className="text-sm text-white/60">Service_Agreement_v3.pdf</span>
+        <span className="text-sm text-white/50">Service_Agreement_v3.pdf</span>
         <div className="ml-auto flex items-center gap-2">
-          <div className="flex items-center gap-1.5 text-xs text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1.5 rounded-lg">
-            <div className="w-1.5 h-1.5 rounded-full bg-amber-400"/>
-            {selected.size} items selected
+          {/* Original / Preview toggle */}
+          <div className="flex items-center border border-white/[0.08] rounded-lg overflow-hidden text-xs">
+            <button onClick={() => setViewMode("original")}
+              className={`px-3 py-1.5 transition-colors ${viewMode === "original" ? "bg-white/[0.08] text-white" : "text-white/40 hover:text-white/60"}`}>
+              Original
+            </button>
+            <button onClick={() => setViewMode("preview")}
+              className={`px-3 py-1.5 transition-colors ${viewMode === "preview" ? "bg-violet-600 text-white" : "text-white/40 hover:text-white/60"}`}>
+              Redaction Preview
+            </button>
           </div>
           <button className="flex items-center gap-1.5 text-xs text-white/60 bg-white/[0.04] border border-white/[0.08] px-2.5 py-1.5 rounded-lg hover:bg-white/[0.07]">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
             Export Redacted
           </button>
-          <button className="flex items-center gap-1.5 text-xs text-white/60 bg-white/[0.04] border border-white/[0.08] px-2.5 py-1.5 rounded-lg hover:bg-white/[0.07]">
+          <button className="flex items-center gap-1.5 text-xs text-white/60 bg-white/[0.04] border border-white/[0.08] px-2.5 py-1.5 rounded-lg">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
             Save
           </button>
@@ -56,53 +84,109 @@ export function RedactCompleted() {
       </header>
 
       <div className="flex-1 flex overflow-hidden">
-        {/* Left: Document viewer 60% */}
-        <div className="w-[60%] border-r border-white/[0.06] overflow-y-auto p-4 space-y-3">
-          <div className="flex items-center justify-between mb-2 px-1">
-            <div className="flex items-center gap-2">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white/30"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>
-              <span className="text-xs text-white/40">Service_Agreement_v3.pdf</span>
+        {/* ── LEFT: Document viewer as paper surface ── */}
+        <div className="w-[60%] border-r border-white/[0.06] overflow-y-auto bg-[#111115] p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2 text-xs text-white/35">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>
+              Service_Agreement_v3.pdf &nbsp;·&nbsp; 4 pages
             </div>
-            <span className="text-xs text-white/25">4 sections · 3 pages</span>
+            <div className="flex items-center gap-1.5 text-xs text-white/25">
+              {viewMode === "preview"
+                ? <span className="text-violet-400">{selected.size} items redacted</span>
+                : <span>{sensitive.length} items detected</span>}
+            </div>
           </div>
-          {docSections.map(s => (
-            <div key={s.id} onClick={() => setActiveSection(s.id === activeSection ? null : s.id)}
-              className={`rounded-xl p-4 border cursor-pointer transition-all ${activeSection === s.id ? "border-violet-500/50 bg-violet-500/[0.05]" : "border-white/[0.06] bg-white/[0.02] hover:border-white/10"}`}>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs text-white/50 font-mono">{s.id}</span>
-                <span className="text-xs font-medium text-white/80">{s.title}</span>
-                {s.hasItem && <div className="w-2 h-2 rounded-full bg-amber-400"/>}
-              </div>
-              <p className="text-xs text-white/50 leading-relaxed">{s.content}</p>
+
+          {/* Paper page */}
+          <div className="bg-white text-gray-800 rounded-lg shadow-2xl shadow-black/60 p-8 text-[13px] leading-7 font-serif mx-auto max-w-[600px]">
+            {/* Page header */}
+            <div className="text-center mb-6 pb-4 border-b border-gray-200">
+              <p className="font-bold text-gray-900 text-base tracking-wide">SERVICE AGREEMENT</p>
+              <p className="text-gray-500 text-xs mt-1">Reference: SA-2025-8841 &nbsp;·&nbsp; Effective June 1, 2025</p>
             </div>
-          ))}
+
+            {/* §1 */}
+            <p className="font-semibold text-gray-700 text-xs uppercase tracking-wider mb-2 mt-0">§1 &nbsp;— &nbsp;Parties &amp; Services</p>
+            <p className="mb-4 text-gray-700">
+              This Service Agreement is entered into between Linmore Group LLC ("Client") and Brightfield Creative ("Provider"),
+              commencing June 1, 2025. The Client contact for this agreement is{" "}
+              <Redacted id="name-1" text="James R. Holloway" />,
+              reachable at{" "}
+              <Redacted id="email-1" text="j.holloway@linmore.com" />{" "}
+              and{" "}
+              <Redacted id="phone-1" text="(555) 391-8823" />.
+              Services include design, production, and delivery as detailed in Exhibit A.
+            </p>
+
+            {/* §2 */}
+            <p className="font-semibold text-gray-700 text-xs uppercase tracking-wider mb-2">§2 &nbsp;— &nbsp;Fees &amp; Payment Schedule</p>
+            <p className="mb-4 text-gray-700">
+              The total project fee is $12,000, payable in three equal installments of $4,000.
+              Invoices will be issued on kickoff, mid-project review, and final delivery.
+              Payment via ACH to First National Bank,{" "}
+              <Redacted id="account-1" text="Account No. 7841" />.
+              Late payments accrue interest at 1.5% per month.
+            </p>
+
+            {/* §3 */}
+            <p className="font-semibold text-gray-700 text-xs uppercase tracking-wider mb-2">§3 &nbsp;— &nbsp;Intellectual Property</p>
+            <p className="mb-4 text-gray-700">
+              All deliverables produced under this agreement become the exclusive property of the Client upon receipt of final payment.
+              Provider retains the right to display work in a professional portfolio.
+              No third-party disclosure of proprietary information is permitted.
+            </p>
+
+            {/* §4 */}
+            <p className="font-semibold text-gray-700 text-xs uppercase tracking-wider mb-2">§4 &nbsp;— &nbsp;Personal Data &amp; Confidentiality</p>
+            <p className="mb-2 text-gray-700">
+              For identity verification, the following personal data was provided by the Client:{" "}
+              <Redacted id="ssn-1" text="SSN: 482-00-7731" />,{" "}
+              <Redacted id="dob-1" text="DOB: 14/03/1987" />.
+              This data will not be shared with any third party and will be destroyed after verification.
+              Confidentiality obligations survive termination of this agreement for a period of two years.
+            </p>
+
+            {/* Page footer */}
+            <div className="mt-8 pt-4 border-t border-gray-200 flex justify-between items-center text-xs text-gray-400">
+              <span>Service_Agreement_v3.pdf</span>
+              <span>Page 1 of 4</span>
+            </div>
+          </div>
+
+          {viewMode === "original" && (
+            <p className="text-center text-xs text-white/25 mt-4">Click a highlighted item to select it · Original document unchanged</p>
+          )}
+          {viewMode === "preview" && (
+            <p className="text-center text-xs text-violet-400/60 mt-4">Redaction preview — black bars replace {selected.size} selected items in the exported copy</p>
+          )}
         </div>
 
-        {/* Right: Redaction control panel 40% */}
+        {/* ── RIGHT: Redaction control panel ── */}
         <div className="w-[40%] overflow-y-auto p-4 space-y-4">
-          {/* A. Redaction Summary */}
+          {/* A. Summary */}
           <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-4">
             <p className="text-xs text-white/30 uppercase tracking-widest mb-2">A. Redaction Summary</p>
             <div className="flex items-center gap-2 mb-2">
               <div className="w-7 h-7 rounded-lg bg-red-500/15 flex items-center justify-center">
-                <span className="text-sm font-bold text-red-400">8</span>
+                <span className="text-sm font-bold text-red-400">{sensitive.length}</span>
               </div>
               <div>
-                <p className="text-sm font-medium text-white">8 possible sensitive items found</p>
-                <p className="text-xs text-white/40">across 4 categories · 4 pages</p>
+                <p className="text-sm font-medium text-white">{sensitive.length} possible sensitive items found</p>
+                <p className="text-xs text-white/40">4 categories · 4 pages</p>
               </div>
             </div>
-            <p className="text-xs text-white/50 leading-relaxed mb-1">Names, contact details, financial account numbers, and personal identifiers were detected. Review each item before creating a redacted copy.</p>
+            <p className="text-xs text-white/50 leading-relaxed mb-1">Names, contact details, financial account numbers, and personal identifiers detected. Review each item on the document before exporting a redacted copy.</p>
             <p className="text-xs text-amber-400/80">Review before export. Original document is unchanged.</p>
           </div>
 
-          {/* B. Detection / Confidence Strip */}
+          {/* B. Detection strip */}
           <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-3">
             <p className="text-xs text-white/30 uppercase tracking-widest mb-2">B. Detection Strip</p>
             <div className="flex flex-wrap gap-1.5">
-              <span className="px-2 py-1 rounded-full text-xs border border-white/10 text-white/60">8 items found</span>
+              <span className="px-2 py-1 rounded-full text-xs border border-white/10 text-white/55">{sensitive.length} items found</span>
               <span className="px-2 py-1 rounded-full text-xs border border-emerald-500/25 text-emerald-400">High confidence</span>
-              <span className="px-2 py-1 rounded-full text-xs border border-white/10 text-white/60">4 categories</span>
+              <span className="px-2 py-1 rounded-full text-xs border border-white/10 text-white/55">4 categories</span>
               <span className="px-2 py-1 rounded-full text-xs border border-red-500/25 text-red-400">2 high-priority</span>
               <span className="px-2 py-1 rounded-full text-xs border border-violet-500/25 text-violet-400">{selected.size} selected</span>
             </div>
@@ -112,22 +196,27 @@ export function RedactCompleted() {
           <div>
             <p className="text-xs text-white/30 uppercase tracking-widest mb-2">C. Suggested Redactions</p>
             <div className="space-y-2">
-              {suggestedRedactions.map(r => (
-                <div key={r.id} className={`rounded-xl p-3 border transition-all ${selected.has(r.id) ? "border-emerald-500/30 bg-emerald-500/[0.04]" : "border-white/[0.06] bg-white/[0.02]"}`}>
+              {sensitive.map(r => (
+                <div key={r.id}
+                  onClick={() => activate(r.id)}
+                  className={`rounded-xl p-3 border cursor-pointer transition-all ${
+                    activeId === r.id ? "border-violet-500/50 bg-violet-500/[0.06]" :
+                    selected.has(r.id) ? "border-emerald-500/30 bg-emerald-500/[0.04]" :
+                    "border-white/[0.06] bg-white/[0.02] hover:border-white/10"
+                  }`}>
                   <div className="flex items-start gap-2">
-                    <input type="checkbox" checked={selected.has(r.id)} onChange={() => toggle(r.id)}
-                      className="mt-0.5 accent-emerald-500 cursor-pointer"/>
+                    <input type="checkbox" checked={selected.has(r.id)} onClick={e => e.stopPropagation()} onChange={() => toggle(r.id)} className="mt-0.5 accent-emerald-500 cursor-pointer"/>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 flex-wrap mb-1">
-                        <span className="text-xs font-medium text-white/90">{r.label}</span>
-                        <span className={`px-1.5 py-0.5 rounded-full text-xs border ${catColor(r.category)}`}>{r.category}</span>
-                        <span className={`px-1.5 py-0.5 rounded-full text-xs border ${confColor(r.conf)}`}>{r.conf}</span>
-                        <span className="px-1.5 py-0.5 rounded-full text-xs border border-violet-500/30 text-violet-400 ml-auto">{r.src}</span>
+                        <span className="text-xs font-medium text-white/90">{r.category === "ID" || r.category === "Financial" ? "🔴" : "🟡"} {r.category}</span>
+                        <span className={`px-1.5 py-0.5 rounded-full text-xs border ${confColor(r.confidence)}`}>{r.confidence}</span>
+                        <span className="ml-auto px-1.5 py-0.5 rounded text-xs border border-violet-500/30 text-violet-400">{r.source}</span>
                       </div>
-                      <p className="text-xs text-white/40 mb-1">{r.reason}</p>
-                      <div className="flex items-center gap-1.5 bg-black/30 rounded-lg px-2 py-1">
-                        <div className="w-3 h-2 bg-white/20 rounded-sm"/>
-                        <span className="text-xs text-white/30 font-mono">{r.masked}</span>
+                      <div className="flex items-center gap-1.5 bg-black/20 rounded-lg px-2 py-1">
+                        {selected.has(r.id) && viewMode === "preview"
+                          ? <span className="bg-black border border-white/10 text-transparent select-none rounded px-1 text-xs leading-5" style={{minWidth:"80px"}}>{r.text}</span>
+                          : <span className="text-xs text-white/40 font-mono">{r.text.replace(/[a-z]/gi, "•").replace(/\d/g, "·")}</span>
+                        }
                       </div>
                     </div>
                   </div>
@@ -136,12 +225,12 @@ export function RedactCompleted() {
             </div>
           </div>
 
-          {/* D. Redaction Categories */}
+          {/* D. Categories */}
           <div>
             <p className="text-xs text-white/30 uppercase tracking-widest mb-2">D. Redaction Categories</p>
             <div className="flex flex-wrap gap-1.5">
-              {["All (8)", "Names (2)", "Contact (2)", "Financial (2)", "IDs (1)", "Dates (1)"].map((c, i) => (
-                <button key={c} className={`px-2.5 py-1 rounded-lg text-xs border transition-colors ${i === 0 ? "border-violet-500/40 bg-violet-500/10 text-violet-300" : "border-white/[0.07] text-white/40 hover:border-white/15"}`}>{c}</button>
+              {["All (6)", "Names (1)", "Contact (2)", "Financial (1)", "IDs (1)", "Personal (1)"].map((c, i) => (
+                <button key={c} className={`px-2.5 py-1 rounded-lg text-xs border transition-colors ${i === 0 ? "border-violet-500/40 bg-violet-500/10 text-violet-300" : "border-white/[0.07] text-white/40"}`}>{c}</button>
               ))}
             </div>
           </div>
@@ -150,59 +239,42 @@ export function RedactCompleted() {
           <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-3">
             <p className="text-xs text-white/30 uppercase tracking-widest mb-2">E. Review Queue</p>
             <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-white/50">Selected for redaction</span><span className="text-emerald-400 font-medium">{selected.size}</span>
-              </div>
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-white/50">Needs confirmation</span><span className="text-amber-400 font-medium">2</span>
-              </div>
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-white/50">Ignored / left visible</span><span className="text-white/30">{suggestedRedactions.length - selected.size}</span>
-              </div>
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-white/50">Manually added</span><span className="text-white/30">0</span>
-              </div>
+              {[["Selected for redaction", String(selected.size), "text-emerald-400"],
+                ["Needs confirmation", "2", "text-amber-400"],
+                ["Left visible", String(sensitive.length - selected.size), "text-white/30"],
+                ["Manually added", "0", "text-white/30"]].map(([l, v, c]) => (
+                <div key={l as string} className="flex items-center justify-between text-xs">
+                  <span className="text-white/45">{l as string}</span><span className={`font-medium ${c as string}`}>{v as string}</span>
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* F. Manual Redaction Tools */}
+          {/* F. Manual Tools */}
           <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-3">
             <p className="text-xs text-white/30 uppercase tracking-widest mb-2">F. Manual Redaction Tools</p>
             <div className="grid grid-cols-2 gap-1.5">
-              {[
-                { icon: "✏️", label: "Select text to redact" },
-                { icon: "➕", label: "Add manual region" },
-                { icon: "↩️", label: "Undo last redaction" },
-                { icon: "🗑️", label: "Clear all manual" },
-              ].map(t => (
-                <button key={t.label} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-white/[0.06] text-xs text-white/50 hover:text-white/70 hover:border-white/15 transition-colors">
-                  <span>{t.icon}</span>{t.label}
-                </button>
+              {[["✏️","Select text to redact"],["➕","Add manual region"],["↩️","Undo last"],["🗑️","Clear all manual"]].map(([i, l]) => (
+                <button key={l as string} className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-white/[0.06] text-xs text-white/45 hover:border-white/15 transition-colors">{i as string} {l as string}</button>
               ))}
             </div>
-            <button className="mt-2 w-full py-2 rounded-lg border border-violet-500/30 text-xs text-violet-400 hover:bg-violet-500/10 transition-colors">
-              Preview redacted copy
-            </button>
           </div>
 
           {/* G. Export */}
-          <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-3">
-            <p className="text-xs text-white/30 uppercase tracking-widest mb-2">G. Export / Save</p>
-            <div className="space-y-2">
-              <button className="w-full py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-xs font-medium text-white transition-colors">Export Redacted PDF</button>
-              <div className="grid grid-cols-2 gap-2">
-                <button className="py-2 rounded-lg border border-white/[0.07] text-xs text-white/50 hover:border-white/15 transition-colors">Export DOCX</button>
-                <button className="py-2 rounded-lg border border-white/[0.07] text-xs text-white/50 hover:border-white/15 transition-colors">Download copy</button>
-              </div>
-              <p className="text-xs text-white/25 text-center">Original document is not modified. Redactions create a separate copy.</p>
+          <div className="space-y-2">
+            <button className="w-full py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-xs font-medium text-white transition-colors">Export Redacted PDF</button>
+            <div className="grid grid-cols-2 gap-2">
+              <button className="py-2 rounded-lg border border-white/[0.07] text-xs text-white/45">Export DOCX</button>
+              <button className="py-2 rounded-lg border border-white/[0.07] text-xs text-white/45">Download copy</button>
             </div>
+            <p className="text-xs text-white/25 text-center">Original document is not modified. Redactions create a separate copy.</p>
           </div>
 
           {/* H. Source Traceability */}
           <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-3">
             <p className="text-xs text-white/30 uppercase tracking-widest mb-2">H. Source Traceability</p>
             <div className="flex flex-wrap gap-1.5">
-              {["§1·p.1 ×3", "§2·p.2 ×2", "§4·p.4 ×2", "§3·p.3"].map(c => (
+              {["§1·p.1 ×3", "§2·p.2 ×1", "§4·p.4 ×2"].map(c => (
                 <button key={c} className="px-2 py-1 rounded-lg text-xs border border-violet-500/25 text-violet-400 hover:bg-violet-500/10 transition-colors">{c}</button>
               ))}
             </div>
