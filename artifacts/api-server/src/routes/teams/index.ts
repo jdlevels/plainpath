@@ -107,6 +107,10 @@ router.post("/invite/:token/accept", requireAuth, async (req: any, res) => {
       return res.status(410).json({ error: "invite_expired" });
     }
 
+    if (email.toLowerCase() !== invite.invited_email.toLowerCase()) {
+      return res.status(403).json({ error: "invite_email_mismatch" });
+    }
+
     const displayName = await getUserDisplayName(req.userId);
 
     const existing = await pool.query(
