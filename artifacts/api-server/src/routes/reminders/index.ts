@@ -1,11 +1,33 @@
 import { Router } from "express"
-import { getAuth } from "@clerk/express"
+import { getAuth, clerkClient } from "@clerk/express"
 import { logger } from "../../lib/logger"
 
 const router = Router()
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;")
+}
+
 function getResendApiKey(): string | null {
   return process.env.RESEND_API_KEY ?? null
+}
+
+async function getVerifiedUserEmail(userId: string): Promise<string | null> {
+  try {
+    const user = await clerkClient.users.getUser(userId)
+    const primary = user.emailAddresses.find(
+      (e) => e.id === user.primaryEmailAddressId && e.verification?.status === "verified"
+    )
+    return primary?.emailAddress ?? null
+  } catch (err) {
+    logger.error({ err }, "Failed to fetch user email from Clerk")
+    return null
+  }
 }
 
 async function sendReminderEmail(opts: {
@@ -23,28 +45,33 @@ async function sendReminderEmail(opts: {
   const { Resend } = await import("resend")
   const resend = new Resend(apiKey)
 
-  const daysText = opts.deadlineDate
-    ? `on <strong>${opts.deadlineDate}</strong>`
+  const safeTitle = escapeHtml(opts.deadlineTitle)
+  const safeDate = escapeHtml(opts.deadlineDate)
+  const safeDescription = escapeHtml(opts.deadlineDescription)
+  const safeDocTitle = escapeHtml(opts.docTitle)
+
+  const daysText = safeDate
+    ? `on <strong>${safeDate}</strong>`
     : "coming up soon"
 
   const { error } = await resend.emails.send({
     from: "PlainPath <support@plainpathapp.com>",
     to: opts.to,
-    subject: `Deadline reminder: ${opts.deadlineTitle}`,
+    subject: `Deadline reminder: ${safeTitle}`,
     html: `
       <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 32px 24px; background: #F8F7F4; border-radius: 16px;">
         <p style="font-size: 13px; font-weight: 600; color: #6B6B6B; text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 16px;">Deadline Reminder · PlainPath</p>
 
-        <h1 style="font-size: 24px; font-weight: 700; color: #1a1a1a; margin: 0 0 8px;">${opts.deadlineTitle}</h1>
+        <h1 style="font-size: 24px; font-weight: 700; color: #1a1a1a; margin: 0 0 8px;">${safeTitle}</h1>
 
         <p style="font-size: 16px; color: #444; margin: 0 0 24px;">
           This deadline is ${daysText}. It was identified from:<br>
-          <strong>${opts.docTitle}</strong>
+          <strong>${safeDocTitle}</strong>
         </p>
 
-        ${opts.deadlineDescription ? `
+        ${safeDescription ? `
         <div style="background: #fff; border-radius: 12px; padding: 16px 20px; border: 1px solid #E5E5E5; margin-bottom: 24px;">
-          <p style="font-size: 14px; color: #555; margin: 0;">${opts.deadlineDescription}</p>
+          <p style="font-size: 14px; color: #555; margin: 0;">${safeDescription}</p>
         </div>
         ` : ""}
 
@@ -70,25 +97,25 @@ router.post("/api/reminders/email", async (req, res) => {
     return res.status(401).json({ error: "unauthorized", message: "You must be signed in to send reminder emails." })
   }
 
-  const { email, deadlineTitle, deadlineDate, deadlineDescription, docTitle } =
+  const verifiedEmail = await getVerifiedUserEmail(userId)
+  if (!verifiedEmail) {
+    return res.status(403).json({ error: "no_verified_email", message: "No verified email address found for your account." })
+  }
+
+  const { deadlineTitle, deadlineDate, deadlineDescription, docTitle } =
     req.body as {
-      email?: string
       deadlineTitle?: string
       deadlineDate?: string
       deadlineDescription?: string
       docTitle?: string
     }
 
-  if (!email || typeof email !== "string" || !email.includes("@")) {
-    return res.status(400).json({ error: "A valid email address is required." })
-  }
-
   if (!deadlineTitle || typeof deadlineTitle !== "string") {
     return res.status(400).json({ error: "deadlineTitle is required." })
   }
 
   const result = await sendReminderEmail({
-    to: email.trim().toLowerCase(),
+    to: verifiedEmail,
     deadlineTitle,
     deadlineDate: deadlineDate ?? "",
     deadlineDescription: deadlineDescription ?? "",
@@ -114,11 +141,9 @@ router.post("/api/reminders/drip", async (req, res) => {
     return res.status(401).json({ error: "unauthorized", message: "You must be signed in to send drip emails." })
   }
 
-  const { email, firstName, tool } =
-    req.body as { email?: string; firstName?: string; tool?: string }
-
-  if (!email || typeof email !== "string" || !email.includes("@")) {
-    return res.status(400).json({ error: "A valid email address is required." })
+  const verifiedEmail = await getVerifiedUserEmail(userId)
+  if (!verifiedEmail) {
+    return res.status(403).json({ error: "no_verified_email", message: "No verified email address found for your account." })
   }
 
   const apiKey = getResendApiKey()
@@ -126,15 +151,20 @@ router.post("/api/reminders/drip", async (req, res) => {
     return res.status(503).json({ error: "Email not configured." })
   }
 
+  const { firstName, tool } =
+    req.body as { firstName?: string; tool?: string }
+
   const { Resend } = await import("resend")
   const resend = new Resend(apiKey)
 
-  const greeting = firstName ? `Hi ${firstName}` : "Hi there"
-  const toolName = tool ?? "PlainPath"
+  const safeFirstName = firstName ? escapeHtml(String(firstName)) : null
+  const safeTool = tool ? escapeHtml(String(tool)) : "PlainPath"
+
+  const greeting = safeFirstName ? `Hi ${safeFirstName}` : "Hi there"
 
   const { error } = await resend.emails.send({
     from: "PlainPath <support@plainpathapp.com>",
-    to: email.trim().toLowerCase(),
+    to: verifiedEmail,
     subject: "Your first PlainPath analysis is ready",
     html: `
       <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 32px 24px; background: #F8F7F4; border-radius: 16px;">
@@ -143,7 +173,7 @@ router.post("/api/reminders/drip", async (req, res) => {
         <h1 style="font-size: 24px; font-weight: 700; color: #1a1a1a; margin: 0 0 12px;">${greeting} — welcome to PlainPath 👋</h1>
 
         <p style="font-size: 15px; color: #444; margin: 0 0 20px; line-height: 1.6;">
-          You just used <strong>${toolName}</strong> to analyze a document in plain English.
+          You just used <strong>${safeTool}</strong> to analyze a document in plain English.
           No legal jargon. No hourly billing. Just the information you need to act confidently.
         </p>
 
@@ -183,10 +213,9 @@ router.post("/api/reminders/welcome", async (req, res) => {
     return res.status(401).json({ error: "unauthorized", message: "You must be signed in to send welcome emails." })
   }
 
-  const { email, firstName } = req.body as { email?: string; firstName?: string }
-
-  if (!email || typeof email !== "string" || !email.includes("@")) {
-    return res.status(400).json({ error: "A valid email address is required." })
+  const verifiedEmail = await getVerifiedUserEmail(userId)
+  if (!verifiedEmail) {
+    return res.status(403).json({ error: "no_verified_email", message: "No verified email address found for your account." })
   }
 
   const apiKey = getResendApiKey()
@@ -194,11 +223,14 @@ router.post("/api/reminders/welcome", async (req, res) => {
 
   const { Resend } = await import("resend")
   const resend = new Resend(apiKey)
-  const greeting = firstName ? `Hi ${firstName}` : "Hi there"
+
+  const { firstName } = req.body as { firstName?: string }
+  const safeFirstName = firstName ? escapeHtml(String(firstName)) : null
+  const greeting = safeFirstName ? `Hi ${safeFirstName}` : "Hi there"
 
   const { error } = await resend.emails.send({
     from: "PlainPath <support@plainpathapp.com>",
-    to: email.trim().toLowerCase(),
+    to: verifiedEmail,
     subject: "Welcome to PlainPath — you're all set",
     html: `
       <div style="font-family: system-ui, -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 0; background: #F8F7F4;">
