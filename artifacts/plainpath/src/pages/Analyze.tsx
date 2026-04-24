@@ -43,6 +43,8 @@ import { useEntitlements } from "@/hooks/useEntitlements"
 import UpgradeCard from "@/components/UpgradeCard"
 import { findGlossaryEntry } from "@/lib/legalGlossary"
 import { addReminder, requestNotificationPermission } from "@/lib/reminderStorage"
+import { DocumentChat } from "@/components/DocumentChat"
+import { computeRiskScore, getRiskScoreResult } from "@/lib/riskScore"
 
 const TABS = [
   { id: "plain-english",   label: "Plain English",   icon: BookOpen                                    },
@@ -55,6 +57,7 @@ const TABS = [
   { id: "risks",           label: "Risks & Notes",    icon: AlertTriangle                              },
   { id: "key-terms",       label: "Key Terms",        icon: Flag,          countKey: "keyTerms"         },
   { id: "action-pack",    label: "Action Pack",      icon: Package                                      },
+  { id: "ask",             label: "Ask PlainPath",    icon: MessageSquare                               },
 ]
 
 export default function Analyze() {
@@ -300,6 +303,20 @@ export default function Analyze() {
             <StatPill label="Docs" value={requiredDocuments.length} onClick={() => setActiveTab("documents")} />
             <StatPill label="Deadlines" value={hardDeadlines.length} warn={hardDeadlines.length > 0} onClick={() => setActiveTab("deadlines")} />
             <StatPill label="Risks" value={highRisks.length} warn={highRisks.length > 0} onClick={() => setActiveTab("risks")} />
+            {(() => {
+              const score = computeRiskScore({ risks, deadlines, overallConfidence: analysis.overallConfidence })
+              const sr = getRiskScoreResult(score)
+              return (
+                <button
+                  onClick={() => setActiveTab("risks")}
+                  className={`shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-bold transition-colors hover:opacity-80 ${sr.bg} ${sr.color}`}
+                  title="Document Risk Score — click to view risks"
+                >
+                  <span className="font-mono">{score}</span>
+                  <span className="hidden sm:inline">{sr.label}</span>
+                </button>
+              )
+            })()}
             <div className="flex items-center gap-1.5 shrink-0 ml-auto pl-2">
               <ConfidenceBadge level={analysis.overallConfidence} />
               <span className="text-xs text-muted-foreground hidden sm:inline">overall confidence</span>
@@ -410,6 +427,24 @@ export default function Analyze() {
                   : <RisksTab      analysis={analysis} onOpenGuidedReview={() => setGuidedReviewCtx("risks")} />)}
                 {activeTab === "key-terms"       && <KeyTermsTab   analysis={analysis} />}
                 {activeTab === "action-pack"     && <ActionPackTab analysis={analysis} />}
+                {activeTab === "ask"             && (
+                  isSignedIn
+                    ? <DocumentChat analysis={analysis} />
+                    : <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
+                        <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+                          <MessageSquare className="w-6 h-6 text-primary/60" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-foreground mb-1">Sign in to ask questions</p>
+                          <p className="text-xs text-muted-foreground max-w-xs">
+                            Create a free account to ask PlainPath anything about your document.
+                          </p>
+                        </div>
+                        <a href="/sign-up" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity">
+                          Create free account <ArrowRight className="w-4 h-4" />
+                        </a>
+                      </div>
+                )}
 
               </motion.div>
             </AnimatePresence>

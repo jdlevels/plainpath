@@ -15,6 +15,12 @@ import Support from "@/pages/Support";
 import ReviewingALease from "@/pages/guides/ReviewingALease";
 import UnderstandingAnNDA from "@/pages/guides/UnderstandingAnNDA";
 import EmploymentContractRedFlags from "@/pages/guides/EmploymentContractRedFlags";
+import UnderstandYourLease from "@/pages/guides/UnderstandYourLease";
+import UnderstandYourMedicalBill from "@/pages/guides/UnderstandYourMedicalBill";
+import UnderstandYourIrsLetter from "@/pages/guides/UnderstandYourIrsLetter";
+import UnderstandYourEmploymentContract from "@/pages/guides/UnderstandYourEmploymentContract";
+import VsContractCrab from "@/pages/VsContractCrab";
+import VsAiLawyer from "@/pages/VsAiLawyer";
 import DemoLanding from "@/pages/DemoLanding";
 import DemoAnalyze from "@/pages/DemoAnalyze";
 import DemoTrustCheck from "@/pages/DemoTrustCheck";
@@ -51,6 +57,17 @@ function Router() {
       <Route path="/guides/reviewing-a-lease" component={ReviewingALease} />
       <Route path="/guides/understanding-an-nda" component={UnderstandingAnNDA} />
       <Route path="/guides/employment-contract-red-flags" component={EmploymentContractRedFlags} />
+
+      {/* SEO landing pages — document types */}
+      <Route path="/understand-your-lease" component={UnderstandYourLease} />
+      <Route path="/understand-your-medical-bill" component={UnderstandYourMedicalBill} />
+      <Route path="/understand-your-irs-letter" component={UnderstandYourIrsLetter} />
+      <Route path="/understand-your-employment-contract" component={UnderstandYourEmploymentContract} />
+
+      {/* Competitor comparison pages */}
+      <Route path="/vs-contractcrab" component={VsContractCrab} />
+      <Route path="/vs-ai-lawyer" component={VsAiLawyer} />
+
       <Route path="/pricing">{() => <ExternalRedirect to="/#pricing" />}</Route>
       <Route path="/privacy" component={Privacy} />
       <Route path="/terms" component={Terms} />

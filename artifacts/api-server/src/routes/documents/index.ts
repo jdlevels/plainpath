@@ -2700,4 +2700,97 @@ Focus on substantive changes — skip formatting-only differences. Limit to 15 m
   }
 });
 
+// ── Document Chat ────────────────────────────────────────────────────────────
+// POST /api/documents/chat
+// Ask a follow-up question about a document using its analysis as context.
+router.post("/chat", async (req, res) => {
+  const { userId } = getAuth(req);
+  if (!userId) return res.status(401).json({ error: "unauthenticated" });
+
+  const { analysisContext, message, history = [] } = req.body;
+  if (!message || typeof message !== "string" || message.trim().length < 2) {
+    return res.status(400).json({ error: "message_required", message: "A message is required." });
+  }
+  if (!analysisContext || typeof analysisContext !== "object") {
+    return res.status(400).json({ error: "context_required", message: "Analysis context is required." });
+  }
+
+  const { title, documentType, summary, risks = [], deadlines = [], keyTerms = [], actionSteps = [], plainEnglish } = analysisContext;
+
+  const contextParts = [
+    `Document: "${title || "Untitled"}" (${documentType || "Unknown type"})`,
+    summary ? `Summary: ${summary}` : null,
+    risks.length
+      ? `Key risks:\n${(risks as any[]).slice(0, 6).map((r: any) => `- [${String(r.severity ?? "").toUpperCase()}] ${r.title}: ${r.description}`).join("\n")}`
+      : null,
+    deadlines.length
+      ? `Deadlines:\n${(deadlines as any[]).slice(0, 5).map((d: any) => `- ${d.title}${d.date ? ` (${d.date})` : ""}${d.isHard ? " [HARD]" : ""}: ${d.description}`).join("\n")}`
+      : null,
+    keyTerms.length
+      ? `Key terms:\n${(keyTerms as any[]).slice(0, 8).map((k: any) => `- ${k.term}: ${k.definition}`).join("\n")}`
+      : null,
+    actionSteps.length
+      ? `Action steps:\n${(actionSteps as any[]).slice(0, 5).map((a: any) => `- [${String(a.priority ?? "").toUpperCase()}] ${a.title}: ${a.description}`).join("\n")}`
+      : null,
+    plainEnglish
+      ? `Plain English breakdown:\n- What it is: ${(plainEnglish as any).whatItIs}\n- Obligations: ${(plainEnglish as any).obligations}\n- Pay attention to: ${(plainEnglish as any).payAttentionTo}`
+      : null,
+  ].filter(Boolean).join("\n\n");
+
+  const systemPrompt = `You are PlainPath's document assistant — an expert at explaining legal and official documents in plain English. A user has analyzed their document. Answer their questions using the analysis context below.
+
+${contextParts}
+
+Rules:
+- Speak in plain English. Explain any legal terms you use.
+- Be specific to this document. Don't give generic advice.
+- If asked something not in the analysis, say you don't have enough context from the document to answer that precisely.
+- Keep answers concise: 2–4 sentences for simple questions, a short paragraph for complex ones.
+- If the user asks about serious legal consequences, encourage them to consult a licensed attorney for their specific situation.
+- Never fabricate document details not present in the analysis above.`;
+
+  const messages = [
+    { role: "system" as const, content: systemPrompt },
+    ...(history as any[]).slice(-12).map((h: any) => ({ role: h.role as "user" | "assistant", content: String(h.content) })),
+    { role: "user" as const, content: message.trim() },
+  ];
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      max_completion_tokens: 500,
+      messages,
+    });
+
+    const reply = response.choices[0]?.message?.content?.trim() ?? "I wasn't able to generate a response. Please try again.";
+    const suggestedQuestions = buildSuggestedQuestions(documentType, risks, deadlines);
+    return res.json({ reply, suggestedQuestions });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    logger.error({ err: msg }, "documents/chat failed");
+    return res.status(500).json({ message: "Chat failed. Please try again." });
+  }
+});
+
+function buildSuggestedQuestions(documentType: string, risks: any[], deadlines: any[]): string[] {
+  const questions: string[] = [];
+  if ((deadlines as any[]).some((d: any) => d.isHard)) questions.push("What happens if I miss the deadline?");
+  if ((risks as any[]).some((r: any) => r.severity === "high")) questions.push("What should I do about the high-risk items?");
+
+  const byType: Record<string, string[]> = {
+    lease:      ["Can my landlord raise the rent mid-lease?", "What are my options if the landlord won't make repairs?", "How much notice do I need to give before moving out?"],
+    employment: ["Can I negotiate these terms?", "Is this non-compete clause enforceable?", "What happens if I'm terminated without cause?"],
+    medical:    ["Am I required to pay this full amount?", "How do I dispute or appeal this bill?", "What happens if I can't pay right now?"],
+    irs:        ["What options do I have to respond?", "What happens if I ignore this notice?", "Can I set up a payment plan?"],
+    contract:   ["What are the termination rights?", "Are there any auto-renewal clauses?", "What happens if either party breaches the contract?"],
+    nda:        ["What am I not allowed to share?", "How long does this agreement last?", "What happens if I accidentally violate it?"],
+  };
+
+  const typeKey = Object.keys(byType).find(k => String(documentType ?? "").toLowerCase().includes(k)) ?? "contract";
+  const extras = byType[typeKey] ?? byType.contract;
+  const combined = [...questions, ...extras];
+  return Array.from(new Set(combined)).slice(0, 3);
+}
+
 export default router;
+
