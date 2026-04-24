@@ -803,6 +803,7 @@ export default function Home() {
   const [waitlistOpen, setWaitlistOpen] = useState(false)
   const [waitlistPlatform, setWaitlistPlatform] = useState<"ios" | "android" | "both">("both")
   const [activeDemoTool, setActiveDemoTool] = useState(0)
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly")
 
   useEffect(() => {
     const id = setInterval(() => setActiveDemoTool(prev => (prev + 1) % 8), DEMO_INTERVAL_MS)
@@ -918,7 +919,7 @@ export default function Home() {
                 >
                   Try it free — no account needed <ArrowRight className="w-4 h-4" />
                 </a>
-                <p className="text-xs text-muted-foreground/80">2 free analyses included — no sign-up required.</p>
+                <p className="text-xs text-muted-foreground/80">No account required &nbsp;·&nbsp; No credit card &nbsp;·&nbsp; Start immediately</p>
                 <div className="flex items-center gap-2.5 flex-wrap">
                   <AppStoreBadge onClick={() => openWaitlist("ios")} />
                   <PlayStoreBadge onClick={() => openWaitlist("android")} />
@@ -1398,12 +1399,34 @@ export default function Home() {
             </motion.p>
           </div>
 
+          {/* ── Billing toggle ── */}
+          <div className="flex items-center justify-center mb-10">
+            <div className="inline-flex items-center gap-1 p-1 rounded-full bg-secondary/70 border border-border/50">
+              <button
+                onClick={() => setBillingCycle("monthly")}
+                className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${billingCycle === "monthly" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setBillingCycle("annual")}
+                className={`flex items-center gap-2 px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${billingCycle === "annual" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                Annual
+                <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                  Save 20%
+                </span>
+              </button>
+            </div>
+          </div>
+
           {/* ── Attorney cost comparison ── */}
           <AttorneyComparison />
 
           <div className="grid md:grid-cols-2 gap-6 items-stretch max-w-4xl mx-auto">
             {PLANS.map((plan, i) => {
-              const pr = plan.monthly;
+              const pr = billingCycle === "annual" ? plan.annual : plan.monthly;
+              const planHref = billingCycle === "annual" ? `${plan.href}&billing=annual` : plan.href;
               return (
               <motion.div
                 key={plan.name}
@@ -1432,6 +1455,12 @@ export default function Home() {
                     </span>
                     <span className="text-muted-foreground text-sm ml-0.5">{pr.period}</span>
                   </div>
+                  {billingCycle === "annual" && "eq" in pr && (
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">{pr.eq}</span>
+                      <span className="text-xs text-muted-foreground">{pr.sub}</span>
+                    </div>
+                  )}
                   <div className="mb-2" />
                   <p className="text-sm text-muted-foreground leading-snug">{plan.desc}</p>
                 </div>
@@ -1462,8 +1491,13 @@ export default function Home() {
                   )}
                 </div>
 
+                <div className="flex items-center gap-1.5 mb-3 text-xs text-muted-foreground">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                  <span>30-day money-back guarantee</span>
+                </div>
+
                 <a
-                  href={plan.href}
+                  href={planHref}
                   className={`block w-full py-3 rounded-xl text-sm font-semibold text-center transition-all ${
                     plan.highlight
                       ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
@@ -1477,8 +1511,29 @@ export default function Home() {
             })}
           </div>
 
-          <p className="text-center text-xs text-muted-foreground mt-8">
-            Web access included on all plans &nbsp;·&nbsp; iOS &amp; Android apps coming soon &nbsp;·&nbsp; Cancel anytime
+          {/* ── Trust badges ── */}
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-x-7 gap-y-3">
+            {[
+              { icon: Lock,         text: "Encrypted in transit" },
+              { icon: XIcon,        text: "Data never sold" },
+              { icon: ShieldCheck,  text: "Not used for AI training" },
+              { icon: CheckCircle2, text: "Cancel anytime" },
+            ].map(({ icon: Icon, text }) => (
+              <span key={text} className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <Icon className="w-3.5 h-3.5 text-primary/60 shrink-0" />
+                {text}
+              </span>
+            ))}
+          </div>
+
+          <p className="text-center text-xs text-muted-foreground mt-5">
+            Web access included on all plans &nbsp;·&nbsp; iOS &amp; Android apps coming soon
+          </p>
+          <p className="text-center text-xs text-muted-foreground mt-2">
+            Questions? Email us at{" "}
+            <a href="mailto:support@plainpathapp.com" className="text-primary hover:underline font-medium">
+              support@plainpathapp.com
+            </a>
           </p>
         </div>
       </div>

@@ -144,6 +144,13 @@ export function Navbar() {
           <ThemeToggle />
 
           <a
+            href="/demo"
+            className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold text-primary hover:bg-primary/8 transition-colors"
+          >
+            Try demo
+          </a>
+
+          <a
             href="/app/sign-in"
             className="hidden lg:block text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-2"
           >
@@ -217,6 +224,13 @@ export function Navbar() {
           </a>
 
           <div className="pt-2 border-t border-border/40 mt-2 space-y-2">
+            <a
+              href="/demo"
+              onClick={() => setMobileOpen(false)}
+              className="block px-3 py-2.5 rounded-lg text-sm font-semibold text-primary hover:bg-primary/8 transition-colors"
+            >
+              Try demo — no account needed
+            </a>
             <a
               href="/app/sign-in"
               className="block px-3 py-2.5 rounded-lg text-sm font-medium text-foreground hover:bg-secondary/60 transition-colors"
