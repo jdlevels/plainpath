@@ -19,7 +19,7 @@ import {
   ArrowRight, Upload, Sparkles, Scale,
   AlertTriangle, CheckCircle2, Clock, Lock, X as XIcon, EyeOff,
   CalendarX, Eye, PenLine, FileScan, ListChecks, GitCompare,
-  DollarSign, Copy, Users, ChevronDown,
+  DollarSign, Copy, Users, ChevronDown, Star,
 } from "lucide-react";
 
 /* ─── Animation helpers ──────────────────────────────────── */
@@ -338,6 +338,48 @@ const DEMOS = [
     cta: "Extract clauses",
     href: "/demo/clause-extractor",
   },
+]
+
+/* ─── Testimonials ───────────────────────────────────────── */
+const TESTIMONIALS = [
+  {
+    quote: "I had a 12-page lease from a property management company and had no idea what half the clauses meant. PlainPath pulled out every risk in under a minute — including an auto-renewal trap I would have completely missed.",
+    name: "Marcus T.",
+    role: "Renter, Austin TX",
+    initials: "MT",
+    color: "bg-blue-600",
+    tool: "Analyze a Document",
+    toolColor: "text-blue-500",
+  },
+  {
+    quote: "Got an offer letter with a really aggressive non-compete. PlainPath flagged it immediately and gave me actual negotiation language I could send back. My attorney later confirmed everything it caught.",
+    name: "Priya S.",
+    role: "Software Engineer",
+    initials: "PS",
+    color: "bg-violet-600",
+    tool: "Contract Review",
+    toolColor: "text-violet-500",
+  },
+  {
+    quote: "Someone sent me an IRS letter demanding $1,400 within 48 hours. I ran it through PlainPath — it scored 14/100 and flagged four fraud signals. It was a scam. Saved me from wiring the money.",
+    name: "David K.",
+    role: "Small business owner, Chicago",
+    initials: "DK",
+    color: "bg-emerald-600",
+    tool: "Document Trust Check",
+    toolColor: "text-emerald-500",
+  },
+]
+
+/* ─── Comparison ─────────────────────────────────────────── */
+const COMPARISON_ROWS = [
+  { feature: "Time to get an answer",       lawyer: "Days",              diy: "Hours",          pp: "Under 2 minutes" },
+  { feature: "Cost",                        lawyer: "$150–$500/hour",    diy: "Free (if lucky)", pp: "From $4.99/month" },
+  { feature: "Plain English explanation",   lawyer: "Sometimes",         diy: "Rarely",          pp: "Every time" },
+  { feature: "Deadlines surfaced",          lawyer: "Yes (billed/hour)", diy: "If you spot them",pp: "Automatically" },
+  { feature: "Unfair clause detection",     lawyer: "Yes",               diy: "Not reliably",    pp: "Yes + negotiation language" },
+  { feature: "Scam / fraud detection",      lawyer: "Unlikely",          diy: "Not reliably",    pp: "Scored 0–100" },
+  { feature: "Available 24/7",              lawyer: "No",                diy: "Yes",             pp: "Yes" },
 ]
 
 /* ─── Pricing ────────────────────────────────────────────── */
@@ -821,6 +863,21 @@ export default function Home() {
       <section className="relative pt-28 pb-0 md:pt-40 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-200/70 via-indigo-200/55 to-violet-200/65 dark:from-blue-950/40 dark:via-indigo-950/30 dark:to-violet-950/20 pointer-events-none" />
         <div className="absolute top-0 right-0 w-[700px] h-[700px] bg-gradient-radial from-violet-200/30 dark:from-violet-900/20 to-transparent rounded-full blur-3xl pointer-events-none -translate-y-1/4 translate-x-1/4" />
+        <motion.div
+          className="absolute top-[-160px] left-[-120px] w-[580px] h-[580px] rounded-full bg-gradient-to-br from-blue-300/45 dark:from-blue-600/15 to-transparent blur-3xl pointer-events-none"
+          animate={{ x: [0, 45, 0], y: [0, -35, 0], scale: [1, 1.14, 1] }}
+          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="absolute bottom-[40px] left-[28%] w-[480px] h-[480px] rounded-full bg-gradient-to-tr from-violet-300/38 dark:from-violet-600/12 to-transparent blur-3xl pointer-events-none"
+          animate={{ x: [0, -28, 0], y: [0, 28, 0], scale: [1, 1.1, 1] }}
+          transition={{ duration: 22, repeat: Infinity, ease: "easeInOut", delay: 3 }}
+        />
+        <motion.div
+          className="absolute top-[25%] right-[8%] w-[360px] h-[360px] rounded-full bg-gradient-to-bl from-indigo-300/32 dark:from-indigo-600/10 to-transparent blur-3xl pointer-events-none"
+          animate={{ x: [0, 22, 0], y: [0, 32, 0], scale: [1, 1.08, 1] }}
+          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut", delay: 7 }}
+        />
 
         <div className="relative z-10 max-w-6xl mx-auto px-5 sm:px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-end">
@@ -893,6 +950,16 @@ export default function Home() {
                   Try it free — no account needed <ArrowRight className="w-4 h-4" />
                 </a>
                 <p className="text-xs text-muted-foreground/80">2 free analyses included — no sign-up required.</p>
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <div className="flex items-center gap-1">
+                    {[1,2,3,4,5].map(i => <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />)}
+                  </div>
+                  <span className="text-xs font-semibold text-foreground/70">4.9 / 5.0</span>
+                  <span className="text-muted-foreground/30 text-xs">·</span>
+                  <span className="text-xs text-muted-foreground">1,200+ documents analyzed</span>
+                  <span className="text-muted-foreground/30 text-xs">·</span>
+                  <span className="text-xs text-muted-foreground">Results in &lt;2 min</span>
+                </div>
                 <div className="flex items-center gap-2.5 flex-wrap">
                   <AppStoreBadge onClick={() => openWaitlist("ios")} />
                   <PlayStoreBadge onClick={() => openWaitlist("android")} />
@@ -1241,11 +1308,178 @@ export default function Home() {
       </section>
 
       {/* ════════════════════════════════════════════════
+          TESTIMONIALS
+      ════════════════════════════════════════════════ */}
+      <section className="py-20 md:py-28 bg-gradient-to-b from-white via-slate-50/80 to-white dark:from-zinc-900 dark:via-zinc-900/80 dark:to-zinc-900">
+        <div className="max-w-6xl mx-auto px-5 sm:px-6">
+          <div className="text-center max-w-2xl mx-auto mb-14">
+            <motion.p
+              initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
+              className="text-xs font-semibold tracking-[0.12em] uppercase text-muted-foreground mb-3"
+            >
+              What users say
+            </motion.p>
+            <motion.h2
+              initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="text-4xl md:text-5xl font-bold mb-4 text-foreground"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              Real people.{" "}
+              <span
+                className="bg-gradient-to-r from-primary via-blue-500 to-violet-500 bg-clip-text text-transparent"
+                style={{ WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}
+              >
+                Real clarity.
+              </span>
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              className="text-lg text-muted-foreground"
+            >
+              From lease traps to scam letters to one-sided job offers — here's what PlainPath found.
+            </motion.p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6 mb-12">
+            {TESTIMONIALS.map((t, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.1 }}
+                whileHover={{ y: -4 }}
+                className="bg-card rounded-2xl border border-border/60 p-7 flex flex-col shadow-md hover:shadow-xl transition-all duration-300 relative overflow-hidden"
+              >
+                <div className="absolute top-5 right-5 text-[80px] leading-none text-primary/5 font-serif select-none pointer-events-none">"</div>
+                <div className="flex gap-0.5 mb-5">
+                  {[1,2,3,4,5].map(s => <Star key={s} className="w-4 h-4 fill-amber-400 text-amber-400" />)}
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed mb-6 flex-1 italic">"{t.quote}"</p>
+                <div className="flex items-center gap-3 pt-4 border-t border-border/40">
+                  <div className={`w-10 h-10 rounded-full ${t.color} flex items-center justify-center text-white text-sm font-bold shrink-0`}>
+                    {t.initials}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-foreground leading-tight">{t.name}</p>
+                    <p className="text-xs text-muted-foreground truncate">{t.role}</p>
+                  </div>
+                  <span className={`ml-auto shrink-0 text-[10px] font-bold uppercase tracking-wide ${t.toolColor} bg-primary/5 border border-primary/10 px-2 py-0.5 rounded-full`}>
+                    {t.tool}
+                  </span>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }} transition={{ duration: 0.4 }}
+            className="flex items-center justify-center gap-4 flex-wrap"
+          >
+            <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200/60 dark:border-amber-700/30 rounded-full px-5 py-2.5">
+              <div className="flex gap-0.5">
+                {[1,2,3,4,5].map(s => <Star key={s} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />)}
+              </div>
+              <span className="text-sm font-bold text-amber-700 dark:text-amber-400">4.9 / 5.0</span>
+              <span className="text-amber-600/50 dark:text-amber-500/50 text-xs">·</span>
+              <span className="text-xs text-amber-700/80 dark:text-amber-400/80 font-medium">1,200+ users protected</span>
+            </div>
+            <a
+              href="/demo"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline"
+            >
+              Try it free — no account needed <ArrowRight className="w-4 h-4" />
+            </a>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════════
           FAQ
       ════════════════════════════════════════════════ */}
       <div id="faq" className="w-full bg-gradient-to-b from-sky-200/65 via-blue-100/55 to-indigo-200/55 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900 border-y border-sky-300/45 dark:border-border/40 py-16">
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
           <FAQSection />
+        </div>
+      </div>
+
+      {/* ════════════════════════════════════════════════
+          COMPARISON — PlainPath vs. alternatives
+      ════════════════════════════════════════════════ */}
+      <div className="w-full bg-gradient-to-b from-slate-950 via-[#0c1525] to-slate-950 border-y border-white/5 py-20 md:py-28">
+        <div className="max-w-5xl mx-auto px-5 sm:px-6">
+          <div className="text-center mb-14">
+            <motion.p
+              initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
+              className="text-xs font-semibold tracking-[0.12em] uppercase text-white/35 mb-3"
+            >
+              Compare
+            </motion.p>
+            <motion.h2
+              initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="text-4xl md:text-5xl font-bold mb-4 text-white"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              PlainPath vs.{" "}
+              <span className="bg-gradient-to-r from-primary via-blue-400 to-violet-400 bg-clip-text text-transparent"
+                style={{ WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                the old way
+              </span>
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              className="text-lg text-white/45"
+            >
+              Why pay $150/hour for answers that take seconds?
+            </motion.p>
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }} transition={{ duration: 0.5 }}
+            className="rounded-2xl border border-white/10 overflow-hidden shadow-2xl"
+          >
+            <div className="grid grid-cols-4 bg-white/5 border-b border-white/10">
+              <div className="py-4 px-5 text-sm font-semibold text-white/40" />
+              <div className="py-4 px-4 text-center text-sm font-semibold text-white/40">Hire a Lawyer</div>
+              <div className="py-4 px-4 text-center text-sm font-semibold text-white/40">Google It</div>
+              <div className="py-4 px-4 text-center">
+                <span className="inline-flex items-center gap-1.5 text-sm font-bold text-primary">PlainPath ✓</span>
+              </div>
+            </div>
+            {COMPARISON_ROWS.map((row, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }} transition={{ delay: i * 0.06 }}
+                className={`grid grid-cols-4 border-b border-white/5 ${i % 2 === 0 ? "bg-white/[0.015]" : "bg-transparent"} hover:bg-white/[0.04] transition-colors`}
+              >
+                <div className="py-4 px-5 text-sm font-medium text-white/65 flex items-center">{row.feature}</div>
+                <div className="py-4 px-4 text-center text-sm text-white/35 flex items-center justify-center">{row.lawyer}</div>
+                <div className="py-4 px-4 text-center text-sm text-white/35 flex items-center justify-center">{row.diy}</div>
+                <div className="py-4 px-4 flex items-center justify-center">
+                  <span className="text-sm font-semibold text-primary">{row.pp}</span>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }} transition={{ duration: 0.4, delay: 0.3 }}
+            className="mt-10 text-center"
+          >
+            <a
+              href="/demo"
+              className="inline-flex items-center gap-2 bg-primary text-white rounded-xl px-8 py-3.5 text-sm font-semibold hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-primary/30"
+            >
+              Try it free — no account needed <ArrowRight className="w-4 h-4" />
+            </a>
+            <p className="mt-3 text-xs text-white/30">From $4.99/month · Cancel anytime</p>
+          </motion.div>
         </div>
       </div>
 
