@@ -6,7 +6,8 @@ import {
   FileSignature, Plus, ArrowLeft, Upload, FileText, X,
   Send, CheckCircle2, AlertCircle, Loader2, RefreshCw,
   Download, Clock, Eye, ChevronRight, Pen, Mail,
-  ClipboardCopy, Lock, Shield, Zap, MousePointer,
+  ClipboardCopy, Lock, Shield, Zap, MousePointer, Search,
+  Check,
 } from "lucide-react"
 import PrepareAndPlace from "./PrepareAndPlace"
 import { Button } from "@/components/ui/button"
@@ -112,7 +113,28 @@ function LockedGate() {
   )
 }
 
+// ─── Avatar initials helper ───────────────────────────────────────────────────
+
+function avatarInitials(name: string): string {
+  const parts = name.trim().split(/\s+/)
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+}
+
+const AVATAR_COLORS = [
+  "bg-blue-500", "bg-indigo-500", "bg-violet-500", "bg-emerald-500",
+  "bg-teal-500", "bg-cyan-500", "bg-amber-500", "bg-rose-500",
+]
+
+function avatarColor(name: string): string {
+  let h = 0
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % AVATAR_COLORS.length
+  return AVATAR_COLORS[h]
+}
+
 // ─── List view ────────────────────────────────────────────────────────────────
+
+type ListFilter = "all" | "awaiting" | "completed" | "other"
 
 function ListView({
   onNew,
@@ -124,6 +146,8 @@ function ListView({
   const [items, setItems] = useState<SignatureListItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [filter, setFilter] = useState<ListFilter>("all")
+  const [search, setSearch] = useState("")
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -140,23 +164,97 @@ function ListView({
 
   useEffect(() => { void load() }, [load])
 
+  const awaiting  = items.filter(i => i.status === "sent" || i.status === "draft")
+  const completed = items.filter(i => i.status === "signed")
+  const other     = items.filter(i => ["declined", "expired", "failed"].includes(i.status))
+
+  const filtered = items.filter(item => {
+    const matchesFilter =
+      filter === "all" ? true :
+      filter === "awaiting" ? (item.status === "sent" || item.status === "draft") :
+      filter === "completed" ? item.status === "signed" :
+      ["declined", "expired", "failed"].includes(item.status)
+    const q = search.toLowerCase()
+    const matchesSearch = !q || item.documentName.toLowerCase().includes(q) || item.signerName.toLowerCase().includes(q) || item.signerEmail.toLowerCase().includes(q)
+    return matchesFilter && matchesSearch
+  })
+
+  const tabs: { key: ListFilter; label: string; count?: number }[] = [
+    { key: "all",       label: "All Documents",    count: items.length },
+    { key: "awaiting",  label: "Awaiting Others",  count: awaiting.length },
+    { key: "completed", label: "Completed",         count: completed.length },
+    { key: "other",     label: "Declined / Expired", count: other.length },
+  ]
+
   return (
     <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center">
             <FileSignature className="w-5 h-5 text-violet-600 dark:text-violet-400" />
           </div>
           <div>
             <h1 className="text-xl font-bold">Digital Signature</h1>
-            <p className="text-sm text-muted-foreground">Send and track e-signature requests</p>
+            <p className="text-sm text-muted-foreground">Send and track legally binding e-signature requests</p>
           </div>
         </div>
         <Button onClick={onNew} className="gap-2">
           <Plus className="w-4 h-4" /> New Request
         </Button>
       </div>
+
+      {/* Stats bar */}
+      {!loading && !error && items.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+          {[
+            { label: "Awaiting Signature", count: awaiting.length,  color: "text-amber-600 dark:text-amber-400",   bg: "bg-amber-50 dark:bg-amber-950/20 border-amber-200/70 dark:border-amber-800/40" },
+            { label: "Completed",          count: completed.length, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200/70 dark:border-emerald-800/40" },
+            { label: "Total Sent",         count: items.length,     color: "text-violet-600 dark:text-violet-400",  bg: "bg-violet-50 dark:bg-violet-950/20 border-violet-200/70 dark:border-violet-800/40" },
+            { label: "Declined / Expired", count: other.length,     color: "text-red-500 dark:text-red-400",        bg: "bg-red-50 dark:bg-red-950/20 border-red-200/70 dark:border-red-800/40" },
+          ].map(s => (
+            <div key={s.label} className={`border rounded-xl p-3.5 ${s.bg}`}>
+              <p className={`text-2xl font-bold ${s.color}`}>{s.count}</p>
+              <p className="text-xs text-muted-foreground mt-0.5 font-medium">{s.label}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Tabs + search */}
+      {!loading && !error && items.length > 0 && (
+        <div className="flex items-end justify-between border-b border-border/60 mb-4 gap-4">
+          <div className="flex items-center gap-0.5 overflow-x-auto">
+            {tabs.map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => setFilter(tab.key)}
+                className={`px-3.5 py-2 text-xs font-semibold border-b-2 transition-colors whitespace-nowrap ${
+                  filter === tab.key
+                    ? "border-violet-600 text-violet-600 dark:border-violet-400 dark:text-violet-400"
+                    : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {tab.label}
+                {tab.count !== undefined && tab.count > 0 && (
+                  <span className={`ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                    filter === tab.key ? "bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300" : "bg-muted text-muted-foreground"
+                  }`}>{tab.count}</span>
+                )}
+              </button>
+            ))}
+          </div>
+          <div className="relative pb-2 flex-shrink-0">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search…"
+              className="text-xs border border-border/60 rounded-lg pl-8 pr-3 py-1.5 w-44 bg-background text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-violet-200 dark:focus:ring-violet-800 focus:border-violet-300 dark:focus:border-violet-700 transition-all"
+            />
+          </div>
+        </div>
+      )}
 
       {loading && (
         <div className="flex items-center justify-center py-16">
@@ -189,49 +287,99 @@ function ListView({
         </div>
       )}
 
-      {!loading && items.length > 0 && (
-        <div className="space-y-3">
-          {items.map((item, i) => (
-            <motion.div
-              key={item.id}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.04 }}
-            >
-              <Card
-                className="border border-border/60 rounded-xl hover:border-border hover:shadow-sm transition-all cursor-pointer"
-                onClick={() => onSelect(item.id)}
+      {!loading && !error && items.length > 0 && filtered.length === 0 && (
+        <div className="border border-dashed border-border/40 rounded-xl p-8 text-center text-sm text-muted-foreground">
+          No requests match your filter.
+        </div>
+      )}
+
+      {!loading && filtered.length > 0 && (
+        <div className="space-y-2">
+          {filtered.map((item, i) => {
+            const initials = avatarInitials(item.signerName)
+            const avatarBg = avatarColor(item.signerName)
+            const isAwaiting = item.status === "sent" || item.status === "draft"
+            const isSigned   = item.status === "signed"
+            const isOther    = ["declined", "expired", "failed"].includes(item.status)
+            return (
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.03 }}
               >
-                <div className="p-4 flex items-center gap-4">
-                  <div className="w-9 h-9 rounded-lg bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center flex-shrink-0">
-                    <FileText className="w-4.5 h-4.5 text-violet-600 dark:text-violet-400 w-[18px] h-[18px]" />
+                <div
+                  className="bg-background border border-border/60 rounded-xl p-4 flex items-center gap-4 hover:shadow-sm hover:border-border transition-all cursor-pointer group"
+                  onClick={() => onSelect(item.id)}
+                >
+                  {/* File icon */}
+                  <div className="w-9 h-9 rounded-lg bg-violet-50 dark:bg-violet-950/30 border border-violet-100 dark:border-violet-800/40 flex items-center justify-center flex-shrink-0">
+                    <FileText className="w-[18px] h-[18px] text-violet-500 dark:text-violet-400" />
                   </div>
+
+                  {/* Title + signer meta */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-medium text-sm truncate">{item.documentName}</p>
+                      <p className="font-semibold text-sm truncate">{item.documentName}</p>
                       {item.testMode && (
-                        <span className="text-[9px] font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400 border border-amber-300/50 rounded-full px-1.5 py-0.5">
-                          Test
-                        </span>
+                        <span className="text-[9px] font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400 border border-amber-300/50 rounded-full px-1.5 py-0.5">Test</span>
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                      To: {item.signerName} ({item.signerEmail})
-                      {item.signerRole && ` — ${item.signerRole}`}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3 flex-shrink-0">
-                    <StatusBadge status={item.status} />
-                    <div className="text-xs text-muted-foreground hidden sm:block whitespace-nowrap">
-                      {timeAgo(item.createdAt)}
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
+                      <div className={`w-5 h-5 rounded-full ${avatarBg} flex items-center justify-center flex-shrink-0`}>
+                        <span className="text-white text-[9px] font-bold">{initials}</span>
+                      </div>
+                      <span className="text-xs text-muted-foreground">{item.signerName}</span>
+                      {item.signerRole && (
+                        <span className="text-[10px] text-muted-foreground bg-muted/60 rounded px-1.5 py-0.5">{item.signerRole}</span>
+                      )}
                     </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground/40" />
                   </div>
+
+                  {/* Date */}
+                  <div className="text-right flex-shrink-0 hidden sm:block">
+                    <p className="text-xs text-muted-foreground">{timeAgo(item.createdAt)}</p>
+                  </div>
+
+                  {/* Status badge */}
+                  <div className="flex-shrink-0">
+                    <StatusBadge status={item.status} />
+                  </div>
+
+                  {/* Hover actions */}
+                  <div className="flex-shrink-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {isAwaiting && (
+                      <button
+                        onClick={e => { e.stopPropagation(); onSelect(item.id) }}
+                        className="text-[11px] text-violet-600 dark:text-violet-400 border border-violet-200 dark:border-violet-800/50 hover:bg-violet-50 dark:hover:bg-violet-950/30 px-2.5 py-1 rounded-lg font-medium transition-colors"
+                      >
+                        View
+                      </button>
+                    )}
+                    {isSigned && (
+                      <button
+                        onClick={e => { e.stopPropagation(); onSelect(item.id) }}
+                        className="text-[11px] text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 px-2.5 py-1 rounded-lg font-medium transition-colors"
+                      >
+                        Download
+                      </button>
+                    )}
+                  </div>
+
+                  <ChevronRight className="w-4 h-4 text-muted-foreground/30 flex-shrink-0" />
                 </div>
-              </Card>
-            </motion.div>
-          ))}
+              </motion.div>
+            )
+          })}
         </div>
+      )}
+
+      {/* Footer */}
+      {!loading && items.length > 0 && (
+        <p className="text-center text-xs text-muted-foreground mt-8 flex items-center justify-center gap-1.5">
+          <Shield className="w-3.5 h-3.5" />
+          Legally binding e-signatures powered by Dropbox Sign
+        </p>
       )}
     </div>
   )
@@ -355,28 +503,33 @@ function NewRequestWizard({
       </div>
 
       {/* Step indicators */}
-      <div className="flex items-center gap-2 mb-8">
-        {([1, 2, 3] as WizardStep[]).map((s) => (
-          <div key={s} className="flex items-center gap-2">
-            <div
-              className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
-                step >= s
+      <div className="flex items-center gap-0 mb-8">
+        {([
+          { num: 1 as WizardStep, label: "Document" },
+          { num: 2 as WizardStep, label: "Recipients" },
+          { num: 3 as WizardStep, label: "Review & Send" },
+        ]).map(({ num, label }, i, arr) => (
+          <div key={num} className="flex items-center">
+            <div className="flex items-center gap-1.5 px-2 py-1">
+              <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 transition-all ${
+                step > num
                   ? "bg-violet-600 dark:bg-violet-500 text-white"
+                  : step === num
+                  ? "bg-violet-600 dark:bg-violet-500 text-white ring-2 ring-violet-200 dark:ring-violet-800"
                   : "bg-muted text-muted-foreground"
-              }`}
-            >
-              {s}
+              }`}>
+                {step > num ? <Check className="w-3 h-3" /> : num}
+              </div>
+              <span className={`text-xs font-medium transition-colors ${
+                step === num ? "text-violet-700 dark:text-violet-300" :
+                step > num ? "text-muted-foreground" : "text-muted-foreground/60"
+              }`}>{label}</span>
             </div>
-            {s < 3 && (
-              <div className={`h-px w-12 transition-colors ${step > s ? "bg-violet-500" : "bg-border"}`} />
+            {i < arr.length - 1 && (
+              <div className={`w-8 h-px transition-colors ${step > num ? "bg-violet-400 dark:bg-violet-600" : "bg-border/60"}`} />
             )}
           </div>
         ))}
-        <span className="ml-2 text-sm text-muted-foreground">
-          {step === 1 && "Choose document"}
-          {step === 2 && "Signer details"}
-          {step === 3 && "Review & send"}
-        </span>
       </div>
 
       <div className="max-w-2xl">
@@ -776,37 +929,38 @@ function DetailView({
   return (
     <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8 flex-wrap gap-3">
-        <div className="flex items-center gap-3">
+      <div className="sticky top-16 z-10 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-3 mb-6 bg-background/98 backdrop-blur-sm border-b border-border/60 shadow-sm flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center gap-3 min-w-0">
           <button
             onClick={onBack}
-            className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+            className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground flex-shrink-0"
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-lg font-bold">{request.documentName}</h1>
+              <h1 className="text-base font-bold truncate">{request.documentName}</h1>
+              <StatusBadge status={request.status} />
               {request.testMode && (
                 <span className="text-[9px] font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400 border border-amber-300/50 rounded-full px-1.5 py-0.5">
                   Test mode
                 </span>
               )}
             </div>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              Signature request · {fmtDate(request.createdAt)}
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Sent {fmtDate(request.createdAt)}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           {!isDone && (
             <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing} className="gap-2">
               <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
-              Refresh status
+              {refreshing ? "Checking…" : "Refresh"}
             </Button>
           )}
           {isSignedComplete && (
-            <Button size="sm" onClick={handleDownload} className="gap-2">
+            <Button size="sm" onClick={handleDownload} className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white">
               <Download className="w-3.5 h-3.5" /> Download signed
             </Button>
           )}
@@ -893,60 +1047,82 @@ function DetailView({
 
           {/* Signer card */}
           <Card className="border border-border/60 rounded-xl p-5">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-4">Signer</h2>
-            <div className="flex items-start justify-between flex-wrap gap-3">
-              <div className="space-y-1">
-                <p className="font-medium">{request.signerName}</p>
-                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <Mail className="w-3.5 h-3.5" />
-                  {request.signerEmail}
+            <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-4">Signer</h2>
+            <div className="flex items-center gap-3 mb-3">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold text-sm ${avatarColor(request.signerName)}`}>
+                {avatarInitials(request.signerName)}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-sm">{request.signerName}</p>
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
+                  <Mail className="w-3 h-3 flex-shrink-0" />
+                  <span className="truncate">{request.signerEmail}</span>
                 </div>
                 {request.signerRole && (
-                  <p className="text-xs text-muted-foreground">{request.signerRole}</p>
+                  <span className="inline-block text-[10px] bg-muted/60 rounded px-1.5 py-0.5 mt-1 text-muted-foreground">{request.signerRole}</span>
                 )}
               </div>
               <button
                 onClick={handleCopyEmail}
-                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground border border-border/50 rounded-lg px-2.5 py-1.5 transition-colors"
+                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground border border-border/50 rounded-lg px-2.5 py-1.5 transition-colors flex-shrink-0"
               >
-                <ClipboardCopy className="w-3.5 h-3.5" />
+                {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <ClipboardCopy className="w-3.5 h-3.5" />}
                 {copied ? "Copied!" : "Copy email"}
               </button>
             </div>
             {request.requestMessage && (
               <div className="mt-3 pt-3 border-t border-border/40 text-sm text-muted-foreground">
-                <p className="text-xs font-medium text-muted-foreground/70 mb-1">Message sent to signer</p>
-                <p className="italic">"{request.requestMessage}"</p>
+                <p className="text-[11px] font-semibold text-muted-foreground/70 mb-1 uppercase tracking-wider">Message sent to signer</p>
+                <p className="italic text-xs leading-relaxed">"{request.requestMessage}"</p>
               </div>
             )}
           </Card>
 
           {/* Audit trail */}
           <Card className="border border-border/60 rounded-xl p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <Clock className="w-4 h-4 text-muted-foreground" />
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Audit Trail</h2>
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-muted-foreground" />
+                <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Audit Trail</h2>
+              </div>
             </div>
             {request.events.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No events recorded yet. Events will appear here as the signer interacts with the document.</p>
-            ) : (
-              <div className="space-y-3">
-                {request.events.map((event) => (
-                  <div key={event.id} className="flex items-start gap-3 text-sm">
-                    <div className="w-1.5 h-1.5 rounded-full bg-violet-500 mt-1.5 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-foreground/90">
-                        {EVENT_LABELS[event.providerEventName] ?? event.providerEventName}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {fmtDate(event.occurredAt)}
-                      </p>
-                    </div>
-                    {event.appStatusAfterEvent && (
-                      <StatusBadge status={event.appStatusAfterEvent as SignatureStatus} />
-                    )}
+              <div className="flex items-start gap-3">
+                <div className="flex flex-col items-center gap-1 flex-shrink-0">
+                  <div className="w-7 h-7 rounded-full bg-amber-100 dark:bg-amber-950/40 flex items-center justify-center">
+                    <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                   </div>
-                ))}
+                </div>
+                <div className="pb-2">
+                  <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">Awaiting signer activity</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Events will appear here as the signer interacts with the document.</p>
+                </div>
+              </div>
+            ) : (
+              <div>
+                {request.events.map((event, idx) => {
+                  const isLast = idx === request.events.length - 1
+                  const label = EVENT_LABELS[event.providerEventName] ?? event.providerEventName
+                  return (
+                    <div key={event.id} className="flex gap-3 relative">
+                      {!isLast && (
+                        <div className="absolute left-3.5 top-7 w-px bg-violet-200 dark:bg-violet-800/50" style={{ height: "calc(100% - 4px)" }} />
+                      )}
+                      <div className="w-7 h-7 rounded-full bg-violet-100 dark:bg-violet-900/40 flex items-center justify-center flex-shrink-0 mt-0.5 z-10">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-violet-600 dark:text-violet-400" />
+                      </div>
+                      <div className={`flex-1 min-w-0 ${!isLast ? "pb-4" : ""}`}>
+                        <p className="text-sm font-semibold text-foreground/90">{label}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{fmtDate(event.occurredAt)}</p>
+                        {event.appStatusAfterEvent && (
+                          <div className="mt-1">
+                            <StatusBadge status={event.appStatusAfterEvent as SignatureStatus} />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
             )}
           </Card>
