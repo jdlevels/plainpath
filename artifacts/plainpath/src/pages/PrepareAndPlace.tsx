@@ -574,9 +574,20 @@ export default function PrepareAndPlace({ onBack, onSent }: Props) {
             )}
 
             {sendError && (
-              <div className="mb-3 flex items-start gap-2 text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20 border border-red-200/60 dark:border-red-900/40 rounded-lg px-3 py-2.5">
-                <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
-                {sendError}
+              <div className="mb-3 rounded-lg border border-red-200/60 dark:border-red-900/40 bg-red-50 dark:bg-red-950/20 overflow-hidden">
+                <div className="flex items-start gap-2 px-3 py-2.5 text-xs text-red-700 dark:text-red-400">
+                  <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                  <p className="leading-relaxed">{sendError}</p>
+                </div>
+                {sendError.includes("test mode") && (
+                  <div className="px-3 pb-2.5 text-[11px] text-red-600 dark:text-red-400 border-t border-red-200/40 dark:border-red-900/30 pt-2">
+                    <p className="font-semibold mb-1">To fix this:</p>
+                    <ul className="space-y-0.5 list-disc list-inside">
+                      <li>Use a <span className="font-medium">@plainpathapp.com</span> email address to test</li>
+                      <li>Or contact <span className="font-medium">apisupport@hellosign.com</span></li>
+                    </ul>
+                  </div>
+                )}
               </div>
             )}
 
