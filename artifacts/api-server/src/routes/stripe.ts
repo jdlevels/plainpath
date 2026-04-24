@@ -11,6 +11,105 @@ import {
   upsertSubscriber,
 } from "../lib/billingDb"
 import { BILLING_CONFIG } from "../lib/billingConfig"
+import { pool } from "@workspace/db"
+import { Resend } from "resend"
+
+function getResend(): Resend | null {
+  const key = process.env.RESEND_API_KEY
+  return key ? new Resend(key) : null
+}
+
+async function sendTeamPaymentEmail(opts: {
+  ownerEmail: string
+  teamName: string
+  type: "failed" | "canceled"
+  memberEmails: string[]
+}): Promise<void> {
+  const resend = getResend()
+  if (!resend) {
+    console.warn("[stripe] RESEND_API_KEY not set — skipping team notification email")
+    return
+  }
+  try {
+    if (opts.type === "failed") {
+      // Email to owner about failed payment
+      await resend.emails.send({
+        from: "PlainPath <no-reply@plainpathapp.com>",
+        to: opts.ownerEmail,
+        subject: `Action needed: Payment failed for your PlainPath Team plan`,
+        html: `
+          <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#fff;border-radius:12px;">
+            <h2 style="color:#dc2626;margin:0 0 12px">Payment failed</h2>
+            <p style="color:#555;line-height:1.6;margin:0 0 20px">
+              We weren't able to process payment for your <strong>${opts.teamName}</strong> PlainPath Team plan.
+              Please update your payment method to restore access for you and your team members.
+            </p>
+            <a href="https://plainpathapp.com/app/billing"
+               style="display:inline-block;padding:12px 24px;background:#6366f1;color:#fff;border-radius:8px;font-weight:600;text-decoration:none;">
+              Update payment method
+            </a>
+            <p style="color:#999;font-size:12px;margin:24px 0 0">
+              If you need help, contact us at support@plainpathapp.com.
+            </p>
+          </div>
+        `,
+      })
+    } else {
+      // Email to owner and members on cancellation
+      const allEmails = [opts.ownerEmail, ...opts.memberEmails.filter(e => e !== opts.ownerEmail)]
+      for (const email of allEmails) {
+        const isOwner = email === opts.ownerEmail
+        await resend.emails.send({
+          from: "PlainPath <no-reply@plainpathapp.com>",
+          to: email,
+          subject: `Your PlainPath Team access has ended`,
+          html: `
+            <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#fff;border-radius:12px;">
+              <h2 style="color:#1a1a1a;margin:0 0 12px">Team access ended</h2>
+              <p style="color:#555;line-height:1.6;margin:0 0 20px">
+                ${isOwner
+                  ? `Your PlainPath Team plan (<strong>${opts.teamName}</strong>) has been canceled. You and your team members no longer have Pro access.`
+                  : `The PlainPath Team plan for <strong>${opts.teamName}</strong> has been canceled. You no longer have Pro access.`}
+              </p>
+              ${isOwner ? `
+                <a href="https://plainpathapp.com/app/subscribe"
+                   style="display:inline-block;padding:12px 24px;background:#6366f1;color:#fff;border-radius:8px;font-weight:600;text-decoration:none;">
+                  Resubscribe
+                </a>
+              ` : `<p style="color:#555">Contact your team owner if you believe this is a mistake.</p>`}
+              <p style="color:#999;font-size:12px;margin:24px 0 0">
+                Questions? Email us at support@plainpathapp.com.
+              </p>
+            </div>
+          `,
+        })
+      }
+    }
+  } catch (err) {
+    console.error("[stripe] Failed to send team notification email:", err)
+  }
+}
+
+async function getTeamInfoForOwner(ownerClerkId: string): Promise<{ teamName: string; memberEmails: string[] } | null> {
+  try {
+    const teamResult = await pool.query(
+      `SELECT t.name, t.id FROM teams t WHERE t.owner_id = $1`,
+      [ownerClerkId]
+    )
+    if (!teamResult.rowCount || teamResult.rowCount === 0) return null
+    const team = teamResult.rows[0]
+    const membersResult = await pool.query(
+      `SELECT email FROM team_members WHERE team_id = $1`,
+      [team.id]
+    )
+    return {
+      teamName: team.name,
+      memberEmails: membersResult.rows.map((r: any) => r.email),
+    }
+  } catch {
+    return null
+  }
+}
 
 const router = Router()
 
@@ -274,6 +373,7 @@ router.get("/subscriber-status", async (req, res) => {
       cancelAtPeriodEnd: Boolean(subscriber.cancelAtPeriodEnd),
       billingMode: subscriber.billingMode,
       billingProvider: subscriber.billingProvider,
+      billingPeriod: subscriber.billingPeriod ?? "monthly",
     })
   } catch (error) {
     console.error("Subscriber status error:", error)
@@ -338,6 +438,8 @@ router.post("/webhook", async (req: any, res) => {
           break
         }
 
+        const sessionBillingPeriod = session.metadata?.billingPeriod || "monthly"
+
         if (email && isPlanKey(plan)) {
           upsertSubscriber({
             email,
@@ -349,6 +451,7 @@ router.post("/webhook", async (req: any, res) => {
             status: "active",
             billingMode: sessionBillingMode,
             billingProvider: "stripe",
+            billingPeriod: sessionBillingPeriod,
           })
         }
         break
@@ -380,6 +483,8 @@ router.post("/webhook", async (req: any, res) => {
           "starter"
 
         const subBillingMode = subscription.metadata?.billingMode || billingMode
+        const subBillingPeriod = subscription.metadata?.billingPeriod ||
+          (subscription.items.data[0]?.price?.recurring?.interval === "year" ? "annual" : "monthly")
 
         if (email) {
           upsertSubscriber({
@@ -397,6 +502,7 @@ router.post("/webhook", async (req: any, res) => {
             cancelAtPeriodEnd: Boolean(subscription.cancel_at_period_end),
             billingMode: subBillingMode,
             billingProvider: "stripe",
+            billingPeriod: subBillingPeriod,
           })
         }
         break
@@ -423,7 +529,22 @@ router.post("/webhook", async (req: any, res) => {
             cancelAtPeriodEnd: Boolean(subscription.cancel_at_period_end),
             billingMode: existing.billingMode,
             billingProvider: "stripe",
+            billingPeriod: existing.billingPeriod,
           })
+
+          // Notify team members if this was a team plan
+          if (existing.plan === "team" && existing.clerkUserId) {
+            void getTeamInfoForOwner(existing.clerkUserId).then(info => {
+              if (info) {
+                void sendTeamPaymentEmail({
+                  ownerEmail: existing.email,
+                  teamName: info.teamName,
+                  type: "canceled",
+                  memberEmails: info.memberEmails,
+                })
+              }
+            })
+          }
         }
         break
       }
@@ -481,8 +602,23 @@ router.post("/webhook", async (req: any, res) => {
             status: "past_due",
             billingMode: subscriber.billingMode,
             billingProvider: "stripe",
+            billingPeriod: subscriber.billingPeriod,
           })
           console.warn(`Payment failed for subscriber: ${subscriber.email}`)
+
+          // Notify team owner if this is a team plan
+          if (subscriber.plan === "team" && subscriber.clerkUserId) {
+            void getTeamInfoForOwner(subscriber.clerkUserId).then(info => {
+              if (info) {
+                void sendTeamPaymentEmail({
+                  ownerEmail: subscriber.email,
+                  teamName: info.teamName,
+                  type: "failed",
+                  memberEmails: info.memberEmails,
+                })
+              }
+            })
+          }
         }
         break
       }

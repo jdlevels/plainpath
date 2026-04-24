@@ -38,7 +38,7 @@ import { getApiBaseUrl } from "@/lib/api"
 import { saveAnalysis, updateSaved } from "@/lib/savedAnalyses"
 import { saveCloudAnalysis, renameCloudAnalysis } from "@/lib/cloudHistory"
 import { createUserDocument, attachToolRun } from "@/lib/userDocsApi"
-import { useUser } from "@clerk/react"
+import { useUser, useAuth } from "@clerk/react"
 import { useEntitlements } from "@/hooks/useEntitlements"
 import UpgradeCard from "@/components/UpgradeCard"
 import { findGlossaryEntry } from "@/lib/legalGlossary"
@@ -1360,6 +1360,7 @@ function RiskCard({ risk, documentType }: { risk: DocumentAnalysis["risks"][0]; 
   const iconColor = isHigh ? "text-red-600 dark:text-red-400" : isMedium ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"
 
   const { entitlements } = useEntitlements()
+  const { getToken } = useAuth()
   const canNegotiate = entitlements?.plan === "pro" || entitlements?.plan === "team"
   const showNegotiate = isHigh || isMedium
 
@@ -1373,9 +1374,13 @@ function RiskCard({ risk, documentType }: { risk: DocumentAnalysis["risks"][0]; 
     setNegotiating(true)
     setNegotiateError(null)
     try {
+      const token = await getToken().catch(() => null)
       const res = await fetch(`${getApiBaseUrl()}/api/documents/negotiate`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           riskTitle: risk.title,
           riskDescription: risk.description,
