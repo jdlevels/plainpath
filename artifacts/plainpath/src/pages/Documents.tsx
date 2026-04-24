@@ -312,7 +312,7 @@ export default function Documents() {
         if (saved) {
           setAnalysis(saved.analysis)
           setDocumentTypeHint(saved.documentTypeHint ?? null)
-          navigate("/results")
+          navigate("/analyze-document")
           return
         }
       } catch { /* fall through */ }

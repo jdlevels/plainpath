@@ -162,7 +162,7 @@ export function Navbar() {
   useEffect(() => { setMobileOpen(false) }, [location])
 
   function isToolActive(href: string) {
-    if (href === "/analyze") return location === "/analyze" || location === "/import" || location === "/results" || location.startsWith("/results")
+    if (href === "/analyze") return location === "/analyze" || location === "/import" || location === "/results" || location.startsWith("/results") || location === "/analyze-document"
     return location === href
   }
 

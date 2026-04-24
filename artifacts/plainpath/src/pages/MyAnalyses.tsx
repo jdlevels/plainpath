@@ -126,7 +126,7 @@ export default function MyAnalyses() {
   const handleOpen = (saved: SavedAnalysis) => {
     setAnalysis(saved.analysis)
     setDocumentTypeHint(saved.documentTypeHint)
-    setLocation("/results")
+    setLocation("/analyze-document")
   }
 
   const startRename = (saved: SavedAnalysis) => {

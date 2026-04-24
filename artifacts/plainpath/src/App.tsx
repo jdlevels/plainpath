@@ -39,6 +39,7 @@ import AccountSecurity from "@/pages/AccountSecurity";
 import ClauseExtractor from "@/pages/ClauseExtractor"
 import AskDocument from "@/pages/AskDocument"
 import DocumentOverview from "@/pages/DocumentOverview"
+import AnalyzeDocument from "@/pages/AnalyzeDocument"
 import Methodology from "@/pages/Methodology";
 import BuilderList from "@/pages/Builder/index";
 import BuilderNew from "@/pages/Builder/New";
@@ -484,6 +485,7 @@ function Router() {
             <Route path="/import" component={protect(Import)} />
             <Route path="/analyze" component={protect(Import)} />
             <Route path="/results" component={protect(Analyze)} />
+            <Route path="/analyze-document" component={protect(AnalyzeDocument)} />
             <Route path="/trust-check" component={protect(TrustCheck)} />
             <Route path="/my-analyses" component={protect(MyAnalyses)} />
             <Route path="/contract-builder" component={protect(ContractBuilder)} />

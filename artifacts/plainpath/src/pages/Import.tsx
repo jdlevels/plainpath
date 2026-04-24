@@ -509,7 +509,7 @@ export default function Import() {
         setLocation("/trust-check")
       } else {
         setAnalysis(data.analysis)
-        setLocation("/results")
+        setLocation("/analyze-document")
       }
     } catch {
       setCameraError("Network error. Please check your connection and try again.")
@@ -656,7 +656,7 @@ export default function Import() {
       mutate(
         { data: { text: p.text, documentTypeHint: docTypeLabel } as any },
         {
-          onSuccess: (data) => { void haptic("success"); setAnalysis(data.analysis); setLocation("/results") },
+          onSuccess: (data) => { void haptic("success"); setAnalysis(data.analysis); setLocation("/analyze-document") },
           onError: (err: any) => {
             const serverMessage = err?.data?.message
             const status = err?.status ?? 0
@@ -717,7 +717,7 @@ export default function Import() {
         }
         await haptic("success")
         setAnalysis(data.analysis)
-        setLocation("/results")
+        setLocation("/analyze-document")
       } catch {
         setUploadError("Network error. Please check your connection and try again.")
         setUploadedFile(null)

@@ -1,0 +1,90 @@
+The Analyze a Document canvas redesign is approved for implementation.
+
+Please now implement the refined Analyze a Document design into the actual PlainPath app.
+
+Important:
+Do not redesign further in canvas.
+Do not start other tools yet.
+Do not add new tools.
+Do not add SOP/manual builder language.
+Do not add Document Classifier or Packet Splitter.
+
+Implement the approved Analyze a Document design with the following requirements:
+
+1. Preserve the document-first layout.
+Desktop layout:
+- Left side: document viewer
+- Right side: intelligence panel
+- Left document viewer should remain visually dominant, about 55–60% of the workspace.
+- Right intelligence panel should be about 40–45%.
+
+2. Completed State panel order must remain:
+- Plain-English Summary
+- Risk & Confidence
+- Required Next Steps
+- Risks & Watchouts
+- Key Dates / Deadlines where available
+- Key Parties where available
+- Source references / traceability
+
+3. Source chips must be functional.
+When a user clicks a source chip such as “p.3 §12.1”:
+- scroll the document viewer to the referenced page/section
+- visually highlight that referenced section
+- briefly pulse or outline the highlighted area
+- keep the related finding/card active in the right panel
+
+If exact text coordinates are not available yet, implement the best available version:
+- scroll to the referenced page
+- highlight the approximate section block
+- preserve the source chip behavior so it can be improved later.
+
+4. Implement all key states shown in the approved canvas:
+- Empty State before upload
+- Processing State with multi-step progress
+- Completed State with intelligence panel
+- Low Confidence / Partial Analysis State
+- Error State with clean retry actions
+- Mobile tab layout
+
+5. Processing checklist should use:
+- Reading document structure
+- Extracting important sections
+- Checking for risks
+- Generating plain-English summary
+
+6. Low-confidence state should use this language:
+“PlainPath could read part of this document, but the scan quality limits confidence.”
+
+Actions should include:
+- Upload clearer PDF
+- Upload text-based version
+- Continue with partial analysis
+- Ask This Document
+
+7. Empty upload state should stay focused on existing document review.
+Examples should include:
+- contracts
+- lease agreements
+- insurance forms
+- notices
+- legal or financial letters
+- service agreements
+
+8. Mobile behavior:
+- Default to the Analysis tab first
+- Document tab should be available beside it
+- Source chips should still navigate/highlight the document where feasible
+
+9. Maintain PlainPath’s product focus:
+Analyze a Document should only scan, explain, extract, risk-check, and provide source-backed next steps.
+Do not turn this into a writing tool.
+
+After implementation, provide screenshots of:
+- Empty State
+- Processing State
+- Completed State
+- Source chip clicked/highlighted state
+- Low Confidence State
+- Error State
+- Mobile State
