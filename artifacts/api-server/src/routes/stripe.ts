@@ -1,14 +1,15 @@
 import { Router } from "express"
 import Stripe from "stripe"
+import { getAuth, clerkClient } from "@clerk/express"
 import { getStripeClient, isStripeAvailable } from "../lib/stripe"
 import { getWebhookSecret } from "../lib/stripeWebhookSecret"
 import {
+  getSubscriberByClerkUserId,
   getSubscriberByCustomerId,
   getSubscriberByEmail,
   getSubscriberBySubscriptionId,
   upsertSubscriber,
 } from "../lib/billingDb"
-// getSubscriberByClerkUserId imported only where needed to keep diff minimal
 import { BILLING_CONFIG } from "../lib/billingConfig"
 
 const router = Router()
@@ -49,8 +50,15 @@ function toIsoFromUnix(unixSeconds?: number | null): string | null {
 }
 
 // ─── Create Checkout Session ──────────────────────────────────────────────────
+// Requires a valid Clerk session. Identity (email + clerkUserId) is sourced
+// exclusively from the authenticated session — never from the request body.
 
 router.post("/create-checkout-session", async (req, res) => {
+  const auth = getAuth(req)
+  if (!auth?.userId) {
+    return res.status(401).json({ error: "Authentication required to start checkout." })
+  }
+
   let stripe: Stripe
   try {
     stripe = await getStripeClient()
@@ -59,11 +67,15 @@ router.post("/create-checkout-session", async (req, res) => {
   }
 
   try {
-    const { plan, email, clerkUserId } = req.body as { plan?: string; email?: string; clerkUserId?: string }
+    const { plan } = req.body as { plan?: string }
 
     if (!isPlanKey(plan)) {
       return res.status(400).json({ error: "Invalid plan. Must be 'starter' or 'pro'." })
     }
+
+    // Resolve email from the authenticated Clerk session — never trust the request body.
+    const clerkUser = await clerkClient.users.getUser(auth.userId)
+    const verifiedEmail = clerkUser.emailAddresses?.[0]?.emailAddress?.toLowerCase().trim() || undefined
 
     const selectedPlan = PLAN_CONFIG[plan]
     const billingMode = BILLING_CONFIG.BILLING_MODE
@@ -71,14 +83,14 @@ router.post("/create-checkout-session", async (req, res) => {
     const sharedMetadata: Record<string, string> = {
       plan,
       billingMode,
-      ...(clerkUserId ? { clerkUserId } : {}),
+      clerkUserId: auth.userId,
     }
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       success_url: `${APP_BASE_URL}/subscribe/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${APP_BASE_URL}/subscribe/cancel`,
-      customer_email: email || undefined,
+      customer_email: verifiedEmail,
       line_items: [
         {
           quantity: 1,
@@ -143,8 +155,15 @@ router.get("/checkout-session-status", async (req, res) => {
 })
 
 // ─── Billing Portal ───────────────────────────────────────────────────────────
+// Requires a valid Clerk session. Ownership is verified: the subscriber record
+// must be linked to the authenticated user's Clerk ID or email.
 
 router.post("/billing-portal", async (req, res) => {
+  const auth = getAuth(req)
+  if (!auth?.userId) {
+    return res.status(401).json({ error: "Authentication required to access the billing portal." })
+  }
+
   let stripe: Stripe
   try {
     stripe = await getStripeClient()
@@ -153,18 +172,35 @@ router.post("/billing-portal", async (req, res) => {
   }
 
   try {
-    const { email } = req.body as { email?: string }
+    // Resolve the authenticated user's verified email from Clerk.
+    const clerkUser = await clerkClient.users.getUser(auth.userId)
+    const sessionEmail = clerkUser.emailAddresses?.[0]?.emailAddress?.toLowerCase().trim() ?? null
 
-    if (!email || typeof email !== "string") {
-      return res.status(400).json({ error: "Missing email" })
-    }
+    // Optional email hint from body (for the subscription-restore flow where the
+    // subscription email differs from the Clerk sign-in email). Only accepted when
+    // the caller is authenticated; ownership is verified below.
+    const hintEmail = typeof req.body?.email === "string" ? req.body.email.toLowerCase().trim() : null
 
-    const subscriber = getSubscriberByEmail(email.toLowerCase().trim())
+    // Look up the subscriber: prefer the hint email, then session email, then clerkUserId.
+    let subscriber =
+      (hintEmail ? getSubscriberByEmail(hintEmail) : null) ??
+      (sessionEmail ? getSubscriberByEmail(sessionEmail) : null) ??
+      getSubscriberByClerkUserId(auth.userId)
 
     if (!subscriber?.stripeCustomerId) {
       return res.status(404).json({
-        error: "No Stripe customer found for this email. Please subscribe first.",
+        error: "No Stripe customer found. Please subscribe first.",
       })
+    }
+
+    // Ownership check: the subscriber must be linked to this Clerk account via
+    // clerkUserId OR the subscriber email must match the authenticated user's email.
+    const ownsRecord =
+      subscriber.clerkUserId === auth.userId ||
+      subscriber.email === sessionEmail
+
+    if (!ownsRecord) {
+      return res.status(403).json({ error: "You do not have access to this billing account." })
     }
 
     const session = await stripe.billingPortal.sessions.create({
@@ -180,15 +216,24 @@ router.post("/billing-portal", async (req, res) => {
 })
 
 // ─── Subscriber Status ────────────────────────────────────────────────────────
+// Requires a valid Clerk session. Only returns data for the authenticated user's
+// own subscriber record.
 
-router.get("/subscriber-status", (req, res) => {
+router.get("/subscriber-status", async (req, res) => {
+  const auth = getAuth(req)
+  if (!auth?.userId) {
+    return res.status(401).json({ error: "Authentication required." })
+  }
+
   try {
-    const email = req.query.email
-    if (typeof email !== "string") {
-      return res.status(400).json({ error: "Missing email" })
-    }
+    // Resolve session user's email from Clerk — never trust a caller-supplied email.
+    const clerkUser = await clerkClient.users.getUser(auth.userId)
+    const sessionEmail = clerkUser.emailAddresses?.[0]?.emailAddress?.toLowerCase().trim() ?? null
 
-    const subscriber = getSubscriberByEmail(email.toLowerCase().trim())
+    // Find subscriber by Clerk user ID first; fall back to session email.
+    const subscriber =
+      getSubscriberByClerkUserId(auth.userId) ??
+      (sessionEmail ? getSubscriberByEmail(sessionEmail) : null)
 
     if (!subscriber) {
       return res.json({ found: false, plan: null, status: "inactive" })
@@ -239,13 +284,33 @@ router.post("/webhook", async (req: any, res) => {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session
 
-        const email =
-          session.customer_details?.email?.toLowerCase().trim() ||
-          session.customer_email?.toLowerCase().trim()
-
         const plan = session.metadata?.plan || "starter"
         const sessionBillingMode = session.metadata?.billingMode || billingMode
+        // clerkUserId in metadata was set server-side during checkout creation
+        // (after authenticating the Clerk session) — it is therefore trusted.
         const clerkUserId = session.metadata?.clerkUserId || null
+
+        // Derive the authoritative email from Clerk using the trusted clerkUserId.
+        // This prevents subscription rebinding when the Stripe checkout email
+        // differs from the authenticated user's Clerk email.
+        // If Clerk identity cannot be resolved, the upsert is skipped rather than
+        // falling back to the potentially attacker-influenced Stripe email.
+        let email: string | null = null
+        if (clerkUserId) {
+          try {
+            const clerkUser = await clerkClient.users.getUser(clerkUserId)
+            email = clerkUser.emailAddresses?.[0]?.emailAddress?.toLowerCase().trim() || null
+          } catch (err) {
+            // Clerk lookup failed — skip write rather than trusting unverified Stripe email.
+            console.error(`checkout.session.completed: Clerk lookup failed for clerkUserId ${clerkUserId}; skipping upsert`, err)
+            break
+          }
+        } else {
+          // No clerkUserId — this session was not created via the authenticated checkout
+          // path. Skip the write to avoid trusting an unverified Stripe email.
+          console.warn("checkout.session.completed: no clerkUserId in metadata; skipping upsert")
+          break
+        }
 
         if (email && isPlanKey(plan)) {
           upsertSubscriber({

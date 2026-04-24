@@ -2,8 +2,6 @@ import { getApiBaseUrl } from "@/lib/api"
 
 export async function startStripeCheckout(
   plan: "starter" | "pro",
-  email?: string,
-  clerkUserId?: string,
 ) {
   const apiBase = getApiBaseUrl()
   const response = await fetch(`${apiBase}/api/stripe/create-checkout-session`, {
@@ -11,7 +9,7 @@ export async function startStripeCheckout(
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ plan, email, clerkUserId }),
+    body: JSON.stringify({ plan }),
   })
 
   const data = await response.json()

@@ -12,6 +12,7 @@ import { BILLING_CONFIG } from "@/lib/billingConfig"
 import { trackEvent } from "@/lib/analytics"
 import { getApiBaseUrl } from "@/lib/api"
 
+
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "")
 
 function isPlanKey(value: unknown): value is "starter" | "pro" {
@@ -99,11 +100,8 @@ export default function Subscribe() {
     setLoadingPlan(planKey)
     trackEvent("subscribe_started", { plan: planKey })
 
-    const email = user?.primaryEmailAddress?.emailAddress
-    const clerkUserId = user?.id
-
     try {
-      await startStripeCheckout(planKey as "starter" | "pro", email, clerkUserId)
+      await startStripeCheckout(planKey as "starter" | "pro")
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to start checkout. Please try again.")
       setLoadingPlan(null)

@@ -125,12 +125,14 @@ export async function consumeAnalysis(email: string) {
 }
 
 // ─── Open Stripe billing portal ───────────────────────────────────────────────
+// Requires an active Clerk session. The server resolves subscriber identity
+// from the authenticated session — no caller-supplied email is needed.
 
-export async function openBillingPortal(email: string): Promise<void> {
+export async function openBillingPortal(): Promise<void> {
   const response = await fetch("/api/stripe/billing-portal", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email }),
+    body: JSON.stringify({}),
   })
 
   const data = await response.json()

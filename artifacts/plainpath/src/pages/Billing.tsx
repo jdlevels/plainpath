@@ -9,7 +9,6 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useEntitlements } from "@/hooks/useEntitlements"
-import { getStoredSubscriberEmail, setStoredSubscriberEmail, clearStoredSubscriberEmail } from "@/lib/subscriberStorage"
 import { openBillingPortal } from "@/lib/entitlements"
 import { BILLING_CONFIG } from "@/lib/billingConfig"
 import { isNative } from "@/lib/platform"
@@ -74,64 +73,28 @@ function NativeBillingMessage() {
   )
 }
 
-// ─── Email restore card ───────────────────────────────────────────────────────
+// ─── Subscription not detected card ──────────────────────────────────────────
+// Shown when the signed-in user has no active subscription detected.
+// Directs users to sign in with their subscription email or contact support.
 
-function EmailRestoreCard({ onRestore }: { onRestore: (email: string) => void }) {
-  const [input, setInput] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  async function handleRestore() {
-    const email = input.trim().toLowerCase()
-    if (!email.includes("@")) {
-      setError("Enter a valid email address.")
-      return
-    }
-    setLoading(true)
-    setError(null)
-    try {
-      const res = await fetch(`/api/entitlements/status?email=${encodeURIComponent(email)}`)
-      const data = await res.json()
-      if (data.found && data.status === "active") {
-        setStoredSubscriberEmail(email)
-        onRestore(email)
-      } else if (data.found) {
-        setError(`Subscription found but status is "${data.status}". Contact support if you believe this is an error.`)
-      } else {
-        setError("No active subscription found for this email.")
-      }
-    } catch {
-      setError("Unable to look up subscription. Check your connection and try again.")
-    } finally {
-      setLoading(false)
-    }
-  }
-
+function SubscriptionNotFoundCard() {
   return (
     <div className="rounded-2xl border border-border/60 bg-card p-5">
       <div className="flex items-center gap-2 mb-3">
         <Mail className="w-4 h-4 text-muted-foreground" />
-        <span className="text-sm font-semibold text-foreground">Restore existing subscription</span>
+        <span className="text-sm font-semibold text-foreground">Subscription not showing?</span>
       </div>
-      <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
-        If you subscribed previously, enter the email you used at checkout to restore your plan.
+      <p className="text-xs text-muted-foreground leading-relaxed">
+        Your subscription is linked to the account you signed in with. If you subscribed with a
+        different email, sign out and sign back in using that address to access your plan.
       </p>
-      <div className="flex gap-2">
-        <input
-          type="email"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleRestore()}
-          placeholder="you@example.com"
-          className="flex-1 h-9 rounded-lg border border-border/60 bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
-        />
-        <Button size="sm" onClick={handleRestore} disabled={loading} className="shrink-0">
-          {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Restore"}
-        </Button>
-      </div>
-      {error && (
-        <p className="mt-2 text-xs text-destructive">{error}</p>
-      )}
+      <p className="mt-3 text-xs text-muted-foreground leading-relaxed">
+        Still having trouble?{" "}
+        <a href="mailto:support@plainpathapp.com" className="text-primary hover:underline">
+          Contact support
+        </a>
+        {" "}and we'll help you get access.
+      </p>
     </div>
   )
 }
@@ -140,14 +103,12 @@ function EmailRestoreCard({ onRestore }: { onRestore: (email: string) => void })
 
 export default function Billing() {
   const [, navigate] = useLocation()
-  const [email, setEmail] = useState<string | null>(null)
   const [portalLoading, setPortalLoading] = useState(false)
   const [portalError, setPortalError] = useState<string | null>(null)
   const { entitlements, loading, reload, isAdmin } = useEntitlements()
 
   useEffect(() => {
     document.title = "Plan & Billing — PlainPath"
-    setEmail(getStoredSubscriberEmail())
     return () => { document.title = "PlainPath" }
   }, [])
 
@@ -163,22 +124,15 @@ export default function Billing() {
   const meta = plan ? PLAN_META[plan] : null
 
   async function handleManageSubscription() {
-    if (!email) return
     setPortalLoading(true)
     setPortalError(null)
     trackEvent("portal_opened", { plan: plan ?? "unknown" })
     try {
-      await openBillingPortal(email)
+      await openBillingPortal()
     } catch (err) {
       setPortalError(err instanceof Error ? err.message : "Unable to open billing portal.")
       setPortalLoading(false)
     }
-  }
-
-  function handleSignOut() {
-    clearStoredSubscriberEmail()
-    setEmail(null)
-    reload()
   }
 
   return (
@@ -275,21 +229,6 @@ export default function Billing() {
                 </div>
               )}
 
-              {/* Email indicator */}
-              {email && (
-                <div className="flex items-center justify-between mt-4 pt-3 border-t border-border/40">
-                  <p className="text-xs text-muted-foreground">
-                    Subscription email: <span className="font-medium text-foreground">{email}</span>
-                  </p>
-                  <button
-                    onClick={handleSignOut}
-                    className="text-xs text-muted-foreground hover:text-foreground transition-colors ml-3"
-                  >
-                    Unlink
-                  </button>
-                </div>
-              )}
-
               {/* Manage button */}
               <div className="mt-4 flex flex-col gap-2">
                 <Button
@@ -320,7 +259,7 @@ export default function Billing() {
                   <RefreshCw className="w-3 h-3" /> Refresh
                 </button>
               </div>
-              <EmailRestoreCard onRestore={(e) => { setEmail(e); reload() }} />
+              <SubscriptionNotFoundCard />
             </div>
           )}
         </motion.div>

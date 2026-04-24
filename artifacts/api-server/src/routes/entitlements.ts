@@ -75,28 +75,40 @@ async function bootstrapAdminMetadata(clerkUserId: string, email: string) {
 }
 
 // ─── GET /status ──────────────────────────────────────────────────────────────
-// Returns full entitlement data for the requesting user.
+// Returns entitlement data for the requesting user.
 //
 // Security model:
-//   - Allowlist check first: if the resolved email is not in ALLOWED_EMAILS, 403.
-//   - clerkUserId is sourced from the Clerk session JWT (via getAuth) when present.
-//   - email-only fallback is permitted for the subscription-restore flow ONLY
-//     and carries no elevated privilege — admin check still requires ADMIN_EMAILS.
+//   - Requires a valid Clerk session JWT. Unauthenticated requests receive 401.
+//   - Admin check and metadata bootstrap are ALWAYS based on the authenticated
+//     session user's Clerk email — never on a caller-supplied query email.
+//     This prevents privilege escalation via cross-email admin probing.
+//   - An email query param is accepted ONLY for the subscription-restore flow
+//     (when a subscription email differs from the Clerk sign-in email). For
+//     cross-email queries, only minimal subscriber state is returned (found +
+//     status); full entitlement details require querying one's own email.
 
-router.get("/status", (req, res) => {
+router.get("/status", async (req, res) => {
   try {
-    const email = String(req.query.email || "").trim().toLowerCase()
-
     const sessionUserId = getAuth(req)?.userId ?? null
-    const clerkUserId = sessionUserId ?? (String(req.query.clerkUserId || "").trim() || null)
 
-    if (!email && !clerkUserId) {
-      return res.status(400).json({ error: "Missing email or clerkUserId" })
+    // Require a valid Clerk session — unauthenticated email-only probes are rejected.
+    if (!sessionUserId) {
+      return res.status(401).json({ error: "Authentication required." })
     }
 
-    let resolvedEmail = email
-    if (!resolvedEmail && clerkUserId) {
-      const byClerk = getSubscriberByClerkUserId(clerkUserId)
+    // Resolve the session user's verified email from Clerk — this is the
+    // authoritative identity used for admin checks and metadata bootstrap.
+    const clerkUser = await clerkClient.users.getUser(sessionUserId)
+    const sessionEmail = clerkUser.emailAddresses?.[0]?.emailAddress?.toLowerCase().trim() ?? null
+
+    // The query email is an optional hint for the subscription-restore flow.
+    const queryEmail = String(req.query.email || "").trim().toLowerCase()
+
+    // Determine which email to look up subscriber state for.
+    let resolvedEmail: string | null = queryEmail || sessionEmail
+
+    if (!resolvedEmail && sessionUserId) {
+      const byClerk = getSubscriberByClerkUserId(sessionUserId)
       if (byClerk) {
         resolvedEmail = byClerk.email
       } else {
@@ -104,24 +116,28 @@ router.get("/status", (req, res) => {
       }
     }
 
+    if (!resolvedEmail) {
+      return res.status(400).json({ error: "Unable to resolve identity." })
+    }
+
     // ── Admin bypass ───────────────────────────────────────────────────────
-    if (isAdminEmail(resolvedEmail)) {
+    // Admin eligibility is determined solely from the authenticated Clerk
+    // session email. A cross-email query can NEVER grant or expose admin status.
+    if (sessionEmail && isAdminEmail(sessionEmail)) {
       const proEntitlements = PLAN_ENTITLEMENTS["pro"]
-      if (clerkUserId) {
-        void bootstrapAdminMetadata(clerkUserId, resolvedEmail)
-      }
+      void bootstrapAdminMetadata(sessionUserId, sessionEmail)
       logger.info(
         {
           event: "entitlement.status.granted",
-          email: resolvedEmail,
-          userId: clerkUserId,
+          email: sessionEmail,
+          userId: sessionUserId,
           role: "admin",
           accessTier: "pro",
         },
         "Entitlement status granted: admin"
       )
       return res.json({
-        email: resolvedEmail,
+        email: sessionEmail,
         role: "admin",
         accessTier: "pro",
         found: true,
@@ -141,18 +157,29 @@ router.get("/status", (req, res) => {
       })
     }
 
-    const subscriber = getSubscriberByEmail(resolvedEmail)
+    // ── Own-account query — full response ──────────────────────────────────
+    // Cross-email queries are not permitted. Only the authenticated user's own
+    // subscriber record (matched by Clerk user ID or session email) is returned.
+    // This prevents subscription state enumeration for arbitrary email addresses.
+    const subscriber =
+      getSubscriberByClerkUserId(sessionUserId) ??
+      (sessionEmail ? getSubscriberByEmail(sessionEmail) : null)
+
+    // Use the subscriber's canonical email (or session email) for usage tracking —
+    // never the caller-supplied query email.
+    const accountEmail = subscriber?.email ?? sessionEmail ?? resolvedEmail
+
     const plan = normalizePlan(subscriber?.plan)
     const status = subscriber?.status || "inactive"
     const entitlements = PLAN_ENTITLEMENTS[plan]
-    const usageCount = getUsageForCurrentMonth(resolvedEmail)
-    const toolUsage = getAllToolUsageForCurrentMonth(resolvedEmail)
+    const usageCount = getUsageForCurrentMonth(accountEmail)
+    const toolUsage = getAllToolUsageForCurrentMonth(accountEmail)
 
     logger.info(
       {
         event: "entitlement.status.granted",
-        email: resolvedEmail,
-        userId: clerkUserId,
+        email: accountEmail,
+        userId: sessionUserId,
         role: "member",
         accessTier: plan,
         billingStatus: status,
@@ -161,7 +188,7 @@ router.get("/status", (req, res) => {
     )
 
     return res.json({
-      email: resolvedEmail,
+      email: accountEmail,
       role: "member",
       accessTier: plan,
       found: Boolean(subscriber),
