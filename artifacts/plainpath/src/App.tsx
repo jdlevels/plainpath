@@ -380,8 +380,12 @@ function PlanGate({ children }: { children: React.ReactNode }) {
     return <>{children}</>;
   }
 
-  // Signed in but entitlements still loading
-  if (entLoading) {
+  // Signed in but entitlements haven't loaded yet for the first time.
+  // If we already have entitlement data from a previous fetch (e.g. during a
+  // Clerk auth-state re-initialization), skip the spinner and use stale data
+  // while the background refresh completes. This prevents the "flash" where
+  // the router unmounts in the middle of an ongoing document analysis.
+  if (entLoading && !entitlements && !hasPaidSubscription) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="w-7 h-7 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
