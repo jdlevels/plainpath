@@ -38,6 +38,7 @@ import Documents from "@/pages/Documents";
 import AccountSecurity from "@/pages/AccountSecurity";
 import ClauseExtractor from "@/pages/ClauseExtractor"
 import AskDocument from "@/pages/AskDocument"
+import DocumentOverview from "@/pages/DocumentOverview"
 import Methodology from "@/pages/Methodology";
 import BuilderList from "@/pages/Builder/index";
 import BuilderNew from "@/pages/Builder/New";
@@ -504,6 +505,13 @@ function Router() {
             <Route path="/ask-document/:id">
               {(params) => {
                 const C = protect(() => <AskDocument />)
+                return <C />
+              }}
+            </Route>
+            <Route path="/document-overview" component={protect(DocumentOverview)} />
+            <Route path="/document-overview/:id">
+              {(params) => {
+                const C = protect(() => <DocumentOverview />)
                 return <C />
               }}
             </Route>

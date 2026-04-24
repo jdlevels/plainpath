@@ -1,0 +1,148 @@
+PlainPath — Implement Document Overview Hub as the new default post-upload screen
+
+The refined canvas/design pass for Document Overview Hub is approved.
+Build the real feature now and make it the default first screen a user sees after uploading/opening a document.
+
+Important:
+Replit is already working on Ask This Document.
+Do NOT replace or interrupt that tool.
+Instead, integrate Ask This Document as the first drill-down action from the new Overview Hub.
+
+## Product role
+The Document Overview Hub is now the primary home base for a single uploaded document.
+
+PlainPath should work like this:
+1. upload/open document
+2. generate overview
+3. launch the right next action from that overview
+
+This should shift PlainPath from tool-first to document-first.
+
+---
+
+## Required implementation
+
+### 1. Make Overview Hub the default post-upload surface
+After a document is uploaded/opened, the user should land on:
+Document Overview Hub
+
+Not directly into a tool menu.
+Not directly into Ask This Document.
+Overview comes first.
+
+### 2. Implement the approved hierarchy in the right-side intelligence panel
+Use this order:
+
+1. Plain-English summary
+2. Urgent watchouts
+3. Key dates / parties / obligations
+4. Recommended next actions
+5. Suggested follow-up questions
+
+This hierarchy is approved and should be preserved.
+
+### 3. Left document viewer
+Implement a real document viewer on the left with:
+- file name
+- page controls
+- page count
+- zoom
+- fit width / fit page
+- source-highlight behavior when overview findings are selected
+
+The document should remain readable and visually primary.
+
+### 4. Source traceability
+Every important finding in the overview should be source-backed where possible.
+
+Specifically:
+- risks/watchouts need source/page chips
+- dates need source/page chips
+- obligations need source/page chips
+
+Clicking one of these chips should:
+- scroll/jump the document viewer to the matching source area
+- visibly highlight the relevant document section
+- show page/source indicator clearly
+
+### 5. Recommended next actions
+This is a key area and must feel operational, not decorative.
+
+Recommended actions should launch the right downstream tool for the current document, such as:
+- Ask This Document
+- Trust Check
+- Clause Extractor
+- Contract Review
+- Compare Versions
+- Redact Sensitive Info
+- Document Builder (only when relevant)
+
+Show only the most relevant 2–3 actions first.
+Do not overwhelm the user.
+
+### 6. Ask This Document integration
+Integrate Ask This Document as a drill-down from the overview.
+
+Requirements:
+- overview launches Ask This Document with the current document already loaded
+- user does not need to re-upload
+- the experience should feel like moving deeper into the same document workflow
+- keep the document context consistent across both screens
+
+### 7. Required states
+Implement all approved states:
+- Empty state
+- Processing state
+- Completed overview state
+- Low-confidence / partial extraction state
+- Error state
+
+### 8. Empty state
+Keep the refined empty state pattern:
+- upload area
+- recent documents
+- document type
+- status badge
+- quick reopen action
+
+### 9. Low-confidence state
+Keep the refined low-confidence behavior:
+- clearly state extraction is partial / confidence is lower
+- do not overstate certainty
+- still offer best next actions:
+  - Ask This Document
+  - Trust Check
+  - Clause Extractor
+
+### 10. Mobile behavior
+Implement the approved mobile concept:
+- summary-first overview
+- source jump behavior
+- easy return from source view back to summary
+- preserve context clearly
+
+### 11. Stability requirements
+This build must not introduce:
+- flashing screens
+- layout jumps
+- broken document highlights
+- dead source-chip clicks
+- stale viewer state
+- broken transitions into Ask This Document
+
+---
+
+## Deliverables required
+1. Exact files changed
+2. Screenshots of:
+   - empty state
+   - processing state
+   - completed overview state
+   - low-confidence state
+   - mobile state
+3. Screenshot showing launch from Overview Hub into Ask This Document with the same document loaded
+4. Explanation of:
+   - source traceability behavior
+   - recommended action logic
+   - how Overview Hub and Ask This Document now work together
+5. Confirmation that Overview Hub is now the default post-upload surface

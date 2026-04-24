@@ -26,6 +26,7 @@ import askDocumentRoutes from "./routes/ask-document/index.js";
 import pdfUtilitiesRoutes from "./routes/pdf-utilities/index.js";
 import compareVersionsRoutes from "./routes/compare-versions/index.js";
 import demoRoutes from "./routes/demo/index.js";
+import documentOverviewRoutes from "./routes/document-overview/index.js";
 import { logger } from "./lib/logger";
 import { initBuilderTemplates } from "@workspace/db";
 
@@ -196,6 +197,7 @@ app.use(
     "/api/help/chat",
     "/api/demo/analyze",
     "/api/ask-document/sessions",
+    "/api/document-overview/sessions",
   ],
   aiLimiter,
 )
@@ -266,6 +268,7 @@ app.use("/api/ask-document", askDocumentRoutes);
 app.use("/api/pdf-utilities", pdfUtilitiesRoutes);
 app.use("/api/compare-versions", compareVersionsRoutes);
 app.use("/api/demo", demoRoutes);
+app.use("/api/document-overview", documentOverviewRoutes);
 
 // Initialize builder system templates once on first deployment.
 // initBuilderTemplates() runs a single COUNT query and exits immediately if

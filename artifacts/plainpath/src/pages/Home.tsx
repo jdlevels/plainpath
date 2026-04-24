@@ -4,7 +4,7 @@ import {
   ArrowRight, ShieldCheck,
   PenLine, FileScan, Scale, EyeOff,
   BookMarked, Clock, ChevronRight, CreditCard,
-  LayoutGrid, GitCompare, ListChecks, LayoutTemplate, MessageSquare,
+  LayoutGrid, GitCompare, ListChecks, LayoutTemplate, MessageSquare, Sparkles,
 } from "lucide-react"
 import { BUILDER_ENABLED, CATEGORY_LABELS } from "@/lib/builderConfig"
 import { useState, useEffect, type ElementType } from "react"
@@ -340,6 +340,37 @@ export default function Home() {
               <CreditCard className="w-3.5 h-3.5 ml-0.5 opacity-60" />
             </button>
           )}
+        </motion.div>
+
+        {/* ══════════════════════════════════════════════
+            DOCUMENT OVERVIEW HUB — primary entry point
+        ══════════════════════════════════════════════ */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+          className="mb-2"
+        >
+          <button
+            onClick={() => setLocation("/document-overview")}
+            className="w-full rounded-2xl border border-violet-500/25 bg-gradient-to-r from-violet-600/[0.08] to-transparent hover:from-violet-600/[0.13] hover:border-violet-500/40 transition-all duration-200 group text-left overflow-hidden"
+          >
+            <div className="px-5 py-4 flex items-center gap-4">
+              <div className="w-11 h-11 rounded-xl bg-violet-600/15 border border-violet-500/30 flex items-center justify-center shrink-0">
+                <Sparkles className="w-5 h-5 text-violet-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <h3 className="text-foreground font-semibold text-sm">Document Overview Hub</h3>
+                  <span className="h-4 px-1.5 rounded-full bg-violet-600/20 border border-violet-500/25 text-violet-300 text-[9px] font-semibold">NEW</span>
+                </div>
+                <p className="text-muted-foreground text-xs leading-relaxed">
+                  Upload any document — get risks, key dates, obligations, and recommended next actions in seconds. The fastest way to understand any paperwork.
+                </p>
+              </div>
+              <ArrowRight className="w-4 h-4 text-violet-400/60 group-hover:text-violet-400 group-hover:translate-x-0.5 transition-all shrink-0" />
+            </div>
+          </button>
         </motion.div>
 
         {/* ══════════════════════════════════════════════

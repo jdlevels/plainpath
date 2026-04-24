@@ -1,0 +1,222 @@
+PlainPath — Canvas redesign pass for existing tool: Analyze a Document
+
+We are redesigning PlainPath’s current tools in canvas before rebuilding additional tools.
+Start with:
+
+Analyze a Document
+
+This is a DESIGN / CANVAS pass only.
+Do NOT implement backend logic yet.
+Do NOT build the full feature yet.
+This pass is to redesign the tool so it matches the new premium PlainPath direction established by:
+- Ask This Document
+- Document Overview Hub
+
+## Product goal
+Analyze a Document should feel like PlainPath’s core flagship workflow:
+Upload one document and immediately get:
+- a plain-English explanation
+- key deadlines
+- key risks
+- required next steps
+- supporting source references
+- recommended follow-up actions
+
+This tool should feel premium, calm, trustworthy, and operational.
+
+---
+
+## Core redesign objective
+Redesign Analyze a Document so it no longer feels like a plain output screen.
+It should feel like a true document intelligence workspace.
+
+The design should align with the new PlainPath system:
+- document-first layout
+- source-backed outputs
+- right-side intelligence panel
+- clear action hierarchy
+- strong traceability
+- premium dark UI
+
+---
+
+## Design direction
+
+### Main desktop layout
+Use a premium split-screen workspace:
+
+- Left side: document viewer
+- Right side: analysis intelligence panel
+
+The document should remain visually primary.
+
+### The right panel should prioritize this hierarchy:
+1. Plain-English summary
+2. Required next steps
+3. Key deadlines
+4. Risks / watchouts
+5. Missing documents / dependencies
+6. Follow-up actions / related tool launches
+
+This should feel like:
+“What does this document mean, and what do I do now?”
+
+---
+
+## Required states to design
+
+### 1. Empty state
+Before upload:
+- tool title
+- short description
+- upload zone
+- examples of supported document types
+- sample prompts / use cases
+- recent documents if appropriate
+
+### 2. Processing state
+After upload while analysis is running:
+- stable layout
+- no generic spinner-only treatment
+- clear progress language such as:
+  - Reading document structure
+  - Extracting dates and obligations
+  - Checking for risks and missing items
+  - Building plain-English explanation
+
+### 3. Completed state
+After analysis completes:
+Show a refined right-side intelligence panel containing:
+- plain-English summary
+- next actions
+- deadlines
+- risks
+- missing docs
+- source/page chips
+- recommended next tools
+
+### 4. Low-confidence / partial analysis state
+If the document is incomplete, low-quality, scanned poorly, or only partially understood:
+- clearly state that confidence is lower
+- avoid pretending certainty
+- still provide the best available findings
+- suggest better next actions
+
+### 5. Error state
+If analysis fails:
+- clean retry state
+- no raw debug text
+- no ugly error block
+
+### 6. Mobile state
+On mobile, create a stacked/tabbed version that preserves:
+- document view
+- analysis view
+- source jump behavior
+- action-first layout
+
+---
+
+## Intelligence panel content blocks
+
+### A. Plain-English summary
+This should be the top block and the easiest thing to read.
+It should explain the document in simple terms.
+
+### B. Required next steps
+This should be the strongest operational block.
+It should tell the user:
+- what must be done
+- what is due soon
+- what to gather or submit
+- what to review more carefully
+
+### C. Key deadlines
+Show extracted dates and what they mean.
+Each one should be traceable to the source.
+
+### D. Risks / watchouts
+Show risks with severity hierarchy.
+Use source/page chips.
+
+### E. Missing documents / dependencies
+If the document references attachments, forms, IDs, notices, or additional paperwork, surface that here.
+
+### F. Recommended next tools
+Show 2–3 best next actions such as:
+- Ask This Document
+- Trust Check
+- Clause Extractor
+- Compare Versions
+- Redact Sensitive Info
+
+Do not show every tool equally.
+Only show the most relevant next moves.
+
+---
+
+## Traceability / citation behavior
+This is important.
+
+Design source traceability for:
+- summary insights
+- deadlines
+- risks
+- missing docs
+
+Use:
+- source chips
+- page references
+- highlighted source behavior in the document viewer
+
+Clicking a source chip should conceptually:
+- scroll to the source
+- highlight the relevant section
+- show the user exactly where the finding came from
+
+---
+
+## Viewer requirements
+The left document viewer should include:
+- filename
+- page controls
+- zoom
+- fit width / fit page
+- source highlight behavior when a chip is selected
+
+The document must stay readable and feel central.
+
+---
+
+## Visual direction
+Match the refined premium PlainPath language:
+- dark UI
+- strong hierarchy
+- document-first
+- not a generic chatbot
+- not a plain dashboard card wall
+- calm, trustworthy, premium
+
+---
+
+## Deliverables required
+Return canvas screenshots/mockups for:
+1. Empty state
+2. Processing state
+3. Completed state
+4. Low-confidence state
+5. Error state
+6. Mobile state
+
+Also include a short explanation of:
+- layout choice
+- hierarchy choice
+- how source traceability works
+- how this tool now fits into the broader PlainPath system with Overview Hub and Ask This Document
+
+## Important scope constraint
+Do NOT redesign every tool in this pass.
+Only redesign:
+Analyze a Document
+
+We will use this as the model before moving to the next tool.
