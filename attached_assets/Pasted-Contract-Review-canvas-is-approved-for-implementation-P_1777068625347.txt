@@ -1,0 +1,112 @@
+Contract Review canvas is approved for implementation.
+
+Please now implement the approved Contract Review design into the actual PlainPath app.
+
+Do not redesign further in canvas.
+Do not move to Clause Extractor yet.
+Do not add new tools.
+Do not add SOP/manual builder language.
+Do not add Document Classifier or Packet Splitter.
+
+Implementation requirements:
+
+1. Follow the approved PlainPath Scan Workspace Standard.
+- Left panel: contract document viewer, about 55–60%
+- Right panel: Contract Intelligence panel, about 40–45%
+- Both panels should support independent scrolling
+- Mobile should use Review tab first, Document tab second
+
+2. Preserve all approved states:
+- Empty State
+- Processing State
+- Completed Contract Review Overview
+- Source chip active / clause highlighted state
+- Low Confidence State
+- Error State
+- Mobile Review View
+- Mobile Document View
+
+3. Completed Contract Review panel order:
+A. Plain-English Contract Summary
+B. Risk / Confidence Strip
+C. Key Contract Risks
+D. Required Next Steps
+E. Source Traceability
+
+Deeper sections should be compact/collapsed/secondary:
+- Obligations & Responsibilities
+- Payment / Fees / Penalties
+- Termination / Renewal
+- Missing or Weak Protections
+
+4. Keep the approved legal-safe wording.
+Use:
+- contract review support
+- risk indicators
+- terms to verify
+- possible missing protections
+- not legal advice
+- review with a qualified professional if high-risk
+
+Avoid:
+- you should sign
+- you should not sign
+- legally invalid
+- guaranteed protection
+- replaces an attorney
+
+5. Source chips must be functional.
+When clicked:
+- scroll the contract viewer to the referenced clause/section
+- highlight the matching clause
+- show the evidence banner
+- keep the related risk card active
+- preserve active source-chip state
+
+If exact coordinates are not available:
+- scroll to the closest matching section
+- highlight the nearest matching text block
+
+6. Preserve the decision-dashboard layout.
+Do not turn the completed state into a long legal memo or report dump.
+Show the top risks and next steps first.
+Keep deeper details compact.
+
+7. Use fictional demo/mock content only.
+No real company names, real people, real account numbers, or real contract examples.
+
+8. Keep visual hierarchy calm.
+- Red only for critical/high-risk or urgent items
+- Amber for caution
+- Purple for source evidence and traceability
+- Green for clear/acceptable terms
+- Avoid excessive warning colors
+
+9. Low-confidence message must use:
+“PlainPath could review part of this contract, but the scan quality limits review confidence.”
+
+10. Error state message must use:
+“Contract review could not be completed.”
+
+Actions:
+- Try again
+- Upload different file
+- Ask This Document
+- Analyze a Document
+
+11. After implementation, provide live screenshots of:
+- Empty State
+- Processing State
+- Completed Contract Review Overview
+- Source chip active / clause highlighted
+- Low Confidence State
+- Error State
+- Mobile Review View
+- Mobile Document View
+
+Also confirm:
+- the authenticated route is protected
+- no mock/demo route exposes real user document analysis
+- demo data is fictional only
+- source chips scroll/highlight matching clauses
+- no new TypeScript/runtime errors were introduced

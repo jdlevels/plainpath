@@ -233,6 +233,7 @@ Rules:
       missingProtections: Array.isArray(result.missingProtections) ? result.missingProtections : [],
       preSigningChecklist: Array.isArray(result.preSigningChecklist) ? result.preSigningChecklist : [],
       reviewedAt: new Date().toISOString(),
+      docText: text.slice(0, 12000),
     });
   } catch (err) {
     logger.error({ err }, "contracts/review failed");
@@ -335,6 +336,8 @@ Rules: clauses 5-20 items, negotiationLanguage must include actual replacement t
       missingProtections: Array.isArray(result.missingProtections) ? result.missingProtections : [],
       preSigningChecklist: Array.isArray(result.preSigningChecklist) ? result.preSigningChecklist : [],
       reviewedAt: new Date().toISOString(),
+      docText: text.slice(0, 12000),
+      scanQuality: text.length < 500 ? "poor" : "good",
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
