@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import multer from "multer";
 import { getAuth } from "@clerk/express";
 import { openai } from "@workspace/integrations-openai-ai-server";
+import { requireEntitlement } from "../../middlewares/requireEntitlement.js";
 import { demoDocuments } from "../../lib/demoData.js";
 import { trustCheckDemoDocuments } from "../../lib/trustCheckDemoData.js";
 import type { DocumentAnalysis, DocumentSection, KeyTerm, ActionPack, TrustCheckAnalysis, TrustCheckVerdict, TrustCheckContactDetail, TrustCheckDeadlineItem, TrustCheckScamIndicator, TrustCheckScores, TrustCheckMetadataFinding } from "../../lib/types.js";
@@ -322,7 +323,7 @@ async function runAnalysis(text: string, title?: string, documentTypeHint?: stri
   };
 }
 
-router.post("/analyze", async (req, res) => {
+router.post("/analyze", requireEntitlement("analyze"), async (req, res) => {
   const { text, title, documentTypeHint } = req.body;
 
   if (!text || typeof text !== "string" || text.trim().length < 30) {
@@ -377,7 +378,7 @@ router.post("/analyze", async (req, res) => {
   }
 });
 
-router.post("/upload", upload.single("file"), async (req, res, next) => {
+router.post("/upload", requireEntitlement("analyze"), upload.single("file"), async (req, res, next) => {
   // Top-level safety net: catches anything that escapes inner try/catch blocks
   // so the global handler never fires for upload errors.
   try {
@@ -519,7 +520,7 @@ router.post("/upload", upload.single("file"), async (req, res, next) => {
 });
 
 // ── Scan images (multi-page camera capture) ──────────────────────────────────
-router.post("/scan-images", async (req, res) => {
+router.post("/scan-images", requireEntitlement("analyze"), async (req, res) => {
   const { images, documentTypeHint } = req.body;
 
   if (!Array.isArray(images) || images.length === 0) {
@@ -619,7 +620,7 @@ router.post("/scan-images", async (req, res) => {
 });
 
 // ── Scan images → Trust Check ────────────────────────────────────────────────
-router.post("/scan-images-trust", async (req, res) => {
+router.post("/scan-images-trust", requireEntitlement("trust-check"), async (req, res) => {
   const { images } = req.body;
 
   if (!Array.isArray(images) || images.length === 0) {
@@ -2134,7 +2135,7 @@ async function extractTextFromBuffer(
   return { text: "", title, error: { status: 400, body: { error: "unsupported_type", message: "Unsupported file type. Please upload a PDF (.pdf), Word document (.docx), or plain text (.txt) file." } } };
 }
 
-router.post("/trust-check", async (req, res) => {
+router.post("/trust-check", requireEntitlement("trust-check"), async (req, res) => {
   const { text } = req.body;
 
   if (!text || typeof text !== "string" || text.trim().length < 30) {
@@ -2169,7 +2170,7 @@ router.post("/trust-check", async (req, res) => {
   }
 });
 
-router.post("/trust-check-upload", upload.single("file"), async (req, res) => {
+router.post("/trust-check-upload", requireEntitlement("trust-check"), upload.single("file"), async (req, res) => {
   try {
     const file = req.file;
     if (!file) return res.status(400).json({ error: "no_file", message: "No file was uploaded." });
