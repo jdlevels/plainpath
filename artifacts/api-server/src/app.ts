@@ -171,6 +171,7 @@ app.use(
   [
     "/api/documents/analyze",
     "/api/documents/upload",
+    "/api/documents/import-url",
     "/api/documents/scan-images",
     "/api/documents/scan-images-trust",
     "/api/documents/trust-check",
