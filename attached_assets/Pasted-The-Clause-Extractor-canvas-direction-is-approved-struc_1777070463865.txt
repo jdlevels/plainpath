@@ -1,0 +1,210 @@
+The Clause Extractor canvas direction is approved structurally, but please do one refinement pass before implementation.
+
+Do not implement yet.
+Do not move to Compare Versions yet.
+Stay in canvas/design mode for Clause Extractor only.
+
+The layout direction is correct:
+- document-first workspace
+- left document viewer
+- right clause extraction panel
+- source-backed extracted clauses
+- clickable source chips
+- source chip active/highlight state
+- mobile Clauses / Document tabs
+- premium dark UI
+- compact cards, not report dumps
+
+Please refine the canvas with the following requirements:
+
+1. Make Clause Extractor feel distinct from Contract Review.
+
+Clause Extractor should feel like an extraction and organization workspace, not another contract risk dashboard.
+
+Primary purpose:
+- extract clauses
+- categorize clauses
+- identify obligations
+- identify dates/deadlines
+- show owners/responsible parties
+- link every clause back to the source text
+
+Risk should be secondary, not the main identity.
+
+2. Rename the completed state structure from “decision dashboard” language to “extraction dashboard.”
+
+Completed right panel order should be:
+
+A. Extraction Summary
+B. Clause / Confidence Strip
+C. Key Extracted Clauses
+D. Clause Categories / Filters
+E. Obligations & Owners
+F. Dates / Deadlines
+G. Missing / Unclear Clauses
+H. Source Traceability
+
+3. Refine the Extraction Summary.
+
+Keep it to 4–6 lines maximum.
+
+It should answer:
+- What type of document was detected?
+- How many clauses were extracted?
+- Which categories were found?
+- What should the user inspect first?
+
+Avoid making this sound like legal advice or contract review conclusions.
+
+4. Refine the Clause / Confidence Strip.
+
+Use compact chips such as:
+- 23 clauses found
+- High extraction confidence
+- 7 categories
+- 6 obligations
+- 4 deadlines
+- 3 unclear terms
+
+Avoid making the first row primarily about “risk.” Risk can appear on clause cards only where relevant.
+
+5. Refine Key Extracted Clauses.
+
+Show top 5–8 clauses by default.
+
+Each clause card should include:
+- clause title
+- clause category
+- one-line plain-English meaning
+- source chip
+- importance chip, if needed
+- action only if needed
+
+Example clause categories:
+- Payment / Fees
+- Termination / Renewal
+- Obligations
+- Liability
+- Confidentiality
+- Dispute Resolution
+- Deadlines / Notice Periods
+- Signatures / Attachments
+
+6. Add or strengthen category filters.
+
+Clause Extractor should make it easy to filter extracted clauses by category.
+
+Use compact filter chips or grouped tabs:
+- All
+- Payment
+- Termination
+- Obligations
+- Liability
+- Confidentiality
+- Deadlines
+- Missing / Unclear
+
+7. Refine Obligations & Owners.
+
+Use a compact table/card hybrid:
+- obligation
+- responsible party
+- deadline/date if available
+- source chip
+
+This section should feel like structured extracted data, not paragraphs.
+
+8. Refine Dates / Deadlines.
+
+Use a compact timeline or list:
+- date/deadline
+- what it applies to
+- notice period if relevant
+- source chip
+
+9. Refine Missing / Unclear Clauses.
+
+Use cautious language:
+- possible missing clause
+- unclear term
+- verify whether this applies
+- review with a qualified professional if high-risk
+
+Avoid:
+- legally invalid
+- contract is unsafe
+- you should not sign
+- guaranteed protection
+
+10. Preserve source chip behavior.
+
+When a source chip is clicked:
+- source chip becomes active
+- matching clause highlights in the left document viewer
+- document scrolls to the matching section/page
+- evidence banner shows the matched text
+- related clause card remains active on the right panel
+
+11. Low Confidence State refinement.
+
+Use this exact message:
+“PlainPath could extract part of this document, but the scan quality limits extraction confidence.”
+
+Show:
+- what clauses were readable
+- what could not be verified
+- recommended next action
+
+12. Error State refinement.
+
+Keep the error state clean.
+
+Message:
+“Clause extraction could not be completed.”
+
+Actions:
+- Try again
+- Upload different file
+- Ask This Document
+- Analyze a Document
+
+13. Mobile refinement.
+
+Mobile Clauses tab should show:
+- extraction summary
+- clause/confidence strip
+- category filters
+- key extracted clauses
+- obligations/deadlines
+- source chips
+- compact cards
+
+Mobile Document tab should show:
+- active clause highlight
+- evidence banner
+- source chip jump behavior
+- easy return to Clauses tab
+
+14. Keep fictional demo data only.
+
+Do not use real company names, real people, real account numbers, or real contract examples.
+
+15. Keep the design calm and premium.
+
+Avoid:
+- dense report layout
+- every clause expanded by default
+- too much risk-review language
+- too many red cards
+- attorney-like legal conclusions
+- generic AI report styling
+
+After this refinement, show the updated canvas states again:
+- Empty State
+- Processing State
+- Completed Clause Extraction Overview
+- Source chip active/highlighted state
+- Low Confidence State
+- Error State
+- Mobile Clauses View
+- Mobile Document View

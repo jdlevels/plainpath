@@ -1,4 +1,4 @@
-import { FileText, AlertTriangle, Bookmark, Scale, ChevronRight, Clock, Users, DollarSign, ShieldCheck, FileSearch } from "lucide-react";
+import { FileText, Bookmark, Scale, ChevronRight, Clock, Users, DollarSign, AlertTriangle, FileSearch, Layers } from "lucide-react";
 
 function SChip({ label }: { label: string }) {
   return (
@@ -8,18 +8,20 @@ function SChip({ label }: { label: string }) {
   );
 }
 
+const FILTER_TABS = ["All","Payment","Termination","Obligations","Deadlines","Missing"];
+
 const KEY_CLAUSES = [
-  { title: "Auto-renewal — 60-day notice to cancel",    cat: "Termination",    chip: "§3",  risk: "high",  plain: "Missed window = another 12-month term." },
-  { title: "Monthly fee $22,500 — net-30 terms",        cat: "Payment",        chip: "§4",  risk: "watch", plain: "Late fee accrues at 1.5%/month." },
-  { title: "Liability cap — $67,500 (3 months)",        cat: "Liability",      chip: "§9",  risk: "high",  plain: "Unusually low for a $270K/yr contract." },
-  { title: "5-year confidentiality post-termination",   cat: "Confidentiality",chip: "§7",  risk: "ok",    plain: "Both parties bound 5 years after end." },
-  { title: "HIPAA compliance obligation on Provider",   cat: "Regulatory",     chip: "§7",  risk: "ok",    plain: "Provider must comply with all HIPAA rules." },
+  { title: "Auto-renewal — 60-day notice to cancel", cat: "Termination",  chip: "§3", imp: "attention", plain: "Missed window = automatic 12-month renewal." },
+  { title: "Monthly fee $22,500 — net-30 terms",     cat: "Payment",      chip: "§4", imp: "standard",  plain: "Late fee accrues at 1.5%/month." },
+  { title: "Liability capped at $67,500",             cat: "Liability",    chip: "§9", imp: "attention", plain: "Unusually low cap for a $270K/yr contract." },
+  { title: "5-year confidentiality — both parties",   cat: "Confidentiality", chip: "§7", imp: "noted", plain: "Both parties bound 5 years post-term." },
+  { title: "HIPAA compliance on Provider",            cat: "Obligations",  chip: "§7", imp: "noted",     plain: "Provider must comply with all HIPAA rules." },
 ];
 
-const RISK_COLORS = {
-  high:  { dot: "bg-red-500",     badge: "bg-red-500/10 border-red-500/18 text-red-300/65",     label: "High" },
-  watch: { dot: "bg-amber-500",   badge: "bg-amber-500/10 border-amber-500/18 text-amber-300/65", label: "Review" },
-  ok:    { dot: "bg-emerald-500", badge: "bg-emerald-500/10 border-emerald-500/18 text-emerald-300/65", label: "Extracted" },
+const IMP = {
+  attention: { dot: "bg-amber-500",   badge: "bg-amber-500/12 border-amber-500/20 text-amber-300/70",  label: "Needs attention" },
+  standard:  { dot: "bg-blue-500",    badge: "bg-blue-500/12 border-blue-500/20 text-blue-300/65",     label: "Standard term" },
+  noted:     { dot: "bg-white/28",    badge: "bg-white/[0.07] border-white/[0.09] text-white/38",      label: "Noted" },
 };
 
 export function ClauseExtractorMobile() {
@@ -33,10 +35,6 @@ export function ClauseExtractorMobile() {
         </div>
         <span className="text-white/85 text-sm font-semibold">PlainPath</span>
         <div className="ml-auto flex items-center gap-2">
-          <div className="h-5 px-2 rounded-full bg-amber-500/15 border border-amber-500/25 flex items-center gap-1">
-            <AlertTriangle className="w-2.5 h-2.5 text-amber-400" />
-            <span className="text-[10px] text-amber-300/80">2 high-priority</span>
-          </div>
           <button className="text-white/30"><Bookmark className="w-4 h-4" /></button>
         </div>
       </div>
@@ -51,91 +49,129 @@ export function ClauseExtractorMobile() {
         </button>
       </div>
 
-      {/* Clauses tab body */}
+      {/* Body */}
       <div className="flex-1 overflow-y-auto">
 
-        {/* Document identity */}
+        {/* Doc identity */}
         <div className="px-4 pt-4 pb-3 border-b border-white/[0.04]">
-          <div className="flex items-start gap-2.5">
+          <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-violet-600/20 border border-violet-500/25 flex items-center justify-center shrink-0">
               <Scale className="w-3.5 h-3.5 text-violet-400" />
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <p className="text-sm font-bold text-white/88 truncate">ClearMed Services Agreement</p>
-                <span className="h-4 px-1.5 rounded border bg-amber-500/10 border-amber-500/20 text-amber-300/70 text-[9px] font-medium">Review Req.</span>
-              </div>
+            <div>
+              <p className="text-sm font-bold text-white/88">ClearMed Services Agreement</p>
               <p className="text-[10px] text-white/30 mt-0.5">Professional Services · 6 pages · $22,500/mo</p>
             </div>
           </div>
         </div>
 
-        {/* Risk summary chips */}
+        {/* B. Confidence Strip */}
         <div className="px-4 pt-3 pb-2">
-          <div className="flex flex-wrap gap-1.5 mb-2.5">
+          <p className="text-[9px] uppercase tracking-[0.1em] text-white/20 font-semibold mb-2">CONFIDENCE STRIP</p>
+          <div className="flex flex-wrap gap-1.5">
             {[
-              { label: "2 high-priority",    cls: "bg-red-500/12 border-red-500/20 text-red-300/75" },
-              { label: "1 review",           cls: "bg-amber-500/12 border-amber-500/20 text-amber-300/75" },
-              { label: "4 deadlines",        cls: "bg-blue-500/12 border-blue-500/20 text-blue-300/75" },
-              { label: "8 obligations",      cls: "bg-white/[0.07] border-white/[0.09] text-white/45" },
-              { label: "3 unclear terms",    cls: "bg-amber-500/10 border-amber-500/18 text-amber-300/65" },
+              { label: "23 clauses found",          cls: "bg-emerald-500/12 border-emerald-500/20 text-emerald-300/75" },
+              { label: "High confidence",            cls: "bg-emerald-500/12 border-emerald-500/20 text-emerald-300/75" },
+              { label: "7 categories",               cls: "bg-violet-500/12 border-violet-500/20 text-violet-300/75" },
+              { label: "6 obligations",              cls: "bg-blue-500/12 border-blue-500/20 text-blue-300/75" },
+              { label: "4 deadlines",                cls: "bg-blue-500/12 border-blue-500/20 text-blue-300/70" },
+              { label: "3 unclear terms",            cls: "bg-amber-500/10 border-amber-500/18 text-amber-300/65" },
             ].map(c => (
               <span key={c.label} className={`h-5 px-2 rounded-full border text-[10px] font-medium ${c.cls}`}>{c.label}</span>
             ))}
           </div>
-          <div className="flex gap-2">
-            <span className="h-6 px-2.5 rounded-full border bg-red-500/10 border-red-500/20 text-red-300/80 text-[10px] font-semibold flex items-center">High risk</span>
-            <span className="h-6 px-2.5 rounded-full border bg-emerald-500/10 border-emerald-500/20 text-emerald-300/80 text-[10px] font-semibold flex items-center">High confidence</span>
+        </div>
+
+        {/* A. Extraction Summary */}
+        <div className="px-4 pb-3">
+          <p className="text-[9px] uppercase tracking-[0.1em] text-white/20 font-semibold mb-2">EXTRACTION SUMMARY</p>
+          <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] px-3.5 py-3 text-xs text-white/52 leading-relaxed">
+            Professional Services Agreement — 18 months at $22,500/month, 23 clauses across 7 categories. Inspect the <span className="text-amber-300/80 font-semibold">60-day renewal window (§3)</span> and the <span className="text-amber-300/80 font-semibold">$67,500 liability cap (§9)</span>. <span className="text-white/30">Review with a qualified professional before signing.</span>
           </div>
         </div>
 
-        {/* Plain-English summary */}
+        {/* D. Category Filters */}
         <div className="px-4 pb-3">
-          <p className="text-[10px] uppercase tracking-[0.1em] text-white/20 font-semibold mb-2">EXTRACTION SUMMARY</p>
-          <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] px-3.5 py-3 text-xs text-white/55 leading-relaxed">
-            18-month agreement between ClearMed and Northbridge at $22,500/month. Watch the <span className="text-amber-300/80 font-semibold">60-day renewal window in §3</span> and the <span className="text-amber-300/80 font-semibold">$67,500 liability cap in §9</span>. 23 clauses extracted across 7 categories. <span className="text-white/35">Review with a qualified professional before signing.</span>
+          <p className="text-[9px] uppercase tracking-[0.1em] text-white/20 font-semibold mb-2">FILTER BY CATEGORY</p>
+          <div className="flex flex-wrap gap-1.5">
+            {FILTER_TABS.map((t,i) => (
+              <button key={t} className={`h-6 px-2.5 rounded-full border text-[10px] font-medium ${i===0 ? "bg-white/[0.1] border-white/[0.15] text-white/72" : "border-white/[0.07] text-white/32"}`}>{t}</button>
+            ))}
           </div>
         </div>
 
-        {/* Key clauses */}
+        {/* C. Key Extracted Clauses */}
         <div className="px-4 pb-3">
-          <p className="text-[10px] uppercase tracking-[0.1em] text-white/20 font-semibold mb-2.5">KEY CLAUSES <span className="text-white/18 normal-case tracking-normal">· {KEY_CLAUSES.length} found</span></p>
+          <p className="text-[9px] uppercase tracking-[0.1em] text-white/20 font-semibold mb-2.5">KEY EXTRACTED CLAUSES <span className="text-white/18 normal-case tracking-normal">· {KEY_CLAUSES.length}</span></p>
           <div className="space-y-2">
             {KEY_CLAUSES.map(cl => {
-              const r = RISK_COLORS[cl.risk as keyof typeof RISK_COLORS];
+              const i = IMP[cl.imp as keyof typeof IMP];
               return (
                 <div key={cl.title} className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
-                  <div className="flex items-start gap-2 mb-1.5">
-                    <div className={`w-2 h-2 rounded-full ${r.dot} shrink-0 mt-1`} />
+                  <div className="flex items-start gap-2 mb-1">
+                    <div className={`w-2 h-2 rounded-full ${i.dot} shrink-0 mt-1`} />
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-semibold text-white/80 leading-snug">{cl.title}</p>
                       <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                         <SChip label={cl.chip} />
-                        <span className={`h-4 px-1.5 rounded border text-[9px] font-medium ${r.badge}`}>{r.label}</span>
-                        <span className="text-[9px] text-white/25">{cl.cat}</span>
+                        <span className={`h-4 px-1.5 rounded border text-[9px] font-medium ${i.badge}`}>{i.label}</span>
+                        <span className="text-[9px] text-white/22">{cl.cat}</span>
                       </div>
                     </div>
                   </div>
-                  <p className="text-[10px] text-white/40 pl-4 leading-snug">{cl.plain}</p>
+                  <p className="text-[10px] text-white/38 pl-4 leading-snug">{cl.plain}</p>
                 </div>
               );
             })}
           </div>
         </div>
 
+        {/* E. Obligations & Owners */}
+        <div className="px-4 pb-3">
+          <p className="text-[9px] uppercase tracking-[0.1em] text-white/20 font-semibold mb-2.5">OBLIGATIONS & OWNERS</p>
+          <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] divide-y divide-white/[0.04] overflow-hidden">
+            {[
+              { ob: "Give 60-day non-renewal notice", party: "Either party", chip: "§3" },
+              { ob: "Pay $22,500/month — net 30",     party: "ClearMed",     chip: "§4" },
+              { ob: "Comply with HIPAA",              party: "Northbridge",  chip: "§7" },
+            ].map((r,i) => (
+              <div key={i} className="flex items-center gap-2.5 px-3.5 py-2.5">
+                <p className="text-[11px] text-white/50 flex-1 leading-snug">{r.ob}</p>
+                <p className="text-[10px] text-white/28 whitespace-nowrap">{r.party}</p>
+                <SChip label={r.chip} />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* F. Dates & Deadlines */}
+        <div className="px-4 pb-3">
+          <p className="text-[9px] uppercase tracking-[0.1em] text-white/20 font-semibold mb-2.5">DATES & DEADLINES</p>
+          <div className="space-y-1.5">
+            {[
+              { date: "Oct 1, 2026",  event: "60-day non-renewal notice deadline", amber: true, chip: "§3" },
+              { date: "Dec 1, 2026",  event: "Initial 18-month term expiry",       amber: false, chip: "§3" },
+              { date: "1st / month",  event: "Monthly invoice — net-30 due",       amber: false, chip: "§4" },
+            ].map((d,i) => (
+              <div key={i} className={`rounded-xl border px-3.5 py-2.5 flex items-center gap-2.5 ${d.amber ? "border-amber-500/18 bg-amber-500/[0.04]" : "border-white/[0.06] bg-white/[0.015]"}`}>
+                <p className="text-[10px] font-semibold text-white/60 w-20 shrink-0">{d.date}</p>
+                <p className="text-[10px] text-white/45 flex-1 leading-snug">{d.event}</p>
+                <SChip label={d.chip} />
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Collapsed sections */}
-        <div className="px-4 pb-4 space-y-2">
+        <div className="px-4 pb-5 space-y-2">
           {[
-            { icon: <DollarSign className="w-3.5 h-3.5" />, label: "Payment & Fee Terms",      badge: "4 clauses" },
-            { icon: <Users className="w-3.5 h-3.5" />,      label: "Obligations & Owners",     badge: "8 obligations" },
-            { icon: <Clock className="w-3.5 h-3.5" />,      label: "Dates & Deadlines",        badge: "4 deadlines" },
-            { icon: <AlertTriangle className="w-3.5 h-3.5" />, label: "Missing / Unclear",    badge: "3 flagged" },
-            { icon: <ShieldCheck className="w-3.5 h-3.5" />, label: "Clause Categories",      badge: "7 types" },
+            { icon: <AlertTriangle className="w-3.5 h-3.5" />, label: "Missing / Unclear Clauses", badge: "3 flagged", amber: true },
+            { icon: <Layers className="w-3.5 h-3.5" />,        label: "Source Traceability",       badge: "23 chips",  amber: false },
           ].map(s => (
-            <button key={s.label} className="w-full rounded-xl border border-white/[0.06] bg-white/[0.015] flex items-center gap-2.5 px-3.5 py-3 hover:bg-white/[0.025] transition-colors">
+            <button key={s.label} className="w-full rounded-xl border border-white/[0.06] bg-white/[0.015] flex items-center gap-2.5 px-3.5 py-3">
               <span className="text-white/20 shrink-0">{s.icon}</span>
               <p className="text-xs text-white/45 font-medium flex-1 text-left">{s.label}</p>
-              <span className="text-[10px] text-white/28 border border-white/[0.08] rounded px-1.5 py-0.5">{s.badge}</span>
+              <span className={`text-[10px] border rounded px-1.5 py-0.5 ${s.amber ? "border-amber-500/18 text-amber-300/55 bg-amber-500/10" : "border-white/[0.08] text-white/28"}`}>{s.badge}</span>
               <ChevronRight className="w-3.5 h-3.5 text-white/18 shrink-0" />
             </button>
           ))}

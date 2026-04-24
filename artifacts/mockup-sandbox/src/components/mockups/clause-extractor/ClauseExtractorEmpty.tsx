@@ -1,14 +1,14 @@
-import { FileText, Upload, Camera, ClipboardPaste, Link2, Info, Scale, Briefcase, Home, FileCheck, FileSearch, ShieldCheck, Layers, ScrollText } from "lucide-react";
+import { FileText, Upload, Camera, ClipboardPaste, Link2, Info, Scale, Briefcase, Home, FileCheck, Layers, ScrollText, ShieldCheck, Cpu } from "lucide-react";
 
 const WORKS_WITH = [
-  { icon: <Scale className="w-3.5 h-3.5 text-violet-400" />,     label: "Service agreements",    desc: "Obligations, payment terms, renewal, liability" },
-  { icon: <Home className="w-3.5 h-3.5 text-sky-400" />,         label: "Leases",                desc: "Tenant rights, notice periods, deposits, exit" },
-  { icon: <Briefcase className="w-3.5 h-3.5 text-amber-400" />,  label: "Employment agreements", desc: "Compensation, non-compete, IP, termination" },
-  { icon: <FileText className="w-3.5 h-3.5 text-emerald-400" />, label: "Vendor contracts",      desc: "SLAs, liability caps, dispute resolution" },
-  { icon: <FileCheck className="w-3.5 h-3.5 text-blue-400" />,   label: "Insurance forms",       desc: "Coverage terms, exclusions, notice requirements" },
-  { icon: <Layers className="w-3.5 h-3.5 text-orange-400" />,    label: "Policy documents",      desc: "Obligations, definitions, enforcement terms" },
-  { icon: <ScrollText className="w-3.5 h-3.5 text-rose-400" />,  label: "Notices",               desc: "Deadlines, required actions, response windows" },
-  { icon: <ShieldCheck className="w-3.5 h-3.5 text-purple-400" />,label: "Contractor agreements",desc: "Scope, IP ownership, payment schedule, exit" },
+  { icon: <Scale className="w-3.5 h-3.5 text-violet-400" />,      label: "Service agreements",     desc: "Obligations, payment terms, renewal, liability" },
+  { icon: <Home className="w-3.5 h-3.5 text-sky-400" />,          label: "Leases",                 desc: "Tenant rights, notice periods, deposits, exit" },
+  { icon: <Briefcase className="w-3.5 h-3.5 text-amber-400" />,   label: "Employment agreements",  desc: "Compensation, non-compete, IP, termination" },
+  { icon: <FileText className="w-3.5 h-3.5 text-emerald-400" />,  label: "Vendor contracts",       desc: "SLAs, liability caps, dispute resolution" },
+  { icon: <FileCheck className="w-3.5 h-3.5 text-blue-400" />,    label: "Insurance forms",        desc: "Coverage terms, exclusions, notice requirements" },
+  { icon: <Layers className="w-3.5 h-3.5 text-orange-400" />,     label: "Policy documents",       desc: "Obligations, definitions, enforcement terms" },
+  { icon: <ScrollText className="w-3.5 h-3.5 text-rose-400" />,   label: "Notices",                desc: "Deadlines, required actions, response windows" },
+  { icon: <ShieldCheck className="w-3.5 h-3.5 text-purple-400" />,label: "Contractor agreements",  desc: "Scope, IP ownership, payment schedule, exit" },
 ];
 
 export function ClauseExtractorEmpty() {
@@ -32,11 +32,11 @@ export function ClauseExtractorEmpty() {
           {/* Hero */}
           <div className="text-center mb-10">
             <div className="w-14 h-14 rounded-2xl bg-violet-600/20 border border-violet-500/25 flex items-center justify-center mx-auto mb-5">
-              <FileSearch className="w-7 h-7 text-violet-400" />
+              <Cpu className="w-7 h-7 text-violet-400" />
             </div>
-            <h1 className="text-[22px] font-bold text-white tracking-tight mb-3">Extract the clauses that matter.</h1>
+            <h1 className="text-[22px] font-bold text-white tracking-tight mb-3">Extract and organize your contract clauses.</h1>
             <p className="text-sm text-white/42 leading-relaxed max-w-lg mx-auto">
-              Upload, paste, or scan a document. PlainPath finds key clauses, organizes them by type, highlights obligations and deadlines, and links each clause back to its source.
+              Upload any contract or agreement. PlainPath finds the clauses, categorizes them, identifies obligations and deadlines, and links every extracted clause back to its source.
             </p>
           </div>
 
@@ -46,7 +46,7 @@ export function ClauseExtractorEmpty() {
               <Upload className="w-5 h-5 text-white/40" />
             </div>
             <p className="text-sm font-semibold text-white/70 mb-1">Drop your document here</p>
-            <p className="text-xs text-white/30 mb-5">PlainPath provides clause extraction support — source-backed extracted terms. Not legal advice.</p>
+            <p className="text-xs text-white/28 mb-5">PlainPath extracts and organizes clauses — source-backed. Not legal advice.</p>
             <button className="bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium px-5 py-2 rounded-lg transition-colors inline-flex items-center gap-2">
               <Upload className="w-3.5 h-3.5" />
               Choose file
@@ -57,9 +57,9 @@ export function ClauseExtractorEmpty() {
           {/* Secondary input options */}
           <div className="grid grid-cols-3 gap-3 mb-8">
             {[
-              { icon: <Camera className="w-4 h-4 text-white/35" />, label: "Scan Photo", desc: "Point camera at document" },
-              { icon: <ClipboardPaste className="w-4 h-4 text-white/35" />, label: "Paste Text", desc: "Paste from email or doc" },
-              { icon: <Link2 className="w-4 h-4 text-white/35" />, label: "Import Link", desc: "From URL or cloud" },
+              { icon: <Camera className="w-4 h-4 text-white/35" />, label: "Scan Photo",   desc: "Point camera at document" },
+              { icon: <ClipboardPaste className="w-4 h-4 text-white/35" />, label: "Paste Text",   desc: "Paste from email or doc" },
+              { icon: <Link2 className="w-4 h-4 text-white/35" />, label: "Import Link",   desc: "From URL or cloud" },
             ].map(opt => (
               <button key={opt.label} className="rounded-xl border border-white/[0.07] bg-white/[0.025] hover:bg-white/[0.045] transition-colors py-3.5 px-3 flex flex-col items-center gap-2 cursor-pointer">
                 {opt.icon}
@@ -69,16 +69,16 @@ export function ClauseExtractorEmpty() {
             ))}
           </div>
 
-          {/* Legal disclaimer */}
+          {/* Disclaimer */}
           <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 flex gap-3 mb-8">
             <Info className="w-3.5 h-3.5 text-white/30 shrink-0 mt-0.5" />
             <p className="text-[11px] text-white/35 leading-relaxed">
-              PlainPath provides <strong className="text-white/50 font-semibold">clause extraction support</strong> — source-backed extracted terms, obligations, and deadlines. This is not legal advice. Review important language with a qualified professional if this document is high-risk for your situation.
+              PlainPath provides <strong className="text-white/50 font-semibold">clause extraction support</strong> — source-backed extracted terms, obligations, and deadlines. This is not legal advice. For high-risk documents, review with a qualified professional.
             </p>
           </div>
 
           {/* Works well with */}
-          <div>
+          <div className="mb-8">
             <p className="text-[10px] uppercase tracking-[0.12em] font-semibold text-white/20 mb-4">WORKS WELL WITH</p>
             <div className="grid grid-cols-2 gap-2">
               {WORKS_WITH.map(w => (
@@ -94,14 +94,14 @@ export function ClauseExtractorEmpty() {
           </div>
 
           {/* What you get */}
-          <div className="mt-8">
-            <p className="text-[10px] uppercase tracking-[0.12em] font-semibold text-white/20 mb-4">YOUR EXTRACTION WILL INCLUDE</p>
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.12em] font-semibold text-white/20 mb-4">WHAT GETS EXTRACTED</p>
             <div className="grid grid-cols-2 gap-2">
               {[
-                "Plain-English clause summary", "Extraction confidence score",
-                "Key clauses by category",     "Obligations & owners table",
-                "Dates & deadlines list",       "Missing / unclear clause flags",
-                "Source-backed terms",          "Clickable source chips",
+                "Clauses by category",           "Plain-English clause summary",
+                "Obligations & responsible parties", "Dates & deadlines",
+                "Extraction confidence score",   "Missing or unclear clause flags",
+                "Clickable source chips",         "Source-backed extracted terms",
               ].map(f => (
                 <div key={f} className="flex items-center gap-2 py-2 px-3 rounded-lg border border-white/[0.05] bg-white/[0.01]">
                   <div className="w-1 h-1 rounded-full bg-violet-500/60 shrink-0" />
