@@ -1,0 +1,70 @@
+PlainPath — Ask This Document canvas refinement pass
+
+This design direction is approved, but not yet ready for implementation.
+Do one refinement pass in canvas only.
+
+Keep:
+- desktop split-screen layout
+- mobile stacked layout
+- citation-backed answer concept
+- suggested prompts
+- dark premium UI tone
+
+Refine the following:
+
+1. Empty state
+- make it feel more like a working tool, less like a landing page
+- reduce dead space
+- move upload zone higher
+- tighten suggested question chips
+- add one supporting line under the title:
+  “Ask about dates, obligations, risks, fees, renewal terms, deadlines, or next steps.”
+
+2. Answer hierarchy
+Restructure the right panel into:
+- answer summary at top
+- source-backed findings in the middle
+- follow-up questions at the bottom
+Make the top answer block more visually prominent.
+
+3. Citation interaction
+Improve the citation experience:
+- clicking a citation chip should auto-scroll the document viewer to the matching section
+- highlight that section more clearly
+- show page number / source label
+- optional small source preview on hover or tap
+
+4. Document viewer top bar
+Strengthen the left viewer with:
+- file name
+- page controls
+- zoom
+- fit width
+- active source indicator
+
+5. Loading / low-confidence / error states
+Separate these visually:
+- loading = grounded reading in progress
+- low-confidence = answer not clearly found in the document
+- error = system failure / retry state
+Do not let these states look too similar.
+
+6. Mobile refinement
+Keep stacked layout, but improve:
+- Document / Ask tab switch clarity
+- citation-to-source jump behavior
+- mobile source highlight flow after tapping a citation
+
+7. Final deliverables
+Return updated canvas screenshots for:
+- refined empty state
+- refined loaded state
+- refined answer state
+- refined loading state
+- refined low-confidence state
+- refined mobile state
+
+Also include a short explanation of:
+- citation interaction behavior
+- why the answer hierarchy changed
+- how mobile source jumps work
