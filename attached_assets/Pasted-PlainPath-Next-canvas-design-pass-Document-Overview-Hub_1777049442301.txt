@@ -1,0 +1,116 @@
+PlainPath — Next canvas/design pass: Document Overview Hub
+
+Replit is already implementing Ask This Document.
+Do NOT interrupt that work.
+
+The next task is a design-first canvas pass for a new primary PlainPath surface:
+
+Document Overview Hub
+
+## Goal
+Create the new default first screen a user sees after uploading/opening a document.
+
+PlainPath should no longer feel like “pick a tool first.”
+It should feel like:
+1. upload/open document
+2. get immediate overview
+3. launch the right tool from that overview
+
+This is a canvas/UX pass only.
+Do NOT build backend logic yet.
+
+## Product role of this screen
+The Document Overview Hub should become the home base for a single document.
+
+It must summarize the document and guide the user into the best next action.
+
+## Required content blocks
+Design a premium document-first overview screen showing:
+
+- Document title / filename
+- Document type
+- Plain-English summary
+- Key dates
+- Key parties
+- Key obligations
+- Risks / watchouts
+- Required next steps
+- Confidence / source traceability
+- Suggested questions
+- Recommended tools/actions from this document
+
+## Required actions from this screen
+The overview must include clear launch points into:
+- Ask This Document
+- Trust Check
+- Contract Review
+- Clause Extractor
+- Compare Versions
+- Redact Sensitive Info
+- Document Builder (only where relevant)
+
+Do not make this feel like a dashboard of random buttons.
+It should feel like guided next-step actions based on the current document.
+
+## Layout direction
+Design a premium document-first workspace.
+
+Recommended structure:
+- Left/main: document viewer or document preview
+- Right: overview intelligence panel
+
+OR
+- top summary band + split lower workspace
+
+You decide the best layout, but it must feel:
+- premium
+- readable
+- grounded in the document
+- consistent with Ask This Document
+- like the primary shell for PlainPath going forward
+
+## Required states
+Show all key states in canvas:
+
+1. Empty state before upload
+2. Uploaded / processing state
+3. Completed overview state
+4. Low-confidence / partial-extraction state
+5. Error state
+
+## Overview panel behavior
+The panel should visually prioritize:
+1. plain-English summary
+2. urgent risks / important deadlines
+3. required actions
+4. suggested questions
+5. launch actions into specialized tools
+
+## Traceability
+Wherever possible, show that findings are source-backed.
+This can be done visually with:
+- citation chips
+- page references
+- source badges
+- “jump to source” affordances
+
+## Visual direction
+Match the refined Ask This Document tone:
+- dark premium UI
+- strong hierarchy
+- not a generic chatbot
+- document-first
+- trust-focused
+
+## Deliverables required
+Return canvas screenshots/mockups for:
+1. empty state
+2. processing state
+3. completed overview state
+4. low-confidence state
+5. mobile/responsive concept
+
+Also include:
+- explanation of layout decision
+- explanation of how this becomes PlainPath’s default post-upload screen
+- explanation of how the specialized tools launch from this overview
