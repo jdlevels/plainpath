@@ -40,6 +40,7 @@ import ClauseExtractor from "@/pages/ClauseExtractor"
 import AskDocument from "@/pages/AskDocument"
 import DocumentOverview from "@/pages/DocumentOverview"
 import AnalyzeDocument from "@/pages/AnalyzeDocument"
+import AnalyzePage from "@/pages/AnalyzePage"
 import Methodology from "@/pages/Methodology";
 import BuilderList from "@/pages/Builder/index";
 import BuilderNew from "@/pages/Builder/New";
@@ -483,7 +484,7 @@ function Router() {
             {/* ── Protected routes (require sign-in) ── */}
             <Route path="/" component={protect(Home)} />
             <Route path="/import" component={protect(Import)} />
-            <Route path="/analyze" component={protect(Import)} />
+            <Route path="/analyze" component={protect(AnalyzePage)} />
             <Route path="/results" component={protect(Analyze)} />
             <Route path="/analyze-document" component={protect(AnalyzeDocument)} />
             <Route path="/trust-check" component={protect(TrustCheck)} />
