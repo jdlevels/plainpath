@@ -4,7 +4,7 @@ import cookieParser from "cookie-parser";
 import pinoHttp from "pino-http";
 import multer from "multer";
 import rateLimit from "express-rate-limit";
-import { clerkMiddleware } from "@clerk/express";
+import { clerkMiddleware, getAuth } from "@clerk/express";
 import { CLERK_PROXY_PATH, clerkProxyMiddleware } from "./middlewares/clerkProxyMiddleware";
 import router from "./routes";
 import stripeRoutes from "./routes/stripe";
@@ -180,11 +180,57 @@ app.use(
     "/api/documents/trust-check-upload",
     "/api/documents/explain-source-section",
     "/api/documents/explain-section",
-    "/api/contracts/draft",
+    "/api/documents/compare",
+    "/api/documents/extract-text",
+    "/api/contracts/generate-draft",
     "/api/contracts/review",
+    "/api/contracts/insight",
+    "/api/contracts/scan-images",
+    "/api/contracts/negotiate-clause",
+    "/api/help/chat",
     "/api/demo/analyze",
   ],
   aiLimiter,
+)
+
+const heavyLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: { error: "rate_limited", message: "Too many requests for this resource. Please wait a few minutes and try again." },
+  skip: () => process.env.NODE_ENV !== "production",
+})
+
+app.use(
+  [
+    "/api/documents/redact-pdf",
+    "/api/contracts/send-for-signature",
+  ],
+  heavyLimiter,
+)
+
+const userOutboundLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 20,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  keyGenerator: (req) => {
+    const { userId } = getAuth(req)
+    return userId ?? req.ip ?? "anonymous"
+  },
+  message: { error: "rate_limited", message: "You have sent too many emails or signature requests. Please wait an hour and try again." },
+  skip: () => process.env.NODE_ENV !== "production",
+})
+
+app.use(
+  [
+    "/api/reminders/email",
+    "/api/reminders/drip",
+    "/api/reminders/welcome",
+    "/api/contracts/send-for-signature",
+  ],
+  userOutboundLimiter,
 )
 
 app.use("/api", eventsRouter)

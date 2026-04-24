@@ -1,4 +1,5 @@
 import { Router } from "express"
+import { getAuth } from "@clerk/express"
 import { logger } from "../../lib/logger"
 
 const router = Router()
@@ -64,6 +65,11 @@ async function sendReminderEmail(opts: {
 }
 
 router.post("/api/reminders/email", async (req, res) => {
+  const { userId } = getAuth(req)
+  if (!userId) {
+    return res.status(401).json({ error: "unauthorized", message: "You must be signed in to send reminder emails." })
+  }
+
   const { email, deadlineTitle, deadlineDate, deadlineDescription, docTitle } =
     req.body as {
       email?: string
@@ -103,6 +109,11 @@ router.post("/api/reminders/email", async (req, res) => {
 
 // ── Welcome / drip email sent after first analysis ───────────────────────────
 router.post("/api/reminders/drip", async (req, res) => {
+  const { userId } = getAuth(req)
+  if (!userId) {
+    return res.status(401).json({ error: "unauthorized", message: "You must be signed in to send drip emails." })
+  }
+
   const { email, firstName, tool } =
     req.body as { email?: string; firstName?: string; tool?: string }
 
@@ -167,6 +178,11 @@ router.post("/api/reminders/drip", async (req, res) => {
 
 // ── Welcome email sent on new account creation ───────────────────────────────
 router.post("/api/reminders/welcome", async (req, res) => {
+  const { userId } = getAuth(req)
+  if (!userId) {
+    return res.status(401).json({ error: "unauthorized", message: "You must be signed in to send welcome emails." })
+  }
+
   const { email, firstName } = req.body as { email?: string; firstName?: string }
 
   if (!email || typeof email !== "string" || !email.includes("@")) {

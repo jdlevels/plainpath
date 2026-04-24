@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { v4 as uuidv4 } from "uuid";
 import multer from "multer";
+import { getAuth } from "@clerk/express";
 import { openai } from "@workspace/integrations-openai-ai-server";
 import { demoDocuments } from "../../lib/demoData.js";
 import { trustCheckDemoDocuments } from "../../lib/trustCheckDemoData.js";
@@ -2467,6 +2468,11 @@ router.post("/extract-text", upload.single("file"), async (req, res) => {
 // Draws solid black filled rectangles over every matching text item using pdf-lib.
 // Returns the modified PDF binary. The original uploaded file is never mutated.
 router.post("/redact-pdf", upload.single("file"), async (req, res) => {
+  const { userId } = getAuth(req);
+  if (!userId) {
+    return res.status(401).json({ error: "unauthorized", message: "You must be signed in to redact a PDF." });
+  }
+
   try {
     const file = req.file;
     if (!file) return res.status(400).json({ message: "PDF file required." });
@@ -2624,7 +2630,7 @@ router.post("/redact-pdf", upload.single("file"), async (req, res) => {
 
     res.set("Content-Type", "application/pdf");
     res.set("Content-Disposition", `attachment; filename="${file.originalname.replace(/\.[^.]+$/, "")}_redacted.pdf"`);
-    res.send(Buffer.from(redactedBytes));
+    return res.send(Buffer.from(redactedBytes));
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error("[documents/redact-pdf]", msg);

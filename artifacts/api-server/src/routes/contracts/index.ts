@@ -1,5 +1,6 @@
 import { Router, type Request, type Response } from "express";
 import multer from "multer";
+import { getAuth } from "@clerk/express";
 import { openai } from "@workspace/integrations-openai-ai-server";
 import { logger } from "../../lib/logger";
 
@@ -346,6 +347,11 @@ Rules: clauses 5-20 items, negotiationLanguage must include actual replacement t
 // E-Signature — sends a contract for signature via Dropbox Sign.
 // Returns 503 if DROPBOX_SIGN_API_KEY is not set.
 router.post("/send-for-signature", async (req: Request, res: Response) => {
+  const { userId } = getAuth(req);
+  if (!userId) {
+    return res.status(401).json({ error: "unauthorized", message: "You must be signed in to send a contract for signature." });
+  }
+
   const apiKey = process.env.DROPBOX_SIGN_API_KEY;
   if (!apiKey) {
     return res.status(503).json({
