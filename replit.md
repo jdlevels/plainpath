@@ -42,12 +42,77 @@ PlainPath is a monorepo built with pnpm workspaces, separating frontend and back
 -   **Compare Versions**: PDF-first workspace for comparing original and revised documents. Slices 1–5 shipped. Engine: Stage A spatial/visual diff, Stage B Myers text diff, Stage C structural signals. Slice 4: union-rect group zones, hover/selection sync, severity override, notes CRUD. Slice 5 (AI enrichment): after deterministic scan completes, async OpenAI pass enriches text diff items with `ai_category` (9-value enum) + `ai_explanation` (one-sentence plain English). AI may upgrade severity but never downgrade below deterministic baseline. Manager override always wins. DB: `compare_versions_sessions.ai_status` (idle/running/complete/error) + `ai_enriched_at`. Auto-enrich fires after each fresh scan; manual retry via "AI Review" button in toolbar. Polling for `ai_status === 'running'` mirrors scan polling. Summary rows show AI category pill + explanation. Non-blocking: workspace fully usable if AI fails. Routes: `POST /sessions/:id/enrich`. Key files: `compareVersionsEnrichment.ts`, `compareVersionsGrouping.ts`, `compareVersionsTypes.ts`, `CompareVersionsSession.tsx`.
 
 ### Product Design Rules
+
+#### PlainPath Scan Workspace Standard (standing rule — applies to all scan/analysis tools)
+Every PlainPath tool that scans, reviews, analyzes, checks, extracts, compares, or explains an uploaded document must follow this standard:
+
+**1. Document-first layout**
+The document is always the source of truth. The user should always be able to see the uploaded document or document preview. AI/intelligence output explains the document — it never replaces it.
+
+**2. Desktop layout**
+Two-panel workspace:
+- Left panel: document viewer — 55–60% width
+- Right panel: intelligence/action panel — 40–45% width
+Both panels support independent scrolling.
+
+**3. Mobile layout**
+Tabbed layout with two tabs: Analysis (default) and Document. Analysis tab opens first. Document is one tap away.
+
+**4. Source-backed findings**
+Every major finding includes clickable source chips when source information is available (e.g. `p.2 §4.1`, `p.5 Termination`). Clicking a source chip scrolls the document viewer to the referenced page or section, highlights and pulses it, and keeps the related intelligence card active. If exact PDF coordinates are unavailable, scroll to the nearest page/section and highlight the nearest block.
+
+**5. Intelligence panel**
+Concise, structured, action-oriented. Do not expand everything by default. Hierarchy:
+- Plain-English summary
+- Confidence / risk status
+- Top findings
+- Required next steps
+- Deadlines / dates
+- Key parties / terms
+- Source traceability
+Long details are collapsible or secondary.
+
+**6. Visual style**
+Premium dark UI: calm dark background (`#0c0c0f`), strong controlled contrast, clean cards, clear spacing, readable text hierarchy, source chips as a consistent system.
+- purple = PlainPath intelligence / source traceability
+- green = verified / confidence / safe
+- amber = caution / needs review
+- red = critical risk only
+- blue = neutral action / help state
+
+Avoid: walls of text, dense report dumps, excessive warning cards, too many borders, tiny centered layouts on wide screens, generic AI chat/report styling.
+
+**7. Tool-specific right-panel content**
+Same scan-workspace layout, right panel adapts per tool:
+- **Analyze a Document**: summary, risks, missing items, next steps, deadlines, key parties, source traceability
+- **Document Trust Check**: trust score, authenticity concerns, metadata issues, visual/structure warnings, fraud indicators, confidence level, source-backed evidence
+- **Contract Review**: risky clauses, obligations, payment terms, termination/cancellation, missing protections, next steps, source-backed clause references
+- **Clause Extractor**: extracted clauses, clause category, obligation owner, deadline/date, risk level, source chip, compact table/card hybrid
+- **Compare Versions**: modified layout — original viewer + revised viewer + change/risk intelligence panel or drawer + source-backed change references
+- **Redact Sensitive Info**: modified layout — document viewer + detected sensitive items + redaction controls + preview before export + source/highlight for detected items
+- **Ask This Document**: document-first — document viewer + question/answer intelligence panel; every answer includes source chips when possible
+- **Build a Contract / Document Builder**: creation layout (not scan) — left: live document preview; right: builder controls/questions; same premium PlainPath design language
+
+**8. Product focus rule**
+PlainPath stays focused on: document scanning, document meaning, extraction, risk review, trust review, source-backed explanations, action steps. Do not add SOP/manual builder language. Do not add generic document-writing language. Do not add Document Classifier or Packet Splitter until current core tool redesigns are complete.
+
+**9. Implementation discipline**
+When implementing each redesigned tool:
+- Follow the approved canvas mockup closely
+- Do not reinterpret it into a long report page
+- Do not expand every section by default
+- Preserve compact cards and clear hierarchy
+- Keep the document visible and dominant
+- Keep source chips functional
+
+---
+
 -   **Split-Screen Creation Principle**: Tools involving document creation/editing must default to a split-screen layout for real-time visual feedback (Left pane: live document/reference, Right pane: controls).
 -   **Document Surface Proportions and Legibility**: Document-heavy tools must display document surfaces at realistic US Letter proportions on desktop for readability.
 -   **Tool Surface Parity (Standardization Pass applied)**: All 8 first-class tools must be consistently represented across: (a) authenticated dashboard tool grid, (b) marketing navbar Tools dropdown, (c) marketing ToolsShowcase feature cards. The 8 tools are: Analyze a Document (`FileScan`), Document Trust Check (`ShieldCheck`), Contract Review (`Scale`), Build a Contract (`PenLine`), Redact Sensitive Info (`EyeOff`), Digital Signature (`FileSignature`), Clause Extractor (`ListChecks`), Compare Versions (`GitCompare`). Document Builder (`LayoutTemplate`) is a separate utility tool — shown in dashboard but not in the marketing tools surfaces.
 -   **Standard Intake Rule**: All document-intake tools must show: (1) pre-run confirmation state on upload, (2) file card with filename + size, (3) explicit X/remove button, (4) no auto-processing, (5) tool-specific explicit CTA button.
 -   **Save Standard for Editing Tools**: Document Builder must have a visible Save button, autosave every 60s, amber highlight when unsaved changes are pending, saving state indicator, and retryable failure state. Document Builder has autosave indicator + explicit Save button (added in standardization pass).
--   **Analyze a Document (new layout — `/analyze-document`)**: Premium split-screen results page replacing the tab-based `/results` page for the analyze workflow. Desktop: document viewer (58% width, `w-[58%]`) on left showing extracted `analysis.sections` as scrollable section cards; intelligence panel (42%, `flex-1`) on right with strict hierarchy: Plain-English Summary → Risk & Confidence Status → Required Next Steps → Risks & Watchouts → Key Dates → Key Terms → Source Traceability → Follow-up Tools. Source chips are clickable — `findBestSection()` word-overlap algorithm matches `sourceEvidence` text to the best `DocumentSection`, scrolls it into view, applies violet highlight ring, shows a dismissable citation banner. Low-confidence state (when `overallConfidence === "low"`): full amber warning panel + 4 actions (upload clearer PDF, upload text-based version, continue partial, Ask This Document). Mobile: tab layout defaulting to Analysis tab; chip clicks switch to Document tab and show "Back to Analysis" banner. Save to cloud/local via existing `saveCloudAnalysis`/`saveAnalysis` utilities. Upload and processing states remain in `Import.tsx` (unchanged). Old `/results` route (Analyze.tsx with tab sidebar) is preserved for backward compat (demo documents still use it). Key files: `artifacts/plainpath/src/pages/AnalyzeDocument.tsx` (new), `App.tsx` (route added), `Import.tsx` (3 redirects updated), `MyAnalyses.tsx` (redirect updated), `Documents.tsx` (redirect updated), `Navbar.tsx` (active state updated).
+-   **Analyze a Document (new layout — `/analyze` + `/analyze-document`)**: `/analyze` → `AnalyzePage.tsx` handles the full upload + processing + error flow with dark canvas-matching UI (empty state: centered upload zone + Works Well With grid + recent analyses; processing state: split-screen muted doc viewer on left + animated 4-stage checklist + progress bar on right; error state: centered error card + retry/alternatives). On success, context is set and user is redirected to `/analyze-document` → `AnalyzeDocument.tsx` (results). `AnalyzeDocument.tsx` implements the premium split-screen results page: desktop — document viewer (58% width, `w-[58%]`) on left showing extracted `analysis.sections` as scrollable section cards; intelligence panel (42%, `flex-1`) on right with strict hierarchy: Plain-English Summary → Risk & Confidence Status → Required Next Steps → Risks & Watchouts → Key Dates → Key Terms → Source Traceability → Follow-up Tools. Source chips are clickable — `findBestSection()` word-overlap algorithm matches `sourceEvidence` text to the best `DocumentSection`, scrolls it into view, applies violet highlight ring, shows a dismissable citation banner. Low-confidence state (when `overallConfidence === "low"`): full amber warning panel + 4 actions (upload clearer PDF, upload text-based version, continue partial, Ask This Document). Mobile: tab layout defaulting to Analysis tab; chip clicks switch to Document tab and show "Back to Analysis" banner. Save to cloud/local via `saveCloudAnalysis`/`saveAnalysis` utilities. Old `/results` route (Analyze.tsx) preserved for backward compat (demo documents). Key files: `artifacts/plainpath/src/pages/AnalyzePage.tsx`, `artifacts/plainpath/src/pages/AnalyzeDocument.tsx`, `App.tsx`.
 
 ### Payment and Billing
 -   Full billing architecture implemented with Stripe for Starter and Pro tiers.
