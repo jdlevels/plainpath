@@ -248,7 +248,7 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
   const [session, setSession]             = useState<CVSessionDetail | null>(null)
   const [loadError, setLoadError]         = useState<string | null>(null)
   const [activeChange, setActiveChange]   = useState<ActiveChange | null>(null)
-  const [mobileTab, setMobileTab]         = useState<MobileTab>("original")
+  const [mobileTab, setMobileTab]         = useState<MobileTab>("analysis")
   const [traceOpen, setTraceOpen]         = useState(false)
   const [rescanning, setRescanning]       = useState(false)
 
@@ -736,8 +736,8 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
 
         {/* Mobile tab bar */}
         <div className="h-14 border-t border-white/[0.06] flex shrink-0 bg-[#0c0c0f]">
-          {(["original", "revised", "analysis"] as MobileTab[]).map((tab) => {
-            const labels: Record<MobileTab, string> = { original: "Original", revised: "Revised", analysis: "Analysis" }
+          {(["analysis", "original", "revised"] as MobileTab[]).map((tab) => {
+            const labels: Record<MobileTab, string> = { analysis: "Summary", original: "Original", revised: "Revised" }
             const icons: Record<MobileTab, React.ReactNode> = {
               original: <FileText className="w-4 h-4" />,
               revised:  <FileText className="w-4 h-4 text-violet-400" />,
