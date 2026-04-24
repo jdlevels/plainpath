@@ -1,0 +1,235 @@
+The Compare Versions canvas direction is approved structurally, but please do one refinement pass before implementation.
+
+Do not implement yet.
+Do not move to Redact Sensitive Info yet.
+Stay in canvas/design mode for Compare Versions only.
+
+The layout direction is correct:
+- original document panel
+- revised document panel
+- change intelligence panel/drawer
+- source-backed change findings
+- clickable change/source chips
+- mobile Summary / Original / Revised tabs
+- premium dark UI
+- compact cards, not report dumps
+
+Please refine the canvas with the following requirements:
+
+1. Make Compare Versions feel like a comparison workspace, not a risk-review dashboard.
+
+Primary purpose:
+- compare two document versions
+- identify added language
+- identify removed language
+- identify modified terms
+- identify unclear or moved language
+- show before/after evidence
+- help the user decide what needs review
+
+Risk should be secondary and only appear where a change may materially affect obligations, protections, payment, deadlines, or rights.
+
+2. Refine the Completed Compare Overview panel order.
+
+Right panel order should be:
+
+A. Change Summary
+B. Change / Confidence Strip
+C. Key Changes
+D. Added Language
+E. Removed Language
+F. Modified Terms
+G. Possible Risk Changes
+H. Source / Change Traceability
+
+Do not make possible risk changes the dominant section.
+
+3. Tighten the Change Summary.
+
+Keep it to 4–6 lines maximum.
+
+It should answer:
+- What documents were compared?
+- How many changes were found?
+- What changed most meaningfully?
+- What should the user inspect first?
+
+Avoid legal conclusions.
+
+Use cautious wording:
+- change comparison support
+- changed language
+- term to verify
+- possible risk change
+- not legal advice
+- review with a qualified professional if high-risk
+
+4. Refine the Change / Confidence Strip.
+
+Use compact chips:
+- 14 changes found
+- 3 additions
+- 2 removals
+- 6 modified terms
+- 3 terms to verify
+- high comparison confidence
+
+5. Refine Key Changes.
+
+Show top 5–8 changes by default.
+
+Each change card should include:
+- change title
+- change type: Added / Removed / Modified / Moved / Unclear
+- one-line plain-English meaning
+- importance chip
+- source/change chip
+- action only if needed
+
+6. Clarify color semantics.
+
+Use:
+- green = added language
+- red = removed language
+- amber = modified / unclear / needs review
+- purple = active source/change traceability
+- blue = neutral action/help
+- gray = unchanged context
+
+Important:
+Red should not automatically mean “bad.” In Compare Versions, red can simply mean removed language. Only use critical red language when a removed/changed term creates a high-priority issue.
+
+7. Improve the three-zone desktop layout.
+
+The Original and Revised document panels must remain readable.
+
+Preferred layout:
+- Original document: 35–40%
+- Revised document: 35–40%
+- Change Intelligence: 25–30%
+
+If the right panel feels too narrow, use a collapsible or slide-out Change Intelligence drawer.
+
+Do not shrink the documents so much that the comparison becomes hard to read.
+
+8. Strengthen Change Chip Active behavior.
+
+When a change chip is clicked:
+- active chip becomes visually selected
+- original document scrolls to the old/removed/modified section
+- revised document scrolls to the new/added/modified section
+- both matching sections highlight when both exist
+- evidence banner shows Before and After text
+- related change card remains active
+
+If only one side has text:
+- added language highlights only in Revised
+- removed language highlights only in Original
+
+9. Refine Added Language section.
+
+Each item should show:
+- added term or clause
+- where it appears
+- plain-English meaning
+- source chip
+- action only if needed
+
+10. Refine Removed Language section.
+
+Each item should show:
+- removed term or clause
+- where it used to appear
+- plain-English meaning
+- source chip
+- why the user may want to verify it
+
+Avoid saying the removal is automatically bad.
+
+11. Refine Modified Terms section.
+
+Each item should show:
+- before language
+- after language
+- what changed
+- source chip
+- term to verify, if needed
+
+This section should make before/after meaning clear.
+
+12. Refine Possible Risk Changes.
+
+Use cautious language:
+- may increase obligation
+- may reduce protection
+- may change payment responsibility
+- may affect deadline or notice rights
+- verify before signing or acting
+- review with a qualified professional if high-risk
+
+Avoid:
+- legally invalid
+- you should sign
+- you should not sign
+- guaranteed protection
+- replaces an attorney
+
+13. Low Confidence State refinement.
+
+Use this exact message:
+“PlainPath could compare part of these documents, but scan quality limits comparison confidence.”
+
+Show:
+- what was readable
+- what could not be aligned
+- which document caused the issue
+- recommended next action
+
+14. Error State refinement.
+
+Keep the error state clean.
+
+Message:
+“Version comparison could not be completed.”
+
+Actions:
+- Try again
+- Upload different files
+- Ask This Document
+- Analyze a Document
+
+15. Mobile refinement.
+
+Mobile Summary tab should show:
+- change summary
+- change/confidence strip
+- key changes
+- added/removed/modified sections
+- source/change chips
+
+Mobile Original tab should show:
+- active old-language highlight
+- evidence banner
+- source chip jump behavior
+- easy return to Summary tab
+
+Mobile Revised tab should show:
+- active new-language highlight
+- evidence banner
+- source chip jump behavior
+- easy return to Summary tab
+
+16. Keep fictional demo data only.
+
+Do not use real company names, real people, real account numbers, or real contract examples.
+
+After this refinement, show the updated canvas states again:
+- Empty State
+- Processing State
+- Completed Compare Overview
+- Change chip active / before-after highlighted state
+- Low Confidence State
+- Error State
+- Mobile Summary View
+- Mobile Original View
+- Mobile Revised View

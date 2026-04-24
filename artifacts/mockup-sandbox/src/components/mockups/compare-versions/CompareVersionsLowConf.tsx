@@ -1,4 +1,4 @@
-import { FileText, ArrowLeftRight, AlertTriangle, Upload, MessageSquare, ArrowRight, Info } from "lucide-react";
+import { FileText, ArrowLeftRight, AlertTriangle, RefreshCcw, MessageSquare, BookOpen, Info, ChevronRight } from "lucide-react";
 
 export function CompareVersionsLowConf() {
   return (
@@ -12,152 +12,182 @@ export function CompareVersionsLowConf() {
         <span className="text-white/85 text-sm font-semibold">PlainPath</span>
         <span className="text-white/15 text-xs mx-0.5">›</span>
         <span className="text-white/40 text-xs">Compare Versions</span>
+        <span className="text-white/15 text-xs mx-0.5">›</span>
+        <span className="text-white/45 text-xs truncate">Service_v1 vs Service_v2</span>
         <div className="ml-auto">
-          <div className="h-6 px-2.5 rounded-full bg-amber-500/15 border border-amber-500/25 flex items-center gap-1.5">
-            <AlertTriangle className="w-2.5 h-2.5 text-amber-400" />
-            <span className="text-[11px] text-amber-300/75 font-medium">28% compare confidence — partial review</span>
+          <div className="h-6 px-2.5 rounded-full bg-amber-500/15 border border-amber-500/28 flex items-center gap-1.5">
+            <AlertTriangle className="w-3 h-3 text-amber-300/80" />
+            <span className="text-[11px] text-amber-200/75 font-medium">Partial comparison — low scan quality</span>
           </div>
+        </div>
+      </div>
+
+      {/* Confidence warning banner */}
+      <div className="border-b border-amber-500/20 bg-amber-500/[0.06] px-5 py-3 flex items-start gap-3 shrink-0">
+        <AlertTriangle className="w-4 h-4 text-amber-400/75 shrink-0 mt-0.5" />
+        <div className="flex-1">
+          <p className="text-[12px] font-semibold text-amber-200/85">PlainPath could compare part of these documents, but scan quality limits comparison confidence.</p>
+          <p className="text-[11px] text-white/38 mt-1 leading-snug">The original document (v1) contains low-resolution scanned pages. Sections 3–5 could not be reliably aligned with the revised version.</p>
         </div>
       </div>
 
       {/* Three-zone body */}
       <div className="flex-1 flex min-h-0">
 
-        {/* Left — Original (low quality) */}
-        <div className="w-[30%] border-r border-white/[0.05] flex flex-col overflow-hidden">
+        {/* Left — Original (partially readable) */}
+        <div className="w-[33%] border-r border-white/[0.05] flex flex-col overflow-hidden">
           <div className="h-9 border-b border-white/[0.05] flex items-center px-4 gap-2 shrink-0">
             <FileText className="w-3 h-3 text-white/25" />
-            <span className="text-[11px] text-white/45 font-medium">Original</span>
-            <span className="ml-auto text-[9px] text-white/20">readable</span>
+            <span className="text-[11px] text-white/50 font-semibold">Original</span>
+            <span className="ml-auto text-[9px] text-amber-300/55 font-medium">low scan quality</span>
           </div>
           <div className="flex-1 overflow-y-auto p-3 space-y-2">
-            <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-3">
-              <p className="text-[9px] text-white/35 font-medium mb-2">Page 1 — §1–2 · Parties & Scope</p>
-              <p className="text-[10px] text-white/42 leading-relaxed">Service agreement between Meridian Solutions Inc. ("Client") and Apex Consulting Group LLC ("Provider") for professional consulting services.</p>
-              <span className="mt-1.5 text-[9px] text-emerald-300/45 font-medium">extracted</span>
-            </div>
-            <div className="rounded-xl border border-amber-500/15 bg-amber-500/[0.03] p-3">
-              <p className="text-[9px] text-white/30 font-medium mb-2">Page 2 — §4 · Fees (partial)</p>
-              <p className="text-[10px] text-amber-300/40 leading-relaxed">…monthly fee of $[illegible]…payment due net [illegible] days…late fee of [illegible]%…</p>
-              <div className="mt-2 space-y-1">
-                {[...Array(3)].map((_,i) => <div key={i} className="h-1.5 bg-amber-500/10 rounded" style={{width:`${50+(i*17)%30}%`}} />)}
+            {/* Readable sections */}
+            <div className="rounded-xl border border-emerald-500/18 bg-emerald-500/[0.03] p-3">
+              <div className="flex items-center gap-2 mb-1.5">
+                <p className="text-[10px] text-white/28 font-medium">§1 · Parties & Services</p>
+                <span className="ml-auto text-[9px] text-emerald-300/55">readable</span>
               </div>
-              <span className="mt-1.5 text-[9px] text-amber-300/45 font-medium">partial</span>
+              <p className="text-[10px] text-white/42 leading-relaxed">Service agreement between Linmore Group LLC ("Client") and Brightfield Creative ("Provider") for design services, commencing June 2025.</p>
             </div>
-            <div className="rounded-xl border border-amber-500/15 bg-amber-500/[0.03] p-3">
-              <p className="text-[9px] text-white/30 font-medium mb-2">Page 3 — §7 · Termination (partial)</p>
-              <p className="text-[10px] text-amber-300/40 leading-relaxed">…shall provide [illegible] days written notice…either party may terminate…</p>
-              <div className="mt-2 space-y-1">
-                {[...Array(3)].map((_,i) => <div key={i} className="h-1.5 bg-amber-500/10 rounded" style={{width:`${45+(i*19)%35}%`}} />)}
+            <div className="rounded-xl border border-emerald-500/18 bg-emerald-500/[0.03] p-3">
+              <div className="flex items-center gap-2 mb-1.5">
+                <p className="text-[10px] text-white/28 font-medium">§2 · Fees & Schedule</p>
+                <span className="ml-auto text-[9px] text-emerald-300/55">readable</span>
               </div>
-              <span className="mt-1.5 text-[9px] text-amber-300/45 font-medium">partial</span>
+              <p className="text-[10px] text-white/42 leading-relaxed">Project fee: $12,000, due in three equal installments. Kickoff, mid-project, and delivery. Schedule per Exhibit A.</p>
             </div>
-          </div>
-          <div className="h-8 border-t border-white/[0.04] px-4 flex items-center">
-            <span className="text-[10px] text-amber-300/40">1 of 3 pages fully readable</span>
-          </div>
-        </div>
-
-        {/* Middle — Revised (readable) */}
-        <div className="w-[30%] border-r border-white/[0.05] flex flex-col overflow-hidden">
-          <div className="h-9 border-b border-white/[0.05] flex items-center px-4 gap-2 shrink-0">
-            <FileText className="w-3 h-3 text-violet-400/50" />
-            <span className="text-[11px] text-violet-300/60 font-medium">Revised</span>
-            <span className="ml-auto text-[9px] text-white/20">readable</span>
-          </div>
-          <div className="flex-1 overflow-y-auto p-3 space-y-2">
-            {[
-              { title:"Page 1 — §1–2 · Parties & Scope",  body:"Service agreement between Meridian Solutions Inc. and Apex Consulting Group LLC for professional consulting services." },
-              { title:"Page 2 — §4 · Fees & Payment",     body:"Monthly fee of $18,500. Payment due net-30. Late fee of 2% per month after 10-day grace period." },
-              { title:"Page 3 — §7 · Termination",        body:"Either party may terminate with 60 days written notice. Immediate termination for material breach with 10-day cure period." },
-              { title:"Page 4 — §10 · Dispute Resolution", body:"Disputes resolved by mediation then binding arbitration. Arbitration per AAA rules. Costs split equally." },
-            ].map((sec, i) => (
-              <div key={i} className="rounded-xl border border-violet-500/12 bg-violet-500/[0.02] p-3">
-                <p className="text-[9px] text-white/28 font-medium mb-1.5">{sec.title}</p>
-                <p className="text-[10px] text-white/40 leading-relaxed">{sec.body}</p>
-                <span className="mt-1.5 text-[9px] text-violet-300/40 font-medium">readable</span>
+            {/* Unreadable sections */}
+            {[3,4,5].map(n => (
+              <div key={n} className="rounded-xl border border-amber-500/18 bg-amber-500/[0.03] p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <p className="text-[10px] text-white/28 font-medium">§{n} · {["Intellectual Property","Confidentiality","Termination"][n-3]}</p>
+                  <AlertTriangle className="w-2.5 h-2.5 text-amber-400/50 ml-auto" />
+                </div>
+                <div className="space-y-1">
+                  {[...Array(3)].map((_,i) => (
+                    <div key={i} className="h-2.5 rounded-full bg-white/[0.06]" style={{ width:`${65+Math.sin(n*i)*25}%`, opacity:0.4+i*0.1 }} />
+                  ))}
+                </div>
+                <p className="text-[9px] text-amber-300/45 mt-2">Low scan quality — could not align for comparison</p>
               </div>
             ))}
           </div>
           <div className="h-8 border-t border-white/[0.04] px-4 flex items-center">
-            <span className="text-[10px] text-white/18">4 of 4 pages fully readable</span>
+            <span className="text-[10px] text-white/18">5 sections · 2 readable</span>
           </div>
         </div>
 
-        {/* Right — Low confidence panel */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {/* Middle — Revised (fully readable) */}
+        <div className="w-[33%] border-r border-white/[0.05] flex flex-col overflow-hidden">
+          <div className="h-9 border-b border-white/[0.05] flex items-center px-4 gap-2 shrink-0">
+            <FileText className="w-3 h-3 text-violet-400/55" />
+            <span className="text-[11px] text-violet-300/65 font-semibold">Revised</span>
+            <span className="ml-auto text-[9px] text-emerald-300/55">fully readable</span>
+          </div>
+          <div className="flex-1 overflow-y-auto p-3 space-y-2">
+            {[
+              { s:"§1 · Parties & Services",     t:"Service agreement between Linmore Group LLC (\"Client\") and Brightfield Creative (\"Provider\") for design and development services, commencing June 2025.", diff:null },
+              { s:"§2 · Fees & Schedule",        t:"Project fee: $15,000, due in three equal installments. Kickoff, mid-project, and delivery. Schedule per Exhibit A.", diff:"modified" },
+              { s:"§3 · Intellectual Property",  t:"All work product created under this agreement is owned by Client upon full payment. Provider retains rights to portfolio display.", diff:null },
+              { s:"§4 · Confidentiality",        t:"Provider agrees not to disclose Client's proprietary information. Obligations survive agreement for two years.", diff:null },
+              { s:"§5 · Termination",            t:"Either party may terminate with 30 days written notice. Client owes fees for work completed through termination date.", diff:null },
+            ].map((sec, i) => (
+              <div key={i} className={`rounded-xl border p-3 ${sec.diff ? "border-amber-500/22 bg-amber-500/[0.04]" : "border-white/[0.06] bg-white/[0.015]"}`}>
+                <p className="text-[10px] text-white/28 font-medium mb-1.5">{sec.s}</p>
+                <p className="text-[10px] text-white/42 leading-relaxed">{sec.t}</p>
+              </div>
+            ))}
+          </div>
+          <div className="h-8 border-t border-white/[0.04] px-4 flex items-center">
+            <span className="text-[10px] text-white/18">5 sections · all readable</span>
+          </div>
+        </div>
 
-          {/* Main warning */}
-          <div className="rounded-xl border border-amber-500/25 bg-amber-500/[0.06] p-4">
-            <div className="flex items-start gap-2.5 mb-3">
-              <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-bold text-amber-300/90">Partial comparison — low scan quality</p>
-                <p className="text-[11px] text-white/50 mt-1 leading-relaxed">PlainPath could compare part of these documents, but scan quality limits comparison confidence. Key sections in the original could not be aligned.</p>
+        {/* Right — Partial results + guidance */}
+        <div className="flex-1 flex flex-col overflow-y-auto px-4 py-4 space-y-4">
+
+          <div>
+            <div className="flex items-center gap-1.5 mb-2.5">
+              <ArrowLeftRight className="w-3.5 h-3.5 text-violet-400/45" />
+              <p className="text-[13px] font-bold text-white/80">Partial Comparison Results</p>
+            </div>
+            <div className="flex gap-2 flex-wrap mb-1">
+              <span className="h-6 px-2.5 rounded-full border bg-emerald-500/12 border-emerald-500/18 text-[10px] text-emerald-300/70">2 sections compared</span>
+              <span className="h-6 px-2.5 rounded-full border bg-amber-500/12 border-amber-500/18 text-[10px] text-amber-300/65">3 sections unaligned</span>
+              <span className="h-6 px-2.5 rounded-full border bg-violet-500/12 border-violet-500/18 text-[10px] text-violet-300/65">1 change confirmed</span>
+            </div>
+          </div>
+
+          {/* What was comparable */}
+          <div className="rounded-xl border border-emerald-500/18 bg-emerald-500/[0.03] p-3.5">
+            <div className="flex items-center gap-2 mb-2.5">
+              <BookOpen className="w-3 h-3 text-emerald-400/55" />
+              <p className="text-[10px] uppercase tracking-[0.12em] font-semibold text-white/30">WHAT WAS COMPARABLE</p>
+            </div>
+            <div className="space-y-2">
+              <div className="rounded-lg border border-white/[0.05] bg-white/[0.02] p-2.5">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+                  <p className="text-[10px] font-semibold text-white/65">Project fee increased</p>
+                  <span className="ml-auto text-[9px] text-violet-300/55 font-mono">§2·p.1</span>
+                </div>
+                <p className="text-[10px] text-white/40 pl-3.5 leading-snug">$12,000 → $15,000. Before/after readable in both versions.</p>
+              </div>
+              <div className="rounded-lg border border-white/[0.05] bg-white/[0.02] p-2.5">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />
+                  <p className="text-[10px] font-semibold text-white/55">Service scope note added</p>
+                  <span className="ml-auto text-[9px] text-violet-300/55 font-mono">§1·p.1</span>
+                </div>
+                <p className="text-[10px] text-white/40 pl-3.5 leading-snug">"and development services" added to scope in §1.</p>
               </div>
             </div>
+          </div>
 
-            <div className="space-y-3">
-              <div>
-                <p className="text-[9px] uppercase tracking-[0.1em] font-semibold text-white/30 mb-2">WHAT WAS COMPARABLE</p>
-                <div className="space-y-1.5">
-                  {[
-                    { label:"§1–2 Parties & Scope", chip:"§1·p.1", ok:true },
-                    { label:"§7 Termination — partial alignment", chip:"§7·p.3", ok:false },
-                  ].map((r,i) => (
-                    <div key={i} className="flex items-center gap-2">
-                      <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${r.ok?"bg-emerald-400/60":"bg-amber-400/50"}`} />
-                      <span className="text-[10px] text-white/45">{r.label}</span>
-                      <span className="h-[16px] px-1.5 rounded text-[9px] font-mono font-medium bg-violet-600/10 border border-violet-500/18 text-violet-300/60">{r.chip}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <p className="text-[9px] uppercase tracking-[0.1em] font-semibold text-white/30 mb-2">WHAT COULD NOT BE ALIGNED</p>
-                <div className="space-y-1.5">
-                  {[
-                    "§4 Fees & Payment — original text illegible (pages 2–3)",
-                    "Notice period comparison — original §7 partially unreadable",
-                    "Liability cap language — could not extract from original",
-                  ].map((r,i) => (
-                    <div key={i} className="flex items-start gap-2">
-                      <span className="text-white/20 shrink-0 mt-0.5">×</span>
-                      <span className="text-[10px] text-white/38 leading-snug">{r}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex items-start gap-1.5">
-                <Info className="w-3 h-3 text-amber-400/50 shrink-0 mt-0.5" />
-                <p className="text-[10px] text-amber-300/55 leading-relaxed">The revised document is fully readable. The issue is with the original document's scan quality.</p>
-              </div>
+          {/* What could not be aligned */}
+          <div className="rounded-xl border border-amber-500/18 bg-amber-500/[0.03] p-3.5">
+            <div className="flex items-center gap-2 mb-2.5">
+              <AlertTriangle className="w-3 h-3 text-amber-400/55" />
+              <p className="text-[10px] uppercase tracking-[0.12em] font-semibold text-white/30">WHAT COULD NOT BE ALIGNED</p>
             </div>
+            <div className="space-y-1.5">
+              {["§3 · Intellectual Property","§4 · Confidentiality","§5 · Termination"].map((s,i) => (
+                <div key={i} className="flex items-center gap-2.5 px-2 py-1.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-amber-400/35 shrink-0" />
+                  <p className="text-[10px] text-white/40 flex-1">{s}</p>
+                  <span className="text-[9px] text-amber-300/38">low scan quality in original</span>
+                </div>
+              ))}
+            </div>
+            <p className="text-[10px] text-white/25 mt-2 italic">Document causing the issue: original (v1) · Revised is fully readable.</p>
           </div>
 
           {/* Recommended next steps */}
-          <div>
-            <p className="text-[9px] uppercase tracking-[0.12em] font-semibold text-white/20 mb-2.5">RECOMMENDED NEXT STEPS</p>
-            <div className="space-y-2">
+          <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3.5">
+            <div className="flex items-center gap-2 mb-2.5">
+              <Info className="w-3 h-3 text-white/30" />
+              <p className="text-[10px] uppercase tracking-[0.12em] font-semibold text-white/30">RECOMMENDED NEXT STEPS</p>
+            </div>
+            <div className="space-y-1">
               {[
-                { icon: <Upload className="w-3.5 h-3.5 text-white/35" />,          label: "Upload a clearer original",     desc: "Higher resolution scan enables better alignment and comparison." },
-                { icon: <ArrowLeftRight className="w-3.5 h-3.5 text-white/35" />,  label: "Upload a text-based original",  desc: "Export from Word or the source application for best results." },
-                { icon: <ArrowRight className="w-3.5 h-3.5 text-white/35" />,      label: "Continue with partial comparison", desc: "See what PlainPath was able to compare — findings are partial only." },
-                { icon: <MessageSquare className="w-3.5 h-3.5 text-white/35" />,   label: "Ask This Document",              desc: "Ask targeted questions — sometimes works on poor-quality scans." },
-              ].map((step, i) => (
-                <button key={i} className="w-full rounded-xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition-colors p-3 flex items-center gap-3 text-left">
-                  {step.icon}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[11px] font-semibold text-white/55">{step.label}</p>
-                    <p className="text-[10px] text-white/28 leading-snug mt-0.5">{step.desc}</p>
+                { icon:<RefreshCcw className="w-3 h-3" />,      t:"Upload a clearer version of the original",     d:"A text-based or higher-resolution scan will improve alignment." },
+                { icon:<FileText className="w-3 h-3" />,         t:"Try a text-based version of the original",     d:"A digital original produces full comparison confidence." },
+                { icon:<ArrowLeftRight className="w-3 h-3" />,   t:"Continue with partial results",                d:"Confirmed changes shown above. Unaligned sections remain unreviewed." },
+                { icon:<MessageSquare className="w-3 h-3" />,    t:"Ask about unreviewed sections",                d:"Ask specific questions about §3, §4, §5 of the revised version." },
+              ].map((a, i) => (
+                <div key={i} className="flex items-start gap-2.5 px-2 py-2 rounded-lg hover:bg-white/[0.025] cursor-pointer group">
+                  <div className="text-white/25 group-hover:text-white/45 mt-0.5 shrink-0">{a.icon}</div>
+                  <div className="flex-1">
+                    <p className="text-[10px] text-white/55 font-medium group-hover:text-white/70">{a.t}</p>
+                    <p className="text-[10px] text-white/28 mt-0.5 leading-snug">{a.d}</p>
                   </div>
-                  <ArrowRight className="w-3.5 h-3.5 text-white/20 shrink-0" />
-                </button>
+                  <ChevronRight className="w-3 h-3 text-white/15 ml-auto mt-0.5 shrink-0 group-hover:text-white/30" />
+                </div>
               ))}
             </div>
           </div>
+
         </div>
       </div>
     </div>
