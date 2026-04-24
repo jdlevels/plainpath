@@ -376,8 +376,11 @@ function PlanGate({ children }: { children: React.ReactNode }) {
     return <>{children}</>;
   }
 
-  // Signed in but entitlements still loading
-  if (entLoading) {
+  // Signed in but entitlements still loading on the INITIAL fetch (no cached data yet).
+  // On subsequent reloads (e.g. session-token refresh mid-analysis) we keep the Router
+  // mounted using the previous entitlements value — unmounting here caused every
+  // in-progress analysis to reset when Clerk refreshed its session token (~60s).
+  if (entLoading && !entitlements) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="w-7 h-7 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
