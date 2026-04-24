@@ -1,0 +1,240 @@
+Document Trust Check is approved and locked.
+
+Do not make more changes to Document Trust Check unless a bug appears later.
+
+Now begin the Contract Review redesign in canvas/design mode only.
+
+Do not implement yet.
+Do not start Clause Extractor yet.
+Do not add new tools.
+Do not add SOP/manual builder language.
+Do not add Document Classifier or Packet Splitter.
+
+Use the approved PlainPath Scan Workspace Standard and the locked Analyze a Document / Document Trust Check designs as the visual baseline.
+
+Goal:
+Redesign Contract Review so it feels like the same premium PlainPath system, but focused specifically on contract obligations, risk, missing protections, deadlines, payment terms, termination language, and recommended next actions.
+
+Core layout:
+- Premium dark UI
+- Document-first layout
+- Left document viewer
+- Right Contract Intelligence panel
+- Source-backed clause findings
+- Clickable source chips
+- Compact cards, not report dumps
+- Overview-first flow before deeper details
+
+Desktop layout:
+- Left panel: contract document viewer, about 55–60% width
+- Right panel: contract intelligence/action panel, about 40–45% width
+- Both panels should scroll independently
+- Use most of the visible screen height
+
+Mobile layout:
+- Tabs: Review first, Document second
+- Default mobile view should show contract findings first
+- Document tab should remain one tap away
+
+Design the following canvas states:
+
+1. Empty State — before upload
+Purpose:
+The user uploads a contract or agreement to understand obligations, risks, deadlines, and key terms.
+
+Suggested headline:
+“Review a contract before you sign or act.”
+
+Suggested subtext:
+“Upload, paste, or scan a contract. PlainPath identifies key obligations, risky clauses, deadlines, payment terms, termination language, missing protections, and source-backed next steps.”
+
+Input options:
+- Upload PDF / DOCX
+- Paste Text
+- Scan Photo
+- Import Link, if currently supported
+
+Works well with:
+- service agreements
+- leases
+- employment agreements
+- vendor contracts
+- independent contractor agreements
+- settlement agreements
+- purchase agreements
+- business contracts
+
+Avoid claiming this replaces an attorney. Use careful language:
+- “contract review support”
+- “risk indicators”
+- “terms to verify”
+- “source-backed findings”
+- “not legal advice”
+
+2. Processing State — contract review in progress
+Use left document preview and right progress panel.
+
+Progress checklist:
+- Reading contract structure
+- Identifying parties and contract type
+- Extracting obligations and deadlines
+- Reviewing payment and termination terms
+- Checking risks and missing protections
+- Generating contract review summary
+
+Keep it compact and premium.
+
+3. Completed State — Contract Review Overview
+This is the main screen.
+
+Right panel order:
+A. Plain-English Contract Summary
+- 4–6 lines maximum
+- explain what the contract is, who it involves, and what the user should pay attention to
+
+B. Risk / Confidence Strip
+Use compact chips:
+- Review confidence
+- Risk level
+- Critical clauses count
+- Deadlines found
+- Missing protections
+
+C. Key Contract Risks
+Top 3–5 findings only by default.
+Each card should include:
+- short risk title
+- one-line explanation
+- severity chip
+- source chip
+- recommended action
+
+D. Required Next Steps
+Action-oriented checklist:
+- verify parties and dates
+- confirm payment terms
+- review termination clause
+- confirm renewal/auto-renewal language
+- check dispute resolution terms
+- confirm missing attachments/exhibits
+- ask attorney or qualified professional if high-risk
+
+E. Obligations & Responsibilities
+Compact section showing:
+- who must do what
+- deadline/date if applicable
+- owner/party responsible
+- source chip
+
+F. Payment / Fees / Penalties
+Compact section showing:
+- payment amount
+- due date
+- late fees
+- penalties
+- refund/cancellation terms
+- source chip
+
+G. Termination / Renewal
+Compact section showing:
+- cancellation rights
+- notice periods
+- auto-renewal
+- early termination penalties
+- source chip
+
+H. Missing or Weak Protections
+Show possible missing protections:
+- no clear termination right
+- no dispute resolution clarity
+- unclear payment timeline
+- missing signatures
+- missing exhibits/attachments
+- vague performance standard
+- no liability cap
+- no confidentiality clause, if relevant
+
+I. Source Traceability
+Every major contract finding should have source chips.
+Source chips should scroll/highlight the contract section.
+
+4. Source Chip Active State
+Show what happens when a user clicks a source chip.
+
+Behavior:
+- source chip becomes active
+- matching clause in left document viewer highlights
+- document scrolls to matching section/page
+- evidence banner shows the matched text
+- related contract finding remains active in the right panel
+
+5. Low Confidence / Partial Review State
+Use when the contract scan quality is weak.
+
+Suggested message:
+“PlainPath could review part of this contract, but the scan quality limits review confidence.”
+
+Show:
+- confidence badge
+- what was readable
+- what could not be verified
+- recommended next steps
+
+Actions:
+- Upload clearer PDF
+- Upload original file
+- Upload text-based version
+- Continue with partial contract review
+- Ask This Document
+
+6. Error State
+Clean retry state.
+
+Message:
+“Contract review could not be completed.”
+
+Actions:
+- Try again
+- Upload different file
+- Ask This Document
+- Analyze a Document
+
+7. Mobile Review View
+Mobile should show:
+- plain-English contract summary
+- risk/confidence chips
+- key contract risks
+- required next steps
+- source chips
+- compact cards
+
+8. Mobile Document View
+Show document viewer with:
+- active source highlight
+- evidence banner
+- source chip jump behavior
+- easy return to Review tab
+
+Design rules:
+- Do not make this a long report page.
+- Do not show every extracted clause expanded by default.
+- Do not claim to provide legal advice.
+- Use “risk indicators,” “terms to verify,” “possible missing protection,” and “review with a qualified professional” where appropriate.
+- Keep the interface calm, credible, and professional.
+
+Color usage:
+- green = acceptable/clear term
+- amber = needs review/caution
+- red = critical or high-risk clause only
+- purple = PlainPath source traceability
+- blue = neutral action/help
+
+After creating the canvas, show these states for review before implementation:
+- Empty State
+- Processing State
+- Completed Contract Review Overview
+- Source chip active/highlighted state
+- Low Confidence State
+- Error State
+- Mobile Review View
+- Mobile Document View
