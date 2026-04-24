@@ -16,7 +16,8 @@ import {
   HelpCircle, ChevronDown, ChevronLeft, ChevronRight, Lightbulb, Eye, Shield, Zap,
   AlignLeft, MessageSquare, X, Flag, Package, Lock, EyeOff,
   FolderOpen, Mail, CheckSquare, Copy, Check,
-  Bookmark, BookmarkCheck, Share2, Download, Upload, Bell, BellDot, Link2
+  Bookmark, BookmarkCheck, Share2, Download, Upload, Bell, BellDot, Link2,
+  Pencil, OctagonAlert
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -304,7 +305,9 @@ export default function Analyze() {
             <StatPill label="Deadlines" value={hardDeadlines.length} warn={hardDeadlines.length > 0} onClick={() => setActiveTab("deadlines")} />
             <StatPill label="Risks" value={highRisks.length} warn={highRisks.length > 0} onClick={() => setActiveTab("risks")} />
             {(() => {
-              const score = computeRiskScore({ risks, deadlines, overallConfidence: analysis.overallConfidence })
+              // Prefer the AI-provided risk score; fall back to the computed score
+              const aiScore = typeof analysis.overallRisk === "number" ? analysis.overallRisk : null
+              const score = aiScore ?? computeRiskScore({ risks, deadlines, overallConfidence: analysis.overallConfidence })
               const sr = getRiskScoreResult(score)
               return (
                 <button
@@ -323,6 +326,24 @@ export default function Analyze() {
             </div>
           </div>
         </div>
+
+        {/* ── Red Flags banner ─────────────────────────── */}
+        {analysis.redFlags && analysis.redFlags.length > 0 && (
+          <div className="no-print mb-5 rounded-xl border border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-950/30 px-4 py-3 flex items-start gap-3">
+            <OctagonAlert className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-bold uppercase tracking-wide text-red-700 dark:text-red-400 mb-1.5">Critical issues to review</p>
+              <ul className="space-y-1">
+                {analysis.redFlags.map((flag, i) => (
+                  <li key={i} className="flex items-start gap-1.5 text-sm text-red-800 dark:text-red-300">
+                    <span className="shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full bg-red-500 dark:bg-red-400" />
+                    {flag}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
 
         {/* ── Attorney badge ──────────────────────────── */}
         <div className="no-print flex items-center justify-end mb-3">
@@ -2185,9 +2206,20 @@ function KeyTermCard({ term }: { term: KeyTerm }) {
               <span className="text-[11px] text-muted-foreground">{term.category}</span>
             </div>
           </div>
-          <span className={`shrink-0 text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${cfg.badge}`}>
-            {cfg.label}
-          </span>
+          <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
+            {typeof term.isNegotiable === "boolean" && (
+              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+                term.isNegotiable
+                  ? "bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800"
+                  : "bg-muted/60 text-muted-foreground border-border/40"
+              }`}>
+                {term.isNegotiable ? "Negotiable" : "Standard"}
+              </span>
+            )}
+            <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${cfg.badge}`}>
+              {cfg.label}
+            </span>
+          </div>
         </div>
         <div className="px-4 py-3 space-y-3">
           <div>
@@ -2202,6 +2234,24 @@ function KeyTermCard({ term }: { term: KeyTerm }) {
             <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-400 mb-1">Watch out for</p>
             <p className="text-sm text-foreground/90 leading-relaxed">{term.watchOut}</p>
           </div>
+          {term.marketContext && (
+            <div className="bg-blue-50/60 dark:bg-blue-950/20 rounded-lg px-3 py-2.5 flex items-start gap-2 border border-blue-100 dark:border-blue-900/40">
+              <TrendingUp className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-400 mb-0.5">Market context</p>
+                <p className="text-sm text-foreground/90 leading-relaxed">{term.marketContext}</p>
+              </div>
+            </div>
+          )}
+          {term.proposedChange && term.isNegotiable && (
+            <div className="bg-emerald-50/60 dark:bg-emerald-950/20 rounded-lg px-3 py-2.5 flex items-start gap-2 border border-emerald-100 dark:border-emerald-900/40">
+              <Pencil className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-400 mb-0.5">Suggested ask</p>
+                <p className="text-sm text-foreground/90 leading-relaxed">{term.proposedChange}</p>
+              </div>
+            </div>
+          )}
           {term.questionToAsk && (
             <div className="bg-muted/40 rounded-lg px-3 py-2.5 flex items-start gap-2 mt-1">
               <HelpCircle className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" />

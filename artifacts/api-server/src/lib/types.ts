@@ -54,6 +54,12 @@ export interface KeyTerm {
   whyItMatters: string;
   watchOut: string;
   questionToAsk?: string;
+  /** Whether this term is realistically negotiable (true) or standard boilerplate (false) */
+  isNegotiable?: boolean;
+  /** How this clause compares to typical agreements of this type (e.g. "Broader than the 6–12 month industry standard") */
+  marketContext?: string;
+  /** If negotiable, the specific language change to propose to the other party */
+  proposedChange?: string;
 }
 
 export interface ActionPackQuestion {
@@ -118,6 +124,12 @@ export interface DocumentAnalysis {
   sections?: DocumentSection[];
   keyTerms?: KeyTerm[];
   actionPack?: ActionPack;
+  /** Risk score 0–100 (0 = no issues, 100 = severe). Derived from severity/count of risks and key terms. */
+  overallRisk?: number;
+  /** Plain-English verdict for this document */
+  verdict?: "low-risk" | "review-advised" | "high-risk" | "critical";
+  /** 1–3 most critical one-liner issues to surface prominently at the top of results */
+  redFlags?: string[];
 }
 
 // ── Document Trust Check types ──────────────────────────────────────────────

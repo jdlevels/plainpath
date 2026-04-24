@@ -140,7 +140,10 @@ The JSON must have this exact structure:
       "explanation": "string - 1-2 sentences: what this term or clause means in plain English",
       "whyItMatters": "string - 1-2 sentences: why this clause is important to the reader and what depends on it",
       "watchOut": "string - 1-2 sentences: specific risk, hidden obligation, or consequence the reader might miss",
-      "questionToAsk": "string - optional: a specific question the reader should ask before agreeing or signing (omit field entirely if not applicable)"
+      "questionToAsk": "string - optional: a specific question the reader should ask before agreeing or signing (omit field entirely if not applicable)",
+      "isNegotiable": true,
+      "marketContext": "string - 1 sentence: how this clause compares to typical agreements of this type (e.g. 'Broader than the 6–12 month industry standard for non-competes' or 'Standard in most commercial leases'). Omit if not applicable.",
+      "proposedChange": "string - if isNegotiable=true, the specific plain-English change to request (e.g. 'Ask them to change this to: 30 days written notice instead of 90 days'). Omit if isNegotiable=false or not applicable."
     }
   ],
   "actionPack": {
@@ -180,7 +183,10 @@ The JSON must have this exact structure:
     "obligations": "string - 2-4 sentences: what the reader is agreeing to, is responsible for, or may become liable for",
     "payAttentionTo": "string - 2-4 sentences: the most important clauses, dates, or conditions the reader must not overlook",
     "nextSteps": "string - 2-4 sentences: the first concrete things the reader should do after reading this document"
-  }
+  },
+  "overallRisk": 0,
+  "verdict": "low-risk|review-advised|high-risk|critical",
+  "redFlags": ["string - one-liner describing the single most critical issue (max 3 items, omit array if none)"]
 }
 
 Guidelines:
@@ -202,7 +208,13 @@ Guidelines:
 - actionPack.whatToGather: 4-6 records, forms, IDs, or documents the user should have ready before responding or proceeding
 - actionPack.whatToSay: 2-3 neutral, practical draft messages for common communication scenarios (asking for time, requesting clarification, responding to a notice). NEVER frame as legal or professional advice — use phrasing like "You may want to ask..." and "You might consider saying..."
 - actionPack.beforeYouActChecklist: 4-6 concrete things to confirm before signing or submitting
-- Tailor actionPack to document type: contracts→negotiation questions, ownership/renewal concerns; tax/gov→deadline clarification, missing forms, agency response; healthcare→appeal questions, coverage clarification, missing records; bills/notices→payment proof, deadline response, collections; grants/applications→eligibility, attachments, submission completeness`;
+- Tailor actionPack to document type: contracts→negotiation questions, ownership/renewal concerns; tax/gov→deadline clarification, missing forms, agency response; healthcare→appeal questions, coverage clarification, missing records; bills/notices→payment proof, deadline response, collections; grants/applications→eligibility, attachments, submission completeness
+- overallRisk: integer 0–100. 0–24 = low-risk (routine paperwork, no unusual terms). 25–49 = review-advised (some terms need attention or clarification). 50–74 = high-risk (significant financial, legal, or practical exposure). 75–100 = critical (severe consequences, non-standard demands, urgent action required).
+- verdict must match overallRisk: 0–24→"low-risk", 25–49→"review-advised", 50–74→"high-risk", 75–100→"critical"
+- redFlags: ONLY include if there are truly critical issues that could seriously harm the reader (e.g. waiving legal rights, large automatic penalties, illegal terms, extreme time pressure). Max 3 items, each under 100 characters. Omit or use empty array if no critical issues.
+- keyTerms.isNegotiable: true if this type of clause is routinely negotiated in this kind of agreement; false if it's standard non-negotiable boilerplate (e.g., governing law, entire agreement clauses in standard contracts are usually non-negotiable)
+- keyTerms.marketContext: compare to what's typical for this document type. Be specific: "Non-competes in employment contracts typically run 6–12 months; this one is 2 years." Omit if no meaningful comparison exists.
+- keyTerms.proposedChange: ONLY include when isNegotiable=true. Give the exact ask: "Request they change this to 30 days written notice" or "Ask them to cap this fee at $X rather than an open-ended amount." Keep it plain and actionable. Omit if isNegotiable=false.`;
 
 async function runAnalysis(text: string, title?: string, documentTypeHint?: string, rawText?: string): Promise<DocumentAnalysis> {
   const hintLine = documentTypeHint ? `\nUser-specified document category: ${documentTypeHint}` : "";
