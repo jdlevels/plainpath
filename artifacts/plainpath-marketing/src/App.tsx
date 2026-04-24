@@ -4,6 +4,8 @@ import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { StickyCTA } from "@/components/StickyCTA";
+import { CookieConsent } from "@/components/CookieConsent";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import Privacy from "@/pages/Privacy";
@@ -65,6 +67,8 @@ function App() {
           <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
             <Router />
           </WouterRouter>
+          <StickyCTA />
+          <CookieConsent />
           <Toaster />
         </TooltipProvider>
       </ThemeProvider>
