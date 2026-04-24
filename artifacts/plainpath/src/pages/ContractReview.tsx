@@ -6,7 +6,7 @@ import {
   ShieldAlert, AlertTriangle, CheckCircle2, X as XIcon,
   Lock, ClipboardList, ChevronRight, Mail, Shield, ShieldCheck,
   Camera, ScanLine, Download, Bookmark, Clock, ArrowRight,
-  CheckSquare, Link as LinkIcon, Plus, Type,
+  CheckSquare, Link as LinkIcon, Plus, Type, Zap, TrendingUp,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -954,6 +954,7 @@ export default function ContractReview() {
   const [urlLoading, setUrlLoading] = useState(false)
   const [upgradeModal, setUpgradeModal] = useState(false)
   const [copyDone, setCopyDone] = useState(false)
+  const [activeSection, setActiveSection] = useState("overview")
 
   const { entitlements } = useEntitlements()
 
@@ -1133,6 +1134,13 @@ export default function ContractReview() {
 
   // Results view
   if (result) {
+    const redFlags  = result.clauses.filter(c => c.rating === "red-flag")
+    const watchOuts = result.clauses.filter(c => c.rating === "watch-out")
+    const fair      = result.clauses.filter(c => c.rating === "fair")
+    const missing   = result.missingProtections ?? []
+    const checklist = result.preSigningChecklist ?? []
+    const recommendation = primaryRecommendation(result)
+
     function copyResult() {
       navigator.clipboard.writeText(buildReviewText(result!)).then(() => {
         setCopyDone(true)
@@ -1140,54 +1148,368 @@ export default function ContractReview() {
       })
     }
 
+    const SIDEBAR_SECTIONS = [
+      { id: "overview",   label: "Overview",            icon: FileText,     count: null,            warn: false },
+      { id: "red-flags",  label: "Red Flags",           icon: ShieldAlert,  count: redFlags.length,  warn: redFlags.length > 0 },
+      { id: "watch-outs", label: "Watch Outs",          icon: AlertTriangle,count: watchOuts.length, warn: watchOuts.length > 0 },
+      { id: "fair",       label: "Fair Clauses",        icon: CheckCircle2, count: fair.length,      warn: false },
+      { id: "missing",    label: "Missing Protections", icon: Lock,         count: missing.length,   warn: missing.length > 0 },
+      { id: "checklist",  label: "Before You Sign",     icon: ClipboardList,count: checklist.length, warn: false },
+    ]
+
     return (
-      <div
-        className="min-h-screen bg-background"
-        style={{ paddingBottom: "max(6rem, env(safe-area-inset-bottom) + 6rem)" }}
-      >
-        <ResultStickyHeader
-          toolIcon={Scale}
-          toolLabel="Contract Review"
-          toolIconClass="text-amber-500/80"
-          subtitleText={`Score: ${result.overallScore}/100`}
-          verdictLabel={result.verdict}
-          verdictBadgeClass={scoreBadgeClass(result.overallScore)}
-          onBack={handleReset}
-          actions={
-            <>
-              <button
-                onClick={copyResult}
-                title="Copy results as text"
-                className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors shrink-0"
-                aria-label="Copy summary"
-              >
-                {copyDone
-                  ? <Check className="w-4 h-4 text-emerald-500" />
-                  : <Copy className="w-4 h-4" />
-                }
-              </button>
-              <button
-                onClick={() => window.print()}
-                title="Export as PDF"
-                className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors shrink-0 print:hidden"
-                aria-label="Export PDF"
-              >
-                <Download className="w-4 h-4" />
-              </button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleReset}
-                className="text-xs h-8 hidden sm:flex gap-1.5 shrink-0"
-              >
-                Review Another <ArrowRight className="w-3.5 h-3.5" />
-              </Button>
-            </>
-          }
-        />
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-5 sm:pt-8 space-y-4">
-          <ResultsView result={result} onReset={handleReset} />
+      <div className="h-screen flex flex-col bg-slate-950 text-slate-100 overflow-hidden">
+
+        {/* ── Header ── */}
+        <div className="no-print flex-shrink-0 flex items-center gap-3 px-4 sm:px-5 py-3 bg-slate-900 border-b border-slate-800 z-30">
+          <button
+            onClick={handleReset}
+            style={{ touchAction: "manipulation" }}
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:bg-slate-800 hover:text-slate-300 transition-colors shrink-0"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+          <div className="w-7 h-7 rounded-xl bg-amber-900/50 border border-amber-700/40 flex items-center justify-center shrink-0">
+            <Scale className="w-3.5 h-3.5 text-amber-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <span className="text-[10px] text-slate-600 font-medium uppercase tracking-widest">Contract Review</span>
+            <h1 className="text-sm font-bold text-slate-100 truncate leading-tight">{result.verdict}</h1>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <div className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border ${scoreBadgeClass(result.overallScore).replace("bg-", "bg-").replace("text-", "text-")} bg-slate-800 border-slate-700`}>
+              <TrendingUp className="w-3.5 h-3.5 text-slate-400" />
+              <span className={`text-xs font-bold tabular-nums ${scoreColor(result.overallScore)}`}>{result.overallScore}</span>
+              <span className="text-[10px] text-slate-500 font-medium hidden sm:inline">/ 100</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              onClick={copyResult}
+              className="p-1.5 rounded-lg border border-slate-700 bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-300 transition-colors"
+              title="Copy results"
+            >
+              {copyDone ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+            </button>
+            <button
+              onClick={() => window.print()}
+              className="p-1.5 rounded-lg border border-slate-700 bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-300 transition-colors print:hidden"
+              title="Export PDF"
+            >
+              <Download className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={handleReset}
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 text-xs font-semibold hover:bg-slate-700 transition-colors"
+            >
+              Review Another <ArrowRight className="w-3 h-3" />
+            </button>
+          </div>
         </div>
+
+        {/* ── Body ── */}
+        <div className="flex-1 flex overflow-hidden">
+
+          {/* ── Sidebar ── */}
+          <aside className="no-print w-[200px] lg:w-[220px] flex-shrink-0 flex flex-col bg-slate-900 border-r border-slate-800 overflow-y-auto">
+
+            {/* Score */}
+            <div className="px-3 pt-4 pb-3 border-b border-slate-800/80">
+              <p className="text-[9px] font-bold uppercase tracking-widest text-slate-600 mb-2">Fairness Score</p>
+              <div className="flex items-end gap-1.5 mb-1.5">
+                <span className={`text-3xl font-bold tabular-nums leading-none ${scoreColor(result.overallScore)}`}>{result.overallScore}</span>
+                <span className="text-xs text-slate-600 mb-0.5">/ 100</span>
+              </div>
+              <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden mb-1.5">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${result.overallScore}%` }}
+                  transition={{ delay: 0.2, duration: 0.5, ease: "easeOut" }}
+                  className={`h-full rounded-full ${scoreBarClass(result.overallScore)}`}
+                />
+              </div>
+              <p className="text-[10px] text-slate-500 leading-tight">{interpretScore(result.overallScore)}</p>
+            </div>
+
+            {/* Count tiles */}
+            <div className="px-3 py-3 border-b border-slate-800/80 grid grid-cols-2 gap-1.5">
+              {[
+                { label: "Red Flags",  value: redFlags.length,  warn: redFlags.length > 0,  id: "red-flags"  },
+                { label: "Watch Outs", value: watchOuts.length, warn: watchOuts.length > 0, id: "watch-outs" },
+                { label: "Missing",    value: missing.length,   warn: missing.length > 0,   id: "missing"    },
+                { label: "Fair",       value: fair.length,      warn: false,                id: "fair"       },
+              ].map(tile => (
+                <button
+                  key={tile.id}
+                  onClick={() => setActiveSection(tile.id)}
+                  className={`rounded-lg p-2 text-left transition-colors hover:bg-slate-800 border ${
+                    tile.warn && tile.value > 0 ? "border-amber-800/50 bg-amber-950/20" : "border-slate-800 bg-slate-800/40"
+                  }`}
+                >
+                  <div className={`text-lg font-bold tabular-nums leading-none mb-0.5 ${tile.warn && tile.value > 0 ? "text-amber-300" : "text-slate-200"}`}>
+                    {tile.value}
+                  </div>
+                  <div className="text-[9px] text-slate-500 font-medium leading-tight">{tile.label}</div>
+                </button>
+              ))}
+            </div>
+
+            {/* Section nav */}
+            <nav className="flex-1 py-2">
+              <p className="text-[9px] font-bold uppercase tracking-widest text-slate-600 px-3 mb-1 mt-1">Sections</p>
+              {SIDEBAR_SECTIONS.map(sec => {
+                const isActive = activeSection === sec.id
+                return (
+                  <button
+                    key={sec.id}
+                    onClick={() => setActiveSection(sec.id)}
+                    className={`relative w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors outline-none ${
+                      isActive
+                        ? "bg-amber-900/30 text-amber-300"
+                        : "text-slate-400 hover:bg-slate-800/70 hover:text-slate-300"
+                    }`}
+                  >
+                    {isActive && <div className="absolute left-0 top-1 bottom-1 w-[3px] rounded-r-full bg-amber-500" />}
+                    <sec.icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? "text-amber-400" : "text-slate-500"}`} />
+                    <span className="text-xs font-medium flex-1 truncate text-left">{sec.label}</span>
+                    {sec.count != null && sec.count > 0 && (
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none shrink-0 ${
+                        isActive
+                          ? "bg-amber-800 text-amber-200"
+                          : sec.warn
+                          ? "bg-red-900/60 text-red-400"
+                          : "bg-slate-800 text-slate-500"
+                      }`}>
+                        {sec.count}
+                      </span>
+                    )}
+                  </button>
+                )
+              })}
+            </nav>
+
+            {/* Upgrade nudge */}
+            <div className="mx-3 mb-3 p-3 rounded-xl bg-gradient-to-br from-amber-900/30 to-slate-800/80 border border-amber-800/40">
+              <div className="flex items-center gap-1.5 mb-1">
+                <Zap className="w-3 h-3 text-amber-400" />
+                <span className="text-[10px] font-bold text-amber-300 uppercase tracking-wide">Pro</span>
+              </div>
+              <p className="text-[11px] text-slate-400 leading-tight mb-2">Get AI-drafted negotiation emails for every clause</p>
+              <a href="/upgrade" className="block w-full py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold text-center transition-colors">
+                Upgrade
+              </a>
+            </div>
+
+            <div className="px-3 pb-3">
+              <a href="/methodology" className="flex items-center gap-1.5 text-[9px] text-slate-700 hover:text-slate-600 transition-colors">
+                <Shield className="w-3 h-3" /> Reviewed by licensed attorneys
+              </a>
+            </div>
+          </aside>
+
+          {/* ── Main Content ── */}
+          <main className="flex-1 overflow-y-auto bg-slate-950 dark">
+            <div className="max-w-3xl mx-auto px-5 sm:px-8 py-6" style={{ paddingBottom: "max(3rem, env(safe-area-inset-bottom) + 3rem)" }}>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeSection}
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -5 }}
+                  transition={{ duration: 0.14 }}
+                  className="space-y-4"
+                >
+
+                  {/* ── Overview ── */}
+                  {activeSection === "overview" && (
+                    <>
+                      {/* Score banner */}
+                      <div className={`rounded-2xl border p-5 sm:p-6 ${scoreBg(result.overallScore)}`}>
+                        <div className="flex items-start gap-5 flex-wrap mb-3">
+                          <div className="text-center min-w-[80px]">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">Fairness Score</p>
+                            <p className={`text-5xl font-bold leading-none tabular-nums ${scoreColor(result.overallScore)}`}>{result.overallScore}</p>
+                            <p className="text-xs text-muted-foreground mt-1">/ 100</p>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-lg font-bold mb-1 ${scoreColor(result.overallScore)}`}>{result.verdict}</p>
+                            <p className="text-sm text-foreground/80 leading-relaxed mt-2">{result.summary}</p>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          {redFlags.length > 0 && (
+                            <button onClick={() => setActiveSection("red-flags")} className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-red-500/15 text-red-700 dark:text-red-300 border border-red-500/20 hover:bg-red-500/20 transition-colors">
+                              <ShieldAlert className="w-3 h-3" /> {redFlags.length} red flag{redFlags.length !== 1 ? "s" : ""}
+                            </button>
+                          )}
+                          {watchOuts.length > 0 && (
+                            <button onClick={() => setActiveSection("watch-outs")} className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/20 hover:bg-amber-500/20 transition-colors">
+                              <AlertTriangle className="w-3 h-3" /> {watchOuts.length} watch-out{watchOuts.length !== 1 ? "s" : ""}
+                            </button>
+                          )}
+                          {missing.length > 0 && (
+                            <button onClick={() => setActiveSection("missing")} className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-violet-500/15 text-violet-700 dark:text-violet-300 border border-violet-500/20 hover:bg-violet-500/20 transition-colors">
+                              <Lock className="w-3 h-3" /> {missing.length} missing protection{missing.length !== 1 ? "s" : ""}
+                            </button>
+                          )}
+                          {fair.length > 0 && (
+                            <button onClick={() => setActiveSection("fair")} className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors">
+                              <CheckCircle2 className="w-3 h-3" /> {fair.length} fair clause{fair.length !== 1 ? "s" : ""}
+                            </button>
+                          )}
+                        </div>
+                        <div className="h-2 rounded-full bg-black/8 dark:bg-white/10 overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${result.overallScore}%` }}
+                            transition={{ delay: 0.3, duration: 0.6, ease: "easeOut" }}
+                            className={`h-full rounded-full ${scoreBarClass(result.overallScore)}`}
+                          />
+                        </div>
+                        <ScoreLegend score={result.overallScore} config={CONTRACT_REVIEW_LEGEND} />
+                      </div>
+
+                      {/* Primary recommendation */}
+                      <div className={`p-5 rounded-2xl border ${
+                        redFlags.length >= 1
+                          ? "border-red-200/70 dark:border-red-700/40 bg-red-50/40 dark:bg-red-950/20"
+                          : watchOuts.length >= 3
+                          ? "border-amber-200/70 dark:border-amber-700/40 bg-amber-50/40 dark:bg-amber-950/20"
+                          : "border-blue-200/70 dark:border-blue-700/40 bg-blue-50/40 dark:bg-blue-950/20"
+                      }`}>
+                        <div className="flex items-center gap-2 mb-2">
+                          <CheckSquare className={`w-4 h-4 ${redFlags.length >= 1 ? "text-amber-500 dark:text-amber-400" : "text-blue-500 dark:text-blue-400"}`} />
+                          <h3 className={`text-sm font-bold ${redFlags.length >= 1 ? "text-amber-800 dark:text-amber-300" : "text-blue-800 dark:text-blue-300"}`}>
+                            Recommended Action
+                          </h3>
+                        </div>
+                        <p className="text-sm text-foreground/85 leading-relaxed">{recommendation}</p>
+                      </div>
+
+                      {/* Disclaimer */}
+                      <div className="bg-muted/30 border border-border/30 rounded-xl px-4 py-3 text-xs text-muted-foreground">
+                        AI-assisted contract review. Not legal advice — always consult a qualified attorney before signing any legal agreement.
+                      </div>
+
+                      {/* Reviewed at */}
+                      {result.reviewedAt && (
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground/60">
+                          <Clock className="w-3.5 h-3.5" />
+                          Reviewed {formatReviewedAt(result.reviewedAt)}
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {/* ── Red Flags ── */}
+                  {activeSection === "red-flags" && (
+                    <>
+                      <div className="flex items-center gap-2 mb-1">
+                        <ShieldAlert className="w-4 h-4 text-red-400" />
+                        <h2 className="text-base font-bold text-slate-200">Red Flags</h2>
+                        <span className="ml-auto text-xs text-slate-600">{redFlags.length} clause{redFlags.length !== 1 ? "s" : ""}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mb-2">These clauses are harmful or one-sided. Each should be negotiated or removed before you sign.</p>
+                      {redFlags.length === 0
+                        ? <div className="rounded-2xl border border-emerald-800/40 bg-emerald-950/20 p-8 text-center"><CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto mb-2" /><p className="text-sm text-emerald-300 font-semibold">No red flags found</p><p className="text-xs text-slate-500 mt-1">This contract doesn't contain any clearly harmful clauses.</p></div>
+                        : <div className="space-y-3">{redFlags.map(c => <ClauseCard key={c.id} clause={c} defaultOpen={true} />)}</div>
+                      }
+                    </>
+                  )}
+
+                  {/* ── Watch Outs ── */}
+                  {activeSection === "watch-outs" && (
+                    <>
+                      <div className="flex items-center gap-2 mb-1">
+                        <AlertTriangle className="w-4 h-4 text-amber-400" />
+                        <h2 className="text-base font-bold text-slate-200">Watch Outs</h2>
+                        <span className="ml-auto text-xs text-slate-600">{watchOuts.length} clause{watchOuts.length !== 1 ? "s" : ""}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mb-2">Vague, one-sided, or unusual — understand these before signing.</p>
+                      {watchOuts.length === 0
+                        ? <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-8 text-center"><CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto mb-2" /><p className="text-sm text-emerald-300 font-semibold">No watch-outs found</p></div>
+                        : <div className="space-y-3">{watchOuts.map(c => <ClauseCard key={c.id} clause={c} defaultOpen={true} />)}</div>
+                      }
+                    </>
+                  )}
+
+                  {/* ── Fair Clauses ── */}
+                  {activeSection === "fair" && (
+                    <>
+                      <div className="flex items-center gap-2 mb-1">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                        <h2 className="text-base font-bold text-slate-200">Fair Clauses</h2>
+                        <span className="ml-auto text-xs text-slate-600">{fair.length} clause{fair.length !== 1 ? "s" : ""}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mb-2">These clauses appear balanced and reasonable.</p>
+                      {fair.length === 0
+                        ? <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-8 text-center"><p className="text-sm text-slate-400">No fair clauses identified.</p></div>
+                        : <div className="space-y-3">{fair.map(c => <ClauseCard key={c.id} clause={c} defaultOpen={false} />)}</div>
+                      }
+                    </>
+                  )}
+
+                  {/* ── Missing Protections ── */}
+                  {activeSection === "missing" && (
+                    <>
+                      <div className="flex items-center gap-2 mb-1">
+                        <Lock className="w-4 h-4 text-violet-400" />
+                        <h2 className="text-base font-bold text-slate-200">Missing Protections</h2>
+                        <span className="ml-auto text-xs text-slate-600">{missing.length}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mb-2">Standard protections a balanced contract should include — but this one doesn't. Request these before signing.</p>
+                      {missing.length === 0
+                        ? <div className="rounded-2xl border border-emerald-800/40 bg-emerald-950/20 p-8 text-center"><CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto mb-2" /><p className="text-sm text-emerald-300 font-semibold">No missing protections identified</p></div>
+                        : (
+                          <div className="rounded-2xl border border-violet-800/40 bg-slate-900/60 divide-y divide-slate-800/60 overflow-hidden">
+                            {missing.map((item, i) => (
+                              <div key={i} className="flex items-start gap-3 px-5 py-4">
+                                <Lock className="w-3.5 h-3.5 text-violet-400 shrink-0 mt-0.5" />
+                                <span className="text-sm text-foreground/85 leading-snug">{item}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )
+                      }
+                    </>
+                  )}
+
+                  {/* ── Before You Sign ── */}
+                  {activeSection === "checklist" && (
+                    <>
+                      <div className="flex items-center gap-2 mb-1">
+                        <ClipboardList className="w-4 h-4 text-blue-400" />
+                        <h2 className="text-base font-bold text-slate-200">Before You Sign</h2>
+                        <span className="ml-auto text-xs text-slate-600">{checklist.length} item{checklist.length !== 1 ? "s" : ""}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mb-2">Work through each of these before signing — specific to this contract.</p>
+                      {checklist.length === 0
+                        ? <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-8 text-center"><p className="text-sm text-slate-400">No checklist generated.</p></div>
+                        : (
+                          <div className="rounded-2xl border border-blue-800/40 bg-slate-900/60 divide-y divide-slate-800/60 overflow-hidden">
+                            {checklist.map((item, i) => (
+                              <div key={i} className="flex items-start gap-3 px-5 py-4">
+                                <span className="w-5 h-5 rounded-full bg-blue-900/60 border border-blue-700/50 text-[10px] font-bold text-blue-300 flex items-center justify-center shrink-0 mt-0.5">
+                                  {i + 1}
+                                </span>
+                                <span className="text-sm text-foreground/85 leading-snug">{item}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )
+                      }
+                    </>
+                  )}
+
+                </motion.div>
+              </AnimatePresence>
+            </div>
+          </main>
+        </div>
+
+        <UpgradeModal open={upgradeModal} onClose={() => setUpgradeModal(false)} />
       </div>
     )
   }
