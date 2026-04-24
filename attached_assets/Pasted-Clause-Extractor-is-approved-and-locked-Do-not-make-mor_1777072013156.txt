@@ -1,0 +1,270 @@
+Clause Extractor is approved and locked.
+
+Do not make more changes to Clause Extractor unless a bug appears later.
+
+Now begin the Compare Versions redesign in canvas/design mode only.
+
+Do not implement yet.
+Do not start Redact Sensitive Info yet.
+Do not add new tools.
+Do not add SOP/manual builder language.
+Do not add Document Classifier or Packet Splitter.
+
+Use the approved PlainPath Scan Workspace Standard and the locked Analyze, Trust Check, Contract Review, and Clause Extractor designs as the visual baseline.
+
+Goal:
+Redesign Compare Versions so it feels like the same premium PlainPath system, but focused specifically on comparing two versions of a document and showing what changed, what was added, what was removed, what became riskier, and what needs user attention.
+
+Important:
+Compare Versions should use a modified scan-workspace layout because it needs two document surfaces.
+
+Core layout:
+- Premium dark UI
+- Document comparison-first layout
+- Original document viewer
+- Revised document viewer
+- Change intelligence panel or drawer
+- Source-backed change findings
+- Clickable change/source chips
+- Compact cards, not report dumps
+- Overview-first flow before deeper change details
+
+Desktop layout:
+Use a three-zone comparison workspace:
+
+Option A preferred:
+- Left panel: Original Document, about 35–40%
+- Middle panel: Revised Document, about 35–40%
+- Right panel: Change Intelligence, about 25–30%
+
+If space is too tight:
+- Use side-by-side document viewers as the main workspace
+- Add a collapsible right-side Change Intelligence drawer
+
+Both document panels should scroll independently where possible.
+The intelligence panel/drawer should also scroll independently.
+
+Mobile layout:
+Use tabs:
+- Summary
+- Original
+- Revised
+
+Default mobile view should open on Summary first.
+Original and Revised should be one tap away.
+
+Design the following canvas states:
+
+1. Empty State — before upload
+
+Purpose:
+The user uploads or selects two versions of a document to compare.
+
+Suggested headline:
+“Compare two document versions.”
+
+Suggested subtext:
+“Upload an original and revised document. PlainPath shows what changed, what was added, what was removed, and what may need review before you act.”
+
+Input sections:
+- Original document
+- Revised document
+
+Input options:
+- Upload PDF / DOCX
+- Paste Text
+- Scan Photo, if currently supported
+- Select from My Documents, if currently supported
+
+Works well with:
+- contracts
+- leases
+- service agreements
+- notices
+- policy documents
+- drafts
+- revised agreements
+- redlined documents
+
+Use cautious wording:
+- “change comparison support”
+- “source-backed changes”
+- “terms to verify”
+- “not legal advice”
+
+2. Processing State — comparison in progress
+
+Use two muted document previews and a progress panel.
+
+Progress checklist:
+- Reading original document
+- Reading revised document
+- Aligning matching sections
+- Detecting added and removed language
+- Identifying changed terms
+- Checking changes that may need review
+- Generating comparison summary
+
+3. Completed State — Compare Overview
+
+Right intelligence panel order:
+
+A. Change Summary
+- 4–6 lines maximum
+- explain what changed overall
+- identify whether changes appear minor, moderate, or significant
+- identify what the user should inspect first
+
+B. Change / Confidence Strip
+Use compact chips:
+- Changes found
+- Additions
+- Removals
+- Modified clauses
+- Review confidence
+- High-priority changes
+
+C. Key Changes
+Show top 5–8 changes by default.
+Each change card should include:
+- change title
+- change type: Added / Removed / Modified / Moved / Unclear
+- one-line plain-English meaning
+- importance chip
+- source/change chip
+- action if needed
+
+D. Added Language
+Compact section showing:
+- added clause/term
+- where it appears
+- why it matters
+- source chip
+
+E. Removed Language
+Compact section showing:
+- removed clause/term
+- where it used to appear
+- why it matters
+- source chip
+
+F. Modified Terms
+Compact section showing:
+- before language
+- after language
+- meaning of the change
+- source chip
+
+G. Possible Risk Changes
+Use cautious language:
+- may increase obligation
+- may reduce protection
+- term changed materially
+- verify before signing or acting
+- review with a qualified professional if high-risk
+
+H. Source / Change Traceability
+Every major change should have clickable chips.
+Change chips should scroll/highlight both document panels where possible.
+
+4. Change Chip Active State
+
+Show what happens when a user clicks a change/source chip.
+
+Behavior:
+- change chip becomes active
+- original document scrolls to the matching old section
+- revised document scrolls to the matching new section
+- both sections highlight
+- evidence banner shows before/after text
+- related change card remains active
+
+If only one side has text:
+- added language highlights only in revised document
+- removed language highlights only in original document
+
+5. Low Confidence / Partial Compare State
+
+Use when one or both documents are low quality.
+
+Suggested message:
+“PlainPath could compare part of these documents, but scan quality limits comparison confidence.”
+
+Show:
+- confidence badge
+- what was readable
+- what could not be aligned
+- which document caused the issue
+- recommended next steps
+
+Actions:
+- Upload clearer original
+- Upload clearer revised
+- Upload text-based versions
+- Continue with partial comparison
+- Ask This Document
+
+6. Error State
+
+Clean retry state.
+
+Message:
+“Version comparison could not be completed.”
+
+Actions:
+- Try again
+- Upload different files
+- Ask This Document
+- Analyze a Document
+
+7. Mobile Summary View
+
+Mobile should show:
+- change summary
+- change/confidence strip
+- key changes
+- added/removed/modified sections
+- source/change chips
+- compact cards
+
+8. Mobile Original View
+
+Show original document with:
+- active old-language highlight
+- evidence banner
+- easy return to Summary tab
+
+9. Mobile Revised View
+
+Show revised document with:
+- active new-language highlight
+- evidence banner
+- easy return to Summary tab
+
+Design rules:
+- Do not make this a long report page.
+- Do not show every change expanded by default.
+- Use a compact comparison dashboard.
+- Keep before/after traceability clear.
+- Avoid legal conclusions.
+- Use “changed language,” “term to verify,” “possible risk change,” and “not legal advice.”
+- Keep the interface calm, credible, and professional.
+
+Color usage:
+- purple = PlainPath source/change traceability
+- green = added language
+- red = removed language or high-priority risk only
+- amber = modified / needs review
+- blue = neutral action/help
+- gray = unchanged or context text
+
+After creating the canvas, show these states for review before implementation:
+- Empty State
+- Processing State
+- Completed Compare Overview
+- Change chip active / before-after highlighted state
+- Low Confidence State
+- Error State
+- Mobile Summary View
+- Mobile Original View
+- Mobile Revised View
