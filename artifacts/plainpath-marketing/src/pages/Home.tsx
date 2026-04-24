@@ -777,7 +777,7 @@ export default function Home() {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly")
 
   useEffect(() => {
-    const id = setInterval(() => setActiveDemoTool(prev => (prev + 1) % 8), DEMO_INTERVAL_MS)
+    const id = setInterval(() => setActiveDemoTool(prev => (prev + 1) % 7), DEMO_INTERVAL_MS)
     return () => clearInterval(id)
   }, [])
 
