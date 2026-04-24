@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { useParams, useLocation } from "wouter"
 import { useAuth } from "@clerk/react"
 import { motion, AnimatePresence } from "framer-motion"
@@ -638,7 +638,7 @@ function ProcessingView({
 }) {
   const { getToken } = useAuth()
 
-  useState(() => {
+  useEffect(() => {
     let cancelled = false
     const poll = async () => {
       try {
@@ -656,7 +656,7 @@ function ProcessingView({
     }
     poll()
     return () => { cancelled = true }
-  })
+  }, [sessionId])
 
   return (
     <div className="max-w-2xl mx-auto text-center py-16">
