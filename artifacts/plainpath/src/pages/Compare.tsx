@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import {
   GitCompare, Loader2, AlertCircle, ArrowRight, Check, X, AlertTriangle, Info,
   UploadCloud, Type, CheckCircle2, FileText, Plus, Minus, TrendingUp,
-  CalendarClock, ClipboardCheck, RotateCcw,
+  CalendarClock, ClipboardCheck, RotateCcw, Camera, Link as LinkIcon,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -132,12 +132,18 @@ interface DocumentInputProps {
 }
 
 function DocumentInput({ label, helperText, value, onChange, side }: DocumentInputProps) {
-  const [tab, setTab] = useState<"paste" | "upload">("paste")
+  const [tab, setTab] = useState<"paste" | "upload" | "scan" | "url">("paste")
   const [isDragging, setIsDragging] = useState(false)
   const [fileName, setFileName] = useState<string | null>(null)
   const [fileError, setFileError] = useState<string | null>(null)
   const [extracting, setExtracting] = useState(false)
+  const [urlInput, setUrlInput] = useState("")
+  const [urlError, setUrlError] = useState<string | null>(null)
+  const [urlLoading, setUrlLoading] = useState(false)
+  const [scanFile, setScanFile] = useState<File | null>(null)
+  const [scanError, setScanError] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+  const cameraRef = useRef<HTMLInputElement>(null)
 
   const isOriginal = side === "original"
   const accentBadge = isOriginal
@@ -151,7 +157,7 @@ function DocumentInput({ label, helperText, value, onChange, side }: DocumentInp
     : "border-emerald-300 dark:border-emerald-700 bg-emerald-50/40 dark:bg-emerald-950/20"
   const successIcon = isOriginal ? "text-blue-500" : "text-emerald-500"
 
-  async function processFile(file: File) {
+  async function extractFromFile(file: File) {
     setFileError(null)
     setFileName(file.name)
 
@@ -198,16 +204,84 @@ function DocumentInput({ label, helperText, value, onChange, side }: DocumentInp
     }
   }
 
-  function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleScanExtract() {
+    if (!scanFile) return
+    setScanError(null)
+    setExtracting(true)
+    try {
+      const formData = new FormData()
+      formData.append("file", scanFile)
+      const base = getApiBaseUrl()
+      const res = await fetch(`${base}/api/documents/extract-text`, {
+        method: "POST",
+        body: formData,
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setScanError(data.message ?? "Could not read the photo. Please try again.")
+      } else if (!data.text || data.text.trim().length < 20) {
+        setScanError("No readable text found in this photo. Try a clearer, better-lit shot.")
+      } else {
+        onChange(data.text)
+        setTab("paste")
+      }
+    } catch {
+      setScanError("Upload failed. Check your connection and try again.")
+    } finally {
+      setExtracting(false)
+    }
+  }
+
+  async function handleUrlImport() {
+    const url = urlInput.trim()
+    if (!url) return
+    setUrlLoading(true)
+    setUrlError(null)
+    try {
+      const base = getApiBaseUrl()
+      const res = await fetch(`${base}/api/documents/import-url`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setUrlError(data?.message ?? "Failed to import document. Check the link and try again.")
+        return
+      }
+      const extracted: string = data.text ?? ""
+      if (!extracted || extracted.length < 30) {
+        setUrlError("Could not extract readable text from this link. Try downloading the file and uploading it directly.")
+        return
+      }
+      onChange(extracted)
+      setTab("paste")
+    } catch {
+      setUrlError("Network error — please check your connection and try again.")
+    } finally {
+      setUrlLoading(false)
+    }
+  }
+
+  function handleFileInputChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
-    if (file) void processFile(file)
+    if (file) void extractFromFile(file)
+  }
+
+  function handleCameraChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith("image/")) { setScanError("Only image files are supported."); return }
+    setScanFile(file)
+    setScanError(null)
+    e.target.value = ""
   }
 
   function handleDrop(e: React.DragEvent) {
     e.preventDefault()
     setIsDragging(false)
     const file = e.dataTransfer.files?.[0]
-    if (file) void processFile(file)
+    if (file) void extractFromFile(file)
   }
 
   function clearFile() {
@@ -217,24 +291,28 @@ function DocumentInput({ label, helperText, value, onChange, side }: DocumentInp
     if (fileRef.current) fileRef.current.value = ""
   }
 
-  function switchTab(next: "paste" | "upload") {
+  function switchTab(next: typeof tab) {
     setTab(next)
-    if (next === "paste") {
-      setFileName(null)
-      setFileError(null)
-    }
+    if (next !== "upload") { setFileName(null); setFileError(null) }
+    if (next !== "scan") { setScanFile(null); setScanError(null) }
+    if (next !== "url") { setUrlError(null) }
   }
+
+  const TABS = [
+    { id: "paste" as const, icon: Type, label: "Paste Text", sub: "Copy & paste" },
+    { id: "upload" as const, icon: UploadCloud, label: "Upload File", sub: "PDF, DOCX, TXT" },
+    { id: "scan" as const, icon: Camera, label: "Scan Photo", sub: "Camera or image" },
+    { id: "url" as const, icon: LinkIcon, label: "Import Link", sub: "Drive or Dropbox" },
+  ]
 
   return (
     <div className="flex flex-col gap-3">
       {/* Label row */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2">
-            <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${accentBadge}`}>
-              {isOriginal ? "Original" : "Revised"}
-            </span>
-          </div>
+          <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full w-fit ${accentBadge}`}>
+            {isOriginal ? "Original" : "Revised"}
+          </span>
           <p className="text-sm font-bold text-foreground">{label}</p>
           <p className="text-xs text-muted-foreground">{helperText}</p>
         </div>
@@ -244,29 +322,24 @@ function DocumentInput({ label, helperText, value, onChange, side }: DocumentInp
       </div>
 
       {/* Tab switcher */}
-      <div className="flex gap-1 bg-muted/50 rounded-lg p-0.5">
-        <button
-          onClick={() => switchTab("paste")}
-          className={`flex-1 flex items-center justify-center gap-1.5 text-xs font-medium py-1.5 rounded-md transition-all ${
-            tab === "paste"
-              ? "bg-background text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          <Type className="w-3.5 h-3.5" />
-          Paste text
-        </button>
-        <button
-          onClick={() => switchTab("upload")}
-          className={`flex-1 flex items-center justify-center gap-1.5 text-xs font-medium py-1.5 rounded-md transition-all ${
-            tab === "upload"
-              ? "bg-background text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          <UploadCloud className="w-3.5 h-3.5" />
-          Upload file
-        </button>
+      <div className="grid grid-cols-4 gap-0.5 bg-muted/50 rounded-xl p-0.5">
+        {TABS.map(({ id: t, icon: Icon, label, sub }) => (
+          <button
+            key={t}
+            onClick={() => switchTab(t)}
+            style={{ touchAction: "manipulation" }}
+            className={`flex flex-col items-center justify-center gap-0.5 py-2 rounded-lg transition-all min-h-[44px] ${
+              tab === t ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <div className="flex items-center gap-1 text-xs font-semibold">
+              <Icon className="w-3 h-3 shrink-0" />
+              <span className="hidden sm:inline">{label}</span>
+            </div>
+            <span className="text-[9px] opacity-50 hidden sm:block">{sub}</span>
+            <span className="sm:hidden text-[10px] font-medium">{label.split(" ")[0]}</span>
+          </button>
+        ))}
       </div>
 
       {/* Paste mode */}
@@ -275,40 +348,27 @@ function DocumentInput({ label, helperText, value, onChange, side }: DocumentInp
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={`Paste the ${isOriginal ? "original" : "revised"} document text here…`}
-          className="h-60 text-sm resize-none font-mono bg-muted/20 border-border/50 focus-visible:ring-primary/30 leading-relaxed"
+          className="h-52 text-sm resize-none font-mono bg-muted/20 border-border/50 focus-visible:ring-primary/30 leading-relaxed"
         />
       )}
 
       {/* Upload mode */}
       {tab === "upload" && (
         <div>
-          <input
-            ref={fileRef}
-            type="file"
-            accept={ACCEPTED}
-            className="hidden"
-            onChange={handleInputChange}
-          />
-
+          <input ref={fileRef} type="file" accept={ACCEPTED} className="hidden" onChange={handleFileInputChange} />
           {extracting ? (
-            <div className="h-60 border-2 border-dashed border-border/50 rounded-xl flex flex-col items-center justify-center gap-3 bg-muted/10">
+            <div className="h-52 border-2 border-dashed border-border/50 rounded-xl flex flex-col items-center justify-center gap-3 bg-muted/10">
               <Loader2 className="w-7 h-7 animate-spin text-primary" />
-              <div className="text-center">
-                <p className="text-sm font-medium text-foreground">Extracting text…</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Reading {fileName}</p>
-              </div>
+              <p className="text-sm text-muted-foreground">Extracting text from {fileName}…</p>
             </div>
           ) : fileName && value && !fileError ? (
-            <div className={`h-60 border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-3 ${successBorder}`}>
+            <div className={`h-52 border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-3 ${successBorder}`}>
               <CheckCircle2 className={`w-8 h-8 ${successIcon}`} />
               <div className="text-center px-4">
                 <p className="text-sm font-semibold text-foreground truncate max-w-[200px]">{fileName}</p>
                 <p className="text-xs text-muted-foreground mt-1">{value.length.toLocaleString()} characters loaded</p>
               </div>
-              <button
-                onClick={clearFile}
-                className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors px-3 py-1 rounded-lg hover:bg-muted/60"
-              >
+              <button onClick={clearFile} className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors px-3 py-1 rounded-lg hover:bg-muted/60">
                 <RotateCcw className="w-3 h-3" /> Replace file
               </button>
             </div>
@@ -318,32 +378,113 @@ function DocumentInput({ label, helperText, value, onChange, side }: DocumentInp
               onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
               onDragLeave={() => setIsDragging(false)}
               onClick={() => fileRef.current?.click()}
-              className={`h-60 border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-4 cursor-pointer transition-all ${
-                isDragging
-                  ? dragBorder
-                  : "border-border/50 hover:border-primary/40 hover:bg-muted/20"
-              }`}
+              className={`h-52 border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-4 cursor-pointer transition-all ${isDragging ? dragBorder : "border-border/50 hover:border-primary/40 hover:bg-muted/20"}`}
             >
-              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-colors ${
-                isDragging ? "bg-primary/10" : "bg-muted/60"
-              }`}>
+              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-colors ${isDragging ? "bg-primary/10" : "bg-muted/60"}`}>
                 <UploadCloud className={`w-7 h-7 transition-colors ${isDragging ? "text-primary" : "text-muted-foreground"}`} />
               </div>
               <div className="text-center px-4">
-                <p className="text-sm font-medium text-foreground">
-                  {isDragging ? "Drop to upload" : "Drag and drop, or click to browse"}
-                </p>
+                <p className="text-sm font-medium text-foreground">{isDragging ? "Drop to upload" : "Drag and drop, or click to browse"}</p>
                 <p className="text-xs text-muted-foreground mt-1">PDF, DOCX, or TXT · max 20 MB</p>
               </div>
             </div>
           )}
-
           {fileError && (
             <div className="flex items-start gap-2 mt-2.5 text-destructive">
               <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
               <p className="text-xs leading-snug">{fileError}</p>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Scan Photo mode */}
+      {tab === "scan" && (
+        <div className="space-y-3">
+          <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleCameraChange} />
+          {!scanFile ? (
+            <button
+              onClick={() => cameraRef.current?.click()}
+              className="w-full h-44 border-2 border-dashed border-border/50 rounded-xl flex flex-col items-center justify-center gap-3 hover:border-primary/40 hover:bg-muted/20 transition-all cursor-pointer"
+            >
+              <Camera className="w-8 h-8 text-muted-foreground" />
+              <div className="text-center">
+                <p className="text-sm font-medium text-foreground">Take a photo or choose from gallery</p>
+                <p className="text-xs text-muted-foreground mt-1">AI will extract the text automatically</p>
+              </div>
+            </button>
+          ) : (
+            <div className="space-y-2">
+              <div className="rounded-xl border border-border/40 overflow-hidden bg-muted/10">
+                <img src={URL.createObjectURL(scanFile)} alt="Scanned document" className="w-full object-contain max-h-40" />
+              </div>
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-background border border-border/40">
+                <Camera className="w-4 h-4 text-muted-foreground/60 shrink-0" />
+                <p className="text-sm text-muted-foreground flex-1 truncate">{scanFile.name}</p>
+                <button onClick={() => { setScanFile(null); setScanError(null) }} className="p-1 rounded hover:bg-muted/60 text-muted-foreground">
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <Button
+                size="sm"
+                onClick={() => void handleScanExtract()}
+                disabled={extracting}
+                className="w-full gap-2"
+              >
+                {extracting ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Extracting…</> : <><Camera className="w-3.5 h-3.5" /> Extract Text from Photo</>}
+              </Button>
+            </div>
+          )}
+          {scanError && (
+            <div className="flex items-start gap-2 text-destructive text-xs">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+              {scanError}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Import Link mode */}
+      {tab === "url" && (
+        <div className="space-y-3">
+          <div>
+            <p className="text-sm font-semibold mb-1">Paste a Google Drive or Dropbox link</p>
+            <p className="text-xs text-muted-foreground mb-2 leading-relaxed">
+              PlainPath will fetch and extract the text automatically.
+            </p>
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/50 pointer-events-none" />
+                <input
+                  type="url"
+                  placeholder="https://drive.google.com/... or https://dropbox.com/..."
+                  value={urlInput}
+                  onChange={e => { setUrlInput(e.target.value); setUrlError(null) }}
+                  className="w-full pl-8 pr-3 py-2 rounded-xl border border-border/60 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all"
+                  onKeyDown={e => { if (e.key === "Enter" && urlInput.trim()) void handleUrlImport() }}
+                />
+              </div>
+              <Button
+                size="sm"
+                onClick={() => void handleUrlImport()}
+                disabled={urlLoading || !urlInput.trim()}
+                style={{ touchAction: "manipulation" }}
+                className="shrink-0 rounded-xl"
+              >
+                {urlLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Import"}
+              </Button>
+            </div>
+            {urlError && (
+              <div className="flex items-start gap-2 text-destructive text-xs mt-2">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                {urlError}
+              </div>
+            )}
+          </div>
+          <div className="rounded-xl bg-muted/40 border border-border/50 p-3 space-y-2 text-xs text-muted-foreground">
+            <p className="font-semibold text-foreground/70">Google Drive: right-click → Share → "Anyone with the link" → copy link</p>
+            <p className="font-semibold text-foreground/70">Dropbox: click Share on the file → copy shared link</p>
+          </div>
         </div>
       )}
     </div>

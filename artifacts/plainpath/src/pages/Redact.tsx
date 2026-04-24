@@ -25,7 +25,7 @@ import { useLocation } from "wouter"
 import {
   ShieldCheck, ArrowLeft, UploadCloud, Type, Loader2, AlertCircle, File, X,
   FileText, Scale, EyeOff, Download, Copy, Check, ArrowRight, Lock,
-  User, FileSignature, HeartPulse, FileDown, Camera,
+  User, FileSignature, HeartPulse, FileDown, Camera, Link as LinkIcon,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { WorkspaceShell } from "@/components/WorkspaceShell"
@@ -218,11 +218,14 @@ export default function Redact() {
   }, [entitlementsLoading, canRedact])
 
   // Input state
-  const [mode, setMode] = useState<"paste" | "upload" | "scan">("paste")
+  const [mode, setMode] = useState<"paste" | "upload" | "scan" | "url">("paste")
   const [pastedText, setPastedText] = useState("")
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [extractingFile, setExtractingFile] = useState(false)
+  const [urlInput, setUrlInput] = useState("")
+  const [urlError, setUrlError] = useState<string | null>(null)
+  const [urlLoading, setUrlLoading] = useState(false)
 
   // Review state
   const [activeText, setActiveText] = useState<string | null>(null)
@@ -327,6 +330,38 @@ export default function Redact() {
       setUploadError(err instanceof Error ? err.message : "File extraction failed.")
     } finally {
       setExtractingFile(false)
+    }
+  }
+
+  // ── Import from URL, extract text, populate paste tab ────────────────────
+  async function handleUrlImport() {
+    const url = urlInput.trim()
+    if (!url) return
+    setUrlLoading(true)
+    setUrlError(null)
+    try {
+      const apiBase = getApiBaseUrl()
+      const res = await fetch(`${apiBase}/api/documents/import-url`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setUrlError(data?.message ?? "Failed to import document. Check the link and try again.")
+        return
+      }
+      const extracted: string = data.text ?? ""
+      if (!extracted || extracted.length < 30) {
+        setUrlError("Could not extract readable text from this link. Try downloading the file and uploading it directly.")
+        return
+      }
+      setPastedText(extracted)
+      setMode("paste")
+    } catch {
+      setUrlError("Network error — please check your connection and try again.")
+    } finally {
+      setUrlLoading(false)
     }
   }
 
@@ -838,22 +873,27 @@ export default function Redact() {
         </div>
 
         {/* Mode tabs */}
-        <div className="flex gap-1 bg-muted/40 rounded-xl p-1">
+        <div className="grid grid-cols-4 gap-1 bg-muted/50 rounded-xl p-1">
           {([
-            { id: "paste", icon: Type, label: "Paste Text" },
-            { id: "upload", icon: UploadCloud, label: "Upload File" },
-            { id: "scan", icon: Camera, label: "Take Photo" },
-          ] as const).map(({ id: m, icon: Icon, label }) => (
+            { id: "paste", icon: Type, label: "Paste Text", sub: "Copy & paste" },
+            { id: "upload", icon: UploadCloud, label: "Upload File", sub: "PDF, DOCX, TXT" },
+            { id: "scan", icon: Camera, label: "Scan Photo", sub: "Camera or image" },
+            { id: "url", icon: LinkIcon, label: "Import Link", sub: "Drive or Dropbox" },
+          ] as const).map(({ id: m, icon: Icon, label, sub }) => (
             <button
               key={m}
-              onClick={() => { setMode(m); setUploadError(null); setUploadedFile(null) }}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-medium transition-all ${
+              onClick={() => { setMode(m); setUploadError(null); setUploadedFile(null); setUrlError(null) }}
+              style={{ touchAction: "manipulation" }}
+              className={`flex flex-col items-center justify-center gap-0.5 py-2.5 rounded-lg transition-all min-h-[52px] ${
                 mode === m ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              <Icon className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">{label}</span>
-              <span className="sm:hidden">{m === "paste" ? "Text" : m === "upload" ? "Upload" : "Photo"}</span>
+              <div className="flex items-center gap-1 text-sm font-semibold">
+                <Icon className="w-3.5 h-3.5 shrink-0" />
+                <span className="hidden sm:inline">{label}</span>
+              </div>
+              <span className="text-[10px] opacity-55 hidden sm:block">{sub}</span>
+              <span className="sm:hidden text-xs font-medium">{label.split(" ")[0]}</span>
             </button>
           ))}
         </div>
@@ -1031,6 +1071,58 @@ export default function Redact() {
             <p className="text-[11px] text-muted-foreground/50 text-center">
               Scanned text is processed with AI. Pixel-level image redaction is not available — PlainPath exports a clean redacted text version.
             </p>
+          </div>
+        )}
+
+        {/* URL / Import Link mode */}
+        {mode === "url" && (
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm font-semibold mb-1">Paste a Google Drive or Dropbox link</p>
+              <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
+                Share a file from Google Drive or Dropbox — PlainPath will fetch and extract the text automatically, then scan it for sensitive information.
+              </p>
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 pointer-events-none" />
+                  <input
+                    type="url"
+                    placeholder="https://drive.google.com/... or https://dropbox.com/..."
+                    value={urlInput}
+                    onChange={e => { setUrlInput(e.target.value); setUrlError(null) }}
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-border/60 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all"
+                    onKeyDown={e => { if (e.key === "Enter" && urlInput.trim()) void handleUrlImport() }}
+                  />
+                </div>
+                <Button
+                  onClick={() => void handleUrlImport()}
+                  disabled={urlLoading || !urlInput.trim()}
+                  style={{ touchAction: "manipulation" }}
+                  className="shrink-0 rounded-xl"
+                >
+                  {urlLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Import"}
+                </Button>
+              </div>
+              {urlError && (
+                <div className="flex items-start gap-2 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20 border border-red-200/60 dark:border-red-900/40 rounded-lg px-3 py-2.5 text-sm mt-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  {urlError}
+                </div>
+              )}
+            </div>
+            <div className="rounded-xl bg-muted/40 border border-border/50 p-4 space-y-3 text-xs text-muted-foreground">
+              <p className="font-semibold text-foreground/70">How to share from Google Drive:</p>
+              <ol className="space-y-1.5 list-decimal list-inside leading-relaxed">
+                <li>Right-click the file → <span className="font-medium">Share</span></li>
+                <li>Set access to <span className="font-medium">"Anyone with the link"</span></li>
+                <li>Copy the link and paste it above</li>
+              </ol>
+              <p className="font-semibold text-foreground/70 pt-1">How to share from Dropbox:</p>
+              <ol className="space-y-1.5 list-decimal list-inside leading-relaxed">
+                <li>Click <span className="font-medium">Share</span> on the file in Dropbox</li>
+                <li>Copy the shared link and paste it above</li>
+              </ol>
+            </div>
           </div>
         )}
 
