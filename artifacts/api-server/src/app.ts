@@ -6,7 +6,6 @@ import multer from "multer";
 import rateLimit from "express-rate-limit";
 import { clerkMiddleware, getAuth } from "@clerk/express";
 import { CLERK_PROXY_PATH, clerkProxyMiddleware } from "./middlewares/clerkProxyMiddleware";
-import { allowlistEnforcement } from "./middlewares/allowlistEnforcement";
 import router from "./routes";
 import stripeRoutes from "./routes/stripe";
 import entitlementRoutes from "./routes/entitlements";
@@ -119,6 +118,11 @@ app.use(
             ...replitDomainOrigins,
           ];
           if (allowed.includes(origin)) return callback(null, true);
+          // Also allow any *.replit.app or *.repl.co origin for Replit-hosted deployments
+          if (/^https:\/\/[a-zA-Z0-9-]+\.replit\.app$/.test(origin) ||
+              /^https:\/\/[a-zA-Z0-9-]+\.repl\.co$/.test(origin)) {
+            return callback(null, true);
+          }
           logger.warn({ origin }, "CORS: rejected disallowed origin");
           callback(new Error("CORS: origin not allowed"));
         }
@@ -140,7 +144,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.use(clerkMiddleware());
-app.use(allowlistEnforcement());
 
 // ---------------------------------------------------------------------------
 // Rate limiting
@@ -171,7 +174,6 @@ app.use(
   [
     "/api/documents/analyze",
     "/api/documents/upload",
-    "/api/documents/import-url",
     "/api/documents/scan-images",
     "/api/documents/scan-images-trust",
     "/api/documents/trust-check",

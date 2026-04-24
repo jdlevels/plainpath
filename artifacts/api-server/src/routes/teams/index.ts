@@ -135,83 +135,46 @@ router.get("/invite/:token", async (req, res) => {
 
 // ─── POST /api/teams/invite/:token/accept ─────────────────────────────────────
 router.post("/invite/:token/accept", requireAuth, async (req: any, res) => {
-  const client = await pool.connect();
   try {
     const email = req.userEmail ?? (await getUserEmail(req.userId));
     if (!email) return res.status(401).json({ error: "could_not_resolve_email" });
 
-    await client.query("BEGIN");
-
-    // First, resolve the invite without locking to get the team ID
-    const inviteResult = await client.query(
+    const inviteResult = await pool.query(
       `SELECT ti.*, t.name as team_name FROM team_invites ti
        JOIN teams t ON t.id = ti.team_id
        WHERE ti.token = $1`,
       [req.params.token]
     );
-    if (inviteResult.rowCount === 0) {
-      await client.query("ROLLBACK");
-      return res.status(404).json({ error: "invite_not_found" });
-    }
+    if (inviteResult.rowCount === 0) return res.status(404).json({ error: "invite_not_found" });
     const invite = inviteResult.rows[0];
 
-    if (invite.status !== "pending") {
-      await client.query("ROLLBACK");
-      return res.status(410).json({ error: "invite_used" });
-    }
+    if (invite.status !== "pending") return res.status(410).json({ error: "invite_used" });
     if (new Date(invite.expires_at) < new Date()) {
-      await client.query(`UPDATE team_invites SET status = 'expired' WHERE token = $1`, [req.params.token]);
-      await client.query("COMMIT");
+      await pool.query(`UPDATE team_invites SET status = 'expired' WHERE token = $1`, [req.params.token]);
       return res.status(410).json({ error: "invite_expired" });
     }
 
     if (email.toLowerCase() !== invite.invited_email.toLowerCase()) {
-      await client.query("ROLLBACK");
       return res.status(403).json({ error: "invite_email_mismatch" });
-    }
-
-    // Lock the team row to serialize all concurrent accept operations for this
-    // team. Without this, two different pending invites could both read the same
-    // member count below the cap and both insert, exceeding MAX_TEAM_SEATS.
-    await client.query(
-      `SELECT id FROM teams WHERE id = $1 FOR UPDATE`,
-      [invite.team_id]
-    );
-
-    // Re-check seat cap at acceptance time (under the team lock)
-    const seatCount = await client.query(
-      `SELECT COUNT(*) FROM team_members WHERE team_id = $1`,
-      [invite.team_id]
-    );
-    if (parseInt(seatCount.rows[0].count) >= MAX_TEAM_SEATS) {
-      await client.query("ROLLBACK");
-      return res.status(409).json({
-        error: "seat_limit_reached",
-        message: `This team has reached its ${MAX_TEAM_SEATS}-seat limit and cannot accept more members.`,
-      });
     }
 
     const displayName = await getUserDisplayName(req.userId);
 
-    const existing = await client.query(
+    const existing = await pool.query(
       `SELECT id FROM team_members WHERE team_id = $1 AND user_id = $2`,
       [invite.team_id, req.userId]
     );
     if (existing.rowCount === 0) {
-      await client.query(
+      await pool.query(
         `INSERT INTO team_members (team_id, user_id, email, display_name, role) VALUES ($1, $2, $3, $4, 'member')`,
         [invite.team_id, req.userId, email, displayName]
       );
     }
 
-    await client.query(`UPDATE team_invites SET status = 'accepted' WHERE token = $1`, [req.params.token]);
-    await client.query("COMMIT");
+    await pool.query(`UPDATE team_invites SET status = 'accepted' WHERE token = $1`, [req.params.token]);
     res.json({ ok: true, teamId: invite.team_id, teamName: invite.team_name });
   } catch {
-    await client.query("ROLLBACK");
     res.status(500).json({ error: "server_error" });
-  } finally {
-    client.release();
   }
 });
 
@@ -337,53 +300,34 @@ router.post("/:teamId/invite", requireTeamPlan, async (req: any, res) => {
   const { email } = req.body;
   if (!email?.trim()) return res.status(400).json({ error: "email_required" });
 
-  const inviteClient = await pool.connect();
   try {
-    const adminCheck = await inviteClient.query(
+    const adminCheck = await pool.query(
       `SELECT id FROM team_members WHERE team_id = $1 AND user_id = $2 AND role = 'admin'`,
       [req.params.teamId, req.userId]
     );
-    if (adminCheck.rowCount === 0) {
-      return res.status(403).json({ error: "admin_required" });
-    }
+    if (adminCheck.rowCount === 0) return res.status(403).json({ error: "admin_required" });
 
-    await inviteClient.query("BEGIN");
-
-    // Lock the team row so concurrent invite-creation calls are serialized —
-    // this prevents racing requests from both reading below-cap counts and
-    // both inserting pending invites that together exceed MAX_TEAM_SEATS.
-    await inviteClient.query(
-      `SELECT id FROM teams WHERE id = $1 FOR UPDATE`,
-      [req.params.teamId]
-    );
-
-    const alreadyMember = await inviteClient.query(
+    const alreadyMember = await pool.query(
       `SELECT id FROM team_members WHERE team_id = $1 AND email = $2`,
       [req.params.teamId, email.trim().toLowerCase()]
     );
     if (alreadyMember.rowCount && alreadyMember.rowCount > 0) {
-      await inviteClient.query("ROLLBACK");
       return res.status(409).json({ error: "already_member", message: "This person is already on the team." });
     }
 
-    // Enforce seat limit — count confirmed members AND pending invites so that
-    // pre-sending many invites before anyone accepts cannot bypass the cap.
-    const seatCount = await inviteClient.query(
-      `SELECT
-         (SELECT COUNT(*) FROM team_members WHERE team_id = $1) +
-         (SELECT COUNT(*) FROM team_invites  WHERE team_id = $1 AND status = 'pending')
-         AS total`,
+    // Enforce seat limit
+    const seatCount = await pool.query(
+      `SELECT COUNT(*) FROM team_members WHERE team_id = $1`,
       [req.params.teamId]
     );
-    if (parseInt(seatCount.rows[0].total) >= MAX_TEAM_SEATS) {
-      await inviteClient.query("ROLLBACK");
+    if (parseInt(seatCount.rows[0].count) >= MAX_TEAM_SEATS) {
       return res.status(400).json({
         error: "seat_limit_reached",
-        message: `Your team plan supports up to ${MAX_TEAM_SEATS} members. Remove a member or cancel a pending invite before adding a new one.`,
+        message: `Your team plan supports up to ${MAX_TEAM_SEATS} members. Remove a member before adding a new one.`,
       });
     }
 
-    await inviteClient.query(
+    await pool.query(
       `UPDATE team_invites SET status = 'superseded' WHERE team_id = $1 AND invited_email = $2 AND status = 'pending'`,
       [req.params.teamId, email.trim().toLowerCase()]
     );
@@ -391,15 +335,13 @@ router.post("/:teamId/invite", requireTeamPlan, async (req: any, res) => {
     const token = generateInviteToken();
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-    const result = await inviteClient.query(
+    const result = await pool.query(
       `INSERT INTO team_invites (team_id, invited_email, token, expires_at) VALUES ($1, $2, $3, $4) RETURNING id, token`,
       [req.params.teamId, email.trim().toLowerCase(), token, expiresAt]
     );
 
-    const teamResult = await inviteClient.query(`SELECT name FROM teams WHERE id = $1`, [req.params.teamId]);
+    const teamResult = await pool.query(`SELECT name FROM teams WHERE id = $1`, [req.params.teamId]);
     const teamName = teamResult.rows[0]?.name ?? "your team";
-
-    await inviteClient.query("COMMIT");
 
     const appBase = process.env.APP_URL ?? "https://plainpathapp.com/app";
     const inviteUrl = `${appBase}/join/${token}`;
@@ -421,10 +363,7 @@ router.post("/:teamId/invite", requireTeamPlan, async (req: any, res) => {
       expiresAt,
     });
   } catch {
-    await inviteClient.query("ROLLBACK").catch(() => {});
     res.status(500).json({ error: "server_error" });
-  } finally {
-    inviteClient.release();
   }
 });
 

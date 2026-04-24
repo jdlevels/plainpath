@@ -162,17 +162,7 @@ function WelcomeEmailTrigger() {
   return null;
 }
 
-// Local-storage keys that hold per-session (unscoped) document data.
-// These are cleared whenever the signed-in account changes so that a later
-// user on the same browser cannot access a previous user's saved analyses.
-const LOCAL_HISTORY_KEYS = [
-  "plainpath-saved-analyses",
-  "plainpath-saved-trust-checks",
-];
-
-// Invalidates react-query cache and clears unscoped local history when the
-// signed-in user changes. This prevents cross-user data exposure on shared
-// browsers where a previous user's data may have been written to local storage.
+// Invalidates react-query cache when signed-in user changes
 function ClerkQueryClientCacheInvalidator() {
   const { addListener } = useClerk();
   const qc = useQueryClient();
@@ -186,11 +176,6 @@ function ClerkQueryClientCacheInvalidator() {
         prevUserIdRef.current !== userId
       ) {
         qc.clear();
-        // Remove unscoped local-history entries so the incoming user (or an
-        // unauthenticated visitor) cannot see data left by the previous account.
-        LOCAL_HISTORY_KEYS.forEach((key) => {
-          try { localStorage.removeItem(key); } catch { /* ignore */ }
-        });
       }
       prevUserIdRef.current = userId;
     });

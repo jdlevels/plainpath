@@ -3,7 +3,6 @@ import { v4 as uuidv4 } from "uuid";
 import multer from "multer";
 import { getAuth } from "@clerk/express";
 import { openai } from "@workspace/integrations-openai-ai-server";
-import { requireEntitlement } from "../../middlewares/requireEntitlement.js";
 import { demoDocuments } from "../../lib/demoData.js";
 import { trustCheckDemoDocuments } from "../../lib/trustCheckDemoData.js";
 import type { DocumentAnalysis, DocumentSection, KeyTerm, ActionPack, TrustCheckAnalysis, TrustCheckVerdict, TrustCheckContactDetail, TrustCheckDeadlineItem, TrustCheckScamIndicator, TrustCheckScores, TrustCheckMetadataFinding } from "../../lib/types.js";
@@ -323,7 +322,7 @@ async function runAnalysis(text: string, title?: string, documentTypeHint?: stri
   };
 }
 
-router.post("/analyze", requireEntitlement("analyze"), async (req, res) => {
+router.post("/analyze", async (req, res) => {
   const { text, title, documentTypeHint } = req.body;
 
   if (!text || typeof text !== "string" || text.trim().length < 30) {
@@ -378,7 +377,7 @@ router.post("/analyze", requireEntitlement("analyze"), async (req, res) => {
   }
 });
 
-router.post("/upload", requireEntitlement("analyze"), upload.single("file"), async (req, res, next) => {
+router.post("/upload", upload.single("file"), async (req, res, next) => {
   // Top-level safety net: catches anything that escapes inner try/catch blocks
   // so the global handler never fires for upload errors.
   try {
@@ -520,7 +519,7 @@ router.post("/upload", requireEntitlement("analyze"), upload.single("file"), asy
 });
 
 // ── Scan images (multi-page camera capture) ──────────────────────────────────
-router.post("/scan-images", requireEntitlement("analyze"), async (req, res) => {
+router.post("/scan-images", async (req, res) => {
   const { images, documentTypeHint } = req.body;
 
   if (!Array.isArray(images) || images.length === 0) {
@@ -620,7 +619,7 @@ router.post("/scan-images", requireEntitlement("analyze"), async (req, res) => {
 });
 
 // ── Scan images → Trust Check ────────────────────────────────────────────────
-router.post("/scan-images-trust", requireEntitlement("trust-check"), async (req, res) => {
+router.post("/scan-images-trust", async (req, res) => {
   const { images } = req.body;
 
   if (!Array.isArray(images) || images.length === 0) {
@@ -2135,7 +2134,7 @@ async function extractTextFromBuffer(
   return { text: "", title, error: { status: 400, body: { error: "unsupported_type", message: "Unsupported file type. Please upload a PDF (.pdf), Word document (.docx), or plain text (.txt) file." } } };
 }
 
-router.post("/trust-check", requireEntitlement("trust-check"), async (req, res) => {
+router.post("/trust-check", async (req, res) => {
   const { text } = req.body;
 
   if (!text || typeof text !== "string" || text.trim().length < 30) {
@@ -2170,7 +2169,7 @@ router.post("/trust-check", requireEntitlement("trust-check"), async (req, res) 
   }
 });
 
-router.post("/trust-check-upload", requireEntitlement("trust-check"), upload.single("file"), async (req, res) => {
+router.post("/trust-check-upload", upload.single("file"), async (req, res) => {
   try {
     const file = req.file;
     if (!file) return res.status(400).json({ error: "no_file", message: "No file was uploaded." });
@@ -2855,33 +2854,6 @@ router.post("/import-url", async (req, res) => {
     return res.status(400).json({ message: "A valid URL is required." });
   }
 
-  // Allowlist: only Google Drive and Dropbox share URLs are supported.
-  // Canonical provider hostnames plus known CDN/download redirect domains used by each provider.
-  // Google Drive large-file downloads redirect through *.googleusercontent.com.
-  // Dropbox direct-download links may land on dl.dropboxusercontent.com.
-  const ALLOWED_HOSTNAMES = [
-    "drive.google.com",
-    "googleusercontent.com",     // covers doc-0a-XX-docs.googleusercontent.com etc.
-    "www.dropbox.com",
-    "dropbox.com",
-    "dl.dropboxusercontent.com",
-  ];
-  const MAX_IMPORT_BYTES = 20 * 1024 * 1024; // 20 MB cap
-
-  function isAllowedHost(rawUrl: string): boolean {
-    try {
-      const { hostname, protocol } = new URL(rawUrl);
-      if (protocol !== "https:" && protocol !== "http:") return false;
-      return ALLOWED_HOSTNAMES.some((h) => hostname === h || hostname.endsWith(`.${h}`));
-    } catch {
-      return false;
-    }
-  }
-
-  if (!isAllowedHost(url)) {
-    return res.status(400).json({ message: "Only Google Drive and Dropbox URLs are supported." });
-  }
-
   try {
     let downloadUrl = url.trim();
     let guessedFilename = "document";
@@ -2903,47 +2875,13 @@ router.post("/import-url", async (req, res) => {
       guessedFilename = "dropbox-document";
     }
 
-    // Re-validate the rewritten download URL before fetching.
-    if (!isAllowedHost(downloadUrl)) {
-      return res.status(400).json({ message: "Only Google Drive and Dropbox URLs are supported." });
-    }
-
-    // Follow redirects manually so every hop can be validated against the allowlist
-    // before an outbound request is made — preventing open-redirect-to-SSRF abuse.
-    const MAX_REDIRECTS = 10;
-    let currentUrl = downloadUrl;
-    let fetchRes!: Response;
-    for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
-      if (!isAllowedHost(currentUrl)) {
-        return res.status(400).json({ message: "Only Google Drive and Dropbox URLs are supported." });
-      }
-      fetchRes = await fetch(currentUrl, {
-        headers: {
-          "User-Agent": "Mozilla/5.0 (compatible; PlainPath/1.0)",
-          "Accept": "*/*",
-        },
-        redirect: "manual",
-      });
-      const isRedirect = fetchRes.status >= 300 && fetchRes.status < 400;
-      if (!isRedirect) break;
-      const location = fetchRes.headers.get("location");
-      if (!location) break;
-      // Resolve relative redirects against the current URL.
-      try {
-        currentUrl = new URL(location, currentUrl).toString();
-      } catch {
-        return res.status(400).json({ message: "Could not follow the document redirect." });
-      }
-      if (hop === MAX_REDIRECTS) {
-        return res.status(400).json({ message: "Too many redirects while fetching the document." });
-      }
-    }
-
-    // Enforce response size cap to prevent large-download abuse.
-    const contentLength = parseInt(fetchRes.headers.get("content-length") ?? "0", 10);
-    if (contentLength > MAX_IMPORT_BYTES) {
-      return res.status(400).json({ message: "The document exceeds the 20 MB size limit. Please upload it directly." });
-    }
+    const fetchRes = await fetch(downloadUrl, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (compatible; PlainPath/1.0)",
+        "Accept": "*/*",
+      },
+      redirect: "follow",
+    });
 
     if (!fetchRes.ok) {
       return res.status(400).json({ message: `Could not fetch the document. The link may be expired or private. (Status: ${fetchRes.status})` });
@@ -2954,26 +2892,7 @@ router.post("/import-url", async (req, res) => {
     const filenameMatch = disposition.match(/filename[^;=\n]*=([^;\n"]*)/);
     if (filenameMatch?.[1]) guessedFilename = filenameMatch[1].trim().replace(/["']/g, "");
 
-    // Read body with hard size cap to prevent memory exhaustion.
-    const chunks: Uint8Array[] = [];
-    let totalBytes = 0;
-    const reader = fetchRes.body?.getReader();
-    if (!reader) {
-      return res.status(400).json({ message: "Could not read the document response." });
-    }
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      if (value) {
-        totalBytes += value.byteLength;
-        if (totalBytes > MAX_IMPORT_BYTES) {
-          await reader.cancel();
-          return res.status(400).json({ message: "The document exceeds the 20 MB size limit. Please upload it directly." });
-        }
-        chunks.push(value);
-      }
-    }
-    const buffer = Buffer.concat(chunks.map((c) => Buffer.from(c)));
+    const buffer = Buffer.from(await fetchRes.arrayBuffer());
 
     let extractedText = "";
 

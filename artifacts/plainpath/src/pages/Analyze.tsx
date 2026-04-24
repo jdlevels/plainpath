@@ -195,10 +195,14 @@ export default function Analyze() {
             }).catch(() => {})
           }
         } catch {
-          // Cloud save failed; do not fall back to shared local storage for
-          // signed-in users (cross-user data exposure). Also suppress the
-          // "saved" feedback so the user is not misled into thinking their
-          // data was persisted.
+          const saved = saveAnalysis({
+            title: analysis.title,
+            sourceKind: demoId ? "demo" : "document",
+            documentTypeHint,
+            analysis,
+          })
+          setSavedId(saved.id)
+          triggerFeedback()
         }
       }
     } else {

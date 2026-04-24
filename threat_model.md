@@ -20,7 +20,6 @@ Production assumptions for this threat model:
 ## Trust Boundaries
 
 - **Browser / mobile client to API server** — all request bodies, uploaded files, cookies, headers, query parameters, and session state from the client are untrusted.
-- **Deployment origin boundary** — any live deployment origin, including Replit-hosted aliases under `*.replit.app` or `*.repl.co`, is part of the production surface. Wildcard trust of sibling deployment origins must be treated as trusting attacker-controlled internet sites.
 - **API server to PostgreSQL / SQLite state** — the API has broad authority over persisted user data, billing state, invites, and collaboration records. Query scoping and route-level authz are critical.
 - **API server to third-party services** — the server sends user data to OpenAI, Stripe, Dropbox Sign, Resend, RevenueCat, Clerk, and object storage. Each integration requires origin/authenticity checks and least-privilege handling.
 - **Public / authenticated / admin boundaries** — the marketing site and several API endpoints are intentionally public, while document history, builder, clause extractor, compare versions, signatures, and team routes are intended to be protected. Admin-only behavior is encoded separately from billing-plan access.
@@ -31,7 +30,6 @@ Production assumptions for this threat model:
 
 - **Production entry points**: `artifacts/api-server/src/index.ts`, `artifacts/api-server/src/app.ts`, `artifacts/plainpath/src/main.tsx`, `artifacts/plainpath-marketing/src/main.tsx`
 - **Highest-risk server areas**: `artifacts/api-server/src/routes/{documents,contracts,compare-versions,clause-extractor,signatures,stripe,entitlements,teams}` and `artifacts/api-server/src/lib/{billingDb,pdfObjectStorage,compareVersionsEnrichment}`
-- **Cross-origin policy anchors**: `artifacts/api-server/src/app.ts` CORS and trusted-origin logic for production deployment aliases
 - **Public surfaces**: marketing pages, demo routes, waitlist, reminders, shares, health, some document-analysis routes, Stripe/Dropbox webhook endpoints
 - **Authenticated surfaces**: builder, user docs/history, signatures, clause extractor, compare versions, team management, entitlement bootstrap
 - **Dev-only areas to usually ignore**: `artifacts/mockup-sandbox`, `artifacts/pitch-deck`, `.agents/`, screenshots, docs, and generated/native wrapper artifacts unless production reachability is demonstrated

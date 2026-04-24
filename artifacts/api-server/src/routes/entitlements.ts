@@ -391,26 +391,16 @@ router.post("/bootstrap", async (req, res) => {
 // Records a tool usage event. When PAYWALL_ENFORCEMENT is true, this also
 // validates the subscriber has access to the tool and has not exceeded limits.
 // When PAYWALL_ENFORCEMENT is false, usage is recorded but never blocked.
-//
-// Identity is derived from the authenticated Clerk session — the request body
-// email field is ignored to prevent quota exhaustion / enumeration attacks.
 
-router.post("/consume", async (req, res) => {
+router.post("/consume", (req, res) => {
   try {
-    const auth = getAuth(req)
-    if (!auth?.userId) {
-      return res.status(401).json({ error: "Authentication required." })
-    }
-
-    const clerkUser = await clerkClient.users.getUser(auth.userId)
-    const email = clerkUser.emailAddresses?.[0]?.emailAddress?.toLowerCase().trim() ?? ""
-
+    const email = String(req.body?.email || "").trim().toLowerCase()
     const tool = String(req.body?.tool || "") as ToolKey
 
     const validTools: ToolKey[] = ["analyze", "trust-check", "contract-review", "build-contract", "redact", "signature"]
 
     if (!email) {
-      return res.status(401).json({ error: "Could not resolve authenticated user email." })
+      return res.status(400).json({ error: "Missing email" })
     }
     if (!validTools.includes(tool)) {
       return res.status(400).json({ error: `Invalid tool. Must be one of: ${validTools.join(", ")}` })
@@ -487,21 +477,13 @@ router.post("/consume", async (req, res) => {
 })
 
 // ─── POST /consume-analysis (legacy endpoint, kept for backwards compat) ──────
-// Identity is derived from the authenticated Clerk session — the request body
-// email field is ignored to prevent quota exhaustion / enumeration attacks.
 
-router.post("/consume-analysis", async (req, res) => {
+router.post("/consume-analysis", (req, res) => {
   try {
-    const auth = getAuth(req)
-    if (!auth?.userId) {
-      return res.status(401).json({ error: "Authentication required." })
-    }
-
-    const clerkUser = await clerkClient.users.getUser(auth.userId)
-    const email = clerkUser.emailAddresses?.[0]?.emailAddress?.toLowerCase().trim() ?? ""
+    const email = String(req.body?.email || "").trim().toLowerCase()
 
     if (!email) {
-      return res.status(401).json({ error: "Could not resolve authenticated user email." })
+      return res.status(400).json({ error: "Missing email" })
     }
 
     if (isAdminEmail(email)) {
@@ -531,7 +513,7 @@ router.post("/consume-analysis", async (req, res) => {
 
     if (!subscriber || subscriber.status !== "active") {
       return res.status(403).json({
-        error: "No active subscription found for this account.",
+        error: "No active subscription found for this email.",
       })
     }
 
