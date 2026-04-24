@@ -813,7 +813,7 @@ function TopBar({ analysis, onSave, justSaved, savedId }: {
         </button>
         <a href="/analyze" className="h-7 px-2.5 rounded-lg border border-white/[0.08] bg-white/[0.03] text-white/30 text-xs hover:bg-white/[0.06] hover:text-white/50 transition-colors flex items-center gap-1.5">
           <Zap className="w-3 h-3" />
-          <span className="hidden sm:inline">Re-analyse</span>
+          <span className="hidden sm:inline">Re-analyze</span>
         </a>
       </div>
     </div>

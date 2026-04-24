@@ -77,7 +77,7 @@ export function AnalyzeDocumentLiveCompleted() {
   return (
     <div className="h-screen flex flex-col bg-[#0c0c0f] text-white overflow-hidden" style={{ fontFamily: "'Inter', sans-serif" }}>
 
-      {/* Top bar — LIVE: "Re-analyse" with Zap icon, Save button, confidence badge */}
+      {/* Top bar — LIVE: "Re-analyze" with Zap icon, Save button, confidence badge */}
       <div className="h-12 border-b border-white/[0.06] flex items-center px-5 gap-2.5 shrink-0">
         <div className="w-5 h-5 rounded bg-violet-600 flex items-center justify-center shrink-0">
           <FileText className="w-3 h-3 text-white" />
@@ -96,10 +96,10 @@ export function AnalyzeDocumentLiveCompleted() {
             <Bookmark className="w-3 h-3" />
             <span>Save</span>
           </button>
-          {/* LIVE CHANGE: "Re-analyse" with Zap (was "New" with Upload) */}
+          {/* LIVE CHANGE: "Re-analyze" with Zap (was "New" with Upload) */}
           <a className="h-7 px-2.5 rounded-lg border border-white/[0.08] bg-white/[0.03] text-white/30 text-xs flex items-center gap-1.5">
             <Zap className="w-3 h-3" />
-            <span>Re-analyse</span>
+            <span>Re-analyze</span>
           </a>
         </div>
       </div>

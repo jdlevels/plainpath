@@ -50,7 +50,7 @@ export function AnalyzeDocumentLiveScrolled() {
             <Bookmark className="w-3 h-3" /><span>Save</span>
           </button>
           <a className="h-7 px-2.5 rounded-lg border border-white/[0.08] bg-white/[0.03] text-white/30 text-xs flex items-center gap-1.5">
-            <Zap className="w-3 h-3" /><span>Re-analyse</span>
+            <Zap className="w-3 h-3" /><span>Re-analyze</span>
           </a>
         </div>
       </div>
