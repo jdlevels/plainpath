@@ -1,15 +1,15 @@
 import {
   ShieldCheck, Upload, FileText, Mail, Camera, Link,
-  Scale, Home, FileWarning, AlertTriangle, Info, ChevronRight
+  Scale, Home, FileWarning, Info
 } from "lucide-react";
 
 const USE_CASES = [
-  { icon: <FileText className="w-3.5 h-3.5 text-violet-400" />, label: "Invoices & payment requests", desc: "Check for spoofed senders and payment fraud signals" },
-  { icon: <Scale className="w-3.5 h-3.5 text-sky-400" />, label: "Contracts & agreements", desc: "Verify parties, dates, and document consistency" },
-  { icon: <Mail className="w-3.5 h-3.5 text-amber-400" />, label: "Official notices & letters", desc: "Spot impersonation and formatting inconsistencies" },
-  { icon: <Home className="w-3.5 h-3.5 text-emerald-400" />, label: "Court & government documents", desc: "Check structure, identifiers, and source signals" },
+  { icon: <FileText className="w-3.5 h-3.5 text-violet-400" />, label: "Invoices & payment requests", desc: "Look for suspicious senders, unusual payment methods, date gaps" },
+  { icon: <Scale className="w-3.5 h-3.5 text-sky-400" />, label: "Contracts & agreements", desc: "Check party consistency, dates, and document structure" },
+  { icon: <Mail className="w-3.5 h-3.5 text-amber-400" />, label: "Official notices & letters", desc: "Spot impersonation signals and formatting inconsistencies" },
+  { icon: <Home className="w-3.5 h-3.5 text-emerald-400" />, label: "Court & government documents", desc: "Review structure, identifiers, and source signals" },
   { icon: <FileWarning className="w-3.5 h-3.5 text-orange-400" />, label: "Records & certificates", desc: "Look for missing fields, altered data, scan anomalies" },
-  { icon: <Scale className="w-3.5 h-3.5 text-rose-400" />, label: "Forms & applications", desc: "Review formatting, completeness, and consistency" },
+  { icon: <Scale className="w-3.5 h-3.5 text-rose-400" />, label: "Forms & applications", desc: "Review completeness, formatting, and consistency" },
 ];
 
 export function TrustCheckEmpty() {
@@ -38,7 +38,7 @@ export function TrustCheckEmpty() {
             Check whether a document can be trusted.
           </h1>
           <p className="text-white/35 text-sm leading-[1.7]">
-            Upload a document. PlainPath checks for credibility signals, missing details, suspicious structure, conflicting information, and source-backed red flags.
+            Upload a document. PlainPath checks for credibility signals, missing details, suspicious structure, conflicting information, and source-backed risk indicators.
           </p>
         </div>
 
@@ -50,7 +50,7 @@ export function TrustCheckEmpty() {
             </div>
             <div className="text-center">
               <p className="text-white/70 text-sm font-medium mb-1">Drop your document here</p>
-              <p className="text-white/28 text-xs">PlainPath checks the document for trust signals — not its content</p>
+              <p className="text-white/28 text-xs">PlainPath checks for trust signals — not the meaning of the content</p>
             </div>
             <button className="h-8 px-5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold transition-colors flex items-center gap-1.5">
               <Upload className="w-3 h-3" />
@@ -66,20 +66,20 @@ export function TrustCheckEmpty() {
               { icon: <Mail className="w-3.5 h-3.5" />, label: "Paste Text", desc: "Paste from email or web" },
               { icon: <Link className="w-3.5 h-3.5" />, label: "Import Link", desc: "From URL or cloud" },
             ].map((opt, i) => (
-              <button key={i} className="flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border border-white/[0.07] bg-white/[0.015] hover:bg-white/[0.03] transition-colors text-white/35">
-                {opt.icon}
-                <span className="text-[10px] font-medium text-white/50">{opt.label}</span>
+              <button key={i} className="flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border border-white/[0.07] bg-white/[0.015] hover:bg-white/[0.03] transition-colors">
+                <span className="text-white/30">{opt.icon}</span>
+                <span className="text-[10px] font-medium text-white/48">{opt.label}</span>
                 <span className="text-[9px] text-white/22 text-center leading-tight">{opt.desc}</span>
               </button>
             ))}
           </div>
         </div>
 
-        {/* Trust signals note */}
+        {/* Disclaimer */}
         <div className="w-full max-w-lg mb-7 flex items-start gap-2.5 px-3 py-2.5 rounded-lg border border-amber-500/12 bg-amber-500/[0.04]">
-          <Info className="w-3 h-3 text-amber-400/60 mt-[2px] shrink-0" />
-          <p className="text-amber-200/45 text-[10px] leading-relaxed">
-            PlainPath identifies <strong className="text-amber-200/60">trust signals and risk indicators</strong> only. Results are not a legal or forensic determination. Human verification is always required before acting on any finding.
+          <Info className="w-3 h-3 text-amber-400/55 mt-[2px] shrink-0" />
+          <p className="text-amber-200/42 text-[10px] leading-relaxed">
+            PlainPath identifies <strong className="text-amber-200/60">possible risk indicators and trust signals</strong> only. Results are not a legal or forensic determination. Human verification is always required before acting on any finding.
           </p>
         </div>
 

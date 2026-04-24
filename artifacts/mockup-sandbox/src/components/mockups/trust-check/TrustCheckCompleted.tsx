@@ -1,27 +1,27 @@
 import {
   ShieldCheck, AlertTriangle, CheckCircle2, ChevronRight, FileText,
-  FileWarning, Zap, Bookmark, Users, Calendar, X, Shield,
-  AlertCircle, ClipboardCheck, BarChart2
+  FileWarning, Zap, Bookmark, Info, ClipboardCheck, BarChart2,
+  AlertCircle
 } from "lucide-react";
 
 function SourceChip({ label, active }: { label: string; active?: boolean }) {
   return (
-    <span className={`inline-flex items-center gap-1 h-[18px] px-1.5 rounded text-[10px] font-mono font-medium whitespace-nowrap cursor-pointer ${
+    <span className={`inline-flex items-center gap-1 h-[18px] px-1.5 rounded text-[10px] font-mono font-medium whitespace-nowrap cursor-pointer transition-all ${
       active
-        ? "bg-violet-500/30 border border-violet-400/55 text-violet-100 ring-1 ring-violet-500/35 shadow-[0_0_8px_rgba(139,92,246,0.22)]"
+        ? "bg-violet-500/30 border border-violet-400/55 text-violet-100 ring-1 ring-violet-500/35"
         : "bg-violet-600/10 border border-violet-500/18 text-violet-300/75 hover:bg-violet-500/20"
     }`}>
-      {active && <div className="w-1 h-1 rounded-full bg-violet-400 animate-pulse shrink-0" />}
+      {active && <div className="w-1 h-1 rounded-full bg-violet-400 shrink-0" />}
       {label}
     </span>
   );
 }
 
-function SLabel({ children, icon, right }: { children: React.ReactNode; icon?: React.ReactNode; right?: React.ReactNode }) {
+function PanelLabel({ children, icon, right }: { children: React.ReactNode; icon?: React.ReactNode; right?: React.ReactNode }) {
   return (
     <div className="flex items-center gap-1.5 mb-3">
-      {icon && <span className="text-white/28 shrink-0">{icon}</span>}
-      <p className="text-[10px] uppercase tracking-[0.12em] font-semibold text-white/26 flex-1">{children}</p>
+      {icon && <span className="shrink-0 text-white/25">{icon}</span>}
+      <p className="text-[10px] uppercase tracking-[0.12em] font-semibold text-white/24 flex-1">{children}</p>
       {right}
     </div>
   );
@@ -29,82 +29,72 @@ function SLabel({ children, icon, right }: { children: React.ReactNode; icon?: R
 
 const CONCERNS = [
   {
-    title: "Sender email domain doesn't match Microsoft",
-    detail: "Sent from m1crosoft-invoices.com — not microsoft.com. Possible impersonation.",
+    title: "Sender email domain may not match the claimed sender",
+    detail: "Sent from northstar-billing.net — the stated company typically uses northstarcloudsvc.com. This is a possible impersonation signal.",
     sev: "critical",
     chip: "p.1 · Header",
-    action: "Verify sender identity directly with Microsoft before paying.",
+    action: "Confirm sender identity directly through a known contact at the company before responding.",
   },
   {
-    title: "Wire transfer to international account",
-    detail: "Microsoft does not typically request wire transfers to personal or foreign accounts.",
+    title: "Wire transfer destination is unusual for this vendor type",
+    detail: "Payment directed to an overseas account. This pattern requires independent verification of the payment destination.",
     sev: "critical",
     chip: "p.2 · §4",
-    action: "Reject this payment method. Contact Microsoft finance directly.",
+    action: "Verify the payment account independently — call or email the vendor using a contact you already have on file.",
   },
   {
-    title: "Date inconsistency — invoice post-dates service period",
-    detail: "Invoice dated March 15 but service period ended February 28, 2025.",
-    sev: "high",
+    title: "Invoice date and service period appear inconsistent",
+    detail: "Invoice is dated April 10 but the stated service period ended March 31. This internal inconsistency warrants clarification.",
+    sev: "caution",
     chip: "p.1 · §1",
-    action: "Request an explanation and a corrected, re-dated invoice.",
+    action: "Request an explanation and a corrected, re-dated version from the sender.",
   },
   {
-    title: "Missing official watermark and document identifier",
-    detail: "Genuine Microsoft invoices include embedded document IDs and security watermarks.",
-    sev: "high",
+    title: "Document header identifiers appear incomplete",
+    detail: "No document ID or reference number visible in the header. Consistent with some invoice formats, but worth confirming.",
+    sev: "caution",
     chip: "p.1",
-    action: "Compare against a verified Microsoft invoice from your account portal.",
+    action: "Ask the sender to re-send with a full document reference or purchase order number.",
   },
 ];
 
 const CHECKLIST = [
-  { label: "Contact Microsoft directly to verify invoice #MS-2025-88241", done: false, urgent: true },
-  { label: "Do not send any payment until identity is confirmed", done: false, urgent: true },
-  { label: "Check Microsoft customer portal for this invoice", done: false, urgent: false },
-  { label: "Forward to your finance/IT team for review", done: false, urgent: false },
-  { label: "Save a copy of this document as evidence", done: false, urgent: false },
+  { label: "Confirm sender using a known phone number or email address — not the contact info in this document", urgent: true, done: false },
+  { label: "Verify payment destination independently before transferring any funds", urgent: true, done: false },
+  { label: "Cross-check invoice number with your own records or PO system", urgent: false, done: false },
+  { label: "Request the original source file (not a scan or forwarded copy)", urgent: false, done: false },
+  { label: "Confirm any signatures or official identifiers with the issuing party", urgent: false, done: false },
+  { label: "Do not pay or act on this document until high-risk signals are resolved", urgent: false, done: false },
 ];
 
 const CONSISTENCY = [
   { label: "Company name", status: "ok" },
   { label: "Invoice number format", status: "warn" },
-  { label: "Sender email domain", status: "critical" },
-  { label: "Payment instructions", status: "critical" },
+  { label: "Sender email domain", status: "warn" },
+  { label: "Payment instructions", status: "warn" },
   { label: "Dates — invoice vs. service period", status: "warn" },
-  { label: "Document logo/watermark", status: "warn" },
+  { label: "Document header identifiers", status: "warn" },
   { label: "Referenced attachments", status: "ok" },
 ];
 
 const DOC_SECTIONS = [
-  { id: "s1", title: "Invoice Header", body: "MICROSOFT CORP — INVOICE\nInvoice #: MS-2025-88241\nDate: March 15, 2025\nBill To: Acme Industries LLC, 14 Oak Ave, Portland, OR", active: false },
-  { id: "s2", title: "Service Period & Items", body: "Enterprise Software Licensing — Q1 2025\nService period: Jan 1 – Feb 28, 2025\n12-month subscription renewal — $47,350.00", active: false },
-  { id: "s3", title: "Payment Instructions", body: "Wire Transfer ONLY to:\nBank: Erste Bank AG, Vienna\nIBAN: AT12 3456 7890 1234 5678\nBIC: GIBAATWW\nRef: INV-2025-88241", active: false },
+  { id: "s1", title: "Invoice Header", body: "NORTHSTAR CLOUD SERVICES\nINVOICE NCS-2025-10847\nDate: April 10, 2025\nBill To: Meridian Group LLC, 88 Commerce Drive, Austin, TX" },
+  { id: "s2", title: "Service Items", body: "IT Infrastructure — Q1 2025\nManaged services: Jan 1 – Mar 31, 2025\nEnterprise tier renewal — $31,200.00" },
+  { id: "s3", title: "Payment Instructions", body: "Wire Transfer to:\nCoastal Pacific Bank, Singapore\nAccount: 4817-2930-1055\nRef: NCS-2025-10847" },
 ];
 
-function DocSection({ section }: { section: typeof DOC_SECTIONS[0] }) {
-  return (
-    <div className={`w-full rounded-xl border p-4 flex flex-col gap-2 ${section.active ? "border-violet-500/45 bg-violet-500/[0.06] ring-1 ring-violet-500/20" : "border-white/[0.05] bg-white/[0.015]"}`}>
-      <p className="text-[9px] font-mono text-white/18">{section.title}</p>
-      <p className="text-[11px] text-white/38 leading-relaxed whitespace-pre-line">{section.body}</p>
-    </div>
-  );
-}
-
-const SEV_STYLES: Record<string, string> = {
-  critical: "border-red-500/28 bg-red-500/[0.05]",
-  high: "border-amber-500/18 bg-amber-500/[0.03]",
-  medium: "border-white/[0.07]",
+const SEV: Record<string, string> = {
+  critical: "border-amber-500/22 bg-amber-500/[0.04]",
+  caution:  "border-white/[0.08] bg-white/[0.015]",
 };
-const DOT_STYLES: Record<string, string> = {
-  critical: "bg-red-400",
-  high: "bg-amber-400",
-  medium: "bg-white/25",
+const DOT: Record<string, string> = {
+  critical: "bg-amber-400",
+  caution:  "bg-white/28",
 };
-const STATUS_ICON: Record<string, React.ReactNode> = {
-  ok: <CheckCircle2 className="w-3 h-3 text-emerald-400" />,
-  warn: <AlertTriangle className="w-3 h-3 text-amber-400" />,
-  critical: <AlertCircle className="w-3 h-3 text-red-400" />,
+const STAT: Record<string, React.ReactNode> = {
+  ok:   <CheckCircle2 className="w-3 h-3 text-emerald-400/80" />,
+  warn: <AlertTriangle className="w-3 h-3 text-amber-400/80" />,
+  crit: <AlertCircle className="w-3 h-3 text-red-400/80" />,
 };
 
 export function TrustCheckCompleted() {
@@ -120,18 +110,18 @@ export function TrustCheckCompleted() {
         <span className="text-white/18 text-[10px] mx-0.5">·</span>
         <span className="text-white/30 text-xs">Document Trust Check</span>
         <ChevronRight className="w-3 h-3 text-white/18" />
-        <span className="text-white/30 text-xs truncate max-w-[180px]">Microsoft — Invoice INV-2025-88241.pdf</span>
+        <span className="text-white/30 text-xs truncate max-w-[180px]">NCS Invoice NCS-2025-10847.pdf</span>
         <div className="ml-auto flex items-center gap-2">
-          <div className="h-6 px-2.5 rounded-full border flex items-center gap-1.5 bg-red-600/12 border-red-500/28 text-red-300">
+          <div className="h-6 px-2.5 rounded-full border flex items-center gap-1.5 bg-amber-600/12 border-amber-500/28 text-amber-300">
             <AlertTriangle className="w-2.5 h-2.5" />
-            <span className="text-[10px] font-medium">High risk · 22/100</span>
+            <span className="text-[10px] font-medium">Needs review · 31/100</span>
           </div>
           <button className="h-7 px-2.5 rounded-lg border border-white/[0.08] bg-white/[0.03] text-white/30 text-xs flex items-center gap-1.5">
             <Bookmark className="w-3 h-3" /><span>Save</span>
           </button>
-          <a className="h-7 px-2.5 rounded-lg border border-white/[0.08] bg-white/[0.03] text-white/30 text-xs flex items-center gap-1.5">
+          <button className="h-7 px-2.5 rounded-lg border border-white/[0.08] bg-white/[0.03] text-white/30 text-xs flex items-center gap-1.5">
             <Zap className="w-3 h-3" /><span>Re-analyze</span>
-          </a>
+          </button>
         </div>
       </div>
 
@@ -140,8 +130,8 @@ export function TrustCheckCompleted() {
         {/* LEFT: document viewer */}
         <div className="w-[58%] border-r border-white/[0.06] flex flex-col bg-[#0d0d10] shrink-0 overflow-hidden">
           <div className="h-10 border-b border-white/[0.06] flex items-center px-4 gap-2.5 shrink-0">
-            <FileWarning className="w-3.5 h-3.5 text-red-400/60 shrink-0" />
-            <span className="text-white/45 text-xs flex-1 truncate">Microsoft — Invoice INV-2025-88241.pdf</span>
+            <FileWarning className="w-3.5 h-3.5 text-amber-400/55 shrink-0" />
+            <span className="text-white/45 text-xs flex-1 truncate">Northstar Cloud Services — Invoice NCS-2025-10847.pdf</span>
             <span className="text-white/18 text-xs shrink-0">3 pp.</span>
             <div className="w-px h-4 bg-white/[0.06] mx-1" />
             <div className="flex items-center gap-0.5">
@@ -151,97 +141,100 @@ export function TrustCheckCompleted() {
             </div>
           </div>
           <div className="flex-1 overflow-y-auto px-3 py-3 flex flex-col gap-2.5">
-            {DOC_SECTIONS.map(s => <DocSection key={s.id} section={s} />)}
+            {DOC_SECTIONS.map(s => (
+              <div key={s.id} className="w-full rounded-xl border border-white/[0.05] bg-white/[0.015] p-4 flex flex-col gap-2">
+                <p className="text-[9px] font-mono text-white/18">{s.title}</p>
+                <p className="text-[11px] text-white/35 leading-relaxed whitespace-pre-line">{s.body}</p>
+              </div>
+            ))}
           </div>
           <div className="h-10 border-t border-white/[0.06] flex items-center justify-between px-4 shrink-0">
             <span className="text-white/20 text-xs">3 sections</span>
-            <div className="flex items-center gap-1">
-              {[1,2,3].map(n => <button key={n} className="w-6 h-6 rounded-md text-[9px] flex items-center justify-center text-white/22">{n}</button>)}
-            </div>
+            <div className="flex items-center gap-1">{[1,2,3].map(n => <button key={n} className="w-6 h-6 rounded-md text-[9px] flex items-center justify-center text-white/22">{n}</button>)}</div>
             <span className="text-white/14 text-[10px]">Jump to section</span>
           </div>
         </div>
 
         {/* RIGHT: trust intelligence panel */}
         <div className="flex-1 overflow-y-auto bg-[#0c0c0f]">
-          <div className="p-5 flex flex-col gap-5">
+          <div className="p-5 flex flex-col gap-4">
 
             {/* Doc identity */}
             <div className="flex items-start gap-3 pb-4 border-b border-white/[0.05]">
-              <div className="w-9 h-9 rounded-xl bg-red-600/10 border border-red-500/22 flex items-center justify-center shrink-0 mt-0.5">
-                <FileWarning className="w-4 h-4 text-red-400" />
+              <div className="w-9 h-9 rounded-xl bg-amber-600/10 border border-amber-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                <FileWarning className="w-4 h-4 text-amber-400" />
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                  <h1 className="text-white/90 text-sm font-semibold">Microsoft Invoice — INV-2025-88241</h1>
-                  <span className="h-4 px-1.5 rounded border border-red-500/28 bg-red-500/10 text-red-300/80 text-[9px] font-medium">High Risk</span>
+                  <h1 className="text-white/90 text-sm font-semibold">Northstar Cloud Services Invoice</h1>
+                  <span className="h-4 px-1.5 rounded border border-amber-500/28 bg-amber-500/10 text-amber-300/80 text-[9px] font-medium">Needs Review</span>
                 </div>
-                <p className="text-white/28 text-[10px]">Claimed: Microsoft Corp · Invoice · March 15, 2025 · 3 pages</p>
+                <p className="text-white/28 text-[10px]">Claimed: Northstar Cloud Services · Invoice · April 10, 2025 · 3 pages</p>
               </div>
             </div>
 
             {/* A. Trust Summary */}
-            <div className="rounded-xl border border-red-500/18 bg-red-600/[0.04] p-4">
-              <SLabel icon={<ShieldCheck className="w-3.5 h-3.5 text-red-400/60" />}>Trust Summary</SLabel>
-              <p className="text-white/72 text-sm leading-[1.7]">
-                This document has <strong className="text-red-300">major trust concerns</strong> and should <strong className="text-red-300">not be acted on</strong> without direct verification. The sender domain does not match Microsoft's, the payment method is highly atypical, and dates are internally inconsistent. These are <strong className="text-white/80">common signals of invoice fraud</strong>. Do not make any payment until you confirm this invoice independently through a verified Microsoft contact.
+            <div className="rounded-xl border border-white/[0.09] bg-white/[0.02] p-4">
+              <PanelLabel icon={<ShieldCheck className="w-3.5 h-3.5" />}>A. Trust Summary</PanelLabel>
+              <p className="text-white/70 text-sm leading-[1.75]">
+                This document has <strong className="text-amber-300">several signals that require verification</strong> before acting. PlainPath identified a possible sender domain mismatch, an unusual payment destination, and an internal date inconsistency. These are <strong className="text-white/80">risk indicators, not proof of fraud</strong>. Confirm with the original source before responding or paying.
               </p>
             </div>
 
-            {/* B. Trust Score strip */}
+            {/* B. Trust Score / Confidence Strip */}
             <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
-              <SLabel icon={<BarChart2 className="w-3.5 h-3.5 text-white/30" />}>Trust Score & Confidence</SLabel>
+              <PanelLabel icon={<BarChart2 className="w-3.5 h-3.5" />}>B. Trust Score &amp; Confidence</PanelLabel>
               <div className="flex flex-wrap gap-1.5 mb-3">
-                <div className="h-6 px-2.5 rounded-lg border flex items-center gap-1.5 bg-red-600/12 border-red-500/28 text-red-300">
-                  <span className="text-[11px] font-semibold">22 / 100</span>
-                  <span className="text-[9px] text-red-300/60">trust score</span>
+                <div className="h-6 px-2.5 rounded-lg border flex items-center gap-1.5 bg-amber-600/12 border-amber-500/25 text-amber-300">
+                  <span className="text-[11px] font-semibold">31 / 100</span>
+                  <span className="text-[9px] text-amber-300/55">trust score</span>
                 </div>
-                <div className="h-6 px-2.5 rounded-lg border flex items-center gap-1.5 bg-amber-600/10 border-amber-500/22 text-amber-300">
+                <div className="h-6 px-2.5 rounded-lg border flex items-center gap-1.5 bg-sky-600/10 border-sky-500/20 text-sky-300">
                   <span className="text-[11px] font-medium">Medium confidence</span>
                 </div>
-                <div className="h-6 px-2.5 rounded-lg border flex items-center gap-1.5 bg-white/[0.04] border-white/[0.10] text-white/45">
-                  <span className="text-[10px]">Invoice · 84% type match</span>
+                <div className="h-6 px-2.5 rounded-lg border flex items-center gap-1.5 bg-white/[0.04] border-white/[0.08] text-white/42">
+                  <span className="text-[10px]">Invoice · 81% type match</span>
                 </div>
               </div>
-              {/* Red flag count pills */}
-              <div className="flex items-center gap-1.5">
-                <div className="h-5 px-2 rounded-full bg-red-500/10 border border-red-500/22 flex items-center gap-1">
-                  <div className="w-1 h-1 rounded-full bg-red-400 shrink-0" />
-                  <span className="text-red-300 text-[9px] font-medium">2 critical signals</span>
-                </div>
-                <div className="h-5 px-2 rounded-full bg-amber-500/8 border border-amber-500/18 flex items-center gap-1">
+              <div className="flex items-center gap-1.5 mb-2.5">
+                <div className="h-5 px-2 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center gap-1">
                   <div className="w-1 h-1 rounded-full bg-amber-400 shrink-0" />
-                  <span className="text-amber-300 text-[9px] font-medium">2 high signals</span>
+                  <span className="text-amber-300 text-[9px] font-medium">2 possible critical signals</span>
                 </div>
                 <div className="h-5 px-2 rounded-full bg-amber-500/6 border border-amber-500/12 flex items-center gap-1">
-                  <AlertTriangle className="w-2 h-2 text-amber-400/60 shrink-0" />
-                  <span className="text-amber-300/60 text-[9px]">Needs human review</span>
+                  <div className="w-1 h-1 rounded-full bg-amber-400/50 shrink-0" />
+                  <span className="text-amber-300/65 text-[9px]">2 caution signals</span>
                 </div>
+              </div>
+              <div className="flex items-start gap-1.5 px-2.5 py-2 rounded-lg bg-white/[0.02] border border-white/[0.05]">
+                <Info className="w-2.5 h-2.5 text-white/20 mt-[2px] shrink-0" />
+                <p className="text-white/22 text-[9px] leading-relaxed">Trust score reflects document consistency, source clarity, metadata signals, and risk indicators. It is not a legal or forensic determination.</p>
               </div>
             </div>
 
             {/* C. Major Trust Concerns */}
             <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
-              <SLabel icon={<AlertTriangle className="w-3.5 h-3.5 text-red-400/55" />}
-                right={<span className="h-4 px-1.5 rounded bg-red-500/10 border border-red-500/22 text-red-300/70 text-[9px]">2 critical</span>}>
-                Major Trust Concerns
-              </SLabel>
+              <PanelLabel
+                icon={<AlertTriangle className="w-3.5 h-3.5" />}
+                right={<span className="h-4 px-1.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-300/70 text-[9px]">4 concerns</span>}>
+                C. Major Trust Concerns
+              </PanelLabel>
               <div className="flex flex-col gap-2">
                 {CONCERNS.map((c, i) => (
-                  <div key={i} className={`rounded-xl border px-3.5 py-3 ${SEV_STYLES[c.sev]}`}>
+                  <div key={i} className={`rounded-xl border px-3.5 py-3 ${SEV[c.sev]}`}>
                     <div className="flex items-start gap-2.5 mb-2">
-                      <div className={`w-1.5 h-1.5 rounded-full mt-[5px] shrink-0 ${DOT_STYLES[c.sev]}`} />
+                      <div className={`w-1.5 h-1.5 rounded-full mt-[5px] shrink-0 ${DOT[c.sev]}`} />
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2">
-                          <p className="text-white/80 text-xs font-medium leading-snug">{c.title}</p>
+                        <div className="flex items-start justify-between gap-2 mb-1">
+                          <p className="text-white/80 text-xs font-medium leading-snug flex-1">{c.title}</p>
                           <SourceChip label={c.chip} />
                         </div>
-                        <p className="text-white/38 text-[10px] leading-relaxed mt-1">{c.detail}</p>
+                        <p className="text-white/38 text-[10px] leading-relaxed">{c.detail}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1.5 pl-4">
-                      <ChevronRight className="w-2.5 h-2.5 text-violet-400/40 shrink-0" />
-                      <p className="text-violet-300/55 text-[10px] leading-relaxed">{c.action}</p>
+                    <div className="flex items-start gap-1.5 pl-4">
+                      <ChevronRight className="w-2.5 h-2.5 text-violet-400/35 shrink-0 mt-0.5" />
+                      <p className="text-violet-300/50 text-[10px] leading-relaxed">{c.action}</p>
                     </div>
                   </div>
                 ))}
@@ -249,24 +242,22 @@ export function TrustCheckCompleted() {
             </div>
 
             {/* D. Verification Checklist */}
-            <div className="rounded-xl overflow-hidden border border-white/[0.09]" style={{ background: "linear-gradient(140deg, rgba(109,40,217,0.07) 0%, rgba(12,12,15,0) 55%)" }}>
+            <div className="rounded-xl overflow-hidden border border-white/[0.09]" style={{ background: "linear-gradient(140deg, rgba(109,40,217,0.06) 0%, rgba(12,12,15,0) 55%)" }}>
               <div className="px-4 pt-4 pb-3 border-b border-white/[0.07] flex items-center gap-2.5">
                 <div className="w-6 h-6 rounded-lg bg-violet-600/18 border border-violet-500/28 flex items-center justify-center">
                   <ClipboardCheck className="w-3.5 h-3.5 text-violet-400" />
                 </div>
-                <p className="text-white/85 text-sm font-semibold flex-1">Verification Checklist</p>
-                <div className="h-5 px-2 rounded-full bg-red-500/10 border border-red-500/20">
-                  <span className="text-red-300/90 text-[9px] font-medium">2 urgent</span>
+                <p className="text-white/85 text-sm font-semibold flex-1">D. Verification Checklist</p>
+                <div className="h-5 px-2 rounded-full bg-amber-500/10 border border-amber-500/20">
+                  <span className="text-amber-300/80 text-[9px] font-medium">2 urgent</span>
                 </div>
               </div>
               <div className="p-3 flex flex-col gap-1.5">
                 {CHECKLIST.map((item, i) => (
                   <div key={i} className={`flex items-start gap-2.5 px-3 py-2.5 rounded-lg border cursor-pointer hover:bg-white/[0.02] ${item.urgent ? "border-white/[0.10] bg-white/[0.018]" : "border-white/[0.06]"}`}>
-                    <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center mt-0.5 shrink-0 ${item.done ? "bg-emerald-500 border-emerald-500" : "border-white/[0.18]"}`}>
-                      {item.done && <CheckCircle2 className="w-2 h-2 text-white" />}
-                    </div>
-                    <p className={`text-xs ${item.urgent ? "text-white/78 font-medium" : "text-white/40"}`}>{item.label}</p>
-                    {item.urgent && <div className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0 mt-1" />}
+                    <div className="w-3.5 h-3.5 rounded border border-white/[0.18] flex-shrink-0 mt-0.5" />
+                    <p className={`text-[10px] leading-relaxed flex-1 ${item.urgent ? "text-white/75 font-medium" : "text-white/38"}`}>{item.label}</p>
+                    {item.urgent && <div className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0 mt-1" />}
                   </div>
                 ))}
               </div>
@@ -274,33 +265,33 @@ export function TrustCheckCompleted() {
 
             {/* E. Document Consistency */}
             <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4">
-              <SLabel icon={<FileText className="w-3.5 h-3.5 text-white/28" />}>Document Consistency</SLabel>
+              <PanelLabel icon={<FileText className="w-3.5 h-3.5" />}>E. Document Consistency</PanelLabel>
               <div className="grid grid-cols-2 gap-1.5">
                 {CONSISTENCY.map((item, i) => (
                   <div key={i} className="flex items-center gap-2 px-2.5 py-2 rounded-lg border border-white/[0.05]">
-                    {STATUS_ICON[item.status]}
-                    <p className="text-white/48 text-[10px] flex-1 truncate">{item.label}</p>
+                    {STAT[item.status]}
+                    <p className="text-white/45 text-[10px] flex-1 truncate">{item.label}</p>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* F. Metadata Signals */}
+            {/* F. Metadata / Structure Signals */}
             <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4">
-              <SLabel icon={<BarChart2 className="w-3.5 h-3.5 text-white/25" />}>Metadata & Structure Signals</SLabel>
+              <PanelLabel icon={<BarChart2 className="w-3.5 h-3.5" />}>F. Metadata &amp; Structure Signals</PanelLabel>
               <div className="flex flex-col gap-1.5">
                 {[
                   { label: "File type", value: "PDF (v1.7)", ok: true },
                   { label: "Page count", value: "3 pages", ok: true },
-                  { label: "Creation metadata", value: "Stripped / unavailable", ok: false },
-                  { label: "Scan quality", value: "Good · 94% OCR confidence", ok: true },
+                  { label: "Creation metadata", value: "Not available / stripped", ok: false },
+                  { label: "Scan quality", value: "Good · 92% OCR confidence", ok: true },
                   { label: "Embedded fonts", value: "1 non-standard font detected", ok: false },
                   { label: "Document structure", value: "Unusual heading hierarchy", ok: false },
                 ].map((m, i) => (
                   <div key={i} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-white/[0.04]">
-                    <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${m.ok ? "bg-emerald-400/60" : "bg-amber-400/60"}`} />
+                    <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${m.ok ? "bg-emerald-400/55" : "bg-amber-400/55"}`} />
                     <p className="text-white/28 text-[10px] shrink-0">{m.label}</p>
-                    <p className={`text-[10px] ml-auto ${m.ok ? "text-white/50" : "text-amber-300/60"}`}>{m.value}</p>
+                    <p className={`text-[10px] ml-auto ${m.ok ? "text-white/45" : "text-amber-300/55"}`}>{m.value}</p>
                   </div>
                 ))}
               </div>
@@ -308,19 +299,19 @@ export function TrustCheckCompleted() {
 
             {/* G. Source Traceability */}
             <div className="rounded-xl border border-violet-500/10 bg-violet-600/[0.03] p-4">
-              <SLabel icon={<FileWarning className="w-3.5 h-3.5 text-violet-400/55" />}>Source Traceability</SLabel>
-              <p className="text-white/28 text-[11px] leading-relaxed mb-3">Every concern links to the document section where it was found. Click a chip to jump the viewer.</p>
+              <PanelLabel icon={<FileWarning className="w-3.5 h-3.5 text-violet-400/50" />}>G. Source Traceability</PanelLabel>
+              <p className="text-white/25 text-[10px] leading-relaxed mb-3">Each concern links to the section where PlainPath found it. Click a chip to jump to that location in the viewer.</p>
               <div className="flex flex-col gap-1.5">
                 {[
-                  { label: "Spoofed sender domain — header section" },
-                  { label: "Wire transfer to foreign account" },
-                  { label: "Date inconsistency — invoice vs. service period" },
-                  { label: "Missing watermark/document identifier" },
+                  "Possible domain mismatch — document header",
+                  "Unusual payment destination — payment section",
+                  "Date inconsistency — invoice vs. service period",
+                  "Incomplete header identifiers — page 1",
                 ].map((item, i) => (
-                  <div key={i} className="flex items-center gap-2.5 px-3 py-2 rounded-lg border border-white/[0.05] bg-white/[0.01] cursor-pointer hover:bg-violet-500/[0.04]">
-                    <div className="w-1.5 h-1.5 rounded-full shrink-0 bg-white/18" />
-                    <p className="text-white/38 text-[11px] flex-1 truncate">{item.label}</p>
-                    <SourceChip label="jump" />
+                  <div key={i} className="flex items-center gap-2.5 px-3 py-2 rounded-lg border border-white/[0.05] bg-white/[0.01] cursor-pointer hover:bg-violet-500/[0.04] transition-colors">
+                    <div className="w-1.5 h-1.5 rounded-full shrink-0 bg-white/15" />
+                    <p className="text-white/35 text-[10px] flex-1 truncate">{item}</p>
+                    <SourceChip label="jump ↗" />
                   </div>
                 ))}
               </div>

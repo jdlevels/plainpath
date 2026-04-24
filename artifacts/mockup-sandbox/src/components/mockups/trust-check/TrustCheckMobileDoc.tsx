@@ -1,21 +1,21 @@
 import {
-  ShieldCheck, AlertTriangle, FileText, ChevronRight, X, ArrowRight
+  ShieldCheck, AlertTriangle, FileText, ChevronRight, X, ArrowLeft
 } from "lucide-react";
 
 const SECTIONS = [
   {
     id: "s1", title: "Invoice Header",
-    body: "MICROSOFT CORP — INVOICE\nInvoice #: MS-2025-88241\nDate: March 15, 2025\nBill To: Acme Industries LLC, 14 Oak Ave, Portland, OR",
+    body: "NORTHSTAR CLOUD SERVICES\nINVOICE NCS-2025-10847\nDate: April 10, 2025\nBill To: Meridian Group LLC, 88 Commerce Drive, Austin, TX",
     active: false,
   },
   {
-    id: "s2", title: "Service Period & Items",
-    body: "Enterprise Software Licensing — Q1 2025\nService period: Jan 1 – Feb 28, 2025\n12-month subscription renewal — $47,350.00",
+    id: "s2", title: "Service Items",
+    body: "IT Infrastructure — Q1 2025\nManaged services: Jan 1 – Mar 31, 2025\nEnterprise tier renewal — $31,200.00",
     active: false,
   },
   {
     id: "s3", title: "Payment Instructions",
-    body: "Wire Transfer ONLY to:\nBank: Erste Bank AG, Vienna\nIBAN: AT12 3456 7890 1234 5678\nBIC: GIBAATWW\nRef: INV-2025-88241",
+    body: "Wire Transfer to:\nCoastal Pacific Bank, Singapore\nAccount: 4817-2930-1055\nRef: NCS-2025-10847",
     active: true,
   },
 ];
@@ -39,46 +39,44 @@ export function TrustCheckMobileDoc() {
         <div className="w-5 h-5 rounded bg-violet-600 flex items-center justify-center shrink-0">
           <ShieldCheck className="w-3 h-3 text-white" />
         </div>
-        <span className="text-white/88 text-sm font-semibold tracking-tight">PlainPath</span>
-        <span className="text-white/25 text-[10px] mx-1">·</span>
-        <span className="text-white/32 text-xs flex-1">Document Trust Check</span>
-        <div className="h-6 px-2 rounded-full bg-red-600/12 border border-red-500/22 flex items-center gap-1">
-          <AlertTriangle className="w-2.5 h-2.5 text-red-400" />
-          <span className="text-red-300 text-[10px] font-medium">22/100</span>
+        <span className="text-white/88 text-sm font-semibold flex-1 tracking-tight">Document Trust Check</span>
+        <div className="h-6 px-2 rounded-full bg-amber-600/12 border border-amber-500/22 flex items-center gap-1">
+          <AlertTriangle className="w-2.5 h-2.5 text-amber-400" />
+          <span className="text-amber-300 text-[10px] font-medium">31/100</span>
         </div>
       </div>
 
       {/* File strip */}
       <div className="h-9 border-b border-white/[0.05] flex items-center px-4 gap-2 shrink-0">
-        <FileText className="w-3 h-3 text-red-400/45 shrink-0" />
-        <span className="text-white/38 text-xs flex-1 truncate">Microsoft — Invoice INV-2025-88241.pdf</span>
+        <FileText className="w-3 h-3 text-amber-400/40 shrink-0" />
+        <span className="text-white/38 text-xs flex-1 truncate">Northstar Cloud Services — Invoice NCS-2025-10847.pdf</span>
         <span className="text-white/18 text-[10px]">3 pp.</span>
       </div>
 
       {/* Tab bar — Document tab active */}
       <div className="h-10 border-b border-white/[0.06] flex shrink-0">
-        {[{ id: "trust", label: "Trust Check", active: false }, { id: "document", label: "Document", active: true }].map(tab => (
-          <button key={tab.id} className={`flex-1 text-sm font-medium relative ${tab.active ? "text-white/90" : "text-white/28"}`}>
+        {[{ label: "Trust Check", active: false }, { label: "Document", active: true }].map((tab, i) => (
+          <button key={i} className={`flex-1 text-sm font-medium relative ${tab.active ? "text-white/90" : "text-white/28"}`}>
             {tab.label}
             {tab.active && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-0.5 rounded-full bg-violet-500" />}
           </button>
         ))}
       </div>
 
-      {/* Evidence banner on document tab */}
-      <div className="mx-3 mt-2.5 mb-0.5 shrink-0 rounded-lg border border-violet-500/25 bg-violet-500/[0.07] px-3 py-2 flex items-center gap-2">
+      {/* Evidence banner */}
+      <div className="mx-3 mt-2.5 mb-0.5 shrink-0 rounded-lg border border-violet-500/22 bg-violet-500/[0.07] px-3 py-2 flex items-center gap-2">
         <div className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse shrink-0" />
         <div className="flex-1 min-w-0">
-          <p className="text-violet-200/80 text-[10px] font-medium truncate">
-            Wire Transfer ONLY to: Bank: Erste Bank AG, Vienna…
+          <p className="text-violet-200/78 text-[10px] font-medium truncate">
+            Wire Transfer to: Coastal Pacific Bank, Singapore…
           </p>
-          <p className="text-violet-300/38 text-[9px]">Highlighted from trust concern panel</p>
+          <p className="text-violet-300/35 text-[9px]">Highlighted from trust concern — tap to return</p>
         </div>
-        <button className="flex items-center gap-1 text-violet-400/60 text-[9px] shrink-0">
-          <ArrowRight className="w-2.5 h-2.5 rotate-180" />
+        <button className="flex items-center gap-1 text-violet-400/55 text-[9px] shrink-0">
+          <ArrowLeft className="w-2.5 h-2.5 rotate-180" />
           Back
         </button>
-        <button className="text-white/20 shrink-0 ml-1"><X className="w-3 h-3" /></button>
+        <button className="text-white/18 shrink-0 ml-1"><X className="w-3 h-3" /></button>
       </div>
 
       {/* Document sections */}
@@ -86,25 +84,25 @@ export function TrustCheckMobileDoc() {
         {SECTIONS.map(s => (
           <div key={s.id} className={`w-full rounded-xl border p-3.5 flex flex-col gap-2 ${
             s.active
-              ? "border-violet-500/45 bg-violet-500/[0.06] ring-1 ring-violet-500/20"
+              ? "border-violet-500/40 bg-violet-500/[0.06] ring-1 ring-violet-500/18"
               : "border-white/[0.05] bg-white/[0.012]"
           }`}>
             <div className="flex items-center justify-between gap-2">
-              <span className={`text-[9px] font-mono ${s.active ? "text-violet-300/60" : "text-white/18"}`}>{s.title}</span>
+              <span className={`text-[9px] font-mono ${s.active ? "text-violet-300/55" : "text-white/18"}`}>{s.title}</span>
               {s.active && (
-                <div className="flex items-center gap-1 h-4 px-1.5 rounded-full bg-violet-500/25 border border-violet-500/35">
+                <div className="flex items-center gap-1 h-4 px-1.5 rounded-full bg-violet-500/22 border border-violet-500/32">
                   <div className="w-1 h-1 rounded-full bg-violet-400 animate-pulse" />
-                  <span className="text-violet-200/70 text-[9px]">Source</span>
+                  <span className="text-violet-200/65 text-[9px]">Source</span>
                 </div>
               )}
             </div>
-            <p className={`text-[11px] leading-relaxed whitespace-pre-line ${s.active ? "text-white/65" : "text-white/30"}`}>
+            <p className={`text-[11px] leading-relaxed whitespace-pre-line ${s.active ? "text-white/62" : "text-white/28"}`}>
               {s.body}
             </p>
             {s.active && (
-              <div className="mt-1 rounded-lg border border-violet-500/18 bg-violet-500/[0.07] px-2.5 py-1.5">
-                <p className="text-violet-200/60 text-[9px] leading-relaxed italic">
-                  "Wire Transfer ONLY to: Bank: Erste Bank AG, Vienna — IBAN: AT12 3456 7890 1234 5678"
+              <div className="mt-1 rounded-lg border border-violet-500/16 bg-violet-500/[0.06] px-2.5 py-1.5">
+                <p className="text-violet-200/55 text-[9px] leading-relaxed italic">
+                  "Wire Transfer to: Coastal Pacific Bank, Singapore — Account: 4817-2930-1055"
                 </p>
               </div>
             )}
@@ -120,6 +118,12 @@ export function TrustCheckMobileDoc() {
             ))}
           </div>
         </div>
+
+        {/* Back to trust check */}
+        <button className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-white/[0.07] bg-white/[0.015] text-white/32 text-xs">
+          <ArrowLeft className="w-3.5 h-3.5" />
+          Back to Trust Check
+        </button>
       </div>
 
       <div className="h-6 shrink-0" />
