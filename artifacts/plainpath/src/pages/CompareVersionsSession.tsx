@@ -1447,6 +1447,13 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
     if (notesOpen) setNotesOpen(false)
   }
 
+  // ── Lock body scroll so the fixed-height workspace never scrolls away ─────────
+  // Must be before early returns to comply with the Rules of Hooks.
+  useEffect(() => {
+    document.body.style.overflow = "hidden"
+    return () => { document.body.style.overflow = "" }
+  }, [])
+
   // ── Guards ───────────────────────────────────────────────────────────────────
   if (entLoading) return (
     <div className="flex items-center justify-center min-h-[60vh]">
@@ -1496,12 +1503,6 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
   const navLabel   = sortedByPage.length > 0
     ? (diffNavIdx >= 0 ? `${diffNavIdx + 1}/${sortedByPage.length}` : `${sortedByPage.length} diff${sortedByPage.length !== 1 ? "s" : ""}`)
     : null
-
-  // ── Lock body scroll so the fixed-height workspace never scrolls away ─────────
-  useEffect(() => {
-    document.body.style.overflow = "hidden"
-    return () => { document.body.style.overflow = "" }
-  }, [])
 
   // ── Workspace ─────────────────────────────────────────────────────────────────
   return (
