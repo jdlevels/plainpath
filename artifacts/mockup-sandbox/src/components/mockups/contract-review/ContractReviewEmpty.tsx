@@ -1,17 +1,18 @@
 import {
   FileText, Upload, Camera, ClipboardPaste, Link2, Info,
-  Scale, Briefcase, Home, Users, FileCheck, DollarSign
+  Scale, Briefcase, Home, Users, FileCheck, DollarSign,
+  AlertCircle
 } from "lucide-react";
 
 const WORKS_WITH = [
-  { icon: <Scale className="w-3.5 h-3.5 text-violet-400" />, label: "Service agreements", desc: "Obligations, deliverables, payment terms, renewal" },
-  { icon: <Home className="w-3.5 h-3.5 text-sky-400" />, label: "Leases", desc: "Tenant rights, deposits, notice periods, termination" },
-  { icon: <Briefcase className="w-3.5 h-3.5 text-amber-400" />, label: "Employment agreements", desc: "Non-compete, IP assignment, termination rights" },
-  { icon: <FileText className="w-3.5 h-3.5 text-emerald-400" />, label: "Vendor contracts", desc: "SLAs, liability caps, dispute resolution" },
-  { icon: <Users className="w-3.5 h-3.5 text-orange-400" />, label: "Contractor agreements", desc: "Scope, IP ownership, payment, termination" },
-  { icon: <DollarSign className="w-3.5 h-3.5 text-rose-400" />, label: "Purchase agreements", desc: "Payment, delivery, warranties, cancellation" },
-  { icon: <FileCheck className="w-3.5 h-3.5 text-blue-400" />, label: "Settlement agreements", desc: "Release of claims, payment, confidentiality" },
-  { icon: <Scale className="w-3.5 h-3.5 text-light-violet" style={{ color: "#a78bfa" }} />, label: "Business contracts", desc: "Partnerships, licensing, exclusivity clauses" },
+  { icon: <Scale className="w-3.5 h-3.5 text-violet-400" />,    label: "Service agreements",    desc: "Obligations, payment terms, renewal, liability" },
+  { icon: <Home className="w-3.5 h-3.5 text-sky-400" />,        label: "Leases",                desc: "Tenant rights, notice periods, deposits, exit" },
+  { icon: <Briefcase className="w-3.5 h-3.5 text-amber-400" />, label: "Employment agreements", desc: "Compensation, non-compete, IP, termination" },
+  { icon: <FileText className="w-3.5 h-3.5 text-emerald-400" />,label: "Vendor contracts",      desc: "SLAs, liability caps, dispute resolution" },
+  { icon: <Users className="w-3.5 h-3.5 text-orange-400" />,    label: "Contractor agreements", desc: "Scope, IP ownership, payment, exit terms" },
+  { icon: <DollarSign className="w-3.5 h-3.5 text-rose-400" />, label: "Purchase agreements",   desc: "Payment, delivery, warranties, cancellation" },
+  { icon: <FileCheck className="w-3.5 h-3.5 text-blue-400" />,  label: "Settlement agreements", desc: "Release of claims, payment, confidentiality" },
+  { icon: <AlertCircle className="w-3.5 h-3.5 text-purple-400" />, label: "Business contracts", desc: "Partnerships, licensing, exclusivity, NDA" },
 ];
 
 export function ContractReviewEmpty() {
@@ -40,7 +41,7 @@ export function ContractReviewEmpty() {
             Review a contract before you sign or act.
           </h1>
           <p className="text-white/35 text-sm leading-[1.7]">
-            Upload, paste, or scan a contract. PlainPath identifies key obligations, risky clauses, deadlines, payment terms, termination language, missing protections, and source-backed next steps.
+            Upload a contract. PlainPath identifies key obligations, risk indicators, auto-renewal clauses, payment terms, termination language, possible missing protections, and source-backed next steps.
           </p>
         </div>
 
@@ -52,7 +53,7 @@ export function ContractReviewEmpty() {
             </div>
             <div className="text-center">
               <p className="text-white/70 text-sm font-medium mb-1">Drop your contract here</p>
-              <p className="text-white/28 text-xs">PlainPath reviews contract terms — this is contract review support, not legal advice</p>
+              <p className="text-white/26 text-xs">PlainPath provides contract review support — risk indicators and terms to verify. Not legal advice.</p>
             </div>
             <button className="h-8 px-5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold transition-colors flex items-center gap-1.5">
               <Upload className="w-3 h-3" />
@@ -64,10 +65,10 @@ export function ContractReviewEmpty() {
           {/* Alt methods */}
           <div className="grid grid-cols-3 gap-2">
             {[
-              { icon: <Camera className="w-3.5 h-3.5" />, label: "Scan Photo", desc: "Point camera at contract" },
-              { icon: <ClipboardPaste className="w-3.5 h-3.5" />, label: "Paste Text", desc: "Paste from email or web" },
-              { icon: <Link2 className="w-3.5 h-3.5" />, label: "Import Link", desc: "From URL or cloud" },
-            ].map((opt, i) => (
+              { icon: <Camera className="w-3.5 h-3.5" />,       label: "Scan Photo",   desc: "Point camera at contract" },
+              { icon: <ClipboardPaste className="w-3.5 h-3.5" />, label: "Paste Text",  desc: "Paste from email or doc" },
+              { icon: <Link2 className="w-3.5 h-3.5" />,        label: "Import Link",  desc: "From URL or cloud" },
+            ].map((opt,i) => (
               <button key={i} className="flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border border-white/[0.07] bg-white/[0.015] hover:bg-white/[0.03] transition-colors">
                 <span className="text-white/30">{opt.icon}</span>
                 <span className="text-[10px] font-medium text-white/48">{opt.label}</span>
@@ -77,23 +78,47 @@ export function ContractReviewEmpty() {
           </div>
         </div>
 
-        {/* Disclaimer */}
-        <div className="w-full max-w-lg mb-7 flex items-start gap-2.5 px-3 py-2.5 rounded-lg border border-amber-500/12 bg-amber-500/[0.04]">
-          <Info className="w-3 h-3 text-amber-400/55 mt-[2px] shrink-0" />
-          <p className="text-amber-200/42 text-[10px] leading-relaxed">
-            PlainPath provides <strong className="text-amber-200/60">contract review support</strong> — risk indicators, terms to verify, and source-backed findings. This is not legal advice. Review with a qualified professional for high-stakes contracts.
+        {/* Review support disclaimer */}
+        <div className="w-full max-w-lg mb-7 flex items-start gap-2.5 px-3 py-2.5 rounded-lg border border-white/[0.06] bg-white/[0.015]">
+          <Info className="w-3 h-3 text-white/22 mt-[2px] shrink-0" />
+          <p className="text-white/30 text-[10px] leading-relaxed">
+            PlainPath provides <strong className="text-white/50">contract review support</strong> — risk indicators, terms to verify, and possible missing protections. This is not legal advice. Review with a qualified professional if this contract is high-risk for your situation.
           </p>
+        </div>
+
+        {/* Your review will include */}
+        <div className="w-full max-w-lg mb-7">
+          <p className="text-white/20 text-[9px] uppercase tracking-[0.12em] font-semibold mb-3">Your review will include</p>
+          <div className="grid grid-cols-2 gap-1.5">
+            {[
+              "Plain-English summary",
+              "Risk & confidence strip",
+              "Key contract risks",
+              "Required next steps",
+              "Obligations & deadlines",
+              "Payment & fee terms",
+              "Termination & renewal",
+              "Possible missing protections",
+              "Source traceability",
+              "Verification checklist",
+            ].map((item,i) => (
+              <div key={i} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-white/[0.05]">
+                <div className="w-1 h-1 rounded-full bg-violet-400/32 shrink-0" />
+                <p className="text-white/28 text-[10px]">{item}</p>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Works well with */}
         <div className="w-full max-w-lg">
-          <p className="text-white/22 text-[9px] uppercase tracking-[0.12em] font-semibold mb-3">Works well with</p>
+          <p className="text-white/20 text-[9px] uppercase tracking-[0.12em] font-semibold mb-3">Works well with</p>
           <div className="grid grid-cols-2 gap-2">
-            {WORKS_WITH.map((u, i) => (
+            {WORKS_WITH.map((u,i) => (
               <div key={i} className="flex items-start gap-2.5 px-3 py-2.5 rounded-xl border border-white/[0.06] bg-white/[0.012]">
                 <div className="mt-0.5 shrink-0">{u.icon}</div>
                 <div>
-                  <p className="text-white/55 text-xs font-medium leading-tight mb-0.5">{u.label}</p>
+                  <p className="text-white/52 text-xs font-medium leading-tight mb-0.5">{u.label}</p>
                   <p className="text-white/22 text-[10px] leading-tight">{u.desc}</p>
                 </div>
               </div>
