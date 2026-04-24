@@ -1,0 +1,239 @@
+Contract Review is approved and locked.
+
+Do not make more changes to Contract Review unless a bug appears later.
+
+Now begin the Clause Extractor redesign in canvas/design mode only.
+
+Do not implement yet.
+Do not start Compare Versions yet.
+Do not add new tools.
+Do not add SOP/manual builder language.
+Do not add Document Classifier or Packet Splitter.
+
+Use the approved PlainPath Scan Workspace Standard and the locked Analyze, Trust Check, and Contract Review designs as the visual baseline.
+
+Goal:
+Redesign Clause Extractor so it feels like the same premium PlainPath system, but focused specifically on extracting, categorizing, and organizing important clauses from a document.
+
+Core layout:
+- Premium dark UI
+- Document-first layout
+- Left document viewer
+- Right Clause Intelligence panel
+- Source-backed extracted clauses
+- Clickable source chips
+- Compact table/card hybrid
+- Overview-first flow before deeper clause details
+
+Desktop layout:
+- Left panel: document viewer, about 55–60% width
+- Right panel: clause extraction panel, about 40–45% width
+- Both panels should scroll independently
+- Use most of the visible screen height
+
+Mobile layout:
+- Tabs: Clauses first, Document second
+- Default mobile view should show extracted clauses first
+- Document tab should remain one tap away
+
+Design the following canvas states:
+
+1. Empty State — before upload
+
+Purpose:
+The user uploads a document to extract important clauses, obligations, dates, responsibilities, and source-backed terms.
+
+Suggested headline:
+“Extract the clauses that matter.”
+
+Suggested subtext:
+“Upload, paste, or scan a document. PlainPath finds key clauses, organizes them by type, highlights obligations and deadlines, and links each clause back to its source.”
+
+Input options:
+- Upload PDF / DOCX
+- Paste Text
+- Scan Photo
+- Import Link, if currently supported
+
+Works well with:
+- contracts
+- leases
+- service agreements
+- vendor agreements
+- employment agreements
+- notices
+- insurance forms
+- policy documents
+
+Use cautious wording:
+- “clause extraction support”
+- “source-backed extracted terms”
+- “review important language”
+- “not legal advice”
+
+2. Processing State — clause extraction in progress
+
+Use left document preview and right progress panel.
+
+Progress checklist:
+- Reading document structure
+- Finding clause headings and sections
+- Extracting obligations and deadlines
+- Categorizing clause types
+- Linking clauses to source sections
+- Generating clause summary
+
+3. Completed State — Clause Extraction Overview
+
+Right panel order:
+
+A. Extraction Summary
+- 4–6 lines maximum
+- explain what document type was detected
+- show how many clauses were found
+- identify the most important clause categories
+
+B. Clause / Confidence Strip
+Use compact chips:
+- Clauses found
+- Extraction confidence
+- Deadlines found
+- Obligations found
+- High-priority clauses
+
+C. Key Clauses
+Show top 5–8 important clauses by default.
+Each clause card should include:
+- clause title
+- clause category
+- one-line plain-English meaning
+- importance/risk chip
+- source chip
+- action if needed
+
+D. Clause Categories
+Compact category filter or grouped cards:
+- Payment / Fees
+- Termination / Renewal
+- Obligations
+- Liability
+- Confidentiality
+- Dispute Resolution
+- Deadlines / Notice Periods
+- Signatures / Attachments
+- Other
+
+E. Obligations & Owners
+Compact table/card hybrid:
+- obligation
+- responsible party
+- deadline/date if available
+- source chip
+
+F. Dates / Deadlines
+Compact timeline/list:
+- due date
+- renewal date
+- notice period
+- expiration date
+- deadline source chip
+
+G. Missing / Unclear Clauses
+Use cautious language:
+- possible missing clause
+- unclear term
+- verify whether this applies
+- review with a qualified professional if high-risk
+
+H. Source Traceability
+Every extracted clause should have source chips.
+Source chips should scroll/highlight the clause in the document viewer.
+
+4. Source Chip Active State
+
+Show what happens when a user clicks a clause source chip.
+
+Behavior:
+- source chip becomes active
+- matching clause highlights in the left document viewer
+- document scrolls to matching section/page
+- evidence banner shows the matched text
+- related clause card remains active on the right panel
+
+5. Low Confidence / Partial Extraction State
+
+Use when scan quality is weak.
+
+Suggested message:
+“PlainPath could extract part of this document, but the scan quality limits extraction confidence.”
+
+Show:
+- confidence badge
+- what clauses were readable
+- what could not be verified
+- recommended next steps
+
+Actions:
+- Upload clearer PDF
+- Upload original file
+- Upload text-based version
+- Continue with partial extraction
+- Ask This Document
+
+6. Error State
+
+Clean retry state.
+
+Message:
+“Clause extraction could not be completed.”
+
+Actions:
+- Try again
+- Upload different file
+- Ask This Document
+- Analyze a Document
+
+7. Mobile Clauses View
+
+Mobile should show:
+- extraction summary
+- clause/confidence chips
+- key clauses
+- category filters
+- obligations/deadlines
+- source chips
+- compact cards
+
+8. Mobile Document View
+
+Show document viewer with:
+- active clause highlight
+- evidence banner
+- source chip jump behavior
+- easy return to Clauses tab
+
+Design rules:
+- Do not make this a long report page.
+- Do not show every extracted clause expanded by default.
+- Use a compact table/card hybrid for clause extraction.
+- Keep source chips highly visible.
+- Avoid legal conclusions.
+- Use “extracted clause,” “term to verify,” “possible missing clause,” and “not legal advice.”
+- Keep the interface calm, credible, and professional.
+
+Color usage:
+- purple = PlainPath source traceability
+- green = clear/extracted successfully
+- amber = unclear/needs review
+- red = high-risk or urgent only
+- blue = neutral action/help
+
+After creating the canvas, show these states for review before implementation:
+- Empty State
+- Processing State
+- Completed Clause Extraction Overview
+- Source chip active/highlighted state
+- Low Confidence State
+- Error State
+- Mobile Clauses View
+- Mobile Document View
