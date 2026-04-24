@@ -39,6 +39,10 @@ export function useEntitlements() {
   const { user, isLoaded: clerkLoaded } = useUser()
   const [data, setData] = useState<EntitlementStatus | null>(null)
   const [loading, setLoading] = useState(true)
+  // True only when the API confirms an active Stripe subscription record exists.
+  // This is the raw billing truth BEFORE any client-side overrides (e.g. the
+  // starter/graceful-downgrade paths that set status="active" even without billing).
+  const [hasPaidSubscription, setHasPaidSubscription] = useState(false)
 
   // Persist Clerk email to localStorage so entitlements fetch works across reloads.
   useEffect(() => {
@@ -129,6 +133,17 @@ export function useEntitlements() {
         setStoredSubscriberEmail(email)
       }
 
+      // ── Billing truth: raw API response before any client-side overrides ──
+      // hasPaidSubscription is true when EITHER:
+      //   a) The Stripe DB confirms an active subscription record, OR
+      //   b) The user has Pro publicMetadata (manually granted Pro access).
+      //      This covers accounts like yelevels@gmail.com that were given Pro
+      //      access before Stripe was wired up, without blocking them at the gate.
+      // Admin role is handled separately in PlanGate and never reaches this gate.
+      const hasActiveBilling = Boolean(merged.found && merged.status === "active")
+      const hasManualProGrant = resolvedAccessTier === "pro"
+      setHasPaidSubscription(hasActiveBilling || hasManualProGrant)
+
       // ── Access decision: metadata-first, billing-verified for Pro ─────────
       //
       // SAFE DEFAULT: missing metadata → null (locked). Never grant access to
@@ -162,6 +177,7 @@ export function useEntitlements() {
       }
     } catch {
       setData(null)
+      setHasPaidSubscription(false)
     } finally {
       setLoading(false)
     }
@@ -184,5 +200,6 @@ export function useEntitlements() {
     reload,
     isAdmin,
     accessTier,
+    hasPaidSubscription,
   }
 }

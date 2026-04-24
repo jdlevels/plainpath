@@ -1,8 +1,12 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { ClerkProvider, SignIn, SignUp, useClerk, useUser } from "@clerk/react";
 import { getApiBaseUrl } from "@/lib/api";
+import { useEntitlements } from "@/hooks/useEntitlements";
+import { startStripeCheckout } from "@/lib/stripe";
+import { PRICING_PLANS } from "@/data/pricingData";
+import { ArrowRight, Check, Zap, BarChart3, LogOut } from "lucide-react";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AnalysisProvider } from "@/context/AnalysisContext";
@@ -177,6 +181,220 @@ function ClerkQueryClientCacheInvalidator() {
   return null;
 }
 
+// ─── ChoosePlanScreen ─────────────────────────────────────────────────────────
+// Full-page plan selection shown to signed-in users who have not yet purchased
+// a subscription. Initiates Stripe checkout directly — no intermediate page.
+const PLAN_ICONS: Record<string, React.ElementType> = { starter: BarChart3, pro: Zap };
+
+function ChoosePlanScreen() {
+  const { user } = useUser();
+  const { signOut } = useClerk();
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSelectPlan(planKey: "starter" | "pro") {
+    setLoadingPlan(planKey);
+    setError(null);
+    try {
+      await startStripeCheckout(
+        planKey,
+        user?.emailAddresses?.[0]?.emailAddress,
+        user?.id,
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to start checkout. Please try again.");
+      setLoadingPlan(null);
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Minimal header */}
+      <header className="border-b border-border/40 px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <img src="/logo.svg" alt="PlainPath" className="h-6 w-6" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+          <span className="font-bold text-base tracking-tight">PlainPath</span>
+        </div>
+        <button
+          onClick={() => void signOut({ redirectUrl: "/" })}
+          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <LogOut className="w-3.5 h-3.5" />
+          Sign out
+        </button>
+      </header>
+
+      {/* Content */}
+      <div className="flex-1 flex flex-col items-center justify-center px-4 py-12">
+        <div className="w-full max-w-2xl">
+          {/* Heading */}
+          <div className="text-center mb-10">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground mb-3">
+              Choose your plan to get started
+            </h1>
+            <p className="text-muted-foreground text-sm sm:text-base max-w-md mx-auto">
+              Select a plan to unlock your PlainPath dashboard. Cancel anytime — no commitment.
+            </p>
+          </div>
+
+          {/* Plan cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+            {PRICING_PLANS.map((plan) => {
+              const planKey = (plan.planKey ?? "starter") as "starter" | "pro";
+              const Icon = PLAN_ICONS[planKey] ?? BarChart3;
+              const isHighlight = plan.highlight;
+              const isLoading = loadingPlan === planKey;
+
+              return (
+                <div
+                  key={planKey}
+                  className={`relative rounded-2xl border p-6 flex flex-col transition-shadow hover:shadow-md ${
+                    isHighlight
+                      ? "border-primary bg-primary/4 shadow-sm"
+                      : "border-border/60 bg-card"
+                  }`}
+                >
+                  {isHighlight && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                      <span className="bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full">
+                        Most popular
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-2.5 mb-4">
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${isHighlight ? "bg-primary/12" : "bg-secondary"}`}>
+                      <Icon className={`w-4.5 h-4.5 ${isHighlight ? "text-primary" : "text-muted-foreground"}`} />
+                    </div>
+                    <span className="font-bold text-base text-foreground">{plan.name}</span>
+                  </div>
+
+                  <div className="mb-3">
+                    <span className="text-3xl font-bold text-foreground">{plan.price}</span>
+                    <span className="text-muted-foreground text-sm ml-1">{plan.period}</span>
+                  </div>
+
+                  <p className="text-xs text-muted-foreground leading-relaxed mb-4 flex-1">
+                    {plan.description}
+                  </p>
+
+                  <ul className="space-y-1.5 mb-6">
+                    {plan.features.map((f) => (
+                      <li key={f} className="flex items-start gap-2 text-xs text-foreground/80">
+                        <Check className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${isHighlight ? "text-primary" : "text-emerald-500"}`} />
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+
+                  <button
+                    onClick={() => void handleSelectPlan(planKey)}
+                    disabled={loadingPlan !== null}
+                    className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all disabled:opacity-60 disabled:cursor-not-allowed ${
+                      isHighlight
+                        ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
+                        : "bg-secondary text-foreground hover:bg-muted border border-border/50"
+                    }`}
+                  >
+                    {isLoading ? (
+                      <span className="flex items-center gap-2">
+                        <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        Redirecting…
+                      </span>
+                    ) : (
+                      <>
+                        {plan.ctaLabel}
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </>
+                    )}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Error */}
+          {error && (
+            <p className="text-center text-sm text-destructive mb-4">{error}</p>
+          )}
+
+          {/* Already subscribed */}
+          <p className="text-center text-xs text-muted-foreground">
+            Already purchased?{" "}
+            <a href="/app/billing" className="underline underline-offset-2 hover:text-foreground transition-colors">
+              Restore your subscription
+            </a>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── PlanGate ──────────────────────────────────────────────────────────────────
+// Sits between ClerkProvider and the Router. For any signed-in user without an
+// active Stripe subscription, the entire dashboard is replaced by ChoosePlanScreen.
+//
+// Bypass paths (always pass through — these are part of the purchase / auth flow):
+//   /sign-in, /sign-up, /subscribe, /billing, /privacy, /terms, /support, /pricing
+//
+// Admin accounts (ADMIN_EMAILS on the server) bypass the gate — their role is
+// set to "admin" at bootstrap and they never need a subscription.
+//
+// State matrix:
+//   Clerk loading              → blank screen
+//   Not signed in              → pass through (Router handles public routes)
+//   Bypass path                → pass through
+//   Signed in, loading         → "Loading…" spinner
+//   Signed in, admin           → pass through
+//   Signed in, status=active   → pass through
+//   Signed in, no subscription → ChoosePlanScreen
+function PlanGate({ children }: { children: React.ReactNode }) {
+  const { isLoaded, isSignedIn } = useUser();
+  const { entitlements, loading: entLoading, hasPaidSubscription } = useEntitlements();
+  const [location] = useLocation();
+
+  // Paths that must remain accessible during the purchase / auth flow
+  const BYPASS_PREFIXES = [
+    "/sign-in", "/sign-up", "/subscribe", "/billing",
+    "/privacy", "/terms", "/support", "/pricing",
+    "/guides", "/shared",
+  ];
+  const isBypassPath = BYPASS_PREFIXES.some((p) => location.startsWith(p));
+
+  // Clerk still initializing — show nothing to prevent UI flash
+  if (!isLoaded) {
+    return <div className="min-h-screen bg-background" />;
+  }
+
+  // Not signed in or on a bypass path — let the Router handle it
+  if (!isSignedIn || isBypassPath) {
+    return <>{children}</>;
+  }
+
+  // Signed in but entitlements still loading
+  if (entLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-7 h-7 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // Admin accounts are always allowed — no subscription required
+  if (entitlements?.role === "admin") {
+    return <>{children}</>;
+  }
+
+  // Confirmed active Stripe subscription → grant access
+  if (hasPaidSubscription) {
+    return <>{children}</>;
+  }
+
+  // No active subscription — require plan selection before dashboard access
+  return <ChoosePlanScreen />;
+}
+
 // Global auth guard — redirects unauthenticated users to the public marketing site.
 // Renders nothing (blank screen) while Clerk is still resolving auth state to
 // prevent any flash of protected content.
@@ -315,7 +533,9 @@ function ClerkProviderWithRoutes() {
         <WelcomeEmailTrigger />
         <TooltipProvider>
           <AnalysisProvider>
-            <Router />
+            <PlanGate>
+              <Router />
+            </PlanGate>
             <Toaster />
           </AnalysisProvider>
         </TooltipProvider>
