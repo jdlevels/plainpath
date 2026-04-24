@@ -8,6 +8,7 @@ import {
   FileText, BarChart2, Info,
   Copy, Check, Bookmark, BookmarkCheck,
   Download, BanIcon, AlertOctagon, Ban,
+  Fingerprint, TrendingDown, Zap,
 } from "lucide-react"
 import { saveTrustCheck } from "@/lib/savedTrustChecks"
 import { saveCloudTrustCheck } from "@/lib/cloudHistory"
@@ -167,6 +168,7 @@ export default function TrustCheck() {
   const [copyDone, setCopyDone] = useState(false)
   const [savedId, setSavedId] = useState<string | null>(null)
   const [justSaved, setJustSaved] = useState(false)
+  const [activeSection, setActiveSection] = useState("overview")
 
   function handleCheckDocument() {
     const hasTrustCheck = entitlements?.toolAccess?.includes("trust-check") ?? false
@@ -344,553 +346,609 @@ export default function TrustCheck() {
     window.print()
   }
 
+  /* ── Sidebar section config ───────────────────────────────────────── */
+  const SIDEBAR_SECTIONS = [
+    { id: "overview",     label: "Verdict",              icon: ShieldCheck,  count: null },
+    { id: "indicators",   label: "Scam Indicators",      icon: Flag,         count: analysis.scamIndicators.length,          warn: true  },
+    { id: "contacts",     label: "Contact Details",      icon: Phone,        count: analysis.contactDetails.length,           warn: analysis.contactDetails.some(c => c.suspicious) },
+    { id: "deadlines",    label: "Deadlines",            icon: Clock,        count: analysis.deadlines.length,                warn: analysis.deadlines.some(d => d.type === "threat" || d.type === "escalation") },
+    { id: "legitimacy",   label: "Legitimacy Signals",   icon: CheckCircle2, count: analysis.legitimacyIndicators?.length ?? 0, warn: false },
+    { id: "fingerprint",  label: "Doc Metadata",         icon: Fingerprint,  count: (analysis.metadataFindings?.length ?? 0) + (analysis.structuralFindings?.length ?? 0), warn: (analysis.metadataFindings?.length ?? 0) > 0 },
+    { id: "verify",       label: "Verify & Next Steps",  icon: Eye,          count: analysis.whatToVerify.length + analysis.safeNextSteps.length, warn: false },
+  ]
+
   /* ── Render ───────────────────────────────────────────────────────── */
   return (
-    <div
-      className="min-h-screen bg-background"
-      style={{ paddingBottom: "max(6rem, env(safe-area-inset-bottom) + 6rem)" }}
-    >
-      {/* ── Sticky header ───────────────────────────────────────────── */}
-      <ResultStickyHeader
-        toolIcon={ShieldCheck}
-        toolLabel="Document Trust Check"
-        toolIconClass="text-primary/70"
-        subtitleText={`Scam Risk Score: ${analysis.riskScore}/100`}
-        verdictLabel={analysis.verdict}
-        verdictBadgeClass={vc.badge}
-        onBack={() => setLocation("/import?mode=trust-check")}
-        actions={
-          <>
-            <button
-              onClick={copyResults}
-              title="Copy results as text"
-              className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors shrink-0"
-              aria-label="Copy summary"
-            >
-              {copyDone ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
-            </button>
-            <button
-              onClick={exportPDF}
-              title="Export as PDF"
-              className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors shrink-0"
-              aria-label="Export PDF"
-            >
-              <Download className="w-4 h-4" />
-            </button>
-            {!demoId && (
-              <button
-                onClick={handleSave}
-                title={savedId ? "Saved to My Analyses" : "Save this result"}
-                className={`p-2 rounded-xl transition-colors shrink-0 ${
-                  justSaved
-                    ? "text-emerald-500 bg-emerald-50 dark:bg-emerald-950/30"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-                }`}
-                aria-label="Save result"
-              >
-                {savedId ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
-              </button>
-            )}
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setLocation("/import?mode=trust-check")}
-              className="text-xs h-8 hidden sm:flex gap-1.5 shrink-0"
-            >
-              New Check <ArrowRight className="w-3.5 h-3.5" />
-            </Button>
-          </>
-        }
-      />
+    <div className="h-screen flex flex-col bg-slate-950 text-slate-100 overflow-hidden">
 
-      {/* ── Content ─────────────────────────────────────────────────── */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-5 sm:pt-8 space-y-4">
-
-        {/* ── 1. Primary Verdict banner ──────────────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className={`rounded-2xl border p-5 sm:p-6 ${vc.bg} ${vc.border}`}
+      {/* ── Header ── */}
+      <div className="no-print flex-shrink-0 flex items-center gap-3 px-4 sm:px-5 py-3 bg-slate-900 border-b border-slate-800 z-30">
+        <button
+          onClick={() => setLocation("/import?mode=trust-check")}
+          style={{ touchAction: "manipulation" }}
+          className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:bg-slate-800 hover:text-slate-300 transition-colors shrink-0"
         >
-          {/* Score + verdict row */}
-          <div className="flex items-start gap-6 flex-wrap mb-3">
-            <div className="text-center min-w-[80px]">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">Scam Risk Score</p>
-              <p className={`text-6xl font-bold leading-none tabular-nums ${vc.text}`}>{analysis.riskScore}</p>
-              <p className="text-xs text-muted-foreground mt-1">/ 100</p>
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1.5">
-                <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 border ${vc.badge}`}>
-                  <VerdictIcon verdict={analysis.verdict} />
-                </div>
-                <h1 className={`text-xl font-bold leading-snug ${vc.text}`}>{analysis.verdict}</h1>
-              </div>
-              <p className={`text-xs font-semibold mb-2 ${vc.text} opacity-70`}>{interpretRiskScore(analysis.riskScore)}</p>
-              <p className="text-sm text-foreground/80 leading-relaxed">{analysis.verdictExplanation}</p>
-            </div>
+          <ArrowLeft className="w-4 h-4" />
+        </button>
+        <div className="w-7 h-7 rounded-xl bg-blue-900/50 border border-blue-700/40 flex items-center justify-center shrink-0">
+          <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <span className="text-[10px] text-slate-600 font-medium uppercase tracking-widest">Trust Check</span>
+          <h1 className="text-sm font-bold text-slate-100 truncate leading-tight">{analysis.verdict}</h1>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-700">
+            <TrendingDown className="w-3.5 h-3.5 text-slate-400" />
+            <span className={`text-xs font-bold tabular-nums ${vc.text}`}>{analysis.riskScore}</span>
+            <span className="text-[10px] text-slate-500 font-medium hidden sm:inline">risk / 100</span>
           </div>
+        </div>
 
-          {/* Count summary pills */}
-          {(() => {
-            const high = analysis.scamIndicators.filter(i => i.severity === "high").length
-            const total = analysis.scamIndicators.length
-            const legit = analysis.legitimacyIndicators?.length ?? 0
-            return (
-              <div className="flex flex-wrap gap-2 mb-4">
-                {total === 0 ? (
-                  <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
-                    <CheckCircle2 className="w-3 h-3" /> No scam indicators
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-red-500/15 text-red-700 dark:text-red-300 border border-red-500/20">
-                    <XCircle className="w-3 h-3" />
-                    {total} scam {total === 1 ? "indicator" : "indicators"}
-                    {high > 0 && <span className="opacity-70">· {high} high-risk</span>}
-                  </span>
-                )}
-                {legit > 0 && (
-                  <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
-                    <CheckCircle2 className="w-3 h-3" /> {legit} legitimacy {legit === 1 ? "signal" : "signals"}
-                  </span>
-                )}
-              </div>
-            )
-          })()}
+        <div className="flex items-center gap-1.5 shrink-0">
+          <button
+            onClick={copyResults}
+            className="p-1.5 rounded-lg border border-slate-700 bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-300 transition-colors"
+            title="Copy results"
+          >
+            {copyDone ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+          </button>
+          <button
+            onClick={exportPDF}
+            className="p-1.5 rounded-lg border border-slate-700 bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-300 transition-colors print:hidden"
+            title="Export PDF"
+          >
+            <Download className="w-3.5 h-3.5" />
+          </button>
+          {!demoId && (
+            <button
+              onClick={handleSave}
+              className={`p-1.5 rounded-lg border transition-colors ${
+                justSaved
+                  ? "border-emerald-700/50 bg-emerald-900/30 text-emerald-400"
+                  : "border-slate-700 bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-300"
+              }`}
+              title={savedId ? "Saved" : "Save result"}
+            >
+              {savedId ? <BookmarkCheck className="w-3.5 h-3.5" /> : <Bookmark className="w-3.5 h-3.5" />}
+            </button>
+          )}
+          <button
+            onClick={() => setLocation("/import?mode=trust-check")}
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 text-xs font-semibold hover:bg-slate-700 transition-colors"
+          >
+            New Check <ArrowRight className="w-3 h-3" />
+          </button>
+        </div>
+      </div>
 
-          {/* Progress bar + legend */}
-          <div className="space-y-1.5">
-            <div className="h-2 rounded-full bg-black/8 dark:bg-white/10 overflow-hidden">
+      {/* ── Body ── */}
+      <div className="flex-1 flex overflow-hidden">
+
+        {/* ── Sidebar ── */}
+        <aside className="no-print w-[200px] lg:w-[220px] flex-shrink-0 flex flex-col bg-slate-900 border-r border-slate-800 overflow-y-auto">
+
+          {/* Risk score */}
+          <div className="px-3 pt-4 pb-3 border-b border-slate-800/80">
+            <p className="text-[9px] font-bold uppercase tracking-widest text-slate-600 mb-2">Risk Score</p>
+            <div className="flex items-end gap-1.5 mb-1.5">
+              <span className={`text-3xl font-bold tabular-nums leading-none ${vc.text}`}>{analysis.riskScore}</span>
+              <span className="text-xs text-slate-600 mb-0.5">/ 100</span>
+            </div>
+            <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden mb-1.5">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${analysis.riskScore}%` }}
-                transition={{ delay: 0.3, duration: 0.6, ease: "easeOut" }}
+                transition={{ delay: 0.2, duration: 0.5, ease: "easeOut" }}
                 className={`h-full rounded-full ${vc.bar}`}
               />
             </div>
+            <p className="text-[10px] text-slate-500 leading-tight">{interpretRiskScore(analysis.riskScore)}</p>
           </div>
-          <ScoreLegend score={analysis.riskScore} config={TRUST_CHECK_LEGEND} />
-        </motion.div>
 
-        {/* ── 2. Recommended Action ─────────────────────────────────── */}
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-          <Card className={`p-5 border ${
-            isHighRisk
-              ? "border-red-200/70 dark:border-red-700/40 bg-red-50/40 dark:bg-red-950/20"
-              : isSuspicious
-              ? "border-amber-200/70 dark:border-amber-700/40 bg-amber-50/40 dark:bg-amber-950/20"
-              : "border-blue-200/70 dark:border-blue-700/40 bg-blue-50/40 dark:bg-blue-950/20"
-          }`}>
-            <div className="flex items-center gap-2 mb-3">
-              <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border ${
-                isHighRisk
-                  ? "bg-red-100 dark:bg-red-900/40 border-red-200 dark:border-red-700"
-                  : isSuspicious
-                  ? "bg-amber-100 dark:bg-amber-900/40 border-amber-200 dark:border-amber-700"
-                  : "bg-blue-100 dark:bg-blue-900/40 border-blue-200 dark:border-blue-700"
-              }`}>
-                <CheckSquare className={`w-3.5 h-3.5 ${
-                  isHighRisk ? "text-red-600 dark:text-red-400"
-                  : isSuspicious ? "text-amber-600 dark:text-amber-400"
-                  : "text-blue-600 dark:text-blue-400"
-                }`} />
-              </div>
-              <h3 className={`text-sm font-bold ${
-                isHighRisk ? "text-red-800 dark:text-red-300"
-                : isSuspicious ? "text-amber-800 dark:text-amber-300"
-                : "text-blue-800 dark:text-blue-300"
-              }`}>Recommended Actions</h3>
-            </div>
-            <ul className="space-y-2.5">
-              {recommendedActions(analysis.verdict).map((action, i) => (
-                <li key={i} className="flex items-start gap-2.5">
-                  <action.icon className={`w-4 h-4 shrink-0 mt-0.5 ${action.color}`} />
-                  <p className="text-sm text-foreground/85 leading-snug">{action.text}</p>
-                </li>
-              ))}
-            </ul>
-          </Card>
-        </motion.div>
-
-        {/* ── 3. Metadata strip ─────────────────────────────────────── */}
-        <ResultMetaStrip items={[
-          { icon: Clock, text: `Analyzed ${formatAnalyzedAt(analysis.processedAt)}` },
-          ...(analysis.documentType ? [{ icon: FileText, text: analysis.documentType }] : []),
-          ...(demoId ? [{ icon: Info, text: "Demo document" }] : []),
-        ]} />
-
-        {/* ── 4. Score Summary — 3 dimensions ───────────────────────── */}
-        {scores && (
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-            <Card className="p-4 sm:p-5 border-border/40">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-7 h-7 rounded-lg bg-primary/8 flex items-center justify-center shrink-0">
-                  <BarChart2 className="w-3.5 h-3.5 text-primary/70" />
-                </div>
-                <h3 className="text-sm font-bold text-foreground">Risk Score Breakdown</h3>
-              </div>
-              <div className="flex gap-3 flex-col sm:flex-row">
-                <ScoreCard
-                  label="Authenticity Risk"
-                  score={scores.authenticityRisk}
-                  description="Scam / impersonation signals"
-                  tooltip="How strongly this document resembles known scam or impersonation patterns. High = strong scam characteristics."
-                  colorFn={authenticityRiskColor}
-                />
-                <ScoreCard
-                  label="Document Risk"
-                  score={scores.documentRisk}
-                  description="Harsh contract terms"
-                  tooltip="Whether the document contains harmful, manipulative, or one-sided contract terms — regardless of whether it's a scam."
-                  colorFn={documentRiskColor}
-                />
-                <ScoreCard
-                  label="Verification Confidence"
-                  score={scores.verificationConfidence}
-                  description="How verifiable the sender appears"
-                  tooltip="How many of the sender's claimed details (name, phone, address, domain) can be independently verified. High = easier to confirm."
-                  colorFn={verificationConfidenceColor}
-                />
-              </div>
-              <p className="text-[10px] text-muted-foreground/50 mt-3 leading-relaxed">
-                Each score is independent. A legitimate company can still send a high-risk contract; a scam can still be sent on official letterhead.
-              </p>
-            </Card>
-          </motion.div>
-        )}
-
-        {/* ── 5. Contract Risk Callout ───────────────────────────────── */}
-        {(analysis.contractRiskNotes || (analysis.contractTermsFound && analysis.contractTermsFound.length > 0)) && (
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-            <Card className="p-5 border-amber-200/70 dark:border-amber-700/40 bg-amber-50/60 dark:bg-amber-950/20">
-              <div className="flex items-start gap-3">
-                <div className="w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-900/40 border border-amber-200 dark:border-amber-700 flex items-center justify-center shrink-0 mt-0.5">
-                  <FileText className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-bold text-amber-800 dark:text-amber-300 mb-1">Contract Terms to Review</h3>
-                  <p className="text-[11px] font-medium text-amber-700/70 dark:text-amber-400/60 mb-2.5">
-                    Contract-risk findings — separate from scam or authenticity concerns. A document can be genuine and still contain terms that deserve careful attention.
-                  </p>
-                  {analysis.contractRiskNotes && (
-                    <p className="text-sm text-foreground/80 leading-relaxed mb-3">{analysis.contractRiskNotes}</p>
-                  )}
-                  {analysis.contractTermsFound && analysis.contractTermsFound.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5">
-                      {analysis.contractTermsFound.map((term, i) => (
-                        <span
-                          key={i}
-                          className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-700"
-                        >
-                          {term}
-                        </span>
-                      ))}
+          {/* Sub-score breakdown */}
+          {scores && (
+            <div className="px-3 py-3 border-b border-slate-800/80">
+              <p className="text-[9px] font-bold uppercase tracking-widest text-slate-600 mb-2">Score Breakdown</p>
+              <div className="space-y-2">
+                {[
+                  { label: "Authenticity Risk",     score: scores.authenticityRisk,       bad: true  },
+                  { label: "Document Risk",          score: scores.documentRisk,           bad: true  },
+                  { label: "Verification Conf.",     score: scores.verificationConfidence, bad: false },
+                ].map(s => (
+                  <div key={s.label}>
+                    <div className="flex items-center justify-between mb-0.5">
+                      <span className="text-[9px] text-slate-500 leading-tight truncate">{s.label}</span>
+                      <span className={`text-[9px] font-bold tabular-nums ${s.bad && s.score > 50 ? "text-red-400" : s.bad ? "text-amber-400" : s.score > 50 ? "text-emerald-400" : "text-slate-400"}`}>{s.score}</span>
                     </div>
-                  )}
-                </div>
-              </div>
-            </Card>
-          </motion.div>
-        )}
-
-        {/* ── 6. What This Letter Claims ─────────────────────────────── */}
-        {analysis.whatItClaims && (
-          <ResultSectionCard collapsible={false} icon={Flag} title="What This Document Claims">
-            <p className="text-sm text-foreground/80 leading-relaxed">{analysis.whatItClaims}</p>
-          </ResultSectionCard>
-        )}
-
-        {/* ── 7. Demanded Action ─────────────────────────────────────── */}
-        {analysis.demandedAction && (
-          <ResultSectionCard collapsible={false} icon={AlertCircle} title="What It Demands From You">
-            <p className="text-sm text-foreground/80 leading-relaxed">{analysis.demandedAction}</p>
-          </ResultSectionCard>
-        )}
-
-        {/* ── 8. Scam Indicators — collapsible ──────────────────────── */}
-        <ResultSectionCard collapsible={true}
-          icon={Shield}
-          title="Scam Indicators"
-          defaultOpen={isHighRisk || isSuspicious}
-          badge={
-            analysis.scamIndicators.length > 0 ? (
-              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md border mr-1 ${
-                highIndicators.length > 0
-                  ? "bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 border-red-200 dark:border-red-700"
-                  : "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-700"
-              }`}>
-                {analysis.scamIndicators.length}
-              </span>
-            ) : null
-          }
-        >
-          {analysis.scamIndicators.length > 0 ? (
-            <div className="space-y-3">
-              {[...highIndicators, ...medIndicators, ...lowIndicators].map((indicator, i) => (
-                <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-secondary/30 border border-border/30">
-                  <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full shrink-0 mt-0.5 ${severityColor(indicator.severity)}`}>
-                    {indicator.severity}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground leading-snug">{indicator.indicator}</p>
-                    {indicator.sourceEvidence && (
-                      <div className="mt-1.5 flex items-start gap-1.5">
-                        <span className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground/50 shrink-0 mt-0.5">Evidence</span>
-                        <p className="text-xs text-muted-foreground italic bg-secondary/50 rounded-lg px-2.5 py-1.5 border border-border/30 leading-relaxed">
-                          "{indicator.sourceEvidence}"
-                        </p>
-                      </div>
-                    )}
+                    <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${
+                          s.bad
+                            ? s.score > 60 ? "bg-red-500" : s.score > 35 ? "bg-amber-500" : "bg-emerald-500"
+                            : s.score > 60 ? "bg-emerald-500" : s.score > 35 ? "bg-amber-500" : "bg-red-500"
+                        }`}
+                        style={{ width: `${s.score}%` }}
+                      />
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">No significant scam indicators detected in this document.</p>
           )}
-        </ResultSectionCard>
 
-        {/* ── 9. Legitimacy Signals ──────────────────────────────────── */}
-        {analysis.legitimacyIndicators && analysis.legitimacyIndicators.length > 0 && (
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-            <Card className="p-5 border-emerald-200/70 dark:border-emerald-700/40 bg-emerald-50/60 dark:bg-emerald-950/20">
-              <div className="flex items-start gap-3">
-                <div className="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 border border-emerald-200 dark:border-emerald-700 flex items-center justify-center shrink-0 mt-0.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+          {/* Stat tiles */}
+          <div className="px-3 py-3 border-b border-slate-800/80 grid grid-cols-2 gap-1.5">
+            {[
+              { label: "Indicators", value: analysis.scamIndicators.length, warn: highIndicators.length > 0, id: "indicators" },
+              { label: "High Risk",  value: highIndicators.length,          warn: highIndicators.length > 0, id: "indicators" },
+              { label: "Contacts",   value: analysis.contactDetails.length, warn: analysis.contactDetails.some(c => c.suspicious), id: "contacts" },
+              { label: "Deadlines",  value: analysis.deadlines.length,      warn: analysis.deadlines.some(d => d.type === "threat"), id: "deadlines" },
+            ].map((tile, i) => (
+              <button
+                key={i}
+                onClick={() => setActiveSection(tile.id)}
+                className={`rounded-lg p-2 text-left transition-colors hover:bg-slate-800 border ${
+                  tile.warn && tile.value > 0 ? "border-amber-800/50 bg-amber-950/20" : "border-slate-800 bg-slate-800/40"
+                }`}
+              >
+                <div className={`text-lg font-bold tabular-nums leading-none mb-0.5 ${tile.warn && tile.value > 0 ? "text-amber-300" : "text-slate-200"}`}>
+                  {tile.value}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-bold text-emerald-800 dark:text-emerald-300 mb-1">
-                    Legitimacy Signals ({analysis.legitimacyIndicators.length})
-                  </h3>
-                  <p className="text-[11px] font-medium text-emerald-700/70 dark:text-emerald-400/60 mb-2.5">
-                    Observable signals that support this document's authenticity — specific elements that checked out during analysis.
-                  </p>
-                  <ul className="space-y-2">
-                    {analysis.legitimacyIndicators.map((signal, i) => (
-                      <li key={i} className="flex items-start gap-2.5">
-                        <div className="w-4 h-4 rounded-full bg-emerald-100 dark:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-700 flex items-center justify-center shrink-0 mt-0.5">
-                          <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400" />
-                        </div>
-                        <p className="text-sm text-foreground/80 leading-snug">{signal}</p>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </Card>
-          </motion.div>
-        )}
+                <div className="text-[9px] text-slate-500 font-medium leading-tight">{tile.label}</div>
+              </button>
+            ))}
+          </div>
 
-        {/* ── 10. Metadata Findings ─────────────────────────────────── */}
-        {hasMetadata && (
-          <ResultSectionCard collapsible={true}
-            icon={Info}
-            title={`File Metadata Findings (${analysis.metadataFindings!.length})`}
-            defaultOpen={false}
-          >
-            <p className="text-[11px] text-muted-foreground/70 mb-3 font-medium">
-              These findings come from the PDF file's embedded metadata. Suspicious metadata may indicate the document was produced by unexpected software or modified after the fact.
-            </p>
-            <div className="space-y-2.5">
-              {analysis.metadataFindings!.map((finding, i) => (
-                <div key={i} className="flex items-start gap-3 p-3 rounded-xl border bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                      <span className="text-xs font-semibold text-foreground">{finding.field}</span>
-                      <code className="text-xs font-mono text-muted-foreground">{finding.value}</code>
-                      <span className="text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 shrink-0">
-                        Suspicious
-                      </span>
-                    </div>
-                    <p className="text-xs text-muted-foreground leading-snug">{finding.note}</p>
-                  </div>
-                </div>
-              ))}
+          {/* Section nav */}
+          <nav className="flex-1 py-2">
+            <p className="text-[9px] font-bold uppercase tracking-widest text-slate-600 px-3 mb-1 mt-1">Sections</p>
+            {SIDEBAR_SECTIONS.map(sec => {
+              const isActive = activeSection === sec.id
+              return (
+                <button
+                  key={sec.id}
+                  onClick={() => setActiveSection(sec.id)}
+                  className={`relative w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors outline-none ${
+                    isActive
+                      ? "bg-blue-900/30 text-blue-300"
+                      : "text-slate-400 hover:bg-slate-800/70 hover:text-slate-300"
+                  }`}
+                >
+                  {isActive && <div className="absolute left-0 top-1 bottom-1 w-[3px] rounded-r-full bg-blue-500" />}
+                  <sec.icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? "text-blue-400" : "text-slate-500"}`} />
+                  <span className="text-xs font-medium flex-1 truncate">{sec.label}</span>
+                  {sec.count != null && sec.count > 0 && (
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none shrink-0 ${
+                      isActive
+                        ? "bg-blue-800 text-blue-200"
+                        : sec.warn
+                        ? "bg-red-900/60 text-red-400"
+                        : "bg-slate-800 text-slate-500"
+                    }`}>
+                      {sec.count}
+                    </span>
+                  )}
+                </button>
+              )
+            })}
+          </nav>
+
+          {/* Upgrade nudge */}
+          <div className="mx-3 mb-3 p-3 rounded-xl bg-gradient-to-br from-blue-900/30 to-slate-800/80 border border-blue-800/40">
+            <div className="flex items-center gap-1.5 mb-1">
+              <Zap className="w-3 h-3 text-blue-400" />
+              <span className="text-[10px] font-bold text-blue-300 uppercase tracking-wide">Pro</span>
             </div>
-          </ResultSectionCard>
-        )}
+            <p className="text-[11px] text-slate-400 leading-tight mb-2">Get sender intelligence, domain lookup & pattern matching</p>
+            <a href="/upgrade" className="block w-full py-1.5 rounded-lg bg-blue-700 hover:bg-blue-600 text-white text-xs font-bold text-center transition-colors">
+              Upgrade
+            </a>
+          </div>
 
-        {/* ── 11. Structural Observations — collapsible ─────────────── */}
-        {hasStructural && (
-          <ResultSectionCard collapsible={true}
-            icon={AlertTriangle}
-            title={`Structural Observations (${analysis.structuralFindings!.length})`}
-            defaultOpen={false}
-            badge={
-              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md border bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-700 mr-1">
-                {analysis.structuralFindings!.length}
-              </span>
-            }
-          >
-            <p className="text-[11px] text-muted-foreground/70 mb-3 font-medium">
-              Text-pattern and logic inconsistencies in the document structure — distinct from scam indicators and contract terms.
-            </p>
-            <ul className="space-y-2.5">
-              {analysis.structuralFindings!.map((finding, i) => (
-                <li key={i} className="flex items-start gap-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0 mt-2" />
-                  <p className="text-sm text-foreground/80 leading-relaxed">{finding}</p>
-                </li>
-              ))}
-            </ul>
-          </ResultSectionCard>
-        )}
+          <div className="px-3 pb-3">
+            <a href="/methodology" className="flex items-center gap-1.5 text-[9px] text-slate-700 hover:text-slate-600 transition-colors">
+              <Shield className="w-3 h-3" /> Reviewed by licensed attorneys
+            </a>
+          </div>
+        </aside>
 
-        {/* ── 12. Contact Details — collapsible ─────────────────────── */}
-        {analysis.contactDetails.length > 0 && (
-          <ResultSectionCard collapsible={true}
-            icon={Phone}
-            title="Contact Details Found"
-            defaultOpen={isHighRisk || isSuspicious}
-            badge={
-              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md border bg-secondary text-muted-foreground border-border/40 mr-1">
-                {analysis.contactDetails.length}
-              </span>
-            }
-          >
-            <div className="space-y-2.5">
-              {analysis.contactDetails.map((contact, i) => {
-                const Icon = contactIcon(contact.type)
-                return (
-                  <div key={i} className={`flex items-start gap-3 p-3 rounded-xl border ${contact.suspicious ? "bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800" : "bg-secondary/30 border-border/30"}`}>
-                    <Icon className={`w-4 h-4 shrink-0 mt-0.5 ${contact.suspicious ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"}`} />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <code className="text-xs font-mono font-medium text-foreground break-all">{contact.value}</code>
-                        {contact.suspicious && (
-                          <span className="text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 shrink-0">
-                            Verify
+        {/* ── Main Content ── */}
+        <main className="flex-1 overflow-y-auto bg-slate-950 dark">
+          <div className="max-w-2xl mx-auto px-5 sm:px-7 py-6" style={{ paddingBottom: "max(3rem, env(safe-area-inset-bottom) + 3rem)" }}>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeSection}
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -5 }}
+                transition={{ duration: 0.14 }}
+                className="space-y-4"
+              >
+
+                {/* ── Overview / Verdict ── */}
+                {activeSection === "overview" && (
+                  <>
+                    {/* Verdict banner */}
+                    <div className={`rounded-2xl border p-5 ${vc.bg} ${vc.border}`}>
+                      <div className="flex items-start gap-5 flex-wrap mb-3">
+                        <div className="text-center min-w-[72px]">
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">Risk Score</p>
+                          <p className={`text-5xl font-bold leading-none tabular-nums ${vc.text}`}>{analysis.riskScore}</p>
+                          <p className="text-xs text-muted-foreground mt-1">/ 100</p>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 border ${vc.badge}`}>
+                              <VerdictIcon verdict={analysis.verdict} />
+                            </div>
+                            <h2 className={`text-lg font-bold leading-snug ${vc.text}`}>{analysis.verdict}</h2>
+                          </div>
+                          <p className="text-sm text-foreground/80 leading-relaxed">{analysis.verdictExplanation}</p>
+                        </div>
+                      </div>
+                      {/* Count pills */}
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {analysis.scamIndicators.length === 0 ? (
+                          <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
+                            <CheckCircle2 className="w-3 h-3" /> No scam indicators
                           </span>
+                        ) : (
+                          <button
+                            onClick={() => setActiveSection("indicators")}
+                            className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-red-500/15 text-red-700 dark:text-red-300 border border-red-500/20 hover:bg-red-500/20 transition-colors"
+                          >
+                            <XCircle className="w-3 h-3" />
+                            {analysis.scamIndicators.length} indicator{analysis.scamIndicators.length !== 1 ? "s" : ""}
+                            {highIndicators.length > 0 && <span className="opacity-70">· {highIndicators.length} high-risk</span>}
+                          </button>
                         )}
-                        {!contact.suspicious && (
-                          <span className="text-[10px] font-medium text-muted-foreground/60 shrink-0">
-                            {contact.type}
-                          </span>
+                        {(analysis.legitimacyIndicators?.length ?? 0) > 0 && (
+                          <button
+                            onClick={() => setActiveSection("legitimacy")}
+                            className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors"
+                          >
+                            <CheckCircle2 className="w-3 h-3" /> {analysis.legitimacyIndicators!.length} legitimacy signal{analysis.legitimacyIndicators!.length !== 1 ? "s" : ""}
+                          </button>
                         )}
                       </div>
-                      {contact.note && (
-                        <p className="text-xs text-muted-foreground mt-0.5">{contact.note}</p>
-                      )}
+                      {/* Bar + legend */}
+                      <div className="h-2 rounded-full bg-black/8 dark:bg-white/10 overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${analysis.riskScore}%` }}
+                          transition={{ delay: 0.3, duration: 0.6, ease: "easeOut" }}
+                          className={`h-full rounded-full ${vc.bar}`}
+                        />
+                      </div>
+                      <ScoreLegend score={analysis.riskScore} config={TRUST_CHECK_LEGEND} />
                     </div>
-                    {contact.type === "url" && (
-                      <ExternalLink className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0 mt-0.5" />
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-            <p className="text-[11px] text-muted-foreground mt-3 border-t border-border/30 pt-3">
-              Do not call or visit these contacts from this document. Verify through official public channels first.
-            </p>
-          </ResultSectionCard>
-        )}
 
-        {/* ── 13. Deadlines & Pressure Tactics — collapsible ────────── */}
-        {analysis.deadlines.length > 0 && (
-          <ResultSectionCard collapsible={true}
-            icon={Clock}
-            title="Deadlines & Pressure Tactics"
-            defaultOpen={isHighRisk || isSuspicious}
-            badge={
-              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md border mr-1 ${
-                analysis.deadlines.some(d => d.type === "threat" || d.type === "escalation")
-                  ? "bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 border-red-200 dark:border-red-700"
-                  : "bg-secondary text-muted-foreground border-border/40"
-              }`}>
-                {analysis.deadlines.length}
-              </span>
-            }
-          >
-            <div className="space-y-2">
-              {analysis.deadlines.map((dl, i) => {
-                const isThreaten = dl.type === "threat" || dl.type === "escalation"
-                return (
-                  <div key={i} className={`flex items-center gap-3 p-3 rounded-xl border ${isThreaten ? "bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800" : "bg-secondary/30 border-border/30"}`}>
-                    {isThreaten
-                      ? <AlertTriangle className="w-3.5 h-3.5 text-red-500 shrink-0" />
-                      : <Calendar className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                    }
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground">{dl.text}</p>
-                      {dl.note && <p className="text-xs text-muted-foreground mt-0.5">{dl.note}</p>}
-                    </div>
-                    <span className={`text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded shrink-0 ${
-                      isThreaten
-                        ? "bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400"
-                        : dl.type === "relative"
-                        ? "bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400"
-                        : "bg-secondary text-muted-foreground"
+                    {/* Recommended Actions */}
+                    <div className={`p-5 rounded-2xl border ${
+                      isHighRisk
+                        ? "border-red-200/70 dark:border-red-700/40 bg-red-50/40 dark:bg-red-950/20"
+                        : isSuspicious
+                        ? "border-amber-200/70 dark:border-amber-700/40 bg-amber-50/40 dark:bg-amber-950/20"
+                        : "border-blue-200/70 dark:border-blue-700/40 bg-blue-50/40 dark:bg-blue-950/20"
                     }`}>
-                      {dl.type === "explicit_date" ? "date" : dl.type === "relative" ? "urgency" : dl.type}
-                    </span>
-                  </div>
-                )
-              })}
-            </div>
-          </ResultSectionCard>
-        )}
+                      <div className="flex items-center gap-2 mb-3">
+                        <CheckSquare className={`w-4 h-4 ${isHighRisk ? "text-red-500 dark:text-red-400" : isSuspicious ? "text-amber-500 dark:text-amber-400" : "text-blue-500 dark:text-blue-400"}`} />
+                        <h3 className={`text-sm font-bold ${isHighRisk ? "text-red-800 dark:text-red-300" : isSuspicious ? "text-amber-800 dark:text-amber-300" : "text-blue-800 dark:text-blue-300"}`}>
+                          Recommended Actions
+                        </h3>
+                      </div>
+                      <ul className="space-y-2.5">
+                        {recommendedActions(analysis.verdict).map((action, i) => (
+                          <li key={i} className="flex items-start gap-2.5">
+                            <action.icon className={`w-4 h-4 shrink-0 mt-0.5 ${action.color}`} />
+                            <p className="text-sm text-foreground/85 leading-snug">{action.text}</p>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
 
-        {/* ── 14. What To Verify ─────────────────────────────────────── */}
-        {analysis.whatToVerify.length > 0 && (
-          <ResultSectionCard collapsible={false} icon={Eye} title="What To Verify Before Acting">
-            <ul className="space-y-2.5">
-              {analysis.whatToVerify.map((item, i) => (
-                <li key={i} className="flex items-start gap-3">
-                  <div className="w-5 h-5 rounded-full bg-primary/8 border border-primary/20 flex items-center justify-center shrink-0 mt-0.5">
-                    <span className="text-[10px] font-bold text-primary/70">{i + 1}</span>
-                  </div>
-                  <p className="text-sm text-foreground/80 leading-relaxed">{item}</p>
-                </li>
-              ))}
-            </ul>
-          </ResultSectionCard>
-        )}
+                    {/* What it claims / demands */}
+                    {analysis.whatItClaims && (
+                      <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
+                        <p className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">What This Document Claims</p>
+                        <p className="text-sm text-foreground/80 leading-relaxed">{analysis.whatItClaims}</p>
+                      </div>
+                    )}
+                    {analysis.demandedAction && (
+                      <div className="rounded-2xl border border-amber-800/40 bg-amber-950/20 p-4">
+                        <p className="text-xs font-bold uppercase tracking-widest text-amber-500 mb-2">What It Demands From You</p>
+                        <p className="text-sm text-foreground/80 leading-relaxed">{analysis.demandedAction}</p>
+                      </div>
+                    )}
 
-        {/* ── 15. Safe Next Steps ────────────────────────────────────── */}
-        {analysis.safeNextSteps.length > 0 && (
-          <ResultSectionCard collapsible={false} icon={CheckSquare} title="Safe Next Steps">
-            <ul className="space-y-2.5">
-              {analysis.safeNextSteps.map((step, i) => (
-                <li key={i} className="flex items-start gap-3">
-                  <div className="w-5 h-5 rounded-full bg-green-100 dark:bg-green-900/40 border border-green-200 dark:border-green-700 flex items-center justify-center shrink-0 mt-0.5">
-                    <span className="text-[10px] font-bold text-green-600 dark:text-green-400">{i + 1}</span>
-                  </div>
-                  <p className="text-sm text-foreground/80 leading-relaxed">{step}</p>
-                </li>
-              ))}
-            </ul>
-          </ResultSectionCard>
-        )}
+                    {/* Meta strip */}
+                    <div className="flex items-center gap-2 text-xs text-slate-600 flex-wrap">
+                      <Clock className="w-3.5 h-3.5" />
+                      <span>{`Analyzed ${formatAnalyzedAt(analysis.processedAt)}`}</span>
+                      {analysis.documentType && <><span>·</span><span>{analysis.documentType}</span></>}
+                      {demoId && <><span>·</span><span>Demo document</span></>}
+                    </div>
+                  </>
+                )}
 
-        {/* ── Footer disclaimer ──────────────────────────────────────── */}
-        <div className="text-center py-4">
-          <p className="text-[11px] text-muted-foreground/60 max-w-sm mx-auto leading-relaxed">
-            PlainPath Trust Check uses AI and rule-based analysis to assess risk across three dimensions. Results are not legal or financial advice. When in doubt, consult an official agency or attorney.
-          </p>
-          <a href="/methodology" className="inline-flex items-center gap-1.5 text-[10px] text-muted-foreground/50 hover:text-muted-foreground transition-colors mt-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            Methodology reviewed by licensed attorneys
-          </a>
-          <div className="flex items-center justify-center gap-3 mt-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={exportPDF}
-              className="text-xs gap-1.5"
-            >
-              <Download className="w-3.5 h-3.5" /> Export PDF
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setLocation("/import?mode=trust-check")}
-              className="text-xs gap-1.5"
-            >
-              Check another document <ArrowRight className="w-3.5 h-3.5" />
-            </Button>
+                {/* ── Scam Indicators ── */}
+                {activeSection === "indicators" && (
+                  <>
+                    <div className="flex items-center gap-2 mb-1">
+                      <Flag className="w-4 h-4 text-red-400" />
+                      <h2 className="text-base font-bold text-slate-200">Scam Indicators</h2>
+                      <span className="ml-auto text-xs text-slate-600">{analysis.scamIndicators.length} total</span>
+                    </div>
+                    {analysis.scamIndicators.length === 0 ? (
+                      <div className="rounded-2xl border border-emerald-800/40 bg-emerald-950/20 p-8 text-center">
+                        <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto mb-2" />
+                        <p className="text-sm text-emerald-300 font-semibold">No scam indicators detected</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {[...highIndicators, ...medIndicators, ...lowIndicators].map((indicator, i) => (
+                          <div key={i} className={`flex items-start gap-3 p-4 rounded-2xl border ${
+                            indicator.severity === "high"
+                              ? "border-red-800/50 bg-red-950/20"
+                              : indicator.severity === "medium"
+                              ? "border-amber-800/40 bg-amber-950/15"
+                              : "border-slate-800 bg-slate-900/60"
+                          }`}>
+                            <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full shrink-0 mt-0.5 ${
+                              indicator.severity === "high"
+                                ? "bg-red-900/60 text-red-300 border border-red-700/50"
+                                : indicator.severity === "medium"
+                                ? "bg-amber-900/60 text-amber-300 border border-amber-700/50"
+                                : "bg-slate-800 text-slate-400 border border-slate-700"
+                            }`}>
+                              {indicator.severity}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-foreground leading-snug">{indicator.indicator}</p>
+                              {indicator.sourceEvidence && (
+                                <div className="mt-2 bg-slate-800/60 border border-slate-700/50 rounded-lg px-3 py-2">
+                                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-600 mb-1">Evidence</p>
+                                  <p className="text-xs text-slate-400 italic leading-relaxed">"{indicator.sourceEvidence}"</p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* ── Contact Details ── */}
+                {activeSection === "contacts" && (
+                  <>
+                    <div className="flex items-center gap-2 mb-1">
+                      <Phone className="w-4 h-4 text-blue-400" />
+                      <h2 className="text-base font-bold text-slate-200">Contact Details</h2>
+                      <span className="ml-auto text-xs text-slate-600">{analysis.contactDetails.length} found</span>
+                    </div>
+                    <p className="text-xs text-slate-500 mb-1">Do not call or click these — verify through official public channels first.</p>
+                    {analysis.contactDetails.length === 0 ? (
+                      <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-8 text-center">
+                        <p className="text-sm text-slate-400">No contact details found in this document.</p>
+                      </div>
+                    ) : (
+                      <div className="rounded-2xl border border-slate-800 bg-slate-900/60 divide-y divide-slate-800/60 overflow-hidden">
+                        {analysis.contactDetails.map((contact, i) => {
+                          const Icon = contactIcon(contact.type)
+                          return (
+                            <div key={i} className={`flex items-start gap-3 px-4 py-3.5 ${contact.suspicious ? "bg-amber-950/20" : ""}`}>
+                              <Icon className={`w-4 h-4 shrink-0 mt-0.5 ${contact.suspicious ? "text-amber-400" : "text-slate-500"}`} />
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <code className="text-xs font-mono font-medium text-foreground/90 break-all">{contact.value}</code>
+                                  {contact.suspicious && (
+                                    <span className="text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-amber-900/60 text-amber-300 border border-amber-700/50 shrink-0">
+                                      Verify
+                                    </span>
+                                  )}
+                                </div>
+                                {contact.note && <p className="text-xs text-slate-500 mt-0.5">{contact.note}</p>}
+                              </div>
+                              {contact.type === "url" && <ExternalLink className="w-3.5 h-3.5 text-slate-600 shrink-0 mt-0.5" />}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* ── Deadlines ── */}
+                {activeSection === "deadlines" && (
+                  <>
+                    <div className="flex items-center gap-2 mb-1">
+                      <Clock className="w-4 h-4 text-amber-400" />
+                      <h2 className="text-base font-bold text-slate-200">Deadlines & Pressure Tactics</h2>
+                      <span className="ml-auto text-xs text-slate-600">{analysis.deadlines.length}</span>
+                    </div>
+                    {analysis.deadlines.length === 0 ? (
+                      <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-8 text-center">
+                        <p className="text-sm text-slate-400">No deadlines or pressure tactics detected.</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {analysis.deadlines.map((dl, i) => {
+                          const isThreaten = dl.type === "threat" || dl.type === "escalation"
+                          return (
+                            <div key={i} className={`flex items-center gap-3 p-4 rounded-2xl border ${isThreaten ? "border-red-800/50 bg-red-950/20" : "border-slate-800 bg-slate-900/60"}`}>
+                              {isThreaten
+                                ? <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
+                                : <Calendar className="w-4 h-4 text-slate-500 shrink-0" />
+                              }
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold text-foreground leading-snug">{dl.text}</p>
+                                {dl.note && <p className="text-xs text-slate-500 mt-0.5">{dl.note}</p>}
+                              </div>
+                              <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full shrink-0 border ${
+                                isThreaten ? "bg-red-900/60 text-red-300 border-red-700/50" : "bg-slate-800 text-slate-500 border-slate-700"
+                              }`}>
+                                {dl.type === "explicit_date" ? "date" : dl.type === "relative" ? "urgency" : dl.type}
+                              </span>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* ── Legitimacy Signals ── */}
+                {activeSection === "legitimacy" && (
+                  <>
+                    <div className="flex items-center gap-2 mb-1">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                      <h2 className="text-base font-bold text-slate-200">Legitimacy Signals</h2>
+                    </div>
+
+                    {(analysis.legitimacyIndicators?.length ?? 0) === 0 ? (
+                      <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-8 text-center">
+                        <p className="text-sm text-slate-400">No legitimacy signals detected.</p>
+                      </div>
+                    ) : (
+                      <div className="rounded-2xl border border-emerald-800/40 bg-emerald-950/15 divide-y divide-slate-800/60 overflow-hidden">
+                        {analysis.legitimacyIndicators!.map((signal, i) => (
+                          <div key={i} className="flex items-start gap-3 px-4 py-3.5">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                            <p className="text-sm text-foreground/85 leading-snug">{signal}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {(analysis.contractRiskNotes || (analysis.contractTermsFound && analysis.contractTermsFound.length > 0)) && (
+                      <div className="rounded-2xl border border-amber-800/40 bg-amber-950/20 p-4 mt-2">
+                        <p className="text-xs font-bold uppercase tracking-widest text-amber-500 mb-2">Contract Terms to Review</p>
+                        {analysis.contractRiskNotes && (
+                          <p className="text-sm text-foreground/80 leading-relaxed mb-3">{analysis.contractRiskNotes}</p>
+                        )}
+                        {analysis.contractTermsFound && analysis.contractTermsFound.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5">
+                            {analysis.contractTermsFound.map((term, i) => (
+                              <span key={i} className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-900/60 text-amber-300 border border-amber-700/50">
+                                {term}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* ── Doc Metadata / Fingerprint ── */}
+                {activeSection === "fingerprint" && (
+                  <>
+                    <div className="flex items-center gap-2 mb-1">
+                      <Fingerprint className="w-4 h-4 text-violet-400" />
+                      <h2 className="text-base font-bold text-slate-200">Document Metadata</h2>
+                    </div>
+
+                    {hasMetadata && (
+                      <>
+                        <p className="text-xs text-slate-500 mb-2">Suspicious findings from the PDF file's embedded metadata — may indicate the document was produced by unexpected software or modified after the fact.</p>
+                        <div className="rounded-2xl border border-amber-800/40 bg-slate-900/60 divide-y divide-slate-800/60 overflow-hidden">
+                          {analysis.metadataFindings!.map((finding, i) => (
+                            <div key={i} className="px-4 py-4">
+                              <div className="flex items-center gap-2 flex-wrap mb-1">
+                                <span className="text-xs font-semibold text-slate-200">{finding.field}</span>
+                                <code className="text-xs font-mono text-amber-300">{finding.value}</code>
+                                <span className="text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded bg-amber-900/60 text-amber-300 border border-amber-700/50">Suspicious</span>
+                              </div>
+                              <p className="text-xs text-slate-400 leading-snug">{finding.note}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
+
+                    {hasStructural && (
+                      <>
+                        <p className="text-xs font-bold uppercase tracking-widest text-slate-600 mt-4 mb-2">Structural Observations</p>
+                        <p className="text-xs text-slate-500 mb-2">Text-pattern and logic inconsistencies in the document structure — distinct from scam indicators.</p>
+                        <div className="rounded-2xl border border-slate-800 bg-slate-900/60 divide-y divide-slate-800/60 overflow-hidden">
+                          {analysis.structuralFindings!.map((finding, i) => (
+                            <div key={i} className="flex items-start gap-3 px-4 py-3.5">
+                              <div className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0 mt-2" />
+                              <p className="text-sm text-foreground/80 leading-relaxed">{finding}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
+
+                    {!hasMetadata && !hasStructural && (
+                      <div className="rounded-2xl border border-emerald-800/40 bg-emerald-950/20 p-8 text-center">
+                        <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto mb-2" />
+                        <p className="text-sm text-emerald-300 font-semibold">No metadata anomalies found</p>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* ── Verify & Next Steps ── */}
+                {activeSection === "verify" && (
+                  <>
+                    {analysis.whatToVerify.length > 0 && (
+                      <>
+                        <div className="flex items-center gap-2 mb-1">
+                          <Eye className="w-4 h-4 text-blue-400" />
+                          <h2 className="text-base font-bold text-slate-200">What To Verify Before Acting</h2>
+                        </div>
+                        <div className="rounded-2xl border border-slate-800 bg-slate-900/60 divide-y divide-slate-800/60 overflow-hidden mb-4">
+                          {analysis.whatToVerify.map((item, i) => (
+                            <div key={i} className="flex items-start gap-3 px-4 py-3.5">
+                              <div className="w-5 h-5 rounded-full bg-blue-900/60 border border-blue-700/50 flex items-center justify-center shrink-0 mt-0.5">
+                                <span className="text-[9px] font-bold text-blue-300">{i + 1}</span>
+                              </div>
+                              <p className="text-sm text-foreground/85 leading-relaxed">{item}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
+
+                    {analysis.safeNextSteps.length > 0 && (
+                      <>
+                        <div className="flex items-center gap-2 mb-1">
+                          <CheckSquare className="w-4 h-4 text-emerald-400" />
+                          <h2 className="text-base font-bold text-slate-200">Safe Next Steps</h2>
+                        </div>
+                        <div className="rounded-2xl border border-emerald-800/40 bg-slate-900/60 divide-y divide-slate-800/60 overflow-hidden">
+                          {analysis.safeNextSteps.map((step, i) => (
+                            <div key={i} className="flex items-start gap-3 px-4 py-3.5">
+                              <div className="w-5 h-5 rounded-full bg-emerald-900/60 border border-emerald-700/50 flex items-center justify-center shrink-0 mt-0.5">
+                                <span className="text-[9px] font-bold text-emerald-300">{i + 1}</span>
+                              </div>
+                              <p className="text-sm text-foreground/85 leading-relaxed">{step}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
+
+                    {analysis.whatToVerify.length === 0 && analysis.safeNextSteps.length === 0 && (
+                      <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-8 text-center">
+                        <p className="text-sm text-slate-400">No verification steps generated.</p>
+                      </div>
+                    )}
+                  </>
+                )}
+
+              </motion.div>
+            </AnimatePresence>
           </div>
-        </div>
+        </main>
       </div>
+
+      <UpgradeModal open={showUpgrade} onClose={() => setShowUpgrade(false)} reason="trustCheck" />
     </div>
   )
 }
