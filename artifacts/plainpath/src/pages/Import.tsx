@@ -6,7 +6,7 @@ import {
   ClipboardList, GraduationCap, Banknote, CheckCircle2, FileText, Type, File,
   ArrowLeft, Building2, Scale, Heart, FileSignature,
   Mail, HelpCircle, ShieldCheck, AlertTriangle, XCircle,
-  Camera, X as XIcon, Plus, ScanLine, RotateCcw, Clock,
+  Camera, X as XIcon, Plus, ScanLine, RotateCcw, Clock, Link as LinkIcon,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { WorkspaceShell } from "@/components/WorkspaceShell"
@@ -292,7 +292,10 @@ export default function Import() {
     }
   }, [])
 
-  const [mode, setMode] = useState<"paste" | "upload" | "camera">("paste")
+  const [mode, setMode] = useState<"paste" | "upload" | "camera" | "url">("paste")
+  const [urlInput, setUrlInput] = useState("")
+  const [urlError, setUrlError] = useState<string | null>(null)
+  const [urlLoading, setUrlLoading] = useState(false)
   const [text, setText] = useState("")
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [isDragging, setIsDragging] = useState(false)
@@ -312,6 +315,36 @@ export default function Import() {
   const cameraInputRef = useRef<HTMLInputElement>(null)
   const { mutate, isPending } = useAnalyzeDocument()
   const { entitlements } = useEntitlements()
+
+  const handleUrlImport = async () => {
+    const url = urlInput.trim()
+    if (!url) return
+    setUrlLoading(true)
+    setUrlError(null)
+    try {
+      const apiBase = getApiBaseUrl()
+      const res = await fetch(`${apiBase}/api/documents/import-url`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setUrlError(data?.message ?? "Failed to import document. Please check the link and try again.")
+        return
+      }
+      const extractedText: string = data.text ?? ""
+      if (!extractedText || extractedText.length < 30) {
+        setUrlError("Could not extract readable text from this document. Try downloading the file and uploading it directly.")
+        return
+      }
+      goToDocType({ kind: "text", text: extractedText })
+    } catch {
+      setUrlError("Network error — please check your connection and try again.")
+    } finally {
+      setUrlLoading(false)
+    }
+  }
 
   const goToDocType = (payload: Payload) => {
     if (isTrustCheck) {
@@ -964,11 +997,11 @@ export default function Import() {
                 >
                   {/* Tab switcher */}
                   <div className="p-2 border-b border-border/30 bg-muted/30">
-                    <div className="grid grid-cols-3 rounded-xl bg-secondary/70 p-1 gap-1">
+                    <div className="grid grid-cols-4 rounded-xl bg-secondary/70 p-1 gap-1">
                       {(["paste", "upload"] as const).map((tab) => (
                         <button
                           key={tab}
-                          onClick={() => { setMode(tab); setUploadError(null); setUploadedFile(null); setPasteError(null); setCameraError(null); if (fileInputRef.current) fileInputRef.current.value = "" }}
+                          onClick={() => { setMode(tab); setUploadError(null); setUploadedFile(null); setPasteError(null); setCameraError(null); setUrlError(null); if (fileInputRef.current) fileInputRef.current.value = "" }}
                           style={{ touchAction: "manipulation" }}
                           className={`flex flex-col items-center justify-center gap-0.5 py-3 rounded-lg transition-all min-h-[56px] ${
                             mode === tab
@@ -987,7 +1020,7 @@ export default function Import() {
                       ))}
                       {/* Camera / Scan tab */}
                       <button
-                        onClick={() => { setMode("camera"); setUploadError(null); setUploadedFile(null); setPasteError(null); setCameraError(null); }}
+                        onClick={() => { setMode("camera"); setUploadError(null); setUploadedFile(null); setPasteError(null); setCameraError(null); setUrlError(null); }}
                         style={{ touchAction: "manipulation" }}
                         className={`flex flex-col items-center justify-center gap-0.5 py-3 rounded-lg transition-all min-h-[56px] ${
                           mode === "camera"
@@ -1000,6 +1033,22 @@ export default function Import() {
                           <span>Scan Photo</span>
                         </div>
                         <span className="text-[10px] font-normal opacity-55">Camera or image</span>
+                      </button>
+                      {/* URL / Link import tab */}
+                      <button
+                        onClick={() => { setMode("url"); setUploadError(null); setUploadedFile(null); setPasteError(null); setCameraError(null); setUrlError(null); }}
+                        style={{ touchAction: "manipulation" }}
+                        className={`flex flex-col items-center justify-center gap-0.5 py-3 rounded-lg transition-all min-h-[56px] ${
+                          mode === "url"
+                            ? "bg-card text-foreground shadow-sm shadow-black/[0.06]"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        <div className="flex items-center gap-1.5 text-sm font-semibold">
+                          <LinkIcon className="w-4 h-4" />
+                          <span>Import Link</span>
+                        </div>
+                        <span className="text-[10px] font-normal opacity-55">Drive or Dropbox</span>
                       </button>
                     </div>
                   </div>
@@ -1367,6 +1416,61 @@ export default function Import() {
                           <p className="text-[11px] text-center text-muted-foreground/50">
                             Up to 10 pages · Photos are processed by AI and not stored by PlainPath
                           </p>
+                        </motion.div>
+                      )}
+
+                      {/* ── URL / LINK import mode ──────────── */}
+                      {mode === "url" && (
+                        <motion.div
+                          key="url"
+                          initial={{ opacity: 0, x: 14 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -14 }}
+                          transition={{ duration: 0.14 }}
+                          className="space-y-4"
+                        >
+                          <div>
+                            <p className="text-sm font-semibold mb-1.5">Paste a Google Drive or Dropbox link</p>
+                            <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
+                              Share a file from Google Drive or Dropbox — PlainPath will fetch and extract the text automatically.
+                            </p>
+                            <div className="flex gap-2">
+                              <div className="relative flex-1">
+                                <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 pointer-events-none" />
+                                <input
+                                  type="url"
+                                  placeholder="https://drive.google.com/... or https://dropbox.com/..."
+                                  value={urlInput}
+                                  onChange={e => { setUrlInput(e.target.value); setUrlError(null); }}
+                                  className="w-full pl-9 pr-3 py-3 rounded-xl border border-border/60 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all"
+                                  onKeyDown={e => { if (e.key === "Enter" && urlInput.trim()) void handleUrlImport() }}
+                                />
+                              </div>
+                              <Button
+                                onClick={() => void handleUrlImport()}
+                                disabled={urlLoading || !urlInput.trim()}
+                                style={{ touchAction: "manipulation" }}
+                                className="shrink-0 rounded-xl"
+                              >
+                                {urlLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Import"}
+                              </Button>
+                            </div>
+                            {urlError && <ErrorBanner message={urlError} />}
+                          </div>
+
+                          <div className="rounded-xl bg-muted/40 border border-border/50 p-4 space-y-3 text-xs text-muted-foreground">
+                            <p className="font-semibold text-foreground/70">How to share from Google Drive:</p>
+                            <ol className="space-y-1.5 list-decimal list-inside leading-relaxed">
+                              <li>Right-click the file in Google Drive → <span className="font-medium">Share</span></li>
+                              <li>Set access to <span className="font-medium">"Anyone with the link"</span></li>
+                              <li>Copy the link and paste it above</li>
+                            </ol>
+                            <p className="font-semibold text-foreground/70 pt-1">How to share from Dropbox:</p>
+                            <ol className="space-y-1.5 list-decimal list-inside leading-relaxed">
+                              <li>Click <span className="font-medium">Share</span> on the file in Dropbox</li>
+                              <li>Copy the shared link and paste it above</li>
+                            </ol>
+                          </div>
                         </motion.div>
                       )}
 

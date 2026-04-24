@@ -53,6 +53,8 @@ import IndependentContractor from "@/pages/guides/IndependentContractor";
 import EvictionNotice from "@/pages/guides/EvictionNotice";
 import MedicalBillingDispute from "@/pages/guides/MedicalBillingDispute";
 import NotFound from "@/pages/not-found";
+import TeamManage from "@/pages/TeamManage";
+import JoinTeam from "@/pages/JoinTeam";
 
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -466,6 +468,7 @@ function Router() {
             <Route path="/subscribe" component={Subscribe} />
             <Route path="/subscribe/success" component={SubscribeSuccess} />
             <Route path="/subscribe/cancel" component={SubscribeCancel} />
+            <Route path="/join/:token" component={JoinTeam} />
 
             {/* ── Protected routes (require sign-in) ── */}
             <Route path="/" component={protect(Home)} />
@@ -483,6 +486,7 @@ function Router() {
             <Route path="/redact" component={protect(Redact)} />
             <Route path="/billing" component={protect(Billing)} />
             <Route path="/upgrade" component={protect(Upgrade)} />
+            <Route path="/team" component={protect(TeamManage)} />
             <Route path="/signature" component={protect(Signature)} />
             <Route path="/documents" component={protect(Documents)} />
             <Route path="/account-security" component={protect(AccountSecurity)} />

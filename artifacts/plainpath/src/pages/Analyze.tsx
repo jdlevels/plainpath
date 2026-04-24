@@ -95,7 +95,7 @@ export default function Analyze() {
 
   const { entitlements, loading: entitlementsLoading } = useEntitlements()
   const { isSignedIn } = useUser()
-  const isPro = entitlements?.plan === "pro"
+  const isPro = entitlements?.plan === "pro" || entitlements?.plan === "team"
   // Tabs locked to Pro plan. Starter plan includes: plain-english, summary, key-terms,
   // action-pack, documents (Required Docs), and deadlines.
   const PRO_ONLY_TABS = new Set(["source-sections", "missing", "checklist", "risks"])
@@ -424,7 +424,7 @@ export default function Analyze() {
                   : <DeadlinesTab  analysis={analysis} />)}
                 {activeTab === "risks"           && (isTabLocked("risks")
                   ? <UpgradeCard title="Risks & Notes — Pro" description="Understand what you're agreeing to and what could go wrong before you sign or submit." />
-                  : <RisksTab      analysis={analysis} onOpenGuidedReview={() => setGuidedReviewCtx("risks")} />)}
+                  : <RisksTab      analysis={analysis} onOpenGuidedReview={() => setGuidedReviewCtx("risks")} documentType={analysis.documentType} />)}
                 {activeTab === "key-terms"       && <KeyTermsTab   analysis={analysis} />}
                 {activeTab === "action-pack"     && <ActionPackTab analysis={analysis} />}
                 {activeTab === "ask"             && (
@@ -1346,7 +1346,9 @@ function DeadlinesTab({ analysis }: { analysis: DocumentAnalysis }) {
 /* ────────────────────────────────────────────────
    RISKS TAB
 ──────────────────────────────────────────────── */
-function RiskCard({ risk }: { risk: DocumentAnalysis["risks"][0] }) {
+type NegotiationResult = { strategy: string; counterLanguage: string; talkingPoints: string[] }
+
+function RiskCard({ risk, documentType }: { risk: DocumentAnalysis["risks"][0]; documentType?: string }) {
   const isHigh   = risk.severity === "high"
   const isMedium = risk.severity === "medium"
   const cardCls = isHigh
@@ -1356,27 +1358,143 @@ function RiskCard({ risk }: { risk: DocumentAnalysis["risks"][0] }) {
       : "bg-card border border-border/50"
   const iconCls = isHigh ? "bg-red-100 dark:bg-red-950/60" : isMedium ? "bg-amber-50 dark:bg-amber-950/50" : "bg-secondary"
   const iconColor = isHigh ? "text-red-600 dark:text-red-400" : isMedium ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"
+
+  const { entitlements } = useEntitlements()
+  const canNegotiate = entitlements?.plan === "pro" || entitlements?.plan === "team"
+  const showNegotiate = isHigh || isMedium
+
+  const [negotiating, setNegotiating] = useState(false)
+  const [negotiation, setNegotiation] = useState<NegotiationResult | null>(null)
+  const [negotiateError, setNegotiateError] = useState<string | null>(null)
+  const [open, setOpen] = useState(false)
+
+  const handleNegotiate = async () => {
+    if (negotiation) { setOpen(o => !o); return }
+    setNegotiating(true)
+    setNegotiateError(null)
+    try {
+      const res = await fetch(`${getApiBaseUrl()}/api/documents/negotiate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          riskTitle: risk.title,
+          riskDescription: risk.description,
+          severity: risk.severity,
+          documentType: documentType ?? "contract",
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data?.message ?? "Negotiation failed")
+      setNegotiation(data as NegotiationResult)
+      setOpen(true)
+    } catch (err) {
+      setNegotiateError(err instanceof Error ? err.message : "Failed to generate negotiation advice.")
+    } finally {
+      setNegotiating(false)
+    }
+  }
+
   return (
-    <div className={`rounded-2xl p-5 ${cardCls}`}>
-      <div className="flex items-start gap-3">
-        <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${iconCls}`}>
-          <AlertTriangle className={`w-4 h-4 ${iconColor}`} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <h3 className="font-bold text-foreground leading-snug">{risk.title}</h3>
-          <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{risk.description}</p>
-          {risk.sourceEvidence && (
-            <div className="mt-3">
-              <EvidenceTooltip text={risk.sourceEvidence} />
-            </div>
-          )}
+    <div className={`rounded-2xl overflow-hidden ${cardCls}`}>
+      <div className="p-5">
+        <div className="flex items-start gap-3">
+          <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${iconCls}`}>
+            <AlertTriangle className={`w-4 h-4 ${iconColor}`} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-foreground leading-snug">{risk.title}</h3>
+            <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{risk.description}</p>
+            {risk.sourceEvidence && (
+              <div className="mt-3">
+                <EvidenceTooltip text={risk.sourceEvidence} />
+              </div>
+            )}
+            {showNegotiate && (
+              <div className="mt-3 flex items-center gap-2">
+                {canNegotiate ? (
+                  <button
+                    onClick={() => void handleNegotiate()}
+                    disabled={negotiating}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
+                      isHigh
+                        ? "border-red-300/50 dark:border-red-800/50 bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-950/50"
+                        : "border-amber-300/50 dark:border-amber-800/50 bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-950/50"
+                    }`}
+                  >
+                    {negotiating ? (
+                      <><Loader2 className="w-3 h-3 animate-spin" />Thinking…</>
+                    ) : (
+                      <><MessageSquare className="w-3 h-3" />Negotiate this</>
+                    )}
+                    {negotiation && <ChevronDown className={`w-3 h-3 transition-transform ${open ? "rotate-180" : ""}`} />}
+                  </button>
+                ) : (
+                  <a
+                    href="subscribe"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 transition-all"
+                  >
+                    <Lock className="w-3 h-3" />
+                    Negotiate this — Pro
+                  </a>
+                )}
+                {negotiateError && <span className="text-xs text-destructive">{negotiateError}</span>}
+              </div>
+            )}
+          </div>
         </div>
       </div>
+
+      {/* Negotiation result panel */}
+      <AnimatePresence>
+        {open && negotiation && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden border-t border-border/30"
+          >
+            <div className="p-5 bg-background/60 dark:bg-background/20 space-y-4">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">Strategy</p>
+                <p className="text-sm text-foreground leading-relaxed">{negotiation.strategy}</p>
+              </div>
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">Suggested counter-language</p>
+                <div className="relative rounded-xl border border-border/60 bg-muted/40 p-3.5">
+                  <p className="text-sm font-mono text-foreground leading-relaxed whitespace-pre-wrap">{negotiation.counterLanguage}</p>
+                  <button
+                    onClick={() => void navigator.clipboard.writeText(negotiation.counterLanguage)}
+                    className="absolute top-2 right-2 p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+                    title="Copy to clipboard"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                  </button>
+                </div>
+              </div>
+              {negotiation.talkingPoints.length > 0 && (
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">Talking points</p>
+                  <ul className="space-y-1.5">
+                    {negotiation.talkingPoints.map((pt, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm">
+                        <span className="w-4 h-4 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5 text-[9px] font-bold text-primary">{i + 1}</span>
+                        <span className="text-foreground/85 leading-relaxed">{pt}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              <p className="text-[10px] text-muted-foreground/50 italic">PlainPath's negotiation advice is for informational purposes — not legal counsel. For major contracts, consult an attorney.</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
 
-function RisksTab({ analysis, onOpenGuidedReview }: { analysis: DocumentAnalysis; onOpenGuidedReview?: () => void }) {
+function RisksTab({ analysis, onOpenGuidedReview, documentType }: { analysis: DocumentAnalysis; onOpenGuidedReview?: () => void; documentType?: string }) {
   const highRisks   = analysis.risks.filter(r => r.severity === "high")
   const medRisks    = analysis.risks.filter(r => r.severity === "medium")
   const lowRisks    = analysis.risks.filter(r => r.severity === "low" || (r.severity !== "high" && r.severity !== "medium"))
@@ -1406,7 +1524,7 @@ function RisksTab({ analysis, onOpenGuidedReview }: { analysis: DocumentAnalysis
                 <div className="p-3 space-y-2">
                   {highRisks.map(r => (
                     <div key={r.id} data-review-id={r.id}>
-                      <RiskCard risk={r} />
+                      <RiskCard risk={r} documentType={documentType} />
                     </div>
                   ))}
                 </div>
@@ -1424,7 +1542,7 @@ function RisksTab({ analysis, onOpenGuidedReview }: { analysis: DocumentAnalysis
                 <div className="p-3 space-y-2">
                   {medRisks.map(r => (
                     <div key={r.id} data-review-id={r.id}>
-                      <RiskCard risk={r} />
+                      <RiskCard risk={r} documentType={documentType} />
                     </div>
                   ))}
                 </div>
@@ -1442,7 +1560,7 @@ function RisksTab({ analysis, onOpenGuidedReview }: { analysis: DocumentAnalysis
                 <div className="p-3 space-y-2">
                   {lowRisks.map(r => (
                     <div key={r.id} data-review-id={r.id}>
-                      <RiskCard risk={r} />
+                      <RiskCard risk={r} documentType={documentType} />
                     </div>
                   ))}
                 </div>

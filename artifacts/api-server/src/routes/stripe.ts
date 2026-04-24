@@ -16,23 +16,43 @@ const router = Router()
 
 const APP_BASE_URL = process.env.APP_BASE_URL || "https://plainpathapp.com/app"
 
-type PlanKey = "starter" | "pro"
+type PlanKey = "starter" | "pro" | "team"
+type BillingPeriod = "monthly" | "annual"
 
-const PLAN_CONFIG: Record<PlanKey, { name: string; amount: number; description: string }> = {
+const PLAN_CONFIG: Record<PlanKey, {
+  name: string
+  amount: number        // monthly, cents
+  annualAmount: number  // yearly, cents
+  description: string
+  annualDescription: string
+  seats?: number
+}> = {
   starter: {
     name: "PlainPath Starter",
     amount: 499,
+    annualAmount: 4900,
     description: "Unlimited document analyses — plain English breakdowns, any time.",
+    annualDescription: "Unlimited document analyses — plain English breakdowns. Billed annually.",
   },
   pro: {
     name: "PlainPath Pro",
     amount: 1999,
+    annualAmount: 19900,
     description: "All tools: Analyze, Trust Check, Contract Builder, Contract Review, Redact, Compare Versions, and Clause Extractor.",
+    annualDescription: "All tools included. Billed annually — save 17% vs. monthly.",
+  },
+  team: {
+    name: "PlainPath Team",
+    amount: 2999,
+    annualAmount: 28900,
+    description: "All Pro tools for up to 3 users under one subscription.",
+    annualDescription: "All Pro tools for up to 3 users. Billed annually — save 20% vs. monthly.",
+    seats: 3,
   },
 }
 
 function isPlanKey(value: unknown): value is PlanKey {
-  return value === "starter" || value === "pro"
+  return value === "starter" || value === "pro" || value === "team"
 }
 
 // ─── Billing Status ───────────────────────────────────────────────────────────
@@ -67,11 +87,13 @@ router.post("/create-checkout-session", async (req, res) => {
   }
 
   try {
-    const { plan } = req.body as { plan?: string }
+    const { plan, billingPeriod = "monthly" } = req.body as { plan?: string; billingPeriod?: string }
 
     if (!isPlanKey(plan)) {
-      return res.status(400).json({ error: "Invalid plan. Must be 'starter' or 'pro'." })
+      return res.status(400).json({ error: "Invalid plan. Must be 'starter', 'pro', or 'team'." })
     }
+
+    const isAnnual = billingPeriod === "annual"
 
     // Resolve email from the authenticated Clerk session — never trust the request body.
     const clerkUser = await clerkClient.users.getUser(auth.userId)
@@ -79,10 +101,14 @@ router.post("/create-checkout-session", async (req, res) => {
 
     const selectedPlan = PLAN_CONFIG[plan]
     const billingMode = BILLING_CONFIG.BILLING_MODE
+    const unitAmount = isAnnual ? selectedPlan.annualAmount : selectedPlan.amount
+    const interval = isAnnual ? "year" : "month"
+    const productDescription = isAnnual ? selectedPlan.annualDescription : selectedPlan.description
 
     const sharedMetadata: Record<string, string> = {
       plan,
       billingMode,
+      billingPeriod: isAnnual ? "annual" : "monthly",
       clerkUserId: auth.userId,
     }
 
@@ -96,12 +122,12 @@ router.post("/create-checkout-session", async (req, res) => {
           quantity: 1,
           price_data: {
             currency: "usd",
-            recurring: { interval: "month" },
+            recurring: { interval },
             product_data: {
               name: selectedPlan.name,
-              description: selectedPlan.description,
+              description: productDescription,
             },
-            unit_amount: selectedPlan.amount,
+            unit_amount: unitAmount,
           },
         },
       ],

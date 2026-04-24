@@ -29,6 +29,43 @@ billingDb.exec(`
   );
 `)
 
+// ─── Team tables ─────────────────────────────────────────────────────────────
+billingDb.exec(`
+  CREATE TABLE IF NOT EXISTS teams (
+    id             TEXT PRIMARY KEY,
+    ownerClerkId   TEXT NOT NULL,
+    ownerEmail     TEXT NOT NULL,
+    plan           TEXT NOT NULL DEFAULT 'team',
+    status         TEXT NOT NULL DEFAULT 'active',
+    maxSeats       INTEGER NOT NULL DEFAULT 3,
+    stripeSubId    TEXT,
+    createdAt      TEXT NOT NULL,
+    updatedAt      TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS team_members (
+    id         TEXT PRIMARY KEY,
+    teamId     TEXT NOT NULL,
+    clerkId    TEXT,
+    email      TEXT NOT NULL,
+    role       TEXT NOT NULL DEFAULT 'member',
+    status     TEXT NOT NULL DEFAULT 'active',
+    joinedAt   TEXT NOT NULL,
+    FOREIGN KEY (teamId) REFERENCES teams(id)
+  );
+
+  CREATE TABLE IF NOT EXISTS team_invitations (
+    id         TEXT PRIMARY KEY,
+    teamId     TEXT NOT NULL,
+    email      TEXT NOT NULL,
+    token      TEXT UNIQUE NOT NULL,
+    expiresAt  TEXT NOT NULL,
+    acceptedAt TEXT,
+    createdAt  TEXT NOT NULL,
+    FOREIGN KEY (teamId) REFERENCES teams(id)
+  );
+`)
+
 // ─── Non-destructive schema migrations ───────────────────────────────────────
 // Add new columns to existing databases without dropping data.
 const pragmaColumns = billingDb

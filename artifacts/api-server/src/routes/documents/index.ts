@@ -2772,6 +2772,163 @@ Rules:
   }
 });
 
+// ─── POST /documents/negotiate ────────────────────────────────────────────────
+// Pro feature: returns negotiation strategy + counter-language for a risk item.
+router.post("/negotiate", async (req, res) => {
+  const { userId } = getAuth(req);
+  if (!userId) return res.status(401).json({ message: "unauthenticated" });
+
+  const { riskTitle, riskDescription, severity, documentType, documentSummary } = req.body as {
+    riskTitle?: string;
+    riskDescription?: string;
+    severity?: string;
+    documentType?: string;
+    documentSummary?: string;
+  };
+
+  if (!riskTitle || !riskDescription) {
+    return res.status(400).json({ message: "riskTitle and riskDescription are required." });
+  }
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      max_completion_tokens: 700,
+      messages: [
+        {
+          role: "system",
+          content: `You are a contract and document negotiation expert helping regular people push back on unfair terms.
+Be direct, practical, and confident. Give advice as if helping a friend — not legal jargon.`,
+        },
+        {
+          role: "user",
+          content: `Document type: ${documentType ?? "contract"}
+${documentSummary ? `Document summary: ${documentSummary}\n` : ""}Risk identified: "${riskTitle}"
+Description: ${riskDescription}
+Severity: ${severity ?? "medium"}
+
+Please provide:
+1. A negotiation strategy — 1-2 sentences on the best approach
+2. Exact counter-language they can propose (draft text they can copy and use or adapt)
+3. Three specific talking points to use in negotiation
+
+Return ONLY valid JSON in this exact format:
+{
+  "strategy": "string",
+  "counterLanguage": "string",
+  "talkingPoints": ["string", "string", "string"]
+}`,
+        },
+      ],
+      response_format: { type: "json_object" },
+    });
+
+    const content = response.choices[0]?.message?.content ?? "{}";
+    let parsed: { strategy?: string; counterLanguage?: string; talkingPoints?: string[] };
+    try {
+      parsed = JSON.parse(content);
+    } catch {
+      return res.status(500).json({ message: "Failed to parse negotiation response." });
+    }
+
+    return res.json({
+      strategy: parsed.strategy ?? "",
+      counterLanguage: parsed.counterLanguage ?? "",
+      talkingPoints: Array.isArray(parsed.talkingPoints) ? parsed.talkingPoints : [],
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    logger.error({ err: msg }, "documents/negotiate failed");
+    return res.status(500).json({ message: "Negotiation failed. Please try again." });
+  }
+});
+
+// ─── POST /documents/import-url ───────────────────────────────────────────────
+// Fetches a document from a Google Drive or Dropbox share URL, extracts text.
+router.post("/import-url", async (req, res) => {
+  const { userId } = getAuth(req);
+  if (!userId) return res.status(401).json({ message: "unauthenticated" });
+
+  const { url } = req.body as { url?: string };
+  if (!url || !url.startsWith("http")) {
+    return res.status(400).json({ message: "A valid URL is required." });
+  }
+
+  try {
+    let downloadUrl = url.trim();
+    let guessedFilename = "document";
+
+    // Google Drive: https://drive.google.com/file/d/FILE_ID/view → uc?export=download
+    const driveMatch = downloadUrl.match(/drive\.google\.com\/file\/d\/([^/?\s]+)/);
+    if (driveMatch) {
+      downloadUrl = `https://drive.google.com/uc?export=download&confirm=t&id=${driveMatch[1]}`;
+      guessedFilename = "google-drive-document";
+    }
+
+    // Dropbox: replace ?dl=0 with ?dl=1 or add ?dl=1
+    if (downloadUrl.includes("dropbox.com")) {
+      if (downloadUrl.includes("dl=0")) {
+        downloadUrl = downloadUrl.replace("dl=0", "dl=1");
+      } else if (downloadUrl.includes("www.dropbox.com") && !downloadUrl.includes("dl=1")) {
+        downloadUrl = downloadUrl + (downloadUrl.includes("?") ? "&dl=1" : "?dl=1");
+      }
+      guessedFilename = "dropbox-document";
+    }
+
+    const fetchRes = await fetch(downloadUrl, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (compatible; PlainPath/1.0)",
+        "Accept": "*/*",
+      },
+      redirect: "follow",
+    });
+
+    if (!fetchRes.ok) {
+      return res.status(400).json({ message: `Could not fetch the document. The link may be expired or private. (Status: ${fetchRes.status})` });
+    }
+
+    const contentType = (fetchRes.headers.get("content-type") ?? "").toLowerCase();
+    const disposition = fetchRes.headers.get("content-disposition") ?? "";
+    const filenameMatch = disposition.match(/filename[^;=\n]*=([^;\n"]*)/);
+    if (filenameMatch?.[1]) guessedFilename = filenameMatch[1].trim().replace(/["']/g, "");
+
+    const buffer = Buffer.from(await fetchRes.arrayBuffer());
+
+    let extractedText = "";
+
+    if (contentType.includes("pdf") || guessedFilename.toLowerCase().endsWith(".pdf")) {
+      const pdfMod = await import("pdf-parse/lib/pdf-parse.js");
+      const pdfParse: (buf: Buffer) => Promise<{ text: string }> =
+        typeof pdfMod.default === "function" ? pdfMod.default : (pdfMod as any);
+      const result = await pdfParse(buffer);
+      extractedText = result.text ?? "";
+    } else if (
+      contentType.includes("wordprocessingml") ||
+      contentType.includes("msword") ||
+      guessedFilename.toLowerCase().endsWith(".docx") ||
+      guessedFilename.toLowerCase().endsWith(".doc")
+    ) {
+      const mammoth = await import("mammoth");
+      const result = await mammoth.extractRawText({ buffer });
+      extractedText = result.value ?? "";
+    } else {
+      // Treat as plain text
+      extractedText = buffer.toString("utf-8");
+    }
+
+    extractedText = extractedText.trim();
+    if (!extractedText || extractedText.length < 20) {
+      return res.status(400).json({ message: "Could not extract readable text from this document. Try downloading the file and uploading it directly." });
+    }
+
+    return res.json({ text: extractedText, filename: guessedFilename });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    logger.error({ err: msg }, "documents/import-url failed");
+    return res.status(500).json({ message: "Failed to import document from URL. Please try uploading the file directly." });
+  }
+});
+
 function buildSuggestedQuestions(documentType: string, risks: any[], deadlines: any[]): string[] {
   const questions: string[] = [];
   if ((deadlines as any[]).some((d: any) => d.isHard)) questions.push("What happens if I miss the deadline?");

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react"
 import { motion } from "framer-motion"
 import {
   Check, ArrowLeft, Sparkles, Loader2,
-  ExternalLink, Lock, Clock, LogIn,
+  ExternalLink, Lock, Clock, LogIn, Users,
 } from "lucide-react"
 import { useUser } from "@clerk/react"
 import { PRICING_PLANS } from "@/data/pricingData"
@@ -15,8 +15,8 @@ import { getApiBaseUrl } from "@/lib/api"
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "")
 
-function isPlanKey(value: unknown): value is "starter" | "pro" {
-  return value === "starter" || value === "pro"
+function isPlanKey(value: unknown): value is "starter" | "pro" | "team" {
+  return value === "starter" || value === "pro" || value === "team"
 }
 
 // ─── Native fallback ────────────────────────────────────────────────────────
@@ -52,6 +52,7 @@ export default function Subscribe() {
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [billingAvailable, setBillingAvailable] = useState<boolean | null>(null)
+  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annual">("monthly")
   const autoTriggeredRef = useRef(false)
 
   // Read ?plan= from URL (set by the sign-in redirect flow)
@@ -101,7 +102,7 @@ export default function Subscribe() {
     trackEvent("subscribe_started", { plan: planKey })
 
     try {
-      await startStripeCheckout(planKey as "starter" | "pro")
+      await startStripeCheckout(planKey as "starter" | "pro" | "team", billingPeriod)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to start checkout. Please try again.")
       setLoadingPlan(null)
@@ -138,6 +139,35 @@ export default function Subscribe() {
               Signed in as <span className="font-medium text-foreground">{user.primaryEmailAddress.emailAddress}</span>
             </p>
           )}
+
+          {/* ── Billing period toggle ── */}
+          <div className="mt-7 inline-flex items-center gap-0 rounded-full border border-border/60 bg-muted/40 p-1 shadow-sm">
+            <button
+              type="button"
+              onClick={() => setBillingPeriod("monthly")}
+              className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${
+                billingPeriod === "monthly"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Monthly
+            </button>
+            <button
+              type="button"
+              onClick={() => setBillingPeriod("annual")}
+              className={`flex items-center gap-2 px-5 py-2 rounded-full text-sm font-semibold transition-all ${
+                billingPeriod === "annual"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Annual
+              <span className="px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-[10px] font-bold text-emerald-700 dark:text-emerald-400">
+                Save 17%
+              </span>
+            </button>
+          </div>
         </div>
 
         {/* ── Billing not activated notice ── */}
@@ -190,12 +220,26 @@ export default function Subscribe() {
                 )}
 
                 <div className="pt-2">
-                  <h3 className="text-lg font-bold tracking-tight">{plan.name}</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-bold tracking-tight">{plan.name}</h3>
+                    {plan.seats && (
+                      <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-violet-100 dark:bg-violet-950/40 text-[11px] font-semibold text-violet-700 dark:text-violet-400">
+                        <Users className="w-3 h-3" />{plan.seats} users
+                      </span>
+                    )}
+                  </div>
 
                   <div className="mt-3 flex items-end gap-1">
-                    <span className="text-4xl font-bold tracking-tight">{plan.price}</span>
-                    <span className="pb-1 text-sm text-muted-foreground">{plan.period}</span>
+                    <span className="text-4xl font-bold tracking-tight">
+                      {billingPeriod === "annual" && plan.annualPrice ? plan.annualPrice : plan.price}
+                    </span>
+                    <span className="pb-1 text-sm text-muted-foreground">/month</span>
                   </div>
+                  {billingPeriod === "annual" && plan.annualTotal && (
+                    <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-0.5">
+                      {plan.annualTotal}/year — billed annually
+                    </p>
+                  )}
 
                   <p className="mt-3 text-sm text-muted-foreground leading-relaxed min-h-[60px]">
                     {plan.description}

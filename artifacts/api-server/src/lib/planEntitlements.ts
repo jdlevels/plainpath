@@ -18,7 +18,7 @@
 //
 // ─────────────────────────────────────────────────────────────────────────────
 
-export type PlanKey = "starter" | "pro"
+export type PlanKey = "starter" | "pro" | "team"
 
 // ─── Tool Access Map ──────────────────────────────────────────────────────────
 
@@ -37,6 +37,7 @@ export type ToolKey =
 export const TOOL_ACCESS: Record<PlanKey, ToolKey[]> = {
   starter: ["analyze", "redact"],
   pro: ["analyze", "trust-check", "contract-review", "build-contract", "redact", "signature", "compare", "clause-extractor", "compare-versions"],
+  team: ["analyze", "trust-check", "contract-review", "build-contract", "redact", "signature", "compare", "clause-extractor", "compare-versions"],
 }
 
 /** True if the given plan can access the given tool. */
@@ -69,6 +70,26 @@ export type PlanEntitlements = {
 }
 
 export const PLAN_ENTITLEMENTS: Record<PlanKey, PlanEntitlements> = {
+  team: {
+    plan: "team",
+    displayName: "Team",
+    priceMonthly: 2999,
+    analysesPerMonth: Infinity,
+    features: {
+      plainEnglish: true,
+      sourceSections: true,
+      sectionExplainer: true,
+      checklist: true,
+      requiredDocs: true,
+      deadlines: true,
+      risks: true,
+      whatsMissing: true,
+      keyTerms: true,
+      actionPack: true,
+      savedAnalyses: true,
+      exportShare: true,
+    },
+  },
   starter: {
     plan: "starter",
     displayName: "Starter",
@@ -114,5 +135,6 @@ export const PLAN_ENTITLEMENTS: Record<PlanKey, PlanEntitlements> = {
 /** Normalize any incoming plan string to a valid PlanKey. Defaults to starter. */
 export function normalizePlan(plan?: string | null): PlanKey {
   if (plan === "pro") return "pro"
+  if (plan === "team") return "team"
   return "starter"
 }

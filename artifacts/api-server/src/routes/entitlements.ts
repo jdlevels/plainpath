@@ -34,6 +34,7 @@ import {
   incrementToolUsage,
   getCurrentMonthKey,
 } from "../lib/usageDb"
+import { pool } from "@workspace/db"
 
 const router = Router()
 
@@ -226,8 +227,40 @@ router.get("/status", async (req, res) => {
     // never the caller-supplied query email.
     const accountEmail = subscriber?.email ?? sessionEmail ?? resolvedEmail
 
-    const plan = normalizePlan(subscriber?.plan)
-    const status = subscriber?.status || "inactive"
+    let plan = normalizePlan(subscriber?.plan)
+    let status = subscriber?.status || "inactive"
+
+    // If no active direct subscription, check PostgreSQL team membership
+    if (status !== "active" && sessionUserId) {
+      try {
+        const teamMemberResult = await pool.query(
+          `SELECT tm.role, t.id as team_id
+           FROM team_members tm
+           JOIN teams t ON t.id = tm.team_id
+           WHERE tm.user_id = $1
+           LIMIT 1`,
+          [sessionUserId]
+        )
+        if (teamMemberResult.rowCount && teamMemberResult.rowCount > 0) {
+          // User is a team member — check if the team owner has an active team subscription
+          const ownerResult = await pool.query(
+            `SELECT t.owner_id FROM teams t WHERE t.id = $1`,
+            [teamMemberResult.rows[0].team_id]
+          )
+          if (ownerResult.rowCount && ownerResult.rowCount > 0) {
+            const ownerId = ownerResult.rows[0].owner_id
+            const ownerSub = getSubscriberByClerkUserId(ownerId)
+            if (ownerSub && ownerSub.plan === "team" && ownerSub.status === "active") {
+              plan = "team"
+              status = "active"
+            }
+          }
+        }
+      } catch {
+        // Non-fatal: team lookup failed, fall back to direct subscription
+      }
+    }
+
     const entitlements = PLAN_ENTITLEMENTS[plan]
     const usageCount = getUsageForCurrentMonth(accountEmail)
     const toolUsage = getAllToolUsageForCurrentMonth(accountEmail)
