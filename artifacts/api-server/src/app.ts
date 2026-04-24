@@ -30,6 +30,11 @@ import { initBuilderTemplates } from "@workspace/db";
 
 const app: Express = express();
 
+// Trust the first hop of reverse proxies (Replit's edge layer).
+// Required for express-rate-limit to read the real client IP from
+// X-Forwarded-For and avoid ERR_ERL_UNEXPECTED_X_FORWARDED_FOR.
+app.set("trust proxy", 1);
+
 // Clerk proxy must be mounted before body parsers (streams raw bytes)
 app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
 
