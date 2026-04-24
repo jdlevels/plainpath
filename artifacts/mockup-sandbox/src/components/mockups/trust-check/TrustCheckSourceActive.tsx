@@ -49,7 +49,7 @@ export function TrustCheckSourceActive() {
         <div className="ml-auto flex items-center gap-2">
           <div className="h-6 px-2.5 rounded-full border flex items-center gap-1.5 bg-amber-600/12 border-amber-500/28 text-amber-300">
             <AlertTriangle className="w-2.5 h-2.5" />
-            <span className="text-[10px] font-medium">Needs review · 31/100</span>
+            <span className="text-[10px] font-medium">Needs verification · 31/100</span>
           </div>
           <button className="h-7 px-2.5 rounded-lg border border-white/[0.08] bg-white/[0.03] text-white/30 text-xs flex items-center gap-1.5">
             <Bookmark className="w-3 h-3" /><span>Save</span>
