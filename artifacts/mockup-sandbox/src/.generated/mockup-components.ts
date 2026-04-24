@@ -2,6 +2,9 @@
 type ModuleMap = Record<string, () => Promise<Record<string, unknown>>>;
 export const modules: ModuleMap = {
   "./components/mockups/sig-dashboard/Dashboard.tsx": () => import("../components/mockups/sig-dashboard/Dashboard.tsx"),
+  "./components/mockups/compare-versions/AuditDashboard.tsx": () => import("../components/mockups/compare-versions/AuditDashboard.tsx"),
+  "./components/mockups/compare-versions/CleanReader.tsx": () => import("../components/mockups/compare-versions/CleanReader.tsx"),
+  "./components/mockups/compare-versions/CommandCenter.tsx": () => import("../components/mockups/compare-versions/CommandCenter.tsx"),
   "./components/mockups/sig-detail/RequestDetail.tsx": () => import("../components/mockups/sig-detail/RequestDetail.tsx"),
   "./components/mockups/sig-prepare/PrepareWorkspace.tsx": () => import("../components/mockups/sig-prepare/PrepareWorkspace.tsx"),
   "./components/mockups/sig-wizard/WizardFlow.tsx": () => import("../components/mockups/sig-wizard/WizardFlow.tsx")
