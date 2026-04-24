@@ -272,20 +272,26 @@ export default function TrustCheck() {
   async function handleSave() {
     if (!analysis || demoId) return
     const title = `Trust Check — ${analysis.verdict} (${analysis.riskScore}/100)`
+    const triggerFeedback = () => {
+      setJustSaved(true)
+      setTimeout(() => setJustSaved(false), 2500)
+    }
     if (isSignedIn) {
       try {
         const saved = await saveCloudTrustCheck({ title, analysis })
         setSavedId(saved.id)
+        triggerFeedback()
       } catch {
-        const saved = saveTrustCheck({ title, analysis })
-        setSavedId(saved.id)
+        // Cloud save failed; do not fall back to shared local storage for
+        // signed-in users (cross-user data exposure). Also suppress the
+        // "saved" feedback so the user is not misled into thinking their
+        // data was persisted.
       }
     } else {
       const saved = saveTrustCheck({ title, analysis })
       setSavedId(saved.id)
+      triggerFeedback()
     }
-    setJustSaved(true)
-    setTimeout(() => setJustSaved(false), 2500)
   }
 
   function copyResults() {

@@ -91,8 +91,8 @@ export default function MyAnalyses() {
           setTrustChecks(checks)
         })
         .catch(() => {
-          setItems(getAll())
-          setTrustChecks(getAllTrustChecks())
+          setItems([])
+          setTrustChecks([])
         })
         .finally(() => setCloudLoading(false))
     } else {

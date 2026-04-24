@@ -119,11 +119,6 @@ app.use(
             ...replitDomainOrigins,
           ];
           if (allowed.includes(origin)) return callback(null, true);
-          // Also allow any *.replit.app or *.repl.co origin for Replit-hosted deployments
-          if (/^https:\/\/[a-zA-Z0-9-]+\.replit\.app$/.test(origin) ||
-              /^https:\/\/[a-zA-Z0-9-]+\.repl\.co$/.test(origin)) {
-            return callback(null, true);
-          }
           logger.warn({ origin }, "CORS: rejected disallowed origin");
           callback(new Error("CORS: origin not allowed"));
         }
