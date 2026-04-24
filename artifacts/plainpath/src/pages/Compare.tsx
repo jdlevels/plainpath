@@ -8,6 +8,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
+import { DocumentScanScreen } from "@/components/DocumentScanScreen"
 import { Badge } from "@/components/ui/badge"
 import { getApiBaseUrl } from "@/lib/api"
 import { WorkspaceShell } from "@/components/WorkspaceShell"
@@ -408,6 +409,8 @@ export default function Compare() {
       : "bg-muted text-muted-foreground"
 
   const canCompare = original.trim().length >= 50 && revised.trim().length >= 50
+
+  if (loading) return <DocumentScanScreen mode="compare" />
 
   return (
     <div className="min-h-screen bg-background">

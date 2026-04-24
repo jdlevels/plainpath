@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { clauseExtractorApi } from "@/lib/clauseExtractorApi"
+import { DocumentScanScreen } from "@/components/DocumentScanScreen"
 import type {
   ClauseExtractorSessionDetail,
   ClauseExtractionResults,
@@ -435,7 +436,13 @@ function ResultsPanel({
 /* ─── Upload / entry point ──────────────────────────────────── */
 type UploadStage = "idle" | "selected" | "uploading"
 
-function UploadView({ onUploaded }: { onUploaded: (s: ClauseExtractorSessionDetail) => void }) {
+function UploadView({
+  onUploaded,
+  onUploading,
+}: {
+  onUploaded: (s: ClauseExtractorSessionDetail) => void
+  onUploading: (fileName: string | null) => void
+}) {
   const { getToken } = useAuth()
   const [stage, setStage] = useState<UploadStage>("idle")
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -462,6 +469,7 @@ function UploadView({ onUploaded }: { onUploaded: (s: ClauseExtractorSessionDeta
     if (!selectedFile) return
     setError(null)
     setStage("uploading")
+    onUploading(selectedFile.name)
     try {
       const token = await getToken().catch(() => null)
       const session = await clauseExtractorApi.createSession(selectedFile, token)
@@ -469,8 +477,9 @@ function UploadView({ onUploaded }: { onUploaded: (s: ClauseExtractorSessionDeta
     } catch (e: any) {
       setError(e.message || "Upload failed. Please try again.")
       setStage("selected")
+      onUploading(null)
     }
-  }, [selectedFile, getToken, onUploaded])
+  }, [selectedFile, getToken, onUploaded, onUploading])
 
   const clearFile = useCallback(() => {
     setSelectedFile(null)
@@ -693,8 +702,14 @@ export default function ClauseExtractor() {
   const [state, setState] = useState<PageState>(() =>
     id ? { stage: "processing", sessionId: id, fileName: "" } : { stage: "upload" }
   )
+  const [uploadingFileName, setUploadingFileName] = useState<string | null>(null)
+
+  const handleUploading = useCallback((fileName: string | null) => {
+    setUploadingFileName(fileName)
+  }, [])
 
   const handleUploaded = (session: ClauseExtractorSessionDetail) => {
+    setUploadingFileName(null)
     if (session.status === "done" && session.results) {
       setState({ stage: "results", session })
       setLocation(`/clause-extractor/${session.id}`, { replace: true })
@@ -720,13 +735,17 @@ export default function ClauseExtractor() {
     setLocation("/clause-extractor", { replace: true })
   }
 
+  if (uploadingFileName) {
+    return <DocumentScanScreen mode="clause-extractor" fileName={uploadingFileName} />
+  }
+
   return (
     <div className="min-h-full">
       <div className="p-4 sm:p-6 max-w-4xl mx-auto">
         <AnimatePresence mode="wait">
           {state.stage === "upload" && (
             <motion.div key="upload" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <UploadView onUploaded={handleUploaded} />
+              <UploadView onUploaded={handleUploaded} onUploading={handleUploading} />
             </motion.div>
           )}
 

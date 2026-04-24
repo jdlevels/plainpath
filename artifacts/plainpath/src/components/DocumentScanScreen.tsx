@@ -2,10 +2,10 @@ import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   FileText, ShieldCheck, Scale, Check, Loader2,
-  AlertTriangle, CheckCircle2, AlertCircle,
+  AlertTriangle, CheckCircle2, AlertCircle, GitCompare, ListChecks,
 } from "lucide-react"
 
-export type ScanMode = "trust-check" | "contract-review" | "analyze"
+export type ScanMode = "trust-check" | "contract-review" | "analyze" | "compare" | "clause-extractor"
 
 interface Finding {
   text: string
@@ -156,6 +156,80 @@ const CONFIGS: Record<ScanMode, ScanConfig> = {
     docLines: 20,
     footerText: "Analysis typically completes in 20–35 seconds.",
     progressLabel: "Analysis Completeness",
+  },
+  "compare": {
+    ToolIcon: GitCompare,
+    iconBg: "bg-violet-100 dark:bg-violet-900/40",
+    iconColor: "text-violet-600 dark:text-violet-400",
+    label: "Document Comparison",
+    accent: "border-violet-200/60 dark:border-violet-900/40",
+    accentBg: "bg-violet-50 dark:bg-violet-950/30",
+    accentText: "text-violet-700 dark:text-violet-300",
+    scanGlow: "rgb(139 92 246 / 0.5)",
+    scanLineClass: "bg-violet-500",
+    stepInterval: 6000,
+    steps: [
+      "Reading both versions",
+      "Mapping clause structure",
+      "Detecting added & removed clauses",
+      "Assessing risk-level changes",
+      "Building comparison report",
+    ],
+    findings: [
+      { text: "Version A structure mapped",    type: "info",    step: 0 },
+      { text: "Version B structure mapped",    type: "info",    step: 0 },
+      { text: "New clause detected",           type: "warning", step: 1 },
+      { text: "Removed clause found",          type: "danger",  step: 2 },
+      { text: "Risk level change flagged",     type: "warning", step: 3 },
+      { text: "Comparison report ready",       type: "success", step: 4 },
+    ],
+    regions: [
+      { top: 5,  height: 9,  color: "bg-violet-100/50 dark:bg-violet-900/20",   chipText: "Version A",  chipType: "info",    step: 0 },
+      { top: 22, height: 8,  color: "bg-blue-100/50 dark:bg-blue-900/20",       chipText: "New clause", chipType: "warning", step: 1 },
+      { top: 38, height: 10, color: "bg-red-100/60 dark:bg-red-900/20",         chipText: "Removed",    chipType: "danger",  step: 2 },
+      { top: 55, height: 8,  color: "bg-amber-100/55 dark:bg-amber-900/15",     chipText: "Risk ↑",     chipType: "warning", step: 3 },
+      { top: 70, height: 9,  color: "bg-emerald-100/50 dark:bg-emerald-900/20", chipText: "Version B",  chipType: "info",    step: 4 },
+    ],
+    docLines: 20,
+    footerText: "Comparison typically completes in 15–30 seconds.",
+    progressLabel: "Comparison Completeness",
+  },
+  "clause-extractor": {
+    ToolIcon: ListChecks,
+    iconBg: "bg-emerald-100 dark:bg-emerald-900/40",
+    iconColor: "text-emerald-600 dark:text-emerald-400",
+    label: "Clause Extractor",
+    accent: "border-emerald-200/60 dark:border-emerald-900/40",
+    accentBg: "bg-emerald-50 dark:bg-emerald-950/30",
+    accentText: "text-emerald-700 dark:text-emerald-300",
+    scanGlow: "rgb(16 185 129 / 0.5)",
+    scanLineClass: "bg-emerald-500",
+    stepInterval: 5500,
+    steps: [
+      "Reading document",
+      "Identifying parties & dates",
+      "Extracting financial terms",
+      "Finding key legal clauses",
+      "Building clause summary",
+    ],
+    findings: [
+      { text: "Document structure mapped",      type: "info",    step: 0 },
+      { text: "Parties identified",             type: "success", step: 1 },
+      { text: "Key dates extracted",            type: "info",    step: 1 },
+      { text: "Payment terms found",            type: "warning", step: 2 },
+      { text: "Termination clause detected",    type: "warning", step: 3 },
+      { text: "Clause summary ready",           type: "success", step: 4 },
+    ],
+    regions: [
+      { top: 5,  height: 9,  color: "bg-emerald-100/50 dark:bg-emerald-900/20", chipText: "Parties",    chipType: "success", step: 0 },
+      { top: 22, height: 8,  color: "bg-blue-100/50 dark:bg-blue-900/20",       chipText: "Key dates",  chipType: "info",    step: 1 },
+      { top: 38, height: 10, color: "bg-amber-100/60 dark:bg-amber-900/20",     chipText: "Payment",    chipType: "warning", step: 2 },
+      { top: 55, height: 8,  color: "bg-amber-100/55 dark:bg-amber-900/15",     chipText: "Clause",     chipType: "warning", step: 3 },
+      { top: 70, height: 9,  color: "bg-emerald-100/50 dark:bg-emerald-900/20", chipText: "Done",       chipType: "success", step: 4 },
+    ],
+    docLines: 20,
+    footerText: "Extraction typically completes in 15–25 seconds.",
+    progressLabel: "Extraction Completeness",
   },
 }
 

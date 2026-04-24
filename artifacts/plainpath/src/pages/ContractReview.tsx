@@ -917,6 +917,7 @@ export default function ContractReview() {
   const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [scanFailed, setScanFailed] = useState(false)
   const [result, setResult] = useState<ReviewResult | null>(null)
   const [redactedNotice, setRedactedNotice] = useState(false)
 
@@ -1006,6 +1007,7 @@ export default function ContractReview() {
       if (err instanceof UsageLimitError) { setUpgradeModal(true); return }
     }
     setError(null)
+    setScanFailed(false)
     setLoading(true)
     try {
       const base = getApiBaseUrl()
@@ -1018,6 +1020,7 @@ export default function ContractReview() {
       } else {
         if (!text.trim() || text.trim().length < 50) {
           setError("Please paste at least 50 characters of contract text.")
+          setScanFailed(true)
           setLoading(false)
           return
         }
@@ -1030,7 +1033,13 @@ export default function ContractReview() {
 
       const data = await response.json() as ReviewResult & { message?: string }
       if (!response.ok) {
-        setError(data.message ?? "Review failed. Please try again.")
+        const msg = data.message ?? "Review failed. Please try again."
+        const isScanOnly = msg.toLowerCase().includes("50 characters")
+        setError(isScanOnly
+          ? "This PDF appears to be a scanned image. PlainPath can only read text-based PDFs — try copying and pasting the contract text instead."
+          : msg
+        )
+        setScanFailed(true)
         setLoading(false)
         return
       }
@@ -1038,6 +1047,7 @@ export default function ContractReview() {
       setResult(data)
     } catch {
       setError("Network error. Please check your connection and try again.")
+      setScanFailed(true)
     } finally {
       setLoading(false)
     }
@@ -1048,11 +1058,44 @@ export default function ContractReview() {
     setText("")
     setFile(null)
     setError(null)
+    setScanFailed(false)
     setActiveTab("paste")
   }
 
   // Full-page loading skeleton
   if (loading) return <DocumentScanScreen mode="contract-review" fileName={file?.name} />
+
+  // Scan failed — show a clear error instead of silently reverting to the form
+  if (scanFailed && error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+        <div className="max-w-md w-full text-center">
+          <div className="w-14 h-14 rounded-2xl bg-red-100 dark:bg-red-950/40 flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="w-7 h-7 text-red-600 dark:text-red-400" />
+          </div>
+          <h2 className="text-lg font-bold text-foreground mb-2">Review couldn't complete</h2>
+          <p className="text-sm text-muted-foreground leading-relaxed mb-6">{error}</p>
+          <div className="flex flex-col gap-2">
+            <Button
+              onClick={handleReset}
+              className="w-full gap-2 bg-amber-600 hover:bg-amber-700 text-white"
+            >
+              <RotateCcw className="w-4 h-4" /> Try Again
+            </Button>
+            {activeTab === "upload" && (
+              <Button
+                variant="outline"
+                onClick={() => { setScanFailed(false); setError(null); setActiveTab("paste") }}
+                className="w-full gap-2"
+              >
+                Paste contract text instead
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   // Results view
   if (result) {
