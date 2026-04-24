@@ -66,10 +66,14 @@ import { OfflineBanner } from "@/components/OfflineBanner";
 // Guard against a common misconfiguration where the entire shell assignment line
 // ("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_...") was pasted as the secret value.
 // In that case we extract everything after the first "=" so Clerk receives a valid key.
-const _rawClerkKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY ?? "";
-const clerkPubKey = _rawClerkKey.includes("=")
+// IMPORTANT: only strip when the raw value doesn't already start with a valid prefix —
+// Clerk keys for base64-encoded custom domains often contain "=" padding characters,
+// and stripping unconditionally corrupts those keys.
+const _rawClerkKey = (import.meta.env.VITE_CLERK_PUBLISHABLE_KEY ?? "").trim();
+const _looksValid = _rawClerkKey.startsWith("pk_live_") || _rawClerkKey.startsWith("pk_test_");
+const clerkPubKey = !_looksValid && _rawClerkKey.includes("=")
   ? _rawClerkKey.slice(_rawClerkKey.indexOf("=") + 1).trim()
-  : _rawClerkKey.trim();
+  : _rawClerkKey;
 
 const clerkProxyUrl = import.meta.env.VITE_CLERK_PROXY_URL;
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
