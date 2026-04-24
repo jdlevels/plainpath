@@ -15,6 +15,7 @@ import {
 } from "../../lib/pdfObjectStorage";
 import { runComparison } from "../../lib/compareVersionsEngine";
 import { runBackgroundEnrich } from "../../lib/compareVersionsEnrichment";
+import { runChangeIntelligence } from "../../lib/compareVersionsIntelligence";
 
 const router = Router();
 
@@ -56,6 +57,9 @@ async function runBackgroundScan(
     console.debug(`[compare-versions] scan complete for ${sessionId} — ${diffResult.stats.total} items`);
     runBackgroundEnrich(sessionId, false).catch((err) =>
       console.error(`[compare-versions] enrichment post-scan error for ${sessionId}:`, err),
+    );
+    runChangeIntelligence(sessionId, originalBuf, revisedBuf).catch((err) =>
+      console.error(`[compare-versions] intelligence post-scan error for ${sessionId}:`, err),
     );
   } catch (err) {
     console.error(`[compare-versions] scan error for ${sessionId}:`, err);
@@ -222,6 +226,7 @@ router.get("/sessions/:id", requireAuth, async (req: any, res: any) => {
          revised_storage_key, revised_file_name, revised_page_count,
          manager_notes, diff_result, scanned_at,
          ai_status, ai_enriched_at,
+         change_intelligence, ci_status,
          archived_at, deleted_at, created_at, updated_at
        FROM compare_versions_sessions
        WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL`,
@@ -229,6 +234,29 @@ router.get("/sessions/:id", requireAuth, async (req: any, res: any) => {
     );
     if (!result.rows.length) return res.status(404).json({ error: "not_found" });
     const row = result.rows[0];
+
+    // Auto-trigger intelligence if scan is done but analysis hasn't run yet
+    if (row.status === "complete" && (row.ci_status === "pending" || !row.ci_status)) {
+      if (isObjectStorageAvailable()) {
+        (async () => {
+          try {
+            await pool.query(
+              `UPDATE compare_versions_sessions SET ci_status = 'running', updated_at = NOW() WHERE id = $1 AND ci_status = 'pending'`,
+              [row.id],
+            );
+            const [origBuf, revBuf] = await Promise.all([
+              downloadPdf(row.original_storage_key),
+              downloadPdf(row.revised_storage_key),
+            ]);
+            await runChangeIntelligence(row.id, origBuf, revBuf);
+          } catch (err) {
+            console.error(`[compare-versions] auto-intelligence error for ${row.id}:`, err);
+          }
+        })().catch(() => {});
+        row.ci_status = "running";
+      }
+    }
+
     return res.json({
       id: row.id, title: row.title, status: row.status,
       originalStorageKey: row.original_storage_key, originalFileName: row.original_file_name,
@@ -238,6 +266,8 @@ router.get("/sessions/:id", requireAuth, async (req: any, res: any) => {
       managerNotes: row.manager_notes ?? { freeform: "", watchlist: [] },
       diffResult: row.diff_result ?? null, scannedAt: row.scanned_at,
       aiStatus: row.ai_status ?? "idle", aiEnrichedAt: row.ai_enriched_at ?? null,
+      changeIntelligence: row.change_intelligence ?? null,
+      ciStatus: row.ci_status ?? "pending",
       archivedAt: row.archived_at ?? null, deletedAt: row.deleted_at ?? null,
       createdAt: row.created_at, updatedAt: row.updated_at,
     });
@@ -329,7 +359,7 @@ router.post("/sessions/:id/scan", requireAuth, async (req: any, res: any) => {
       return res.status(409).json({ error: "already_scanning" });
 
     await pool.query(
-      `UPDATE compare_versions_sessions SET status = 'scanning', ai_status = 'idle', updated_at = NOW() WHERE id = $1`,
+      `UPDATE compare_versions_sessions SET status = 'scanning', ai_status = 'idle', ci_status = 'pending', change_intelligence = NULL, updated_at = NOW() WHERE id = $1`,
       [req.params.id],
     );
 
