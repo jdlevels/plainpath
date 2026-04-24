@@ -18,6 +18,14 @@ const ADMIN_EMAILS: Set<string> = new Set(
     .filter(Boolean)
 );
 
+// MANUAL_PRO_EMAILS — users granted Pro access without Stripe (same env var as entitlements.ts)
+const MANUAL_PRO_EMAILS: Set<string> = new Set(
+  (process.env.MANUAL_PRO_EMAILS || "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean)
+);
+
 // ─── Auth middleware ──────────────────────────────────────────────────────────
 
 function requireAuth(req: any, res: any, next: any) {
@@ -42,6 +50,9 @@ async function requireSignaturePlan(req: any, res: any, next: any) {
 
     // Admin bypass
     if (ADMIN_EMAILS.has(email)) return next();
+
+    // Manual Pro bypass — granted Pro access without Stripe
+    if (MANUAL_PRO_EMAILS.has(email)) return next();
 
     // If enforcement is off, always proceed (just log)
     if (!BILLING_CONFIG.PAYWALL_ENFORCEMENT) return next();
