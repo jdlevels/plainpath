@@ -4,7 +4,7 @@ import {
   ArrowRight, ShieldCheck,
   PenLine, FileScan, Scale, EyeOff,
   BookMarked, Clock, ChevronRight, CreditCard,
-  LayoutGrid, GitCompare, ListChecks, LayoutTemplate,
+  LayoutGrid, GitCompare, ListChecks, LayoutTemplate, MessageSquare,
 } from "lucide-react"
 import { BUILDER_ENABLED, CATEGORY_LABELS } from "@/lib/builderConfig"
 import { useState, useEffect, type ElementType } from "react"
@@ -109,6 +109,17 @@ const TOOLS = [
     color: "text-teal-500 dark:text-teal-400",
     bg: "bg-teal-50 dark:bg-teal-950/50",
     ring: "hover:border-teal-400/50 hover:shadow-teal-500/10",
+    plan: "pro" as const,
+  },
+  {
+    key: "ask-document" as const,
+    label: "Ask This Document",
+    desc: "Ask natural-language questions about any document and get source-backed, citation-linked answers.",
+    icon: MessageSquare,
+    path: "/ask-document",
+    color: "text-violet-500 dark:text-violet-400",
+    bg: "bg-violet-50 dark:bg-violet-950/50",
+    ring: "hover:border-violet-400/50 hover:shadow-violet-500/10",
     plan: "pro" as const,
   },
 ]

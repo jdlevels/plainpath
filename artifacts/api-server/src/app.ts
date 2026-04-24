@@ -21,7 +21,8 @@ import teamRoutes from "./routes/teams/index.js";
 import signatureRoutes from "./routes/signatures/index.js";
 import userDocsRoutes from "./routes/userDocs/index.js";
 import builderRoutes from "./routes/builder/index.js";
-import clauseExtractorRoutes from "./routes/clause-extractor/index.js";
+import clauseExtractorRoutes from "./routes/clause-extractor/index.js"
+import askDocumentRoutes from "./routes/ask-document/index.js";
 import pdfUtilitiesRoutes from "./routes/pdf-utilities/index.js";
 import compareVersionsRoutes from "./routes/compare-versions/index.js";
 import demoRoutes from "./routes/demo/index.js";
@@ -194,6 +195,7 @@ app.use(
     "/api/contracts/negotiate-clause",
     "/api/help/chat",
     "/api/demo/analyze",
+    "/api/ask-document/sessions",
   ],
   aiLimiter,
 )
@@ -260,6 +262,7 @@ app.use("/api/signatures", signatureRoutes);
 app.use("/api/user/documents", userDocsRoutes);
 app.use("/api/builder", builderRoutes);
 app.use("/api/clause-extractor", clauseExtractorRoutes);
+app.use("/api/ask-document", askDocumentRoutes);
 app.use("/api/pdf-utilities", pdfUtilitiesRoutes);
 app.use("/api/compare-versions", compareVersionsRoutes);
 app.use("/api/demo", demoRoutes);

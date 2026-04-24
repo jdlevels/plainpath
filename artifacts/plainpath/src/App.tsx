@@ -37,6 +37,7 @@ import Upgrade from "@/pages/Upgrade";
 import Documents from "@/pages/Documents";
 import AccountSecurity from "@/pages/AccountSecurity";
 import ClauseExtractor from "@/pages/ClauseExtractor"
+import AskDocument from "@/pages/AskDocument"
 import Methodology from "@/pages/Methodology";
 import BuilderList from "@/pages/Builder/index";
 import BuilderNew from "@/pages/Builder/New";
@@ -499,6 +500,13 @@ function Router() {
             <Route path="/account-security" component={protect(AccountSecurity)} />
             <Route path="/clause-extractor" component={protect(ClauseExtractor)} />
             <Route path="/clause-extractor/:id" component={protect(ClauseExtractor)} />
+            <Route path="/ask-document" component={protect(AskDocument)} />
+            <Route path="/ask-document/:id">
+              {(params) => {
+                const C = protect(() => <AskDocument />)
+                return <C />
+              }}
+            </Route>
             <Route path="/compare-versions" component={protect(CompareVersions)} />
             <Route path="/compare-versions/:id">
               {(params) => {
