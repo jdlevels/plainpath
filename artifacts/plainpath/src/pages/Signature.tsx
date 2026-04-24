@@ -54,10 +54,47 @@ function fmtDate(iso: string | null): string {
   })
 }
 
+function fmtShort(iso: string | null): string {
+  if (!iso) return "—"
+  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+}
+
+// Dot-style badge matching the mockup design
+const STATUS_DOT: Record<SignatureStatus, string> = {
+  draft:   "bg-gray-400",
+  sent:    "bg-amber-500",
+  viewed:  "bg-amber-500",
+  signed:  "bg-emerald-500",
+  declined:"bg-red-500",
+  failed:  "bg-red-600",
+  expired: "bg-gray-400",
+}
+
+const STATUS_BADGE: Record<SignatureStatus, string> = {
+  draft:   "bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700",
+  sent:    "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800/50",
+  viewed:  "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800/50",
+  signed:  "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800/50",
+  declined:"bg-red-50 text-red-600 border-red-200 dark:bg-red-950/20 dark:text-red-400 dark:border-red-800/40",
+  failed:  "bg-red-50 text-red-600 border-red-200 dark:bg-red-950/20 dark:text-red-400 dark:border-red-800/40",
+  expired: "bg-gray-100 text-gray-500 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700",
+}
+
+const STATUS_FULL_LABELS: Record<SignatureStatus, string> = {
+  draft:   "Draft",
+  sent:    "Awaiting Signature",
+  viewed:  "Awaiting Signature",
+  signed:  "Signed",
+  declined:"Declined",
+  failed:  "Failed",
+  expired: "Expired",
+}
+
 function StatusBadge({ status }: { status: SignatureStatus }) {
   return (
-    <span className={`inline-flex items-center text-[10px] font-bold uppercase tracking-widest border rounded-full px-2 py-0.5 ${STATUS_COLORS[status]}`}>
-      {STATUS_LABELS[status]}
+    <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold border rounded-full px-2.5 py-1 ${STATUS_BADGE[status]}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[status]} flex-shrink-0`} />
+      {STATUS_FULL_LABELS[status]}
     </span>
   )
 }
@@ -333,12 +370,23 @@ function ListView({
                       {item.signerRole && (
                         <span className="text-[10px] text-muted-foreground bg-muted/60 rounded px-1.5 py-0.5">{item.signerRole}</span>
                       )}
+                      <span className="text-gray-300 dark:text-gray-600">·</span>
+                      {/* Viewed / Not opened chip */}
+                      {item.status === "viewed" && (
+                        <span className="text-[10px] text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-800/40 px-1.5 py-0.5 rounded">Viewed</span>
+                      )}
+                      {item.status === "sent" && (
+                        <span className="text-[10px] text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/40 px-1.5 py-0.5 rounded">Not opened</span>
+                      )}
+                      {item.completedAt && (
+                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400">Signed {fmtShort(item.completedAt)}</span>
+                      )}
                     </div>
                   </div>
 
                   {/* Date */}
                   <div className="text-right flex-shrink-0 hidden sm:block">
-                    <p className="text-xs text-muted-foreground">{timeAgo(item.createdAt)}</p>
+                    <p className="text-xs text-muted-foreground">Sent {fmtShort(item.sentAt ?? item.createdAt)}</p>
                   </div>
 
                   {/* Status badge */}
@@ -351,19 +399,25 @@ function ListView({
                     {isAwaiting && (
                       <button
                         onClick={e => { e.stopPropagation(); onSelect(item.id) }}
-                        className="text-[11px] text-violet-600 dark:text-violet-400 border border-violet-200 dark:border-violet-800/50 hover:bg-violet-50 dark:hover:bg-violet-950/30 px-2.5 py-1 rounded-lg font-medium transition-colors"
+                        className="text-[11px] text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/30 hover:bg-violet-100 dark:hover:bg-violet-900/40 px-2.5 py-1 rounded-lg font-medium transition-colors"
                       >
-                        View
+                        Remind
                       </button>
                     )}
                     {isSigned && (
                       <button
                         onClick={e => { e.stopPropagation(); onSelect(item.id) }}
-                        className="text-[11px] text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 px-2.5 py-1 rounded-lg font-medium transition-colors"
+                        className="text-[11px] text-muted-foreground bg-muted/60 hover:bg-muted px-2.5 py-1 rounded-lg font-medium transition-colors"
                       >
                         Download
                       </button>
                     )}
+                    <button
+                      onClick={e => { e.stopPropagation(); onSelect(item.id) }}
+                      className="p-1.5 text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted/50 rounded-lg transition-colors"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                    </button>
                   </div>
 
                   <ChevronRight className="w-4 h-4 text-muted-foreground/30 flex-shrink-0" />
@@ -926,49 +980,108 @@ function DetailView({
   const isSignedComplete = request.status === "signed"
   const isDone = ["signed", "declined", "expired", "failed"].includes(request.status)
 
+  // Build the signing pipeline for the timeline
+  const pipeline = [
+    {
+      key: "sent",
+      label: "Request sent",
+      desc: `Sent to ${request.signerEmail}`,
+      time: request.sentAt,
+      done: !!request.sentAt,
+      active: false,
+      icon: "send",
+    },
+    {
+      key: "viewed",
+      label: request.viewedAt ? "Document viewed" : "Email opened",
+      desc: request.viewedAt
+        ? `${request.signerName} opened and viewed the document`
+        : `Waiting for ${request.signerName} to open the email`,
+      time: request.viewedAt,
+      done: !!request.viewedAt,
+      active: !request.viewedAt && !!request.sentAt && !isDone,
+      icon: "eye",
+    },
+    {
+      key: "signing",
+      label: isSignedComplete ? "Signature complete" : "Awaiting signature",
+      desc: isSignedComplete
+        ? `${request.signerName} has signed the document`
+        : `Waiting for ${request.signerName} to sign`,
+      time: request.completedAt ?? (request.declinedAt || null),
+      done: isSignedComplete || !!request.declinedAt,
+      active: !!request.viewedAt && !isDone,
+      icon: isSignedComplete ? "check" : "clock",
+    },
+    ...(isSignedComplete ? [{
+      key: "cert",
+      label: "Audit certificate",
+      desc: "Legal audit trail PDF generated by Dropbox Sign",
+      time: request.completedAt,
+      done: isSignedComplete,
+      active: false,
+      icon: "cert",
+    }] : []),
+  ]
+
+  // Also layer in raw events from Dropbox Sign
+  const rawEvents = request.events
+
   return (
-    <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Header */}
-      <div className="sticky top-16 z-10 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-3 mb-6 bg-background/98 backdrop-blur-sm border-b border-border/60 shadow-sm flex items-center justify-between flex-wrap gap-3">
-        <div className="flex items-center gap-3 min-w-0">
-          <button
-            onClick={onBack}
-            className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground flex-shrink-0"
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </button>
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-base font-bold truncate">{request.documentName}</h1>
-              <StatusBadge status={request.status} />
-              {request.testMode && (
-                <span className="text-[9px] font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400 border border-amber-300/50 rounded-full px-1.5 py-0.5">
-                  Test mode
-                </span>
-              )}
-            </div>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Sent {fmtDate(request.createdAt)}
-            </p>
+    <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-0">
+      {/* Top bar — matches mockup header */}
+      <div className="sticky top-16 z-10 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-3 bg-background border-b border-border/60 flex items-center gap-3 flex-wrap mb-6">
+        <button onClick={onBack} className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground flex-shrink-0">
+          <ArrowLeft className="w-4 h-4" />
+        </button>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="text-sm font-bold truncate">{request.documentName}</p>
+            <StatusBadge status={request.status} />
+            {request.testMode && (
+              <span className="text-[9px] font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400 border border-amber-300/50 rounded-full px-1.5 py-0.5">Test</span>
+            )}
           </div>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Sent {fmtShort(request.sentAt ?? request.createdAt)}
+            {request.expiredAt && ` · Expired ${fmtShort(request.expiredAt)}`}
+          </p>
         </div>
+        {/* Action buttons matching mockup */}
         <div className="flex items-center gap-2 flex-shrink-0">
           {!isDone && (
-            <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing} className="gap-2">
-              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
-              {refreshing ? "Checking…" : "Refresh"}
-            </Button>
+            <>
+              <button
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="text-xs text-violet-600 dark:text-violet-400 border border-violet-200 dark:border-violet-800/50 bg-violet-50 dark:bg-violet-950/20 hover:bg-violet-100 dark:hover:bg-violet-900/30 px-3 py-1.5 rounded-lg font-medium transition-colors disabled:opacity-50"
+              >
+                {refreshing ? "Checking…" : "Send Reminder"}
+              </button>
+              <button className="text-xs text-muted-foreground border border-border/60 hover:bg-muted/50 px-3 py-1.5 rounded-lg font-medium transition-colors">
+                Download
+              </button>
+              <button className="text-xs text-red-500 dark:text-red-400 border border-red-200 dark:border-red-800/40 hover:bg-red-50 dark:hover:bg-red-950/20 px-3 py-1.5 rounded-lg font-medium transition-colors">
+                Void
+              </button>
+            </>
           )}
           {isSignedComplete && (
-            <Button size="sm" onClick={handleDownload} className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white">
+            <Button size="sm" onClick={handleDownload} className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white">
               <Download className="w-3.5 h-3.5" /> Download signed
+            </Button>
+          )}
+          {!isDone && (
+            <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing} className="gap-1.5">
+              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
+              Refresh
             </Button>
           )}
         </div>
       </div>
 
       {refreshMsg && (
-        <div className="flex items-center gap-2 text-sm mb-4 text-muted-foreground bg-muted/30 border border-border/40 rounded-lg px-3 py-2">
+        <div className="flex items-center gap-2 text-sm mb-4 text-muted-foreground bg-muted/30 border border-border/40 rounded-lg px-3 py-2 mx-0">
           <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
           {refreshMsg}
         </div>
@@ -987,203 +1100,211 @@ function DetailView({
           <div>
             <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">Provider configuration required</p>
             <p className="text-xs text-amber-700/80 dark:text-amber-400/70 mt-0.5 leading-relaxed">
-              Digital Signature is enabled, but outbound sending requires a Dropbox Sign API key to be configured. This request has been saved as a draft and will be sent once the provider is set up.
+              Outbound sending requires a Dropbox Sign API key. This request is saved as a draft.
             </p>
           </div>
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left column — details */}
-        <div className="lg:col-span-2 space-y-5">
-          {/* Status card */}
-          <Card className="border border-border/60 rounded-xl p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Status</h2>
-              <StatusBadge status={request.status} />
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
-              <div>
-                <p className="text-xs text-muted-foreground">Created</p>
-                <p className="font-medium mt-0.5">{fmtDate(request.createdAt)}</p>
-              </div>
-              {request.sentAt && (
-                <div>
-                  <p className="text-xs text-muted-foreground">Sent</p>
-                  <p className="font-medium mt-0.5">{fmtDate(request.sentAt)}</p>
-                </div>
-              )}
-              {request.viewedAt && (
-                <div>
-                  <p className="text-xs text-muted-foreground">Opened</p>
-                  <p className="font-medium mt-0.5">{fmtDate(request.viewedAt)}</p>
-                </div>
-              )}
-              {request.completedAt && (
-                <div>
-                  <p className="text-xs text-muted-foreground">Signed</p>
-                  <p className="font-medium mt-0.5 text-emerald-600 dark:text-emerald-400">{fmtDate(request.completedAt)}</p>
-                </div>
-              )}
-              {request.declinedAt && (
-                <div>
-                  <p className="text-xs text-muted-foreground">Declined</p>
-                  <p className="font-medium mt-0.5 text-red-500">{fmtDate(request.declinedAt)}</p>
-                </div>
-              )}
-              {request.expiredAt && (
-                <div>
-                  <p className="text-xs text-muted-foreground">Expired</p>
-                  <p className="font-medium mt-0.5">{fmtDate(request.expiredAt)}</p>
-                </div>
-              )}
-            </div>
-            {request.failureReason && (
-              <div className="mt-3 pt-3 border-t border-border/40 text-xs text-red-500">
-                Failure reason: {request.failureReason}
-              </div>
-            )}
-          </Card>
+      {/* 5-col grid: main (3) + sidebar (2) — matches mockup */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 pb-10">
 
-          {/* Signer card */}
-          <Card className="border border-border/60 rounded-xl p-5">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-4">Signer</h2>
-            <div className="flex items-center gap-3 mb-3">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold text-sm ${avatarColor(request.signerName)}`}>
-                {avatarInitials(request.signerName)}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm">{request.signerName}</p>
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
-                  <Mail className="w-3 h-3 flex-shrink-0" />
-                  <span className="truncate">{request.signerEmail}</span>
+        {/* Left main — 3 cols */}
+        <div className="lg:col-span-3 space-y-4">
+
+          {/* Document preview card */}
+          <Card className="border border-border/60 rounded-xl overflow-hidden">
+            <div className="px-4 py-3 border-b border-border/60 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-7 bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-800/40 rounded flex items-center justify-center">
+                  <span className="text-[8px] font-bold text-red-400">PDF</span>
                 </div>
-                {request.signerRole && (
-                  <span className="inline-block text-[10px] bg-muted/60 rounded px-1.5 py-0.5 mt-1 text-muted-foreground">{request.signerRole}</span>
-                )}
+                <span className="text-xs font-semibold truncate max-w-[260px]">{request.documentName}</span>
               </div>
-              <button
-                onClick={handleCopyEmail}
-                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground border border-border/50 rounded-lg px-2.5 py-1.5 transition-colors flex-shrink-0"
-              >
-                {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <ClipboardCopy className="w-3.5 h-3.5" />}
-                {copied ? "Copied!" : "Copy email"}
-              </button>
+              {isSignedComplete && (
+                <button onClick={handleDownload} className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors">
+                  <Download className="w-3.5 h-3.5" /> Download
+                </button>
+              )}
             </div>
-            {request.requestMessage && (
-              <div className="mt-3 pt-3 border-t border-border/40 text-sm text-muted-foreground">
-                <p className="text-[11px] font-semibold text-muted-foreground/70 mb-1 uppercase tracking-wider">Message sent to signer</p>
-                <p className="italic text-xs leading-relaxed">"{request.requestMessage}"</p>
+            <div className="bg-muted/30 p-5 flex items-center justify-center" style={{ minHeight: 160 }}>
+              <div className="bg-background shadow border border-border/60 rounded" style={{ width: 240, height: 150 }}>
+                <div className="p-4 text-[10px] text-muted-foreground leading-relaxed">
+                  <p className="font-bold text-center text-foreground/80 text-[11px] mb-2 truncate">{request.documentName.toUpperCase()}</p>
+                  <p className="mb-1 line-clamp-2 text-muted-foreground/70">This document has been sent for e-signature via Dropbox Sign.</p>
+                  <div className="mt-3 border-t border-dashed border-violet-300 dark:border-violet-700 pt-2 flex items-center gap-1.5">
+                    <div className="h-4 bg-violet-50 dark:bg-violet-950/30 border border-violet-300 dark:border-violet-700 rounded text-[8px] text-violet-500 flex items-center justify-center px-1.5">Signature</div>
+                    <div className="h-4 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-700 rounded text-[8px] text-emerald-500 flex items-center justify-center px-1.5">Date</div>
+                  </div>
+                </div>
               </div>
-            )}
+            </div>
           </Card>
 
           {/* Audit trail */}
-          <Card className="border border-border/60 rounded-xl p-5">
-            <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-muted-foreground" />
-                <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Audit Trail</h2>
-              </div>
+          <Card className="border border-border/60 rounded-xl">
+            <div className="px-4 py-3 border-b border-border/60 flex items-center justify-between">
+              <p className="text-xs font-bold text-foreground/80">Audit Trail</p>
+              {rawEvents.length > 0 && (
+                <span className="text-[11px] text-muted-foreground">{rawEvents.length} events recorded</span>
+              )}
             </div>
-            {request.events.length === 0 ? (
-              <div className="flex items-start gap-3">
-                <div className="flex flex-col items-center gap-1 flex-shrink-0">
-                  <div className="w-7 h-7 rounded-full bg-amber-100 dark:bg-amber-950/40 flex items-center justify-center">
-                    <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                  </div>
-                </div>
-                <div className="pb-2">
-                  <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">Awaiting signer activity</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Events will appear here as the signer interacts with the document.</p>
-                </div>
-              </div>
-            ) : (
-              <div>
-                {request.events.map((event, idx) => {
-                  const isLast = idx === request.events.length - 1
-                  const label = EVENT_LABELS[event.providerEventName] ?? event.providerEventName
-                  return (
-                    <div key={event.id} className="flex gap-3 relative">
-                      {!isLast && (
-                        <div className="absolute left-3.5 top-7 w-px bg-violet-200 dark:bg-violet-800/50" style={{ height: "calc(100% - 4px)" }} />
+            <div className="px-4 py-4">
+              {pipeline.map((step, i) => {
+                const isLast = i === pipeline.length - 1
+                return (
+                  <div key={step.key} className="flex gap-3 relative">
+                    {!isLast && (
+                      <div
+                        className={`absolute left-3.5 top-7 w-px ${step.done ? "bg-violet-200 dark:bg-violet-800/50" : "bg-border/40"}`}
+                        style={{ height: 36 }}
+                      />
+                    )}
+                    <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 z-10 ${
+                      step.done ? "bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400" :
+                      step.active ? "bg-amber-100 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 ring-2 ring-amber-200 dark:ring-amber-800/50" :
+                      "bg-muted text-muted-foreground/40"
+                    }`}>
+                      {step.icon === "send" && <Send className="w-3.5 h-3.5" />}
+                      {step.icon === "eye" && <Eye className="w-3.5 h-3.5" />}
+                      {step.icon === "clock" && <Clock className="w-3.5 h-3.5" />}
+                      {step.icon === "check" && <CheckCircle2 className="w-3.5 h-3.5" />}
+                      {step.icon === "cert" && <Shield className="w-3.5 h-3.5" />}
+                    </div>
+                    <div className={`flex-1 min-w-0 ${!isLast ? "pb-5" : ""}`}>
+                      <p className={`text-xs font-semibold ${
+                        step.done ? "text-foreground/90" :
+                        step.active ? "text-amber-700 dark:text-amber-400" :
+                        "text-muted-foreground/40"
+                      }`}>{step.label}</p>
+                      <p className={`text-[11px] mt-0.5 ${step.done || step.active ? "text-muted-foreground" : "text-muted-foreground/30"}`}>{step.desc}</p>
+                      {step.time && (
+                        <p className={`text-[10px] mt-0.5 font-medium ${
+                          step.active ? "text-amber-500 dark:text-amber-400" :
+                          step.done ? "text-violet-500 dark:text-violet-400" : "text-muted-foreground/30"
+                        }`}>{fmtDate(step.time)}</p>
                       )}
-                      <div className="w-7 h-7 rounded-full bg-violet-100 dark:bg-violet-900/40 flex items-center justify-center flex-shrink-0 mt-0.5 z-10">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-violet-600 dark:text-violet-400" />
-                      </div>
-                      <div className={`flex-1 min-w-0 ${!isLast ? "pb-4" : ""}`}>
-                        <p className="text-sm font-semibold text-foreground/90">{label}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">{fmtDate(event.occurredAt)}</p>
-                        {event.appStatusAfterEvent && (
-                          <div className="mt-1">
-                            <StatusBadge status={event.appStatusAfterEvent as SignatureStatus} />
-                          </div>
-                        )}
+                      {step.active && !step.time && (
+                        <p className="text-[10px] mt-0.5 font-medium text-amber-500 dark:text-amber-400">In progress</p>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+
+              {/* Raw Dropbox Sign events if any */}
+              {rawEvents.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-border/40">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-3">Provider Events</p>
+                  {rawEvents.map((event) => (
+                    <div key={event.id} className="flex items-start gap-2 mb-2 text-[11px]">
+                      <span className="w-1.5 h-1.5 rounded-full bg-violet-400 flex-shrink-0 mt-1.5" />
+                      <div>
+                        <span className="font-medium text-foreground/80">{EVENT_LABELS[event.providerEventName] ?? event.providerEventName}</span>
+                        <span className="text-muted-foreground ml-2">{fmtDate(event.occurredAt)}</span>
                       </div>
                     </div>
-                  )
-                })}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
+            </div>
           </Card>
         </div>
 
-        {/* Right column — meta */}
-        <div className="space-y-4">
+        {/* Right sidebar — 2 cols */}
+        <div className="lg:col-span-2 space-y-4">
+
+          {/* Signers card */}
           <Card className="border border-border/60 rounded-xl p-4">
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">Provider Details</h2>
-            <div className="space-y-2.5 text-sm">
-              <div>
-                <p className="text-xs text-muted-foreground">Provider</p>
-                <p className="font-medium mt-0.5 capitalize">{request.providerName.replace(/_/g, " ")}</p>
+            <p className="text-xs font-bold text-foreground/80 mb-3">Signers</p>
+            <div className={`border rounded-xl p-3 ${
+              isSignedComplete
+                ? "border-emerald-200 dark:border-emerald-800/40 bg-emerald-50/50 dark:bg-emerald-950/10"
+                : "border-amber-200 dark:border-amber-800/40 bg-amber-50/50 dark:bg-amber-950/10"
+            }`}>
+              <div className="flex items-center gap-2 mb-2">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0 ${avatarColor(request.signerName)}`}>
+                  {avatarInitials(request.signerName)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold truncate">{request.signerName}</p>
+                  <p className="text-[10px] text-muted-foreground truncate">{request.signerEmail}</p>
+                </div>
+                <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full border flex-shrink-0 ${
+                  isSignedComplete
+                    ? "text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800/40"
+                    : "text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800/40"
+                }`}>
+                  {isSignedComplete ? "Signed" : "Pending"}
+                </span>
               </div>
-              {request.providerRequestId ? (
-                <div>
-                  <p className="text-xs text-muted-foreground">Request ID</p>
-                  <p className="font-mono text-xs mt-0.5 break-all text-foreground/70">{request.providerRequestId}</p>
-                </div>
-              ) : (
-                <div>
-                  <p className="text-xs text-muted-foreground">Request ID</p>
-                  <p className="text-xs mt-0.5 text-muted-foreground italic">Not yet sent to provider</p>
-                </div>
+              <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                {request.signerRole && (
+                  <span className={`px-1.5 py-0.5 rounded font-medium ${
+                    isSignedComplete
+                      ? "bg-emerald-100 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400"
+                      : "bg-amber-100 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400"
+                  }`}>{request.signerRole}</span>
+                )}
+                {request.viewedAt && <span>· Viewed the document</span>}
+                <button onClick={handleCopyEmail} className="ml-auto flex items-center gap-1 hover:text-foreground transition-colors">
+                  {copied ? <Check className="w-3 h-3 text-emerald-500" /> : <ClipboardCopy className="w-3 h-3" />}
+                  {copied ? "Copied" : "Copy email"}
+                </button>
+              </div>
+              {!isDone && (
+                <button
+                  onClick={handleRefresh}
+                  disabled={refreshing}
+                  className="mt-2.5 w-full text-[11px] text-violet-600 dark:text-violet-400 border border-violet-200 dark:border-violet-800/50 hover:bg-violet-50 dark:hover:bg-violet-950/20 py-1.5 rounded-lg font-medium transition-colors"
+                >
+                  {refreshing ? "Checking…" : "Send Reminder"}
+                </button>
               )}
-              <div>
-                <p className="text-xs text-muted-foreground">Mode</p>
-                <p className="font-medium mt-0.5">{request.testMode ? "Test / Sandbox" : "Live"}</p>
-              </div>
             </div>
           </Card>
 
-          {isSignedComplete && (
-            <Card className="border border-emerald-200/60 dark:border-emerald-800/40 bg-emerald-50 dark:bg-emerald-950/20 rounded-xl p-4">
-              <div className="flex items-start gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Document signed</p>
-                  <p className="text-xs text-emerald-700/70 dark:text-emerald-300/70 mt-0.5">
-                    The signed document is available to download.
-                  </p>
-                  <Button size="sm" onClick={handleDownload} className="mt-3 w-full gap-2 bg-emerald-600 hover:bg-emerald-700">
-                    <Download className="w-3.5 h-3.5" /> Download signed PDF
-                  </Button>
-                </div>
+          {/* Request details */}
+          <Card className="border border-border/60 rounded-xl p-4 space-y-3">
+            <p className="text-xs font-bold text-foreground/80">Request Details</p>
+            {[
+              { label: "Created by", value: "You" },
+              { label: "Sent", value: fmtShort(request.sentAt ?? request.createdAt) },
+              ...(request.expiredAt ? [{ label: "Expired", value: fmtShort(request.expiredAt) }] : []),
+              ...(request.completedAt ? [{ label: "Signed", value: fmtShort(request.completedAt) }] : []),
+              { label: "Document ID", value: request.providerRequestId ? `${request.providerRequestId.slice(0, 14)}…` : "Pending" },
+              { label: "Mode", value: request.testMode ? "Test / Sandbox" : "Live" },
+            ].map(({ label, value }) => (
+              <div key={label} className="flex justify-between items-center text-xs">
+                <span className="text-muted-foreground">{label}</span>
+                <span className="text-foreground/80 font-medium text-right">{value}</span>
               </div>
+            ))}
+          </Card>
+
+          {/* Message Sent */}
+          {request.requestMessage && (
+            <Card className="border border-border/60 rounded-xl p-4">
+              <p className="text-xs font-bold text-foreground/80 mb-2">Message Sent</p>
+              <p className="text-xs text-muted-foreground leading-relaxed italic">"{request.requestMessage}"</p>
             </Card>
           )}
 
-          {!isDone && request.status === "sent" && (
-            <Card className="border border-blue-200/60 dark:border-blue-800/40 bg-blue-50 dark:bg-blue-950/20 rounded-xl p-4">
-              <div className="flex items-start gap-2 text-sm">
-                <Eye className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-semibold text-blue-700 dark:text-blue-300">Awaiting signature</p>
-                  <p className="text-xs text-blue-700/70 dark:text-blue-300/70 mt-0.5">
-                    The signing link has been emailed to {request.signerEmail}. Click "Refresh status" to check for updates.
-                  </p>
-                </div>
-              </div>
-            </Card>
+          {/* Security badge */}
+          <div className="bg-violet-50 dark:bg-violet-950/20 border border-violet-200 dark:border-violet-800/40 rounded-xl p-3 flex items-start gap-2">
+            <Shield className="w-4 h-4 text-violet-500 dark:text-violet-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-[11px] font-semibold text-violet-700 dark:text-violet-300">Legally binding</p>
+              <p className="text-[10px] text-violet-600 dark:text-violet-400 mt-0.5">Secured by Dropbox Sign · Full audit certificate available after signing</p>
+            </div>
+          </div>
+
+          {/* Failure reason if any */}
+          {request.failureReason && (
+            <div className="bg-red-50 dark:bg-red-950/20 border border-red-200/60 dark:border-red-900/40 rounded-xl px-4 py-3 text-xs text-red-600 dark:text-red-400">
+              <p className="font-semibold mb-0.5">Failure reason</p>
+              {request.failureReason}
+            </div>
           )}
         </div>
       </div>
