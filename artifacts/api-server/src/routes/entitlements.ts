@@ -3,23 +3,21 @@
 //   role        = internal privilege  ("admin" | "member")
 //   accessTier  = product entitlement ("starter" | "pro")
 //
-//   Admin   → { role: "admin",  accessTier: "pro"     }   (support@plainpathapp.com)
-//   Pro     → { role: "member", accessTier: "pro"     }   (yelevels@gmail.com)
-//   Starter → { role: "member", accessTier: "starter" }   (future paid accounts)
+//   Admin   → { role: "admin",  accessTier: "pro"     }   (ADMIN_EMAILS)
+//   New user→ { role: "member", accessTier: "starter" }   (any new signup)
+//   Paid    → { role: "member", accessTier: "pro"     }   (active Stripe subscription)
 //
 // Sources of truth (in priority order):
-//   1. ALLOWED_EMAILS env var — who is permitted to use the app at all
-//   2. ADMIN_EMAILS env var   — which of those are admins (admin/pro)
-//   3. Clerk publicMetadata   — role + accessTier (written by /bootstrap)
+//   1. ADMIN_EMAILS env var   — which users are admins (admin/pro, no payment required)
+//   2. Stripe subscriber DB   — active subscription → plan tier
+//   3. Clerk publicMetadata   — role + accessTier (cached, written by /bootstrap)
 //
 // unsafeMetadata is NEVER used for access control.
 //
 // Audit log events:
 //   entitlement.status.granted   — /status returned data
-//   entitlement.status.denied    — /status returned unauthorized
 //   entitlement.bootstrap.noop   — metadata already set; no-op
 //   entitlement.bootstrap.wrote  — metadata written for first time
-//   entitlement.bootstrap.denied — caller not in allowlist; denied
 //   entitlement.bootstrap.error  — unexpected error during bootstrap
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -39,44 +37,11 @@ import {
 
 const router = Router()
 
-// ── Access mode + allowlist helpers ───────────────────────────────────────────
+// ── Admin helpers ──────────────────────────────────────────────────────────────
 //
-// ACCESS_MODE controls which users can bootstrap into the app.
-//
-//   "internal_only" (default, current operating mode):
-//     Only emails explicitly in ALLOWED_EMAILS can enter.
-//     Admin emails    (ADMIN_EMAILS)   → role=admin,  accessTier=pro
-//     Allowed members (ALLOWED_EMAILS) → role=member, accessTier=pro
-//     All other emails                 → 403 blocked; no tool access granted.
-//     This mode makes it impossible for any new unknown user to receive
-//     even partial (starter) access — there is no open default tier.
-//
-//   "public_signup" (future, when PlainPath opens to the public):
-//     Admin emails  → role=admin,  accessTier=pro
-//     All new users → role=member, accessTier=starter   (free tier)
-//     Switch by setting ACCESS_MODE=public_signup in the environment.
-//
-// Changing ACCESS_MODE is the single switch that controls open vs. closed signup.
-// ALLOWED_EMAILS and the allowlistEnforcement middleware still enforce a hard
-// deny for unapproved users regardless of ACCESS_MODE.
-//
-// ADMIN_EMAILS — emails that receive the admin role + pro access.
+// ADMIN_EMAILS — emails that receive admin role + pro access without needing
+//   a Stripe subscription. Set via ADMIN_EMAILS env var (comma-separated).
 //   Currently: support@plainpathapp.com
-//
-// ALLOWED_EMAILS — every email permitted to use the app (includes admins).
-//   Currently: support@plainpathapp.com, yelevels@gmail.com
-
-type AccessMode = "internal_only" | "public_signup"
-
-const ACCESS_MODE: AccessMode =
-  process.env.ACCESS_MODE === "public_signup" ? "public_signup" : "internal_only"
-
-const ALLOWED_EMAILS: Set<string> = new Set(
-  (process.env.ALLOWED_EMAILS || "")
-    .split(",")
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean)
-)
 
 const ADMIN_EMAILS: Set<string> = new Set(
   (process.env.ADMIN_EMAILS || "")
@@ -84,12 +49,6 @@ const ADMIN_EMAILS: Set<string> = new Set(
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean)
 )
-
-function isAllowedEmail(email: string): boolean {
-  // If ALLOWED_EMAILS is empty, enforcement is disabled (logged at startup by middleware).
-  if (ALLOWED_EMAILS.size === 0) return true
-  return ALLOWED_EMAILS.has(email.toLowerCase())
-}
 
 function isAdminEmail(email: string): boolean {
   return ADMIN_EMAILS.has(email.toLowerCase())
@@ -145,26 +104,6 @@ router.get("/status", (req, res) => {
       }
     }
 
-    // ── Allowlist check (defense-in-depth at route level) ──────────────────
-    // The allowlistEnforcement middleware already blocks non-allowlisted
-    // authenticated sessions. This check also covers the email-only flow.
-    if (resolvedEmail && !isAllowedEmail(resolvedEmail)) {
-      logger.warn(
-        {
-          event: "entitlement.status.denied",
-          email: resolvedEmail,
-          userId: clerkUserId,
-          allowlistMatch: false,
-          accessGranted: false,
-        },
-        "Entitlement status denied: email not in allowlist"
-      )
-      return res.status(403).json({
-        error: "unauthorized_user",
-        message: "This application is invite-only. Your account is not authorized.",
-      })
-    }
-
     // ── Admin bypass ───────────────────────────────────────────────────────
     if (isAdminEmail(resolvedEmail)) {
       const proEntitlements = PLAN_ENTITLEMENTS["pro"]
@@ -178,8 +117,6 @@ router.get("/status", (req, res) => {
           userId: clerkUserId,
           role: "admin",
           accessTier: "pro",
-          allowlistMatch: true,
-          accessGranted: true,
         },
         "Entitlement status granted: admin"
       )
@@ -218,8 +155,6 @@ router.get("/status", (req, res) => {
         userId: clerkUserId,
         role: "member",
         accessTier: plan,
-        allowlistMatch: true,
-        accessGranted: true,
         billingStatus: status,
       },
       "Entitlement status granted: member"
@@ -258,13 +193,10 @@ router.get("/status", (req, res) => {
 // Writes role + accessTier to Clerk publicMetadata (merge-safe).
 //
 // Identity rules:
-//   ADMIN_EMAILS           → { role: "admin",  accessTier: "pro" }
-//   ALLOWED_EMAILS (other) → { role: "member", accessTier: "pro" }
-//     ↑ All currently-allowed non-admin accounts are Pro members.
-//       If future accounts should be Starter, this logic can be updated.
+//   ADMIN_EMAILS  → { role: "admin",  accessTier: "pro"     }
+//   Everyone else → { role: "member", accessTier: "starter" }
 //
-// NOT in ALLOWED_EMAILS → 403 unauthorized (defense-in-depth)
-//
+// Starter users can upgrade to Pro via Stripe checkout.
 // Already bootstrapped → returns current values without writing (no-op).
 // Requires a valid Clerk session JWT. Returns 401 if unauthenticated.
 
@@ -280,27 +212,6 @@ router.post("/bootstrap", async (req, res) => {
     const clerkUser = await clerkClient.users.getUser(userId)
     const email = (clerkUser.emailAddresses?.[0]?.emailAddress ?? "").trim().toLowerCase()
     const existing = clerkUser.publicMetadata as Record<string, unknown>
-
-    // ── Allowlist check — defense-in-depth at bootstrap ───────────────────
-    // The allowlistEnforcement middleware runs first, but this provides a
-    // second hard stop in the route itself in case the middleware config
-    // changes or ALLOWED_EMAILS is populated differently at route level.
-    if (ALLOWED_EMAILS.size > 0 && !isAllowedEmail(email)) {
-      logger.warn(
-        {
-          event: "entitlement.bootstrap.denied",
-          email,
-          userId,
-          allowlistMatch: false,
-          accessGranted: false,
-        },
-        "Bootstrap denied: email not in allowlist"
-      )
-      return res.status(403).json({
-        error: "unauthorized_user",
-        message: "This application is invite-only. Your account is not authorized.",
-      })
-    }
 
     // ── No-op if metadata already set ────────────────────────────────────
     if (existing.role && existing.accessTier) {
@@ -323,33 +234,12 @@ router.post("/bootstrap", async (req, res) => {
       })
     }
 
-    // ── Determine correct identity based on ACCESS_MODE ───────────────────
-    //
-    // internal_only (current):
-    //   ADMIN_EMAILS              → role=admin,  accessTier=pro
-    //   ALLOWED_EMAILS (non-admin)→ role=member, accessTier=pro
-    //   All other emails          → already blocked above by allowlist check
-    //   There is NO fallback to starter — unknown users get nothing.
-    //
-    // public_signup (future, when ALLOWED to open PlainPath to the public):
-    //   ADMIN_EMAILS  → role=admin,  accessTier=pro
-    //   All new users → role=member, accessTier=starter   (free tier on-ramp)
-    let newMeta: { role: string; accessTier: string }
-
-    if (ACCESS_MODE === "internal_only") {
-      // Hard allowlist mode: only explicitly approved emails can enter.
-      // Non-admin allowed emails (e.g. yelevels@gmail.com) get Pro directly.
-      // Any email not in ALLOWED_EMAILS was already rejected above.
-      newMeta = isAdminEmail(email)
-        ? { role: "admin", accessTier: "pro" }
-        : { role: "member", accessTier: "pro" }
-    } else {
-      // public_signup: open signup with Starter as the default free tier.
-      // Admins still get Pro regardless.
-      newMeta = isAdminEmail(email)
-        ? { role: "admin", accessTier: "pro" }
-        : { role: "member", accessTier: "starter" }
-    }
+    // ── Determine role + tier ─────────────────────────────────────────────
+    // Admins (ADMIN_EMAILS) get Pro access immediately.
+    // Everyone else starts as a Starter member and upgrades via Stripe.
+    const newMeta: { role: string; accessTier: string } = isAdminEmail(email)
+      ? { role: "admin", accessTier: "pro" }
+      : { role: "member", accessTier: "starter" }
 
     // Merge-safe: spread existing keys so no other metadata is overwritten.
     await clerkClient.users.updateUser(userId, {
@@ -363,9 +253,6 @@ router.post("/bootstrap", async (req, res) => {
         userId,
         role: newMeta.role,
         accessTier: newMeta.accessTier,
-        accessMode: ACCESS_MODE,
-        allowlistMatch: true,
-        accessGranted: true,
       },
       "Bootstrap: metadata written for first time"
     )

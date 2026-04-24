@@ -2,7 +2,6 @@ import { useEffect, useRef } from "react";
 import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { ClerkProvider, SignIn, SignUp, useClerk, useUser } from "@clerk/react";
-import { useEntitlements } from "@/hooks/useEntitlements";
 import { getApiBaseUrl } from "@/lib/api";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -178,119 +177,6 @@ function ClerkQueryClientCacheInvalidator() {
   return null;
 }
 
-// ─── UnauthorizedScreen ────────────────────────────────────────────────────────
-// Shown to any signed-in Clerk user whose email is not in the server-side
-// ALLOWED_EMAILS list. This replaces the entire app UI — no nav, no pages.
-function UnauthorizedScreen() {
-  const { signOut } = useClerk();
-
-  return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-6">
-      <div className="text-center max-w-sm space-y-5">
-        <div className="w-14 h-14 rounded-full bg-destructive/10 flex items-center justify-center mx-auto">
-          <svg
-            className="w-7 h-7 text-destructive"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={1.8}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
-            />
-          </svg>
-        </div>
-        <div className="space-y-2">
-          <h1 className="text-xl font-semibold tracking-tight">Access Restricted</h1>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            PlainPath is currently invite-only. Your account is not authorized
-            to access this application. If you believe this is an error, contact{" "}
-            <a
-              href="mailto:support@plainpathapp.com"
-              className="underline underline-offset-2 text-foreground hover:text-primary transition-colors"
-            >
-              support@plainpathapp.com
-            </a>
-            .
-          </p>
-        </div>
-        <button
-          onClick={() => void signOut({ redirectUrl: "/" })}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border bg-card hover:bg-secondary transition-colors text-sm font-medium"
-        >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9"
-            />
-          </svg>
-          Sign out
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// ─── AllowlistGate ─────────────────────────────────────────────────────────────
-// Top-level gate that sits between ClerkProvider and the Router.
-// Intercepts signed-in users before any page renders and checks whether they
-// have valid entitlements. If entitlements are null after loading (backend
-// returned 403 for non-allowlisted users), the entire app is replaced with
-// UnauthorizedScreen. This prevents unauthorized users from seeing any page,
-// including Home, Billing, and all tool routes.
-//
-// State matrix:
-//   Clerk loading               → blank screen (prevents flash of UI)
-//   Not signed in               → pass through (Router handles public routes)
-//   Signed in, ent. loading     → "Verifying access…" spinner
-//   Signed in, ent. null        → UnauthorizedScreen (sign-out button)
-//   Signed in, ent. valid       → pass through (render the app)
-function AllowlistGate({ children }: { children: React.ReactNode }) {
-  const { isLoaded, isSignedIn } = useUser();
-  const { entitlements, loading: entLoading } = useEntitlements();
-
-  // Clerk still initializing — show nothing to prevent any UI flash
-  if (!isLoaded) {
-    return <div className="min-h-screen bg-background" />;
-  }
-
-  // Not signed in — let the Router handle public routes and sign-in redirects
-  if (!isSignedIn) {
-    return <>{children}</>;
-  }
-
-  // Signed in but entitlements still resolving — show a neutral loading state
-  if (entLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center space-y-3">
-          <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin mx-auto" />
-          <p className="text-sm text-muted-foreground">Verifying access…</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Signed in and loaded, but entitlements are null:
-  // backend returned 403 (email not in ALLOWED_EMAILS) or some other failure.
-  // Replace the entire app with the unauthorized screen.
-  if (!entitlements) {
-    return <UnauthorizedScreen />;
-  }
-
-  // Authorized — render the full application
-  return <>{children}</>;
-}
-
 // Global auth guard — redirects unauthenticated users to the public marketing site.
 // Renders nothing (blank screen) while Clerk is still resolving auth state to
 // prevent any flash of protected content.
@@ -429,9 +315,7 @@ function ClerkProviderWithRoutes() {
         <WelcomeEmailTrigger />
         <TooltipProvider>
           <AnalysisProvider>
-            <AllowlistGate>
-              <Router />
-            </AllowlistGate>
+            <Router />
             <Toaster />
           </AnalysisProvider>
         </TooltipProvider>
