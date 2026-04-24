@@ -58,6 +58,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { HelpWidget } from "@/components/HelpWidget";
 import { FirstRunOnboarding } from "@/components/FirstRunOnboarding";
+import { OfflineBanner } from "@/components/OfflineBanner";
 
 // VITE_CLERK_PUBLISHABLE_KEY must be just the key value (pk_live_... or pk_test_...).
 // Guard against a common misconfiguration where the entire shell assignment line
@@ -533,6 +534,7 @@ function ClerkProviderWithRoutes() {
         <ClerkQueryClientCacheInvalidator />
         <WelcomeEmailTrigger />
         <FirstRunOnboarding />
+        <OfflineBanner />
         <TooltipProvider>
           <AnalysisProvider>
             <PlanGate>

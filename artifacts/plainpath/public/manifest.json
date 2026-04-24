@@ -1,0 +1,40 @@
+{
+  "name": "PlainPath",
+  "short_name": "PlainPath",
+  "description": "Understand any document in plain English — leases, contracts, medical bills, court notices, and more.",
+  "start_url": "/app/",
+  "scope": "/app/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4F46E5",
+  "orientation": "portrait-primary",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/images/logo-icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/images/logo-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Analyze a Document",
+      "short_name": "Analyze",
+      "url": "/app/analyze",
+      "description": "Upload and analyze any document"
+    },
+    {
+      "name": "Document Trust Check",
+      "short_name": "Trust Check",
+      "url": "/app/import?mode=trust-check",
+      "description": "Check if a document is legitimate"
+    }
+  ]
+}

@@ -13,6 +13,7 @@ import DocumentSituations from "@/components/DocumentSituations";
 import FAQSection from "@/components/FAQSection";
 import VideoWalkthrough from "@/components/VideoWalkthrough";
 import { BackToTop } from "@/components/BackToTop";
+import { NewsletterCapture } from "@/components/NewsletterCapture";
 import { Card } from "@/components/ui/card";
 import {
   FileText, FileSignature, ShieldCheck,
@@ -1542,6 +1543,8 @@ export default function Home() {
           REFER A FRIEND
       ════════════════════════════════════════════════ */}
       <ReferFriend />
+
+      <NewsletterCapture />
 
       {/* ════════════════════════════════════════════════
           APP SHOWCASE — web + mobile

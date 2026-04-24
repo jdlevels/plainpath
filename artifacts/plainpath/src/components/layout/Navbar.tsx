@@ -10,6 +10,7 @@ import { ThemeToggle } from "@/components/ui/ThemeToggle"
 import { useUser, useClerk } from "@clerk/react"
 import { useEntitlements } from "@/hooks/useEntitlements"
 import { BUILDER_ENABLED } from "@/lib/builderConfig"
+import { WhatsNew } from "@/components/WhatsNew"
 
 function LogoBrand() {
   return (
@@ -266,6 +267,7 @@ export function Navbar() {
 
         {/* Right actions */}
         <div className="flex items-center gap-1.5">
+          <WhatsNew />
           <ThemeToggle />
 
           <a

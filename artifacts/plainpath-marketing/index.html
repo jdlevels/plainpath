@@ -31,6 +31,83 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Structured data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "SoftwareApplication",
+          "name": "PlainPath",
+          "url": "https://plainpathapp.com",
+          "description": "PlainPath turns confusing paperwork into a clear action plan — every step, deadline, and risk explained in plain English.",
+          "applicationCategory": "LegalApplication",
+          "operatingSystem": "Web",
+          "offers": [
+            {
+              "@type": "Offer",
+              "name": "Starter",
+              "price": "4.99",
+              "priceCurrency": "USD",
+              "description": "Analyze and redact documents in plain English."
+            },
+            {
+              "@type": "Offer",
+              "name": "Pro",
+              "price": "19.99",
+              "priceCurrency": "USD",
+              "description": "All 8 tools — unlimited use."
+            }
+          ]
+        },
+        {
+          "@type": "Organization",
+          "name": "PlainPath",
+          "url": "https://plainpathapp.com",
+          "email": "support@plainpathapp.com",
+          "description": "PlainPath helps everyday people understand their legal documents in plain English."
+        },
+        {
+          "@type": "FAQPage",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "Is PlainPath a replacement for a lawyer?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "No. PlainPath helps you understand your documents better, but it is not legal advice. For binding legal decisions, consult a licensed attorney."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Is my document data safe?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes. Documents are encrypted in transit, never sold, and never used to train AI models."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What types of documents can PlainPath analyze?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "PlainPath works with leases, employment contracts, NDAs, medical bills, IRS letters, eviction notices, business agreements, freelance contracts, and more."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How much does PlainPath cost?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "PlainPath offers two plans: Starter at $4.99/month and Pro at $19.99/month. Both plans include a 30-day money-back guarantee."
+              }
+            }
+          ]
+        }
+      ]
+    }
+    </script>
+
     <script>
       (function () {
         try {

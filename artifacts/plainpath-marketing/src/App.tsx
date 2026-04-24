@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { StickyCTA } from "@/components/StickyCTA";
 import { CookieConsent } from "@/components/CookieConsent";
+import { ExitIntent } from "@/components/ExitIntent";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import Privacy from "@/pages/Privacy";
@@ -69,6 +70,7 @@ function App() {
           </WouterRouter>
           <StickyCTA />
           <CookieConsent />
+          <ExitIntent />
           <Toaster />
         </TooltipProvider>
       </ThemeProvider>
