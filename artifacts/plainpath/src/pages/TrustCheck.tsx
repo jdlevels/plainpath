@@ -43,8 +43,8 @@ function findBestSection(evidence: string, sections: TrustCheckSection[]): strin
 function SLabel({ children, icon, right }: { children: React.ReactNode; icon?: React.ReactNode; right?: React.ReactNode }) {
   return (
     <div className="flex items-center gap-1.5 mb-3">
-      {icon && <span className="text-white/28 shrink-0">{icon}</span>}
-      <p className="text-[10px] uppercase tracking-[0.12em] font-semibold text-white/26 flex-1">{children}</p>
+      {icon && <span className="text-white/50 shrink-0">{icon}</span>}
+      <p className="text-[10px] uppercase tracking-[0.12em] font-semibold text-white/50 flex-1">{children}</p>
       {right}
     </div>
   )
@@ -107,7 +107,7 @@ function DocViewer({
       {/* Tool identity row */}
       <div className="h-7 border-b border-white/[0.04] flex items-center px-4 gap-2 shrink-0 bg-white/[0.01]">
         <Shield className="w-3 h-3 text-blue-400/45 shrink-0" />
-        <span className="text-[10px] text-white/28 font-medium flex-1">Document Trust Check</span>
+        <span className="text-[10px] text-white/50 font-medium flex-1">Document Trust Check</span>
         {isLowConf ? (
           <span className="h-4 px-1.5 rounded border border-amber-500/28 bg-amber-500/10 text-amber-300/75 text-[9px] font-medium">Low confidence</span>
         ) : (
@@ -512,7 +512,7 @@ function TrustIntelPanel({
         {/* ── F. Metadata / Structure Signals ── */}
         {(analysis.metadataFindings?.length ?? 0) > 0 && (
           <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
-            <SLabel icon={<Database className="w-3.5 h-3.5 text-white/28" />}>F. Metadata / Structure Signals</SLabel>
+            <SLabel icon={<Database className="w-3.5 h-3.5 text-white/50" />}>F. Metadata / Structure Signals</SLabel>
             <div className="flex flex-col gap-2.5">
               {analysis.metadataFindings!.map((finding, i) => (
                 <div key={i} className={`rounded-lg border p-2.5 ${
@@ -537,7 +537,7 @@ function TrustIntelPanel({
         {/* ── G. Source Traceability ── */}
         {analysis.scamIndicators.some(i => i.sourceEvidence) && (
           <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
-            <SLabel icon={<Search className="w-3.5 h-3.5 text-white/28" />}>G. Source Traceability</SLabel>
+            <SLabel icon={<Search className="w-3.5 h-3.5 text-white/50" />}>G. Source Traceability</SLabel>
             <div className="flex flex-col gap-2">
               {analysis.scamIndicators
                 .filter(i => i.sourceEvidence)
@@ -599,7 +599,7 @@ function LowConfPanel({ analysis, onReanalyze, onNewCheck }: {
           <div className="grid grid-cols-1 gap-3">
             {/* What could be read */}
             <div>
-              <p className="text-white/30 text-[9px] uppercase tracking-widest font-semibold mb-1.5">What PlainPath could read</p>
+              <p className="text-white/52 text-[9px] uppercase tracking-widest font-semibold mb-1.5">What PlainPath could read</p>
               {(analysis.sections ?? []).slice(0, 1).map(s => (
                 <div key={s.id} className="flex items-start gap-1.5">
                   <CheckCircle2 className="w-3 h-3 text-emerald-400/60 shrink-0 mt-0.5" />
@@ -616,7 +616,7 @@ function LowConfPanel({ analysis, onReanalyze, onNewCheck }: {
 
             {/* What could not be verified */}
             <div>
-              <p className="text-white/30 text-[9px] uppercase tracking-widest font-semibold mb-1.5">What could not be verified</p>
+              <p className="text-white/52 text-[9px] uppercase tracking-widest font-semibold mb-1.5">What could not be verified</p>
               {[
                 "Pages 2–3 — authority references, terms, and conditions",
                 "Signature block and official identifiers",
@@ -672,7 +672,7 @@ function LowConfPanel({ analysis, onReanalyze, onNewCheck }: {
         {analysis.scamIndicators.length > 0 && (
           <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-white/30 text-[9px] uppercase tracking-widest font-semibold">Partial signals found</p>
+              <p className="text-white/52 text-[9px] uppercase tracking-widest font-semibold">Partial signals found</p>
               <span className="h-5 px-2 rounded-full text-[9px] border border-white/10 text-white/30">verify manually</span>
             </div>
             <div className="flex flex-col gap-2">

@@ -564,7 +564,7 @@ export function EmptyState({
 
           {/* What gets detected */}
           <div className="border border-white/[0.06] rounded-2xl p-5">
-            <p className="text-xs font-semibold text-white/30 uppercase tracking-widest mb-3">What gets detected</p>
+            <p className="text-xs font-semibold text-white/52 uppercase tracking-widest mb-3">What gets detected</p>
             <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
               {[
                 "Full names", "Street addresses", "Phone numbers", "Email addresses",
@@ -695,7 +695,7 @@ export function ProcessingState({ fileName }: { fileName: string }) {
           </div>
 
           <div className="border border-white/[0.06] rounded-xl p-4">
-            <p className="text-xs text-white/30 mb-2">What you'll see in the review</p>
+            <p className="text-xs text-white/52 mb-2">What you'll see in the review</p>
             {["Sensitive items highlighted in the document", "Right panel to select what to redact", "Original · Redaction Preview toggle", "Export redacted copy when ready"].map(s => (
               <div key={s} className="flex items-center gap-2 text-xs text-white/40 mt-1.5">
                 <div className="w-1 h-1 rounded-full bg-violet-400/50" />
@@ -735,7 +735,7 @@ export function ErrorState({
 
         <div className="w-full border border-white/[0.07] rounded-2xl overflow-hidden mb-6">
           <div className="px-4 py-2 bg-white/[0.02] border-b border-white/[0.05] text-left">
-            <span className="text-xs text-white/30 uppercase tracking-widest">File attempted</span>
+            <span className="text-xs text-white/52 uppercase tracking-widest">File attempted</span>
           </div>
           <div className="px-4 py-3 flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0">
@@ -767,7 +767,7 @@ export function ErrorState({
 
         <div className="w-full border border-white/[0.07] rounded-2xl overflow-hidden">
           <div className="px-4 py-2 bg-white/[0.02] border-b border-white/[0.05] text-left">
-            <span className="text-xs text-white/30 uppercase tracking-widest">What you can try instead</span>
+            <span className="text-xs text-white/52 uppercase tracking-widest">What you can try instead</span>
           </div>
           {[
             { icon: "💬", label: "Ask This Document", sub: "Ask specific questions about the document you can open.", action: onAsk },
@@ -908,7 +908,7 @@ export function Workspace({ text, fileName, spans, onReset, onExport, uploadedFi
 
         {/* A. Summary */}
         <section className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-4">
-          <p className="text-xs text-white/30 uppercase tracking-widest mb-3">A. Redaction Summary</p>
+          <p className="text-xs text-white/52 uppercase tracking-widest mb-3">A. Redaction Summary</p>
           <div className="flex items-center gap-3 mb-3">
             <div className="w-9 h-9 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0">
               <span className="text-sm font-bold text-red-400">{spans.length}</span>
@@ -926,7 +926,7 @@ export function Workspace({ text, fileName, spans, onReset, onExport, uploadedFi
 
         {/* B. Detection strip */}
         <section className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-3">
-          <p className="text-xs text-white/30 uppercase tracking-widest mb-2">B. Detection Strip</p>
+          <p className="text-xs text-white/52 uppercase tracking-widest mb-2">B. Detection Strip</p>
           <div className="flex flex-wrap gap-1.5">
             <span className="px-2 py-1 rounded-full text-xs border border-white/10 text-white/50">{spans.length} items found</span>
             <span className="px-2 py-1 rounded-full text-xs border border-emerald-500/25 text-emerald-400">{spans.filter(s => s.confidence === "high").length} high-confidence</span>
@@ -937,7 +937,7 @@ export function Workspace({ text, fileName, spans, onReset, onExport, uploadedFi
 
         {/* C. Suggested Redactions */}
         <section>
-          <p className="text-xs text-white/30 uppercase tracking-widest mb-2">C. Suggested Redactions</p>
+          <p className="text-xs text-white/52 uppercase tracking-widest mb-2">C. Suggested Redactions</p>
           <div className="space-y-2">
             {filteredSpans.map(span => {
               const chip = typeChip(span.type)
@@ -947,7 +947,7 @@ export function Workspace({ text, fileName, spans, onReset, onExport, uploadedFi
                 <div
                   key={span.id}
                   onClick={() => activate(span.id)}
-                  className={`rounded-xl p-3 border cursor-pointer transition-all ${isAct ? "border-violet-500/50 bg-violet-500/[0.06]" : isSel ? "border-emerald-500/25 bg-emerald-500/[0.03]" : "border-white/[0.06] bg-white/[0.02] hover:border-white/10"}`}
+                  className={`rounded-xl p-3 border cursor-pointer transition-all ${isAct ? "border-violet-500/50 bg-violet-500/[0.07]" : isSel ? "border-emerald-500/35 bg-emerald-500/[0.08]" : "border-white/[0.06] bg-white/[0.02] hover:border-white/12"}`}
                 >
                   <div className="flex items-start gap-2">
                     <input
@@ -967,7 +967,7 @@ export function Workspace({ text, fileName, spans, onReset, onExport, uploadedFi
                       </div>
                       <div className="flex items-center gap-1.5 bg-black/20 rounded-lg px-2 py-1">
                         <div className="w-3 h-2 bg-white/15 rounded-sm shrink-0" />
-                        <span className="text-xs text-white/35 font-mono truncate">{maskValue(span)}</span>
+                        <span className="text-xs text-white/60 font-mono truncate">{maskValue(span)}</span>
                       </div>
                     </div>
                     <ChevronRight className={`w-3.5 h-3.5 mt-0.5 shrink-0 transition-transform ${isAct ? "text-violet-400 rotate-90" : "text-white/20"}`} />
@@ -977,11 +977,11 @@ export function Workspace({ text, fileName, spans, onReset, onExport, uploadedFi
                   {isAct && (
                     <div className="mt-3 space-y-2 border-t border-white/[0.06] pt-3">
                       <div className="flex items-start gap-2 rounded-lg bg-amber-500/10 border border-amber-500/20 px-3 py-2">
-                        <span className="text-xs text-white/30 mt-0.5 shrink-0">In document:</span>
+                        <span className="text-xs text-white/52 mt-0.5 shrink-0">In document:</span>
                         <span className="text-xs text-amber-300 font-medium leading-relaxed">{span.value}</span>
                       </div>
                       <div className="flex items-center gap-2 rounded-lg bg-black/30 border border-white/[0.07] px-3 py-2">
-                        <span className="text-xs text-white/30 shrink-0">Redacted as:</span>
+                        <span className="text-xs text-white/52 shrink-0">Redacted as:</span>
                         <span className="bg-black border border-white/20 rounded-sm text-transparent select-none inline-block" style={{ minWidth: "60px", height: "1em" }} />
                         <span className="text-xs text-white/25">[REDACTED]</span>
                       </div>
@@ -1013,7 +1013,7 @@ export function Workspace({ text, fileName, spans, onReset, onExport, uploadedFi
 
         {/* D. Categories */}
         <section>
-          <p className="text-xs text-white/30 uppercase tracking-widest mb-2">D. Redaction Categories</p>
+          <p className="text-xs text-white/52 uppercase tracking-widest mb-2">D. Redaction Categories</p>
           <div className="flex flex-wrap gap-1.5">
             {CATS.map(([cat, count]) => (
               <button
@@ -1029,7 +1029,7 @@ export function Workspace({ text, fileName, spans, onReset, onExport, uploadedFi
 
         {/* E. Review Queue */}
         <section className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-4">
-          <p className="text-xs text-white/30 uppercase tracking-widest mb-3">E. Review Queue</p>
+          <p className="text-xs text-white/52 uppercase tracking-widest mb-3">E. Review Queue</p>
           <div className="space-y-2">
             {[
               ["Selected for redaction", selectedCount.toString(), "text-emerald-400"],
@@ -1047,7 +1047,7 @@ export function Workspace({ text, fileName, spans, onReset, onExport, uploadedFi
 
         {/* F. Manual Redaction Tools */}
         <section className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-4">
-          <p className="text-xs text-white/30 uppercase tracking-widest mb-3">F. Manual Redaction Tools</p>
+          <p className="text-xs text-white/52 uppercase tracking-widest mb-3">F. Manual Redaction Tools</p>
           <div className="grid grid-cols-2 gap-2">
             {[
               { icon: Plus, label: "Add manual item", action: () => setManualCount(c => c + 1) },
@@ -1110,7 +1110,7 @@ export function Workspace({ text, fileName, spans, onReset, onExport, uploadedFi
 
           {/* Non-PDF note */}
           {!canExportPdf && (
-            <p className="text-xs text-white/25 text-center">PDF redaction export is available for PDF uploads.</p>
+            <p className="text-xs text-white/42 text-center">PDF redaction export is available for PDF uploads.</p>
           )}
 
           <div className="grid grid-cols-2 gap-2">
@@ -1129,13 +1129,13 @@ export function Workspace({ text, fileName, spans, onReset, onExport, uploadedFi
               {viewMode === "original" ? "Preview redacted" : "Original view"}
             </button>
           </div>
-          <p className="text-xs text-white/20 text-center">PlainPath creates a flattened redacted PDF copy. The original file is unchanged.</p>
+          <p className="text-xs text-white/38 text-center">PlainPath creates a flattened redacted PDF copy. The original file is unchanged.</p>
         </section>
 
         {/* H. Source Traceability */}
         {activeId && (
           <section className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-3">
-            <p className="text-xs text-white/30 uppercase tracking-widest mb-2">H. Source Traceability</p>
+            <p className="text-xs text-white/52 uppercase tracking-widest mb-2">H. Source Traceability</p>
             {(() => {
               const span = spans.find(s => s.id === activeId)
               if (!span) return null

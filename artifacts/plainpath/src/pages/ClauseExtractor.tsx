@@ -484,7 +484,7 @@ function DocViewer({ session, sections, activeSection, onClearSource, evidenceBa
       {/* Tool identity row */}
       <div className="h-7 border-b border-white/[0.04] flex items-center px-4 gap-2 shrink-0 bg-white/[0.01]">
         <ListChecks className="w-3 h-3 text-violet-400/45 shrink-0" />
-        <span className="text-[10px] text-white/28 font-medium flex-1">Clause Extractor</span>
+        <span className="text-[10px] text-white/50 font-medium flex-1">Clause Extractor</span>
         {clauseCount != null && totalClauses != null && (
           <span className={`h-4 px-1.5 rounded border text-[9px] font-medium ${
             confidence === "high" ? "border-emerald-500/28 bg-emerald-500/10 text-emerald-300/75"
@@ -498,7 +498,7 @@ function DocViewer({ session, sections, activeSection, onClearSource, evidenceBa
         <FileText className="w-3.5 h-3.5 text-violet-400/60 shrink-0" />
         <span className="text-white/58 text-xs flex-1 truncate">{session.fileName}</span>
         {sections.length > 0 && (
-          <span className="text-white/32 text-xs shrink-0">{sections.length} sections</span>
+          <span className="text-white/50 text-xs shrink-0">{sections.length} sections</span>
         )}
         <div className="w-px h-4 bg-white/[0.06] mx-1" />
         <div className="flex items-center gap-0.5">
@@ -1575,7 +1575,7 @@ function UploadView({
           {/* Disclaimer */}
           <div className="w-full flex items-start gap-2 rounded-xl border border-white/[0.05] bg-amber-500/[0.04] px-3 py-2.5 mb-8 text-left">
             <Info className="w-3.5 h-3.5 text-amber-400/50 shrink-0 mt-0.5" />
-            <p className="text-white/30 text-[10px] leading-relaxed">
+            <p className="text-white/48 text-[10px] leading-relaxed">
               PlainPath identifies and organizes contract terms for review.{" "}
               <span className="text-amber-300/65 font-medium">Results are not legal advice.</span>{" "}
               Always verify with a qualified professional before acting on any contract term.
@@ -1583,7 +1583,7 @@ function UploadView({
           </div>
 
           {/* Works well with */}
-          <p className="text-white/20 text-[9px] uppercase tracking-widest font-semibold mb-3">Works well with</p>
+          <p className="text-white/48 text-[9px] uppercase tracking-widest font-semibold mb-3">Works well with</p>
           <div className="w-full grid grid-cols-2 gap-2 mb-8">
             {CE_WORKS_WELL_WITH.map(item => (
               <div
@@ -1593,14 +1593,14 @@ function UploadView({
                 <item.icon className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${item.color}`} />
                 <div>
                   <p className="text-white/52 text-[11px] font-medium leading-tight">{item.label}</p>
-                  <p className="text-white/24 text-[10px] leading-tight mt-0.5">{item.desc}</p>
+                  <p className="text-white/42 text-[10px] leading-tight mt-0.5">{item.desc}</p>
                 </div>
               </div>
             ))}
           </div>
 
           {/* Demo chips */}
-          <p className="text-white/20 text-[9px] uppercase tracking-widest font-semibold mb-3">Or try a demo</p>
+          <p className="text-white/48 text-[9px] uppercase tracking-widest font-semibold mb-3">Or try a demo</p>
           <div className="w-full flex flex-col gap-2">
             {CLAUSE_DEMOS.map(d => (
               <button
@@ -1613,7 +1613,7 @@ function UploadView({
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-white/55 text-xs font-medium leading-tight">{d.label}</p>
-                  <p className="text-white/25 text-[10px]">{d.description}</p>
+                  <p className="text-white/42 text-[10px]">{d.description}</p>
                 </div>
                 <ChevronRight className="w-3.5 h-3.5 text-white/18 shrink-0" />
               </button>

@@ -626,14 +626,14 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
         {/* Left — Original (33%) */}
         <div className="w-[33%] border-r border-white/[0.05] flex flex-col overflow-hidden">
           <div className="h-7 border-b border-white/[0.04] flex items-center px-4 gap-2 shrink-0 bg-white/[0.01]">
-            <ArrowLeftRight className="w-3 h-3 text-white/22 shrink-0" />
-            <span className="text-[10px] text-white/28 font-medium flex-1">Compare Versions</span>
-            <span className="text-[9px] text-white/18">{ci.sections_original.length} sections</span>
+            <ArrowLeftRight className="w-3 h-3 text-white/48 shrink-0" />
+            <span className="text-[10px] text-white/50 font-medium flex-1">Compare Versions</span>
+            <span className="text-[9px] text-white/40">{ci.sections_original.length} sections</span>
           </div>
           <div className="h-8 border-b border-white/[0.05] flex items-center px-4 gap-2 shrink-0">
-            <FileText className="w-3 h-3 text-white/25 shrink-0" />
+            <FileText className="w-3 h-3 text-white/45 shrink-0" />
             <span className="text-[11px] text-white/50 font-semibold">Original</span>
-            <span className="text-[10px] text-white/22 ml-1 flex-1 truncate">{session.originalFileName}</span>
+            <span className="text-[10px] text-white/42 ml-1 flex-1 truncate">{session.originalFileName}</span>
             {ci.removed_language.length > 0 && (
               <span className="h-4 px-1.5 rounded border border-red-400/22 bg-red-400/[0.07] text-red-300/60 text-[9px] font-medium shrink-0">
                 {ci.removed_language.length} removed
@@ -661,7 +661,7 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
         <div className="w-[33%] border-r border-white/[0.05] flex flex-col overflow-hidden">
           <div className="h-7 border-b border-white/[0.04] flex items-center px-4 gap-2 shrink-0 bg-white/[0.01]">
             <span className="flex-1" />
-            <span className="text-[9px] text-white/32">{ci.sections_revised.length} sections</span>
+            <span className="text-[9px] text-white/40">{ci.sections_revised.length} sections</span>
           </div>
           <div className="h-8 border-b border-white/[0.05] flex items-center px-4 gap-2 shrink-0">
             <FileText className="w-3 h-3 text-violet-400/55 shrink-0" />
@@ -714,9 +714,9 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
           {mobileTab === "original" && (
             <div className="h-full flex flex-col overflow-hidden">
               <div className="h-9 border-b border-white/[0.05] flex items-center px-4 gap-2 shrink-0">
-                <FileText className="w-3 h-3 text-white/25" />
+                <FileText className="w-3 h-3 text-white/45" />
                 <span className="text-[11px] text-white/50 font-semibold">Original</span>
-                <span className="text-[10px] text-white/22 ml-1 truncate">{session.originalFileName}</span>
+                <span className="text-[10px] text-white/42 ml-1 truncate">{session.originalFileName}</span>
               </div>
               <div ref={origScrollRef} className="flex-1 overflow-y-auto p-3 space-y-2">
                 {ci.sections_original.map((sec) => (
@@ -740,7 +740,7 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
               <div className="h-9 border-b border-white/[0.05] flex items-center px-4 gap-2 shrink-0">
                 <FileText className="w-3 h-3 text-violet-400/55" />
                 <span className="text-[11px] text-violet-300/65 font-semibold">Revised</span>
-                <span className="text-[10px] text-white/22 ml-1 truncate">{session.revisedFileName}</span>
+                <span className="text-[10px] text-white/42 ml-1 truncate">{session.revisedFileName}</span>
               </div>
               <div ref={revScrollRef} className="flex-1 overflow-y-auto p-3 space-y-2">
                 {ci.sections_revised.map((sec) => (
@@ -842,8 +842,8 @@ function ChangeIntelligencePanel({
         {/* A. Change Summary */}
         <div>
           <div className="flex items-center gap-1.5 mb-2">
-            <BookOpen className="w-3 h-3 text-white/25" />
-            <p className="text-[10px] uppercase tracking-[0.12em] font-semibold text-white/24">A. Change Summary</p>
+            <BookOpen className="w-3 h-3 text-white/50" />
+            <p className="text-[10px] uppercase tracking-[0.12em] font-semibold text-white/50">A. Change Summary</p>
           </div>
           <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3.5 text-[11px] text-white/55 leading-relaxed space-y-1.5">
             <p><strong className="text-white/70 font-semibold">Compared:</strong> {ci.summary.compared}</p>
@@ -851,8 +851,8 @@ function ChangeIntelligencePanel({
             <p><strong className="text-white/70 font-semibold">Inspect first:</strong> <span className="text-amber-300/80 font-medium">{ci.summary.inspect_first}</span></p>
           </div>
           <div className="mt-2 flex items-start gap-1.5 px-1">
-            <Info className="w-3 h-3 text-white/20 shrink-0 mt-0.5" />
-            <p className="text-[10px] text-white/28">Change comparison support — source-backed changes, not legal advice.</p>
+            <Info className="w-3 h-3 text-white/40 shrink-0 mt-0.5" />
+            <p className="text-[10px] text-white/45">Change comparison support — source-backed changes, not legal advice.</p>
           </div>
         </div>
 
@@ -860,7 +860,7 @@ function ChangeIntelligencePanel({
         <div>
           <div className="flex items-center gap-1.5 mb-2">
             <ArrowLeftRight className="w-3 h-3 text-white/25" />
-            <p className="text-[10px] uppercase tracking-[0.12em] font-semibold text-white/24">B. Change Strip</p>
+            <p className="text-[10px] uppercase tracking-[0.12em] font-semibold text-white/50">B. Change Strip</p>
           </div>
           <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3 flex flex-wrap gap-1.5">
             <span className="h-6 px-2.5 rounded-full border bg-violet-500/15 border-violet-500/22 text-[10px] text-violet-300/80 font-medium">
@@ -896,7 +896,7 @@ function ChangeIntelligencePanel({
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-1.5">
                 <Tag className="w-3 h-3 text-white/25" />
-                <p className="text-[10px] uppercase tracking-[0.12em] font-semibold text-white/24">C. Key Changes</p>
+                <p className="text-[10px] uppercase tracking-[0.12em] font-semibold text-white/50">C. Key Changes</p>
               </div>
               <span className="text-[10px] text-white/28">{ci.key_changes.length} of {ci.stats.total_changes}</span>
             </div>
@@ -936,7 +936,7 @@ function ChangeIntelligencePanel({
           <div>
             <div className="flex items-center gap-1.5 mb-2">
               <Plus className="w-3 h-3 text-emerald-400/50" />
-              <p className="text-[10px] uppercase tracking-[0.12em] font-semibold text-white/24">D. Added Language</p>
+              <p className="text-[10px] uppercase tracking-[0.12em] font-semibold text-white/50">D. Added Language</p>
             </div>
             <div className="space-y-1.5">
               {ci.added_language.map((a) => {
@@ -967,7 +967,7 @@ function ChangeIntelligencePanel({
           <div>
             <div className="flex items-center gap-1.5 mb-2">
               <Minus className="w-3 h-3 text-red-400/50" />
-              <p className="text-[10px] uppercase tracking-[0.12em] font-semibold text-white/24">E. Removed Language</p>
+              <p className="text-[10px] uppercase tracking-[0.12em] font-semibold text-white/50">E. Removed Language</p>
             </div>
             <div className="space-y-1.5">
               {ci.removed_language.map((r) => {
@@ -998,7 +998,7 @@ function ChangeIntelligencePanel({
           <div>
             <div className="flex items-center gap-1.5 mb-2">
               <Edit3 className="w-3 h-3 text-amber-400/50" />
-              <p className="text-[10px] uppercase tracking-[0.12em] font-semibold text-white/24">F. Modified Terms</p>
+              <p className="text-[10px] uppercase tracking-[0.12em] font-semibold text-white/50">F. Modified Terms</p>
             </div>
             <div className="space-y-2">
               {ci.modified_terms.map((m) => {
@@ -1038,7 +1038,7 @@ function ChangeIntelligencePanel({
           <div>
             <div className="flex items-center gap-1.5 mb-2">
               <AlertTriangle className="w-3 h-3 text-white/22" />
-              <p className="text-[10px] uppercase tracking-[0.12em] font-semibold text-white/24">G. Possible Risk Changes</p>
+              <p className="text-[10px] uppercase tracking-[0.12em] font-semibold text-white/50">G. Possible Risk Changes</p>
             </div>
             <div className="space-y-1.5">
               {ci.risk_changes.map((r) => (

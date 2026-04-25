@@ -503,7 +503,7 @@ function EmptyState({ onSelect }: { onSelect: (ct: ContractType) => void }) {
                 </div>
                 <div>
                   <div className="text-sm font-medium text-white/85 mb-0.5 leading-tight">{ct.title}</div>
-                  <div className="text-xs text-white/35 leading-relaxed">{ct.description}</div>
+                  <div className="text-xs text-white/55 leading-relaxed">{ct.description}</div>
                 </div>
               </button>
             )
@@ -512,8 +512,8 @@ function EmptyState({ onSelect }: { onSelect: (ct: ContractType) => void }) {
 
         {/* Scoping notice */}
         <div className="flex items-start gap-2.5 px-4 py-3 bg-white/[0.02] border border-white/[0.06] rounded-xl mb-6">
-          <Info className="w-3.5 h-3.5 text-white/25 mt-0.5 shrink-0" />
-          <p className="text-xs text-white/30 leading-relaxed">
+          <Info className="w-3.5 h-3.5 text-white/45 mt-0.5 shrink-0" />
+          <p className="text-xs text-white/50 leading-relaxed">
             PlainPath supports contracts, agreements, notices, and structured business/legal documents.
             Not for SOPs, policy manuals, or general long-form writing.
           </p>
@@ -522,8 +522,8 @@ function EmptyState({ onSelect }: { onSelect: (ct: ContractType) => void }) {
         {/* Recent drafts */}
         <div className="border border-white/[0.07] rounded-2xl overflow-hidden mb-6">
           <div className="px-4 py-2.5 border-b border-white/[0.05] flex items-center gap-2">
-            <Clock className="w-3.5 h-3.5 text-white/30" />
-            <span className="text-xs text-white/30 uppercase tracking-widest">Recent Drafts</span>
+            <Clock className="w-3.5 h-3.5 text-white/52" />
+            <span className="text-xs text-white/52 uppercase tracking-widest">Recent Drafts</span>
           </div>
           {hasSavedDraft ? (
             <button
@@ -543,7 +543,7 @@ function EmptyState({ onSelect }: { onSelect: (ct: ContractType) => void }) {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium text-white/80 truncate">Saved draft — click to resume</div>
-                <div className="text-xs text-white/30 mt-0.5">Auto-saved</div>
+                <div className="text-xs text-white/48 mt-0.5">Auto-saved</div>
               </div>
               <ChevronRight className="w-4 h-4 text-white/20 shrink-0" />
             </button>
@@ -567,9 +567,9 @@ function EmptyState({ onSelect }: { onSelect: (ct: ContractType) => void }) {
           )}
         </div>
 
-        <p className="text-center text-xs text-white/20 leading-relaxed">
+        <p className="text-center text-xs text-white/38 leading-relaxed">
           PlainPath helps draft structured documents. Review before use.{" "}
-          <span className="text-white/30 font-medium">Not legal advice.</span>{" "}
+          <span className="text-white/52 font-medium">Not legal advice.</span>{" "}
           Consider professional review for high-stakes documents.
         </p>
       </div>
@@ -590,7 +590,7 @@ function FieldGroup({ label, required, optional, children }: {
   return (
     <div className="mb-5">
       <div className="flex items-center gap-1.5 mb-2">
-        <span className="text-[10px] text-white/30 uppercase tracking-widest">{label}</span>
+        <span className="text-[10px] text-white/52 uppercase tracking-widest">{label}</span>
         {required && (
           <span className="text-[10px] text-red-400/70 bg-red-500/10 border border-red-500/20 rounded px-1.5 py-0.5">Required</span>
         )}
@@ -625,7 +625,7 @@ function TextInput({
         </div>
       )}
       {note && !(!value.trim() && required) && (
-        <p className="text-xs text-white/25 mt-1 leading-relaxed">{note}</p>
+        <p className="text-xs text-white/45 mt-1 leading-relaxed">{note}</p>
       )}
     </div>
   )
@@ -687,7 +687,7 @@ function Toggle({ label, value, onChange, note }: {
           <div className="w-4 h-4 bg-white rounded-full shadow-sm" />
         </button>
       </div>
-      {note && <p className="text-xs text-white/25 mt-1 leading-relaxed">{note}</p>}
+      {note && <p className="text-xs text-white/45 mt-1 leading-relaxed">{note}</p>}
     </div>
   )
 }
@@ -722,7 +722,7 @@ function PeopleSection({
     <div className="space-y-4">
       <div>
         <h3 className="text-sm font-semibold text-white mb-0.5">Step 2 — Parties</h3>
-        <p className="text-xs text-white/35">Enter the full legal names and contact details for both parties.</p>
+        <p className="text-xs text-white/55">Enter the full legal names and contact details for both parties.</p>
       </div>
 
       <FieldGroup label={`Party A — ${clientLabel}`} required>
@@ -818,7 +818,7 @@ function ScopeSection({
     <div className="space-y-4">
       <div>
         <h3 className="text-sm font-semibold text-white mb-0.5">Step 3 — Scope of Work</h3>
-        <p className="text-xs text-white/35">Define what is being delivered or agreed to.</p>
+        <p className="text-xs text-white/55">Define what is being delivered or agreed to.</p>
       </div>
 
       {isLease ? (
@@ -956,7 +956,7 @@ function MoneySection({
       <div className="space-y-4">
         <div>
           <h3 className="text-sm font-semibold text-white mb-0.5">Step 4 — Rent & Fees</h3>
-          <p className="text-xs text-white/35">Define the financial terms of this lease.</p>
+          <p className="text-xs text-white/55">Define the financial terms of this lease.</p>
         </div>
         <FieldGroup label="Monthly Rent" required>
           <div className="flex items-center bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 gap-2">
@@ -1025,7 +1025,7 @@ function MoneySection({
     <div className="space-y-4">
       <div>
         <h3 className="text-sm font-semibold text-white mb-0.5">Step 4 — Payment & Compensation</h3>
-        <p className="text-xs text-white/35">Define how and when payment will be made.</p>
+        <p className="text-xs text-white/55">Define how and when payment will be made.</p>
       </div>
 
       <FieldGroup label="Payment Structure" required>
@@ -1158,7 +1158,7 @@ function ProtectionSection({
     <div className="space-y-4">
       <div>
         <h3 className="text-sm font-semibold text-white mb-0.5">Step 5 — Protection & Terms</h3>
-        <p className="text-xs text-white/35">{isLease ? "Tenant rights, maintenance, and termination terms." : "IP, confidentiality, termination, and dispute resolution."}</p>
+        <p className="text-xs text-white/55">{isLease ? "Tenant rights, maintenance, and termination terms." : "IP, confidentiality, termination, and dispute resolution."}</p>
       </div>
 
       {!isLease && (
@@ -1295,12 +1295,12 @@ function ReviewExportPanel({
         <Check className="w-4 h-4 text-green-400" />
         <span className="text-sm font-semibold text-white">Ready to Download</span>
       </div>
-      <p className="text-xs text-white/35 mb-5">All sections complete. Review the document then export.</p>
+      <p className="text-xs text-white/55 mb-5">All sections complete. Review the document then export.</p>
 
       {/* Completion checklist */}
       <div className="border border-white/[0.07] rounded-2xl overflow-hidden mb-4">
         <div className="px-4 py-2.5 bg-white/[0.02] border-b border-white/[0.05]">
-          <span className="text-xs text-white/30 uppercase tracking-widest">Section checklist</span>
+          <span className="text-xs text-white/52 uppercase tracking-widest">Section checklist</span>
         </div>
         {REVIEW_SECTIONS.map((s, i) => {
           const note =
@@ -1317,7 +1317,7 @@ function ReviewExportPanel({
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-xs font-medium text-white/75">{s.label}</div>
-                <div className="text-[11px] text-white/30 truncate">{note}</div>
+                <div className="text-[11px] text-white/48 truncate">{note}</div>
               </div>
             </div>
           )
@@ -1350,7 +1350,7 @@ function ReviewExportPanel({
 
       {/* Export options */}
       <div className="mb-1">
-        <div className="text-[10px] text-white/25 uppercase tracking-widest mb-2">Export options</div>
+        <div className="text-[10px] text-white/50 uppercase tracking-widest mb-2">Export options</div>
         <div className="space-y-2">
           <button
             onClick={() => { onDownload("pdf"); setDownloaded(true) }}
@@ -1390,8 +1390,8 @@ function ReviewExportPanel({
 
       {/* Legal disclaimer */}
       <div className="flex items-start gap-2 p-3 mt-4 bg-white/[0.02] border border-white/[0.05] rounded-xl">
-        <Info className="w-3.5 h-3.5 text-white/20 mt-0.5 shrink-0" />
-        <p className="text-xs text-white/25 leading-relaxed">
+        <Info className="w-3.5 h-3.5 text-white/38 mt-0.5 shrink-0" />
+        <p className="text-xs text-white/42 leading-relaxed">
           PlainPath provides document drafting support. Review before use. Not legal advice. Consider professional review before execution.
         </p>
       </div>
@@ -1466,7 +1466,7 @@ function GeneratingView({
           <Sparkles className="w-6 h-6 text-violet-400 animate-pulse" />
         </div>
         <h3 className="text-base font-semibold text-white mb-1">PlainPath suggests language for review</h3>
-        <p className="text-xs text-white/35 mb-6 leading-relaxed">
+        <p className="text-xs text-white/55 mb-6 leading-relaxed">
           Drafting your {CONTRACT_TYPES.find(c => c.id === contractType)?.title ?? "document"} based on your answers. This usually takes 10–20 seconds.
         </p>
         <div className="w-full max-w-xs space-y-2 text-left mb-6">
@@ -1537,7 +1537,7 @@ function ErrorView({
 
       <div className="w-full max-w-sm border border-white/[0.07] rounded-2xl overflow-hidden">
         <div className="px-4 py-2 bg-white/[0.02] border-b border-white/[0.05] text-left">
-          <span className="text-xs text-white/30 uppercase tracking-widest">Other options</span>
+          <span className="text-xs text-white/52 uppercase tracking-widest">Other options</span>
         </div>
         {[
           { icon: LayoutTemplate, label: "Use another template for this section", sub: "Pre-built clause options for this document type." },
@@ -1732,7 +1732,7 @@ function SplitWorkspace({
               <span className="text-xs text-violet-300">Return to Builder to edit</span>
             </button>
             <div className="flex-1 overflow-y-auto px-3 py-4 bg-[#111115]">
-              <div className="text-[10px] text-white/25 text-center mb-3 font-sans">
+              <div className="text-[10px] text-white/45 text-center mb-3 font-sans">
                 Live preview — updates as you fill the Builder
               </div>
               <div className="flex justify-center">
@@ -1776,7 +1776,7 @@ function ReviewFormPanel({
   return (
     <div className="flex-1 overflow-y-auto px-5 py-5">
       <h3 className="text-sm font-semibold text-white mb-0.5">Step 6 — Review & Generate</h3>
-      <p className="text-xs text-white/35 mb-5 leading-relaxed">
+      <p className="text-xs text-white/55 mb-5 leading-relaxed">
         Check your answers below. PlainPath will draft your document based on the information you provided.
       </p>
 
@@ -1798,7 +1798,7 @@ function ReviewFormPanel({
           { label: "Governing law",  value: people.governingLaw ?? "Not specified" },
         ].map((item, i) => (
           <div key={i} className="flex items-start gap-3 py-2.5 border-b border-white/[0.04] last:border-0">
-            <span className="text-xs text-white/35 w-36 shrink-0 mt-0.5">{item.label}</span>
+            <span className="text-xs text-white/55 w-36 shrink-0 mt-0.5">{item.label}</span>
             <span className={`text-xs font-medium ${(item as any).warn ? "text-red-400" : "text-white/75"}`}>{item.value}</span>
           </div>
         ))}
@@ -1817,8 +1817,8 @@ function ReviewFormPanel({
       </button>
 
       <div className="flex items-start gap-2 p-3 bg-white/[0.02] border border-white/[0.05] rounded-xl">
-        <Info className="w-3.5 h-3.5 text-white/20 mt-0.5 shrink-0" />
-        <p className="text-xs text-white/25 leading-relaxed">
+        <Info className="w-3.5 h-3.5 text-white/38 mt-0.5 shrink-0" />
+        <p className="text-xs text-white/42 leading-relaxed">
           PlainPath provides document drafting support. Review before use. Not legal advice. Consider professional review before execution.
         </p>
       </div>
@@ -2095,7 +2095,7 @@ export default function ContractBuilder() {
                 <Check className="w-4 h-4 text-green-400" />
                 <span className="text-sm font-semibold">Ready to Download</span>
               </div>
-              <p className="text-xs text-white/35">All sections complete. Review document then export.</p>
+              <p className="text-xs text-white/55">All sections complete. Review document then export.</p>
             </div>
             <ReviewExportPanel
               draft={draft}
