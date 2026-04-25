@@ -1,0 +1,97 @@
+# PlainPath Visual Direction Reconciliation Prompt
+
+Pause broad visual changes.
+
+We need a visual-direction reconciliation pass, not a full redesign.
+
+## Goal
+
+Blend the stronger older PlainPath overview/card style with the current redesigned tool workspace system.
+
+## Decision
+
+* Keep the current redesigned tool workspaces for active document work.
+* Use the older/cleaner visual style for dashboard, all-tools overview, public tool cards, and empty/start states where appropriate.
+
+## Restrictions
+
+Do not roll back the redesigned tools.
+Do not change source-chip behavior.
+Do not change right-panel logic.
+Do not change routing.
+Do not add new tools.
+Do not touch Stripe/payment behavior.
+Do not touch Redact PDF export logic in this pass.
+
+---
+
+## 1. Dashboard / All-Tools View
+
+Compare the current all-tools view against the older look we used last week.
+
+Recommend how to make the tools overview feel:
+
+* cleaner
+* more premium
+* easier to scan
+* less visually heavy
+* more consistent with the PlainPath brand
+
+---
+
+## 2. Tool Empty / Start Screens
+
+Review empty states for:
+
+* Analyze a Document
+* Document Trust Check
+* Contract Review
+* Clause Extractor
+* Compare Versions
+* Redact Sensitive Info
+* Build a Contract / Document Builder
+
+The empty/start screens should feel closer to the older cleaner onboarding style while preserving:
+
+* current top shell/header
+* tool identity
+* upload/dropzone
+* sample/demo options
+* privacy/safety note
+
+---
+
+## 3. Active Tool Workspaces
+
+Do not change these unless there is a clear visual mismatch:
+
+* left document viewer
+* right intelligence/action panel
+* source chips
+* action plan cards
+* trust/risk/extraction cards
+* redaction paper surface
+* document builder preview
+
+These should remain in the current redesigned workspace style.
+
+---
+
+## 4. Create a Recommendation Before Implementing
+
+Return a short visual recommendation with:
+
+A. What should keep the current redesigned look
+B. What should move closer to the older look
+C. What should not be touched
+D. Screens that need visual refinement
+E. Screens that are already acceptable
+
+Do not implement until the recommendation is reviewed.
+
+---
+
+## Current Priority Note
+
+Fix the Redact PDF export bug first if it is still failing, because that is functional.
+After that, run this visual reconciliation pass so we stop bouncing between styles.

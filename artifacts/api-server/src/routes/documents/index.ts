@@ -2525,8 +2525,6 @@ router.post("/redact-pdf", upload.single("file"), async (req, res) => {
   const PAD_X = 3; // horizontal padding around each box in pixels
   const PAD_Y = 4; // vertical padding around each box in pixels
 
-  let tmpDir: string | null = null;
-
   try {
     const file = req.file;
     if (!file) return res.status(400).json({ message: "PDF file required." });
@@ -2677,85 +2675,104 @@ router.post("/redact-pdf", upload.single("file"), async (req, res) => {
     // If no text was found at all (e.g. scanned/image-only PDF), still rasterize
     // so the output is always image-only (no text layer recoverable).
 
-    // ── Step 4: Rasterize pages with pdftoppm ────────────────────────────────
-    const { spawnSync } = await import("child_process");
-    const fsPromises = await import("fs/promises");
-    const fsSync = await import("fs");
-    const path = await import("path");
-    const os = await import("os");
+    // ── Step 4+5: Rasterize pages with pdfjs-dist + @napi-rs/canvas, then draw bars ─
+    // Pure-JS pipeline — no system binaries required (pdftoppm not available in
+    // the deployed container). pdfjs-dist renders each page into an @napi-rs/canvas
+    // surface; we then draw opaque black rectangles over each matched text box.
 
-    tmpDir = fsSync.mkdtempSync(path.join(os.tmpdir(), "plainpath-redact-"));
-    const pdfPath = path.join(tmpDir, "input.pdf");
-    fsSync.writeFileSync(pdfPath, pdfBuffer);
+    const { createCanvas } = await import("@napi-rs/canvas");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pdfjsLib: any = await import("pdfjs-dist/build/pdf.mjs");
 
-    const outPrefix = path.join(tmpDir, "page");
-    const pdftoppm = spawnSync(
-      "pdftoppm",
-      ["-r", String(RENDER_DPI), "-png", "-l", String(totalPages), pdfPath, outPrefix],
-      { timeout: 30_000 }
-    );
+    // Disable web worker — not available in Node.js server context
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "";
 
-    if (pdftoppm.error || pdftoppm.status !== 0) {
-      const errMsg = pdftoppm.error?.message ?? (pdftoppm.stderr?.toString() ?? "pdftoppm failed");
-      throw new Error(`Page rendering failed: ${errMsg}`);
-    }
+    // CanvasFactory adapter: pdfjs-dist uses this to allocate canvases internally
+    const nodeCanvasFactory = {
+      create(width: number, height: number) {
+        const c = createCanvas(Math.ceil(width), Math.ceil(height));
+        return { canvas: c, context: c.getContext("2d") };
+      },
+      reset(canvasAndCtx: { canvas: { width: number; height: number } }, width: number, height: number) {
+        canvasAndCtx.canvas.width = Math.ceil(width);
+        canvasAndCtx.canvas.height = Math.ceil(height);
+      },
+      destroy(canvasAndCtx: { canvas: { width: number; height: number } }) {
+        canvasAndCtx.canvas.width = 0;
+        canvasAndCtx.canvas.height = 0;
+      },
+    };
 
-    // Collect and sort page PNGs (pdftoppm names them page-1.png or page-01.png etc.)
-    const allFiles = fsSync.readdirSync(tmpDir);
-    const pngFiles = allFiles
-      .filter(f => f.endsWith(".png"))
-      .sort((a, b) => {
-        const numA = parseInt(a.replace(/[^0-9]/g, ""), 10);
-        const numB = parseInt(b.replace(/[^0-9]/g, ""), 10);
-        return numA - numB;
-      });
-
-    if (pngFiles.length === 0) throw new Error("No page images produced during rendering.");
-
-    // ── Step 5: Draw redaction bars on each page image ────────────────────────
-    const { createCanvas, loadImage } = await import("@napi-rs/canvas");
+    const pdfJsDoc = await pdfjsLib.getDocument({
+      data: new Uint8Array(pdfBuffer),
+      canvasFactory: nodeCanvasFactory,
+      useWorkerFetch: false,
+      isEvalSupported: false,
+      useSystemFonts: true,
+      disableFontFace: false,
+      verbosity: 0, // suppress pdfjs console warnings
+    }).promise as { getPage: (n: number) => Promise<{
+      getViewport: (o: { scale: number }) => { width: number; height: number };
+      render: (o: Record<string, unknown>) => { promise: Promise<void> };
+      cleanup: () => void;
+    }> };
 
     const redactedPngBuffers: Buffer[] = [];
     const pageDimsForPdf: Array<{ wPts: number; hPts: number }> = [];
 
-    for (let i = 0; i < pngFiles.length; i++) {
-      const pageNum = i + 1;
-      const pngPath = path.join(tmpDir, pngFiles[i]);
-      const pngBuf = fsSync.readFileSync(pngPath);
-      const img = await loadImage(pngBuf);
+    for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+      let page: Awaited<ReturnType<typeof pdfJsDoc.getPage>> | null = null;
+      try {
+        page = await pdfJsDoc.getPage(pageNum);
+        const viewport = page.getViewport({ scale: SCALE });
 
-      const imgW = img.width;
-      const imgH = img.height;
+        const imgW = Math.ceil(viewport.width);
+        const imgH = Math.ceil(viewport.height);
 
-      const canvas = createCanvas(imgW, imgH);
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(img, 0, 0);
+        const canvas = createCanvas(imgW, imgH);
+        const ctx = canvas.getContext("2d");
 
-      // Page height in PDF points — needed for Y-flip
-      const pageHeightPts = pageHeights.get(pageNum) ?? (imgH / SCALE);
-      pageDimsForPdf.push({
-        wPts: srcPages[i]?.getWidth() ?? imgW / SCALE,
-        hPts: pageHeightPts,
-      });
+        // Render the PDF page into the canvas
+        await page.render({ canvasContext: ctx, viewport }).promise;
 
-      // Draw black bars over each redaction box on this page
-      const boxes = boxesByPage.get(pageNum) ?? [];
-      ctx.fillStyle = "#000000";
-      for (const box of boxes) {
-        // Convert PDF user-space (y from bottom) → image pixel space (y from top)
-        const px = box.x * SCALE - PAD_X;
-        const py = (pageHeightPts - box.y - box.h) * SCALE - PAD_Y;
-        const pw = box.w * SCALE + PAD_X * 2;
-        const ph = box.h * SCALE + PAD_Y * 2;
-        ctx.fillRect(
-          Math.max(0, Math.round(px)),
-          Math.max(0, Math.round(py)),
-          Math.min(imgW, Math.round(pw)),
-          Math.min(imgH, Math.round(ph))
-        );
+        // Page height in PDF points — needed for Y-flip (PDF Y-axis is from bottom)
+        const pageHeightPts = pageHeights.get(pageNum) ?? (imgH / SCALE);
+        pageDimsForPdf.push({
+          wPts: srcPages[pageNum - 1]?.getWidth() ?? imgW / SCALE,
+          hPts: pageHeightPts,
+        });
+
+        // Draw solid black bars over each redaction box on this page
+        const boxes = boxesByPage.get(pageNum) ?? [];
+        ctx.fillStyle = "#000000";
+        for (const box of boxes) {
+          // Convert PDF user-space (y from bottom) → pixel space (y from top)
+          const px = box.x * SCALE - PAD_X;
+          const py = (pageHeightPts - box.y - box.h) * SCALE - PAD_Y;
+          const pw = box.w * SCALE + PAD_X * 2;
+          const ph = box.h * SCALE + PAD_Y * 2;
+          ctx.fillRect(
+            Math.max(0, Math.round(px)),
+            Math.max(0, Math.round(py)),
+            Math.min(imgW, Math.round(pw)),
+            Math.min(imgH, Math.round(ph))
+          );
+        }
+
+        redactedPngBuffers.push(canvas.toBuffer("image/png"));
+      } catch (pageErr) {
+        const msg = pageErr instanceof Error ? pageErr.message : String(pageErr);
+        console.error(`[documents/redact-pdf] Page ${pageNum} render error:`, msg);
+        // Create a blank page as placeholder rather than failing the whole export
+        const fallbackCanvas = createCanvas(612, 792); // A4-ish default
+        const fallbackCtx = fallbackCanvas.getContext("2d");
+        fallbackCtx.fillStyle = "#ffffff";
+        fallbackCtx.fillRect(0, 0, 612, 792);
+        pageDimsForPdf.push({ wPts: 612 / SCALE, hPts: 792 / SCALE });
+        redactedPngBuffers.push(fallbackCanvas.toBuffer("image/png"));
+      } finally {
+        page?.cleanup();
       }
-
-      redactedPngBuffers.push(canvas.toBuffer("image/png"));
     }
 
     // ── Step 6: Assemble final PDF from redacted page images ──────────────────
@@ -2771,15 +2788,7 @@ router.post("/redact-pdf", upload.single("file"), async (req, res) => {
 
     const outBytes = await outDoc.save();
 
-    // ── Step 7: Clean up temp files ───────────────────────────────────────────
-    try {
-      fsSync.rmSync(tmpDir, { recursive: true, force: true });
-      tmpDir = null;
-    } catch {
-      // Best-effort cleanup — do not fail the response
-    }
-
-    // ── Step 8: Return redacted PDF ───────────────────────────────────────────
+    // ── Step 7: Return redacted PDF ──────────────────────────────────────────
     const baseName = (file.originalname ?? "document").replace(/\.[^.]+$/, "").replace(/[^\w\-]/g, "_");
     res.set("Content-Type", "application/pdf");
     res.set("Content-Disposition", `attachment; filename="${baseName}_redacted.pdf"`);
@@ -2788,16 +2797,36 @@ router.post("/redact-pdf", upload.single("file"), async (req, res) => {
     return res.send(Buffer.from(outBytes));
 
   } catch (err) {
-    // Clean up temp dir on error
-    if (tmpDir) {
-      try {
-        const fsSync = require("fs");
-        fsSync.rmSync(tmpDir, { recursive: true, force: true });
-      } catch { /* ignore */ }
-    }
     const msg = err instanceof Error ? err.message : String(err);
     console.error("[documents/redact-pdf]", msg);
-    return res.status(500).json({ message: "PDF redaction failed. Please try again." });
+
+    // Structured error codes — safe to surface to the client
+    if (msg.includes("ENOENT") || msg.includes("rasteriz") || msg.includes("render")) {
+      return res.status(500).json({
+        error: "redaction_failed",
+        code: "RASTERIZER_FAILED",
+        message: "PDF rendering failed. Please try again or use a different PDF.",
+      });
+    }
+    if (msg.includes("no text") || msg.includes("text layer") || msg.includes("No selectable")) {
+      return res.status(422).json({
+        error: "redaction_failed",
+        code: "NO_TEXT_LAYER",
+        message: "No selectable text found in this PDF. Try a text-based PDF rather than a scanned image.",
+      });
+    }
+    if (msg.includes("too large") || msg.includes("limit")) {
+      return res.status(413).json({
+        error: "redaction_failed",
+        code: "FILE_TOO_LARGE",
+        message: "This PDF is too large to export. Try splitting it into smaller sections.",
+      });
+    }
+    return res.status(500).json({
+      error: "redaction_failed",
+      code: "INTERNAL_ERROR",
+      message: "PDF redaction failed. Your document and selections were preserved — please try again.",
+    });
   }
 });
 

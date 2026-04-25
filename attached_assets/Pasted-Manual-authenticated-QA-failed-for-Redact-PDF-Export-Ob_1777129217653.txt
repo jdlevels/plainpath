@@ -1,0 +1,133 @@
+Manual authenticated QA failed for Redact PDF Export.
+
+Observed in live logged-in app:
+- Uploaded PDF successfully
+- Redaction preview works
+- 7 items selected
+- Clicking “Export Redacted PDF” fails
+- UI shows: “PDF redaction failed. Please try again.”
+- Page/state appears to reset or partially reset after failure
+
+Do not mark PDF export complete.
+Do not redesign the Redact UI.
+Do not touch unrelated tools.
+Do not touch Stripe/payment behavior.
+
+Goal:
+Debug and fix the live Redact PDF export failure and prevent export failure from resetting the page state.
+
+Required investigation:
+
+1. Check live/deployed server logs for the exact failure from:
+
+POST /api/documents/redact-pdf
+
+Find:
+- HTTP status returned
+- backend exception stack trace
+- whether failure is auth-related
+- whether pdftoppm is missing in deployed runtime
+- whether @napi-rs/canvas fails in deployed runtime
+- whether the uploaded file buffer is received
+- whether redactValues is received and non-empty
+- whether rasterization fails
+- whether pdf-lib assembly fails
+
+Important:
+Do not log sensitive redaction values. Log counts only.
+
+2. Verify frontend auth on PDF export.
+
+Check downloadRedactedPdf() in piiExport.ts and the Redact.tsx call site.
+
+Confirm:
+- the request includes Clerk auth token if the endpoint requires auth
+- Authorization: Bearer <token> is included
+- endpoint is not returning 401/403 during real browser use
+- same auth pattern is used as other protected API calls
+
+If auth token is missing, fix it.
+
+3. Verify deployed runtime, not just Replit shell.
+
+The previous environment gate checked the Replit workspace/dev environment. Now verify the actual running app/backend environment can access:
+
+- pdftoppm
+- @napi-rs/canvas
+- required temp directory access
+- pdf-lib output generation
+
+If pdftoppm is unavailable in the deployed runtime:
+- stop relying on it as the only production path
+- report the exact environment limitation
+- either switch to a deploy-safe rasterizer path or add a clean server error explaining PDF export is unavailable in this environment
+
+4. Fix state reset behavior.
+
+Export failure must not reset:
+- uploaded file
+- detected items
+- selected redactions
+- Redaction Preview mode
+- saved/unsaved state
+- right-panel item list
+- document viewer position if possible
+
+Check all export buttons:
+- add type="button" to Export, Save, Original/Preview toggle, Select All, Clear, Undo buttons if inside any form context
+- prevent default form submission where needed
+- ensure catch/finally only updates export status, not the whole workspace state
+
+5. Improve error handling.
+
+Replace generic-only failure with a safe specific message based on error code.
+
+Examples:
+- Auth failure: “Your session expired. Please refresh and try again.”
+- Rasterizer unavailable: “PDF redaction export is unavailable in this environment.”
+- No text layer: “No selectable text was found in this PDF. Try a text-based PDF.”
+- File too large: “This PDF exceeds the export limit.”
+- Unknown: “PDF redaction failed. Your document and selections were preserved.”
+
+Do not expose sensitive values.
+
+6. Add safe backend response codes.
+
+The backend should return structured non-sensitive errors:
+
+- 401/403 for auth/session failure
+- 400 for missing file or empty redactValues
+- 413 for file/page limit exceeded
+- 422 for no text layer or no matched values
+- 500 for rasterizer/internal error
+
+Include safe JSON:
+{
+  "error": "redaction_failed",
+  "code": "RASTERIZER_FAILED",
+  "message": "PDF redaction failed. Your selections were preserved."
+}
+
+7. Re-test with the same live flow.
+
+Manual QA must pass:
+
+- upload PDF
+- select items
+- click Export Redacted PDF
+- no page reset
+- if export fails, selections remain preserved
+- if export succeeds, output downloads as .pdf
+- exported PDF has black bars aligned
+- redacted text cannot be selected, copied, searched, or recovered
+- original document remains unchanged
+
+8. Final report required.
+
+Return:
+A. root cause  
+B. exact files changed  
+C. whether issue was auth, rasterizer, file parsing, temp files, or frontend state reset  
+D. confirmation that export failure no longer resets the page  
+E. confirmation that live PDF export now works, or the exact blocker if the deployed runtime cannot support it  
+F. no new TypeScript/runtime errors introduced

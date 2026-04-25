@@ -1066,6 +1066,7 @@ export function Workspace({ text, fileName, spans, onReset, onExport, uploadedFi
         {/* G. Save / Export */}
         <section className="space-y-2">
           <button
+            type="button"
             onClick={() => { void handleExportClick() }}
             disabled={isExporting}
             className="w-full py-3 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-60 disabled:cursor-not-allowed text-sm font-medium text-white transition-colors flex items-center justify-center gap-2"
@@ -1244,6 +1245,7 @@ export function Workspace({ text, fileName, spans, onReset, onExport, uploadedFi
           </div>
           {/* Save */}
           <button
+            type="button"
             onClick={() => setUnsaved(false)}
             className={`hidden sm:flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg border transition-colors ${unsaved ? "bg-amber-500/10 border-amber-500/30 text-amber-400" : "border-white/[0.08] text-white/40"}`}
           >
@@ -1252,6 +1254,7 @@ export function Workspace({ text, fileName, spans, onReset, onExport, uploadedFi
           </button>
           {/* Export */}
           <button
+            type="button"
             onClick={() => { void handleExportClick() }}
             disabled={isExporting}
             className="flex items-center gap-1.5 text-xs bg-violet-600 hover:bg-violet-500 disabled:opacity-60 disabled:cursor-not-allowed text-white px-2.5 py-1.5 rounded-lg font-medium transition-colors"
