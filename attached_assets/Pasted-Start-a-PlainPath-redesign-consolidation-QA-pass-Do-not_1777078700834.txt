@@ -1,0 +1,246 @@
+Start a PlainPath redesign consolidation QA pass.
+
+Do not add new tools.
+Do not redesign any tool from scratch.
+Do not start Document Classifier or Packet Splitter.
+Do not add SOP/manual builder language.
+Do not activate paid feature gates yet.
+Do not activate free-limit reached messages yet.
+Do not change Stripe/payment behavior unless a bug is found.
+
+Goal:
+Now that the core redesign sequence is complete, review the full PlainPath app for consistency, routing, layout, navigation, and release-readiness gaps.
+
+The redesigned/locked tools are:
+
+1. Analyze a Document
+2. Document Trust Check
+3. Contract Review
+4. Clause Extractor
+5. Compare Versions
+6. Redact Sensitive Info
+7. Build a Contract / Document Builder
+
+Perform a consolidation QA pass across these areas:
+
+1. Route verification
+
+Confirm each redesigned tool has a working authenticated route:
+
+- Analyze a Document
+- Document Trust Check
+- Contract Review
+- Clause Extractor
+- Compare Versions
+- Redact Sensitive Info
+- Build a Contract / Document Builder
+
+Confirm:
+- each route is protected
+- unauthenticated users are redirected correctly
+- no protected tool opens publicly
+- demo/mock/sandbox routes are dev-only or removed from production paths
+- no QA-only route remains exposed, especially /redact-qa or similar temporary routes
+
+2. Dashboard and Tools menu alignment
+
+Confirm the authenticated app dashboard/tools area shows the correct current tool list.
+
+Each locked tool should have a visible card/button/link:
+
+- Analyze a Document
+- Document Trust Check
+- Contract Review
+- Clause Extractor
+- Compare Versions
+- Redact Sensitive Info
+- Build a Contract / Document Builder
+- Ask This Document, if already part of the app flow
+
+Check:
+- labels are consistent
+- icons are consistent
+- descriptions are short and clear
+- no removed/replaced tool still appears
+- no duplicate outdated tool card exists
+- public site and authenticated app do not contradict each other
+
+3. Public site tool-card alignment
+
+Review the public/marketing site tool cards and tool explanations.
+
+Confirm the public site accurately reflects the current app tools.
+
+Check for:
+- outdated tools
+- missing tools
+- old PDF Editor language
+- generic AI writing language
+- SOP/manual builder language
+- tool descriptions that overpromise
+- tool descriptions that do not match the authenticated app
+
+Do not redesign the whole public site yet. Only identify and fix obvious mismatches.
+
+4. PlainPath Scan Workspace Standard consistency
+
+For scan/review/extraction tools, confirm the standard is preserved:
+
+- document-first layout
+- document viewer on the left
+- intelligence/action panel on the right
+- source chips where relevant
+- compact findings
+- no report dumps
+- mobile Analysis/Review/Trust/Clauses/Summary tab first
+- Document tab second where applicable
+
+Applies to:
+
+- Analyze a Document
+- Document Trust Check
+- Contract Review
+- Clause Extractor
+- Compare Versions, using its modified Original/Revised/Summary standard
+- Redact Sensitive Info, using its modified redaction workspace standard
+
+5. Document Builder consistency
+
+Confirm Document Builder uses its own creation layout:
+
+- live document preview on the left
+- builder controls/questions on the right
+- Save is distinct from Export
+- PDF/DOCX export buttons are present
+- Dropbox Sign remains disabled/Coming Soon unless fully implemented
+- no SOP/manual/general writing language appears
+- “Custom Agreement” wording is preserved
+
+6. Mobile QA pass
+
+Check mobile layouts for all redesigned tools.
+
+Confirm:
+- no horizontal overflow
+- no white background leaks
+- tabs fit properly
+- sticky footer/nav controls do not cover content
+- document preview remains readable
+- right-panel content becomes mobile cards cleanly
+- source chips remain usable
+- Save/Export buttons remain accessible
+
+7. Save / Export consistency
+
+Check every creation/editing/export tool:
+
+- Redact Sensitive Info
+- Build a Contract / Document Builder
+- Compare Versions, if export exists
+- Analyze/Contract/Trust/Clause tools, if Save/Export exists
+
+Confirm:
+- Save is visually distinct from Export
+- unsaved-change states appear where expected
+- export buttons are clear
+- export labels match actual behavior
+- no export button promises unsupported output
+
+Important known production gap:
+Redact Sensitive Info does not yet export true redacted PDFs. It currently exports .txt even for PDF input. Keep this documented as a production-release gap. Do not attempt to solve it in this QA pass unless specifically asked.
+
+8. Source chip behavior audit
+
+Confirm source/chip behavior across tools:
+
+- click source chip
+- scroll to matching document section
+- highlight matching section
+- show evidence banner where applicable
+- keep related card active
+- mobile source chips navigate correctly
+
+Tools to check:
+
+- Analyze a Document
+- Document Trust Check
+- Contract Review
+- Clause Extractor
+- Compare Versions
+- Redact Sensitive Info
+
+9. Legal-safe and trust-safe wording audit
+
+Check the app for unsafe overclaims.
+
+Avoid wording like:
+- legally guaranteed
+- court-ready
+- attorney-approved
+- verified authentic
+- proves fraud
+- fake document
+- you should sign
+- you should not sign
+- replaces a lawyer
+
+Prefer:
+- not legal advice
+- review before use
+- risk indicators
+- terms to verify
+- possible missing protection
+- possible trust concern
+- requires human verification
+- consider professional review for high-risk documents
+
+10. Payment/gating state audit
+
+During current testing:
+
+- keep paid feature gates inactive
+- keep “free limit reached” messages disabled/reset
+- do not block testing flows
+- do not activate Stripe enforcement yet
+- do not show confusing upgrade blocks in the redesigned tool workflows
+
+If subscription or Stripe code exists, only verify it does not interfere with testing.
+
+11. TypeScript and build audit
+
+Run the standard checks.
+
+Report:
+
+- new TypeScript errors introduced by redesigned tools
+- pre-existing unrelated TypeScript errors
+- build status
+- runtime errors
+- broken imports
+- unused critical routes
+- any tool page failing to render
+
+Do not hide errors. Separate them clearly:
+
+A. Blocking current redesigned tools
+B. Pre-existing technical debt
+C. Production-release cleanup
+
+12. Final QA report
+
+After review, provide a structured report:
+
+A. Routes checked  
+B. Tool cards checked  
+C. Public-site mismatches found  
+D. Mobile issues found  
+E. Save/export issues found  
+F. Source-chip issues found  
+G. Legal/trust wording issues found  
+H. Payment/gating issues found  
+I. TypeScript/build issues found  
+J. Recommended fixes in priority order  
+
+Do not start fixing large items automatically unless they are small obvious bugs.
+
+If fixes are needed, list them first and wait for approval unless they are minor copy/routing cleanup issues.
