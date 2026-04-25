@@ -71,6 +71,12 @@ function SLabel({ children, icon, right }: { children: React.ReactNode; icon?: R
 
 // ─── Document viewer ─────────────────────────────────────────────────────────
 
+const DOC_TEXT_SIZES = [
+  { label: "A",  body: "text-[11px]", title: "text-xs"  },
+  { label: "A+", body: "text-xs",     title: "text-[13px]" },
+  { label: "A++",body: "text-sm",     title: "text-[14px]" },
+] as const
+
 function DocViewer({
   analysis, activeChipId, activeEvidence, highlightSectionId, onDismiss, sectionRefs
 }: {
@@ -83,20 +89,33 @@ function DocViewer({
 }) {
   const sections: DocumentSection[] = analysis.sections ?? []
   const isLowConf = analysis.overallConfidence === "low"
+  const [sizeIdx, setSizeIdx] = useState<0 | 1 | 2>(0)
+  const textSize = DOC_TEXT_SIZES[sizeIdx]
 
   return (
     <div className="w-[58%] border-r border-white/[0.06] flex flex-col bg-[#0d0d10] shrink-0 overflow-hidden">
       {/* Viewer toolbar */}
       <div className="h-10 border-b border-white/[0.06] flex items-center px-4 gap-2.5 shrink-0">
         <FileText className={`w-3.5 h-3.5 shrink-0 ${isLowConf ? "text-amber-400/50" : "text-violet-400/60"}`} />
-        <span className="text-white/45 text-xs flex-1 truncate">{analysis.title}</span>
+        <span className="text-white/55 text-xs flex-1 truncate">{analysis.title}</span>
         {sections.length > 0 && (
-          <span className="text-white/18 text-xs shrink-0">{sections.length} pp.</span>
+          <span className="text-white/28 text-xs shrink-0">{sections.length} sections</span>
         )}
         <div className="w-px h-4 bg-white/[0.06] mx-1" />
         <div className="flex items-center gap-0.5">
-          {["Fit", "75%", "100%"].map((z, i) => (
-            <button key={i} className={`h-5 px-1.5 rounded text-[9px] font-medium transition-colors ${i === 1 ? "bg-white/[0.07] text-white/55" : "text-white/22 hover:text-white/45"}`}>{z}</button>
+          {DOC_TEXT_SIZES.map((s, i) => (
+            <button
+              key={i}
+              onClick={() => setSizeIdx(i as 0 | 1 | 2)}
+              title={`Text size: ${s.label}`}
+              className={`h-5 px-1.5 rounded text-[9px] font-medium transition-colors ${
+                i === sizeIdx
+                  ? "bg-white/[0.09] text-white/70"
+                  : "text-white/28 hover:text-white/55 hover:bg-white/[0.05]"
+              }`}
+            >
+              {s.label}
+            </button>
           ))}
         </div>
       </div>
@@ -152,11 +171,11 @@ function DocViewer({
                   )}
                 </div>
                 {section.title && (
-                  <p className={`text-xs font-semibold leading-tight ${isHighlighted ? "text-violet-300/80" : "text-white/45"}`}>
+                  <p className={`font-semibold leading-tight ${textSize.title} ${isHighlighted ? "text-violet-300/90" : "text-white/72"}`}>
                     {section.title}
                   </p>
                 )}
-                <p className={`text-[11px] leading-relaxed ${isHighlighted ? "text-white/65" : "text-white/32"}`}>
+                <p className={`leading-relaxed ${textSize.body} ${isHighlighted ? "text-white/82" : "text-white/62"}`}>
                   {section.content}
                 </p>
                 {isHighlighted && activeEvidence && (
@@ -385,7 +404,32 @@ function IntelPanel({
                   </div>
                 )}
               </div>
-              <p className="text-white/22 text-[10px] mt-1.5 ml-8.5">Source-backed next steps · appears to require action · verify before acting</p>
+              <p className="text-white/35 text-[10px] mt-1.5 ml-8.5">Source-backed next steps · appears to require action · verify before acting</p>
+              {/* ── Action steps progress bar ── */}
+              {(() => {
+                const completedCount = actionSteps.filter(s => (stepStatuses[s.id] ?? "not-started") === "complete").length
+                const pct = actionSteps.length === 0 ? 100 : Math.round((completedCount / actionSteps.length) * 100)
+                const allDone = completedCount === actionSteps.length && actionSteps.length > 0
+                return (
+                  <div className="mt-3 ml-8.5">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-white/38 text-[9px]">{completedCount} of {actionSteps.length} complete</span>
+                      <span className={`text-[9px] font-semibold tabular-nums ${allDone ? "text-emerald-400" : "text-violet-400/75"}`}>{pct}%</span>
+                    </div>
+                    <div className="h-[3px] rounded-full bg-white/[0.07] overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${allDone ? "bg-emerald-400" : "bg-violet-500"}`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    {allDone && (
+                      <p className="text-emerald-400/55 text-[9px] mt-1.5 flex items-center gap-1">
+                        <CheckCircle2 className="w-2.5 h-2.5" /> All steps marked complete
+                      </p>
+                    )}
+                  </div>
+                )
+              })()}
             </div>
             <div className="p-3 flex flex-col gap-2">
               {actionSteps.map((step, idx) => {

@@ -403,3 +403,23 @@
     grid-column-start: 2;
   }
 }
+
+/* ── Analyze page font-size scale ─────────────────────────────
+   Applied when user selects "medium" or "large" text size.
+   Targets <p> body text inside the main content area.
+   Headings (h2, h3) are intentionally left unscaled.
+──────────────────────────────────────────────────────────────── */
+[data-text-scale="md"] p {
+  font-size: 1rem;
+  line-height: 1.65;
+}
+[data-text-scale="lg"] p {
+  font-size: 1.125rem;
+  line-height: 1.72;
+}
+[data-text-scale="md"] .scale-label {
+  font-size: 0.875rem;
+}
+[data-text-scale="lg"] .scale-label {
+  font-size: 1rem;
+}

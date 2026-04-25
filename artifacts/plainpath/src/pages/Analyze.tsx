@@ -76,6 +76,7 @@ export default function Analyze() {
   const tabListRef = useRef<HTMLDivElement>(null)
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(true)
+  const [textSize, setTextSize] = useState<"sm" | "md" | "lg">("sm")
 
   const checkScroll = useCallback(() => {
     const el = tabListRef.current
@@ -276,6 +277,23 @@ export default function Analyze() {
             <span className="text-xs font-bold text-slate-300 tabular-nums">{progress}%</span>
             <span className="text-[10px] text-slate-500 font-medium">done</span>
           </div>
+          {/* Font size toggle */}
+          <div className="hidden sm:flex items-center gap-px rounded-lg border border-slate-700 bg-slate-800 p-0.5" title="Text size">
+            {(["sm", "md", "lg"] as const).map((size, i) => (
+              <button
+                key={size}
+                onClick={() => setTextSize(size)}
+                title={["Small text", "Medium text", "Large text"][i]}
+                className={`h-6 px-2 rounded text-[10px] font-bold transition-colors ${
+                  textSize === size
+                    ? "bg-slate-700 text-slate-100"
+                    : "text-slate-500 hover:text-slate-300"
+                }`}
+              >
+                {["A", "A+", "A⁺⁺"][i]}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="flex items-center gap-1.5 shrink-0">
@@ -416,7 +434,7 @@ export default function Analyze() {
         </aside>
 
         {/* ── Main Content ── */}
-        <main className="flex-1 overflow-y-auto bg-slate-950 dark">
+        <main className="flex-1 overflow-y-auto bg-slate-950 dark" data-text-scale={textSize !== "sm" ? textSize : undefined}>
           <div className="max-w-4xl mx-auto px-5 sm:px-8 py-6" style={{ paddingBottom: "max(3rem, env(safe-area-inset-bottom) + 3rem)" }}>
             <AnimatePresence mode="wait">
               <motion.div
@@ -988,14 +1006,29 @@ function ChecklistTab({
     </div>
   )
 
+  const checklistTotal = analysis.actionSteps.length
+  const checklistDone = checklistTotal - remaining
+  const checklistPct = checklistTotal === 0 ? 100 : Math.round((checklistDone / checklistTotal) * 100)
+
   return (
     <div className="space-y-5">
       <div className="flex items-start justify-between gap-3">
-        <div>
+        <div className="flex-1 min-w-0">
           <h2 className="text-xl sm:text-2xl font-display font-bold">Action Steps</h2>
           <p className="text-sm text-muted-foreground mt-1">
-            {remaining === 0 ? "All steps complete." : `${remaining} of ${analysis.actionSteps.length} remaining — check off items as you complete them`}
+            {remaining === 0 ? "All steps complete — great work!" : `${remaining} of ${checklistTotal} remaining — check off items as you complete them`}
           </p>
+          {/* Progress bar — always visible, even when complete */}
+          <div className="mt-3 space-y-1.5">
+            <Progress
+              value={checklistPct}
+              className={`h-2 ${remaining === 0 ? "bg-emerald-950/40 [&>div]:bg-emerald-500" : "bg-slate-800 [&>div]:bg-violet-500"}`}
+            />
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-muted-foreground tabular-nums">{checklistDone} of {checklistTotal} complete</span>
+              <span className={`text-[10px] font-semibold tabular-nums ${remaining === 0 ? "text-emerald-500" : "text-slate-400"}`}>{checklistPct}%</span>
+            </div>
+          </div>
         </div>
         {onOpenGuidedReview && <GuidedReviewButton onClick={onOpenGuidedReview} />}
       </div>
@@ -1081,14 +1114,28 @@ function DocumentsTab({ analysis, onToggle, onOpenGuidedReview }: { analysis: Do
   const requiredObtained = analysis.requiredDocuments.filter(d => d.required && d.obtained)
   const optionalDocs     = analysis.requiredDocuments.filter(d => !d.required)
   const remaining = requiredPending.length
+  const docsTotal = requiredPending.length + requiredObtained.length
+  const docsPct = docsTotal === 0 ? 100 : Math.round((requiredObtained.length / docsTotal) * 100)
+
   return (
     <div className="space-y-5">
       <div className="flex items-start justify-between gap-3">
-        <div>
+        <div className="flex-1 min-w-0">
           <h2 className="text-xl sm:text-2xl font-display font-bold">Required Documents</h2>
           <p className="text-sm text-muted-foreground mt-1">
-            {remaining === 0 ? "All required documents obtained." : `${remaining} of ${analysis.requiredDocuments.filter(d => d.required).length} still needed — gather these before submitting`}
+            {remaining === 0 ? "All required documents obtained — great work!" : `${remaining} of ${docsTotal} still needed — gather these before submitting`}
           </p>
+          {/* Progress bar — always visible, even when complete */}
+          <div className="mt-3 space-y-1.5">
+            <Progress
+              value={docsPct}
+              className={`h-2 ${remaining === 0 ? "bg-emerald-950/40 [&>div]:bg-emerald-500" : "bg-slate-800 [&>div]:bg-violet-500"}`}
+            />
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-muted-foreground tabular-nums">{requiredObtained.length} of {docsTotal} obtained</span>
+              <span className={`text-[10px] font-semibold tabular-nums ${remaining === 0 ? "text-emerald-500" : "text-slate-400"}`}>{docsPct}%</span>
+            </div>
+          </div>
         </div>
         {onOpenGuidedReview && <GuidedReviewButton onClick={onOpenGuidedReview} />}
       </div>
