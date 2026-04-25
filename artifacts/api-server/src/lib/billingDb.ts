@@ -93,11 +93,6 @@ if (!existingColumns.has("clerkUserId")) {
     `ALTER TABLE subscribers ADD COLUMN clerkUserId TEXT`
   )
 }
-if (!existingColumns.has("billingPeriod")) {
-  billingDb.exec(
-    `ALTER TABLE subscribers ADD COLUMN billingPeriod TEXT NOT NULL DEFAULT 'monthly'`
-  )
-}
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type SubscriberRecord = {
@@ -114,7 +109,6 @@ export type SubscriberRecord = {
   cancelAtPeriodEnd: number
   billingMode: string
   billingProvider: string
-  billingPeriod: string | null
   createdAt: string
   updatedAt: string
 }
@@ -132,7 +126,6 @@ export function upsertSubscriber(input: {
   cancelAtPeriodEnd?: boolean
   billingMode?: string
   billingProvider?: string
-  billingPeriod?: string | null
 }) {
   const now = new Date().toISOString()
 
@@ -156,7 +149,6 @@ export function upsertSubscriber(input: {
           cancelAtPeriodEnd       = ?,
           billingMode             = COALESCE(?, billingMode),
           billingProvider         = COALESCE(?, billingProvider),
-          billingPeriod           = COALESCE(?, billingPeriod),
           updatedAt               = ?
         WHERE email = ?
       `)
@@ -172,7 +164,6 @@ export function upsertSubscriber(input: {
         input.cancelAtPeriodEnd ? 1 : 0,
         input.billingMode ?? null,
         input.billingProvider ?? null,
-        input.billingPeriod ?? null,
         now,
         input.email
       )
@@ -183,8 +174,8 @@ export function upsertSubscriber(input: {
           email, clerkUserId, stripeCustomerId, stripeSubscriptionId,
           stripeCheckoutSessionId, plan, status, currentPeriodStart,
           currentPeriodEnd, cancelAtPeriodEnd, billingMode, billingProvider,
-          billingPeriod, createdAt, updatedAt
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          createdAt, updatedAt
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `)
       .run(
         input.email,
@@ -199,7 +190,6 @@ export function upsertSubscriber(input: {
         input.cancelAtPeriodEnd ? 1 : 0,
         input.billingMode ?? "test",
         input.billingProvider ?? "stripe",
-        input.billingPeriod ?? "monthly",
         now,
         now
       )

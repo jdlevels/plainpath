@@ -371,21 +371,9 @@ router.post("/send", requireAuth, requireSignaturePlan, upload.single("file"), a
          WHERE id = $2`,
         [JSON.stringify(dsData), signatureRequestId]
       );
-
-      const dsError = (dsData as any)?.error ?? {};
-      let friendlyMessage = "Could not send the signature request. Please check your Dropbox Sign configuration.";
-
-      if (dsResponse.status === 403 && typeof dsError.error_msg === "string" && dsError.error_msg.includes("test mode")) {
-        friendlyMessage = "Dropbox Sign is in test mode, which only allows sending to email addresses on your own domain. To send to external addresses, contact apisupport@hellosign.com or upgrade to a paid Dropbox Sign plan.";
-      } else if (dsResponse.status === 401) {
-        friendlyMessage = "Dropbox Sign authentication failed. Please check that your API key is valid.";
-      } else if (typeof dsError.error_msg === "string") {
-        friendlyMessage = `Dropbox Sign error: ${dsError.error_msg}`;
-      }
-
       return res.status(502).json({
         error: "provider_error",
-        message: friendlyMessage,
+        message: "Could not send the signature request. Please check your Dropbox Sign configuration.",
         signatureRequestId,
       });
     }
@@ -595,21 +583,9 @@ router.post("/send-prepared", requireAuth, requireSignaturePlan, upload.single("
          WHERE id = $2`,
         [JSON.stringify(dsData), signatureRequestId]
       );
-
-      const dsError = (dsData as any)?.error ?? {};
-      let friendlyMessage = "Could not send the signature request. Please check your Dropbox Sign configuration.";
-
-      if (dsResponse.status === 403 && typeof dsError.error_msg === "string" && dsError.error_msg.includes("test mode")) {
-        friendlyMessage = "Dropbox Sign is in test mode, which only allows sending to email addresses on your own domain. To send to external addresses, contact apisupport@hellosign.com or upgrade to a paid Dropbox Sign plan.";
-      } else if (dsResponse.status === 401) {
-        friendlyMessage = "Dropbox Sign authentication failed. Please check that your API key is valid.";
-      } else if (typeof dsError.error_msg === "string") {
-        friendlyMessage = `Dropbox Sign error: ${dsError.error_msg}`;
-      }
-
       return res.status(502).json({
         error: "provider_error",
-        message: friendlyMessage,
+        message: "Could not send the signature request. Please check your Dropbox Sign configuration.",
         signatureRequestId,
       });
     }

@@ -100,6 +100,7 @@ export default function PrepareAndPlace({ onBack, onSent }: Props) {
 
   // Right panel accordion sections
   const [showSigner, setShowSigner] = useState(true)
+  const [showFields, setShowFields] = useState(true)
 
   // ── File upload ─────────────────────────────────────────────────────────────
 
@@ -321,105 +322,10 @@ export default function PrepareAndPlace({ onBack, onSent }: Props) {
         </div>
       </div>
 
-      {/* Main workspace: left palette | center PDF | right properties */}
-      <div className="flex flex-1 overflow-hidden">
-
-        {/* Left sidebar — field type palette + placed fields list */}
-        <div className="w-48 xl:w-52 flex-shrink-0 border-r border-border/60 flex flex-col overflow-y-auto bg-background hidden md:flex">
-          {/* Signer badge */}
-          <div className="p-3 border-b border-border/40">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Signer</p>
-            {signerName ? (
-              <div className="flex items-center gap-2 bg-violet-50 dark:bg-violet-950/20 border border-violet-200/60 dark:border-violet-800/40 rounded-lg px-2.5 py-2">
-                <div className="w-6 h-6 rounded-full bg-violet-600 flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0">
-                  {signerName.trim().split(/\s+/).map((p: string) => p[0]).slice(0,2).join("").toUpperCase()}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold truncate">{signerName}</p>
-                  <p className="text-[10px] text-muted-foreground truncate">{signerEmail || "No email yet"}</p>
-                </div>
-              </div>
-            ) : (
-              <p className="text-[11px] text-muted-foreground/60">Fill in signer details →</p>
-            )}
-          </div>
-
-          {/* Field type palette */}
-          <div className="p-3 border-b border-border/40 flex-shrink-0">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Field Types</p>
-            <p className="text-[10px] text-muted-foreground/70 mb-2.5 leading-relaxed">Select a type, then click the document to place it.</p>
-            <div className="space-y-1.5">
-              {FIELD_PALETTE.map(({ type, icon: Icon }) => {
-                const isActive = activeFieldType === type
-                return (
-                  <button
-                    key={type}
-                    onClick={() => {
-                      setActiveFieldType(isActive ? null : type)
-                      if (!isActive) setSelectedFieldId(null)
-                    }}
-                    className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium transition-all border text-left ${
-                      isActive
-                        ? "bg-violet-600 text-white border-violet-600 shadow-sm"
-                        : "bg-background text-foreground border-border/50 hover:border-border hover:bg-muted/40"
-                    }`}
-                  >
-                    <Icon className="w-3.5 h-3.5 flex-shrink-0" />
-                    <span className="truncate">{FIELD_TYPE_LABELS[type]}</span>
-                    {isActive && <span className="ml-auto text-[9px] font-bold opacity-80">ACTIVE</span>}
-                  </button>
-                )
-              })}
-            </div>
-            {activeFieldType && (
-              <button
-                onClick={() => setActiveFieldType(null)}
-                className="mt-2 w-full text-[11px] text-muted-foreground hover:text-foreground text-center py-1 border border-border/40 rounded-lg hover:bg-muted/30 transition-colors"
-              >
-                Cancel (Esc)
-              </button>
-            )}
-          </div>
-
-          {/* Placed fields list */}
-          <div className="flex-1 overflow-y-auto p-3">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">
-              Placed Fields {fields.length > 0 && `(${fields.length})`}
-            </p>
-            {fields.length === 0 ? (
-              <p className="text-[11px] text-muted-foreground/50 text-center py-4">
-                No fields yet
-              </p>
-            ) : (
-              <div className="space-y-1">
-                {fields.map((f) => (
-                  <div
-                    key={f.id}
-                    onClick={() => { setSelectedFieldId(f.id); setActiveFieldType(null) }}
-                    className={`flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer text-xs transition-colors ${
-                      f.id === selectedFieldId
-                        ? "bg-violet-50 dark:bg-violet-950/30 border border-violet-200/60 dark:border-violet-800/40"
-                        : "hover:bg-muted/40"
-                    }`}
-                  >
-                    <span className={`w-2 h-2 rounded-full flex-shrink-0 ${FIELD_COLORS_DOT[f.type]}`} />
-                    <span className="flex-1 font-medium truncate">{FIELD_TYPE_LABELS[f.type]}</span>
-                    <span className="text-[10px] text-muted-foreground">p.{f.page}</span>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); deleteField(f.id) }}
-                      className="p-0.5 rounded hover:bg-red-100 dark:hover:bg-red-950/30 text-muted-foreground hover:text-red-500 transition-colors"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Center: PDF viewer */}
-        <div className="flex-1 min-h-0 overflow-y-auto bg-neutral-100 dark:bg-zinc-900/70">
+      {/* Main workspace: left = PDF, right = sidebar (stacks on mobile) */}
+      <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
+        {/* Left: PDF viewer */}
+        <div className="flex-1 min-h-[45vh] md:min-h-0 overflow-y-auto bg-neutral-100 dark:bg-zinc-900/70">
           {pdfFile && (
             <PdfSignatureWorkspace
               pdfFile={pdfFile}
@@ -433,21 +339,120 @@ export default function PrepareAndPlace({ onBack, onSent }: Props) {
           )}
         </div>
 
-        {/* Right sidebar — signer details + field properties + send */}
-        <div className="w-56 xl:w-64 flex-shrink-0 border-l border-border/60 flex flex-col overflow-y-auto bg-background">
+        {/* Right: sidebar — full width on mobile, fixed width on desktop */}
+        <div className="w-full md:w-72 xl:w-80 flex-shrink-0 border-t md:border-t-0 md:border-l border-border/60 flex flex-col overflow-y-auto bg-background max-h-80 md:max-h-none">
 
-          {/* Signer details (mobile: show signer badge here too) */}
+          {/* Field type palette */}
           <div className="p-3 border-b border-border/40">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2 px-1">
+              Field Types — click page to place
+            </p>
+            <div className="grid grid-cols-2 gap-1.5">
+              {FIELD_PALETTE.map(({ type, icon: Icon }) => {
+                const isActive = activeFieldType === type
+                return (
+                  <button
+                    key={type}
+                    onClick={() => {
+                      setActiveFieldType(isActive ? null : type)
+                      if (!isActive) setSelectedFieldId(null)
+                    }}
+                    className={`flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-medium transition-all border ${
+                      isActive
+                        ? "bg-violet-600 text-white border-violet-600 shadow-sm"
+                        : "bg-background text-foreground border-border/60 hover:border-border hover:bg-muted/40"
+                    }`}
+                  >
+                    <Icon className="w-3.5 h-3.5 flex-shrink-0" />
+                    <span className="truncate">{FIELD_TYPE_LABELS[type]}</span>
+                  </button>
+                )
+              })}
+            </div>
+
+            {activeFieldType && (
+              <button
+                onClick={() => setActiveFieldType(null)}
+                className="mt-2 w-full text-[11px] text-muted-foreground hover:text-foreground text-center py-1"
+              >
+                Cancel placement (Esc)
+              </button>
+            )}
+          </div>
+
+          {/* Placed fields list */}
+          <div className="border-b border-border/40">
+            <button
+              onClick={() => setShowFields(!showFields)}
+              className="w-full flex items-center justify-between px-3 py-2.5 text-left hover:bg-muted/30 transition-colors"
+            >
+              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                Placed Fields ({fields.length})
+              </span>
+              {showFields ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground" /> : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />}
+            </button>
+
+            {showFields && (
+              <div className="px-2 pb-2 space-y-1 max-h-48 overflow-y-auto">
+                {fields.length === 0 ? (
+                  <p className="text-xs text-muted-foreground/60 text-center py-3">
+                    Click the document to place fields
+                  </p>
+                ) : (
+                  fields.map((f) => (
+                    <div
+                      key={f.id}
+                      onClick={() => { setSelectedFieldId(f.id); setActiveFieldType(null) }}
+                      className={`flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer text-xs transition-colors ${
+                        f.id === selectedFieldId
+                          ? "bg-violet-50 dark:bg-violet-950/30 border border-violet-200/60 dark:border-violet-800/40"
+                          : "hover:bg-muted/40"
+                      }`}
+                    >
+                      <span className={`w-2 h-2 rounded-full flex-shrink-0 ${FIELD_COLORS_DOT[f.type]}`} />
+                      <span className="flex-1 font-medium truncate">{FIELD_TYPE_LABELS[f.type]}</span>
+                      <span className="text-[10px] text-muted-foreground">p.{f.page}</span>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); deleteField(f.id) }}
+                        className="p-0.5 rounded hover:bg-red-100 dark:hover:bg-red-950/30 text-muted-foreground hover:text-red-500 transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+
+            {selectedField && (
+              <div className="px-3 pb-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={deleteSelectedField}
+                  className="w-full gap-2 text-red-600 hover:text-red-700 border-red-200/60 hover:border-red-300 hover:bg-red-50 dark:hover:bg-red-950/20"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Delete Selected Field
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* Signer panel */}
+          <div className="border-b border-border/40">
             <button
               onClick={() => setShowSigner(!showSigner)}
-              className="w-full flex items-center justify-between text-left hover:opacity-70 transition-opacity"
+              className="w-full flex items-center justify-between px-3 py-2.5 text-left hover:bg-muted/30 transition-colors"
             >
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Signer Details</p>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                Signer Details
+              </span>
               {showSigner ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground" /> : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />}
             </button>
 
             {showSigner && (
-              <div className="mt-2.5 space-y-2">
+              <div className="px-3 pb-3 space-y-2.5">
                 <div className="space-y-1">
                   <Label htmlFor="pp-signerName" className="text-[11px] text-muted-foreground">
                     Full name <span className="text-red-500">*</span>
@@ -498,70 +503,9 @@ export default function PrepareAndPlace({ onBack, onSent }: Props) {
             )}
           </div>
 
-          {/* Selected field properties — matches mockup design */}
-          {selectedField && (
-            <div className="p-3 border-b border-border/40">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Field Properties</p>
-              <div className="space-y-3">
-                {/* Type */}
-                <div>
-                  <p className="text-[11px] text-muted-foreground mb-1">Type</p>
-                  <div className={`flex items-center gap-2 border rounded-lg px-2.5 py-1.5 bg-violet-50 dark:bg-violet-950/20 border-violet-200/60 dark:border-violet-800/40`}>
-                    <span className={`w-2 h-2 rounded-full flex-shrink-0 ${FIELD_COLORS_DOT[selectedField.type]}`} />
-                    <span className="text-xs font-semibold text-violet-700 dark:text-violet-300">{FIELD_TYPE_LABELS[selectedField.type]}</span>
-                  </div>
-                </div>
-                {/* Required toggle */}
-                <div>
-                  <p className="text-[11px] text-muted-foreground mb-1">Required</p>
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-4 bg-violet-600 rounded-full relative flex-shrink-0">
-                      <div className="w-3 h-3 bg-white rounded-full absolute right-0.5 top-0.5" />
-                    </div>
-                    <span className="text-[11px] text-foreground/80">Yes</span>
-                  </div>
-                </div>
-                {/* Assigned to */}
-                <div>
-                  <p className="text-[11px] text-muted-foreground mb-1">Assigned to</p>
-                  <div className="flex items-center gap-1.5 bg-violet-50 dark:bg-violet-950/20 border border-violet-100 dark:border-violet-800/40 rounded-lg px-2 py-1.5">
-                    <div className="w-4 h-4 rounded-full bg-violet-600 flex items-center justify-center text-white text-[8px] font-bold flex-shrink-0">
-                      {(signerName || "?").charAt(0).toUpperCase()}{(signerName.split(" ")[1] ?? "").charAt(0).toUpperCase()}
-                    </div>
-                    <span className="text-[11px] text-foreground/80 truncate">{signerName || "Signer"}</span>
-                  </div>
-                </div>
-                {/* Placeholder hint */}
-                <div>
-                  <p className="text-[11px] text-muted-foreground mb-1">Placeholder hint</p>
-                  <input
-                    className="w-full border border-border/60 rounded-lg px-2 py-1.5 text-[11px] text-foreground/80 bg-background focus:outline-none focus:ring-1 focus:ring-violet-400"
-                    placeholder={selectedField.type === "signature" ? "Sign here" : selectedField.type === "date_signed" ? "Date" : "Enter text"}
-                  />
-                </div>
-                {/* Page info */}
-                <div className="text-[10px] text-muted-foreground">Page {selectedField.page}</div>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={deleteSelectedField}
-                className="w-full gap-2 text-red-600 hover:text-red-700 border-red-200/60 hover:border-red-300 hover:bg-red-50 dark:hover:bg-red-950/20 mt-3"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                Delete Field
-              </Button>
-              {/* Tip */}
-              <div className="mt-3 pt-3 border-t border-border/40">
-                <p className="text-[10px] text-muted-foreground leading-relaxed">
-                  Click any field to select it. Drag to move, drag the corner to resize.
-                </p>
-              </div>
-            </div>
-          )}
-
           {/* Validation + Send */}
           <div className="p-3 mt-auto">
+            {/* Validation errors */}
             {validationErrors.length > 0 && (
               <div className="mb-3 rounded-lg border border-amber-200/60 dark:border-amber-800/40 bg-amber-50/80 dark:bg-amber-950/20 px-3 py-2.5 space-y-1">
                 {validationErrors.map((err) => (
@@ -574,26 +518,15 @@ export default function PrepareAndPlace({ onBack, onSent }: Props) {
             )}
 
             {sendError && (
-              <div className="mb-3 rounded-lg border border-red-200/60 dark:border-red-900/40 bg-red-50 dark:bg-red-950/20 overflow-hidden">
-                <div className="flex items-start gap-2 px-3 py-2.5 text-xs text-red-700 dark:text-red-400">
-                  <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
-                  <p className="leading-relaxed">{sendError}</p>
-                </div>
-                {sendError.includes("test mode") && (
-                  <div className="px-3 pb-2.5 text-[11px] text-red-600 dark:text-red-400 border-t border-red-200/40 dark:border-red-900/30 pt-2">
-                    <p className="font-semibold mb-1">To fix this:</p>
-                    <ul className="space-y-0.5 list-disc list-inside">
-                      <li>Use a <span className="font-medium">@plainpathapp.com</span> email address to test</li>
-                      <li>Or contact <span className="font-medium">apisupport@hellosign.com</span></li>
-                    </ul>
-                  </div>
-                )}
+              <div className="mb-3 flex items-start gap-2 text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20 border border-red-200/60 dark:border-red-900/40 rounded-lg px-3 py-2.5">
+                <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                {sendError}
               </div>
             )}
 
             <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground mb-2.5">
               <Shield className="w-3 h-3 flex-shrink-0" />
-              Legally binding · Dropbox Sign
+              Legally binding · powered by Dropbox Sign
             </div>
 
             <Button

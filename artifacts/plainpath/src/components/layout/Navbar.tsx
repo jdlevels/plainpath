@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter"
 import { Button } from "@/components/ui/button"
 import {
   FileScan, Plus, BookMarked, GitCompare, LogOut, User, ChevronDown,
-  LayoutGrid, ShieldCheck, PenLine, Scale, Menu, X, LayoutDashboard, CreditCard, EyeOff, FolderOpen, ListChecks, LayoutTemplate, MessageCircle,
+  LayoutGrid, ShieldCheck, PenLine, Scale, Menu, X, LayoutDashboard, CreditCard, EyeOff, FileSignature, FolderOpen, ListChecks, LayoutTemplate, MessageCircle,
 } from "lucide-react"
 
 import { ThemeToggle } from "@/components/ui/ThemeToggle"
@@ -38,6 +38,7 @@ const TOOL_NAV = [
   { label: "Contract Review",       href: "/contract-review",         icon: Scale         },
   { label: "Build a Contract",      href: "/build-contract",          icon: PenLine       },
   { label: "Redact Sensitive Info", href: "/redact",                  icon: EyeOff        },
+  { label: "Digital Signature",     href: "/signature",               icon: FileSignature },
   { label: "Clause Extractor",       href: "/clause-extractor",        icon: ListChecks    },
   { label: "Compare Versions",      href: "/compare-versions",        icon: GitCompare    },
 ]
@@ -162,7 +163,7 @@ export function Navbar() {
   useEffect(() => { setMobileOpen(false) }, [location])
 
   function isToolActive(href: string) {
-    if (href === "/analyze") return location === "/analyze" || location === "/import" || location === "/results" || location.startsWith("/results") || location === "/analyze-document"
+    if (href === "/analyze") return location === "/analyze" || location === "/import" || location === "/results" || location.startsWith("/results")
     return location === href
   }
 

@@ -1,7 +1,7 @@
 /* ─────────────────────────────────────────────────────────────
    VideoWalkthrough.tsx
    
-   Animated workflow demo cycling all 7 live PlainPath tools.
+   Animated workflow demo cycling all 8 live PlainPath tools.
    Each tool shows: document loaded → processing → findings.
    Auto-advances every INTERVAL_MS. Clicking a chapter card
    jumps immediately to that tool.
@@ -12,7 +12,7 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 import {
   FileText, ShieldAlert, PenLine, Scale, EyeOff,
   AlertTriangle, CheckCircle2, Lock, Sparkles, Download,
-  GitCompare, ListChecks, ArrowRightLeft,
+  FileSignature, GitCompare, ListChecks, Send, ArrowRightLeft,
   CalendarClock, Users, Layers,
 } from "lucide-react"
 
@@ -97,6 +97,21 @@ const TOOLS = [
   },
   {
     id: 5,
+    name: "Digital Signature",
+    shortName: "Signature",
+    desc: "Secure signing link sent. Real-time audit trail.",
+    icon: FileSignature,
+    hex: "#6366f1",
+    iconHex: "#a5b4fc",
+    docName: "Consulting_Agreement_Final.pdf",
+    docMeta: "1,820 words · 6 pages",
+    badgeLabel: "Awaiting",
+    badgeText: "#6366f1",
+    badgeBg: "rgba(99,102,241,0.12)",
+    badgeBorder: "rgba(99,102,241,0.3)",
+  },
+  {
+    id: 6,
     name: "Compare Versions",
     shortName: "Compare",
     desc: "Every addition, deletion, and change mapped.",
@@ -111,7 +126,7 @@ const TOOLS = [
     badgeBorder: "rgba(20,184,166,0.3)",
   },
   {
-    id: 6,
+    id: 7,
     name: "Clause Extractor",
     shortName: "Extract",
     desc: "Pull key clauses, dates, and obligations.",
@@ -127,7 +142,7 @@ const TOOLS = [
   },
 ] as const
 
-type ToolId = 0 | 1 | 2 | 3 | 4 | 5 | 6
+type ToolId = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7
 
 /* ─── Document line configs ───────────────────────────────── */
 type LineConfig = { w: number; hl?: string; redacted?: boolean; delay: number }
@@ -184,8 +199,20 @@ const DOC_LINES: Record<number, LineConfig[]> = {
     { w: 100, delay: 0.42 },
     { w: 70,  delay: 0.46 },
   ],
-  5: [],
-  6: [
+  5: [
+    { w: 100, delay: 0 },
+    { w: 85,  delay: 0.04 },
+    { w: 100, delay: 0.08 },
+    { w: 72,  delay: 0.12 },
+    { w: 100, delay: 0.16 },
+    { w: 90,  delay: 0.20 },
+    { w: 100, delay: 0.25, hl: "rgba(99,102,241,0.45)" },
+    { w: 65,  delay: 0.28, hl: "rgba(99,102,241,0.45)" },
+    { w: 100, delay: 0.34 },
+    { w: 80,  delay: 0.38 },
+  ],
+  6: [],
+  7: [
     { w: 100, delay: 0 },
     { w: 88,  delay: 0.04 },
     { w: 100, delay: 0.08, hl: "rgba(168,85,247,0.42)" },
@@ -202,7 +229,7 @@ const DOC_LINES: Record<number, LineConfig[]> = {
 /* ─── Left panel: document lines ─────────────────────────── */
 function DocLines({ toolId, reduced }: { toolId: ToolId; reduced: boolean }) {
   if (toolId === 2) return <BuildWizardLeft reduced={reduced} />
-  if (toolId === 5) return <CompareDocLeft reduced={reduced} />
+  if (toolId === 6) return <CompareDocLeft reduced={reduced} />
 
   const lines = DOC_LINES[toolId] ?? []
 
@@ -551,6 +578,55 @@ function RedactOutput({ reduced }: { reduced: boolean }) {
   )
 }
 
+function SignatureOutput({ reduced }: { reduced: boolean }) {
+  return (
+    <div className="space-y-1.5">
+      <p className="text-[8px] font-semibold tracking-widest uppercase mb-2" style={{ color: "#475569" }}>Signature Request</p>
+      <motion.div
+        initial={reduced ? false : { opacity: 0, scale: 0.96 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: reduced ? 0 : 0.85, duration: 0.35 }}
+        className="rounded-lg border p-2 mb-1.5"
+        style={{ backgroundColor: "rgba(99,102,241,0.10)", borderColor: "rgba(99,102,241,0.28)" }}
+      >
+        <div className="flex items-center gap-1.5 mb-1">
+          <Send style={{ width: 9, height: 9, color: "#a5b4fc" }} />
+          <span className="text-[8px] font-bold uppercase tracking-wide" style={{ color: "#a5b4fc" }}>Request Sent</span>
+        </div>
+        <p className="text-[8px] leading-snug" style={{ color: "#94a3b8" }}>Secure signing link delivered to sarah@example.com</p>
+      </motion.div>
+      {[
+        { label: "Sarah Chen", role: "Recipient", status: "Awaiting", active: true },
+        { label: "You",        role: "Sender",    status: "Signed",   active: false },
+      ].map(({ label, role, status, active }, i) => (
+        <motion.div key={label}
+          initial={reduced ? false : { opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: reduced ? 0 : 1.2 + i * 0.2, duration: 0.32 }}
+          className="flex items-center justify-between rounded-lg border p-1.5"
+          style={{ backgroundColor: "rgba(99,102,241,0.06)", borderColor: "rgba(99,102,241,0.2)" }}
+        >
+          <div>
+            <p className="text-[8px] font-semibold" style={{ color: "#e2e8f0" }}>{label}</p>
+            <p className="text-[7px]" style={{ color: "#475569" }}>{role}</p>
+          </div>
+          <span className="text-[7px] font-bold px-1.5 py-0.5 rounded-full"
+            style={{ backgroundColor: active ? "rgba(99,102,241,0.2)" : "rgba(16,185,129,0.2)", color: active ? "#a5b4fc" : "#34d399" }}>
+            {status}
+          </span>
+        </motion.div>
+      ))}
+      <motion.div
+        initial={reduced ? false : { opacity: 0 }} animate={{ opacity: 1 }}
+        transition={{ delay: reduced ? 0 : 1.75, duration: 0.35 }}
+        className="flex items-center gap-1.5 pt-0.5"
+      >
+        <CheckCircle2 style={{ width: 9, height: 9, color: "#6366f1" }} />
+        <span className="text-[8px] font-medium" style={{ color: "#818cf8" }}>Full audit trail recorded</span>
+      </motion.div>
+    </div>
+  )
+}
+
 function CompareOutput({ reduced }: { reduced: boolean }) {
   return (
     <div className="space-y-1.5">
@@ -624,7 +700,8 @@ function ToolOutput({ toolId, reduced }: { toolId: ToolId; reduced: boolean }) {
   if (toolId === 2) return <BuildOutput reduced={reduced} />
   if (toolId === 3) return <ReviewOutput reduced={reduced} />
   if (toolId === 4) return <RedactOutput reduced={reduced} />
-  if (toolId === 5) return <CompareOutput reduced={reduced} />
+  if (toolId === 5) return <SignatureOutput reduced={reduced} />
+  if (toolId === 6) return <CompareOutput reduced={reduced} />
   return <ClauseExtractorOutput reduced={reduced} />
 }
 
@@ -635,8 +712,9 @@ const PROCESSING_LABELS: Record<number, string> = {
   2: "Building clause structure…",
   3: "Flagging risk clauses…",
   4: "Detecting sensitive data…",
-  5: "Mapping document changes…",
-  6: "Extracting clauses and obligations…",
+  5: "Sending signature request…",
+  6: "Mapping document changes…",
+  7: "Extracting clauses and obligations…",
 }
 
 function ProcessingView({ tool }: { tool: typeof TOOLS[number] }) {
@@ -946,7 +1024,7 @@ export default function VideoWalkthrough({ activeTool, onToolChange }: VideoWalk
     if (isControlled) return
     if (reduced) return
     const id = setInterval(() => {
-      setInternalActive((prev) => ((prev + 1) % 7) as ToolId)
+      setInternalActive((prev) => ((prev + 1) % 8) as ToolId)
     }, INTERVAL_MS)
     return () => clearInterval(id)
   }, [reduced, isControlled])
@@ -981,7 +1059,7 @@ export default function VideoWalkthrough({ activeTool, onToolChange }: VideoWalk
           className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/15 border border-primary/30 mb-5"
         >
           <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-          <span className="text-xs font-semibold uppercase tracking-widest text-primary">7 tools · live demo</span>
+          <span className="text-xs font-semibold uppercase tracking-widest text-primary">8 tools · live demo</span>
         </motion.div>
         <motion.h2
           initial={{ opacity: 0, y: 12 }}

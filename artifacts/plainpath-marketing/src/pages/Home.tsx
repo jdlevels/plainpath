@@ -16,7 +16,7 @@ import { BackToTop } from "@/components/BackToTop";
 import { NewsletterCapture } from "@/components/NewsletterCapture";
 import { Card } from "@/components/ui/card";
 import {
-  FileText, ShieldCheck,
+  FileText, FileSignature, ShieldCheck,
   ArrowRight, Upload, Sparkles, Scale,
   AlertTriangle, CheckCircle2, Clock, Lock, X as XIcon, EyeOff,
   CalendarX, Eye, PenLine, FileScan, ListChecks, GitCompare,
@@ -97,6 +97,7 @@ const TOOLS = [
   { label: "Build a Contract",      icon: PenLine,        cls: "tool-btn-emerald", href: "/app/build-contract",          comingSoon: false },
   { label: "Contract Review",       icon: Scale,          cls: "tool-btn-amber",   href: "/app/contract-review",         comingSoon: false },
   { label: "Redact Sensitive Info", icon: EyeOff,         cls: "tool-btn-violet",  href: "/app/redact",                  comingSoon: false },
+  { label: "Digital Signature",     icon: FileSignature,  cls: "tool-btn-indigo",  href: "/app/signature",               comingSoon: false },
   { label: "Clause Extractor",       icon: ListChecks,     cls: "tool-btn-fuchsia", href: "/app/clause-extractor",        comingSoon: false },
   { label: "Compare Versions",      icon: GitCompare,     cls: "tool-btn-sky",     href: "/app/compare-versions",        comingSoon: false },
 ];
@@ -169,6 +170,19 @@ const FEATURES = [
     tagCls: "bg-violet-50/80 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300 border border-violet-200/60 dark:border-violet-700/40",
   },
   {
+    icon: FileSignature,
+    color: "text-indigo-600 dark:text-indigo-400",
+    bg: "bg-indigo-100 dark:bg-indigo-900/30",
+    border: "border-l-indigo-500 dark:border-l-indigo-400",
+    accent: "bg-indigo-500 dark:bg-indigo-400",
+    glow: "from-indigo-50 dark:from-indigo-900/10",
+    title: "Digital Signature",
+    desc: "Send documents for e-signature, track signing status in real time, and download certified signed copies — all without leaving PlainPath. Powered by Dropbox Sign.",
+    result: { label: "Signature Request Sent", value: "Sarah Chen received a secure signing link for the Consulting Agreement.", icon: CheckCircle2, color: "text-indigo-600 dark:text-indigo-400", bg: "bg-indigo-50 dark:bg-indigo-900/20" },
+    tags: ["Contracts", "NDAs", "Agreements"],
+    tagCls: "bg-indigo-50/80 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-700/40",
+  },
+  {
     icon: GitCompare,
     color: "text-sky-600 dark:text-sky-400",
     bg: "bg-sky-100 dark:bg-sky-900/30",
@@ -176,7 +190,7 @@ const FEATURES = [
     accent: "bg-sky-500 dark:bg-sky-400",
     glow: "from-sky-50 dark:from-sky-900/10",
     title: "Compare Versions",
-    desc: "Upload an original and a revised document. PlainPath extracts both, identifies every addition, deletion, and modified term, and delivers source-backed Change Intelligence with severity scoring.",
+    desc: "Upload an original and a revised document. PlainPath maps every addition, deletion, and structural change — with zone-by-zone overlays and severity scoring.",
     result: { label: "Changes Found", value: "14 changes detected — 3 high-severity clause deletions identified.", icon: AlertTriangle, color: "text-sky-600 dark:text-sky-400", bg: "bg-sky-50 dark:bg-sky-900/20" },
     tags: ["Contract revisions", "Lease renewals", "Policy updates", "Legal amendments"],
     tagCls: "bg-sky-50/80 dark:bg-sky-900/20 text-sky-700 dark:text-sky-300 border border-sky-200/60 dark:border-sky-700/40",
@@ -284,6 +298,20 @@ const DEMOS = [
     href: "/demo/redact",
   },
   {
+    id: "signature-freelance",
+    tool: "Digital Signature",
+    title: "Freelance Agreement — In Progress",
+    desc: "A freelance contract sent to two signers. The client signed at 2:34 PM. The contractor's signature is still pending — see the live status.",
+    icon: FileSignature,
+    color: "text-indigo-500 dark:text-indigo-400",
+    bg: "bg-indigo-50 dark:bg-indigo-950/50",
+    hoverBorder: "hover:border-indigo-400/50",
+    hoverTitle: "group-hover:text-indigo-500 dark:group-hover:text-indigo-400",
+    tags: ["1 of 2 signed", "Status timeline", "Pre-loaded demo"],
+    cta: "See signing status",
+    href: "/demo/signature",
+  },
+  {
     id: "compare-nda",
     tool: "Compare Versions",
     title: "NDA v1 vs v2 — 1 Critical Change",
@@ -339,6 +367,7 @@ const PLANS = [
       { label: "Document Trust Check",  included: false, comingSoon: false },
       { label: "Build a Contract",      included: false, comingSoon: false },
       { label: "Contract Review",       included: false, comingSoon: false },
+      { label: "Digital Signature",     included: false, comingSoon: false },
       { label: "Compare Versions",      included: false, comingSoon: false },
       { label: "Clause Extractor",      included: false, comingSoon: false },
     ],
@@ -350,7 +379,7 @@ const PLANS = [
     name: "Pro",
     monthly: { price: "$19.99", period: "/month", sub: null },
     annual:  { price: "$191.90", period: "/year", sub: "billed annually", eq: "≈ $16.00/mo", savings: "Save 20%" },
-    desc: "All 7 tools in one plan — unlimited use across every workflow.",
+    desc: "All 8 tools in one plan — unlimited use across every workflow.",
     highlight: true,
     badge: "Best Value",
     tools: [
@@ -359,6 +388,7 @@ const PLANS = [
       { label: "Build a Contract",      included: true,  comingSoon: false },
       { label: "Contract Review",       included: true,  comingSoon: false },
       { label: "Redact Sensitive Info", included: true,  comingSoon: false },
+      { label: "Digital Signature",     included: true,  comingSoon: false },
       { label: "Compare Versions",      included: true,  comingSoon: false },
       { label: "Clause Extractor",      included: true,  comingSoon: false },
     ],
@@ -777,7 +807,7 @@ export default function Home() {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly")
 
   useEffect(() => {
-    const id = setInterval(() => setActiveDemoTool(prev => (prev + 1) % 7), DEMO_INTERVAL_MS)
+    const id = setInterval(() => setActiveDemoTool(prev => (prev + 1) % 8), DEMO_INTERVAL_MS)
     return () => clearInterval(id)
   }, [])
 
@@ -852,7 +882,7 @@ export default function Home() {
                 custom={2} variants={fadeUp}
                 className="text-base md:text-lg text-muted-foreground mb-6 leading-relaxed max-w-lg"
               >
-                Leases, contracts, medical bills, and court notices — PlainPath gives you 7 tools to
+                Leases, contracts, medical bills, and court notices — PlainPath gives you 8 tools to
                 understand what any document means, spot problems before you sign, and know exactly
                 what to do next. All in plain English.
               </motion.p>
@@ -902,7 +932,7 @@ export default function Home() {
 
               <motion.div custom={5} variants={fadeUp}>
                 <p className="text-xs text-muted-foreground">
-                  From $4.99/month &nbsp;·&nbsp; All 7 tools on Pro &nbsp;·&nbsp; Cancel anytime
+                  From $4.99/month &nbsp;·&nbsp; All 8 tools on Pro &nbsp;·&nbsp; Cancel anytime
                 </p>
               </motion.div>
             </motion.div>
@@ -947,12 +977,12 @@ export default function Home() {
       </div>
 
       {/* ════════════════════════════════════════════════
-          7 TOOLS — premium feature cards
+          8 TOOLS — premium feature cards
       ════════════════════════════════════════════════ */}
       <section id="features" className="py-20 md:py-28 bg-gradient-to-b from-background via-white/70 to-background dark:bg-transparent">
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
           <div className="text-center max-w-2xl mx-auto mb-14">
-            <p className="text-xs font-semibold tracking-[0.12em] uppercase text-muted-foreground mb-3">7 tools live</p>
+            <p className="text-xs font-semibold tracking-[0.12em] uppercase text-muted-foreground mb-3">8 tools live</p>
             <h2
               className="text-4xl md:text-5xl font-bold mb-4 text-foreground"
               style={{ fontFamily: "var(--font-display)" }}
@@ -1101,6 +1131,7 @@ export default function Home() {
                     { icon: PenLine,       title: "Signing the other party's boilerplate",        desc: "When you don't have your own contract, you sign theirs — and every clause was written to protect them. Build a Contract creates a fair agreement from scratch.",                           tool: "Build a Contract",      iconBg: "rgba(16,185,129,0.15)",   iconColor: "#34d399", badgeBorder: "rgba(16,185,129,0.35)",   badgeColor: "#6ee7b7"  },
                     { icon: Eye,           title: "Clauses that shift all the risk to you",       desc: "One paragraph waives your right to dispute. Another transfers liability quietly. Contract Review reads it clause by clause and tells you exactly what you're agreeing to.",                 tool: "Contract Review",       iconBg: "rgba(245,158,11,0.15)",   iconColor: "#fbbf24", badgeBorder: "rgba(245,158,11,0.35)",   badgeColor: "#fcd34d"  },
                     { icon: EyeOff,        title: "Your private details go wherever the doc goes", desc: "Names, SSNs, account numbers — once you share a document they go with it. Redact Sensitive Info lets you strip them before anyone else sees the file.",                                   tool: "Redact Sensitive Info", iconBg: "rgba(139,92,246,0.15)",   iconColor: "#a78bfa", badgeBorder: "rgba(139,92,246,0.35)",   badgeColor: "#c4b5fd"  },
+                    { icon: FileSignature, title: "Print, sign, scan — for every signature",      desc: "The old workflow adds days and creates unsigned copies nobody can track. Digital Signature sends a secure link and gives you a real-time audit trail.",                                    tool: "Digital Signature",     iconBg: "rgba(99,102,241,0.15)",   iconColor: "#818cf8", badgeBorder: "rgba(99,102,241,0.35)",   badgeColor: "#a5b4fc"  },
                     { icon: GitCompare,    title: "New contract version — what actually changed?", desc: "They sent a revised draft. You have no idea what moved. Compare Versions maps every addition, deletion, and structural change with severity scoring.",                                    tool: "Compare Versions",      iconBg: "rgba(20,184,166,0.15)",   iconColor: "#2dd4bf", badgeBorder: "rgba(20,184,166,0.35)",   badgeColor: "#5eead4"  },
                     { icon: ListChecks,    title: "Obligations buried in the fine print",         desc: "You're about to sign but you don't know who owes what by when. Clause Extractor pulls every obligation, assigns it to a party, and flags any that require action before signing.", tool: "Clause Extractor",      iconBg: "rgba(192,38,211,0.15)",   iconColor: "#f0abfc", badgeBorder: "rgba(192,38,211,0.35)",   badgeColor: "#fae8ff"  },
                   ].map((item, i) => (
@@ -1659,7 +1690,7 @@ export default function Home() {
             </a>
           </motion.div>
           <p className="mt-6 text-xs text-white/30">
-            From $4.99/month &nbsp;·&nbsp; All 7 tools on Pro ($19.99/mo) &nbsp;·&nbsp; Cancel anytime
+            From $4.99/month &nbsp;·&nbsp; All 8 tools on Pro ($19.99/mo) &nbsp;·&nbsp; Cancel anytime
           </p>
         </div>
       </div>

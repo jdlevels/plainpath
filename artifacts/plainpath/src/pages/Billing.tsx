@@ -5,7 +5,7 @@ import {
   CreditCard, CheckCircle2, XCircle, Zap, BarChart3,
   ShieldCheck, PenLine, Scale, ArrowRight, ExternalLink,
   AlertTriangle, TestTube, Loader2, RefreshCw, Mail, EyeOff,
-  FileScan, GitCompare, ListChecks,
+  FileScan, FileSignature, GitCompare, ListChecks,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useEntitlements } from "@/hooks/useEntitlements"
@@ -42,6 +42,7 @@ const TOOLS = [
   { icon: ShieldCheck,    key: "trust-check",      label: "Document Trust Check", plans: ["pro"] },
   { icon: Scale,          key: "contract-review",  label: "Contract Review",      plans: ["pro"] },
   { icon: PenLine,        key: "build-contract",   label: "Build a Contract",     plans: ["pro"] },
+  { icon: FileSignature,  key: "signature",        label: "Digital Signature",    plans: ["pro"] },
   { icon: GitCompare,     key: "compare-versions", label: "Compare Versions",     plans: ["pro"] },
   { icon: ListChecks,     key: "clause-extractor", label: "Clause Extractor",     plans: ["pro"] },
 ] as const
@@ -313,7 +314,7 @@ export default function Billing() {
           {isEnforced && plan === "starter" && (
             <div className="mt-4 rounded-xl border border-primary/20 bg-primary/5 p-3 flex items-center justify-between gap-3">
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Upgrade to <span className="font-semibold text-primary">Pro</span> to unlock all 7 tools — including Contract Review, Compare Versions, Clause Extractor, and more.
+                Upgrade to <span className="font-semibold text-primary">Pro</span> to unlock all 8 tools — including Contract Review, Digital Signature, Compare Versions, and more.
               </p>
               <Button size="sm" onClick={() => navigate("/subscribe")} className="shrink-0">
                 Upgrade <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
@@ -337,7 +338,7 @@ export default function Billing() {
                 </p>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   Starter at <strong>$4.99/mo</strong> gives you Analyze and Redact.
-                  Pro at <strong>$19.99/mo</strong> unlocks all 7 tools.
+                  Pro at <strong>$19.99/mo</strong> unlocks all 8 tools.
                 </p>
               </div>
               <Button size="sm" onClick={() => navigate("/subscribe")} className="shrink-0">
@@ -360,7 +361,7 @@ export default function Billing() {
                   Upgrade to Pro — $19.99/mo
                 </p>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  Unlock all 7 tools — Trust Check, Contract Review, Compare Versions, Clause Extractor, and more.
+                  Unlock all 8 tools — Trust Check, Contract Review, Signature, Compare Versions, Clause Extractor, and more.
                 </p>
               </div>
               <Button size="sm" onClick={() => navigate("/subscribe")} className="shrink-0">

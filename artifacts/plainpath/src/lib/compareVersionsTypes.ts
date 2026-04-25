@@ -1,4 +1,4 @@
-// ─── Compare Versions — Shared Types (Slices 1–6 + Change Intelligence) ────────
+// ─── Compare Versions — Shared Types (Slices 1–5) ─────────────────────────────
 
 export type CVSessionStatus = "pending" | "scanning" | "complete" | "error";
 export type CVAiStatus = "idle" | "running" | "complete" | "error";
@@ -166,94 +166,6 @@ export interface CVSessionDetail extends CVSessionListItem {
   // AI enrichment status (Slice 5)
   aiStatus: CVAiStatus;
   aiEnrichedAt: string | null;
-  // Change Intelligence (new workspace)
-  ciStatus: "pending" | "running" | "complete" | "error";
-  changeIntelligence: CVChangeIntelligence | null;
-}
-
-// ─── Change Intelligence types ─────────────────────────────────────────────────
-
-export interface CISection {
-  id: string;
-  heading: string;
-  text: string;
-  change_type: "unchanged" | "modified" | "removed" | "added";
-  paired_id: string | null;
-}
-
-export interface CIKeyChange {
-  id: string;
-  type: "added" | "removed" | "modified";
-  chip: string;
-  title: string;
-  plain: string;
-  action: string | null;
-  orig_id: string | null;
-  rev_id: string | null;
-}
-
-export interface CIAddedLanguage {
-  id: string;
-  chip: string;
-  term: string;
-  where: string;
-  meaning: string;
-  action: string | null;
-  rev_id: string;
-}
-
-export interface CIRemovedLanguage {
-  id: string;
-  chip: string;
-  term: string;
-  where: string;
-  meaning: string;
-  why: string;
-  orig_id: string;
-}
-
-export interface CIModifiedTerm {
-  id: string;
-  chip: string;
-  term: string;
-  before: string;
-  after: string;
-  what_changed: string;
-  action: string | null;
-  orig_id: string;
-  rev_id: string;
-}
-
-export interface CIRiskChange {
-  id: string;
-  chip: string;
-  title: string;
-  note: string;
-}
-
-export interface CVChangeIntelligence {
-  document_type: string;
-  parties: string;
-  summary: {
-    compared: string;
-    what_changed: string;
-    inspect_first: string;
-  };
-  stats: {
-    total_changes: number;
-    additions: number;
-    removals: number;
-    modifications: number;
-    terms_to_verify: number;
-  };
-  sections_original: CISection[];
-  sections_revised: CISection[];
-  key_changes: CIKeyChange[];
-  added_language: CIAddedLanguage[];
-  removed_language: CIRemovedLanguage[];
-  modified_terms: CIModifiedTerm[];
-  risk_changes: CIRiskChange[];
-  confidence: "high" | "partial" | "low_scan_quality";
 }
 
 export interface CreateCVSessionInput {

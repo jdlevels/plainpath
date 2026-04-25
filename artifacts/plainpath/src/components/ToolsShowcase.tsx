@@ -4,7 +4,7 @@ import {
   BookOpen, ShieldCheck, PenLine, Scale, ArrowRight,
   ListTodo, Calendar, AlertTriangle, CheckCircle2,
   Flag, BarChart2, FileCheck, Sparkles, Copy, MessageSquare,
-  EyeOff, Download, ArrowRightLeft, Lock, Clock,
+  EyeOff, Download, ArrowRightLeft, Lock, Clock, Pen, Send, Eye,
 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -63,7 +63,7 @@ const TOOLS = [
     features: [
       { icon: Sparkles, label: "AI-generated clause drafts" },
       { icon: CheckCircle2, label: "Gap analysis — nothing left out" },
-      { icon: ShieldCheck, label: "6 contract types supported" },
+      { icon: ShieldCheck, label: "5 contract types supported" },
       { icon: FileCheck, label: "Download-ready PDF output" },
     ],
     cta: "Build a Contract",
@@ -121,6 +121,29 @@ const TOOLS = [
     verbColor: "text-violet-600 dark:text-violet-400",
     comingSoon: false,
   },
+  {
+    icon: Pen,
+    title: "Digital Signature",
+    verb: "Sign it.",
+    tagline: "Legally binding e-signatures, built in",
+    description: "Send documents for e-signature, track signing status in real time, and download certified signed copies — all without leaving PlainPath. Powered by Dropbox Sign.",
+    features: [
+      { icon: Send, label: "Send secure signing link by email" },
+      { icon: Eye, label: "Real-time status tracking" },
+      { icon: Clock, label: "Full audit trail per request" },
+      { icon: CheckCircle2, label: "Download signed PDF when complete" },
+    ],
+    cta: "Send for Signature",
+    route: "/signature",
+    color: "from-violet-50/60 to-violet-50/40 dark:from-violet-900/10 dark:to-violet-900/10",
+    badge: "bg-violet-100 text-violet-600 dark:bg-violet-900/40 dark:text-violet-400",
+    badgeLabel: "Pro",
+    border: "border-violet-200/60 dark:border-violet-900/40",
+    iconBg: "bg-violet-100 dark:bg-violet-900/40",
+    iconColor: "text-violet-600 dark:text-violet-400",
+    verbColor: "text-violet-600 dark:text-violet-400",
+    comingSoon: false,
+  },
 ]
 
 export default function ToolsShowcase() {
@@ -135,7 +158,7 @@ export default function ToolsShowcase() {
           viewport={{ once: true }}
           className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3"
         >
-          5 tools live
+          6 tools live
         </motion.p>
         <motion.h2
           initial={{ opacity: 0, y: 12 }}
@@ -143,7 +166,7 @@ export default function ToolsShowcase() {
           viewport={{ once: true }}
           className="text-3xl md:text-4xl font-display font-bold mb-4"
         >
-          Read it. Trust it. Build it. Review it. Protect it.
+          Read it. Trust it. Build it. Review it. Protect it. Sign it.
         </motion.h2>
         <motion.p
           initial={{ opacity: 0, y: 8 }}

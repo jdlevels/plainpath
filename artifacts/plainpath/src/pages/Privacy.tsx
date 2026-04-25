@@ -37,6 +37,7 @@ export default function Privacy() {
             <li className="flex items-start gap-2"><span className="text-primary font-bold mt-0.5">✓</span> Your document text is sent to OpenAI for analysis and is subject to OpenAI's data policies.</li>
             <li className="flex items-start gap-2"><span className="text-primary font-bold mt-0.5">✓</span> For free-tier analysis, PlainPath does not store your documents or analysis results. Unsaved analyses exist only in your browser session.</li>
             <li className="flex items-start gap-2"><span className="text-primary font-bold mt-0.5">✓</span> Pro tools (Clause Extractor, Compare Versions, Document Builder) store working data on PlainPath servers so you can access it across sessions and devices. You can delete this data at any time.</li>
+            <li className="flex items-start gap-2"><span className="text-primary font-bold mt-0.5">✓</span> If you use electronic signatures, your document is sent to Dropbox Sign for e-signature processing and is subject to their data policies.</li>
             <li className="flex items-start gap-2"><span className="text-primary font-bold mt-0.5">✓</span> When you use the Share feature, your analysis output is stored on PlainPath servers for up to 30 days to generate a shareable link. No document text is attached.</li>
             <li className="flex items-start gap-2"><span className="text-primary font-bold mt-0.5">✓</span> If you subscribe to a paid plan, your email address is stored on PlainPath servers and processed by Stripe. Payment details are held by Stripe, not PlainPath.</li>
             <li className="flex items-start gap-2"><span className="text-primary font-bold mt-0.5">✓</span> If you use the deadline email reminder feature, your email address is processed by Resend to deliver the reminder. It is not stored by PlainPath beyond the delivery attempt.</li>
@@ -61,6 +62,7 @@ export default function Privacy() {
               <li><strong>Clause Extractor</strong> — Uploaded document text is sent to OpenAI to identify and extract clauses. The extracted clause results are stored on PlainPath servers linked to your account so you can revisit and export them. Original uploaded files are not retained after processing.</li>
               <li><strong>Compare Versions</strong> — Document text from both versions is sent to OpenAI to generate a comparison. Comparison session results are stored on PlainPath servers linked to your account. Original uploaded files are not retained after processing.</li>
               <li><strong>Document Builder</strong> — Document drafts you create are stored on PlainPath servers linked to your account and are accessible from any device. Document content remains on PlainPath servers until you delete it.</li>
+              <li><strong>Electronic Signatures</strong> — When you send a document for signature, the document file is transmitted to Dropbox Sign (our e-signature provider) for processing, storage, and delivery to signatories. Signed documents and audit trails are held by Dropbox Sign and subject to their data policies. PlainPath stores a reference to the signature request status linked to your account.</li>
             </ul>
 
             <p><strong>Share feature</strong></p>
@@ -95,6 +97,9 @@ export default function Privacy() {
             <p><strong>Stripe</strong> — Payment processing (paid plans only)</p>
             <p>Subscriptions are processed by Stripe, Inc. When you subscribe, your email address and payment details are handled by Stripe. PlainPath receives only subscription status and the email you used to subscribe. Stripe's privacy practices are described at <a href="https://stripe.com/privacy" target="_blank" rel="noopener noreferrer" className="text-primary underline">stripe.com/privacy</a>.</p>
 
+            <p><strong>Dropbox Sign</strong> — Electronic signatures (paid plans only)</p>
+            <p>When you use the electronic signature feature, your document is transmitted to Dropbox Sign (formerly HelloSign) for e-signature processing. Dropbox Sign stores the document, signature request, and completed audit trail. Their data practices are described at <a href="https://sign.dropbox.com/privacy" target="_blank" rel="noopener noreferrer" className="text-primary underline">sign.dropbox.com/privacy</a>. <strong>Do not use the signature feature for documents containing sensitive personal data</strong> unless you have reviewed Dropbox Sign's data policies.</p>
+
             <p><strong>Resend</strong> — Transactional email (deadline reminders only)</p>
             <p>If you request a deadline reminder email, the email is delivered via Resend. Your email address is passed to Resend solely for the purpose of delivering that specific reminder. Resend's privacy policy is available at <a href="https://resend.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-primary underline">resend.com/legal/privacy-policy</a>.</p>
           </Section>
@@ -107,6 +112,7 @@ export default function Privacy() {
               <li><strong>Clause Extractor results</strong> (paid plans) — extracted clause data is stored on PlainPath servers linked to your account until you delete it or your account is closed.</li>
               <li><strong>Compare Versions sessions</strong> (paid plans) — comparison results are stored on PlainPath servers linked to your account until you delete them or your account is closed.</li>
               <li><strong>Document Builder drafts</strong> (paid plans) — document content is stored on PlainPath servers linked to your account until you delete it or your account is closed.</li>
+              <li><strong>Signature requests</strong> (paid plans) — documents and audit trails are held by Dropbox Sign per their retention policies. PlainPath retains a status reference linked to your account until you delete it or your account is closed.</li>
               <li><strong>Subscriber records</strong> (paid plans only) — your email address and subscription status are stored on PlainPath servers for as long as your plan is active, plus up to 90 days after cancellation for billing reconciliation. After that period, all subscriber data is permanently deleted.</li>
               <li><strong>Deadline reminder emails</strong> — your email address is passed to Resend for a single delivery. It is not stored in PlainPath's database.</li>
             </ul>
@@ -132,7 +138,7 @@ export default function Privacy() {
           <Section icon={Shield} title="6. What PlainPath does not do">
             <ul>
               <li>Does not store uploaded document files after processing is complete. For free-tier analysis, document text is also not retained. Pro tools (Clause Extractor, Compare Versions, Document Builder) store processed output — not original files — linked to your account so you can access your work.</li>
-              <li>Does not share your documents with third parties other than OpenAI (for AI analysis).</li>
+              <li>Does not share your documents with third parties other than OpenAI (for AI analysis) and Dropbox Sign (when you explicitly use the signature feature).</li>
               <li>Does not sell data.</li>
               <li>Does not require an account or email address for free-tier use.</li>
               <li>Does not use your documents to train any model.</li>

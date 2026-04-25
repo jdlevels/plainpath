@@ -2,32 +2,6 @@ import React, { createContext, useContext, useState, useCallback } from "react";
 import type { DocumentAnalysis } from "@workspace/api-client-react";
 import type { TrustCheckAnalysis } from "@/lib/trustCheckTypes";
 
-// sessionStorage keys — persist analysis across Clerk re-initialization cycles
-// so a PlanGate spinner during Clerk auth-state changes never loses in-flight results.
-const SS_ANALYSIS_KEY = "pp_analysis";
-const SS_HINT_KEY = "pp_doc_type_hint";
-
-function ssGet<T>(key: string): T | null {
-  try {
-    const raw = sessionStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as T) : null;
-  } catch {
-    return null;
-  }
-}
-
-function ssSet(key: string, value: unknown): void {
-  try {
-    if (value === null || value === undefined) {
-      sessionStorage.removeItem(key);
-    } else {
-      sessionStorage.setItem(key, JSON.stringify(value));
-    }
-  } catch {
-    // sessionStorage unavailable (private mode, quota, etc.) — silently ignore
-  }
-}
-
 interface AnalysisContextType {
   analysis: DocumentAnalysis | null;
   documentTypeHint: string | null;
@@ -43,23 +17,15 @@ interface AnalysisContextType {
 const AnalysisContext = createContext<AnalysisContextType | undefined>(undefined);
 
 export function AnalysisProvider({ children }: { children: React.ReactNode }) {
-  // Hydrate from sessionStorage on mount so the analysis survives PlanGate
-  // spinner cycles caused by Clerk auth-state re-initialization.
-  const [analysis, setAnalysisState] = useState<DocumentAnalysis | null>(
-    () => ssGet<DocumentAnalysis>(SS_ANALYSIS_KEY)
-  );
-  const [documentTypeHint, setDocumentTypeHintState] = useState<string | null>(
-    () => ssGet<string>(SS_HINT_KEY)
-  );
+  const [analysis, setAnalysisState] = useState<DocumentAnalysis | null>(null);
+  const [documentTypeHint, setDocumentTypeHintState] = useState<string | null>(null);
   const [trustCheckAnalysis, setTrustCheckAnalysisState] = useState<TrustCheckAnalysis | null>(null);
 
   const setAnalysis = useCallback((newAnalysis: DocumentAnalysis | null) => {
-    ssSet(SS_ANALYSIS_KEY, newAnalysis);
     setAnalysisState(newAnalysis);
   }, []);
 
   const setDocumentTypeHint = useCallback((hint: string | null) => {
-    ssSet(SS_HINT_KEY, hint);
     setDocumentTypeHintState(hint);
   }, []);
 
@@ -68,8 +34,6 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const clearAnalysis = useCallback(() => {
-    ssSet(SS_ANALYSIS_KEY, null);
-    ssSet(SS_HINT_KEY, null);
     setAnalysisState(null);
     setDocumentTypeHintState(null);
     setTrustCheckAnalysisState(null);
@@ -78,28 +42,24 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
   const updateActionStep = useCallback((id: string, completed: boolean) => {
     setAnalysisState((prev) => {
       if (!prev) return prev;
-      const next = {
+      return {
         ...prev,
         actionSteps: prev.actionSteps.map((step) =>
           step.id === id ? { ...step, completed } : step
         ),
       };
-      ssSet(SS_ANALYSIS_KEY, next);
-      return next;
     });
   }, []);
 
   const updateRequiredDoc = useCallback((id: string, obtained: boolean) => {
     setAnalysisState((prev) => {
       if (!prev) return prev;
-      const next = {
+      return {
         ...prev,
         requiredDocuments: prev.requiredDocuments.map((doc) =>
           doc.id === id ? { ...doc, obtained } : doc
         ),
       };
-      ssSet(SS_ANALYSIS_KEY, next);
-      return next;
     });
   }, []);
 

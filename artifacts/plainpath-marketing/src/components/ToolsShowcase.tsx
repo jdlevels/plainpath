@@ -3,7 +3,7 @@ import {
   FileScan, ShieldCheck, PenLine, Scale, ArrowRight,
   ListTodo, Calendar, AlertTriangle, CheckCircle2,
   Flag, BarChart2, FileCheck, Sparkles, Copy, MessageSquare,
-  EyeOff, Download, ArrowRightLeft, Lock, Clock,
+  EyeOff, Download, ArrowRightLeft, Lock, Clock, FileSignature, Send, Eye,
   GitCompare, ListChecks, CalendarClock, Layers, Users,
 } from "lucide-react"
 import { Card } from "@/components/ui/card"
@@ -62,7 +62,7 @@ const TOOLS = [
     features: [
       { icon: Sparkles, label: "AI-generated clause drafts" },
       { icon: CheckCircle2, label: "Gap analysis — nothing left out" },
-      { icon: ShieldCheck, label: "6 contract types supported" },
+      { icon: ShieldCheck, label: "5 contract types supported" },
       { icon: FileCheck, label: "Download-ready PDF output" },
     ],
     cta: "Build a Contract",
@@ -121,16 +121,39 @@ const TOOLS = [
     comingSoon: false,
   },
   {
+    icon: FileSignature,
+    title: "Digital Signature",
+    verb: "Sign it.",
+    tagline: "Legally binding e-signatures, built in",
+    description: "Send documents for e-signature, track signing status in real time, and download certified signed copies — all without leaving PlainPath. Powered by Dropbox Sign.",
+    features: [
+      { icon: Send, label: "Send secure signing link by email" },
+      { icon: Eye, label: "Real-time status tracking" },
+      { icon: Clock, label: "Full audit trail per request" },
+      { icon: CheckCircle2, label: "Download signed PDF when complete" },
+    ],
+    cta: "Send for Signature",
+    href: "/app/signature",
+    color: "from-indigo-50/60 to-indigo-50/40 dark:from-indigo-900/10 dark:to-indigo-900/10",
+    badge: "bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400",
+    badgeLabel: "Pro",
+    border: "border-indigo-200/60 dark:border-indigo-900/40",
+    iconBg: "bg-indigo-100 dark:bg-indigo-900/40",
+    iconColor: "text-indigo-600 dark:text-indigo-400",
+    verbColor: "text-indigo-600 dark:text-indigo-400",
+    comingSoon: false,
+  },
+  {
     icon: GitCompare,
     title: "Compare Versions",
     verb: "Compare it.",
     tagline: "Spot every change between two document versions",
-    description: "Upload an original and a revised PDF. PlainPath extracts both documents, identifies every addition, deletion, and modified term, and delivers source-backed Change Intelligence with severity scoring.",
+    description: "Upload an original and a revised PDF. PlainPath maps every addition, deletion, and structural change with zone-by-zone overlays, severity scoring, and optional AI enrichment.",
     features: [
-      { icon: ArrowRightLeft, label: "Compare original and revised document text" },
+      { icon: ArrowRightLeft, label: "Side-by-side PDF workspace" },
       { icon: AlertTriangle, label: "Severity-sorted change summary" },
       { icon: Sparkles, label: "AI enrichment for context" },
-      { icon: FileCheck, label: "Track changed terms with source-backed highlights" },
+      { icon: FileCheck, label: "Page-by-page zone mapping" },
     ],
     cta: "Compare Documents",
     href: "/app/compare-versions",
@@ -187,7 +210,7 @@ export default function ToolsShowcase() {
           className="text-3xl md:text-4xl font-bold mb-4"
           style={{ fontFamily: "var(--font-display)" }}
         >
-          Read it. Trust it. Build it. Review it. Protect it. Compare it. Decode it.
+          Read it. Trust it. Build it. Review it. Protect it. Sign it. Compare it. Decode it.
         </motion.h2>
         <motion.p
           initial={{ opacity: 0, y: 8 }}
@@ -196,7 +219,7 @@ export default function ToolsShowcase() {
           transition={{ delay: 0.08 }}
           className="text-muted-foreground text-lg max-w-2xl mx-auto"
         >
-          Whether you are reading a document, questioning its legitimacy, creating an agreement, reviewing one before you sign, redacting private information, comparing two versions, or extracting key clauses — PlainPath has a dedicated tool for exactly that.
+          Whether you are reading a document, questioning its legitimacy, creating an agreement, reviewing one before you sign, redacting private information, sending for e-signature, comparing versions, or editing a PDF — PlainPath has a dedicated tool for exactly that.
         </motion.p>
       </div>
 

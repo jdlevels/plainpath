@@ -34,13 +34,10 @@ import CompareVersionsSession from "@/pages/CompareVersionsSession";
 import Redact from "@/pages/Redact";
 import Billing from "@/pages/Billing";
 import Upgrade from "@/pages/Upgrade";
+import Signature from "@/pages/Signature";
 import Documents from "@/pages/Documents";
 import AccountSecurity from "@/pages/AccountSecurity";
 import ClauseExtractor from "@/pages/ClauseExtractor"
-import AskDocument from "@/pages/AskDocument"
-import DocumentOverview from "@/pages/DocumentOverview"
-import AnalyzeDocument from "@/pages/AnalyzeDocument"
-import AnalyzePage from "@/pages/AnalyzePage"
 import Methodology from "@/pages/Methodology";
 import BuilderList from "@/pages/Builder/index";
 import BuilderNew from "@/pages/Builder/New";
@@ -69,14 +66,10 @@ import { OfflineBanner } from "@/components/OfflineBanner";
 // Guard against a common misconfiguration where the entire shell assignment line
 // ("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_...") was pasted as the secret value.
 // In that case we extract everything after the first "=" so Clerk receives a valid key.
-// IMPORTANT: only strip when the raw value doesn't already start with a valid prefix —
-// Clerk keys for base64-encoded custom domains often contain "=" padding characters,
-// and stripping unconditionally corrupts those keys.
-const _rawClerkKey = (import.meta.env.VITE_CLERK_PUBLISHABLE_KEY ?? "").trim();
-const _looksValid = _rawClerkKey.startsWith("pk_live_") || _rawClerkKey.startsWith("pk_test_");
-const clerkPubKey = !_looksValid && _rawClerkKey.includes("=")
+const _rawClerkKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY ?? "";
+const clerkPubKey = _rawClerkKey.includes("=")
   ? _rawClerkKey.slice(_rawClerkKey.indexOf("=") + 1).trim()
-  : _rawClerkKey;
+  : _rawClerkKey.trim();
 
 const clerkProxyUrl = import.meta.env.VITE_CLERK_PROXY_URL;
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -383,12 +376,8 @@ function PlanGate({ children }: { children: React.ReactNode }) {
     return <>{children}</>;
   }
 
-  // Signed in but entitlements haven't loaded yet for the first time.
-  // If we already have entitlement data from a previous fetch (e.g. during a
-  // Clerk auth-state re-initialization), skip the spinner and use stale data
-  // while the background refresh completes. This prevents the "flash" where
-  // the router unmounts in the middle of an ongoing document analysis.
-  if (entLoading && !entitlements && !hasPaidSubscription) {
+  // Signed in but entitlements still loading
+  if (entLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="w-7 h-7 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
@@ -484,9 +473,8 @@ function Router() {
             {/* ── Protected routes (require sign-in) ── */}
             <Route path="/" component={protect(Home)} />
             <Route path="/import" component={protect(Import)} />
-            <Route path="/analyze" component={protect(AnalyzePage)} />
+            <Route path="/analyze" component={protect(Import)} />
             <Route path="/results" component={protect(Analyze)} />
-            <Route path="/analyze-document" component={protect(AnalyzeDocument)} />
             <Route path="/trust-check" component={protect(TrustCheck)} />
             <Route path="/my-analyses" component={protect(MyAnalyses)} />
             <Route path="/contract-builder" component={protect(ContractBuilder)} />
@@ -499,25 +487,11 @@ function Router() {
             <Route path="/billing" component={protect(Billing)} />
             <Route path="/upgrade" component={protect(Upgrade)} />
             <Route path="/team" component={protect(TeamManage)} />
-            <Route path="/signature">{() => { window.location.replace("/app/"); return null; }}</Route>
+            <Route path="/signature" component={protect(Signature)} />
             <Route path="/documents" component={protect(Documents)} />
             <Route path="/account-security" component={protect(AccountSecurity)} />
             <Route path="/clause-extractor" component={protect(ClauseExtractor)} />
             <Route path="/clause-extractor/:id" component={protect(ClauseExtractor)} />
-            <Route path="/ask-document" component={protect(AskDocument)} />
-            <Route path="/ask-document/:id">
-              {(params) => {
-                const C = protect(() => <AskDocument />)
-                return <C />
-              }}
-            </Route>
-            <Route path="/document-overview" component={protect(DocumentOverview)} />
-            <Route path="/document-overview/:id">
-              {(params) => {
-                const C = protect(() => <DocumentOverview />)
-                return <C />
-              }}
-            </Route>
             <Route path="/compare-versions" component={protect(CompareVersions)} />
             <Route path="/compare-versions/:id">
               {(params) => {

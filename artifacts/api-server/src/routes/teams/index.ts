@@ -3,53 +3,6 @@ import { getAuth, clerkClient } from "@clerk/express";
 import { pool } from "@workspace/db";
 import { getSubscriberByEmail } from "../../lib/billingDb";
 import crypto from "crypto";
-import { Resend } from "resend";
-
-const MAX_TEAM_SEATS = 3;
-
-function getResend(): Resend | null {
-  const key = process.env.RESEND_API_KEY;
-  return key ? new Resend(key) : null;
-}
-
-async function sendInviteEmail(opts: {
-  toEmail: string;
-  inviteUrl: string;
-  teamName: string;
-  ownerEmail: string;
-}): Promise<void> {
-  const resend = getResend();
-  if (!resend) {
-    console.warn("[teams] RESEND_API_KEY not set — skipping invite email");
-    return;
-  }
-  try {
-    await resend.emails.send({
-      from: "PlainPath <no-reply@plainpathapp.com>",
-      to: opts.toEmail,
-      subject: `You've been invited to join ${opts.teamName} on PlainPath`,
-      html: `
-        <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#fff;border-radius:12px;">
-          <h2 style="color:#1a1a1a;margin:0 0 12px">You're invited to PlainPath</h2>
-          <p style="color:#555;line-height:1.6;margin:0 0 20px">
-            <strong>${opts.ownerEmail}</strong> has invited you to join their team
-            <strong>${opts.teamName}</strong> on PlainPath — giving you full Pro access
-            to all document analysis tools.
-          </p>
-          <a href="${opts.inviteUrl}"
-             style="display:inline-block;padding:12px 24px;background:#6366f1;color:#fff;border-radius:8px;font-weight:600;text-decoration:none;">
-            Accept invitation
-          </a>
-          <p style="color:#999;font-size:12px;margin:24px 0 0">
-            This link expires in 7 days. If you didn't expect this invitation, you can safely ignore it.
-          </p>
-        </div>
-      `,
-    });
-  } catch (err) {
-    console.error("[teams] Failed to send invite email:", err);
-  }
-}
 
 const router = Router();
 
@@ -312,19 +265,7 @@ router.post("/:teamId/invite", requireTeamPlan, async (req: any, res) => {
       [req.params.teamId, email.trim().toLowerCase()]
     );
     if (alreadyMember.rowCount && alreadyMember.rowCount > 0) {
-      return res.status(409).json({ error: "already_member", message: "This person is already on the team." });
-    }
-
-    // Enforce seat limit
-    const seatCount = await pool.query(
-      `SELECT COUNT(*) FROM team_members WHERE team_id = $1`,
-      [req.params.teamId]
-    );
-    if (parseInt(seatCount.rows[0].count) >= MAX_TEAM_SEATS) {
-      return res.status(400).json({
-        error: "seat_limit_reached",
-        message: `Your team plan supports up to ${MAX_TEAM_SEATS} members. Remove a member before adding a new one.`,
-      });
+      return res.status(409).json({ error: "already_member" });
     }
 
     await pool.query(
@@ -343,16 +284,7 @@ router.post("/:teamId/invite", requireTeamPlan, async (req: any, res) => {
     const teamResult = await pool.query(`SELECT name FROM teams WHERE id = $1`, [req.params.teamId]);
     const teamName = teamResult.rows[0]?.name ?? "your team";
 
-    const appBase = process.env.APP_URL ?? "https://plainpathapp.com/app";
-    const inviteUrl = `${appBase}/join/${token}`;
-
-    // Send invitation email (non-blocking — failure doesn't affect response)
-    void sendInviteEmail({
-      toEmail: email.trim().toLowerCase(),
-      inviteUrl,
-      teamName,
-      ownerEmail: req.userEmail,
-    });
+    const inviteUrl = `${process.env.APP_URL ?? "https://plainpathapp.com/app"}/join?token=${token}`;
 
     res.json({
       ok: true,

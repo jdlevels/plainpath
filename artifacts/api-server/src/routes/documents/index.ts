@@ -140,10 +140,7 @@ The JSON must have this exact structure:
       "explanation": "string - 1-2 sentences: what this term or clause means in plain English",
       "whyItMatters": "string - 1-2 sentences: why this clause is important to the reader and what depends on it",
       "watchOut": "string - 1-2 sentences: specific risk, hidden obligation, or consequence the reader might miss",
-      "questionToAsk": "string - optional: a specific question the reader should ask before agreeing or signing (omit field entirely if not applicable)",
-      "isNegotiable": true,
-      "marketContext": "string - 1 sentence: how this clause compares to typical agreements of this type (e.g. 'Broader than the 6–12 month industry standard for non-competes' or 'Standard in most commercial leases'). Omit if not applicable.",
-      "proposedChange": "string - if isNegotiable=true, the specific plain-English change to request (e.g. 'Ask them to change this to: 30 days written notice instead of 90 days'). Omit if isNegotiable=false or not applicable."
+      "questionToAsk": "string - optional: a specific question the reader should ask before agreeing or signing (omit field entirely if not applicable)"
     }
   ],
   "actionPack": {
@@ -183,10 +180,7 @@ The JSON must have this exact structure:
     "obligations": "string - 2-4 sentences: what the reader is agreeing to, is responsible for, or may become liable for",
     "payAttentionTo": "string - 2-4 sentences: the most important clauses, dates, or conditions the reader must not overlook",
     "nextSteps": "string - 2-4 sentences: the first concrete things the reader should do after reading this document"
-  },
-  "overallRisk": 0,
-  "verdict": "low-risk|review-advised|high-risk|critical",
-  "redFlags": ["string - one-liner describing the single most critical issue (max 3 items, omit array if none)"]
+  }
 }
 
 Guidelines:
@@ -208,13 +202,7 @@ Guidelines:
 - actionPack.whatToGather: 4-6 records, forms, IDs, or documents the user should have ready before responding or proceeding
 - actionPack.whatToSay: 2-3 neutral, practical draft messages for common communication scenarios (asking for time, requesting clarification, responding to a notice). NEVER frame as legal or professional advice — use phrasing like "You may want to ask..." and "You might consider saying..."
 - actionPack.beforeYouActChecklist: 4-6 concrete things to confirm before signing or submitting
-- Tailor actionPack to document type: contracts→negotiation questions, ownership/renewal concerns; tax/gov→deadline clarification, missing forms, agency response; healthcare→appeal questions, coverage clarification, missing records; bills/notices→payment proof, deadline response, collections; grants/applications→eligibility, attachments, submission completeness
-- overallRisk: integer 0–100. 0–24 = low-risk (routine paperwork, no unusual terms). 25–49 = review-advised (some terms need attention or clarification). 50–74 = high-risk (significant financial, legal, or practical exposure). 75–100 = critical (severe consequences, non-standard demands, urgent action required).
-- verdict must match overallRisk: 0–24→"low-risk", 25–49→"review-advised", 50–74→"high-risk", 75–100→"critical"
-- redFlags: ONLY include if there are truly critical issues that could seriously harm the reader (e.g. waiving legal rights, large automatic penalties, illegal terms, extreme time pressure). Max 3 items, each under 100 characters. Omit or use empty array if no critical issues.
-- keyTerms.isNegotiable: true if this type of clause is routinely negotiated in this kind of agreement; false if it's standard non-negotiable boilerplate (e.g., governing law, entire agreement clauses in standard contracts are usually non-negotiable)
-- keyTerms.marketContext: compare to what's typical for this document type. Be specific: "Non-competes in employment contracts typically run 6–12 months; this one is 2 years." Omit if no meaningful comparison exists.
-- keyTerms.proposedChange: ONLY include when isNegotiable=true. Give the exact ask: "Request they change this to 30 days written notice" or "Ask them to cap this fee at $X rather than an open-ended amount." Keep it plain and actionable. Omit if isNegotiable=false.`;
+- Tailor actionPack to document type: contracts→negotiation questions, ownership/renewal concerns; tax/gov→deadline clarification, missing forms, agency response; healthcare→appeal questions, coverage clarification, missing records; bills/notices→payment proof, deadline response, collections; grants/applications→eligibility, attachments, submission completeness`;
 
 async function runAnalysis(text: string, title?: string, documentTypeHint?: string, rawText?: string): Promise<DocumentAnalysis> {
   const hintLine = documentTypeHint ? `\nUser-specified document category: ${documentTypeHint}` : "";
@@ -1833,20 +1821,11 @@ Return ONLY a valid JSON object — no markdown, no code fences, just raw JSON.
   "verdictExplanation": "string - 2-4 sentences explaining the primary risk level using risk-based language. Distinguish between authenticity concerns (scam/impersonation risk) and contract-term concerns — do not conflate the two.",
   "whatItClaims": "string - 2-4 sentences: what organization or authority this document claims to be from, and what situation it describes",
   "demandedAction": "string - 2-4 sentences: what the letter/contract asks the recipient to do — pay, call, respond, sign, provide information, etc.",
-  "documentType": "string - short label for the document type, e.g. Invoice, Notice, Contract, Collection Letter, IRS Letter, Grant Deed. Leave null if unclear.",
-  "sections": [
-    {
-      "id": "string - short unique id like section-1, section-2",
-      "title": "string - brief section label, e.g. Header, Payment Instructions, Terms, Signature Block",
-      "content": "string - verbatim or near-verbatim text of this section (max 400 chars per section)"
-    }
-  ],
   "scamIndicators": [
     {
       "indicator": "string - clear description of the authenticity or scam-risk signal",
       "severity": "high|medium|low",
-      "sourceEvidence": "string - brief quote or paraphrase from the document supporting this indicator",
-      "sourceRef": "string or null - short location label like 'p.1 · Header' or 'p.2 · §4' pointing to where in the document this signal appears"
+      "sourceEvidence": "string - brief quote or paraphrase from the document supporting this indicator"
     }
   ],
   "structuralFindings": [
@@ -2026,7 +2005,6 @@ async function runTrustCheckAnalysis(
         indicator: si.indicator || "",
         severity: (si.severity as "high" | "medium" | "low") || "medium",
         sourceEvidence: si.sourceEvidence,
-        sourceRef: si.sourceRef ?? undefined,
       }))
     : [];
 
@@ -2074,31 +2052,10 @@ async function runTrustCheckAnalysis(
     ? parsed.legitimacyIndicators.filter((s: unknown) => typeof s === "string" && (s as string).trim().length > 0)
     : [];
 
-  const parsedSections: Array<{ id: string; title?: string; content: string }> =
-    Array.isArray(parsed.sections)
-      ? parsed.sections
-          .filter((s: any) => s && typeof s.content === "string" && s.content.trim().length > 0)
-          .map((s: any, idx: number) => ({
-            id: typeof s.id === "string" && s.id.trim() ? s.id.trim() : `section-${idx + 1}`,
-            title: typeof s.title === "string" && s.title.trim() ? s.title.trim() : undefined,
-            content: s.content.trim(),
-          }))
-      : [];
-
-  const parsedDocumentType: string | undefined =
-    typeof parsed.documentType === "string" && parsed.documentType.trim()
-      ? parsed.documentType.trim()
-      : undefined;
-
-  const scanQuality: "good" | "partial" | "poor" =
-    verificationConfidence < 30 ? "poor" : verificationConfidence < 50 ? "partial" : "good";
-
   return {
     id: uuidv4(),
     processedAt: new Date().toISOString(),
-    documentType: parsedDocumentType,
     riskScore,
-    scanQuality,
     verdict: finalVerdict,
     verdictExplanation: parsed.verdictExplanation || "",
     whatItClaims: parsed.whatItClaims || "",
@@ -2114,7 +2071,6 @@ async function runTrustCheckAnalysis(
     scores,
     metadataFindings: significantMetadataFindings.length > 0 ? significantMetadataFindings : undefined,
     structuralFindings: allStructuralFindings.length > 0 ? allStructuralFindings : undefined,
-    sections: parsedSections.length > 0 ? parsedSections : undefined,
   };
 }
 
@@ -2507,69 +2463,49 @@ router.post("/extract-text", upload.single("file"), async (req, res) => {
 });
 
 // POST /api/documents/redact-pdf
-// Rasterized redaction: renders each PDF page to an image, draws solid black bars
-// over detected sensitive text, then assembles a new PDF from the redacted images.
-// The final PDF contains only image pages — no recoverable text content streams.
-// The original uploaded file is never modified.
+// Accepts a PDF + list of string values to redact.
+// Uses pdfjs-dist to locate each value's bounding box on each page.
+// Draws solid black filled rectangles over every matching text item using pdf-lib.
+// Returns the modified PDF binary. The original uploaded file is never mutated.
 router.post("/redact-pdf", upload.single("file"), async (req, res) => {
   const { userId } = getAuth(req);
   if (!userId) {
     return res.status(401).json({ error: "unauthorized", message: "You must be signed in to redact a PDF." });
   }
 
-  const MAX_PAGES = 20;
-  const MAX_BYTES = 20 * 1024 * 1024; // 20 MB
-  const MAX_VALUES = 500;
-  const RENDER_DPI = 144; // render quality: 2× PDF baseline (72 dpi)
-  const SCALE = RENDER_DPI / 72; // pixel = pdf_units * SCALE
-  const PAD_X = 3; // horizontal padding around each box in pixels
-  const PAD_Y = 4; // vertical padding around each box in pixels
-
   try {
-    // ── stage: auth ──────────────────────────────────────────────────────────
-    console.log(`[redact-pdf] stage=auth userId=${userId}`);
-
     const file = req.file;
-    if (!file) return res.status(400).json({ error: "FILE_MISSING", message: "PDF file required." });
+    if (!file) return res.status(400).json({ message: "PDF file required." });
 
-    // ── stage: parse ─────────────────────────────────────────────────────────
     const mime = file.mimetype;
     const ext = (file.originalname ?? "").split(".").pop()?.toLowerCase() ?? "";
     if (mime !== "application/pdf" && ext !== "pdf") {
-      return res.status(400).json({ error: "FILE_MISSING", message: "Only PDF files are supported for PDF redaction." });
+      return res.status(400).json({ message: "Only PDF files are supported for PDF redaction." });
     }
-
-    if (file.buffer.length > MAX_BYTES) {
-      return res.status(413).json({ error: "FILE_TOO_LARGE", message: `File too large. Maximum size for PDF redaction is ${MAX_BYTES / 1024 / 1024} MB.` });
-    }
-
-    console.log(`[redact-pdf] stage=parse fileSize=${file.buffer.length}`);
 
     let redactValues: string[] = [];
     try {
       const raw = req.body?.redactValues;
       if (raw) redactValues = JSON.parse(raw);
     } catch {
-      return res.status(400).json({ error: "REDACT_VALUES_EMPTY", message: "Invalid redactValues — expected a JSON array of strings." });
+      return res.status(400).json({ message: "Invalid redactValues — expected a JSON array of strings." });
     }
 
-    redactValues = [...new Set(
-      redactValues.map((v: unknown) => (typeof v === "string" ? v.trim() : ""))
-        .filter((v: string) => v.length >= 2)
-    )].slice(0, MAX_VALUES);
+    // Deduplicate and filter empty values
+    redactValues = [...new Set(redactValues.map(v => v?.trim()).filter(v => v && v.length >= 2))];
 
-    if (redactValues.length === 0) {
-      return res.status(400).json({ error: "REDACT_VALUES_EMPTY", message: "No redaction values provided." });
-    }
-
-    console.log(`[redact-pdf] stage=parse redactValuesCount=${redactValues.length}`);
-
+    // If nothing to redact, return a clean copy of the PDF as-is
     const pdfBuffer = file.buffer;
+    if (redactValues.length === 0) {
+      res.set("Content-Type", "application/pdf");
+      res.set("Content-Disposition", `attachment; filename="redacted.pdf"`);
+      return res.send(pdfBuffer);
+    }
 
     // ── Step 1: Extract text items with bounding boxes ────────────────────────
-    // Use pdf-parse to walk each page's text content via its pagerender hook.
-    // Each item carries: str, page (1-based), x (pdf units from left),
-    // y (pdf units from bottom), width, height.
+    // We piggyback on pdf-parse's bundled pdfjs-dist (v2.x) via its pagerender
+    // hook. That version is already configured for Node.js and doesn't require
+    // DOMMatrix, canvas polyfills, or external worker setup.
 
     interface TextItem {
       str: string;
@@ -2581,16 +2517,16 @@ router.post("/redact-pdf", upload.single("file"), async (req, res) => {
     }
 
     const allItems: TextItem[] = [];
-    let parsedPageCount = 0;
+    let currentPage = 0;
 
+    // Import the internal module directly to avoid pdf-parse's test-file-read side effect
     const pdfParseModule = await import("pdf-parse/lib/pdf-parse.js");
     const pdfParse = pdfParseModule.default ?? pdfParseModule;
 
     await pdfParse(pdfBuffer, {
-      max: MAX_PAGES,
       pagerender: async (pageData: { getTextContent: (opts?: Record<string, unknown>) => Promise<{ items: unknown[] }> }) => {
-        parsedPageCount++;
-        const pageNum = parsedPageCount;
+        currentPage++;
+        const pageNum = currentPage;
         try {
           const content = await pageData.getTextContent();
           for (const item of content.items) {
@@ -2609,250 +2545,96 @@ router.post("/redact-pdf", upload.single("file"), async (req, res) => {
             });
           }
         } catch {
-          // Skip page if extraction fails
+          // Page extraction failed — skip this page's items
         }
         return "";
       },
     });
 
-    // ── Step 2: Get page dimensions from pdf-lib ──────────────────────────────
-    const { PDFDocument } = await import("pdf-lib");
-    const srcDoc = await PDFDocument.load(pdfBuffer, { ignoreEncryption: true });
-    const srcPages = srcDoc.getPages();
-    const totalPages = Math.min(srcPages.length, MAX_PAGES);
-
-    // Map page index (1-based) → height in PDF points
-    const pageHeights: Map<number, number> = new Map();
-    for (let i = 0; i < totalPages; i++) {
-      pageHeights.set(i + 1, srcPages[i].getHeight());
-    }
-
-    // ── Step 3: Match redactValues to text items, collect boxes per page ──────
+    // ── Step 2: Build searchable flat text + character→item offset map ───────
     let fullText = "";
     const itemOffsets: Array<{ start: number; end: number; idx: number }> = [];
+
     for (let i = 0; i < allItems.length; i++) {
       const start = fullText.length;
       fullText += allItems[i].str;
       itemOffsets.push({ start, end: fullText.length, idx: i });
+      // Add separator (space or newline) between items
       fullText += " ";
     }
 
+    // ── Step 3: Find each value in the flat text, collect bounding boxes ─────
     interface RedactBox {
       page: number;
-      x: number;       // pdf units from left
-      y: number;       // pdf units from bottom
+      x: number;
+      y: number;
       w: number;
       h: number;
     }
 
-    // Track matched values for header metadata
-    const matchedValueSet = new Set<string>();
-    const boxesByPage: Map<number, RedactBox[]> = new Map();
-    const seen = new Set<string>();
+    const boxes: RedactBox[] = [];
+    const seen = new Set<string>(); // deduplicate identical boxes
 
     for (const value of redactValues) {
       let searchPos = 0;
-      let foundAny = false;
       while (true) {
         const found = fullText.indexOf(value, searchPos);
         if (found === -1) break;
-        foundAny = true;
         const foundEnd = found + value.length;
+
         for (const range of itemOffsets) {
+          // Include any text item that overlaps with [found, foundEnd]
           if (range.start < foundEnd && range.end > found) {
             const item = allItems[range.idx];
-            const key = `${item.page}:${item.x.toFixed(1)}:${item.y.toFixed(1)}`;
+            const key = `${item.page}:${item.x.toFixed(1)}:${item.y.toFixed(1)}:${item.width.toFixed(1)}`;
             if (!seen.has(key)) {
               seen.add(key);
-              const pageBoxes = boxesByPage.get(item.page) ?? [];
-              pageBoxes.push({
+              boxes.push({
                 page: item.page,
                 x: item.x,
                 y: item.y,
-                w: item.width > 0 ? item.width : Math.max(value.length * 5, 20),
+                w: item.width > 0 ? item.width : Math.max(value.length * 6, 30),
                 h: item.height,
               });
-              boxesByPage.set(item.page, pageBoxes);
             }
           }
         }
+
         searchPos = found + 1;
       }
-      if (foundAny) matchedValueSet.add(value);
     }
 
-    const matchedCount = matchedValueSet.size;
-    const missedCount = redactValues.length - matchedCount;
-    console.log(`[redact-pdf] stage=match pageCount=${totalPages} textItems=${allItems.length} matched=${matchedCount} missed=${missedCount}`);
+    // ── Step 4: Load PDF with pdf-lib, draw solid black rectangles ───────────
+    const { PDFDocument, rgb } = await import("pdf-lib");
+    const pdfLibDoc = await PDFDocument.load(pdfBuffer);
+    const pages = pdfLibDoc.getPages();
 
-    // If no text was found at all (e.g. scanned/image-only PDF), still rasterize
-    // so the output is always image-only (no text layer recoverable).
+    const PAD_X = 1; // horizontal padding around text box
+    const PAD_Y = 2; // vertical padding below text box
 
-    // ── Step 4+5: Rasterize pages with pdfjs-dist + @napi-rs/canvas, then draw bars ─
-    console.log(`[redact-pdf] stage=render-start pages=${totalPages}`);
-    // Pure-JS pipeline — no system binaries required (pdftoppm not available in
-    // the deployed container). pdfjs-dist renders each page into an @napi-rs/canvas
-    // surface; we then draw opaque black rectangles over each matched text box.
-
-    const { createCanvas } = await import("@napi-rs/canvas");
-    const { pathToFileURL } = await import("node:url");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    // Use the legacy build — the standard browser build requires DOMMatrix and
-    // other Web APIs that are not available in the Node.js server environment.
-    const pdfjsLib: any = await import("pdfjs-dist/legacy/build/pdf.mjs");
-
-    // pdfjs-dist v5 requires a non-empty workerSrc to set up its inline worker.
-    // We resolve the worker file via require.resolve (injected by the esbuild
-    // banner) so the path is correct both locally (pnpm symlink) and in prod.
-    const workerAbsPath = (globalThis as any).require.resolve(
-      "pdfjs-dist/legacy/build/pdf.worker.mjs"
-    );
-    pdfjsLib.GlobalWorkerOptions.workerSrc = pathToFileURL(workerAbsPath).href;
-
-    // CanvasFactory adapter: pdfjs-dist uses this to allocate canvases internally
-    const nodeCanvasFactory = {
-      create(width: number, height: number) {
-        const c = createCanvas(Math.ceil(width), Math.ceil(height));
-        return { canvas: c, context: c.getContext("2d") };
-      },
-      reset(canvasAndCtx: { canvas: { width: number; height: number } }, width: number, height: number) {
-        canvasAndCtx.canvas.width = Math.ceil(width);
-        canvasAndCtx.canvas.height = Math.ceil(height);
-      },
-      destroy(canvasAndCtx: { canvas: { width: number; height: number } }) {
-        canvasAndCtx.canvas.width = 0;
-        canvasAndCtx.canvas.height = 0;
-      },
-    };
-
-    const pdfJsDoc = await pdfjsLib.getDocument({
-      data: new Uint8Array(pdfBuffer),
-      canvasFactory: nodeCanvasFactory,
-      useWorkerFetch: false,
-      isEvalSupported: false,
-      useSystemFonts: true,
-      disableFontFace: false,
-      verbosity: 0, // suppress pdfjs console warnings
-    }).promise as { getPage: (n: number) => Promise<{
-      getViewport: (o: { scale: number }) => { width: number; height: number };
-      render: (o: Record<string, unknown>) => { promise: Promise<void> };
-      cleanup: () => void;
-    }> };
-
-    const redactedPngBuffers: Buffer[] = [];
-    const pageDimsForPdf: Array<{ wPts: number; hPts: number }> = [];
-
-    for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
-      let page: Awaited<ReturnType<typeof pdfJsDoc.getPage>> | null = null;
-      try {
-        page = await pdfJsDoc.getPage(pageNum);
-        const viewport = page.getViewport({ scale: SCALE });
-
-        const imgW = Math.ceil(viewport.width);
-        const imgH = Math.ceil(viewport.height);
-
-        const canvas = createCanvas(imgW, imgH);
-        const ctx = canvas.getContext("2d");
-
-        // Render the PDF page into the canvas
-        await page.render({ canvasContext: ctx, viewport }).promise;
-
-        // Page height in PDF points — needed for Y-flip (PDF Y-axis is from bottom)
-        const pageHeightPts = pageHeights.get(pageNum) ?? (imgH / SCALE);
-        pageDimsForPdf.push({
-          wPts: srcPages[pageNum - 1]?.getWidth() ?? imgW / SCALE,
-          hPts: pageHeightPts,
-        });
-
-        // Draw solid black bars over each redaction box on this page
-        const boxes = boxesByPage.get(pageNum) ?? [];
-        ctx.fillStyle = "#000000";
-        for (const box of boxes) {
-          // Convert PDF user-space (y from bottom) → pixel space (y from top)
-          const px = box.x * SCALE - PAD_X;
-          const py = (pageHeightPts - box.y - box.h) * SCALE - PAD_Y;
-          const pw = box.w * SCALE + PAD_X * 2;
-          const ph = box.h * SCALE + PAD_Y * 2;
-          ctx.fillRect(
-            Math.max(0, Math.round(px)),
-            Math.max(0, Math.round(py)),
-            Math.min(imgW, Math.round(pw)),
-            Math.min(imgH, Math.round(ph))
-          );
-        }
-
-        redactedPngBuffers.push(canvas.toBuffer("image/png"));
-      } catch (pageErr) {
-        const msg = pageErr instanceof Error ? pageErr.message : String(pageErr);
-        console.error(`[documents/redact-pdf] Page ${pageNum} render error:`, msg);
-        // Create a blank page as placeholder rather than failing the whole export
-        const fallbackCanvas = createCanvas(612, 792); // A4-ish default
-        const fallbackCtx = fallbackCanvas.getContext("2d");
-        fallbackCtx.fillStyle = "#ffffff";
-        fallbackCtx.fillRect(0, 0, 612, 792);
-        pageDimsForPdf.push({ wPts: 612 / SCALE, hPts: 792 / SCALE });
-        redactedPngBuffers.push(fallbackCanvas.toBuffer("image/png"));
-      } finally {
-        page?.cleanup();
-      }
+    for (const box of boxes) {
+      const page = pages[box.page - 1];
+      if (!page) continue;
+      page.drawRectangle({
+        x: box.x - PAD_X,
+        y: box.y - PAD_Y,
+        width: box.w + PAD_X * 2,
+        height: box.h + PAD_Y * 2,
+        color: rgb(0, 0, 0),
+        opacity: 1,
+      });
     }
 
-    console.log(`[redact-pdf] stage=render-done pagesRendered=${redactedPngBuffers.length}`);
+    // Save with no compression to prevent any text-layer recovery
+    const redactedBytes = await pdfLibDoc.save({ useObjectStreams: false });
 
-    // ── Step 6: Assemble final PDF from redacted page images ──────────────────
-    // Each page contains only the rasterized image — no original text streams.
-    console.log(`[redact-pdf] stage=assemble pages=${redactedPngBuffers.length}`);
-    const outDoc = await PDFDocument.create();
-
-    for (let i = 0; i < redactedPngBuffers.length; i++) {
-      const img = await outDoc.embedPng(redactedPngBuffers[i]);
-      const { wPts, hPts } = pageDimsForPdf[i];
-      const page = outDoc.addPage([wPts, hPts]);
-      page.drawImage(img, { x: 0, y: 0, width: wPts, height: hPts });
-    }
-
-    const outBytes = await outDoc.save();
-
-    // ── Step 7: Return redacted PDF ──────────────────────────────────────────
-    const baseName = (file.originalname ?? "document").replace(/\.[^.]+$/, "").replace(/[^\w\-]/g, "_");
-    console.log(`[redact-pdf] stage=response-sent sizeBytes=${outBytes.length} matched=${matchedCount} missed=${missedCount}`);
     res.set("Content-Type", "application/pdf");
-    res.set("Content-Disposition", `attachment; filename="${baseName}_redacted.pdf"`);
-    res.set("X-Redact-Matched", String(matchedCount));
-    res.set("X-Redact-Missed", String(missedCount));
-    return res.send(Buffer.from(outBytes));
-
+    res.set("Content-Disposition", `attachment; filename="${file.originalname.replace(/\.[^.]+$/, "")}_redacted.pdf"`);
+    return res.send(Buffer.from(redactedBytes));
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error("[documents/redact-pdf]", msg);
-
-    // Structured error codes — safe to surface to the client
-    if (msg.includes("DOMMatrix") || msg.includes("legacy") || msg.includes("ENOENT") || msg.includes("rasteriz") || msg.includes("render")) {
-      return res.status(500).json({
-        error: "redaction_failed",
-        code: "PDF_RENDER_FAILED",
-        message: "PDF rendering failed. Please try again or use a different PDF.",
-      });
-    }
-    if (msg.includes("no text") || msg.includes("text layer") || msg.includes("No selectable")) {
-      return res.status(422).json({
-        error: "redaction_failed",
-        code: "NO_TEXT_LAYER",
-        message: "No selectable text found in this PDF. Try a text-based PDF rather than a scanned image.",
-      });
-    }
-    if (msg.includes("too large") || msg.includes("limit")) {
-      return res.status(413).json({
-        error: "redaction_failed",
-        code: "FILE_TOO_LARGE",
-        message: "This PDF is too large to export. Try splitting it into smaller sections.",
-      });
-    }
-    return res.status(500).json({
-      error: "redaction_failed",
-      code: "INTERNAL_ERROR",
-      message: "PDF redaction failed. Your document and selections were preserved — please try again.",
-    });
+    return res.status(500).json({ message: "PDF redaction failed. Please try again." });
   }
 });
 

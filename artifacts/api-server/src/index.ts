@@ -24,37 +24,7 @@ async function initStripe() {
       return;
     }
 
-    const migrationLogger = {
-      info:  (msg: string, ...args: unknown[]) => logger.info({ stripe: true }, `[stripe-migration] ${msg}`),
-      warn:  (msg: string, ...args: unknown[]) => logger.warn({ stripe: true }, `[stripe-migration] ${msg}`),
-      error: (msg: string, ...args: unknown[]) => logger.error({ stripe: true }, `[stripe-migration] ${msg}`),
-    };
-
-    await runMigrations({ databaseUrl, logger: migrationLogger });
-
-    // Verify that the key stripe.accounts table was actually created — the
-    // migration library can silently skip when a prior run left the schema in
-    // a partial state.  If it's missing we bail out early so the error is
-    // clearly visible in the logs instead of surfacing as a confusing "relation
-    // does not exist" deep inside stripe-replit-sync.
-    const { Pool } = await import("pg");
-    const verifyPool = new Pool({ connectionString: databaseUrl });
-    const checkResult = await verifyPool.query(
-      `SELECT EXISTS (
-        SELECT 1 FROM information_schema.tables
-        WHERE table_schema = 'stripe' AND table_name = 'accounts'
-      ) AS exists`
-    );
-    await verifyPool.end();
-
-    if (!checkResult.rows[0]?.exists) {
-      logger.error(
-        "stripe.accounts table missing after runMigrations — " +
-        "migrations may have been skipped or partially applied. " +
-        "Check the [stripe-migration] log lines above for details."
-      );
-      return;
-    }
+    await runMigrations({ databaseUrl });
 
     const { getStripeSync } = await import("./lib/stripeClient");
     const stripeSync = await getStripeSync();
@@ -68,12 +38,13 @@ async function initStripe() {
 
       // The secret is always stored in the _managed_webhooks table
       // (Stripe only returns it once on creation; we read it from DB for reliability)
-      const pool2 = new Pool({ connectionString: process.env.DATABASE_URL });
-      const row = await pool2.query(
+      const { Pool } = await import("pg");
+      const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+      const row = await pool.query(
         "SELECT secret FROM stripe._managed_webhooks WHERE url = $1 LIMIT 1",
         [webhookUrl],
       );
-      await pool2.end();
+      await pool.end();
 
       if (row.rows[0]?.secret) {
         const { setWebhookSecret } = await import("./lib/stripeWebhookSecret");

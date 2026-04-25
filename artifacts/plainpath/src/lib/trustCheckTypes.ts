@@ -4,12 +4,6 @@ export type TrustCheckVerdict =
   | "High scam risk"
   | "Cannot verify authenticity"
 
-export interface TrustCheckSection {
-  id: string
-  title?: string
-  content: string
-}
-
 export interface TrustCheckContactDetail {
   type: "phone" | "email" | "url" | "address"
   value: string
@@ -27,8 +21,6 @@ export interface TrustCheckScamIndicator {
   indicator: string
   severity: "high" | "medium" | "low"
   sourceEvidence?: string
-  sourceRef?: string
-  sourceSectionId?: string
 }
 
 export interface TrustCheckScores {
@@ -47,10 +39,8 @@ export interface TrustCheckMetadataFinding {
 export interface TrustCheckAnalysis {
   id: string
   processedAt: string
-  title?: string
   documentType?: string
   riskScore: number
-  scanQuality?: "good" | "partial" | "poor"
   verdict: TrustCheckVerdict
   verdictExplanation: string
   whatItClaims: string
@@ -66,7 +56,6 @@ export interface TrustCheckAnalysis {
   scores?: TrustCheckScores
   metadataFindings?: TrustCheckMetadataFinding[]
   structuralFindings?: string[]
-  sections?: TrustCheckSection[]
 }
 
 export function verdictColor(verdict: TrustCheckVerdict): {
@@ -135,40 +124,4 @@ export function verificationConfidenceColor(score: number): { label: string; lab
   if (score >= 70) return { label: "Good", labelClass: "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-700", barClass: "bg-green-500", textClass: "text-green-600 dark:text-green-400" }
   if (score >= 40) return { label: "Partial", labelClass: "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-700", barClass: "bg-amber-400", textClass: "text-amber-600 dark:text-amber-400" }
   return { label: "Low", labelClass: "bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-700", barClass: "bg-red-400", textClass: "text-red-600 dark:text-red-400" }
-}
-
-export function trustScoreLabel(score: number): string {
-  if (score <= 35) return "Needs verification"
-  if (score <= 55) return "Review recommended"
-  if (score <= 74) return "Some indicators"
-  return "Signals align"
-}
-
-export function trustScoreColor(score: number): {
-  pill: string; text: string; bar: string; icon: string
-} {
-  if (score <= 35) return {
-    pill: "bg-amber-600/12 border-amber-500/28 text-amber-300",
-    text: "text-amber-300",
-    bar: "bg-amber-500",
-    icon: "text-amber-400",
-  }
-  if (score <= 55) return {
-    pill: "bg-amber-600/08 border-amber-500/20 text-amber-300/80",
-    text: "text-amber-300/80",
-    bar: "bg-amber-400",
-    icon: "text-amber-300",
-  }
-  if (score <= 74) return {
-    pill: "bg-blue-600/12 border-blue-500/25 text-blue-300",
-    text: "text-blue-300",
-    bar: "bg-blue-500",
-    icon: "text-blue-400",
-  }
-  return {
-    pill: "bg-emerald-600/12 border-emerald-500/25 text-emerald-300",
-    text: "text-emerald-300",
-    bar: "bg-emerald-500",
-    icon: "text-emerald-400",
-  }
 }

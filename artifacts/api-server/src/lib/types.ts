@@ -54,12 +54,6 @@ export interface KeyTerm {
   whyItMatters: string;
   watchOut: string;
   questionToAsk?: string;
-  /** Whether this term is realistically negotiable (true) or standard boilerplate (false) */
-  isNegotiable?: boolean;
-  /** How this clause compares to typical agreements of this type (e.g. "Broader than the 6–12 month industry standard") */
-  marketContext?: string;
-  /** If negotiable, the specific language change to propose to the other party */
-  proposedChange?: string;
 }
 
 export interface ActionPackQuestion {
@@ -124,12 +118,6 @@ export interface DocumentAnalysis {
   sections?: DocumentSection[];
   keyTerms?: KeyTerm[];
   actionPack?: ActionPack;
-  /** Risk score 0–100 (0 = no issues, 100 = severe). Derived from severity/count of risks and key terms. */
-  overallRisk?: number;
-  /** Plain-English verdict for this document */
-  verdict?: "low-risk" | "review-advised" | "high-risk" | "critical";
-  /** 1–3 most critical one-liner issues to surface prominently at the top of results */
-  redFlags?: string[];
 }
 
 // ── Document Trust Check types ──────────────────────────────────────────────
@@ -139,12 +127,6 @@ export type TrustCheckVerdict =
   | "Suspicious — verify before acting"
   | "High scam risk"
   | "Cannot verify authenticity";
-
-export interface TrustCheckSection {
-  id: string;
-  title?: string;
-  content: string;
-}
 
 export interface TrustCheckContactDetail {
   type: "phone" | "email" | "url" | "address";
@@ -163,8 +145,6 @@ export interface TrustCheckScamIndicator {
   indicator: string;
   severity: "high" | "medium" | "low";
   sourceEvidence?: string;
-  sourceRef?: string;
-  sourceSectionId?: string;
 }
 
 export interface TrustCheckScores {
@@ -183,10 +163,7 @@ export interface TrustCheckMetadataFinding {
 export interface TrustCheckAnalysis {
   id: string;
   processedAt: string;
-  title?: string;
-  documentType?: string;
   riskScore: number;
-  scanQuality?: "good" | "partial" | "poor";
   verdict: TrustCheckVerdict;
   verdictExplanation: string;
   whatItClaims: string;
@@ -202,5 +179,4 @@ export interface TrustCheckAnalysis {
   scores?: TrustCheckScores;
   metadataFindings?: TrustCheckMetadataFinding[];
   structuralFindings?: string[];
-  sections?: TrustCheckSection[];
 }

@@ -21,7 +21,7 @@ export default function TeamManage() {
 
   const [inviteEmail, setInviteEmail] = useState("")
   const [inviting, setInviting] = useState(false)
-  const [inviteResult, setInviteResult] = useState<{ inviteUrl: string } | null>(null)
+  const [inviteResult, setInviteResult] = useState<{ joinUrl: string } | null>(null)
   const [inviteError, setInviteError] = useState<string | null>(null)
 
   const [teamName, setTeamName] = useState("")
@@ -278,11 +278,11 @@ export default function TeamManage() {
                     <div className="flex gap-2">
                       <input
                         readOnly
-                        value={inviteResult.inviteUrl}
+                        value={inviteResult.joinUrl}
                         className="flex-1 px-3 py-2 rounded-lg border border-emerald-200 dark:border-emerald-800/40 bg-background text-xs font-mono"
                       />
                       <button
-                        onClick={() => copyLink(inviteResult.inviteUrl)}
+                        onClick={() => copyLink(inviteResult.joinUrl)}
                         className="px-3 py-2 rounded-lg bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 text-xs font-semibold flex items-center gap-1.5 hover:bg-emerald-200 dark:hover:bg-emerald-950/60 transition-all"
                       >
                         {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}

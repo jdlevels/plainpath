@@ -1,9 +1,9 @@
 /**
- * WebAppDemo — 7-tool live workspace demo
+ * WebAppDemo — 8-tool live workspace demo
  *
- * Controlled mode: pass activeTool (0–6) + onToolChange from Home.tsx's
+ * Controlled mode: pass activeTool (0–7) + onToolChange from Home.tsx's
  * shared demo rotation state so all surfaces stay in sync.
- * Uncontrolled mode: self-rotates through all 7 tools every 3 500 ms.
+ * Uncontrolled mode: self-rotates through all 8 tools every 3 500 ms.
  *
  * Dark-themed — designed to sit inside the dark "One platform" section.
  */
@@ -12,8 +12,8 @@ import React, { useEffect, useRef, useState } from "react"
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 import {
   AlertTriangle, CheckCircle2, Shield, ShieldAlert, Scale,
-  FileText, EyeOff, GitCompare, ListChecks,
-  PenLine, Download, Sparkles,
+  FileText, EyeOff, FileSignature, GitCompare, ListChecks,
+  PenLine, Download, Sparkles, Clock,
 } from "lucide-react"
 
 const TOOL_MS = 3500
@@ -31,11 +31,12 @@ const TOOLS = [
   { id: 2, shortName: "Build",    icon: PenLine,       hex: "#10b981", iconHex: "#6ee7b7", docName: "Freelance Services Agreement",   docMeta: "New contract · 6 fields", badge: { label: "Building…",     dot: "#10b981" } },
   { id: 3, shortName: "Review",   icon: Scale,         hex: "#f59e0b", iconHex: "#fcd34d", docName: "Employment Agreement.pdf",       docMeta: "1,240 words · 8 pages",  badge: { label: "Score: 28/100", dot: "#f59e0b" } },
   { id: 4, shortName: "Redact",   icon: EyeOff,        hex: "#8b5cf6", iconHex: "#c4b5fd", docName: "Patient Intake Form.pdf",        docMeta: "423 words · 3 pages",    badge: { label: "3 items",       dot: "#8b5cf6" } },
-  { id: 5, shortName: "Compare",  icon: GitCompare,    hex: "#14b8a6", iconHex: "#5eead4", docName: "NDA v1.pdf → NDA v2.pdf",       docMeta: "2 versions · 14 changes", badge: { label: "1 critical",    dot: "#ef4444" } },
-  { id: 6, shortName: "Extract",  icon: ListChecks,    hex: "#c026d3", iconHex: "#f0abfc", docName: "Lease Agreement.pdf",           docMeta: "2,840 words · 12 pages", badge: { label: "6 obligations", dot: "#c026d3" } },
+  { id: 5, shortName: "Sign",     icon: FileSignature, hex: "#6366f1", iconHex: "#a5b4fc", docName: "Consulting Agreement Final.pdf", docMeta: "1,820 words · 6 pages",  badge: { label: "Awaiting",      dot: "#6366f1" } },
+  { id: 6, shortName: "Compare",  icon: GitCompare,    hex: "#14b8a6", iconHex: "#5eead4", docName: "NDA v1.pdf → NDA v2.pdf",       docMeta: "2 versions · 14 changes", badge: { label: "1 critical",    dot: "#ef4444" } },
+  { id: 7, shortName: "Extract",  icon: ListChecks,    hex: "#c026d3", iconHex: "#f0abfc", docName: "Lease Agreement.pdf",           docMeta: "2,840 words · 12 pages", badge: { label: "6 obligations", dot: "#c026d3" } },
 ] as const
 
-type ToolId = 0|1|2|3|4|5|6
+type ToolId = 0|1|2|3|4|5|6|7
 
 /* ─── App nav bar ────────────────────────────────────────────── */
 function MiniNav({
@@ -264,18 +265,18 @@ function DocPane({ toolId }: { toolId: ToolId }) {
   return (
     <div className="relative h-full px-3 pt-3 overflow-hidden border-r border-zinc-800">
       <p className="text-[9px] font-semibold tracking-widest uppercase mb-2.5" style={{ color: "#52525b" }}>
-        {toolId === 2 ? "Contract Fields" : toolId === 5 ? "Version Diff" : "Document Preview"}
+        {toolId === 2 ? "Contract Fields" : toolId === 6 ? "Version Diff" : "Document Preview"}
       </p>
       <AnimatePresence mode="wait">
         <motion.div key={toolId} variants={slide} initial="hidden" animate="visible" exit="exit">
           {toolId === 2 ? <WizardDocLines /> :
            toolId === 4 ? <RedactedDocLines /> :
-           toolId === 5 ? <DiffDocLines /> :
+           toolId === 6 ? <DiffDocLines /> :
            <DocLines
-             highlighted={[0, 1, 3, 6].includes(toolId)}
+             highlighted={[0, 1, 3, 7].includes(toolId)}
              hlColor={
                toolId === 1 ? "rgba(239,68,68,0.25)" :
-               toolId === 6 ? "rgba(192,38,211,0.25)" :
+               toolId === 7 ? "rgba(192,38,211,0.25)" :
                "rgba(245,158,11,0.25)"
              }
            />}
@@ -448,6 +449,39 @@ function ResultsRedact() {
   )
 }
 
+function ResultsSignature() {
+  return (
+    <div className="space-y-2">
+      <p className="text-[9px] font-semibold tracking-widest uppercase text-zinc-600 mb-2">Signature Status</p>
+      <motion.div initial={{ opacity: 0, x: -4 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 }}
+        className="flex items-center gap-2 p-2 rounded-lg" style={{ background: "rgba(16,185,129,0.15)", border: "1px solid rgba(16,185,129,0.3)" }}>
+        <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ background: "#10b981" }}>
+          <CheckCircle2 style={{ width: 11, height: 11, color: "white" }} />
+        </div>
+        <div>
+          <p className="text-[10px] font-semibold" style={{ color: "#10b981" }}>Sarah Chen — Client</p>
+          <p className="text-[9px] text-zinc-500">Signed · May 2, 2:34 PM</p>
+        </div>
+      </motion.div>
+      <motion.div initial={{ opacity: 0, x: -4 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.18 }}
+        className="flex items-center gap-2 p-2 rounded-lg" style={{ background: "rgba(99,102,241,0.15)", border: "1px solid rgba(99,102,241,0.3)" }}>
+        <div className="w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0" style={{ borderColor: "#6366f1" }}>
+          <Clock style={{ width: 9, height: 9, color: "#6366f1" }} />
+        </div>
+        <div>
+          <p className="text-[10px] font-semibold" style={{ color: "#6366f1" }}>Marcus Lee — Contractor</p>
+          <p className="text-[9px] text-zinc-500">Awaiting signature</p>
+        </div>
+      </motion.div>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
+        className="flex items-center gap-1.5 p-1.5 rounded-lg" style={{ background: "#111118", border: "1px solid #27272a" }}>
+        <FileSignature style={{ width: 10, height: 10, color: "#6366f1" }} />
+        <span className="text-[9px] text-zinc-400">Secure signing link sent via email</span>
+      </motion.div>
+    </div>
+  )
+}
+
 function ResultsCompare() {
   return (
     <div className="space-y-2">
@@ -522,8 +556,9 @@ function ResultsPane({ toolId }: { toolId: ToolId }) {
           {toolId === 2 && <ResultsBuild />}
           {toolId === 3 && <ResultsReview />}
           {toolId === 4 && <ResultsRedact />}
-          {toolId === 5 && <ResultsCompare />}
-          {toolId === 6 && <ResultsClauseExtractor />}
+          {toolId === 5 && <ResultsSignature />}
+          {toolId === 6 && <ResultsCompare />}
+          {toolId === 7 && <ResultsClauseExtractor />}
         </motion.div>
       </AnimatePresence>
       <div className="absolute bottom-0 left-0 right-0 h-8 pointer-events-none" style={{ background: "linear-gradient(to top,#0a0a0f,transparent)" }} />
@@ -546,7 +581,7 @@ export function WebAppDemo({ activeTool, onToolChange }: Props = {}) {
   useEffect(() => {
     if (isControlled) return
     if (shouldReduce) return
-    const id = setInterval(() => setInternalTool(t => ((t + 1) % 7) as ToolId), TOOL_MS)
+    const id = setInterval(() => setInternalTool(t => ((t + 1) % 8) as ToolId), TOOL_MS)
     return () => clearInterval(id)
   }, [isControlled, shouldReduce])
 
