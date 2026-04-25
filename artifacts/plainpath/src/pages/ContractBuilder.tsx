@@ -1,37 +1,29 @@
-import { useState, useEffect, useCallback, useMemo } from "react"
+import { useState, useCallback, useMemo, useEffect } from "react"
 import { useLocation } from "wouter"
-import { motion, AnimatePresence } from "framer-motion"
 import {
-  Code2, Lock, CreditCard, Briefcase, Home as HomeIcon,
-  ArrowRight, ArrowLeft, Sparkles, AlertTriangle, CheckCircle2,
-  Info, ChevronDown, ChevronUp, Save, FileText, RotateCcw,
-  Shield, Clock, DollarSign, Users, BookOpen, ClipboardCheck,
-  Loader2, Download, TriangleAlert, Search, Pencil, EyeOff,
+  PenLine, Code2, Lock, CreditCard, Briefcase, Home as HomeIcon, FileText,
+  ChevronRight, ChevronLeft, Sparkles, AlertCircle, Check, Save, Download,
+  SkipForward, RefreshCcw, Loader2, Info, Clock, Lock as LockIcon,
+  LayoutTemplate, DollarSign, Users, Shield, ArrowLeft, Eye,
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { useToast } from "@/hooks/use-toast"
 import { getApiBaseUrl } from "@/lib/api"
 import { beforeRunContractDraft, UsageLimitError } from "@/lib/analysisGate"
 import { saveRecentWork } from "@/lib/recentWork"
 import { useEntitlements } from "@/hooks/useEntitlements"
 import UpgradeModal from "@/components/UpgradeModal"
-import { WorkspaceShell } from "@/components/WorkspaceShell"
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
 // ─────────────────────────────────────────────────────────────────────────────
 
-type ContractType = "freelance" | "nda" | "payment-agreement" | "service-agreement" | "lease"
+type ContractType = "freelance" | "nda" | "payment-agreement" | "service-agreement" | "lease" | "custom"
 type PaymentStructure = "flat" | "hourly" | "milestone"
 type IPTiming = "on-creation" | "on-payment" | "limited-license"
 type DisputeResolution = "negotiation" | "mediation" | "arbitration" | "court"
 type PartyType = "individual" | "business"
+type MobileTab = "builder" | "preview"
+type PageState = "empty" | "workspace" | "generating" | "review" | "error"
 
 interface PeopleData {
   clientName: string
@@ -45,7 +37,6 @@ interface PeopleData {
   freelancerAddress: string
   governingLaw: string
   projectTitle: string
-  // NDA / simple fields
   partyAName: string
   partyAType: PartyType
   partyBName: string
@@ -59,14 +50,11 @@ interface ScopeData {
   exclusions: string
   revisionLimit: string
   acceptanceCriteria: string
-  // NDA
   purposeOfDisclosure: string
   confidentialInfoDescription: string
   ndaTerm: string
-  // Service Agreement
   serviceSchedule: string
   serviceStandards: string
-  // Lease
   propertyAddress: string
   propertyType: string
   propertyDescription: string
@@ -87,7 +75,6 @@ interface MoneyData {
   deadline: string
   invoiceDueDays: string
   milestones: Array<{ name: string; amount: string; date: string }>
-  // Lease-specific
   monthlyRent: string
   securityDeposit: string
   petDeposit: string
@@ -109,12 +96,6 @@ interface ProtectionData {
   subcontractingAllowed: boolean
 }
 
-interface AIInsights {
-  suggestions: string[]
-  warnings: string[]
-  draftGuidance: string[]
-}
-
 interface DraftSection { title: string; clauses: string[] }
 interface DraftParty { label: string; name: string; type: string }
 interface DraftPayload {
@@ -130,544 +111,1451 @@ interface DraftPayload {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// BUILDER DEMO PRE-FILLS
-// ─────────────────────────────────────────────────────────────────────────────
-
-interface BuilderDemo {
-  id: string
-  label: string
-  meta: string
-  contractType: ContractType
-  people: Partial<PeopleData>
-  scope: Partial<ScopeData>
-  money: Partial<MoneyData>
-  protection: Partial<ProtectionData>
-}
-
-const BUILDER_DEMOS: BuilderDemo[] = [
-  {
-    id: "web-dev-freelance",
-    label: "Freelance Web Dev Contract",
-    meta: "Freelance · Flat-fee · 30-day project",
-    contractType: "freelance",
-    people: {
-      clientName: "Acme Corp",
-      clientType: "business",
-      clientEntityName: "Acme Corporation LLC",
-      clientAddress: "123 Market St, San Francisco, CA 94105",
-      clientState: "California",
-      freelancerName: "Jordan Lee",
-      freelancerType: "individual",
-      freelancerAddress: "456 Oak Ave, Oakland, CA 94601",
-      governingLaw: "California",
-      projectTitle: "E-commerce Website Redesign",
-    },
-    scope: {
-      serviceType: "Web Development",
-      scopeDescription: "Full redesign and development of Acme Corp's e-commerce storefront using React and Tailwind CSS, including product catalogue, cart, and checkout flow.",
-      deliverables: "1) Figma mockups (mobile + desktop)\n2) Fully coded React storefront\n3) Stripe payment integration\n4) Admin dashboard for product management\n5) Deployment to Vercel",
-      exclusions: "Custom CMS development, SEO copywriting, logo design, ongoing hosting fees.",
-      revisionLimit: "2",
-      acceptanceCriteria: "Deliverables are accepted when they match approved Figma mockups, pass basic QA testing, and process a successful test payment.",
-    },
-    money: {
-      paymentStructure: "milestone",
-      depositRequired: true,
-      depositAmount: "2500",
-      lateFee: true,
-      lateFeeAmount: "1.5",
-      startDate: "2026-05-01",
-      deadline: "2026-05-31",
-      invoiceDueDays: "14",
-      milestones: [
-        { name: "Kickoff deposit", amount: "2500", date: "2026-05-01" },
-        { name: "Mockup approval", amount: "2500", date: "2026-05-15" },
-        { name: "Final delivery", amount: "2000", date: "2026-05-31" },
-      ],
-    },
-    protection: {
-      ipTiming: "on-payment",
-      portfolioUsage: true,
-      confidentiality: true,
-      terminationNoticeDays: "7",
-      killFee: true,
-      killFeeAmount: "25",
-      disputeResolution: "negotiation",
-      clientFeedbackDeadlineDays: "5",
-      fileReleaseOnPayment: true,
-      subcontractingAllowed: false,
-    },
-  },
-  {
-    id: "nda-mutual",
-    label: "Mutual Non-Disclosure Agreement",
-    meta: "NDA · 2-year term · Both parties",
-    contractType: "nda",
-    people: {
-      partyAName: "TechVenture Inc",
-      partyAType: "business",
-      partyBName: "Bright Idea Studios",
-      partyBType: "business",
-      governingLaw: "New York",
-      projectTitle: "Product Partnership Exploration",
-    },
-    scope: {
-      purposeOfDisclosure: "Evaluating a potential co-development partnership for a B2B SaaS product. Both parties may share proprietary technology roadmaps, financial projections, and customer data.",
-      confidentialInfoDescription: "Business plans, source code, product roadmaps, financial data, customer lists, and any information marked 'Confidential' or that a reasonable person would understand to be confidential.",
-      ndaTerm: "2",
-    },
-    money: {
-      paymentStructure: "flat",
-      depositRequired: false,
-      lateFee: false,
-    },
-    protection: {
-      confidentiality: true,
-      disputeResolution: "arbitration",
-      subcontractingAllowed: false,
-      portfolioUsage: false,
-      ipTiming: "on-payment",
-      fileReleaseOnPayment: false,
-      killFee: false,
-    },
-  },
-  {
-    id: "lease-residential",
-    label: "Residential Lease Agreement",
-    meta: "Lease · 12-month · 2-bed apartment",
-    contractType: "lease",
-    people: {
-      partyAName: "Greenwood Properties LLC",
-      partyAType: "business",
-      partyBName: "Sam Rivera",
-      partyBType: "individual",
-      governingLaw: "Texas",
-      projectTitle: "2BR Apartment at 88 Elm Street",
-    },
-    scope: {
-      propertyAddress: "88 Elm Street, Unit 4B, Austin, TX 78701",
-      propertyType: "Apartment",
-      propertyDescription: "2-bedroom, 1-bathroom apartment on the 4th floor. Includes one assigned parking space (#12). No smoking permitted on premises.",
-      leaseType: "fixed",
-      utilitiesIncluded: "Water and trash. Tenant is responsible for electricity, gas, and internet.",
-      petsAllowed: "Small pets under 25 lbs permitted with a $300 pet deposit.",
-    },
-    money: {
-      paymentStructure: "flat",
-      monthlyRent: "1850",
-      securityDeposit: "3700",
-      petDeposit: "300",
-      leaseTerm: "12",
-      leaseStartDate: "2026-06-01",
-      leaseEndDate: "2027-05-31",
-      depositRequired: true,
-      lateFee: true,
-      lateFeeAmount: "75",
-    },
-    protection: {
-      terminationNoticeDays: "60",
-      disputeResolution: "mediation",
-      confidentiality: false,
-      killFee: false,
-      subcontractingAllowed: false,
-      portfolioUsage: false,
-      ipTiming: "on-payment",
-      fileReleaseOnPayment: false,
-    },
-  },
-]
-
-// ─────────────────────────────────────────────────────────────────────────────
 // CONSTANTS
 // ─────────────────────────────────────────────────────────────────────────────
 
 const STEPS = ["Type", "People", "Scope", "Money", "Protection", "Review"]
-const DEFAULT_CLAUSES = ["Severability clause", "Entire Agreement clause", "Notices clause", "Force majeure clause"]
 
 const CONTRACT_TYPES: Array<{
   id: ContractType
   title: string
   description: string
-  example: string
   Icon: React.ComponentType<{ className?: string }>
-  color: string
-  bg: string
-  ready: boolean
+  popular?: boolean
 }> = [
-  {
-    id: "freelance",
-    title: "Freelance Services Agreement",
-    description: "For independent contractors delivering a defined project or service.",
-    example: "e.g. Logo design, web development, copywriting",
-    Icon: Code2,
-    color: "text-blue-500",
-    bg: "bg-blue-50 dark:bg-blue-950/40",
-    ready: true,
-  },
-  {
-    id: "nda",
-    title: "NDA / Confidentiality Agreement",
-    description: "Protects sensitive information shared between two parties.",
-    example: "e.g. Business partnership, hiring process, vendor talks",
-    Icon: Lock,
-    color: "text-violet-500",
-    bg: "bg-violet-50 dark:bg-violet-950/40",
-    ready: true,
-  },
-  {
-    id: "payment-agreement",
-    title: "Simple Payment Agreement",
-    description: "Formalises a payment plan between two parties.",
-    example: "e.g. Personal loan, installment plan, deposit arrangement",
-    Icon: CreditCard,
-    color: "text-emerald-500",
-    bg: "bg-emerald-50 dark:bg-emerald-950/40",
-    ready: true,
-  },
-  {
-    id: "service-agreement",
-    title: "Service Agreement",
-    description: "General agreement for ongoing or retainer-based services.",
-    example: "e.g. IT support, cleaning services, consulting retainer",
-    Icon: Briefcase,
-    color: "text-amber-500",
-    bg: "bg-amber-50 dark:bg-amber-950/40",
-    ready: true,
-  },
-  {
-    id: "lease",
-    title: "Lease / Rental Agreement",
-    description: "Defines the terms of a property rental between landlord and tenant.",
-    example: "e.g. Apartment lease, equipment rental, office space",
-    Icon: HomeIcon,
-    color: "text-rose-500",
-    bg: "bg-rose-50 dark:bg-rose-950/40",
-    ready: true,
-  },
+  { id: "freelance",         title: "Freelance Service Agreement",  description: "For project-based creative, tech, or consulting work.", Icon: Code2, popular: true },
+  { id: "nda",               title: "Non-Disclosure Agreement",     description: "Mutual or one-way confidentiality between two parties.", Icon: Lock },
+  { id: "service-agreement", title: "Service Agreement",            description: "Ongoing or retainer-based service relationships.", Icon: Briefcase },
+  { id: "lease",             title: "Lease Agreement",              description: "Residential or commercial property rental terms.", Icon: HomeIcon },
+  { id: "payment-agreement", title: "Payment Agreement",            description: "Formalise a payment plan or installment arrangement.", Icon: CreditCard },
+  { id: "custom",            title: "Custom Agreement",             description: "For structured agreements, notices, or business documents. Not for SOPs or manuals.", Icon: FileText },
 ]
 
-// ─────────────────────────────────────────────────────────────────────────────
-// HELPERS
-// ─────────────────────────────────────────────────────────────────────────────
+const API_CONTRACT_TYPE = (ct: ContractType): string =>
+  ct === "custom" ? "freelance" : ct
 
-function contractLabel(ct: ContractType | null): string {
-  return CONTRACT_TYPES.find((c) => c.id === ct)?.title ?? "Contract"
-}
-
-function computeRuleInsights(
-  step: number,
-  contractType: ContractType | null,
-  people: Partial<PeopleData>,
-  scope: Partial<ScopeData>,
-  money: Partial<MoneyData>,
-  protection: Partial<ProtectionData>
-): AIInsights {
-  const suggestions: string[] = []
-  const warnings: string[] = []
-  const draftGuidance: string[] = []
-
-  if (!contractType) return { suggestions, warnings, draftGuidance }
-
-  if (contractType === "freelance") {
-    if (step >= 3) {
-      const fee = parseFloat((money.totalFee ?? "").replace(/[^0-9.]/g, "") || "0")
-      if (fee > 1500 && !money.depositRequired) {
-        suggestions.push("Projects over $1,500 — consider requiring a deposit before work starts.")
-      }
-      if (!money.lateFee) {
-        warnings.push("No late fee added. Late payments are very common without one.")
-      }
-      if (money.paymentStructure === "milestone") {
-        draftGuidance.push("Milestone structure selected — a payment schedule clause will be added.")
-      }
-      if (money.depositRequired && money.depositAmount) {
-        draftGuidance.push(`Deposit of ${money.depositAmount} will be stated as due before work begins.`)
-      }
-    }
-
-    if (step >= 4) {
-      if (protection.ipTiming === "on-creation") {
-        warnings.push("IP transfers on creation — client could use work before full payment.")
-      }
-      if (!protection.killFee) {
-        warnings.push("No kill fee. If the client cancels mid-project, you may receive nothing.")
-      }
-      if (!protection.clientFeedbackDeadlineDays || protection.clientFeedbackDeadlineDays === "0") {
-        suggestions.push("No client feedback deadline. Delays become hard to dispute without one.")
-      }
-      if (!protection.fileReleaseOnPayment) {
-        warnings.push("Files release before payment — this is high-risk for the freelancer.")
-      }
-    }
-
-    if (step >= 2) {
-      if (!scope.revisionLimit || scope.revisionLimit === "0") {
-        suggestions.push("No revision limit — unlimited revisions can cause scope creep.")
-      }
-      if (!scope.exclusions || scope.exclusions.trim().length < 5) {
-        suggestions.push("Adding explicit exclusions prevents scope disputes later.")
-      }
-      if (scope.serviceType) {
-        draftGuidance.push(`Service type "${scope.serviceType}" will define the work-for-hire clause.`)
-      }
-    }
-  }
-
-  if (contractType === "nda") {
-    if (step >= 2) {
-      if (!scope.ndaTerm || scope.ndaTerm === "") {
-        suggestions.push("No NDA duration set. A defined term (1–3 years) is standard.")
-      }
-    }
-  }
-
-  if (contractType === "service-agreement") {
-    if (step >= 2) {
-      if (!scope.serviceSchedule || scope.serviceSchedule.trim().length < 3) {
-        suggestions.push("No service schedule defined — when/how often services are provided should be explicit.")
-      }
-      if (!scope.exclusions || scope.exclusions.trim().length < 5) {
-        suggestions.push("Add explicit exclusions to prevent scope creep on ongoing service contracts.")
-      }
-    }
-    if (step >= 3) {
-      if (!money.lateFee) {
-        warnings.push("No late fee clause — late payments are common in retainer arrangements without one.")
-      }
-      if (!protection.terminationNoticeDays || protection.terminationNoticeDays === "0") {
-        suggestions.push("Define a termination notice period (e.g. 30 days) so either party can exit cleanly.")
-      }
-    }
-  }
-
-  if (contractType === "lease") {
-    if (step >= 2) {
-      if (!scope.propertyAddress || scope.propertyAddress.trim().length < 5) {
-        warnings.push("No property address entered — this is required for a legally binding lease.")
-      }
-      if (!scope.leaseType) {
-        suggestions.push("Specify fixed-term or month-to-month — this affects notice requirements and rights.")
-      }
-    }
-    if (step >= 3) {
-      if (!money.monthlyRent || money.monthlyRent === "0") {
-        warnings.push("No monthly rent amount set — this is a required term of any lease agreement.")
-      }
-      if (!money.securityDeposit) {
-        suggestions.push("No security deposit specified. Most leases require one to protect against damage.")
-      }
-      if (!money.lateFee) {
-        suggestions.push("Consider adding a late fee clause to deter overdue rent payments.")
-      }
-      if (!money.leaseStartDate) {
-        warnings.push("No lease start date — this must be specified for the lease to take effect.")
-      }
-    }
-  }
-
-  draftGuidance.push(...DEFAULT_CLAUSES.map((c) => `Default: ${c} will be included.`))
-
-  return { suggestions, warnings, draftGuidance: draftGuidance.slice(0, 4) }
+const STEP_SECTIONS: Record<number, string> = {
+  1: "Parties & Services",
+  2: "Scope of Work",
+  3: "Payment & Compensation",
+  4: "IP & Confidentiality",
+  5: "Governing Law",
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PROGRESS BAR
+// LIVE DOCUMENT PREVIEW
 // ─────────────────────────────────────────────────────────────────────────────
 
-function WizardProgressBar({ step }: { step: number }) {
+function PlaceholderLines({ count = 3, widths }: { count?: number; widths?: number[] }) {
+  const ws = widths ?? [100, 88, 75, 60].slice(0, count)
   return (
-    <div className="sticky top-16 z-30 bg-background/95 backdrop-blur border-b border-border/40 px-4 py-2.5">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex items-center gap-0.5 sm:gap-1">
-          {STEPS.map((label, i) => {
-            const done = i < step
-            const active = i === step
+    <div className="space-y-1.5">
+      {ws.map((w, i) => (
+        <div key={i} className="h-2 bg-gray-200 rounded-full" style={{ width: `${w}%` }} />
+      ))}
+    </div>
+  )
+}
+
+function SectionHeading({ num, title, active, done }: { num: string; title: string; active: boolean; done: boolean }) {
+  return (
+    <div className={`font-bold text-[11px] uppercase tracking-wider font-sans mb-2 ${active ? "text-violet-700" : done ? "text-[#1a1a1a]" : "text-[#aaa]"}`}>
+      {num} — {title}
+    </div>
+  )
+}
+
+function LiveDocumentPreview({
+  contractType,
+  people,
+  scope,
+  money,
+  protection,
+  step,
+  draft,
+  aiActive,
+}: {
+  contractType: ContractType | null
+  people: Partial<PeopleData>
+  scope: Partial<ScopeData>
+  money: Partial<MoneyData>
+  protection: Partial<ProtectionData>
+  step: number
+  draft: DraftPayload | null
+  aiActive?: boolean
+}) {
+  const clientName = people.clientName?.trim() || people.clientEntityName?.trim() || null
+  const freelancerName = people.freelancerName?.trim() || people.freelancerEntityName?.trim() || null
+  const govLaw = people.governingLaw?.trim() || null
+  const totalFee = money.totalFee?.trim() || null
+  const deposit = money.depositRequired && money.depositAmount ? money.depositAmount : null
+  const invoiceDays = money.invoiceDueDays?.trim() || "30"
+  const scopeDesc = scope.scopeDescription?.trim() || null
+  const deliverables = scope.deliverables?.trim() || null
+  const titleLabel = contractType ? CONTRACT_TYPES.find(c => c.id === contractType)?.title ?? "Agreement" : "Agreement"
+
+  const sectionActive = (s: number) => step === s
+  const sectionDone = (s: number) => step > s
+
+  // If we have a fully generated draft, render it
+  if (draft) {
+    return (
+      <div className="w-full max-w-[580px] bg-[#FFFEF8] rounded-lg shadow-[0_4px_40px_rgba(0,0,0,0.3)] p-10 font-serif text-[#1a1a1a] text-sm leading-relaxed min-h-[700px]">
+        <div className="text-center mb-8">
+          <div className="font-bold text-base tracking-wide uppercase">{titleLabel}</div>
+          {draft.parties && (
+            <div className="text-xs text-[#888] font-sans mt-1">
+              {draft.parties.partyA?.name} × {draft.parties.partyB?.name}
+            </div>
+          )}
+        </div>
+        {draft.sections?.map((section, i) => (
+          <div key={i} className="mb-6">
+            <div className="font-bold text-[11px] uppercase tracking-wider font-sans mb-2">§{i + 1} — {section.title}</div>
+            {section.clauses?.map((clause, j) => (
+              <p key={j} className="text-[13px] mb-2 leading-relaxed">{clause}</p>
+            ))}
+          </div>
+        ))}
+        <div className="mt-10 pt-8 border-t border-gray-200 grid grid-cols-2 gap-8">
+          <div>
+            <div className="text-[11px] font-sans text-gray-400 mb-6">CLIENT</div>
+            <div className="border-b border-gray-300 mb-1.5" />
+            <div className="text-[11px] font-sans text-gray-500">{draft.parties?.partyA?.name}</div>
+          </div>
+          <div>
+            <div className="text-[11px] font-sans text-gray-400 mb-6">FREELANCER</div>
+            <div className="border-b border-gray-300 mb-1.5" />
+            <div className="text-[11px] font-sans text-gray-500">{draft.parties?.partyB?.name}</div>
+          </div>
+        </div>
+        <div className="mt-8 pt-4 border-t border-gray-200 flex items-center justify-between">
+          <span className="text-[10px] text-gray-400 font-sans">PlainPath · Document drafting support. Review before use. Not legal advice.</span>
+          <span className="text-[10px] text-gray-400 font-sans">Page 1 of 1</span>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="w-full max-w-[580px] bg-[#FFFEF8] rounded-lg shadow-[0_4px_40px_rgba(0,0,0,0.3)] p-10 font-serif text-[#1a1a1a] text-sm leading-relaxed min-h-[700px]">
+      <div className="text-center mb-8">
+        <div className="font-bold text-base tracking-wide uppercase">{titleLabel}</div>
+        {(clientName || freelancerName) && (
+          <div className="text-xs text-[#888] font-sans mt-1">
+            {clientName ?? "—"} × {freelancerName ?? "—"}
+            {govLaw ? ` · ${govLaw}` : ""}
+          </div>
+        )}
+        {!clientName && !freelancerName && (
+          <div className="text-xs text-[#bbb] font-sans mt-1">Complete the form to see your document build here</div>
+        )}
+      </div>
+
+      {/* §1 — Parties */}
+      <div className={`mb-5 ${sectionActive(1) ? "rounded-lg border-2 border-violet-500/60 bg-violet-500/[0.03] p-3 -mx-1 relative" : ""}`}>
+        {sectionActive(1) && (
+          <div className="absolute -top-2.5 left-3 flex items-center gap-1.5 bg-[#FFFEF8] px-2">
+            <span className="text-[10px] text-violet-500 font-bold font-sans uppercase tracking-wider">● Editing this section</span>
+          </div>
+        )}
+        <SectionHeading num="§1" title="PARTIES & SERVICES" active={sectionActive(1)} done={sectionDone(1)} />
+        {(sectionDone(1) || sectionActive(1)) && (clientName || freelancerName) ? (
+          <p className="text-[13px]">
+            This Agreement is entered into between{" "}
+            <strong>{clientName ?? <span className="bg-amber-100 text-amber-800 px-1 rounded font-sans text-[11px]">client name needed</span>}</strong>{" "}
+            ("Client")
+            {people.clientAddress ? `, ${people.clientAddress}` : ""}
+            {people.governingLaw ? `, a ${people.governingLaw} entity` : ""}, and{" "}
+            <strong>{freelancerName ?? <span className="bg-amber-100 text-amber-800 px-1 rounded font-sans text-[11px]">freelancer name needed</span>}</strong>{" "}
+            ("Freelancer")
+            {people.freelancerAddress
+              ? `, ${people.freelancerAddress}`
+              : <span className="inline-block bg-amber-100 text-amber-800 px-1.5 rounded font-sans text-[11px] ml-1">address needed</span>
+            }
+            {money.startDate ? `, effective ${new Date(money.startDate).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}` : ""}.
+          </p>
+        ) : (
+          <>
+            <PlaceholderLines count={2} widths={[90, 75]} />
+            {step < 1 && <div className="mt-1.5 text-[10px] text-gray-400 font-sans italic">Complete Step 2 — Parties to fill this section</div>}
+          </>
+        )}
+      </div>
+
+      {/* §2 — Scope */}
+      <div className={`mb-5 ${sectionActive(2) ? "rounded-lg border-2 border-violet-500/60 bg-violet-500/[0.03] p-3 -mx-1 relative" : ""} ${!sectionDone(1) && !sectionActive(2) ? "opacity-50" : ""}`}>
+        {sectionActive(2) && (
+          <div className="absolute -top-2.5 left-3 flex items-center gap-1.5 bg-[#FFFEF8] px-2">
+            <span className="text-[10px] text-violet-500 font-bold font-sans uppercase tracking-wider">● Editing this section</span>
+          </div>
+        )}
+        <SectionHeading num="§2" title="SCOPE OF WORK" active={sectionActive(2)} done={sectionDone(2)} />
+        {sectionDone(2) && scopeDesc ? (
+          <p className="text-[13px]">{scopeDesc}{deliverables ? ` Deliverables include: ${deliverables.split("\n").slice(0, 3).join("; ")}.` : ""}</p>
+        ) : (
+          <>
+            <PlaceholderLines count={3} widths={[100, 88, 72]} />
+            {!sectionDone(2) && step < 2 && <div className="mt-1.5 text-[10px] text-gray-400 font-sans italic">Complete Step 3 — Scope to fill this section</div>}
+          </>
+        )}
+      </div>
+
+      {/* §3 — Payment */}
+      <div className={`mb-5 ${sectionActive(3) ? "rounded-lg border-2 border-violet-500/60 bg-violet-500/[0.03] p-3 -mx-1 relative" : ""} ${!sectionDone(2) && !sectionActive(3) ? "opacity-40" : ""}`}>
+        {sectionActive(3) && (
+          <div className="absolute -top-2.5 left-3 flex items-center gap-1.5 bg-[#FFFEF8] px-2">
+            <span className="text-[10px] text-violet-500 font-bold font-sans uppercase tracking-wider">● Editing this section</span>
+          </div>
+        )}
+        <SectionHeading num="§3" title="PAYMENT & COMPENSATION" active={sectionActive(3)} done={sectionDone(3)} />
+        {sectionDone(3) && totalFee ? (
+          <p className="text-[13px]">
+            Total fee: <strong>${parseInt(totalFee).toLocaleString()}</strong>.
+            {deposit && ` Deposit of $${parseInt(deposit).toLocaleString()} (${Math.round((parseInt(deposit) / parseInt(totalFee)) * 100)}%) due upon execution.`}
+            {` Balance due within ${invoiceDays} days of final delivery.`}
+            {money.lateFee && money.lateFeeAmount && ` Late payments accrue ${money.lateFeeAmount}% per month interest.`}
+          </p>
+        ) : (
+          <PlaceholderLines count={2} widths={[95, 82]} />
+        )}
+      </div>
+
+      {/* §4 — IP */}
+      <div className={`mb-5 ${sectionActive(4) ? "rounded-lg border-2 border-violet-500/60 bg-violet-500/[0.03] p-3 -mx-1 relative" : ""} ${!sectionDone(3) && !sectionActive(4) ? "opacity-30" : ""}`}>
+        {sectionActive(4) && aiActive && (
+          <div className="absolute -top-2.5 left-3 flex items-center gap-1.5 bg-[#FFFEF8] px-2">
+            <Sparkles className="w-3 h-3 text-violet-500" />
+            <span className="text-[10px] text-violet-500 font-bold font-sans uppercase tracking-wider">AI — suggesting language</span>
+          </div>
+        )}
+        {sectionActive(4) && !aiActive && (
+          <div className="absolute -top-2.5 left-3 flex items-center gap-1.5 bg-[#FFFEF8] px-2">
+            <span className="text-[10px] text-violet-500 font-bold font-sans uppercase tracking-wider">● Editing this section</span>
+          </div>
+        )}
+        <SectionHeading num="§4" title="INTELLECTUAL PROPERTY & CONFIDENTIALITY" active={sectionActive(4)} done={sectionDone(4)} />
+        {sectionDone(4) ? (
+          <p className="text-[13px]">
+            {protection.ipTiming === "on-payment"
+              ? "All deliverables become exclusive property of Client upon receipt of full payment. Until then, IP remains with Freelancer."
+              : "IP transfers to Client upon creation of each deliverable."}
+            {protection.portfolioUsage ? " Freelancer retains portfolio display rights." : ""}
+            {protection.confidentiality ? " Both parties agree to maintain confidentiality for 2 years post-engagement." : ""}
+          </p>
+        ) : (
+          <PlaceholderLines count={2} widths={[90, 78]} />
+        )}
+      </div>
+
+      {/* §5 — Governing Law */}
+      <div className={`mb-5 ${!sectionDone(4) && !sectionActive(5) ? "opacity-25" : ""}`}>
+        <SectionHeading num="§5" title="GOVERNING LAW" active={sectionActive(5)} done={sectionDone(5)} />
+        {govLaw ? (
+          <p className="text-[13px]">
+            This Agreement is governed by the laws of <strong>{govLaw}</strong>.
+            {protection.disputeResolution && ` Disputes shall be resolved by ${protection.disputeResolution}.`}
+          </p>
+        ) : (
+          <PlaceholderLines count={1} widths={[70]} />
+        )}
+      </div>
+
+      <div className="mt-10 pt-4 border-t border-gray-200 flex items-center justify-between">
+        <span className="text-[10px] text-gray-400 font-sans">PlainPath · Document drafting support. Review before use. Not legal advice.</span>
+        <span className="text-[10px] text-gray-400 font-sans">Draft · Page 1</span>
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HEADER
+// ─────────────────────────────────────────────────────────────────────────────
+
+function BuilderHeader({
+  filename,
+  unsaved,
+  onSave,
+  onExport,
+  canExport,
+}: {
+  filename: string
+  unsaved: boolean
+  onSave: () => void
+  onExport: () => void
+  canExport: boolean
+}) {
+  return (
+    <header className="h-12 border-b border-white/[0.06] flex items-center px-4 gap-3 shrink-0 bg-[#0c0c0f]">
+      <div className="w-7 h-7 rounded-lg bg-violet-600 flex items-center justify-center shrink-0">
+        <PenLine className="w-4 h-4 text-white" />
+      </div>
+      <span className="text-sm font-medium text-white/50 hidden sm:inline">Build a Contract</span>
+      <span className="text-white/20 hidden sm:inline">/</span>
+      <span className="text-sm font-medium text-white/80 truncate max-w-[200px]">{filename}</span>
+      {unsaved && (
+        <div className="ml-1 flex items-center gap-1.5 text-xs text-amber-400 bg-amber-500/[0.08] border border-amber-500/20 rounded-full px-2.5 py-0.5 shrink-0">
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+          <span className="hidden sm:inline">Unsaved</span>
+        </div>
+      )}
+      <div className="ml-auto flex items-center gap-2">
+        <button
+          onClick={onSave}
+          className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-white/[0.08] text-white/60 hover:text-white/80 transition-colors"
+        >
+          <Save className="w-3.5 h-3.5" /> Save draft
+        </button>
+        <button
+          onClick={onExport}
+          disabled={!canExport}
+          className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          <Download className="w-3.5 h-3.5" /> Export
+        </button>
+      </div>
+    </header>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STEP PROGRESS
+// ─────────────────────────────────────────────────────────────────────────────
+
+function StepProgress({ step }: { step: number }) {
+  const current = step - 1 // steps 1-5 (People to Review)
+  return (
+    <div className="px-5 pt-5 pb-3 border-b border-white/[0.05] shrink-0">
+      <div className="flex items-center gap-0.5 mb-3 flex-wrap">
+        {STEPS.slice(1).map((s, i) => (
+          <div key={i} className="flex items-center gap-0.5">
+            <div className={`flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-medium shrink-0 ${
+              i < current ? "bg-violet-600 text-white" :
+              i === current ? "bg-violet-600 text-white ring-2 ring-violet-400/30" :
+              "bg-white/[0.05] text-white/25"
+            }`}>
+              {i < current ? <Check className="w-3 h-3" /> : i + 2}
+            </div>
+            <span className={`text-[10px] mx-0.5 ${
+              i === current ? "text-white/80 font-medium" :
+              i < current ? "text-white/40" : "text-white/20"
+            }`}>{s}</span>
+            {i < STEPS.length - 2 && (
+              <div className={`w-3 h-px mx-0.5 ${i < current ? "bg-violet-500/50" : "bg-white/[0.08]"}`} />
+            )}
+          </div>
+        ))}
+      </div>
+      <div className="h-1 bg-white/[0.05] rounded-full overflow-hidden">
+        <div
+          className="h-full bg-violet-600 rounded-full transition-all duration-500"
+          style={{ width: `${(current / (STEPS.length - 2)) * 100}%` }}
+        />
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// EMPTY STATE — TYPE SELECTION
+// ─────────────────────────────────────────────────────────────────────────────
+
+const RECENT_DRAFTS_DEMO = [
+  { name: "Acme-Riverton-ServiceAgreement.draft", updated: "2 days ago", type: "Freelance", pct: 70 },
+  { name: "SunBridge-NDA.draft",                  updated: "4 days ago", type: "NDA",       pct: 40 },
+]
+
+function EmptyState({ onSelect }: { onSelect: (ct: ContractType) => void }) {
+  const [hasSavedDraft, setHasSavedDraft] = useState(false)
+  useEffect(() => {
+    setHasSavedDraft(!!localStorage.getItem("plainpath-contract-draft-latest"))
+  }, [])
+
+  return (
+    <div className="flex-1 overflow-y-auto px-6 pb-12 bg-[#0c0c0f]">
+      <div className="max-w-3xl mx-auto pt-10">
+        <h1 className="text-2xl font-semibold text-white mb-1">What would you like to build?</h1>
+        <p className="text-sm text-white/40 mb-8">
+          PlainPath guides you through each section with drafting support. Your document grows in real time as you answer.
+        </p>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
+          {CONTRACT_TYPES.map((ct) => {
+            const Icon = ct.Icon
             return (
-              <div key={label} className="flex items-center flex-1 min-w-0">
-                <div className={`flex items-center gap-1 flex-shrink-0 text-xs font-medium transition-colors ${active ? "text-primary" : done ? "text-primary/60" : "text-muted-foreground/40"}`}>
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold transition-all ${active ? "bg-primary text-primary-foreground" : done ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground/40"}`}>
-                    {done ? <CheckCircle2 className="w-3 h-3" /> : i + 1}
-                  </div>
-                  <span className="hidden sm:inline">{label}</span>
-                </div>
-                {i < STEPS.length - 1 && (
-                  <div className={`flex-1 h-0.5 mx-1 rounded-full transition-all ${done ? "bg-primary/30" : "bg-border/40"}`} />
+              <button
+                key={ct.id}
+                onClick={() => onSelect(ct.id)}
+                className={`group relative flex flex-col items-start gap-3 p-4 rounded-2xl border transition-all text-left ${
+                  ct.popular
+                    ? "border-violet-500/40 bg-violet-600/[0.06] hover:bg-violet-600/[0.10]"
+                    : "border-white/[0.07] bg-white/[0.01] hover:border-white/15 hover:bg-white/[0.03]"
+                }`}
+              >
+                {ct.popular && (
+                  <span className="absolute top-3 right-3 text-[10px] font-medium px-2 py-0.5 rounded-full border bg-violet-600/20 text-violet-300 border-violet-500/30">
+                    Most Popular
+                  </span>
                 )}
-              </div>
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${ct.popular ? "bg-violet-600/20" : "bg-white/[0.05]"}`}>
+                  <Icon className={`w-5 h-5 ${ct.popular ? "text-violet-400" : "text-white/50"}`} />
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-white/85 mb-0.5 leading-tight">{ct.title}</div>
+                  <div className="text-xs text-white/35 leading-relaxed">{ct.description}</div>
+                </div>
+              </button>
             )
           })}
         </div>
-      </div>
-    </div>
-  )
-}
 
-// ─────────────────────────────────────────────────────────────────────────────
-// AI INSIGHT PANEL
-// ─────────────────────────────────────────────────────────────────────────────
-
-function AIInsightPanel({
-  insights,
-  loading,
-}: {
-  insights: AIInsights
-  loading: boolean
-}) {
-  const hasContent =
-    insights.suggestions.length > 0 ||
-    insights.warnings.length > 0 ||
-    insights.draftGuidance.length > 0
-
-  return (
-    <div className="rounded-2xl border border-border/50 bg-card overflow-hidden">
-      <div className="px-4 py-3 border-b border-border/30 flex items-center gap-2">
-        <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center">
-          <Sparkles className="w-3.5 h-3.5 text-primary" />
-        </div>
-        <span className="text-sm font-semibold">AI Insights</span>
-        {loading && <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground ml-auto" />}
-      </div>
-
-      <div className="p-4 space-y-4 max-h-[calc(100vh-220px)] overflow-y-auto">
-        {loading && !hasContent && (
-          <div className="space-y-2">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-3 bg-muted/60 rounded animate-pulse" style={{ width: `${85 - i * 10}%` }} />
-            ))}
-          </div>
-        )}
-
-        {!loading && !hasContent && (
-          <p className="text-xs text-muted-foreground text-center py-4">
-            Fill in your answers to see live guidance.
+        {/* Scoping notice */}
+        <div className="flex items-start gap-2.5 px-4 py-3 bg-white/[0.02] border border-white/[0.06] rounded-xl mb-6">
+          <Info className="w-3.5 h-3.5 text-white/25 mt-0.5 shrink-0" />
+          <p className="text-xs text-white/30 leading-relaxed">
+            PlainPath supports contracts, agreements, notices, and structured business/legal documents.
+            Not for SOPs, policy manuals, or general long-form writing.
           </p>
-        )}
+        </div>
 
-        {insights.warnings.length > 0 && (
-          <div className="space-y-1.5">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-amber-500">Heads Up</p>
-            {insights.warnings.map((w, i) => (
-              <div key={i} className="flex gap-2 text-xs text-foreground/80 bg-amber-50 dark:bg-amber-950/30 rounded-lg p-2.5">
-                <AlertTriangle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0 mt-0.5" />
-                <span>{w}</span>
-              </div>
-            ))}
+        {/* Recent drafts */}
+        <div className="border border-white/[0.07] rounded-2xl overflow-hidden mb-6">
+          <div className="px-4 py-2.5 border-b border-white/[0.05] flex items-center gap-2">
+            <Clock className="w-3.5 h-3.5 text-white/30" />
+            <span className="text-xs text-white/30 uppercase tracking-widest">Recent Drafts</span>
           </div>
-        )}
+          {hasSavedDraft ? (
+            <button
+              onClick={() => {
+                const raw = localStorage.getItem("plainpath-contract-draft-latest")
+                if (raw) {
+                  try {
+                    const saved = JSON.parse(raw)
+                    if (saved.contractType) onSelect(saved.contractType)
+                  } catch { /* ignore */ }
+                }
+              }}
+              className="w-full flex items-center gap-4 px-4 py-3.5 text-left hover:bg-white/[0.02] transition-colors"
+            >
+              <div className="w-8 h-8 rounded-lg bg-violet-600/10 border border-violet-500/20 flex items-center justify-center shrink-0">
+                <FileText className="w-4 h-4 text-violet-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium text-white/80 truncate">Saved draft — click to resume</div>
+                <div className="text-xs text-white/30 mt-0.5">Auto-saved</div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-white/20 shrink-0" />
+            </button>
+          ) : (
+            RECENT_DRAFTS_DEMO.map((d, i) => (
+              <div key={i} className="flex items-center gap-4 px-4 py-3.5 border-b border-white/[0.04] last:border-0 opacity-40">
+                <div className="w-8 h-8 rounded-lg bg-violet-600/10 border border-violet-500/20 flex items-center justify-center shrink-0">
+                  <FileText className="w-4 h-4 text-violet-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-white/80 truncate">{d.name}</div>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <div className="h-1 w-20 bg-white/[0.06] rounded-full overflow-hidden">
+                      <div className="h-full bg-violet-500/60 rounded-full" style={{ width: `${d.pct}%` }} />
+                    </div>
+                    <span className="text-xs text-white/30">{d.pct}% · {d.updated}</span>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
 
-        {insights.suggestions.length > 0 && (
-          <div className="space-y-1.5">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-blue-500">Suggestions</p>
-            {insights.suggestions.map((s, i) => (
-              <div key={i} className="flex gap-2 text-xs text-foreground/80 bg-blue-50 dark:bg-blue-950/30 rounded-lg p-2.5">
-                <Info className="w-3.5 h-3.5 text-blue-500 flex-shrink-0 mt-0.5" />
-                <span>{s}</span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {insights.draftGuidance.length > 0 && (
-          <div className="space-y-1.5">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Draft Preview</p>
-            {insights.draftGuidance.map((g, i) => (
-              <div key={i} className="flex gap-2 text-xs text-muted-foreground bg-muted/40 rounded-lg p-2.5">
-                <FileText className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
-                <span>{g}</span>
-              </div>
-            ))}
-          </div>
-        )}
+        <p className="text-center text-xs text-white/20 leading-relaxed">
+          PlainPath helps draft structured documents. Review before use.{" "}
+          <span className="text-white/30 font-medium">Not legal advice.</span>{" "}
+          Consider professional review for high-stakes documents.
+        </p>
       </div>
     </div>
   )
 }
 
-function MobileInsightDrawer({ insights, loading }: { insights: AIInsights; loading: boolean }) {
-  const [open, setOpen] = useState(false)
-  const count = insights.warnings.length + insights.suggestions.length
-  return (
-    <div className="lg:hidden mt-4">
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center justify-between gap-2 px-4 py-3 rounded-xl bg-card border border-border/50 text-sm font-medium"
-      >
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-primary" />
-          <span>AI Insights</span>
-          {count > 0 && <Badge variant="secondary" className="text-xs">{count}</Badge>}
-          {loading && <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />}
-        </div>
-        {open ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
-      </button>
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="overflow-hidden"
-          >
-            <div className="mt-2">
-              <AIInsightPanel insights={insights} loading={loading} />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  )
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
-// STEP 0 — CONTRACT TYPE
+// FORM STEP SECTIONS (Right panel content)
 // ─────────────────────────────────────────────────────────────────────────────
 
-function TypeStep({
-  selected,
-  onSelect,
-}: {
-  selected: ContractType | null
-  onSelect: (t: ContractType) => void
+function FieldGroup({ label, required, optional, children }: {
+  label: string
+  required?: boolean
+  optional?: boolean
+  children: React.ReactNode
 }) {
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-display font-bold mb-1">What are you building?</h2>
-        <p className="text-muted-foreground text-sm">Choose the contract type that best fits your situation.</p>
+    <div className="mb-5">
+      <div className="flex items-center gap-1.5 mb-2">
+        <span className="text-[10px] text-white/30 uppercase tracking-widest">{label}</span>
+        {required && (
+          <span className="text-[10px] text-red-400/70 bg-red-500/10 border border-red-500/20 rounded px-1.5 py-0.5">Required</span>
+        )}
+        {optional && (
+          <span className="text-[10px] text-white/25 bg-white/[0.04] border border-white/[0.07] rounded px-1.5 py-0.5">Optional</span>
+        )}
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-        {CONTRACT_TYPES.map(({ id, title, description, example, Icon, color, bg, ready }, idx) => {
-          const isSelected = selected === id
-          const centreLastRow = CONTRACT_TYPES.length % 3 === 2 && idx === CONTRACT_TYPES.length - 2
+      {children}
+    </div>
+  )
+}
+
+function TextInput({
+  label, value, onChange, placeholder, required, note,
+}: {
+  label: string; value: string; onChange: (v: string) => void
+  placeholder?: string; required?: boolean; note?: string
+}) {
+  return (
+    <div>
+      <label className="text-xs text-white/50 mb-1 block">{label}</label>
+      <input
+        className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white/85 placeholder-white/25 focus:outline-none focus:border-violet-500/40 focus:ring-1 focus:ring-violet-500/20 transition-colors"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+      />
+      {!value.trim() && required && (
+        <div className="flex items-center gap-1 mt-1">
+          <AlertCircle className="w-3 h-3 text-amber-400" />
+          <span className="text-[11px] text-amber-400">Required — will appear in document</span>
+        </div>
+      )}
+      {note && !(!value.trim() && required) && (
+        <p className="text-xs text-white/25 mt-1 leading-relaxed">{note}</p>
+      )}
+    </div>
+  )
+}
+
+function TextareaInput({ label, value, onChange, placeholder, rows = 3 }: {
+  label: string; value: string; onChange: (v: string) => void
+  placeholder?: string; rows?: number
+}) {
+  return (
+    <div>
+      <label className="text-xs text-white/50 mb-1 block">{label}</label>
+      <textarea
+        rows={rows}
+        className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white/85 placeholder-white/25 focus:outline-none focus:border-violet-500/40 focus:ring-1 focus:ring-violet-500/20 transition-colors resize-none"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+      />
+    </div>
+  )
+}
+
+function SegmentedControl({ options, value, onChange }: {
+  options: { label: string; value: string }[]
+  value: string
+  onChange: (v: string) => void
+}) {
+  return (
+    <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${options.length}, 1fr)` }}>
+      {options.map((opt) => (
+        <button
+          key={opt.value}
+          onClick={() => onChange(opt.value)}
+          className={`py-2 rounded-lg text-xs font-medium border transition-colors ${
+            value === opt.value
+              ? "bg-violet-600/20 border-violet-500/40 text-violet-300"
+              : "border-white/[0.07] text-white/40 hover:border-white/15 hover:text-white/60"
+          }`}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function Toggle({ label, value, onChange, note }: {
+  label: string; value: boolean; onChange: (v: boolean) => void; note?: string
+}) {
+  return (
+    <div>
+      <div className="flex items-center justify-between">
+        <label className="text-xs text-white/50">{label}</label>
+        <button
+          onClick={() => onChange(!value)}
+          className={`w-9 h-5 rounded-full transition-colors flex items-center px-0.5 ${value ? "bg-violet-600 justify-end" : "bg-white/[0.10] justify-start"}`}
+        >
+          <div className="w-4 h-4 bg-white rounded-full shadow-sm" />
+        </button>
+      </div>
+      {note && <p className="text-xs text-white/25 mt-1 leading-relaxed">{note}</p>}
+    </div>
+  )
+}
+
+function AIHint({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex items-start gap-2 p-3 bg-violet-600/[0.06] border border-violet-500/15 rounded-xl">
+      <Sparkles className="w-3.5 h-3.5 text-violet-400 mt-0.5 shrink-0" />
+      <p className="text-xs text-violet-300/70 leading-relaxed">{children}</p>
+    </div>
+  )
+}
+
+// Step 1 — People
+function PeopleSection({
+  contractType,
+  people,
+  onChange,
+}: {
+  contractType: ContractType
+  people: Partial<PeopleData>
+  onChange: (d: Partial<PeopleData>) => void
+}) {
+  const isLease = contractType === "lease"
+  const isNda = contractType === "nda" || contractType === "payment-agreement"
+  const clientLabel = isLease ? "Tenant" : isNda ? "Disclosing Party" : "Client"
+  const freelancerLabel = isLease ? "Landlord / Property Manager" : isNda ? "Receiving Party" : contractType === "freelance" ? "Freelancer / Contractor" : "Service Provider"
+
+  const set = (k: keyof PeopleData) => (v: string) => onChange({ ...people, [k]: v })
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h3 className="text-sm font-semibold text-white mb-0.5">Step 2 — Parties</h3>
+        <p className="text-xs text-white/35">Enter the full legal names and contact details for both parties.</p>
+      </div>
+
+      <FieldGroup label={`Party A — ${clientLabel}`} required>
+        <div className="space-y-2">
+          <TextInput
+            label="Full legal name or entity name"
+            value={people.clientName ?? ""}
+            onChange={set("clientName")}
+            placeholder={`e.g. Acme Corp`}
+            required
+          />
+          <TextInput
+            label="Business address"
+            value={people.clientAddress ?? ""}
+            onChange={set("clientAddress")}
+            placeholder="Street, City, State, ZIP"
+          />
+        </div>
+      </FieldGroup>
+
+      <FieldGroup label={`Party B — ${freelancerLabel}`} required>
+        <div className="space-y-2">
+          <TextInput
+            label="Full legal name or entity name"
+            value={people.freelancerName ?? ""}
+            onChange={set("freelancerName")}
+            placeholder="e.g. Jordan R. / Riverton Design Studio"
+            required
+          />
+          <TextInput
+            label="Business address"
+            value={people.freelancerAddress ?? ""}
+            onChange={set("freelancerAddress")}
+            placeholder="Street, City, State, ZIP"
+            required
+          />
+        </div>
+      </FieldGroup>
+
+      <FieldGroup label="Governing State" optional>
+        <TextInput
+          label="State whose laws govern this agreement"
+          value={people.governingLaw ?? ""}
+          onChange={set("governingLaw")}
+          placeholder="e.g. New Jersey, California"
+          note="Usually the state where work is performed or where both parties are located."
+        />
+      </FieldGroup>
+
+      {contractType === "freelance" || contractType === "service-agreement" ? (
+        <FieldGroup label="Project / Engagement Title" optional>
+          <TextInput
+            label="Short name for this engagement"
+            value={people.projectTitle ?? ""}
+            onChange={set("projectTitle")}
+            placeholder="e.g. Brand Identity & Website Design"
+          />
+        </FieldGroup>
+      ) : null}
+
+      <FieldGroup label="Effective Date" optional>
+        <TextInput
+          label="Agreement effective date"
+          value={people.clientState ?? ""}
+          onChange={set("clientState")}
+          placeholder="e.g. July 1, 2025"
+          note="Leave blank to use the signature date."
+        />
+      </FieldGroup>
+
+      <AIHint>
+        Match legal names exactly to any business registration. For LLCs, include the state of formation.
+      </AIHint>
+    </div>
+  )
+}
+
+// Step 2 — Scope
+function ScopeSection({
+  contractType,
+  scope,
+  onChange,
+}: {
+  contractType: ContractType
+  scope: Partial<ScopeData>
+  onChange: (d: Partial<ScopeData>) => void
+}) {
+  const set = (k: keyof ScopeData) => (v: string) => onChange({ ...scope, [k]: v })
+  const isLease = contractType === "lease"
+  const isNda = contractType === "nda"
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h3 className="text-sm font-semibold text-white mb-0.5">Step 3 — Scope of Work</h3>
+        <p className="text-xs text-white/35">Define what is being delivered or agreed to.</p>
+      </div>
+
+      {isLease ? (
+        <>
+          <FieldGroup label="Property Address" required>
+            <TextInput
+              label="Full address of the rental property"
+              value={scope.propertyAddress ?? ""}
+              onChange={set("propertyAddress")}
+              placeholder="e.g. 210 Oak St, Apt 3B, Newark, NJ 07102"
+              required
+            />
+          </FieldGroup>
+          <FieldGroup label="Property Type" optional>
+            <SegmentedControl
+              options={[
+                { label: "Residential", value: "residential" },
+                { label: "Commercial", value: "commercial" },
+              ]}
+              value={scope.propertyType ?? "residential"}
+              onChange={set("propertyType")}
+            />
+          </FieldGroup>
+          <FieldGroup label="Lease Type" optional>
+            <SegmentedControl
+              options={[
+                { label: "Fixed-term", value: "fixed" },
+                { label: "Month-to-month", value: "month-to-month" },
+              ]}
+              value={scope.leaseType ?? "fixed"}
+              onChange={set("leaseType")}
+            />
+          </FieldGroup>
+        </>
+      ) : isNda ? (
+        <>
+          <FieldGroup label="Purpose of Disclosure" required>
+            <TextInput
+              label="Why is confidential information being shared?"
+              value={scope.purposeOfDisclosure ?? ""}
+              onChange={set("purposeOfDisclosure")}
+              placeholder="e.g. Evaluating a potential business partnership"
+              required
+            />
+          </FieldGroup>
+          <FieldGroup label="Confidential Information" optional>
+            <TextareaInput
+              label="Describe the type of information covered"
+              value={scope.confidentialInfoDescription ?? ""}
+              onChange={set("confidentialInfoDescription")}
+              placeholder="e.g. Trade secrets, financial data, product roadmaps, customer lists"
+            />
+          </FieldGroup>
+          <FieldGroup label="NDA Duration" optional>
+            <TextInput
+              label="How long does the NDA remain in effect?"
+              value={scope.ndaTerm ?? ""}
+              onChange={set("ndaTerm")}
+              placeholder="e.g. 2 years, 3 years"
+              note="A defined term (1–3 years) is standard. Leave blank for indefinite."
+            />
+          </FieldGroup>
+        </>
+      ) : (
+        <>
+          <FieldGroup label="Service Type" optional>
+            <TextInput
+              label="Category of work"
+              value={scope.serviceType ?? ""}
+              onChange={set("serviceType")}
+              placeholder="e.g. Web Development, Graphic Design, IT Support"
+            />
+          </FieldGroup>
+          <FieldGroup label="Scope Description" required>
+            <TextareaInput
+              label="Describe the work in plain terms"
+              value={scope.scopeDescription ?? ""}
+              onChange={set("scopeDescription")}
+              rows={4}
+              placeholder="Describe what the freelancer will do for the client..."
+            />
+          </FieldGroup>
+          <FieldGroup label="Deliverables" optional>
+            <TextareaInput
+              label="List specific items to be delivered (one per line)"
+              value={scope.deliverables ?? ""}
+              onChange={set("deliverables")}
+              rows={3}
+              placeholder={"1) Figma mockups\n2) Coded website\n3) Source files"}
+            />
+          </FieldGroup>
+          <FieldGroup label="Exclusions" optional>
+            <TextareaInput
+              label="What is explicitly NOT included?"
+              value={scope.exclusions ?? ""}
+              onChange={set("exclusions")}
+              rows={2}
+              placeholder="e.g. Ongoing hosting, SEO copywriting, logo design"
+            />
+          </FieldGroup>
+          <FieldGroup label="Revision Rounds" optional>
+            <TextInput
+              label="Number of revision rounds included"
+              value={scope.revisionLimit ?? ""}
+              onChange={set("revisionLimit")}
+              placeholder="e.g. 2"
+              note="Without a limit, clients can request revisions indefinitely."
+            />
+          </FieldGroup>
+        </>
+      )}
+
+      <AIHint>
+        Suggested language only — review before use. Clear scope definitions reduce disputes. Not legal advice.
+      </AIHint>
+    </div>
+  )
+}
+
+// Step 3 — Money
+function MoneySection({
+  contractType,
+  money,
+  onChange,
+}: {
+  contractType: ContractType
+  money: Partial<MoneyData>
+  onChange: (d: Partial<MoneyData>) => void
+}) {
+  const set = (k: keyof MoneyData) => (v: string | boolean) => onChange({ ...money, [k]: v })
+  const isLease = contractType === "lease"
+
+  if (isLease) {
+    return (
+      <div className="space-y-4">
+        <div>
+          <h3 className="text-sm font-semibold text-white mb-0.5">Step 4 — Rent & Fees</h3>
+          <p className="text-xs text-white/35">Define the financial terms of this lease.</p>
+        </div>
+        <FieldGroup label="Monthly Rent" required>
+          <div className="flex items-center bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 gap-2">
+            <span className="text-white/40 text-sm">$</span>
+            <input
+              className="flex-1 bg-transparent text-sm text-white/85 placeholder-white/25 focus:outline-none"
+              value={money.monthlyRent ?? ""}
+              onChange={(e) => set("monthlyRent")(e.target.value)}
+              placeholder="e.g. 2,200"
+            />
+            <span className="text-white/30 text-xs">/month</span>
+          </div>
+        </FieldGroup>
+        <div className="grid grid-cols-2 gap-3">
+          <FieldGroup label="Lease Start" optional>
+            <input
+              type="date"
+              className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white/85 focus:outline-none focus:border-violet-500/40 transition-colors"
+              value={money.leaseStartDate ?? ""}
+              onChange={(e) => set("leaseStartDate")(e.target.value)}
+            />
+          </FieldGroup>
+          <FieldGroup label="Lease End" optional>
+            <input
+              type="date"
+              className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white/85 focus:outline-none focus:border-violet-500/40 transition-colors"
+              value={money.leaseEndDate ?? ""}
+              onChange={(e) => set("leaseEndDate")(e.target.value)}
+            />
+          </FieldGroup>
+        </div>
+        <FieldGroup label="Security Deposit" optional>
+          <div className="flex items-center bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 gap-2">
+            <span className="text-white/40 text-sm">$</span>
+            <input
+              className="flex-1 bg-transparent text-sm text-white/85 placeholder-white/25 focus:outline-none"
+              value={money.securityDeposit ?? ""}
+              onChange={(e) => set("securityDeposit")(e.target.value)}
+              placeholder="e.g. 4,400 (2 months)"
+            />
+          </div>
+        </FieldGroup>
+        <FieldGroup label="Late Rent Fee" optional>
+          <Toggle
+            label="Charge a late fee for overdue rent"
+            value={money.lateFee ?? false}
+            onChange={(v) => set("lateFee")(v)}
+          />
+          {money.lateFee && (
+            <div className="mt-2">
+              <TextInput
+                label="Late fee amount or rate"
+                value={money.lateFeeAmount ?? ""}
+                onChange={(v) => set("lateFeeAmount")(v)}
+                placeholder="e.g. $100 flat or 5% of monthly rent"
+              />
+            </div>
+          )}
+        </FieldGroup>
+        <AIHint>Suggested language only — review before use. Security deposits are governed by state law. Not legal advice.</AIHint>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h3 className="text-sm font-semibold text-white mb-0.5">Step 4 — Payment & Compensation</h3>
+        <p className="text-xs text-white/35">Define how and when payment will be made.</p>
+      </div>
+
+      <FieldGroup label="Payment Structure" required>
+        <SegmentedControl
+          options={[
+            { label: "Flat fee", value: "flat" },
+            { label: "Hourly", value: "hourly" },
+            { label: "Milestone", value: "milestone" },
+          ]}
+          value={money.paymentStructure ?? "flat"}
+          onChange={(v) => set("paymentStructure")(v)}
+        />
+      </FieldGroup>
+
+      {(money.paymentStructure ?? "flat") !== "hourly" ? (
+        <FieldGroup label="Total Project Fee" required>
+          <div className="flex items-center bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 gap-2">
+            <span className="text-white/40 text-sm">$</span>
+            <input
+              className="flex-1 bg-transparent text-sm text-white/85 placeholder-white/25 focus:outline-none"
+              value={money.totalFee ?? ""}
+              onChange={(e) => set("totalFee")(e.target.value)}
+              placeholder="e.g. 9,500"
+            />
+          </div>
+        </FieldGroup>
+      ) : (
+        <FieldGroup label="Hourly Rate" required>
+          <div className="flex items-center bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 gap-2">
+            <span className="text-white/40 text-sm">$</span>
+            <input
+              className="flex-1 bg-transparent text-sm text-white/85 placeholder-white/25 focus:outline-none"
+              value={money.hourlyRate ?? ""}
+              onChange={(e) => set("hourlyRate")(e.target.value)}
+              placeholder="e.g. 120"
+            />
+            <span className="text-white/30 text-xs">/hour</span>
+          </div>
+        </FieldGroup>
+      )}
+
+      <FieldGroup label="Upfront Deposit" optional>
+        <Toggle
+          label="Require a deposit before work begins"
+          value={money.depositRequired ?? false}
+          onChange={(v) => set("depositRequired")(v)}
+          note="A 25–50% deposit is standard. Common for projects over $500."
+        />
+        {money.depositRequired && (
+          <div className="mt-2">
+            <TextInput
+              label="Deposit amount"
+              value={money.depositAmount ?? ""}
+              onChange={(v) => set("depositAmount")(v)}
+              placeholder="e.g. 2,375"
+            />
+          </div>
+        )}
+      </FieldGroup>
+
+      <div className="grid grid-cols-2 gap-3">
+        <FieldGroup label="Project Start" optional>
+          <input
+            type="date"
+            className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white/85 focus:outline-none focus:border-violet-500/40 transition-colors"
+            value={money.startDate ?? ""}
+            onChange={(e) => set("startDate")(e.target.value)}
+          />
+        </FieldGroup>
+        <FieldGroup label="Delivery Deadline" optional>
+          <input
+            type="date"
+            className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white/85 focus:outline-none focus:border-violet-500/40 transition-colors"
+            value={money.deadline ?? ""}
+            onChange={(e) => set("deadline")(e.target.value)}
+          />
+        </FieldGroup>
+      </div>
+
+      <FieldGroup label="Invoice Due Period" optional>
+        <TextInput
+          label="Days after delivery for payment"
+          value={money.invoiceDueDays ?? ""}
+          onChange={(v) => set("invoiceDueDays")(v)}
+          placeholder="e.g. 30 (NET 30)"
+          note="NET 14 or NET 30 sets clear expectations."
+        />
+      </FieldGroup>
+
+      <FieldGroup label="Late Payment Fee" optional>
+        <Toggle
+          label="Charge a late fee on overdue invoices"
+          value={money.lateFee ?? false}
+          onChange={(v) => set("lateFee")(v)}
+          note="1.5%/month is standard and enforceable in most U.S. states."
+        />
+        {money.lateFee && (
+          <div className="mt-2">
+            <TextInput
+              label="Late fee rate"
+              value={money.lateFeeAmount ?? ""}
+              onChange={(v) => set("lateFeeAmount")(v)}
+              placeholder="e.g. 1.5 (% per month)"
+            />
+          </div>
+        )}
+      </FieldGroup>
+
+      <AIHint>
+        Suggested language only — review before use. Not legal advice.
+      </AIHint>
+    </div>
+  )
+}
+
+// Step 4 — Protection
+function ProtectionSection({
+  contractType,
+  protection,
+  onChange,
+}: {
+  contractType: ContractType
+  protection: Partial<ProtectionData>
+  onChange: (d: Partial<ProtectionData>) => void
+}) {
+  const set = (k: keyof ProtectionData) => (v: string | boolean) => onChange({ ...protection, [k]: v })
+  const isLease = contractType === "lease"
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h3 className="text-sm font-semibold text-white mb-0.5">Step 5 — Protection & Terms</h3>
+        <p className="text-xs text-white/35">{isLease ? "Tenant rights, maintenance, and termination terms." : "IP, confidentiality, termination, and dispute resolution."}</p>
+      </div>
+
+      {!isLease && (
+        <>
+          <FieldGroup label="IP Ownership Transfer" required>
+            <SegmentedControl
+              options={[
+                { label: "On full payment", value: "on-payment" },
+                { label: "On creation", value: "on-creation" },
+                { label: "Limited license", value: "limited-license" },
+              ]}
+              value={protection.ipTiming ?? "on-payment"}
+              onChange={(v) => set("ipTiming")(v)}
+            />
+            {protection.ipTiming === "on-creation" && (
+              <div className="flex items-start gap-2 mt-2 p-2.5 bg-amber-500/[0.06] border border-amber-500/20 rounded-lg">
+                <AlertCircle className="w-3.5 h-3.5 text-amber-400 mt-0.5 shrink-0" />
+                <p className="text-xs text-amber-300/70">IP transfers before full payment — client could use work without paying the balance.</p>
+              </div>
+            )}
+          </FieldGroup>
+
+          <FieldGroup label="Confidentiality" optional>
+            <Toggle
+              label="Include confidentiality clause"
+              value={protection.confidentiality ?? false}
+              onChange={(v) => set("confidentiality")(v)}
+              note="Protects proprietary information shared during the engagement."
+            />
+          </FieldGroup>
+
+          <FieldGroup label="Portfolio Usage" optional>
+            <Toggle
+              label="Freelancer may display work in portfolio"
+              value={protection.portfolioUsage ?? true}
+              onChange={(v) => set("portfolioUsage")(v)}
+            />
+          </FieldGroup>
+
+          <FieldGroup label="Kill Fee" optional>
+            <Toggle
+              label="Charge a kill fee if client cancels"
+              value={protection.killFee ?? false}
+              onChange={(v) => set("killFee")(v)}
+              note="Compensates for lost time if the project is cancelled mid-way."
+            />
+            {protection.killFee && (
+              <div className="mt-2">
+                <TextInput
+                  label="Kill fee amount or percentage"
+                  value={protection.killFeeAmount ?? ""}
+                  onChange={(v) => set("killFeeAmount")(v)}
+                  placeholder="e.g. 50% of remaining balance"
+                />
+              </div>
+            )}
+          </FieldGroup>
+
+          <FieldGroup label="Client Feedback Deadline" optional>
+            <TextInput
+              label="Days for client to respond to deliverables"
+              value={protection.clientFeedbackDeadlineDays ?? ""}
+              onChange={(v) => set("clientFeedbackDeadlineDays")(v)}
+              placeholder="e.g. 5"
+              note="Prevents indefinite delays from client-side inaction."
+            />
+          </FieldGroup>
+        </>
+      )}
+
+      <FieldGroup label="Termination Notice" optional>
+        <TextInput
+          label="Notice period required to terminate (days)"
+          value={protection.terminationNoticeDays ?? ""}
+          onChange={(v) => set("terminationNoticeDays")(v)}
+          placeholder="e.g. 14"
+          note="Gives both parties time to wrap up the engagement."
+        />
+      </FieldGroup>
+
+      <FieldGroup label="Dispute Resolution" optional>
+        <SegmentedControl
+          options={[
+            { label: "Negotiation", value: "negotiation" },
+            { label: "Mediation", value: "mediation" },
+            { label: "Arbitration", value: "arbitration" },
+          ]}
+          value={protection.disputeResolution ?? "negotiation"}
+          onChange={(v) => set("disputeResolution")(v)}
+        />
+      </FieldGroup>
+
+      <AIHint>
+        Suggested clause language — review before use. Consider professional review for high-risk documents. Not legal advice.
+      </AIHint>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// REVIEW PANEL (Right side when draft is ready)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const REVIEW_SECTIONS = [
+  { label: "Type & Template",      key: "type" },
+  { label: "Parties",              key: "people" },
+  { label: "Scope of Work",        key: "scope" },
+  { label: "Payment",              key: "money" },
+  { label: "Protection & Terms",   key: "protection" },
+  { label: "Governing Law",        key: "law" },
+]
+
+function ReviewExportPanel({
+  draft,
+  contractType,
+  people,
+  onDownload,
+  onRestart,
+}: {
+  draft: DraftPayload
+  contractType: ContractType
+  people: Partial<PeopleData>
+  onDownload: (format: "pdf" | "docx" | "text") => void
+  onRestart: () => void
+}) {
+  const [downloaded, setDownloaded] = useState(false)
+  const clientName = people.clientName?.trim() || people.clientEntityName?.trim() || "—"
+  const freelancerName = people.freelancerName?.trim() || people.freelancerEntityName?.trim() || "—"
+
+  return (
+    <div className="flex-1 overflow-y-auto px-5 py-5">
+      {/* Header */}
+      <div className="flex items-center gap-2 mb-1">
+        <Check className="w-4 h-4 text-green-400" />
+        <span className="text-sm font-semibold text-white">Ready to Download</span>
+      </div>
+      <p className="text-xs text-white/35 mb-5">All sections complete. Review the document then export.</p>
+
+      {/* Completion checklist */}
+      <div className="border border-white/[0.07] rounded-2xl overflow-hidden mb-4">
+        <div className="px-4 py-2.5 bg-white/[0.02] border-b border-white/[0.05]">
+          <span className="text-xs text-white/30 uppercase tracking-widest">Section checklist</span>
+        </div>
+        {REVIEW_SECTIONS.map((s, i) => {
+          const note =
+            s.key === "type" ? CONTRACT_TYPES.find(c => c.id === contractType)?.title ?? "—" :
+            s.key === "people" ? `${clientName} · ${freelancerName}` :
+            s.key === "scope" ? (draft.sections?.[1]?.title ?? "—") :
+            s.key === "money" ? (draft.paymentSummary?.[0] ?? "—") :
+            s.key === "protection" ? (draft.protectionSummary?.[0] ?? "—") :
+            (people.governingLaw ?? "—")
+          return (
+            <div key={i} className="flex items-center gap-3 px-4 py-3 border-b border-white/[0.04] last:border-0">
+              <div className="w-5 h-5 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center shrink-0">
+                <Check className="w-3 h-3 text-green-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-xs font-medium text-white/75">{s.label}</div>
+                <div className="text-[11px] text-white/30 truncate">{note}</div>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Review flags */}
+      {draft.reviewFlags && draft.reviewFlags.length > 0 && (
+        <div className="flex items-start gap-3 p-3.5 bg-amber-500/[0.05] border border-amber-500/15 rounded-xl mb-4">
+          <AlertCircle className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
+          <div className="flex-1">
+            <div className="text-xs font-medium text-amber-300 mb-1">Review before use</div>
+            {draft.reviewFlags.slice(0, 2).map((flag, i) => (
+              <div key={i} className="text-[11px] text-amber-300/50 leading-relaxed">{flag}</div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Signatures warning */}
+      <div className="flex items-start gap-3 p-3.5 bg-amber-500/[0.05] border border-amber-500/15 rounded-xl mb-5">
+        <AlertCircle className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
+        <div className="flex-1">
+          <div className="text-xs font-medium text-amber-300 mb-0.5">Signatures not added</div>
+          <div className="text-[11px] text-amber-300/50 leading-relaxed">
+            Add signatures to make this document legally binding. You can download without signatures and sign manually.
+          </div>
+        </div>
+      </div>
+
+      {/* Export options */}
+      <div className="mb-1">
+        <div className="text-[10px] text-white/25 uppercase tracking-widest mb-2">Export options</div>
+        <div className="space-y-2">
+          <button
+            onClick={() => { onDownload("pdf"); setDownloaded(true) }}
+            className="w-full py-3 rounded-xl bg-violet-600 hover:bg-violet-500 text-sm font-medium text-white flex items-center justify-center gap-2 transition-colors"
+          >
+            {downloaded ? <Check className="w-4 h-4" /> : <FileText className="w-4 h-4" />}
+            {downloaded ? "Preparing PDF..." : "Download PDF"}
+          </button>
+          <button
+            onClick={() => onDownload("docx")}
+            className="w-full py-2.5 rounded-xl border border-white/[0.08] text-sm text-white/60 hover:text-white/80 hover:border-white/15 flex items-center justify-center gap-2 transition-colors"
+          >
+            <FileText className="w-4 h-4" /> Download DOCX
+          </button>
+          <button
+            onClick={() => onDownload("text")}
+            className="w-full py-2.5 rounded-xl border border-white/[0.08] text-sm text-white/50 hover:text-white/70 hover:border-white/15 flex items-center justify-center gap-2 transition-colors"
+          >
+            Copy plain text
+          </button>
+        </div>
+      </div>
+
+      {/* E-signature — Coming soon / disabled */}
+      <div className="mt-4 flex items-center gap-3 p-4 rounded-2xl border border-white/[0.06] bg-white/[0.01] opacity-50 cursor-not-allowed">
+        <div className="w-9 h-9 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center shrink-0">
+          <LockIcon className="w-4 h-4 text-white/30" />
+        </div>
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <div className="text-sm font-medium text-white/40">E-signature workflow</div>
+            <span className="text-[10px] text-white/25 bg-white/[0.04] border border-white/[0.08] rounded px-1.5 py-0.5">Coming soon</span>
+          </div>
+          <div className="text-xs text-white/25">Send for signature via Dropbox Sign</div>
+        </div>
+      </div>
+
+      {/* Legal disclaimer */}
+      <div className="flex items-start gap-2 p-3 mt-4 bg-white/[0.02] border border-white/[0.05] rounded-xl">
+        <Info className="w-3.5 h-3.5 text-white/20 mt-0.5 shrink-0" />
+        <p className="text-xs text-white/25 leading-relaxed">
+          PlainPath provides document drafting support. Review before use. Not legal advice. Consider professional review before execution.
+        </p>
+      </div>
+
+      <button
+        onClick={onRestart}
+        className="w-full mt-4 py-2.5 rounded-xl border border-white/[0.07] text-sm text-white/40 hover:text-white/60 hover:border-white/15 flex items-center justify-center gap-2 transition-colors"
+      >
+        Start a new document
+      </button>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GENERATING STATE (AI Suggestion-like)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const GENERATING_PHASES = [
+  "Structuring document sections...",
+  "Drafting party and scope clauses...",
+  "Writing payment and protection terms...",
+  "Finalising governing law...",
+  "Assembling your document...",
+]
+
+function GeneratingView({
+  contractType,
+  people,
+  scope,
+  money,
+  protection,
+}: {
+  contractType: ContractType
+  people: Partial<PeopleData>
+  scope: Partial<ScopeData>
+  money: Partial<MoneyData>
+  protection: Partial<ProtectionData>
+}) {
+  const [phaseIdx, setPhaseIdx] = useState(0)
+  useEffect(() => {
+    const id = setInterval(() => setPhaseIdx(i => Math.min(i + 1, GENERATING_PHASES.length - 1)), 3000)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <div className="flex flex-1 overflow-hidden">
+      {/* Left — paper with AI cursor */}
+      <div className="w-[58%] border-r border-white/[0.05] bg-[#111115] flex flex-col overflow-hidden">
+        <div className="px-4 py-2 border-b border-white/[0.05] flex items-center gap-2 shrink-0">
+          <span className="text-xs text-white/30">Generating your document...</span>
+          <span className="ml-auto text-xs text-violet-400/60 flex items-center gap-1.5">
+            <Sparkles className="w-3 h-3 animate-pulse" /> PlainPath writing...
+          </span>
+        </div>
+        <div className="flex-1 overflow-y-auto px-6 py-6 flex justify-center">
+          <LiveDocumentPreview
+            contractType={contractType}
+            people={people}
+            scope={scope}
+            money={money}
+            protection={protection}
+            step={4}
+            draft={null}
+            aiActive
+          />
+        </div>
+      </div>
+      {/* Right — AI suggestion panel */}
+      <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
+        <div className="w-14 h-14 rounded-2xl bg-violet-600/10 border border-violet-500/20 flex items-center justify-center mb-5">
+          <Sparkles className="w-6 h-6 text-violet-400 animate-pulse" />
+        </div>
+        <h3 className="text-base font-semibold text-white mb-1">PlainPath suggests language for review</h3>
+        <p className="text-xs text-white/35 mb-6 leading-relaxed">
+          Drafting your {CONTRACT_TYPES.find(c => c.id === contractType)?.title ?? "document"} based on your answers. This usually takes 10–20 seconds.
+        </p>
+        <div className="w-full max-w-xs space-y-2 text-left mb-6">
+          {GENERATING_PHASES.map((phase, i) => (
+            <div key={i} className="flex items-center gap-2.5 text-xs">
+              {i < phaseIdx
+                ? <Check className="w-3.5 h-3.5 text-green-400 shrink-0" />
+                : i === phaseIdx
+                  ? <Loader2 className="w-3.5 h-3.5 text-violet-400 animate-spin shrink-0" />
+                  : <div className="w-3.5 h-3.5 rounded-full border border-white/[0.12] shrink-0" />
+              }
+              <span className={i <= phaseIdx ? "text-white/70" : "text-white/25"}>{phase}</span>
+            </div>
+          ))}
+        </div>
+        <p className="text-xs text-white/20 leading-relaxed max-w-xs">
+          This is drafting support, not legal advice. Review before use. Consider professional review for high-stakes documents.
+        </p>
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ERROR STATE
+// ─────────────────────────────────────────────────────────────────────────────
+
+function ErrorView({
+  error,
+  onRetry,
+  onSave,
+  onRestart,
+}: {
+  error: string
+  onRetry: () => void
+  onSave: () => void
+  onRestart: () => void
+}) {
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center px-6 text-center max-w-lg mx-auto w-full py-16">
+      <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-6">
+        <AlertCircle className="w-7 h-7 text-red-400" />
+      </div>
+      <h2 className="text-xl font-semibold text-white mb-2">Document could not be generated.</h2>
+      <p className="text-sm text-white/40 mb-2 leading-relaxed">
+        PlainPath ran into a problem. Your form data is saved and no progress was lost.
+      </p>
+      {error && (
+        <p className="text-xs text-white/25 mb-8 font-mono bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 py-2 max-w-sm">
+          {error}
+        </p>
+      )}
+
+      <div className="flex gap-3 w-full max-w-sm mb-6">
+        <button
+          onClick={onRetry}
+          className="flex-1 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-sm font-medium text-white transition-colors flex items-center justify-center gap-2"
+        >
+          <RefreshCcw className="w-4 h-4" /> Try again
+        </button>
+        <button
+          onClick={onSave}
+          className="flex-1 py-2.5 rounded-xl border border-white/[0.08] text-sm text-white/60 hover:text-white/80 hover:border-white/15 transition-colors flex items-center justify-center gap-2"
+        >
+          <Save className="w-4 h-4" /> Save draft
+        </button>
+      </div>
+
+      <div className="w-full max-w-sm border border-white/[0.07] rounded-2xl overflow-hidden">
+        <div className="px-4 py-2 bg-white/[0.02] border-b border-white/[0.05] text-left">
+          <span className="text-xs text-white/30 uppercase tracking-widest">Other options</span>
+        </div>
+        {[
+          { icon: LayoutTemplate, label: "Use another template for this section", sub: "Pre-built clause options for this document type." },
+          { icon: Sparkles,       label: "Ask PlainPath",                          sub: "Describe what you need and PlainPath will draft the language." },
+          { icon: FileText,       label: "Export what's complete",                sub: "Download the document with completed sections." },
+        ].map((a, i) => {
+          const Icon = a.icon
           return (
             <button
-              key={id}
-              onClick={() => ready && onSelect(id)}
-              className={`relative text-left rounded-2xl border-2 p-4 transition-all duration-200 ${centreLastRow ? "xl-col-start-2" : ""} ${
-                isSelected
-                  ? "border-primary bg-primary/8 shadow-[0_0_0_4px_rgba(99,102,241,0.10)] dark:shadow-[0_0_0_4px_rgba(139,92,246,0.15)]"
-                  : ready
-                  ? "border-border/50 hover:border-primary/40 hover:bg-accent/30"
-                  : "border-border/30 opacity-50 cursor-not-allowed"
-              }`}
+              key={i}
+              onClick={i === 0 ? onRestart : i === 2 ? onSave : undefined}
+              className="w-full flex items-start gap-4 px-4 py-3.5 text-left hover:bg-white/[0.02] border-b border-white/[0.04] last:border-0 transition-colors"
             >
-              {!ready && (
-                <span className="absolute top-3 right-3 text-[10px] font-semibold bg-muted text-muted-foreground px-2 py-0.5 rounded-full">
-                  Coming soon
-                </span>
-              )}
-              {isSelected && (
-                <span className="absolute top-3 right-3">
-                  <CheckCircle2 className="w-4 h-4 text-primary" />
-                </span>
-              )}
-              <div className={`w-10 h-10 rounded-xl ${bg} flex items-center justify-center mb-3`}>
-                <Icon className={`w-5 h-5 ${color}`} />
+              <Icon className="w-4 h-4 text-white/30 mt-0.5 shrink-0" />
+              <div>
+                <div className="text-sm font-medium text-white/70">{a.label}</div>
+                <div className="text-xs text-white/30 mt-0.5 leading-relaxed">{a.sub}</div>
               </div>
-              <h3 className={`text-sm font-semibold mb-1 transition-colors ${isSelected ? "text-primary" : ""}`}>{title}</h3>
-              <p className="text-xs text-muted-foreground mb-2 leading-relaxed">{description}</p>
-              <span className="text-[10px] text-muted-foreground/70 italic">{example}</span>
             </button>
           )
         })}
@@ -677,1822 +1565,263 @@ function TypeStep({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// STEP 1 — PEOPLE
+// SPLIT-SCREEN WORKSPACE
 // ─────────────────────────────────────────────────────────────────────────────
 
-function PartySection({
-  label,
-  nameKey,
-  typeKey,
-  entityKey,
-  addressKey,
-  data,
-  onChange,
-}: {
-  label: string
-  nameKey: keyof PeopleData
-  typeKey: keyof PeopleData
-  entityKey: keyof PeopleData
-  addressKey: keyof PeopleData
-  data: Partial<PeopleData>
-  onChange: (d: Partial<PeopleData>) => void
-}) {
-  const type = (data[typeKey] as PartyType) ?? "individual"
-  return (
-    <div className="rounded-xl border border-border/50 p-4 space-y-4 bg-card/50">
-      <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{label}</p>
-      <div className="space-y-1">
-        <Label className="text-xs">Legal Name</Label>
-        <Input
-          placeholder="Full legal name"
-          value={(data[nameKey] as string) ?? ""}
-          onChange={(e) => onChange({ ...data, [nameKey]: e.target.value })}
-        />
-      </div>
-      <div className="space-y-1">
-        <Label className="text-xs">Party Type</Label>
-        <div className="flex gap-2">
-          {(["individual", "business"] as PartyType[]).map((t) => (
-            <button
-              key={t}
-              onClick={() => onChange({ ...data, [typeKey]: t })}
-              className={`flex-1 py-2 rounded-lg text-xs font-medium border transition-all ${
-                type === t ? "border-primary bg-primary/10 text-primary" : "border-border/50 text-muted-foreground hover:bg-accent/30"
-              }`}
-            >
-              {t === "individual" ? "Individual" : "Business / LLC"}
-            </button>
-          ))}
-        </div>
-      </div>
-      {type === "business" && (
-        <div className="space-y-1">
-          <Label className="text-xs">Business / Entity Name</Label>
-          <Input
-            placeholder="Acme Corp LLC"
-            value={(data[entityKey] as string) ?? ""}
-            onChange={(e) => onChange({ ...data, [entityKey]: e.target.value })}
-          />
-        </div>
-      )}
-      <div className="space-y-1">
-        <Label className="text-xs">Address (optional)</Label>
-        <Input
-          placeholder="123 Main St, City, State"
-          value={(data[addressKey] as string) ?? ""}
-          onChange={(e) => onChange({ ...data, [addressKey]: e.target.value })}
-        />
-      </div>
-    </div>
-  )
-}
-
-function PeopleStep({
-  data,
-  onChange,
-  contractType,
-}: {
-  data: Partial<PeopleData>
-  onChange: (d: Partial<PeopleData>) => void
-  contractType: ContractType
-}) {
-  const isFreelance = contractType === "freelance"
-  const isNDA = contractType === "nda"
-  const isPayment = contractType === "payment-agreement"
-
-  const clientLabel = isFreelance ? "Client" : isNDA ? "Disclosing Party" : isPayment ? "Borrower / Payer" : "Party A"
-  const freelancerLabel = isFreelance ? "Freelancer / Contractor" : isNDA ? "Receiving Party" : isPayment ? "Lender / Payee" : "Party B"
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-display font-bold mb-1">Who's involved?</h2>
-        <p className="text-muted-foreground text-sm">Enter the legal details for both parties.</p>
-      </div>
-
-      <div className="grid sm:grid-cols-2 gap-4">
-        <PartySection
-          label={clientLabel}
-          nameKey="clientName"
-          typeKey="clientType"
-          entityKey="clientEntityName"
-          addressKey="clientAddress"
-          data={data}
-          onChange={onChange}
-        />
-        <PartySection
-          label={freelancerLabel}
-          nameKey="freelancerName"
-          typeKey="freelancerType"
-          entityKey="freelancerEntityName"
-          addressKey="freelancerAddress"
-          data={data}
-          onChange={onChange}
-        />
-      </div>
-
-      <div className="grid sm:grid-cols-2 gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-1.5">
-            <Label className="text-xs">Governing Law / State</Label>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
-              </TooltipTrigger>
-              <TooltipContent side="right" className="max-w-xs text-xs">
-                This is the U.S. state whose laws will govern the contract. Usually the state where the work is performed or where the freelancer is located.
-              </TooltipContent>
-            </Tooltip>
-          </div>
-          <Input
-            placeholder="e.g. California, New York, Texas"
-            value={data.governingLaw ?? ""}
-            onChange={(e) => onChange({ ...data, governingLaw: e.target.value })}
-          />
-        </div>
-        {isFreelance && (
-          <div className="space-y-1">
-            <Label className="text-xs">Project Title (optional)</Label>
-            <Input
-              placeholder="e.g. Brand Identity Redesign 2026"
-              value={data.projectTitle ?? ""}
-              onChange={(e) => onChange({ ...data, projectTitle: e.target.value })}
-            />
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// STEP 2 — SCOPE
-// ─────────────────────────────────────────────────────────────────────────────
-
-function ScopeStep({
-  data,
-  onChange,
-  contractType,
-}: {
-  data: Partial<ScopeData>
-  onChange: (d: Partial<ScopeData>) => void
-  contractType: ContractType
-}) {
-  if (contractType === "nda") {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h2 className="text-2xl font-display font-bold mb-1">What's being protected?</h2>
-          <p className="text-muted-foreground text-sm">Describe what information will be kept confidential.</p>
-        </div>
-        <div className="space-y-4">
-          <div className="space-y-1">
-            <Label className="text-xs">Purpose of Disclosure</Label>
-            <Input
-              placeholder="e.g. Evaluating a potential business partnership"
-              value={data.purposeOfDisclosure ?? ""}
-              onChange={(e) => onChange({ ...data, purposeOfDisclosure: e.target.value })}
-            />
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs">Description of Confidential Information</Label>
-            <Textarea
-              rows={4}
-              placeholder="e.g. Trade secrets, business plans, financial projections, customer lists, software source code, and other proprietary information..."
-              value={data.confidentialInfoDescription ?? ""}
-              onChange={(e) => onChange({ ...data, confidentialInfoDescription: e.target.value })}
-              className="resize-none"
-            />
-          </div>
-          <div className="space-y-1">
-            <div className="flex items-center gap-1.5">
-              <Label className="text-xs">NDA Duration</Label>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
-                </TooltipTrigger>
-                <TooltipContent className="text-xs max-w-xs">
-                  How long the confidentiality obligation lasts. 1–3 years is typical. Perpetual NDAs are enforceable for true trade secrets.
-                </TooltipContent>
-              </Tooltip>
-            </div>
-            <Input
-              placeholder="e.g. 2 years, 3 years, indefinite for trade secrets"
-              value={data.ndaTerm ?? ""}
-              onChange={(e) => onChange({ ...data, ndaTerm: e.target.value })}
-            />
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (contractType === "payment-agreement") {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h2 className="text-2xl font-display font-bold mb-1">What is the payment for?</h2>
-          <p className="text-muted-foreground text-sm">Describe the reason for the payment arrangement.</p>
-        </div>
-        <div className="space-y-4">
-          <div className="space-y-1">
-            <Label className="text-xs">Purpose / Description</Label>
-            <Textarea
-              rows={5}
-              placeholder="e.g. Personal loan of $3,000 to cover emergency vehicle repair, to be repaid in 6 monthly installments..."
-              value={data.scopeDescription ?? ""}
-              onChange={(e) => onChange({ ...data, scopeDescription: e.target.value })}
-              className="resize-none"
-            />
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (contractType === "service-agreement") {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h2 className="text-2xl font-display font-bold mb-1">What services are being provided?</h2>
-          <p className="text-muted-foreground text-sm">Define the ongoing services, schedule, and scope boundaries.</p>
-        </div>
-        <div className="space-y-4">
-          <div className="space-y-1">
-            <Label className="text-xs">Service Type</Label>
-            <Input
-              placeholder="e.g. IT support, cleaning services, consulting, marketing retainer"
-              value={data.serviceType ?? ""}
-              onChange={(e) => onChange({ ...data, serviceType: e.target.value })}
-            />
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs">Scope of Services</Label>
-            <Textarea
-              rows={4}
-              placeholder="Describe what the service provider will do. Be specific — this becomes the core of the services clause."
-              value={data.scopeDescription ?? ""}
-              onChange={(e) => onChange({ ...data, scopeDescription: e.target.value })}
-              className="resize-none"
-            />
-          </div>
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <div className="flex items-center gap-1.5">
-                <Label className="text-xs">Service Schedule</Label>
-                <Tooltip>
-                  <TooltipTrigger asChild><Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" /></TooltipTrigger>
-                  <TooltipContent className="text-xs max-w-xs">How often the service is performed — e.g. weekly, monthly, on-call, or during business hours.</TooltipContent>
-                </Tooltip>
-              </div>
-              <Input
-                placeholder="e.g. Weekly, monthly, on-demand, Mon–Fri 9am–5pm"
-                value={data.serviceSchedule ?? ""}
-                onChange={(e) => onChange({ ...data, serviceSchedule: e.target.value })}
-              />
-            </div>
-            <div className="space-y-1">
-              <div className="flex items-center gap-1.5">
-                <Label className="text-xs">Service Standards / SLAs (optional)</Label>
-                <Tooltip>
-                  <TooltipTrigger asChild><Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" /></TooltipTrigger>
-                  <TooltipContent className="text-xs max-w-xs">Any measurable standards — e.g. "respond within 4 hours", "99% uptime", "resolve issues within 24 hours".</TooltipContent>
-                </Tooltip>
-              </div>
-              <Input
-                placeholder="e.g. 4-hour response time, issues resolved within 1 business day"
-                value={data.serviceStandards ?? ""}
-                onChange={(e) => onChange({ ...data, serviceStandards: e.target.value })}
-              />
-            </div>
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs">What is NOT included (Exclusions)</Label>
-            <Textarea
-              rows={3}
-              placeholder="e.g. Hardware procurement, after-hours emergency calls, travel outside the local area"
-              value={data.exclusions ?? ""}
-              onChange={(e) => onChange({ ...data, exclusions: e.target.value })}
-              className="resize-none"
-            />
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (contractType === "lease") {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h2 className="text-2xl font-display font-bold mb-1">What is being rented?</h2>
-          <p className="text-muted-foreground text-sm">Describe the property and rental conditions.</p>
-        </div>
-        <div className="space-y-4">
-          <div className="space-y-1">
-            <Label className="text-xs">Property Address</Label>
-            <Input
-              placeholder="e.g. 123 Main Street, Apt 4B, New York, NY 10001"
-              value={data.propertyAddress ?? ""}
-              onChange={(e) => onChange({ ...data, propertyAddress: e.target.value })}
-            />
-          </div>
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <Label className="text-xs">Property Type</Label>
-              <div className="grid grid-cols-2 gap-1.5">
-                {["Residential", "Commercial", "Office", "Equipment"].map((t) => (
-                  <button
-                    key={t}
-                    onClick={() => onChange({ ...data, propertyType: t })}
-                    className={`text-sm py-2 px-3 rounded-xl border-2 font-medium transition-all ${data.propertyType === t ? "border-primary bg-primary/5 text-primary" : "border-border/50 text-muted-foreground hover:border-primary/30"}`}
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Lease Type</Label>
-              <div className="flex flex-col gap-1.5">
-                {[
-                  { id: "fixed-term", label: "Fixed Term", desc: "Set start and end date" },
-                  { id: "month-to-month", label: "Month-to-Month", desc: "Ongoing, monthly renewal" },
-                ].map((lt) => (
-                  <button
-                    key={lt.id}
-                    onClick={() => onChange({ ...data, leaseType: lt.id })}
-                    className={`text-left px-3 py-2 rounded-xl border-2 transition-all ${data.leaseType === lt.id ? "border-primary bg-primary/5" : "border-border/50 hover:border-primary/30"}`}
-                  >
-                    <div className="text-sm font-semibold">{lt.label}</div>
-                    <div className="text-[11px] text-muted-foreground">{lt.desc}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs">Property Description (optional)</Label>
-            <Textarea
-              rows={3}
-              placeholder="e.g. 2-bedroom, 1-bathroom apartment, furnished, includes parking space #12, no garage"
-              value={data.propertyDescription ?? ""}
-              onChange={(e) => onChange({ ...data, propertyDescription: e.target.value })}
-              className="resize-none"
-            />
-          </div>
-          <div className="grid sm:grid-cols-3 gap-4">
-            <div className="space-y-1">
-              <Label className="text-xs">Utilities Included</Label>
-              <Input
-                placeholder="e.g. Water, trash (tenant pays electric)"
-                value={data.utilitiesIncluded ?? ""}
-                onChange={(e) => onChange({ ...data, utilitiesIncluded: e.target.value })}
-              />
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Pets Allowed?</Label>
-              <div className="flex gap-1.5">
-                {["Yes", "No", "Case by case"].map((v) => (
-                  <button
-                    key={v}
-                    onClick={() => onChange({ ...data, petsAllowed: v })}
-                    className={`flex-1 text-xs py-2 rounded-lg border-2 font-medium transition-all ${data.petsAllowed === v ? "border-primary bg-primary/5 text-primary" : "border-border/50 text-muted-foreground hover:border-primary/30"}`}
-                  >
-                    {v}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-display font-bold mb-1">What's the work?</h2>
-        <p className="text-muted-foreground text-sm">Define the scope, deliverables, and boundaries of this engagement.</p>
-      </div>
-      <div className="space-y-4">
-        <div className="space-y-1">
-          <Label className="text-xs">Service Type</Label>
-          <Input
-            placeholder="e.g. Logo design, web development, photography, copywriting"
-            value={data.serviceType ?? ""}
-            onChange={(e) => onChange({ ...data, serviceType: e.target.value })}
-          />
-        </div>
-        <div className="space-y-1">
-          <Label className="text-xs">Scope of Work</Label>
-          <Textarea
-            rows={5}
-            placeholder="Describe in detail what you will deliver. Be specific — this becomes the core of the services clause."
-            value={data.scopeDescription ?? ""}
-            onChange={(e) => onChange({ ...data, scopeDescription: e.target.value })}
-            className="resize-none"
-          />
-        </div>
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div className="space-y-1">
-            <Label className="text-xs">Specific Deliverables</Label>
-            <Textarea
-              rows={3}
-              placeholder="List what you'll hand over — e.g. 3 logo concepts, final SVG/PNG files, brand guide PDF"
-              value={data.deliverables ?? ""}
-              onChange={(e) => onChange({ ...data, deliverables: e.target.value })}
-              className="resize-none"
-            />
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs">What is NOT included (Exclusions)</Label>
-            <Textarea
-              rows={3}
-              placeholder="e.g. Social media templates, print production, animated versions, copywriting"
-              value={data.exclusions ?? ""}
-              onChange={(e) => onChange({ ...data, exclusions: e.target.value })}
-              className="resize-none"
-            />
-          </div>
-        </div>
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-1.5">
-              <Label className="text-xs">Revision Rounds Included</Label>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
-                </TooltipTrigger>
-                <TooltipContent className="text-xs max-w-xs">
-                  A "revision round" means one set of client feedback that you address. Setting a limit protects against scope creep. 2–3 rounds is common.
-                </TooltipContent>
-              </Tooltip>
-            </div>
-            <Input
-              type="number"
-              min="0"
-              placeholder="e.g. 2"
-              value={data.revisionLimit ?? ""}
-              onChange={(e) => onChange({ ...data, revisionLimit: e.target.value })}
-            />
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs">Acceptance Criteria (optional)</Label>
-            <Input
-              placeholder="e.g. Client approves final files in writing"
-              value={data.acceptanceCriteria ?? ""}
-              onChange={(e) => onChange({ ...data, acceptanceCriteria: e.target.value })}
-            />
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// STEP 3 — MONEY / TIMING
-// ─────────────────────────────────────────────────────────────────────────────
-
-function YesNoToggle({ label, value, onChange, tooltip }: {
-  label: string
-  value: boolean
-  onChange: (v: boolean) => void
-  tooltip?: string
-}) {
-  return (
-    <div className="flex items-center justify-between py-2 border-b border-border/30 last:border-0">
-      <div className="flex items-center gap-1.5">
-        <span className="text-sm">{label}</span>
-        {tooltip && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
-            </TooltipTrigger>
-            <TooltipContent className="text-xs max-w-xs">{tooltip}</TooltipContent>
-          </Tooltip>
-        )}
-      </div>
-      <div className="flex gap-1">
-        {[true, false].map((v) => (
-          <button
-            key={String(v)}
-            onClick={() => onChange(v)}
-            className={`px-3 py-1 rounded-lg text-xs font-medium border transition-all ${
-              value === v
-                ? v ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600" : "border-border bg-muted text-muted-foreground"
-                : "border-border/40 text-muted-foreground/60 hover:border-border"
-            }`}
-          >
-            {v ? "Yes" : "No"}
-          </button>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function MoneyStep({ data, onChange, contractType }: { data: Partial<MoneyData>; onChange: (d: Partial<MoneyData>) => void; contractType: ContractType | null }) {
-  const structure = data.paymentStructure ?? "flat"
-  const isLease = contractType === "lease"
-
-  const PAYMENT_OPTIONS: Array<{ id: PaymentStructure; label: string; desc: string }> = [
-    { id: "flat", label: "Flat Fee", desc: "One total price for the entire project" },
-    { id: "hourly", label: "Hourly Rate", desc: "Billed based on hours worked" },
-    { id: "milestone", label: "Milestone", desc: "Payments tied to project phases" },
-  ]
-
-  if (isLease) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h2 className="text-2xl font-display font-bold mb-1">Rent & Lease Terms</h2>
-          <p className="text-muted-foreground text-sm">Set the rental amounts, dates, and deposit requirements.</p>
-        </div>
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div className="space-y-1">
-            <Label className="text-xs">Monthly Rent</Label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
-              <Input className="pl-7" placeholder="0.00" value={data.monthlyRent ?? ""} onChange={(e) => onChange({ ...data, monthlyRent: e.target.value })} />
-            </div>
-          </div>
-          <div className="space-y-1">
-            <div className="flex items-center gap-1.5">
-              <Label className="text-xs">Security Deposit</Label>
-              <Tooltip>
-                <TooltipTrigger asChild><Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" /></TooltipTrigger>
-                <TooltipContent className="text-xs">Typically 1–2 months rent. Check your local laws for the legal maximum.</TooltipContent>
-              </Tooltip>
-            </div>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
-              <Input className="pl-7" placeholder="0.00" value={data.securityDeposit ?? ""} onChange={(e) => onChange({ ...data, securityDeposit: e.target.value })} />
-            </div>
-          </div>
-        </div>
-        <div className="grid sm:grid-cols-3 gap-4">
-          <div className="space-y-1">
-            <Label className="text-xs">Lease Start Date</Label>
-            <Input type="date" value={data.leaseStartDate ?? ""} onChange={(e) => onChange({ ...data, leaseStartDate: e.target.value })} />
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs">Lease End Date</Label>
-            <Input type="date" value={data.leaseEndDate ?? ""} onChange={(e) => onChange({ ...data, leaseEndDate: e.target.value })} />
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs">Rent Due Day</Label>
-            <Input placeholder="e.g. 1st of month" value={data.invoiceDueDays ?? ""} onChange={(e) => onChange({ ...data, invoiceDueDays: e.target.value })} />
-          </div>
-        </div>
-        <div className="rounded-xl border border-border/50 p-4 bg-card/50 space-y-0">
-          <YesNoToggle
-            label="Charge a late fee for overdue rent?"
-            value={data.lateFee ?? false}
-            onChange={(v) => onChange({ ...data, lateFee: v })}
-            tooltip="A late fee clause deters late payments. Common amounts are $25–$100 or 5–10% of monthly rent. Check local rent laws."
-          />
-          {data.lateFee && (
-            <div className="pt-2 pb-1">
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
-                <Input className="pl-7" placeholder="e.g. 50.00" value={data.lateFeeAmount ?? ""} onChange={(e) => onChange({ ...data, lateFeeAmount: e.target.value })} />
-              </div>
-            </div>
-          )}
-        </div>
-        <div className="space-y-1">
-          <Label className="text-xs">Pet Deposit (if pets allowed)</Label>
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
-            <Input className="pl-7" placeholder="e.g. 300.00 (leave blank if no pets)" value={data.petDeposit ?? ""} onChange={(e) => onChange({ ...data, petDeposit: e.target.value })} />
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-display font-bold mb-1">Money & Timeline</h2>
-        <p className="text-muted-foreground text-sm">Set up payment terms, amounts, and key dates.</p>
-      </div>
-
-      <div className="space-y-2">
-        <Label className="text-xs">Payment Structure</Label>
-        <div className="grid grid-cols-3 gap-2">
-          {PAYMENT_OPTIONS.map(({ id, label, desc }) => (
-            <button
-              key={id}
-              onClick={() => onChange({ ...data, paymentStructure: id })}
-              className={`text-left p-3 rounded-xl border-2 transition-all ${
-                structure === id ? "border-primary bg-primary/5" : "border-border/50 hover:border-primary/30"
-              }`}
-            >
-              <div className="text-sm font-semibold mb-0.5">{label}</div>
-              <div className="text-[11px] text-muted-foreground leading-tight">{desc}</div>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="grid sm:grid-cols-2 gap-4">
-        {structure === "hourly" ? (
-          <div className="space-y-1">
-            <Label className="text-xs">Hourly Rate</Label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
-              <Input className="pl-7" placeholder="0.00" value={data.hourlyRate ?? ""} onChange={(e) => onChange({ ...data, hourlyRate: e.target.value })} />
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-1">
-            <Label className="text-xs">{structure === "milestone" ? "Total Project Fee" : "Total Fee"}</Label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
-              <Input className="pl-7" placeholder="0.00" value={data.totalFee ?? ""} onChange={(e) => onChange({ ...data, totalFee: e.target.value })} />
-            </div>
-          </div>
-        )}
-        <div className="space-y-1">
-          <div className="flex items-center gap-1.5">
-            <Label className="text-xs">Invoice Due Period</Label>
-            <Tooltip>
-              <TooltipTrigger asChild><Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" /></TooltipTrigger>
-              <TooltipContent className="text-xs">How many days the client has to pay each invoice. "NET 14" means 14 days.</TooltipContent>
-            </Tooltip>
-          </div>
-          <Input placeholder="e.g. NET 14, NET 30" value={data.invoiceDueDays ?? ""} onChange={(e) => onChange({ ...data, invoiceDueDays: e.target.value })} />
-        </div>
-      </div>
-
-      {structure === "milestone" && (
-        <div className="space-y-2">
-          <Label className="text-xs">Milestone Schedule (up to 3)</Label>
-          <div className="space-y-2">
-            {[0, 1, 2].map((i) => {
-              const ms = (data.milestones ?? [])[i] ?? { name: "", amount: "", date: "" }
-              const update = (field: string, val: string) => {
-                const next = [...(data.milestones ?? [{ name: "", amount: "", date: "" }, { name: "", amount: "", date: "" }, { name: "", amount: "", date: "" }])]
-                next[i] = { ...ms, [field]: val }
-                onChange({ ...data, milestones: next })
-              }
-              return (
-                <div key={i} className="grid grid-cols-3 gap-2 items-center">
-                  <Input placeholder={`Phase ${i + 1} name`} value={ms.name} onChange={(e) => update("name", e.target.value)} />
-                  <div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span><Input className="pl-7" placeholder="Amount" value={ms.amount} onChange={(e) => update("amount", e.target.value)} /></div>
-                  <Input type="date" value={ms.date} onChange={(e) => update("date", e.target.value)} />
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
-      <div className="rounded-xl border border-border/50 p-4 bg-card/50 space-y-0">
-        <YesNoToggle
-          label="Require a deposit before work starts?"
-          value={data.depositRequired ?? false}
-          onChange={(v) => onChange({ ...data, depositRequired: v })}
-          tooltip="A deposit (typically 25–50%) reduces the risk of non-payment. It is standard for creative and project-based work."
-        />
-        {data.depositRequired && (
-          <div className="pt-2 pb-1">
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
-              <Input className="pl-7" placeholder="Deposit amount" value={data.depositAmount ?? ""} onChange={(e) => onChange({ ...data, depositAmount: e.target.value })} />
-            </div>
-          </div>
-        )}
-        <YesNoToggle
-          label="Include a late payment fee?"
-          value={data.lateFee ?? false}
-          onChange={(v) => onChange({ ...data, lateFee: v })}
-          tooltip="A late fee (e.g. 1.5% per month or a flat $50) incentivises on-time payment and is legally enforceable in most states."
-        />
-        {data.lateFee && (
-          <div className="pt-2 pb-1">
-            <Input placeholder="e.g. 1.5% per month, or $50 flat" value={data.lateFeeAmount ?? ""} onChange={(e) => onChange({ ...data, lateFeeAmount: e.target.value })} />
-          </div>
-        )}
-      </div>
-
-      <div className="grid sm:grid-cols-2 gap-4">
-        <div className="space-y-1">
-          <Label className="text-xs">Project Start Date</Label>
-          <Input type="date" value={data.startDate ?? ""} onChange={(e) => onChange({ ...data, startDate: e.target.value })} />
-        </div>
-        <div className="space-y-1">
-          <Label className="text-xs">Final Deadline</Label>
-          <Input type="date" value={data.deadline ?? ""} onChange={(e) => onChange({ ...data, deadline: e.target.value })} />
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// STEP 4 — RIGHTS / PROTECTION
-// ─────────────────────────────────────────────────────────────────────────────
-
-function ProtectionStep({
-  data,
-  onChange,
-  contractType,
-}: {
-  data: Partial<ProtectionData>
-  onChange: (d: Partial<ProtectionData>) => void
-  contractType: ContractType
-}) {
-  const IP_OPTIONS: Array<{ id: IPTiming; label: string; desc: string; risk?: string }> = [
-    { id: "on-payment", label: "On Final Payment", desc: "IP transfers only when fully paid", risk: undefined },
-    { id: "on-creation", label: "On Creation", desc: "IP transfers as work is completed", risk: "⚠ Higher risk for freelancer" },
-    { id: "limited-license", label: "Limited License", desc: "Client can use the work; freelancer retains ownership", risk: undefined },
-  ]
-
-  const DISPUTE_OPTIONS: Array<{ id: DisputeResolution; label: string; desc: string }> = [
-    { id: "negotiation", label: "Negotiation", desc: "Resolve directly between parties" },
-    { id: "mediation", label: "Mediation", desc: "Use a neutral third-party mediator" },
-    { id: "arbitration", label: "Arbitration", desc: "Binding arbitration (private)" },
-    { id: "court", label: "Court", desc: "Full litigation in courts" },
-  ]
-
-  if (contractType === "nda" || contractType === "payment-agreement") {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h2 className="text-2xl font-display font-bold mb-1">Protection terms</h2>
-          <p className="text-muted-foreground text-sm">Set the key protective provisions for this agreement.</p>
-        </div>
-        <div className="rounded-xl border border-border/50 p-4 bg-card/50 space-y-0">
-          <YesNoToggle label="Require confidentiality?" value={data.confidentiality ?? false} onChange={(v) => onChange({ ...data, confidentiality: v })} />
-          <div className="space-y-2">
-            <Label className="text-xs">Dispute Resolution</Label>
-            <div className="grid grid-cols-2 gap-2">
-              {DISPUTE_OPTIONS.map(({ id, label, desc }) => (
-                <button
-                  key={id}
-                  onClick={() => onChange({ ...data, disputeResolution: id })}
-                  className={`text-left p-3 rounded-xl border-2 transition-all ${data.disputeResolution === id ? "border-primary bg-primary/5" : "border-border/50 hover:border-primary/30"}`}
-                >
-                  <div className="text-sm font-semibold">{label}</div>
-                  <div className="text-[11px] text-muted-foreground">{desc}</div>
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="space-y-1 pt-2">
-            <Label className="text-xs">Termination Notice Period (days)</Label>
-            <Input type="number" min="0" placeholder="e.g. 14" value={data.terminationNoticeDays ?? ""} onChange={(e) => onChange({ ...data, terminationNoticeDays: e.target.value })} />
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-display font-bold mb-1">Rights & Protection</h2>
-        <p className="text-muted-foreground text-sm">Define ownership, termination terms, and how disputes will be handled.</p>
-      </div>
-
-      <div className="space-y-2">
-        <div className="flex items-center gap-1.5">
-          <Label className="text-xs">IP Ownership Timing</Label>
-          <Tooltip>
-            <TooltipTrigger asChild><Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" /></TooltipTrigger>
-            <TooltipContent className="text-xs max-w-xs">
-              This controls when the client legally owns the work. "On final payment" is the safest option for freelancers — the client can't use the deliverables until fully paid.
-            </TooltipContent>
-          </Tooltip>
-        </div>
-        <div className="grid sm:grid-cols-3 gap-2">
-          {IP_OPTIONS.map(({ id, label, desc, risk }) => (
-            <button
-              key={id}
-              onClick={() => onChange({ ...data, ipTiming: id })}
-              className={`text-left p-3 rounded-xl border-2 transition-all ${data.ipTiming === id ? "border-primary bg-primary/5" : "border-border/50 hover:border-primary/30"}`}
-            >
-              <div className="text-sm font-semibold mb-0.5">{label}</div>
-              <div className="text-[11px] text-muted-foreground mb-1">{desc}</div>
-              {risk && <div className="text-[10px] text-amber-500">{risk}</div>}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="rounded-xl border border-border/50 p-4 bg-card/50 space-y-0">
-        <YesNoToggle label="Allow portfolio usage of this work?" value={data.portfolioUsage ?? true} onChange={(v) => onChange({ ...data, portfolioUsage: v })} tooltip="Allows you to show this project in your portfolio. Clients may request to restrict this for confidential work." />
-        <YesNoToggle label="Require confidentiality from client?" value={data.confidentiality ?? false} onChange={(v) => onChange({ ...data, confidentiality: v })} tooltip="Adds a mutual NDA provision to the contract — useful when sharing business strategy, pricing, or proprietary processes." />
-        <YesNoToggle label="Include a kill fee for cancellations?" value={data.killFee ?? false} onChange={(v) => onChange({ ...data, killFee: v })} tooltip="A kill fee compensates you if the client cancels mid-project. Typically 25–50% of the remaining balance." />
-        {data.killFee && (
-          <div className="pt-2 pb-1">
-            <Input placeholder="e.g. 50% of remaining balance" value={data.killFeeAmount ?? ""} onChange={(e) => onChange({ ...data, killFeeAmount: e.target.value })} />
-          </div>
-        )}
-        <YesNoToggle label="Release final files only after full payment?" value={data.fileReleaseOnPayment ?? true} onChange={(v) => onChange({ ...data, fileReleaseOnPayment: v })} tooltip="Highly recommended. Delays file delivery until the final invoice is paid in full." />
-        <YesNoToggle label="Allow subcontracting?" value={data.subcontractingAllowed ?? false} onChange={(v) => onChange({ ...data, subcontractingAllowed: v })} tooltip="If yes, you can hire other freelancers to help. Most clients prefer to restrict this so they know exactly who is working on their project." />
-      </div>
-
-      <div className="grid sm:grid-cols-2 gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-1.5">
-            <Label className="text-xs">Client Feedback Deadline (days)</Label>
-            <Tooltip>
-              <TooltipTrigger asChild><Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" /></TooltipTrigger>
-              <TooltipContent className="text-xs max-w-xs">How many days the client has to review and respond after you submit a deliverable. If they don't respond in time, the work is deemed approved.</TooltipContent>
-            </Tooltip>
-          </div>
-          <Input type="number" min="0" placeholder="e.g. 5" value={data.clientFeedbackDeadlineDays ?? ""} onChange={(e) => onChange({ ...data, clientFeedbackDeadlineDays: e.target.value })} />
-        </div>
-        <div className="space-y-1">
-          <Label className="text-xs">Termination Notice Period (days)</Label>
-          <Input type="number" min="0" placeholder="e.g. 14" value={data.terminationNoticeDays ?? ""} onChange={(e) => onChange({ ...data, terminationNoticeDays: e.target.value })} />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label className="text-xs">Dispute Resolution</Label>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {DISPUTE_OPTIONS.map(({ id, label, desc }) => (
-            <button
-              key={id}
-              onClick={() => onChange({ ...data, disputeResolution: id })}
-              className={`text-left p-3 rounded-xl border-2 transition-all ${data.disputeResolution === id ? "border-primary bg-primary/5" : "border-border/50 hover:border-primary/30"}`}
-            >
-              <div className="text-sm font-semibold">{label}</div>
-              <div className="text-[11px] text-muted-foreground">{desc}</div>
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// GAP ANALYSIS — types, computation, sub-component
-// ─────────────────────────────────────────────────────────────────────────────
-
-interface GapItem {
-  id: string
-  label: string
-  description: string
-  severity: "warning" | "suggestion"
-  group?: "money" | "protection" | "people" | "scope"
-  editStep?: number
-  quickFillKey?: string
-  quickFillType?: "text" | "number" | "date"
-  quickFillLabel?: string
-  quickFillPlaceholder?: string
-  canQuickFill: boolean
-}
-
-function computeGaps(
-  contractType: ContractType,
-  people: Partial<PeopleData>,
-  scope: Partial<ScopeData>,
-  money: Partial<MoneyData>,
-  protection: Partial<ProtectionData>
-): GapItem[] {
-  const gaps: GapItem[] = []
-
-  // ── Party name check — required for every contract type ──────────────────
-  const partyAEffective = people.clientName?.trim() || people.clientEntityName?.trim() || ""
-  const partyBEffective = people.freelancerName?.trim() || people.freelancerEntityName?.trim() || ""
-
-  if (!partyAEffective) {
-    const label =
-      contractType === "nda" ? "Disclosing Party name" :
-      contractType === "payment-agreement" ? "Borrower name" :
-      "Client name"
-    gaps.push({
-      id: "party-a-name",
-      label: `Required: ${label} is missing`,
-      description: "A contract must identify both parties by name. Return to the People step to add this before generating.",
-      severity: "warning",
-      editStep: 1,
-      group: "people",
-      canQuickFill: false,
-    })
-  }
-  if (!partyBEffective) {
-    const label =
-      contractType === "nda" ? "Receiving Party name" :
-      contractType === "payment-agreement" ? "Lender name" :
-      contractType === "freelance" ? "Freelancer / Contractor name" :
-      contractType === "lease" ? "Landlord / Property Manager name" :
-      "Service Provider name"
-    gaps.push({
-      id: "party-b-name",
-      label: `Required: ${label} is missing`,
-      description: "A contract must identify both parties by name. Return to the People step to add this before generating.",
-      severity: "warning",
-      editStep: 1,
-      group: "people",
-      canQuickFill: false,
-    })
-  }
-  // ─────────────────────────────────────────────────────────────────────────
-
-  if (contractType === "freelance" || contractType === "service-agreement") {
-    if (!money.lateFee) {
-      gaps.push({
-        id: "late-fee",
-        label: "No late payment fee included",
-        description: "Without one, overdue invoices have no automatic penalty. 1.5%/month is standard.",
-        severity: "warning",
-        group: "money",
-        quickFillKey: "lateFeeAmount",
-        quickFillType: "text",
-        quickFillLabel: "Late fee rate",
-        quickFillPlaceholder: "e.g. 1.5% per month or $50 flat",
-        canQuickFill: true,
-      })
-    }
-    if (!protection.killFee) {
-      gaps.push({
-        id: "kill-fee",
-        label: "No kill fee for project cancellations",
-        description: "If the client cancels mid-project you may receive nothing. A kill fee protects your lost time.",
-        severity: "warning",
-        group: "protection",
-        quickFillKey: "killFeeAmount",
-        quickFillType: "text",
-        quickFillLabel: "Kill fee amount",
-        quickFillPlaceholder: "e.g. 50% of remaining balance",
-        canQuickFill: true,
-      })
-    }
-    if (!protection.clientFeedbackDeadlineDays) {
-      gaps.push({
-        id: "feedback-deadline",
-        label: "No client feedback deadline",
-        description: "Without one, clients can delay feedback indefinitely — stalling your timeline.",
-        severity: "suggestion",
-        group: "protection",
-        quickFillKey: "clientFeedbackDeadlineDays",
-        quickFillType: "number",
-        quickFillLabel: "Days to respond",
-        quickFillPlaceholder: "e.g. 5",
-        canQuickFill: true,
-      })
-    }
-    if (!scope.revisionLimit) {
-      gaps.push({
-        id: "revision-limit",
-        label: "No revision limit — unlimited revisions allowed",
-        description: "Without a cap, clients can request revisions indefinitely. 2–3 rounds is standard.",
-        severity: "suggestion",
-        editStep: 2,
-        group: "scope",
-        canQuickFill: false,
-      })
-    }
-    if (protection.ipTiming === "on-creation") {
-      gaps.push({
-        id: "ip-timing",
-        label: "IP transfers on creation — before full payment",
-        description: "The client legally owns the work before the final balance is paid. Consider switching to On Final Payment.",
-        severity: "warning",
-        editStep: 4,
-        group: "protection",
-        canQuickFill: false,
-      })
-    }
-    if (!money.depositRequired) {
-      gaps.push({
-        id: "deposit",
-        label: "No upfront deposit required",
-        description: "A 25–50% deposit reduces non-payment risk before work begins. Common for projects over $500.",
-        severity: "suggestion",
-        editStep: 3,
-        group: "money",
-        canQuickFill: false,
-      })
-    }
-  }
-
-  if (!people.governingLaw) {
-    gaps.push({
-      id: "governing-law",
-      label: "No governing state specified",
-      description: "Which state's law applies is important for any legal dispute.",
-      severity: "warning",
-      group: "people",
-      quickFillKey: "governingLaw",
-      quickFillType: "text",
-      quickFillLabel: "Governing state",
-      quickFillPlaceholder: "e.g. California",
-      canQuickFill: true,
-    })
-  }
-
-  if (!money.deadline) {
-    gaps.push({
-      id: "deadline",
-      label: "No delivery deadline set",
-      description: "Without a final deadline there is no binding timeline for project completion.",
-      severity: "suggestion",
-      group: "money",
-      quickFillKey: "deadline",
-      quickFillType: "date",
-      quickFillLabel: "Final deadline",
-      quickFillPlaceholder: "",
-      canQuickFill: true,
-    })
-  }
-
-  if (!money.invoiceDueDays) {
-    gaps.push({
-      id: "invoice-due",
-      label: "No invoice payment window",
-      description: "NET 14 or NET 30 sets clear expectations for when invoices must be paid.",
-      severity: "suggestion",
-      group: "money",
-      quickFillKey: "invoiceDueDays",
-      quickFillType: "text",
-      quickFillLabel: "Invoice due period",
-      quickFillPlaceholder: "e.g. NET 14",
-      canQuickFill: true,
-    })
-  }
-
-  if (!protection.terminationNoticeDays) {
-    gaps.push({
-      id: "termination-notice",
-      label: "No termination notice period",
-      description: "A notice period (e.g. 14 days) gives both parties time to wrap up the engagement.",
-      severity: "suggestion",
-      group: "protection",
-      quickFillKey: "terminationNoticeDays",
-      quickFillType: "number",
-      quickFillLabel: "Notice period (days)",
-      quickFillPlaceholder: "e.g. 14",
-      canQuickFill: true,
-    })
-  }
-
-  return gaps
-}
-
-function GapRow({
-  gap,
-  isExpanded,
-  inputValue,
-  onToggle,
-  onInputChange,
-  onApply,
-  onEdit,
-}: {
-  gap: GapItem
-  isExpanded: boolean
-  inputValue: string
-  onToggle: () => void
-  onInputChange: (v: string) => void
-  onApply: () => void
-  onEdit: (step: number) => void
-}) {
-  return (
-    <div className={`rounded-lg border overflow-hidden transition-colors ${gap.severity === "warning" ? "border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/20" : "border-border/40 bg-background"}`}>
-      <div className="flex items-start gap-3 p-3">
-        {gap.severity === "warning"
-          ? <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
-          : <Info className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />}
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium leading-tight">{gap.label}</p>
-          <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{gap.description}</p>
-        </div>
-        <div className="flex gap-1 flex-shrink-0 ml-2">
-          {gap.canQuickFill && (
-            <Button
-              size="sm"
-              variant={isExpanded ? "secondary" : "outline"}
-              className="h-7 px-2.5 text-xs"
-              onClick={onToggle}
-            >
-              {isExpanded ? "Cancel" : "Add"}
-            </Button>
-          )}
-          {!gap.canQuickFill && gap.editStep !== undefined && (
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-7 px-2.5 text-xs gap-1 text-muted-foreground"
-              onClick={() => onEdit(gap.editStep!)}
-            >
-              <Pencil className="w-3 h-3" /> Edit
-            </Button>
-          )}
-        </div>
-      </div>
-      <AnimatePresence>
-        {isExpanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.18 }}
-            className="overflow-hidden"
-          >
-            <div className="px-3 pb-3 flex gap-2 border-t border-border/30 pt-2.5">
-              {gap.quickFillLabel && (
-                <Label className="sr-only">{gap.quickFillLabel}</Label>
-              )}
-              <Input
-                type={gap.quickFillType === "date" ? "date" : gap.quickFillType === "number" ? "number" : "text"}
-                placeholder={gap.quickFillPlaceholder}
-                value={inputValue}
-                onChange={(e) => onInputChange(e.target.value)}
-                className="flex-1 h-8 text-sm"
-                min={gap.quickFillType === "number" ? "0" : undefined}
-                autoFocus
-              />
-              <Button
-                size="sm"
-                className="h-8 px-3 text-xs"
-                onClick={onApply}
-                disabled={!inputValue.trim()}
-              >
-                Apply
-              </Button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// STEP 5 — REVIEW SUMMARY
-// ─────────────────────────────────────────────────────────────────────────────
-
-function SummaryItem({ ok, label, value }: { ok: boolean | "warn" | "missing"; label: string; value?: string }) {
-  const icon = ok === true ? <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-    : ok === "warn" ? <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" />
-    : <TriangleAlert className="w-4 h-4 text-red-400 flex-shrink-0" />
-  return (
-    <div className="flex items-start gap-2.5 py-1.5">
-      <div className="mt-0.5">{icon}</div>
-      <div>
-        <span className="text-sm font-medium">{label}</span>
-        {value && <span className="text-sm text-muted-foreground ml-1.5">{value}</span>}
-      </div>
-    </div>
-  )
-}
-
-function ReviewStep({
+function SplitWorkspace({
   contractType,
   people,
   scope,
   money,
   protection,
-  onEdit,
-  onGenerate,
-  onSave,
-  generating,
-  error,
-  onFillMoney,
-  onFillProtection,
-  onFillPeople,
+  step,
+  onPeopleChange,
+  onScopeChange,
+  onMoneyChange,
+  onProtectionChange,
+  onBack,
+  onNext,
+  canSkip,
 }: {
   contractType: ContractType
   people: Partial<PeopleData>
   scope: Partial<ScopeData>
   money: Partial<MoneyData>
   protection: Partial<ProtectionData>
-  onEdit: (step: number) => void
-  onGenerate: () => void
-  onSave: () => void
-  generating: boolean
-  error: string | null
-  onFillMoney: (u: Partial<MoneyData>) => void
-  onFillProtection: (u: Partial<ProtectionData>) => void
-  onFillPeople: (u: Partial<PeopleData>) => void
+  step: number
+  onPeopleChange: (d: Partial<PeopleData>) => void
+  onScopeChange: (d: Partial<ScopeData>) => void
+  onMoneyChange: (d: Partial<MoneyData>) => void
+  onProtectionChange: (d: Partial<ProtectionData>) => void
+  onBack: () => void
+  onNext: () => void
+  canSkip: boolean
 }) {
-  const [expandedGap, setExpandedGap] = useState<string | null>(null)
-  const [gapInputValue, setGapInputValue] = useState("")
+  const [mobileTab, setMobileTab] = useState<MobileTab>("builder")
 
-  const isFreelance = contractType === "freelance"
-  const clientEffective = people.clientName?.trim() || people.clientEntityName?.trim() || ""
-  const freelancerEffective = people.freelancerName?.trim() || people.freelancerEntityName?.trim() || ""
-  const clientName = clientEffective || "—"
-  const freelancerName = freelancerEffective || "—"
-  const totalFee = money.totalFee ? `$${money.totalFee}` : money.hourlyRate ? `$${money.hourlyRate}/hr` : "—"
-  const missingPartyNames = !clientEffective || !freelancerEffective
+  const stepLabel = STEP_SECTIONS[step] ?? "Section"
+  const backLabel = STEPS[step - 1] ?? "Back"
+  const nextLabel = step < STEPS.length - 1
+    ? (STEP_SECTIONS[step + 1] ?? STEPS[step + 1] ?? "Next")
+    : "Review"
 
-  const gaps = computeGaps(contractType, people, scope, money, protection)
-  const warningGaps = gaps.filter((g) => g.severity === "warning")
-  const suggestionGaps = gaps.filter((g) => g.severity === "suggestion")
-
-  function applyGapFill(gap: GapItem) {
-    const v = gapInputValue.trim()
-    if (!v || !gap.canQuickFill) return
-    if (gap.group === "money") {
-      if (gap.id === "late-fee") onFillMoney({ lateFee: true, lateFeeAmount: v })
-      else if (gap.id === "deadline") onFillMoney({ deadline: v })
-      else if (gap.id === "invoice-due") onFillMoney({ invoiceDueDays: v })
-    } else if (gap.group === "protection") {
-      if (gap.id === "kill-fee") onFillProtection({ killFee: true, killFeeAmount: v })
-      else if (gap.id === "feedback-deadline") onFillProtection({ clientFeedbackDeadlineDays: v })
-      else if (gap.id === "termination-notice") onFillProtection({ terminationNoticeDays: v })
-    } else if (gap.group === "people") {
-      if (gap.id === "governing-law") onFillPeople({ governingLaw: v })
+  const formContent = (() => {
+    switch (step) {
+      case 1: return <PeopleSection     contractType={contractType} people={people}         onChange={onPeopleChange} />
+      case 2: return <ScopeSection      contractType={contractType} scope={scope}           onChange={onScopeChange} />
+      case 3: return <MoneySection      contractType={contractType} money={money}           onChange={onMoneyChange} />
+      case 4: return <ProtectionSection contractType={contractType} protection={protection} onChange={onProtectionChange} />
+      default: return null
     }
-    setExpandedGap(null)
-    setGapInputValue("")
-  }
+  })()
 
-  function toggleGap(id: string) {
-    if (expandedGap === id) {
-      setExpandedGap(null)
-      setGapInputValue("")
-    } else {
-      setExpandedGap(id)
-      setGapInputValue("")
-    }
-  }
+  const preview = (
+    <LiveDocumentPreview
+      contractType={contractType}
+      people={people}
+      scope={scope}
+      money={money}
+      protection={protection}
+      step={step}
+      draft={null}
+    />
+  )
 
   return (
-    <div className="space-y-6">
-      <div>
-        <div className="flex items-center gap-2 mb-2">
-          <Badge variant="outline">{contractLabel(contractType)}</Badge>
-          <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">Step 6 of 6</span>
+    <div className="flex flex-1 overflow-hidden">
+      {/* ── Desktop: Left panel — live paper preview ── */}
+      <div className="hidden md:flex md:w-[58%] border-r border-white/[0.05] bg-[#111115] flex-col overflow-hidden">
+        <div className="px-4 py-2 border-b border-white/[0.05] flex items-center gap-2 text-xs text-white/30 shrink-0">
+          <span>Document preview</span>
+          <span className="ml-auto text-violet-400/60">
+            {stepLabel} — step {step} of {STEPS.length - 1}
+          </span>
         </div>
-        <h2 className="text-2xl font-display font-bold mb-1">Review Your {contractLabel(contractType)}</h2>
-        <p className="text-muted-foreground text-sm">Check your answers and fill any gaps before generating. You can edit any step.</p>
-      </div>
-
-      <div className="space-y-3">
-        <div className="rounded-xl border border-border/50 p-4 bg-card/50 space-y-0.5">
-          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-1.5"><Users className="w-3.5 h-3.5" /> Parties</p>
-          <SummaryItem ok={!!clientEffective} label="Client:" value={clientName} />
-          <SummaryItem ok={!!freelancerEffective} label={isFreelance ? "Freelancer:" : "Party B:"} value={freelancerName} />
-          <SummaryItem ok={!!people.governingLaw} label="Governing Law:" value={people.governingLaw || "—"} />
-          {people.projectTitle && <SummaryItem ok={true} label="Project:" value={people.projectTitle} />}
-        </div>
-
-        {isFreelance && (
-          <div className="rounded-xl border border-border/50 p-4 bg-card/50 space-y-0.5 cursor-pointer hover:bg-accent/10" onClick={() => onEdit(2)}>
-            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-1.5"><BookOpen className="w-3.5 h-3.5" /> Scope</p>
-            <SummaryItem ok={!!scope.serviceType} label="Service:" value={scope.serviceType || "—"} />
-            <SummaryItem ok={!!scope.scopeDescription && scope.scopeDescription.length > 10} label="Scope" value={scope.scopeDescription ? `${scope.scopeDescription.slice(0, 60)}…` : "Not set"} />
-            <SummaryItem ok={!!scope.revisionLimit} label="Revisions:" value={scope.revisionLimit ? `${scope.revisionLimit} round(s)` : "Unlimited"} />
-          </div>
-        )}
-
-        <div className="rounded-xl border border-border/50 p-4 bg-card/50 space-y-0.5 cursor-pointer hover:bg-accent/10" onClick={() => onEdit(3)}>
-          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-1.5"><DollarSign className="w-3.5 h-3.5" /> Payment</p>
-          <SummaryItem ok={!!(money.totalFee || money.hourlyRate)} label="Fee:" value={totalFee} />
-          <SummaryItem ok={money.paymentStructure !== undefined} label="Structure:" value={money.paymentStructure || "—"} />
-          <SummaryItem ok={!!money.depositRequired} label="Deposit:" value={money.depositRequired ? (money.depositAmount ? `$${money.depositAmount}` : "Yes") : "No"} />
-          <SummaryItem ok={money.lateFee ?? false} label="Late Fee:" value={money.lateFee ? (money.lateFeeAmount || "Yes") : "No"} />
-          {money.deadline && <SummaryItem ok={true} label="Deadline:" value={money.deadline} />}
-        </div>
-
-        {isFreelance && (
-          <div className="rounded-xl border border-border/50 p-4 bg-card/50 space-y-0.5 cursor-pointer hover:bg-accent/10" onClick={() => onEdit(4)}>
-            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-1.5"><Shield className="w-3.5 h-3.5" /> Protection</p>
-            <SummaryItem
-              ok={protection.ipTiming !== "on-creation" ? true : "warn"}
-              label="IP Ownership:"
-              value={protection.ipTiming === "on-payment" ? "Transfers on final payment" : protection.ipTiming === "on-creation" ? "Transfers on creation" : "Limited license"}
-            />
-            <SummaryItem ok={protection.fileReleaseOnPayment ?? true} label="File Release:" value={protection.fileReleaseOnPayment ? "After final payment" : "Before payment"} />
-            <SummaryItem ok={protection.killFee ?? false} label="Kill Fee:" value={protection.killFee ? (protection.killFeeAmount || "Yes") : "No"} />
-            <SummaryItem ok={!!protection.clientFeedbackDeadlineDays} label="Feedback Deadline:" value={protection.clientFeedbackDeadlineDays ? `${protection.clientFeedbackDeadlineDays} days` : "None set"} />
-            <SummaryItem ok={true} label="Dispute:" value={protection.disputeResolution || "negotiation"} />
-          </div>
-        )}
-
-        {/* ── Check for Gaps & Fill ─────────────────────────── */}
-        <div className="rounded-xl border border-border/60 bg-card/30 overflow-hidden">
-          <div className="px-4 py-3 bg-muted/20 border-b border-border/30 flex items-start gap-2.5">
-            <Search className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="text-sm font-semibold">Check for Gaps &amp; Fill Recommendations</p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {gaps.length === 0
-                  ? "No gaps found — your contract looks well-covered."
-                  : `${gaps.length} item${gaps.length !== 1 ? "s" : ""} found. Review before generating.`}
-              </p>
-            </div>
-          </div>
-
-          <div className="p-4 space-y-4">
-            {warningGaps.length > 0 && (
-              <div className="space-y-2">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-amber-500">Business Protections</p>
-                {warningGaps.map((gap) => (
-                  <GapRow
-                    key={gap.id}
-                    gap={gap}
-                    isExpanded={expandedGap === gap.id}
-                    inputValue={expandedGap === gap.id ? gapInputValue : ""}
-                    onToggle={() => toggleGap(gap.id)}
-                    onInputChange={setGapInputValue}
-                    onApply={() => applyGapFill(gap)}
-                    onEdit={onEdit}
-                  />
-                ))}
-              </div>
-            )}
-
-            {suggestionGaps.length > 0 && (
-              <div className="space-y-2">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Suggested Additions</p>
-                {suggestionGaps.map((gap) => (
-                  <GapRow
-                    key={gap.id}
-                    gap={gap}
-                    isExpanded={expandedGap === gap.id}
-                    inputValue={expandedGap === gap.id ? gapInputValue : ""}
-                    onToggle={() => toggleGap(gap.id)}
-                    onInputChange={setGapInputValue}
-                    onApply={() => applyGapFill(gap)}
-                    onEdit={onEdit}
-                  />
-                ))}
-              </div>
-            )}
-
-            <div className={`space-y-1.5 ${gaps.length > 0 ? "pt-3 border-t border-border/30" : ""}`}>
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-emerald-500">Default Legal Protections (auto-added)</p>
-              {DEFAULT_CLAUSES.map((c) => (
-                <div key={c} className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
-                  {c}
-                </div>
-              ))}
-            </div>
-          </div>
+        <div className="flex-1 overflow-y-auto px-6 py-6 flex justify-center">
+          {preview}
         </div>
       </div>
 
-      {missingPartyNames && (
-        <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 dark:border-red-800/60 dark:bg-red-950/20 px-4 py-3">
-          <TriangleAlert className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="text-sm font-semibold text-red-700 dark:text-red-400">Party names required before generating</p>
-            <p className="text-xs text-red-600/80 dark:text-red-400/70 mt-0.5">
-              A contract cannot be generated without identifying both parties by name.{" "}
+      {/* ── Desktop: Right panel — builder controls ── */}
+      <div className="hidden md:flex flex-col flex-1 overflow-hidden">
+        <StepProgress step={step} />
+        <div className="flex-1 overflow-y-auto px-5 py-5">{formContent}</div>
+        <div className="px-5 py-4 border-t border-white/[0.05] flex items-center gap-2 shrink-0">
+          <button
+            onClick={onBack}
+            className="flex items-center gap-1.5 text-xs px-3 py-2.5 rounded-xl border border-white/[0.07] text-white/40 hover:text-white/60 transition-colors"
+          >
+            <ChevronLeft className="w-3.5 h-3.5" /> {backLabel}
+          </button>
+          <button
+            onClick={onNext}
+            className="flex-1 flex items-center justify-center gap-1.5 text-sm py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-medium transition-colors"
+          >
+            {step >= STEPS.length - 2 ? "Review Summary" : `Next: ${nextLabel}`}
+            <ChevronRight className="w-4 h-4" />
+          </button>
+          {canSkip && (
+            <button
+              onClick={onNext}
+              className="flex items-center gap-1 text-xs px-3 py-2.5 rounded-xl border border-white/[0.07] text-white/25 hover:text-white/50 transition-colors"
+            >
+              <SkipForward className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ── Mobile: Tab view ── */}
+      <div className="flex md:hidden flex-col flex-1 overflow-hidden">
+        {/* Tab bar */}
+        <div className="flex border-b border-white/[0.06] shrink-0">
+          <button
+            onClick={() => setMobileTab("builder")}
+            className={`flex-1 py-2.5 text-sm flex items-center justify-center gap-2 transition-colors ${
+              mobileTab === "builder"
+                ? "font-medium text-white border-b-2 border-violet-500"
+                : "text-white/40"
+            }`}
+          >
+            <PenLine className={`w-3.5 h-3.5 ${mobileTab === "builder" ? "text-violet-400" : ""}`} /> Builder
+          </button>
+          <button
+            onClick={() => setMobileTab("preview")}
+            className={`flex-1 py-2.5 text-sm flex items-center justify-center gap-2 transition-colors ${
+              mobileTab === "preview"
+                ? "font-medium text-white border-b-2 border-violet-500"
+                : "text-white/40"
+            }`}
+          >
+            <Eye className={`w-3.5 h-3.5 ${mobileTab === "preview" ? "text-violet-400" : ""}`} /> Preview
+          </button>
+        </div>
+
+        {mobileTab === "builder" ? (
+          <>
+            <StepProgress step={step} />
+            <div className="flex-1 overflow-y-auto px-4 py-4 pb-24">{formContent}</div>
+            <div className="fixed bottom-0 left-0 right-0 bg-[#0c0c0f] border-t border-white/[0.06] px-4 py-3 flex items-center gap-2 z-10">
               <button
-                onClick={() => onEdit(1)}
-                className="underline font-medium hover:text-red-700 dark:hover:text-red-300 transition-colors"
+                onClick={onBack}
+                className="flex items-center gap-1.5 text-xs px-3 py-2.5 rounded-xl border border-white/[0.07] text-white/40"
               >
-                Go to the People step
-              </button>{" "}
-              to add the missing name{!clientEffective && !freelancerEffective ? "s" : ""}.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {error && (
-        <div className="flex items-start gap-2.5 rounded-lg border border-red-300/60 dark:border-red-800/50 bg-red-50/60 dark:bg-red-950/20 px-4 py-3">
-          <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="text-sm font-semibold text-red-700 dark:text-red-400">Generation failed</p>
-            <p className="text-xs text-red-600/80 dark:text-red-400/70 mt-0.5">{error}</p>
-          </div>
-        </div>
-      )}
-
-      <div className="flex flex-col gap-2.5 pt-1">
-        <Button
-          onClick={onGenerate}
-          disabled={generating || missingPartyNames}
-          size="lg"
-          className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white h-11 text-base"
-        >
-          {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-          {generating ? "Drafting your contract…" : "Generate Draft"}
-        </Button>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={onSave} className="gap-1.5 flex-1 text-xs">
-            <Save className="w-3.5 h-3.5" /> Save Progress
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => onEdit(1)} className="gap-1.5 flex-1 text-xs">
-            <ArrowLeft className="w-3.5 h-3.5" /> Edit Answers
-          </Button>
-        </div>
+                <ChevronLeft className="w-3.5 h-3.5" /> Back
+              </button>
+              <button
+                onClick={onNext}
+                className="flex-1 flex items-center justify-center gap-1.5 text-sm py-2.5 rounded-xl bg-violet-600 text-white font-medium"
+              >
+                {step >= STEPS.length - 2 ? "Review" : "Next"}
+                <ChevronRight className="w-4 h-4" />
+              </button>
+              {canSkip && (
+                <button onClick={onNext} className="flex items-center text-xs px-3 py-2.5 rounded-xl border border-white/[0.07] text-white/25">
+                  <SkipForward className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          </>
+        ) : (
+          <>
+            <button
+              onClick={() => setMobileTab("builder")}
+              className="flex items-center gap-2 px-4 py-2.5 bg-violet-600/[0.06] border-b border-violet-500/10 hover:bg-violet-600/[0.10] transition-colors"
+            >
+              <ArrowLeft className="w-3.5 h-3.5 text-violet-400" />
+              <span className="text-xs text-violet-300">Return to Builder to edit</span>
+            </button>
+            <div className="flex-1 overflow-y-auto px-3 py-4 bg-[#111115]">
+              <div className="text-[10px] text-white/25 text-center mb-3 font-sans">
+                Live preview — updates as you fill the Builder
+              </div>
+              <div className="flex justify-center">
+                <div className="w-full max-w-[360px]">
+                  {preview}
+                </div>
+              </div>
+              <div className="flex items-start gap-1.5 mt-3 px-1">
+                <Info className="w-3 h-3 text-white/20 mt-0.5 shrink-0" />
+                <p className="text-[10px] text-white/20 leading-relaxed">
+                  Drafting support only. Review before use. Not legal advice.
+                </p>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   )
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// DRAFT RESULT VIEW
+// REVIEW STEP — Right panel form for confirming before generation
 // ─────────────────────────────────────────────────────────────────────────────
 
-function buildDraftText(d: DraftPayload): string {
-  const lines: string[] = [`${d.contractType}\n`]
-  const parties = Object.values(d.parties).map(p => `${p.label}: ${p.name || "TBD"}`).join(" | ")
-  lines.push(`Parties: ${parties}\n`)
-  for (const section of (d.sections ?? [])) {
-    lines.push(`\n${section.title}`)
-    section.clauses.forEach((c, i) => lines.push(`${i + 1}. ${c}`))
-  }
-  if ((d.defaultClauses ?? []).length) {
-    lines.push("\nStandard Clauses")
-    d.defaultClauses!.forEach(c => lines.push(`• ${c}`))
-  }
-  return lines.join("\n")
-}
-
-function DraftResultView({ draft, contractType, onBack, onRestart }: {
-  draft: DraftPayload
+function ReviewFormPanel({
+  contractType,
+  people,
+  onGenerate,
+  generating,
+}: {
   contractType: ContractType
-  onBack: () => void
-  onRestart: () => void
+  people: Partial<PeopleData>
+  onGenerate: () => void
+  generating: boolean
 }) {
-  const { toast } = useToast()
-  const [, setLocation] = useLocation()
-  const generatedAt = useMemo(() => new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }), [])
-
-  useEffect(() => {
-    const labels: Record<ContractType, string> = {
-      freelance: "Freelance Agreement",
-      nda: "Non-Disclosure Agreement",
-      "payment-agreement": "Payment Agreement",
-      "service-agreement": "Service Agreement",
-      lease: "Lease Agreement",
-    }
-    saveRecentWork({ tool: "contract-builder", title: labels[contractType] ?? "Contract Draft" })
-  }, [])
-
-  function handleAnalyzeContract() {
-    try {
-      sessionStorage.setItem("pii_analyze_text", buildDraftText(draft))
-    } catch { /* sessionStorage unavailable */ }
-    setLocation("/analyze")
-  }
-
-  function handleRedactContract() {
-    try {
-      sessionStorage.setItem("pii_redact_input", JSON.stringify({
-        text: buildDraftText(draft),
-        source: "analyze",
-        fileName: `${draft.contractType} Contract`,
-      }))
-    } catch { /* sessionStorage unavailable */ }
-    setLocation("/redact")
-  }
-
-  function exportJSON() {
-    const blob = new Blob([JSON.stringify(draft, null, 2)], { type: "application/json" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = `${contractType}-draft-${Date.now()}.json`
-    a.click()
-    URL.revokeObjectURL(url)
-    toast({ title: "Draft exported", description: "JSON file downloaded." })
-  }
-
-  function downloadPDF() {
-    const partiesHtml = Object.values(draft.parties)
-      .map(p => `<div class="party"><span class="party-label">${p.label}</span> <strong>${p.name || "TBD"}</strong>${p.type ? ` <span class="party-type">(${p.type})</span>` : ""}</div>`)
-      .join("")
-
-    const summaryHtml = (draft.plainEnglishSummary ?? [])
-      .map(line => `<li>&#10003; ${line}</li>`)
-      .join("")
-
-    const sectionsHtml = (draft.sections ?? [])
-      .map(section => `
-        <div class="section">
-          <h3>${section.title}</h3>
-          <ol>${section.clauses.map(c => `<li>${c}</li>`).join("")}</ol>
-        </div>`)
-      .join("")
-
-    const defaultClausesHtml = (draft.defaultClauses ?? [])
-      .map(c => `<li>&#10003; ${c}</li>`)
-      .join("")
-
-    const flagsHtml = [
-      ...(draft.reviewFlags ?? []).map(f => `<li>&#9651; ${f}</li>`),
-      ...(draft.missingProtections ?? []).map(m => `<li>&#9432; ${m}</li>`),
-    ].join("")
-
-    const html = `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <title>${draft.contractType} — PlainPath Draft</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Georgia, serif; font-size: 11pt; color: #111; line-height: 1.65; padding: 60px 80px; max-width: 860px; margin: 0 auto; }
-    .header { text-align: center; margin-bottom: 40px; border-bottom: 2px solid #111; padding-bottom: 20px; }
-    .header h1 { font-size: 18pt; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
-    .header .subtitle { font-size: 10pt; color: #555; }
-    .block { margin-bottom: 28px; }
-    .block-title { font-size: 8.5pt; font-family: Arial, sans-serif; text-transform: uppercase; letter-spacing: 0.1em; color: #666; border-bottom: 1px solid #ddd; padding-bottom: 4px; margin-bottom: 10px; }
-    .party { margin-bottom: 5px; font-size: 10.5pt; }
-    .party-label { font-size: 8pt; background: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-family: Arial, sans-serif; margin-right: 4px; }
-    .party-type { color: #666; font-size: 9pt; }
-    ul, ol { padding-left: 20px; }
-    li { margin-bottom: 5px; font-size: 10.5pt; }
-    .section { margin-bottom: 22px; }
-    .section h3 { font-size: 11pt; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; color: #222; }
-    .flags li { color: #b45309; }
-    .footer { margin-top: 60px; border-top: 1px solid #ddd; padding-top: 16px; font-size: 8.5pt; color: #888; font-family: Arial, sans-serif; text-align: center; }
-    .sig-block { margin-top: 60px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
-    .sig-line { border-top: 1px solid #333; padding-top: 6px; font-size: 9pt; color: #444; }
-    @media print { body { padding: 40px 60px; } }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <h1>${draft.contractType}</h1>
-    <div class="subtitle">Draft prepared with PlainPath · ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</div>
-  </div>
-
-  <div class="block">
-    <div class="block-title">Parties</div>
-    ${partiesHtml}
-  </div>
-
-  ${summaryHtml ? `<div class="block"><div class="block-title">Plain English Summary</div><ul>${summaryHtml}</ul></div>` : ""}
-
-  ${sectionsHtml}
-
-  ${defaultClausesHtml ? `<div class="block"><div class="block-title">Standard Clauses</div><ul>${defaultClausesHtml}</ul></div>` : ""}
-
-  ${flagsHtml ? `<div class="block flags"><div class="block-title">Items Needing Review</div><ul>${flagsHtml}</ul></div>` : ""}
-
-  <div class="sig-block">
-    ${Object.values(draft.parties).map(p => `
-      <div>
-        <div class="sig-line">Signature — ${p.name || p.label}</div>
-        <div class="sig-line" style="margin-top:24px">Date</div>
-      </div>`).join("")}
-  </div>
-
-  <div class="footer">
-    This is a draft document prepared for review purposes only. It is not legal advice. Have a qualified attorney review any contract before signing.
-  </div>
-</body>
-</html>`
-
-    const w = window.open("", "_blank")
-    if (!w) {
-      toast({ title: "Popup blocked", description: "Allow popups for this site and try again.", variant: "destructive" })
-      return
-    }
-    w.document.write(html)
-    w.document.close()
-    w.focus()
-    setTimeout(() => { w.print() }, 400)
-    toast({ title: "Contract ready", description: "Use 'Save as PDF' in the print dialog." })
-  }
-
-  const hasFlagsOrMissing = (draft.reviewFlags?.length ?? 0) > 0 || (draft.missingProtections?.length ?? 0) > 0
+  const clientName = people.clientName?.trim() || people.clientEntityName?.trim() || null
+  const freelancerName = people.freelancerName?.trim() || people.freelancerEntityName?.trim() || null
+  const canGenerate = !!(clientName && freelancerName)
 
   return (
-    <div className="flex flex-col gap-0">
-      {/* ── Compact toolbar header ── */}
-      <div className="flex items-center justify-between gap-3 pb-4 flex-shrink-0">
-        <div className="flex items-center gap-3 min-w-0">
-          <button
-            onClick={onBack}
-            className="p-1.5 rounded-lg hover:bg-muted/60 text-muted-foreground transition-colors flex-shrink-0"
-            title="Edit answers"
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </button>
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-              <Badge variant="secondary" className="text-[10px] py-0 flex-shrink-0">Draft</Badge>
-              <span className="text-[10px] text-muted-foreground flex-shrink-0">Generated {generatedAt}</span>
-            </div>
-            <h2 className="text-lg font-display font-bold leading-tight truncate">{contractLabel(contractType)}</h2>
-            {(() => {
-              const partyA = Object.values(draft.parties)[0]?.name?.trim()
-              const partyB = Object.values(draft.parties)[1]?.name?.trim()
-              return (partyA || partyB) ? (
-                <p className="text-xs text-muted-foreground truncate mt-0.5">
-                  {[partyA, partyB].filter(Boolean).join(" × ")}
-                </p>
-              ) : null
-            })()}
+    <div className="flex-1 overflow-y-auto px-5 py-5">
+      <h3 className="text-sm font-semibold text-white mb-0.5">Step 6 — Review & Generate</h3>
+      <p className="text-xs text-white/35 mb-5 leading-relaxed">
+        Check your answers below. PlainPath will draft your document based on the information you provided.
+      </p>
+
+      {!canGenerate && (
+        <div className="flex items-start gap-2.5 p-3.5 bg-red-500/[0.05] border border-red-500/15 rounded-xl mb-4">
+          <AlertCircle className="w-4 h-4 text-red-400 mt-0.5 shrink-0" />
+          <div>
+            <div className="text-xs font-medium text-red-300 mb-0.5">Required fields missing</div>
+            <div className="text-[11px] text-red-300/50">Both party names are required before generating. Return to Step 2 — Parties.</div>
           </div>
         </div>
-        <button
-          onClick={onRestart}
-          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors flex-shrink-0 px-2 py-1.5 rounded-lg hover:bg-muted/50"
-        >
-          <RotateCcw className="w-3.5 h-3.5" /> Start Over
-        </button>
+      )}
+
+      <div className="space-y-2 mb-6">
+        {[
+          { label: "Document type",  value: CONTRACT_TYPES.find(c => c.id === contractType)?.title ?? "—" },
+          { label: "Party A (Client)",      value: clientName ?? "⚠ Missing", warn: !clientName },
+          { label: "Party B (Freelancer)",  value: freelancerName ?? "⚠ Missing", warn: !freelancerName },
+          { label: "Governing law",  value: people.governingLaw ?? "Not specified" },
+        ].map((item, i) => (
+          <div key={i} className="flex items-start gap-3 py-2.5 border-b border-white/[0.04] last:border-0">
+            <span className="text-xs text-white/35 w-36 shrink-0 mt-0.5">{item.label}</span>
+            <span className={`text-xs font-medium ${(item as any).warn ? "text-red-400" : "text-white/75"}`}>{item.value}</span>
+          </div>
+        ))}
       </div>
 
-      {/* ── Split workspace: document LEFT / actions RIGHT ── */}
-      <div className="flex flex-col lg:flex-row gap-5 min-h-[70vh]">
+      <button
+        onClick={onGenerate}
+        disabled={!canGenerate || generating}
+        className="w-full py-3 rounded-xl bg-violet-600 hover:bg-violet-500 text-sm font-medium text-white flex items-center justify-center gap-2 transition-colors disabled:opacity-40 disabled:cursor-not-allowed mb-3"
+      >
+        {generating ? (
+          <><Loader2 className="w-4 h-4 animate-spin" /> Drafting...</>
+        ) : (
+          <><Sparkles className="w-4 h-4" /> Generate document</>
+        )}
+      </button>
 
-        {/* LEFT — Letter-style document preview */}
-        <div className="flex-1 min-w-0 overflow-y-auto rounded-xl border border-border/30 bg-neutral-100/60 dark:bg-zinc-900/40 p-4 sm:p-6">
-          <div className="max-w-[680px] mx-auto bg-white dark:bg-zinc-900 rounded-lg border border-border/20 shadow-sm px-8 sm:px-12 py-10 sm:py-14">
-
-            {/* Document header */}
-            <div className="text-center border-b border-border/20 pb-7 mb-8">
-              <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/50 mb-2">PlainPath Draft — For Review Only</p>
-              <h1 className="text-[17px] font-bold uppercase tracking-wide text-foreground">
-                {draft.contractType}
-              </h1>
-              <p className="text-xs text-muted-foreground mt-2">
-                {new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
-              </p>
-            </div>
-
-            {/* Parties */}
-            {Object.values(draft.parties).length > 0 && (
-              <div className="mb-7">
-                <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground/60 mb-3 border-b border-border/10 pb-1">Parties</p>
-                <div className="space-y-1.5">
-                  {Object.values(draft.parties).map((p) => (
-                    <p key={p.label} className="text-sm leading-snug">
-                      <span className="font-semibold text-muted-foreground text-xs uppercase tracking-wide mr-1.5">{p.label}:</span>
-                      <span className="font-medium">{p.name || "[TBD]"}</span>
-                      {p.type && <span className="text-xs text-muted-foreground ml-1">({p.type})</span>}
-                    </p>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Plain English Summary */}
-            {(draft.plainEnglishSummary ?? []).length > 0 && (
-              <div className="mb-7 rounded-lg bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200/40 dark:border-emerald-800/30 px-4 py-3">
-                <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-emerald-600/70 dark:text-emerald-400/70 mb-2">Plain English Summary</p>
-                <ul className="space-y-1">
-                  {(draft.plainEnglishSummary ?? []).map((line, i) => (
-                    <li key={i} className="flex gap-2 text-xs text-emerald-800 dark:text-emerald-200 leading-snug">
-                      <CheckCircle2 className="w-3 h-3 text-emerald-500 flex-shrink-0 mt-0.5" />
-                      <span>{line}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {/* Contract sections */}
-            {(draft.sections ?? []).map((section, si) => (
-              <div key={section.title} className={`mb-6 ${si < (draft.sections?.length ?? 0) - 1 ? "pb-6 border-b border-border/10" : ""}`}>
-                <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground/60 mb-3">{section.title}</p>
-                <ol className="space-y-2 pl-0">
-                  {section.clauses.map((c, i) => (
-                    <li key={i} className="flex gap-3 text-[13px] leading-relaxed">
-                      <span className="text-muted-foreground/40 font-mono text-[10px] mt-[3px] flex-shrink-0 w-5 text-right">{i + 1}.</span>
-                      <span>{c}</span>
-                    </li>
-                  ))}
-                </ol>
-              </div>
-            ))}
-
-            {/* Default clauses */}
-            {(draft.defaultClauses ?? DEFAULT_CLAUSES).length > 0 && (
-              <div className="mb-7 pt-2">
-                <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-muted-foreground/60 mb-3 border-b border-border/10 pb-1">Standard Clauses</p>
-                <ul className="space-y-1.5">
-                  {(draft.defaultClauses ?? DEFAULT_CLAUSES).map((c, i) => (
-                    <li key={i} className="flex gap-2 text-xs leading-snug">
-                      <CheckCircle2 className="w-3 h-3 text-emerald-500/70 flex-shrink-0 mt-0.5" />
-                      <span>{c}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {/* Signature block */}
-            <div className="mt-10 pt-8 border-t border-border/20">
-              <div className="grid grid-cols-2 gap-8">
-                {Object.values(draft.parties).slice(0, 2).map((p) => (
-                  <div key={p.label}>
-                    <div className="border-t border-foreground/30 pt-2 mt-8">
-                      <p className="text-[10px] text-muted-foreground">Signature — {p.name || p.label}</p>
-                    </div>
-                    <div className="border-t border-foreground/30 pt-2 mt-6">
-                      <p className="text-[10px] text-muted-foreground">Date</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <p className="mt-8 text-[9px] text-muted-foreground/50 text-center leading-relaxed">
-              This is a structured draft for review purposes only — not legal advice. Have a qualified attorney review before signing.
-            </p>
-          </div>
-        </div>
-
-        {/* RIGHT — Action panel */}
-        <div className="lg:w-72 xl:w-80 flex-shrink-0 flex flex-col gap-4">
-
-          {/* Primary actions */}
-          <div className="rounded-xl border border-border/40 bg-card p-4 space-y-2.5">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Save &amp; Sign</p>
-            <Button
-              size="sm"
-              onClick={downloadPDF}
-              className="w-full gap-2 bg-primary text-white hover:bg-primary/90 h-9"
-            >
-              <Download className="w-3.5 h-3.5" /> Download PDF
-            </Button>
-            <p className="text-[10px] text-muted-foreground/70 text-center leading-snug pt-0.5">
-              Download to keep your draft — it's not stored on our servers.
-            </p>
-          </div>
-
-          {/* Use with another tool */}
-          <div className="rounded-xl border border-border/40 bg-card p-4 space-y-2">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Continue with</p>
-            <button
-              onClick={handleAnalyzeContract}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border border-border/40 hover:bg-muted/40 transition-colors text-left group"
-            >
-              <div className="w-7 h-7 rounded-lg bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center flex-shrink-0">
-                <FileText className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold">Analyze this contract</p>
-                <p className="text-[10px] text-muted-foreground">Spot risks and obligations</p>
-              </div>
-            </button>
-            <button
-              onClick={handleRedactContract}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border border-border/40 hover:bg-muted/40 transition-colors text-left group"
-            >
-              <div className="w-7 h-7 rounded-lg bg-violet-100 dark:bg-violet-900/40 flex items-center justify-center flex-shrink-0">
-                <EyeOff className="w-3.5 h-3.5 text-violet-600 dark:text-violet-400" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold">Redact before sharing</p>
-                <p className="text-[10px] text-muted-foreground">Remove sensitive data</p>
-              </div>
-            </button>
-          </div>
-
-          {/* Parties summary */}
-          {Object.values(draft.parties).length > 0 && (
-            <div className="rounded-xl border border-border/40 bg-card p-4 space-y-2">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Parties</p>
-              {Object.values(draft.parties).map((p) => (
-                <div key={p.label} className="flex items-center gap-2">
-                  <Badge variant="outline" className="text-[9px] px-1.5 py-0.5">{p.label}</Badge>
-                  <span className="text-xs font-medium truncate">{p.name || "[TBD]"}</span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Review flags */}
-          {hasFlagsOrMissing && (
-            <div className="rounded-xl border border-amber-300/50 dark:border-amber-800/40 bg-amber-50/60 dark:bg-amber-950/20 p-4 space-y-1.5">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400">Needs Review</p>
-              {(draft.reviewFlags ?? []).map((f, i) => (
-                <div key={i} className="flex gap-2 text-xs text-amber-700 dark:text-amber-300">
-                  <AlertTriangle className="w-3 h-3 flex-shrink-0 mt-0.5" />
-                  <span>{f}</span>
-                </div>
-              ))}
-              {(draft.missingProtections ?? []).map((m, i) => (
-                <div key={i} className="flex gap-2 text-xs text-muted-foreground">
-                  <Info className="w-3 h-3 flex-shrink-0 mt-0.5" />
-                  <span>{m}</span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Utility */}
-          <div className="rounded-xl border border-border/30 bg-muted/30 p-3 space-y-1.5">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">Utility</p>
-            <button
-              onClick={exportJSON}
-              className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted/60 transition-colors text-left"
-            >
-              <Download className="w-3 h-3 text-muted-foreground flex-shrink-0" />
-              <span className="text-[11px] text-muted-foreground">Export raw JSON</span>
-            </button>
-          </div>
-
-          {/* Edit */}
-          <Button variant="outline" size="sm" onClick={onBack} className="w-full gap-1.5 text-xs">
-            <ArrowLeft className="w-3.5 h-3.5" /> Edit answers
-          </Button>
-        </div>
+      <div className="flex items-start gap-2 p-3 bg-white/[0.02] border border-white/[0.05] rounded-xl">
+        <Info className="w-3.5 h-3.5 text-white/20 mt-0.5 shrink-0" />
+        <p className="text-xs text-white/25 leading-relaxed">
+          PlainPath provides document drafting support. Review before use. Not legal advice. Consider professional review before execution.
+        </p>
       </div>
-
     </div>
   )
 }
@@ -2501,101 +1830,90 @@ function DraftResultView({ draft, contractType, onBack, onRestart }: {
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 
+const DEFAULT_PEOPLE: Partial<PeopleData> = { clientType: "individual", freelancerType: "individual", partyAType: "individual", partyBType: "individual" }
+const DEFAULT_MONEY: Partial<MoneyData> = { paymentStructure: "flat", depositRequired: false, lateFee: false, milestones: [] }
+const DEFAULT_PROTECTION: Partial<ProtectionData> = { ipTiming: "on-payment", portfolioUsage: true, confidentiality: false, killFee: false, fileReleaseOnPayment: true, disputeResolution: "negotiation", subcontractingAllowed: false }
+
+function deriveFilename(ct: ContractType | null, people: Partial<PeopleData>): string {
+  if (!ct) return "NewDocument.draft"
+  const clientSlug = (people.clientName ?? people.clientEntityName ?? "Client").split(" ").slice(0, 1).join("")
+  const freelancerSlug = (people.freelancerName ?? people.freelancerEntityName ?? "Freelancer").split(" ").slice(0, 1).join("")
+  const typeSlug = ct === "freelance" ? "ServiceAgreement" : ct === "nda" ? "NDA" : ct === "lease" ? "Lease" : ct === "service-agreement" ? "ServiceAgreement" : ct === "payment-agreement" ? "PaymentAgreement" : "Agreement"
+  if (clientSlug === "Client" && freelancerSlug === "Freelancer") return `NewDocument-${typeSlug}.draft`
+  return `${clientSlug}-${freelancerSlug}-${typeSlug}.draft`
+}
+
 export default function ContractBuilder() {
   const [, setLocation] = useLocation()
   const { toast } = useToast()
+  const { entitlements } = useEntitlements()
+  const [upgradeModal, setUpgradeModal] = useState(false)
 
-  // ── All hooks before any early returns ──
-  const [step, setStep] = useState(0)
+  // Core state
   const [contractType, setContractType] = useState<ContractType | null>(null)
-  const [people, setPeople] = useState<Partial<PeopleData>>({ clientType: "individual", freelancerType: "individual" })
+  const [step, setStep] = useState(0)
+  const [people, setPeople] = useState<Partial<PeopleData>>(DEFAULT_PEOPLE)
   const [scope, setScope] = useState<Partial<ScopeData>>({})
-  const [money, setMoney] = useState<Partial<MoneyData>>({ paymentStructure: "flat", depositRequired: false, lateFee: false })
-  const [protection, setProtection] = useState<Partial<ProtectionData>>({
-    ipTiming: "on-payment",
-    portfolioUsage: true,
-    confidentiality: false,
-    killFee: false,
-    fileReleaseOnPayment: true,
-    disputeResolution: "negotiation",
-    subcontractingAllowed: false,
-  })
-  const [aiInsights, setAiInsights] = useState<AIInsights>({ suggestions: [], warnings: [], draftGuidance: [] })
-  const [insightLoading, setInsightLoading] = useState(false)
+  const [money, setMoney] = useState<Partial<MoneyData>>(DEFAULT_MONEY)
+  const [protection, setProtection] = useState<Partial<ProtectionData>>(DEFAULT_PROTECTION)
   const [draft, setDraft] = useState<DraftPayload | null>(null)
   const [generating, setGenerating] = useState(false)
   const [draftError, setDraftError] = useState<string | null>(null)
-  const [upgradeModal, setUpgradeModal] = useState(false)
-  const { entitlements } = useEntitlements()
+  const [unsaved, setUnsaved] = useState(false)
 
+  // Mark unsaved on any field change
+  const markUnsaved = useCallback(() => setUnsaved(true), [])
+  const setPeopleTracked = useCallback((d: Partial<PeopleData>) => { setPeople(d); markUnsaved() }, [markUnsaved])
+  const setScopeTracked = useCallback((d: Partial<ScopeData>) => { setScope(d); markUnsaved() }, [markUnsaved])
+  const setMoneyTracked = useCallback((d: Partial<MoneyData>) => { setMoney(d); markUnsaved() }, [markUnsaved])
+  const setProtectionTracked = useCallback((d: Partial<ProtectionData>) => { setProtection(d); markUnsaved() }, [markUnsaved])
+
+  const filename = useMemo(() => deriveFilename(contractType, people), [contractType, people])
+
+  // Restore saved draft on mount
   useEffect(() => {
-    document.title = "Contract Builder — PlainPath"
-    return () => { document.title = "PlainPath" }
-  }, [])
-
-  // Load saved draft on mount
-  useEffect(() => {
-    const saved = localStorage.getItem("plainpath-contract-draft-latest")
-    if (saved) {
-      try {
-        const data = JSON.parse(saved)
-        if (data.contractType) setContractType(data.contractType)
-        if (data.people) setPeople(data.people)
-        if (data.scope) setScope(data.scope)
-        if (data.money) setMoney(data.money)
-        if (data.protection) setProtection(data.protection)
-      } catch {
-        // Ignore corrupted draft
-      }
-    }
-  }, [])
-
-  const ruleInsights = useMemo(
-    () => computeRuleInsights(step, contractType, people, scope, money, protection),
-    [step, contractType, people, scope, money, protection]
-  )
-
-  const mergedInsights: AIInsights = useMemo(() => ({
-    suggestions: [...ruleInsights.suggestions, ...aiInsights.suggestions.filter((s) => !ruleInsights.suggestions.includes(s))].slice(0, 4),
-    warnings: [...ruleInsights.warnings, ...aiInsights.warnings.filter((w) => !ruleInsights.warnings.includes(w))].slice(0, 4),
-    draftGuidance: [...ruleInsights.draftGuidance, ...aiInsights.draftGuidance.filter((g) => !ruleInsights.draftGuidance.includes(g))].slice(0, 5),
-  }), [ruleInsights, aiInsights])
-
-  const fetchAIInsights = useCallback(async (nextStep: number) => {
-    if (!contractType) return
-    setInsightLoading(true)
+    const raw = localStorage.getItem("plainpath-contract-draft-latest")
+    if (!raw) return
     try {
-      const base = getApiBaseUrl()
-      const r = await fetch(`${base}/api/contracts/insight`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contractType, step: nextStep, people, scope, money, protection }),
-      })
-      const data = await r.json()
-      setAiInsights({
-        suggestions: Array.isArray(data.suggestions) ? data.suggestions : [],
-        warnings: Array.isArray(data.warnings) ? data.warnings : [],
-        draftGuidance: Array.isArray(data.draftGuidance) ? data.draftGuidance : [],
-      })
-    } catch {
-      // Silent fail — rule-based insights remain
-    } finally {
-      setInsightLoading(false)
-    }
-  }, [contractType, people, scope, money, protection])
+      const saved = JSON.parse(raw)
+      if (saved.contractType) {
+        setContractType(saved.contractType)
+        if (saved.people) setPeople(saved.people)
+        if (saved.scope) setScope(saved.scope)
+        if (saved.money) setMoney(saved.money)
+        if (saved.protection) setProtection(saved.protection)
+      }
+    } catch { /* ignore */ }
+  }, [])
+
+  // Determine page state
+  const pageState: PageState = useMemo(() => {
+    if (!contractType || step === 0) return "empty"
+    if (generating) return "generating"
+    if (draftError) return "error"
+    if (draft) return "review"
+    return "workspace"
+  }, [contractType, step, generating, draftError, draft])
 
   function saveDraft() {
-    const data = { contractType, people, scope, money, protection }
-    localStorage.setItem("plainpath-contract-draft-latest", JSON.stringify({ ...data, savedAt: new Date().toISOString() }))
-    toast({ title: "Draft saved", description: "Your progress has been saved and will load next time you return." })
+    localStorage.setItem(
+      "plainpath-contract-draft-latest",
+      JSON.stringify({ contractType, people, scope, money, protection, savedAt: new Date().toISOString() })
+    )
+    setUnsaved(false)
+    if (contractType) {
+      saveRecentWork({ tool: "contract-builder", title: filename })
+    }
+    toast({ title: "Draft saved", description: "Your progress has been saved locally." })
   }
 
   async function generateDraft() {
-    // Pre-flight: party names are required — block silently-broken drafts
-    const partyAOk = !!(people.clientName?.trim() || people.clientEntityName?.trim())
-    const partyBOk = !!(people.freelancerName?.trim() || people.freelancerEntityName?.trim())
-    if (!partyAOk || !partyBOk) {
-      setDraftError("Please add names for both parties before generating your contract. Go back to the People step.")
+    if (!contractType) return
+    const clientName = people.clientName?.trim() || people.clientEntityName?.trim()
+    const freelancerName = people.freelancerName?.trim() || people.freelancerEntityName?.trim()
+    if (!clientName || !freelancerName) {
+      toast({ title: "Missing party names", description: "Both party names are required before generating.", variant: "destructive" })
+      setStep(1)
       return
     }
     try {
@@ -2610,11 +1928,19 @@ export default function ContractBuilder() {
       const r = await fetch(`${base}/api/contracts/generate-draft`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contractType, people, scope, money, protection }),
+        body: JSON.stringify({
+          contractType: API_CONTRACT_TYPE(contractType),
+          people,
+          scope,
+          money,
+          protection,
+        }),
       })
       const data = await r.json()
-      if (data.error) throw new Error(data.message)
+      if (data.error) throw new Error(data.message ?? "Generation failed")
       setDraft(data.draft)
+      saveRecentWork({ tool: "contract-builder", title: filename })
+      localStorage.removeItem("plainpath-contract-draft-latest")
     } catch (e) {
       setDraftError((e as Error).message || "Draft generation failed. Please try again.")
     } finally {
@@ -2622,13 +1948,48 @@ export default function ContractBuilder() {
     }
   }
 
+  function handleDownload(format: "pdf" | "docx" | "text") {
+    if (!draft) return
+    const sections = draft.sections?.map((s, i) => `§${i + 1} — ${s.title}\n\n${s.clauses.join("\n\n")}`) ?? []
+    const text = [
+      (CONTRACT_TYPES.find(c => c.id === contractType)?.title ?? "Agreement").toUpperCase(),
+      `${draft.parties?.partyA?.name} × ${draft.parties?.partyB?.name}`,
+      "",
+      ...sections,
+      "",
+      "---",
+      "Document drafting support. Review before use. Not legal advice. Consider professional review before execution.",
+    ].join("\n\n")
+
+    const blob = new Blob([text], { type: "text/plain;charset=utf-8" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = filename.replace(".draft", format === "pdf" ? ".txt" : format === "docx" ? ".txt" : ".txt")
+    a.click()
+    URL.revokeObjectURL(url)
+    toast({ title: "Downloaded", description: `${filename} exported as text. PDF/DOCX export coming soon.` })
+  }
+
+  function handleSelectType(ct: ContractType) {
+    setContractType(ct)
+    setStep(1)
+    setDraft(null)
+    setDraftError(null)
+    setUnsaved(false)
+  }
+
+  function handleBack() {
+    if (draft) { setDraft(null); return }
+    if (draftError) { setDraftError(null); return }
+    if (step <= 1) { setStep(0); setContractType(null); return }
+    setStep(s => Math.max(s - 1, 0))
+  }
+
   function handleNext() {
-    if (step === 0 && !contractType) return
-    const next = Math.min(step + 1, STEPS.length - 1)
+    if (step >= STEPS.length - 1) return
+    const next = step + 1
     setStep(next)
-    void fetchAIInsights(next)
-    window.scrollTo({ top: 0, behavior: "smooth" })
-    // Auto-save progress on every step advance so mobile users don't lose work
     if (contractType) {
       localStorage.setItem(
         "plainpath-contract-draft-latest",
@@ -2637,203 +1998,164 @@ export default function ContractBuilder() {
     }
   }
 
-  function handleBack() {
-    if (draft) { setDraft(null); return }
-    if (step === 0) { setLocation("/analyze"); return }
-    setStep((s) => Math.max(s - 1, 0))
-    window.scrollTo({ top: 0, behavior: "smooth" })
-  }
-
   function handleRestart() {
-    setStep(0)
-    setContractType(null)
-    setPeople({ clientType: "individual", freelancerType: "individual" })
-    setScope({})
-    setMoney({ paymentStructure: "flat", depositRequired: false, lateFee: false })
-    setProtection({ ipTiming: "on-payment", portfolioUsage: true, confidentiality: false, killFee: false, fileReleaseOnPayment: true, disputeResolution: "negotiation", subcontractingAllowed: false })
-    setDraft(null)
-    setDraftError(null)
-    setAiInsights({ suggestions: [], warnings: [], draftGuidance: [] })
+    setStep(0); setContractType(null)
+    setPeople(DEFAULT_PEOPLE); setScope({})
+    setMoney(DEFAULT_MONEY); setProtection(DEFAULT_PROTECTION)
+    setDraft(null); setDraftError(null); setUnsaved(false)
     localStorage.removeItem("plainpath-contract-draft-latest")
   }
 
-  const canProceed = step === 0 ? !!contractType : true
-  const isLastStep = step === STEPS.length - 1
-
-  const stepContent = [
-    <TypeStep key="type" selected={contractType} onSelect={(t) => { setContractType(t); setAiInsights({ suggestions: [], warnings: [], draftGuidance: [] }) }} />,
-    <PeopleStep key="people" data={people} onChange={setPeople} contractType={contractType ?? "freelance"} />,
-    <ScopeStep key="scope" data={scope} onChange={setScope} contractType={contractType ?? "freelance"} />,
-    <MoneyStep key="money" data={money} onChange={setMoney} contractType={contractType} />,
-    <ProtectionStep key="protection" data={protection} onChange={setProtection} contractType={contractType ?? "freelance"} />,
-    <ReviewStep
-      key="review"
-      contractType={contractType ?? "freelance"}
-      people={people}
-      scope={scope}
-      money={money}
-      protection={protection}
-      onEdit={(s) => setStep(s)}
-      onGenerate={generateDraft}
-      onSave={saveDraft}
-      generating={generating}
-      error={draftError}
-      onFillMoney={(u) => setMoney((m) => ({ ...m, ...u }))}
-      onFillProtection={(u) => setProtection((p) => ({ ...p, ...u }))}
-      onFillPeople={(u) => setPeople((p) => ({ ...p, ...u }))}
-    />,
-  ]
+  // Review step is last (step 5)
+  const isReviewStep = step === STEPS.length - 1
 
   return (
-    <div className="min-h-screen bg-background">
-      <UpgradeModal
-        open={upgradeModal}
-        onClose={() => setUpgradeModal(false)}
-        reason="contractDraft"
-      />
-      <WizardProgressBar step={step} />
+    <div className="min-h-screen bg-[#0c0c0f] text-white flex flex-col">
+      <UpgradeModal open={upgradeModal} onClose={() => setUpgradeModal(false)} reason="contractDraft" />
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
-        {draft ? (
-          <DraftResultView
-            draft={draft}
-            contractType={contractType ?? "freelance"}
-            onBack={() => setDraft(null)}
+      {/* Header — always visible once a type is selected */}
+      {pageState !== "empty" && (
+        <BuilderHeader
+          filename={filename}
+          unsaved={unsaved}
+          onSave={saveDraft}
+          onExport={() => draft ? handleDownload("pdf") : undefined}
+          canExport={!!draft}
+        />
+      )}
+
+      {/* Page content */}
+      {pageState === "empty" && (
+        <EmptyState onSelect={handleSelectType} />
+      )}
+
+      {pageState === "generating" && contractType && (
+        <GeneratingView
+          contractType={contractType}
+          people={people}
+          scope={scope}
+          money={money}
+          protection={protection}
+        />
+      )}
+
+      {pageState === "error" && draftError && (
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <ErrorView
+            error={draftError}
+            onRetry={generateDraft}
+            onSave={saveDraft}
             onRestart={handleRestart}
           />
-        ) : generating ? (
-          <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 text-center">
-            <div className="relative flex items-center justify-center w-16 h-16">
-              <div className="absolute inset-0 rounded-full border-4 border-emerald-200 dark:border-emerald-900" />
-              <div className="absolute inset-0 rounded-full border-4 border-t-emerald-600 animate-spin" />
-              <Sparkles className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+        </div>
+      )}
+
+      {pageState === "review" && draft && contractType && (
+        <div className="flex flex-1 overflow-hidden">
+          {/* Left — final document */}
+          <div className="w-[58%] border-r border-white/[0.05] bg-[#111115] flex flex-col overflow-hidden">
+            <div className="px-4 py-2 border-b border-white/[0.05] flex items-center gap-2 shrink-0">
+              <span className="text-xs text-white/30">Final document — {filename}</span>
+              <span className="ml-auto text-xs text-green-400/70 flex items-center gap-1.5">
+                <Check className="w-3 h-3" /> All sections complete
+              </span>
             </div>
-            <div className="space-y-2">
-              <h2 className="text-xl font-display font-bold">Drafting your {contractLabel(contractType ?? "freelance")}…</h2>
-              <p className="text-muted-foreground text-sm max-w-sm">PlainPath is building a structured contract draft based on your answers. This usually takes 10–20 seconds.</p>
+            <div className="flex-1 overflow-y-auto px-6 py-6 flex justify-center">
+              <LiveDocumentPreview
+                contractType={contractType}
+                people={people}
+                scope={scope}
+                money={money}
+                protection={protection}
+                step={5}
+                draft={draft}
+              />
             </div>
-            <div className="flex flex-col gap-1.5 text-xs text-muted-foreground max-w-xs">
-              <span className="flex items-center gap-2"><CheckCircle2 className="w-3 h-3 text-emerald-500 flex-shrink-0" /> Structuring contract sections</span>
-              <span className="flex items-center gap-2"><CheckCircle2 className="w-3 h-3 text-emerald-500 flex-shrink-0" /> Adding legal protections</span>
-              <span className="flex items-center gap-2"><Loader2 className="w-3 h-3 animate-spin flex-shrink-0" /> Writing your clauses…</span>
+          </div>
+          {/* Right — export panel */}
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="px-5 pt-4 pb-3 border-b border-white/[0.05] shrink-0">
+              <div className="flex items-center gap-2 mb-0.5">
+                <Check className="w-4 h-4 text-green-400" />
+                <span className="text-sm font-semibold">Ready to Download</span>
+              </div>
+              <p className="text-xs text-white/35">All sections complete. Review document then export.</p>
+            </div>
+            <ReviewExportPanel
+              draft={draft}
+              contractType={contractType}
+              people={people}
+              onDownload={handleDownload}
+              onRestart={handleRestart}
+            />
+          </div>
+        </div>
+      )}
+
+      {pageState === "workspace" && contractType && (
+        isReviewStep ? (
+          <div className="flex flex-1 overflow-hidden">
+            {/* Left — preview with all data */}
+            <div className="hidden md:flex w-[58%] border-r border-white/[0.05] bg-[#111115] flex-col overflow-hidden">
+              <div className="px-4 py-2 border-b border-white/[0.05] flex items-center gap-2 text-xs text-white/30 shrink-0">
+                <span>Final review preview</span>
+                <span className="ml-auto text-violet-400/60">Step 6 of 6</span>
+              </div>
+              <div className="flex-1 overflow-y-auto px-6 py-6 flex justify-center">
+                <LiveDocumentPreview
+                  contractType={contractType}
+                  people={people}
+                  scope={scope}
+                  money={money}
+                  protection={protection}
+                  step={5}
+                  draft={null}
+                />
+              </div>
+            </div>
+            {/* Right — review confirm + generate */}
+            <div className="flex-1 flex flex-col overflow-hidden">
+              <StepProgress step={step} />
+              <ReviewFormPanel
+                contractType={contractType}
+                people={people}
+                onGenerate={generateDraft}
+                generating={generating}
+              />
+              <div className="px-5 py-4 border-t border-white/[0.05] flex items-center gap-3 shrink-0">
+                <button
+                  onClick={handleBack}
+                  className="flex items-center gap-1.5 text-xs px-4 py-2 rounded-xl border border-white/[0.07] text-white/40 hover:text-white/60 transition-colors"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" /> Protection
+                </button>
+                <button
+                  onClick={handleRestart}
+                  className="flex items-center gap-1.5 text-xs px-4 py-2 rounded-xl border border-white/[0.07] text-white/30 hover:text-white/50 transition-colors"
+                >
+                  Start over
+                </button>
+              </div>
             </div>
           </div>
         ) : (
-          <>
-            {/* ── Page header (step 0 only) ── */}
-            {step === 0 && (
-              <div className="text-center mb-8 space-y-3">
-                <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-emerald-100 dark:bg-emerald-900/40 mb-1">
-                  <FileText className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
-                </div>
-                <h1 className="text-3xl sm:text-4xl font-display font-bold tracking-tight">
-                  Build a Contract
-                </h1>
-                <p className="text-muted-foreground text-base max-w-lg mx-auto leading-relaxed">
-                  Choose the type of contract you want to create, then PlainPath will guide you through the details step by step.
-                </p>
-                <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground flex-wrap pt-1">
-                  <span className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />Professional clause structure</span>
-                  <span className="flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-blue-500" />Legal protections included</span>
-                  <span className="flex items-center gap-1.5"><FileText className="w-3.5 h-3.5 text-amber-500" />Ready-to-sign draft</span>
-                  <span className="flex items-center gap-1.5"><BookOpen className="w-3.5 h-3.5 text-violet-500" />Guided step by step</span>
-                </div>
-              </div>
-            )}
-
-            <div className="flex gap-8">
-              {/* ── Main content ── */}
-              <div className="flex-1 min-w-0">
-                <WorkspaceShell>
-                  {/* Step content */}
-                  <div className="p-6 sm:p-8">
-                    <AnimatePresence mode="wait">
-                      <motion.div
-                        key={step}
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        transition={{ duration: 0.22, ease: "easeOut" }}
-                      >
-                        {stepContent[step]}
-                      </motion.div>
-                    </AnimatePresence>
-
-                    {/* ── Demo pre-fill shortcuts (step 0 only) ── */}
-                    {step === 0 && (
-                      <div className="mt-8 space-y-3">
-                        <div className="flex items-center gap-3">
-                          <div className="flex-1 h-px bg-border/40" />
-                          <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Try a sample contract</p>
-                          <div className="flex-1 h-px bg-border/40" />
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                          {BUILDER_DEMOS.map((demo) => (
-                            <button
-                              key={demo.id}
-                              onClick={() => {
-                                setContractType(demo.contractType)
-                                setPeople((p) => ({ ...p, ...demo.people }))
-                                setScope((s) => ({ ...s, ...demo.scope }))
-                                setMoney((m) => ({ ...m, ...demo.money }))
-                                setProtection((p) => ({ ...p, ...demo.protection }))
-                                setStep(5)
-                                window.scrollTo({ top: 0, behavior: "smooth" })
-                              }}
-                              className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/50 hover:border-emerald-400/50 hover:bg-emerald-50/40 dark:hover:bg-emerald-950/10 transition-all text-left group"
-                            >
-                              <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 flex items-center justify-center shrink-0">
-                                <FileText className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                              </div>
-                              <div className="min-w-0">
-                                <p className="text-xs font-semibold leading-tight group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">{demo.label}</p>
-                                <p className="text-[10px] text-muted-foreground mt-0.5">{demo.meta}</p>
-                              </div>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* ── Footer navigation ── */}
-                  <div className="flex items-center justify-between px-6 sm:px-8 py-4 border-t border-border/[0.15] bg-muted/20">
-                    <Button variant="ghost" onClick={handleBack} className="gap-1.5 text-sm">
-                      <ArrowLeft className="w-4 h-4" />
-                      {step === 0 ? "Home" : "Back"}
-                    </Button>
-                    <div className="flex items-center gap-2">
-                      {step > 0 && (
-                        <Button variant="outline" size="sm" onClick={saveDraft} className="gap-1.5">
-                          <Save className="w-3.5 h-3.5" /> Save Draft
-                        </Button>
-                      )}
-                      {!isLastStep && (
-                        <Button onClick={handleNext} disabled={!canProceed} className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white">
-                          {step === STEPS.length - 2 ? "Review Summary" : "Next"}
-                          <ArrowRight className="w-4 h-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </WorkspaceShell>
-
-                {/* Mobile AI insights drawer */}
-                {step > 0 && <MobileInsightDrawer insights={mergedInsights} loading={insightLoading} />}
-              </div>
-
-              {/* ── Desktop AI panel ── */}
-              {step > 0 && (
-                <div className="hidden lg:block w-72 flex-shrink-0">
-                  <div className="sticky top-32">
-                    <AIInsightPanel insights={mergedInsights} loading={insightLoading} />
-                  </div>
-                </div>
-              )}
-            </div>
-          </>
-        )}
-      </div>
+          <SplitWorkspace
+            contractType={contractType}
+            people={people}
+            scope={scope}
+            money={money}
+            protection={protection}
+            step={step}
+            onPeopleChange={setPeopleTracked}
+            onScopeChange={setScopeTracked}
+            onMoneyChange={setMoneyTracked}
+            onProtectionChange={setProtectionTracked}
+            onBack={handleBack}
+            onNext={handleNext}
+            canSkip={step >= 2}
+          />
+        )
+      )}
     </div>
   )
 }
