@@ -1,0 +1,160 @@
+Approved. Proceed with the Redact PDF Export production-gap implementation, with a required environment gate first.
+
+Important:
+Do not redesign the Redact UI.
+Do not change the existing redaction workflow except export behavior.
+Do not touch unrelated TypeScript debt.
+Do not change Stripe/payment behavior.
+Do not add a third-party external redaction service.
+
+Goal:
+For PDF uploads, export a true redacted PDF where redacted text cannot be copied, searched, selected, or recovered.
+
+Required implementation direction:
+Use server-side rasterized-page PDF export.
+
+This means:
+- render each PDF page to an image
+- draw black redaction bars onto the image
+- rebuild a new PDF from the redacted page images
+- exported PDF contains image pages only, not the original searchable text layer
+- original uploaded PDF remains unchanged
+
+Do not ship a pdf-lib overlay-only redaction as the production solution because the hidden text can remain recoverable.
+
+Step 1 — Environment verification first
+
+Before changing production code, verify the server can use:
+
+@napi-rs/canvas
+
+Create a small server-side test that:
+- loads one PDF page using pdfjs-dist
+- renders page 1 to canvas
+- exports the rendered page as PNG
+- confirms the PNG is valid
+- confirms this works in the Replit environment without system-level dependency errors
+
+If this fails:
+- stop
+- do not implement the export change
+- report the failure and recommend the next rasterization fallback
+
+If this passes:
+Proceed with Steps 2–7 below.
+
+Step 2 — Replace /api/documents/redact-pdf with the secure rasterized approach
+
+Use the existing endpoint path:
+
+POST /api/documents/redact-pdf
+
+Keep the frontend API contract the same where possible:
+- file: original PDF
+- redactValues: JSON array of approved values
+
+Return:
+- application/pdf
+- Content-Disposition filename="{original-basename}_redacted.pdf"
+
+Do not leave the old unsafe overlay-only endpoint exposed as the production export path.
+
+Step 3 — Backend redaction pipeline
+
+For PDF input:
+
+1. Receive the uploaded PDF buffer and redactValues.
+2. Enforce limits:
+   - max 20 pages
+   - max 20 MB file size
+   - max 500 redactValues
+3. Extract text items and text bounding boxes using pdfjs/pdf-parse logic.
+4. Match approved redactValues to text items.
+5. Render each PDF page to canvas.
+6. Draw black rectangles directly onto the rendered page image at the matched coordinates.
+7. Export each redacted page image as PNG.
+8. Create a new PDF with pdf-lib.
+9. Embed each redacted PNG as a full-page image.
+10. Stream the final PDF response.
+
+The final PDF should contain only image pages, not the original PDF text stream.
+
+Step 4 — Add matched/missed response metadata
+
+Add response headers:
+- X-Redact-Matched
+- X-Redact-Missed
+
+These should allow the frontend to warn the user if some selected values were not found in the PDF text layer.
+
+Do not include sensitive values in the headers or error messages.
+
+Step 5 — Frontend export logic
+
+Update Redact.tsx export behavior:
+
+If uploadedFile exists and file name ends with .pdf:
+- call downloadRedactedPdf(uploadedFile, approvedValues, apiBase)
+- show loading state: “Generating redacted PDF…”
+- disable export button while generating
+- on success: download {basename}_redacted.pdf
+- on failure: show a clear error and offer text fallback only as secondary
+
+If input is pasted text:
+- keep existing .txt export
+
+If input is DOCX/TXT or non-PDF:
+- keep text export
+- show note: “PDF redaction export is available for PDF uploads.”
+
+Step 6 — UI copy and status
+
+Add clear export behavior copy:
+
+For PDF uploads:
+“Export Redacted PDF”
+
+During export:
+“Generating redacted PDF…”
+
+After success:
+“Redacted PDF downloaded.”
+
+If missed values exist:
+“Some selected items could not be matched in the PDF text layer. Review the exported file before sharing.”
+
+Also include privacy-safe note:
+“PlainPath creates a flattened redacted PDF copy. The original file is unchanged.”
+
+Step 7 — Security requirements
+
+Confirm:
+- original uploaded file is never modified
+- redacted PDF is generated as a separate copy
+- output PDF does not contain the original searchable text layer
+- no redacted values are exposed in errors, logs, headers, or demo data
+- no temporary files are written to disk unless absolutely required
+- if temp files are used, they are deleted immediately
+- auth remains required
+- endpoint rejects oversized files/pages cleanly
+
+Step 8 — QA tests
+
+Test and report results for:
+
+1. Single-page text PDF
+2. Multi-page text PDF
+3. PDF with multiple selected redactions
+4. PDF where one selected value does not exist
+5. Image-only/scanned PDF with no text layer
+6. Oversized PDF beyond page/file limit
+7. Pasted text input still exports .txt
+8. Non-PDF upload does not falsely promise PDF redaction
+
+Required final confirmation:
+- PDF upload exports .pdf, not .txt
+- exported PDF cannot reveal redacted text through copy/search/select
+- redaction bars appear in correct locations
+- original document remains unchanged
+- no new TypeScript/runtime errors were introduced
+- build completes cleanly
