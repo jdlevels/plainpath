@@ -1,0 +1,147 @@
+Redact Sensitive Info canvas is approved for implementation.
+
+The latest update correctly shows the actual paper/document surface being redacted. This is the required direction.
+
+Please now implement the approved Redact Sensitive Info design into the actual PlainPath app.
+
+Do not redesign further in canvas.
+Do not move to Build a Contract / Document Builder yet.
+Do not add new tools.
+Do not add SOP/manual builder language.
+Do not add Document Classifier or Packet Splitter.
+
+Implementation requirements:
+
+1. Follow the approved modified PlainPath Scan Workspace Standard.
+
+Desktop layout:
+- Left panel: document/redaction surface, about 60–65%
+- Right panel: redaction controls, about 35–40%
+- Both panels should scroll independently
+- The document surface should feel like the actual paper being redacted
+
+Mobile layout:
+- Redactions tab first
+- Document tab second
+- Default mobile view opens on Redactions first
+
+2. Preserve all approved states:
+- Empty State
+- Processing State
+- Completed Redaction Review
+- Sensitive item active / highlighted state
+- Redaction Preview State
+- Low Confidence State
+- Error State
+- Mobile Redactions View
+- Mobile Document View
+
+3. The left document panel must show the paper being redacted.
+
+Required behavior:
+- Show uploaded document as a page/paper surface
+- Show detected sensitive items highlighted in Original View
+- Show black redaction blocks over selected items in Redaction Preview
+- When a user clicks a detected item in the right panel, scroll to that item on the document
+- Highlight the active item with a visible source/selection ring
+- Keep the original document unchanged
+- Export creates a separate redacted copy
+
+4. Include Original View / Redaction Preview toggle.
+
+Original View:
+- shows detected-item highlights
+- lets the user inspect what PlainPath found
+
+Redaction Preview:
+- shows black redaction blocks over selected sensitive items
+- lets the user preview the final redacted copy before export
+
+5. Right panel order:
+A. Redaction Summary
+B. Detection / Confidence Strip
+C. Suggested Redactions
+D. Redaction Categories
+E. Review Queue
+F. Manual Redaction Tools
+G. Save / Export Controls
+H. Source Traceability
+
+6. Suggested Redactions should use masked previews where possible.
+
+Examples:
+- Name: James R. H...
+- Email: j...@...com
+- Account ending 7841
+- SSN ending 7731
+
+Do not unnecessarily expose full sensitive values inside the right control panel.
+
+7. Redaction controls must support:
+- select / deselect item for redaction
+- category filtering
+- add manual redaction box
+- undo last redaction
+- clear manual redactions
+- preview redacted copy
+- save changes
+- export redacted copy
+
+8. Editing/save rule:
+Because this is an editing/export tool:
+- include a visible Save button/icon
+- show an unsaved-change state when redactions are modified
+- include a clear Export Redacted Copy action
+- do not rely only on autosave
+
+9. Source/sensitive item chips must be functional.
+When clicked:
+- right-panel item becomes active
+- document scrolls to the matching sensitive item
+- matching text/area highlights
+- evidence banner appears
+- related redaction card remains active
+
+10. Low-confidence message must use:
+“PlainPath could detect part of this document, but scan quality limits redaction confidence.”
+
+11. Error state message must use:
+“Sensitive information scan could not be completed.”
+
+Actions:
+- Try again
+- Upload different file
+- Ask This Document
+- Analyze a Document
+
+12. Use fictional demo/mock content only.
+No real personal data, real account numbers, real SSNs, real emails, or real documents.
+
+13. Keep visual hierarchy calm.
+- Purple = active source traceability / selected item
+- Amber = needs user review
+- Red = high-priority sensitive item only
+- Green = selected/confirmed for redaction
+- Black/gray = applied redaction overlay
+- Blue = neutral action/help
+
+14. After implementation, provide live screenshots of:
+- Empty State
+- Processing State
+- Completed Redaction Review
+- Sensitive item active / highlighted state
+- Redaction Preview State
+- Low Confidence State
+- Error State
+- Mobile Redactions View
+- Mobile Document View
+
+Also confirm:
+- the authenticated Redact route is protected
+- no mock/demo route exposes real user document data
+- demo data is fictional only
+- redaction blocks render directly on the document surface
+- original document remains unchanged
+- export creates a separate redacted copy
+- no new TypeScript/runtime errors were introduced
+- the build completes cleanly

@@ -1,79 +1,143 @@
-// ─── Redact Page ──────────────────────────────────────────────────────────────
-// Standalone route: /redact
+// ─── Redact Sensitive Info — Workspace ────────────────────────────────────────
+// Route: /redact (protected by RequireAuth)
 //
-// TWO ENTRY PATHS:
-//   A) From Import.tsx — sessionStorage key "pii_redact_input" contains
-//      { text, source: "analyze" | "trust-check", fileName? }
-//      After "Analyze this", saves redacted text to "pii_analyze_text"
-//      and navigates back to /analyze.
+// Layout: 60% document paper surface / 40% redaction controls
+// Mobile: Redactions tab (default) | Document tab
 //
-//   B) Standalone — user navigates directly to /redact.
-//      Shows input step: paste text or upload file.
-//      File uploads: uses /api/documents/extract-text to get text first.
+// States:
+//   empty       — upload or paste input
+//   processing  — PII detection in flight
+//   workspace   — review & select items on the paper surface
+//   error       — detection failed
 //
-// PHASE 2 / FUTURE-READY STUBS (not yet built):
-//   - Standalone tool card in Home page
-//   - "Redact a Document" route in Navbar
-//   - Redaction audit log (who redacted what, when)
-//   - Document-type templates ("Redact all SSNs for medical records")
-//   - Manual box-select redaction on image/PDF
-//
+// Entry paths:
+//   A) Standalone navigation to /redact
+//   B) From another tool via sessionStorage "pii_redact_input"
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useState, useEffect } from "react"
+import {
+  useState, useEffect, useRef, useCallback, useMemo,
+} from "react"
 import { useLocation } from "wouter"
 import {
-  ShieldCheck, ArrowLeft, UploadCloud, Type, Loader2, AlertCircle, File, X,
-  FileText, Scale, EyeOff, Download, Copy, Check, ArrowRight, Lock,
-  User, HeartPulse, FileDown, Camera, Link as LinkIcon,
+  ShieldCheck, ArrowLeft, UploadCloud, Type, Loader2, AlertCircle,
+  X, FileText, EyeOff, ArrowRight, Camera, Link as LinkIcon, Download,
+  Save, RefreshCcw, Eye, EyeOff as EyeOffIcon, CheckCircle2, Plus,
+  Undo2, Trash2, ChevronRight, User, HeartPulse,
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { WorkspaceShell } from "@/components/WorkspaceShell"
-import { PiiReview } from "@/components/PiiReview"
-import { PdfRedactViewer } from "@/components/PdfRedactViewer"
 import { getApiBaseUrl } from "@/lib/api"
-import { downloadRedactedPdf, downloadRedactedText } from "@/lib/piiExport"
-import { saveRecentWork } from "@/lib/recentWork"
 import { useEntitlements } from "@/hooks/useEntitlements"
 import UpgradeModal from "@/components/UpgradeModal"
 import { BILLING_CONFIG } from "@/lib/billingConfig"
+import { saveRecentWork } from "@/lib/recentWork"
 
-// ─── Accepted file types ──────────────────────────────────────────────────────
+// ─── PII types (mirrors server/piiDetection.ts) ───────────────────────────────
 
-const ACCEPTED = ".pdf,.docx,.txt,.jpg,.jpeg,.png,.webp,.gif,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,image/jpeg,image/png,image/webp,image/gif"
+type PiiType =
+  | "NAME" | "ADDRESS" | "EMAIL" | "PHONE" | "SSN" | "TAX_ID" | "DOB"
+  | "ACCOUNT_NUMBER" | "ROUTING_NUMBER" | "CREDIT_CARD" | "POLICY_ID"
+  | "MEMBER_ID" | "CASE_NUMBER" | "LICENSE_NUMBER" | "IP_ADDRESS" | "OTHER_ID"
 
-const IMAGE_EXTS = [".jpg", ".jpeg", ".png", ".webp", ".gif"]
-const IMAGE_MIMES = ["image/jpeg", "image/png", "image/webp", "image/gif"]
-
-function isImageFile(name: string, mime?: string): boolean {
-  const ext = "." + (name.split(".").pop() ?? "").toLowerCase()
-  return IMAGE_EXTS.includes(ext) || IMAGE_MIMES.includes(mime ?? "")
-}
-
-function isPdfFile(name: string): boolean {
-  return name.toLowerCase().endsWith(".pdf")
-}
-
-// ─── Built-in demo documents ──────────────────────────────────────────────────
-
-const REDACT_DEMOS: Array<{
+interface PiiSpan {
   id: string
+  type: PiiType
   label: string
-  meta: string
-  fileName: string
-  icon: React.ComponentType<{ className?: string }>
-  color: string
-  bg: string
-  text: string
-}> = [
+  value: string
+  start: number
+  end: number
+  confidence: "high" | "medium" | "low"
+  source: "regex" | "ai" | "both"
+}
+
+// ─── Text segment (for annotated rendering) ───────────────────────────────────
+
+type Seg =
+  | { kind: "text"; content: string }
+  | { kind: "span"; span: PiiSpan }
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+/** Build flat segment list: interleave plain-text runs with PII spans. */
+function buildSegments(text: string, spans: PiiSpan[]): Seg[] {
+  if (!spans.length) return [{ kind: "text", content: text }]
+  const sorted = [...spans].sort((a, b) => a.start - b.start)
+  const segs: Seg[] = []
+  let cursor = 0
+  for (const span of sorted) {
+    if (span.start < cursor) continue // skip overlapping
+    if (span.start > cursor) segs.push({ kind: "text", content: text.slice(cursor, span.start) })
+    segs.push({ kind: "span", span })
+    cursor = span.end
+  }
+  if (cursor < text.length) segs.push({ kind: "text", content: text.slice(cursor) })
+  return segs
+}
+
+/** Masked preview — shows partial value for right-panel cards. */
+function maskValue(span: PiiSpan): string {
+  const v = span.value
+  switch (span.type) {
+    case "EMAIL": {
+      const [user, domain] = v.split("@")
+      return `${user.slice(0, 2)}•••@${domain ?? "•••"}`
+    }
+    case "SSN":
+      return "•••-••-" + v.replace(/\D/g, "").slice(-4)
+    case "ACCOUNT_NUMBER":
+    case "ROUTING_NUMBER":
+    case "CREDIT_CARD":
+      return "•••• " + v.replace(/\D/g, "").slice(-4)
+    case "PHONE":
+      return v.slice(0, 3) + " •••-••••"
+    case "NAME":
+      return v.split(" ").map((w, i) => i === 0 ? w : w[0] + "•••").join(" ")
+    case "DOB":
+      return "••/••/" + v.replace(/\D/g, "").slice(-4)
+    case "TAX_ID":
+      return "••-•••" + v.replace(/\D/g, "").slice(-4)
+    default:
+      return v.length > 12 ? v.slice(0, 6) + "•••" : v.slice(0, 3) + "•••"
+  }
+}
+
+/** Color chip for PII type. */
+function typeChip(type: PiiType): { label: string; cls: string } {
+  switch (type) {
+    case "SSN": case "CREDIT_CARD":
+      return { label: "High-risk ID", cls: "text-red-400 bg-red-500/10 border-red-500/20" }
+    case "ACCOUNT_NUMBER": case "ROUTING_NUMBER": case "TAX_ID":
+      return { label: "Financial", cls: "text-amber-400 bg-amber-500/10 border-amber-500/20" }
+    case "EMAIL": case "PHONE":
+      return { label: "Contact", cls: "text-blue-400 bg-blue-500/10 border-blue-500/20" }
+    case "NAME":
+      return { label: "Name", cls: "text-white/50 bg-white/[0.05] border-white/10" }
+    case "ADDRESS":
+      return { label: "Address", cls: "text-white/50 bg-white/[0.05] border-white/10" }
+    case "DOB":
+      return { label: "Date of birth", cls: "text-violet-400 bg-violet-500/10 border-violet-500/20" }
+    case "POLICY_ID": case "MEMBER_ID":
+      return { label: "Policy / ID", cls: "text-teal-400 bg-teal-500/10 border-teal-500/20" }
+    case "CASE_NUMBER":
+      return { label: "Case number", cls: "text-white/50 bg-white/[0.05] border-white/10" }
+    default:
+      return { label: "Identifier", cls: "text-white/40 bg-white/[0.04] border-white/[0.08]" }
+  }
+}
+
+const confCls = (c: string) =>
+  c === "high" ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/25" : "text-amber-400 bg-amber-500/10 border-amber-500/25"
+
+// ─── Demo documents ───────────────────────────────────────────────────────────
+
+const DEMOS = [
   {
-    id: "personal-info-letter",
+    id: "personal-info",
     label: "Personal Info Letter",
     meta: "Name · SSN · address · phone",
-    fileName: "personal_info_letter.txt",
     icon: User,
     color: "text-violet-600 dark:text-violet-400",
     bg: "bg-violet-50 dark:bg-violet-950/40",
+    fileName: "personal_info_letter.txt",
     text: `Re: Application Confirmation — Reference Number 2024-48291
 
 Dear Jordan M. Whitfield,
@@ -102,10 +166,10 @@ Region 5 Compliance Office`,
     id: "freelance-contract",
     label: "Freelance Contract",
     meta: "Names · bank details · tax ID",
-    fileName: "freelance_contract.txt",
     icon: FileText,
     color: "text-emerald-600 dark:text-emerald-400",
     bg: "bg-emerald-50 dark:bg-emerald-950/40",
+    fileName: "freelance_contract.txt",
     text: `FREELANCE SERVICES AGREEMENT
 
 This Agreement is entered into as of April 1, 2024, between:
@@ -124,12 +188,10 @@ Phone:   (503) 774-2281
 Tax ID (EIN): 47-3826104
 
 1. SCOPE OF WORK
-Freelancer agrees to design a brand identity package — including logo, color palette, and typography system — for Client's product launch scheduled for June 2024.
+Freelancer agrees to design a brand identity package for Client's product launch scheduled for June 2024.
 
 2. COMPENSATION
-Client shall pay Freelancer a flat fee of $4,800 USD. A deposit of $1,200 USD is due upon signing. The remaining $3,600 USD is due within 14 days of final delivery.
-
-Payment via bank transfer to:
+Client shall pay Freelancer a flat fee of $4,800 USD. Payment via bank transfer to:
   Account Name:   Samuel A. Park
   Account Number: 7820134567
   Routing Number: 021000021
@@ -145,17 +207,15 @@ Marcella V. Torres — Client
 Samuel A. Park — Freelancer`,
   },
   {
-    id: "medical-benefits-form",
+    id: "medical",
     label: "Medical Benefits Form",
     meta: "Patient · DOB · member ID · provider",
-    fileName: "medical_benefits_form.txt",
     icon: HeartPulse,
     color: "text-blue-600 dark:text-blue-400",
     bg: "bg-blue-50 dark:bg-blue-950/40",
+    fileName: "medical_benefits_form.txt",
     text: `PATIENT INFORMATION FORM
 Bright Valley Medical Center
-
-Please complete all fields before your appointment.
 
 PATIENT DETAILS
   Patient Name:           Christine L. Nguyen
@@ -170,7 +230,6 @@ INSURANCE INFORMATION
   Insurance Provider:     Pacific Health Group
   Policy Number:          PHG-00827-CA
   Group Number:           3318-B
-  Subscriber Name:        Christine L. Nguyen
 
 EMERGENCY CONTACT
   Name:                   David K. Nguyen
@@ -181,28 +240,1026 @@ PRIMARY CARE PROVIDER
   Name:                   Dr. Anita Ramos
   Provider NPI:           1234567890
   Clinic Phone:           (916) 481-2200
-  Clinic Fax:             (916) 481-2201
-
-REFERRING PHYSICIAN
-  Dr. James T. Holbrook
-  Holbrook Internal Medicine
-  751 Oak Park Avenue, Suite 104, Sacramento, CA 95815
-
-By signing below, I authorize Bright Valley Medical Center to use and disclose my health information as needed for treatment, payment, and healthcare operations.
 
 Patient Signature: Christine L. Nguyen
 Date: April 10, 2024`,
   },
 ]
 
-// ─── Component ────────────────────────────────────────────────────────────────
+// ─── Annotated Document ───────────────────────────────────────────────────────
+// Renders document text on a white paper surface with inline PII highlights.
+// Segments are rendered as plain text or as highlighted/redacted spans.
+
+interface AnnotatedDocumentProps {
+  text: string
+  spans: PiiSpan[]
+  selected: Set<string>
+  activeId: string | null
+  viewMode: "original" | "preview"
+  onActivate: (id: string) => void
+  spanRefs: React.MutableRefObject<Map<string, HTMLElement>>
+  fileName: string
+}
+
+function AnnotatedDocument({
+  text, spans, selected, activeId, viewMode, onActivate, spanRefs, fileName,
+}: AnnotatedDocumentProps) {
+  const segments = useMemo(() => buildSegments(text, spans), [text, spans])
+
+  // Render a single PII span inline
+  const renderSpan = useCallback((span: PiiSpan) => {
+    const isActive = span.id === activeId
+    const isSel = selected.has(span.id)
+
+    const refCallback = (el: HTMLElement | null) => {
+      if (el) spanRefs.current.set(span.id, el)
+      else spanRefs.current.delete(span.id)
+    }
+
+    if (viewMode === "preview" && isSel) {
+      // Black redaction bar
+      return (
+        <span
+          key={span.id}
+          ref={refCallback as React.RefCallback<HTMLSpanElement>}
+          onClick={() => onActivate(span.id)}
+          className={`inline-block bg-black align-middle cursor-pointer mx-0.5 rounded-sm select-none transition-shadow ${isActive ? "ring-2 ring-violet-500" : "hover:ring-1 hover:ring-white/20"}`}
+          style={{ minWidth: `${Math.max(span.value.length * 7, 32)}px`, height: "1em" }}
+          aria-label={`Redacted: ${span.label}`}
+        />
+      )
+    }
+
+    // Original view: amber highlight (or violet if active)
+    let hlCls = ""
+    if (isActive) {
+      hlCls = "bg-amber-200 border-2 border-violet-500 rounded ring-2 ring-violet-400/30 text-gray-900 font-medium cursor-pointer"
+    } else if (isSel) {
+      hlCls = "bg-amber-200/80 border border-amber-400 rounded text-gray-800 font-medium cursor-pointer hover:bg-amber-200"
+    } else {
+      hlCls = "bg-amber-100 border border-amber-300/70 rounded text-gray-700 cursor-pointer hover:bg-amber-200/60"
+    }
+
+    return (
+      <span
+        key={span.id}
+        ref={refCallback as React.RefCallback<HTMLSpanElement>}
+        onClick={() => onActivate(span.id)}
+        className={`px-0.5 mx-0.5 transition-all ${hlCls}`}
+        title={span.label}
+      >
+        {span.value}
+      </span>
+    )
+  }, [activeId, selected, viewMode, onActivate, spanRefs])
+
+  // Build rendered output: iterate segments, split on newlines for paragraph rendering
+  const lines: React.ReactNode[] = []
+  let lineNodes: React.ReactNode[] = []
+
+  const flushLine = () => {
+    lines.push(
+      <p key={lines.length} className="mb-4 last:mb-0 text-gray-700 leading-7">
+        {lineNodes.length ? lineNodes : <br />}
+      </p>
+    )
+    lineNodes = []
+  }
+
+  for (const seg of segments) {
+    if (seg.kind === "text") {
+      const parts = seg.content.split("\n")
+      for (let i = 0; i < parts.length; i++) {
+        if (i > 0) { flushLine() }
+        if (parts[i]) lineNodes.push(parts[i])
+      }
+    } else {
+      lineNodes.push(renderSpan(seg.span))
+    }
+  }
+  if (lineNodes.length) flushLine()
+
+  return (
+    <div className="bg-white rounded-lg shadow-2xl shadow-black/50 mx-auto max-w-[640px] overflow-hidden">
+      {/* Paper header */}
+      <div className="px-8 pt-7 pb-4 border-b border-gray-200">
+        <div className="flex items-center justify-between">
+          <span className="font-semibold text-gray-700 text-xs uppercase tracking-wider truncate max-w-[70%]">{fileName}</span>
+          <span className="text-xs text-gray-400">PlainPath Review</span>
+        </div>
+      </div>
+
+      {/* Paper body */}
+      <div className="px-8 py-7 font-serif text-[13.5px]">
+        {lines}
+      </div>
+
+      {/* Paper footer */}
+      <div className="px-8 py-4 border-t border-gray-200 flex justify-between items-center">
+        <span className="text-xs text-gray-400">{fileName}</span>
+        <span className="text-xs text-gray-400">{spans.length} items detected</span>
+      </div>
+    </div>
+  )
+}
+
+// ─── Empty State ──────────────────────────────────────────────────────────────
+
+interface EmptyStateProps {
+  onText: (text: string, fileName: string) => void
+  onFile: (file: File) => Promise<void>
+  onUrl: (url: string) => Promise<void>
+  extracting: boolean
+  urlLoading: boolean
+  uploadError: string | null
+  urlError: string | null
+  uploadedFile: File | null
+  setUploadedFile: (f: File | null) => void
+}
+
+function EmptyState({
+  onText, onFile, onUrl, extracting, urlLoading,
+  uploadError, urlError, uploadedFile, setUploadedFile,
+}: EmptyStateProps) {
+  const [inputMode, setInputMode] = useState<"paste" | "upload" | "url">("paste")
+  const [pastedText, setPastedText] = useState("")
+  const [urlInput, setUrlInput] = useState("")
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const ACCEPTED = ".pdf,.docx,.txt,.jpg,.jpeg,.png,.webp"
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 20 * 1024 * 1024) {
+      setUploadedFile(null)
+      return
+    }
+    setUploadedFile(file)
+    e.target.value = ""
+  }
+
+  return (
+    <div className="min-h-screen bg-[#0c0c0f] text-white flex flex-col">
+      {/* Nav */}
+      <header className="h-12 border-b border-white/[0.06] flex items-center px-4 gap-3 shrink-0">
+        <div className="w-7 h-7 rounded-lg bg-violet-600 flex items-center justify-center">
+          <ShieldCheck className="w-4 h-4" />
+        </div>
+        <span className="text-sm font-medium text-white/80">Redact Sensitive Info</span>
+      </header>
+
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-2xl mx-auto px-4 py-10 space-y-8">
+          {/* Title */}
+          <div className="text-center">
+            <div className="w-14 h-14 rounded-2xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center mx-auto mb-4">
+              <ShieldCheck className="w-7 h-7 text-violet-400" />
+            </div>
+            <h1 className="text-2xl font-bold mb-2">Redact Sensitive Info</h1>
+            <p className="text-sm text-white/50 leading-relaxed max-w-md mx-auto">
+              Automatically detect and redact personal information — names, SSNs, financial details, and more — before sharing or archiving a document.
+            </p>
+          </div>
+
+          {/* Input modes */}
+          <div className="border border-white/[0.07] rounded-2xl overflow-hidden">
+            {/* Tab bar */}
+            <div className="flex border-b border-white/[0.07]">
+              {([
+                { id: "paste", label: "Paste Text", icon: Type },
+                { id: "upload", label: "Upload File", icon: UploadCloud },
+                { id: "url", label: "Import Link", icon: LinkIcon },
+              ] as const).map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setInputMode(tab.id)}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-medium transition-colors ${inputMode === tab.id ? "text-white bg-white/[0.05] border-b-2 border-violet-500" : "text-white/40 hover:text-white/70"}`}
+                >
+                  <tab.icon className="w-3.5 h-3.5" />
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="p-5">
+              {/* Paste */}
+              {inputMode === "paste" && (
+                <div className="space-y-3">
+                  <textarea
+                    value={pastedText}
+                    onChange={e => setPastedText(e.target.value)}
+                    placeholder="Paste your document text here — contracts, letters, forms, medical records…"
+                    rows={8}
+                    className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl p-3 text-sm text-white/80 placeholder-white/20 resize-none focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/40 transition-all font-mono leading-relaxed"
+                  />
+                  <button
+                    disabled={pastedText.trim().length < 30}
+                    onClick={() => onText(pastedText.trim(), "Pasted document")}
+                    className="w-full py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 disabled:cursor-not-allowed text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                  >
+                    <ShieldCheck className="w-4 h-4" />
+                    Scan for Sensitive Information
+                  </button>
+                  {pastedText.trim().length < 30 && pastedText.length > 0 && (
+                    <p className="text-xs text-white/30 text-center">Paste at least 30 characters to continue</p>
+                  )}
+                </div>
+              )}
+
+              {/* Upload */}
+              {inputMode === "upload" && (
+                <div className="space-y-3">
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="border-2 border-dashed border-white/10 rounded-xl p-8 text-center cursor-pointer hover:border-violet-500/40 hover:bg-violet-500/[0.03] transition-all group"
+                  >
+                    <UploadCloud className="w-8 h-8 text-white/25 mx-auto mb-3 group-hover:text-violet-400 transition-colors" />
+                    <p className="text-sm font-medium text-white/70 mb-1">Drop a file or click to browse</p>
+                    <p className="text-xs text-white/30">PDF, DOCX, TXT, JPG, PNG — up to 20 MB</p>
+                  </div>
+                  <input ref={fileInputRef} type="file" accept={ACCEPTED} className="hidden" onChange={handleFileChange} />
+
+                  {/* Camera option */}
+                  <button
+                    onClick={() => { if (fileInputRef.current) { fileInputRef.current.accept = "image/*"; fileInputRef.current.capture = "environment"; fileInputRef.current.click() } }}
+                    className="w-full flex items-center justify-center gap-2 py-2 rounded-xl border border-white/[0.08] text-xs text-white/50 hover:text-white/80 hover:border-white/15 transition-colors"
+                  >
+                    <Camera className="w-3.5 h-3.5" />
+                    Open Camera (photo a document)
+                  </button>
+
+                  {uploadedFile && (
+                    <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-white/[0.07] bg-white/[0.03]">
+                      <FileText className="w-5 h-5 text-violet-400 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-white/80 truncate">{uploadedFile.name}</p>
+                        <p className="text-xs text-white/35 mt-0.5">{(uploadedFile.size / 1024).toFixed(0)} KB</p>
+                      </div>
+                      <button onClick={() => setUploadedFile(null)} className="text-white/30 hover:text-white/70 transition-colors">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+
+                  {uploadError && (
+                    <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-400">
+                      <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                      {uploadError}
+                    </div>
+                  )}
+
+                  <button
+                    disabled={!uploadedFile || extracting}
+                    onClick={() => uploadedFile && void onFile(uploadedFile)}
+                    className="w-full py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 disabled:cursor-not-allowed text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                  >
+                    {extracting
+                      ? <><Loader2 className="w-4 h-4 animate-spin" /> Extracting text…</>
+                      : <><ShieldCheck className="w-4 h-4" /> Scan for Sensitive Information</>
+                    }
+                  </button>
+                </div>
+              )}
+
+              {/* URL */}
+              {inputMode === "url" && (
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-xs text-white/50 mb-2 leading-relaxed">
+                      Share a file from Google Drive or Dropbox — PlainPath will fetch and extract the text, then scan it for sensitive information.
+                    </p>
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/25 pointer-events-none" />
+                        <input
+                          type="url"
+                          value={urlInput}
+                          onChange={e => setUrlInput(e.target.value)}
+                          placeholder="https://drive.google.com/… or https://dropbox.com/…"
+                          className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-sm text-white/80 placeholder-white/20 focus:outline-none focus:ring-2 focus:ring-violet-500/40 transition-all"
+                          onKeyDown={e => { if (e.key === "Enter" && urlInput.trim()) void onUrl(urlInput.trim()) }}
+                        />
+                      </div>
+                      <button
+                        disabled={urlLoading || !urlInput.trim()}
+                        onClick={() => void onUrl(urlInput.trim())}
+                        className="px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-sm font-medium transition-colors"
+                      >
+                        {urlLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Import"}
+                      </button>
+                    </div>
+                    {urlError && (
+                      <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-400 mt-2">
+                        <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                        {urlError}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* What gets detected */}
+          <div className="border border-white/[0.06] rounded-2xl p-5">
+            <p className="text-xs font-semibold text-white/30 uppercase tracking-widest mb-3">What gets detected</p>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
+              {[
+                "Full names", "Street addresses", "Phone numbers", "Email addresses",
+                "Social Security Numbers", "Tax IDs / EINs", "Dates of birth", "Account numbers",
+                "Routing numbers", "Credit card numbers", "Policy / member IDs", "Case numbers",
+                "License numbers", "Personal identifiers",
+              ].map(item => (
+                <div key={item} className="text-xs text-white/50 flex items-center gap-1.5">
+                  <div className="w-1 h-1 rounded-full bg-violet-400/60 shrink-0" />
+                  {item}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Try sample */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-white/[0.06]" />
+              <p className="text-[11px] font-bold uppercase tracking-widest text-white/25 whitespace-nowrap">Try a sample</p>
+              <div className="flex-1 h-px bg-white/[0.06]" />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {DEMOS.map(demo => {
+                const Icon = demo.icon
+                return (
+                  <button
+                    key={demo.id}
+                    onClick={() => onText(demo.text, demo.fileName)}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-white/[0.07] hover:border-violet-500/40 hover:bg-violet-500/[0.04] transition-all text-left group"
+                  >
+                    <div className={`w-8 h-8 rounded-lg ${demo.bg} flex items-center justify-center shrink-0`}>
+                      <Icon className={`w-4 h-4 ${demo.color}`} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold text-white/80 group-hover:text-violet-300 transition-colors leading-tight">{demo.label}</p>
+                      <p className="text-[10px] text-white/30 mt-0.5">{demo.meta}</p>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          <p className="text-xs text-white/20 text-center">Original document is never modified. Redactions create a separate copy.</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Processing State ─────────────────────────────────────────────────────────
+
+function ProcessingState({ fileName }: { fileName: string }) {
+  const steps = [
+    "Reading document structure",
+    "Running pattern recognition",
+    "Detecting names and identifiers",
+    "Finding contact information",
+    "Scanning financial data",
+    "Grouping and ranking results",
+    "Preparing redaction review",
+  ]
+  const [step, setStep] = useState(0)
+  useEffect(() => {
+    const t = setInterval(() => setStep(s => Math.min(s + 1, steps.length - 1)), 900)
+    return () => clearInterval(t)
+  }, [])
+
+  return (
+    <div className="min-h-screen bg-[#0c0c0f] text-white flex flex-col">
+      <header className="h-12 border-b border-white/[0.06] flex items-center px-4 gap-3 shrink-0">
+        <div className="w-7 h-7 rounded-lg bg-violet-600 flex items-center justify-center">
+          <ShieldCheck className="w-4 h-4" />
+        </div>
+        <span className="text-sm font-medium text-white/80">Redact Sensitive Info</span>
+        <span className="text-white/20 text-xs">/</span>
+        <span className="text-sm text-white/50 truncate max-w-[200px]">{fileName}</span>
+      </header>
+
+      <div className="flex-1 flex flex-col lg:flex-row">
+        {/* Left: document skeleton */}
+        <div className="w-full lg:w-[60%] border-r border-white/[0.06] bg-[#111115] p-6 flex items-center justify-center">
+          <div className="bg-white rounded-lg shadow-xl shadow-black/40 p-8 w-full max-w-[560px] animate-pulse">
+            <div className="border-b border-gray-200 pb-4 mb-5">
+              <div className="h-4 bg-gray-200 rounded w-2/3 mb-2" />
+              <div className="h-3 bg-gray-100 rounded w-1/3" />
+            </div>
+            {[100, 80, 95, 70, 85, 90, 60, 75, 88, 65].map((w, i) => (
+              <div key={i} className="h-3 bg-gray-100 rounded mb-2.5" style={{ width: `${w}%` }} />
+            ))}
+            <div className="mt-4 space-y-3">
+              <div className="h-3 bg-amber-100 rounded w-4/5" />
+              <div className="h-3 bg-gray-100 rounded w-3/4" />
+              <div className="h-3 bg-amber-100 rounded w-2/3" />
+              <div className="h-3 bg-gray-100 rounded w-5/6" />
+            </div>
+          </div>
+        </div>
+
+        {/* Right: progress */}
+        <div className="w-full lg:w-[40%] p-6 flex flex-col justify-center space-y-6">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <Loader2 className="w-5 h-5 animate-spin text-violet-400" />
+              <span className="text-sm font-medium text-white">Scanning document…</span>
+            </div>
+            <div className="h-1 bg-white/[0.06] rounded-full overflow-hidden">
+              <div
+                className="h-full bg-violet-500 rounded-full transition-all duration-700"
+                style={{ width: `${((step + 1) / steps.length) * 100}%` }}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            {steps.map((s, i) => (
+              <div key={s} className={`flex items-center gap-2.5 text-xs transition-all duration-300 ${i < step ? "text-white/40" : i === step ? "text-white/80" : "text-white/20"}`}>
+                {i < step
+                  ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  : i === step
+                    ? <Loader2 className="w-3.5 h-3.5 animate-spin text-violet-400 shrink-0" />
+                    : <div className="w-3.5 h-3.5 rounded-full border border-white/10 shrink-0" />
+                }
+                {s}
+              </div>
+            ))}
+          </div>
+
+          <div className="border border-white/[0.06] rounded-xl p-4">
+            <p className="text-xs text-white/30 mb-2">What you'll see in the review</p>
+            {["Sensitive items highlighted in the document", "Right panel to select what to redact", "Original · Redaction Preview toggle", "Export redacted copy when ready"].map(s => (
+              <div key={s} className="flex items-center gap-2 text-xs text-white/40 mt-1.5">
+                <div className="w-1 h-1 rounded-full bg-violet-400/50" />
+                {s}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Error State ──────────────────────────────────────────────────────────────
+
+function ErrorState({
+  fileName, onReset, onAsk,
+}: { fileName: string; onReset: () => void; onAsk: () => void }) {
+  return (
+    <div className="min-h-screen bg-[#0c0c0f] text-white flex flex-col">
+      <header className="h-12 border-b border-white/[0.06] flex items-center px-4 gap-3 shrink-0">
+        <div className="w-7 h-7 rounded-lg bg-violet-600 flex items-center justify-center">
+          <ShieldCheck className="w-4 h-4" />
+        </div>
+        <span className="text-sm font-medium text-white/80">Redact Sensitive Info</span>
+      </header>
+
+      <div className="flex-1 flex flex-col items-center justify-center px-6 text-center max-w-lg mx-auto w-full">
+        <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-6">
+          <AlertCircle className="w-7 h-7 text-red-400" />
+        </div>
+
+        <h2 className="text-xl font-semibold mb-2">Sensitive information scan could not be completed.</h2>
+        <p className="text-sm text-white/45 mb-8 leading-relaxed">
+          The document could not be processed. This may be due to encryption, an unsupported format, or a network error.
+        </p>
+
+        <div className="w-full border border-white/[0.07] rounded-2xl overflow-hidden mb-6">
+          <div className="px-4 py-2 bg-white/[0.02] border-b border-white/[0.05] text-left">
+            <span className="text-xs text-white/30 uppercase tracking-widest">File attempted</span>
+          </div>
+          <div className="px-4 py-3 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0">
+              <FileText className="w-4 h-4 text-red-400" />
+            </div>
+            <div className="flex-1 text-left">
+              <div className="text-xs font-medium text-white/80 truncate">{fileName}</div>
+              <div className="text-xs text-red-400 mt-0.5">Could not extract or process — please try again</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex gap-3 w-full mb-6">
+          <button
+            onClick={onReset}
+            className="flex-1 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-sm font-medium transition-colors flex items-center justify-center gap-2"
+          >
+            <RefreshCcw className="w-4 h-4" />
+            Try again
+          </button>
+          <button
+            onClick={onReset}
+            className="flex-1 py-2.5 rounded-xl border border-white/[0.08] text-sm text-white/60 hover:text-white/80 hover:border-white/15 transition-colors flex items-center justify-center gap-2"
+          >
+            <UploadCloud className="w-4 h-4" />
+            Upload different file
+          </button>
+        </div>
+
+        <div className="w-full border border-white/[0.07] rounded-2xl overflow-hidden">
+          <div className="px-4 py-2 bg-white/[0.02] border-b border-white/[0.05] text-left">
+            <span className="text-xs text-white/30 uppercase tracking-widest">What you can try instead</span>
+          </div>
+          {[
+            { icon: "💬", label: "Ask This Document", sub: "Ask specific questions about the document you can open.", action: onAsk },
+            { icon: "🔍", label: "Analyze a Document", sub: "Extract key terms and clauses from a single document.", action: onReset },
+            { icon: "📋", label: "Use a text-based PDF", sub: "A digital PDF (not a scanned image) processes more reliably.", action: onReset },
+            { icon: "✏️", label: "Paste the text directly", sub: "Copy the document text and paste it into the paste tab.", action: onReset },
+          ].map(a => (
+            <button
+              key={a.label}
+              onClick={a.action}
+              className="w-full flex items-start gap-4 px-4 py-3.5 text-left hover:bg-white/[0.02] border-b border-white/[0.04] last:border-0 transition-colors"
+            >
+              <span className="text-lg mt-0.5">{a.icon}</span>
+              <div>
+                <div className="text-sm font-medium text-white/80">{a.label}</div>
+                <div className="text-xs text-white/35 mt-0.5 leading-relaxed">{a.sub}</div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Workspace ────────────────────────────────────────────────────────────────
+
+interface WorkspaceProps {
+  text: string
+  fileName: string
+  spans: PiiSpan[]
+  onReset: () => void
+  onExport: (selected: Set<string>) => void
+}
+
+function Workspace({ text, fileName, spans, onReset, onExport }: WorkspaceProps) {
+  const [selected, setSelected] = useState<Set<string>>(
+    // Default: pre-select all high-confidence items
+    () => new Set(spans.filter(s => s.confidence === "high").map(s => s.id))
+  )
+  const [activeId, setActiveId] = useState<string | null>(null)
+  const [viewMode, setViewMode] = useState<"original" | "preview">("original")
+  const [unsaved, setUnsaved] = useState(false)
+  const [mobileTab, setMobileTab] = useState<"redactions" | "document">("redactions")
+  const [categoryFilter, setCategoryFilter] = useState<string>("all")
+  const [manualCount, setManualCount] = useState(0)
+
+  const docScrollRef = useRef<HTMLDivElement>(null)
+  const spanRefs = useRef<Map<string, HTMLElement>>(new Map())
+
+  const toggle = useCallback((id: string) => {
+    setSelected(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      return next
+    })
+    setUnsaved(true)
+  }, [])
+
+  const activate = useCallback((id: string) => {
+    setActiveId(prev => prev === id ? null : id)
+    // Scroll document to span
+    setTimeout(() => {
+      const el = spanRefs.current.get(id)
+      if (el && docScrollRef.current) {
+        const container = docScrollRef.current
+        const top = el.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop
+        container.scrollTo({ top: top - 200, behavior: "smooth" })
+      }
+    }, 50)
+    if (window.innerWidth < 1024) setMobileTab("document")
+  }, [])
+
+  // Categories
+  const CATS = useMemo(() => {
+    const map = new Map<string, number>()
+    for (const s of spans) {
+      const cat = typeChip(s.type).label
+      map.set(cat, (map.get(cat) ?? 0) + 1)
+    }
+    return [["All", spans.length], ...Array.from(map.entries())] as [string, number][]
+  }, [spans])
+
+  const filteredSpans = useMemo(() =>
+    categoryFilter === "all" ? spans : spans.filter(s => typeChip(s.type).label === categoryFilter),
+    [spans, categoryFilter]
+  )
+
+  const selectedCount = selected.size
+  const highPriority = spans.filter(s => s.type === "SSN" || s.type === "CREDIT_CARD").length
+
+  // ── Right panel sections ──────────────────────────────────────────────────
+
+  const RightPanel = () => (
+    <div className="overflow-y-auto h-full">
+      <div className="p-4 space-y-4">
+
+        {/* A. Summary */}
+        <section className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-4">
+          <p className="text-xs text-white/30 uppercase tracking-widest mb-3">A. Redaction Summary</p>
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-9 h-9 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0">
+              <span className="text-sm font-bold text-red-400">{spans.length}</span>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-white">{spans.length} possible sensitive items found</p>
+              <p className="text-xs text-white/35">{CATS.length - 1} categories detected</p>
+            </div>
+          </div>
+          <p className="text-xs text-white/50 leading-relaxed mb-2">
+            Review each detected item on the document surface. Toggle between Original and Redaction Preview to see how the exported copy will look.
+          </p>
+          <p className="text-xs text-amber-400/80">Original document is unchanged. Redactions create a separate copy.</p>
+        </section>
+
+        {/* B. Detection strip */}
+        <section className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-3">
+          <p className="text-xs text-white/30 uppercase tracking-widest mb-2">B. Detection Strip</p>
+          <div className="flex flex-wrap gap-1.5">
+            <span className="px-2 py-1 rounded-full text-xs border border-white/10 text-white/50">{spans.length} items found</span>
+            <span className="px-2 py-1 rounded-full text-xs border border-emerald-500/25 text-emerald-400">{spans.filter(s => s.confidence === "high").length} high-confidence</span>
+            {highPriority > 0 && <span className="px-2 py-1 rounded-full text-xs border border-red-500/25 text-red-400">{highPriority} high-priority</span>}
+            <span className="px-2 py-1 rounded-full text-xs border border-violet-500/25 text-violet-400">{selectedCount} selected</span>
+          </div>
+        </section>
+
+        {/* C. Suggested Redactions */}
+        <section>
+          <p className="text-xs text-white/30 uppercase tracking-widest mb-2">C. Suggested Redactions</p>
+          <div className="space-y-2">
+            {filteredSpans.map(span => {
+              const chip = typeChip(span.type)
+              const isSel = selected.has(span.id)
+              const isAct = span.id === activeId
+              return (
+                <div
+                  key={span.id}
+                  onClick={() => activate(span.id)}
+                  className={`rounded-xl p-3 border cursor-pointer transition-all ${isAct ? "border-violet-500/50 bg-violet-500/[0.06]" : isSel ? "border-emerald-500/25 bg-emerald-500/[0.03]" : "border-white/[0.06] bg-white/[0.02] hover:border-white/10"}`}
+                >
+                  <div className="flex items-start gap-2">
+                    <input
+                      type="checkbox"
+                      checked={isSel}
+                      onClick={e => e.stopPropagation()}
+                      onChange={() => toggle(span.id)}
+                      className="mt-0.5 accent-emerald-500 cursor-pointer shrink-0"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap mb-1.5">
+                        <span className={`px-1.5 py-0.5 rounded-full text-xs border ${chip.cls}`}>{chip.label}</span>
+                        <span className={`px-1.5 py-0.5 rounded-full text-xs border ${confCls(span.confidence)}`}>{span.confidence}</span>
+                        {(span.type === "SSN" || span.type === "CREDIT_CARD") && (
+                          <div className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" title="High priority" />
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5 bg-black/20 rounded-lg px-2 py-1">
+                        <div className="w-3 h-2 bg-white/15 rounded-sm shrink-0" />
+                        <span className="text-xs text-white/35 font-mono truncate">{maskValue(span)}</span>
+                      </div>
+                    </div>
+                    <ChevronRight className={`w-3.5 h-3.5 mt-0.5 shrink-0 transition-transform ${isAct ? "text-violet-400 rotate-90" : "text-white/20"}`} />
+                  </div>
+
+                  {/* Active expanded evidence */}
+                  {isAct && (
+                    <div className="mt-3 space-y-2 border-t border-white/[0.06] pt-3">
+                      <div className="flex items-start gap-2 rounded-lg bg-amber-500/10 border border-amber-500/20 px-3 py-2">
+                        <span className="text-xs text-white/30 mt-0.5 shrink-0">In document:</span>
+                        <span className="text-xs text-amber-300 font-medium leading-relaxed">{span.value}</span>
+                      </div>
+                      <div className="flex items-center gap-2 rounded-lg bg-black/30 border border-white/[0.07] px-3 py-2">
+                        <span className="text-xs text-white/30 shrink-0">Redacted as:</span>
+                        <span className="bg-black border border-white/20 rounded-sm text-transparent select-none inline-block" style={{ minWidth: "60px", height: "1em" }} />
+                        <span className="text-xs text-white/25">[REDACTED]</span>
+                      </div>
+                      <div className="flex gap-2 mt-1">
+                        {!isSel && (
+                          <button
+                            onClick={e => { e.stopPropagation(); toggle(span.id) }}
+                            className="flex-1 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-xs text-white font-medium transition-colors"
+                          >
+                            ✓ Include in redaction
+                          </button>
+                        )}
+                        {isSel && (
+                          <button
+                            onClick={e => { e.stopPropagation(); toggle(span.id) }}
+                            className="flex-1 py-1.5 rounded-lg border border-white/[0.08] text-xs text-white/50 hover:text-white/80 transition-colors"
+                          >
+                            Remove from redaction
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </section>
+
+        {/* D. Categories */}
+        <section>
+          <p className="text-xs text-white/30 uppercase tracking-widest mb-2">D. Redaction Categories</p>
+          <div className="flex flex-wrap gap-1.5">
+            {CATS.map(([cat, count]) => (
+              <button
+                key={cat}
+                onClick={() => setCategoryFilter(cat === "All" ? "all" : cat)}
+                className={`px-2.5 py-1 rounded-lg text-xs border transition-colors ${(cat === "All" && categoryFilter === "all") || cat === categoryFilter ? "border-violet-500/40 bg-violet-500/10 text-violet-300" : "border-white/[0.07] text-white/40 hover:border-white/15"}`}
+              >
+                {cat} ({count})
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* E. Review Queue */}
+        <section className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-4">
+          <p className="text-xs text-white/30 uppercase tracking-widest mb-3">E. Review Queue</p>
+          <div className="space-y-2">
+            {[
+              ["Selected for redaction", selectedCount.toString(), "text-emerald-400"],
+              ["Needs confirmation", spans.filter(s => s.confidence !== "high" && !selected.has(s.id)).length.toString(), "text-amber-400"],
+              ["Left visible", (spans.length - selectedCount).toString(), "text-white/30"],
+              ["Manually added", manualCount.toString(), "text-white/30"],
+            ].map(([l, v, c]) => (
+              <div key={l as string} className="flex items-center justify-between text-xs">
+                <span className="text-white/45">{l as string}</span>
+                <span className={`font-semibold ${c as string}`}>{v as string}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* F. Manual Redaction Tools */}
+        <section className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-4">
+          <p className="text-xs text-white/30 uppercase tracking-widest mb-3">F. Manual Redaction Tools</p>
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { icon: Plus, label: "Add manual item", action: () => setManualCount(c => c + 1) },
+              { icon: Undo2, label: "Undo last", action: () => {} },
+              { icon: Trash2, label: "Clear manual", action: () => setManualCount(0) },
+              { icon: EyeOffIcon, label: "Select all", action: () => { setSelected(new Set(spans.map(s => s.id))); setUnsaved(true) } },
+            ].map(({ icon: Icon, label, action }) => (
+              <button key={label} onClick={action} className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-white/[0.06] text-xs text-white/45 hover:border-white/15 hover:text-white/70 transition-colors">
+                <Icon className="w-3.5 h-3.5 shrink-0" />
+                {label}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* G. Save / Export */}
+        <section className="space-y-2">
+          <button
+            onClick={() => onExport(selected)}
+            className="w-full py-3 rounded-xl bg-violet-600 hover:bg-violet-500 text-sm font-medium text-white transition-colors flex items-center justify-center gap-2"
+          >
+            <Download className="w-4 h-4" />
+            Export Redacted Copy
+          </button>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => { setUnsaved(false) }}
+              className={`py-2 rounded-lg border text-xs transition-colors flex items-center justify-center gap-1.5 ${unsaved ? "border-amber-500/40 text-amber-400 bg-amber-500/[0.04]" : "border-white/[0.07] text-white/40"}`}
+            >
+              <Save className="w-3.5 h-3.5" />
+              {unsaved ? "Save changes" : "Saved"}
+            </button>
+            <button
+              onClick={() => setViewMode(v => v === "original" ? "preview" : "original")}
+              className="py-2 rounded-lg border border-white/[0.07] text-xs text-white/40 hover:text-white/70 transition-colors flex items-center justify-center gap-1.5"
+            >
+              <Eye className="w-3.5 h-3.5" />
+              {viewMode === "original" ? "Preview redacted" : "Original view"}
+            </button>
+          </div>
+          <p className="text-xs text-white/20 text-center">Original preserved. Redactions create a separate copy.</p>
+        </section>
+
+        {/* H. Source Traceability */}
+        {activeId && (
+          <section className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-3">
+            <p className="text-xs text-white/30 uppercase tracking-widest mb-2">H. Source Traceability</p>
+            {(() => {
+              const span = spans.find(s => s.id === activeId)
+              if (!span) return null
+              const chip = typeChip(span.type)
+              return (
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2 text-xs">
+                    <span className="text-white/30">Type:</span>
+                    <span className={`px-1.5 py-0.5 rounded-full text-xs border ${chip.cls}`}>{chip.label}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    <span className="text-white/30">Detected via:</span>
+                    <span className="text-white/50">{span.source === "regex" ? "Pattern match" : span.source === "ai" ? "AI detection" : "Pattern + AI"}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    <span className="text-white/30">Confidence:</span>
+                    <span className={confCls(span.confidence).split(" ")[0]}>{span.confidence}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    <span className="text-white/30">Position:</span>
+                    <span className="text-white/40 font-mono">chars {span.start}–{span.end}</span>
+                  </div>
+                </div>
+              )
+            })()}
+          </section>
+        )}
+
+      </div>
+    </div>
+  )
+
+  // ── Document side ───────────────────────────────────────────────────────────
+
+  const DocPanel = () => (
+    <div ref={docScrollRef} className="overflow-y-auto h-full bg-[#111115] p-6">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2 text-xs text-white/35">
+          <FileText className="w-3.5 h-3.5" />
+          <span className="truncate max-w-[180px]">{fileName}</span>
+        </div>
+        <div>
+          {viewMode === "preview"
+            ? <span className="text-xs text-violet-400">{selectedCount} items redacted in preview</span>
+            : <span className="text-xs text-amber-400">{spans.length} items detected</span>}
+        </div>
+      </div>
+
+      <AnnotatedDocument
+        text={text}
+        spans={spans}
+        selected={selected}
+        activeId={activeId}
+        viewMode={viewMode}
+        onActivate={activate}
+        spanRefs={spanRefs}
+        fileName={fileName}
+      />
+
+      {viewMode === "original" && (
+        <p className="text-center text-xs text-white/20 mt-4">Click a highlighted item to inspect · Original document unchanged</p>
+      )}
+      {viewMode === "preview" && (
+        <p className="text-center text-xs text-violet-400/50 mt-4">Redaction preview — black bars replace {selectedCount} selected items in the export</p>
+      )}
+    </div>
+  )
+
+  return (
+    <div className="min-h-screen bg-[#0c0c0f] text-white flex flex-col">
+      {/* Nav */}
+      <header className="h-12 border-b border-white/[0.06] flex items-center px-4 gap-2 lg:gap-3 shrink-0">
+        <button onClick={onReset} className="text-white/40 hover:text-white/80 transition-colors p-1">
+          <ArrowLeft className="w-4 h-4" />
+        </button>
+        <div className="w-7 h-7 rounded-lg bg-violet-600 flex items-center justify-center shrink-0">
+          <ShieldCheck className="w-4 h-4" />
+        </div>
+        <span className="text-sm font-medium text-white/80 hidden sm:block">Redact Sensitive Info</span>
+        <span className="text-white/20 text-xs hidden sm:block">/</span>
+        <span className="text-sm text-white/50 truncate max-w-[140px]">{fileName}</span>
+
+        <div className="ml-auto flex items-center gap-2">
+          {/* Unsaved indicator */}
+          {unsaved && (
+            <span className="hidden sm:flex items-center gap-1 text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded-lg">
+              <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+              Unsaved
+            </span>
+          )}
+          {/* View toggle */}
+          <div className="flex items-center border border-white/[0.08] rounded-lg overflow-hidden text-xs">
+            <button
+              onClick={() => setViewMode("original")}
+              className={`px-2.5 lg:px-3 py-1.5 transition-colors ${viewMode === "original" ? "bg-white/[0.08] text-white" : "text-white/40 hover:text-white/70"}`}
+            >
+              <span className="hidden lg:inline">Original</span>
+              <Eye className="w-3.5 h-3.5 lg:hidden" />
+            </button>
+            <button
+              onClick={() => setViewMode("preview")}
+              className={`px-2.5 lg:px-3 py-1.5 transition-colors ${viewMode === "preview" ? "bg-violet-600 text-white" : "text-white/40 hover:text-white/70"}`}
+            >
+              <span className="hidden lg:inline">Redaction Preview</span>
+              <EyeOffIcon className="w-3.5 h-3.5 lg:hidden" />
+            </button>
+          </div>
+          {/* Save */}
+          <button
+            onClick={() => setUnsaved(false)}
+            className={`hidden sm:flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg border transition-colors ${unsaved ? "bg-amber-500/10 border-amber-500/30 text-amber-400" : "border-white/[0.08] text-white/40"}`}
+          >
+            <Save className="w-3.5 h-3.5" />
+            Save
+          </button>
+          {/* Export */}
+          <button
+            onClick={() => onExport(selected)}
+            className="flex items-center gap-1.5 text-xs bg-violet-600 hover:bg-violet-500 text-white px-2.5 py-1.5 rounded-lg font-medium transition-colors"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span className="hidden lg:inline">Export Redacted</span>
+          </button>
+        </div>
+      </header>
+
+      {/* Active item banner (shows when an item is selected) */}
+      {activeId && (() => {
+        const span = spans.find(s => s.id === activeId)
+        if (!span) return null
+        return (
+          <div className="border-b border-white/[0.06] bg-[#0e0e12] px-4 py-2.5 flex items-center gap-4 shrink-0">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-1.5 h-1.5 rounded-full bg-violet-400 shrink-0" />
+              <span className="text-xs text-violet-300 font-medium truncate">Active: {span.label}</span>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 rounded-lg px-2.5 py-1">
+                <span className="text-xs text-white/30 shrink-0">In doc:</span>
+                <span className="text-xs text-amber-300 font-medium">{span.value}</span>
+              </div>
+              <span className="text-white/20 text-xs">→</span>
+              <span className="bg-black border border-white/20 rounded-sm text-transparent select-none inline-block" style={{ minWidth: "48px", height: "1em" }} />
+            </div>
+            <button onClick={() => setActiveId(null)} className="ml-auto text-white/25 hover:text-white/60 shrink-0 transition-colors">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )
+      })()}
+
+      {/* Preview banner */}
+      {viewMode === "preview" && (
+        <div className="border-b border-violet-500/20 bg-violet-500/[0.04] px-4 py-1.5 flex items-center gap-2 shrink-0">
+          <div className="w-1.5 h-1.5 rounded-full bg-violet-400" />
+          <span className="text-xs text-violet-300">Redaction preview — {selectedCount} items will appear as black bars in the export</span>
+        </div>
+      )}
+
+      {/* ── DESKTOP: side-by-side panels ── */}
+      <div className="hidden lg:flex flex-1 overflow-hidden">
+        <div className="w-[60%] border-r border-white/[0.06] overflow-hidden flex flex-col">
+          <DocPanel />
+        </div>
+        <div className="w-[40%] overflow-hidden flex flex-col">
+          <RightPanel />
+        </div>
+      </div>
+
+      {/* ── MOBILE: tabbed layout ── */}
+      <div className="flex lg:hidden flex-col flex-1 overflow-hidden">
+        {/* Tab bar */}
+        <div className="flex border-b border-white/[0.06] shrink-0">
+          <button
+            onClick={() => setMobileTab("redactions")}
+            className={`flex-1 py-2.5 text-xs font-medium border-b-2 transition-colors ${mobileTab === "redactions" ? "border-violet-500 text-violet-300 bg-violet-500/[0.04]" : "border-transparent text-white/35"}`}
+          >
+            <div className="flex items-center justify-center gap-1.5">
+              <EyeOffIcon className="w-3.5 h-3.5" />
+              Redactions {selectedCount > 0 && <span className="bg-violet-500/30 text-violet-300 rounded-full px-1.5 text-xs">{selectedCount}</span>}
+            </div>
+          </button>
+          <button
+            onClick={() => setMobileTab("document")}
+            className={`flex-1 py-2.5 text-xs font-medium border-b-2 transition-colors ${mobileTab === "document" ? "border-violet-500 text-violet-300 bg-violet-500/[0.04]" : "border-transparent text-white/35"}`}
+          >
+            <div className="flex items-center justify-center gap-1.5">
+              <FileText className="w-3.5 h-3.5" />
+              Document
+            </div>
+          </button>
+        </div>
+        <div className="flex-1 overflow-hidden">
+          {mobileTab === "redactions" ? <RightPanel /> : <DocPanel />}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
+
+type PageState = "empty" | "processing" | "workspace" | "error"
 
 export default function Redact() {
   const [, setLocation] = useLocation()
 
-  // ── Subscription gate ─────────────────────────────────────────────────────
-  // Redact Sensitive Info is available to Starter and Pro plans.
-  // Free / no-subscription users are shown an upgrade prompt.
   const { entitlements, loading: entitlementsLoading } = useEntitlements()
   const [upgradeOpen, setUpgradeOpen] = useState(false)
 
@@ -210,133 +1267,88 @@ export default function Redact() {
     ? (entitlements?.toolAccess?.includes("redact") ?? false)
     : true
 
-  // Show upgrade modal automatically when enforcement is on and user lacks access
   useEffect(() => {
     if (!entitlementsLoading && BILLING_CONFIG.PAYWALL_ENFORCEMENT && !canRedact) {
       setUpgradeOpen(true)
     }
   }, [entitlementsLoading, canRedact])
 
-  // Input state
-  const [mode, setMode] = useState<"paste" | "upload" | "scan" | "url">("paste")
-  const [pastedText, setPastedText] = useState("")
+  // Page state
+  const [pageState, setPageState] = useState<PageState>("empty")
+  const [docText, setDocText] = useState("")
+  const [fileName, setFileName] = useState("")
+  const [spans, setSpans] = useState<PiiSpan[]>([])
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [uploadError, setUploadError] = useState<string | null>(null)
-  const [extractingFile, setExtractingFile] = useState(false)
-  const [urlInput, setUrlInput] = useState("")
   const [urlError, setUrlError] = useState<string | null>(null)
   const [urlLoading, setUrlLoading] = useState(false)
-
-  // Review state
-  const [activeText, setActiveText] = useState<string | null>(null)
-  const [activeFileName, setActiveFileName] = useState<string | undefined>()
+  const [extracting, setExtracting] = useState(false)
   const [returnTo, setReturnTo] = useState<"analyze" | "trust-check" | "contract-review" | "none">("none")
 
-  // Post-redaction next-step state (standalone mode only)
-  const [nextStepText, setNextStepText] = useState<string | null>(null)
-  const [copied, setCopied] = useState(false)
-  const [pdfCompletionActive, setPdfCompletionActive] = useState(false)
-  const [pdfApprovedValues, setPdfApprovedValues] = useState<string[]>([])
-  const [pdfDownloading, setPdfDownloading] = useState(false)
-  const [pdfDownloadError, setPdfDownloadError] = useState<string | null>(null)
-
-  // On mount: check if we were launched from another tool's "Redact first" flow
   useEffect(() => {
-    document.title = "Redact Sensitive Information — PlainPath"
+    document.title = "Redact Sensitive Info — PlainPath"
     try {
       const raw = sessionStorage.getItem("pii_redact_input")
       if (raw) {
-        const stored = JSON.parse(raw) as {
-          text: string
-          source?: "analyze" | "trust-check" | "contract-review"
-          fileName?: string
-        }
+        const stored = JSON.parse(raw) as { text: string; source?: string; fileName?: string }
         sessionStorage.removeItem("pii_redact_input")
         if (stored.text && stored.text.trim().length > 10) {
-          setActiveText(stored.text)
-          setActiveFileName(stored.fileName)
           const src = stored.source
-          setReturnTo(
-            src === "trust-check" ? "trust-check" :
-            src === "contract-review" ? "contract-review" :
-            src === "analyze" ? "analyze" : "none"
-          )
+          setReturnTo(src === "trust-check" ? "trust-check" : src === "contract-review" ? "contract-review" : src === "analyze" ? "analyze" : "none")
+          void handleTextInput(stored.text.trim(), stored.fileName ?? "Imported document")
         }
       }
-    } catch {
-      // sessionStorage unavailable or parse error — ignore
-    }
+    } catch { /* ignore */ }
   }, [])
 
-  // ── File validation ──────────────────────────────────────────────────────
-  function validateFile(file: File): string | null {
-    const allowedMimes = [
-      "application/pdf",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      "text/plain",
-      ...IMAGE_MIMES,
-    ]
-    const allowedExts = [".pdf", ".docx", ".txt", ...IMAGE_EXTS]
-    const ext = "." + (file.name.split(".").pop() ?? "").toLowerCase()
-    if (!allowedMimes.includes(file.type) && !allowedExts.includes(ext)) {
-      return "Unsupported file type. Please upload a PDF, DOCX, TXT, or image file (JPG, PNG, WEBP)."
-    }
-    if (file.size > 20 * 1024 * 1024) {
-      return "File is too large. Maximum allowed size is 20 MB."
-    }
-    return null
+  async function runDetection(text: string): Promise<PiiSpan[]> {
+    const apiBase = getApiBaseUrl()
+    const res = await fetch(`${apiBase}/api/documents/detect-pii`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text }),
+    })
+    if (!res.ok) throw new Error("Detection failed")
+    const data = await res.json() as { spans: PiiSpan[] }
+    return data.spans ?? []
   }
 
-  // ── Handle file selection ─────────────────────────────────────────────────
-  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const err = validateFile(file)
-    if (err) { setUploadError(err); return }
-    setUploadedFile(file)
-    setUploadError(null)
-    e.target.value = ""
+  async function handleTextInput(text: string, name: string) {
+    setDocText(text)
+    setFileName(name)
+    setPageState("processing")
+    try {
+      const detected = await runDetection(text)
+      setSpans(detected)
+      setPageState("workspace")
+    } catch {
+      setPageState("error")
+    }
   }
 
-  // ── Extract text from uploaded file, then launch review ──────────────────
-  async function handleExtractAndRedact() {
-    if (!uploadedFile) return
-    setExtractingFile(true)
+  async function handleFileUpload(file: File) {
+    setExtracting(true)
     setUploadError(null)
     try {
       const apiBase = getApiBaseUrl()
       const formData = new FormData()
-      formData.append("file", uploadedFile)
-      const res = await fetch(`${apiBase}/api/documents/extract-text`, {
-        method: "POST",
-        body: formData,
-      })
+      formData.append("file", file)
+      const res = await fetch(`${apiBase}/api/documents/extract-text`, { method: "POST", body: formData })
       if (!res.ok) {
         const data = await res.json().catch(() => ({})) as { message?: string }
-        throw new Error(
-          data.message ??
-          (res.status === 422
-            ? "Could not extract text from this file. Try pasting the text directly instead."
-            : "File extraction failed. Please try again.")
-        )
+        throw new Error(data.message ?? "File extraction failed. Please try again.")
       }
       const data = await res.json() as { text?: string }
-      if (!data.text || data.text.trim().length < 20) {
-        throw new Error("No readable text found in this file. Try pasting the text directly instead.")
-      }
-      setActiveText(data.text)
-      setActiveFileName(uploadedFile.name)
+      if (!data.text || data.text.trim().length < 20) throw new Error("No readable text found. Try pasting the text directly.")
+      setExtracting(false)
+      await handleTextInput(data.text, file.name)
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : "File extraction failed.")
-    } finally {
-      setExtractingFile(false)
+      setExtracting(false)
     }
   }
 
-  // ── Import from URL, extract text, populate paste tab ────────────────────
-  async function handleUrlImport() {
-    const url = urlInput.trim()
-    if (!url) return
+  async function handleUrlImport(url: string) {
     setUrlLoading(true)
     setUrlError(null)
     try {
@@ -346,802 +1358,129 @@ export default function Redact() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url }),
       })
-      const data = await res.json()
-      if (!res.ok) {
-        setUrlError(data?.message ?? "Failed to import document. Check the link and try again.")
-        return
-      }
-      const extracted: string = data.text ?? ""
-      if (!extracted || extracted.length < 30) {
-        setUrlError("Could not extract readable text from this link. Try downloading the file and uploading it directly.")
-        return
-      }
-      setPastedText(extracted)
-      setMode("paste")
+      const data = await res.json() as { text?: string; message?: string }
+      if (!res.ok) { setUrlError(data.message ?? "Failed to import. Check the link and try again."); return }
+      if (!data.text || data.text.length < 30) { setUrlError("Could not extract readable text. Try downloading and uploading the file directly."); return }
+      await handleTextInput(data.text, url.split("/").pop() ?? "Imported document")
     } catch {
-      setUrlError("Network error — please check your connection and try again.")
+      setUrlError("Network error — check your connection and try again.")
     } finally {
       setUrlLoading(false)
     }
   }
 
-  // ── After redaction applied: route back OR show next-step panel ──────────
-  function handleAnalyzeRedacted(redactedText: string, approvedValues?: string[]) {
-    if (returnTo === "none") {
-      setNextStepText(redactedText)
-      // PDF source: show PDF completion screen instead of text-only panel
-      if (uploadedFile && isPdfFile(uploadedFile.name)) {
-        setPdfApprovedValues(approvedValues ?? [])
-        setPdfCompletionActive(true)
+  function handleExport(selected: Set<string>) {
+    if (returnTo !== "none") {
+      // Return-to flow: strip selected spans from text and navigate back
+      let out = docText
+      const selSpans = spans.filter(s => selected.has(s.id)).sort((a, b) => b.start - a.start)
+      for (const span of selSpans) {
+        out = out.slice(0, span.start) + "[REDACTED]" + out.slice(span.end)
       }
+      try {
+        if (returnTo === "contract-review") sessionStorage.setItem("pii_contract_review_text", out)
+        else sessionStorage.setItem("pii_analyze_text", out)
+      } catch { /* ignore */ }
+      const dest = returnTo === "contract-review" ? "/contract-review" : returnTo === "trust-check" ? "/analyze?mode=trust-check" : "/analyze"
+      setLocation(dest)
       return
     }
-    try {
-      if (returnTo === "contract-review") {
-        sessionStorage.setItem("pii_contract_review_text", redactedText)
-        setLocation("/contract-review")
-      } else if (returnTo === "trust-check") {
-        sessionStorage.setItem("pii_analyze_text", redactedText)
-        setLocation("/analyze?mode=trust-check")
-      } else {
-        sessionStorage.setItem("pii_analyze_text", redactedText)
-        setLocation("/analyze")
-      }
-    } catch {
-      if (returnTo === "contract-review") setLocation("/contract-review")
-      else if (returnTo === "trust-check") setLocation("/analyze?mode=trust-check")
-      else setLocation("/analyze")
+
+    // Standalone: download redacted text
+    let out = docText
+    const selSpans = spans.filter(s => selected.has(s.id)).sort((a, b) => b.start - a.start)
+    for (const span of selSpans) {
+      out = out.slice(0, span.start) + "[REDACTED]" + out.slice(span.end)
     }
-  }
-
-  // ── From next-step panel: send to a specific tool ─────────────────────────
-  function sendToTool(dest: "analyze" | "trust-check" | "contract-review") {
-    if (!nextStepText) return
-    try {
-      if (dest === "contract-review") {
-        sessionStorage.setItem("pii_contract_review_text", nextStepText)
-        setLocation("/contract-review")
-      } else if (dest === "trust-check") {
-        sessionStorage.setItem("pii_analyze_text", nextStepText)
-        setLocation("/analyze?mode=trust-check")
-      } else {
-        sessionStorage.setItem("pii_analyze_text", nextStepText)
-        setLocation("/analyze")
-      }
-    } catch {
-      if (dest === "contract-review") setLocation("/contract-review")
-      else if (dest === "trust-check") setLocation("/analyze?mode=trust-check")
-      else setLocation("/analyze")
-    }
-  }
-
-  // ── Next-step panel copy / download ───────────────────────────────────────
-  function handleCopyRedacted() {
-    if (!nextStepText) return
-    navigator.clipboard.writeText(nextStepText).catch(() => {})
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2500)
-  }
-
-  function handleDownloadRedacted() {
-    if (!nextStepText) return
-    const blob = new Blob([nextStepText], { type: "text/plain" })
+    const blob = new Blob([out], { type: "text/plain" })
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
-    a.download = activeFileName
-      ? activeFileName.replace(/\.[^.]+$/, "") + "_redacted.txt"
-      : "redacted_document.txt"
+    a.download = fileName.replace(/\.[^.]+$/, "") + "_redacted.txt"
     a.click()
     URL.revokeObjectURL(url)
-    saveRecentWork({
-      tool: "redact",
-      title: activeFileName ? activeFileName.replace(/\.[^.]+$/, "") : "Redacted Document",
-    })
+    saveRecentWork({ tool: "redact", title: fileName.replace(/\.[^.]+$/, "") })
   }
 
-  // ── Cancel: return to the originating tool ────────────────────────────────
-  function handleCancel() {
-    if (returnTo === "contract-review") setLocation("/contract-review")
-    else if (returnTo === "trust-check") setLocation("/analyze?mode=trust-check")
-    else if (returnTo === "analyze") setLocation("/analyze")
-    else setActiveText(null)
-  }
-
-  // ── Label for the "continue" action based on origin ───────────────────────
-  const continueLabel =
-    returnTo === "contract-review" ? "Review this contract" :
-    returnTo === "trust-check" ? "Run Trust Check on this document" :
-    returnTo === "analyze" ? "Analyze this document" :
-    "Continue with redacted version"
-
-  const canSubmitPaste = pastedText.trim().length >= 30
-
-  // ── PDF download helper (used in PDF completion screen) ──────────────────
-  async function handleDownloadRedactedPdfFinal() {
-    if (!uploadedFile || pdfDownloading) return
-    setPdfDownloading(true)
-    setPdfDownloadError(null)
-    try {
-      const apiBase = getApiBaseUrl()
-      await downloadRedactedPdf(uploadedFile, pdfApprovedValues, apiBase)
-      saveRecentWork({
-        tool: "redact",
-        title: uploadedFile.name.replace(/\.[^.]+$/, ""),
-      })
-    } catch (err) {
-      setPdfDownloadError(err instanceof Error ? err.message : "PDF download failed. Please try again.")
-    } finally {
-      setPdfDownloading(false)
-    }
-  }
-
-  // ── Reset helper ──────────────────────────────────────────────────────────
-  function resetAll() {
-    setNextStepText(null)
-    setPdfCompletionActive(false)
-    setPdfApprovedValues([])
-    setPdfDownloadError(null)
-    setActiveText(null)
-    setPastedText("")
+  function handleReset() {
+    setPageState("empty")
+    setDocText("")
+    setFileName("")
+    setSpans([])
     setUploadedFile(null)
+    setUploadError(null)
+    setUrlError(null)
   }
 
-  // ─── SUBSCRIPTION GATE ────────────────────────────────────────────────────
-  // Redact requires Starter or Pro. Show upgrade modal for free/no-plan users.
+  // ── Subscription gate ──────────────────────────────────────────────────────
   if (entitlementsLoading && BILLING_CONFIG.PAYWALL_ENFORCEMENT) {
     return (
-      <WorkspaceShell>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-        </div>
-      </WorkspaceShell>
+      <div className="min-h-screen bg-[#0c0c0f] flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-white/30" />
+      </div>
     )
   }
 
   if (!canRedact) {
     return (
-      <WorkspaceShell>
-        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4 gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-violet-50 dark:bg-violet-950/40 border border-violet-200 dark:border-violet-800/60 flex items-center justify-center">
-            <EyeOff className="w-7 h-7 text-violet-500 dark:text-violet-400" />
-          </div>
-          <div className="max-w-xs">
-            <h2 className="text-lg font-bold mb-1">Redact Sensitive Info</h2>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Automatic PII detection and redaction is available on the Starter plan and above.
-            </p>
-          </div>
-          <Button onClick={() => setUpgradeOpen(true)} className="gap-2 mt-1">
-            View plans &amp; pricing
-            <ArrowRight className="w-4 h-4" />
-          </Button>
-          <button
-            onClick={() => setLocation("/")}
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Back to tools
-          </button>
+      <div className="min-h-screen bg-[#0c0c0f] text-white flex flex-col items-center justify-center px-4 text-center gap-4">
+        <div className="w-14 h-14 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
+          <EyeOff className="w-7 h-7 text-violet-400" />
         </div>
-        <UpgradeModal
-          open={upgradeOpen}
-          onClose={() => setUpgradeOpen(false)}
-          reason="redact"
-        />
-      </WorkspaceShell>
-    )
-  }
-
-  // ─── PDF COMPLETION SCREEN ───────────────────────────────────────────────
-  // Shown when source was a PDF and returnTo === "none"
-  if (nextStepText !== null && pdfCompletionActive && uploadedFile) {
-    return (
-      <div className="min-h-screen bg-background">
-        <div className="max-w-[1440px] mx-auto py-6 px-4 space-y-4">
-
-          {/* Header with back */}
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => { setNextStepText(null); setPdfCompletionActive(false); setActiveText(null) }}
-              className="p-1.5 rounded-lg hover:bg-muted/50 text-muted-foreground transition-colors"
-              aria-label="Back to review"
-            >
-              <ArrowLeft className="w-4 h-4" />
-            </button>
-            <div className="w-8 h-8 rounded-xl bg-violet-100 dark:bg-violet-900/40 flex items-center justify-center shrink-0">
-              <ShieldCheck className="w-4 h-4 text-violet-600 dark:text-violet-400" />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold leading-tight">Redacted PDF ready</h1>
-              <p className="text-xs text-muted-foreground">
-                {pdfApprovedValues.length} value{pdfApprovedValues.length !== 1 ? "s" : ""} permanently blacked out
-                {uploadedFile.name && <span className="font-mono ml-1">· {uploadedFile.name}</span>}
-              </p>
-            </div>
-          </div>
-
-          {/* Two-column: preview + actions */}
-          <div className="flex flex-col lg:flex-row lg:items-start gap-5">
-
-            {/* LEFT: PDF preview */}
-            <div className="w-full lg:w-[60%] lg:sticky lg:top-20 lg:max-h-[calc(100vh-120px)] lg:overflow-y-auto space-y-2">
-              <div className="flex items-center gap-2">
-                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Redacted PDF Preview</p>
-                <span className="text-[9px] text-muted-foreground/50">black boxes = permanently hidden</span>
-              </div>
-              <PdfRedactViewer file={uploadedFile} approvedValues={pdfApprovedValues} />
-            </div>
-
-            {/* RIGHT: Actions */}
-            <div className="flex-1 space-y-4">
-
-              {/* Primary: download PDF */}
-              <div className="space-y-1.5">
-                <Button
-                  size="lg"
-                  className="w-full h-12 text-sm rounded-xl gap-2 bg-violet-600 hover:bg-violet-700 text-white"
-                  onClick={handleDownloadRedactedPdfFinal}
-                  disabled={pdfDownloading}
-                >
-                  {pdfDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
-                  {pdfDownloading ? "Building redacted PDF…" : "Download Redacted PDF"}
-                </Button>
-                {pdfDownloadError && <p className="text-xs text-destructive text-center">{pdfDownloadError}</p>}
-                <p className="text-[10px] text-center text-muted-foreground/40">
-                  Solid black boxes · original file unchanged · content unrecoverable
-                </p>
-              </div>
-
-              {/* Send to another PlainPath tool */}
-              <div className="rounded-xl border border-border/50 bg-card p-4 space-y-3">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Continue with redacted text</p>
-                <div className="space-y-2">
-                  <button onClick={() => sendToTool("analyze")} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-blue-200/60 dark:border-blue-900/40 bg-blue-50/80 dark:bg-blue-950/20 hover:bg-blue-100/80 dark:hover:bg-blue-950/40 transition-colors group text-left">
-                    <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center shrink-0">
-                      <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">Analyze this document</p>
-                      <p className="text-xs text-muted-foreground">Get an action plan from the redacted version</p>
-                    </div>
-                    <ArrowRight className="w-4 h-4 text-blue-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
-                  </button>
-
-                  <button onClick={() => sendToTool("trust-check")} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-red-200/60 dark:border-red-900/40 bg-red-50/80 dark:bg-red-950/20 hover:bg-red-100/80 dark:hover:bg-red-950/40 transition-colors group text-left">
-                    <div className="w-8 h-8 rounded-lg bg-red-100 dark:bg-red-900/40 flex items-center justify-center shrink-0">
-                      <ShieldCheck className="w-4 h-4 text-red-600 dark:text-red-400" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-red-700 dark:text-red-300">Run Trust Check</p>
-                      <p className="text-xs text-muted-foreground">Verify legitimacy on the redacted document</p>
-                    </div>
-                    <ArrowRight className="w-4 h-4 text-red-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
-                  </button>
-
-                  <button onClick={() => sendToTool("contract-review")} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-amber-200/60 dark:border-amber-900/40 bg-amber-50/80 dark:bg-amber-950/20 hover:bg-amber-100/80 dark:hover:bg-amber-950/40 transition-colors group text-left">
-                    <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center shrink-0">
-                      <Scale className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">Review this contract</p>
-                      <p className="text-xs text-muted-foreground">Clause-by-clause review of the redacted version</p>
-                    </div>
-                    <ArrowRight className="w-4 h-4 text-amber-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
-                  </button>
-
-                </div>
-              </div>
-
-              {/* Secondary: .txt export */}
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="flex-1 gap-2 rounded-lg" onClick={handleCopyRedacted}>
-                  {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-                  {copied ? "Copied!" : "Copy text"}
-                </Button>
-                <Button variant="outline" size="sm" className="flex-1 gap-2 rounded-lg" onClick={handleDownloadRedacted}>
-                  <Download className="w-3.5 h-3.5" />
-                  Download .txt
-                </Button>
-              </div>
-
-              {/* Start over */}
-              <div className="flex justify-center pt-1">
-                <button onClick={resetAll} className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5">
-                  Redact another document
-                </button>
-              </div>
-
-            </div>
-          </div>
-
-        </div>
-      </div>
-    )
-  }
-
-  // ─── TEXT NEXT-STEP PANEL (non-PDF standalone post-redaction) ────────────
-  if (nextStepText !== null) {
-    return (
-      <div className="min-h-screen bg-background">
-        <div className="max-w-xl mx-auto py-8 px-4 space-y-6">
-
-          {/* Header */}
-          <div className="space-y-1">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setNextStepText(null)}
-                className="p-1.5 rounded-lg hover:bg-muted/50 text-muted-foreground transition-colors"
-                aria-label="Back to review"
-              >
-                <ArrowLeft className="w-4 h-4" />
-              </button>
-              <div className="flex items-center gap-2">
-                <div className="w-9 h-9 rounded-xl bg-violet-100 dark:bg-violet-900/40 flex items-center justify-center">
-                  <EyeOff className="w-5 h-5 text-violet-600 dark:text-violet-400" />
-                </div>
-                <div>
-                  <h1 className="text-lg font-bold leading-tight">Redaction complete</h1>
-                  <p className="text-xs text-muted-foreground">Your redacted document is ready</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Export options */}
-          <div className="rounded-xl border border-border/50 bg-card p-4 space-y-3">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Save or export</p>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex-1 gap-2 rounded-lg"
-                onClick={handleCopyRedacted}
-              >
-                {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-                {copied ? "Copied!" : "Copy text"}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex-1 gap-2 rounded-lg"
-                onClick={handleDownloadRedacted}
-              >
-                <Download className="w-3.5 h-3.5" />
-                Download .txt
-              </Button>
-            </div>
-          </div>
-
-          {/* Send to another tool */}
-          <div className="rounded-xl border border-border/50 bg-card p-4 space-y-3">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Send to a PlainPath tool</p>
-            <div className="space-y-2">
-              <button
-                onClick={() => sendToTool("analyze")}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-blue-200/60 dark:border-blue-900/40 bg-blue-50/80 dark:bg-blue-950/20 hover:bg-blue-100/80 dark:hover:bg-blue-950/40 transition-colors group text-left"
-              >
-                <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center shrink-0">
-                  <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">Analyze this document</p>
-                  <p className="text-xs text-muted-foreground">Get an action plan from the redacted version</p>
-                </div>
-                <ArrowRight className="w-4 h-4 text-blue-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
-              </button>
-
-              <button
-                onClick={() => sendToTool("trust-check")}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-red-200/60 dark:border-red-900/40 bg-red-50/80 dark:bg-red-950/20 hover:bg-red-100/80 dark:hover:bg-red-950/40 transition-colors group text-left"
-              >
-                <div className="w-8 h-8 rounded-lg bg-red-100 dark:bg-red-900/40 flex items-center justify-center shrink-0">
-                  <ShieldCheck className="w-4 h-4 text-red-600 dark:text-red-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-red-700 dark:text-red-300">Run Trust Check</p>
-                  <p className="text-xs text-muted-foreground">Verify legitimacy on the redacted document</p>
-                </div>
-                <ArrowRight className="w-4 h-4 text-red-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
-              </button>
-
-              <button
-                onClick={() => sendToTool("contract-review")}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-amber-200/60 dark:border-amber-900/40 bg-amber-50/80 dark:bg-amber-950/20 hover:bg-amber-100/80 dark:hover:bg-amber-950/40 transition-colors group text-left"
-              >
-                <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center shrink-0">
-                  <Scale className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">Review this contract</p>
-                  <p className="text-xs text-muted-foreground">Clause-by-clause review of the redacted version</p>
-                </div>
-                <ArrowRight className="w-4 h-4 text-amber-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
-              </button>
-
-            </div>
-          </div>
-
-          {/* Start over */}
-          <div className="flex justify-center">
-            <button
-              onClick={() => {
-                setNextStepText(null)
-                setActiveText(null)
-                setPastedText("")
-                setUploadedFile(null)
-              }}
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Redact another document
-            </button>
-          </div>
-
-        </div>
-      </div>
-    )
-  }
-
-  // ─── REVIEW PHASE ────────────────────────────────────────────────────────
-  if (activeText !== null) {
-    return (
-      <div className="bg-background flex flex-col" style={{ minHeight: "calc(100vh - 4rem)" }}>
-        {/* Compact sticky workspace header */}
-        <div className="sticky top-16 z-20 flex items-center gap-3 px-4 sm:px-6 py-2.5 border-b border-border/40 bg-background/95 backdrop-blur-sm flex-shrink-0">
-          <button
-            onClick={handleCancel}
-            className="p-1.5 rounded-lg hover:bg-muted/50 text-muted-foreground transition-colors flex-shrink-0"
-            aria-label="Back to document input"
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </button>
-          <ShieldCheck className="w-4 h-4 text-primary flex-shrink-0" />
-          <h1 className="text-sm font-bold">Review &amp; Redact</h1>
-          {activeFileName && (
-            <span className="text-xs text-muted-foreground font-mono truncate max-w-[160px] sm:max-w-[260px]">{activeFileName}</span>
-          )}
-          {returnTo !== "none" && (
-            <span className="ml-auto text-[10px] text-muted-foreground hidden sm:block">
-              ← Will return to {returnTo === "contract-review" ? "Contract Review" : returnTo === "trust-check" ? "Trust Check" : "Analysis"}
-            </span>
-          )}
-        </div>
-
-        {/* PiiReview workspace */}
-        <div className="flex-1 max-w-[1440px] mx-auto w-full px-4 sm:px-6 py-4">
-          <PiiReview
-            text={activeText}
-            fileName={activeFileName}
-            continueLabel={continueLabel}
-            onAnalyzeRedacted={handleAnalyzeRedacted}
-            onCancel={handleCancel}
-            sourcePdfFile={uploadedFile && isPdfFile(uploadedFile.name) ? uploadedFile : null}
-            sourceImageFile={uploadedFile && isImageFile(uploadedFile.name, uploadedFile.type) ? uploadedFile : null}
-          />
-        </div>
-      </div>
-    )
-  }
-
-  // ─── INPUT PHASE (standalone) ────────────────────────────────────────────
-  return (
-    <WorkspaceShell>
-      <div className="max-w-xl mx-auto py-6 px-4 space-y-6">
-        {/* Header */}
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="w-6 h-6 text-primary" />
-            <h1 className="text-xl font-bold">Redact Sensitive Information</h1>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Automatically detect and permanently remove personal information from a document before sharing, analyzing, or exporting it.
+        <div className="max-w-xs">
+          <h2 className="text-lg font-bold mb-1">Redact Sensitive Info</h2>
+          <p className="text-sm text-white/40 leading-relaxed">
+            Automatic PII detection and redaction is available on the Starter plan and above.
           </p>
         </div>
-
-        {/* Mode tabs */}
-        <div className="grid grid-cols-4 gap-1 bg-muted/50 rounded-xl p-1">
-          {([
-            { id: "paste", icon: Type, label: "Paste Text", sub: "Copy & paste" },
-            { id: "upload", icon: UploadCloud, label: "Upload File", sub: "PDF, DOCX, TXT" },
-            { id: "scan", icon: Camera, label: "Scan Photo", sub: "Camera or image" },
-            { id: "url", icon: LinkIcon, label: "Import Link", sub: "Drive or Dropbox" },
-          ] as const).map(({ id: m, icon: Icon, label, sub }) => (
-            <button
-              key={m}
-              onClick={() => { setMode(m); setUploadError(null); setUploadedFile(null); setUrlError(null) }}
-              style={{ touchAction: "manipulation" }}
-              className={`flex flex-col items-center justify-center gap-0.5 py-2.5 rounded-lg transition-all min-h-[52px] ${
-                mode === m ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <div className="flex items-center gap-1 text-sm font-semibold">
-                <Icon className="w-3.5 h-3.5 shrink-0" />
-                <span className="hidden sm:inline">{label}</span>
-              </div>
-              <span className="text-[10px] opacity-55 hidden sm:block">{sub}</span>
-              <span className="sm:hidden text-xs font-medium">{label.split(" ")[0]}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* Paste mode */}
-        {mode === "paste" && (
-          <div className="space-y-4">
-            <textarea
-              value={pastedText}
-              onChange={e => setPastedText(e.target.value)}
-              placeholder="Paste your document text here…"
-              className="w-full min-h-[220px] resize-y rounded-xl border border-input bg-background px-4 py-3 text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring/30 leading-relaxed"
-            />
-            <Button
-              size="lg"
-              disabled={!canSubmitPaste}
-              className="w-full h-12 rounded-xl gap-2"
-              onClick={() => { setActiveText(pastedText); setReturnTo("none") }}
-            >
-              <ShieldCheck className="w-4 h-4" />
-              Scan for Sensitive Information
-            </Button>
-          </div>
-        )}
-
-        {/* Upload mode */}
-        {mode === "upload" && (
-          <div className="space-y-4">
-            {!uploadedFile ? (
-              <label className="flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-border/50 hover:border-primary/40 bg-muted/20 hover:bg-muted/30 cursor-pointer transition-all p-10 text-center">
-                <UploadCloud className="w-9 h-9 text-muted-foreground/50" />
-                <div>
-                  <p className="text-sm font-medium text-foreground">Click to upload a file</p>
-                  <p className="text-xs text-muted-foreground mt-1">PDF, DOCX, TXT, or image (JPG, PNG, WEBP) · up to 20 MB</p>
-                </div>
-                <input
-                  type="file"
-                  accept={ACCEPTED}
-                  className="sr-only"
-                  onChange={handleFileSelect}
-                />
-              </label>
-            ) : (
-              <div className="rounded-xl border border-border/50 bg-background p-4 flex items-center gap-3">
-                <File className="w-8 h-8 text-primary/70 shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{uploadedFile.name}</p>
-                  <p className="text-xs text-muted-foreground">{(uploadedFile.size / 1024).toFixed(0)} KB</p>
-                </div>
-                <button
-                  onClick={() => setUploadedFile(null)}
-                  className="p-1 rounded hover:bg-muted/50 text-muted-foreground"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            )}
-
-            {uploadError && (
-              <div className="p-3 rounded-lg bg-destructive/8 border border-destructive/15 flex gap-2 text-destructive text-sm">
-                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                {uploadError}
-              </div>
-            )}
-
-            {uploadedFile && (
-              <Button
-                size="lg"
-                disabled={extractingFile}
-                className="w-full h-12 rounded-xl gap-2"
-                onClick={handleExtractAndRedact}
-              >
-                {extractingFile ? (
-                  <><Loader2 className="w-4 h-4 animate-spin" /> Extracting text…</>
-                ) : (
-                  <><ShieldCheck className="w-4 h-4" /> Scan for Sensitive Information</>
-                )}
-              </Button>
-            )}
-
-            <p className="text-[11px] text-muted-foreground/50 text-center">
-              Uploaded PDF/DOCX files are converted to text for redaction. PlainPath exports a clean redacted text version. The original uploaded file is not modified.
-            </p>
-          </div>
-        )}
-
-        {/* Camera / Scan mode */}
-        {mode === "scan" && (
-          <div className="space-y-4">
-            {/* Camera card */}
-            <div className="rounded-xl border border-border/50 bg-gradient-to-b from-violet-50/50 to-background dark:from-violet-950/10 dark:to-background p-6 space-y-4 text-center">
-              <div className="w-16 h-16 mx-auto rounded-2xl bg-violet-100 dark:bg-violet-900/40 flex items-center justify-center">
-                <Camera className="w-8 h-8 text-violet-600 dark:text-violet-400" />
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm font-semibold">Take a photo or scan a document</p>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  Photograph a printed document, letter, form, or ID.
-                  PlainPath uses AI to read all visible text, then scans it for sensitive information.
-                </p>
-              </div>
-
-              {!uploadedFile ? (
-                <label className="block cursor-pointer">
-                  <Button size="lg" className="w-full gap-2 rounded-xl pointer-events-none bg-violet-600 hover:bg-violet-700 text-white" asChild>
-                    <span>
-                      <Camera className="w-4 h-4" />
-                      <span className="sm:hidden">Open Camera or Choose Photo</span>
-                      <span className="hidden sm:inline">Select Photo or Image File</span>
-                    </span>
-                  </Button>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    capture="environment"
-                    className="sr-only"
-                    onChange={handleFileSelect}
-                  />
-                </label>
-              ) : (
-                <div className="space-y-3">
-                  {/* Thumbnail preview */}
-                  <div className="rounded-xl border border-border/30 overflow-hidden bg-muted/10">
-                    <img
-                      src={URL.createObjectURL(uploadedFile)}
-                      alt={uploadedFile.name}
-                      className="w-full object-contain max-h-[220px]"
-                    />
-                  </div>
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-background border border-border/50">
-                    <Camera className="w-4 h-4 text-violet-500 shrink-0" />
-                    <div className="flex-1 min-w-0 text-left">
-                      <p className="text-sm font-medium truncate">{uploadedFile.name}</p>
-                      <p className="text-xs text-muted-foreground">{(uploadedFile.size / 1024).toFixed(0)} KB</p>
-                    </div>
-                    <button onClick={() => setUploadedFile(null)} className="p-1 rounded hover:bg-muted/50 text-muted-foreground" aria-label="Remove photo">
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {uploadError && (
-              <div className="p-3 rounded-lg bg-destructive/8 border border-destructive/15 flex gap-2 text-destructive text-sm">
-                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                {uploadError}
-              </div>
-            )}
-
-            {uploadedFile && (
-              <Button
-                size="lg"
-                disabled={extractingFile}
-                className="w-full h-12 rounded-xl gap-2"
-                onClick={handleExtractAndRedact}
-              >
-                {extractingFile ? (
-                  <><Loader2 className="w-4 h-4 animate-spin" /> Extracting text from image…</>
-                ) : (
-                  <><ShieldCheck className="w-4 h-4" /> Scan for Sensitive Information</>
-                )}
-              </Button>
-            )}
-
-            {/* Mobile note */}
-            <div className="flex items-start gap-2 rounded-lg bg-muted/30 border border-border/30 px-3 py-2.5">
-              <Camera className="w-4 h-4 text-muted-foreground/60 shrink-0 mt-0.5" />
-              <div className="text-xs text-muted-foreground/70 space-y-1">
-                <p className="font-medium text-muted-foreground">On your phone?</p>
-                <p>Tap "Open Camera" above to photograph a document directly. Hold your phone steady and make sure all text is visible and in focus.</p>
-              </div>
-            </div>
-
-            <p className="text-[11px] text-muted-foreground/50 text-center">
-              Scanned text is processed with AI. Pixel-level image redaction is not available — PlainPath exports a clean redacted text version.
-            </p>
-          </div>
-        )}
-
-        {/* URL / Import Link mode */}
-        {mode === "url" && (
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm font-semibold mb-1">Paste a Google Drive or Dropbox link</p>
-              <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
-                Share a file from Google Drive or Dropbox — PlainPath will fetch and extract the text automatically, then scan it for sensitive information.
-              </p>
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50 pointer-events-none" />
-                  <input
-                    type="url"
-                    placeholder="https://drive.google.com/... or https://dropbox.com/..."
-                    value={urlInput}
-                    onChange={e => { setUrlInput(e.target.value); setUrlError(null) }}
-                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-border/60 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all"
-                    onKeyDown={e => { if (e.key === "Enter" && urlInput.trim()) void handleUrlImport() }}
-                  />
-                </div>
-                <Button
-                  onClick={() => void handleUrlImport()}
-                  disabled={urlLoading || !urlInput.trim()}
-                  style={{ touchAction: "manipulation" }}
-                  className="shrink-0 rounded-xl"
-                >
-                  {urlLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Import"}
-                </Button>
-              </div>
-              {urlError && (
-                <div className="flex items-start gap-2 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20 border border-red-200/60 dark:border-red-900/40 rounded-lg px-3 py-2.5 text-sm mt-2">
-                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                  {urlError}
-                </div>
-              )}
-            </div>
-            <div className="rounded-xl bg-muted/40 border border-border/50 p-4 space-y-3 text-xs text-muted-foreground">
-              <p className="font-semibold text-foreground/70">How to share from Google Drive:</p>
-              <ol className="space-y-1.5 list-decimal list-inside leading-relaxed">
-                <li>Right-click the file → <span className="font-medium">Share</span></li>
-                <li>Set access to <span className="font-medium">"Anyone with the link"</span></li>
-                <li>Copy the link and paste it above</li>
-              </ol>
-              <p className="font-semibold text-foreground/70 pt-1">How to share from Dropbox:</p>
-              <ol className="space-y-1.5 list-decimal list-inside leading-relaxed">
-                <li>Click <span className="font-medium">Share</span> on the file in Dropbox</li>
-                <li>Copy the shared link and paste it above</li>
-              </ol>
-            </div>
-          </div>
-        )}
-
-        {/* What gets detected */}
-        <div className="rounded-xl border border-border/40 bg-muted/10 p-4 space-y-2">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">What gets detected</p>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-            {[
-              "Full names", "Street addresses", "Phone numbers", "Email addresses",
-              "Social Security Numbers", "Tax IDs / EINs", "Dates of birth", "Account numbers",
-              "Routing numbers", "Credit card numbers", "Policy / member IDs", "Case numbers",
-              "License numbers", "Personal identifiers",
-            ].map(item => (
-              <div key={item} className="text-xs text-muted-foreground flex items-center gap-1.5">
-                <div className="w-1 h-1 rounded-full bg-primary/40 shrink-0" />
-                {item}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Try a sample document */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-3">
-            <div className="flex-1 h-px bg-border/40" />
-            <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">Try a sample document</p>
-            <div className="flex-1 h-px bg-border/40" />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            {REDACT_DEMOS.map((demo) => {
-              const Icon = demo.icon
-              return (
-                <button
-                  key={demo.id}
-                  onClick={() => {
-                    setActiveText(demo.text)
-                    setActiveFileName(demo.fileName)
-                    setReturnTo("none")
-                  }}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/50 hover:border-violet-400/50 hover:bg-violet-50/40 dark:hover:bg-violet-950/10 transition-all text-left group"
-                >
-                  <div className={`w-8 h-8 rounded-lg ${demo.bg} flex items-center justify-center shrink-0`}>
-                    <Icon className={`w-4 h-4 ${demo.color}`} />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold leading-tight group-hover:text-violet-700 dark:group-hover:text-violet-400 transition-colors">{demo.label}</p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">{demo.meta}</p>
-                  </div>
-                </button>
-              )
-            })}
-          </div>
-        </div>
+        <button onClick={() => setUpgradeOpen(true)} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-sm font-medium transition-colors">
+          View plans &amp; pricing
+          <ArrowRight className="w-4 h-4" />
+        </button>
+        <button onClick={() => setLocation("/")} className="text-sm text-white/30 hover:text-white/60 transition-colors">
+          Back to tools
+        </button>
+        <UpgradeModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} reason="redact" />
       </div>
-    </WorkspaceShell>
+    )
+  }
+
+  // ── State routing ──────────────────────────────────────────────────────────
+  if (pageState === "processing") return <ProcessingState fileName={fileName} />
+
+  if (pageState === "error") {
+    return (
+      <ErrorState
+        fileName={fileName}
+        onReset={handleReset}
+        onAsk={() => setLocation("/ask")}
+      />
+    )
+  }
+
+  if (pageState === "workspace") {
+    return (
+      <Workspace
+        text={docText}
+        fileName={fileName}
+        spans={spans}
+        onReset={handleReset}
+        onExport={handleExport}
+      />
+    )
+  }
+
+  return (
+    <EmptyState
+      onText={handleTextInput}
+      onFile={handleFileUpload}
+      onUrl={handleUrlImport}
+      extracting={extracting}
+      urlLoading={urlLoading}
+      uploadError={uploadError}
+      urlError={urlError}
+      uploadedFile={uploadedFile}
+      setUploadedFile={setUploadedFile}
+    />
   )
 }
