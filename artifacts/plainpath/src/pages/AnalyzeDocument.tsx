@@ -206,9 +206,23 @@ function DocViewer({
 // ─── Intelligence panel ───────────────────────────────────────────────────────
 
 const RISK_SEVERITY_STYLES = {
-  high:   { border: "border-red-500/22 bg-red-500/[0.04]",   dot: "bg-red-400",    text: "text-red-300"   },
-  medium: { border: "border-amber-500/15 bg-amber-500/[0.03]",dot: "bg-amber-400",  text: "text-amber-300" },
-  low:    { border: "border-white/[0.05] bg-transparent",     dot: "bg-white/22",   text: "text-white/35"  },
+  high:   { border: "border-red-500/22 bg-red-500/[0.04]",    dot: "bg-red-400",   text: "text-red-300"   },
+  medium: { border: "border-amber-500/15 bg-amber-500/[0.03]", dot: "bg-amber-400", text: "text-amber-300" },
+  low:    { border: "border-white/[0.05] bg-transparent",      dot: "bg-white/22",  text: "text-white/35"  },
+}
+
+type StepStatus = "not-started" | "in-progress" | "complete"
+
+const STEP_STATUS_CYCLE: Record<StepStatus, StepStatus> = {
+  "not-started": "in-progress",
+  "in-progress": "complete",
+  "complete": "not-started",
+}
+
+const STEP_STATUS_UI: Record<StepStatus, { dot: string; label: string; ring: string }> = {
+  "not-started": { dot: "bg-white/18 border border-white/20",            label: "Not started", ring: "" },
+  "in-progress":  { dot: "bg-amber-400/70 border border-amber-400/50",   label: "In progress", ring: "ring-1 ring-amber-400/20" },
+  "complete":     { dot: "bg-emerald-400 border border-emerald-400/60",  label: "Complete",    ring: "ring-1 ring-emerald-400/20" },
 }
 
 function IntelPanel({
@@ -222,26 +236,40 @@ function IntelPanel({
   const { entitlements } = useEntitlements()
   const isPro = entitlements?.plan === "pro" || entitlements?.plan === "team"
 
-  const confidence = analysis.overallConfidence
-  const riskScore = analysis.overallRisk ?? null
-  const risks = analysis.risks ?? []
   const actionSteps = analysis.actionSteps ?? []
   const deadlines = analysis.deadlines ?? []
+  const risks = analysis.risks ?? []
   const keyTerms = analysis.keyTerms ?? []
   const redFlags = analysis.redFlags ?? []
+  const missingDocs = (analysis.requiredDocuments ?? []).filter(d => !d.obtained)
 
-  const criticalRisks = risks.filter(r => r.severity === "high")
-  const urgentSteps = actionSteps.filter(s => s.priority === "high" && !s.completed)
+  const urgentSteps = actionSteps.filter(s => s.priority === "high")
   const hardDeadlines = deadlines.filter(d => d.isHard)
+  const sourceBackedCount = [
+    ...actionSteps.filter(s => s.sourceEvidence),
+    ...deadlines.filter(d => d.sourceEvidence),
+    ...risks.filter(r => r.sourceEvidence),
+  ].length
 
-  const confBadge = confidence === "high"
-    ? "bg-emerald-600/12 border-emerald-500/25 text-emerald-300"
-    : confidence === "medium"
-    ? "bg-amber-600/12 border-amber-500/25 text-amber-300"
-    : "bg-red-600/12 border-red-500/25 text-red-300"
+  const overallStatus: "ready" | "needs-completion" | "needs-review" =
+    missingDocs.length > 0 ? "needs-completion"
+    : urgentSteps.length > 0 ? "needs-review"
+    : "ready"
 
-  const confIcon = confidence === "high" ? <CheckCircle2 className="w-2.5 h-2.5" /> : <AlertTriangle className="w-2.5 h-2.5" />
-  const confLabel = confidence === "high" ? "High confidence" : confidence === "medium" ? "Medium confidence" : "Low confidence"
+  const [stepStatuses, setStepStatuses] = useState<Record<string, StepStatus>>(() => {
+    const init: Record<string, StepStatus> = {}
+    for (const s of actionSteps) {
+      init[s.id] = s.completed ? "complete" : "not-started"
+    }
+    return init
+  })
+
+  function cycleStatus(stepId: string) {
+    setStepStatuses(prev => ({
+      ...prev,
+      [stepId]: STEP_STATUS_CYCLE[prev[stepId] ?? "not-started"],
+    }))
+  }
 
   function makeChipId(prefix: string, id: string) { return `${prefix}-${id}` }
 
@@ -254,7 +282,7 @@ function IntelPanel({
           <div className="w-9 h-9 rounded-xl bg-violet-600/10 border border-violet-500/20 flex items-center justify-center shrink-0 mt-0.5">
             <FileText className="w-4 h-4 text-violet-400" />
           </div>
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap mb-0.5">
               <h1 className="text-white/90 text-sm font-semibold">{analysis.title}</h1>
               {analysis.documentType && (
@@ -263,6 +291,7 @@ function IntelPanel({
                 </span>
               )}
             </div>
+            <p className="text-white/22 text-[10px]">Based on the document — verify before acting</p>
           </div>
         </div>
 
@@ -271,7 +300,7 @@ function IntelPanel({
           <div className="rounded-xl border border-red-500/25 bg-red-500/[0.06] p-3.5 flex items-start gap-2.5">
             <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
             <div className="flex-1">
-              <p className="text-red-300 text-xs font-semibold mb-1">Critical issues found</p>
+              <p className="text-red-300 text-xs font-semibold mb-1">Issues found — review carefully</p>
               <ul className="flex flex-col gap-1">
                 {redFlags.map((f, i) => (
                   <li key={i} className="text-white/52 text-[11px] leading-relaxed">{f}</li>
@@ -281,7 +310,7 @@ function IntelPanel({
           </div>
         )}
 
-        {/* ── 1. Plain-English Summary ── */}
+        {/* ── A. Plain-English Summary ── */}
         <div className="rounded-xl border border-violet-500/15 bg-violet-600/[0.05] p-4">
           <SLabel icon={<FileText className="w-3.5 h-3.5" />}>Plain-English Summary</SLabel>
           <p className="text-white/72 text-sm leading-[1.7]">{analysis.summary}</p>
@@ -290,86 +319,56 @@ function IntelPanel({
           )}
         </div>
 
-        {/* ── 2. Confidence & Risk Status ── */}
-        <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
-          <SLabel icon={<AlertTriangle className="w-3.5 h-3.5 text-amber-400/60" />}>
-            Risk & Confidence
-          </SLabel>
-
-          {/* Confidence badge */}
-          <div className="flex items-center gap-2 mb-3 flex-wrap">
-            <div className={`h-6 px-2.5 rounded-lg border flex items-center gap-1.5 ${confBadge}`}>
-              {confIcon}
-              <span className="text-[11px] font-medium">{confLabel}</span>
+        {/* ── B. Action Plan Snapshot ── */}
+        <div className="rounded-xl border border-white/[0.08] bg-white/[0.015] p-4">
+          <SLabel icon={<ArrowRight className="w-3.5 h-3.5 text-violet-400/60" />}>Action Plan Snapshot</SLabel>
+          <div className="flex flex-wrap gap-1.5 mb-3">
+            <div className="h-6 px-2.5 rounded-lg border border-violet-500/22 bg-violet-500/[0.07] flex items-center gap-1.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-violet-400 shrink-0" />
+              <span className="text-violet-200/80 text-[10px] font-medium">{actionSteps.length} action{actionSteps.length !== 1 ? "s" : ""}</span>
             </div>
-            {riskScore !== null && (
-              <div className={`h-6 px-2.5 rounded-lg border flex items-center gap-1.5 ${
-                riskScore >= 70 ? "border-red-500/25 bg-red-500/[0.07] text-red-300" :
-                riskScore >= 40 ? "border-amber-500/20 bg-amber-500/[0.05] text-amber-300" :
-                "border-emerald-500/20 bg-emerald-500/[0.05] text-emerald-300"
-              }`}>
-                <span className="text-[11px] font-medium">Risk score: {riskScore}/100</span>
+            {urgentSteps.length > 0 && (
+              <div className="h-6 px-2.5 rounded-lg border border-red-500/25 bg-red-500/[0.07] flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
+                <span className="text-red-200/80 text-[10px] font-medium">{urgentSteps.length} urgent</span>
+              </div>
+            )}
+            {missingDocs.length > 0 && (
+              <div className="h-6 px-2.5 rounded-lg border border-amber-500/22 bg-amber-500/[0.06] flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
+                <span className="text-amber-200/80 text-[10px] font-medium">{missingDocs.length} missing</span>
+              </div>
+            )}
+            {deadlines.length > 0 && (
+              <div className="h-6 px-2.5 rounded-lg border border-sky-500/20 bg-sky-500/[0.05] flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-sky-400 shrink-0" />
+                <span className="text-sky-200/80 text-[10px] font-medium">{deadlines.length} deadline{deadlines.length !== 1 ? "s" : ""}</span>
+              </div>
+            )}
+            {sourceBackedCount > 0 && (
+              <div className="h-6 px-2.5 rounded-lg border border-white/[0.08] bg-white/[0.03] flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-white/30 shrink-0" />
+                <span className="text-white/45 text-[10px] font-medium">{sourceBackedCount} source-backed</span>
               </div>
             )}
           </div>
-
-          {/* Risk severity count row */}
-          {risks.length > 0 && (() => {
-            const crit = risks.filter(r => r.severity === "high").length
-            const med  = risks.filter(r => r.severity === "medium").length
-            const low  = risks.filter(r => r.severity === "low").length
-            return (
-              <div className="flex items-center gap-1.5 mb-3 flex-wrap">
-                {crit > 0 && (
-                  <div className="h-5 px-2 rounded-full bg-red-500/10 border border-red-500/22 flex items-center gap-1">
-                    <div className="w-1 h-1 rounded-full bg-red-400 shrink-0" />
-                    <span className="text-red-300 text-[9px] font-medium">{crit} critical</span>
-                  </div>
-                )}
-                {med > 0 && (
-                  <div className="h-5 px-2 rounded-full bg-amber-500/8 border border-amber-500/18 flex items-center gap-1">
-                    <div className="w-1 h-1 rounded-full bg-amber-400 shrink-0" />
-                    <span className="text-amber-300 text-[9px] font-medium">{med} high</span>
-                  </div>
-                )}
-                {low > 0 && (
-                  <div className="h-5 px-2 rounded-full bg-white/[0.05] border border-white/[0.10] flex items-center gap-1">
-                    <div className="w-1 h-1 rounded-full bg-white/30 shrink-0" />
-                    <span className="text-white/38 text-[9px] font-medium">{low} low</span>
-                  </div>
-                )}
-              </div>
-            )
-          })()}
-
-          <div className="mb-3" />
-          {risks.length > 0 && (
-            <div className="flex flex-col gap-1.5">
-              {risks.slice(0, 3).map((r) => {
-                const chipId = makeChipId("risk", r.id)
-                const st = RISK_SEVERITY_STYLES[r.severity] ?? RISK_SEVERITY_STYLES.low
-                return (
-                  <div key={r.id} className={`flex items-start gap-2.5 rounded-lg px-3 py-2.5 border ${st.border}`}>
-                    <div className={`w-1.5 h-1.5 rounded-full mt-[5px] shrink-0 ${st.dot}`} />
-                    <p className="text-white/58 text-xs leading-relaxed flex-1">{r.title}</p>
-                    {r.sourceEvidence && (
-                      <SourceChip
-                        id={chipId} evidence={r.sourceEvidence} label="source"
-                        active={activeChipId === chipId}
-                        onClick={() => onChipClick(chipId, r.sourceEvidence!)}
-                      />
-                    )}
-                  </div>
-                )
-              })}
-              {risks.length > 3 && (
-                <p className="text-white/20 text-[10px] pl-3">+{risks.length - 3} more risks below</p>
-              )}
-            </div>
-          )}
+          <div className={`h-7 px-3 rounded-lg border flex items-center gap-2 w-fit ${
+            overallStatus === "ready"
+              ? "border-emerald-500/25 bg-emerald-500/[0.06] text-emerald-300"
+              : overallStatus === "needs-completion"
+              ? "border-amber-500/25 bg-amber-500/[0.06] text-amber-300"
+              : "border-sky-500/20 bg-sky-500/[0.05] text-sky-300"
+          }`}>
+            {overallStatus === "ready"
+              ? <CheckCircle2 className="w-3 h-3 shrink-0" />
+              : <AlertTriangle className="w-3 h-3 shrink-0" />}
+            <span className="text-[10px] font-medium">
+              {overallStatus === "ready" ? "Ready to proceed" : overallStatus === "needs-completion" ? "Needs completion" : "Needs review"}
+            </span>
+          </div>
         </div>
 
-        {/* ── 3. Required Next Steps ── */}
+        {/* ── C. Step-by-Step Required Actions ── */}
         {actionSteps.length > 0 && (
           <div className="rounded-xl overflow-hidden border border-white/[0.09]" style={{
             background: "linear-gradient(140deg, rgba(109,40,217,0.08) 0%, rgba(12,12,15,0) 55%)"
@@ -379,34 +378,81 @@ function IntelPanel({
                 <div className="w-6 h-6 rounded-lg bg-violet-600/18 border border-violet-500/28 flex items-center justify-center shrink-0">
                   <ArrowRight className="w-3.5 h-3.5 text-violet-400" />
                 </div>
-                <p className="text-white/85 text-sm font-semibold flex-1">Required Next Steps</p>
+                <p className="text-white/85 text-sm font-semibold flex-1">Step-by-Step Required Actions</p>
                 {urgentSteps.length > 0 && (
                   <div className="h-5 px-2 rounded-full bg-red-500/10 border border-red-500/20 flex items-center">
                     <span className="text-red-300/90 text-[9px] font-medium">{urgentSteps.length} urgent</span>
                   </div>
                 )}
               </div>
+              <p className="text-white/22 text-[10px] mt-1.5 ml-8.5">Source-backed next steps · appears to require action · verify before acting</p>
             </div>
-            <div className="p-3 flex flex-col gap-1.5">
-              {actionSteps.slice(0, 5).map((step) => {
+            <div className="p-3 flex flex-col gap-2">
+              {actionSteps.map((step, idx) => {
                 const chipId = makeChipId("step", step.id)
                 const isUrgent = step.priority === "high"
+                const isImportant = step.priority === "medium"
+                const status = stepStatuses[step.id] ?? "not-started"
+                const statusUI = STEP_STATUS_UI[status]
+                const isComplete = status === "complete"
                 return (
-                  <div key={step.id} className={`flex items-start gap-3 rounded-lg px-3.5 py-3 border cursor-default transition-all ${
-                    isUrgent ? "border-white/[0.10] bg-white/[0.025]" : "border-white/[0.06]"
-                  }`}>
-                    <div className={`w-1.5 h-1.5 rounded-full mt-[5px] shrink-0 ${
-                      isUrgent ? "bg-red-400" : step.priority === "medium" ? "bg-amber-400/60" : "bg-white/20"
-                    }`} />
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-[12px] font-medium mb-0.5 ${isUrgent ? "text-white/85" : "text-white/48"}`}>
-                        {step.title}
-                      </p>
-                      {step.description && (
-                        <p className="text-white/25 text-[10px] leading-relaxed">{step.description}</p>
-                      )}
+                  <div key={step.id} className={`rounded-xl border px-4 py-3.5 transition-all ${
+                    isComplete
+                      ? "border-white/[0.05] bg-transparent opacity-55"
+                      : isUrgent
+                      ? "border-white/[0.12] bg-white/[0.03]"
+                      : "border-white/[0.07]"
+                  } ${activeChipId === chipId ? "ring-1 ring-violet-500/25 border-violet-500/22" : ""}`}>
+
+                    {/* Step header row */}
+                    <div className="flex items-start gap-3 mb-2.5">
+                      {/* Step number */}
+                      <div className={`w-6 h-6 rounded-lg border flex items-center justify-center shrink-0 text-[10px] font-bold ${
+                        isComplete ? "border-white/[0.08] text-white/22" : isUrgent ? "border-violet-500/30 bg-violet-600/12 text-violet-300" : "border-white/[0.10] text-white/35"
+                      }`}>
+                        {idx + 1}
+                      </div>
+
+                      {/* Title + badges */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
+                          <p className={`text-[12px] font-semibold leading-tight ${isComplete ? "line-through text-white/28" : isUrgent ? "text-white/90" : "text-white/65"}`}>
+                            {step.title}
+                          </p>
+                          {/* Priority badge */}
+                          {!isComplete && (
+                            <span className={`h-4 px-1.5 rounded text-[9px] font-medium shrink-0 ${
+                              isUrgent ? "bg-red-500/12 border border-red-500/25 text-red-300"
+                              : isImportant ? "bg-amber-500/10 border border-amber-500/20 text-amber-300"
+                              : "bg-white/[0.04] border border-white/[0.08] text-white/30"
+                            }`}>
+                              {isUrgent ? "Urgent" : isImportant ? "Important" : "Optional"}
+                            </span>
+                          )}
+                        </div>
+                        {/* Category / responsible party */}
+                        {step.category && (
+                          <p className="text-white/22 text-[9px] uppercase tracking-wide">{step.category}</p>
+                        )}
+                      </div>
+
+                      {/* Status dot — click to cycle */}
+                      <button
+                        onClick={() => cycleStatus(step.id)}
+                        title={`Status: ${statusUI.label} — click to change`}
+                        className={`w-5 h-5 rounded-full border shrink-0 mt-0.5 transition-all cursor-pointer hover:scale-110 ${statusUI.dot} ${statusUI.ring}`}
+                      />
                     </div>
-                    <div className="flex items-center gap-1.5 shrink-0 mt-0.5">
+
+                    {/* Instruction */}
+                    {step.description && (
+                      <p className={`text-[11px] leading-relaxed mb-2.5 pl-9 ${isComplete ? "text-white/20" : "text-white/50"}`}>
+                        {step.description}
+                      </p>
+                    )}
+
+                    {/* Footer row: source chip + status label */}
+                    <div className="flex items-center gap-2 pl-9">
                       {step.sourceEvidence && (
                         <SourceChip
                           id={chipId} evidence={step.sourceEvidence} label="source"
@@ -414,41 +460,44 @@ function IntelPanel({
                           onClick={() => onChipClick(chipId, step.sourceEvidence!)}
                         />
                       )}
+                      <span className={`text-[9px] ml-auto ${
+                        status === "complete" ? "text-emerald-400/60" : status === "in-progress" ? "text-amber-400/60" : "text-white/18"
+                      }`}>{statusUI.label}</span>
                     </div>
                   </div>
                 )
               })}
-              {actionSteps.length > 5 && (
-                <p className="text-white/18 text-[10px] pl-3">+{actionSteps.length - 5} more steps</p>
-              )}
             </div>
           </div>
         )}
 
-        {/* ── 4. Risks & Watchouts (full list) ── */}
-        {risks.length > 0 && (
-          <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4">
-            <SLabel icon={<AlertTriangle className="w-3.5 h-3.5 text-amber-400/60" />}>Risks & Watchouts</SLabel>
-            <div className="flex flex-col gap-2">
-              {risks.map((r) => {
-                const chipId = makeChipId("risk-full", r.id)
-                const st = RISK_SEVERITY_STYLES[r.severity] ?? RISK_SEVERITY_STYLES.low
+        {/* ── D. Missing Items / Information Needed ── */}
+        {missingDocs.length > 0 && (
+          <div className="rounded-xl border border-amber-500/15 bg-amber-600/[0.03] p-4">
+            <SLabel icon={<AlertCircle className="w-3.5 h-3.5 text-amber-400/60" />}
+              right={<span className="h-4 px-1.5 rounded bg-amber-500/8 border border-amber-500/18 text-amber-300/60 text-[9px]">verify before acting</span>}>
+              Missing Items / Information Needed
+            </SLabel>
+            <div className="flex flex-col gap-2.5">
+              {missingDocs.map((doc) => {
+                const chipId = makeChipId("missing", doc.id)
                 return (
-                  <div key={r.id} className={`flex items-start gap-2.5 rounded-lg px-3 py-3 border ${st.border}`}>
-                    <div className={`w-1.5 h-1.5 rounded-full mt-[5px] shrink-0 ${st.dot}`} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white/68 text-xs font-medium mb-0.5">{r.title}</p>
-                      {r.description && (
-                        <p className="text-white/35 text-[10px] leading-relaxed">{r.description}</p>
+                  <div key={doc.id} className="rounded-lg border border-amber-500/12 bg-amber-500/[0.025] px-3.5 py-3">
+                    <div className="flex items-start gap-2.5 mb-1.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-amber-400/70 mt-[5px] shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white/72 text-xs font-medium mb-0.5">{doc.name}</p>
+                        {doc.description && (
+                          <p className="text-white/35 text-[10px] leading-relaxed">{doc.description}</p>
+                        )}
+                      </div>
+                      {doc.sourceEvidence && (
+                        <SourceChip id={chipId} evidence={doc.sourceEvidence} label="source"
+                          active={activeChipId === chipId}
+                          onClick={() => onChipClick(chipId, doc.sourceEvidence!)} />
                       )}
                     </div>
-                    {r.sourceEvidence && (
-                      <SourceChip
-                        id={chipId} evidence={r.sourceEvidence} label="source"
-                        active={activeChipId === chipId}
-                        onClick={() => onChipClick(chipId, r.sourceEvidence!)}
-                      />
-                    )}
+                    <p className="text-amber-300/40 text-[9px] pl-4">appears missing · not found in the provided document</p>
                   </div>
                 )
               })}
@@ -456,7 +505,7 @@ function IntelPanel({
           </div>
         )}
 
-        {/* ── 5. Key Dates ── */}
+        {/* ── E. Deadlines & Time-Sensitive Items ── */}
         {deadlines.length > 0 && (
           <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4">
             <SLabel icon={<Calendar className="w-3.5 h-3.5 text-sky-400/60" />}
@@ -465,31 +514,63 @@ function IntelPanel({
                   {hardDeadlines.length} hard deadline{hardDeadlines.length !== 1 ? "s" : ""}
                 </span>
               ) : null}>
-              Key Dates
+              Deadlines & Time-Sensitive Items
             </SLabel>
-            <div className="flex flex-col gap-2.5">
+            <div className="flex flex-col gap-2">
               {deadlines.map((d) => {
                 const chipId = makeChipId("dl", d.id)
                 return (
-                  <div key={d.id} className={`flex items-start justify-between gap-3 rounded-lg px-3 py-2.5 ${
-                    d.isHard ? "border border-amber-500/14 bg-amber-500/[0.03]" : ""
+                  <div key={d.id} className={`rounded-lg px-3.5 py-3 border ${
+                    d.isHard ? "border-amber-500/18 bg-amber-500/[0.04]" : "border-white/[0.07]"
                   }`}>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white/28 text-[10px] mb-0.5">{d.title}</p>
-                      <p className={`text-xs font-medium ${d.isHard ? "text-amber-300" : "text-white/65"}`}>
-                        {d.date}
-                        {d.isHard && <span className="ml-1.5 text-amber-400/60 font-normal text-[9px]">⚠ Hard deadline</span>}
-                      </p>
-                      {d.description && (
-                        <p className="text-white/22 text-[10px] leading-relaxed mt-0.5">{d.description}</p>
+                    <div className="flex items-start gap-2.5 mb-1">
+                      <div className={`w-1.5 h-1.5 rounded-full mt-[5px] shrink-0 ${d.isHard ? "bg-amber-400" : "bg-sky-400/50"}`} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                          <p className={`text-[12px] font-semibold ${d.isHard ? "text-amber-300" : "text-white/75"}`}>
+                            {d.date}
+                            {d.isHard && <span className="ml-1.5 font-normal text-[9px] text-amber-400/70">Hard deadline</span>}
+                          </p>
+                        </div>
+                        <p className="text-white/45 text-[10px] font-medium mb-0.5">{d.title}</p>
+                        {d.description && (
+                          <p className="text-white/25 text-[10px] leading-relaxed">{d.description}</p>
+                        )}
+                      </div>
+                      {d.sourceEvidence && (
+                        <SourceChip id={chipId} evidence={d.sourceEvidence} label="source"
+                          active={activeChipId === chipId}
+                          onClick={() => onChipClick(chipId, d.sourceEvidence!)} />
                       )}
                     </div>
-                    {d.sourceEvidence && (
-                      <SourceChip
-                        id={chipId} evidence={d.sourceEvidence} label="source"
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ── F. Key Risks / Watchouts ── */}
+        {risks.length > 0 && (
+          <div className="rounded-xl border border-white/[0.07] bg-white/[0.015] p-4">
+            <SLabel icon={<AlertTriangle className="w-3.5 h-3.5 text-amber-400/55" />}>Key Risks / Watchouts</SLabel>
+            <div className="flex flex-col gap-1.5">
+              {risks.map((r) => {
+                const chipId = makeChipId("risk", r.id)
+                const st = RISK_SEVERITY_STYLES[r.severity] ?? RISK_SEVERITY_STYLES.low
+                return (
+                  <div key={r.id} className={`flex items-start gap-2.5 rounded-lg px-3 py-2.5 border ${st.border}`}>
+                    <div className={`w-1.5 h-1.5 rounded-full mt-[5px] shrink-0 ${st.dot}`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white/60 text-xs font-medium mb-0.5">{r.title}</p>
+                      {r.description && (
+                        <p className="text-white/30 text-[10px] leading-relaxed">{r.description}</p>
+                      )}
+                    </div>
+                    {r.sourceEvidence && (
+                      <SourceChip id={chipId} evidence={r.sourceEvidence} label="source"
                         active={activeChipId === chipId}
-                        onClick={() => onChipClick(chipId, d.sourceEvidence!)}
-                      />
+                        onClick={() => onChipClick(chipId, r.sourceEvidence!)} />
                     )}
                   </div>
                 )
@@ -498,61 +579,23 @@ function IntelPanel({
           </div>
         )}
 
-        {/* ── 6. Key Terms ── */}
-        {keyTerms.length > 0 && (
-          <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4">
-            <SLabel>Key Terms</SLabel>
-            <div className="flex flex-col gap-2.5">
-              {keyTerms.slice(0, isPro ? keyTerms.length : 3).map((term) => (
-                <div key={term.id} className={`rounded-lg px-3 py-3 border ${
-                  term.severity === "high" ? "border-red-500/15 bg-red-500/[0.03]" :
-                  term.severity === "medium" ? "border-amber-500/12 bg-amber-500/[0.02]" :
-                  "border-white/[0.05]"
-                }`}>
-                  <div className="flex items-start gap-2 mb-1">
-                    <div className={`w-1.5 h-1.5 rounded-full mt-[4px] shrink-0 ${
-                      term.severity === "high" ? "bg-red-400" : term.severity === "medium" ? "bg-amber-400" : "bg-white/22"
-                    }`} />
-                    <p className="text-white/72 text-xs font-medium">{term.term}</p>
-                    {term.isNegotiable && (
-                      <span className="h-4 px-1.5 rounded bg-sky-500/8 border border-sky-500/18 text-sky-300/70 text-[9px] shrink-0">
-                        Negotiable
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-white/35 text-[10px] leading-relaxed pl-3.5">{term.explanation}</p>
-                  {term.watchOut && (
-                    <p className="text-amber-300/50 text-[10px] leading-relaxed pl-3.5 mt-1">⚠ {term.watchOut}</p>
-                  )}
-                </div>
-              ))}
-              {!isPro && keyTerms.length > 3 && (
-                <div className="rounded-lg border border-white/[0.05] bg-white/[0.01] px-3 py-2.5 flex items-center gap-2">
-                  <Zap className="w-3 h-3 text-amber-400 shrink-0" />
-                  <p className="text-white/30 text-[10px]">{keyTerms.length - 3} more terms — upgrade to Pro to unlock</p>
-                  <a href="/upgrade" className="text-violet-400/70 text-[10px] font-medium hover:text-violet-300 ml-auto shrink-0">Upgrade</a>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* ── 7. Source Traceability ── */}
+        {/* ── G. Source Traceability ── */}
         {(risks.some(r => r.sourceEvidence) || actionSteps.some(s => s.sourceEvidence) || deadlines.some(d => d.sourceEvidence)) && (
           <div className="rounded-xl border border-violet-500/10 bg-violet-600/[0.03] p-4">
             <SLabel icon={<FileWarning className="w-3.5 h-3.5 text-violet-400/55" />}>Source Traceability</SLabel>
             <p className="text-white/28 text-[11px] leading-relaxed mb-3">
-              Every finding links to the exact document section it came from. Click a chip to jump the document viewer.
+              Every finding links to the exact document section it came from. Click a source chip to jump the document viewer.
             </p>
             <div className="flex flex-col gap-1.5">
               {[
-                ...risks.filter(r => r.sourceEvidence).map(r => ({ label: r.title, evidence: r.sourceEvidence!, id: `trace-risk-${r.id}` })),
-                ...actionSteps.filter(s => s.sourceEvidence).slice(0, 3).map(s => ({ label: s.title, evidence: s.sourceEvidence!, id: `trace-step-${s.id}` })),
+                ...actionSteps.filter(s => s.sourceEvidence).map(s => ({ label: s.title, evidence: s.sourceEvidence!, id: `trace-step-${s.id}` })),
                 ...deadlines.filter(d => d.sourceEvidence).map(d => ({ label: d.title, evidence: d.sourceEvidence!, id: `trace-dl-${d.id}` })),
-              ].slice(0, 8).map((item) => (
-                <div key={item.id} className={`flex items-center gap-2.5 px-3 py-2 rounded-lg border cursor-pointer hover:bg-violet-500/[0.04] transition-all ${
-                  activeChipId === item.id ? "border-violet-500/28 bg-violet-500/[0.06]" : "border-white/[0.05] bg-white/[0.01]"
-                }`}
+                ...risks.filter(r => r.sourceEvidence).map(r => ({ label: r.title, evidence: r.sourceEvidence!, id: `trace-risk-${r.id}` })),
+              ].slice(0, 10).map((item) => (
+                <div key={item.id}
+                  className={`flex items-center gap-2.5 px-3 py-2 rounded-lg border cursor-pointer hover:bg-violet-500/[0.04] transition-all ${
+                    activeChipId === item.id ? "border-violet-500/28 bg-violet-500/[0.06]" : "border-white/[0.05] bg-white/[0.01]"
+                  }`}
                   onClick={() => onChipClick(item.id, item.evidence)}
                 >
                   <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${activeChipId === item.id ? "bg-violet-400" : "bg-white/18"}`} />
@@ -564,7 +607,44 @@ function IntelPanel({
           </div>
         )}
 
-        {/* ── Follow-up tools ── */}
+        {/* Key Terms (secondary — after traceability) */}
+        {keyTerms.length > 0 && (
+          <div className="rounded-xl border border-white/[0.06] bg-white/[0.01] p-4">
+            <SLabel>Key Terms</SLabel>
+            <div className="flex flex-col gap-2">
+              {keyTerms.slice(0, isPro ? keyTerms.length : 3).map((term) => (
+                <div key={term.id} className={`rounded-lg px-3 py-2.5 border ${
+                  term.severity === "high" ? "border-red-500/15 bg-red-500/[0.03]" :
+                  term.severity === "medium" ? "border-amber-500/12 bg-amber-500/[0.02]" :
+                  "border-white/[0.05]"
+                }`}>
+                  <div className="flex items-start gap-2 mb-1">
+                    <div className={`w-1.5 h-1.5 rounded-full mt-[4px] shrink-0 ${
+                      term.severity === "high" ? "bg-red-400" : term.severity === "medium" ? "bg-amber-400" : "bg-white/22"
+                    }`} />
+                    <p className="text-white/65 text-xs font-medium flex-1">{term.term}</p>
+                    {term.isNegotiable && (
+                      <span className="h-4 px-1.5 rounded bg-sky-500/8 border border-sky-500/18 text-sky-300/70 text-[9px] shrink-0">Negotiable</span>
+                    )}
+                  </div>
+                  <p className="text-white/32 text-[10px] leading-relaxed pl-3.5">{term.explanation}</p>
+                  {term.watchOut && (
+                    <p className="text-amber-300/45 text-[10px] leading-relaxed pl-3.5 mt-1">⚠ {term.watchOut}</p>
+                  )}
+                </div>
+              ))}
+              {!isPro && keyTerms.length > 3 && (
+                <div className="rounded-lg border border-white/[0.05] bg-white/[0.01] px-3 py-2.5 flex items-center gap-2">
+                  <Zap className="w-3 h-3 text-amber-400 shrink-0" />
+                  <p className="text-white/28 text-[10px]">{keyTerms.length - 3} more terms — upgrade to Pro to unlock</p>
+                  <a href="/upgrade" className="text-violet-400/70 text-[10px] font-medium hover:text-violet-300 ml-auto shrink-0">Upgrade</a>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Follow-up tools */}
         <div>
           <SLabel>Recommended Follow-up Tools</SLabel>
           <div className="grid grid-cols-2 gap-2">
@@ -666,13 +746,56 @@ function LowConfPanel({ analysis, onChipClick, activeChipId, sections }: {
           </div>
         </div>
 
-        {/* Partial analysis data */}
+        {/* Partial summary */}
         {analysis.summary && (
           <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4">
-            <SLabel>Partial Explanation</SLabel>
+            <SLabel>Partial Plain-English Summary</SLabel>
             <p className="text-white/50 text-sm leading-relaxed">{analysis.summary}</p>
+            <p className="text-amber-300/40 text-[10px] mt-2">~ Based on partial text extraction — may not reflect the full document</p>
           </div>
         )}
+
+        {/* Partial action steps */}
+        {analysis.actionSteps.length > 0 && (
+          <div className="rounded-xl overflow-hidden border border-white/[0.08]">
+            <div className="px-4 pt-4 pb-3 border-b border-white/[0.06]">
+              <div className="flex items-center gap-2.5">
+                <div className="w-6 h-6 rounded-lg bg-amber-600/12 border border-amber-500/22 flex items-center justify-center shrink-0">
+                  <ArrowRight className="w-3.5 h-3.5 text-amber-400" />
+                </div>
+                <p className="text-white/75 text-sm font-semibold flex-1">Partial Required Actions</p>
+                <span className="h-4 px-1.5 rounded bg-amber-500/8 border border-amber-500/18 text-amber-300/60 text-[9px]">verify manually</span>
+              </div>
+            </div>
+            <div className="p-3 flex flex-col gap-1.5">
+              {analysis.actionSteps.map((step, idx) => {
+                const chipId = `lowconf-step-${step.id}`
+                return (
+                  <div key={step.id} className="flex items-start gap-3 rounded-lg px-3.5 py-3 border border-white/[0.06]">
+                    <div className="w-5 h-5 rounded border border-white/[0.08] flex items-center justify-center text-[9px] font-bold text-white/25 shrink-0">
+                      {idx + 1}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white/55 text-[11px] font-medium mb-0.5">
+                        <span className="text-amber-300/60 font-mono mr-1">~</span>{step.title}
+                      </p>
+                      {step.description && (
+                        <p className="text-white/28 text-[10px] leading-relaxed">{step.description}</p>
+                      )}
+                    </div>
+                    {step.sourceEvidence && (
+                      <SourceChip id={chipId} evidence={step.sourceEvidence} label="source" uncertain
+                        active={activeChipId === chipId}
+                        onClick={() => onChipClick(chipId, step.sourceEvidence!)} />
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Partial risks */}
         {analysis.risks.length > 0 && (
           <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4">
             <SLabel right={<span className="h-4 px-1.5 rounded bg-amber-500/8 border border-amber-500/18 text-amber-300/60 text-[9px]">verify manually</span>}>Partial Risks</SLabel>
@@ -692,6 +815,23 @@ function LowConfPanel({ analysis, onChipClick, activeChipId, sections }: {
             </div>
           </div>
         )}
+
+        {/* Recommended next steps */}
+        <div className="rounded-xl border border-white/[0.07] bg-white/[0.015] p-4">
+          <SLabel>Recommended Next Steps</SLabel>
+          <div className="flex flex-col gap-1.5">
+            {[
+              "Upload a text-based PDF for a full, high-confidence analysis",
+              "Use Ask This Document to get targeted answers on specific sections",
+              "Consider professional review if this is a high-value or legal document",
+            ].map((s, i) => (
+              <div key={i} className="flex items-start gap-2 px-2 py-1.5">
+                <div className="w-1 h-1 rounded-full bg-white/20 mt-[6px] shrink-0" />
+                <p className="text-white/38 text-[11px] leading-relaxed">{s}</p>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   )
