@@ -1,0 +1,118 @@
+Start the Redact PDF Export production-gap planning pass.
+
+Do not implement yet.
+Do not redesign the Redact UI.
+Do not change the existing redaction workflow.
+Do not touch unrelated TypeScript debt yet.
+Do not add new tools.
+Do not change Stripe/payment behavior.
+
+Goal:
+Plan the correct production implementation for true redacted PDF export.
+
+Current known gap:
+Redact Sensitive Info currently exports .txt even when the input was a PDF. For production, PDF uploads must export a real redacted PDF copy with black redaction blocks embedded into the PDF layout.
+
+Important:
+This is not just visual preview. The exported PDF must actually remove or permanently cover the sensitive information so it cannot be copied, searched, selected, or recovered from the exported file.
+
+Planning requirements:
+
+1. Inspect current Redact implementation.
+Review:
+- Redact.tsx
+- PII detection API
+- current export function
+- uploaded file handling
+- text extraction flow
+- whether original PDF bytes are preserved
+- whether coordinates/page positions are available
+- current redaction item data structure
+
+2. Determine the current data gap.
+
+Answer:
+- Do we currently have original PDF file bytes available at export time?
+- Do we currently have page coordinates for detected sensitive items?
+- Are redaction items character-index based only?
+- Can current detection results map back to PDF coordinates?
+- Is the current paper preview coordinate-accurate or only text-position simulated?
+
+3. Recommend safest implementation path.
+
+Evaluate options:
+
+Option A — pdf-lib overlay redaction
+- load original PDF
+- draw black rectangles over detected coordinates
+- export new PDF
+- limitation: text may remain underneath unless page content is flattened/rasterized or content is actually removed
+
+Option B — rasterize pages then draw redaction bars
+- render each PDF page to image
+- draw black bars over redaction areas
+- create a new PDF from the redacted page images
+- stronger privacy because underlying text is not recoverable
+- larger file size
+- best for production privacy if exact text removal is difficult
+
+Option C — server-side PDF redaction service/library
+- use a PDF processing library or service that can truly remove/redact content
+- stronger but may add dependency/cost
+
+4. Recommended production standard.
+
+PlainPath should prefer privacy over perfect text preservation.
+
+Recommended direction:
+- if true content-level PDF redaction is not reliable, use rasterized-page export for redacted PDFs
+- exported redacted PDF should not contain selectable original sensitive text
+- black bars should be embedded into the final page image/PDF
+- original document remains unchanged
+
+5. Define required backend/API changes.
+
+Plan:
+- endpoint name
+- input payload
+- output file type
+- file naming convention
+- storage behavior
+- whether export is generated on demand
+- whether redacted PDF is stored or immediately downloaded
+- limits for page count/file size
+
+6. Define required frontend changes.
+
+Plan:
+- export button behavior
+- progress/loading state
+- success/failure state
+- file type handling
+- warning if true PDF export is unavailable for a given file
+- fallback to .txt only for pasted text or plain text inputs
+
+7. Security/privacy requirements.
+
+Confirm:
+- original uploaded PDF is not modified
+- redacted PDF is generated as a separate copy
+- exported PDF cannot reveal redacted text through copy/search/select
+- temporary files are cleaned up
+- no real demo data is used
+- errors do not leak sensitive values
+
+8. Output required.
+
+Return a clear implementation plan with:
+
+A. Current architecture findings  
+B. Data gaps  
+C. Recommended implementation approach  
+D. Backend changes needed  
+E. Frontend changes needed  
+F. Privacy/security notes  
+G. Risks/limitations  
+H. Step-by-step implementation order  
+
+Do not write code until this plan is reviewed and approved.
