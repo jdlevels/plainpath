@@ -16,7 +16,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import {
-  useState, useEffect, useRef, useCallback, useMemo,
+  useState, useEffect, useRef, useCallback, useMemo, memo,
 } from "react"
 import { useLocation } from "wouter"
 import {
@@ -263,7 +263,7 @@ interface AnnotatedDocumentProps {
   fileName: string
 }
 
-function AnnotatedDocument({
+const AnnotatedDocument = memo(function AnnotatedDocument({
   text, spans, selected, activeId, viewMode, onActivate, spanRefs, fileName,
 }: AnnotatedDocumentProps) {
   const segments = useMemo(() => buildSegments(text, spans), [text, spans])
@@ -363,7 +363,7 @@ function AnnotatedDocument({
       </div>
     </div>
   )
-}
+})
 
 // ─── Empty State ──────────────────────────────────────────────────────────────
 
@@ -1078,7 +1078,7 @@ export function Workspace({ text, fileName, spans, onReset, onExport, uploadedFi
 
   // ── Document side ───────────────────────────────────────────────────────────
 
-  const docPanel = (
+  const docPanel = useMemo(() => (
     <div ref={docScrollRef} className="overflow-y-auto h-full bg-[#111115] p-6">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2 text-xs text-white/35">
@@ -1110,7 +1110,7 @@ export function Workspace({ text, fileName, spans, onReset, onExport, uploadedFi
         <p className="text-center text-xs text-violet-400/50 mt-4">Redaction preview — black bars replace {selectedCount} selected items in the export</p>
       )}
     </div>
-  )
+  ), [text, spans, selected, selectedCount, activeId, viewMode, activate, fileName])
 
   return (
     <div className="min-h-screen bg-[#0c0c0f] text-white flex flex-col">
