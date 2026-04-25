@@ -1,0 +1,184 @@
+The Document Builder canvas direction is approved structurally, but please do one refinement pass before implementation.
+
+Do not implement yet.
+Stay in canvas/design mode for Build a Contract / Document Builder only.
+
+The layout direction is correct:
+- left side live document preview / paper surface
+- right side builder controls, questions, clause controls, AI suggestions, and export actions
+- premium dark PlainPath UI
+- split-screen creation workflow
+- mobile Builder / Preview tabs
+
+This is not a scan tool, so do not force the exact scan-tool intelligence panel pattern.
+
+Refinement requirements:
+
+1. Keep Document Builder scoped to PlainPath’s core purpose.
+
+Document Builder should focus on:
+- contracts
+- agreements
+- notices
+- simple business/legal documents
+- structured document drafting support
+- exportable PDF/DOCX documents
+
+Do not let it become:
+- SOP builder
+- manual builder
+- policy manual generator
+- general long-form writing tool
+- generic AI document writer
+
+2. Rename or clarify “Custom Document.”
+
+The current “Custom Document” card is too broad.
+
+Use one of these safer labels:
+- Custom Agreement
+- Custom Legal/Business Document
+- Other Agreement
+- Other Structured Document
+
+Add small helper text:
+“Use for structured agreements, notices, or business documents. Not for SOPs or manuals.”
+
+3. Add legal-safe drafting language.
+
+Use careful wording:
+- document drafting support
+- suggested clause language
+- review before use
+- not legal advice
+- consider professional review for high-risk documents
+
+Avoid:
+- legally guaranteed
+- attorney-approved
+- court-ready
+- replaces a lawyer
+- guaranteed enforceable
+
+4. Preserve the split-screen creation layout.
+
+Desktop:
+- Left panel: live document preview, about 55–60%
+- Right panel: builder controls, about 40–45%
+- Both panels should scroll independently
+- The document preview should look like a real page/paper surface
+
+Mobile:
+- Builder tab first
+- Preview tab second
+- Builder tab should control the document
+- Preview tab should show the live paper preview
+
+5. Refine the Empty / Template Selection state.
+
+Keep the template grid, but make the template choices clearly PlainPath-relevant:
+
+Recommended templates:
+- Freelance Service Agreement
+- Non-Disclosure Agreement
+- Service Agreement
+- Lease Agreement
+- Employment Agreement
+- Custom Agreement / Other Structured Document
+
+Keep recent drafts below.
+
+Add a clear disclaimer:
+“PlainPath helps draft structured documents. Review before use. Not legal advice.”
+
+6. Refine the Builder Workspace state.
+
+Right panel should show:
+- progress stepper
+- current section/question group
+- required fields
+- optional fields
+- clause preview/helper text
+- Back / Next buttons
+- visible Save button
+- unsaved-change indicator
+
+Left paper preview should update live as fields are completed.
+
+7. Refine Clause Active / Editing state.
+
+When editing a clause:
+- highlight the matching clause on the paper preview
+- right panel shows editable fields for that clause
+- include a clear “Update document” button
+- show whether the clause is required or optional
+- allow the user to skip optional clauses where appropriate
+
+8. Refine AI Suggestion state.
+
+AI suggestion should feel like drafting assistance, not legal authority.
+
+Use:
+- “PlainPath suggests language for review”
+- “Accept suggestion”
+- “Edit first”
+- “Redo”
+- “Skip”
+
+Avoid:
+- “best legal clause”
+- “approved clause”
+- “guaranteed protection”
+
+The suggested clause should highlight in the document preview before acceptance.
+
+9. Refine Review & Export state.
+
+This should show:
+- final document preview on the left
+- completion checklist on the right
+- missing signature warning if signatures are not complete
+- Save button
+- Download PDF
+- Download DOCX
+- Export / download options clearly separated from Save
+
+If Dropbox Sign / e-signature is shown:
+- mark it as optional/future or disabled unless it is fully implemented
+- do not make it look active if the backend is not ready
+
+10. Save / unsaved-change behavior.
+
+Because this is a creation/editing tool:
+- visible Save button required
+- unsaved-change state required
+- Save should be distinct from Export
+- export should not replace saving progress
+
+11. Error state refinement.
+
+Message:
+“Document could not be generated.”
+
+Actions:
+- Try again
+- Save draft
+- Use another template
+- Ask PlainPath
+
+12. Keep fictional demo data only.
+
+No real company names, real people, real addresses, real account numbers, or real legal documents.
+
+13. Preserve all 8 approved states:
+
+- Empty / Template Selection
+- Builder Workspace
+- Clause Active / Editing
+- AI Suggestion
+- Review & Export
+- Error State
+- Mobile Builder tab
+- Mobile Preview tab
+
+After this refinement, show the updated canvas states again before implementation.
