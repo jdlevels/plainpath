@@ -2526,31 +2526,43 @@ router.post("/redact-pdf", upload.single("file"), async (req, res) => {
   const PAD_Y = 4; // vertical padding around each box in pixels
 
   try {
-    const file = req.file;
-    if (!file) return res.status(400).json({ message: "PDF file required." });
+    // ── stage: auth ──────────────────────────────────────────────────────────
+    console.log(`[redact-pdf] stage=auth userId=${userId}`);
 
+    const file = req.file;
+    if (!file) return res.status(400).json({ error: "FILE_MISSING", message: "PDF file required." });
+
+    // ── stage: parse ─────────────────────────────────────────────────────────
     const mime = file.mimetype;
     const ext = (file.originalname ?? "").split(".").pop()?.toLowerCase() ?? "";
     if (mime !== "application/pdf" && ext !== "pdf") {
-      return res.status(400).json({ message: "Only PDF files are supported for PDF redaction." });
+      return res.status(400).json({ error: "FILE_MISSING", message: "Only PDF files are supported for PDF redaction." });
     }
 
     if (file.buffer.length > MAX_BYTES) {
-      return res.status(413).json({ message: `File too large. Maximum size for PDF redaction is ${MAX_BYTES / 1024 / 1024} MB.` });
+      return res.status(413).json({ error: "FILE_TOO_LARGE", message: `File too large. Maximum size for PDF redaction is ${MAX_BYTES / 1024 / 1024} MB.` });
     }
+
+    console.log(`[redact-pdf] stage=parse fileSize=${file.buffer.length}`);
 
     let redactValues: string[] = [];
     try {
       const raw = req.body?.redactValues;
       if (raw) redactValues = JSON.parse(raw);
     } catch {
-      return res.status(400).json({ message: "Invalid redactValues — expected a JSON array of strings." });
+      return res.status(400).json({ error: "REDACT_VALUES_EMPTY", message: "Invalid redactValues — expected a JSON array of strings." });
     }
 
     redactValues = [...new Set(
       redactValues.map((v: unknown) => (typeof v === "string" ? v.trim() : ""))
         .filter((v: string) => v.length >= 2)
     )].slice(0, MAX_VALUES);
+
+    if (redactValues.length === 0) {
+      return res.status(400).json({ error: "REDACT_VALUES_EMPTY", message: "No redaction values provided." });
+    }
+
+    console.log(`[redact-pdf] stage=parse redactValuesCount=${redactValues.length}`);
 
     const pdfBuffer = file.buffer;
 
@@ -2671,21 +2683,31 @@ router.post("/redact-pdf", upload.single("file"), async (req, res) => {
 
     const matchedCount = matchedValueSet.size;
     const missedCount = redactValues.length - matchedCount;
+    console.log(`[redact-pdf] stage=match pageCount=${totalPages} textItems=${allItems.length} matched=${matchedCount} missed=${missedCount}`);
 
     // If no text was found at all (e.g. scanned/image-only PDF), still rasterize
     // so the output is always image-only (no text layer recoverable).
 
     // ── Step 4+5: Rasterize pages with pdfjs-dist + @napi-rs/canvas, then draw bars ─
+    console.log(`[redact-pdf] stage=render-start pages=${totalPages}`);
     // Pure-JS pipeline — no system binaries required (pdftoppm not available in
     // the deployed container). pdfjs-dist renders each page into an @napi-rs/canvas
     // surface; we then draw opaque black rectangles over each matched text box.
 
     const { createCanvas } = await import("@napi-rs/canvas");
+    const { pathToFileURL } = await import("node:url");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const pdfjsLib: any = await import("pdfjs-dist/build/pdf.mjs");
+    // Use the legacy build — the standard browser build requires DOMMatrix and
+    // other Web APIs that are not available in the Node.js server environment.
+    const pdfjsLib: any = await import("pdfjs-dist/legacy/build/pdf.mjs");
 
-    // Disable web worker — not available in Node.js server context
-    pdfjsLib.GlobalWorkerOptions.workerSrc = "";
+    // pdfjs-dist v5 requires a non-empty workerSrc to set up its inline worker.
+    // We resolve the worker file via require.resolve (injected by the esbuild
+    // banner) so the path is correct both locally (pnpm symlink) and in prod.
+    const workerAbsPath = (globalThis as any).require.resolve(
+      "pdfjs-dist/legacy/build/pdf.worker.mjs"
+    );
+    pdfjsLib.GlobalWorkerOptions.workerSrc = pathToFileURL(workerAbsPath).href;
 
     // CanvasFactory adapter: pdfjs-dist uses this to allocate canvases internally
     const nodeCanvasFactory = {
@@ -2775,8 +2797,11 @@ router.post("/redact-pdf", upload.single("file"), async (req, res) => {
       }
     }
 
+    console.log(`[redact-pdf] stage=render-done pagesRendered=${redactedPngBuffers.length}`);
+
     // ── Step 6: Assemble final PDF from redacted page images ──────────────────
     // Each page contains only the rasterized image — no original text streams.
+    console.log(`[redact-pdf] stage=assemble pages=${redactedPngBuffers.length}`);
     const outDoc = await PDFDocument.create();
 
     for (let i = 0; i < redactedPngBuffers.length; i++) {
@@ -2790,6 +2815,7 @@ router.post("/redact-pdf", upload.single("file"), async (req, res) => {
 
     // ── Step 7: Return redacted PDF ──────────────────────────────────────────
     const baseName = (file.originalname ?? "document").replace(/\.[^.]+$/, "").replace(/[^\w\-]/g, "_");
+    console.log(`[redact-pdf] stage=response-sent sizeBytes=${outBytes.length} matched=${matchedCount} missed=${missedCount}`);
     res.set("Content-Type", "application/pdf");
     res.set("Content-Disposition", `attachment; filename="${baseName}_redacted.pdf"`);
     res.set("X-Redact-Matched", String(matchedCount));
@@ -2801,10 +2827,10 @@ router.post("/redact-pdf", upload.single("file"), async (req, res) => {
     console.error("[documents/redact-pdf]", msg);
 
     // Structured error codes — safe to surface to the client
-    if (msg.includes("ENOENT") || msg.includes("rasteriz") || msg.includes("render")) {
+    if (msg.includes("DOMMatrix") || msg.includes("legacy") || msg.includes("ENOENT") || msg.includes("rasteriz") || msg.includes("render")) {
       return res.status(500).json({
         error: "redaction_failed",
-        code: "RASTERIZER_FAILED",
+        code: "PDF_RENDER_FAILED",
         message: "PDF rendering failed. Please try again or use a different PDF.",
       });
     }
