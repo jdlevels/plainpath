@@ -74,6 +74,12 @@ function SourceChip({
 
 // ─── Document Viewer ─────────────────────────────────────────────────────────
 
+const TRUST_TEXT_SIZES = [
+  { label: "A",   body: "text-[11px]", title: "text-xs"     },
+  { label: "A+",  body: "text-xs",     title: "text-[13px]" },
+  { label: "A++", body: "text-sm",     title: "text-[14px]" },
+] as const
+
 function DocViewer({
   analysis, sections, activeChipId, activeEvidence, highlightSectionId,
   onDismiss, sectionRefs,
@@ -92,6 +98,9 @@ function DocViewer({
 
   const trustScore = 100 - analysis.riskScore
   const tsl = trustScoreLabel(trustScore)
+
+  const [sizeIdx, setSizeIdx] = useState<0 | 1 | 2>(0)
+  const textSize = TRUST_TEXT_SIZES[sizeIdx]
 
   return (
     <div className="w-[58%] border-r border-white/[0.06] flex flex-col bg-[#0d0d10] shrink-0 overflow-hidden">
@@ -112,14 +121,25 @@ function DocViewer({
       {/* File toolbar */}
       <div className="h-9 border-b border-white/[0.06] flex items-center px-4 gap-2.5 shrink-0">
         <FileText className={`w-3.5 h-3.5 shrink-0 ${isLowConf ? "text-amber-400/50" : "text-violet-400/60"}`} />
-        <span className="text-white/45 text-xs flex-1 truncate">{analysis.title ?? displayName}</span>
+        <span className="text-white/58 text-xs flex-1 truncate">{analysis.title ?? displayName}</span>
         {pageCount > 0 && (
-          <span className="text-white/18 text-xs shrink-0">{pageCount} sections</span>
+          <span className="text-white/32 text-xs shrink-0">{pageCount} sections</span>
         )}
         <div className="w-px h-4 bg-white/[0.06] mx-1" />
         <div className="flex items-center gap-0.5">
-          {["Fit", "75%", "100%"].map((z, i) => (
-            <button key={i} className={`h-5 px-1.5 rounded text-[9px] font-medium transition-colors ${i === 1 ? "bg-white/[0.07] text-white/55" : "text-white/22 hover:text-white/45"}`}>{z}</button>
+          {TRUST_TEXT_SIZES.map((s, i) => (
+            <button
+              key={i}
+              onClick={() => setSizeIdx(i as 0 | 1 | 2)}
+              title={`Text size: ${s.label}`}
+              className={`h-5 px-1.5 rounded text-[9px] font-medium transition-colors ${
+                i === sizeIdx
+                  ? "bg-white/[0.09] text-white/70"
+                  : "text-white/28 hover:text-white/55 hover:bg-white/[0.05]"
+              }`}
+            >
+              {s.label}
+            </button>
           ))}
         </div>
       </div>
@@ -176,7 +196,7 @@ function DocViewer({
                     </div>
                   )}
                 </div>
-                <p className={`text-[11px] leading-relaxed whitespace-pre-line ${isHighlighted ? "text-white/65" : "text-white/32"}`}>
+                <p className={`${textSize.body} leading-relaxed whitespace-pre-line ${isHighlighted ? "text-white/82" : "text-white/62"}`}>
                   {section.content}
                 </p>
                 {isHighlighted && activeEvidence && (
@@ -287,7 +307,7 @@ function TrustIntelPanel({
                 </span>
               )}
             </div>
-            <p className="text-white/30 text-[11px]">
+            <p className="text-white/52 text-[11px]">
               Claimed {analysis.documentType ?? "document"}
               {analysis.processedAt ? ` · ${new Date(analysis.processedAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}` : ""}
               {sections.length > 0 ? ` · ${sections.length} section${sections.length !== 1 ? "s" : ""}` : ""}
@@ -347,7 +367,7 @@ function TrustIntelPanel({
           {/* Score explanation */}
           <div className="flex items-start gap-1.5 rounded-lg border border-white/[0.06] bg-white/[0.02] px-2.5 py-2">
             <Info className="w-3 h-3 text-white/20 shrink-0 mt-0.5" />
-            <p className="text-white/28 text-[10px] leading-relaxed">
+            <p className="text-white/52 text-[10px] leading-relaxed">
               Trust score reflects document consistency, source clarity, metadata signals, and risk indicators. It is not a legal or forensic determination.
             </p>
           </div>
@@ -413,6 +433,32 @@ function TrustIntelPanel({
             >
               D. Verification Checklist
             </SLabel>
+            {/* ── Checklist progress bar — always visible ── */}
+            {(() => {
+              const total = verifyItems.length
+              const doneCount = verifyItems.filter((_, i) => checklistDone[`check-${i}`]).length
+              const pct = total === 0 ? 100 : Math.round((doneCount / total) * 100)
+              const allDone = doneCount === total && total > 0
+              return (
+                <div className="mb-4">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-white/38 text-[9px]">{doneCount} of {total} verified</span>
+                    <span className={`text-[9px] font-semibold tabular-nums ${allDone ? "text-emerald-400" : "text-violet-400/75"}`}>{pct}%</span>
+                  </div>
+                  <div className="h-[3px] rounded-full bg-white/[0.07] overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-500 ${allDone ? "bg-emerald-400" : "bg-violet-500"}`}
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                  {allDone && (
+                    <p className="text-emerald-400/60 text-[9px] mt-1.5 flex items-center gap-1">
+                      <CheckCircle2 className="w-2.5 h-2.5" /> All items verified
+                    </p>
+                  )}
+                </div>
+              )
+            })()}
             <div className="flex flex-col gap-2">
               {verifyItems.map((item, i) => {
                 const id = `check-${i}`
@@ -429,7 +475,7 @@ function TrustIntelPanel({
                     }`}>
                       {done && <CheckCheck className="w-2.5 h-2.5 text-emerald-400" />}
                     </div>
-                    <p className={`text-[11px] leading-relaxed flex-1 transition-colors ${done ? "line-through text-white/20" : "text-white/58"}`}>
+                    <p className={`text-[11px] leading-relaxed flex-1 transition-colors ${done ? "line-through text-white/22" : "text-white/70"}`}>
                       {item}
                     </p>
                     {isUrgent && !done && (
@@ -481,7 +527,7 @@ function TrustIntelPanel({
                     )}
                   </div>
                   <p className="text-white/55 text-[11px] font-medium mb-1">{finding.value}</p>
-                  <p className="text-white/30 text-[10px] leading-relaxed">{finding.note}</p>
+                  <p className="text-white/55 text-[10px] leading-relaxed">{finding.note}</p>
                 </div>
               ))}
             </div>
@@ -502,7 +548,7 @@ function TrustIntelPanel({
                     <div key={i} className="flex items-start gap-2.5">
                       <div className="w-1 h-1 rounded-full bg-violet-400/50 shrink-0 mt-2" />
                       <div className="flex-1 min-w-0">
-                        <p className="text-white/28 text-[10px] leading-relaxed italic">"{ind.sourceEvidence}"</p>
+                        <p className="text-white/55 text-[10px] leading-relaxed italic">"{ind.sourceEvidence}"</p>
                         {(ind.sourceRef || targetSectionId) && (
                           <div className="mt-1">
                             <SourceChip
@@ -578,7 +624,7 @@ function LowConfPanel({ analysis, onReanalyze, onNewCheck }: {
               ].map((item, i) => (
                 <div key={i} className="flex items-start gap-1.5 mb-1">
                   <X className="w-3 h-3 text-white/25 shrink-0 mt-0.5" />
-                  <p className="text-white/32 text-[11px]">{item}</p>
+                  <p className="text-white/55 text-[11px]">{item}</p>
                 </div>
               ))}
               <div className="mt-2 flex items-start gap-1.5 rounded-lg border border-amber-500/15 bg-amber-500/[0.03] px-2 py-1.5">
@@ -614,7 +660,7 @@ function LowConfPanel({ analysis, onReanalyze, onNewCheck }: {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className={`text-xs font-medium ${step.primary ? "text-violet-200/85" : "text-white/55"}`}>{step.label}</p>
-                  <p className="text-white/28 text-[10px] leading-tight">{step.desc}</p>
+                  <p className="text-white/52 text-[10px] leading-tight">{step.desc}</p>
                 </div>
                 <ChevronRight className="w-3.5 h-3.5 text-white/18 shrink-0" />
               </button>

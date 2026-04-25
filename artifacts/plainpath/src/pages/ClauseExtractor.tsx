@@ -449,6 +449,12 @@ function buildConfidenceStrip(r: ClauseExtractionResults): Array<{ label: string
 
 /* ─── Document Viewer (left panel) ───────────────────────────────────────── */
 
+const CLAUSE_TEXT_SIZES = [
+  { label: "A",   body: "text-[11px]", title: "text-xs"     },
+  { label: "A+",  body: "text-xs",     title: "text-[13px]" },
+  { label: "A++", body: "text-sm",     title: "text-[14px]" },
+] as const
+
 interface DocViewerProps {
   session: ClauseExtractorSessionDetail
   sections: DocSect[]
@@ -459,6 +465,8 @@ interface DocViewerProps {
 
 function DocViewer({ session, sections, activeSection, onClearSource, evidenceBanner }: DocViewerProps) {
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({})
+  const [sizeIdx, setSizeIdx] = useState<0 | 1 | 2>(0)
+  const textSize = CLAUSE_TEXT_SIZES[sizeIdx]
 
   useEffect(() => {
     if (activeSection && sectionRefs.current[activeSection]) {
@@ -488,14 +496,25 @@ function DocViewer({ session, sections, activeSection, onClearSource, evidenceBa
       {/* File toolbar */}
       <div className="h-9 border-b border-white/[0.06] flex items-center px-4 gap-2 shrink-0">
         <FileText className="w-3.5 h-3.5 text-violet-400/60 shrink-0" />
-        <span className="text-white/45 text-xs flex-1 truncate">{session.fileName}</span>
+        <span className="text-white/58 text-xs flex-1 truncate">{session.fileName}</span>
         {sections.length > 0 && (
-          <span className="text-white/18 text-xs shrink-0">{sections.length} sections</span>
+          <span className="text-white/32 text-xs shrink-0">{sections.length} sections</span>
         )}
         <div className="w-px h-4 bg-white/[0.06] mx-1" />
         <div className="flex items-center gap-0.5">
-          {["Fit", "75%", "100%"].map((z, i) => (
-            <button key={i} className={`h-5 px-1.5 rounded text-[9px] font-medium transition-colors ${i === 1 ? "bg-white/[0.07] text-white/55" : "text-white/22 hover:text-white/45"}`}>{z}</button>
+          {CLAUSE_TEXT_SIZES.map((s, i) => (
+            <button
+              key={i}
+              onClick={() => setSizeIdx(i as 0 | 1 | 2)}
+              title={`Text size: ${s.label}`}
+              className={`h-5 px-1.5 rounded text-[9px] font-medium transition-colors ${
+                i === sizeIdx
+                  ? "bg-white/[0.09] text-white/70"
+                  : "text-white/28 hover:text-white/55 hover:bg-white/[0.05]"
+              }`}
+            >
+              {s.label}
+            </button>
           ))}
         </div>
       </div>
@@ -565,11 +584,11 @@ function DocViewer({ session, sections, activeSection, onClearSource, evidenceBa
                   )}
                 </div>
                 {sec.title && (
-                  <p className={`text-xs font-semibold leading-tight ${isActive ? "text-violet-300/80" : "text-white/45"}`}>
+                  <p className={`${textSize.title} font-semibold leading-tight ${isActive ? "text-violet-300/80" : "text-white/70"}`}>
                     {sec.title}
                   </p>
                 )}
-                <p className={`text-[11px] leading-relaxed ${isActive ? "text-white/65" : "text-white/32"}`}>
+                <p className={`${textSize.body} leading-relaxed ${isActive ? "text-white/82" : "text-white/62"}`}>
                   {sec.body}
                 </p>
                 {isActive && sec.snippet && (
@@ -833,7 +852,7 @@ function ExtractionPanel({
                           </div>
                         </div>
                       </div>
-                      <p className="text-[11px] text-muted-foreground dark:text-white/48 pl-4 leading-snug">{cl.plain}</p>
+                      <p className="text-[11px] text-muted-foreground dark:text-white/65 pl-4 leading-snug">{cl.plain}</p>
                       {cl.action && (
                         <p className="text-[10px] text-violet-600/60 dark:text-violet-300/50 pl-4 mt-1.5">› {cl.action}</p>
                       )}
@@ -860,9 +879,9 @@ function ExtractionPanel({
                     key={i}
                     className={`grid grid-cols-[1fr_auto_auto_auto] gap-0 px-3.5 py-2.5 items-center ${i < obligations.length - 1 ? "border-b border-border/30 dark:border-white/[0.04]" : ""}`}
                   >
-                    <p className="text-[11px] text-foreground/70 dark:text-white/55 leading-snug pr-2">{ob.obligation}</p>
-                    <p className="text-[10px] text-muted-foreground dark:text-white/35 px-2 text-center whitespace-nowrap">{ob.party}</p>
-                    <p className="text-[10px] text-muted-foreground/70 dark:text-white/30 px-2 text-center whitespace-nowrap">{ob.deadline}</p>
+                    <p className="text-[11px] text-foreground/70 dark:text-white/70 leading-snug pr-2">{ob.obligation}</p>
+                    <p className="text-[10px] text-muted-foreground dark:text-white/55 px-2 text-center whitespace-nowrap">{ob.party}</p>
+                    <p className="text-[10px] text-muted-foreground/70 dark:text-white/50 px-2 text-center whitespace-nowrap">{ob.deadline}</p>
                     <div className="px-2 flex justify-center">
                       <SChip
                         label={ob.chip}
@@ -889,7 +908,7 @@ function ExtractionPanel({
                       <p className="text-[11px] font-semibold text-foreground dark:text-white/65">{d.date}</p>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[11px] text-muted-foreground dark:text-white/52 truncate">{d.event}</p>
+                      <p className="text-[11px] text-muted-foreground dark:text-white/68 truncate">{d.event}</p>
                       {d.notice && (
                         <p className="text-[10px] text-amber-600/70 dark:text-amber-300/50 mt-0.5">{d.notice}</p>
                       )}
@@ -940,7 +959,7 @@ function ExtractionPanel({
                               Possible gap
                             </span>
                           </div>
-                          <p className="text-[10px] text-muted-foreground/60 dark:text-white/38 pl-3.5 leading-snug">
+                          <p className="text-[10px] text-muted-foreground/60 dark:text-white/58 pl-3.5 leading-snug">
                             No {f.toLowerCase()} clause identified. Verify whether this applies to your situation — not legal advice.
                           </p>
                         </div>

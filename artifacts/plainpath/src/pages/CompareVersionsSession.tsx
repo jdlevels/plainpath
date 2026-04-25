@@ -23,6 +23,12 @@ import type {
 
 const POLL_MS = 2500
 
+const CV_TEXT_SIZES = [
+  { label: "A",   body: "text-[10px]" },
+  { label: "A+",  body: "text-xs"     },
+  { label: "A++", body: "text-[13px]" },
+] as const
+
 // ─── Active change state ───────────────────────────────────────────────────────
 
 interface ActiveChange {
@@ -58,17 +64,17 @@ function revSectionStyle(ct: CISection["change_type"], active: boolean): string 
 
 function origTextStyle(ct: CISection["change_type"]): string {
   switch (ct) {
-    case "removed":  return "text-white/32 line-through decoration-red-400/25"
-    case "modified": return "text-white/50"
-    default:         return "text-white/42"
+    case "removed":  return "text-white/52 line-through decoration-red-400/25"
+    case "modified": return "text-white/68"
+    default:         return "text-white/62"
   }
 }
 
 function revTextStyle(ct: CISection["change_type"]): string {
   switch (ct) {
-    case "added":    return "text-emerald-300/65"
-    case "modified": return "text-white/50"
-    default:         return "text-white/42"
+    case "added":    return "text-emerald-300/80"
+    case "modified": return "text-white/68"
+    default:         return "text-white/62"
   }
 }
 
@@ -154,12 +160,13 @@ function EvidenceBanner({
 // ─── Section cards ─────────────────────────────────────────────────────────────
 
 function OrigSectionCard({
-  sec, active, onClick, refCallback,
+  sec, active, onClick, refCallback, textSz = "text-[10px]",
 }: {
   sec: CISection
   active: boolean
   onClick: () => void
   refCallback: (el: HTMLDivElement | null) => void
+  textSz?: string
 }) {
   return (
     <div
@@ -168,22 +175,23 @@ function OrigSectionCard({
       className={`rounded-xl border p-3 cursor-pointer transition-all duration-100 ${origSectionStyle(sec.change_type, active)}`}
     >
       <div className="flex items-center justify-between mb-1.5">
-        <p className="text-[10px] text-white/28 font-medium">{sec.heading}</p>
+        <p className="text-[10px] text-white/45 font-medium">{sec.heading}</p>
         {sec.change_type === "modified" && <Edit3 className="w-2.5 h-2.5 text-amber-400/50 shrink-0" />}
         {sec.change_type === "removed"  && <Minus className="w-2.5 h-2.5 text-red-400/50 shrink-0" />}
       </div>
-      <p className={`text-[10px] leading-relaxed ${origTextStyle(sec.change_type)}`}>{sec.text}</p>
+      <p className={`${textSz} leading-relaxed ${origTextStyle(sec.change_type)}`}>{sec.text}</p>
     </div>
   )
 }
 
 function RevSectionCard({
-  sec, active, onClick, refCallback,
+  sec, active, onClick, refCallback, textSz = "text-[10px]",
 }: {
   sec: CISection
   active: boolean
   onClick: () => void
   refCallback: (el: HTMLDivElement | null) => void
+  textSz?: string
 }) {
   return (
     <div
@@ -192,11 +200,11 @@ function RevSectionCard({
       className={`rounded-xl border p-3 cursor-pointer transition-all duration-100 ${revSectionStyle(sec.change_type, active)}`}
     >
       <div className="flex items-center justify-between mb-1.5">
-        <p className="text-[10px] text-white/28 font-medium">{sec.heading}</p>
+        <p className="text-[10px] text-white/45 font-medium">{sec.heading}</p>
         {sec.change_type === "added"    && <span className="text-[9px] text-emerald-300/60 flex items-center gap-0.5 font-medium"><Plus className="w-2.5 h-2.5" />new</span>}
         {sec.change_type === "modified" && <Edit3 className="w-2.5 h-2.5 text-amber-400/50 shrink-0" />}
       </div>
-      <p className={`text-[10px] leading-relaxed ${revTextStyle(sec.change_type)}`}>{sec.text}</p>
+      <p className={`${textSz} leading-relaxed ${revTextStyle(sec.change_type)}`}>{sec.text}</p>
     </div>
   )
 }
@@ -251,6 +259,7 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
   const [mobileTab, setMobileTab]         = useState<MobileTab>("analysis")
   const [traceOpen, setTraceOpen]         = useState(false)
   const [rescanning, setRescanning]       = useState(false)
+  const [sizeIdx, setSizeIdx]             = useState<0 | 1 | 2>(0)
 
   // Refs for scrollable panels
   const origScrollRef = useRef<HTMLDivElement>(null)
@@ -413,6 +422,23 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
         {session?.title ?? "Loading…"}
       </span>
       <div className="ml-auto flex items-center gap-2">
+        {/* Text size toggle */}
+        <div className="flex items-center gap-0.5">
+          {CV_TEXT_SIZES.map((s, i) => (
+            <button
+              key={i}
+              onClick={() => setSizeIdx(i as 0 | 1 | 2)}
+              title={`Text size: ${s.label}`}
+              className={`h-6 px-1.5 rounded text-[9px] font-medium transition-colors ${
+                i === sizeIdx
+                  ? "bg-white/[0.09] text-white/70"
+                  : "text-white/28 hover:text-white/55 hover:bg-white/[0.05]"
+              }`}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
         {isComplete && (
           <>
             <button onClick={handleExport}
@@ -621,6 +647,7 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
                 sec={sec}
                 active={activeOrigId === sec.id}
                 onClick={() => activateSection(sec, "orig")}
+                textSz={CV_TEXT_SIZES[sizeIdx].body}
                 refCallback={(el) => {
                   if (el) sectionRefsOrig.current.set(sec.id, el)
                   else    sectionRefsOrig.current.delete(sec.id)
@@ -634,12 +661,12 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
         <div className="w-[33%] border-r border-white/[0.05] flex flex-col overflow-hidden">
           <div className="h-7 border-b border-white/[0.04] flex items-center px-4 gap-2 shrink-0 bg-white/[0.01]">
             <span className="flex-1" />
-            <span className="text-[9px] text-white/18">{ci.sections_revised.length} sections</span>
+            <span className="text-[9px] text-white/32">{ci.sections_revised.length} sections</span>
           </div>
           <div className="h-8 border-b border-white/[0.05] flex items-center px-4 gap-2 shrink-0">
             <FileText className="w-3 h-3 text-violet-400/55 shrink-0" />
             <span className="text-[11px] text-violet-300/65 font-semibold">Revised</span>
-            <span className="text-[10px] text-white/22 ml-1 flex-1 truncate">{session.revisedFileName}</span>
+            <span className="text-[10px] text-white/42 ml-1 flex-1 truncate">{session.revisedFileName}</span>
             {ci.added_language.length > 0 && (
               <span className="h-4 px-1.5 rounded border border-emerald-400/22 bg-emerald-400/[0.07] text-emerald-300/60 text-[9px] font-medium shrink-0">
                 {ci.added_language.length} added
@@ -653,6 +680,7 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
                 sec={sec}
                 active={activeRevId === sec.id}
                 onClick={() => activateSection(sec, "rev")}
+                textSz={CV_TEXT_SIZES[sizeIdx].body}
                 refCallback={(el) => {
                   if (el) sectionRefsRev.current.set(sec.id, el)
                   else    sectionRefsRev.current.delete(sec.id)
@@ -697,6 +725,7 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
                     sec={sec}
                     active={activeOrigId === sec.id}
                     onClick={() => activateSection(sec, "orig")}
+                    textSz={CV_TEXT_SIZES[sizeIdx].body}
                     refCallback={(el) => {
                       if (el) sectionRefsOrig.current.set(sec.id, el)
                       else    sectionRefsOrig.current.delete(sec.id)
@@ -720,6 +749,7 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
                     sec={sec}
                     active={activeRevId === sec.id}
                     onClick={() => activateSection(sec, "rev")}
+                    textSz={CV_TEXT_SIZES[sizeIdx].body}
                     refCallback={(el) => {
                       if (el) sectionRefsRev.current.set(sec.id, el)
                       else    sectionRefsRev.current.delete(sec.id)
