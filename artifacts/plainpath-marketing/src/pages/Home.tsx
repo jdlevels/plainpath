@@ -176,7 +176,7 @@ const FEATURES = [
     accent: "bg-sky-500 dark:bg-sky-400",
     glow: "from-sky-50 dark:from-sky-900/10",
     title: "Compare Versions",
-    desc: "Upload an original and a revised document. PlainPath maps every addition, deletion, and structural change — with zone-by-zone overlays and severity scoring.",
+    desc: "Upload an original and a revised document. PlainPath extracts both, identifies every addition, deletion, and modified term, and delivers source-backed Change Intelligence with severity scoring.",
     result: { label: "Changes Found", value: "14 changes detected — 3 high-severity clause deletions identified.", icon: AlertTriangle, color: "text-sky-600 dark:text-sky-400", bg: "bg-sky-50 dark:bg-sky-900/20" },
     tags: ["Contract revisions", "Lease renewals", "Policy updates", "Legal amendments"],
     tagCls: "bg-sky-50/80 dark:bg-sky-900/20 text-sky-700 dark:text-sky-300 border border-sky-200/60 dark:border-sky-700/40",
