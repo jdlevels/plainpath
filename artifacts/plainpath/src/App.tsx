@@ -16,6 +16,7 @@ import { captureInboundRef } from "@/lib/referral";
 
 import Home from "@/pages/Home";
 import Import from "@/pages/Import";
+import AskDocument from "@/pages/AskDocument";
 import Analyze from "@/pages/Analyze";
 import TrustCheck from "@/pages/TrustCheck";
 import MyAnalyses from "@/pages/MyAnalyses";
@@ -474,8 +475,8 @@ function Router() {
             <Route path="/" component={protect(Home)} />
             <Route path="/import" component={protect(Import)} />
             <Route path="/analyze" component={protect(Import)} />
-            <Route path="/ask-document" component={protect(Import)} />
-            <Route path="/ask-this-document" component={protect(Import)} />
+            <Route path="/ask-document" component={protect(AskDocument)} />
+            <Route path="/ask-this-document" component={protect(AskDocument)} />
             <Route path="/results" component={protect(Analyze)} />
             <Route path="/trust-check" component={protect(TrustCheck)} />
             <Route path="/my-analyses" component={protect(MyAnalyses)} />
