@@ -2013,8 +2013,24 @@ export default function ContractBuilder() {
     <div className="min-h-screen bg-[#0c0c0f] text-white flex flex-col">
       <UpgradeModal open={upgradeModal} onClose={() => setUpgradeModal(false)} reason="contractDraft" />
 
-      {/* Header — always visible once a type is selected */}
-      {pageState !== "empty" && (
+      {/* Header — simplified in empty state, full BuilderHeader once type is selected */}
+      {pageState === "empty" ? (
+        <header className="h-12 border-b border-white/[0.06] flex items-center px-4 gap-2 shrink-0 bg-[#0c0c0f]">
+          <button
+            onClick={() => window.history.back()}
+            className="p-1 rounded-md text-white/25 hover:text-white/55 transition-colors mr-0.5"
+            aria-label="Back"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+          </button>
+          <div className="w-5 h-5 rounded bg-violet-600 flex items-center justify-center shrink-0">
+            <PenLine className="w-3 h-3 text-white" />
+          </div>
+          <span className="text-white/30 text-xs font-medium">PlainPath</span>
+          <span className="text-white/15 text-xs">·</span>
+          <span className="text-white/70 text-xs font-semibold">Build a Contract</span>
+        </header>
+      ) : (
         <BuilderHeader
           filename={filename}
           unsaved={unsaved}
