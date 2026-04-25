@@ -1,0 +1,134 @@
+We rolled back PlainPath to the older stable checkpoint.
+
+This is now the new rebuild base.
+
+Do not reapply the recent full visual redesign.
+Do not rebuild all tools from scratch.
+Do not change the database.
+Do not touch Stripe/payment logic.
+Do not add new subscription gates.
+Do not start broad TypeScript cleanup.
+Do not change the marketing design beyond the specific tool/card updates listed below.
+
+Goal:
+Rebuild from this stable checkpoint using controlled functional updates only.
+
+Primary requirements:
+
+1. Remove Digital Signature everywhere
+
+Digital Signature was removed from the product direction.
+
+Remove or hide Digital Signature from:
+- public homepage hero tool buttons
+- public tools section/cards
+- authenticated dashboard tool cards
+- Tools dropdown/nav
+- routes if they are user-facing
+- marketing copy
+- any “8 tools” count if Digital Signature was included in that count
+
+Do not delete reusable code aggressively unless needed.
+Prefer hiding/removing the user-facing entry points first.
+
+2. Add / restore Ask This Document
+
+Replace the Digital Signature product slot with:
+
+Tool name:
+Ask This Document
+
+Purpose:
+User uploads a document and asks plain-English questions about it.
+
+Core description:
+“Upload a document and ask questions about clauses, dates, obligations, risks, missing items, or confusing language.”
+
+User-facing examples:
+- “What does this document require me to do?”
+- “What deadlines are listed?”
+- “What sections should I review first?”
+- “Are there payment terms?”
+- “What looks unclear?”
+
+Ask This Document should be available as:
+- a visible tool card/button in the public site where Digital Signature was removed
+- a visible authenticated app tool if the route/component already exists
+- a contextual next-step option from Analyze, Trust Check, Contract Review, Clause Extractor, Compare Versions, and Redact where appropriate
+
+3. Preserve the older stable layout
+
+Keep the current rollback page/layout as the base.
+Do not apply the recent dense split-screen redesign.
+Do not change the homepage visual structure except:
+- removing Digital Signature
+- adding Ask This Document
+- correcting the tool count if needed
+
+4. Tool count and language
+
+Update tool count language accurately.
+
+If the active tool set is:
+- Analyze a Document
+- Document Trust Check
+- Contract Review
+- Clause Extractor
+- Compare Versions
+- Redact Sensitive Info
+- Build a Contract
+- Ask This Document
+
+Then use:
+“8 tools live”
+
+If Ask This Document is contextual only and not a full standalone card, then use:
+“7 core tools + Ask This Document”
+
+Do not show Digital Signature as live, coming soon, or available.
+
+5. Analyze a Document priority
+
+Analyze a Document must remain focused on:
+- plain-English summary
+- step-by-step required actions
+- missing items
+- deadlines
+- risks/watchouts
+- source traceability
+- Ask This Document as a follow-up option
+
+This is the heart of PlainPath:
+The user uploads a document and receives clear step-by-step instructions on what needs to be completed.
+
+Do not turn Analyze into a generic document viewer.
+Do not bury the action steps.
+
+6. Stability first
+
+Before making any changes:
+- inspect current App routes
+- inspect public homepage tool buttons/cards
+- inspect authenticated dashboard tools
+- inspect Tools dropdown
+- inspect whether Ask This Document already exists in the codebase
+- inspect whether Digital Signature entries still exist
+
+Then make the smallest safe changes.
+
+7. Final verification required
+
+Return a report with:
+
+A. Current rollback baseline confirmed  
+B. Exact Digital Signature entries removed/hidden  
+C. Exact Ask This Document entries added/restored  
+D. Tool count corrected  
+E. Routes checked  
+F. Public homepage checked  
+G. Authenticated dashboard checked  
+H. Tools dropdown checked  
+I. Analyze a Document action-plan purpose preserved  
+J. No database rollback or database changes made  
+K. No Stripe/payment changes made  
+L. No new TypeScript/runtime errors introduced  

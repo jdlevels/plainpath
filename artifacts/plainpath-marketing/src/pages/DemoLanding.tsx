@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import {
   FileScan, ShieldCheck, PenLine, Scale, EyeOff,
-  FileSignature, GitCompare, ListChecks, ArrowRight,
+  MessageCircle, GitCompare, ListChecks, ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/layout/Navbar";
@@ -69,16 +69,16 @@ const TOOLS = [
     href: "/demo/redact",
   },
   {
-    key: "signature",
-    label: "Digital Signature",
-    scenario: "Freelance agreement — 1 of 2 signers complete",
-    desc: "A freelance contract sent to two parties: one signed, one pending. See the real-time signing status and timeline.",
-    icon: FileSignature,
+    key: "ask",
+    label: "Ask This Document",
+    scenario: "Residential lease — 3 questions answered with sources",
+    desc: "Upload a lease and ask plain-English questions. PlainPath finds exact answers from the document text and shows you where.",
+    icon: MessageCircle,
     color: "text-indigo-600 dark:text-indigo-400",
     bg: "bg-indigo-50 dark:bg-indigo-950/40",
     border: "border-indigo-200 dark:border-indigo-800",
     ring: "hover:ring-indigo-300 dark:hover:ring-indigo-700",
-    href: "/demo/signature",
+    href: "/app/analyze",
   },
   {
     key: "compare",

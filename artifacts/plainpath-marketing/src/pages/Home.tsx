@@ -16,7 +16,7 @@ import { BackToTop } from "@/components/BackToTop";
 import { NewsletterCapture } from "@/components/NewsletterCapture";
 import { Card } from "@/components/ui/card";
 import {
-  FileText, FileSignature, ShieldCheck,
+  FileText, MessageCircle, ShieldCheck,
   ArrowRight, Upload, Sparkles, Scale,
   AlertTriangle, CheckCircle2, Clock, Lock, X as XIcon, EyeOff,
   CalendarX, Eye, PenLine, FileScan, ListChecks, GitCompare,
@@ -97,7 +97,7 @@ const TOOLS = [
   { label: "Build a Contract",      icon: PenLine,        cls: "tool-btn-emerald", href: "/app/build-contract",          comingSoon: false },
   { label: "Contract Review",       icon: Scale,          cls: "tool-btn-amber",   href: "/app/contract-review",         comingSoon: false },
   { label: "Redact Sensitive Info", icon: EyeOff,         cls: "tool-btn-violet",  href: "/app/redact",                  comingSoon: false },
-  { label: "Digital Signature",     icon: FileSignature,  cls: "tool-btn-indigo",  href: "/app/signature",               comingSoon: false },
+  { label: "Ask This Document",      icon: MessageCircle,  cls: "tool-btn-indigo",  href: "/app/analyze",                 comingSoon: false },
   { label: "Clause Extractor",       icon: ListChecks,     cls: "tool-btn-fuchsia", href: "/app/clause-extractor",        comingSoon: false },
   { label: "Compare Versions",      icon: GitCompare,     cls: "tool-btn-sky",     href: "/app/compare-versions",        comingSoon: false },
 ];
@@ -170,16 +170,16 @@ const FEATURES = [
     tagCls: "bg-violet-50/80 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300 border border-violet-200/60 dark:border-violet-700/40",
   },
   {
-    icon: FileSignature,
+    icon: MessageCircle,
     color: "text-indigo-600 dark:text-indigo-400",
     bg: "bg-indigo-100 dark:bg-indigo-900/30",
     border: "border-l-indigo-500 dark:border-l-indigo-400",
     accent: "bg-indigo-500 dark:bg-indigo-400",
     glow: "from-indigo-50 dark:from-indigo-900/10",
-    title: "Digital Signature",
-    desc: "Send documents for e-signature, track signing status in real time, and download certified signed copies — all without leaving PlainPath. Powered by Dropbox Sign.",
-    result: { label: "Signature Request Sent", value: "Sarah Chen received a secure signing link for the Consulting Agreement.", icon: CheckCircle2, color: "text-indigo-600 dark:text-indigo-400", bg: "bg-indigo-50 dark:bg-indigo-900/20" },
-    tags: ["Contracts", "NDAs", "Agreements"],
+    title: "Ask This Document",
+    desc: "Upload a document and ask plain-English questions about clauses, obligations, deadlines, and risks — get direct answers sourced from the actual text.",
+    result: { label: "Answer Generated", value: "You must return the signed addendum by April 22nd or the lease auto-renews for 12 months.", icon: CheckCircle2, color: "text-indigo-600 dark:text-indigo-400", bg: "bg-indigo-50 dark:bg-indigo-900/20" },
+    tags: ["Contracts", "Leases", "Legal notices", "Agreements"],
     tagCls: "bg-indigo-50/80 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-700/40",
   },
   {
@@ -298,18 +298,18 @@ const DEMOS = [
     href: "/demo/redact",
   },
   {
-    id: "signature-freelance",
-    tool: "Digital Signature",
-    title: "Freelance Agreement — In Progress",
-    desc: "A freelance contract sent to two signers. The client signed at 2:34 PM. The contractor's signature is still pending — see the live status.",
-    icon: FileSignature,
+    id: "ask-lease",
+    tool: "Ask This Document",
+    title: "Residential Lease — Question Asked",
+    desc: "A lease upload with plain-English questions answered. \"What must I do before move-in?\" gets a sourced, structured reply.",
+    icon: MessageCircle,
     color: "text-indigo-500 dark:text-indigo-400",
     bg: "bg-indigo-50 dark:bg-indigo-950/50",
     hoverBorder: "hover:border-indigo-400/50",
     hoverTitle: "group-hover:text-indigo-500 dark:group-hover:text-indigo-400",
-    tags: ["1 of 2 signed", "Status timeline", "Pre-loaded demo"],
-    cta: "See signing status",
-    href: "/demo/signature",
+    tags: ["3 questions answered", "Sourced from text", "Pre-loaded demo"],
+    cta: "See it in action",
+    href: "/app/analyze",
   },
   {
     id: "compare-nda",
@@ -367,7 +367,7 @@ const PLANS = [
       { label: "Document Trust Check",  included: false, comingSoon: false },
       { label: "Build a Contract",      included: false, comingSoon: false },
       { label: "Contract Review",       included: false, comingSoon: false },
-      { label: "Digital Signature",     included: false, comingSoon: false },
+      { label: "Ask This Document",     included: false, comingSoon: false },
       { label: "Compare Versions",      included: false, comingSoon: false },
       { label: "Clause Extractor",      included: false, comingSoon: false },
     ],
@@ -388,7 +388,7 @@ const PLANS = [
       { label: "Build a Contract",      included: true,  comingSoon: false },
       { label: "Contract Review",       included: true,  comingSoon: false },
       { label: "Redact Sensitive Info", included: true,  comingSoon: false },
-      { label: "Digital Signature",     included: true,  comingSoon: false },
+      { label: "Ask This Document",     included: true,  comingSoon: false },
       { label: "Compare Versions",      included: true,  comingSoon: false },
       { label: "Clause Extractor",      included: true,  comingSoon: false },
     ],
@@ -996,7 +996,7 @@ export default function Home() {
               </span>
             </h2>
             <p className="text-lg text-muted-foreground">
-              Whether you're reading, verifying, building, reviewing, redacting, signing, comparing, or editing — PlainPath has a tool for it.
+              Whether you're reading, verifying, building, reviewing, redacting, asking, comparing, or editing — PlainPath has a tool for it.
             </p>
           </div>
 
@@ -1131,7 +1131,7 @@ export default function Home() {
                     { icon: PenLine,       title: "Signing the other party's boilerplate",        desc: "When you don't have your own contract, you sign theirs — and every clause was written to protect them. Build a Contract creates a fair agreement from scratch.",                           tool: "Build a Contract",      iconBg: "rgba(16,185,129,0.15)",   iconColor: "#34d399", badgeBorder: "rgba(16,185,129,0.35)",   badgeColor: "#6ee7b7"  },
                     { icon: Eye,           title: "Clauses that shift all the risk to you",       desc: "One paragraph waives your right to dispute. Another transfers liability quietly. Contract Review reads it clause by clause and tells you exactly what you're agreeing to.",                 tool: "Contract Review",       iconBg: "rgba(245,158,11,0.15)",   iconColor: "#fbbf24", badgeBorder: "rgba(245,158,11,0.35)",   badgeColor: "#fcd34d"  },
                     { icon: EyeOff,        title: "Your private details go wherever the doc goes", desc: "Names, SSNs, account numbers — once you share a document they go with it. Redact Sensitive Info lets you strip them before anyone else sees the file.",                                   tool: "Redact Sensitive Info", iconBg: "rgba(139,92,246,0.15)",   iconColor: "#a78bfa", badgeBorder: "rgba(139,92,246,0.35)",   badgeColor: "#c4b5fd"  },
-                    { icon: FileSignature, title: "Print, sign, scan — for every signature",      desc: "The old workflow adds days and creates unsigned copies nobody can track. Digital Signature sends a secure link and gives you a real-time audit trail.",                                    tool: "Digital Signature",     iconBg: "rgba(99,102,241,0.15)",   iconColor: "#818cf8", badgeBorder: "rgba(99,102,241,0.35)",   badgeColor: "#a5b4fc"  },
+                    { icon: MessageCircle, title: "Buried language you can't decipher",             desc: "Legal docs use terms and phrasing you've never seen. Ask This Document lets you ask in plain English — \"what does this mean?\" — and get a direct answer from the text.",              tool: "Ask This Document",     iconBg: "rgba(99,102,241,0.15)",   iconColor: "#818cf8", badgeBorder: "rgba(99,102,241,0.35)",   badgeColor: "#a5b4fc"  },
                     { icon: GitCompare,    title: "New contract version — what actually changed?", desc: "They sent a revised draft. You have no idea what moved. Compare Versions maps every addition, deletion, and structural change with severity scoring.",                                    tool: "Compare Versions",      iconBg: "rgba(20,184,166,0.15)",   iconColor: "#2dd4bf", badgeBorder: "rgba(20,184,166,0.35)",   badgeColor: "#5eead4"  },
                     { icon: ListChecks,    title: "Obligations buried in the fine print",         desc: "You're about to sign but you don't know who owes what by when. Clause Extractor pulls every obligation, assigns it to a party, and flags any that require action before signing.", tool: "Clause Extractor",      iconBg: "rgba(192,38,211,0.15)",   iconColor: "#f0abfc", badgeBorder: "rgba(192,38,211,0.35)",   badgeColor: "#fae8ff"  },
                   ].map((item, i) => (

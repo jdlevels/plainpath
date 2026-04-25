@@ -31,8 +31,8 @@ const TOOL_ROWS: { color: string; name: string; desc: string }[] = [
   },
   {
     color: "text-indigo-600 dark:text-indigo-400",
-    name: "Digital Signature",
-    desc: "lets you send documents for legally binding e-signature, track signing status in real time, and download certified signed copies.",
+    name: "Ask This Document",
+    desc: "lets you upload any document and ask plain-English questions about clauses, obligations, deadlines, and risks — getting direct answers sourced from the text.",
   },
   {
     color: "text-sky-600 dark:text-sky-400",
@@ -88,7 +88,7 @@ const FAQS: { q: string; a: React.ReactNode }[] = [
   },
   {
     q: "Which plan do I need for each tool?",
-    a: "Analyze a Document and Redact Sensitive Info are available on Starter and Pro plans. Document Trust Check, Build a Contract, Contract Review, Digital Signature, Compare Versions, and Clause Extractor require a Pro plan. You'll see an upgrade prompt if you try to use them without Pro, and you can switch plans at any time.",
+    a: "Analyze a Document and Redact Sensitive Info are available on Starter and Pro plans. Document Trust Check, Build a Contract, Contract Review, Ask This Document, Compare Versions, and Clause Extractor require a Pro plan. You'll see an upgrade prompt if you try to use them without Pro, and you can switch plans at any time.",
   },
 ]
 

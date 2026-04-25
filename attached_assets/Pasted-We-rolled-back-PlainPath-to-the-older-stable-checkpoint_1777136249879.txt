@@ -1,0 +1,162 @@
+We rolled back PlainPath to the older stable checkpoint. Now perform a full cleanup pass from this rollback baseline.
+
+This is not a visual redesign.
+Do not reapply the recent dense split-screen redesign.
+Do not change the database.
+Do not touch Stripe/payment behavior.
+Do not add subscription gates.
+Do not start broad TypeScript cleanup.
+Do not rebuild all tools from scratch.
+
+Goal:
+Clean up PlainPath into a stable, consistent app using the older working layout, while applying the 6 approved product cleanup recommendations.
+
+Recommendation 1 — Remove Digital Signature completely
+
+Digital Signature is no longer part of the active PlainPath product.
+
+Remove or hide all user-facing Digital Signature references from:
+- homepage hero buttons
+- homepage tool cards
+- public tools section
+- authenticated dashboard tool cards
+- Tools dropdown/nav
+- route links
+- pricing/tool count language
+- marketing copy
+- demo links
+- any “coming soon” references
+
+Do not aggressively delete internal code unless necessary. First priority is removing all user-facing access and references.
+
+Recommendation 2 — Add Ask This Document as a real tool
+
+Replace the Digital Signature slot with:
+
+Tool name:
+Ask This Document
+
+Purpose:
+Users upload a document and ask plain-English questions about it.
+
+Description:
+“Upload a document and ask questions about clauses, dates, obligations, risks, missing items, or confusing language.”
+
+Example questions:
+- “What does this document require me to do?”
+- “What deadlines are listed?”
+- “What sections should I review first?”
+- “Are there payment terms?”
+- “What looks unclear?”
+
+Ask This Document should appear:
+- on the homepage tool button/card area
+- in the authenticated dashboard if the route/component exists
+- in the Tools dropdown if appropriate
+- as a contextual follow-up option from Analyze, Trust Check, Contract Review, Clause Extractor, Compare Versions, and Redact where appropriate
+
+If Ask This Document already exists in the codebase, restore/wire the existing version instead of rebuilding it from scratch.
+
+Recommendation 3 — Restore Analyze a Document as the core action-plan tool
+
+Analyze a Document is the heart of PlainPath.
+
+It must clearly provide:
+- Plain-English summary
+- step-by-step required actions
+- missing items
+- deadlines
+- risks/watchouts
+- source traceability
+- Ask This Document as a follow-up option
+
+Do not turn Analyze into a generic document viewer.
+Do not bury the action steps.
+The user should understand exactly what needs to be completed after reading the analysis.
+
+Recommendation 4 — Clean up tool alignment across the app
+
+Audit and align:
+- homepage hero tool buttons
+- homepage tool cards
+- authenticated app dashboard
+- Tools dropdown/nav
+- routes in App.tsx
+- public marketing copy
+- tool descriptions
+- tool count language
+
+The active tool set should be:
+
+1. Analyze a Document
+2. Document Trust Check
+3. Contract Review
+4. Clause Extractor
+5. Compare Versions
+6. Redact Sensitive Info
+7. Build a Contract
+8. Ask This Document
+
+Use “8 tools live” only if all 8 are visible/available as intended.
+
+Remove stale language:
+- Digital Signature
+- PDF Editor
+- old demo/QA labels
+- inaccurate Compare Versions wording like “zone-by-zone overlays” if that does not match the current tool
+
+Recommendation 5 — Standardize document-processing behavior without redesigning
+
+Keep the older stable visual structure, but make tool behavior consistent.
+
+For tools that upload/process documents:
+- upload flow should be clear
+- loading state should show tool name and file name
+- loading animation should be consistent
+- user should know what tool they are in
+- result page should clearly show uploaded file name
+- document text should remain readable
+- right-side findings should be easy to scan
+- source-backed findings should click/scroll/highlight where applicable
+- missing/not-found findings should explain “No exact source found” instead of pretending to highlight a source
+
+Do not create a new dense layout.
+Use the stable older layout and clean only what is necessary.
+
+Recommendation 6 — Production-readiness cleanup
+
+Run a cleanup audit for:
+- temporary QA routes
+- demo-only routes
+- mock data exposure
+- route protection
+- login redirects
+- old tool links
+- inactive payment/free-limit gates
+- Redact PDF export status
+- build/runtime health
+
+Testing requirements:
+- No database changes
+- No Stripe/payment changes
+- No subscription gating during testing
+- No new tools beyond Ask This Document
+- No broad TypeScript cleanup unless required for files touched in this pass
+
+Final report required:
+
+A. Confirm rollback baseline  
+B. Digital Signature removed from all user-facing places  
+C. Ask This Document added/restored and where it appears  
+D. Active tool count corrected  
+E. Analyze a Document action-plan purpose confirmed  
+F. Homepage checked  
+G. Authenticated dashboard checked  
+H. Tools dropdown checked  
+I. Routes checked  
+J. Temporary QA/demo routes checked  
+K. Redact PDF export status reported  
+L. No database changes made  
+M. No Stripe/payment changes made  
+N. No new TypeScript/runtime errors introduced  
+O. Clear list of remaining issues, if any

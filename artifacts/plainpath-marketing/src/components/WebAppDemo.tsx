@@ -12,7 +12,7 @@ import React, { useEffect, useRef, useState } from "react"
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 import {
   AlertTriangle, CheckCircle2, Shield, ShieldAlert, Scale,
-  FileText, EyeOff, FileSignature, GitCompare, ListChecks,
+  FileText, EyeOff, MessageCircle, GitCompare, ListChecks,
   PenLine, Download, Sparkles, Clock,
 } from "lucide-react"
 
@@ -31,7 +31,7 @@ const TOOLS = [
   { id: 2, shortName: "Build",    icon: PenLine,       hex: "#10b981", iconHex: "#6ee7b7", docName: "Freelance Services Agreement",   docMeta: "New contract · 6 fields", badge: { label: "Building…",     dot: "#10b981" } },
   { id: 3, shortName: "Review",   icon: Scale,         hex: "#f59e0b", iconHex: "#fcd34d", docName: "Employment Agreement.pdf",       docMeta: "1,240 words · 8 pages",  badge: { label: "Score: 28/100", dot: "#f59e0b" } },
   { id: 4, shortName: "Redact",   icon: EyeOff,        hex: "#8b5cf6", iconHex: "#c4b5fd", docName: "Patient Intake Form.pdf",        docMeta: "423 words · 3 pages",    badge: { label: "3 items",       dot: "#8b5cf6" } },
-  { id: 5, shortName: "Sign",     icon: FileSignature, hex: "#6366f1", iconHex: "#a5b4fc", docName: "Consulting Agreement Final.pdf", docMeta: "1,820 words · 6 pages",  badge: { label: "Awaiting",      dot: "#6366f1" } },
+  { id: 5, shortName: "Ask",      icon: MessageCircle, hex: "#6366f1", iconHex: "#a5b4fc", docName: "Residential Lease Agreement.pdf", docMeta: "2,140 words · 8 pages", badge: { label: "3 answered",    dot: "#6366f1" } },
   { id: 6, shortName: "Compare",  icon: GitCompare,    hex: "#14b8a6", iconHex: "#5eead4", docName: "NDA v1.pdf → NDA v2.pdf",       docMeta: "2 versions · 14 changes", badge: { label: "1 critical",    dot: "#ef4444" } },
   { id: 7, shortName: "Extract",  icon: ListChecks,    hex: "#c026d3", iconHex: "#f0abfc", docName: "Lease Agreement.pdf",           docMeta: "2,840 words · 12 pages", badge: { label: "6 obligations", dot: "#c026d3" } },
 ] as const
@@ -449,34 +449,31 @@ function ResultsRedact() {
   )
 }
 
-function ResultsSignature() {
+function ResultsAsk() {
+  const answers = [
+    "Pay first month's rent and security deposit before receiving keys",
+    "Submit proof of renters insurance by move-in date",
+    "Sign and return the lease addendum within 3 business days",
+  ]
   return (
     <div className="space-y-2">
-      <p className="text-[9px] font-semibold tracking-widest uppercase text-zinc-600 mb-2">Signature Status</p>
-      <motion.div initial={{ opacity: 0, x: -4 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 }}
-        className="flex items-center gap-2 p-2 rounded-lg" style={{ background: "rgba(16,185,129,0.15)", border: "1px solid rgba(16,185,129,0.3)" }}>
-        <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style={{ background: "#10b981" }}>
-          <CheckCircle2 style={{ width: 11, height: 11, color: "white" }} />
-        </div>
-        <div>
-          <p className="text-[10px] font-semibold" style={{ color: "#10b981" }}>Sarah Chen — Client</p>
-          <p className="text-[9px] text-zinc-500">Signed · May 2, 2:34 PM</p>
-        </div>
-      </motion.div>
-      <motion.div initial={{ opacity: 0, x: -4 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.18 }}
-        className="flex items-center gap-2 p-2 rounded-lg" style={{ background: "rgba(99,102,241,0.15)", border: "1px solid rgba(99,102,241,0.3)" }}>
-        <div className="w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0" style={{ borderColor: "#6366f1" }}>
-          <Clock style={{ width: 9, height: 9, color: "#6366f1" }} />
-        </div>
-        <div>
-          <p className="text-[10px] font-semibold" style={{ color: "#6366f1" }}>Marcus Lee — Contractor</p>
-          <p className="text-[9px] text-zinc-500">Awaiting signature</p>
-        </div>
-      </motion.div>
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
+      <div className="p-1.5 rounded-lg" style={{ background: "rgba(99,102,241,0.12)", border: "1px solid rgba(99,102,241,0.3)" }}>
+        <p className="text-[9px] italic" style={{ color: "#a5b4fc" }}>"What must I do before move-in?"</p>
+      </div>
+      <p className="text-[9px] font-semibold tracking-widest uppercase text-zinc-600">Answer</p>
+      {answers.map((ans, i) => (
+        <motion.div key={i} initial={{ opacity: 0, x: -4 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 + i * 0.1 }}
+          className="flex items-start gap-1.5 p-1.5 rounded-lg" style={{ background: "#111118", border: "1px solid #27272a" }}>
+          <div className="w-4 h-4 rounded-full flex items-center justify-center shrink-0 mt-px" style={{ background: "rgba(99,102,241,0.2)" }}>
+            <span style={{ fontSize: 7, fontWeight: 700, color: "#818cf8" }}>{i + 1}</span>
+          </div>
+          <span className="text-[9px] text-zinc-300 leading-tight">{ans}</span>
+        </motion.div>
+      ))}
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }}
         className="flex items-center gap-1.5 p-1.5 rounded-lg" style={{ background: "#111118", border: "1px solid #27272a" }}>
-        <FileSignature style={{ width: 10, height: 10, color: "#6366f1" }} />
-        <span className="text-[9px] text-zinc-400">Secure signing link sent via email</span>
+        <CheckCircle2 style={{ width: 10, height: 10, color: "#6366f1" }} />
+        <span className="text-[9px] text-zinc-400">Sourced from Section 3 & Addendum A</span>
       </motion.div>
     </div>
   )
@@ -556,7 +553,7 @@ function ResultsPane({ toolId }: { toolId: ToolId }) {
           {toolId === 2 && <ResultsBuild />}
           {toolId === 3 && <ResultsReview />}
           {toolId === 4 && <ResultsRedact />}
-          {toolId === 5 && <ResultsSignature />}
+          {toolId === 5 && <ResultsAsk />}
           {toolId === 6 && <ResultsCompare />}
           {toolId === 7 && <ResultsClauseExtractor />}
         </motion.div>

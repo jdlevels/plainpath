@@ -12,7 +12,7 @@ import React, { useEffect, useState } from "react"
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 import {
   AlertTriangle, CheckCircle2, ChevronLeft, Shield,
-  Wifi, BatteryFull, Signal, EyeOff, FileSignature,
+  Wifi, BatteryFull, Signal, EyeOff,
   GitCompare, ListChecks, Clock,
 } from "lucide-react"
 
@@ -250,32 +250,31 @@ function RedactScreen() {
   )
 }
 
-/* ─── Tool 5: Digital Signature ──────────────────────────── */
-function SignatureScreen() {
+/* ─── Tool 5: Ask This Document ──────────────────────────── */
+function AskDocumentScreen() {
   return (
     <div className="px-3 pt-3 space-y-2">
-      <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Signature Status</p>
-      <div className="rounded-xl border border-emerald-200 dark:border-emerald-700/40 bg-emerald-50 dark:bg-emerald-900/20 p-2.5 flex items-center gap-2">
-        <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center shrink-0">
-          <CheckCircle2 className="w-3.5 h-3.5 text-white" />
-        </div>
-        <div>
-          <p className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">Sarah Chen — Client</p>
-          <p className="text-[9px] text-zinc-400">Signed · May 2, 2:34 PM</p>
-        </div>
+      <div className="rounded-xl border border-indigo-200 dark:border-indigo-700/40 bg-indigo-50 dark:bg-indigo-900/20 px-2.5 py-2">
+        <p className="text-[9px] text-indigo-600 dark:text-indigo-400 font-medium italic">"What does this lease require me to do before move-in?"</p>
       </div>
-      <div className="rounded-xl border border-indigo-200 dark:border-indigo-700/40 bg-indigo-50 dark:bg-indigo-900/20 p-2.5 flex items-center gap-2">
-        <div className="w-6 h-6 rounded-full border-2 border-indigo-400 flex items-center justify-center shrink-0">
-          <Clock className="w-3 h-3 text-indigo-500" />
-        </div>
-        <div>
-          <p className="text-[10px] font-semibold text-indigo-700 dark:text-indigo-400">Marcus Lee — Contractor</p>
-          <p className="text-[9px] text-zinc-400">Awaiting signature</p>
-        </div>
+      <div className="rounded-xl border border-zinc-200 dark:border-zinc-700/40 bg-white dark:bg-zinc-900/60 px-2.5 py-2 space-y-1.5">
+        <p className="text-[9px] font-semibold text-zinc-500 uppercase tracking-wider">Answer</p>
+        {[
+          "Pay first month's rent + security deposit before keys",
+          "Submit proof of renters insurance by move-in date",
+          "Sign and return lease addendum within 3 days",
+        ].map((item, i) => (
+          <div key={i} className="flex items-start gap-1.5">
+            <div className="w-3.5 h-3.5 rounded-full bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center shrink-0 mt-px">
+              <span className="text-[7px] font-bold text-indigo-600">{i + 1}</span>
+            </div>
+            <p className="text-[9px] text-zinc-600 dark:text-zinc-300 leading-tight">{item}</p>
+          </div>
+        ))}
       </div>
-      <div className="flex items-center gap-2 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200/80 dark:border-zinc-700/40 px-2.5 py-2">
-        <FileSignature className="w-3 h-3 text-indigo-500 shrink-0" />
-        <p className="text-[9px] text-zinc-500">Secure signing link sent via email</p>
+      <div className="flex items-center gap-1.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200/80 dark:border-zinc-700/40 px-2.5 py-2">
+        <CheckCircle2 className="w-3 h-3 text-indigo-500 shrink-0" />
+        <p className="text-[9px] text-zinc-500">Sourced from Section 3 &amp; Addendum A</p>
       </div>
     </div>
   )
@@ -362,7 +361,7 @@ function ToolScreen({ toolId }: { toolId: number }) {
     case 2:  return <BuildContractScreen />
     case 3:  return <ContractReviewScreen />
     case 4:  return <RedactScreen />
-    case 5:  return <SignatureScreen />
+    case 5:  return <AskDocumentScreen />
     case 6:  return <CompareScreen />
     case 7:  return <ClauseExtractorScreen />
     default: return <AnalyzeScreen />

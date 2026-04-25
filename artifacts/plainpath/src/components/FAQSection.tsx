@@ -17,7 +17,7 @@ const FAQS = [
   },
   {
     q: "What's the difference between the six tools?",
-    a: "Analyze a Document breaks down paperwork you already have — extracting action steps, deadlines, risks, and required documents in plain English. Document Trust Check scores whether a document appears legitimate or shows scam and fraud indicators. Build a Contract creates a new agreement from scratch based on your deal terms, with a gap analysis. Contract Review reads a contract someone else wrote, flags risky or missing clauses, scores it, and gives you negotiation language. Redact Sensitive Info detects and removes personal information — names, SSNs, account numbers, and more — before you share or analyze a document. Digital Signature lets you send documents for legally binding e-signature, track signing status in real time, and download certified signed copies.",
+    a: "Analyze a Document breaks down paperwork you already have — extracting action steps, deadlines, risks, and required documents in plain English. Document Trust Check scores whether a document appears legitimate or shows scam and fraud indicators. Build a Contract creates a new agreement from scratch based on your deal terms, with a gap analysis. Contract Review reads a contract someone else wrote, flags risky or missing clauses, scores it, and gives you negotiation language. Redact Sensitive Info detects and removes personal information — names, SSNs, account numbers, and more — before you share or analyze a document. Ask This Document lets you upload any document and ask plain-English questions about clauses, obligations, deadlines, and risks — getting direct answers sourced from the text.",
   },
   {
     q: "Is the output legal advice?",

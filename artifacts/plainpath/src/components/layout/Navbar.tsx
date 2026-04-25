@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter"
 import { Button } from "@/components/ui/button"
 import {
   FileScan, Plus, BookMarked, GitCompare, LogOut, User, ChevronDown,
-  LayoutGrid, ShieldCheck, PenLine, Scale, Menu, X, LayoutDashboard, CreditCard, EyeOff, FileSignature, FolderOpen, ListChecks, LayoutTemplate, MessageCircle,
+  LayoutGrid, ShieldCheck, PenLine, Scale, Menu, X, LayoutDashboard, CreditCard, EyeOff, MessageCircle, FolderOpen, ListChecks, LayoutTemplate,
 } from "lucide-react"
 
 import { ThemeToggle } from "@/components/ui/ThemeToggle"
@@ -38,7 +38,7 @@ const TOOL_NAV = [
   { label: "Contract Review",       href: "/contract-review",         icon: Scale         },
   { label: "Build a Contract",      href: "/build-contract",          icon: PenLine       },
   { label: "Redact Sensitive Info", href: "/redact",                  icon: EyeOff        },
-  { label: "Digital Signature",     href: "/signature",               icon: FileSignature },
+  { label: "Ask This Document",      href: "/analyze",                 icon: MessageCircle },
   { label: "Clause Extractor",       href: "/clause-extractor",        icon: ListChecks    },
   { label: "Compare Versions",      href: "/compare-versions",        icon: GitCompare    },
 ]

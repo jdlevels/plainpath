@@ -25,7 +25,7 @@ export default function VsContractCrab() {
     { feature: "Employment contract analysis", plainpath: true, contractcrab: false },
     { feature: "Document Trust Check (scam detection)", plainpath: true, contractcrab: false },
     { feature: "PII Redaction", plainpath: true, contractcrab: false },
-    { feature: "Digital Signatures (Dropbox Sign)", plainpath: true, contractcrab: false },
+    { feature: "Ask This Document (Document Q&A)", plainpath: true, contractcrab: false },
     { feature: "Contract Builder", plainpath: true, contractcrab: false },
     { feature: "Clause Extractor", plainpath: true, contractcrab: false },
     { feature: "Version Comparison", plainpath: true, contractcrab: false },

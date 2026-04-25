@@ -3,7 +3,7 @@ import {
   FileScan, ShieldCheck, PenLine, Scale, ArrowRight,
   ListTodo, Calendar, AlertTriangle, CheckCircle2,
   Flag, BarChart2, FileCheck, Sparkles, Copy, MessageSquare,
-  EyeOff, Download, ArrowRightLeft, Lock, Clock, FileSignature, Send, Eye,
+  EyeOff, Download, ArrowRightLeft, Lock, Clock, MessageCircle, Send, Eye,
   GitCompare, ListChecks, CalendarClock, Layers, Users,
 } from "lucide-react"
 import { Card } from "@/components/ui/card"
@@ -121,19 +121,19 @@ const TOOLS = [
     comingSoon: false,
   },
   {
-    icon: FileSignature,
-    title: "Digital Signature",
-    verb: "Sign it.",
-    tagline: "Legally binding e-signatures, built in",
-    description: "Send documents for e-signature, track signing status in real time, and download certified signed copies — all without leaving PlainPath. Powered by Dropbox Sign.",
+    icon: MessageSquare,
+    title: "Ask This Document",
+    verb: "Ask it.",
+    tagline: "Get plain-English answers from any document",
+    description: "Upload a document and ask questions about clauses, dates, obligations, risks, missing items, or confusing language — and get direct answers sourced from the actual text.",
     features: [
-      { icon: Send, label: "Send secure signing link by email" },
-      { icon: Eye, label: "Real-time status tracking" },
-      { icon: Clock, label: "Full audit trail per request" },
-      { icon: CheckCircle2, label: "Download signed PDF when complete" },
+      { icon: MessageSquare, label: "\"What does this require me to do?\"" },
+      { icon: Clock, label: "\"What deadlines are listed?\"" },
+      { icon: AlertTriangle, label: "\"What sections should I review first?\"" },
+      { icon: CheckCircle2, label: "\"Are there payment terms?\"" },
     ],
-    cta: "Send for Signature",
-    href: "/app/signature",
+    cta: "Ask a Document",
+    href: "/app/analyze",
     color: "from-indigo-50/60 to-indigo-50/40 dark:from-indigo-900/10 dark:to-indigo-900/10",
     badge: "bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400",
     badgeLabel: "Pro",
@@ -219,7 +219,7 @@ export default function ToolsShowcase() {
           transition={{ delay: 0.08 }}
           className="text-muted-foreground text-lg max-w-2xl mx-auto"
         >
-          Whether you are reading a document, questioning its legitimacy, creating an agreement, reviewing one before you sign, redacting private information, sending for e-signature, comparing versions, or editing a PDF — PlainPath has a dedicated tool for exactly that.
+          Whether you are reading a document, questioning its legitimacy, creating an agreement, reviewing one before you sign, redacting private information, asking plain-English questions, comparing versions, or extracting clauses — PlainPath has a dedicated tool for exactly that.
         </motion.p>
       </div>
 

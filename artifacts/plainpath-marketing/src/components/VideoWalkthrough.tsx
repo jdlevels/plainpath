@@ -12,7 +12,7 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 import {
   FileText, ShieldAlert, PenLine, Scale, EyeOff,
   AlertTriangle, CheckCircle2, Lock, Sparkles, Download,
-  FileSignature, GitCompare, ListChecks, Send, ArrowRightLeft,
+  MessageCircle, GitCompare, ListChecks, Send, ArrowRightLeft,
   CalendarClock, Users, Layers,
 } from "lucide-react"
 
@@ -97,15 +97,15 @@ const TOOLS = [
   },
   {
     id: 5,
-    name: "Digital Signature",
-    shortName: "Signature",
-    desc: "Secure signing link sent. Real-time audit trail.",
-    icon: FileSignature,
+    name: "Ask This Document",
+    shortName: "Ask",
+    desc: "Plain-English answers sourced directly from the text.",
+    icon: MessageCircle,
     hex: "#6366f1",
     iconHex: "#a5b4fc",
-    docName: "Consulting_Agreement_Final.pdf",
-    docMeta: "1,820 words · 6 pages",
-    badgeLabel: "Awaiting",
+    docName: "Residential_Lease_Agreement.pdf",
+    docMeta: "2,140 words · 8 pages",
+    badgeLabel: "Answered",
     badgeText: "#6366f1",
     badgeBg: "rgba(99,102,241,0.12)",
     badgeBorder: "rgba(99,102,241,0.3)",

@@ -5,7 +5,7 @@ import {
   CreditCard, CheckCircle2, XCircle, Zap, BarChart3,
   ShieldCheck, PenLine, Scale, ArrowRight, ExternalLink,
   AlertTriangle, TestTube, Loader2, RefreshCw, Mail, EyeOff,
-  FileScan, FileSignature, GitCompare, ListChecks,
+  FileScan, MessageCircle, GitCompare, ListChecks,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useEntitlements } from "@/hooks/useEntitlements"
@@ -42,7 +42,7 @@ const TOOLS = [
   { icon: ShieldCheck,    key: "trust-check",      label: "Document Trust Check", plans: ["pro"] },
   { icon: Scale,          key: "contract-review",  label: "Contract Review",      plans: ["pro"] },
   { icon: PenLine,        key: "build-contract",   label: "Build a Contract",     plans: ["pro"] },
-  { icon: FileSignature,  key: "signature",        label: "Digital Signature",    plans: ["pro"] },
+  { icon: MessageCircle,  key: "ask-document",     label: "Ask This Document",    plans: ["pro"] },
   { icon: GitCompare,     key: "compare-versions", label: "Compare Versions",     plans: ["pro"] },
   { icon: ListChecks,     key: "clause-extractor", label: "Clause Extractor",     plans: ["pro"] },
 ] as const
@@ -314,7 +314,7 @@ export default function Billing() {
           {isEnforced && plan === "starter" && (
             <div className="mt-4 rounded-xl border border-primary/20 bg-primary/5 p-3 flex items-center justify-between gap-3">
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Upgrade to <span className="font-semibold text-primary">Pro</span> to unlock all 8 tools — including Contract Review, Digital Signature, Compare Versions, and more.
+                Upgrade to <span className="font-semibold text-primary">Pro</span> to unlock all 8 tools — including Contract Review, Ask This Document, Compare Versions, and more.
               </p>
               <Button size="sm" onClick={() => navigate("/subscribe")} className="shrink-0">
                 Upgrade <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
