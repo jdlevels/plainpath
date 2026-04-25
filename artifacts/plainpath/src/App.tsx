@@ -32,6 +32,7 @@ import Compare from "@/pages/Compare";
 import CompareVersions from "@/pages/CompareVersions";
 import CompareVersionsSession from "@/pages/CompareVersionsSession";
 import Redact from "@/pages/Redact";
+import RedactQA from "@/pages/RedactQA";
 import Billing from "@/pages/Billing";
 import Upgrade from "@/pages/Upgrade";
 import Documents from "@/pages/Documents";
@@ -496,6 +497,7 @@ function Router() {
             <Route path="/review" component={protect(ContractReview)} />
             <Route path="/compare" component={protect(Compare)} />
             <Route path="/redact" component={protect(Redact)} />
+            <Route path="/redact-qa" component={RedactQA} />
             <Route path="/billing" component={protect(Billing)} />
             <Route path="/upgrade" component={protect(Upgrade)} />
             <Route path="/team" component={protect(TeamManage)} />

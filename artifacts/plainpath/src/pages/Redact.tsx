@@ -33,12 +33,12 @@ import { saveRecentWork } from "@/lib/recentWork"
 
 // ─── PII types (mirrors server/piiDetection.ts) ───────────────────────────────
 
-type PiiType =
+export type PiiType =
   | "NAME" | "ADDRESS" | "EMAIL" | "PHONE" | "SSN" | "TAX_ID" | "DOB"
   | "ACCOUNT_NUMBER" | "ROUTING_NUMBER" | "CREDIT_CARD" | "POLICY_ID"
   | "MEMBER_ID" | "CASE_NUMBER" | "LICENSE_NUMBER" | "IP_ADDRESS" | "OTHER_ID"
 
-interface PiiSpan {
+export interface PiiSpan {
   id: string
   type: PiiType
   label: string
@@ -377,7 +377,7 @@ interface EmptyStateProps {
   setUploadedFile: (f: File | null) => void
 }
 
-function EmptyState({
+export function EmptyState({
   onText, onFile, onUrl, extracting, urlLoading,
   uploadError, urlError, uploadedFile, setUploadedFile,
 }: EmptyStateProps) {
@@ -617,7 +617,7 @@ function EmptyState({
 
 // ─── Processing State ─────────────────────────────────────────────────────────
 
-function ProcessingState({ fileName }: { fileName: string }) {
+export function ProcessingState({ fileName }: { fileName: string }) {
   const steps = [
     "Reading document structure",
     "Running pattern recognition",
@@ -710,7 +710,7 @@ function ProcessingState({ fileName }: { fileName: string }) {
 
 // ─── Error State ──────────────────────────────────────────────────────────────
 
-function ErrorState({
+export function ErrorState({
   fileName, onReset, onAsk,
 }: { fileName: string; onReset: () => void; onAsk: () => void }) {
   return (
@@ -794,23 +794,29 @@ function ErrorState({
 
 // ─── Workspace ────────────────────────────────────────────────────────────────
 
-interface WorkspaceProps {
+export interface WorkspaceProps {
   text: string
   fileName: string
   spans: PiiSpan[]
   onReset: () => void
   onExport: (selected: Set<string>) => void
+  /** QA-only: set the initial view mode */
+  _qaViewMode?: "original" | "preview"
+  /** QA-only: set an initially-active span id */
+  _qaActiveId?: string | null
+  /** QA-only: set the initial mobile tab */
+  _qaMobileTab?: "redactions" | "document"
 }
 
-function Workspace({ text, fileName, spans, onReset, onExport }: WorkspaceProps) {
+export function Workspace({ text, fileName, spans, onReset, onExport, _qaViewMode, _qaActiveId, _qaMobileTab }: WorkspaceProps) {
   const [selected, setSelected] = useState<Set<string>>(
     // Default: pre-select all high-confidence items
     () => new Set(spans.filter(s => s.confidence === "high").map(s => s.id))
   )
-  const [activeId, setActiveId] = useState<string | null>(null)
-  const [viewMode, setViewMode] = useState<"original" | "preview">("original")
+  const [activeId, setActiveId] = useState<string | null>(_qaActiveId ?? null)
+  const [viewMode, setViewMode] = useState<"original" | "preview">(_qaViewMode ?? "original")
   const [unsaved, setUnsaved] = useState(false)
-  const [mobileTab, setMobileTab] = useState<"redactions" | "document">("redactions")
+  const [mobileTab, setMobileTab] = useState<"redactions" | "document">(_qaMobileTab ?? "redactions")
   const [categoryFilter, setCategoryFilter] = useState<string>("all")
   const [manualCount, setManualCount] = useState(0)
 
