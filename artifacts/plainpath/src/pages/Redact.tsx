@@ -30,6 +30,7 @@ import { useEntitlements } from "@/hooks/useEntitlements"
 import UpgradeModal from "@/components/UpgradeModal"
 import { BILLING_CONFIG } from "@/lib/billingConfig"
 import { saveRecentWork } from "@/lib/recentWork"
+import { downloadRedactedPdf } from "@/lib/piiExport"
 
 // ─── PII types (mirrors server/piiDetection.ts) ───────────────────────────────
 
@@ -800,6 +801,10 @@ export interface WorkspaceProps {
   spans: PiiSpan[]
   onReset: () => void
   onExport: (selected: Set<string>) => void
+  /** Original File object — present when input was a PDF upload */
+  uploadedFile?: File | null
+  /** True when the input source was a PDF file (not pasted text or non-PDF) */
+  isPdfInput?: boolean
   /** QA-only: set the initial view mode */
   _qaViewMode?: "original" | "preview"
   /** QA-only: set an initially-active span id */
@@ -808,7 +813,7 @@ export interface WorkspaceProps {
   _qaMobileTab?: "redactions" | "document"
 }
 
-export function Workspace({ text, fileName, spans, onReset, onExport, _qaViewMode, _qaActiveId, _qaMobileTab }: WorkspaceProps) {
+export function Workspace({ text, fileName, spans, onReset, onExport, uploadedFile, isPdfInput, _qaViewMode, _qaActiveId, _qaMobileTab }: WorkspaceProps) {
   const [selected, setSelected] = useState<Set<string>>(
     // Default: pre-select all high-confidence items
     () => new Set(spans.filter(s => s.confidence === "high").map(s => s.id))
@@ -819,6 +824,37 @@ export function Workspace({ text, fileName, spans, onReset, onExport, _qaViewMod
   const [mobileTab, setMobileTab] = useState<"redactions" | "document">(_qaMobileTab ?? "redactions")
   const [categoryFilter, setCategoryFilter] = useState<string>("all")
   const [manualCount, setManualCount] = useState(0)
+
+  // ── PDF export state ────────────────────────────────────────────────────────
+  const [isExporting, setIsExporting] = useState(false)
+  const [exportError, setExportError] = useState<string | null>(null)
+  const [exportMissed, setExportMissed] = useState(0)
+  const [exportSuccess, setExportSuccess] = useState(false)
+
+  const canExportPdf = !!(isPdfInput && uploadedFile)
+
+  const handleExportClick = useCallback(async () => {
+    if (canExportPdf) {
+      setIsExporting(true)
+      setExportError(null)
+      setExportMissed(0)
+      setExportSuccess(false)
+      try {
+        const approvedValues = spans.filter(s => selected.has(s.id)).map(s => s.value)
+        const result = await downloadRedactedPdf(uploadedFile!, approvedValues, getApiBaseUrl())
+        setExportMissed(result.missed)
+        setExportSuccess(true)
+        saveRecentWork({ tool: "redact", title: fileName.replace(/\.[^.]+$/, "") })
+        setTimeout(() => setExportSuccess(false), 5000)
+      } catch (err) {
+        setExportError(err instanceof Error ? err.message : "Export failed. Please try again.")
+      } finally {
+        setIsExporting(false)
+      }
+    } else {
+      onExport(selected)
+    }
+  }, [canExportPdf, uploadedFile, spans, selected, onExport, fileName])
 
   const docScrollRef = useRef<HTMLDivElement>(null)
   const spanRefs = useRef<Map<string, HTMLElement>>(new Map())
@@ -1030,12 +1066,52 @@ export function Workspace({ text, fileName, spans, onReset, onExport, _qaViewMod
         {/* G. Save / Export */}
         <section className="space-y-2">
           <button
-            onClick={() => onExport(selected)}
-            className="w-full py-3 rounded-xl bg-violet-600 hover:bg-violet-500 text-sm font-medium text-white transition-colors flex items-center justify-center gap-2"
+            onClick={() => { void handleExportClick() }}
+            disabled={isExporting}
+            className="w-full py-3 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-60 disabled:cursor-not-allowed text-sm font-medium text-white transition-colors flex items-center justify-center gap-2"
           >
-            <Download className="w-4 h-4" />
-            Export Redacted Copy
+            {isExporting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Generating redacted PDF…
+              </>
+            ) : (
+              <>
+                <Download className="w-4 h-4" />
+                {canExportPdf ? "Export Redacted PDF" : "Export Redacted Copy"}
+              </>
+            )}
           </button>
+
+          {/* Export success */}
+          {exportSuccess && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-green-500/10 border border-green-500/20 text-xs text-green-400">
+              <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+              <span>Redacted PDF downloaded.</span>
+            </div>
+          )}
+
+          {/* Missed-values warning */}
+          {exportMissed > 0 && !exportError && (
+            <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-400">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-px" />
+              <span>{exportMissed} selected item{exportMissed > 1 ? "s" : ""} could not be matched in the PDF text layer. Review the exported file before sharing.</span>
+            </div>
+          )}
+
+          {/* Export error */}
+          {exportError && (
+            <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20 text-xs text-red-400">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-px" />
+              <span>{exportError}</span>
+            </div>
+          )}
+
+          {/* Non-PDF note */}
+          {!canExportPdf && (
+            <p className="text-xs text-white/25 text-center">PDF redaction export is available for PDF uploads.</p>
+          )}
+
           <div className="grid grid-cols-2 gap-2">
             <button
               onClick={() => { setUnsaved(false) }}
@@ -1052,7 +1128,7 @@ export function Workspace({ text, fileName, spans, onReset, onExport, _qaViewMod
               {viewMode === "original" ? "Preview redacted" : "Original view"}
             </button>
           </div>
-          <p className="text-xs text-white/20 text-center">Original preserved. Redactions create a separate copy.</p>
+          <p className="text-xs text-white/20 text-center">PlainPath creates a flattened redacted PDF copy. The original file is unchanged.</p>
         </section>
 
         {/* H. Source Traceability */}
@@ -1176,11 +1252,17 @@ export function Workspace({ text, fileName, spans, onReset, onExport, _qaViewMod
           </button>
           {/* Export */}
           <button
-            onClick={() => onExport(selected)}
-            className="flex items-center gap-1.5 text-xs bg-violet-600 hover:bg-violet-500 text-white px-2.5 py-1.5 rounded-lg font-medium transition-colors"
+            onClick={() => { void handleExportClick() }}
+            disabled={isExporting}
+            className="flex items-center gap-1.5 text-xs bg-violet-600 hover:bg-violet-500 disabled:opacity-60 disabled:cursor-not-allowed text-white px-2.5 py-1.5 rounded-lg font-medium transition-colors"
           >
-            <Download className="w-3.5 h-3.5" />
-            <span className="hidden lg:inline">Export Redacted</span>
+            {isExporting
+              ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              : <Download className="w-3.5 h-3.5" />
+            }
+            <span className="hidden lg:inline">
+              {isExporting ? "Generating…" : canExportPdf ? "Export Redacted PDF" : "Export Redacted"}
+            </span>
           </button>
         </div>
       </header>
@@ -1465,6 +1547,7 @@ export default function Redact() {
   }
 
   if (pageState === "workspace") {
+    const isPdfInput = !!(uploadedFile && uploadedFile.name.toLowerCase().endsWith(".pdf"))
     return (
       <Workspace
         text={docText}
@@ -1472,6 +1555,8 @@ export default function Redact() {
         spans={spans}
         onReset={handleReset}
         onExport={handleExport}
+        uploadedFile={uploadedFile}
+        isPdfInput={isPdfInput}
       />
     )
   }

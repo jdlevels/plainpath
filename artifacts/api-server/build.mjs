@@ -29,6 +29,12 @@ async function buildAll() {
     // - use path traversal to read files (e.g. @google-cloud/secret-manager loads sibling .proto files)
     external: [
       "*.node",
+      // @napi-rs/canvas uses a native .node binary loaded via a platform-specific
+      // sub-package.  All three must be external so esbuild does not attempt to
+      // bundle the native binary.
+      "@napi-rs/canvas",
+      "@napi-rs/canvas-linux-x64-gnu",
+      "@napi-rs/canvas-linux-arm64-gnu",
       // stripe-replit-sync loads SQL migration files from a path relative to
       // import.meta.url.  Bundling it into dist/index.mjs breaks that path
       // resolution, so we keep it as a proper node_modules import.

@@ -99,14 +99,22 @@ export function downloadRedactedText(redactedText: string, originalName?: string
 
 // ─── Download as redacted PDF ─────────────────────────────────────────────────
 // Sends the original PDF + approved span values to the server.
-// Server applies permanent black-box redactions and returns a new PDF binary.
+// Server rasterizes each page, draws black bars, and returns a new image-only PDF.
 // The original File object is never modified — the server works on a copy.
+//
+// Returns { matched, missed } — counts of how many approved values were found
+// in the PDF text layer vs. not found. Callers can surface a warning if missed > 0.
+
+export type RedactPdfResult = {
+  matched: number
+  missed: number
+}
 
 export async function downloadRedactedPdf(
   originalFile: File,
   approvedValues: string[],
   apiBase: string,
-): Promise<void> {
+): Promise<RedactPdfResult> {
   const formData = new FormData()
   formData.append("file", originalFile)
   formData.append("redactValues", JSON.stringify(approvedValues))
@@ -120,6 +128,9 @@ export async function downloadRedactedPdf(
     const data = await res.json().catch(() => ({})) as { message?: string }
     throw new Error(data.message ?? `PDF redaction failed (${res.status})`)
   }
+
+  const matched = parseInt(res.headers.get("X-Redact-Matched") ?? "0", 10)
+  const missed = parseInt(res.headers.get("X-Redact-Missed") ?? "0", 10)
 
   const blob = await res.blob()
   const base = originalFile.name.replace(/\.[^.]+$/, "").replace(/[^a-zA-Z0-9_\-]/g, "_")
@@ -136,6 +147,8 @@ export async function downloadRedactedPdf(
     URL.revokeObjectURL(url)
     document.body.removeChild(a)
   }, 1000)
+
+  return { matched, missed }
 }
 
 // ─── Copy to clipboard ─────────────────────────────────────────────────────

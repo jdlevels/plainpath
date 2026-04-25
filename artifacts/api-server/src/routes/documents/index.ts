@@ -2507,15 +2507,25 @@ router.post("/extract-text", upload.single("file"), async (req, res) => {
 });
 
 // POST /api/documents/redact-pdf
-// Accepts a PDF + list of string values to redact.
-// Uses pdfjs-dist to locate each value's bounding box on each page.
-// Draws solid black filled rectangles over every matching text item using pdf-lib.
-// Returns the modified PDF binary. The original uploaded file is never mutated.
+// Rasterized redaction: renders each PDF page to an image, draws solid black bars
+// over detected sensitive text, then assembles a new PDF from the redacted images.
+// The final PDF contains only image pages — no recoverable text content streams.
+// The original uploaded file is never modified.
 router.post("/redact-pdf", upload.single("file"), async (req, res) => {
   const { userId } = getAuth(req);
   if (!userId) {
     return res.status(401).json({ error: "unauthorized", message: "You must be signed in to redact a PDF." });
   }
+
+  const MAX_PAGES = 20;
+  const MAX_BYTES = 20 * 1024 * 1024; // 20 MB
+  const MAX_VALUES = 500;
+  const RENDER_DPI = 144; // render quality: 2× PDF baseline (72 dpi)
+  const SCALE = RENDER_DPI / 72; // pixel = pdf_units * SCALE
+  const PAD_X = 3; // horizontal padding around each box in pixels
+  const PAD_Y = 4; // vertical padding around each box in pixels
+
+  let tmpDir: string | null = null;
 
   try {
     const file = req.file;
@@ -2527,6 +2537,10 @@ router.post("/redact-pdf", upload.single("file"), async (req, res) => {
       return res.status(400).json({ message: "Only PDF files are supported for PDF redaction." });
     }
 
+    if (file.buffer.length > MAX_BYTES) {
+      return res.status(413).json({ message: `File too large. Maximum size for PDF redaction is ${MAX_BYTES / 1024 / 1024} MB.` });
+    }
+
     let redactValues: string[] = [];
     try {
       const raw = req.body?.redactValues;
@@ -2535,21 +2549,17 @@ router.post("/redact-pdf", upload.single("file"), async (req, res) => {
       return res.status(400).json({ message: "Invalid redactValues — expected a JSON array of strings." });
     }
 
-    // Deduplicate and filter empty values
-    redactValues = [...new Set(redactValues.map(v => v?.trim()).filter(v => v && v.length >= 2))];
+    redactValues = [...new Set(
+      redactValues.map((v: unknown) => (typeof v === "string" ? v.trim() : ""))
+        .filter((v: string) => v.length >= 2)
+    )].slice(0, MAX_VALUES);
 
-    // If nothing to redact, return a clean copy of the PDF as-is
     const pdfBuffer = file.buffer;
-    if (redactValues.length === 0) {
-      res.set("Content-Type", "application/pdf");
-      res.set("Content-Disposition", `attachment; filename="redacted.pdf"`);
-      return res.send(pdfBuffer);
-    }
 
     // ── Step 1: Extract text items with bounding boxes ────────────────────────
-    // We piggyback on pdf-parse's bundled pdfjs-dist (v2.x) via its pagerender
-    // hook. That version is already configured for Node.js and doesn't require
-    // DOMMatrix, canvas polyfills, or external worker setup.
+    // Use pdf-parse to walk each page's text content via its pagerender hook.
+    // Each item carries: str, page (1-based), x (pdf units from left),
+    // y (pdf units from bottom), width, height.
 
     interface TextItem {
       str: string;
@@ -2561,16 +2571,16 @@ router.post("/redact-pdf", upload.single("file"), async (req, res) => {
     }
 
     const allItems: TextItem[] = [];
-    let currentPage = 0;
+    let parsedPageCount = 0;
 
-    // Import the internal module directly to avoid pdf-parse's test-file-read side effect
     const pdfParseModule = await import("pdf-parse/lib/pdf-parse.js");
     const pdfParse = pdfParseModule.default ?? pdfParseModule;
 
     await pdfParse(pdfBuffer, {
+      max: MAX_PAGES,
       pagerender: async (pageData: { getTextContent: (opts?: Record<string, unknown>) => Promise<{ items: unknown[] }> }) => {
-        currentPage++;
-        const pageNum = currentPage;
+        parsedPageCount++;
+        const pageNum = parsedPageCount;
         try {
           const content = await pageData.getTextContent();
           for (const item of content.items) {
@@ -2589,93 +2599,202 @@ router.post("/redact-pdf", upload.single("file"), async (req, res) => {
             });
           }
         } catch {
-          // Page extraction failed — skip this page's items
+          // Skip page if extraction fails
         }
         return "";
       },
     });
 
-    // ── Step 2: Build searchable flat text + character→item offset map ───────
+    // ── Step 2: Get page dimensions from pdf-lib ──────────────────────────────
+    const { PDFDocument } = await import("pdf-lib");
+    const srcDoc = await PDFDocument.load(pdfBuffer, { ignoreEncryption: true });
+    const srcPages = srcDoc.getPages();
+    const totalPages = Math.min(srcPages.length, MAX_PAGES);
+
+    // Map page index (1-based) → height in PDF points
+    const pageHeights: Map<number, number> = new Map();
+    for (let i = 0; i < totalPages; i++) {
+      pageHeights.set(i + 1, srcPages[i].getHeight());
+    }
+
+    // ── Step 3: Match redactValues to text items, collect boxes per page ──────
     let fullText = "";
     const itemOffsets: Array<{ start: number; end: number; idx: number }> = [];
-
     for (let i = 0; i < allItems.length; i++) {
       const start = fullText.length;
       fullText += allItems[i].str;
       itemOffsets.push({ start, end: fullText.length, idx: i });
-      // Add separator (space or newline) between items
       fullText += " ";
     }
 
-    // ── Step 3: Find each value in the flat text, collect bounding boxes ─────
     interface RedactBox {
       page: number;
-      x: number;
-      y: number;
+      x: number;       // pdf units from left
+      y: number;       // pdf units from bottom
       w: number;
       h: number;
     }
 
-    const boxes: RedactBox[] = [];
-    const seen = new Set<string>(); // deduplicate identical boxes
+    // Track matched values for header metadata
+    const matchedValueSet = new Set<string>();
+    const boxesByPage: Map<number, RedactBox[]> = new Map();
+    const seen = new Set<string>();
 
     for (const value of redactValues) {
       let searchPos = 0;
+      let foundAny = false;
       while (true) {
         const found = fullText.indexOf(value, searchPos);
         if (found === -1) break;
+        foundAny = true;
         const foundEnd = found + value.length;
-
         for (const range of itemOffsets) {
-          // Include any text item that overlaps with [found, foundEnd]
           if (range.start < foundEnd && range.end > found) {
             const item = allItems[range.idx];
-            const key = `${item.page}:${item.x.toFixed(1)}:${item.y.toFixed(1)}:${item.width.toFixed(1)}`;
+            const key = `${item.page}:${item.x.toFixed(1)}:${item.y.toFixed(1)}`;
             if (!seen.has(key)) {
               seen.add(key);
-              boxes.push({
+              const pageBoxes = boxesByPage.get(item.page) ?? [];
+              pageBoxes.push({
                 page: item.page,
                 x: item.x,
                 y: item.y,
-                w: item.width > 0 ? item.width : Math.max(value.length * 6, 30),
+                w: item.width > 0 ? item.width : Math.max(value.length * 5, 20),
                 h: item.height,
               });
+              boxesByPage.set(item.page, pageBoxes);
             }
           }
         }
-
         searchPos = found + 1;
       }
+      if (foundAny) matchedValueSet.add(value);
     }
 
-    // ── Step 4: Load PDF with pdf-lib, draw solid black rectangles ───────────
-    const { PDFDocument, rgb } = await import("pdf-lib");
-    const pdfLibDoc = await PDFDocument.load(pdfBuffer);
-    const pages = pdfLibDoc.getPages();
+    const matchedCount = matchedValueSet.size;
+    const missedCount = redactValues.length - matchedCount;
 
-    const PAD_X = 1; // horizontal padding around text box
-    const PAD_Y = 2; // vertical padding below text box
+    // If no text was found at all (e.g. scanned/image-only PDF), still rasterize
+    // so the output is always image-only (no text layer recoverable).
 
-    for (const box of boxes) {
-      const page = pages[box.page - 1];
-      if (!page) continue;
-      page.drawRectangle({
-        x: box.x - PAD_X,
-        y: box.y - PAD_Y,
-        width: box.w + PAD_X * 2,
-        height: box.h + PAD_Y * 2,
-        color: rgb(0, 0, 0),
-        opacity: 1,
+    // ── Step 4: Rasterize pages with pdftoppm ────────────────────────────────
+    const { spawnSync } = await import("child_process");
+    const fsPromises = await import("fs/promises");
+    const fsSync = await import("fs");
+    const path = await import("path");
+    const os = await import("os");
+
+    tmpDir = fsSync.mkdtempSync(path.join(os.tmpdir(), "plainpath-redact-"));
+    const pdfPath = path.join(tmpDir, "input.pdf");
+    fsSync.writeFileSync(pdfPath, pdfBuffer);
+
+    const outPrefix = path.join(tmpDir, "page");
+    const pdftoppm = spawnSync(
+      "pdftoppm",
+      ["-r", String(RENDER_DPI), "-png", "-l", String(totalPages), pdfPath, outPrefix],
+      { timeout: 30_000 }
+    );
+
+    if (pdftoppm.error || pdftoppm.status !== 0) {
+      const errMsg = pdftoppm.error?.message ?? (pdftoppm.stderr?.toString() ?? "pdftoppm failed");
+      throw new Error(`Page rendering failed: ${errMsg}`);
+    }
+
+    // Collect and sort page PNGs (pdftoppm names them page-1.png or page-01.png etc.)
+    const allFiles = fsSync.readdirSync(tmpDir);
+    const pngFiles = allFiles
+      .filter(f => f.endsWith(".png"))
+      .sort((a, b) => {
+        const numA = parseInt(a.replace(/[^0-9]/g, ""), 10);
+        const numB = parseInt(b.replace(/[^0-9]/g, ""), 10);
+        return numA - numB;
       });
+
+    if (pngFiles.length === 0) throw new Error("No page images produced during rendering.");
+
+    // ── Step 5: Draw redaction bars on each page image ────────────────────────
+    const { createCanvas, loadImage } = await import("@napi-rs/canvas");
+
+    const redactedPngBuffers: Buffer[] = [];
+    const pageDimsForPdf: Array<{ wPts: number; hPts: number }> = [];
+
+    for (let i = 0; i < pngFiles.length; i++) {
+      const pageNum = i + 1;
+      const pngPath = path.join(tmpDir, pngFiles[i]);
+      const pngBuf = fsSync.readFileSync(pngPath);
+      const img = await loadImage(pngBuf);
+
+      const imgW = img.width;
+      const imgH = img.height;
+
+      const canvas = createCanvas(imgW, imgH);
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0);
+
+      // Page height in PDF points — needed for Y-flip
+      const pageHeightPts = pageHeights.get(pageNum) ?? (imgH / SCALE);
+      pageDimsForPdf.push({
+        wPts: srcPages[i]?.getWidth() ?? imgW / SCALE,
+        hPts: pageHeightPts,
+      });
+
+      // Draw black bars over each redaction box on this page
+      const boxes = boxesByPage.get(pageNum) ?? [];
+      ctx.fillStyle = "#000000";
+      for (const box of boxes) {
+        // Convert PDF user-space (y from bottom) → image pixel space (y from top)
+        const px = box.x * SCALE - PAD_X;
+        const py = (pageHeightPts - box.y - box.h) * SCALE - PAD_Y;
+        const pw = box.w * SCALE + PAD_X * 2;
+        const ph = box.h * SCALE + PAD_Y * 2;
+        ctx.fillRect(
+          Math.max(0, Math.round(px)),
+          Math.max(0, Math.round(py)),
+          Math.min(imgW, Math.round(pw)),
+          Math.min(imgH, Math.round(ph))
+        );
+      }
+
+      redactedPngBuffers.push(canvas.toBuffer("image/png"));
     }
 
-    // Save with no compression to prevent any text-layer recovery
-    const redactedBytes = await pdfLibDoc.save({ useObjectStreams: false });
+    // ── Step 6: Assemble final PDF from redacted page images ──────────────────
+    // Each page contains only the rasterized image — no original text streams.
+    const outDoc = await PDFDocument.create();
 
+    for (let i = 0; i < redactedPngBuffers.length; i++) {
+      const img = await outDoc.embedPng(redactedPngBuffers[i]);
+      const { wPts, hPts } = pageDimsForPdf[i];
+      const page = outDoc.addPage([wPts, hPts]);
+      page.drawImage(img, { x: 0, y: 0, width: wPts, height: hPts });
+    }
+
+    const outBytes = await outDoc.save();
+
+    // ── Step 7: Clean up temp files ───────────────────────────────────────────
+    try {
+      fsSync.rmSync(tmpDir, { recursive: true, force: true });
+      tmpDir = null;
+    } catch {
+      // Best-effort cleanup — do not fail the response
+    }
+
+    // ── Step 8: Return redacted PDF ───────────────────────────────────────────
+    const baseName = (file.originalname ?? "document").replace(/\.[^.]+$/, "").replace(/[^\w\-]/g, "_");
     res.set("Content-Type", "application/pdf");
-    res.set("Content-Disposition", `attachment; filename="${file.originalname.replace(/\.[^.]+$/, "")}_redacted.pdf"`);
-    return res.send(Buffer.from(redactedBytes));
+    res.set("Content-Disposition", `attachment; filename="${baseName}_redacted.pdf"`);
+    res.set("X-Redact-Matched", String(matchedCount));
+    res.set("X-Redact-Missed", String(missedCount));
+    return res.send(Buffer.from(outBytes));
+
   } catch (err) {
+    // Clean up temp dir on error
+    if (tmpDir) {
+      try {
+        const fsSync = require("fs");
+        fsSync.rmSync(tmpDir, { recursive: true, force: true });
+      } catch { /* ignore */ }
+    }
     const msg = err instanceof Error ? err.message : String(err);
     console.error("[documents/redact-pdf]", msg);
     return res.status(500).json({ message: "PDF redaction failed. Please try again." });
