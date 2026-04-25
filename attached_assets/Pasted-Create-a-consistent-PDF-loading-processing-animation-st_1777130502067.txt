@@ -1,0 +1,132 @@
+Create a consistent PDF loading / processing animation standard across all PlainPath tools that upload or process PDFs.
+
+Do not redesign the tools.
+Do not change completed right-panel layouts.
+Do not change routing.
+Do not touch Stripe/payment behavior.
+Do not activate paid gates or free-limit messages.
+Do not add new tools.
+
+Goal:
+Every tool that uploads/processes a PDF should show the same PlainPath loading experience so the app feels unified and professional.
+
+Apply to:
+- Analyze a Document
+- Document Trust Check
+- Contract Review
+- Clause Extractor
+- Compare Versions
+- Redact Sensitive Info
+- Build a Contract / Document Builder only if it uploads/imports a source PDF
+- Any shared PDF-upload component used by these tools
+
+Standard loading animation requirements:
+
+1. Tool identity must be visible
+Every loading state should clearly show:
+- PlainPath mark/header
+- tool name
+- uploaded file name
+- document type if known
+- current status badge
+
+2. Left document loading preview
+The left side should show a consistent document skeleton/page preview:
+- dark document workspace
+- page/card skeleton
+- animated scan/progress line
+- highlighted current section/page
+- subtle pulse animation
+- file name visible near the preview
+
+Avoid:
+- blank dark screens
+- generic spinners only
+- inconsistent loading cards
+- hidden file names
+- unclear tool identity
+
+3. Right-side progress checklist
+Where the tool has a right panel, show a consistent progress checklist.
+
+Example structure:
+- Reading document
+- Extracting text
+- Identifying key sections
+- Running tool-specific analysis
+- Building results
+
+Tool-specific final step examples:
+- Analyze: Building action plan
+- Trust Check: Checking trust signals
+- Contract Review: Reviewing terms and risks
+- Clause Extractor: Extracting clauses
+- Compare Versions: Aligning document changes
+- Redact: Detecting sensitive information
+
+4. Progress bar and status
+Use the same visual pattern:
+- progress bar
+- percentage or step count where available
+- active step highlighted
+- completed steps checked
+- pending steps dimmed
+
+5. Reusable component preferred
+If possible, create or reuse one shared component such as:
+
+DocumentProcessingScreen
+or
+PDFProcessingWorkspace
+
+Props should support:
+- toolName
+- fileName
+- documentType
+- currentStep
+- steps[]
+- progress
+- accentColor if needed
+- leftPreviewMode: single / compare / paper
+- statusLabel
+
+Do not duplicate separate loading designs across tools if a shared component can support them cleanly.
+
+6. Compare Versions exception
+Compare Versions may use a modified version because it has two PDF/document inputs.
+
+It should still match the same system:
+- Original document loading preview
+- Revised document loading preview
+- shared progress checklist
+- same top shell/header
+- same progress styling
+
+7. Redact exception
+Redact can keep its white paper surface once loaded, but during processing it should still use the shared PDF loading animation unless there is a strong reason not to.
+
+8. Error safety
+Do not change error handling except to make sure failed processing preserves:
+- uploaded file
+- selected file names
+- current tool screen
+- user selections if any
+
+9. QA required
+After implementation, provide screenshots for the loading/processing state of:
+
+- Analyze a Document
+- Document Trust Check
+- Contract Review
+- Clause Extractor
+- Compare Versions
+- Redact Sensitive Info
+
+Also confirm:
+- all loading states show the tool name
+- all loading states show the file name
+- no tool shows a blank loading screen
+- no upload flow was broken
+- no right-panel results were changed
+- no new TypeScript/runtime errors were introduced
+- build completes cleanly

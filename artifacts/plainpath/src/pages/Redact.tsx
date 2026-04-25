@@ -31,6 +31,7 @@ import UpgradeModal from "@/components/UpgradeModal"
 import { BILLING_CONFIG } from "@/lib/billingConfig"
 import { saveRecentWork } from "@/lib/recentWork"
 import { downloadRedactedPdf } from "@/lib/piiExport"
+import { DocumentScanScreen } from "@/components/DocumentScanScreen"
 
 // ─── PII types (mirrors server/piiDetection.ts) ───────────────────────────────
 
@@ -610,99 +611,6 @@ export function EmptyState({
           </div>
 
           <p className="text-xs text-white/20 text-center">Original document is never modified. Redactions create a separate copy.</p>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ─── Processing State ─────────────────────────────────────────────────────────
-
-export function ProcessingState({ fileName }: { fileName: string }) {
-  const steps = [
-    "Reading document structure",
-    "Running pattern recognition",
-    "Detecting names and identifiers",
-    "Finding contact information",
-    "Scanning financial data",
-    "Grouping and ranking results",
-    "Preparing redaction review",
-  ]
-  const [step, setStep] = useState(0)
-  useEffect(() => {
-    const t = setInterval(() => setStep(s => Math.min(s + 1, steps.length - 1)), 900)
-    return () => clearInterval(t)
-  }, [])
-
-  return (
-    <div className="min-h-screen bg-[#0c0c0f] text-white flex flex-col">
-      <header className="h-12 border-b border-white/[0.06] flex items-center px-4 gap-3 shrink-0">
-        <div className="w-7 h-7 rounded-lg bg-violet-600 flex items-center justify-center">
-          <ShieldCheck className="w-4 h-4" />
-        </div>
-        <span className="text-sm font-medium text-white/80">Redact Sensitive Info</span>
-        <span className="text-white/20 text-xs">/</span>
-        <span className="text-sm text-white/50 truncate max-w-[200px]">{fileName}</span>
-      </header>
-
-      <div className="flex-1 flex flex-col lg:flex-row">
-        {/* Left: document skeleton */}
-        <div className="w-full lg:w-[60%] border-r border-white/[0.06] bg-[#111115] p-6 flex items-center justify-center">
-          <div className="bg-white rounded-lg shadow-xl shadow-black/40 p-8 w-full max-w-[560px] animate-pulse">
-            <div className="border-b border-gray-200 pb-4 mb-5">
-              <div className="h-4 bg-gray-200 rounded w-2/3 mb-2" />
-              <div className="h-3 bg-gray-100 rounded w-1/3" />
-            </div>
-            {[100, 80, 95, 70, 85, 90, 60, 75, 88, 65].map((w, i) => (
-              <div key={i} className="h-3 bg-gray-100 rounded mb-2.5" style={{ width: `${w}%` }} />
-            ))}
-            <div className="mt-4 space-y-3">
-              <div className="h-3 bg-amber-100 rounded w-4/5" />
-              <div className="h-3 bg-gray-100 rounded w-3/4" />
-              <div className="h-3 bg-amber-100 rounded w-2/3" />
-              <div className="h-3 bg-gray-100 rounded w-5/6" />
-            </div>
-          </div>
-        </div>
-
-        {/* Right: progress */}
-        <div className="w-full lg:w-[40%] p-6 flex flex-col justify-center space-y-6">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <Loader2 className="w-5 h-5 animate-spin text-violet-400" />
-              <span className="text-sm font-medium text-white">Scanning document…</span>
-            </div>
-            <div className="h-1 bg-white/[0.06] rounded-full overflow-hidden">
-              <div
-                className="h-full bg-violet-500 rounded-full transition-all duration-700"
-                style={{ width: `${((step + 1) / steps.length) * 100}%` }}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            {steps.map((s, i) => (
-              <div key={s} className={`flex items-center gap-2.5 text-xs transition-all duration-300 ${i < step ? "text-white/40" : i === step ? "text-white/80" : "text-white/20"}`}>
-                {i < step
-                  ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                  : i === step
-                    ? <Loader2 className="w-3.5 h-3.5 animate-spin text-violet-400 shrink-0" />
-                    : <div className="w-3.5 h-3.5 rounded-full border border-white/10 shrink-0" />
-                }
-                {s}
-              </div>
-            ))}
-          </div>
-
-          <div className="border border-white/[0.06] rounded-xl p-4">
-            <p className="text-xs text-white/52 mb-2">What you'll see in the review</p>
-            {["Sensitive items highlighted in the document", "Right panel to select what to redact", "Original · Redaction Preview toggle", "Export redacted copy when ready"].map(s => (
-              <div key={s} className="flex items-center gap-2 text-xs text-white/40 mt-1.5">
-                <div className="w-1 h-1 rounded-full bg-violet-400/50" />
-                {s}
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </div>
@@ -1537,7 +1445,7 @@ export default function Redact() {
   }
 
   // ── State routing ──────────────────────────────────────────────────────────
-  if (pageState === "processing") return <ProcessingState fileName={fileName} />
+  if (pageState === "processing") return <DocumentScanScreen mode="redact" fileName={fileName} />
 
   if (pageState === "error") {
     return (

@@ -885,71 +885,7 @@ function ContractIntelPanel({
 // ─── Processing View ──────────────────────────────────────────────────────────
 
 function ProcessingView({ fileName }: { fileName?: string }) {
-  return (
-    <div className="h-screen flex flex-col bg-[#0c0c0f] text-white overflow-hidden">
-      <div className="h-12 border-b border-white/[0.06] flex items-center px-5 gap-2 shrink-0">
-        <div className="w-5 h-5 rounded bg-amber-600 flex items-center justify-center shrink-0">
-          <Scale className="w-3 h-3 text-white" />
-        </div>
-        <span className="text-white/90 text-sm font-semibold">PlainPath</span>
-        <span className="text-white/15 text-[10px] mx-0.5">·</span>
-        <span className="text-white/28 text-xs">Contract Review</span>
-        {fileName && (
-          <>
-            <ChevronRight className="w-3 h-3 text-white/15" />
-            <span className="text-white/28 text-xs truncate max-w-[160px]">{fileName}</span>
-          </>
-        )}
-        <div className="ml-auto flex items-center gap-1.5">
-          <Loader2 className="w-3.5 h-3.5 text-amber-400 animate-spin" />
-          <span className="text-white/35 text-xs">Reviewing contract…</span>
-        </div>
-      </div>
-      <div className="flex-1 flex overflow-hidden">
-        <div className="w-[57%] border-r border-white/[0.06] flex flex-col bg-[#0d0d10] shrink-0 p-3 gap-2.5">
-          {[120, 80, 100, 65, 90, 75].map((w, i) => (
-            <div key={i} className="rounded-xl border border-white/[0.05] bg-white/[0.015] p-4 animate-pulse">
-              <div className="h-2 rounded-full bg-white/[0.06] mb-3" style={{ width: `${Math.min(w, 60)}%` }} />
-              <div className="space-y-1.5">
-                <div className="h-1.5 rounded-full bg-white/[0.04]" style={{ width: `${w}%` }} />
-                <div className="h-1.5 rounded-full bg-white/[0.04]" style={{ width: `${w * 0.8}%` }} />
-                <div className="h-1.5 rounded-full bg-white/[0.04]" style={{ width: `${w * 0.6}%` }} />
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="flex-1 bg-[#0c0c0f] p-5 flex flex-col gap-4">
-          <div className="rounded-xl border border-white/[0.06] p-4 animate-pulse">
-            <div className="h-2 rounded-full bg-white/[0.06] mb-3 w-32" />
-            <div className="space-y-2">
-              <div className="h-1.5 rounded-full bg-white/[0.04] w-full" />
-              <div className="h-1.5 rounded-full bg-white/[0.04] w-[85%]" />
-              <div className="h-1.5 rounded-full bg-white/[0.04] w-[70%]" />
-            </div>
-          </div>
-          <div className="rounded-xl border border-white/[0.06] p-4 animate-pulse">
-            <div className="h-2 rounded-full bg-white/[0.06] mb-3 w-40" />
-            <div className="flex gap-2 mb-3">
-              <div className="h-7 w-28 rounded-full bg-white/[0.05]" />
-              <div className="h-7 w-20 rounded-full bg-white/[0.05]" />
-            </div>
-            <div className="h-1.5 rounded-full bg-white/[0.05]" />
-          </div>
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="rounded-xl border border-white/[0.06] p-3.5 animate-pulse">
-              <div className="flex items-start gap-2">
-                <div className="w-2 h-2 rounded-full bg-white/[0.08] shrink-0 mt-1.5" />
-                <div className="flex-1 space-y-1.5">
-                  <div className="h-1.5 rounded-full bg-white/[0.06] w-[80%]" />
-                  <div className="h-1.5 rounded-full bg-white/[0.04] w-[60%]" />
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
+  return <DocumentScanScreen mode="contract-review" fileName={fileName} />
 }
 
 // ─── Error View ───────────────────────────────────────────────────────────────

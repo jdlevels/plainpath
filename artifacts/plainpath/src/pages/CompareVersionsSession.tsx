@@ -211,34 +211,97 @@ function RevSectionCard({
 
 // ─── Processing state ──────────────────────────────────────────────────────────
 
-function ProcessingState({ label }: { label: string }) {
+const CV_PROCESSING_STEPS = [
+  "Reading both documents",
+  "Extracting document text",
+  "Mapping clause structure",
+  "Detecting added & removed language",
+  "Assessing risk-level changes",
+  "Building comparison report",
+]
+
+function ProcessingState({
+  label,
+  originalFileName,
+  revisedFileName,
+}: {
+  label: string
+  originalFileName?: string
+  revisedFileName?: string
+}) {
+  const [step, setStep] = useState(0)
+  useEffect(() => {
+    const t = setInterval(() => setStep(s => Math.min(s + 1, CV_PROCESSING_STEPS.length - 1)), 3800)
+    return () => clearInterval(t)
+  }, [])
+
+  const progress = Math.round(((step + 1) / CV_PROCESSING_STEPS.length) * 100)
+
   return (
-    <div className="flex-1 flex flex-col items-center justify-center gap-6 p-8">
-      <div className="relative w-14 h-14">
-        <div className="absolute inset-0 rounded-full border-2 border-white/[0.05]" />
-        <div className="absolute inset-0 rounded-full border-2 border-t-violet-500 border-r-violet-500/30 animate-spin" />
-        <div className="absolute inset-1.5 rounded-full border border-white/[0.04]" />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <ArrowLeftRight className="w-4 h-4 text-violet-400/70" />
+    <div className="flex-1 flex flex-col lg:flex-row overflow-auto">
+      {/* Left: two document skeletons */}
+      <div className="w-full lg:w-[55%] border-r border-white/[0.06] bg-[#0d0d10] p-6 flex flex-col gap-4 items-center justify-center">
+        <div className="flex gap-3 w-full max-w-lg">
+          {[
+            { label: "Original", fileName: originalFileName ?? "original.pdf", color: "border-violet-500/20" },
+            { label: "Revised",  fileName: revisedFileName  ?? "revised.pdf",  color: "border-blue-500/20"   },
+          ].map(({ label: docLabel, fileName, color }) => (
+            <div key={docLabel} className={`flex-1 rounded-xl border ${color} bg-white/[0.018] overflow-hidden`}>
+              <div className="px-3 py-2 border-b border-white/[0.06] flex items-center gap-2">
+                <FileText className="w-3 h-3 text-white/25 shrink-0" />
+                <span className="text-[10px] text-white/40 font-medium truncate flex-1">{docLabel}</span>
+              </div>
+              <div className="px-3 py-3 space-y-2 animate-pulse">
+                {[85, 70, 90, 60, 80, 75, 55, 88].map((w, i) => (
+                  <div key={i} className="h-1.5 rounded-full bg-white/[0.04]" style={{ width: `${w}%` }} />
+                ))}
+              </div>
+              <div className="px-3 pb-2">
+                <span className="text-[9px] text-white/20 font-mono truncate block">{fileName}</span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
-      <div className="space-y-3 w-48 text-center">
-        <p className="text-sm font-medium text-white/70">{label}</p>
-        {["Extracting document text", "Mapping section changes", "Generating change intelligence"].map((step, i) => (
-          <div key={i} className="flex items-center gap-2">
-            <div className="h-0.5 flex-1 rounded-full bg-white/[0.06] overflow-hidden">
-              <div
-                className="h-full rounded-full bg-violet-500/60 animate-pulse"
-                style={{ width: `${[100, 72, 45][i]}%`, animationDelay: `${i * 200}ms` }}
-              />
-            </div>
-            <span className="text-[10px] text-white/25 text-left w-28 truncate">{step}</span>
+
+      {/* Right: step checklist + progress */}
+      <div className="w-full lg:w-[45%] p-6 flex flex-col justify-center gap-5">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <Loader2 className="w-4 h-4 animate-spin text-violet-400 shrink-0" />
+            <span className="text-sm font-medium text-white/75">{label}</span>
           </div>
-        ))}
+          <div className="h-1 bg-white/[0.06] rounded-full overflow-hidden mt-2">
+            <div
+              className="h-full bg-violet-500 rounded-full transition-all duration-700"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
+          {CV_PROCESSING_STEPS.map((s, i) => (
+            <div
+              key={s}
+              className={`flex items-center gap-2.5 text-xs transition-all duration-300 ${
+                i < step ? "text-white/40" : i === step ? "text-white/80" : "text-white/20"
+              }`}
+            >
+              {i < step
+                ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                : i === step
+                  ? <Loader2 className="w-3.5 h-3.5 animate-spin text-violet-400 shrink-0" />
+                  : <div className="w-3.5 h-3.5 rounded-full border border-white/10 shrink-0" />
+              }
+              {s}
+            </div>
+          ))}
+        </div>
+
+        <p className="text-[11px] text-white/22 leading-relaxed">
+          This usually takes 15–30 seconds. The workspace will open automatically when ready.
+        </p>
       </div>
-      <p className="text-[11px] text-white/22 max-w-xs text-center leading-relaxed">
-        This usually takes 15–30 seconds. The workspace will open automatically when ready.
-      </p>
     </div>
   )
 }
@@ -486,7 +549,11 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
     return (
       <div className="h-screen flex flex-col bg-[#0c0c0f] text-white overflow-hidden">
         {header}
-        <ProcessingState label={isScanning ? "Scanning document changes…" : "Generating change intelligence…"} />
+        <ProcessingState
+          label={isScanning ? "Scanning document changes…" : "Generating change intelligence…"}
+          originalFileName={session?.originalFileName}
+          revisedFileName={session?.revisedFileName}
+        />
       </div>
     )
   }
@@ -522,7 +589,11 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
     return (
       <div className="h-screen flex flex-col bg-[#0c0c0f] text-white overflow-hidden">
         {header}
-        <ProcessingState label="Preparing workspace…" />
+        <ProcessingState
+          label="Preparing workspace…"
+          originalFileName={session?.originalFileName}
+          revisedFileName={session?.revisedFileName}
+        />
       </div>
     )
   }

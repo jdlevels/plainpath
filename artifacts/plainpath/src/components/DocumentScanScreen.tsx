@@ -2,10 +2,10 @@ import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   FileText, ShieldCheck, Scale, Check, Loader2,
-  AlertTriangle, CheckCircle2, AlertCircle, GitCompare, ListChecks,
+  AlertTriangle, CheckCircle2, AlertCircle, GitCompare, ListChecks, EraserIcon,
 } from "lucide-react"
 
-export type ScanMode = "trust-check" | "contract-review" | "analyze" | "compare" | "clause-extractor"
+export type ScanMode = "trust-check" | "contract-review" | "analyze" | "compare" | "clause-extractor" | "redact"
 
 interface Finding {
   text: string
@@ -230,6 +230,45 @@ const CONFIGS: Record<ScanMode, ScanConfig> = {
     docLines: 20,
     footerText: "Extraction typically completes in 15–25 seconds.",
     progressLabel: "Extraction Completeness",
+  },
+  "redact": {
+    ToolIcon: EraserIcon,
+    iconBg: "bg-violet-100 dark:bg-violet-900/40",
+    iconColor: "text-violet-600 dark:text-violet-400",
+    label: "Redact Sensitive Info",
+    accent: "border-violet-200/60 dark:border-violet-900/40",
+    accentBg: "bg-violet-50 dark:bg-violet-950/30",
+    accentText: "text-violet-700 dark:text-violet-300",
+    scanGlow: "rgb(139 92 246 / 0.5)",
+    scanLineClass: "bg-violet-500",
+    stepInterval: 5000,
+    steps: [
+      "Reading document structure",
+      "Running pattern recognition",
+      "Detecting names and identifiers",
+      "Finding contact information",
+      "Scanning financial data",
+      "Grouping and ranking results",
+      "Preparing redaction review",
+    ],
+    findings: [
+      { text: "Document structure mapped",    type: "info",    step: 0 },
+      { text: "Text patterns recognized",     type: "info",    step: 1 },
+      { text: "Name / ID candidates found",   type: "warning", step: 2 },
+      { text: "Contact info detected",        type: "warning", step: 3 },
+      { text: "Financial data flagged",       type: "danger",  step: 4 },
+      { text: "Sensitivity groups assigned",  type: "info",    step: 5 },
+    ],
+    regions: [
+      { top: 5,  height: 9,  color: "bg-violet-100/50 dark:bg-violet-900/20",   chipText: "Name",       chipType: "warning", step: 1 },
+      { top: 22, height: 8,  color: "bg-amber-100/60 dark:bg-amber-900/20",     chipText: "Contact",    chipType: "warning", step: 2 },
+      { top: 38, height: 10, color: "bg-red-100/70 dark:bg-red-900/25",         chipText: "Financial",  chipType: "danger",  step: 3 },
+      { top: 57, height: 8,  color: "bg-violet-100/55 dark:bg-violet-900/20",   chipText: "ID found",   chipType: "warning", step: 4 },
+      { top: 72, height: 9,  color: "bg-amber-100/50 dark:bg-amber-900/15",     chipText: "Personal",   chipType: "warning", step: 5 },
+    ],
+    docLines: 20,
+    footerText: "Detection typically completes in 15–30 seconds.",
+    progressLabel: "Detection Progress",
   },
 }
 

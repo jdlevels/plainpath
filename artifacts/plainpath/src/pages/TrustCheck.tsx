@@ -14,6 +14,7 @@ import { saveCloudTrustCheck } from "@/lib/cloudHistory"
 import { getApiBaseUrl } from "@/lib/api"
 import { useEntitlements } from "@/hooks/useEntitlements"
 import UpgradeModal from "@/components/UpgradeModal"
+import { DocumentScanScreen } from "@/components/DocumentScanScreen"
 import {
   type TrustCheckAnalysis,
   type TrustCheckSection,
@@ -1258,16 +1259,7 @@ export default function TrustCheck() {
 
   // ── Loading demo ──────────────────────────────────────────────────────────
   if (demoLoading) {
-    return (
-      <div className="h-screen bg-[#0d0d10] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-violet-600/10 border border-violet-500/20 flex items-center justify-center">
-            <Shield className="w-5 h-5 text-violet-400/60 animate-pulse" />
-          </div>
-          <p className="text-white/25 text-xs">Running trust check…</p>
-        </div>
-      </div>
-    )
+    return <DocumentScanScreen mode="trust-check" />
   }
 
   // ── Trusted score for header pill ─────────────────────────────────────────
