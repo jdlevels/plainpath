@@ -810,7 +810,7 @@ export function Workspace({ text, fileName, spans, onReset, onExport, uploadedFi
 
   // ── Right panel sections ──────────────────────────────────────────────────
 
-  const RightPanel = () => (
+  const rightPanel = (
     <div className="overflow-y-auto h-full">
       <div className="p-4 space-y-4">
 
@@ -1078,7 +1078,7 @@ export function Workspace({ text, fileName, spans, onReset, onExport, uploadedFi
 
   // ── Document side ───────────────────────────────────────────────────────────
 
-  const DocPanel = () => (
+  const docPanel = (
     <div ref={docScrollRef} className="overflow-y-auto h-full bg-[#111115] p-6">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2 text-xs text-white/35">
@@ -1214,10 +1214,10 @@ export function Workspace({ text, fileName, spans, onReset, onExport, uploadedFi
       {/* ── DESKTOP: side-by-side panels ── */}
       <div className="hidden lg:flex flex-1 overflow-hidden">
         <div className="w-[60%] border-r border-white/[0.06] overflow-hidden flex flex-col">
-          <DocPanel />
+          {docPanel}
         </div>
         <div className="w-[40%] overflow-hidden flex flex-col">
-          <RightPanel />
+          {rightPanel}
         </div>
       </div>
 
@@ -1245,7 +1245,7 @@ export function Workspace({ text, fileName, spans, onReset, onExport, uploadedFi
           </button>
         </div>
         <div className="flex-1 overflow-hidden">
-          {mobileTab === "redactions" ? <RightPanel /> : <DocPanel />}
+          {mobileTab === "redactions" ? rightPanel : docPanel}
         </div>
       </div>
     </div>
