@@ -94,7 +94,7 @@ const TOOLS = [
     label: "Ask This Document",
     desc: "Upload a document and ask plain-English questions about clauses, obligations, deadlines, and risks.",
     icon: MessageCircle,
-    path: "/analyze",
+    path: "/ask-document",
     color: "text-indigo-500 dark:text-indigo-400",
     bg: "bg-indigo-50 dark:bg-indigo-950/50",
     ring: "hover:border-indigo-400/50 hover:shadow-indigo-500/10",

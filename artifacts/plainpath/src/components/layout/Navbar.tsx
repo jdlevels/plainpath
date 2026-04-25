@@ -38,7 +38,7 @@ const TOOL_NAV = [
   { label: "Contract Review",       href: "/contract-review",         icon: Scale         },
   { label: "Build a Contract",      href: "/build-contract",          icon: PenLine       },
   { label: "Redact Sensitive Info", href: "/redact",                  icon: EyeOff        },
-  { label: "Ask This Document",      href: "/analyze",                 icon: MessageCircle },
+  { label: "Ask This Document",      href: "/ask-document",            icon: MessageCircle },
   { label: "Clause Extractor",       href: "/clause-extractor",        icon: ListChecks    },
   { label: "Compare Versions",      href: "/compare-versions",        icon: GitCompare    },
 ]

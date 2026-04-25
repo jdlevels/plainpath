@@ -474,6 +474,7 @@ function Router() {
             <Route path="/" component={protect(Home)} />
             <Route path="/import" component={protect(Import)} />
             <Route path="/analyze" component={protect(Import)} />
+            <Route path="/ask-document" component={protect(Import)} />
             <Route path="/results" component={protect(Analyze)} />
             <Route path="/trust-check" component={protect(TrustCheck)} />
             <Route path="/my-analyses" component={protect(MyAnalyses)} />

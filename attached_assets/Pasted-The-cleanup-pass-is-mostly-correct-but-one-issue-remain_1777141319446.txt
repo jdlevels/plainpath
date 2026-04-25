@@ -1,0 +1,78 @@
+The cleanup pass is mostly correct, but one issue remains before we mark it complete.
+
+Ask This Document is currently listed as an 8th tool, but the dashboard and Tools dropdown link it to /analyze. That makes it a tab/contextual feature inside Analyze, not a true standalone tool.
+
+Fix this cleanly without redesigning anything.
+
+Goal:
+Make Ask This Document a real standalone tool route while reusing the existing DocumentChat logic/component.
+
+Requirements:
+
+1. Create or restore a standalone Ask This Document page/route.
+
+Preferred route:
+/ask-document
+
+Acceptable alternative:
+/ask-this-document
+
+2. The Ask This Document tool card and Tools dropdown must link to the standalone Ask route, not /analyze.
+
+Update:
+- authenticated dashboard tool card
+- Tools dropdown/nav
+- public homepage card/button if applicable
+- any “Try demo” or tool CTA references if applicable
+
+3. Reuse existing code.
+
+Do not rebuild the chat engine.
+Reuse the existing DocumentChat component or existing Ask PlainPath/Ask This Document implementation already used inside Analyze.
+
+4. Standalone Ask This Document page should support:
+
+- upload document
+- paste text if already supported
+- ask plain-English questions
+- show document/file name
+- show example questions:
+  - What does this document require me to do?
+  - What deadlines are listed?
+  - What sections should I review first?
+  - Are there payment terms?
+  - What looks unclear?
+
+5. Keep Analyze a Document unchanged.
+
+Analyze should still include Ask This Document as a follow-up tab/option, but the standalone Ask tool must not simply redirect users to Analyze.
+
+6. Keep the tool count accurate.
+
+If Ask This Document now has its own route and card:
+Use “8 tools live.”
+
+If not:
+Change language to “7 core tools + Ask This Document.”
+
+Preferred solution is: keep “8 tools live” and make Ask This Document standalone.
+
+7. Do not touch:
+
+- database
+- Stripe/payment
+- subscription gates
+- broad layout redesign
+- backend analysis logic unless needed to reuse the existing chat endpoint
+
+8. Final verification required:
+
+A. Ask This Document standalone route created/restored  
+B. Dashboard card links to standalone route, not /analyze  
+C. Tools dropdown links to standalone route, not /analyze  
+D. Analyze still keeps Ask This Document as a follow-up option  
+E. Digital Signature still removed from user-facing places  
+F. Tool count remains accurate  
+G. No database changes  
+H. No Stripe/payment changes  
+I. No new TypeScript/runtime errors  
