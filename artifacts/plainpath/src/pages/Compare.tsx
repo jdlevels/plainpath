@@ -493,6 +493,8 @@ function DocumentInput({ label, helperText, value, onChange, side }: DocumentInp
 
 /* ─── Page ───────────────────────────────────────────────────────────────── */
 
+type FilterType = "all" | "high" | ChangeItem["type"]
+
 export default function Compare() {
   const [original, setOriginal] = useState("")
   const [revised, setRevised] = useState("")
@@ -500,6 +502,7 @@ export default function Compare() {
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<CompareResult | null>(null)
   const [upgradeOpen, setUpgradeOpen] = useState(false)
+  const [filterType, setFilterType] = useState<FilterType>("all")
 
   const { entitlements, loading: entitlementsLoading } = useEntitlements()
   const canCompareAccess = BILLING_CONFIG.PAYWALL_ENFORCEMENT
@@ -550,6 +553,16 @@ export default function Compare() {
       : "bg-muted text-muted-foreground"
 
   const canCompare = original.trim().length >= 50 && revised.trim().length >= 50
+
+  const filteredChanges = result
+    ? filterType === "all"
+      ? result.changes
+      : filterType === "high"
+      ? result.changes.filter(c => c.significance === "high")
+      : filterType === "modified"
+      ? result.changes.filter(c => c.type === "modified" || c.type === "risk-increased" || c.type === "risk-decreased")
+      : result.changes.filter(c => c.type === filterType)
+    : []
 
   if (loading) return <DocumentScanScreen mode="compare" />
 
@@ -692,20 +705,49 @@ export default function Compare() {
                     <GitCompare className="w-4.5 h-4.5 text-violet-500" />
                   </div>
                   <div>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Comparison complete</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                      PlainPath · Comparison complete
+                    </p>
                     <h2 className="text-base font-bold text-foreground">Document Version Comparison</h2>
                   </div>
                 </div>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => { setResult(null); setOriginal(""); setRevised("") }}
+                  onClick={() => { setResult(null); setOriginal(""); setRevised(""); setFilterType("all") }}
                   className="gap-1.5 text-xs rounded-full"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
                   Compare again
                 </Button>
               </div>
+
+              {/* Results-first filter chip strip */}
+              {(() => {
+                const addedCount    = result.changes.filter(c => c.type === "added").length
+                const removedCount  = result.changes.filter(c => c.type === "removed").length
+                const modifiedCount = result.changes.filter(c => c.type === "modified" || c.type === "risk-increased" || c.type === "risk-decreased").length
+                const chips: { id: FilterType; label: string; cls: string }[] = [
+                  { id: "all",     label: `All ${result.changesCount}`,                    cls: "border-border/60 text-muted-foreground hover:bg-muted/50" },
+                  { id: "high",    label: `${result.highSignificanceCount} high-significance`, cls: "border-red-300/50 dark:border-red-700/40 text-red-600 dark:text-red-400 bg-red-50/50 dark:bg-red-950/20 hover:bg-red-100/60 dark:hover:bg-red-950/30" },
+                  ...(addedCount    > 0 ? [{ id: "added"    as FilterType, label: `${addedCount} added`,    cls: "border-blue-300/50 dark:border-blue-700/40 text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-950/20 hover:bg-blue-100/60 dark:hover:bg-blue-950/30" }] : []),
+                  ...(removedCount  > 0 ? [{ id: "removed"  as FilterType, label: `${removedCount} removed`,  cls: "border-red-300/50 dark:border-red-700/40 text-red-600 dark:text-red-400 bg-red-50/50 dark:bg-red-950/20 hover:bg-red-100/60 dark:hover:bg-red-950/30" }] : []),
+                  ...(modifiedCount > 0 ? [{ id: "modified" as FilterType, label: `${modifiedCount} modified`, cls: "border-amber-300/50 dark:border-amber-700/40 text-amber-600 dark:text-amber-400 bg-amber-50/50 dark:bg-amber-950/20 hover:bg-amber-100/60 dark:hover:bg-amber-950/30" }] : []),
+                ]
+                return (
+                  <div className="flex flex-wrap gap-1.5">
+                    {chips.map(chip => (
+                      <button
+                        key={chip.id}
+                        onClick={() => setFilterType(chip.id)}
+                        className={`h-7 px-3 rounded-full border text-[11px] font-semibold transition-colors ${chip.cls} ${filterType === chip.id ? "ring-2 ring-offset-1 ring-border/60" : "opacity-80"}`}
+                      >
+                        {chip.label}
+                      </button>
+                    ))}
+                  </div>
+                )
+              })()}
 
               {/* Summary card */}
               <div className="border border-border/50 rounded-2xl p-5 sm:p-6 bg-card shadow-sm">
@@ -743,11 +785,19 @@ export default function Compare() {
               {/* Changes */}
               <div className="space-y-3">
                 <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                  Changes ({result.changes.length})
+                  {filterType === "all"
+                    ? `Changes (${result.changes.length})`
+                    : `${filteredChanges.length} of ${result.changes.length} changes — filtered`}
                 </h3>
-                {result.changes.map((c, i) => (
-                  <ChangeCard key={i} change={c} />
-                ))}
+                {filteredChanges.length === 0 ? (
+                  <p className="text-center text-sm text-muted-foreground py-6">
+                    No changes match this filter.
+                  </p>
+                ) : (
+                  filteredChanges.map((c, i) => (
+                    <ChangeCard key={i} change={c} />
+                  ))
+                )}
               </div>
 
               <p className="text-xs text-muted-foreground text-center pt-2">

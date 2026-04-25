@@ -661,6 +661,11 @@ function ExtractionPanel({
     return keyClauses.filter(c => c.category === activeCategory)
   }, [keyClauses, activeCategory])
 
+  const secClausesRef   = useRef<HTMLDivElement>(null)
+  const secObligRef     = useRef<HTMLDivElement>(null)
+  const secDatesRef     = useRef<HTMLDivElement>(null)
+  const secMissingRef   = useRef<HTMLDivElement>(null)
+
   const buildSummaryText = useCallback(() => {
     const lines: string[] = [
       `Clause Extractor — ${session.fileName}`,
@@ -722,6 +727,40 @@ function ExtractionPanel({
 
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto">
+        {/* Results-first chip navigation strip */}
+        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border/40 px-4 py-2 flex flex-wrap gap-1.5 shrink-0">
+          <button
+            onClick={() => secClausesRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+            className="h-6 px-2.5 rounded-full border border-violet-300/50 dark:border-violet-500/25 bg-violet-50/60 dark:bg-violet-500/[0.08] text-violet-700 dark:text-violet-300/80 text-[10px] font-medium hover:bg-violet-100/60 dark:hover:bg-violet-500/12 transition-colors"
+          >
+            {keyClauses.length} clause{keyClauses.length !== 1 ? "s" : ""}
+          </button>
+          {obligations.length > 0 && (
+            <button
+              onClick={() => secObligRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+              className="h-6 px-2.5 rounded-full border border-border/60 dark:border-white/10 text-muted-foreground dark:text-white/40 text-[10px] font-medium hover:bg-muted/50 dark:hover:bg-white/[0.04] transition-colors"
+            >
+              {obligations.length} obligation{obligations.length !== 1 ? "s" : ""}
+            </button>
+          )}
+          {dates.length > 0 && (
+            <button
+              onClick={() => secDatesRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+              className="h-6 px-2.5 rounded-full border border-amber-300/50 dark:border-amber-500/22 bg-amber-50/50 dark:bg-amber-500/[0.07] text-amber-700 dark:text-amber-300/80 text-[10px] font-medium hover:bg-amber-100/50 dark:hover:bg-amber-500/12 transition-colors"
+            >
+              {dates.length} date{dates.length !== 1 ? "s" : ""}
+            </button>
+          )}
+          {r.missingFields.length > 0 && (
+            <button
+              onClick={() => secMissingRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+              className="h-6 px-2.5 rounded-full border border-amber-300/50 dark:border-amber-500/22 bg-amber-50/50 dark:bg-amber-500/[0.07] text-amber-700 dark:text-amber-300/80 text-[10px] font-medium hover:bg-amber-100/50 dark:hover:bg-amber-500/12 transition-colors"
+            >
+              {r.missingFields.length} to verify
+            </button>
+          )}
+        </div>
+
         {/* Doc identity */}
         <div className="px-4 pt-4 pb-3 border-b border-border/30">
           <div className="flex items-start gap-3">
@@ -781,7 +820,7 @@ function ExtractionPanel({
           </div>
 
           {/* C. Key Extracted Clauses + D. Category Filters */}
-          <div>
+          <div ref={secClausesRef}>
             <div className="flex items-center justify-between mb-2.5">
               <SectionLabel icon={Tag} text="C. Key Extracted Clauses" inline />
               <span className="text-[10px] text-muted-foreground/50">{filteredClauses.length} shown</span>
@@ -856,6 +895,12 @@ function ExtractionPanel({
                       {cl.action && (
                         <p className="text-[10px] text-violet-600/60 dark:text-violet-300/50 pl-4 mt-1.5">› {cl.action}</p>
                       )}
+                      {!sectionId && (
+                        <div className="mt-2 pl-4 flex items-center gap-1.5">
+                          <div className="h-px w-3 bg-muted-foreground/20 dark:bg-white/10 shrink-0" />
+                          <span className="text-[9px] text-muted-foreground/40 dark:text-white/28 italic">No exact source found — not identified in this document</span>
+                        </div>
+                      )}
                     </div>
                   )
                 })}
@@ -865,7 +910,7 @@ function ExtractionPanel({
 
           {/* E. Obligations & Owners */}
           {obligations.length > 0 && (
-            <div>
+            <div ref={secObligRef}>
               <SectionLabel icon={Users} text="E. Obligations & Owners" />
               <div className="rounded-xl border border-border/50 dark:border-white/[0.07] bg-muted/10 dark:bg-white/[0.02] overflow-hidden">
                 <div className="grid grid-cols-[1fr_auto_auto_auto] gap-0 text-[9px] uppercase tracking-wide text-muted-foreground/40 font-semibold px-3.5 py-2 border-b border-border/40 dark:border-white/[0.05]">
@@ -896,7 +941,7 @@ function ExtractionPanel({
 
           {/* F. Dates & Deadlines */}
           {dates.length > 0 && (
-            <div>
+            <div ref={secDatesRef}>
               <SectionLabel icon={Calendar} text="F. Dates & Deadlines" />
               <div className="space-y-2">
                 {dates.map((d, i) => (
@@ -925,7 +970,7 @@ function ExtractionPanel({
 
           {/* G. Missing / Unclear Clauses */}
           {r.missingFields.length > 0 && (
-            <div>
+            <div ref={secMissingRef}>
               <button
                 className="w-full"
                 onClick={() => setMissingOpen(o => !o)}

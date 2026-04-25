@@ -603,8 +603,54 @@ function ContractIntelPanel({
       .map(({ i }) => i)
   )
 
+  const secScoreRef   = useRef<HTMLDivElement>(null)
+  const secRisksRef   = useRef<HTMLDivElement>(null)
+  const secMissingRef = useRef<HTMLDivElement>(null)
+  const secSourceRef  = useRef<HTMLDivElement>(null)
+
   return (
     <div className="flex-1 overflow-y-auto bg-[#0c0c0f]">
+
+      {/* ── Results-first chip navigation strip ── */}
+      <div className="sticky top-0 z-10 bg-[#0c0c0f] border-b border-white/[0.05] px-4 py-2.5 flex flex-wrap gap-1.5 shrink-0">
+        <button
+          onClick={() => secScoreRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+          className={`h-6 px-2.5 rounded-full border text-[10px] font-medium transition-colors ${riskPillStyle} hover:opacity-90`}
+        >
+          {result.overallScore}/100 · {riskHeaderLabel(result.overallScore)}
+        </button>
+        {redFlags.length > 0 && (
+          <button
+            onClick={() => secRisksRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+            className="h-6 px-2.5 rounded-full border border-red-500/25 bg-red-500/10 text-red-300/80 text-[10px] font-medium hover:bg-red-500/15 transition-colors"
+          >
+            {redFlags.length} red flag{redFlags.length !== 1 ? "s" : ""}
+          </button>
+        )}
+        {watchOuts.length > 0 && (
+          <button
+            onClick={() => secRisksRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+            className="h-6 px-2.5 rounded-full border border-amber-500/25 bg-amber-500/10 text-amber-300/80 text-[10px] font-medium hover:bg-amber-500/15 transition-colors"
+          >
+            {watchOuts.length} watch-out{watchOuts.length !== 1 ? "s" : ""}
+          </button>
+        )}
+        {(result.missingProtections?.length ?? 0) > 0 && (
+          <button
+            onClick={() => secMissingRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+            className="h-6 px-2.5 rounded-full border border-violet-500/22 bg-violet-500/[0.08] text-violet-300/80 text-[10px] font-medium hover:bg-violet-500/12 transition-colors"
+          >
+            {result.missingProtections.length} missing protection{result.missingProtections.length !== 1 ? "s" : ""}
+          </button>
+        )}
+        <button
+          onClick={() => secSourceRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+          className="h-6 px-2.5 rounded-full border border-white/10 text-white/40 text-[10px] font-medium hover:bg-white/[0.04] transition-colors"
+        >
+          Source review
+        </button>
+      </div>
+
       <div className="p-5 flex flex-col gap-4">
 
         {/* Doc identity */}
@@ -646,7 +692,7 @@ function ContractIntelPanel({
         </div>
 
         {/* ── B. Risk & Confidence ── */}
-        <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
+        <div ref={secScoreRef} className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
           <SLabel icon={<AlertTriangle className="w-3.5 h-3.5 text-amber-400/60" />}>B. Risk &amp; Confidence</SLabel>
           <div className="flex flex-wrap gap-1.5 mb-3">
             <div className={`h-7 px-2.5 rounded-full border flex items-center gap-1.5 ${riskPillStyle}`}>
@@ -691,7 +737,7 @@ function ContractIntelPanel({
 
         {/* ── C. Key Contract Risks ── */}
         {topRisks.length > 0 && (
-          <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
+          <div ref={secRisksRef} className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
             <SLabel
               icon={<ShieldAlert className="w-3.5 h-3.5 text-red-400/60" />}
               right={
@@ -806,7 +852,7 @@ function ContractIntelPanel({
 
         {/* ── E. Source Traceability ── */}
         {result.clauses.length > 0 && (
-          <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
+          <div ref={secSourceRef} className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
             <SLabel icon={<Search className="w-3.5 h-3.5 text-white/28" />}>E. Source Traceability</SLabel>
             <p className="text-white/22 text-[10px] mb-3">Click a clause source chip to jump to the matching section in the document viewer.</p>
             <div className="flex flex-col gap-2">
@@ -850,14 +896,22 @@ function ContractIntelPanel({
 
         {/* ── Collapsed: Missing Protections ── */}
         {result.missingProtections.length > 0 && (
-          <CollapsedSection icon={<Lock className="w-3.5 h-3.5" />} title="Missing or Weak Protections" badge={`${result.missingProtections.length} possible missing`} badgeColor="amber">
-            {result.missingProtections.map((item, i) => (
-              <div key={i} className="flex items-start gap-2.5">
-                <Lock className="w-3 h-3 text-violet-400/60 shrink-0 mt-0.5" />
-                <p className="text-[11px] text-white/65 leading-relaxed">{item}</p>
-              </div>
-            ))}
-          </CollapsedSection>
+          <div ref={secMissingRef}>
+            <CollapsedSection icon={<Lock className="w-3.5 h-3.5" />} title="Missing or Weak Protections" badge={`${result.missingProtections.length} possible missing`} badgeColor="amber">
+              {result.missingProtections.map((item, i) => (
+                <div key={i} className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-3">
+                  <div className="flex items-start gap-2.5 mb-2">
+                    <Lock className="w-3 h-3 text-violet-400/60 shrink-0 mt-0.5" />
+                    <p className="text-[11px] text-white/65 leading-relaxed">{item}</p>
+                  </div>
+                  <div className="flex items-center gap-1.5 ml-5">
+                    <div className="h-px w-3 bg-white/10 shrink-0" />
+                    <span className="text-[9px] text-white/28 italic">No exact source found — not identified in this document</span>
+                  </div>
+                </div>
+              ))}
+            </CollapsedSection>
+          </div>
         )}
 
         {/* ── Collapsed: Fair Clauses ── */}

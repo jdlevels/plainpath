@@ -808,14 +808,56 @@ export function Workspace({ text, fileName, spans, onReset, onExport, uploadedFi
   const selectedCount = selected.size
   const highPriority = spans.filter(s => s.type === "SSN" || s.type === "CREDIT_CARD").length
 
+  const rpSumRef    = useRef<HTMLElement>(null)
+  const rpItemsRef  = useRef<HTMLElement>(null)
+  const rpCatsRef   = useRef<HTMLElement>(null)
+  const rpExportRef = useRef<HTMLElement>(null)
+
   // ── Right panel sections ──────────────────────────────────────────────────
 
   const rightPanel = (
     <div className="overflow-y-auto h-full">
+
+      {/* ── Results-first chip navigation strip ── */}
+      <div className="sticky top-0 z-10 bg-[#0c0c0f] border-b border-white/[0.04] px-3 py-2 flex flex-wrap gap-1.5 shrink-0">
+        <button
+          onClick={() => rpSumRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+          className="h-6 px-2.5 rounded-full border border-white/10 text-white/50 text-[10px] font-medium hover:bg-white/[0.04] transition-colors"
+        >
+          {spans.length} detected
+        </button>
+        <button
+          onClick={() => rpItemsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+          className={`h-6 px-2.5 rounded-full border text-[10px] font-medium transition-colors ${selectedCount > 0 ? "border-emerald-500/30 bg-emerald-500/[0.08] text-emerald-300/80 hover:bg-emerald-500/12" : "border-white/10 text-white/40 hover:bg-white/[0.04]"}`}
+        >
+          {selectedCount} selected
+        </button>
+        {highPriority > 0 && (
+          <button
+            onClick={() => rpItemsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+            className="h-6 px-2.5 rounded-full border border-red-500/25 bg-red-500/[0.08] text-red-300/80 text-[10px] font-medium hover:bg-red-500/12 transition-colors"
+          >
+            {highPriority} high-priority
+          </button>
+        )}
+        <button
+          onClick={() => rpCatsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+          className="h-6 px-2.5 rounded-full border border-white/[0.07] text-white/35 text-[10px] font-medium hover:bg-white/[0.04] transition-colors"
+        >
+          Categories
+        </button>
+        <button
+          onClick={() => rpExportRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+          className="h-6 px-2.5 rounded-full border border-violet-500/25 bg-violet-500/[0.07] text-violet-300/75 text-[10px] font-medium hover:bg-violet-500/12 transition-colors"
+        >
+          Export
+        </button>
+      </div>
+
       <div className="p-4 space-y-4">
 
         {/* A. Summary */}
-        <section className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-4">
+        <section ref={rpSumRef} className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-4">
           <p className="text-xs text-white/52 uppercase tracking-widest mb-3">A. Redaction Summary</p>
           <div className="flex items-center gap-3 mb-3">
             <div className="w-9 h-9 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0">
@@ -844,7 +886,7 @@ export function Workspace({ text, fileName, spans, onReset, onExport, uploadedFi
         </section>
 
         {/* C. Suggested Redactions */}
-        <section>
+        <section ref={rpItemsRef}>
           <p className="text-xs text-white/52 uppercase tracking-widest mb-2">C. Suggested Redactions</p>
           <div className="space-y-2">
             {filteredSpans.map(span => {
@@ -920,7 +962,7 @@ export function Workspace({ text, fileName, spans, onReset, onExport, uploadedFi
         </section>
 
         {/* D. Categories */}
-        <section>
+        <section ref={rpCatsRef}>
           <p className="text-xs text-white/52 uppercase tracking-widest mb-2">D. Redaction Categories</p>
           <div className="flex flex-wrap gap-1.5">
             {CATS.map(([cat, count]) => (
@@ -972,7 +1014,7 @@ export function Workspace({ text, fileName, spans, onReset, onExport, uploadedFi
         </section>
 
         {/* G. Save / Export */}
-        <section className="space-y-2">
+        <section ref={rpExportRef} className="space-y-2">
           <button
             type="button"
             onClick={() => { void handleExportClick() }}
@@ -1122,6 +1164,8 @@ export function Workspace({ text, fileName, spans, onReset, onExport, uploadedFi
         <div className="w-7 h-7 rounded-lg bg-violet-600 flex items-center justify-center shrink-0">
           <ShieldCheck className="w-4 h-4" />
         </div>
+        <span className="text-white/30 text-xs font-medium hidden sm:block">PlainPath</span>
+        <span className="text-white/15 text-xs hidden sm:block">·</span>
         <span className="text-sm font-medium text-white/80 hidden sm:block">Redact Sensitive Info</span>
         <span className="text-white/20 text-xs hidden sm:block">/</span>
         <span className="text-sm text-white/50 truncate max-w-[140px]">{fileName}</span>

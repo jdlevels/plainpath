@@ -288,8 +288,46 @@ function TrustIntelPanel({
       .map(({ i }) => i)
   )
 
+  const secSummaryRef  = useRef<HTMLDivElement>(null)
+  const secScoreRef    = useRef<HTMLDivElement>(null)
+  const secConcernsRef = useRef<HTMLDivElement>(null)
+  const secVerifyRef   = useRef<HTMLDivElement>(null)
+
   return (
     <div className="flex-1 overflow-y-auto bg-[#0c0c0f]">
+
+      {/* ── Results-first chip navigation strip ── */}
+      <div className="sticky top-0 z-10 bg-[#0c0c0f] border-b border-white/[0.05] px-4 py-2.5 flex flex-wrap gap-1.5 shrink-0">
+        <button
+          onClick={() => secSummaryRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+          className={`h-6 px-2.5 rounded-full border text-[10px] font-medium transition-colors ${tsc.pill} hover:opacity-90`}
+        >
+          {tsl} · {trustScore}/100
+        </button>
+        {(criticalCount + cautionCount) > 0 && (
+          <button
+            onClick={() => secConcernsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+            className="h-6 px-2.5 rounded-full border border-amber-500/25 bg-amber-500/10 text-amber-300/80 text-[10px] font-medium hover:bg-amber-500/15 transition-colors"
+          >
+            {criticalCount + cautionCount} concern{(criticalCount + cautionCount) !== 1 ? "s" : ""}
+          </button>
+        )}
+        {verifyItems.length > 0 && (
+          <button
+            onClick={() => secVerifyRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+            className="h-6 px-2.5 rounded-full border border-violet-500/22 bg-violet-500/[0.08] text-violet-300/80 text-[10px] font-medium hover:bg-violet-500/12 transition-colors"
+          >
+            {verifyItems.length} to verify
+          </button>
+        )}
+        <button
+          onClick={() => secScoreRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+          className="h-6 px-2.5 rounded-full border border-white/10 text-white/40 text-[10px] font-medium hover:bg-white/[0.04] transition-colors"
+        >
+          {confLabel}
+        </button>
+      </div>
+
       <div className="p-5 flex flex-col gap-5">
 
         {/* Doc identity */}
@@ -317,7 +355,7 @@ function TrustIntelPanel({
         </div>
 
         {/* ── A. Trust Summary ── */}
-        <div className="rounded-xl border border-amber-500/20 bg-amber-500/[0.04] p-4">
+        <div ref={secSummaryRef} className="rounded-xl border border-amber-500/20 bg-amber-500/[0.04] p-4">
           <SLabel icon={<Shield className="w-3.5 h-3.5" />}>A. Trust Summary</SLabel>
           <p className="text-white/78 text-sm leading-[1.72]">
             {analysis.verdictExplanation || analysis.whatItClaims}
@@ -325,7 +363,7 @@ function TrustIntelPanel({
         </div>
 
         {/* ── B. Trust Score & Confidence ── */}
-        <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
+        <div ref={secScoreRef} className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
           <SLabel icon={<AlertTriangle className="w-3.5 h-3.5 text-amber-400/60" />}>B. Trust Score &amp; Confidence</SLabel>
 
           <div className="flex items-center gap-2 flex-wrap mb-2.5">
@@ -376,7 +414,7 @@ function TrustIntelPanel({
 
         {/* ── C. Major Trust Concerns ── */}
         {analysis.scamIndicators.length > 0 && (
-          <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
+          <div ref={secConcernsRef} className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
             <SLabel
               icon={<AlertTriangle className="w-3.5 h-3.5 text-amber-400/60" />}
               right={
@@ -421,7 +459,7 @@ function TrustIntelPanel({
 
         {/* ── D. Verification Checklist ── */}
         {verifyItems.length > 0 && (
-          <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
+          <div ref={secVerifyRef} className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
             <SLabel
               icon={<CheckSquare className="w-3.5 h-3.5 text-violet-400/60" />}
               right={
