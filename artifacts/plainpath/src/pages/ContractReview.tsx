@@ -433,15 +433,30 @@ function CollapsedSection({ icon, title, badge, badgeColor = "default", children
 // ─── Contract Doc Viewer (left panel) ─────────────────────────────────────────
 
 function ContractDocViewer({
-  sections, activeChipId, activeEvidence, highlightSectionId, onDismiss, sectionRefs, isLowConf, docName,
+  sections, activeChipId, activeEvidence, highlightSectionId, onDismiss, sectionRefs, isLowConf, docName, riskyCount,
 }: {
   sections: DocSection[]; activeChipId: string | null; activeEvidence: string | null
   highlightSectionId: string | null; onDismiss: () => void; sectionRefs: React.MutableRefObject<Record<string, HTMLDivElement | null>>
-  isLowConf?: boolean; docName?: string
+  isLowConf?: boolean; docName?: string; riskyCount?: number
 }) {
   return (
-    <div className="w-[57%] border-r border-white/[0.06] flex flex-col bg-[#0d0d10] shrink-0 overflow-hidden">
-      <div className="h-10 border-b border-white/[0.06] flex items-center px-4 gap-2.5 shrink-0">
+    <div className="w-[58%] border-r border-white/[0.06] flex flex-col bg-[#0d0d10] shrink-0 overflow-hidden">
+      {/* Tool identity row */}
+      <div className="h-7 border-b border-white/[0.04] flex items-center px-4 gap-2 shrink-0 bg-white/[0.01]">
+        <Scale className="w-3 h-3 text-amber-400/40 shrink-0" />
+        <span className="text-[10px] text-white/28 font-medium flex-1">Contract Review</span>
+        {isLowConf ? (
+          <span className="h-4 px-1.5 rounded border border-amber-500/28 bg-amber-500/10 text-amber-300/75 text-[9px] font-medium">Partial scan</span>
+        ) : riskyCount != null && riskyCount > 0 ? (
+          <span className="h-4 px-1.5 rounded border border-red-500/28 bg-red-500/10 text-red-300/75 text-[9px] font-medium">
+            {riskyCount} risk{riskyCount !== 1 ? "s" : ""} found
+          </span>
+        ) : riskyCount === 0 ? (
+          <span className="h-4 px-1.5 rounded border border-emerald-500/28 bg-emerald-500/10 text-emerald-300/75 text-[9px] font-medium">Looks fair</span>
+        ) : null}
+      </div>
+      {/* File toolbar */}
+      <div className="h-9 border-b border-white/[0.06] flex items-center px-4 gap-2.5 shrink-0">
         <FileText className={`w-3.5 h-3.5 shrink-0 ${isLowConf ? "text-amber-400/50" : "text-amber-400/55"}`} />
         <span className="text-white/40 text-xs flex-1 truncate">{docName ?? "Contract document"}</span>
         {sections.length > 0 && <span className="text-white/18 text-xs shrink-0">{sections.length} sections</span>}
@@ -1372,6 +1387,7 @@ function DesktopWorkspace({
           sectionRefs={sectionRefs}
           isLowConf={isLowConf}
           docName={fileName ?? "Contract document"}
+          riskyCount={riskyCount}
         />
         <ContractIntelPanel
           result={result}

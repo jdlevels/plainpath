@@ -599,10 +599,20 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
 
         {/* Left — Original (33%) */}
         <div className="w-[33%] border-r border-white/[0.05] flex flex-col overflow-hidden">
-          <div className="h-9 border-b border-white/[0.05] flex items-center px-4 gap-2 shrink-0">
-            <FileText className="w-3 h-3 text-white/25" />
+          <div className="h-7 border-b border-white/[0.04] flex items-center px-4 gap-2 shrink-0 bg-white/[0.01]">
+            <ArrowLeftRight className="w-3 h-3 text-white/22 shrink-0" />
+            <span className="text-[10px] text-white/28 font-medium flex-1">Compare Versions</span>
+            <span className="text-[9px] text-white/18">{ci.sections_original.length} sections</span>
+          </div>
+          <div className="h-8 border-b border-white/[0.05] flex items-center px-4 gap-2 shrink-0">
+            <FileText className="w-3 h-3 text-white/25 shrink-0" />
             <span className="text-[11px] text-white/50 font-semibold">Original</span>
-            <span className="text-[10px] text-white/22 ml-1 truncate">{session.originalFileName}</span>
+            <span className="text-[10px] text-white/22 ml-1 flex-1 truncate">{session.originalFileName}</span>
+            {ci.removed_language.length > 0 && (
+              <span className="h-4 px-1.5 rounded border border-red-400/22 bg-red-400/[0.07] text-red-300/60 text-[9px] font-medium shrink-0">
+                {ci.removed_language.length} removed
+              </span>
+            )}
           </div>
           <div ref={origScrollRef} className="flex-1 overflow-y-auto p-3 space-y-2">
             {ci.sections_original.map((sec) => (
@@ -618,17 +628,23 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
               />
             ))}
           </div>
-          <div className="h-8 border-t border-white/[0.04] px-4 flex items-center">
-            <span className="text-[10px] text-white/18">{ci.sections_original.length} section{ci.sections_original.length !== 1 ? "s" : ""}</span>
-          </div>
         </div>
 
         {/* Middle — Revised (33%) */}
         <div className="w-[33%] border-r border-white/[0.05] flex flex-col overflow-hidden">
-          <div className="h-9 border-b border-white/[0.05] flex items-center px-4 gap-2 shrink-0">
-            <FileText className="w-3 h-3 text-violet-400/55" />
+          <div className="h-7 border-b border-white/[0.04] flex items-center px-4 gap-2 shrink-0 bg-white/[0.01]">
+            <span className="flex-1" />
+            <span className="text-[9px] text-white/18">{ci.sections_revised.length} sections</span>
+          </div>
+          <div className="h-8 border-b border-white/[0.05] flex items-center px-4 gap-2 shrink-0">
+            <FileText className="w-3 h-3 text-violet-400/55 shrink-0" />
             <span className="text-[11px] text-violet-300/65 font-semibold">Revised</span>
-            <span className="text-[10px] text-white/22 ml-1 truncate">{session.revisedFileName}</span>
+            <span className="text-[10px] text-white/22 ml-1 flex-1 truncate">{session.revisedFileName}</span>
+            {ci.added_language.length > 0 && (
+              <span className="h-4 px-1.5 rounded border border-emerald-400/22 bg-emerald-400/[0.07] text-emerald-300/60 text-[9px] font-medium shrink-0">
+                {ci.added_language.length} added
+              </span>
+            )}
           </div>
           <div ref={revScrollRef} className="flex-1 overflow-y-auto p-3 space-y-2">
             {ci.sections_revised.map((sec) => (
@@ -643,9 +659,6 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
                 }}
               />
             ))}
-          </div>
-          <div className="h-8 border-t border-white/[0.04] px-4 flex items-center">
-            <span className="text-[10px] text-white/18">{ci.sections_revised.length} section{ci.sections_revised.length !== 1 ? "s" : ""}</span>
           </div>
         </div>
 

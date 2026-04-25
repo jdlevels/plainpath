@@ -1,0 +1,194 @@
+Refine the PlainPath tool workspace shell consistency.
+
+This is not a full redesign.
+Do not change the approved right-panel logic.
+Do not add new tools.
+Do not touch payments, Stripe, or feature gates.
+Do not start Document Classifier or Packet Splitter.
+
+Current issue:
+Analyze a Document has a clearer workspace frame and top border/header, while Clause Extractor and some other tools feel generic or disconnected.
+
+Specific problems:
+- It is hard to read which tool is active.
+- Clause Extractor does not visually match Analyze’s tool shell.
+- Clause Extractor lacks the same top border/header feel.
+- Empty/start screens are inconsistent.
+- Some tools do not show built-in demos/sample options like Analyze.
+- Loaded screens do not consistently show the tool name, file name, and status in a clear top shell.
+
+Goal:
+Create a consistent PlainPath Tool Workspace Shell across all core tools.
+
+Apply to:
+- Analyze a Document
+- Document Trust Check
+- Contract Review
+- Clause Extractor
+- Compare Versions
+- Redact Sensitive Info
+- Build a Contract / Document Builder
+
+1. Standard top workspace shell/header
+
+Every tool page should have a consistent top shell/header bar.
+
+Required elements:
+- PlainPath mark or small brand label
+- tool name clearly visible
+- current file name when a file is uploaded
+- current state/status badge when applicable
+- Home/back control
+- major actions on the right when applicable, such as Save, Export, Re-analyze, Re-check, Re-run, New
+
+The header should have a visible border or separation line so the tool feels framed.
+
+Use the Analyze a Document visual direction as the benchmark.
+
+2. Empty/start screen consistency
+
+All tool empty/start screens should visually feel like the same PlainPath system.
+
+Each should include:
+- tool name/title
+- one-line purpose
+- upload/dropzone or required input area
+- supported formats
+- short “works well with” grid or equivalent
+- built-in demo/sample options where appropriate
+- clear privacy/safety note where relevant
+
+Clause Extractor specifically needs this improved to match Analyze more closely.
+
+3. Built-in demo/sample options
+
+Where appropriate, add consistent demo/sample entry options so users can preview the tool without uploading a real document.
+
+Suggested:
+- Analyze a Document: keep existing sample/demo options
+- Document Trust Check: sample suspicious notice/invoice
+- Contract Review: sample service agreement or membership agreement
+- Clause Extractor: sample lease/service agreement
+- Compare Versions: sample original + revised agreement pair
+- Redact Sensitive Info: sample fictional form/letter
+- Document Builder: recent/sample drafts or template examples
+
+All sample/demo content must be fictional only.
+
+Do not expose real user document data through demo routes.
+
+4. Loaded screen identity
+
+After upload or processing, the top shell should clearly show:
+- tool name
+- file name
+- detected document type where available
+- status badge
+- page/section count where available
+
+Examples:
+Analyze a Document:
+“Analyze a Document · Commercial Lease Agreement.pdf · Action plan ready”
+
+Document Trust Check:
+“Document Trust Check · County Notice.pdf · Needs verification”
+
+Contract Review:
+“Contract Review · Membership Agreement.pdf · Review complete”
+
+Clause Extractor:
+“Clause Extractor · Music Contract.pdf · 23 clauses found”
+
+Compare Versions:
+“Compare Versions · Original vs Revised · 14 changes found”
+
+Redact Sensitive Info:
+“Redact Sensitive Info · Service Agreement.pdf · 8 items detected”
+
+Build a Contract:
+“Build a Contract · Freelance Service Agreement · Drafting”
+
+5. Clause Extractor priority fix
+
+Clause Extractor is the clearest mismatch right now.
+
+Fix Clause Extractor first:
+- add the same top border/header style
+- make the active tool name obvious
+- add better empty-state visual consistency
+- include sample/demo option
+- keep file name visible after upload
+- keep extraction status visible
+- make loaded state look like a PlainPath workspace, not a generic page
+
+6. Document viewer / left pane consistency
+
+In loaded states:
+- left pane should feel like the document workspace
+- right pane should explain/extract/review/control
+- avoid large blank dark areas
+- keep document sections readable
+- keep source highlights visible
+
+Do not shrink the left side below readability.
+
+7. Processing animation consistency
+
+Use a consistent processing animation/skeleton across tools:
+- file name visible
+- tool name visible
+- document skeleton/page preview
+- animated scan/progress line
+- current step label
+- right panel progress checklist
+
+Apply to:
+- Analyze a Document
+- Document Trust Check
+- Contract Review
+- Clause Extractor
+- Compare Versions
+- Redact Sensitive Info
+
+8. Mobile shell consistency
+
+Mobile should also show:
+- tool name
+- file name/status strip
+- active tab
+- consistent top header
+- no white overflow
+- no hidden controls
+
+9. QA output required
+
+After changes, provide screenshots for:
+
+A. Empty/start screens:
+- Analyze a Document
+- Clause Extractor
+- Document Trust Check
+- Contract Review
+
+B. Loaded screens:
+- Analyze a Document
+- Clause Extractor
+- Document Trust Check
+- Contract Review
+
+C. Processing screens:
+- Analyze a Document
+- Clause Extractor
+- Contract Review
+
+D. Mobile:
+- Clause Extractor empty/start
+- Clause Extractor loaded document view
+
+Also confirm:
+- all tool routes remain protected
+- demo/sample data is fictional only
+- no right-panel logic was regressed
+- source chips still work
+- no new TypeScript/runtime errors were introduced
+- build completes cleanly

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react"
 import { useLocation, useSearch } from "wouter"
 import {
-  AlertTriangle, Bookmark, BookmarkCheck, FileText, Shield,
+  AlertTriangle, Bookmark, BookmarkCheck, FileText, Shield, ShieldCheck,
   ArrowLeft, X, CheckCircle2, Info, RotateCcw, Upload,
   Image, ClipboardPaste, Link2, RefreshCcw, MessageSquare,
   Layers, CheckSquare, CheckCheck, AlertCircle, ChevronRight,
@@ -90,14 +90,31 @@ function DocViewer({
   const displayName = analysis.title ?? `Trust Check — ${analysis.verdict}`
   const pageCount = sections.length
 
+  const trustScore = 100 - analysis.riskScore
+  const tsl = trustScoreLabel(trustScore)
+
   return (
-    <div className="w-[57%] border-r border-white/[0.06] flex flex-col bg-[#0d0d10] shrink-0 overflow-hidden">
-      {/* Toolbar */}
-      <div className="h-10 border-b border-white/[0.06] flex items-center px-4 gap-2.5 shrink-0">
+    <div className="w-[58%] border-r border-white/[0.06] flex flex-col bg-[#0d0d10] shrink-0 overflow-hidden">
+      {/* Tool identity row */}
+      <div className="h-7 border-b border-white/[0.04] flex items-center px-4 gap-2 shrink-0 bg-white/[0.01]">
+        <Shield className="w-3 h-3 text-blue-400/45 shrink-0" />
+        <span className="text-[10px] text-white/28 font-medium flex-1">Document Trust Check</span>
+        {isLowConf ? (
+          <span className="h-4 px-1.5 rounded border border-amber-500/28 bg-amber-500/10 text-amber-300/75 text-[9px] font-medium">Low confidence</span>
+        ) : (
+          <span className={`h-4 px-1.5 rounded border text-[9px] font-medium ${
+            trustScore >= 70 ? "border-emerald-500/28 bg-emerald-500/10 text-emerald-300/75"
+            : trustScore >= 45 ? "border-amber-500/28 bg-amber-500/10 text-amber-300/75"
+            : "border-red-500/28 bg-red-500/10 text-red-300/75"
+          }`}>{tsl} · {trustScore}/100</span>
+        )}
+      </div>
+      {/* File toolbar */}
+      <div className="h-9 border-b border-white/[0.06] flex items-center px-4 gap-2.5 shrink-0">
         <FileText className={`w-3.5 h-3.5 shrink-0 ${isLowConf ? "text-amber-400/50" : "text-violet-400/60"}`} />
-        <span className="text-white/45 text-xs flex-1 truncate">{displayName}</span>
+        <span className="text-white/45 text-xs flex-1 truncate">{analysis.title ?? displayName}</span>
         {pageCount > 0 && (
-          <span className="text-white/18 text-xs shrink-0">{pageCount} pp.</span>
+          <span className="text-white/18 text-xs shrink-0">{pageCount} sections</span>
         )}
         <div className="w-px h-4 bg-white/[0.06] mx-1" />
         <div className="flex items-center gap-0.5">

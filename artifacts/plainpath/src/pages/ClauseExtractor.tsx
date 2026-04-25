@@ -337,13 +337,38 @@ function DocViewer({ session, sections, activeSection, onClearSource, evidenceBa
     }
   }, [activeSection])
 
+  const r = session.results
+  const clauseCount = r ? Object.values(r.legalClauses).filter((c: ClausePresence) => c.present).length : null
+  const totalClauses = r ? Object.keys(r.legalClauses).length : null
+  const confidence = r?.extractionConfidence ?? null
+
   return (
-    <div className="h-full flex flex-col overflow-hidden">
-      {/* Panel header */}
-      <div className="h-10 border-b border-border/50 flex items-center px-4 gap-2 shrink-0 bg-muted/20">
-        <FileText className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />
-        <span className="text-xs text-muted-foreground font-medium truncate flex-1">{session.fileName}</span>
-        <span className="text-[10px] text-muted-foreground/40">{fmtBytes(session.fileSizeBytes)}</span>
+    <div className="h-full flex flex-col overflow-hidden bg-[#0d0d10]">
+      {/* Tool identity row */}
+      <div className="h-7 border-b border-white/[0.04] flex items-center px-4 gap-2 shrink-0 bg-white/[0.01]">
+        <ListChecks className="w-3 h-3 text-violet-400/45 shrink-0" />
+        <span className="text-[10px] text-white/28 font-medium flex-1">Clause Extractor</span>
+        {clauseCount != null && totalClauses != null && (
+          <span className={`h-4 px-1.5 rounded border text-[9px] font-medium ${
+            confidence === "high" ? "border-emerald-500/28 bg-emerald-500/10 text-emerald-300/75"
+            : confidence === "medium" ? "border-blue-500/28 bg-blue-500/10 text-blue-300/75"
+            : "border-amber-500/28 bg-amber-500/10 text-amber-300/75"
+          }`}>{clauseCount} of {totalClauses} clauses extracted</span>
+        )}
+      </div>
+      {/* File toolbar */}
+      <div className="h-9 border-b border-white/[0.06] flex items-center px-4 gap-2 shrink-0">
+        <FileText className="w-3.5 h-3.5 text-violet-400/60 shrink-0" />
+        <span className="text-white/45 text-xs flex-1 truncate">{session.fileName}</span>
+        {sections.length > 0 && (
+          <span className="text-white/18 text-xs shrink-0">{sections.length} sections</span>
+        )}
+        <div className="w-px h-4 bg-white/[0.06] mx-1" />
+        <div className="flex items-center gap-0.5">
+          {["Fit", "75%", "100%"].map((z, i) => (
+            <button key={i} className={`h-5 px-1.5 rounded text-[9px] font-medium transition-colors ${i === 1 ? "bg-white/[0.07] text-white/55" : "text-white/22 hover:text-white/45"}`}>{z}</button>
+          ))}
+        </div>
       </div>
 
       {/* Evidence banner — shown when source chip is active */}
@@ -353,79 +378,104 @@ function DocViewer({ session, sections, activeSection, onClearSource, evidenceBa
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
-            className="mx-3 mt-3 mb-1 rounded-lg bg-violet-500/10 dark:bg-violet-500/[0.09] border border-violet-400/40 dark:border-violet-500/22 px-3.5 py-2.5 flex items-start gap-2.5 shrink-0"
+            className="mx-3 mt-2 mb-1 rounded-lg border border-violet-500/28 bg-violet-500/[0.07] px-3 py-2 flex items-center gap-2.5 shrink-0"
           >
-            <span className="w-2 h-2 rounded-full bg-violet-500 shrink-0 mt-0.5" />
+            <div className="w-2 h-2 rounded-full bg-violet-400 animate-pulse shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-[11px] font-semibold text-violet-700 dark:text-violet-200/80">
+              <p className="text-violet-200/85 text-[10px] font-medium truncate">
                 Source: {evidenceBanner.sectionTitle}
               </p>
               {evidenceBanner.snippet && (
-                <p className="text-[10px] text-violet-600/60 dark:text-violet-300/45 mt-0.5 italic">
-                  "{evidenceBanner.snippet}"
-                </p>
+                <p className="text-violet-300/45 text-[9px] italic truncate">"{evidenceBanner.snippet}"</p>
               )}
-              <p className="text-[10px] text-violet-600/50 dark:text-violet-300/40 mt-0.5">
-                Document scrolled to matching section
-              </p>
+              <p className="text-violet-300/40 text-[9px]">Document scrolled to matching section</p>
             </div>
             <button
               onClick={onClearSource}
-              className="text-muted-foreground/40 hover:text-muted-foreground transition-colors mt-0.5 shrink-0"
+              className="text-white/20 hover:text-white/45 shrink-0 transition-colors"
               aria-label="Dismiss source"
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="w-3 h-3" />
             </button>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Scrollable sections */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
+      <div className="flex-1 overflow-y-auto px-3 py-3 flex flex-col gap-2.5">
         {sections.length === 0 ? (
-          <div className="py-8 text-center">
-            <p className="text-xs text-muted-foreground/40">No document sections extracted.</p>
+          <div className="flex-1 flex flex-col items-center justify-center text-center py-16">
+            <FileText className="w-8 h-8 text-white/10 mb-3" />
+            <p className="text-white/22 text-sm font-medium mb-1">Document sections not available</p>
+            <p className="text-white/15 text-xs max-w-xs">Upload a text-based PDF or DOCX to see document content here alongside extracted clauses.</p>
           </div>
         ) : (
-          sections.map(sec => {
+          sections.map((sec, idx) => {
             const isActive = activeSection === sec.id
             return (
               <div
                 key={sec.id}
                 ref={el => { sectionRefs.current[sec.id] = el }}
-                className={[
-                  "rounded-xl border p-3.5 transition-all duration-300",
+                className={`w-full rounded-xl border p-4 flex flex-col gap-2 transition-all duration-300 ${
                   isActive
-                    ? "border-violet-400/50 dark:border-violet-500/40 bg-violet-50/80 dark:bg-violet-500/[0.05] ring-1 ring-violet-400/20 dark:ring-violet-500/15"
+                    ? "border-violet-500/45 bg-violet-500/[0.06] ring-1 ring-violet-500/20 shadow-[0_0_20px_rgba(139,92,246,0.08)]"
                     : activeSection
-                    ? "border-border/30 bg-muted/10 opacity-45"
-                    : "border-border/50 bg-card",
-                ].join(" ")}
+                    ? "border-white/[0.04] bg-white/[0.01] opacity-40"
+                    : "border-white/[0.05] bg-white/[0.015]"
+                }`}
               >
-                <div className="flex items-center justify-between mb-2 gap-2">
-                  <p className={`text-[10px] font-semibold uppercase tracking-wide ${isActive ? "text-violet-600 dark:text-violet-400/70" : "text-muted-foreground/50"}`}>
-                    {sec.title}
-                  </p>
+                <div className="flex items-center justify-between gap-2 mb-0.5">
+                  <span className={`text-[9px] font-mono ${isActive ? "text-violet-300/60" : "text-white/18"}`}>
+                    Section {idx + 1}
+                  </span>
                   {isActive && (
-                    <SChip label="· Source" active />
+                    <div className="flex items-center gap-1 h-4 px-1.5 rounded-full bg-violet-500/25 border border-violet-500/35">
+                      <div className="w-1 h-1 rounded-full bg-violet-400 animate-pulse" />
+                      <span className="text-violet-200/75 text-[9px]">Source</span>
+                    </div>
                   )}
                 </div>
-                <p className={`text-[11px] leading-relaxed ${isActive ? "text-foreground/75 dark:text-white/62" : "text-muted-foreground/60 dark:text-white/48"}`}>
+                {sec.title && (
+                  <p className={`text-xs font-semibold leading-tight ${isActive ? "text-violet-300/80" : "text-white/45"}`}>
+                    {sec.title}
+                  </p>
+                )}
+                <p className={`text-[11px] leading-relaxed ${isActive ? "text-white/65" : "text-white/32"}`}>
                   {sec.body}
                 </p>
                 {isActive && sec.snippet && (
-                  <div className="mt-2.5 rounded-lg bg-violet-500/[0.08] dark:bg-violet-500/[0.08] border border-violet-400/30 dark:border-violet-500/20 px-3 py-2">
-                    <p className="text-[10px] text-violet-600/60 dark:text-violet-200/60 italic">
-                      "{sec.snippet}"
-                    </p>
+                  <div className="mt-1.5 rounded-lg border border-violet-500/18 bg-violet-500/[0.06] px-2.5 py-1.5">
+                    <p className="text-violet-200/60 text-[9px] leading-relaxed line-clamp-2">"{sec.snippet}"</p>
                   </div>
                 )}
               </div>
             )
           })
         )}
-        <div className="h-4" />
       </div>
+
+      {/* Section navigation footer */}
+      {sections.length > 0 && (
+        <div className="h-10 border-t border-white/[0.06] flex items-center justify-between px-4 shrink-0">
+          <span className="text-white/20 text-xs">
+            {activeSection
+              ? `Section ${(sections.findIndex(s => s.id === activeSection) + 1)} of ${sections.length}`
+              : `${sections.length} section${sections.length !== 1 ? "s" : ""}`}
+          </span>
+          <div className="flex items-center gap-1">
+            {sections.slice(0, 8).map((s, i) => (
+              <button
+                key={s.id}
+                onClick={() => { const el = sectionRefs.current[s.id]; if (el) el.scrollIntoView({ behavior: "smooth", block: "center" }) }}
+                className={`w-6 h-6 rounded-md text-[9px] flex items-center justify-center transition-colors ${
+                  activeSection === s.id ? "bg-violet-600 text-white" : "text-white/22 hover:text-white/45 hover:bg-white/[0.05]"
+                }`}
+              >{i + 1}</button>
+            ))}
+          </div>
+          <span className="text-white/14 text-[10px]">Jump to section</span>
+        </div>
+      )}
     </div>
   )
 }
