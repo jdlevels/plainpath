@@ -63,7 +63,7 @@ const TOOLS = [
     features: [
       { icon: Sparkles, label: "AI-generated clause drafts" },
       { icon: CheckCircle2, label: "Gap analysis — nothing left out" },
-      { icon: ShieldCheck, label: "5 contract types supported" },
+      { icon: ShieldCheck, label: "6 contract types supported" },
       { icon: FileCheck, label: "Download-ready PDF output" },
     ],
     cta: "Build a Contract",

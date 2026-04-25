@@ -102,8 +102,8 @@ function LockedGate() {
           </div>
           <div className="flex flex-col gap-2 text-sm text-muted-foreground w-full max-w-xs">
             {[
-              "Side-by-side PDF workspace",
-              "Grouped change zones with severity",
+              "Compare original and revised document text",
+              "See added, removed, and modified language",
               "Manager notes and watchlist",
               "Sessions saved for reopen",
             ].map((f) => (
