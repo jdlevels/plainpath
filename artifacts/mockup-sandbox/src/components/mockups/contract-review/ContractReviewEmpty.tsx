@@ -1,7 +1,7 @@
 import {
   FileText, Upload, Camera, ClipboardPaste, Link2, Info,
   Scale, Briefcase, Home, Users, FileCheck, DollarSign,
-  AlertCircle
+  AlertCircle, ArrowLeft
 } from "lucide-react";
 
 const WORKS_WITH = [
@@ -19,14 +19,17 @@ export function ContractReviewEmpty() {
   return (
     <div className="h-screen flex flex-col bg-[#0c0c0f] text-white overflow-hidden" style={{ fontFamily: "'Inter', sans-serif" }}>
 
-      {/* Top bar */}
-      <div className="h-12 border-b border-white/[0.06] flex items-center px-5 gap-2.5 shrink-0">
-        <div className="w-5 h-5 rounded bg-violet-600 flex items-center justify-center shrink-0">
-          <FileText className="w-3 h-3 text-white" />
+      {/* Tool header — back + icon + name */}
+      <div className="h-12 border-b border-white/[0.06] flex items-center px-5 gap-2 shrink-0">
+        <button className="p-1 rounded-md text-white/25 mr-0.5">
+          <ArrowLeft className="w-3.5 h-3.5" />
+        </button>
+        <div className="w-5 h-5 rounded bg-amber-600 flex items-center justify-center shrink-0">
+          <Scale className="w-3 h-3 text-white" />
         </div>
-        <span className="text-white/90 text-sm font-semibold tracking-tight">PlainPath</span>
-        <span className="text-white/18 text-[10px] mx-0.5">·</span>
-        <span className="text-white/30 text-xs">Contract Review</span>
+        <span className="text-white/30 text-xs font-medium">PlainPath</span>
+        <span className="text-white/15 text-xs">·</span>
+        <span className="text-white/70 text-xs font-semibold">Contract Review</span>
       </div>
 
       {/* Body */}

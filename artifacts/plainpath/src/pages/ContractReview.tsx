@@ -1119,8 +1119,24 @@ function EmptyInputForm({
     : urlInput.trim().length > 0
 
   return (
-    <div className="min-h-screen bg-[#0c0c0f] text-white">
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
+    <div className="min-h-screen bg-[#0c0c0f] text-white flex flex-col">
+      {/* Tool header */}
+      <div className="h-12 border-b border-white/[0.06] flex items-center px-5 gap-2 shrink-0">
+        <button
+          onClick={() => window.history.back()}
+          className="p-1 rounded-md text-white/25 hover:text-white/55 transition-colors mr-0.5"
+          aria-label="Back"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+        </button>
+        <div className="w-5 h-5 rounded bg-amber-600 flex items-center justify-center shrink-0">
+          <Scale className="w-3 h-3 text-white" />
+        </div>
+        <span className="text-white/30 text-xs font-medium">PlainPath</span>
+        <span className="text-white/15 text-xs">·</span>
+        <span className="text-white/70 text-xs font-semibold">Contract Review</span>
+      </div>
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10 w-full">
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="space-y-7">
 
           <div className="text-center space-y-3">

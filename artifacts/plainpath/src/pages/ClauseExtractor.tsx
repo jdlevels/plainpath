@@ -10,6 +10,7 @@ import {
   RefreshCw, Copy, Download, Check, FileType2, X,
   Scale, Layers, Tag, BookOpen, FileSearch, Info,
   RotateCcw, MessageCircle, Clock, DollarSign,
+  ChevronRight, ShieldCheck, Building2, Briefcase,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { clauseExtractorApi } from "@/lib/clauseExtractorApi"
@@ -27,6 +28,134 @@ function fmtBytes(b: number) {
   if (b < 1024 * 1024) return `${(b / 1024).toFixed(1)} KB`
   return `${(b / (1024 * 1024)).toFixed(1)} MB`
 }
+
+/* ─── Upload-state constants ─────────────────────────────────────────────── */
+
+const CE_WORKS_WELL_WITH = [
+  { icon: FileText,   label: "Residential & commercial leases", desc: "Rent terms, maintenance obligations, early exit, renewal options.",   color: "text-violet-400" },
+  { icon: Briefcase,  label: "Freelance & service agreements",  desc: "Scope of work, payment schedule, revision limits, IP ownership.",     color: "text-blue-400"   },
+  { icon: Building2,  label: "Employment & NDA contracts",      desc: "Non-compete clauses, confidentiality terms, termination language.",   color: "text-emerald-400"},
+  { icon: Scale,      label: "Vendor & supplier agreements",    desc: "Delivery obligations, pricing, indemnity, governing law.",           color: "text-amber-400" },
+  { icon: FileSearch, label: "Software & licensing terms",      desc: "Usage rights, restriction clauses, liability caps.",                 color: "text-sky-400"   },
+  { icon: Calendar,   label: "Membership & subscription terms", desc: "Auto-renewal language, cancellation policy, refund clauses.",        color: "text-rose-400"  },
+]
+
+const CLAUSE_DEMOS: Array<{
+  id: string
+  label: string
+  description: string
+  data: import("@/lib/clauseExtractorTypes").ClauseExtractorSessionDetail
+}> = [
+  {
+    id: "demo-lease",
+    label: "Residential Lease — Thornfield Properties",
+    description: "12 clauses · Lease agreement",
+    data: {
+      id: "demo-lease",
+      fileName: "Thornfield_Residential_Lease_2025.pdf",
+      fileSizeBytes: 184320,
+      fileType: "application/pdf",
+      status: "done",
+      errorMessage: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      results: {
+        documentType: "Residential Lease Agreement",
+        extractionConfidence: "high",
+        keyDates: {
+          effectiveDate: "January 15, 2025",
+          executionDate: "January 12, 2025",
+          expirationDate: "January 14, 2026",
+          renewalDate: null,
+          noticeDeadline: "December 15, 2025",
+          noticePeriod: "30 days written notice required before end of term",
+        },
+        parties: [
+          { name: "Jamie L. Moreno", role: "Tenant", type: "individual", isSigner: true },
+          { name: "Thornfield Property Management LLC", role: "Landlord", type: "company", isSigner: true },
+        ],
+        financialTerms: {
+          paymentAmount: "$1,850 per month",
+          paymentSchedule: "Due on the 1st of each month",
+          lateFees: "$75 late fee if payment received after the 5th of the month",
+          refundLanguage: "Security deposit refunded within 21 days of move-out, less deductions for damage",
+          otherTerms: ["Security deposit: $3,700 (two months' rent)", "Pro-rated first month rent if lease begins mid-month"],
+        },
+        legalClauses: {
+          governingLaw: { present: true, summary: "Governed by the laws of the State of Colorado", snippet: "This agreement shall be governed by and construed in accordance with the laws of the State of Colorado." },
+          terminationClause: { present: true, summary: "Either party may terminate with 30 days written notice before lease end; early termination requires 60 days notice and one month penalty", snippet: "Early termination by Tenant requires sixty (60) days written notice and forfeiture of one (1) month's rent as a termination fee." },
+          autoRenewal: { present: true, summary: "Lease converts to month-to-month automatically if neither party provides notice", snippet: "Upon expiration, this Agreement shall automatically convert to a month-to-month tenancy unless either party provides written notice of non-renewal." },
+          liabilityCap: { present: false, summary: null, snippet: null },
+          indemnity: { present: true, summary: "Tenant indemnifies Landlord for damage caused by Tenant or guests", snippet: "Tenant shall indemnify and hold harmless Landlord from any claims arising from Tenant's use of the premises." },
+          confidentiality: { present: false, summary: null, snippet: null },
+          assignment: { present: true, summary: "Subletting prohibited without prior written consent from Landlord", snippet: "Tenant shall not sublet or assign this Agreement or any portion of the Premises without prior written consent of Landlord." },
+          disputeResolution: { present: true, summary: "Disputes resolved through mediation first, then binding arbitration", snippet: "Any dispute arising under this Agreement shall first be submitted to mediation before proceeding to binding arbitration." },
+        },
+        obligations: [
+          { party: "Tenant", obligation: "Pay rent on the 1st of each month", deadline: "Monthly", consequence: "$75 late fee after the 5th of the month" },
+          { party: "Tenant", obligation: "Maintain premises in clean condition and report maintenance issues within 48 hours", deadline: "Ongoing", consequence: "Liable for damage resulting from failure to report" },
+          { party: "Landlord", obligation: "Complete routine maintenance and repairs within 14 days of written request", deadline: "Within 14 days of request", consequence: null },
+          { party: "Tenant", obligation: "Provide 30 days written notice of intent to vacate before lease expiration", deadline: "December 15, 2025", consequence: "Automatic month-to-month conversion if not provided" },
+        ],
+        missingFields: [],
+      },
+    },
+  },
+  {
+    id: "demo-freelance",
+    label: "Freelance Service Agreement — Studio Vela",
+    description: "8 clauses · Service agreement",
+    data: {
+      id: "demo-freelance",
+      fileName: "Studio_Vela_Freelance_Agreement.pdf",
+      fileSizeBytes: 92160,
+      fileType: "application/pdf",
+      status: "done",
+      errorMessage: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      results: {
+        documentType: "Freelance Service Agreement",
+        extractionConfidence: "medium",
+        keyDates: {
+          effectiveDate: "March 1, 2025",
+          executionDate: "February 26, 2025",
+          expirationDate: null,
+          renewalDate: null,
+          noticeDeadline: null,
+          noticePeriod: "14 days written notice to terminate",
+        },
+        parties: [
+          { name: "Kendall Park", role: "Freelancer / Service Provider", type: "individual", isSigner: true },
+          { name: "Studio Vela LLC", role: "Client", type: "company", isSigner: true },
+        ],
+        financialTerms: {
+          paymentAmount: "$4,500 total project fee",
+          paymentSchedule: "50% upon signing; 50% upon final delivery and approval",
+          lateFees: "1.5% monthly interest on overdue invoices after 30 days",
+          refundLanguage: "Upfront payment non-refundable if Freelancer completes initial deliverables",
+          otherTerms: ["Expenses over $100 require prior written approval", "Revisions limited to 2 rounds per deliverable"],
+        },
+        legalClauses: {
+          governingLaw: { present: true, summary: "Governed by the laws of the State of California", snippet: "This Agreement shall be governed by the laws of the State of California, without regard to its conflict of law provisions." },
+          terminationClause: { present: true, summary: "Either party may terminate with 14 days written notice; Client pays for work completed to date", snippet: "Either party may terminate this Agreement with fourteen (14) days written notice. Client shall pay Freelancer for all work completed prior to termination." },
+          autoRenewal: { present: false, summary: null, snippet: null },
+          liabilityCap: { present: true, summary: "Freelancer liability capped at total fees paid under this agreement", snippet: "Freelancer's total liability shall not exceed the total fees paid by Client under this Agreement." },
+          indemnity: { present: true, summary: "Each party indemnifies the other for claims arising from their own breach or negligence", snippet: "Each party shall indemnify and hold harmless the other from claims arising from its own breach or negligence." },
+          confidentiality: { present: true, summary: "Freelancer keeps all Client materials and project details confidential for 2 years", snippet: "Freelancer agrees to keep all Client information confidential for a period of two (2) years following termination of this Agreement." },
+          assignment: { present: true, summary: "All work product and IP transfers to Client upon final payment", snippet: "Upon receipt of full payment, Freelancer assigns all intellectual property rights in the work product to Client." },
+          disputeResolution: { present: false, summary: null, snippet: null },
+        },
+        obligations: [
+          { party: "Kendall Park", obligation: "Deliver initial design concepts within 10 business days of project kickoff", deadline: "March 14, 2025", consequence: "Client may request refund of 25% of upfront payment" },
+          { party: "Studio Vela LLC", obligation: "Provide written feedback within 5 business days of each deliverable", deadline: "Per deliverable", consequence: "Freelancer may invoice for time lost due to delayed feedback" },
+          { party: "Studio Vela LLC", obligation: "Pay final 50% within 7 days of final delivery approval", deadline: "7 days after approval", consequence: "1.5% monthly interest accrues on overdue balance" },
+        ],
+        missingFields: ["Dispute resolution mechanism"],
+      },
+    },
+  },
+]
 
 /* ─── Category types ──────────────────────────────────────────────────────── */
 
@@ -918,16 +1047,60 @@ function WorkspaceView({
     setLocation("/clause-extractor")
   }, [setLocation])
 
+  const clauseCount = r.legalClauses
+    ? Object.values(r.legalClauses).filter((c: import("@/lib/clauseExtractorTypes").ClausePresence) => c.present).length
+    : 0
+
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col min-h-screen bg-[#0d0d10] text-white overflow-hidden">
+
+      {/* Page-level tool header */}
+      <div className="h-12 border-b border-white/[0.06] flex items-center px-5 gap-2 shrink-0">
+        <button
+          onClick={handleReExtract}
+          className="p-1 rounded-md text-white/25 hover:text-white/55 transition-colors mr-0.5"
+          aria-label="New extraction"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+        </button>
+        <div className="w-5 h-5 rounded bg-violet-600 flex items-center justify-center shrink-0">
+          <ListChecks className="w-3 h-3 text-white" />
+        </div>
+        <span className="text-white/30 text-xs font-medium">PlainPath</span>
+        <span className="text-white/15 text-xs">·</span>
+        <span className="text-white/70 text-xs font-semibold">Clause Extractor</span>
+        <ChevronRight className="w-3 h-3 text-white/15 shrink-0" />
+        <span className="text-white/38 text-xs truncate max-w-[160px]">{session.fileName}</span>
+        {clauseCount > 0 && (
+          <div className="h-5 px-2 rounded-full bg-violet-600/15 border border-violet-500/20 flex items-center shrink-0">
+            <span className="text-[10px] text-violet-300/70">{clauseCount} clause{clauseCount !== 1 ? "s" : ""} found</span>
+          </div>
+        )}
+        <div className="ml-auto flex items-center gap-1.5">
+          <button
+            onClick={handleReExtract}
+            className="hidden sm:flex items-center gap-1.5 h-7 px-2.5 rounded-lg border border-white/[0.08] bg-white/[0.03] text-white/40 text-xs font-medium hover:text-white/60 hover:bg-white/[0.06] transition-colors"
+          >
+            <RefreshCw className="w-3 h-3" /> New
+          </button>
+          <button
+            onClick={onDelete}
+            className="p-1.5 rounded-lg border border-white/[0.08] bg-white/[0.03] text-white/30 hover:text-rose-400/70 hover:border-rose-500/20 hover:bg-rose-500/[0.04] transition-colors"
+            aria-label="Delete session"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
       {/* Mobile tab bar */}
-      <div className="flex border-b border-border/50 bg-background shrink-0 sm:hidden">
+      <div className="flex border-b border-white/[0.06] bg-[#0d0d10] shrink-0 sm:hidden">
         <button
           onClick={() => setMobileTab("clauses")}
           className={`flex-1 h-10 text-xs font-medium flex items-center justify-center gap-1.5 transition-colors ${
             mobileTab === "clauses"
-              ? "text-violet-600 dark:text-violet-400 border-b-2 border-violet-500"
-              : "text-muted-foreground"
+              ? "text-violet-400 border-b-2 border-violet-500"
+              : "text-white/30"
           }`}
         >
           <FileSearch className="w-3.5 h-3.5" /> Clauses
@@ -936,8 +1109,8 @@ function WorkspaceView({
           onClick={() => setMobileTab("document")}
           className={`flex-1 h-10 text-xs font-medium flex items-center justify-center gap-1.5 transition-colors ${
             mobileTab === "document"
-              ? "text-violet-600 dark:text-violet-400 border-b-2 border-violet-500"
-              : "text-muted-foreground"
+              ? "text-violet-400 border-b-2 border-violet-500"
+              : "text-white/30"
           }`}
         >
           <FileText className="w-3.5 h-3.5" /> Document
@@ -1177,9 +1350,11 @@ type UploadStage = "idle" | "selected" | "uploading"
 function UploadView({
   onUploaded,
   onUploading,
+  onDemo,
 }: {
   onUploaded: (s: ClauseExtractorSessionDetail) => void
   onUploading: (fileName: string | null) => void
+  onDemo: (s: ClauseExtractorSessionDetail) => void
 }) {
   const { getToken } = useAuth()
   const [stage, setStage] = useState<UploadStage>("idle")
@@ -1234,125 +1409,200 @@ function UploadView({
   }, [validateAndSelect])
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
-      <div className="mb-6">
-        <h1 className="text-xl font-bold text-foreground mb-1">Clause Extractor</h1>
-        <p className="text-sm text-muted-foreground leading-relaxed">
-          Upload a contract or agreement — key clauses, obligations, dates, and responsible parties are extracted and organized automatically.
-        </p>
+    <div className="flex flex-col min-h-screen bg-[#0d0d10] text-white">
+
+      {/* Tool header */}
+      <div className="h-12 border-b border-white/[0.06] flex items-center px-5 gap-2 shrink-0">
+        <button
+          onClick={() => window.history.back()}
+          className="p-1 rounded-md text-white/25 hover:text-white/55 transition-colors mr-0.5"
+          aria-label="Back"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+        </button>
+        <div className="w-5 h-5 rounded bg-violet-600 flex items-center justify-center shrink-0">
+          <ListChecks className="w-3 h-3 text-white" />
+        </div>
+        <span className="text-white/30 text-xs font-medium">PlainPath</span>
+        <span className="text-white/15 text-xs">·</span>
+        <span className="text-white/70 text-xs font-semibold">Clause Extractor</span>
       </div>
 
-      <input
-        ref={inputRef}
-        type="file"
-        accept=".pdf,.docx"
-        className="hidden"
-        onChange={e => { const f = e.target.files?.[0]; if (f) validateAndSelect(f) }}
-      />
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-xl mx-auto px-5 py-14 flex flex-col items-center text-center">
 
-      <AnimatePresence mode="wait">
-        {stage === "idle" && (
-          <motion.div
-            key="dropzone"
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            className={`border-2 border-dashed rounded-2xl p-10 text-center cursor-pointer transition-all ${
-              dragging
-                ? "border-violet-400 bg-violet-50/60 dark:bg-violet-950/20"
-                : "border-border/60 hover:border-violet-400/60 hover:bg-muted/30"
-            }`}
-            onClick={() => inputRef.current?.click()}
-            onDragOver={e => { e.preventDefault(); setDragging(true) }}
-            onDragLeave={() => setDragging(false)}
-            onDrop={onDrop}
-          >
-            <div className="flex flex-col items-center gap-3">
-              <div className="w-14 h-14 rounded-2xl bg-violet-100 dark:bg-violet-900/40 flex items-center justify-center">
-                <Upload className="w-6 h-6 text-violet-600 dark:text-violet-400" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-foreground mb-0.5">
-                  Drop a contract here or{" "}
-                  <span className="text-violet-600 dark:text-violet-400">browse files</span>
-                </p>
-                <p className="text-xs text-muted-foreground">PDF or DOCX · up to 20 MB</p>
-              </div>
-            </div>
-          </motion.div>
-        )}
+          {/* Icon */}
+          <div className="w-14 h-14 rounded-2xl bg-violet-600/10 border border-violet-500/20 flex items-center justify-center mb-5">
+            <ListChecks className="w-7 h-7 text-violet-400/70" />
+          </div>
+          <h2 className="text-white/90 text-lg font-semibold mb-2">Extract key clauses from any contract.</h2>
+          <p className="text-white/40 text-sm leading-relaxed mb-7 max-w-sm">
+            Upload a contract or agreement — key clauses, obligations, dates, and responsible parties are extracted and organized automatically.
+          </p>
 
-        {(stage === "selected" || stage === "uploading") && selectedFile && (
-          <motion.div
-            key="selected"
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            className="space-y-4"
-          >
-            <div className="flex items-center gap-3 rounded-2xl border border-border/60 bg-card px-4 py-3.5">
-              <div className="w-10 h-10 rounded-xl bg-violet-100 dark:bg-violet-900/40 flex items-center justify-center shrink-0">
-                <FileType2 className="w-5 h-5 text-violet-600 dark:text-violet-400" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">{selectedFile.name}</p>
-                <p className="text-xs text-muted-foreground">
-                  {fmtBytes(selectedFile.size)} · {selectedFile.name.split(".").pop()?.toUpperCase()}
-                </p>
-              </div>
-              {stage === "selected" && (
-                <button
-                  onClick={clearFile}
-                  className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors shrink-0"
+          <input
+            ref={inputRef}
+            type="file"
+            accept=".pdf,.docx"
+            className="hidden"
+            onChange={e => { const f = e.target.files?.[0]; if (f) validateAndSelect(f) }}
+          />
+
+          <AnimatePresence mode="wait">
+            {stage === "idle" && (
+              <motion.div
+                key="dropzone"
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="w-full"
+              >
+                <div
+                  className={`w-full rounded-2xl border-2 border-dashed transition-all cursor-pointer px-8 py-10 mb-4 ${
+                    dragging
+                      ? "border-violet-400/60 bg-violet-500/[0.06]"
+                      : "border-white/[0.08] bg-white/[0.015] hover:bg-white/[0.025] hover:border-violet-500/25"
+                  }`}
+                  onClick={() => inputRef.current?.click()}
+                  onDragOver={e => { e.preventDefault(); setDragging(true) }}
+                  onDragLeave={() => setDragging(false)}
+                  onDrop={onDrop}
                 >
-                  <X className="w-4 h-4" />
+                  <div className="w-10 h-10 rounded-xl bg-violet-600/12 border border-violet-500/18 flex items-center justify-center mx-auto mb-3">
+                    <Upload className="w-5 h-5 text-violet-400/70" />
+                  </div>
+                  <p className="text-white/55 text-sm font-medium mb-1">Drop your contract here</p>
+                  <p className="text-white/28 text-xs mb-4">PlainPath reads the contract and extracts obligations, deadlines, and key terms</p>
+                  <button
+                    onClick={e => { e.stopPropagation(); inputRef.current?.click() }}
+                    className="h-8 px-5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold transition-colors"
+                  >
+                    Choose file
+                  </button>
+                  <p className="text-white/18 text-[10px] mt-2">PDF or DOCX · Up to 20 MB</p>
+                </div>
+              </motion.div>
+            )}
+
+            {(stage === "selected" || stage === "uploading") && selectedFile && (
+              <motion.div
+                key="selected"
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="w-full space-y-3 mb-4"
+              >
+                <div className="flex items-center gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.025] px-4 py-3.5">
+                  <div className="w-10 h-10 rounded-xl bg-violet-600/12 border border-violet-500/18 flex items-center justify-center shrink-0">
+                    <FileType2 className="w-5 h-5 text-violet-400/70" />
+                  </div>
+                  <div className="flex-1 min-w-0 text-left">
+                    <p className="text-sm font-medium text-white/80 truncate">{selectedFile.name}</p>
+                    <p className="text-xs text-white/30">
+                      {fmtBytes(selectedFile.size)} · {selectedFile.name.split(".").pop()?.toUpperCase()}
+                    </p>
+                  </div>
+                  {stage === "selected" && (
+                    <button
+                      onClick={clearFile}
+                      className="p-1.5 rounded-lg text-white/25 hover:text-white/55 hover:bg-white/[0.04] transition-colors shrink-0"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+
+                <button
+                  className="w-full h-11 rounded-xl gap-2 bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold flex items-center justify-center transition-colors disabled:opacity-50"
+                  onClick={handleExtract}
+                  disabled={stage === "uploading"}
+                >
+                  {stage === "uploading" ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" /> Uploading…</>
+                  ) : (
+                    <><ListChecks className="w-4 h-4" /> Extract Clauses</>
+                  )}
                 </button>
-              )}
-            </div>
+                <p className="text-xs text-white/25 text-center">
+                  AI extracts key clauses, obligations, and dates — usually 15–30 seconds
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-            <Button
-              className="w-full h-11 gap-2 bg-violet-600 hover:bg-violet-700 text-white"
-              onClick={handleExtract}
-              disabled={stage === "uploading"}
+          {error && (
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+              className="w-full mt-1 mb-4 flex items-center gap-2 text-sm text-rose-400 text-left"
             >
-              {stage === "uploading" ? (
-                <><Loader2 className="w-4 h-4 animate-spin" /> Uploading…</>
-              ) : (
-                <><ListChecks className="w-4 h-4" /> Extract Clauses</>
-              )}
-            </Button>
-            <p className="text-xs text-muted-foreground text-center">
-              AI extracts key clauses, obligations, and dates — usually 15–30 seconds
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              {error}
+            </motion.div>
+          )}
+
+          {/* Trust chips */}
+          <div className="flex items-center justify-center gap-5 mb-7">
+            <span className="flex items-center gap-1.5 text-white/28 text-xs">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400/60" />
+              End-to-end encrypted
+            </span>
+            <span className="flex items-center gap-1.5 text-white/28 text-xs">
+              <Clock className="w-3.5 h-3.5 text-amber-400/60" />
+              Extracts in ~20 sec
+            </span>
+          </div>
+
+          {/* Disclaimer */}
+          <div className="w-full flex items-start gap-2 rounded-xl border border-white/[0.05] bg-amber-500/[0.04] px-3 py-2.5 mb-8 text-left">
+            <Info className="w-3.5 h-3.5 text-amber-400/50 shrink-0 mt-0.5" />
+            <p className="text-white/30 text-[10px] leading-relaxed">
+              PlainPath identifies and organizes contract terms for review.{" "}
+              <span className="text-amber-300/65 font-medium">Results are not legal advice.</span>{" "}
+              Always verify with a qualified professional before acting on any contract term.
             </p>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
 
-      {error && (
-        <motion.div
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-          className="mt-3 flex items-center gap-2 text-sm text-rose-600 dark:text-rose-400"
-        >
-          <AlertCircle className="w-4 h-4 shrink-0" />
-          {error}
-        </motion.div>
-      )}
+          {/* Works well with */}
+          <p className="text-white/20 text-[9px] uppercase tracking-widest font-semibold mb-3">Works well with</p>
+          <div className="w-full grid grid-cols-2 gap-2 mb-8">
+            {CE_WORKS_WELL_WITH.map(item => (
+              <div
+                key={item.label}
+                className="flex items-start gap-2.5 p-3 rounded-xl border border-white/[0.05] bg-white/[0.02] text-left"
+              >
+                <item.icon className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${item.color}`} />
+                <div>
+                  <p className="text-white/52 text-[11px] font-medium leading-tight">{item.label}</p>
+                  <p className="text-white/24 text-[10px] leading-tight mt-0.5">{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
 
-      {stage === "idle" && (
-        <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[
-            { icon: Tag,      label: "Clause Categories",  color: "text-violet-500" },
-            { icon: Calendar, label: "Dates & Deadlines",  color: "text-blue-500" },
-            { icon: Users,    label: "Obligations & Owners", color: "text-emerald-500" },
-            { icon: Layers,   label: "Source Traceability", color: "text-amber-500" },
-          ].map(({ icon: Icon, label, color }) => (
-            <div key={label} className="rounded-xl border border-border/50 bg-card p-3 text-center">
-              <Icon className={`w-4 h-4 mx-auto mb-1 ${color}`} />
-              <p className="text-[11px] font-medium text-muted-foreground">{label}</p>
-            </div>
-          ))}
+          {/* Demo chips */}
+          <p className="text-white/20 text-[9px] uppercase tracking-widest font-semibold mb-3">Or try a demo</p>
+          <div className="w-full flex flex-col gap-2">
+            {CLAUSE_DEMOS.map(d => (
+              <button
+                key={d.id}
+                onClick={() => onDemo(d.data)}
+                className="flex items-center gap-3 p-3 rounded-xl border border-white/[0.06] bg-white/[0.02] hover:border-violet-500/20 hover:bg-violet-500/[0.03] transition-all text-left"
+              >
+                <div className="w-7 h-7 rounded-lg bg-violet-600/10 border border-violet-500/15 flex items-center justify-center shrink-0">
+                  <ListChecks className="w-3.5 h-3.5 text-violet-400/60" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white/55 text-xs font-medium leading-tight">{d.label}</p>
+                  <p className="text-white/25 text-[10px]">{d.description}</p>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 text-white/18 shrink-0" />
+              </button>
+            ))}
+          </div>
+
         </div>
-      )}
+      </div>
     </div>
   )
 }
@@ -1461,6 +1711,10 @@ export default function ClauseExtractor() {
     setLocation("/clause-extractor", { replace: true })
   }, [setLocation])
 
+  const handleDemo = useCallback((session: ClauseExtractorSessionDetail) => {
+    setState({ stage: "results", session })
+  }, [])
+
   // Processing scan screen
   if (uploadingFileName) {
     return <DocumentScanScreen mode="clause-extractor" fileName={uploadingFileName} />
@@ -1482,11 +1736,7 @@ export default function ClauseExtractor() {
 
   // Workspace layouts — full height
   if (state.stage === "results") {
-    return (
-      <div className="h-full flex flex-col">
-        <WorkspaceView session={state.session} onDelete={handleDelete} />
-      </div>
-    )
+    return <WorkspaceView session={state.session} onDelete={handleDelete} />
   }
 
   if (state.stage === "lowconf") {
@@ -1515,9 +1765,5 @@ export default function ClauseExtractor() {
   }
 
   // Upload
-  return (
-    <div className="min-h-full">
-      <UploadView onUploaded={handleUploaded} onUploading={handleUploading} />
-    </div>
-  )
+  return <UploadView onUploaded={handleUploaded} onUploading={handleUploading} onDemo={handleDemo} />
 }

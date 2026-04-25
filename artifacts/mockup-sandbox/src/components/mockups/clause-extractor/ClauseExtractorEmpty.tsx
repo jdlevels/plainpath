@@ -1,114 +1,119 @@
-import { FileText, Upload, Camera, ClipboardPaste, Link2, Info, Scale, Briefcase, Home, FileCheck, Layers, ScrollText, ShieldCheck, Cpu } from "lucide-react";
+import {
+  Upload, Info, Scale, Briefcase, Home, FileText, FileCheck,
+  ShieldCheck, Clock, ChevronRight, ArrowLeft, ListChecks,
+  ScrollText, Layers
+} from "lucide-react";
 
-const WORKS_WITH = [
-  { icon: <Scale className="w-3.5 h-3.5 text-violet-400" />,      label: "Service agreements",     desc: "Obligations, payment terms, renewal, liability" },
-  { icon: <Home className="w-3.5 h-3.5 text-sky-400" />,          label: "Leases",                 desc: "Tenant rights, notice periods, deposits, exit" },
-  { icon: <Briefcase className="w-3.5 h-3.5 text-amber-400" />,   label: "Employment agreements",  desc: "Compensation, non-compete, IP, termination" },
-  { icon: <FileText className="w-3.5 h-3.5 text-emerald-400" />,  label: "Vendor contracts",       desc: "SLAs, liability caps, dispute resolution" },
-  { icon: <FileCheck className="w-3.5 h-3.5 text-blue-400" />,    label: "Insurance forms",        desc: "Coverage terms, exclusions, notice requirements" },
-  { icon: <Layers className="w-3.5 h-3.5 text-orange-400" />,     label: "Policy documents",       desc: "Obligations, definitions, enforcement terms" },
-  { icon: <ScrollText className="w-3.5 h-3.5 text-rose-400" />,   label: "Notices",                desc: "Deadlines, required actions, response windows" },
-  { icon: <ShieldCheck className="w-3.5 h-3.5 text-purple-400" />,label: "Contractor agreements",  desc: "Scope, IP ownership, payment schedule, exit" },
+const CE_WORKS_WELL_WITH = [
+  { icon: Scale,     color: "text-amber-400",   label: "Service agreements",    desc: "Obligations, payment terms, renewal, liability" },
+  { icon: Home,      color: "text-sky-400",      label: "Leases",                desc: "Tenant rights, notice periods, deposits, exit" },
+  { icon: Briefcase, color: "text-violet-400",   label: "Employment agreements", desc: "Compensation, non-compete, IP, termination" },
+  { icon: FileText,  color: "text-emerald-400",  label: "Vendor contracts",      desc: "SLAs, liability caps, dispute resolution" },
+  { icon: FileCheck, color: "text-blue-400",     label: "Insurance forms",       desc: "Coverage terms, exclusions, notice requirements" },
+  { icon: Layers,    color: "text-orange-400",   label: "Policy documents",      desc: "Obligations, definitions, enforcement terms" },
+  { icon: ScrollText,color: "text-rose-400",     label: "Notices",               desc: "Deadlines, required actions, response windows" },
+  { icon: ShieldCheck,color:"text-purple-400",   label: "Contractor agreements", desc: "Scope, IP ownership, payment schedule, exit" },
+];
+
+const DEMOS = [
+  { label: "Thornfield Residential Lease — 24-month", desc: "Residential lease · 12 clauses extracted" },
+  { label: "Studio Vela Freelance Services Agreement", desc: "Service agreement · 9 clauses extracted" },
 ];
 
 export function ClauseExtractorEmpty() {
   return (
-    <div className="h-screen flex flex-col bg-[#0c0c0f] text-white overflow-hidden" style={{ fontFamily: "'Inter', sans-serif" }}>
+    <div className="h-screen flex flex-col bg-[#0d0d10] text-white overflow-hidden" style={{ fontFamily: "'Inter', sans-serif" }}>
 
-      {/* Top bar */}
-      <div className="h-12 border-b border-white/[0.06] flex items-center px-5 gap-2.5 shrink-0">
+      {/* Tool header — back + icon + name */}
+      <div className="h-12 border-b border-white/[0.06] flex items-center px-5 gap-2 shrink-0">
+        <button className="p-1 rounded-md text-white/25 mr-0.5">
+          <ArrowLeft className="w-3.5 h-3.5" />
+        </button>
         <div className="w-5 h-5 rounded bg-violet-600 flex items-center justify-center shrink-0">
-          <FileText className="w-3 h-3 text-white" />
+          <ListChecks className="w-3 h-3 text-white" />
         </div>
-        <span className="text-white/90 text-sm font-semibold tracking-tight">PlainPath</span>
-        <span className="text-white/18 text-[10px] mx-0.5">·</span>
-        <span className="text-white/30 text-xs">Clause Extractor</span>
+        <span className="text-white/30 text-xs font-medium">PlainPath</span>
+        <span className="text-white/15 text-xs">·</span>
+        <span className="text-white/70 text-xs font-semibold">Clause Extractor</span>
       </div>
 
-      {/* Body */}
+      {/* Scrollable body */}
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-2xl mx-auto px-6 pt-14 pb-16">
+        <div className="max-w-xl mx-auto px-5 py-14 flex flex-col items-center text-center">
 
-          {/* Hero */}
-          <div className="text-center mb-10">
-            <div className="w-14 h-14 rounded-2xl bg-violet-600/20 border border-violet-500/25 flex items-center justify-center mx-auto mb-5">
-              <Cpu className="w-7 h-7 text-violet-400" />
-            </div>
-            <h1 className="text-[22px] font-bold text-white tracking-tight mb-3">Extract and organize your contract clauses.</h1>
-            <p className="text-sm text-white/42 leading-relaxed max-w-lg mx-auto">
-              Upload any contract or agreement. PlainPath finds the clauses, categorizes them, identifies obligations and deadlines, and links every extracted clause back to its source.
-            </p>
+          {/* Hero icon */}
+          <div className="w-14 h-14 rounded-2xl bg-violet-600/10 border border-violet-500/20 flex items-center justify-center mb-5">
+            <ListChecks className="w-7 h-7 text-violet-400/70" />
           </div>
+          <h2 className="text-white/90 text-lg font-semibold mb-2">Extract key clauses from any contract.</h2>
+          <p className="text-white/40 text-sm leading-relaxed mb-7 max-w-sm">
+            Upload a contract or agreement — key clauses, obligations, dates, and responsible parties are extracted and organized automatically.
+          </p>
 
-          {/* Upload zone */}
-          <div className="rounded-2xl border-2 border-dashed border-white/[0.1] bg-white/[0.015] hover:border-violet-500/40 hover:bg-violet-500/[0.04] transition-all cursor-pointer p-8 text-center mb-4">
-            <div className="w-12 h-12 rounded-xl bg-white/[0.05] flex items-center justify-center mx-auto mb-4">
-              <Upload className="w-5 h-5 text-white/40" />
+          {/* Drop zone */}
+          <div className="w-full rounded-2xl border-2 border-dashed border-white/[0.08] bg-white/[0.015] hover:bg-white/[0.025] hover:border-violet-500/25 transition-all cursor-pointer px-8 py-10 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-violet-600/12 border border-violet-500/18 flex items-center justify-center mx-auto mb-3">
+              <Upload className="w-5 h-5 text-violet-400/70" />
             </div>
-            <p className="text-sm font-semibold text-white/70 mb-1">Drop your document here</p>
-            <p className="text-xs text-white/28 mb-5">PlainPath extracts and organizes clauses — source-backed. Not legal advice.</p>
-            <button className="bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium px-5 py-2 rounded-lg transition-colors inline-flex items-center gap-2">
-              <Upload className="w-3.5 h-3.5" />
+            <p className="text-white/55 text-sm font-medium mb-1">Drop your contract here</p>
+            <p className="text-white/28 text-xs mb-4">PlainPath reads the contract and extracts obligations, deadlines, and key terms</p>
+            <button className="h-8 px-5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold transition-colors">
               Choose file
             </button>
-            <p className="text-[10px] text-white/20 mt-3">PDF, DOCX, TXT · Up to 50 MB</p>
+            <p className="text-white/18 text-[10px] mt-2">PDF or DOCX · Up to 20 MB</p>
           </div>
 
-          {/* Secondary input options */}
-          <div className="grid grid-cols-3 gap-3 mb-8">
-            {[
-              { icon: <Camera className="w-4 h-4 text-white/35" />, label: "Scan Photo",   desc: "Point camera at document" },
-              { icon: <ClipboardPaste className="w-4 h-4 text-white/35" />, label: "Paste Text",   desc: "Paste from email or doc" },
-              { icon: <Link2 className="w-4 h-4 text-white/35" />, label: "Import Link",   desc: "From URL or cloud" },
-            ].map(opt => (
-              <button key={opt.label} className="rounded-xl border border-white/[0.07] bg-white/[0.025] hover:bg-white/[0.045] transition-colors py-3.5 px-3 flex flex-col items-center gap-2 cursor-pointer">
-                {opt.icon}
-                <span className="text-xs font-medium text-white/55">{opt.label}</span>
-                <span className="text-[10px] text-white/25 text-center leading-tight">{opt.desc}</span>
-              </button>
-            ))}
+          {/* Trust chips */}
+          <div className="flex items-center justify-center gap-5 mb-7">
+            <span className="flex items-center gap-1.5 text-white/28 text-xs">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400/60" />
+              End-to-end encrypted
+            </span>
+            <span className="flex items-center gap-1.5 text-white/28 text-xs">
+              <Clock className="w-3.5 h-3.5 text-amber-400/60" />
+              Extracts in ~20 sec
+            </span>
           </div>
 
           {/* Disclaimer */}
-          <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 flex gap-3 mb-8">
-            <Info className="w-3.5 h-3.5 text-white/30 shrink-0 mt-0.5" />
-            <p className="text-[11px] text-white/35 leading-relaxed">
-              PlainPath provides <strong className="text-white/50 font-semibold">clause extraction support</strong> — source-backed extracted terms, obligations, and deadlines. This is not legal advice. For high-risk documents, review with a qualified professional.
+          <div className="w-full flex items-start gap-2 rounded-xl border border-white/[0.05] bg-amber-500/[0.04] px-3 py-2.5 mb-8 text-left">
+            <Info className="w-3.5 h-3.5 text-amber-400/50 shrink-0 mt-0.5" />
+            <p className="text-white/30 text-[10px] leading-relaxed">
+              PlainPath identifies and organizes contract terms for review.{" "}
+              <span className="text-amber-300/65 font-medium">Results are not legal advice.</span>{" "}
+              Always verify with a qualified professional before acting on any contract term.
             </p>
           </div>
 
           {/* Works well with */}
-          <div className="mb-8">
-            <p className="text-[10px] uppercase tracking-[0.12em] font-semibold text-white/20 mb-4">WORKS WELL WITH</p>
-            <div className="grid grid-cols-2 gap-2">
-              {WORKS_WITH.map(w => (
-                <div key={w.label} className="flex items-start gap-2.5 px-3 py-2.5 rounded-lg border border-white/[0.05] bg-white/[0.015]">
-                  <span className="shrink-0 mt-0.5">{w.icon}</span>
-                  <div>
-                    <p className="text-xs font-medium text-white/60">{w.label}</p>
-                    <p className="text-[10px] text-white/28 leading-snug mt-0.5">{w.desc}</p>
-                  </div>
+          <p className="text-white/20 text-[9px] uppercase tracking-widest font-semibold mb-3 self-start">Works well with</p>
+          <div className="w-full grid grid-cols-2 gap-2 mb-8">
+            {CE_WORKS_WELL_WITH.map(item => (
+              <div key={item.label} className="flex items-start gap-2.5 p-3 rounded-xl border border-white/[0.05] bg-white/[0.02] text-left">
+                <item.icon className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${item.color}`} />
+                <div>
+                  <p className="text-white/52 text-[11px] font-medium leading-tight">{item.label}</p>
+                  <p className="text-white/24 text-[10px] leading-tight mt-0.5">{item.desc}</p>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
 
-          {/* What you get */}
-          <div>
-            <p className="text-[10px] uppercase tracking-[0.12em] font-semibold text-white/20 mb-4">WHAT GETS EXTRACTED</p>
-            <div className="grid grid-cols-2 gap-2">
-              {[
-                "Clauses by category",           "Plain-English clause summary",
-                "Obligations & responsible parties", "Dates & deadlines",
-                "Extraction confidence score",   "Missing or unclear clause flags",
-                "Clickable source chips",         "Source-backed extracted terms",
-              ].map(f => (
-                <div key={f} className="flex items-center gap-2 py-2 px-3 rounded-lg border border-white/[0.05] bg-white/[0.01]">
-                  <div className="w-1 h-1 rounded-full bg-violet-500/60 shrink-0" />
-                  <span className="text-[11px] text-white/38">{f}</span>
+          {/* Demo chips */}
+          <p className="text-white/20 text-[9px] uppercase tracking-widest font-semibold mb-3 self-start">Or try a demo</p>
+          <div className="w-full flex flex-col gap-2">
+            {DEMOS.map(d => (
+              <button key={d.label} className="flex items-center gap-3 p-3 rounded-xl border border-white/[0.06] bg-white/[0.02] hover:border-violet-500/20 hover:bg-violet-500/[0.03] transition-all text-left">
+                <div className="w-7 h-7 rounded-lg bg-violet-600/10 border border-violet-500/15 flex items-center justify-center shrink-0">
+                  <ListChecks className="w-3.5 h-3.5 text-violet-400/60" />
                 </div>
-              ))}
-            </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white/55 text-xs font-medium leading-tight">{d.label}</p>
+                  <p className="text-white/25 text-[10px]">{d.desc}</p>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 text-white/18 shrink-0" />
+              </button>
+            ))}
           </div>
 
         </div>
