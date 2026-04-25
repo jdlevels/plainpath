@@ -148,7 +148,7 @@ const TOOLS = [
     title: "Compare Versions",
     verb: "Compare it.",
     tagline: "Spot every change between two document versions",
-    description: "Upload an original and a revised PDF. PlainPath maps every addition, deletion, and structural change with zone-by-zone overlays, severity scoring, and optional AI enrichment.",
+    description: "Upload an original and a revised PDF. PlainPath maps every addition, deletion, and structural change — with severity scoring so you see what actually matters.",
     features: [
       { icon: ArrowRightLeft, label: "Side-by-side PDF workspace" },
       { icon: AlertTriangle, label: "Severity-sorted change summary" },

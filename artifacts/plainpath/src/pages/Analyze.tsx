@@ -57,7 +57,7 @@ const TABS = [
   { id: "risks",           label: "Risks & Notes",    icon: AlertTriangle                              },
   { id: "key-terms",       label: "Key Terms",        icon: Flag,          countKey: "keyTerms"         },
   { id: "action-pack",    label: "Action Pack",      icon: Package                                      },
-  { id: "ask",             label: "Ask PlainPath",    icon: MessageSquare                               },
+  { id: "ask",             label: "Ask This Document", icon: MessageSquare                               },
 ]
 
 export default function Analyze() {
@@ -2546,13 +2546,6 @@ function ExportMenu({ analysis }: { analysis: DocumentAnalysis }) {
   const [shareErr, setShareErr] = useState(false)
   const [, setLocation] = useLocation()
 
-  function handleSendForSignature() {
-    try {
-      sessionStorage.setItem("pp_sig_doc", JSON.stringify({ title: analysis.title }))
-    } catch { /* sessionStorage unavailable */ }
-    setLocation("/signature")
-  }
-
   function handleSendToRedact() {
     setLocation("/redact")
   }
@@ -2736,13 +2729,6 @@ function ExportMenu({ analysis }: { analysis: DocumentAnalysis }) {
           Send to tool
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem
-          className="gap-2.5 cursor-pointer"
-          onSelect={(e) => { e.preventDefault(); handleSendForSignature() }}
-        >
-          <Lock className="w-3.5 h-3.5 text-violet-500" />
-          <span>Send for Signature</span>
-        </DropdownMenuItem>
         <DropdownMenuItem
           className="gap-2.5 cursor-pointer"
           onSelect={(e) => { e.preventDefault(); handleSendToRedact() }}

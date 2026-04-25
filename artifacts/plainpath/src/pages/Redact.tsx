@@ -25,7 +25,7 @@ import { useLocation } from "wouter"
 import {
   ShieldCheck, ArrowLeft, UploadCloud, Type, Loader2, AlertCircle, File, X,
   FileText, Scale, EyeOff, Download, Copy, Check, ArrowRight, Lock,
-  User, FileSignature, HeartPulse, FileDown, Camera,
+  User, PenLine as FileContract, HeartPulse, FileDown, Camera, MessageCircle,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { WorkspaceShell } from "@/components/WorkspaceShell"
@@ -103,7 +103,7 @@ Region 5 Compliance Office`,
     label: "Freelance Contract",
     meta: "Names · bank details · tax ID",
     fileName: "freelance_contract.txt",
-    icon: FileSignature,
+    icon: FileContract,
     color: "text-emerald-600 dark:text-emerald-400",
     bg: "bg-emerald-50 dark:bg-emerald-950/40",
     text: `FREELANCE SERVICES AGREEMENT
@@ -359,16 +359,13 @@ export default function Redact() {
     }
   }
 
-  // ── From next-step panel: send to Digital Signature ──────────────────────
-  function sendToSignature() {
+  // ── From next-step panel: ask questions about the redacted document ────────
+  function sendToAsk() {
     if (!nextStepText) return
     try {
-      sessionStorage.setItem("pp_sig_doc", JSON.stringify({
-        title: activeFileName?.replace(/\.[^.]+$/, "") || "Redacted document",
-        extractedText: nextStepText,
-      }))
+      sessionStorage.setItem("pii_analyze_text", nextStepText)
     } catch { /* sessionStorage unavailable */ }
-    setLocation("/signature")
+    setLocation("/analyze")
   }
 
   // ── From next-step panel: send to a specific tool ─────────────────────────
@@ -606,15 +603,15 @@ export default function Redact() {
                     <ArrowRight className="w-4 h-4 text-amber-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
                   </button>
 
-                  <button onClick={sendToSignature} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-violet-200/60 dark:border-violet-900/40 bg-violet-50/80 dark:bg-violet-950/20 hover:bg-violet-100/80 dark:hover:bg-violet-950/40 transition-colors group text-left">
-                    <div className="w-8 h-8 rounded-lg bg-violet-100 dark:bg-violet-900/40 flex items-center justify-center shrink-0">
-                      <Lock className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+                  <button onClick={sendToAsk} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-indigo-200/60 dark:border-indigo-900/40 bg-indigo-50/80 dark:bg-indigo-950/20 hover:bg-indigo-100/80 dark:hover:bg-indigo-950/40 transition-colors group text-left">
+                    <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center shrink-0">
+                      <MessageCircle className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-violet-700 dark:text-violet-300">Send for Signature</p>
-                      <p className="text-xs text-muted-foreground">Send the redacted document for e-signature</p>
+                      <p className="text-sm font-semibold text-indigo-700 dark:text-indigo-300">Ask This Document</p>
+                      <p className="text-xs text-muted-foreground">Ask plain-English questions about the redacted document</p>
                     </div>
-                    <ArrowRight className="w-4 h-4 text-violet-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+                    <ArrowRight className="w-4 h-4 text-indigo-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
                   </button>
                 </div>
               </div>
@@ -746,17 +743,17 @@ export default function Redact() {
               </button>
 
               <button
-                onClick={sendToSignature}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-violet-200/60 dark:border-violet-900/40 bg-violet-50/80 dark:bg-violet-950/20 hover:bg-violet-100/80 dark:hover:bg-violet-950/40 transition-colors group text-left"
+                onClick={sendToAsk}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-indigo-200/60 dark:border-indigo-900/40 bg-indigo-50/80 dark:bg-indigo-950/20 hover:bg-indigo-100/80 dark:hover:bg-indigo-950/40 transition-colors group text-left"
               >
-                <div className="w-8 h-8 rounded-lg bg-violet-100 dark:bg-violet-900/40 flex items-center justify-center shrink-0">
-                  <Lock className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+                <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center shrink-0">
+                  <MessageCircle className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-violet-700 dark:text-violet-300">Send for Signature</p>
-                  <p className="text-xs text-muted-foreground">Send the redacted document for e-signature</p>
+                  <p className="text-sm font-semibold text-indigo-700 dark:text-indigo-300">Ask This Document</p>
+                  <p className="text-xs text-muted-foreground">Ask plain-English questions about the redacted document</p>
                 </div>
-                <ArrowRight className="w-4 h-4 text-violet-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+                <ArrowRight className="w-4 h-4 text-indigo-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
               </button>
             </div>
           </div>

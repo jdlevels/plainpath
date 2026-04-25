@@ -191,7 +191,7 @@ export default function Home() {
   const plan = entitlements?.plan ?? null
   const toolAccess = entitlements?.toolAccess ?? []
 
-  // Load recent work — analyses + signatures + Clause Extractor sessions + Compare sessions + local, merged by date
+  // Load recent work — analyses + Clause Extractor sessions + Compare sessions + builder docs, merged by date
   useEffect(() => {
     let cancelled = false
     async function load() {
