@@ -352,11 +352,11 @@ function ClauseMini({ clause, onChipClick, activeChipId, sections }: {
         {open && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.15 }} className="overflow-hidden">
             <div className="px-3.5 pb-3.5 space-y-2.5 border-t border-white/[0.04] pt-2.5">
-              <p className="text-[11px] text-white/48 leading-relaxed">{clause.explanation}</p>
+              <p className="text-[11px] text-white/68 leading-relaxed">{clause.explanation}</p>
               {clause.whyUnfair && (
                 <div className="rounded-lg border border-amber-500/12 bg-amber-500/[0.03] px-2.5 py-2">
                   <p className="text-[9px] text-amber-300/45 uppercase tracking-widest font-semibold mb-1">Why it's a concern</p>
-                  <p className="text-[11px] text-amber-200/55 leading-relaxed">{clause.whyUnfair}</p>
+                  <p className="text-[11px] text-amber-200/78 leading-relaxed">{clause.whyUnfair}</p>
                 </div>
               )}
               {clause.negotiationLanguage && (
@@ -365,13 +365,13 @@ function ClauseMini({ clause, onChipClick, activeChipId, sections }: {
                     <p className="text-[9px] text-white/30 uppercase tracking-widest font-semibold">Suggested revision</p>
                     <CopyBtn text={clause.negotiationLanguage} />
                   </div>
-                  <p className="text-[10px] text-white/40 leading-relaxed font-mono whitespace-pre-wrap">{clause.negotiationLanguage}</p>
+                  <p className="text-[10px] text-white/62 leading-relaxed font-mono whitespace-pre-wrap">{clause.negotiationLanguage}</p>
                 </div>
               )}
               {clause.exitGuidance && (
                 <div className="rounded-lg border border-white/[0.05] px-2.5 py-2">
-                  <p className="text-[9px] text-white/22 uppercase tracking-widest font-semibold mb-1">Already signed?</p>
-                  <p className="text-[11px] text-white/38 leading-relaxed">{clause.exitGuidance}</p>
+                  <p className="text-[9px] text-white/32 uppercase tracking-widest font-semibold mb-1">Already signed?</p>
+                  <p className="text-[11px] text-white/62 leading-relaxed">{clause.exitGuidance}</p>
                 </div>
               )}
               {clause.rating !== "fair" && (
@@ -392,7 +392,7 @@ function ClauseMini({ clause, onChipClick, activeChipId, sections }: {
                           <button onClick={() => setNegEmail(null)} className="text-white/20 hover:text-white/40 transition-colors"><XIcon className="w-3 h-3" /></button>
                         </div>
                       </div>
-                      <p className="text-[11px] text-white/45 leading-relaxed whitespace-pre-wrap">{negEmail}</p>
+                      <p className="text-[11px] text-white/68 leading-relaxed whitespace-pre-wrap">{negEmail}</p>
                     </div>
                   )}
                   {negError && <p className="text-[10px] text-red-400 mt-1">{negError}</p>}
@@ -432,6 +432,12 @@ function CollapsedSection({ icon, title, badge, badgeColor = "default", children
 
 // ─── Contract Doc Viewer (left panel) ─────────────────────────────────────────
 
+const CONTRACT_TEXT_SIZES = [
+  { label: "A",   body: "text-[11px]", title: "text-xs"     },
+  { label: "A+",  body: "text-xs",     title: "text-[13px]" },
+  { label: "A++", body: "text-sm",     title: "text-[14px]" },
+] as const
+
 function ContractDocViewer({
   sections, activeChipId, activeEvidence, highlightSectionId, onDismiss, sectionRefs, isLowConf, docName, riskyCount,
 }: {
@@ -439,12 +445,15 @@ function ContractDocViewer({
   highlightSectionId: string | null; onDismiss: () => void; sectionRefs: React.MutableRefObject<Record<string, HTMLDivElement | null>>
   isLowConf?: boolean; docName?: string; riskyCount?: number
 }) {
+  const [sizeIdx, setSizeIdx] = useState<0 | 1 | 2>(0)
+  const textSize = CONTRACT_TEXT_SIZES[sizeIdx]
+
   return (
     <div className="w-[58%] border-r border-white/[0.06] flex flex-col bg-[#0d0d10] shrink-0 overflow-hidden">
       {/* Tool identity row */}
       <div className="h-7 border-b border-white/[0.04] flex items-center px-4 gap-2 shrink-0 bg-white/[0.01]">
         <Scale className="w-3 h-3 text-amber-400/40 shrink-0" />
-        <span className="text-[10px] text-white/28 font-medium flex-1">Contract Review</span>
+        <span className="text-[10px] text-white/38 font-medium flex-1">Contract Review</span>
         {isLowConf ? (
           <span className="h-4 px-1.5 rounded border border-amber-500/28 bg-amber-500/10 text-amber-300/75 text-[9px] font-medium">Partial scan</span>
         ) : riskyCount != null && riskyCount > 0 ? (
@@ -458,12 +467,23 @@ function ContractDocViewer({
       {/* File toolbar */}
       <div className="h-9 border-b border-white/[0.06] flex items-center px-4 gap-2.5 shrink-0">
         <FileText className={`w-3.5 h-3.5 shrink-0 ${isLowConf ? "text-amber-400/50" : "text-amber-400/55"}`} />
-        <span className="text-white/40 text-xs flex-1 truncate">{docName ?? "Contract document"}</span>
-        {sections.length > 0 && <span className="text-white/18 text-xs shrink-0">{sections.length} sections</span>}
+        <span className="text-white/55 text-xs flex-1 truncate">{docName ?? "Contract document"}</span>
+        {sections.length > 0 && <span className="text-white/30 text-xs shrink-0">{sections.length} sections</span>}
         <div className="w-px h-4 bg-white/[0.06] mx-1" />
         <div className="flex items-center gap-0.5">
-          {["Fit", "75%", "100%"].map((z, i) => (
-            <button key={i} className={`h-5 px-1.5 rounded text-[9px] font-medium transition-colors ${i === 1 ? "bg-white/[0.07] text-white/55" : "text-white/22 hover:text-white/45"}`}>{z}</button>
+          {CONTRACT_TEXT_SIZES.map((s, i) => (
+            <button
+              key={i}
+              onClick={() => setSizeIdx(i as 0 | 1 | 2)}
+              title={`Text size: ${s.label}`}
+              className={`h-5 px-1.5 rounded text-[9px] font-medium transition-colors ${
+                i === sizeIdx
+                  ? "bg-white/[0.09] text-white/70"
+                  : "text-white/28 hover:text-white/55 hover:bg-white/[0.05]"
+              }`}
+            >
+              {s.label}
+            </button>
           ))}
         </div>
       </div>
@@ -513,7 +533,7 @@ function ContractDocViewer({
                     </div>
                   )}
                 </div>
-                <p className={`text-[11px] leading-relaxed whitespace-pre-line ${isHighlighted ? "text-white/65" : "text-white/32"}`}>
+                <p className={`leading-relaxed whitespace-pre-line ${textSize.body} ${isHighlighted ? "text-white/82" : "text-white/62"}`}>
                   {section.content}
                 </p>
                 {isHighlighted && activeEvidence && (
@@ -598,7 +618,7 @@ function ContractIntelPanel({
               {isLowConf && <span className="h-4 px-1.5 rounded border border-amber-500/25 bg-amber-500/10 text-amber-300/80 text-[9px] font-medium">Partial scan</span>}
               {!isLowConf && riskyCount > 0 && <span className="h-4 px-1.5 rounded border border-red-500/25 bg-red-500/10 text-red-300/80 text-[9px] font-medium">Review required</span>}
             </div>
-            <p className="text-white/28 text-[10px]">
+            <p className="text-white/48 text-[10px]">
               {result.verdict}
               {result.reviewedAt ? ` · ${formatAt(result.reviewedAt)}` : ""}
             </p>
@@ -699,17 +719,17 @@ function ContractIntelPanel({
                       <p className={`text-xs font-medium flex-1 leading-snug ${isFlagStyle ? "text-red-300" : "text-amber-300"}`}>{clause.text}</p>
                       <SourceChip id={chipId} label={clause.id} active={isActive} onClick={() => onChipClick(chipId, clause.text)} />
                     </div>
-                    <p className="text-white/38 text-[11px] leading-relaxed ml-4 mb-2">{clause.explanation}</p>
+                    <p className="text-white/62 text-[11px] leading-relaxed ml-4 mb-2">{clause.explanation}</p>
                     {clause.whyUnfair && (
-                      <p className="text-white/28 text-[10px] leading-relaxed ml-4 italic">Risk indicator: {clause.whyUnfair}</p>
+                      <p className="text-white/48 text-[10px] leading-relaxed ml-4 italic">Risk indicator: {clause.whyUnfair}</p>
                     )}
                     {clause.negotiationLanguage && (
                       <div className="ml-4 mt-2 rounded-lg border border-white/[0.06] bg-white/[0.02] px-2.5 py-2">
                         <div className="flex items-center justify-between mb-1">
-                          <p className="text-[9px] text-white/25 uppercase tracking-widest font-semibold">Suggested revision</p>
+                          <p className="text-[9px] text-white/35 uppercase tracking-widest font-semibold">Suggested revision</p>
                           <CopyBtn text={clause.negotiationLanguage} />
                         </div>
-                        <p className="text-[10px] text-white/38 leading-relaxed font-mono line-clamp-3">{clause.negotiationLanguage}</p>
+                        <p className="text-[10px] text-white/58 leading-relaxed font-mono line-clamp-3">{clause.negotiationLanguage}</p>
                       </div>
                     )}
                   </div>
@@ -734,7 +754,33 @@ function ContractIntelPanel({
             >
               D. Required Next Steps
             </SLabel>
-            <p className="text-white/25 text-[10px] mb-3">Work through these before signing — terms to verify specific to this contract.</p>
+            <p className="text-white/38 text-[10px] mb-3">Work through these before signing — terms to verify specific to this contract.</p>
+            {/* ── Checklist progress bar — always visible ── */}
+            {(() => {
+              const total = result.preSigningChecklist.length
+              const doneCount = result.preSigningChecklist.filter((_, i) => checklistDone[`chk-${i}`]).length
+              const pct = total === 0 ? 100 : Math.round((doneCount / total) * 100)
+              const allDone = doneCount === total && total > 0
+              return (
+                <div className="mb-4">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-white/38 text-[9px]">{doneCount} of {total} verified</span>
+                    <span className={`text-[9px] font-semibold tabular-nums ${allDone ? "text-emerald-400" : "text-amber-400/75"}`}>{pct}%</span>
+                  </div>
+                  <div className="h-[3px] rounded-full bg-white/[0.07] overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-500 ${allDone ? "bg-emerald-400" : "bg-amber-500"}`}
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                  {allDone && (
+                    <p className="text-emerald-400/60 text-[9px] mt-1.5 flex items-center gap-1">
+                      <CheckCircle2 className="w-2.5 h-2.5" /> All items verified
+                    </p>
+                  )}
+                </div>
+              )
+            })()}
             <div className="flex flex-col gap-2">
               {result.preSigningChecklist.map((item, i) => {
                 const id = `chk-${i}`
@@ -749,7 +795,7 @@ function ContractIntelPanel({
                     <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 mt-0.5 transition-all ${done ? "bg-emerald-600/25 border-emerald-500/40" : "border-white/15 group-hover:border-white/25"}`}>
                       {done && <CheckCheck className="w-2.5 h-2.5 text-emerald-400" />}
                     </div>
-                    <p className={`text-[11px] leading-relaxed flex-1 transition-colors ${done ? "line-through text-white/20" : "text-white/58"}`}>{item}</p>
+                    <p className={`text-[11px] leading-relaxed flex-1 transition-colors ${done ? "line-through text-white/22" : "text-white/70"}`}>{item}</p>
                     {isUrgent && !done && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0 mt-1.5" />}
                   </button>
                 )
@@ -771,7 +817,7 @@ function ContractIntelPanel({
                   <div key={clause.id} className="flex items-start gap-2.5">
                     <div className={`w-1 h-1 rounded-full shrink-0 mt-2 ${clause.rating === "red-flag" ? "bg-red-400/50" : "bg-amber-400/50"}`} />
                     <div className="flex-1 min-w-0">
-                      <p className="text-white/28 text-[10px] leading-relaxed italic mb-1">"{clause.text.length > 80 ? clause.text.slice(0, 80) + "…" : clause.text}"</p>
+                      <p className="text-white/48 text-[10px] leading-relaxed italic mb-1">"{clause.text.length > 80 ? clause.text.slice(0, 80) + "…" : clause.text}"</p>
                       <SourceChip id={chipId} label={clause.id} active={isActive} onClick={() => onChipClick(chipId, clause.text)} />
                     </div>
                   </div>
@@ -808,7 +854,7 @@ function ContractIntelPanel({
             {result.missingProtections.map((item, i) => (
               <div key={i} className="flex items-start gap-2.5">
                 <Lock className="w-3 h-3 text-violet-400/60 shrink-0 mt-0.5" />
-                <p className="text-[11px] text-white/45 leading-relaxed">{item}</p>
+                <p className="text-[11px] text-white/65 leading-relaxed">{item}</p>
               </div>
             ))}
           </CollapsedSection>
