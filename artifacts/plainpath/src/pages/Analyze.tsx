@@ -33,6 +33,7 @@ import { EvidenceTooltip } from "@/components/shared/EvidenceTooltip"
 import type { DocumentAnalysis, PlainEnglishSections, KeyTerm, ActionPack } from "@workspace/api-client-react"
 import { triggerPrint } from "@/lib/print"
 import { DocumentScanScreen } from "@/components/DocumentScanScreen"
+import { DocumentStageViewer } from "@/components/DocumentStageViewer"
 import { isNative } from "@/lib/platform"
 import { getApiBaseUrl } from "@/lib/api"
 import { saveAnalysis, updateSaved } from "@/lib/savedAnalyses"
@@ -66,12 +67,13 @@ export default function Analyze() {
   const demoId = new URLSearchParams(searchString).get("demo") as string | null
   const tabParam = new URLSearchParams(searchString).get("tab")
 
-  const { analysis, documentTypeHint, setAnalysis, clearAnalysis, updateActionStep, updateRequiredDoc } = useAnalysisContext()
+  const { analysis, documentTypeHint, uploadedAnalyzeFile, setAnalysis, clearAnalysis, updateActionStep, updateRequiredDoc } = useAnalysisContext()
   const [activeTab, setActiveTab] = useState(tabParam ?? "plain-english")
   const [savedId, setSavedId] = useState<string | null>(null)
   const [documentId, setDocumentId] = useState<string | null>(null)
   const [justSaved, setJustSaved] = useState(false)
   const [guidedReviewCtx, setGuidedReviewCtx] = useState<string | null>(null)
+  const [mobileAnalyzeTab, setMobileAnalyzeTab] = useState<"analysis" | "document">("analysis")
   const tabListRef = useRef<HTMLDivElement>(null)
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(true)
@@ -154,6 +156,21 @@ export default function Analyze() {
 
   const hardDeadlines = deadlines.filter(d => d.isHard)
   const highRisks = risks.filter(r => r.severity === "high")
+
+  const hasPdf = !demoId && uploadedAnalyzeFile?.name.toLowerCase().endsWith(".pdf") === true
+
+  const analyzeFallback = (
+    <div className="py-6 space-y-3">
+      {analysis.documentType && (
+        <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/50">{analysis.documentType}</p>
+      )}
+      <h2 className="text-sm font-bold text-foreground leading-snug">{analysis.title}</h2>
+      {(analysis as any).plainEnglishSections?.summary && (
+        <p className="text-sm text-foreground/70 leading-relaxed">{(analysis as any).plainEnglishSections.summary}</p>
+      )}
+      <p className="text-[11px] text-muted-foreground/40 pt-3 border-t border-border/30">Document submitted as text — showing analysis summary</p>
+    </div>
+  )
   const incompleteHigh = actionSteps.filter(s => s.priority === "high" && !s.completed)
 
   // Missing count badge for the tab
@@ -223,7 +240,7 @@ export default function Analyze() {
   }
 
   return (
-    <div className="min-h-screen bg-background" style={{ paddingBottom: "max(6rem, env(safe-area-inset-bottom) + 6rem)" }}>
+    <div className="h-screen flex flex-col bg-background">
 
       {/* ── Sticky header ───────────────────────────── */}
       <div className="no-print bg-background/95 backdrop-blur-md border-b border-border/50 sticky top-0 z-30">
@@ -294,7 +311,35 @@ export default function Analyze() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+      {/* Mobile panel switcher */}
+      <div className="md:hidden no-print flex border-b border-border/40 bg-background shrink-0">
+        <button type="button" onClick={() => setMobileAnalyzeTab("analysis")}
+          className={`flex-1 py-2.5 text-xs font-semibold transition-colors ${mobileAnalyzeTab === "analysis" ? "text-foreground border-b-2 border-foreground" : "text-muted-foreground"}`}>
+          Analysis
+        </button>
+        <button type="button" onClick={() => setMobileAnalyzeTab("document")}
+          className={`flex-1 py-2.5 text-xs font-semibold transition-colors ${mobileAnalyzeTab === "document" ? "text-foreground border-b-2 border-foreground" : "text-muted-foreground"}`}>
+          Document
+        </button>
+      </div>
+
+      {/* Split workspace */}
+      <div className="flex-1 flex min-h-0 overflow-hidden">
+
+        {/* Left: document viewer */}
+        <div className={`flex-col overflow-hidden border-r border-border/40 md:w-[60%] md:flex md:flex-none ${mobileAnalyzeTab === "document" ? "flex flex-1" : "hidden"}`}>
+          <DocumentStageViewer
+            fileName={uploadedAnalyzeFile?.name ?? (demoId ? "Demo Document" : "Analyzed Document")}
+            pdfFile={hasPdf ? uploadedAnalyzeFile : null}
+            fallbackContent={analyzeFallback}
+            contextLabel="Analyze"
+          />
+        </div>
+
+        {/* Right: analysis panel */}
+        <div className={`flex-col overflow-hidden md:w-[40%] md:flex md:flex-none ${mobileAnalyzeTab === "analysis" ? "flex flex-1" : "hidden"}`}>
+          <div className="flex-1 overflow-auto" style={{ paddingBottom: "max(6rem, env(safe-area-inset-bottom) + 6rem)" }}>
+          <div className="px-4 sm:px-5">
 
         {/* ── At-a-glance strip ───────────────────────── */}
         <div className="no-print mt-4 sm:mt-6 mb-5 sm:mb-7">
@@ -454,7 +499,10 @@ export default function Analyze() {
         {/* ── Print-only report (hidden in screen, shown in print) ── */}
         <PrintReport analysis={analysis} documentTypeHint={documentTypeHint} />
 
-      </div>
+          </div>{/* end px-4 sm:px-5 */}
+          </div>{/* end overflow-auto */}
+        </div>{/* end right panel */}
+      </div>{/* end split workspace */}
 
       {/* ── Guided Review Overlay ────────────────────── */}
       <AnimatePresence>

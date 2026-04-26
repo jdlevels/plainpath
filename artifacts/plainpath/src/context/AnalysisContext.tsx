@@ -7,10 +7,12 @@ interface AnalysisContextType {
   documentTypeHint: string | null;
   trustCheckAnalysis: TrustCheckAnalysis | null;
   uploadedTrustFile: File | null;
+  uploadedAnalyzeFile: File | null;
   setAnalysis: (analysis: DocumentAnalysis | null) => void;
   setDocumentTypeHint: (hint: string | null) => void;
   setTrustCheckAnalysis: (analysis: TrustCheckAnalysis | null) => void;
   setUploadedTrustFile: (file: File | null) => void;
+  setUploadedAnalyzeFile: (file: File | null) => void;
   updateActionStep: (id: string, completed: boolean) => void;
   updateRequiredDoc: (id: string, obtained: boolean) => void;
   clearAnalysis: () => void;
@@ -23,6 +25,7 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
   const [documentTypeHint, setDocumentTypeHintState] = useState<string | null>(null);
   const [trustCheckAnalysis, setTrustCheckAnalysisState] = useState<TrustCheckAnalysis | null>(null);
   const [uploadedTrustFile, setUploadedTrustFileState] = useState<File | null>(null);
+  const [uploadedAnalyzeFile, setUploadedAnalyzeFileState] = useState<File | null>(null);
 
   const setAnalysis = useCallback((newAnalysis: DocumentAnalysis | null) => {
     setAnalysisState(newAnalysis);
@@ -40,11 +43,16 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
     setUploadedTrustFileState(file);
   }, []);
 
+  const setUploadedAnalyzeFile = useCallback((file: File | null) => {
+    setUploadedAnalyzeFileState(file);
+  }, []);
+
   const clearAnalysis = useCallback(() => {
     setAnalysisState(null);
     setDocumentTypeHintState(null);
     setTrustCheckAnalysisState(null);
     setUploadedTrustFileState(null);
+    setUploadedAnalyzeFileState(null);
   }, []);
 
   const updateActionStep = useCallback((id: string, completed: boolean) => {
@@ -78,10 +86,12 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
         documentTypeHint,
         trustCheckAnalysis,
         uploadedTrustFile,
+        uploadedAnalyzeFile,
         setAnalysis,
         setDocumentTypeHint,
         setTrustCheckAnalysis,
         setUploadedTrustFile,
+        setUploadedAnalyzeFile,
         updateActionStep,
         updateRequiredDoc,
         clearAnalysis,

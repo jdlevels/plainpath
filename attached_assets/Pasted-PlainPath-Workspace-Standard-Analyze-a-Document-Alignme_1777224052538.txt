@@ -1,0 +1,156 @@
+PlainPath Workspace Standard — Analyze a Document Alignment Only
+
+Goal:
+Carefully align Analyze a Document with the approved PlainPath document workspace standard without breaking the existing analysis experience.
+
+Approved standard:
+- Left side = actual document/PDF preview whenever possible
+- Right side = structured intelligence/action panel
+- Viewer should resemble Ask This Document / Review & Redact:
+  - actual PDF page surface
+  - centered controlled page width
+  - dark workspace around the page
+  - scrollable document area
+  - file name visible
+  - readable scale
+- Right panel should remain Analyze-specific:
+  - plain-English explanation
+  - action steps
+  - missing items
+  - deadlines
+  - required docs
+  - risks
+  - key terms
+  - Action Pack
+  - Ask This Document
+
+Scope:
+Only update Analyze a Document layout if needed.
+
+Allowed file:
+- artifacts/plainpath/src/pages/Analyze.tsx
+
+Allowed reuse:
+- Existing shared viewer/header components if already available and safe.
+- Existing DocumentStageViewer or PDF viewer pattern if already used by other tools.
+
+Do not touch:
+- Ask This Document standalone page
+- DocumentChat
+- Redact
+- Clause Extractor
+- Contract Review
+- Trust Check
+- Compare Versions
+- Document Builder
+- API routes
+- Auth
+- Database
+- Migrations
+- Stripe/payment
+- Marketing
+- Global routing
+
+Critical:
+Preserve all current Analyze functionality.
+
+Must preserve:
+- All 11 tabs:
+  1. Plain English
+  2. Source Sections
+  3. Overview
+  4. What’s Missing
+  5. Checklist
+  6. Required Docs
+  7. Deadlines
+  8. Risks & Notes
+  9. Key Terms
+  10. Action Pack
+  11. Ask This Document
+- Existing Action Pack changes
+- Save
+- Export
+- Progress
+- Checklist/action step status behavior
+- Ask This Document tab
+- Upload/paste/sample flows
+- Existing analysis API calls
+
+Required result:
+
+1. Empty / upload state
+- Leave stable unless there is a clear inconsistency.
+- Do not redesign upload flow tonight.
+
+2. Processing state
+- Preserve the existing shared loading/scanning animation.
+- Confirm it shows:
+  - tool name
+  - file name
+  - document scanning motion
+  - progress/checklist steps
+
+3. Completed result state
+If Analyze currently does not show a real document viewer beside the analysis, align it to the approved standard:
+
+LEFT PANEL — Document Viewer
+- Show actual PDF/document preview if PDF was uploaded.
+- Use centered controlled document stage.
+- For DOCX/TXT/paste, use paper-style text fallback.
+- Do not dump raw text on dark background.
+
+RIGHT PANEL — Analysis Intelligence
+- Keep the existing tabbed analysis experience.
+- Do not remove or rename tabs.
+- Keep Action Pack intact.
+- Keep Ask This Document tab intact.
+- Keep current result cards and analysis sections.
+- Improve only spacing/container fit if required for the split layout.
+
+4. Source behavior
+- Preserve existing source chip behavior.
+- If source chips already scroll/focus document, keep it.
+- If exact matching is not available, use best-effort source focus.
+- Do not fake exact PDF highlighting.
+
+5. Mobile
+- Preserve current mobile behavior.
+- If adding document/right-panel split creates mobile issues, use tabs:
+  - Analysis
+  - Document
+- Do not let content clip behind navigation.
+
+Stability rules:
+- Do not reset uploaded file after processing.
+- Do not clear analysis when switching tabs.
+- Do not break action status cycling.
+- All buttons must use type="button" unless intentionally submitting.
+- Do not introduce new state reset effects.
+
+Verification:
+1. Open /analyze.
+2. Upload a PDF.
+3. Confirm processing animation still works.
+4. Confirm completed state preserves all 11 tabs.
+5. Confirm Action Pack still opens and works.
+6. Confirm Checklist/action status behavior still works.
+7. Confirm Ask This Document tab still works.
+8. Confirm Save and Export still exist.
+9. Confirm left document viewer shows actual PDF/document if implemented.
+10. Confirm source chips do not fake highlighting.
+11. Test mobile at ~390px width.
+12. Confirm no other tools changed.
+13. Confirm no API/auth/database/migration/Stripe/marketing changes.
+14. Confirm no new TypeScript/runtime errors introduced.
+
+Return only:
+A. Files changed
+B. What was changed visually
+C. Document viewer behavior
+D. Tabs preserved confirmation
+E. Action Pack preserved confirmation
+F. Ask This Document tab preserved confirmation
+G. Save/export preserved confirmation
+H. Mobile behavior
+I. Preserved logic
+J. Safe checkpoint: Yes/No

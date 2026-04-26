@@ -269,7 +269,7 @@ export default function Import() {
   const [, setLocation] = useLocation()
   const searchString = useSearch()
   const isTrustCheck = new URLSearchParams(searchString).get("mode") === "trust-check"
-  const { setAnalysis, setDocumentTypeHint, setTrustCheckAnalysis, setUploadedTrustFile } = useAnalysisContext()
+  const { setAnalysis, setDocumentTypeHint, setTrustCheckAnalysis, setUploadedTrustFile, setUploadedAnalyzeFile } = useAnalysisContext()
 
   useEffect(() => {
     document.title = isTrustCheck
@@ -509,6 +509,7 @@ export default function Import() {
         setTrustCheckAnalysis(data.analysis)
         setLocation("/trust-check")
       } else {
+        setUploadedAnalyzeFile(null)
         setAnalysis(data.analysis)
         setLocation("/results")
       }
@@ -659,7 +660,7 @@ export default function Import() {
       mutate(
         { data: { text: p.text, documentTypeHint: docTypeLabel } as any },
         {
-          onSuccess: (data) => { void haptic("success"); setAnalysis(data.analysis); setLocation("/results") },
+          onSuccess: (data) => { void haptic("success"); setUploadedAnalyzeFile(null); setAnalysis(data.analysis); setLocation("/results") },
           onError: (err: any) => {
             const serverMessage = err?.data?.message
             const status = err?.status ?? 0
@@ -719,6 +720,7 @@ export default function Import() {
           return
         }
         await haptic("success")
+        setUploadedAnalyzeFile(uploadedFile)
         setAnalysis(data.analysis)
         setLocation("/results")
       } catch {
