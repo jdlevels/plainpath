@@ -354,10 +354,32 @@ export default function Workspace({ docId }: WorkspaceProps) {
 
   // ── AI block apply ────────────────────────────────────────────────────────
 
-  function handleAiApply(suggestion: string, newBlockType: string | null, _action: string) {
+  function handleAiApply(suggestion: string, newBlockType: string | null, action: string) {
     if (!selectedSectionId || !selectedBlockId || !selectedBlock) return;
     const section = content.sections.find((s) => s.id === selectedSectionId);
     if (!section) return;
+
+    // ── Create next section: add a new section, do not update the selected block ──
+    if (action === "Create next section") {
+      const [rawTitle = "", ...rest] = suggestion.split("\n\n");
+      const sectionTitle = rawTitle.trim();
+      const starterText = rest.join("\n\n").trim();
+      const sorted = [...content.sections].sort((a, b) => a.order - b.order);
+      const newSection: BuilderSection = {
+        id: crypto.randomUUID(),
+        title: sectionTitle,
+        order: sorted.length,
+        blocks: starterText
+          ? [{ id: crypto.randomUUID(), type: "paragraph", order: 0, payload: { text: starterText, marks: [] } }]
+          : [],
+      };
+      handleContentChange({ sections: [...content.sections, newSection] });
+      setTimeout(() => {
+        const el = document.getElementById(`section-${newSection.id}`);
+        el?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 80);
+      return;
+    }
 
     let newPayload: Record<string, unknown>;
     const finalType: string = newBlockType ?? selectedBlock.type;
