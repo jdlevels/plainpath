@@ -27,7 +27,7 @@
 //
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 import { useUser } from "@clerk/react"
 import { fetchEntitlements, type EntitlementStatus, type RoleKey, type AccessTier, type ToolKey } from "../lib/entitlements"
 import { getStoredSubscriberEmail, setStoredSubscriberEmail } from "../lib/subscriberStorage"
@@ -43,6 +43,11 @@ export function useEntitlements() {
   // This is the raw billing truth BEFORE any client-side overrides (e.g. the
   // starter/graceful-downgrade paths that set status="active" even without billing).
   const [hasPaidSubscription, setHasPaidSubscription] = useState(false)
+  // Tracks whether the very first load has completed. After that, re-fetches
+  // (triggered by Clerk's ~60-second session token refresh) run silently in the
+  // background without setting loading=true, preventing PlanGate from replacing
+  // the workspace children with a spinner and resetting the user's document state.
+  const loadedOnceRef = useRef(false)
 
   // Persist Clerk email to localStorage so entitlements fetch works across reloads.
   useEffect(() => {
@@ -70,10 +75,16 @@ export function useEntitlements() {
     if (!email && !clerkUserId) {
       setData(null)
       setLoading(false)
+      loadedOnceRef.current = true
       return
     }
 
-    setLoading(true)
+    // Only block the UI with a spinner on the very first entitlements fetch.
+    // Subsequent reloads (e.g. triggered by Clerk's ~60 s token refresh) run
+    // silently so the mounted workspace children are never unmounted.
+    if (!loadedOnceRef.current) {
+      setLoading(true)
+    }
 
     // ── Bootstrap: write metadata for brand-new users ──────────────────────
     // Fires when a signed-in user has no publicMetadata.role or accessTier.
@@ -180,6 +191,7 @@ export function useEntitlements() {
       setHasPaidSubscription(false)
     } finally {
       setLoading(false)
+      loadedOnceRef.current = true
     }
   }, [user])
 
