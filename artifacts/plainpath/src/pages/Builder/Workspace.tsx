@@ -539,7 +539,7 @@ export default function Workspace({ docId }: WorkspaceProps) {
           {/* Tab content */}
           <div className="flex-1 overflow-hidden">
             {activeTab === "guide" && (
-              <AiGuidePanel selectedBlock={selectedBlock} />
+              <AiGuidePanel selectedBlock={selectedBlock} category={doc?.category} />
             )}
 
             {activeTab === "outline" && (
