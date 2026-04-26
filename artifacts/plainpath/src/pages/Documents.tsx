@@ -328,19 +328,6 @@ export default function Documents() {
     navigate("/analyze")
   }
 
-  function sendForSignature(doc: UserDocument) {
-    try {
-      sessionStorage.setItem("pp_sig_doc", JSON.stringify({
-        id: doc.id,
-        title: doc.title,
-        extractedText: doc.extractedText ?? null,
-        originalFilename: doc.originalFilename ?? null,
-        mimeType: doc.mimeType ?? null,
-      }))
-    } catch { /* ignore */ }
-    navigate("/signature")
-  }
-
   // ─── Clause Extractor session actions ────────────────────────────────────
 
   async function handleDeletePdf(id: string) {
@@ -637,15 +624,6 @@ export default function Documents() {
                               View trust check
                             </Button>
                           )}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 text-xs gap-1 text-muted-foreground"
-                            onClick={() => sendForSignature(doc)}
-                          >
-                            <FileSignature className="w-3 h-3" />
-                            Send for Signature
-                          </Button>
                         </div>
                       </div>
 
