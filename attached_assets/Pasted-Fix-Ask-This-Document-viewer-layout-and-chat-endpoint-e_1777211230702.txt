@@ -1,0 +1,122 @@
+Fix Ask This Document viewer layout and chat endpoint error only.
+
+Current live issues on /ask-document:
+
+1. The document loads, but the left side shows raw extracted text directly on the dark background. It does not use a proper document viewer/page surface similar to Redact Sensitive Info.
+2. Asking a question in the Ask PlainPath panel returns:
+   "Something went wrong. Please try again."
+   No answer is displayed.
+
+Scope:
+Fix only the standalone Ask This Document page and its direct chat wiring.
+
+Allowed files:
+- artifacts/plainpath/src/pages/AskDocument.tsx
+- If absolutely needed: a tiny compatibility adjustment in DocumentChat or a local AskDocument-only chat wrapper
+
+Do not touch:
+- Analyze.tsx
+- Analyze Action Pack
+- Redact behavior
+- Clause Extractor
+- Contract Review
+- Trust Check
+- Compare Versions
+- Document Builder
+- Database
+- Migrations
+- Stripe/payment
+- Auth
+- Global routing
+- Marketing pages
+
+Issue 1 — Document viewer layout:
+The left side must render like a proper document workspace, not raw text dumped on the page.
+
+Required:
+- Use a clean document viewer/card/page surface similar to the Redact tool’s left-side document preview.
+- Show file name and document type in the viewer header.
+- Show extracted document text inside a readable scrollable document surface.
+- Use a white or paper-style document area if consistent with existing Redact preview.
+- Preserve paragraph/section spacing.
+- Add page-like padding and line spacing.
+- Keep the left panel approximately 55–60% width on desktop.
+- Keep the right Ask PlainPath panel approximately 40–45%.
+- Do not let document text stretch across the whole screen.
+- Do not show raw extracted text directly on the background.
+- If PDF rendering can safely reuse an existing read-only PDF preview component, use it.
+- If not, create a page-style extracted-text viewer that visually resembles a document page.
+
+Mobile:
+- Keep Document / Ask tabs.
+- Document tab must show the same readable document viewer.
+- Ask tab must show the chat.
+
+Issue 2 — Ask AI chat error:
+The standalone Ask This Document chat must work.
+
+Required diagnosis:
+1. Inspect the working DocumentChat usage inside Analyze.
+2. Inspect the standalone AskDocument.tsx DocumentChat usage.
+3. Inspect the /api/documents/chat endpoint request contract.
+4. Confirm the exact request body the chat endpoint expects.
+5. Confirm whether it expects:
+   - analysis object
+   - analysisContext
+   - document text
+   - document title/file name
+   - messages array
+   - question string
+   - analysisId/sessionId
+6. Compare that against what /ask-document is currently sending.
+
+Required fix:
+- Make /ask-document send the exact working request shape required by the chat endpoint.
+- If DocumentChat requires props from Analyze that AskDocument does not have, either:
+  A. pass equivalent props from the upload/analyze response, or
+  B. create a small AskDocument-only chat wrapper using the same backend endpoint correctly.
+- The user must be able to ask:
+  "What is this document?"
+  and receive a visible answer.
+- The answer must appear in the right panel.
+- User must remain on /ask-document.
+- Do not redirect to Analyze.
+- Do not show only "Something went wrong" unless the backend truly fails.
+- If an error occurs, log the technical detail to console/server logs, but show the user a plain message:
+  "PlainPath could not answer that question. Please try again or paste the document text manually."
+
+Response/error handling:
+- Check response.ok before parsing.
+- Check content-type before response.json().
+- If backend returns HTML or non-JSON, show a controlled error.
+- If backend returns JSON error, show the plain user-facing error and preserve document/chat state.
+
+Verification:
+1. Open /ask-document.
+2. Upload a PDF.
+3. Confirm loading animation still uses DocumentScanScreen.
+4. Confirm ready state shows:
+   - left: document viewer/page surface, not raw text on background
+   - right: Ask PlainPath chat panel
+5. Ask:
+   "What is this document?"
+6. Confirm answer appears.
+7. Ask:
+   "What does this document require me to do next?"
+8. Confirm answer appears.
+9. Test paste text path.
+10. Confirm paste text also renders in the document viewer and chat answers.
+11. Confirm /ask-this-document still opens the same page or redirects cleanly.
+12. Confirm Analyze Action Pack unchanged.
+13. Confirm no other tools changed.
+14. Confirm no new TypeScript/runtime errors introduced.
+
+Return only:
+A. Root cause of raw document viewer
+B. Root cause of chat error
+C. Files changed
+D. Viewer fix summary
+E. Chat fix summary
+F. PDF upload verification
+G. Paste text verification
+H. Whether safe to publish

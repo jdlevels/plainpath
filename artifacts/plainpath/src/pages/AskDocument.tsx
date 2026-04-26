@@ -64,85 +64,94 @@ function DocumentViewer({
   const showEmpty = !hasSections && !hasRawText && !hasPlainEnglish && !hasSummary
 
   return (
-    <div className="p-4 sm:p-6 space-y-5">
-      {/* Doc title row */}
-      <div className="flex items-center gap-2.5 pb-4 border-b border-border/40">
-        <div className="w-8 h-8 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center shrink-0">
-          <FileText className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-foreground truncate">
-            {fileName ?? analysis.title ?? "Document"}
-          </p>
-          {analysis.documentType && (
-            <p className="text-xs text-muted-foreground">{analysis.documentType}</p>
-          )}
-        </div>
-      </div>
+    <div className="p-4 sm:p-6">
+      {/* Paper surface */}
+      <div className="bg-white dark:bg-card rounded-2xl border border-border/50 shadow-sm overflow-hidden">
 
-      {/* Sections from extracted text */}
-      {showSections && (
-        <div className="space-y-5">
-          {validSections.map((section) => (
-            <div key={section.id} className="space-y-1.5">
-              {section.title?.trim() && (
-                <h3 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/70">
-                  {section.title}
-                </h3>
-              )}
-              <p className="text-sm text-foreground/85 leading-relaxed whitespace-pre-wrap">
-                {section.content}
+        {/* Document header strip */}
+        <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-border/40 bg-muted/20">
+          <div className="w-7 h-7 rounded-lg bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center shrink-0">
+            <FileText className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-foreground truncate leading-tight">
+              {fileName ?? analysis.title ?? "Document"}
+            </p>
+            {analysis.documentType && (
+              <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">{analysis.documentType}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Document body */}
+        <div className="px-6 py-6 space-y-5">
+
+          {/* Sections from extracted text */}
+          {showSections && (
+            <div className="space-y-5">
+              {validSections.map((section) => (
+                <div key={section.id} className="space-y-2">
+                  {section.title?.trim() && (
+                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                      {section.title}
+                    </h3>
+                  )}
+                  <p className="text-sm text-foreground/90 leading-[1.75] whitespace-pre-wrap">
+                    {section.content}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Fallback 1: raw pasted text */}
+          {showRawText && (
+            <div className="space-y-2">
+              <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                Document text
+              </h3>
+              <p className="text-sm text-foreground/90 leading-[1.75] whitespace-pre-wrap">
+                {rawText}
               </p>
             </div>
-          ))}
-        </div>
-      )}
+          )}
 
-      {/* Fallback 1: raw pasted text */}
-      {showRawText && (
-        <div className="space-y-1.5">
-          <h3 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/70">
-            Document text
-          </h3>
-          <p className="text-sm text-foreground/85 leading-relaxed whitespace-pre-wrap">
-            {rawText}
-          </p>
-        </div>
-      )}
-
-      {/* Fallback 2: plain-English breakdown */}
-      {showPlainEnglish && plainEnglish && (
-        <div className="space-y-5">
-          {PE_FIELDS.filter(({ key }) => plainEnglish[key]?.trim()).map(({ key, label }) => (
-            <div key={key} className="space-y-1.5">
-              <h3 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/70">
-                {label}
-              </h3>
-              <p className="text-sm text-foreground/85 leading-relaxed">{plainEnglish[key]}</p>
+          {/* Fallback 2: plain-English breakdown */}
+          {showPlainEnglish && plainEnglish && (
+            <div className="space-y-5">
+              {PE_FIELDS.filter(({ key }) => plainEnglish[key]?.trim()).map(({ key, label }) => (
+                <div key={key} className="space-y-2">
+                  <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                    {label}
+                  </h3>
+                  <p className="text-sm text-foreground/90 leading-[1.75]">{plainEnglish[key]}</p>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      )}
+          )}
 
-      {/* Fallback 3: summary */}
-      {showSummary && (
-        <div className="space-y-1.5">
-          <h3 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/70">
-            Summary
-          </h3>
-          <p className="text-sm text-foreground/85 leading-relaxed">{analysis.summary}</p>
-        </div>
-      )}
+          {/* Fallback 3: summary */}
+          {showSummary && (
+            <div className="space-y-2">
+              <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                Summary
+              </h3>
+              <p className="text-sm text-foreground/90 leading-[1.75]">{analysis.summary}</p>
+            </div>
+          )}
 
-      {/* Empty state */}
-      {showEmpty && (
-        <div className="rounded-xl border border-border/40 bg-muted/20 px-5 py-10 text-center">
-          <p className="text-sm text-muted-foreground">
-            No readable text was extracted from this document. Try another PDF, DOCX, or paste the
-            text manually.
-          </p>
+          {/* Empty state */}
+          {showEmpty && (
+            <div className="rounded-xl border border-border/40 bg-muted/20 px-5 py-10 text-center">
+              <p className="text-sm text-muted-foreground">
+                No readable text was extracted from this document. Try another PDF, DOCX, or paste
+                the text manually.
+              </p>
+            </div>
+          )}
+
         </div>
-      )}
+      </div>
     </div>
   )
 }

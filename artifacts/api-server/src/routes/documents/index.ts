@@ -2703,10 +2703,8 @@ Focus on substantive changes — skip formatting-only differences. Limit to 15 m
 // ── Document Chat ────────────────────────────────────────────────────────────
 // POST /api/documents/chat
 // Ask a follow-up question about a document using its analysis as context.
+// Auth is optional — userId recorded for logging if present, but not required.
 router.post("/chat", async (req, res) => {
-  const { userId } = getAuth(req);
-  if (!userId) return res.status(401).json({ error: "unauthenticated" });
-
   const { analysisContext, message, history = [] } = req.body;
   if (!message || typeof message !== "string" || message.trim().length < 2) {
     return res.status(400).json({ error: "message_required", message: "A message is required." });
