@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from "react"
-import { Send, Bot, User, Loader2, MessageSquare } from "lucide-react"
+import { Send, Bot, Loader2, MessageSquare } from "lucide-react"
 import { useAuth } from "@clerk/react"
 import { Button } from "@/components/ui/button"
 import { getApiBaseUrl } from "@/lib/api"
-import type { DocumentAnalysis } from "@workspace/api-client-react"
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type DocumentAnalysis = any
 
 interface ChatMessage {
   role: "user" | "assistant"
@@ -20,6 +22,11 @@ export interface SourceMatch {
   id: string
   title?: string
   snippet: string
+}
+
+interface QAPair {
+  question: string
+  answer: string | null
 }
 
 interface DocumentChatProps {
@@ -65,6 +72,129 @@ function findBestSection(reply: string, sections: SectionItem[]): SourceMatch | 
   return { id: bestId, title: bestTitle, snippet }
 }
 
+// ─── Source banner (inline in Q&A card) ───────────────────────────────────────
+function QASourceBanner({ match }: { match: SourceMatch | null }) {
+  if (match === null) {
+    return (
+      <p className="text-[11px] text-muted-foreground/50 italic pl-1 pt-1">
+        No exact source location identified for this answer.
+      </p>
+    )
+  }
+  return (
+    <div className="flex items-start gap-2 pt-1">
+      <div className="w-0.5 self-stretch rounded-full bg-indigo-400/60 shrink-0" />
+      <div className="space-y-0.5">
+        <p className="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
+          Source
+        </p>
+        {match.title && (
+          <p className="text-[11px] font-medium text-foreground/80">{match.title}</p>
+        )}
+        <p className="text-[11px] text-muted-foreground leading-relaxed italic">
+          "{match.snippet}"
+        </p>
+      </div>
+    </div>
+  )
+}
+
+// ─── Individual Q&A card ───────────────────────────────────────────────────────
+function QACard({
+  question,
+  answer,
+  isLoading,
+  sourceMatch,
+}: {
+  question: string
+  answer: string | null
+  isLoading?: boolean
+  sourceMatch?: SourceMatch | null
+}) {
+  return (
+    <div className="space-y-2">
+      {/* Question row */}
+      <div className="flex items-start gap-2.5">
+        <div className="w-5 h-5 rounded bg-primary/15 flex items-center justify-center shrink-0 mt-[3px]">
+          <span className="text-[9px] font-bold text-primary leading-none">Q</span>
+        </div>
+        <p className="text-sm font-semibold text-foreground flex-1 leading-relaxed">
+          {question}
+        </p>
+      </div>
+
+      {/* Answer card or loading */}
+      <div className="ml-7">
+        {isLoading ? (
+          <div className="rounded-xl border border-border/50 bg-muted/30 px-4 py-3 flex items-center gap-2">
+            <Loader2 className="w-3.5 h-3.5 text-muted-foreground animate-spin shrink-0" />
+            <span className="text-xs text-muted-foreground">Thinking…</span>
+          </div>
+        ) : answer !== null ? (
+          <div className="space-y-2.5">
+            <div className="rounded-xl border border-border/60 bg-muted/40 px-4 py-3.5">
+              <p className="text-sm text-foreground leading-relaxed">{answer}</p>
+            </div>
+            {/* Source banner — shown only when sourceMatch is not undefined */}
+            {sourceMatch !== undefined && (
+              <div className="px-1">
+                <QASourceBanner match={sourceMatch} />
+              </div>
+            )}
+          </div>
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
+// ─── Empty state ───────────────────────────────────────────────────────────────
+const EXAMPLE_QUESTIONS = [
+  "What does this document require me to do?",
+  "What deadlines are listed?",
+  "Are there any risks I should know about?",
+  "What are the payment terms?",
+  "What sections should I review first?",
+]
+
+function EmptyState({
+  suggestedQuestions,
+  onSend,
+}: {
+  suggestedQuestions: string[]
+  onSend: (q: string) => void
+}) {
+  const questions = suggestedQuestions.length > 0 ? suggestedQuestions : EXAMPLE_QUESTIONS
+  return (
+    <div className="px-4 py-6 space-y-5">
+      <div className="flex flex-col items-center gap-3 text-center">
+        <div className="w-12 h-12 rounded-2xl bg-primary/8 flex items-center justify-center">
+          <Bot className="w-6 h-6 text-primary/50" />
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-foreground">Ask anything about this document</p>
+          <p className="text-xs text-muted-foreground mt-1 leading-relaxed max-w-xs mx-auto">
+            Ask about risks, deadlines, obligations, payment terms, or anything confusing.
+          </p>
+        </div>
+      </div>
+      <div className="space-y-1.5">
+        {questions.slice(0, 5).map((q, i) => (
+          <button
+            key={i}
+            type="button"
+            onClick={() => onSend(q)}
+            className="w-full text-left px-3.5 py-2.5 rounded-xl border border-border/50 bg-background hover:bg-muted/50 transition-colors text-xs text-foreground/80 font-medium"
+          >
+            {q}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─── Main component ────────────────────────────────────────────────────────────
 export function DocumentChat({
   analysis,
   sections,
@@ -78,6 +208,7 @@ export function DocumentChat({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([])
+  const [lastSourceMatch, setLastSourceMatch] = useState<SourceMatch | null | undefined>(undefined)
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
@@ -85,10 +216,14 @@ export function DocumentChat({
     title: analysis.title,
     documentType: analysis.documentType,
     summary: analysis.summary,
-    risks: (analysis.risks ?? []).map(r => ({ title: r.title, description: r.description, severity: r.severity })),
-    deadlines: (analysis.deadlines ?? []).map(d => ({ title: d.title, description: d.description, date: d.date, isHard: d.isHard })),
-    keyTerms: (analysis.keyTerms ?? []).map(k => ({ term: k.term, definition: k.definition })),
-    actionSteps: (analysis.actionSteps ?? []).map(a => ({ title: a.title, description: a.description, priority: a.priority })),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    risks: (analysis.risks ?? []).map((r: any) => ({ title: r.title, description: r.description, severity: r.severity })),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    deadlines: (analysis.deadlines ?? []).map((d: any) => ({ title: d.title, description: d.description, date: d.date, isHard: d.isHard })),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    keyTerms: (analysis.keyTerms ?? []).map((k: any) => ({ term: k.term, definition: k.definition })),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    actionSteps: (analysis.actionSteps ?? []).map((a: any) => ({ title: a.title, description: a.description, priority: a.priority })),
     plainEnglish: analysis.plainEnglish
       ? {
           whatItIs: analysis.plainEnglish.whatItIs,
@@ -134,10 +269,10 @@ export function DocumentChat({
     if (!trimmed || loading) return
 
     onMessageSent?.()
+    setLastSourceMatch(undefined)
 
     const newMessage: ChatMessage = { role: "user", content: trimmed }
-    const updatedMessages = [...messages, newMessage]
-    setMessages(updatedMessages)
+    setMessages(prev => [...prev, newMessage])
     setInput("")
     setLoading(true)
     setError(null)
@@ -163,18 +298,21 @@ export function DocumentChat({
         if (res.status === 401)
           throw new Error("PlainPath could not answer that question. Please try again or paste the document text manually.")
         throw new Error(
-          (data as any).message ?? "PlainPath could not answer that question. Please try again or paste the document text manually."
+          (data as any).message ??
+            "PlainPath could not answer that question. Please try again or paste the document text manually."
         )
       }
 
       const data = await res.json()
       const reply: string = data.reply ?? ""
       setMessages(prev => [...prev, { role: "assistant", content: reply }])
+
       if (Array.isArray(data.suggestedQuestions) && data.suggestedQuestions.length > 0) {
         setSuggestedQuestions(data.suggestedQuestions)
       }
 
       const match = findBestSection(reply, sections ?? [])
+      setLastSourceMatch(match)
       onHighlightSection?.(match)
     } catch (err) {
       setError(
@@ -195,13 +333,36 @@ export function DocumentChat({
     }
   }
 
-  const isEmpty = messages.length === 0
+  // Group flat message array into Q&A pairs
+  const qaPairs: QAPair[] = []
+  let mi = 0
+  while (mi < messages.length) {
+    if (messages[mi].role === "user") {
+      const question = messages[mi].content
+      if (mi + 1 < messages.length && messages[mi + 1].role === "assistant") {
+        qaPairs.push({ question, answer: messages[mi + 1].content })
+        mi += 2
+      } else {
+        qaPairs.push({ question, answer: null })
+        mi += 1
+      }
+    } else {
+      mi += 1
+    }
+  }
+
+  const hasAnySections = (sections ?? []).length > 0
+  const isEmpty = qaPairs.length === 0 && !loading
+  const hasAnswers = qaPairs.some(p => p.answer !== null)
 
   return (
     <div
-      className={`flex flex-col rounded-2xl border border-border/50 bg-card overflow-hidden ${
-        fullHeight ? "h-full" : "min-h-[420px] max-h-[620px]"
-      }`}
+      className={[
+        "flex flex-col bg-card overflow-hidden",
+        fullHeight
+          ? "h-full"
+          : "min-h-[420px] max-h-[620px] rounded-2xl border border-border/50",
+      ].join(" ")}
     >
       {/* Header */}
       <div className="flex items-center gap-2.5 px-4 py-3 border-b border-border/50 bg-muted/20 shrink-0">
@@ -211,113 +372,13 @@ export function DocumentChat({
         <div>
           <p className="text-sm font-semibold text-foreground">Ask PlainPath</p>
           <p className="text-xs text-muted-foreground">
-            Questions about your document, answered in plain English
+            Questions about this document, answered in plain English
           </p>
         </div>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 space-y-4">
-        {isEmpty && (
-          <div className="flex flex-col items-center justify-center h-full gap-4 py-8">
-            <div className="w-14 h-14 rounded-2xl bg-primary/8 flex items-center justify-center">
-              <Bot className="w-7 h-7 text-primary/60" />
-            </div>
-            <div className="text-center">
-              <p className="text-sm font-semibold text-foreground mb-1">
-                Ask anything about this document
-              </p>
-              <p className="text-xs text-muted-foreground max-w-xs leading-relaxed">
-                I've read the full analysis. Ask about risks, deadlines, your rights, what to do
-                next — anything.
-              </p>
-            </div>
-            {suggestedQuestions.length > 0 && (
-              <div className="flex flex-col gap-2 w-full max-w-sm mt-2">
-                {suggestedQuestions.map((q, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => void sendMessage(q)}
-                    className="text-left px-3.5 py-2.5 rounded-xl border border-border/60 bg-background hover:bg-muted/50 transition-colors text-xs text-foreground/80 font-medium"
-                  >
-                    {q}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {messages.map((msg, i) => (
-          <div
-            key={i}
-            className={`flex gap-2.5 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}
-          >
-            <div
-              className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${
-                msg.role === "user"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-primary/10 text-primary"
-              }`}
-            >
-              {msg.role === "user" ? (
-                <User className="w-3.5 h-3.5" />
-              ) : (
-                <Bot className="w-3.5 h-3.5" />
-              )}
-            </div>
-            <div
-              className={`max-w-[82%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
-                msg.role === "user"
-                  ? "bg-primary text-primary-foreground rounded-tr-sm"
-                  : "bg-muted/60 text-foreground rounded-tl-sm border border-border/40"
-              }`}
-            >
-              {msg.content}
-            </div>
-          </div>
-        ))}
-
-        {loading && (
-          <div className="flex gap-2.5">
-            <div className="w-7 h-7 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-              <Bot className="w-3.5 h-3.5 text-primary" />
-            </div>
-            <div className="px-3.5 py-2.5 rounded-2xl rounded-tl-sm bg-muted/60 border border-border/40 flex items-center gap-1.5">
-              <Loader2 className="w-3.5 h-3.5 text-muted-foreground animate-spin" />
-              <span className="text-xs text-muted-foreground">Thinking…</span>
-            </div>
-          </div>
-        )}
-
-        {error && (
-          <div className="px-3.5 py-2.5 rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-200/60 dark:border-red-800/40 text-xs text-red-600 dark:text-red-400">
-            {error}
-          </div>
-        )}
-
-        <div ref={bottomRef} />
-      </div>
-
-      {/* Follow-up chips after first reply */}
-      {!isEmpty && !loading && suggestedQuestions.length > 0 && (
-        <div className="px-4 pb-2 flex flex-wrap gap-1.5 shrink-0">
-          {suggestedQuestions.map((q, i) => (
-            <button
-              key={i}
-              type="button"
-              onClick={() => void sendMessage(q)}
-              className="px-2.5 py-1 rounded-full border border-border/60 bg-background hover:bg-muted/50 transition-colors text-[11px] text-muted-foreground font-medium"
-            >
-              {q}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Input */}
-      <div className="px-4 pb-4 pt-2 border-t border-border/50 shrink-0">
+      {/* Input — pinned near top */}
+      <div className="px-4 py-3 border-b border-border/40 bg-background/60 shrink-0">
         <div className="flex gap-2 items-end">
           <textarea
             ref={inputRef}
@@ -328,7 +389,7 @@ export function DocumentChat({
             rows={1}
             disabled={loading}
             className="flex-1 resize-none rounded-xl border border-border/60 bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition-all disabled:opacity-50"
-            style={{ maxHeight: "112px" }}
+            style={{ maxHeight: "96px" }}
           />
           <Button
             type="button"
@@ -340,9 +401,57 @@ export function DocumentChat({
             <Send className="w-4 h-4" />
           </Button>
         </div>
-        <p className="text-[10px] text-muted-foreground/50 mt-1.5 text-center">
-          Responses are AI-generated based on your document analysis. Not legal advice.
+        <p className="text-[10px] text-muted-foreground/40 mt-1.5 text-center">
+          AI-generated from your document analysis. Not legal advice.
         </p>
+      </div>
+
+      {/* Scrollable Q&A area */}
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        {isEmpty ? (
+          <EmptyState suggestedQuestions={suggestedQuestions} onSend={sendMessage} />
+        ) : (
+          <div className="px-4 py-5 space-y-6">
+            {qaPairs.map((pair, idx) => {
+              const isLatest = idx === qaPairs.length - 1
+              const isLoading = loading && pair.answer === null && isLatest
+              const showSource = isLatest && !isLoading && pair.answer !== null && hasAnySections
+              return (
+                <QACard
+                  key={idx}
+                  question={pair.question}
+                  answer={pair.answer}
+                  isLoading={isLoading}
+                  sourceMatch={showSource ? lastSourceMatch : undefined}
+                />
+              )
+            })}
+
+            {/* Follow-up chips */}
+            {!loading && hasAnswers && suggestedQuestions.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {suggestedQuestions.map((q, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => void sendMessage(q)}
+                    className="px-2.5 py-1 rounded-full border border-border/60 bg-background hover:bg-muted/50 transition-colors text-[11px] text-muted-foreground font-medium"
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Error */}
+            {error && (
+              <div className="rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-200/60 dark:border-red-800/40 px-4 py-3 text-xs text-red-600 dark:text-red-400">
+                {error}
+              </div>
+            )}
+          </div>
+        )}
+        <div ref={bottomRef} />
       </div>
     </div>
   )

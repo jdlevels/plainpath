@@ -1,0 +1,176 @@
+Ask This Document — Match Review & Redact Workspace Feel + Fix Q&A Panel Layout
+
+Current issue:
+Ask This Document now renders the actual PDF and chat works, but the workspace still does not feel premium.
+
+Problems:
+1. The left PDF area is too large / too dominant.
+2. The PDF viewer should feel like the Review & Redact document stage:
+   - centered paper preview
+   - dark workspace around it
+   - controlled page width
+   - not raw full-width document text
+3. The right Ask PlainPath panel still needs to feel like a structured Q&A answer workspace:
+   - question on top
+   - answer directly underneath in a bordered card/window
+   - no large empty space between question and answer
+4. The overall Ask This Document workspace should feel like “Review & Redact,” but with Q&A instead of redaction controls.
+
+Scope:
+Fix only Ask This Document layout and DocumentChat presentation.
+
+Allowed files:
+- artifacts/plainpath/src/pages/AskDocument.tsx
+- artifacts/plainpath/src/components/DocumentChat.tsx
+
+Do not touch:
+- Redact.tsx behavior or layout
+- Redact PDF export
+- Analyze Action Pack
+- Analyze.tsx unless required only for DocumentChat backward compatibility
+- Contract Review
+- Trust Check
+- Clause Extractor
+- Compare Versions
+- Document Builder
+- API auth
+- API routes
+- Database
+- Migrations
+- Stripe/payment
+- Marketing
+- Global routing
+
+Important:
+Use Redact as a visual reference only. Do not modify the Redact tool.
+
+Required layout:
+
+Desktop workspace:
+- Full-screen split workspace.
+- Left side: document preview stage.
+- Right side: Ask PlainPath Q&A panel.
+- Left/right split should feel similar to Review & Redact:
+  - Left document area: about 58–62%
+  - Right Q&A panel: about 38–42%
+- The PDF page itself should not stretch too wide.
+- Constrain rendered PDF page width with a sensible max width.
+  Suggested:
+  - max document page width around 720–860px
+  - centered inside the left stage
+  - dark background around the page
+  - vertical scroll for multi-page documents
+- Keep the PDF readable, but not oversized.
+- Add/keep a compact header strip above the PDF:
+  - file name
+  - document type
+  - page/scroll indicator if available
+  - “Ask This Document” context label if useful
+
+PDF viewer behavior:
+- PDF uploads must show actual rendered PDF pages.
+- Do not show extracted raw text as primary view for PDFs.
+- DOCX/TXT/paste text should still use the paper-style text fallback.
+- If PDF preview fails, show extracted text fallback with:
+  “PDF preview unavailable. Showing extracted text instead.”
+
+Right Q&A panel:
+Make this feel like a premium document Q&A workspace, not a sparse chat wall.
+
+Structure:
+1. Compact header
+   - Icon
+   - “Ask PlainPath”
+   - Subtitle: “Questions about this document, answered in plain English”
+
+2. Question input near the top
+   - Input should stay visible near the top of the right panel.
+   - Placeholder: “Ask about your document…”
+   - Send button on the right.
+   - Do not push the input to the bottom with a giant empty area.
+
+3. Latest Q&A card
+After the user asks a question, show:
+
+Question
+[User question text in a compact bordered/filled question row]
+
+Answer
+[AI answer directly below in a bordered answer card/window]
+
+Rules:
+- The answer must sit directly under the question.
+- No huge blank space between question and answer.
+- The answer card should have:
+  - border
+  - subtle background
+  - padding
+  - readable line height
+  - max-width contained inside the panel
+- Current/latest Q&A should be the primary visible item.
+- Older Q&A items can stack below in smaller cards or remain scrollable.
+
+4. Source placement
+- Keep source matching/fallback behavior.
+- Source banner should appear directly under the answer card.
+- If a source section is matched:
+  “Source used for this answer”
+- If no exact match:
+  “No exact source location found for this answer.”
+- Do not let source banner separate the question from the answer.
+
+5. Empty state
+Before the first question:
+- Show compact guidance card.
+- Show 3–5 example questions.
+- Keep input visible.
+- Avoid large blank area.
+
+Stability:
+- Do not reset uploaded document.
+- Do not clear chat messages after idle.
+- Do not clear PDF object URL except on explicit reset/new upload/unmount.
+- All buttons must use type="button" unless intentionally submitting.
+- Preserve current secure Bearer-token chat auth.
+
+Mobile:
+- Preserve Document / Ask tabs.
+- Document tab shows PDF/document viewer.
+- Ask tab shows compact Q&A panel.
+- No layout overflow or hidden input.
+
+Verification:
+1. Open /ask-document.
+2. Upload a PDF.
+3. Confirm loading animation still appears.
+4. Confirm left viewer resembles Review & Redact:
+   - actual PDF page
+   - centered paper surface
+   - constrained readable width
+   - dark stage around it
+   - not oversized
+5. Ask: “What are the termination rights?”
+6. Confirm right panel shows:
+   - question near top
+   - answer directly under question in bordered answer card
+   - source banner directly under answer
+   - no large empty gap
+7. Ask a second question.
+8. Confirm Q&A stays organized and readable.
+9. Wait 90 seconds.
+10. Confirm no reset.
+11. Test paste text once.
+12. Confirm Analyze → Ask This Document tab still works.
+13. Confirm no Redact files changed.
+14. Confirm no API/auth/database/migration/Stripe changes.
+15. Confirm no new TypeScript/runtime errors.
+
+Return only:
+A. Root cause of oversized/poor viewer layout
+B. Root cause of weak Q&A layout
+C. Files changed
+D. PDF viewer sizing/layout fix
+E. Q&A panel structure fix
+F. Source banner behavior
+G. Redact untouched confirmation
+H. Safe to publish: Yes/No
