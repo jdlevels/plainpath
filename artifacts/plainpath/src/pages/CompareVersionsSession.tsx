@@ -543,12 +543,52 @@ const PdfPane = memo(function PdfPane({
 })
 
 // ─── SummaryPanel ──────────────────────────────────────────────────────────────
-// Right-side drawer (replaces the old bottom tray).
+// Permanent right column on desktop; full-width on mobile "Changes" tab.
 
-type SevFilter = "all" | "high" | "medium" | "low"
+type CVChangeFilter = "all" | "added" | "removed" | "modified" | "high_impact" | "dates" | "money" | "obligations" | "legal"
+
+function changeTypeLabel(item: CVDiffItem): string {
+  if (item.change_type === "text_added" || item.change_type === "added_page") return "Added"
+  if (item.change_type === "text_removed" || item.change_type === "removed_page") return "Removed"
+  return "Modified"
+}
+
+function changeTypeBadge(item: CVDiffItem): string {
+  const t = item.change_type
+  if (t === "text_added" || t === "added_page")
+    return "bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300"
+  if (t === "text_removed" || t === "removed_page")
+    return "bg-red-100 dark:bg-red-950/50 text-red-700 dark:text-red-300"
+  return "bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300"
+}
+
+function matchesCVFilter(item: CVDiffItem, filter: CVChangeFilter): boolean {
+  switch (filter) {
+    case "all": return true
+    case "added": return item.change_type === "text_added" || item.change_type === "added_page"
+    case "removed": return item.change_type === "text_removed" || item.change_type === "removed_page"
+    case "modified": return item.change_type === "text_modified" || item.change_type === "visual_change" || item.change_type === "structural_signal"
+    case "high_impact": return item.severity === "high" || item.ai_category === "financial_value" || item.ai_category === "date_deadline" || item.ai_category === "safety_threshold"
+    case "dates": return item.ai_category === "date_deadline"
+    case "money": return item.ai_category === "financial_value"
+    case "obligations": return item.ai_category === "policy_change" || item.ai_category === "meaning_change"
+    case "legal": return item.ai_category === "legal_language"
+  }
+}
+
+const CV_FILTER_CHIPS: { key: CVChangeFilter; label: string }[] = [
+  { key: "all",         label: "All" },
+  { key: "added",       label: "Added" },
+  { key: "removed",     label: "Removed" },
+  { key: "modified",    label: "Modified" },
+  { key: "high_impact", label: "High Impact" },
+  { key: "dates",       label: "Dates" },
+  { key: "money",       label: "Money" },
+  { key: "obligations", label: "Obligations" },
+  { key: "legal",       label: "Legal" },
+]
 
 function SummaryPanel({
-  open, onClose,
   diffItems, selectedDiffId,
   onSelectItem, onHoverItem, onLeaveItem,
   onSeverityChange,
@@ -556,8 +596,6 @@ function SummaryPanel({
   onRejectToggle,
   density,
 }: {
-  open: boolean
-  onClose: () => void
   diffItems: CVDiffItem[]
   selectedDiffId: string | null
   onSelectItem: (id: string) => void
@@ -568,7 +606,7 @@ function SummaryPanel({
   onRejectToggle: (id: string) => void
   density: Density
 }) {
-  const [sevFilter, setSevFilter] = useState<SevFilter>("all")
+  const [cvFilter, setCvFilter] = useState<CVChangeFilter>("all")
   const [pageFilter, setPageFilter] = useState<number | null>(null)
   const [showPageDrop, setShowPageDrop] = useState(false)
   const itemRefs = useRef<Record<string, HTMLDivElement | null>>({})
@@ -589,21 +627,21 @@ function SummaryPanel({
     if (el) el.scrollIntoView({ behavior: "smooth", block: "nearest" })
   }, [selectedDiffId])
 
-  useEffect(() => { setPageFilter(null) }, [sevFilter])
+  useEffect(() => { setPageFilter(null) }, [cvFilter])
 
-  const sevFiltered = sevFilter === "all" ? diffItems : diffItems.filter((i) => i.severity === sevFilter)
+  const cvFiltered = useMemo(() => diffItems.filter((i) => matchesCVFilter(i, cvFilter)), [diffItems, cvFilter])
 
   const pagesWithItems = useMemo(() => {
     const pSet = new Set<number>()
-    for (const item of sevFiltered) {
+    for (const item of cvFiltered) {
       if (item.page_original != null) pSet.add(item.page_original)
       if (item.page_revised != null) pSet.add(item.page_revised)
     }
     return [...pSet].sort((a, b) => a - b)
-  }, [sevFiltered])
+  }, [cvFiltered])
 
   const visibleItems = useMemo(() => {
-    let list = pageFilter == null ? sevFiltered : sevFiltered.filter((i) =>
+    const list = pageFilter == null ? cvFiltered : cvFiltered.filter((i) =>
       i.page_original === pageFilter || i.page_revised === pageFilter
     )
     return [...list].sort((a, b) => {
@@ -613,119 +651,132 @@ function SummaryPanel({
       const pb = b.page_original ?? b.page_revised ?? 9999
       return pa - pb
     })
-  }, [sevFiltered, pageFilter])
+  }, [cvFiltered, pageFilter])
 
   const stats = useMemo(() => {
-    let high = 0, medium = 0, low = 0
-    for (const i of diffItems) {
-      if (i.severity === "high") high++
-      else if (i.severity === "medium") medium++
-      else low++
-    }
-    return { total: diffItems.length, high, medium, low }
+    const added    = diffItems.filter((i) => matchesCVFilter(i, "added")).length
+    const removed  = diffItems.filter((i) => matchesCVFilter(i, "removed")).length
+    const modified = diffItems.filter((i) => matchesCVFilter(i, "modified")).length
+    const high     = diffItems.filter((i) => i.severity === "high").length
+    const dates    = diffItems.filter((i) => i.ai_category === "date_deadline").length
+    const money    = diffItems.filter((i) => i.ai_category === "financial_value").length
+    const withPage = diffItems.filter((i) => i.page_original != null || i.page_revised != null).length
+    return { total: diffItems.length, added, removed, modified, high, dates, money, withPage }
   }, [diffItems])
 
-  if (!open) return null
+  const rejectedCount = diffItems.filter((i) => i.review_status === "rejected").length
+  const rowPy = density === "compact" ? "py-2" : "py-3"
 
-  const TAB_LABELS: { key: SevFilter; label: string; count: number }[] = [
-    { key: "all",    label: "All",  count: stats.total },
-    { key: "high",   label: "High", count: stats.high },
-    { key: "medium", label: "Med",  count: stats.medium },
-    { key: "low",    label: "Low",  count: stats.low },
-  ]
-
-  const rowPy = density === "compact" ? "py-1.5" : "py-2.5"
+  const chipActive = (key: CVChangeFilter) =>
+    key === cvFilter
+      ? "bg-teal-600 text-white border-teal-600"
+      : "bg-muted/50 text-muted-foreground border-border/50 hover:text-foreground hover:bg-muted/80"
 
   return (
-    <div className="absolute inset-y-0 right-0 z-30 flex flex-col w-[340px] max-w-[92vw] bg-background border-l border-border/60 shadow-xl animate-in slide-in-from-right-2 duration-200">
-      {/* Header */}
+    <div className="flex flex-col h-full bg-background overflow-hidden">
+      {/* Panel header */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-border/40 flex-shrink-0 gap-2">
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex items-center gap-2">
           <BarChart2 className="w-3.5 h-3.5 text-muted-foreground" />
-          <span className="text-sm font-semibold">Summary</span>
+          <span className="text-sm font-semibold">Change Intelligence</span>
           {stats.total > 0 && (
-            <span className="text-[10px] text-muted-foreground font-mono">
-              {stats.total} change{stats.total !== 1 ? "s" : ""}
-            </span>
+            <span className="text-[10px] text-muted-foreground font-mono">{stats.total}</span>
           )}
-          {diffItems.filter((i) => i.review_status === "rejected").length > 0 && (
+          {rejectedCount > 0 && (
             <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400">
-              {diffItems.filter((i) => i.review_status === "rejected").length} rejected
+              {rejectedCount} rejected
             </span>
           )}
         </div>
-
-        <div className="flex items-center gap-1 flex-shrink-0">
-          {pagesWithItems.length > 1 && (
-            <div ref={pageDropRef} className="relative">
-              <button
-                onClick={() => setShowPageDrop((o) => !o)}
-                className={`flex items-center gap-1 px-1.5 py-0.5 rounded border text-[10px] font-medium transition-colors ${
-                  pageFilter != null
-                    ? "bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 border-violet-300/60"
-                    : "border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted/60"
-                }`}
-              >
-                {pageFilter != null ? `p.${pageFilter}` : "Page"}
-                <ChevDown className="w-3 h-3" />
-              </button>
-              {showPageDrop && (
-                <div className="absolute right-0 top-full mt-1 z-50 bg-background border border-border/60 rounded-lg shadow-xl py-1 min-w-[90px]">
-                  <button
-                    onClick={() => { setPageFilter(null); setShowPageDrop(false) }}
-                    className={`w-full text-left px-3 py-1 text-xs hover:bg-muted/60 transition-colors ${pageFilter == null ? "font-semibold text-foreground" : "text-muted-foreground"}`}
-                  >
-                    All pages
-                  </button>
-                  {pagesWithItems.map((pg) => (
-                    <button
-                      key={pg}
-                      onClick={() => { setPageFilter(pg); setShowPageDrop(false) }}
-                      className={`w-full text-left px-3 py-1 text-xs hover:bg-muted/60 transition-colors ${pageFilter === pg ? "font-semibold text-foreground" : "text-muted-foreground"}`}
-                    >
-                      Page {pg}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Severity tabs */}
-          <div className="flex items-center gap-0.5 bg-muted/60 rounded-md p-0.5">
-            {TAB_LABELS.map(({ key, label, count }) => (
-              <button
-                key={key}
-                onClick={() => setSevFilter(key)}
-                className={`px-1.5 py-0.5 rounded text-[10px] font-semibold transition-colors ${
-                  sevFilter === key
-                    ? key === "high"   ? "bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300"
-                    : key === "medium" ? "bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300"
-                    : key === "low"    ? "bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300"
-                    :                   "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {label}{count > 0 && <span className="opacity-60 ml-0.5">({count})</span>}
-              </button>
-            ))}
+        {pagesWithItems.length > 1 && (
+          <div ref={pageDropRef} className="relative flex-shrink-0">
+            <button
+              type="button"
+              onClick={() => setShowPageDrop((o) => !o)}
+              className={`flex items-center gap-1 px-1.5 py-0.5 rounded border text-[10px] font-medium transition-colors ${
+                pageFilter != null
+                  ? "bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 border-violet-300/60"
+                  : "border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted/60"
+              }`}
+            >
+              {pageFilter != null ? `p.${pageFilter}` : "Page"}
+              <ChevDown className="w-3 h-3" />
+            </button>
+            {showPageDrop && (
+              <div className="absolute right-0 top-full mt-1 z-50 bg-background border border-border/60 rounded-lg shadow-xl py-1 min-w-[90px]">
+                <button type="button"
+                  onClick={() => { setPageFilter(null); setShowPageDrop(false) }}
+                  className={`w-full text-left px-3 py-1 text-xs hover:bg-muted/60 transition-colors ${pageFilter == null ? "font-semibold text-foreground" : "text-muted-foreground"}`}
+                >All pages</button>
+                {pagesWithItems.map((pg) => (
+                  <button type="button" key={pg}
+                    onClick={() => { setPageFilter(pg); setShowPageDrop(false) }}
+                    className={`w-full text-left px-3 py-1 text-xs hover:bg-muted/60 transition-colors ${pageFilter === pg ? "font-semibold text-foreground" : "text-muted-foreground"}`}
+                  >Page {pg}</button>
+                ))}
+              </div>
+            )}
           </div>
-
-          <button onClick={onClose} className="p-1 rounded hover:bg-muted transition-colors text-muted-foreground" title="Close">
-            <X className="w-3.5 h-3.5" />
-          </button>
-        </div>
+        )}
       </div>
 
-      {/* Column header */}
+      {/* Stat chips */}
       {diffItems.length > 0 && (
-        <div className="flex items-center gap-0 px-2 py-1 bg-muted/20 border-b border-border/20 flex-shrink-0">
-          <div className="w-7 flex-shrink-0 flex items-center justify-center">
-            <span className="text-[9px] text-muted-foreground/60 font-semibold uppercase tracking-wider">☑</span>
-          </div>
-          <span className="flex-1 text-[9px] text-muted-foreground/60 font-semibold uppercase tracking-wider pl-2">Change</span>
-          <span className="text-[9px] text-muted-foreground/60 font-semibold uppercase tracking-wider pr-1">✕</span>
-          <div style={{ minWidth: "60px" }} />
+        <div className="flex flex-wrap gap-1.5 px-3 py-2.5 border-b border-border/30 flex-shrink-0">
+          <button type="button" onClick={() => setCvFilter("all")}
+            className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border transition-colors ${chipActive("all")}`}>
+            Total <span className="opacity-80">{stats.total}</span>
+          </button>
+          {stats.added > 0 && (
+            <button type="button" onClick={() => setCvFilter("added")}
+              className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border transition-colors ${chipActive("added")}`}>
+              + Added <span className="opacity-80">{stats.added}</span>
+            </button>
+          )}
+          {stats.removed > 0 && (
+            <button type="button" onClick={() => setCvFilter("removed")}
+              className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border transition-colors ${chipActive("removed")}`}>
+              − Removed <span className="opacity-80">{stats.removed}</span>
+            </button>
+          )}
+          {stats.modified > 0 && (
+            <button type="button" onClick={() => setCvFilter("modified")}
+              className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border transition-colors ${chipActive("modified")}`}>
+              ~ Modified <span className="opacity-80">{stats.modified}</span>
+            </button>
+          )}
+          {stats.high > 0 && (
+            <button type="button" onClick={() => setCvFilter("high_impact")}
+              className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border transition-colors ${cvFilter === "high_impact" ? "bg-red-600 text-white border-red-600" : "bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 border-red-200/60 hover:bg-red-100"}`}>
+              ⚑ High Impact <span className="opacity-80">{stats.high}</span>
+            </button>
+          )}
+          {stats.dates > 0 && (
+            <button type="button" onClick={() => setCvFilter("dates")}
+              className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border transition-colors ${chipActive("dates")}`}>
+              Dates <span className="opacity-80">{stats.dates}</span>
+            </button>
+          )}
+          {stats.money > 0 && (
+            <button type="button" onClick={() => setCvFilter("money")}
+              className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border transition-colors ${chipActive("money")}`}>
+              Money <span className="opacity-80">{stats.money}</span>
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Filter chips row */}
+      {diffItems.length > 0 && (
+        <div className="flex items-center gap-1 px-3 py-1.5 border-b border-border/20 flex-shrink-0 overflow-x-auto hide-scrollbar">
+          {CV_FILTER_CHIPS.map(({ key, label }) => (
+            <button type="button" key={key}
+              onClick={() => setCvFilter(key)}
+              className={`flex-shrink-0 px-2 py-0.5 rounded-full text-[10px] font-semibold border transition-colors ${chipActive(key)}`}
+            >
+              {label}
+            </button>
+          ))}
         </div>
       )}
 
@@ -737,42 +788,38 @@ function SummaryPanel({
               <BarChart2 className="w-4 h-4 text-muted-foreground opacity-40" />
             </div>
             <p className="text-sm text-muted-foreground">No differences found.</p>
+            <p className="text-xs text-muted-foreground/60">Upload a revised document to see changes.</p>
           </div>
         )}
 
         {diffItems.length > 0 && visibleItems.length === 0 && (
           <div className="flex flex-col items-center gap-2 py-10 text-center px-4">
-            <p className="text-sm text-muted-foreground">
-              No {sevFilter !== "all" ? sevFilter + " severity " : ""}changes
-              {pageFilter != null ? ` on page ${pageFilter}` : ""}.
-            </p>
+            <p className="text-sm text-muted-foreground">No {cvFilter !== "all" ? cvFilter.replace("_", " ") + " " : ""}changes{pageFilter != null ? ` on page ${pageFilter}` : ""}.</p>
           </div>
         )}
 
         {visibleItems.length > 0 && (
-          <div className="divide-y divide-border/30">
+          <div className="divide-y divide-border/20">
             {visibleItems.map((item) => {
               const isSelected = selectedDiffId === item.id
               const pageLabel =
                 item.page_original != null && item.page_revised != null
-                  ? `p.${item.page_original}→${item.page_revised}`
-                  : item.page_original != null ? `p.${item.page_original} orig`
-                  : item.page_revised != null  ? `p.${item.page_revised} rev`
-                  : "—"
-              const preview = (item.revised_text ?? item.original_text ?? "").slice(0, density === "compact" ? 60 : 80)
+                  ? `p.${item.page_original} → p.${item.page_revised}`
+                  : item.page_original != null ? `p.${item.page_original} baseline`
+                  : item.page_revised != null  ? `p.${item.page_revised} revised`
+                  : null
               const hasLinkedNote = linkedNoteIds.has(item.id)
               const isRejected = item.review_status === "rejected"
+              const hasSource = item.page_original != null || item.page_revised != null
 
               return (
                 <div
                   key={item.id}
                   ref={(el) => { itemRefs.current[item.id] = el as HTMLDivElement | null }}
                   className={`flex items-stretch gap-0 transition-colors ${
-                    isRejected
-                      ? "bg-red-50/60 dark:bg-red-950/20"
-                      : isSelected
-                      ? "bg-violet-50 dark:bg-violet-950/30"
-                      : "hover:bg-muted/30"
+                    isRejected ? "bg-red-50/60 dark:bg-red-950/20"
+                    : isSelected ? "bg-violet-50 dark:bg-violet-950/30"
+                    : "hover:bg-muted/30"
                   }`}
                   onMouseEnter={() => onHoverItem([item.id])}
                   onMouseLeave={() => onLeaveItem()}
@@ -781,76 +828,124 @@ function SummaryPanel({
                     isRejected ? "bg-red-400" : isSelected ? "bg-violet-500" : "bg-transparent"
                   }`} />
 
-                  <button
-                    onClick={() => onSelectItem(item.id)}
-                    className={`flex-1 flex items-start gap-2 pr-2 ${rowPy} text-left`}
-                  >
-                    <span className={`text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded flex-shrink-0 mt-0.5 ${severityBadgeClass(item.severity)}`}>
-                      {item.severity}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className={`text-xs font-medium truncate ${isRejected ? "text-muted-foreground line-through" : "text-foreground"}`}>
-                          {severityLabel(item)}
-                        </span>
+                  <div className={`flex-1 min-w-0 px-2.5 ${rowPy}`}>
+                    {/* Top row: change type + severity + page */}
+                    <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                      <span className={`text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded flex-shrink-0 ${changeTypeBadge(item)}`}>
+                        {changeTypeLabel(item)}
+                      </span>
+                      <span className={`text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded flex-shrink-0 ${severityBadgeClass(item.severity)}`}>
+                        {item.severity}
+                      </span>
+                      {pageLabel && (
                         <span className="text-[10px] text-muted-foreground font-mono flex-shrink-0">{pageLabel}</span>
-                        {isRejected && (
-                          <span className="flex items-center gap-0.5 text-[9px] text-red-600 dark:text-red-400 font-semibold flex-shrink-0">
-                            <XCircle className="w-2.5 h-2.5" /> rejected
-                          </span>
-                        )}
-                        {item.severity_overridden && (
-                          <span className="flex items-center gap-0.5 text-[9px] text-violet-600 dark:text-violet-400 font-semibold flex-shrink-0">
-                            <Pencil className="w-2.5 h-2.5" /> overridden
-                          </span>
-                        )}
-                        {hasLinkedNote && (
-                          <span className="flex items-center gap-0.5 text-[9px] text-teal-600 dark:text-teal-400 font-semibold flex-shrink-0">
-                            <Link2 className="w-2.5 h-2.5" /> note
-                          </span>
-                        )}
-                        {item.ai_category && (
-                          <span className={`flex items-center gap-0.5 text-[9px] px-1.5 py-px rounded font-semibold flex-shrink-0 ${aiCategoryColor(item.ai_category)}`}>
-                            <Sparkles className="w-2 h-2" />
-                            {aiCategoryLabel(item.ai_category)}
-                          </span>
-                        )}
-                      </div>
-                      {preview && density !== "compact" && (
-                        <p className="text-[11px] text-muted-foreground truncate mt-0.5">{preview}</p>
                       )}
-                      {item.ai_explanation && density !== "compact" && (
-                        <p className="text-[10px] text-violet-600/80 dark:text-violet-400/80 mt-0.5 leading-snug line-clamp-2">
-                          {item.ai_explanation}
-                        </p>
+                      {isRejected && (
+                        <span className="flex items-center gap-0.5 text-[9px] text-red-600 dark:text-red-400 font-semibold flex-shrink-0">
+                          <XCircle className="w-2.5 h-2.5" /> rejected
+                        </span>
+                      )}
+                      {item.severity_overridden && (
+                        <span className="flex items-center gap-0.5 text-[9px] text-violet-600 dark:text-violet-400 font-semibold flex-shrink-0">
+                          <Pencil className="w-2.5 h-2.5" /> overridden
+                        </span>
+                      )}
+                      {hasLinkedNote && (
+                        <span className="flex items-center gap-0.5 text-[9px] text-teal-600 dark:text-teal-400 font-semibold flex-shrink-0">
+                          <Link2 className="w-2.5 h-2.5" /> note
+                        </span>
+                      )}
+                      {item.ai_category && (
+                        <span className={`flex items-center gap-0.5 text-[9px] px-1.5 py-px rounded font-semibold flex-shrink-0 ${aiCategoryColor(item.ai_category)}`}>
+                          <Sparkles className="w-2 h-2" />
+                          {aiCategoryLabel(item.ai_category)}
+                        </span>
                       )}
                     </div>
-                    <ChevronRight className="w-3 h-3 text-muted-foreground/50 flex-shrink-0 mt-0.5" />
-                  </button>
 
-                  <button
-                    onClick={(e) => { e.stopPropagation(); onRejectToggle(item.id) }}
-                    title={isRejected ? "Un-reject" : "Reject"}
-                    className={`flex items-center px-1 flex-shrink-0 transition-colors ${
-                      isRejected ? "text-red-500 hover:text-muted-foreground" : "text-muted-foreground/40 hover:text-red-500"
-                    }`}
-                  >
-                    <XCircle className="w-3.5 h-3.5" />
-                  </button>
-
-                  <div className="flex items-center pr-1.5 flex-shrink-0">
-                    <select
-                      value={item.severity}
-                      onChange={(e) => { e.stopPropagation(); onSeverityChange(item.id, e.target.value as CVDiffSeverity) }}
-                      onClick={(e) => e.stopPropagation()}
-                      title="Override severity"
-                      className="text-[10px] font-semibold rounded border border-border/50 bg-muted/40 px-1 py-0.5 cursor-pointer focus:outline-none appearance-none text-center"
-                      style={{ minWidth: "52px" }}
+                    {/* Change title */}
+                    <button
+                      type="button"
+                      onClick={() => onSelectItem(item.id)}
+                      className={`w-full text-left text-xs font-medium leading-snug mb-1.5 ${isRejected ? "text-muted-foreground line-through" : "text-foreground hover:text-teal-700 dark:hover:text-teal-300"}`}
                     >
-                      <option value="high">High</option>
-                      <option value="medium">Med</option>
-                      <option value="low">Low</option>
-                    </select>
+                      {severityLabel(item)}
+                    </button>
+
+                    {/* AI plain-English impact */}
+                    {item.ai_explanation && (
+                      <p className="text-[11px] text-violet-600/80 dark:text-violet-400/80 leading-snug mb-1.5 line-clamp-2">
+                        {item.ai_explanation}
+                      </p>
+                    )}
+
+                    {/* Before / After snippets */}
+                    {density !== "compact" && (
+                      <>
+                        {item.original_text && (
+                          <div className="mt-1 rounded-md bg-red-50 dark:bg-red-950/30 border border-red-200/50 dark:border-red-800/30 px-2 py-1">
+                            <p className="text-[9px] font-bold uppercase tracking-wider text-red-500 dark:text-red-400 mb-0.5">Before</p>
+                            <p className="text-[11px] text-red-800 dark:text-red-300 leading-snug line-clamp-2">{item.original_text}</p>
+                          </div>
+                        )}
+                        {item.revised_text && (
+                          <div className="mt-1 rounded-md bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200/50 dark:border-emerald-800/30 px-2 py-1">
+                            <p className="text-[9px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-0.5">After</p>
+                            <p className="text-[11px] text-emerald-800 dark:text-emerald-300 leading-snug line-clamp-2">{item.revised_text}</p>
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    {/* Source banner (only when selected) */}
+                    {isSelected && (
+                      <div className={`mt-1.5 rounded-md px-2 py-1 text-[10px] font-medium ${
+                        hasSource
+                          ? "bg-teal-50 dark:bg-teal-950/30 border border-teal-200/50 dark:border-teal-800/30 text-teal-700 dark:text-teal-300"
+                          : "bg-muted/50 border border-border/30 text-muted-foreground"
+                      }`}>
+                        {hasSource ? (
+                          <>
+                            Source: {item.page_original != null ? `p.${item.page_original} (Baseline)` : ""}
+                            {item.page_original != null && item.page_revised != null ? " → " : ""}
+                            {item.page_revised != null ? `p.${item.page_revised} (Revised)` : ""}
+                          </>
+                        ) : "No exact source location found"}
+                      </div>
+                    )}
+
+                    {/* Review action row */}
+                    <div className="flex items-center gap-1.5 mt-1.5">
+                      <button type="button"
+                        onClick={() => onSelectItem(item.id)}
+                        className="text-[10px] font-semibold text-teal-600 dark:text-teal-400 hover:underline"
+                      >
+                        Review in document →
+                      </button>
+                      <div className="flex-1" />
+                      <button type="button"
+                        onClick={(e) => { e.stopPropagation(); onRejectToggle(item.id) }}
+                        title={isRejected ? "Un-reject" : "Reject"}
+                        className={`flex items-center gap-0.5 text-[9px] font-semibold transition-colors ${
+                          isRejected ? "text-red-500 hover:text-muted-foreground" : "text-muted-foreground/50 hover:text-red-500"
+                        }`}
+                      >
+                        <XCircle className="w-3 h-3" />
+                        {isRejected ? "Un-reject" : "Reject"}
+                      </button>
+                      <select
+                        value={item.severity}
+                        onChange={(e) => { e.stopPropagation(); onSeverityChange(item.id, e.target.value as CVDiffSeverity) }}
+                        onClick={(e) => e.stopPropagation()}
+                        title="Override severity"
+                        className="text-[10px] font-semibold rounded border border-border/50 bg-muted/40 px-1 py-0.5 cursor-pointer focus:outline-none appearance-none text-center"
+                        style={{ minWidth: "48px" }}
+                      >
+                        <option value="high">High</option>
+                        <option value="medium">Med</option>
+                        <option value="low">Low</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
               )
@@ -1147,8 +1242,8 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
   const [revisedError, setRevisedError] = useState<string | null>(null)
   const [rescanning, setRescanning] = useState(false)
   const [enriching, setEnriching] = useState(false)
-  const [activeTab, setActiveTab] = useState<"original" | "revised">("original")
-  const [summaryOpen, setSummaryOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState<"summary" | "original" | "revised">("original")
+  const [summaryOpen, setSummaryOpen] = useState(true)
   const [notesOpen, setNotesOpen] = useState(false)
 
   const [jumpOrigPage, setJumpOrigPage] = useState<number | null>(null)
@@ -1261,6 +1356,7 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
           setDiffItems(updated.diffResult?.items ?? [])
           setDiffResultBase(updated.diffResult)
           setSummaryOpen(true)
+          setActiveTab("summary")
         }
       } catch { /* ignore poll errors */ }
     }, POLL_INTERVAL_MS)
@@ -1677,13 +1773,13 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
 
       {/* ── Mobile tab switcher ── */}
       <div className="flex md:hidden border-b border-border/40 flex-shrink-0 bg-background">
-        {(["original", "revised"] as const).map((tab) => (
-          <button key={tab} onClick={() => setActiveTab(tab)}
+        {(["summary", "original", "revised"] as const).map((tab) => (
+          <button type="button" key={tab} onClick={() => setActiveTab(tab)}
             className={`flex-1 py-1.5 text-xs font-semibold transition-colors border-b-2 ${
               activeTab === tab ? "text-teal-600 dark:text-teal-400 border-teal-500" : "text-muted-foreground border-transparent hover:text-foreground"
             }`}
           >
-            {tab === "original" ? "Baseline" : "Revised"}
+            {tab === "summary" ? "Changes" : tab === "original" ? "Baseline" : "Revised"}
           </button>
         ))}
       </div>
@@ -1747,20 +1843,22 @@ export default function CompareVersionsSession({ sessionId }: { sessionId: strin
           />
         </div>
 
-        {/* Right drawers — mutually exclusive */}
-        <SummaryPanel
-          open={summaryOpen}
-          onClose={() => setSummaryOpen(false)}
-          diffItems={diffItems}
-          selectedDiffId={selectedDiffId}
-          onSelectItem={(id) => { selectDiffItem(id); setSummaryOpen(true) }}
-          onHoverItem={setHoveredItemIds}
-          onLeaveItem={() => setHoveredItemIds([])}
-          onSeverityChange={handleSeverityChange}
-          linkedNoteIds={linkedNoteIds}
-          onRejectToggle={handleRejectToggle}
-          density={density}
-        />
+        {/* Right: Change Intelligence panel — permanent column on desktop, full-width on mobile "Changes" tab */}
+        <div className={`flex-col overflow-hidden border-l border-border/60 flex-shrink-0 ${
+          activeTab === "summary" ? "flex flex-1" : "hidden"
+        } ${summaryOpen ? "md:flex md:flex-none md:w-[360px]" : "md:hidden"}`}>
+          <SummaryPanel
+            diffItems={diffItems}
+            selectedDiffId={selectedDiffId}
+            onSelectItem={(id) => selectDiffItem(id)}
+            onHoverItem={setHoveredItemIds}
+            onLeaveItem={() => setHoveredItemIds([])}
+            onSeverityChange={handleSeverityChange}
+            linkedNoteIds={linkedNoteIds}
+            onRejectToggle={handleRejectToggle}
+            density={density}
+          />
+        </div>
 
         <NotesRail
           open={notesOpen}

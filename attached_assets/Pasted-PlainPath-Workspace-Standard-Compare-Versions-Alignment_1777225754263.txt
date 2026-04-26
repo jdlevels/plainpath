@@ -1,0 +1,210 @@
+PlainPath Workspace Standard — Compare Versions Alignment Only
+
+Goal:
+Carefully align Compare Versions with the approved PlainPath document workspace standard without breaking the two-document comparison purpose.
+
+Important:
+Compare Versions is different from single-document tools.
+Do not force it into a single-document left panel if that weakens comparison.
+
+Approved standard adapted for Compare Versions:
+- Document-first workspace
+- Original and revised documents remain visually available
+- Right-side or summary panel shows change intelligence
+- Controlled document surfaces
+- Compact premium change cards
+- Minimal wasted space
+- Source/change cards should connect to the relevant document area when possible
+
+Scope:
+Only update Compare Versions if needed.
+
+Allowed file:
+- artifacts/plainpath/src/pages/CompareVersions.tsx
+- artifacts/plainpath/src/pages/CompareVersionsSession.tsx if that is the active result workspace
+- Existing shared viewer/header components only if already available and safe to reuse
+
+Do not touch:
+- Ask This Document
+- Analyze.tsx
+- Analyze Action Pack
+- DocumentChat
+- Redact
+- Clause Extractor
+- Contract Review
+- Trust Check
+- Document Builder
+- API routes
+- Auth
+- Database
+- Migrations
+- Stripe/payment
+- Marketing
+- Global routing
+
+Critical:
+Preserve existing comparison logic.
+Preserve original vs revised document behavior.
+Preserve saved comparison sessions.
+Preserve export/report behavior if present.
+Do not change backend calls.
+Do not change document parsing.
+Do not fake exact source highlighting.
+
+Business purpose:
+Compare Versions should help a normal user understand:
+1. What changed between the original and revised document?
+2. Was text added, removed, or modified?
+3. Which changes matter most?
+4. Where in the documents did the change happen?
+5. What should the user review before accepting the new version?
+
+Required layout:
+
+1. Empty / upload state
+- Keep upload flow stable.
+- Clearly show:
+  - Original document upload
+  - Revised document upload
+  - Supported file types
+  - Sample/demo option if currently present
+- Do not overbuild the empty state.
+
+2. Processing state
+- Use the existing Compare Versions processing state if it already shows both document names.
+- It should show:
+  - Original file name
+  - Revised file name
+  - comparison progress
+  - document skeletons or scan-style animation
+- Must feel consistent with the PlainPath loading standard.
+
+3. Completed workspace
+Use a document-first comparison layout.
+
+Recommended desktop structure:
+- Left/middle: original and revised document previews or comparison panes
+- Right: Change Intelligence panel
+
+Acceptable layouts:
+A. Three-column:
+   - Original document
+   - Revised document
+   - Change Intelligence panel
+
+OR
+
+B. Two-document split with right summary:
+   - larger comparison document area
+   - compact change panel
+
+Do not force a single PDF viewer if it makes comparison worse.
+
+Document viewers:
+- Show actual PDF/document previews whenever possible.
+- Use controlled centered paper surfaces.
+- Dark workspace background around documents.
+- Scrollable document areas.
+- File names visible.
+- For DOCX/TXT/paste, use paper-style text fallback.
+- Do not dump raw extracted text directly on dark background.
+
+Right panel — Change Intelligence:
+Make it results-first.
+
+Top summary should show compact chips/cards:
+- Total changes
+- Added text
+- Removed text
+- Modified terms
+- High-impact changes
+- Dates/deadlines changed
+- Financial terms changed
+- Source/change coverage
+
+Filter chips:
+- All
+- Added
+- Removed
+- Modified
+- High impact
+- Dates
+- Money
+- Obligations
+- Legal terms
+
+Change cards:
+Each change card should show:
+- Change title
+- Change type: Added / Removed / Modified
+- Plain-English impact
+- Before snippet
+- After snippet
+- Suggested review action
+- Click action to focus/scroll corresponding document area when possible
+
+Source/change behavior:
+- Clicking a change card should:
+  - visibly select the card
+  - focus/scroll the original and/or revised document area when possible
+  - show a clear “before” and “after” source banner/snippet
+- If exact PDF coordinate highlighting is unavailable:
+  - use best-effort text/section matching
+  - do not pretend exact text is highlighted
+- If no exact source match exists:
+  - show “No exact source location found”
+  - do not scroll to a fake location
+
+Readability:
+- Use single-column change cards if the right panel is narrow.
+- Avoid too many badges.
+- Make change type and impact easy to scan.
+- Keep the document area dominant enough for real comparison.
+
+Mobile:
+- Use tabs:
+  - Summary
+  - Original
+  - Revised
+- Default to Summary after processing.
+- Original and Revised tabs must show document viewers.
+- Cards must not clip behind navigation.
+
+Stability rules:
+- Do not reset uploaded files after processing.
+- Do not clear results when a card is clicked.
+- Do not break saved comparison sessions.
+- Do not break export/report behavior.
+- All buttons must use type="button" unless intentionally submitting.
+- Preserve error states.
+
+Verification:
+1. Open /compare-versions.
+2. Upload original and revised PDF documents.
+3. Confirm processing shows both file names.
+4. Confirm completed state preserves original vs revised comparison.
+5. Confirm document previews are visible and readable.
+6. Confirm Change Intelligence panel is readable.
+7. Confirm summary chips/counts are visible.
+8. Click a change card.
+9. Confirm card visibly selects.
+10. Confirm document area attempts to focus/scroll to the related change or shows source banner/snippet.
+11. Test filters.
+12. Test mobile at ~390px width.
+13. Confirm saved comparison/session behavior still works.
+14. Confirm export/report behavior still works if present.
+15. Confirm no other tools changed.
+16. Confirm no API/auth/database/migration/Stripe/marketing changes.
+17. Confirm no new TypeScript/runtime errors introduced.
+
+Return only:
+A. Files changed
+B. Empty/processing/result state changes
+C. Compare document viewer structure
+D. Right-panel Change Intelligence structure
+E. Change-card click behavior
+F. No-source behavior
+G. Mobile behavior
+H. Saved session/export preservation
+I. Preserved logic
+J. Safe checkpoint: Yes/No
