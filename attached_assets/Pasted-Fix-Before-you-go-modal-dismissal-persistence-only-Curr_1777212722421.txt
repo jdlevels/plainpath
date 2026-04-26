@@ -1,0 +1,74 @@
+Fix “Before you go” modal dismissal persistence only.
+
+Current issue:
+On the public PlainPath homepage, the “Before you go” modal keeps returning even after the user clicks:
+- X close button
+- “No thanks, I’ll figure it out myself”
+
+This is a bad user experience. Once dismissed, it should not immediately come back.
+
+Scope:
+Fix only the homepage/marketing “Before you go” modal dismissal behavior.
+
+Do not touch:
+- Ask This Document
+- Analyze Action Pack
+- Tool pages
+- Auth
+- Database
+- Migrations
+- Stripe/payment
+- App dashboard
+- API routes
+- Routing except if required for this modal behavior
+
+Required behavior:
+1. When the user clicks the X close button:
+   - Close the modal immediately.
+   - Store a dismissal flag in localStorage.
+   - Do not show the modal again for at least 24 hours.
+
+2. When the user clicks “No thanks, I’ll figure it out myself”:
+   - Close the modal immediately.
+   - Store the same dismissal flag in localStorage.
+   - Do not show the modal again for at least 24 hours.
+
+3. When the user clicks “Try the free demo”:
+   - Proceed with the existing demo action.
+   - Do not break the existing demo flow.
+
+Implementation preference:
+Use a key like:
+
+plainpath_before_you_go_dismissed_until
+
+Store a timestamp:
+Date.now() + 24 hours
+
+On page load:
+- Check localStorage.
+- If dismissed_until exists and Date.now() is less than that timestamp, do not show the modal.
+- If the timestamp is expired, allow the modal to show again.
+
+Also prevent repeated modal triggering during the same page session:
+- Once dismissed, set component state so it cannot reopen until the page is refreshed and the localStorage check allows it.
+
+Verification:
+1. Open public homepage.
+2. Trigger the “Before you go” modal.
+3. Click X.
+4. Confirm the modal closes.
+5. Stay on page / move mouse / scroll — confirm it does not reopen.
+6. Refresh page — confirm it still does not reopen.
+7. Clear localStorage or expire the timestamp — confirm it can show again.
+8. Repeat using “No thanks, I’ll figure it out myself.”
+9. Confirm “Try the free demo” still works.
+10. Confirm no app/tool/auth/API/database changes.
+
+Return only:
+A. Root cause
+B. Files changed
+C. Dismissal persistence fix
+D. Demo button status
+E. Verification result
+F. Whether safe to publish

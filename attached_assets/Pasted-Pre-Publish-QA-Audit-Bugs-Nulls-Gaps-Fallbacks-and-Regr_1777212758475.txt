@@ -1,0 +1,149 @@
+Pre-Publish QA Audit — Bugs, Nulls, Gaps, Fallbacks, and Regression Check
+
+Before republishing, run a full QA audit of the current PlainPath codebase.
+
+Goal:
+Find bugs, null/undefined risks, broken flows, missing fallbacks, stale copy, route issues, auth issues, modal issues, and obvious production blockers before publishing.
+
+Important:
+Do not redesign.
+Do not refactor.
+Do not add new features.
+Do not change layout architecture.
+Do not touch database, migrations, Stripe/payment, or schema.
+Do not apply database migrations.
+Only make code changes if a true blocker, runtime crash, null/undefined bug, broken route, broken auth flow, broken modal behavior, or broken user-facing action is found.
+
+Focus areas:
+
+1. Public homepage / marketing
+- Confirm all 8 tools are visible.
+- Confirm Digital Signature is removed from user-facing copy/cards/nav/pricing/FAQ.
+- Confirm Ask This Document is visible.
+- Confirm Ask This Document links to /app/ask-document.
+- Confirm App Store / Google Play buttons open waitlist/modal only.
+- Confirm “Before you go” modal dismissal persists after:
+  - X close
+  - “No thanks, I’ll figure it out myself”
+- Confirm the modal does not immediately reopen after dismissal.
+- Confirm modal uses localStorage timestamp or equivalent persistence.
+- Confirm “Try the free demo” still works.
+
+2. Authenticated dashboard
+- Confirm all 8 tools appear correctly:
+  - Analyze a Document
+  - Document Trust Check
+  - Build a Contract
+  - Contract Review
+  - Redact Sensitive Info
+  - Ask This Document
+  - Clause Extractor
+  - Compare Versions
+- Confirm Digital Signature is not visible as a tool/card/nav item.
+- Confirm tool routes are correct.
+- Confirm recent work cards do not crash if values are missing/null.
+- Confirm empty dashboard states work if no recent work exists.
+
+3. Ask This Document
+- Confirm /ask-document works.
+- Confirm /ask-this-document works or redirects cleanly.
+- Confirm PDF upload shows the standard DocumentScanScreen loading animation.
+- Confirm PDF upload displays the actual PDF viewer if implemented, or document-style fallback if PDF preview fails.
+- Confirm DOCX/TXT/paste text displays readable document text.
+- Confirm Ask PlainPath chat works after upload.
+- Confirm chat sends Clerk Bearer token correctly.
+- Confirm /api/documents/chat rejects missing auth with clean JSON 401.
+- Confirm no raw HTML/JSON parse errors.
+- Confirm user stays on /ask-document.
+- Confirm errors preserve uploaded document and chat state.
+
+4. Analyze a Document
+- Confirm upload/paste/sample flow works.
+- Confirm all 11 tabs remain:
+  - Plain English
+  - Source Sections
+  - Overview
+  - What’s Missing
+  - Checklist
+  - Required Docs
+  - Deadlines
+  - Risks & Notes
+  - Key Terms
+  - Action Pack
+  - Ask This Document
+- Confirm Action Pack opens and shows action steps.
+- Confirm Action Pack count badge works.
+- Confirm action status cycling works without crashing.
+- Confirm Ask This Document tab inside Analyze still works after DocumentChat auth changes.
+- Confirm Save and Export buttons still exist.
+
+5. Redact Sensitive Info
+- Confirm upload flow works.
+- Confirm detected items render.
+- Confirm selection state is visually clear.
+- Confirm export failure does not reset uploaded file, selected spans, or preview state.
+- Confirm PDF export button still exists.
+- Confirm no background flashing/regression caused by recent changes.
+- Confirm Digital Signature / Send for Signature language is removed.
+
+6. Other core tools
+Verify no obvious broken route, null crash, or blank page in:
+- Document Trust Check
+- Contract Review
+- Clause Extractor
+- Compare Versions
+- Build a Contract
+
+For each:
+- Route loads.
+- Upload/input screen loads.
+- Standard header/shell appears.
+- Processing/loading state does not crash.
+- Result state does not crash with missing/null fields.
+- Source chips/cards do not crash if source data is missing.
+- Empty/error states are readable.
+
+7. Null / undefined / runtime safety scan
+Search for risky access patterns in recently touched files and core tool files:
+- .map on possibly undefined arrays
+- .length on possibly undefined values
+- object.property access without fallback where API data may be missing
+- JSON parsing before response.ok/content-type checks
+- missing optional chaining
+- missing fallback values for title, fileName, sections, analysis, messages, source chips, action steps
+- button handlers referencing undefined state
+
+Fix only obvious user-facing crash risks.
+
+8. API / auth
+- Confirm /api/documents/chat is protected.
+- Confirm auth accepts valid Clerk Bearer token.
+- Confirm missing/invalid auth returns clean JSON 401.
+- Confirm no API endpoint returns raw HTML where frontend expects JSON.
+- Confirm upload/analyze endpoints still return expected shape.
+- Confirm no public unauthenticated document-chat endpoint remains.
+
+9. Database / migrations
+- Do not run migrations.
+- Do not create migrations.
+- Do not alter schema.
+- Confirm current pending migration warnings are only known orphaned-table warnings from prior rollback.
+- Confirm this pass introduces no new migration files.
+
+10. TypeScript / build
+- Run TypeScript/build checks.
+- Separate pre-existing TypeScript errors from new errors.
+- Confirm no new TypeScript/runtime errors were introduced by recent fixes.
+- Confirm both app and marketing Vite workflows run.
+
+Return only this report:
+
+A. Overall pass/fail
+B. True blockers found
+C. Bugs/null risks found
+D. Files changed, if any
+E. Confirmation no DB/migration/Stripe changes
+F. Confirmation Ask This Document works or exact remaining issue
+G. Confirmation Before You Go modal dismissal works
+H. Pre-existing issues that should not block publish
+I. Safe to publish: Yes/No
