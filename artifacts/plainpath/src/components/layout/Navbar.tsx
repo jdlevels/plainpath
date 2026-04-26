@@ -41,6 +41,7 @@ const TOOL_NAV = [
   { label: "Ask This Document",      href: "/ask-document",            icon: MessageCircle },
   { label: "Clause Extractor",       href: "/clause-extractor",        icon: ListChecks    },
   { label: "Compare Versions",      href: "/compare-versions",        icon: GitCompare    },
+  ...(BUILDER_ENABLED ? [{ label: "Document Builder", href: "/builder", icon: LayoutTemplate }] : []),
 ]
 
 function UserMenu() {
@@ -150,7 +151,6 @@ export function Navbar() {
   const isResults = location.startsWith("/results")
   const isMyAnalyses = location === "/my-analyses"
   const isDocuments = location === "/documents"
-  const isBuilder = location.startsWith("/builder")
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -164,6 +164,7 @@ export function Navbar() {
 
   function isToolActive(href: string) {
     if (href === "/analyze") return location === "/analyze" || location === "/import" || location === "/results" || location.startsWith("/results")
+    if (href === "/builder") return location.startsWith("/builder")
     return location === href
   }
 
@@ -213,21 +214,6 @@ export function Navbar() {
                 </div>
             )}
           </div>
-
-            {/* Document Builder */}
-          {BUILDER_ENABLED && (
-            <Link
-              href="/builder"
-              className={`flex items-center gap-1.5 text-sm font-medium transition-colors px-2.5 py-1.5 rounded-lg ${
-                isBuilder
-                  ? "text-primary bg-primary/8"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-              }`}
-            >
-              <LayoutTemplate className="w-3.5 h-3.5" />
-              Document Builder
-            </Link>
-          )}
 
           {/* My Documents */}
           <Link
@@ -322,17 +308,6 @@ export function Navbar() {
               </button>
             ))}
             <div className="border-t border-border/30 mt-2 pt-2">
-              {BUILDER_ENABLED && (
-                <button
-                  onClick={() => navigate("/builder")}
-                  className={`w-full flex items-center gap-2.5 px-2.5 py-2 text-sm rounded-lg transition-colors text-left ${
-                    isBuilder ? "text-primary bg-primary/8 font-medium" : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-                  }`}
-                >
-                  <LayoutTemplate className="w-4 h-4 shrink-0" />
-                  Document Builder
-                </button>
-              )}
               <button
                 onClick={() => navigate("/documents")}
                 className={`w-full flex items-center gap-2.5 px-2.5 py-2 text-sm rounded-lg transition-colors text-left ${

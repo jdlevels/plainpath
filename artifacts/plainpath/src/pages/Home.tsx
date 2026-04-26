@@ -32,7 +32,7 @@ type RecentItem =
 
 // ─── Tool definitions ─────────────────────────────────────────────────────────
 
-// First-class 8 tools — canonical order and routes
+// First-class tools — canonical order and routes (9 when Document Builder is enabled)
 const TOOLS = [
   {
     key: "analyze" as const,
@@ -122,6 +122,17 @@ const TOOLS = [
     ring: "hover:border-teal-400/50 hover:shadow-teal-500/10",
     plan: "pro" as const,
   },
+  ...(BUILDER_ENABLED ? [{
+    key: "builder" as const,
+    label: "Document Builder",
+    desc: "Create SOPs, manuals, policies, onboarding guides, checklists, and internal business documents.",
+    icon: LayoutTemplate,
+    path: "/builder",
+    color: "text-cyan-500 dark:text-cyan-400",
+    bg: "bg-cyan-50 dark:bg-cyan-950/50",
+    ring: "hover:border-cyan-400/50 hover:shadow-cyan-500/10",
+    plan: "pro" as const,
+  }] : []),
 ]
 
 // ─── Demo scenarios ───────────────────────────────────────────────────────────
@@ -410,30 +421,6 @@ export default function Home() {
             })}
           </div>
 
-          {/* Document Builder — separate utility workspace (not a first-class analysis tool) */}
-          {BUILDER_ENABLED && (
-            <div className="mt-6 pt-5 border-t border-border/40">
-              <div className="flex items-center gap-2 mb-3">
-                <LayoutTemplate className="w-3.5 h-3.5 text-muted-foreground" />
-                <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Workspace</span>
-              </div>
-              <Card
-                className="group border border-border/50 bg-card rounded-2xl cursor-pointer hover:border-indigo-400/50 hover:shadow-md hover:shadow-indigo-500/10 transition-all"
-                onClick={() => setLocation("/builder")}
-              >
-                <div className="p-4 flex items-center gap-4">
-                  <div className="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center shrink-0">
-                    <LayoutTemplate className="w-4.5 h-4.5 text-indigo-500 dark:text-indigo-400" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-foreground text-sm">Document Builder</h3>
-                    <p className="text-xs text-muted-foreground leading-relaxed">Create structured documents from scratch or a template, then route them into any PlainPath tool.</p>
-                  </div>
-                  <ArrowRight className="w-4 h-4 text-indigo-400 opacity-0 group-hover:opacity-100 transition-all shrink-0" />
-                </div>
-              </Card>
-            </div>
-          )}
         </section>
 
         {/* ══════════════════════════════════════════════
@@ -669,7 +656,7 @@ export default function Home() {
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">Your Plan</p>
                   <p className="font-bold text-foreground">
-                    {isAdmin ? "Admin — Full Access" : plan === "pro" ? "Pro — All 8 tools" : plan === "starter" ? "Starter — Analyze + Redact" : "Free"}
+                    {isAdmin ? "Admin — Full Access" : plan === "pro" ? `Pro — All ${BUILDER_ENABLED ? "9" : "8"} tools` : plan === "starter" ? "Starter — Analyze + Redact" : "Free"}
                   </p>
                   {!plan && !isAdmin && (
                     <p className="text-xs text-muted-foreground mt-0.5">2 free analyses included</p>
