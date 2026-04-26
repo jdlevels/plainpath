@@ -1,0 +1,99 @@
+Fix Ask This Document ready-state rendering and chat response only.
+
+Current live issue:
+On /ask-document:
+
+1. Uploading a PDF now shows the correct standard DocumentScanScreen loading animation.
+2. After processing completes, the ready page loads but the document/PDF/text viewer is blank.
+3. The chat input appears, but when the user asks a question, no answer is displayed.
+
+Scope:
+Only fix AskDocument.tsx unless a tiny prop compatibility fix is required in DocumentChat or the local document viewer helper inside AskDocument.tsx.
+
+Do not redesign.
+Do not touch Analyze Action Pack.
+Do not touch Analyze.tsx.
+Do not touch other tools.
+Do not touch database, migrations, Stripe/payment, auth, or global routing.
+Do not change DocumentScanScreen unless absolutely required.
+
+Required diagnosis:
+1. Inspect AskDocument.tsx ready phase.
+2. Confirm what data is returned by:
+   - /api/documents/upload for file upload
+   - /api/documents/analyze for pasted text
+3. Confirm the actual response shape:
+   - Does it return { analysis }?
+   - Does analysis.sections exist?
+   - Does analysis.plainEnglish exist?
+   - Does analysis.summary exist?
+   - Is extracted text stored under another field?
+4. Confirm what DocumentViewer inside AskDocument expects.
+5. Confirm what DocumentChat requires as props/context to produce an answer.
+6. Identify whether the chat is failing because:
+   - no analysis/document context is being passed,
+   - wrong prop name,
+   - wrong analysis object shape,
+   - missing documentId/sessionId,
+   - chat endpoint returns data but UI does not render it,
+   - or response parsing is failing silently.
+
+Required fix A — Document viewer:
+After upload/paste succeeds, the left panel must show readable document context.
+
+Use this fallback order:
+1. analysis.sections, if present
+2. analysis.sourceSections, if present
+3. analysis.extractedText, text, documentText, fullText, or rawText if present
+4. analysis.plainEnglish fields if no section text exists
+5. analysis.summary as final fallback
+6. If truly no readable text exists, show:
+   "No readable text was extracted from this document. Try another PDF, DOCX, or paste the text manually."
+
+The left panel must not be blank when analysis data exists.
+
+Required fix B — DocumentChat:
+Make DocumentChat receive the exact document/analysis context it needs to answer questions on /ask-document.
+
+The user must be able to ask:
+"What does this document require me to do next?"
+
+Expected behavior:
+- A response appears in the chat
+- User stays on /ask-document
+- No redirect to Analyze
+- No silent failure
+- If the backend fails, show a visible plain-English error message in the chat area
+
+Required fix C — Debug-safe error handling:
+Add temporary console/error logging only if needed, but do not expose raw API errors to users.
+User-facing error should be plain:
+"PlainPath could not answer that question. Please try again or paste the document text manually."
+
+Required fix D — Layout:
+Keep the existing two-panel layout:
+- Left: document viewer/context
+- Right: DocumentChat
+Do not redesign the visual style.
+
+Verification:
+1. Upload a PDF on /ask-document.
+2. Loading animation appears.
+3. Ready state shows document text/context on the left.
+4. Ask: "What does this document require me to do next?"
+5. Chat answer appears on the right.
+6. Paste text path also shows document context and chat answer.
+7. /ask-this-document still opens same page or cleanly redirects.
+8. Analyze Action Pack unchanged.
+9. No other tools changed.
+10. No new TypeScript/runtime errors introduced.
+
+Return only:
+A. Root cause
+B. Files changed
+C. Exact data shape used from upload/analyze response
+D. Document viewer fix
+E. DocumentChat fix
+F. Upload test result
+G. Paste test result
+H. Whether safe to publish

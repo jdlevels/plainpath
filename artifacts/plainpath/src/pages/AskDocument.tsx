@@ -23,22 +23,45 @@ const EXAMPLE_QUESTIONS = [
 type Phase = "upload" | "paste" | "processing" | "ready"
 type MobileTab = "document" | "ask"
 
-function DocumentViewer({ analysis, fileName }: { analysis: DocumentAnalysis; fileName: string | null }) {
+const PE_FIELDS: { key: string; label: string }[] = [
+  { key: "whatItIs",       label: "What it is" },
+  { key: "whatItSays",     label: "What it says" },
+  { key: "whatItAsks",     label: "What it asks of you" },
+  { key: "obligations",    label: "Your obligations" },
+  { key: "payAttentionTo", label: "Pay attention to" },
+  { key: "nextSteps",      label: "Next steps" },
+]
+
+function DocumentViewer({
+  analysis,
+  fileName,
+  rawText,
+}: {
+  analysis: DocumentAnalysis
+  fileName: string | null
+  rawText?: string
+}) {
   const sections = (analysis.sections ?? []) as Array<{ id: string; title?: string; content: string }>
   const plainEnglish = analysis.plainEnglish as Record<string, string> | undefined
 
-  const hasSections = sections.length > 0
-  const hasPlainEnglish =
-    !!plainEnglish && Object.values(plainEnglish).some((v) => typeof v === "string" && v.trim().length > 0)
+  // Filter to sections that have real content (not empty strings)
+  const validSections = sections.filter((s) => s.content?.trim().length > 0)
+  const hasSections = validSections.length > 0
 
-  const peFields: { key: string; label: string }[] = [
-    { key: "whatItIs",       label: "What it is" },
-    { key: "whatItSays",     label: "What it says" },
-    { key: "whatItAsks",     label: "What it asks of you" },
-    { key: "obligations",    label: "Your obligations" },
-    { key: "payAttentionTo", label: "Pay attention to" },
-    { key: "nextSteps",      label: "Next steps" },
-  ]
+  const hasRawText = (rawText ?? "").trim().length > 0
+
+  const hasPlainEnglish =
+    !!plainEnglish &&
+    Object.values(plainEnglish).some((v) => typeof v === "string" && v.trim().length > 0)
+
+  const hasSummary = (analysis.summary ?? "").trim().length > 0
+
+  // Determine what to render
+  const showSections = hasSections
+  const showRawText = !hasSections && hasRawText
+  const showPlainEnglish = !hasSections && !hasRawText && hasPlainEnglish
+  const showSummary = !hasSections && !hasRawText && !hasPlainEnglish && hasSummary
+  const showEmpty = !hasSections && !hasRawText && !hasPlainEnglish && !hasSummary
 
   return (
     <div className="p-4 sm:p-6 space-y-5">
@@ -57,12 +80,12 @@ function DocumentViewer({ analysis, fileName }: { analysis: DocumentAnalysis; fi
         </div>
       </div>
 
-      {/* Sections (extracted text) */}
-      {hasSections && (
+      {/* Sections from extracted text */}
+      {showSections && (
         <div className="space-y-5">
-          {sections.map((section) => (
+          {validSections.map((section) => (
             <div key={section.id} className="space-y-1.5">
-              {section.title && (
+              {section.title?.trim() && (
                 <h3 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/70">
                   {section.title}
                 </h3>
@@ -75,24 +98,34 @@ function DocumentViewer({ analysis, fileName }: { analysis: DocumentAnalysis; fi
         </div>
       )}
 
-      {/* Fallback: plain-English breakdown */}
-      {!hasSections && hasPlainEnglish && plainEnglish && (
-        <div className="space-y-5">
-          {peFields
-            .filter(({ key }) => plainEnglish[key]?.trim())
-            .map(({ key, label }) => (
-              <div key={key} className="space-y-1.5">
-                <h3 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/70">
-                  {label}
-                </h3>
-                <p className="text-sm text-foreground/85 leading-relaxed">{plainEnglish[key]}</p>
-              </div>
-            ))}
+      {/* Fallback 1: raw pasted text */}
+      {showRawText && (
+        <div className="space-y-1.5">
+          <h3 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/70">
+            Document text
+          </h3>
+          <p className="text-sm text-foreground/85 leading-relaxed whitespace-pre-wrap">
+            {rawText}
+          </p>
         </div>
       )}
 
-      {/* Fallback: summary only */}
-      {!hasSections && !hasPlainEnglish && analysis.summary && (
+      {/* Fallback 2: plain-English breakdown */}
+      {showPlainEnglish && plainEnglish && (
+        <div className="space-y-5">
+          {PE_FIELDS.filter(({ key }) => plainEnglish[key]?.trim()).map(({ key, label }) => (
+            <div key={key} className="space-y-1.5">
+              <h3 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/70">
+                {label}
+              </h3>
+              <p className="text-sm text-foreground/85 leading-relaxed">{plainEnglish[key]}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Fallback 3: summary */}
+      {showSummary && (
         <div className="space-y-1.5">
           <h3 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/70">
             Summary
@@ -102,11 +135,11 @@ function DocumentViewer({ analysis, fileName }: { analysis: DocumentAnalysis; fi
       )}
 
       {/* Empty state */}
-      {!hasSections && !hasPlainEnglish && !analysis.summary && (
+      {showEmpty && (
         <div className="rounded-xl border border-border/40 bg-muted/20 px-5 py-10 text-center">
           <p className="text-sm text-muted-foreground">
-            No readable text was extracted from this document. Try another file or paste the text
-            manually.
+            No readable text was extracted from this document. Try another PDF, DOCX, or paste the
+            text manually.
           </p>
         </div>
       )}
@@ -120,6 +153,7 @@ export default function AskDocument() {
   const [mobileTab, setMobileTab] = useState<MobileTab>("ask")
   const [fileName, setFileName] = useState<string | null>(null)
   const [text, setText] = useState("")
+  const [rawText, setRawText] = useState<string | undefined>(undefined)
   const [analysis, setAnalysis] = useState<DocumentAnalysis | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState(false)
@@ -165,6 +199,7 @@ export default function AskDocument() {
       return
     }
     setFileName("Pasted text")
+    setRawText(trimmed)
     setError(null)
     setPhase("processing")
     try {
@@ -203,6 +238,7 @@ export default function AskDocument() {
     setPhase("upload")
     setFileName(null)
     setText("")
+    setRawText(undefined)
     setAnalysis(null)
     setError(null)
     setMobileTab("ask")
@@ -210,7 +246,7 @@ export default function AskDocument() {
 
   return (
     <WorkspaceShell>
-      <div className="min-h-screen flex flex-col">
+      <div className="h-screen flex flex-col">
 
         {/* ── Header ─────────────────────────────────── */}
         <div className="border-b border-border bg-background/95 backdrop-blur-sm sticky top-0 z-10 px-4 py-3 flex items-center gap-3">
@@ -414,7 +450,7 @@ export default function AskDocument() {
                 <div className="md:hidden flex-1 min-h-0 overflow-hidden">
                   {mobileTab === "document" ? (
                     <div className="h-full overflow-y-auto">
-                      <DocumentViewer analysis={analysis} fileName={fileName} />
+                      <DocumentViewer analysis={analysis} fileName={fileName} rawText={rawText} />
                     </div>
                   ) : (
                     <div className="h-full overflow-hidden">
@@ -426,9 +462,9 @@ export default function AskDocument() {
                 {/* Desktop two-column */}
                 <div className="hidden md:flex flex-1 min-h-0">
                   <div className="w-[58%] overflow-y-auto border-r border-border/40">
-                    <DocumentViewer analysis={analysis} fileName={fileName} />
+                    <DocumentViewer analysis={analysis} fileName={fileName} rawText={rawText} />
                   </div>
-                  <div className="w-[42%] overflow-hidden">
+                  <div className="w-[42%] overflow-y-auto">
                     <DocumentChat analysis={analysis} />
                   </div>
                 </div>
