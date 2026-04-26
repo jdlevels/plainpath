@@ -97,7 +97,7 @@ const TOOLS = [
   { label: "Build a Contract",      icon: PenLine,        cls: "tool-btn-emerald", href: "/app/build-contract",          comingSoon: false },
   { label: "Contract Review",       icon: Scale,          cls: "tool-btn-amber",   href: "/app/contract-review",         comingSoon: false },
   { label: "Redact Sensitive Info", icon: EyeOff,         cls: "tool-btn-violet",  href: "/app/redact",                  comingSoon: false },
-  { label: "Ask This Document",      icon: MessageCircle,  cls: "tool-btn-indigo",  href: "/app/analyze",                 comingSoon: false },
+  { label: "Ask This Document",      icon: MessageCircle,  cls: "tool-btn-indigo",  href: "/app/ask-document",            comingSoon: false },
   { label: "Clause Extractor",       icon: ListChecks,     cls: "tool-btn-fuchsia", href: "/app/clause-extractor",        comingSoon: false },
   { label: "Compare Versions",      icon: GitCompare,     cls: "tool-btn-sky",     href: "/app/compare-versions",        comingSoon: false },
 ];

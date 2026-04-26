@@ -1,0 +1,79 @@
+Run a focused post-rollback QA pass only. Do not redesign, do not refactor broadly, and do not change database, Stripe, payment gates, or layout architecture.
+
+Goal:
+Confirm the app is stable after rollback, Digital Signature removal, Ask This Document restoration, and the document_overview_sessions schema ownership fix.
+
+Check these items:
+
+1. Homepage / marketing
+- Confirm Digital Signature is removed from the homepage, hero buttons, feature cards, pricing copy, FAQ, and tool lists.
+- Confirm Ask This Document appears as an active tool.
+- Confirm homepage says 8 tools only if there are exactly 8 user-facing tools.
+- Confirm App Store / Google Play buttons are either clearly “coming soon” or not misleadingly active.
+
+2. Authenticated dashboard
+- Confirm all 8 tools appear:
+  Analyze a Document
+  Document Trust Check
+  Build a Contract
+  Contract Review
+  Redact Sensitive Info
+  Ask This Document
+  Clause Extractor
+  Compare Versions
+- Confirm each card routes to the correct page.
+- Confirm Ask This Document routes to /ask-document or /ask-this-document, not /analyze.
+- Confirm Digital Signature does not appear as a card, nav item, or CTA.
+
+3. Ask This Document standalone
+- Confirm /ask-document and /ask-this-document both work or one cleanly redirects to the canonical route.
+- Confirm upload/paste flow works.
+- Confirm the DocumentChat component loads on the same page.
+- Confirm example questions are visible.
+- Confirm no database changes are required.
+
+4. Analyze a Document
+- Confirm upload/paste/sample document flow works.
+- Confirm the completed result still includes:
+  Plain English
+  Source Sections
+  Overview
+  What’s Missing
+  Checklist
+  Required Docs
+  Deadlines
+  Risks & Notes
+  Key Terms
+  Action Pack
+  Ask This Document
+- Confirm Action Pack gives step-by-step required actions.
+- Confirm the Ask This Document tab still works as a follow-up inside Analyze.
+- Confirm Save and Export buttons are present.
+
+5. Redact Sensitive Info
+- Confirm page opens.
+- Confirm PDF preview loads.
+- Confirm detected items appear in the right panel.
+- Confirm checking/selecting items enables the redaction/export button.
+- Confirm selected items visibly update on the document preview.
+- Confirm Export Redacted PDF still downloads a PDF.
+- Confirm the page does not reset on export failure.
+
+6. Database / migrations
+- Confirm no destructive database migration is pending.
+- Confirm document_overview_sessions is now schema-owned.
+- Confirm no DROP, ALTER, DELETE, or destructive migration is pending.
+- Confirm Ask This Document did not introduce a database migration.
+- Confirm Digital Signature cleanup did not introduce a database migration.
+
+7. Build/runtime
+- Confirm Vite starts cleanly.
+- Confirm no new TypeScript errors were introduced by the latest cleanup.
+- Confirm any remaining errors are pre-existing and unrelated.
+- Confirm app can be published safely.
+
+Return a concise report with:
+A. Pass/fail for each section
+B. Any blocking issues
+C. Any small copy/UI fixes recommended
+D. Whether it is safe to publish
