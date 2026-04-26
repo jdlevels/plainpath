@@ -20,7 +20,7 @@ import {
   ArrowRight, Upload, Sparkles, Scale,
   AlertTriangle, CheckCircle2, Clock, Lock, X as XIcon, EyeOff,
   CalendarX, Eye, PenLine, FileScan, ListChecks, GitCompare,
-  DollarSign, Copy, Users, ChevronDown,
+  DollarSign, Copy, Users, ChevronDown, Star,
 } from "lucide-react";
 
 /* ─── Animation helpers ──────────────────────────────────── */
@@ -857,10 +857,16 @@ export default function Home() {
             <motion.div initial="hidden" animate="visible" className="pb-16 md:pb-24">
               <motion.div
                 custom={0} variants={fadeUp}
-                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/25 shadow-sm text-xs font-semibold text-primary tracking-wide uppercase mb-5"
+                className="flex flex-wrap items-center gap-2.5 mb-5"
               >
-                <span className="flex h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                Web app — iOS &amp; Android coming soon
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/25 shadow-sm text-xs font-semibold text-primary tracking-wide uppercase">
+                  <span className="flex h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                  Web app — iOS &amp; Android coming soon
+                </div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-50 dark:bg-red-950/20 border border-red-200/60 dark:border-red-800/50 shadow-sm text-xs font-semibold text-red-700 dark:text-red-400">
+                  <Star className="w-3 h-3 text-amber-500" style={{ fill: "currentColor", color: "#f59e0b" }} />
+                  Veteran-Owned Business
+                </div>
               </motion.div>
 
               <motion.h1

@@ -1,3 +1,5 @@
+import { Star } from "lucide-react"
+
 const FooterLogo = () => (
   <div className="flex items-center gap-2.5 mb-4">
     {/* Transparent icon mark — works on both light and dark footer surfaces */}
@@ -36,6 +38,11 @@ export function Footer() {
             >
               support@plainpathapp.com
             </a>
+
+            <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-red-200/70 dark:border-red-800/50 bg-red-50/80 dark:bg-red-950/20">
+              <Star className="w-3.5 h-3.5 text-amber-500" style={{ fill: "#f59e0b" }} />
+              <span className="text-xs font-semibold text-red-700 dark:text-red-400">Veteran-Owned Business</span>
+            </div>
           </div>
 
           {/* Product */}
