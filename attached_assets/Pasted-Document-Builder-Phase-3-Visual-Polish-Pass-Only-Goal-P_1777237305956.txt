@@ -1,0 +1,119 @@
+Document Builder Phase 3 Visual Polish Pass Only
+
+Goal:
+Polish the existing Document Builder branding/style workspace so it feels premium and consistent with the rest of PlainPath.
+
+Do not add new features.
+Do not wire real AI.
+Do not add database fields.
+Do not add migrations.
+Do not add object storage.
+Do not touch API/auth/Stripe/marketing.
+Do not touch Build a Contract or the other 8 tools.
+
+Scope:
+Document Builder only.
+
+Allowed files:
+- pages/Builder/Workspace.tsx
+- components/builder/BuilderPagePreview.tsx
+- components/builder/StylePanel.tsx
+- builder-only CSS/classes if applicable
+
+Polish requirements:
+
+1. Preview stage sizing
+- Keep the left white page preview.
+- Center the page better inside the dark stage.
+- Reduce excessive unused dark space where practical.
+- Keep the document page readable.
+- Do not make the page huge like the PDF viewer tools.
+- Add or preserve controlled max-width behavior.
+
+2. Selected block styling
+- The selected block should look like a selected document block, not a heavy form underline.
+- Replace the heavy full-width blue line with:
+  - subtle blue outline/ring around selected block
+  - light blue background tint if useful
+  - small selected handle/indicator only if easy
+- Keep click-to-select behavior.
+
+3. Right panel width/readability
+- Constrain form content width inside the right panel so inputs do not stretch across the entire screen.
+- Use a max-width content column, for example 860–980px, aligned left inside the panel.
+- Keep tabs visible at top.
+- Avoid giant empty horizontal control fields.
+
+4. Style tab grouping
+Group the Style tab into clear compact cards:
+- Company identity
+- Logo
+- Brand color
+- Header style
+- Footer
+- Watermark
+
+Each group should have:
+- clear title
+- small helper text
+- compact spacing
+- consistent border/background
+- no excessive vertical gaps
+
+5. Logo status clarity
+Because persistent logo storage is not implemented yet:
+- Label logo upload as preview-only.
+- Show:
+  “Logo preview only — persistent logo storage coming soon.”
+- If upload preview works locally, keep it.
+- If upload persistence is not implemented, do not imply it saves permanently.
+
+6. Header/footer preview clarity
+- Company name, department, footer text, page number, confidential badge, and revision/date line should all be visibly reflected in the preview.
+- Keep preview readable and clean.
+- Brand color should accent headings/dividers only, not overpower the document.
+
+7. Export tab check
+- Confirm .txt export still works.
+- PDF/DOCX remain clearly labeled Coming Soon unless truly implemented.
+- Do not add PDF/DOCX generation.
+
+8. Stability
+- All buttons type="button"
+- No draft reset on tab switch
+- No runtime crash
+- No blank screen
+- No new TypeScript errors in changed files
+- Existing drafts still open
+- Phase 2 template/guided question flow still works
+- Build a Contract unchanged
+- Other 8 tools unchanged
+
+Verification:
+1. Open Document Builder workspace.
+2. Click a block in the preview.
+3. Confirm selected block styling is subtle and premium.
+4. Open Style tab.
+5. Confirm grouped cards are clean and compact.
+6. Enter company name and department.
+7. Confirm preview updates.
+8. Change brand color.
+9. Confirm preview updates without becoming visually loud.
+10. Toggle Confidential, page number, revision/date line.
+11. Confirm preview updates.
+12. Check Export tab.
+13. Save, refresh, confirm no reset.
+14. Confirm no DB/auth/API/Stripe/migration/marketing changes.
+15. Confirm Build a Contract and other 8 tools unchanged.
+
+Return only:
+A. Files changed
+B. Preview polish result
+C. Selected block styling result
+D. Style tab grouping result
+E. Logo preview/status result
+F. Export tab result
+G. Save/refresh result
+H. Build a Contract unchanged confirmation
+I. Other 8 tools unchanged confirmation
+J. Safe checkpoint: Yes/No

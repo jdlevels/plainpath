@@ -472,6 +472,7 @@ export default function Workspace({ docId }: WorkspaceProps) {
       <div className="sticky top-16 z-20 border-b border-border/70 bg-background/98 backdrop-blur-sm shadow-sm">
         <div className="px-4 py-2.5 flex items-center gap-3">
           <button
+            type="button"
             onClick={() => navigate("/builder")}
             className="shrink-0 p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
             title="Back to documents"
@@ -516,7 +517,7 @@ export default function Workspace({ docId }: WorkspaceProps) {
               </span>
             )}
 
-            <button onClick={() => setShowArchiveConfirm(true)} title="Archive document" className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors">
+            <button type="button" onClick={() => setShowArchiveConfirm(true)} title="Archive document" className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors">
               <Archive className="w-4 h-4" />
             </button>
           </div>
@@ -527,11 +528,11 @@ export default function Workspace({ docId }: WorkspaceProps) {
       <div className="flex" style={{ height: "calc(100vh - 7.5rem)" }}>
 
         {/* LEFT: white page preview */}
-        <div className="hidden lg:block w-[58%] shrink-0 overflow-y-auto bg-neutral-100 dark:bg-zinc-900/70 border-r border-border">
-          <div className="py-10 px-8 flex justify-center min-h-full">
+        <div className="hidden lg:block w-[58%] shrink-0 overflow-y-auto bg-neutral-200/60 dark:bg-zinc-900/80 border-r border-border">
+          <div className="py-6 px-5 flex justify-center min-h-full">
             <div
-              className="w-full max-w-[720px] bg-white rounded-[2px] shadow-md"
-              style={{ minHeight: "932px", padding: "72px 64px 96px" }}
+              className="w-full max-w-[700px] bg-white rounded-sm shadow-[0_4px_24px_rgba(0,0,0,0.10)]"
+              style={{ minHeight: "900px", padding: "64px 60px 88px" }}
             >
               <BuilderPagePreview
                 content={content}
@@ -551,6 +552,7 @@ export default function Workspace({ docId }: WorkspaceProps) {
             {TABS.map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
+                type="button"
                 onClick={() => setActiveTab(id)}
                 className={`flex items-center gap-1.5 px-3 py-2.5 text-xs font-medium transition-colors border-b-2 -mb-px ${
                   activeTab === id
@@ -616,6 +618,7 @@ export default function Workspace({ docId }: WorkspaceProps) {
                       onDelete={() => { deleteBlock(selectedSectionId!, selectedBlockId!); }}
                     />
                     <button
+                      type="button"
                       onClick={() => { setSelectedBlockId(null); setSelectedSectionId(null); }}
                       className="text-xs text-muted-foreground hover:text-foreground underline transition-colors"
                     >
@@ -649,10 +652,10 @@ export default function Workspace({ docId }: WorkspaceProps) {
               The document will be removed from your active list. This cannot be undone in this version.
             </p>
             <div className="flex gap-2 justify-end">
-              <button onClick={() => setShowArchiveConfirm(false)} className="px-4 py-2 text-sm rounded-lg border border-border text-muted-foreground hover:text-foreground transition-colors">
+              <button type="button" onClick={() => setShowArchiveConfirm(false)} className="px-4 py-2 text-sm rounded-lg border border-border text-muted-foreground hover:text-foreground transition-colors">
                 Cancel
               </button>
-              <button onClick={handleArchive} className="px-4 py-2 text-sm rounded-lg bg-destructive text-destructive-foreground font-medium hover:bg-destructive/90 transition-colors">
+              <button type="button" onClick={handleArchive} className="px-4 py-2 text-sm rounded-lg bg-destructive text-destructive-foreground font-medium hover:bg-destructive/90 transition-colors">
                 Archive
               </button>
             </div>

@@ -163,7 +163,8 @@ export function StylePanel({ branding, onChange }: Props) {
         </p>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
+      <div className="flex-1 overflow-y-auto px-4 py-4">
+      <div className="max-w-[600px] space-y-5">
 
         {/* A. Company Identity */}
         <div>
@@ -423,6 +424,7 @@ export function StylePanel({ branding, onChange }: Props) {
             Company identity, color, and footer settings are saved with the document. Logo is preview-only and is not stored between sessions. Branded PDF/DOCX export is coming soon.
           </p>
         </div>
+      </div>
       </div>
     </div>
   );

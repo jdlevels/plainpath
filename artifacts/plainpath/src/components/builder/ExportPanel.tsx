@@ -17,6 +17,7 @@ export function ExportPanel({ onDownloadTxt, documentTitle }: Props) {
 
       <div className="px-4 py-4 space-y-3">
         <button
+          type="button"
           onClick={onDownloadTxt}
           className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl border border-border bg-card hover:border-foreground/30 hover:bg-secondary transition-colors text-left"
         >
