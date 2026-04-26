@@ -1,0 +1,126 @@
+Ask This Document — Minor UX + Stability Fixes Only
+
+Current live state:
+Ask This Document is now loading PDFs correctly and chat answers are working. The PDF viewer looks much better.
+
+Remaining issues:
+
+1. Chat message layout:
+When the user asks a question, the user question appears near the top/right but the answer does not feel clearly grouped. The chat should show a clear conversation flow:
+- User question in its own message bubble/box
+- AI answer below it in its own bordered answer box/card
+- Both should remain visible in the chat panel
+- The newest answer should be easy to read and visually separated
+
+2. Source/highlight behavior:
+When AI answers a question about the document, it should try to help the user locate the supporting section in the PDF/document viewer.
+Expected behavior:
+- If the answer references a document section, clause, paragraph, or extracted source, highlight or focus the matching location in the left document panel.
+- For PDF uploads, if exact PDF text-coordinate highlighting is already available from the existing PDF viewer, use it.
+- If exact coordinate highlighting is not available, implement a practical fallback:
+  - identify the best matching extracted section/text snippet
+  - scroll the left panel to that section/page if possible
+  - show a visible source banner or highlighted source card above/in the document viewer saying something like:
+    “Source used for this answer”
+  - do not fake precision if exact PDF coordinates are unavailable
+- If no source can be matched, show:
+  “No exact source location found for this answer.”
+
+3. Page reset / lost uploaded document:
+After the PDF was loaded for about 1 minute, the page flashed/reset and the uploaded document disappeared. User had to upload the document again.
+This must be fixed.
+Expected behavior:
+- Once a document is loaded, the Ask This Document workspace must not reset by itself.
+- Chat errors, token refreshes, API failures, timers, re-renders, or background effects must not clear:
+  - uploaded PDF file/object URL
+  - analysis object
+  - extracted text
+  - chat messages
+  - selected mobile tab
+  - ready phase
+- Only explicit user action should reset the workspace:
+  - back button
+  - remove/change document
+  - start over button
+  - new upload
+- If an error occurs, preserve the loaded document and show an inline error instead of resetting.
+
+Scope:
+Only fix Ask This Document and shared DocumentChat behavior if required.
+
+Allowed files:
+- artifacts/plainpath/src/pages/AskDocument.tsx
+- artifacts/plainpath/src/components/DocumentChat.tsx
+- If absolutely required, a small local PDF viewer prop/state adjustment
+
+Do not touch:
+- Analyze Action Pack
+- Analyze.tsx unless only DocumentChat compatibility requires it
+- Redact behavior
+- Contract Review
+- Trust Check
+- Clause Extractor
+- Compare Versions
+- Document Builder
+- Database
+- Migrations
+- Stripe/payment
+- Marketing
+- Global routing
+
+Required diagnosis:
+1. Inspect AskDocument.tsx for any reset(), setPhase("idle"), setAnalysis(null), setPdfFile(null), URL.revokeObjectURL, timeout, useEffect dependency, or cleanup that can run without explicit user action.
+2. Inspect DocumentChat.tsx for any error path, auth retry, initial suggestions fetch, or token failure that could trigger parent state reset or page reload.
+3. Inspect whether the “Start over” action is being triggered accidentally by a button default submit event.
+4. Confirm all buttons in the AskDocument workspace use type="button" unless intentionally submitting a form.
+5. Confirm object URL cleanup only runs on true file change/unmount, not normal re-render.
+
+Required fixes:
+A. Chat layout
+- Render user messages and AI responses as clear stacked chat bubbles/cards.
+- User bubble should be visually distinct.
+- AI answer should be in a bordered card/box.
+- Keep the input at the bottom.
+- Preserve existing auth and endpoint behavior.
+
+B. Source highlighting/focus
+- When an answer is returned, attempt to match answer/source text to the extracted sections.
+- Pass matched source information to the left viewer.
+- Highlight/focus the matched source if available.
+- For actual PDF viewer, use any available existing highlight mechanism if safe.
+- If no exact PDF highlight support exists, show the source banner/fallback without pretending it is exact.
+
+C. Prevent unexpected reset
+- Remove or guard any automatic reset path.
+- Preserve loaded document state across chat errors and token refresh failures.
+- Keep file/object URL alive while the same document is loaded.
+- Only reset on explicit user action.
+- Add controlled error display instead of clearing the workspace.
+
+Verification:
+1. Open /ask-document.
+2. Upload a PDF.
+3. Confirm PDF appears on the left.
+4. Ask: “What should I do about the high-risk items?”
+5. Confirm:
+   - user question appears in a clear bubble/box
+   - AI answer appears below in a bordered answer box/card
+   - matching document source is highlighted/focused or source fallback banner appears
+6. Leave the page idle for at least 90 seconds.
+7. Confirm the page does not flash/reset.
+8. Ask a second question.
+9. Confirm the document is still loaded and chat still works.
+10. Test paste text once.
+11. Confirm Analyze’s Ask This Document tab still works if DocumentChat was touched.
+12. Confirm no database/migration/Stripe/global route changes.
+13. Confirm no new TypeScript/runtime errors introduced.
+
+Return only:
+A. Root cause of chat layout issue
+B. Root cause of missing source focus/highlight
+C. Root cause of unexpected reset
+D. Files changed
+E. Fix summary
+F. 90-second idle verification result
+G. Chat verification result
+H. Whether safe to publish

@@ -9,6 +9,7 @@ import * as pdfjsLib from "pdfjs-dist"
 import { Button } from "@/components/ui/button"
 import { WorkspaceShell } from "@/components/WorkspaceShell"
 import { DocumentChat } from "@/components/DocumentChat"
+import type { SourceMatch } from "@/components/DocumentChat"
 import { DocumentScanScreen } from "@/components/DocumentScanScreen"
 import { getApiBaseUrl } from "@/lib/api"
 import type { DocumentAnalysis } from "@workspace/api-client-react"
@@ -21,6 +22,8 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
 
 const PDF_SCALE = 1.4
 const PDF_MAX_PAGES = 15
+
+type SectionItem = { id: string; title?: string; content: string }
 
 // ─── Read-only PDF viewer ─────────────────────────────────────────────────────
 function PdfReadViewer({ file, fallbackContent }: { file: File; fallbackContent: React.ReactNode }) {
@@ -103,7 +106,6 @@ function PdfReadViewer({ file, fallbackContent }: { file: File; fallbackContent:
           draggable={false}
         />
       ))}
-      {/* truncation note */}
       {pages.length === PDF_MAX_PAGES && (
         <p className="text-[10px] text-muted-foreground/50 text-center pt-1">
           Showing first {PDF_MAX_PAGES} pages
@@ -133,18 +135,57 @@ const PE_FIELDS: { key: string; label: string }[] = [
   { key: "nextSteps",      label: "Next steps" },
 ]
 
+// ─── Source banner ─────────────────────────────────────────────────────────────
+function SourceBanner({ sourceMatch }: { sourceMatch: SourceMatch | null | undefined }) {
+  if (sourceMatch === undefined) return null
+  return (
+    <div
+      className={`border-b border-border/30 px-5 py-3 ${
+        sourceMatch
+          ? "bg-indigo-50/70 dark:bg-indigo-950/25"
+          : "bg-muted/30"
+      }`}
+    >
+      {sourceMatch ? (
+        <div className="space-y-1">
+          <div className="flex items-center gap-1.5">
+            <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0" />
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+              Source used for this answer
+            </p>
+          </div>
+          {sourceMatch.title && (
+            <p className="text-xs font-medium text-foreground pl-3">{sourceMatch.title}</p>
+          )}
+          <p className="text-xs text-foreground/60 leading-relaxed pl-3 italic">
+            "{sourceMatch.snippet}"
+          </p>
+        </div>
+      ) : (
+        <p className="text-[11px] text-muted-foreground/70 italic">
+          No exact source location identified for this answer.
+        </p>
+      )}
+    </div>
+  )
+}
+
+// ─── Document viewer ───────────────────────────────────────────────────────────
 function DocumentViewer({
   analysis,
   fileName,
   rawText,
   pdfFile,
+  sourceMatch,
 }: {
   analysis: DocumentAnalysis
   fileName: string | null
   rawText?: string
   pdfFile?: File | null
+  sourceMatch?: SourceMatch | null
 }) {
-  const sections = (analysis.sections ?? []) as Array<{ id: string; title?: string; content: string }>
+  const sectionRefs = useRef<Map<string, HTMLElement>>(new Map())
+  const sections = (analysis.sections ?? []) as SectionItem[]
   const plainEnglish = analysis.plainEnglish as Record<string, string> | undefined
 
   const validSections = sections.filter((s) => s.content?.trim().length > 0)
@@ -161,21 +202,41 @@ function DocumentViewer({
   const showSummary = !hasSections && !hasRawText && !hasPlainEnglish && hasSummary
   const showEmpty = !hasSections && !hasRawText && !hasPlainEnglish && !hasSummary
 
-  // The extracted-text view — used directly for non-PDFs, and as fallback inside PdfReadViewer
+  // Scroll to highlighted section when sourceMatch changes (text view only)
+  useEffect(() => {
+    if (!sourceMatch?.id) return
+    const el = sectionRefs.current.get(sourceMatch.id)
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "nearest" })
+  }, [sourceMatch])
+
   const textContent = (
     <div className="space-y-5">
-      {showSections && validSections.map((section) => (
-        <div key={section.id} className="space-y-2">
-          {section.title?.trim() && (
-            <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
-              {section.title}
-            </h3>
-          )}
-          <p className="text-sm text-foreground/90 leading-[1.75] whitespace-pre-wrap">
-            {section.content}
-          </p>
-        </div>
-      ))}
+      {showSections && validSections.map((section) => {
+        const isHighlighted = sourceMatch?.id === section.id
+        return (
+          <div
+            key={section.id}
+            ref={(el) => {
+              if (el) sectionRefs.current.set(section.id, el)
+              else sectionRefs.current.delete(section.id)
+            }}
+            className={`space-y-2 transition-all duration-300 rounded-lg ${
+              isHighlighted
+                ? "bg-indigo-50/60 dark:bg-indigo-950/20 border border-indigo-200/60 dark:border-indigo-800/40 px-3 py-2 -mx-1"
+                : ""
+            }`}
+          >
+            {section.title?.trim() && (
+              <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                {section.title}
+              </h3>
+            )}
+            <p className="text-sm text-foreground/90 leading-[1.75] whitespace-pre-wrap">
+              {section.content}
+            </p>
+          </div>
+        )
+      })}
 
       {showRawText && (
         <div className="space-y-2">
@@ -186,14 +247,15 @@ function DocumentViewer({
         </div>
       )}
 
-      {showPlainEnglish && plainEnglish && PE_FIELDS.filter(({ key }) => plainEnglish[key]?.trim()).map(({ key, label }) => (
-        <div key={key} className="space-y-2">
-          <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
-            {label}
-          </h3>
-          <p className="text-sm text-foreground/90 leading-[1.75]">{plainEnglish[key]}</p>
-        </div>
-      ))}
+      {showPlainEnglish && plainEnglish &&
+        PE_FIELDS.filter(({ key }) => plainEnglish[key]?.trim()).map(({ key, label }) => (
+          <div key={key} className="space-y-2">
+            <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+              {label}
+            </h3>
+            <p className="text-sm text-foreground/90 leading-[1.75]">{plainEnglish[key]}</p>
+          </div>
+        ))}
 
       {showSummary && (
         <div className="space-y-2">
@@ -237,6 +299,9 @@ function DocumentViewer({
           </div>
         </div>
 
+        {/* Source banner — shown after any AI answer */}
+        <SourceBanner sourceMatch={sourceMatch} />
+
         {/* Body */}
         <div className="px-4 sm:px-6 py-5">
           {pdfFile ? (
@@ -251,6 +316,7 @@ function DocumentViewer({
   )
 }
 
+// ─── Main page ─────────────────────────────────────────────────────────────────
 export default function AskDocument() {
   const [, setLocation] = useLocation()
   const [phase, setPhase] = useState<Phase>("upload")
@@ -262,6 +328,8 @@ export default function AskDocument() {
   const [analysis, setAnalysis] = useState<DocumentAnalysis | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState(false)
+  // undefined = no answer yet (no banner); null = answer with no source; object = source found
+  const [sourceMatch, setSourceMatch] = useState<SourceMatch | null | undefined>(undefined)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   async function safeParseJson(res: Response): Promise<Record<string, unknown>> {
@@ -274,13 +342,13 @@ export default function AskDocument() {
 
   async function analyzeFile(file: File) {
     setFileName(file.name)
-    // Preserve original File for PDF rendering; clear for non-PDF
     if (file.name.toLowerCase().endsWith(".pdf") || file.type === "application/pdf") {
       setPdfFile(file)
     } else {
       setPdfFile(null)
     }
     setError(null)
+    setSourceMatch(undefined)
     setPhase("processing")
     try {
       const apiBase = getApiBaseUrl()
@@ -314,6 +382,7 @@ export default function AskDocument() {
     setPdfFile(null)
     setRawText(trimmed)
     setError(null)
+    setSourceMatch(undefined)
     setPhase("processing")
     try {
       const apiBase = getApiBaseUrl()
@@ -339,7 +408,7 @@ export default function AskDocument() {
     setIsDragging(false)
     const file = e.dataTransfer.files[0]
     if (file) void analyzeFile(file)
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -356,7 +425,10 @@ export default function AskDocument() {
     setAnalysis(null)
     setError(null)
     setMobileTab("ask")
+    setSourceMatch(undefined)
   }
+
+  const sections = ((analysis?.sections ?? []) as SectionItem[])
 
   return (
     <WorkspaceShell>
@@ -365,6 +437,7 @@ export default function AskDocument() {
         {/* ── Header ─────────────────────────────────── */}
         <div className="border-b border-border bg-background/95 backdrop-blur-sm sticky top-0 z-10 px-4 py-3 flex items-center gap-3">
           <button
+            type="button"
             onClick={() => setLocation("/")}
             className="p-1.5 rounded-lg hover:bg-muted transition-colors"
             aria-label="Back to dashboard"
@@ -382,6 +455,7 @@ export default function AskDocument() {
           </div>
           {phase === "ready" && (
             <button
+              type="button"
               onClick={reset}
               className="ml-auto flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-lg hover:bg-muted"
             >
@@ -460,6 +534,7 @@ export default function AskDocument() {
                       />
                     </div>
                     <button
+                      type="button"
                       onClick={() => { setPhase("paste"); setError(null) }}
                       className="w-full flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors py-2"
                     >
@@ -481,6 +556,7 @@ export default function AskDocument() {
                     />
                     <div className="flex gap-2">
                       <Button
+                        type="button"
                         variant="outline"
                         onClick={() => { setPhase("upload"); setError(null) }}
                         className="flex-1 rounded-xl"
@@ -488,6 +564,7 @@ export default function AskDocument() {
                         Upload a file
                       </Button>
                       <Button
+                        type="button"
                         onClick={() => void analyzeText()}
                         disabled={text.trim().length < 20}
                         className="flex-1 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white"
@@ -512,7 +589,7 @@ export default function AskDocument() {
               </motion.div>
             )}
 
-            {/* Processing phase — standard scan animation */}
+            {/* Processing phase */}
             {phase === "processing" && (
               <motion.div
                 key="processing"
@@ -537,6 +614,7 @@ export default function AskDocument() {
                 {/* Mobile tab bar */}
                 <div className="md:hidden flex shrink-0 border-b border-border/40 bg-background">
                   <button
+                    type="button"
                     onClick={() => setMobileTab("document")}
                     className={`flex-1 py-3 text-sm font-semibold flex items-center justify-center gap-2 transition-colors border-b-2 ${
                       mobileTab === "document"
@@ -548,6 +626,7 @@ export default function AskDocument() {
                     Document
                   </button>
                   <button
+                    type="button"
                     onClick={() => setMobileTab("ask")}
                     className={`flex-1 py-3 text-sm font-semibold flex items-center justify-center gap-2 transition-colors border-b-2 ${
                       mobileTab === "ask"
@@ -560,26 +639,47 @@ export default function AskDocument() {
                   </button>
                 </div>
 
-                {/* Mobile panels */}
+                {/* Mobile panels — kept mounted (CSS hide) to preserve chat state */}
                 <div className="md:hidden flex-1 min-h-0 overflow-hidden">
-                  {mobileTab === "document" ? (
-                    <div className="h-full overflow-y-auto">
-                      <DocumentViewer analysis={analysis} fileName={fileName} rawText={rawText} pdfFile={pdfFile} />
-                    </div>
-                  ) : (
-                    <div className="h-full overflow-hidden">
-                      <DocumentChat analysis={analysis} />
-                    </div>
-                  )}
+                  <div className={`h-full overflow-y-auto ${mobileTab === "document" ? "block" : "hidden"}`}>
+                    <DocumentViewer
+                      analysis={analysis}
+                      fileName={fileName}
+                      rawText={rawText}
+                      pdfFile={pdfFile}
+                      sourceMatch={sourceMatch}
+                    />
+                  </div>
+                  <div className={`h-full overflow-hidden flex-col ${mobileTab === "ask" ? "flex" : "hidden"}`}>
+                    <DocumentChat
+                      analysis={analysis}
+                      sections={sections}
+                      onHighlightSection={setSourceMatch}
+                      onMessageSent={() => setSourceMatch(undefined)}
+                      fullHeight
+                    />
+                  </div>
                 </div>
 
                 {/* Desktop two-column */}
                 <div className="hidden md:flex flex-1 min-h-0">
                   <div className="w-[58%] overflow-y-auto border-r border-border/40">
-                    <DocumentViewer analysis={analysis} fileName={fileName} rawText={rawText} pdfFile={pdfFile} />
+                    <DocumentViewer
+                      analysis={analysis}
+                      fileName={fileName}
+                      rawText={rawText}
+                      pdfFile={pdfFile}
+                      sourceMatch={sourceMatch}
+                    />
                   </div>
-                  <div className="w-[42%] overflow-y-auto">
-                    <DocumentChat analysis={analysis} />
+                  <div className="w-[42%] flex flex-col overflow-hidden">
+                    <DocumentChat
+                      analysis={analysis}
+                      sections={sections}
+                      onHighlightSection={setSourceMatch}
+                      onMessageSent={() => setSourceMatch(undefined)}
+                      fullHeight
+                    />
                   </div>
                 </div>
               </motion.div>
