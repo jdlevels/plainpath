@@ -1,13 +1,14 @@
 import { useState, useRef, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
-  MessageCircle, UploadCloud, Type, Loader2,
-  ArrowLeft, X, AlertCircle, ChevronRight,
+  MessageCircle, UploadCloud, Type,
+  ArrowLeft, X, AlertCircle, ChevronRight, FileText,
 } from "lucide-react"
 import { useLocation } from "wouter"
 import { Button } from "@/components/ui/button"
 import { WorkspaceShell } from "@/components/WorkspaceShell"
 import { DocumentChat } from "@/components/DocumentChat"
+import { DocumentScanScreen } from "@/components/DocumentScanScreen"
 import { getApiBaseUrl } from "@/lib/api"
 import type { DocumentAnalysis } from "@workspace/api-client-react"
 
@@ -20,10 +21,103 @@ const EXAMPLE_QUESTIONS = [
 ]
 
 type Phase = "upload" | "paste" | "processing" | "ready"
+type MobileTab = "document" | "ask"
+
+function DocumentViewer({ analysis, fileName }: { analysis: DocumentAnalysis; fileName: string | null }) {
+  const sections = (analysis.sections ?? []) as Array<{ id: string; title?: string; content: string }>
+  const plainEnglish = analysis.plainEnglish as Record<string, string> | undefined
+
+  const hasSections = sections.length > 0
+  const hasPlainEnglish =
+    !!plainEnglish && Object.values(plainEnglish).some((v) => typeof v === "string" && v.trim().length > 0)
+
+  const peFields: { key: string; label: string }[] = [
+    { key: "whatItIs",       label: "What it is" },
+    { key: "whatItSays",     label: "What it says" },
+    { key: "whatItAsks",     label: "What it asks of you" },
+    { key: "obligations",    label: "Your obligations" },
+    { key: "payAttentionTo", label: "Pay attention to" },
+    { key: "nextSteps",      label: "Next steps" },
+  ]
+
+  return (
+    <div className="p-4 sm:p-6 space-y-5">
+      {/* Doc title row */}
+      <div className="flex items-center gap-2.5 pb-4 border-b border-border/40">
+        <div className="w-8 h-8 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center shrink-0">
+          <FileText className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-foreground truncate">
+            {fileName ?? analysis.title ?? "Document"}
+          </p>
+          {analysis.documentType && (
+            <p className="text-xs text-muted-foreground">{analysis.documentType}</p>
+          )}
+        </div>
+      </div>
+
+      {/* Sections (extracted text) */}
+      {hasSections && (
+        <div className="space-y-5">
+          {sections.map((section) => (
+            <div key={section.id} className="space-y-1.5">
+              {section.title && (
+                <h3 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/70">
+                  {section.title}
+                </h3>
+              )}
+              <p className="text-sm text-foreground/85 leading-relaxed whitespace-pre-wrap">
+                {section.content}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Fallback: plain-English breakdown */}
+      {!hasSections && hasPlainEnglish && plainEnglish && (
+        <div className="space-y-5">
+          {peFields
+            .filter(({ key }) => plainEnglish[key]?.trim())
+            .map(({ key, label }) => (
+              <div key={key} className="space-y-1.5">
+                <h3 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/70">
+                  {label}
+                </h3>
+                <p className="text-sm text-foreground/85 leading-relaxed">{plainEnglish[key]}</p>
+              </div>
+            ))}
+        </div>
+      )}
+
+      {/* Fallback: summary only */}
+      {!hasSections && !hasPlainEnglish && analysis.summary && (
+        <div className="space-y-1.5">
+          <h3 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/70">
+            Summary
+          </h3>
+          <p className="text-sm text-foreground/85 leading-relaxed">{analysis.summary}</p>
+        </div>
+      )}
+
+      {/* Empty state */}
+      {!hasSections && !hasPlainEnglish && !analysis.summary && (
+        <div className="rounded-xl border border-border/40 bg-muted/20 px-5 py-10 text-center">
+          <p className="text-sm text-muted-foreground">
+            No readable text was extracted from this document. Try another file or paste the text
+            manually.
+          </p>
+        </div>
+      )}
+    </div>
+  )
+}
 
 export default function AskDocument() {
   const [, setLocation] = useLocation()
   const [phase, setPhase] = useState<Phase>("upload")
+  const [mobileTab, setMobileTab] = useState<MobileTab>("ask")
   const [fileName, setFileName] = useState<string | null>(null)
   const [text, setText] = useState("")
   const [analysis, setAnalysis] = useState<DocumentAnalysis | null>(null)
@@ -56,6 +150,7 @@ export default function AskDocument() {
       const data = await safeParseJson(res)
       if (!res.ok) throw new Error((data?.message as string) ?? "Could not read this document. Please try again.")
       setAnalysis(data.analysis as DocumentAnalysis)
+      setMobileTab("ask")
       setPhase("ready")
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Something went wrong. Please try again.")
@@ -83,6 +178,7 @@ export default function AskDocument() {
       const data = await safeParseJson(res)
       if (!res.ok) throw new Error((data?.message as string) ?? "Could not analyze this text. Please try again.")
       setAnalysis(data.analysis as DocumentAnalysis)
+      setMobileTab("ask")
       setPhase("ready")
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Something went wrong. Please try again.")
@@ -109,6 +205,7 @@ export default function AskDocument() {
     setText("")
     setAnalysis(null)
     setError(null)
+    setMobileTab("ask")
   }
 
   return (
@@ -145,7 +242,7 @@ export default function AskDocument() {
         </div>
 
         {/* ── Body ───────────────────────────────────── */}
-        <div className="flex-1 overflow-auto">
+        <div className={`flex-1 flex flex-col ${phase === "ready" ? "overflow-hidden" : "overflow-auto"}`}>
           <AnimatePresence mode="wait">
 
             {/* Upload / Paste phase */}
@@ -156,7 +253,7 @@ export default function AskDocument() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.18 }}
-                className="max-w-lg mx-auto px-4 py-10 space-y-7"
+                className="max-w-lg mx-auto px-4 py-10 space-y-7 w-full"
               >
                 {/* Icon + title */}
                 <div className="text-center space-y-3">
@@ -265,38 +362,76 @@ export default function AskDocument() {
               </motion.div>
             )}
 
-            {/* Processing phase */}
+            {/* Processing phase — standard scan animation */}
             {phase === "processing" && (
               <motion.div
                 key="processing"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="flex flex-col items-center justify-center min-h-[60vh] gap-4 px-4"
+                className="flex-1"
               >
-                <div className="w-16 h-16 rounded-2xl bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center">
-                  <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
-                </div>
-                <div className="text-center">
-                  <p className="text-sm font-semibold text-foreground">Reading your document…</p>
-                  {fileName && (
-                    <p className="text-xs text-muted-foreground mt-1 truncate max-w-xs">{fileName}</p>
-                  )}
-                  <p className="text-xs text-muted-foreground mt-2">This usually takes 10–30 seconds</p>
-                </div>
+                <DocumentScanScreen mode="ask-document" fileName={fileName ?? undefined} />
               </motion.div>
             )}
 
-            {/* Ready — show DocumentChat */}
+            {/* Ready — two-panel workspace */}
             {phase === "ready" && analysis && (
               <motion.div
                 key="ready"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.2 }}
-                className="h-full"
+                className="flex-1 flex flex-col min-h-0"
               >
-                <DocumentChat analysis={analysis} />
+                {/* Mobile tab bar */}
+                <div className="md:hidden flex shrink-0 border-b border-border/40 bg-background">
+                  <button
+                    onClick={() => setMobileTab("document")}
+                    className={`flex-1 py-3 text-sm font-semibold flex items-center justify-center gap-2 transition-colors border-b-2 ${
+                      mobileTab === "document"
+                        ? "text-foreground border-foreground"
+                        : "text-muted-foreground border-transparent hover:text-foreground"
+                    }`}
+                  >
+                    <FileText className="w-4 h-4" />
+                    Document
+                  </button>
+                  <button
+                    onClick={() => setMobileTab("ask")}
+                    className={`flex-1 py-3 text-sm font-semibold flex items-center justify-center gap-2 transition-colors border-b-2 ${
+                      mobileTab === "ask"
+                        ? "text-indigo-600 dark:text-indigo-400 border-indigo-500"
+                        : "text-muted-foreground border-transparent hover:text-foreground"
+                    }`}
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    Ask
+                  </button>
+                </div>
+
+                {/* Mobile panels */}
+                <div className="md:hidden flex-1 min-h-0 overflow-hidden">
+                  {mobileTab === "document" ? (
+                    <div className="h-full overflow-y-auto">
+                      <DocumentViewer analysis={analysis} fileName={fileName} />
+                    </div>
+                  ) : (
+                    <div className="h-full overflow-hidden">
+                      <DocumentChat analysis={analysis} />
+                    </div>
+                  )}
+                </div>
+
+                {/* Desktop two-column */}
+                <div className="hidden md:flex flex-1 min-h-0">
+                  <div className="w-[58%] overflow-y-auto border-r border-border/40">
+                    <DocumentViewer analysis={analysis} fileName={fileName} />
+                  </div>
+                  <div className="w-[42%] overflow-hidden">
+                    <DocumentChat analysis={analysis} />
+                  </div>
+                </div>
               </motion.div>
             )}
 

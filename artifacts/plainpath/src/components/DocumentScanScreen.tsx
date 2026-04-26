@@ -2,10 +2,10 @@ import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   FileText, ShieldCheck, Scale, Check, Loader2,
-  AlertTriangle, CheckCircle2, AlertCircle, GitCompare, ListChecks,
+  AlertTriangle, CheckCircle2, AlertCircle, GitCompare, ListChecks, MessageCircle,
 } from "lucide-react"
 
-export type ScanMode = "trust-check" | "contract-review" | "analyze" | "compare" | "clause-extractor"
+export type ScanMode = "trust-check" | "contract-review" | "analyze" | "compare" | "clause-extractor" | "ask-document"
 
 interface Finding {
   text: string
@@ -230,6 +230,39 @@ const CONFIGS: Record<ScanMode, ScanConfig> = {
     docLines: 20,
     footerText: "Extraction typically completes in 15–25 seconds.",
     progressLabel: "Extraction Completeness",
+  },
+  "ask-document": {
+    ToolIcon: MessageCircle,
+    iconBg: "bg-indigo-100 dark:bg-indigo-900/40",
+    iconColor: "text-indigo-600 dark:text-indigo-400",
+    label: "Ask This Document",
+    accent: "border-indigo-200/60 dark:border-indigo-900/40",
+    accentBg: "bg-indigo-50 dark:bg-indigo-950/30",
+    accentText: "text-indigo-700 dark:text-indigo-300",
+    scanGlow: "rgb(99 102 241 / 0.5)",
+    scanLineClass: "bg-indigo-500",
+    stepInterval: 5000,
+    steps: [
+      "Reading your document",
+      "Extracting text",
+      "Identifying key sections",
+      "Preparing document chat",
+    ],
+    findings: [
+      { text: "Document structure mapped",  type: "info",    step: 0 },
+      { text: "Text extracted",             type: "success", step: 1 },
+      { text: "Key sections identified",    type: "info",    step: 2 },
+      { text: "Chat context ready",         type: "success", step: 3 },
+    ],
+    regions: [
+      { top: 6,  height: 10, color: "bg-indigo-100/50 dark:bg-indigo-900/20",  chipText: "Text",     chipType: "info",    step: 0 },
+      { top: 25, height: 9,  color: "bg-blue-100/50 dark:bg-blue-900/20",      chipText: "Section",  chipType: "info",    step: 1 },
+      { top: 42, height: 11, color: "bg-indigo-100/55 dark:bg-indigo-900/20",  chipText: "Section",  chipType: "info",    step: 2 },
+      { top: 62, height: 8,  color: "bg-emerald-100/50 dark:bg-emerald-900/20",chipText: "Ready",    chipType: "success", step: 3 },
+    ],
+    docLines: 18,
+    footerText: "This usually takes 20–35 seconds.",
+    progressLabel: "Processing",
   },
 }
 

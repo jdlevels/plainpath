@@ -1,0 +1,98 @@
+Ask This Document — Add Standard Loading Animation + Document Viewer
+
+Fix only the standalone Ask This Document page.
+
+Current issue:
+The upload endpoint now works, but the standalone /ask-document page has two UX/functionality problems:
+
+1. During upload/processing, it does not use the standard PlainPath document scan/loading animation used by the other PDF upload tools.
+2. After the document loads, it only shows the chat input. It does not show the uploaded document or extracted document text, so the user cannot ask about a specific area of the document.
+
+Scope:
+Only modify AskDocument.tsx unless a shared existing component import is needed.
+Do not redesign the full app.
+Do not touch Analyze Action Pack.
+Do not touch Analyze.tsx.
+Do not touch Redact, Clause Extractor, Trust Check, Contract Review, Compare Versions, Document Builder, dashboard, marketing, Stripe/payment, database, migrations, auth, or routing except if needed to preserve /ask-document and /ask-this-document.
+
+Required fix 1 — Loading animation:
+Use the same standard document scanning/loading component or pattern already used by the other document tools.
+
+During file upload/paste processing, show:
+- Tool name: Ask This Document
+- File name when available
+- Document skeleton/page preview
+- Animated scan/progress line
+- Status label such as:
+  Reading your document
+  Extracting text
+  Preparing document chat
+- Avoid the current tiny centered spinner-only state.
+
+If DocumentScanScreen already supports modes, use it.
+If it does not support ask-document, add a minimal ask-document mode without breaking existing modes.
+
+Required fix 2 — Loaded workspace:
+After the document is processed, show a two-panel workspace:
+
+Left panel:
+- Document viewer / document context panel
+- Shows the uploaded file name
+- Shows extracted document text or source sections from the analysis response
+- Text must be readable and scrollable
+- Preserve section/paragraph structure where available
+- Include section labels if available
+- Include an empty fallback only if no text was extracted:
+  "No readable text was extracted from this document. Try another file or paste the text manually."
+
+Right panel:
+- DocumentChat
+- Chat input visible
+- Suggested questions visible if supported
+- User can ask questions about the visible document
+
+Desktop layout:
+- Left document panel: approximately 55–60%
+- Right chat panel: approximately 40–45%
+- Both panels should fit inside the existing dark PlainPath shell
+- Do not create a huge blank page with only a chat bar
+
+Mobile layout:
+- Use tabs:
+  Document
+  Ask
+- Default to Ask after processing, but Document must be accessible
+- No content should be hidden behind bottom bars
+
+Required behavior:
+- Keep user on /ask-document
+- /ask-this-document must still open the same page or cleanly redirect to /ask-document
+- Upload PDF still works
+- Upload DOCX still works if currently supported
+- Paste text still works
+- No raw JSON or HTML parsing errors
+- No redirect to Analyze
+- No database changes
+- No migrations
+
+Verification:
+1. /ask-document opens
+2. Upload PDF shows standard scan/loading animation
+3. Upload completes
+4. Loaded page shows document text/context on the left and chat on the right
+5. User can ask:
+   "What does this document require me to do next?"
+6. Paste text path also shows the same loaded workspace
+7. /ask-this-document still works
+8. Analyze Action Pack remains unchanged
+9. No other tools changed
+10. No new TypeScript/runtime errors introduced
+
+Return only:
+A. Root cause
+B. Files changed
+C. Loading animation fix
+D. Loaded document viewer fix
+E. Upload/paste verification
+F. Confirmation no other tools changed
+G. Whether safe to publish
