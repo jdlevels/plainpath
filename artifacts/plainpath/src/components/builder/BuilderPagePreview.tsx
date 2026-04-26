@@ -1,51 +1,325 @@
 import React from "react";
-import type { BuilderContent, BuilderSection, BuilderBlock } from "@/lib/builderTypes";
+import type { BuilderContent, BuilderSection, BuilderBlock, BrandingState } from "@/lib/builderTypes";
+import { DEFAULT_BRANDING } from "@/lib/builderTypes";
+
+// ─── Context ──────────────────────────────────────────────────────────────────
+
+const BrandingCtx = React.createContext<BrandingState>(DEFAULT_BRANDING);
+function useBranding() { return React.useContext(BrandingCtx); }
+
+// ─── Props ────────────────────────────────────────────────────────────────────
 
 interface Props {
   content: BuilderContent;
   title: string;
   selectedBlockId?: string | null;
   onBlockSelect?: (sectionId: string, blockId: string) => void;
+  branding?: BrandingState | null;
 }
+
+// ─── Branded header ───────────────────────────────────────────────────────────
+
+function BrandingHeader() {
+  const b = useBranding();
+  const hasLogo = !!b.logoDataUrl;
+  const hasCompany = !!b.companyName.trim();
+  const hasDept = !!b.departmentName.trim();
+  if (!hasLogo && !hasCompany && !hasDept) return null;
+
+  const color = b.brandColor || "#1d4ed8";
+
+  // ── Formal: full-width colored block ───────────────────────────────────────
+  if (b.headerStyle === "formal") {
+    const logoEl = hasLogo && (
+      <img
+        src={b.logoDataUrl!}
+        alt="logo"
+        className="h-10 max-w-[120px] object-contain"
+        style={{
+          filter: "brightness(0) invert(1)",
+          opacity: 0.9,
+        }}
+      />
+    );
+    return (
+      <div
+        className="mb-7 -mx-0 px-6 py-4 rounded-sm"
+        style={{ backgroundColor: color }}
+      >
+        <div
+          className={`flex items-center gap-4 ${
+            b.logoPosition === "center"
+              ? "flex-col text-center"
+              : b.logoPosition === "right"
+              ? "flex-row-reverse"
+              : "flex-row"
+          }`}
+        >
+          {hasLogo && logoEl}
+          <div className={b.logoPosition === "center" ? "" : "flex-1"}>
+            {hasCompany && (
+              <p
+                className="font-bold text-white text-base leading-tight"
+                style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}
+              >
+                {b.companyName}
+              </p>
+            )}
+            {hasDept && (
+              <p
+                className="text-[12px] text-white/80 mt-0.5"
+                style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}
+              >
+                {b.departmentName}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Modern: left accent bar ────────────────────────────────────────────────
+  if (b.headerStyle === "modern") {
+    return (
+      <div className="mb-7 flex items-start gap-4" style={{ borderLeft: `4px solid ${color}`, paddingLeft: "16px" }}>
+        {hasLogo && b.logoPosition === "left" && (
+          <img src={b.logoDataUrl!} alt="logo" className="h-9 max-w-[96px] object-contain shrink-0" />
+        )}
+        <div className="flex-1">
+          {hasCompany && (
+            <p
+              className="font-bold text-neutral-900 text-sm leading-tight"
+              style={{ fontFamily: "system-ui, -apple-system, sans-serif", color }}
+            >
+              {b.companyName}
+            </p>
+          )}
+          {hasDept && (
+            <p
+              className="text-[12px] text-neutral-500 mt-0.5"
+              style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}
+            >
+              {b.departmentName}
+            </p>
+          )}
+        </div>
+        {hasLogo && b.logoPosition === "right" && (
+          <img src={b.logoDataUrl!} alt="logo" className="h-9 max-w-[96px] object-contain shrink-0" />
+        )}
+      </div>
+    );
+  }
+
+  // ── Internal: gray header with badge ──────────────────────────────────────
+  if (b.headerStyle === "internal") {
+    return (
+      <div className="mb-7 px-4 py-3 rounded-sm bg-neutral-100 flex items-center gap-4">
+        {hasLogo && b.logoPosition === "left" && (
+          <img src={b.logoDataUrl!} alt="logo" className="h-8 max-w-[80px] object-contain shrink-0" />
+        )}
+        <div className="flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            {hasCompany && (
+              <p
+                className="text-sm font-semibold text-neutral-700"
+                style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}
+              >
+                {b.companyName}
+              </p>
+            )}
+            {hasDept && (
+              <p className="text-[12px] text-neutral-500" style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}>
+                · {b.departmentName}
+              </p>
+            )}
+          </div>
+          <span
+            className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full mt-1 inline-block"
+            style={{ backgroundColor: `${color}18`, color, border: `1px solid ${color}30` }}
+          >
+            Internal Use Only
+          </span>
+        </div>
+        {hasLogo && b.logoPosition === "right" && (
+          <img src={b.logoDataUrl!} alt="logo" className="h-8 max-w-[80px] object-contain shrink-0" />
+        )}
+      </div>
+    );
+  }
+
+  // ── Minimal (default): company name + thin accent line ────────────────────
+  return (
+    <div
+      className="mb-7 pb-3"
+      style={{ borderBottom: `2px solid ${color}` }}
+    >
+      <div
+        className={`flex items-center gap-3 ${
+          b.logoPosition === "center"
+            ? "justify-center flex-col text-center"
+            : b.logoPosition === "right"
+            ? "flex-row-reverse"
+            : "flex-row"
+        }`}
+      >
+        {hasLogo && (
+          <img src={b.logoDataUrl!} alt="logo" className="h-8 max-w-[96px] object-contain shrink-0" />
+        )}
+        <div>
+          {hasCompany && (
+            <p
+              className="text-[13px] font-semibold text-neutral-700"
+              style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}
+            >
+              {b.companyName}
+            </p>
+          )}
+          {hasDept && (
+            <p className="text-[11px] text-neutral-400" style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}>
+              {b.departmentName}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Branded footer ───────────────────────────────────────────────────────────
+
+function BrandingFooter() {
+  const b = useBranding();
+  const hasFooter = b.footerText.trim() || b.showPageNumber || b.showConfidential || b.showRevisionLine;
+  if (!hasFooter) return null;
+
+  const color = b.brandColor || "#1d4ed8";
+  const today = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+
+  return (
+    <div
+      className="mt-10 pt-3"
+      style={{ borderTop: `1px solid ${color}40` }}
+    >
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="flex-1 min-w-0">
+          {b.footerText.trim() && (
+            <p
+              className="text-[11px] text-neutral-500 truncate"
+              style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}
+            >
+              {b.footerText}
+            </p>
+          )}
+          {b.showRevisionLine && (
+            <p className="text-[10px] text-neutral-400 mt-0.5" style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}>
+              Version 1.0 · {today}
+            </p>
+          )}
+        </div>
+        <div className="flex items-center gap-3 shrink-0">
+          {b.showConfidential && (
+            <span
+              className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full"
+              style={{ backgroundColor: `${color}12`, color, border: `1px solid ${color}30` }}
+            >
+              Confidential
+            </span>
+          )}
+          {b.showPageNumber && (
+            <span className="text-[11px] text-neutral-400" style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}>
+              Page 1
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Watermark ────────────────────────────────────────────────────────────────
+
+function Watermark() {
+  const { watermarkEnabled, brandColor } = useBranding();
+  if (!watermarkEnabled) return null;
+  const color = brandColor || "#1d4ed8";
+  return (
+    <div
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-0 overflow-hidden flex items-center justify-center"
+      style={{ zIndex: 10 }}
+    >
+      <p
+        style={{
+          fontFamily: "system-ui, -apple-system, sans-serif",
+          fontSize: "72px",
+          fontWeight: 900,
+          color,
+          opacity: 0.045,
+          transform: "rotate(-35deg)",
+          whiteSpace: "nowrap",
+          userSelect: "none",
+          letterSpacing: "0.15em",
+        }}
+      >
+        CONFIDENTIAL
+      </p>
+    </div>
+  );
+}
+
+// ─── Main export ──────────────────────────────────────────────────────────────
 
 export const BuilderPagePreview = React.memo(function BuilderPagePreview({
   content,
   title,
   selectedBlockId,
   onBlockSelect,
+  branding,
 }: Props) {
+  const resolvedBranding = branding ?? DEFAULT_BRANDING;
   const sections = [...content.sections].sort((a, b) => a.order - b.order);
 
   return (
-    <div className="text-[14px] leading-relaxed text-neutral-900" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
-      {title && (
-        <div className="mb-7 pb-5 border-b border-neutral-200">
-          <h1
-            style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}
-            className="text-2xl font-bold text-neutral-900 leading-tight"
-          >
-            {title}
-          </h1>
-        </div>
-      )}
+    <BrandingCtx.Provider value={resolvedBranding}>
+      <div className="relative text-[14px] leading-relaxed text-neutral-900" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
+        <Watermark />
 
-      {sections.length === 0 && !title && (
-        <p className="text-neutral-400 text-sm italic text-center pt-24">
-          Your document will appear here as you build it.
-        </p>
-      )}
+        <BrandingHeader />
 
-      {sections.map((section) => (
-        <PreviewSection
-          key={section.id}
-          section={section}
-          selectedBlockId={selectedBlockId ?? null}
-          onBlockSelect={onBlockSelect ?? null}
-        />
-      ))}
-    </div>
+        {title && (
+          <div className="mb-7 pb-5 border-b border-neutral-200">
+            <h1
+              style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}
+              className="text-2xl font-bold text-neutral-900 leading-tight"
+            >
+              {title}
+            </h1>
+          </div>
+        )}
+
+        {sections.length === 0 && !title && (
+          <p className="text-neutral-400 text-sm italic text-center pt-24">
+            Your document will appear here as you build it.
+          </p>
+        )}
+
+        {sections.map((section) => (
+          <PreviewSection
+            key={section.id}
+            section={section}
+            selectedBlockId={selectedBlockId ?? null}
+            onBlockSelect={onBlockSelect ?? null}
+          />
+        ))}
+
+        <BrandingFooter />
+      </div>
+    </BrandingCtx.Provider>
   );
 });
+
+// ─── Section ──────────────────────────────────────────────────────────────────
 
 function PreviewSection({
   section,
@@ -56,6 +330,8 @@ function PreviewSection({
   selectedBlockId: string | null;
   onBlockSelect: ((sectionId: string, blockId: string) => void) | null;
 }) {
+  const { brandColor } = useBranding();
+  const color = brandColor || "#1d4ed8";
   const blocks = [...section.blocks].sort((a, b) => a.order - b.order);
   const hasContent = blocks.some((b) => hasVisibleContent(b));
 
@@ -63,8 +339,11 @@ function PreviewSection({
     <div className="mb-8">
       {section.title && (
         <h2
-          style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}
-          className="text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-4 pb-2 border-b border-neutral-200"
+          style={{
+            fontFamily: "system-ui, -apple-system, sans-serif",
+            borderBottomColor: `${color}50`,
+          }}
+          className="text-[11px] font-bold text-neutral-500 uppercase tracking-widest mb-4 pb-2 border-b"
         >
           {section.title}
         </h2>
@@ -103,6 +382,8 @@ function PreviewSection({
   );
 }
 
+// ─── hasVisibleContent ────────────────────────────────────────────────────────
+
 function hasVisibleContent(block: BuilderBlock): boolean {
   const { type, payload } = block;
   const p = payload as Record<string, unknown>;
@@ -133,7 +414,11 @@ function hasVisibleContent(block: BuilderBlock): boolean {
   return false;
 }
 
+// ─── PreviewBlock ─────────────────────────────────────────────────────────────
+
 function PreviewBlock({ block }: { block: BuilderBlock }) {
+  const { brandColor } = useBranding();
+  const color = brandColor || "#1d4ed8";
   const { type, payload } = block;
 
   if (type === "heading") {
@@ -151,8 +436,11 @@ function PreviewBlock({ block }: { block: BuilderBlock }) {
     const Tag = `h${level}` as "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
     return (
       <Tag
-        style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}
-        className={`${sizeMap[level]} text-neutral-900 leading-snug`}
+        style={{
+          fontFamily: "system-ui, -apple-system, sans-serif",
+          color: level <= 2 ? color : undefined,
+        }}
+        className={`${sizeMap[level]} leading-snug`}
       >
         {p.text}
       </Tag>
@@ -268,7 +556,12 @@ function PreviewBlock({ block }: { block: BuilderBlock }) {
   }
 
   if (type === "divider") {
-    return <hr className="border-neutral-200 my-2" />;
+    return (
+      <hr
+        className="my-2"
+        style={{ borderColor: `${color}30` }}
+      />
+    );
   }
 
   if (type === "table") {

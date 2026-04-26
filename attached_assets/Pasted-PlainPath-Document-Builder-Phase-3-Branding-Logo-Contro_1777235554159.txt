@@ -1,0 +1,217 @@
+PlainPath Document Builder — Phase 3 Branding + Logo Controls Only
+
+Goal:
+Add premium branding controls to Document Builder so users can make SOPs, manuals, policies, checklists, onboarding guides, and internal documents look company-ready.
+
+Important:
+Phase 1 and Phase 2 are already complete.
+Do not rebuild them.
+
+Product decision:
+Document Builder is a premium 9th PlainPath tool, separate from Build a Contract.
+
+Phase 3 focus:
+Branding and document identity only.
+
+Do not touch:
+- Build a Contract
+- Analyze
+- Trust Check
+- Contract Review
+- Redact
+- Ask This Document
+- Clause Extractor
+- Compare Versions
+- DocumentChat
+- API routes unless existing builder save content already supports current metadata
+- Auth
+- Database schema
+- Migrations
+- Stripe
+- Marketing
+- Digital Signature
+- Dropbox Sign
+
+Allowed files:
+- Builder workspace files
+- Builder preview component
+- StylePanel.tsx
+- Builder types only if needed and backward compatible
+- builder-only utility files if needed
+
+Do not add:
+- New database tables
+- New migrations
+- Object storage
+- Real logo file upload persistence
+- Real AI actions
+- PDF/DOCX generation
+- Public marketing updates
+
+Phase 3 requirements:
+
+1. Style tab upgrade
+
+Update the existing Style tab to include:
+
+A. Company identity
+- Company name
+- Department / team name
+- Document owner
+- Approved by
+- Review cycle
+
+B. Logo controls
+- Add logo upload UI
+- Logo upload should create a local preview only using FileReader or object URL
+- Do not upload to storage
+- Do not persist binary logo data to the database
+- If persistence is unsafe, show “Logo preview only — persistent logo storage coming soon”
+- Add clear remove-logo action
+
+C. Logo position
+Options:
+- Top left
+- Top center
+- Top right
+
+D. Brand color
+- Color picker
+- Hex text field if easy
+- Apply brand color to:
+  - document headings
+  - section dividers
+  - small accent lines
+  - selected brand elements only
+- Do not make the document unreadable with heavy colors
+
+E. Header style
+Options:
+- Minimal
+- Formal
+- Modern
+- Internal use
+
+F. Footer controls
+- Footer text
+- Show/hide page number
+- Show/hide “Confidential”
+- Show/hide revision/date line
+
+G. Watermark
+- Toggle: Confidential watermark on/off
+- Watermark should appear lightly in the document preview
+- It should not block readability
+
+2. Live preview integration
+
+Update BuilderPagePreview so the left page reflects branding choices in real time:
+
+- Company name appears in header if provided
+- Logo preview appears in selected position if provided
+- Brand color affects headings/accent line
+- Footer text appears at the bottom if provided
+- Page number appears if enabled
+- Confidential watermark appears if enabled
+- Document title and sections remain readable
+
+3. Metadata handling
+
+Use local component state first.
+
+If the existing document content/meta object already safely supports metadata:
+- Store branding under a backward-compatible key like content.branding or document.meta.branding
+- Do not break older drafts
+- Older drafts without branding must still load normally
+
+If the existing content shape does not safely support branding:
+- Keep branding local-only for Phase 3
+- Do not force schema/type changes
+
+4. Existing drafts
+
+Older drafts must open without errors.
+If no branding exists, use safe defaults:
+- no logo
+- no company name
+- brand color default
+- minimal header
+- no watermark unless toggled
+
+5. Save behavior
+
+If branding is stored in the existing content object:
+- Save should preserve branding
+- Autosave should not reset branding
+- Refresh should reload branding
+
+If branding is local-only:
+- Clearly label it as preview-only for now
+
+Do not break existing autosave or explicit Save.
+
+6. Export behavior
+
+Do not claim PDF/DOCX export works.
+Keep .txt export unchanged.
+Export tab should mention:
+“Brand styling will apply to PDF/DOCX export when those export formats are enabled.”
+
+7. Visual quality
+
+Branding controls should feel premium:
+- grouped cards
+- clear labels
+- compact controls
+- no clutter
+- no giant empty sections
+- consistent dark UI
+- no prototype-looking inputs
+
+8. Stability
+
+- All new buttons use type="button"
+- No draft reset on tab change
+- No runtime crash
+- No blank screen
+- No TypeScript errors in changed files
+- No DB/auth/Stripe/API/migration/marketing changes
+- Build a Contract unchanged
+- Other 8 tools unchanged
+
+Verification:
+1. Open an existing Document Builder draft.
+2. Open Style tab.
+3. Enter company name.
+4. Confirm company name appears in the left preview.
+5. Pick brand color.
+6. Confirm headings/accent line update.
+7. Toggle Confidential watermark.
+8. Confirm watermark appears lightly and does not block readability.
+9. Add footer text.
+10. Confirm footer appears in preview.
+11. Toggle page number.
+12. Confirm page number appears/disappears.
+13. Test logo preview locally if implemented.
+14. Remove logo.
+15. Save draft.
+16. Refresh.
+17. Confirm older drafts still load.
+18. Confirm Document Builder Phase 1 tabs still work.
+19. Confirm Phase 2 templates/guided questions still work.
+20. Confirm Build a Contract unchanged.
+21. Confirm other 8 tools unchanged.
+22. Confirm no DB/auth/Stripe/API/migration/marketing changes.
+23. Confirm no new TypeScript/runtime errors.
+
+Return only:
+A. Files changed
+B. Branding controls completed
+C. Logo preview behavior
+D. Live preview behavior
+E. Save/persistence behavior
+F. Export behavior
+G. Existing drafts behavior
+H. Build a Contract unchanged confirmation
+I. Other 8 tools unchanged confirmation
+J. Safe checkpoint: Yes/No

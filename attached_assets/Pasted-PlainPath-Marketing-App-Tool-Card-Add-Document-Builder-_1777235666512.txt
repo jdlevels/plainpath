@@ -1,0 +1,99 @@
+PlainPath Marketing + App Tool Card — Add Document Builder Card Before Testing
+
+Goal:
+Add Document Builder as a visible tool card with the other PlainPath tools before we test the Document Builder flow.
+
+Product decision:
+Document Builder is now a 9th PlainPath tool.
+It is separate from Build a Contract.
+
+Document Builder purpose:
+Create SOPs, manuals, policies, onboarding guides, checklists, and internal business documents.
+
+Build a Contract purpose:
+Guided contract creation only.
+
+Scope:
+Small UI placement update only.
+
+Do not touch:
+- Document Builder workspace logic
+- Build a Contract
+- Other 8 tools
+- API
+- Auth
+- Database
+- Migrations
+- Stripe
+- Digital Signature
+- Dropbox Sign
+
+Required changes:
+
+1. Add Document Builder card to the homepage tool card grid/pill area
+Add it with the same visual style as the existing tool cards.
+
+Card title:
+Document Builder
+
+Card description:
+Create SOPs, manuals, policies, onboarding guides, checklists, and internal business documents.
+
+Route:
+Use existing route:
+`/builder`
+
+Accent color:
+Use cyan/teal or another distinct builder color that does not conflict with Build a Contract.
+
+Icon:
+Use a document/edit/layout icon consistent with the current icon system.
+
+2. Update visible tool count where directly connected to this grid
+If the homepage says:
+“8 tools”
+change to:
+“9 tools”
+
+If a section says:
+“8 tools live”
+change to:
+“9 tools live”
+
+Only update marketing copy directly tied to the visible tool count.
+Do not rewrite pricing, FAQ, plan descriptions, or major marketing copy yet.
+
+3. Keep Build a Contract unchanged
+Do not rename it.
+Do not move it.
+Do not merge it with Document Builder.
+
+4. Keep layout balanced
+The grid currently has 8 cards.
+With 9 cards, use a clean 3x3 layout if available.
+Avoid leaving the 9th card awkwardly isolated if the viewport supports 3 columns.
+
+5. Feature flag behavior
+If Document Builder is controlled by `BUILDER_ENABLED`, respect the existing flag:
+- If enabled, show the card.
+- If disabled, hide the card.
+Do not create a new flag system.
+
+6. Verification
+Confirm:
+- Document Builder appears with the tools.
+- Tool count reads 9 where appropriate.
+- Clicking Document Builder opens `/builder`.
+- Build a Contract still opens `/build-contract` or its existing route.
+- The card does not appear as a separate top-nav item.
+- No API/auth/DB/Stripe/migration changes.
+- No other tools changed.
+- No new TypeScript/runtime errors.
+
+Return only:
+A. Files changed
+B. Homepage card result
+C. Tool count result
+D. Route result
+E. Build a Contract unchanged confirmation
+F. Safe checkpoint: Yes/No

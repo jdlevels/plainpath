@@ -64,7 +64,7 @@ export function ExportPanel({ onDownloadTxt, documentTitle }: Props) {
 
         <div className="rounded-xl bg-muted/30 border border-border px-3 py-2.5 mt-2">
           <p className="text-[11px] text-muted-foreground leading-relaxed">
-            PDF and DOCX export will be available in an upcoming update, including your brand color, company name, and document styling.
+            Brand styling — including your logo, company name, brand color, and footer — will apply to PDF/DOCX export when those export formats are enabled.
           </p>
         </div>
       </div>

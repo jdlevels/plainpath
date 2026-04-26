@@ -113,10 +113,56 @@ export interface BuilderSection {
   blocks: BuilderBlock[];
 }
 
+// ─── Branding ─────────────────────────────────────────────────────────────────
+
+export type HeaderStyle = "minimal" | "formal" | "modern" | "internal";
+export type LogoPosition = "left" | "center" | "right";
+
+/** Text-only branding fields that are safe to persist in the content JSON column. */
+export interface BrandingData {
+  companyName?: string;
+  departmentName?: string;
+  documentOwner?: string;
+  approvedBy?: string;
+  reviewCycle?: string;
+  brandColor?: string;
+  logoPosition?: LogoPosition;
+  headerStyle?: HeaderStyle;
+  footerText?: string;
+  showPageNumber?: boolean;
+  showConfidential?: boolean;
+  showRevisionLine?: boolean;
+  watermarkEnabled?: boolean;
+}
+
+/** Full runtime branding state, including local-only fields (e.g. logoDataUrl). */
+export interface BrandingState extends Required<BrandingData> {
+  logoDataUrl: string | null; // local preview only — never persisted
+}
+
+export const DEFAULT_BRANDING: BrandingState = {
+  companyName: "",
+  departmentName: "",
+  documentOwner: "",
+  approvedBy: "",
+  reviewCycle: "",
+  brandColor: "#1d4ed8",
+  logoDataUrl: null,
+  logoPosition: "left",
+  headerStyle: "minimal",
+  footerText: "",
+  showPageNumber: false,
+  showConfidential: false,
+  showRevisionLine: false,
+  watermarkEnabled: false,
+};
+
 // ─── Content ─────────────────────────────────────────────────────────────────
 
 export interface BuilderContent {
   sections: BuilderSection[];
+  /** Optional persisted branding (text fields only; logoDataUrl is never stored here). */
+  branding?: BrandingData;
 }
 
 // ─── Document ────────────────────────────────────────────────────────────────

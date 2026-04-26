@@ -14,8 +14,9 @@ import type {
   BuilderDocStatus,
   AutosaveStatus,
   KnownBlockType,
+  BrandingState,
 } from "@/lib/builderTypes";
-import { BLOCK_TYPE_LABELS, KNOWN_BLOCK_TYPES } from "@/lib/builderTypes";
+import { BLOCK_TYPE_LABELS, KNOWN_BLOCK_TYPES, DEFAULT_BRANDING } from "@/lib/builderTypes";
 import { CATEGORY_LABELS } from "@/lib/builderConfig";
 import { BuilderPagePreview } from "@/components/builder/BuilderPagePreview";
 import { BlockEditor } from "@/components/builder/BlockEditor";
@@ -31,12 +32,7 @@ interface WorkspaceProps {
 
 type TabId = "guide" | "outline" | "edit" | "style" | "export";
 
-interface BrandingState {
-  companyName: string;
-  brandColor: string;
-  headerStyle: "minimal" | "banner" | "classic";
-  footerText: string;
-}
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function AutosaveIndicator({ status }: { status: AutosaveStatus }) {
   if (status === "idle") return null;
@@ -62,6 +58,8 @@ const TABS: Array<{ id: TabId; label: string; icon: React.ComponentType<{ classN
   { id: "style",   label: "Style",   icon: Palette   },
   { id: "export",  label: "Export",  icon: Download  },
 ];
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export default function Workspace({ docId }: WorkspaceProps) {
   const [, navigate] = useLocation();
@@ -92,13 +90,12 @@ export default function Workspace({ docId }: WorkspaceProps) {
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
 
-  // Local branding state (Phase 1: not persisted)
-  const [branding, setBranding] = useState<BrandingState>({
-    companyName: "",
-    brandColor: "#1d4ed8",
-    headerStyle: "minimal",
-    footerText: "",
-  });
+  // Branding state — text fields persist in content.branding; logoDataUrl is local only
+  const [branding, setBranding] = useState<BrandingState>(DEFAULT_BRANDING);
+  const brandingRef = useRef<BrandingState>(DEFAULT_BRANDING);
+
+  // Keep brandingRef in sync so save functions always use latest branding
+  useEffect(() => { brandingRef.current = branding; }, [branding]);
 
   useEffect(() => {
     document.title = title ? `${title} — Document Builder — PlainPath` : "Document Builder — PlainPath";
@@ -117,6 +114,16 @@ export default function Workspace({ docId }: WorkspaceProps) {
       serverVersionRef.current = d.serverVersion;
       const sorted = [...d.content.sections].sort((a, b) => a.order - b.order);
       if (sorted.length > 0) setActiveSectionId(sorted[0].id);
+      // Load persisted branding (text fields only) — merge with defaults
+      if (d.content.branding) {
+        const loaded: BrandingState = {
+          ...DEFAULT_BRANDING,
+          ...d.content.branding,
+          logoDataUrl: null, // never restored from DB
+        };
+        setBranding(loaded);
+        brandingRef.current = loaded;
+      }
       setLoading(false);
     }).catch((err) => {
       if (cancelled) return;
@@ -156,6 +163,12 @@ export default function Workspace({ docId }: WorkspaceProps) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, sectionIdKey]);
 
+  // Build content object for saving — strips logoDataUrl, embeds text branding
+  function buildSaveContent(rawContent: BuilderContent): BuilderContent {
+    const { logoDataUrl, ...textBranding } = brandingRef.current;
+    return { ...rawContent, branding: textBranding };
+  }
+
   const scheduleAutosave = useCallback(
     (newContent: BuilderContent, newTitle: string, newStatus: string) => {
       if (conflictRef.current) return;
@@ -165,7 +178,9 @@ export default function Workspace({ docId }: WorkspaceProps) {
         setAutosaveStatus("saving");
         try {
           const result = await api.updateDocument(docId, {
-            content: newContent, title: newTitle, status: newStatus,
+            content: buildSaveContent(newContent),
+            title: newTitle,
+            status: newStatus,
             server_version: serverVersionRef.current,
           });
           serverVersionRef.current = result.serverVersion;
@@ -182,6 +197,7 @@ export default function Workspace({ docId }: WorkspaceProps) {
         }
       }, 2000);
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [docId, api.updateDocument],
   );
 
@@ -191,7 +207,10 @@ export default function Workspace({ docId }: WorkspaceProps) {
     setAutosaveStatus("saving");
     try {
       const result = await api.updateDocument(docId, {
-        content, title, status, server_version: serverVersionRef.current,
+        content: buildSaveContent(content),
+        title,
+        status,
+        server_version: serverVersionRef.current,
       });
       serverVersionRef.current = result.serverVersion;
       setAutosaveStatus("saved");
@@ -205,6 +224,7 @@ export default function Workspace({ docId }: WorkspaceProps) {
         setAutosaveStatus("error");
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [docId, api.updateDocument, content, title, status]);
 
   function handleContentChange(newContent: BuilderContent) {
@@ -215,6 +235,13 @@ export default function Workspace({ docId }: WorkspaceProps) {
   function handleTitleChange(newTitle: string) {
     setTitle(newTitle);
     scheduleAutosave(content, newTitle, status);
+  }
+
+  function handleBrandingChange(newBranding: BrandingState) {
+    setBranding(newBranding);
+    brandingRef.current = newBranding;
+    // Schedule autosave to persist text branding fields
+    scheduleAutosave(content, title, status);
   }
 
   // ── Section operations ────────────────────────────────────────────────────
@@ -511,6 +538,7 @@ export default function Workspace({ docId }: WorkspaceProps) {
                 title={title}
                 selectedBlockId={selectedBlockId}
                 onBlockSelect={handleBlockSelect}
+                branding={branding}
               />
             </div>
           </div>
@@ -599,7 +627,7 @@ export default function Workspace({ docId }: WorkspaceProps) {
             )}
 
             {activeTab === "style" && (
-              <StylePanel branding={branding} onChange={setBranding} />
+              <StylePanel branding={branding} onChange={handleBrandingChange} />
             )}
 
             {activeTab === "export" && (
