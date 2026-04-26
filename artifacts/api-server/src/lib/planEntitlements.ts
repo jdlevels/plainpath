@@ -3,7 +3,7 @@
 // Plans (accessTier = product entitlement):
 //   starter — $4.99/month  — Analyze a Document + Redact Sensitive Info
 //   pro     — $19.99/month — All tools (Analyze, Trust Check, Contract Builder,
-//                            Contract Review, Redact, Digital Signature)
+//                            Contract Review, Redact, Compare Versions, Clause Extractor, Document Builder)
 //
 // Identity model (see routes/entitlements.ts for full spec):
 //   role        = internal privilege  ("admin" | "member")
@@ -28,7 +28,6 @@ export type ToolKey =
   | "contract-review"
   | "build-contract"
   | "redact"
-  | "signature"
   | "compare"
   | "clause-extractor"
   | "compare-versions"
@@ -36,8 +35,8 @@ export type ToolKey =
 /** Which tools each plan can access. This is the canonical feature gate. */
 export const TOOL_ACCESS: Record<PlanKey, ToolKey[]> = {
   starter: ["analyze", "redact"],
-  pro: ["analyze", "trust-check", "contract-review", "build-contract", "redact", "signature", "compare", "clause-extractor", "compare-versions"],
-  team: ["analyze", "trust-check", "contract-review", "build-contract", "redact", "signature", "compare", "clause-extractor", "compare-versions"],
+  pro: ["analyze", "trust-check", "contract-review", "build-contract", "redact", "compare", "clause-extractor", "compare-versions"],
+  team: ["analyze", "trust-check", "contract-review", "build-contract", "redact", "compare", "clause-extractor", "compare-versions"],
 }
 
 /** True if the given plan can access the given tool. */

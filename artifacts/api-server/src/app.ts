@@ -18,7 +18,6 @@ import helpRoutes from "./routes/help/index.js";
 import eventsRouter from "./routes/events.js";
 import userHistoryRoutes from "./routes/userHistory/index.js";
 import teamRoutes from "./routes/teams/index.js";
-import signatureRoutes from "./routes/signatures/index.js";
 import userDocsRoutes from "./routes/userDocs/index.js";
 import builderRoutes from "./routes/builder/index.js";
 import clauseExtractorRoutes from "./routes/clause-extractor/index.js";
@@ -205,7 +204,6 @@ const heavyLimiter = rateLimit({
 app.use(
   [
     "/api/documents/redact-pdf",
-    "/api/contracts/send-for-signature",
   ],
   heavyLimiter,
 )
@@ -234,7 +232,6 @@ app.use(
     "/api/reminders/email",
     "/api/reminders/drip",
     "/api/reminders/welcome",
-    "/api/contracts/send-for-signature",
   ],
   userOutboundLimiter,
 )
@@ -251,7 +248,6 @@ app.use(remindersRoutes);
 app.use("/api/help", helpRoutes);
 app.use("/api/user", userHistoryRoutes);
 app.use("/api/teams", teamRoutes);
-app.use("/api/signatures", signatureRoutes);
 app.use("/api/user/documents", userDocsRoutes);
 app.use("/api/builder", builderRoutes);
 app.use("/api/clause-extractor", clauseExtractorRoutes);

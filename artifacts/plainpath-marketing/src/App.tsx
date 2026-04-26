@@ -27,7 +27,6 @@ import DemoTrustCheck from "@/pages/DemoTrustCheck";
 import DemoBuildContract from "@/pages/DemoBuildContract";
 import DemoContractReview from "@/pages/DemoContractReview";
 import DemoRedact from "@/pages/DemoRedact";
-import DemoSignature from "@/pages/DemoSignature";
 import DemoCompare from "@/pages/DemoCompare";
 import DemoClauseExtractor from "@/pages/DemoClauseExtractor";
 
@@ -50,7 +49,6 @@ function Router() {
       <Route path="/demo/build-contract" component={DemoBuildContract} />
       <Route path="/demo/contract-review" component={DemoContractReview} />
       <Route path="/demo/redact" component={DemoRedact} />
-      <Route path="/demo/signature" component={DemoSignature} />
       <Route path="/demo/compare" component={DemoCompare} />
       <Route path="/demo/clause-extractor" component={DemoClauseExtractor} />
 

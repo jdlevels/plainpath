@@ -35,7 +35,6 @@ import CompareVersionsSession from "@/pages/CompareVersionsSession";
 import Redact from "@/pages/Redact";
 import Billing from "@/pages/Billing";
 import Upgrade from "@/pages/Upgrade";
-import Signature from "@/pages/Signature";
 import Documents from "@/pages/Documents";
 import AccountSecurity from "@/pages/AccountSecurity";
 import ClauseExtractor from "@/pages/ClauseExtractor"
@@ -490,7 +489,6 @@ function Router() {
             <Route path="/billing" component={protect(Billing)} />
             <Route path="/upgrade" component={protect(Upgrade)} />
             <Route path="/team" component={protect(TeamManage)} />
-            <Route path="/signature" component={protect(Signature)} />
             <Route path="/documents" component={protect(Documents)} />
             <Route path="/account-security" component={protect(AccountSecurity)} />
             <Route path="/clause-extractor" component={protect(ClauseExtractor)} />

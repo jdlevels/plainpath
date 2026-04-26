@@ -1,0 +1,258 @@
+PlainPath Launch Stabilization — Remove E-Signature Feature, Keep Signature Line / Date Field Blocks Only
+
+Decision:
+PlainPath will not include e-signature, digital signature, Dropbox Sign, send-for-signature, signing workflows, signature routing, signature envelopes, or signature status tracking.
+
+However, PlainPath Document Builder IS allowed to include basic document layout fields:
+- Signature line
+- Date line
+- Printed name line
+- Approval/sign-off line
+
+These are not e-signature features. They are simple printable document fields that users can place on the page.
+
+Goal:
+Fully remove the unfinished e-signature feature while preserving or adding simple document-builder field blocks for signature/date placement.
+
+Approved active PlainPath tools:
+1. Analyze a Document
+2. Document Trust Check
+3. Build a Contract
+4. Contract Review
+5. Redact Sensitive Info
+6. Ask This Document
+7. Clause Extractor
+8. Compare Versions
+9. Document Builder
+
+Remove completely:
+- Digital Signature tool
+- E-signature tool
+- Send for Signature
+- Sign document workflow
+- Signature routing
+- Signature envelopes
+- Signature status tracking
+- Dropbox Sign integration
+- Dropbox Sign privacy references
+- Signature API endpoints
+- Signature webhooks
+- Signature route
+- Signature page/component
+- Signature modal
+- Signature buttons that launch signing
+- Signature cards
+- Signature CTAs
+- Signature menu items
+- Signature “Coming Soon” feature references
+- Signature helper text connected to signing workflows
+- Signature environment variable references if only used for e-signature
+- Any direct route access to /signature or related paths
+
+Keep / allow only:
+- A simple Signature Line field/block inside Document Builder
+- A simple Date Line field/block inside Document Builder
+- Optional Printed Name Line field/block
+- Optional Approval / Sign-off Line field/block
+- These fields should be printable/static document elements only
+- These fields should not send, request, verify, authenticate, track, or process signatures
+
+Important distinction:
+A “Signature Line” block is allowed.
+A “Send for Signature” feature is not allowed.
+
+Do not remove generic “signature” words if they are part of:
+- contract text
+- uploaded document content
+- generated document content
+- template language
+- legal/contract clauses
+- normal printed signature line fields
+- file icon usage that is generic and not connected to the removed feature
+
+Search the full codebase for:
+- signature
+- e-signature
+- esign
+- digital signature
+- DigitalSignature
+- Signature
+- Send for Signature
+- sendForSignature
+- sign document
+- Dropbox Sign
+- DropboxSign
+- dropboxsign
+- Dropbox
+- HelloSign
+- /signature
+- /sign
+- SIGNATURE
+- VITE_SIGNATURE
+- DROPBOX_SIGN
+- HELLOSIGN
+- PdfSignature
+- SignatureWorkspace
+- DemoSignature
+- SendForSignatureModal
+- FileSignature
+
+Removal requirements:
+
+1. Routes
+- Remove /signature route if it exists.
+- Remove /demo/signature route if it exists.
+- Remove any route alias related to signing.
+- Direct URL must not open any e-signature UI.
+- If route deletion is risky, redirect to /app or 404, but prefer full removal.
+
+2. Navigation/dashboard/actions
+Remove all e-signature entries from:
+- Navbar
+- Tools dropdown
+- Dashboard cards
+- My Documents actions
+- My Analyses actions
+- Recent work actions
+- Export panels
+- Build a Contract result screen
+- Document Builder export panel
+- Any “send/sign/share for signature” button
+
+3. Components/files
+Delete or orphan-check:
+- DigitalSignature page/component
+- DemoSignature page/component
+- SendForSignatureModal
+- PdfSignatureWorkspace
+- Signature-related modals
+- Signature-related API helpers
+- Signature-related client utilities
+- Signature-specific icons if unused elsewhere
+
+Keep only simple field/block renderers if used for printable document layout:
+- SignatureLineBlock
+- DateLineBlock
+- ApprovalLineBlock
+- PrintedNameLineBlock
+
+If these blocks do not exist yet, add them only inside Document Builder’s insert/add-block system.
+
+4. Document Builder allowed field behavior
+Inside Document Builder, allow users to insert:
+- Signature line
+- Date line
+- Printed name line
+- Approval/sign-off line
+
+Behavior:
+- User can place the line on the left document canvas.
+- User can move it.
+- User can resize it if supported.
+- It snaps to the invisible grid.
+- It saves/reloads as a normal document field.
+- It does not send anything to any third-party service.
+- It does not create a signing request.
+- It does not track signer status.
+- It does not verify identity.
+- It does not collect biometric/signature data.
+- It is simply a visible line/label for printed/manual signing.
+
+Suggested labels:
+- Signature: __________________________
+- Date: _______________
+- Printed Name: ______________________
+- Approved By: _______________________
+- Approval Date: _______________
+
+5. API/server/integrations
+Remove:
+- Dropbox Sign routes
+- HelloSign routes
+- Signature API endpoints
+- Signature API client methods
+- Signature webhook handlers
+- Signature-specific auth handlers
+- Signature-specific environment variable usage
+- Signature-specific server imports
+
+Do not remove normal Document Builder save/update APIs.
+
+6. Privacy / Terms / Legal
+Update privacy/legal copy so it does not mention:
+- Dropbox Sign
+- e-signature
+- digital signature
+- signature processing
+- send for signature
+- third-party signature provider
+
+The privacy policy should describe only active PlainPath behavior.
+
+Because signature/date lines are static document fields, they do not require Dropbox Sign or e-signature privacy language.
+
+7. Marketing
+Remove e-signature from:
+- Marketing cards
+- Feature lists
+- Pricing page
+- FAQ
+- Demo pages
+- Footer links
+- Tool count language if affected
+- “Coming soon” sections
+
+Do not add new marketing copy unless needed to clarify Document Builder includes printable fields.
+
+8. TypeScript/import cleanup
+- Remove unused imports caused by e-signature deletion.
+- Keep FileSignature icon only if used generically for file/document labeling.
+- No new TypeScript errors.
+- Do not chase unrelated baseline TypeScript errors unless caused by this cleanup.
+
+9. Database/schema
+Do not create a migration.
+Do not delete user data.
+If signature-specific schema exists, do not modify DB tonight unless it blocks build.
+Instead report:
+- table/field name
+- whether it is unused
+- recommended later cleanup migration
+
+10. Verification
+Verify:
+- /signature cannot open an e-signature UI.
+- /demo/signature cannot open an e-signature UI.
+- Search for Dropbox Sign returns no active UI/privacy/integration references.
+- Search for Send for Signature returns none.
+- Search for Digital Signature returns none.
+- Search for e-signature returns none.
+- No signing card/button/menu/action is visible.
+- Build a Contract has no signing button.
+- Document Builder export panel has no signing workflow reference.
+- My Documents has no signing action.
+- My Analyses has no signing action.
+- Privacy policy has no Dropbox Sign or e-signature reference.
+- Document Builder can still include simple Signature Line and Date Line fields.
+- Signature Line and Date Line fields are static printable layout elements only.
+- Active toolset remains exactly 9 tools.
+- Web app builds/runs.
+- No new TypeScript/runtime errors from changed files.
+- No Stripe/auth/payment changes.
+- No DB migrations.
+
+Return only:
+A. Overall result: Pass / Fail
+B. Files changed
+C. Files deleted, if any
+D. Routes removed
+E. UI e-signature references removed
+F. API/integration references removed
+G. Privacy/legal references removed
+H. Static signature/date line field status
+I. Remaining signature-related references, if any, with explanation
+J. Active 9-tool confirmation
+K. DB/schema impact
+L. Environment variables to delete from Replit secrets, if any
+M. Safe to publish web: Yes/No
+N. Safe to prepare app-store submission: Yes/No
