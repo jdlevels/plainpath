@@ -30,7 +30,7 @@ const TOOL_LINKS = [
   { label: "Redact Sensitive Info", href: "/app/redact",                  icon: EyeOff         },
   { label: "Compare Versions",      href: "/app/compare-versions",        icon: GitCompare     },
   { label: "Clause Extractor",       href: "/app/clause-extractor",        icon: ListChecks     },
-  { label: "Ask This Document",      href: "/app/analyze",                 icon: MessageCircle  },
+  { label: "Ask This Document",      href: "/app/ask-document",            icon: MessageCircle  },
 ];
 
 const LogoBrand = () => (
