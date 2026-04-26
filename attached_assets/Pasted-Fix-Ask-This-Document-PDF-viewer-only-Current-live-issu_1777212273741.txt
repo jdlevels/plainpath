@@ -1,0 +1,92 @@
+Fix Ask This Document PDF viewer only.
+
+Current live issue:
+On /ask-document, chat now works and answers correctly. However, the left panel still shows extracted raw text instead of the actual uploaded PDF.
+
+Requirement:
+For PDF uploads, the left side must visually render the actual PDF document, similar to the Redact Sensitive Info tool’s PDF preview. The user should see the real PDF page surface, not extracted text.
+
+Scope:
+Fix only Ask This Document’s left-side document viewer behavior.
+
+Allowed files:
+- artifacts/plainpath/src/pages/AskDocument.tsx
+- If needed only for reuse: a small read-only PDF viewer component or import an existing PDF viewer component already used by Redact
+
+Do not touch:
+- DocumentChat auth
+- /api/documents/chat auth
+- Analyze Action Pack
+- Analyze.tsx
+- Redact behavior
+- Clause Extractor
+- Contract Review
+- Trust Check
+- Compare Versions
+- Document Builder
+- Database
+- Migrations
+- Stripe/payment
+- Marketing
+- Global routing
+
+Important:
+The current AskDocument chat works. Do not break it.
+
+Required viewer behavior:
+
+1. PDF upload path:
+- When the user uploads a PDF, preserve the original uploaded File object.
+- Create a safe object URL from the uploaded PDF file.
+- Render the actual PDF pages in the left panel.
+- The viewer should resemble the Redact tool’s document preview:
+  - white/paper page surface
+  - readable page scale
+  - scrollable pages
+  - file name visible
+  - dark app background around the paper
+- Do not show extracted text as the primary view for PDF uploads.
+- Use extracted text only as hidden/context data for chat, not as the visible PDF viewer.
+
+2. DOCX / TXT / pasted text path:
+- Since these are not PDFs, continue showing the paper-style extracted text viewer.
+- Keep the existing text fallback for non-PDF inputs.
+
+3. PDF render fallback:
+If the PDF cannot be rendered client-side:
+- show the paper-style extracted text viewer as fallback
+- show a small note:
+  "PDF preview unavailable. Showing extracted text instead."
+
+4. Cleanup:
+- Revoke the object URL when the user resets, uploads a different file, or leaves the component to avoid memory leaks.
+
+5. Layout:
+- Keep the current two-panel layout:
+  - left 55–60% document viewer
+  - right 40–45% Ask PlainPath chat
+- Keep the standard Ask This Document loading animation.
+- Keep mobile Document / Ask tabs.
+
+Verification:
+1. Open /ask-document.
+2. Upload a PDF.
+3. Confirm loading animation still appears.
+4. Confirm the left panel shows the actual PDF pages, not extracted raw text.
+5. Confirm the right panel chat still works.
+6. Ask:
+   "What should I do about the high-risk items?"
+7. Confirm the answer appears.
+8. Test paste text once and confirm text viewer still works.
+9. Confirm /ask-this-document still works.
+10. Confirm no other tools changed.
+11. Confirm no database/migration/Stripe/auth changes.
+12. Confirm no new TypeScript/runtime errors introduced.
+
+Return only:
+A. Root cause
+B. Files changed
+C. PDF viewer implementation
+D. Text fallback behavior
+E. Chat verification
+F. Whether safe to publish

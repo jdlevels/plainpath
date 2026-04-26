@@ -1,16 +1,117 @@
-import { useState, useRef, useCallback } from "react"
+import { useState, useRef, useCallback, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   MessageCircle, UploadCloud, Type,
-  ArrowLeft, X, AlertCircle, ChevronRight, FileText,
+  ArrowLeft, X, AlertCircle, ChevronRight, FileText, Loader2,
 } from "lucide-react"
 import { useLocation } from "wouter"
+import * as pdfjsLib from "pdfjs-dist"
 import { Button } from "@/components/ui/button"
 import { WorkspaceShell } from "@/components/WorkspaceShell"
 import { DocumentChat } from "@/components/DocumentChat"
 import { DocumentScanScreen } from "@/components/DocumentScanScreen"
 import { getApiBaseUrl } from "@/lib/api"
 import type { DocumentAnalysis } from "@workspace/api-client-react"
+
+// Use same worker pattern as PdfRedactViewer
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+  "pdfjs-dist/build/pdf.worker.min.mjs",
+  import.meta.url,
+).toString()
+
+const PDF_SCALE = 1.4
+const PDF_MAX_PAGES = 15
+
+// ─── Read-only PDF viewer ─────────────────────────────────────────────────────
+function PdfReadViewer({ file, fallbackContent }: { file: File; fallbackContent: React.ReactNode }) {
+  const [pages, setPages] = useState<string[]>([])
+  const [loading, setLoading] = useState(true)
+  const [failed, setFailed] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    setFailed(false)
+    setPages([])
+
+    ;(async () => {
+      try {
+        const buf = await file.arrayBuffer()
+        const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(buf), verbosity: 0 }).promise
+        if (cancelled) return
+
+        const renders: string[] = []
+        const count = Math.min(pdf.numPages, PDF_MAX_PAGES)
+
+        for (let pn = 1; pn <= count; pn++) {
+          if (cancelled) break
+          const page = await pdf.getPage(pn)
+          const viewport = page.getViewport({ scale: PDF_SCALE })
+          const canvas = document.createElement("canvas")
+          canvas.width = Math.floor(viewport.width)
+          canvas.height = Math.floor(viewport.height)
+          const ctx = canvas.getContext("2d")!
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await (page.render as any)({ canvasContext: ctx, viewport }).promise
+          renders.push(canvas.toDataURL("image/jpeg", 0.88))
+          page.cleanup()
+        }
+
+        if (!cancelled) {
+          setPages(renders)
+          setLoading(false)
+        }
+      } catch {
+        if (!cancelled) {
+          setFailed(true)
+          setLoading(false)
+        }
+      }
+    })()
+
+    return () => { cancelled = true }
+  }, [file])
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3 py-16 text-muted-foreground">
+        <Loader2 className="w-6 h-6 animate-spin" />
+        <p className="text-xs">Rendering PDF…</p>
+      </div>
+    )
+  }
+
+  if (failed || pages.length === 0) {
+    return (
+      <div className="space-y-4">
+        <p className="text-[11px] text-muted-foreground/70 text-center italic">
+          PDF preview unavailable. Showing extracted text instead.
+        </p>
+        {fallbackContent}
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-3">
+      {pages.map((dataUrl, i) => (
+        <img
+          key={i}
+          src={dataUrl}
+          alt={`Page ${i + 1}`}
+          className="w-full rounded-sm shadow-sm border border-border/20"
+          draggable={false}
+        />
+      ))}
+      {/* truncation note */}
+      {pages.length === PDF_MAX_PAGES && (
+        <p className="text-[10px] text-muted-foreground/50 text-center pt-1">
+          Showing first {PDF_MAX_PAGES} pages
+        </p>
+      )}
+    </div>
+  )
+}
 
 const EXAMPLE_QUESTIONS = [
   "What does this document require me to do?",
@@ -36,121 +137,115 @@ function DocumentViewer({
   analysis,
   fileName,
   rawText,
+  pdfFile,
 }: {
   analysis: DocumentAnalysis
   fileName: string | null
   rawText?: string
+  pdfFile?: File | null
 }) {
   const sections = (analysis.sections ?? []) as Array<{ id: string; title?: string; content: string }>
   const plainEnglish = analysis.plainEnglish as Record<string, string> | undefined
 
-  // Filter to sections that have real content (not empty strings)
   const validSections = sections.filter((s) => s.content?.trim().length > 0)
   const hasSections = validSections.length > 0
-
   const hasRawText = (rawText ?? "").trim().length > 0
-
   const hasPlainEnglish =
     !!plainEnglish &&
     Object.values(plainEnglish).some((v) => typeof v === "string" && v.trim().length > 0)
-
   const hasSummary = (analysis.summary ?? "").trim().length > 0
 
-  // Determine what to render
   const showSections = hasSections
   const showRawText = !hasSections && hasRawText
   const showPlainEnglish = !hasSections && !hasRawText && hasPlainEnglish
   const showSummary = !hasSections && !hasRawText && !hasPlainEnglish && hasSummary
   const showEmpty = !hasSections && !hasRawText && !hasPlainEnglish && !hasSummary
 
+  // The extracted-text view — used directly for non-PDFs, and as fallback inside PdfReadViewer
+  const textContent = (
+    <div className="space-y-5">
+      {showSections && validSections.map((section) => (
+        <div key={section.id} className="space-y-2">
+          {section.title?.trim() && (
+            <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+              {section.title}
+            </h3>
+          )}
+          <p className="text-sm text-foreground/90 leading-[1.75] whitespace-pre-wrap">
+            {section.content}
+          </p>
+        </div>
+      ))}
+
+      {showRawText && (
+        <div className="space-y-2">
+          <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+            Document text
+          </h3>
+          <p className="text-sm text-foreground/90 leading-[1.75] whitespace-pre-wrap">{rawText}</p>
+        </div>
+      )}
+
+      {showPlainEnglish && plainEnglish && PE_FIELDS.filter(({ key }) => plainEnglish[key]?.trim()).map(({ key, label }) => (
+        <div key={key} className="space-y-2">
+          <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+            {label}
+          </h3>
+          <p className="text-sm text-foreground/90 leading-[1.75]">{plainEnglish[key]}</p>
+        </div>
+      ))}
+
+      {showSummary && (
+        <div className="space-y-2">
+          <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+            Summary
+          </h3>
+          <p className="text-sm text-foreground/90 leading-[1.75]">{analysis.summary}</p>
+        </div>
+      )}
+
+      {showEmpty && (
+        <div className="rounded-xl border border-border/40 bg-muted/20 px-5 py-10 text-center">
+          <p className="text-sm text-muted-foreground">
+            No readable text was extracted from this document. Try another PDF, DOCX, or paste
+            the text manually.
+          </p>
+        </div>
+      )}
+    </div>
+  )
+
   return (
     <div className="p-4 sm:p-6">
-      {/* Paper surface */}
+      {/* Paper card surface */}
       <div className="bg-white dark:bg-card rounded-2xl border border-border/50 shadow-sm overflow-hidden">
 
-        {/* Document header strip */}
+        {/* Header strip */}
         <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-border/40 bg-muted/20">
           <div className="w-7 h-7 rounded-lg bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center shrink-0">
             <FileText className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-foreground truncate leading-tight">
-              {fileName ?? analysis.title ?? "Document"}
+              {fileName ?? (analysis as any).title ?? "Document"}
             </p>
-            {analysis.documentType && (
-              <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">{analysis.documentType}</p>
+            {(analysis as any).documentType && (
+              <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">
+                {(analysis as any).documentType}
+              </p>
             )}
           </div>
         </div>
 
-        {/* Document body */}
-        <div className="px-6 py-6 space-y-5">
-
-          {/* Sections from extracted text */}
-          {showSections && (
-            <div className="space-y-5">
-              {validSections.map((section) => (
-                <div key={section.id} className="space-y-2">
-                  {section.title?.trim() && (
-                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
-                      {section.title}
-                    </h3>
-                  )}
-                  <p className="text-sm text-foreground/90 leading-[1.75] whitespace-pre-wrap">
-                    {section.content}
-                  </p>
-                </div>
-              ))}
-            </div>
+        {/* Body */}
+        <div className="px-4 sm:px-6 py-5">
+          {pdfFile ? (
+            <PdfReadViewer file={pdfFile} fallbackContent={textContent} />
+          ) : (
+            textContent
           )}
-
-          {/* Fallback 1: raw pasted text */}
-          {showRawText && (
-            <div className="space-y-2">
-              <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
-                Document text
-              </h3>
-              <p className="text-sm text-foreground/90 leading-[1.75] whitespace-pre-wrap">
-                {rawText}
-              </p>
-            </div>
-          )}
-
-          {/* Fallback 2: plain-English breakdown */}
-          {showPlainEnglish && plainEnglish && (
-            <div className="space-y-5">
-              {PE_FIELDS.filter(({ key }) => plainEnglish[key]?.trim()).map(({ key, label }) => (
-                <div key={key} className="space-y-2">
-                  <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
-                    {label}
-                  </h3>
-                  <p className="text-sm text-foreground/90 leading-[1.75]">{plainEnglish[key]}</p>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Fallback 3: summary */}
-          {showSummary && (
-            <div className="space-y-2">
-              <h3 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
-                Summary
-              </h3>
-              <p className="text-sm text-foreground/90 leading-[1.75]">{analysis.summary}</p>
-            </div>
-          )}
-
-          {/* Empty state */}
-          {showEmpty && (
-            <div className="rounded-xl border border-border/40 bg-muted/20 px-5 py-10 text-center">
-              <p className="text-sm text-muted-foreground">
-                No readable text was extracted from this document. Try another PDF, DOCX, or paste
-                the text manually.
-              </p>
-            </div>
-          )}
-
         </div>
+
       </div>
     </div>
   )
@@ -163,6 +258,7 @@ export default function AskDocument() {
   const [fileName, setFileName] = useState<string | null>(null)
   const [text, setText] = useState("")
   const [rawText, setRawText] = useState<string | undefined>(undefined)
+  const [pdfFile, setPdfFile] = useState<File | null>(null)
   const [analysis, setAnalysis] = useState<DocumentAnalysis | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState(false)
@@ -178,6 +274,12 @@ export default function AskDocument() {
 
   async function analyzeFile(file: File) {
     setFileName(file.name)
+    // Preserve original File for PDF rendering; clear for non-PDF
+    if (file.name.toLowerCase().endsWith(".pdf") || file.type === "application/pdf") {
+      setPdfFile(file)
+    } else {
+      setPdfFile(null)
+    }
     setError(null)
     setPhase("processing")
     try {
@@ -196,6 +298,7 @@ export default function AskDocument() {
       setMobileTab("ask")
       setPhase("ready")
     } catch (err: unknown) {
+      setPdfFile(null)
       setError(err instanceof Error ? err.message : "Something went wrong. Please try again.")
       setPhase("upload")
     }
@@ -208,6 +311,7 @@ export default function AskDocument() {
       return
     }
     setFileName("Pasted text")
+    setPdfFile(null)
     setRawText(trimmed)
     setError(null)
     setPhase("processing")
@@ -248,6 +352,7 @@ export default function AskDocument() {
     setFileName(null)
     setText("")
     setRawText(undefined)
+    setPdfFile(null)
     setAnalysis(null)
     setError(null)
     setMobileTab("ask")
@@ -459,7 +564,7 @@ export default function AskDocument() {
                 <div className="md:hidden flex-1 min-h-0 overflow-hidden">
                   {mobileTab === "document" ? (
                     <div className="h-full overflow-y-auto">
-                      <DocumentViewer analysis={analysis} fileName={fileName} rawText={rawText} />
+                      <DocumentViewer analysis={analysis} fileName={fileName} rawText={rawText} pdfFile={pdfFile} />
                     </div>
                   ) : (
                     <div className="h-full overflow-hidden">
@@ -471,7 +576,7 @@ export default function AskDocument() {
                 {/* Desktop two-column */}
                 <div className="hidden md:flex flex-1 min-h-0">
                   <div className="w-[58%] overflow-y-auto border-r border-border/40">
-                    <DocumentViewer analysis={analysis} fileName={fileName} rawText={rawText} />
+                    <DocumentViewer analysis={analysis} fileName={fileName} rawText={rawText} pdfFile={pdfFile} />
                   </div>
                   <div className="w-[42%] overflow-y-auto">
                     <DocumentChat analysis={analysis} />
