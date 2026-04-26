@@ -1,0 +1,62 @@
+Fix Ask This Document standalone upload JSON error only.
+
+Problem:
+On /ask-document, uploading a document causes this visible error:
+
+Unexpected token '<', "<!DOCTYPE " ... is not valid JSON
+
+This means the frontend is expecting JSON but the request is receiving HTML, likely because AskDocument.tsx is calling the wrong route, a missing API route, a frontend route, or an auth/SPA fallback page.
+
+Scope:
+Fix only the standalone Ask This Document upload/paste processing path.
+
+Do not redesign.
+Do not refactor the app.
+Do not change database.
+Do not apply migrations.
+Do not touch Stripe/payment logic.
+Do not touch Analyze Action Pack.
+Do not touch other tools unless needed only to reuse an existing working API helper.
+
+Required investigation:
+1. Inspect AskDocument.tsx.
+2. Find the exact fetch/API call used when a user uploads a PDF/DOCX or pastes text.
+3. Compare it against the working Analyze upload/paste/sample flow.
+4. Confirm whether AskDocument is hitting:
+   - the wrong URL,
+   - a frontend route,
+   - a missing API route,
+   - an auth redirect,
+   - or a response that is not JSON.
+
+Required fix:
+1. Make Ask This Document use the same working document text extraction / analysis API path already used by Analyze, or the correct existing API helper.
+2. Ensure the request includes the correct method, headers, body/FormData, credentials/session behavior, and API base path.
+3. Add safe response handling:
+   - Check response.ok.
+   - Check content-type includes application/json before calling response.json().
+   - If HTML or non-JSON is returned, show a plain user-friendly error instead of the raw "Unexpected token '<'" message.
+4. Keep the user on /ask-document.
+5. After successful upload/paste, show DocumentChat on the same page.
+6. Do not redirect to /analyze.
+7. Preserve /ask-this-document as the same page or clean redirect to /ask-document.
+
+Verification:
+1. /ask-document opens.
+2. Upload PDF works.
+3. Upload DOCX works if supported by current backend.
+4. Paste text works.
+5. Example questions remain visible before processing.
+6. DocumentChat appears on the same page after processing.
+7. No raw JSON/HTML parsing error appears.
+8. Analyze Action Pack remains unchanged.
+9. No other tools changed.
+10. No new TypeScript/runtime errors introduced.
+
+Return only:
+A. Root cause
+B. Files changed
+C. Exact endpoint corrected
+D. Upload/paste verification result
+E. Confirmation no other tools changed
+F. Whether safe to publish

@@ -31,6 +31,14 @@ export default function AskDocument() {
   const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  async function safeParseJson(res: Response): Promise<Record<string, unknown>> {
+    const ct = res.headers.get("content-type") ?? ""
+    if (!ct.includes("application/json")) {
+      throw new Error("Could not process this document. Please try again.")
+    }
+    return res.json() as Promise<Record<string, unknown>>
+  }
+
   async function analyzeFile(file: File) {
     setFileName(file.name)
     setError(null)
@@ -40,14 +48,14 @@ export default function AskDocument() {
       const form = new FormData()
       form.append("file", file)
       form.append("documentTypeHint", "")
-      const res = await fetch(`${apiBase}/api/documents/analyze-file`, {
+      const res = await fetch(`${apiBase}/api/documents/upload`, {
         method: "POST",
         body: form,
         credentials: "include",
       })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data?.message ?? "Could not read this document. Please try again.")
-      setAnalysis(data.analysis)
+      const data = await safeParseJson(res)
+      if (!res.ok) throw new Error((data?.message as string) ?? "Could not read this document. Please try again.")
+      setAnalysis(data.analysis as DocumentAnalysis)
       setPhase("ready")
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Something went wrong. Please try again.")
@@ -72,9 +80,9 @@ export default function AskDocument() {
         body: JSON.stringify({ text: trimmed, documentTypeHint: "" }),
         credentials: "include",
       })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data?.message ?? "Could not analyze this text. Please try again.")
-      setAnalysis(data.analysis)
+      const data = await safeParseJson(res)
+      if (!res.ok) throw new Error((data?.message as string) ?? "Could not analyze this text. Please try again.")
+      setAnalysis(data.analysis as DocumentAnalysis)
       setPhase("ready")
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Something went wrong. Please try again.")
