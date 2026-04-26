@@ -1,0 +1,316 @@
+PlainPath Document Builder — Phase 2 Structured Templates + Guided Questions Only
+
+Goal:
+Build Phase 2 for Document Builder by adding structured business-document templates and a guided question flow that helps users create a useful first draft quickly.
+
+Important:
+Phase 1 is already complete:
+- Guide tab
+- Outline tab
+- Edit tab
+- Style tab
+- Export tab
+- Click-to-select blocks
+- BuilderPagePreview selected-block ring
+
+Do not rebuild Phase 1.
+
+Product decision:
+Document Builder is a premium 9th PlainPath tool, separate from Build a Contract.
+
+Document Builder is for:
+- SOPs
+- manuals
+- policies
+- onboarding guides
+- training manuals
+- process guides
+- safety manuals
+- incident reports
+- checklists
+- internal business documents
+
+Build a Contract remains contract-specific and must not be changed.
+
+Do not touch:
+- Build a Contract
+- Analyze
+- Trust Check
+- Contract Review
+- Redact
+- Ask This Document
+- Clause Extractor
+- Compare Versions
+- DocumentChat
+- API routes unless existing builder create/save API already accepts the current content shape
+- Auth
+- Database schema
+- Migrations
+- Stripe
+- Marketing
+- Digital Signature
+- Dropbox Sign
+
+Allowed files:
+- pages/Builder/New.tsx
+- pages/Builder/Workspace.tsx only if needed to read the selected structure/template metadata
+- lib/builderConfig.ts
+- builder-only components if needed
+- builderTypes.ts only if absolutely necessary and backward compatible
+
+Main requirement:
+Add a structured template library and guided question flow before the document is created.
+
+1. Add structured document templates
+
+Create or extend builderConfig.ts with structured template definitions for:
+
+A. SOP
+Sections:
+- Title
+- Purpose
+- Scope
+- Roles and responsibilities
+- Required tools/materials
+- Safety or caution notes
+- Step-by-step procedure
+- Quality checks
+- Records/documentation
+- References
+- Revision history
+
+B. Employee Onboarding Manual
+Sections:
+- Welcome
+- Company overview
+- First-day checklist
+- Tools and systems
+- Role expectations
+- Training plan
+- Key contacts
+- Policies to review
+- Completion checklist
+
+C. Policy Document
+Sections:
+- Purpose
+- Scope
+- Policy statement
+- Who must follow it
+- Responsibilities
+- Rules/prohibited actions
+- Exceptions
+- Enforcement
+- Review cycle
+
+D. Training Manual
+Sections:
+- Learning objectives
+- Intended audience
+- Required knowledge
+- Training modules
+- Step-by-step lessons
+- Practice exercises
+- Knowledge checks
+- Completion checklist
+- Revision history
+
+E. Process Guide
+Sections:
+- Process overview
+- Trigger/start point
+- Responsible parties
+- Inputs
+- Step-by-step workflow
+- Outputs
+- Escalation path
+- Quality checks
+- Related documents
+
+F. Safety Manual
+Sections:
+- Safety commitment
+- Roles and responsibilities
+- Hazard identification
+- Hazard prevention and controls
+- PPE requirements
+- Training requirements
+- Incident reporting
+- Emergency procedures
+- Inspections and review
+
+G. Incident Report
+Sections:
+- Incident overview
+- Date/time/location
+- People involved
+- Timeline of events
+- Immediate actions taken
+- Evidence/attachments checklist
+- Root cause
+- Corrective actions
+- Follow-up owner
+- Review/sign-off
+
+H. Checklist
+Sections:
+- Objective
+- Required items
+- Responsible person
+- Due dates
+- Completion criteria
+- Sign-off
+- Notes
+
+2. Add guided questions per document type
+
+Each template should include guided questions that help prefill the document.
+
+Examples:
+
+SOP guided questions:
+- What process does this SOP explain?
+- Who is responsible for following it?
+- When should this process be used?
+- What tools, materials, or systems are needed?
+- What are the steps in order?
+- What mistakes or safety concerns should the user avoid?
+- What records should be kept?
+- Who approves or reviews this SOP?
+
+Policy guided questions:
+- What rule or standard does this policy establish?
+- Who must follow it?
+- What actions are required?
+- What actions are prohibited?
+- Are there exceptions?
+- What happens if the policy is not followed?
+- How often should it be reviewed?
+
+Onboarding guided questions:
+- What role or department is this for?
+- What should the employee do on day one?
+- What systems need access?
+- What training is required?
+- Who are the key contacts?
+- What policies must be reviewed?
+- What confirms onboarding is complete?
+
+3. New document creation flow
+
+In pages/Builder/New.tsx, create a premium flow:
+
+Step 1: Choose document type
+- Show template cards for all 8 structured templates
+- Include “Start from blank”
+- Show short description for each
+
+Step 2: Guided questions
+- After template selection, show the relevant guided questions
+- User can answer some or all questions
+- Answers are optional
+- Include helper text: “Answer what you know. PlainPath will structure the draft around your inputs.”
+
+Step 3: Create draft
+- Generate a BuilderContent object using:
+  - selected document type
+  - guided answers
+  - predefined sections
+  - placeholder text where answers are missing
+- Use existing builder save/create logic
+- Do not create a new database table
+- Do not add migrations
+
+4. Generated draft behavior
+
+The draft should not be blank.
+
+Each selected template should create:
+- document title
+- section headings
+- helpful placeholder text
+- checklist blocks where appropriate
+- table blocks where appropriate if already supported
+- revision history block where appropriate
+- footer/document control section where appropriate
+
+Examples:
+For SOP, create a step-by-step procedure section with placeholder steps.
+For onboarding, create first-day checklist and training checklist blocks.
+For safety manual, create hazard reporting and emergency procedure sections.
+For incident report, create timeline and corrective action sections.
+For checklist, create checklist blocks immediately.
+
+5. AI Guide integration
+
+Do not wire real AI yet.
+
+But in the Guide tab, add contextual helper text based on the document type:
+- “You are building an SOP”
+- “Recommended next step: complete Purpose and Scope”
+- “Use the Edit tab to improve selected blocks”
+- “AI writing actions are coming soon”
+
+If the AI Guide action buttons exist, keep them Coming Soon.
+
+6. Branding/logo
+
+Do not implement real logo upload storage in Phase 2.
+Keep logo upload as Coming Soon / placeholder if already visible.
+
+7. Export
+
+Do not change export.
+Keep .txt export working.
+PDF/DOCX should remain Coming Soon unless already truly working.
+
+8. Stability
+
+- No DB schema changes
+- No migrations
+- No Stripe changes
+- No auth changes
+- No unrelated API changes
+- No marketing changes
+- No changes to the other 8 tools
+- No Build a Contract changes
+- No Digital Signature changes
+- All new buttons must use type="button"
+- No draft reset on tab switch
+- No runtime crash
+- No blank screen
+
+Verification:
+1. Open /builder/new.
+2. Confirm user sees template cards.
+3. Select SOP.
+4. Confirm guided questions appear.
+5. Answer a few questions.
+6. Create draft.
+7. Confirm workspace opens with structured SOP sections.
+8. Confirm left preview renders the generated document.
+9. Confirm Outline tab shows all generated sections.
+10. Confirm clicking blocks still selects them.
+11. Confirm Edit tab still edits selected block.
+12. Repeat quick checks for Policy, Onboarding, Safety Manual, Incident Report, and Checklist.
+13. Confirm Start from blank still works.
+14. Confirm existing drafts still open.
+15. Confirm Save/autosave still works.
+16. Confirm .txt export still works.
+17. Confirm Build a Contract unchanged.
+18. Confirm other 8 tools unchanged.
+19. Confirm no DB/auth/Stripe/API/migration/marketing changes.
+20. Confirm no new TypeScript/runtime errors.
+
+Return only:
+A. Files changed
+B. Structured templates added
+C. Guided question flow result
+D. Draft generation behavior
+E. AI Guide contextual behavior
+F. Start from blank behavior
+G. Save/export behavior
+H. Existing drafts behavior
+I. Build a Contract unchanged confirmation
+J. Other 8 tools unchanged confirmation
+K. Safe checkpoint: Yes/No

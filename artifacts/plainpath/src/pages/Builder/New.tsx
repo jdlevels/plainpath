@@ -1,12 +1,16 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
-import { ArrowLeft, FileText, LayoutTemplate, Loader2, CheckCircle2, AlertCircle, Search } from "lucide-react";
+import {
+  ArrowLeft, FileText, LayoutTemplate, Loader2,
+  CheckCircle2, AlertCircle, Search, ChevronRight,
+} from "lucide-react";
 import type { BuilderTemplate } from "@/lib/builderTypes";
 import { useBuilderApi } from "@/hooks/useBuilderApi";
 import { BUILDER_CATEGORIES, CATEGORY_LABELS } from "@/lib/builderConfig";
 import type { BuilderCategory } from "@/lib/builderConfig";
+import { getQuestionsForCategory, applyAnswersToContent } from "@/lib/templateQuestions";
 
-type Mode = "choose" | "blank" | "template";
+type Mode = "choose" | "blank" | "template" | "questions";
 
 function createEmptyContent() {
   return {
@@ -53,34 +57,45 @@ export default function BuilderNew() {
   const api = useBuilderApi();
   const [mode, setMode] = useState<Mode>("choose");
   const titleRef = useRef<HTMLInputElement>(null);
+  const questionsTitleRef = useRef<HTMLInputElement>(null);
 
-  // Blank flow
+  // ── Blank flow ─────────────────────────────────────────────────────────────
   const [blankCategory, setBlankCategory] = useState<BuilderCategory | "">("");
   const [blankTitle, setBlankTitle] = useState("");
 
-  // Template flow
+  // ── Template flow ──────────────────────────────────────────────────────────
   const [templates, setTemplates] = useState<BuilderTemplate[]>([]);
   const [templatesLoading, setTemplatesLoading] = useState(false);
   const [templatesError, setTemplatesError] = useState(false);
   const [templateSearch, setTemplateSearch] = useState("");
   const [templateCategoryFilter, setTemplateCategoryFilter] = useState<string>("all");
   const [selectedTemplate, setSelectedTemplate] = useState<BuilderTemplate | null>(null);
-  const [templateTitle, setTemplateTitle] = useState("");
-  const [templateCategory, setTemplateCategory] = useState<BuilderCategory | "">("");
 
-  // Submitting
+  // ── Questions flow ─────────────────────────────────────────────────────────
+  const [questionsTitle, setQuestionsTitle] = useState("");
+  const [questionsCategory, setQuestionsCategory] = useState<BuilderCategory | "">("");
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+
+  // ── Shared submitting state ────────────────────────────────────────────────
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
-    document.title = "New Document — Document Builder — PlainPath"
-    return () => { document.title = "PlainPath" }
-  }, [])
+    document.title = "New Document — Document Builder — PlainPath";
+    return () => { document.title = "PlainPath"; };
+  }, []);
 
   // Auto-focus title when entering blank mode
   useEffect(() => {
     if (mode === "blank") {
       setTimeout(() => titleRef.current?.focus(), 50);
+    }
+  }, [mode]);
+
+  // Auto-focus title when entering questions mode
+  useEffect(() => {
+    if (mode === "questions") {
+      setTimeout(() => questionsTitleRef.current?.focus(), 50);
     }
   }, [mode]);
 
@@ -99,16 +114,28 @@ export default function BuilderNew() {
     }
   }, [mode, templates.length, templatesLoading, templatesError, api.listTemplates]);
 
-  // Sync template title/category when selection changes
-  useEffect(() => {
-    if (selectedTemplate) {
-      setTemplateTitle(selectedTemplate.name);
-      setTemplateCategory(selectedTemplate.category as BuilderCategory);
+  // ── Actions ────────────────────────────────────────────────────────────────
+
+  function handleSelectTemplate(t: BuilderTemplate) {
+    setSelectedTemplate(t);
+  }
+
+  function handleUseTemplate() {
+    if (!selectedTemplate) return;
+    setQuestionsTitle(selectedTemplate.name);
+    setQuestionsCategory(selectedTemplate.category as BuilderCategory);
+    const questions = getQuestionsForCategory(selectedTemplate.category);
+    const defaults: Record<string, string> = {};
+    for (const q of questions) {
+      if (q.defaultValue) defaults[q.id] = q.defaultValue;
     }
-  }, [selectedTemplate]);
+    setAnswers(defaults);
+    setSubmitError(null);
+    setMode("questions");
+  }
 
   const canCreateBlank = blankTitle.trim().length > 0 && blankCategory !== "";
-  const canCreateFromTemplate = !!selectedTemplate && templateTitle.trim().length > 0 && templateCategory !== "";
+  const canCreateFromQuestions = questionsTitle.trim().length > 0 && questionsCategory !== "";
 
   async function handleCreateBlank() {
     if (!canCreateBlank) return;
@@ -129,17 +156,21 @@ export default function BuilderNew() {
     }
   }
 
-  async function handleCreateFromTemplate() {
-    if (!selectedTemplate || !canCreateFromTemplate) return;
+  async function handleCreateFromTemplate(skipQuestions = false) {
+    if (!selectedTemplate || !canCreateFromQuestions) return;
     setSubmitting(true);
     setSubmitError(null);
     try {
+      const finalContent = skipQuestions
+        ? selectedTemplate.content
+        : applyAnswersToContent(selectedTemplate.content, answers, selectedTemplate.category);
+
       const doc = await api.createDocument({
-        title: templateTitle.trim(),
-        category: templateCategory as BuilderCategory,
+        title: questionsTitle.trim(),
+        category: questionsCategory as BuilderCategory,
         source: "template",
         templateId: selectedTemplate.id,
-        content: selectedTemplate.content,
+        content: finalContent,
       });
       navigate(`/builder/${doc.id}`);
     } catch (err: any) {
@@ -151,17 +182,18 @@ export default function BuilderNew() {
 
   // Template filtering
   const filteredTemplates = templates.filter((t) => {
-    const matchesSearch = templateSearch.trim() === "" ||
+    const matchesSearch =
+      templateSearch.trim() === "" ||
       t.name.toLowerCase().includes(templateSearch.toLowerCase()) ||
       (t.description ?? "").toLowerCase().includes(templateSearch.toLowerCase());
-    const matchesCategory = templateCategoryFilter === "all" || t.category === templateCategoryFilter;
+    const matchesCategory =
+      templateCategoryFilter === "all" || t.category === templateCategoryFilter;
     return matchesSearch && matchesCategory;
   });
 
-  // Unique categories from loaded templates
   const templateCategories = Array.from(new Set(templates.map((t) => t.category)));
 
-  // ── Choose mode ───────────────────────────────────────────────────────────
+  // ── Choose mode ────────────────────────────────────────────────────────────
 
   if (mode === "choose") {
     return (
@@ -199,7 +231,7 @@ export default function BuilderNew() {
     );
   }
 
-  // ── Blank flow ────────────────────────────────────────────────────────────
+  // ── Blank flow ─────────────────────────────────────────────────────────────
 
   if (mode === "blank") {
     return (
@@ -260,7 +292,131 @@ export default function BuilderNew() {
     );
   }
 
-  // ── Template flow ─────────────────────────────────────────────────────────
+  // ── Questions flow ─────────────────────────────────────────────────────────
+
+  if (mode === "questions" && selectedTemplate) {
+    const questions = getQuestionsForCategory(selectedTemplate.category);
+    const requiredUnanswered = questions
+      .filter((q) => q.required)
+      .some((q) => !(answers[q.id] ?? "").trim());
+
+    const canSubmit = canCreateFromQuestions && !requiredUnanswered;
+
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-12">
+        <button
+          onClick={() => { setMode("template"); setSubmitError(null); }}
+          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-8 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" /> Back to templates
+        </button>
+
+        {/* Template badge */}
+        <div className="flex items-center gap-2 mb-5">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/8 border border-primary/20">
+            <LayoutTemplate className="w-3 h-3 text-primary" />
+            <span className="text-xs font-medium text-primary">{selectedTemplate.name}</span>
+          </div>
+        </div>
+
+        <h1 className="text-2xl font-bold text-foreground mb-1">Personalize your document</h1>
+        <p className="text-sm text-muted-foreground mb-8">
+          These details will be added to a Document Information header section. You can edit everything in the workspace.
+        </p>
+
+        <div className="space-y-5">
+          {/* Document title */}
+          <div>
+            <label htmlFor="q-title" className="text-sm font-medium text-foreground block mb-1.5">
+              Document title <span className="text-destructive">*</span>
+            </label>
+            <input
+              ref={questionsTitleRef}
+              id="q-title"
+              type="text"
+              value={questionsTitle}
+              onChange={(e) => setQuestionsTitle(e.target.value)}
+              placeholder={`e.g. ${selectedTemplate.name}`}
+              maxLength={200}
+              className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-primary transition-colors text-sm"
+            />
+          </div>
+
+          {/* Category */}
+          <div>
+            <label className="text-sm font-medium text-foreground block mb-2">
+              Category <span className="text-destructive">*</span>
+            </label>
+            <CategoryPicker selected={questionsCategory} onSelect={setQuestionsCategory} />
+          </div>
+
+          {/* Divider */}
+          <div className="border-t border-border/50 pt-5">
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">
+              Document details
+            </p>
+
+            <div className="space-y-4">
+              {questions.map((q) => (
+                <div key={q.id}>
+                  <label
+                    htmlFor={`q-${q.id}`}
+                    className="text-sm font-medium text-foreground block mb-1.5"
+                  >
+                    {q.label}
+                    {q.required && <span className="text-destructive ml-1">*</span>}
+                    {q.hint && (
+                      <span className="ml-2 text-xs font-normal text-muted-foreground">{q.hint}</span>
+                    )}
+                  </label>
+                  <input
+                    id={`q-${q.id}`}
+                    type={q.type}
+                    value={answers[q.id] ?? ""}
+                    onChange={(e) =>
+                      setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))
+                    }
+                    placeholder={q.placeholder}
+                    className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-primary transition-colors text-sm"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {submitError && (
+            <div className="flex items-center gap-2 text-sm text-destructive">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              {submitError}
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex items-center gap-3 pt-1">
+            <button
+              type="button"
+              disabled={!canCreateFromQuestions || submitting}
+              onClick={() => handleCreateFromTemplate(true)}
+              className="flex-1 py-2.5 rounded-lg border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:border-foreground/40 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              Skip, create blank
+            </button>
+            <button
+              type="button"
+              disabled={!canSubmit || submitting}
+              onClick={() => handleCreateFromTemplate(false)}
+              className="flex-1 py-2.5 bg-primary text-primary-foreground rounded-lg font-medium text-sm hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+            >
+              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+              Create document
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Template browser ───────────────────────────────────────────────────────
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-12">
@@ -334,7 +490,7 @@ export default function BuilderNew() {
               {filteredTemplates.map((t) => (
                 <button
                   key={t.id}
-                  onClick={() => setSelectedTemplate(selectedTemplate?.id === t.id ? null : t)}
+                  onClick={() => handleSelectTemplate(selectedTemplate?.id === t.id ? null! : t)}
                   className={`p-4 rounded-xl border text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                     selectedTemplate?.id === t.id
                       ? "border-primary bg-primary/8"
@@ -351,62 +507,28 @@ export default function BuilderNew() {
                         <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{t.description}</p>
                       )}
                     </div>
-                    {selectedTemplate?.id === t.id && (
+                    {selectedTemplate?.id === t.id ? (
                       <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                    )}
+                    ) : null}
                   </div>
                 </button>
               ))}
             </div>
           )}
 
-          {/* Title + category + submit — shown when template is selected */}
+          {/* Continue CTA */}
           {selectedTemplate && (
-            <div className="border-t border-border pt-6">
-              <form
-                className="space-y-4"
-                onSubmit={(e) => { e.preventDefault(); handleCreateFromTemplate(); }}
+            <div className="border-t border-border pt-5 flex items-center justify-between gap-4">
+              <p className="text-sm text-muted-foreground">
+                <span className="font-medium text-foreground">{selectedTemplate.name}</span> selected
+              </p>
+              <button
+                onClick={handleUseTemplate}
+                className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-lg font-medium text-sm hover:bg-primary/90 transition-colors shrink-0"
               >
-                <div>
-                  <label htmlFor="template-title" className="text-sm font-medium text-foreground block mb-2">
-                    Document title <span className="text-destructive">*</span>
-                  </label>
-                  <input
-                    id="template-title"
-                    type="text"
-                    value={templateTitle}
-                    onChange={(e) => setTemplateTitle(e.target.value)}
-                    maxLength={200}
-                    className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-primary transition-colors text-sm"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-foreground block mb-2">
-                    Category <span className="text-destructive">*</span>
-                  </label>
-                  <CategoryPicker
-                    selected={templateCategory}
-                    onSelect={setTemplateCategory}
-                  />
-                </div>
-
-                {submitError && (
-                  <div className="flex items-center gap-2 text-sm text-destructive">
-                    <AlertCircle className="w-4 h-4 shrink-0" />
-                    {submitError}
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={!canCreateFromTemplate || submitting}
-                  className="w-full py-2.5 bg-primary text-primary-foreground rounded-lg font-medium text-sm hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-                >
-                  {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                  Create from template
-                </button>
-              </form>
+                Use this template
+                <ChevronRight className="w-4 h-4" />
+              </button>
             </div>
           )}
         </div>
