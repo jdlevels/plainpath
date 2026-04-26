@@ -1,0 +1,129 @@
+PlainPath Final Tool Standardization QA — No Redesign, No New Features
+
+Purpose:
+Run a final regression QA pass after the PlainPath workspace standardization work.
+
+Do not redesign.
+Do not add features.
+Do not refactor.
+Do not change database, auth, Stripe, API, routing, or marketing unless a true blocker is found.
+
+Check the current app state across all 8 active PlainPath tools:
+
+1. Analyze a Document
+2. Document Trust Check
+3. Build a Contract
+4. Contract Review
+5. Redact Sensitive Info
+6. Ask This Document
+7. Clause Extractor
+8. Compare Versions
+
+Important product rule:
+The active PlainPath app should show 8 user-facing tools.
+The broader Document Builder / SOPs / Manuals / Policies builder must not be exposed as an active user-facing PlainPath tool unless intentionally enabled later.
+If /builder or "Document Builder" exists internally, do not delete it, but confirm it is hidden/disabled unless explicitly enabled by a feature flag.
+
+Required QA checks:
+
+A. Navigation / Dashboard
+- Confirm all 8 active tools appear correctly.
+- Confirm Digital Signature is not user-facing.
+- Confirm Ask This Document routes to /ask-document.
+- Confirm Build a Contract routes to /build-contract.
+- Confirm any visible "Document Builder" link is either hidden behind feature flag or not confusing users.
+- Confirm no active SOP/manual builder is exposed as a current PlainPath tool.
+
+B. Tool workspace standard
+For each document-heavy tool, confirm:
+- actual document/PDF viewer appears where appropriate
+- right-side intelligence/action panel appears
+- dark workspace stage is consistent
+- file name is visible
+- page does not feel broken, blank, or misaligned
+- tool does not reset uploaded file unexpectedly
+
+C. Tool-specific checks
+
+Analyze a Document:
+- Upload PDF works
+- left PDF viewer appears
+- all 11 tabs remain
+- Action Pack works
+- Ask This Document tab remains
+- Save/export visible
+
+Document Trust Check:
+- left PDF viewer appears
+- right Trust Intelligence panel appears
+- filters work
+- wording stays cautious
+- no “definitely fake/authentic/guaranteed” claims
+
+Build a Contract:
+- title says Build a Contract
+- contract templates only
+- Save Draft works
+- Export section works
+- Send for Signature is disabled / Coming Soon
+- clicking disabled signature action does not open modal, route, or API call
+
+Contract Review:
+- left PDF viewer appears
+- right Contract Intelligence panel appears
+- filters work
+- source banner/card selection works
+- legal-safe wording preserved
+
+Redact Sensitive Info:
+- left PDF preview appears
+- selected items are clear
+- redaction preview shows black bars
+- Export Redacted PDF remains available
+- export failure does not reset document/selections
+
+Ask This Document:
+- upload PDF works
+- loading animation appears
+- left PDF viewer appears
+- chat answer appears in a bordered answer area
+- source/focus behavior works as best-effort
+- no page reset after asking a question
+
+Clause Extractor:
+- left PDF viewer appears
+- right clause intelligence panel appears
+- found/missing/obligation/date/party filters work
+- missing items do not fake source highlighting
+
+Compare Versions:
+- original document visible
+- revised document visible
+- Change Intelligence panel visible
+- comparison-first layout preserved
+- no runtime error
+- saved comparison sessions still open if available
+
+D. Stability / Regression
+- No blank screens
+- No React runtime crash
+- No new TypeScript errors from changed files
+- No new database migrations
+- No Stripe/payment changes
+- No Clerk/auth changes
+- No API route changes unless previously required and already completed
+- No marketing changes
+- No unrelated files changed
+
+E. Publish readiness
+Return whether this current checkpoint is safe to publish.
+
+Return only:
+1. Overall QA result: Pass / Fail
+2. Tools passed
+3. Tools failed
+4. Any true blockers
+5. Any minor issues to defer
+6. Files changed during this QA pass, if any
+7. Confirmation no DB/auth/Stripe/API/marketing changes
+8. Safe to publish: Yes / No
