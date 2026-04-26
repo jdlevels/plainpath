@@ -1,0 +1,167 @@
+PlainPath Workspace Standard — Build a Contract Alignment Only
+
+Goal:
+Review and lightly align Build a Contract / ContractBuilder with the approved PlainPath workspace standard without expanding it into a general Document Builder.
+
+Important:
+This tool is Build a Contract only.
+Do not turn this into SOPs, manuals, policies, handbooks, or general document creation.
+Do not rename the product feature to Document Builder in user-facing UI unless it is already used only as a navigation/workspace label.
+The user-facing tool should be clear as:
+“Build a Contract”
+
+Approved standard:
+- Left side = live contract/document preview whenever possible
+- Right side = structured contract-building controls
+- Split workspace should feel like Ask This Document / Review & Redact:
+  - document/page surface on the left
+  - controls/intelligence panel on the right
+  - dark workspace around the page
+  - readable page width
+  - clear file/template name
+  - minimal wasted space
+- Save and export should remain obvious.
+
+Scope:
+Only update Build a Contract / ContractBuilder if needed.
+
+Allowed files:
+- artifacts/plainpath/src/pages/ContractBuilder.tsx
+- Any local ContractBuilder-only component if already used by this page
+
+Do not touch:
+- Ask This Document
+- Analyze.tsx
+- Action Pack
+- Clause Extractor
+- Contract Review
+- Trust Check
+- Compare Versions
+- Redact
+- DocumentChat
+- API routes
+- Auth
+- Database
+- Migrations
+- Stripe/payment
+- Marketing
+- Global routing
+
+Critical:
+Preserve all current Build a Contract behavior.
+Do not add SOP/manual/policy templates.
+Do not add broad document-builder features.
+Do not enable e-signature.
+Do not touch Dropbox Sign or signature routes.
+Do not change backend calls unless absolutely necessary.
+Do not change export behavior unless fixing a confirmed UI bug.
+
+Business purpose:
+Build a Contract should help a normal user:
+1. Choose a contract template.
+2. Fill guided contract fields.
+3. Edit/review clauses.
+4. See a live contract preview.
+5. Save the draft.
+6. Export as PDF/DOCX if currently supported.
+7. Understand this is not legal advice.
+
+Required checks/fixes:
+
+1. Naming consistency
+- User-facing tool title should say “Build a Contract.”
+- Avoid showing “Document Builder” as the main tool name if it confuses the current feature.
+- Internal component/file names can remain ContractBuilder.
+
+2. Empty/template state
+- Confirm template selection is clear.
+- Confirm available templates are contract-related only.
+- Confirm the user understands what to do first.
+- Do not redesign heavily.
+
+3. Workspace layout
+- Confirm split-screen layout:
+  - left = live contract preview / page surface
+  - right = guided fields, clauses, review/export controls
+- Preview should look like a real document page.
+- The left preview should not feel cramped or hidden.
+- The right panel should be readable and organized.
+
+4. Save behavior
+- Keep visible Save button/icon.
+- Keep unsaved-change state if already present.
+- Save should be visually separate from Export.
+- Do not rely on invisible autosave only.
+- If autosave exists, preserve it.
+
+5. Export behavior
+- Keep Export PDF and Export DOCX if already present.
+- Export buttons should be disabled until a draft exists if that is current behavior.
+- Do not break export.
+- Do not rename export actions ambiguously.
+
+6. Clause editing
+- Clause editing should remain clear.
+- If the user edits a clause, the preview should update or clearly indicate the change.
+- AI suggestion controls, if present, should remain:
+  - Accept
+  - Edit
+  - Skip
+- Do not add new AI features tonight.
+
+7. E-signature / Dropbox Sign
+- Keep disabled / Coming Soon if present.
+- Do not activate.
+- Do not expose as a working feature.
+- Do not route users into Digital Signature.
+
+8. Legal-safe wording
+- Keep disclaimer language.
+- Do not imply the generated contract is attorney-approved.
+- Use language like:
+  - “Review before signing”
+  - “Not legal advice”
+  - “Consider having a qualified professional review”
+
+9. Mobile
+- Confirm mobile uses a sensible Builder / Preview flow.
+- No clipped controls.
+- Save/export reachable.
+- Preview accessible.
+
+10. Stability
+- Do not reset draft when switching sections.
+- Do not clear entered fields unexpectedly.
+- All buttons must use type="button" unless intentionally submitting.
+- Preserve error states.
+
+Verification:
+1. Open Build a Contract.
+2. Choose a contract template.
+3. Fill required fields.
+4. Confirm required labels and missing-field states are visible.
+5. Edit one clause.
+6. Confirm preview updates or remains consistent with current behavior.
+7. Test AI suggestion controls if present.
+8. Confirm Save works.
+9. Confirm unsaved/saved state is clear.
+10. Go to export step.
+11. Confirm PDF and DOCX export buttons are present if currently supported.
+12. Confirm e-signature/Dropbox Sign remains disabled or Coming Soon.
+13. Test mobile at ~390px width.
+14. Confirm no other tools changed.
+15. Confirm no API/auth/database/migration/Stripe/marketing/global route changes.
+16. Confirm no new TypeScript/runtime errors.
+
+Return only:
+A. Files changed
+B. Naming consistency result
+C. Template/empty state result
+D. Workspace layout result
+E. Save behavior
+F. Export behavior
+G. Clause editing / AI suggestion behavior
+H. E-signature disabled confirmation
+I. Mobile behavior
+J. Preserved logic
+K. Safe checkpoint: Yes/No

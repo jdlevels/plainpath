@@ -2265,6 +2265,7 @@ function DraftResultView({ draft, contractType, onBack, onRestart }: {
       <div className="flex items-center justify-between gap-3 pb-4 flex-shrink-0">
         <div className="flex items-center gap-3 min-w-0">
           <button
+            type="button"
             onClick={onBack}
             className="p-1.5 rounded-lg hover:bg-muted/60 text-muted-foreground transition-colors flex-shrink-0"
             title="Edit answers"
@@ -2289,6 +2290,7 @@ function DraftResultView({ draft, contractType, onBack, onRestart }: {
           </div>
         </div>
         <button
+          type="button"
           onClick={onRestart}
           className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors flex-shrink-0 px-2 py-1.5 rounded-lg hover:bg-muted/50"
         >
@@ -2402,7 +2404,7 @@ function DraftResultView({ draft, contractType, onBack, onRestart }: {
 
           {/* Primary actions */}
           <div className="rounded-xl border border-border/40 bg-card p-4 space-y-2.5">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Save &amp; Sign</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Export</p>
             <Button
               size="sm"
               onClick={downloadPDF}
@@ -2426,6 +2428,7 @@ function DraftResultView({ draft, contractType, onBack, onRestart }: {
           <div className="rounded-xl border border-border/40 bg-card p-4 space-y-2">
             <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Continue with</p>
             <button
+              type="button"
               onClick={handleAnalyzeContract}
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border border-border/40 hover:bg-muted/40 transition-colors text-left group"
             >
@@ -2438,6 +2441,7 @@ function DraftResultView({ draft, contractType, onBack, onRestart }: {
               </div>
             </button>
             <button
+              type="button"
               onClick={handleRedactContract}
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border border-border/40 hover:bg-muted/40 transition-colors text-left group"
             >
@@ -2487,6 +2491,7 @@ function DraftResultView({ draft, contractType, onBack, onRestart }: {
           <div className="rounded-xl border border-border/30 bg-muted/30 p-3 space-y-1.5">
             <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">Utility</p>
             <button
+              type="button"
               onClick={exportJSON}
               className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted/60 transition-colors text-left"
             >
@@ -2785,6 +2790,7 @@ export default function ContractBuilder() {
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                           {BUILDER_DEMOS.map((demo) => (
                             <button
+                              type="button"
                               key={demo.id}
                               onClick={() => {
                                 setContractType(demo.contractType)
