@@ -20,7 +20,7 @@ import {
   ArrowRight, Upload, Sparkles, Scale,
   AlertTriangle, CheckCircle2, Clock, Lock, X as XIcon, EyeOff,
   CalendarX, Eye, PenLine, FileScan, ListChecks, GitCompare,
-  DollarSign, Copy, Users, ChevronDown, Star,
+  DollarSign, Copy, Users, ChevronDown, Star, LayoutTemplate,
 } from "lucide-react";
 
 /* ─── Animation helpers ──────────────────────────────────── */
@@ -100,6 +100,7 @@ const TOOLS = [
   { label: "Ask This Document",      icon: MessageCircle,  cls: "tool-btn-indigo",  href: "/app/ask-document",            comingSoon: false },
   { label: "Clause Extractor",       icon: ListChecks,     cls: "tool-btn-fuchsia", href: "/app/clause-extractor",        comingSoon: false },
   { label: "Compare Versions",      icon: GitCompare,     cls: "tool-btn-sky",     href: "/app/compare-versions",        comingSoon: false },
+  { label: "Document Builder",      icon: LayoutTemplate, cls: "tool-btn-teal",    href: "/app/builder",                 comingSoon: false },
 ];
 
 /* ─── Feature cards ─────────────────────────────────────── */
@@ -888,7 +889,7 @@ export default function Home() {
                 custom={2} variants={fadeUp}
                 className="text-base md:text-lg text-muted-foreground mb-6 leading-relaxed max-w-lg"
               >
-                Leases, contracts, medical bills, and court notices — PlainPath gives you 8 tools to
+                Leases, contracts, medical bills, and court notices — PlainPath gives you 9 tools to
                 understand what any document means, spot problems before you sign, and know exactly
                 what to do next. All in plain English.
               </motion.p>
@@ -988,7 +989,7 @@ export default function Home() {
       <section id="features" className="py-20 md:py-28 bg-gradient-to-b from-background via-white/70 to-background dark:bg-transparent">
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
           <div className="text-center max-w-2xl mx-auto mb-14">
-            <p className="text-xs font-semibold tracking-[0.12em] uppercase text-muted-foreground mb-3">8 tools live</p>
+            <p className="text-xs font-semibold tracking-[0.12em] uppercase text-muted-foreground mb-3">9 tools live</p>
             <h2
               className="text-4xl md:text-5xl font-bold mb-4 text-foreground"
               style={{ fontFamily: "var(--font-display)" }}

@@ -4,7 +4,7 @@ import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import {
   Menu, X, ChevronDown,
   FileScan, ShieldCheck, Scale, PenLine, LayoutGrid, EyeOff,
-  GitCompare, ListChecks, MessageCircle,
+  GitCompare, ListChecks, MessageCircle, LayoutTemplate,
 } from "lucide-react";
 
 function smoothScroll(id: string) {
@@ -31,6 +31,7 @@ const TOOL_LINKS = [
   { label: "Compare Versions",      href: "/app/compare-versions",        icon: GitCompare     },
   { label: "Clause Extractor",       href: "/app/clause-extractor",        icon: ListChecks     },
   { label: "Ask This Document",      href: "/app/ask-document",            icon: MessageCircle  },
+  { label: "Document Builder",       href: "/app/builder",                 icon: LayoutTemplate },
 ];
 
 const LogoBrand = () => (

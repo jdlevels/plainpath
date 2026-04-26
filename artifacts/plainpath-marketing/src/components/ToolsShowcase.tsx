@@ -4,7 +4,7 @@ import {
   ListTodo, Calendar, AlertTriangle, CheckCircle2,
   Flag, BarChart2, FileCheck, Sparkles, Copy, MessageSquare,
   EyeOff, Download, ArrowRightLeft, Lock, Clock, MessageCircle, Send, Eye,
-  GitCompare, ListChecks, CalendarClock, Layers, Users,
+  GitCompare, ListChecks, CalendarClock, Layers, Users, LayoutTemplate, Palette,
 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 
@@ -189,6 +189,29 @@ const TOOLS = [
     verbColor: "text-fuchsia-600 dark:text-fuchsia-400",
     comingSoon: false,
   },
+  {
+    icon: LayoutTemplate,
+    title: "Document Builder",
+    verb: "Draft it.",
+    tagline: "Create SOPs, manuals, policies, onboarding guides, checklists, and internal business documents.",
+    description: "Start from a structured template or a blank page. A guided question flow drafts your document, then you refine it with a block-by-block editor — with your brand, logo, and color applied throughout.",
+    features: [
+      { icon: FileCheck, label: "8 template types — SOP, policy, onboarding, and more" },
+      { icon: Sparkles, label: "AI guide for every document type" },
+      { icon: Palette, label: "Brand color, logo, and header styling" },
+      { icon: Download, label: "Export-ready document output" },
+    ],
+    cta: "Open Document Builder",
+    href: "/app/builder",
+    color: "from-teal-50/80 to-teal-50 dark:from-teal-950/20 dark:to-teal-950/20",
+    badge: "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300",
+    badgeLabel: "Beta",
+    border: "border-teal-200/60 dark:border-teal-900/40",
+    iconBg: "bg-teal-100 dark:bg-teal-900/40",
+    iconColor: "text-teal-600 dark:text-teal-400",
+    verbColor: "text-teal-600 dark:text-teal-400",
+    comingSoon: false,
+  },
 ]
 
 export default function ToolsShowcase() {
@@ -210,7 +233,7 @@ export default function ToolsShowcase() {
           className="text-3xl md:text-4xl font-bold mb-4"
           style={{ fontFamily: "var(--font-display)" }}
         >
-          Read it. Trust it. Build it. Review it. Protect it. Sign it. Compare it. Decode it.
+          Read it. Trust it. Build it. Review it. Protect it. Sign it. Compare it. Decode it. Draft it.
         </motion.h2>
         <motion.p
           initial={{ opacity: 0, y: 8 }}
@@ -219,7 +242,7 @@ export default function ToolsShowcase() {
           transition={{ delay: 0.08 }}
           className="text-muted-foreground text-lg max-w-2xl mx-auto"
         >
-          Whether you are reading a document, questioning its legitimacy, creating an agreement, reviewing one before you sign, redacting private information, asking plain-English questions, comparing versions, or extracting clauses — PlainPath has a dedicated tool for exactly that.
+          Whether you are reading a document, questioning its legitimacy, creating an agreement, reviewing one before you sign, redacting private information, asking plain-English questions, comparing versions, extracting clauses, or drafting internal business documents from scratch — PlainPath has a dedicated tool for exactly that.
         </motion.p>
       </div>
 
