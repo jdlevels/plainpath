@@ -26,6 +26,7 @@ import { AiGuidePanel } from "@/components/builder/AiGuidePanel";
 import { OutlinePanel } from "@/components/builder/OutlinePanel";
 import { StylePanel } from "@/components/builder/StylePanel";
 import { ExportPanel } from "@/components/builder/ExportPanel";
+import { FreeformFieldEditor } from "@/components/builder/FreeformFieldEditor";
 
 interface WorkspaceProps {
   docId: string;
@@ -557,6 +558,12 @@ export default function Workspace({ docId }: WorkspaceProps) {
     el?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
+  // ── Derived: selected freeform field ─────────────────────────────────────
+
+  const selectedFreeformField = selectedFreeformId
+    ? freeformFields.find((f) => f.id === selectedFreeformId) ?? null
+    : null;
+
   // ── Derived: selected block ───────────────────────────────────────────────
 
   const selectedSection = selectedSectionId
@@ -693,7 +700,11 @@ export default function Workspace({ docId }: WorkspaceProps) {
                 selectedFreeformId={selectedFreeformId}
                 onFreeformSelect={(id) => {
                   setSelectedFreeformId(id);
-                  if (id) { setSelectedBlockId(null); setSelectedSectionId(null); }
+                  if (id) {
+                    setSelectedBlockId(null);
+                    setSelectedSectionId(null);
+                    setActiveTab("edit");
+                  }
                 }}
                 onFreeformChange={updateFreeformField}
                 onFreeformAdd={addFreeformField}
@@ -756,7 +767,15 @@ export default function Workspace({ docId }: WorkspaceProps) {
 
             {activeTab === "edit" && (
               <div className="flex flex-col h-full overflow-y-auto">
-                {!selectedBlock || !selectedSection ? (
+                {selectedFreeformField ? (
+                  <FreeformFieldEditor
+                    field={selectedFreeformField}
+                    onChange={updateFreeformField}
+                    onDelete={() => deleteFreeformField(selectedFreeformField.id)}
+                    onDuplicate={() => duplicateFreeformField(selectedFreeformField.id)}
+                    onDeselect={() => setSelectedFreeformId(null)}
+                  />
+                ) : !selectedBlock || !selectedSection ? (
                   <div className="flex flex-col items-center justify-center h-full px-6 py-12 text-center">
                     <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mb-4">
                       <Pencil className="w-5 h-5 text-muted-foreground/60" />
