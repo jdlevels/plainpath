@@ -24,6 +24,7 @@ import { ResultSectionCard } from "@/components/result/ResultSectionCard"
 import { ResultMetaStrip } from "@/components/result/ResultMetaStrip"
 import { ScoreLegend, CONTRACT_REVIEW_LEGEND } from "@/components/ui/ScoreLegend"
 import { DocumentScanScreen } from "@/components/DocumentScanScreen"
+import { DocumentStageViewer } from "@/components/DocumentStageViewer"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -921,6 +922,8 @@ export default function ContractReview() {
   const [scanFailed, setScanFailed] = useState(false)
   const [result, setResult] = useState<ReviewResult | null>(null)
   const [redactedNotice, setRedactedNotice] = useState(false)
+  const [mobileResultTab, setMobileResultTab] = useState<"document" | "review">("review")
+  const [scrollTrigger, setScrollTrigger] = useState(0)
 
   useEffect(() => {
     document.title = "Contract Review — PlainPath"
@@ -1098,7 +1101,7 @@ export default function ContractReview() {
     )
   }
 
-  // Results view
+  // Results view — split workspace
   if (result) {
     function copyResult() {
       navigator.clipboard.writeText(buildReviewText(result!)).then(() => {
@@ -1107,53 +1110,117 @@ export default function ContractReview() {
       })
     }
 
-    return (
+    const hasPdf = file?.name.toLowerCase().endsWith(".pdf") ?? false
+
+    const stickyHeader = (
+      <ResultStickyHeader
+        toolIcon={Scale}
+        toolLabel="Contract Review"
+        toolIconClass="text-amber-500/80"
+        subtitleText={`Score: ${result.overallScore}/100`}
+        verdictLabel={result.verdict}
+        verdictBadgeClass={scoreBadgeClass(result.overallScore)}
+        onBack={handleReset}
+        actions={
+          <>
+            <button
+              onClick={copyResult}
+              title="Copy results as text"
+              className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors shrink-0"
+              aria-label="Copy summary"
+            >
+              {copyDone
+                ? <Check className="w-4 h-4 text-emerald-500" />
+                : <Copy className="w-4 h-4" />
+              }
+            </button>
+            <button
+              onClick={() => window.print()}
+              title="Export as PDF"
+              className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors shrink-0 print:hidden"
+              aria-label="Export PDF"
+            >
+              <Download className="w-4 h-4" />
+            </button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleReset}
+              className="text-xs h-8 hidden sm:flex gap-1.5 shrink-0"
+            >
+              Review Another <ArrowRight className="w-3.5 h-3.5" />
+            </Button>
+          </>
+        }
+      />
+    )
+
+    const stageViewer = (
+      <DocumentStageViewer
+        fileName={file?.name ?? null}
+        pdfFile={hasPdf ? file : null}
+        scrollTrigger={scrollTrigger}
+        contextLabel="Contract Review"
+      />
+    )
+
+    const resultsPanel = (
       <div
-        className="min-h-screen bg-background"
-        style={{ paddingBottom: "max(6rem, env(safe-area-inset-bottom) + 6rem)" }}
+        className="flex-1 overflow-y-auto"
+        style={{ paddingBottom: "max(4rem, env(safe-area-inset-bottom) + 4rem)" }}
       >
-        <ResultStickyHeader
-          toolIcon={Scale}
-          toolLabel="Contract Review"
-          toolIconClass="text-amber-500/80"
-          subtitleText={`Score: ${result.overallScore}/100`}
-          verdictLabel={result.verdict}
-          verdictBadgeClass={scoreBadgeClass(result.overallScore)}
-          onBack={handleReset}
-          actions={
-            <>
-              <button
-                onClick={copyResult}
-                title="Copy results as text"
-                className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors shrink-0"
-                aria-label="Copy summary"
-              >
-                {copyDone
-                  ? <Check className="w-4 h-4 text-emerald-500" />
-                  : <Copy className="w-4 h-4" />
-                }
-              </button>
-              <button
-                onClick={() => window.print()}
-                title="Export as PDF"
-                className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors shrink-0 print:hidden"
-                aria-label="Export PDF"
-              >
-                <Download className="w-4 h-4" />
-              </button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleReset}
-                className="text-xs h-8 hidden sm:flex gap-1.5 shrink-0"
-              >
-                Review Another <ArrowRight className="w-3.5 h-3.5" />
-              </Button>
-            </>
-          }
-        />
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-5 sm:pt-8 space-y-4">
+        <div className="px-4 sm:px-5 pt-4 sm:pt-5 space-y-4">
           <ResultsView result={result} onReset={handleReset} />
+        </div>
+      </div>
+    )
+
+    return (
+      <div className="h-screen flex flex-col">
+        {/* Mobile tab bar */}
+        <div className="md:hidden shrink-0 flex border-b border-border/40 bg-background">
+          <button
+            onClick={() => setMobileResultTab("document")}
+            className={`flex-1 py-2.5 text-xs font-medium transition-colors ${
+              mobileResultTab === "document"
+                ? "text-foreground border-b-2 border-amber-500"
+                : "text-muted-foreground"
+            }`}
+          >
+            Document
+          </button>
+          <button
+            onClick={() => setMobileResultTab("review")}
+            className={`flex-1 py-2.5 text-xs font-medium transition-colors ${
+              mobileResultTab === "review"
+                ? "text-foreground border-b-2 border-amber-500"
+                : "text-muted-foreground"
+            }`}
+          >
+            Review
+          </button>
+        </div>
+
+        {/* Mobile panels (CSS-toggled) */}
+        <div className="md:hidden flex-1 relative overflow-hidden">
+          <div className={`absolute inset-0 flex flex-col ${mobileResultTab === "document" ? "" : "hidden"}`}>
+            {stageViewer}
+          </div>
+          <div className={`absolute inset-0 flex flex-col overflow-hidden ${mobileResultTab === "review" ? "" : "hidden"}`}>
+            {stickyHeader}
+            {resultsPanel}
+          </div>
+        </div>
+
+        {/* Desktop split */}
+        <div className="hidden md:flex flex-1 min-h-0">
+          <div className="flex flex-col overflow-hidden border-r border-border/40" style={{ width: "60%" }}>
+            {stageViewer}
+          </div>
+          <div className="flex flex-col overflow-hidden" style={{ width: "40%" }}>
+            {stickyHeader}
+            {resultsPanel}
+          </div>
         </div>
       </div>
     )

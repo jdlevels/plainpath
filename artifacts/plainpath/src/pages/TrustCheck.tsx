@@ -29,6 +29,7 @@ import { ResultSectionCard } from "@/components/result/ResultSectionCard"
 import { ResultMetaStrip } from "@/components/result/ResultMetaStrip"
 import { ScoreLegend, TRUST_CHECK_LEGEND } from "@/components/ui/ScoreLegend"
 import { DocumentScanScreen } from "@/components/DocumentScanScreen"
+import { DocumentStageViewer } from "@/components/DocumentStageViewer"
 
 /* ── Helpers ────────────────────────────────────────────────────────────── */
 
@@ -168,6 +169,7 @@ export default function TrustCheck() {
   const [copyDone, setCopyDone] = useState(false)
   const [savedId, setSavedId] = useState<string | null>(null)
   const [justSaved, setJustSaved] = useState(false)
+  const [mobileTrustTab, setMobileTrustTab] = useState<"document" | "analysis">("analysis")
 
   function handleCheckDocument() {
     const hasTrustCheck = entitlements?.toolAccess?.includes("trust-check") ?? false
@@ -356,11 +358,68 @@ export default function TrustCheck() {
   }
 
   /* ── Render ───────────────────────────────────────────────────────── */
+  const documentClaims = (
+    <div className="space-y-5">
+      {analysis.whatItClaims && (
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-2">What This Document Claims</p>
+          <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">{analysis.whatItClaims}</p>
+        </div>
+      )}
+      {analysis.demandedAction && (
+        <div className="border-t border-zinc-100 dark:border-zinc-700 pt-5">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-2">What It Demands</p>
+          <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">{analysis.demandedAction}</p>
+        </div>
+      )}
+    </div>
+  )
+
   return (
-    <div
-      className="min-h-screen bg-background"
-      style={{ paddingBottom: "max(6rem, env(safe-area-inset-bottom) + 6rem)" }}
-    >
+    <div className="h-screen flex flex-col">
+      {/* Mobile tab bar */}
+      <div className="md:hidden shrink-0 flex border-b border-border/40 bg-background">
+        <button
+          onClick={() => setMobileTrustTab("document")}
+          className={`flex-1 py-2.5 text-xs font-medium transition-colors ${
+            mobileTrustTab === "document"
+              ? "text-foreground border-b-2 border-emerald-600"
+              : "text-muted-foreground"
+          }`}
+        >
+          Document
+        </button>
+        <button
+          onClick={() => setMobileTrustTab("analysis")}
+          className={`flex-1 py-2.5 text-xs font-medium transition-colors ${
+            mobileTrustTab === "analysis"
+              ? "text-foreground border-b-2 border-emerald-600"
+              : "text-muted-foreground"
+          }`}
+        >
+          Analysis
+        </button>
+      </div>
+
+      {/* Split workspace */}
+      <div className="flex-1 flex min-h-0 overflow-hidden">
+        {/* Left panel: document claims */}
+        <div
+          className={`flex-col overflow-hidden border-r border-border/40 md:w-[60%]
+            ${mobileTrustTab === "document" ? "flex flex-1 md:flex-none" : "hidden md:flex md:flex-none"}`}
+        >
+          <DocumentStageViewer
+            fileName="Uploaded Document"
+            fallbackContent={documentClaims}
+            contextLabel="Trust Check"
+          />
+        </div>
+
+        {/* Right panel: analysis */}
+        <div
+          className={`flex-col overflow-hidden md:w-[40%]
+            ${mobileTrustTab === "analysis" ? "flex flex-1 md:flex-none" : "hidden md:flex md:flex-none"}`}
+        >
       {/* ── Sticky header ───────────────────────────────────────────── */}
       <ResultStickyHeader
         toolIcon={ShieldCheck}
@@ -415,7 +474,8 @@ export default function TrustCheck() {
       />
 
       {/* ── Content ─────────────────────────────────────────────────── */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-5 sm:pt-8 space-y-4">
+      <div className="flex-1 overflow-y-auto" style={{ paddingBottom: "max(6rem, env(safe-area-inset-bottom) + 6rem)" }}>
+      <div className="px-4 sm:px-5 pt-4 sm:pt-5 space-y-4">
 
         {/* ── 1. Primary Verdict banner ──────────────────────────── */}
         <motion.div
@@ -900,6 +960,9 @@ export default function TrustCheck() {
               Check another document <ArrowRight className="w-3.5 h-3.5" />
             </Button>
           </div>
+        </div>
+      </div>
+      </div>
         </div>
       </div>
     </div>

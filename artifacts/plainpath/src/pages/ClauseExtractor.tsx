@@ -14,6 +14,7 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { clauseExtractorApi } from "@/lib/clauseExtractorApi"
 import { DocumentScanScreen } from "@/components/DocumentScanScreen"
+import { DocumentStageViewer } from "@/components/DocumentStageViewer"
 import type {
   ClauseExtractorSessionDetail,
   ClauseExtractionResults,
@@ -237,15 +238,18 @@ function ObligationCard({ ob, i }: { ob: ClauseExtractionResults["obligations"][
   )
 }
 
-/* ─── Results panel ─────────────────────────────────────────── */
-function ResultsPanel({
+/* ─── Results panel (right-side panel, no sticky) ───────────── */
+function ResultsPanelContent({
   session,
+  onBack,
   onDelete,
+  onScrollToDocument,
 }: {
   session: ClauseExtractorSessionDetail
+  onBack: () => void
   onDelete: () => void
+  onScrollToDocument?: () => void
 }) {
-  const [, setLocation] = useLocation()
   const { copied, copy } = useCopy()
   const r = session.results!
 
@@ -260,71 +264,60 @@ function ResultsPanel({
   const presentCount = legalClauses.filter(([, c]) => c.present).length
 
   return (
-    <div>
-      {/* ── Workspace command bar — sticky top-16, sticks below 4rem navbar ── */}
-      <div className="sticky top-16 z-20 border-b border-border/70 bg-background/98 backdrop-blur-sm shadow-sm -mx-4 sm:-mx-6 px-4 sm:px-6 mb-6">
-        <div className="max-w-[900px] mx-auto py-2.5 flex items-center gap-3">
-          {/* Back */}
-          <button
-            onClick={() => setLocation("/clause-extractor")}
-            className="shrink-0 p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
-            aria-label="Back to Clause Extractor"
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </button>
-
-          {/* Title + meta */}
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-foreground truncate leading-tight">{session.fileName}</p>
-            <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
-              <span className="text-[11px] font-medium text-muted-foreground">Clause Extractor</span>
-              {r.documentType && (
-                <Badge variant="secondary" className="text-[10px] px-1.5 py-px h-auto">
-                  {r.documentType}
-                </Badge>
-              )}
-              <Badge className={`text-[10px] px-1.5 py-px h-auto ${confidenceColor}`}>
-                {r.extractionConfidence} confidence
+    <div className="h-full flex flex-col bg-background overflow-hidden">
+      {/* Panel header */}
+      <div className="shrink-0 flex items-center gap-2 px-3 py-2 border-b border-border/60 bg-muted/10">
+        <button
+          onClick={onBack}
+          className="shrink-0 p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+          aria-label="Back"
+        >
+          <ArrowLeft className="w-4 h-4" />
+        </button>
+        <div className="flex-1 min-w-0">
+          <p className="text-[13px] font-semibold text-foreground truncate leading-tight">{session.fileName}</p>
+          <div className="flex flex-wrap items-center gap-1 mt-0.5">
+            <span className="text-[10px] font-medium text-muted-foreground">Clause Extractor</span>
+            {r.documentType && (
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-px h-auto ml-1">
+                {r.documentType}
               </Badge>
-              <span className="text-[10px] text-muted-foreground">{fmtBytes(session.fileSizeBytes)}</span>
-            </div>
-          </div>
-
-          {/* Actions */}
-          <div className="flex items-center gap-1.5 shrink-0">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 px-3 text-xs gap-1.5"
-              onClick={() => copy(buildSummaryText(session))}
-            >
-              {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-              <span>{copied ? "Copied" : "Copy"}</span>
-            </Button>
-            {r.obligations.length > 0 && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 px-3 text-xs gap-1.5"
-                onClick={() => exportObligationsCSV(session)}
-              >
-                <Download className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Export CSV</span>
-              </Button>
             )}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 px-2.5 text-muted-foreground hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30"
-              onClick={onDelete}
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </Button>
+            <Badge className={`text-[10px] px-1.5 py-px h-auto ml-0.5 ${confidenceColor}`}>
+              {r.extractionConfidence}
+            </Badge>
           </div>
+        </div>
+        <div className="flex items-center gap-0.5 shrink-0">
+          <button
+            title={copied ? "Copied!" : "Copy summary"}
+            onClick={() => copy(buildSummaryText(session))}
+            className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+          >
+            {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+          </button>
+          {r.obligations.length > 0 && (
+            <button
+              title="Export obligations CSV"
+              onClick={() => exportObligationsCSV(session)}
+              className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+            >
+              <Download className="w-3.5 h-3.5" />
+            </button>
+          )}
+          <button
+            title="Delete session"
+            onClick={onDelete}
+            className="p-1.5 rounded-lg text-muted-foreground hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
 
-      <div className="space-y-5 max-w-[900px] mx-auto">
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto">
+      <div className="px-4 py-4 space-y-4">
 
       {/* Key Dates */}
       {Object.values(r.keyDates).some(Boolean) && (
@@ -430,6 +423,7 @@ function ResultsPanel({
         </Card>
       )}
       </div>
+      </div>
     </div>
   )
 }
@@ -440,9 +434,11 @@ type UploadStage = "idle" | "selected" | "uploading"
 function UploadView({
   onUploaded,
   onUploading,
+  onFileSelected,
 }: {
   onUploaded: (s: ClauseExtractorSessionDetail) => void
   onUploading: (fileName: string | null) => void
+  onFileSelected?: (f: File | null) => void
 }) {
   const { getToken } = useAuth()
   const [stage, setStage] = useState<UploadStage>("idle")
@@ -464,7 +460,8 @@ function UploadView({
     setError(null)
     setSelectedFile(file)
     setStage("selected")
-  }, [])
+    onFileSelected?.(file)
+  }, [onFileSelected])
 
   const handleExtract = useCallback(async () => {
     if (!selectedFile) return
@@ -487,7 +484,8 @@ function UploadView({
     setStage("idle")
     setError(null)
     if (inputRef.current) inputRef.current.value = ""
-  }, [])
+    onFileSelected?.(null)
+  }, [onFileSelected])
 
   const onDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -703,6 +701,9 @@ export default function ClauseExtractor() {
     id ? { stage: "processing", sessionId: id, fileName: "" } : { stage: "upload" }
   )
   const [uploadingFileName, setUploadingFileName] = useState<string | null>(null)
+  const [pdfFile, setPdfFile] = useState<File | null>(null)
+  const [scrollTrigger, setScrollTrigger] = useState(0)
+  const [mobileTab, setMobileTab] = useState<"document" | "clauses">("clauses")
 
   const handleUploading = useCallback((fileName: string | null) => {
     setUploadingFileName(fileName)
@@ -723,6 +724,13 @@ export default function ClauseExtractor() {
 
   const handleDone = (session: ClauseExtractorSessionDetail) => {
     setState({ stage: "results", session })
+    setMobileTab("clauses")
+  }
+
+  const handleBack = () => {
+    setState({ stage: "upload" })
+    setPdfFile(null)
+    setLocation("/clause-extractor", { replace: true })
   }
 
   const handleDelete = async () => {
@@ -732,6 +740,7 @@ export default function ClauseExtractor() {
       await clauseExtractorApi.deleteSession(state.session.id, token)
     } catch {}
     setState({ stage: "upload" })
+    setPdfFile(null)
     setLocation("/clause-extractor", { replace: true })
   }
 
@@ -739,10 +748,80 @@ export default function ClauseExtractor() {
     return <DocumentScanScreen mode="clause-extractor" fileName={uploadingFileName} />
   }
 
+  /* ── Results: split workspace ──────────────────────────────── */
+  if (state.stage === "results") {
+    const session = state.session
+    const isPdf = session.fileName.toLowerCase().endsWith(".pdf")
+
+    const stageProps = {
+      fileName: session.fileName,
+      documentType: session.results?.documentType,
+      pdfFile: isPdf ? pdfFile : null,
+      scrollTrigger,
+      contextLabel: "Clause Extractor",
+    }
+
+    const panelProps = {
+      session,
+      onBack: handleBack,
+      onDelete: handleDelete,
+    }
+
+    return (
+      <div className="h-screen flex flex-col">
+        {/* Mobile tab bar */}
+        <div className="md:hidden shrink-0 flex border-b border-border/40 bg-background">
+          <button
+            onClick={() => setMobileTab("document")}
+            className={`flex-1 py-2.5 text-xs font-medium transition-colors ${
+              mobileTab === "document"
+                ? "text-foreground border-b-2 border-violet-600"
+                : "text-muted-foreground"
+            }`}
+          >
+            Document
+          </button>
+          <button
+            onClick={() => setMobileTab("clauses")}
+            className={`flex-1 py-2.5 text-xs font-medium transition-colors ${
+              mobileTab === "clauses"
+                ? "text-foreground border-b-2 border-violet-600"
+                : "text-muted-foreground"
+            }`}
+          >
+            Clauses
+          </button>
+        </div>
+
+        {/* Mobile panels (CSS-toggled, stay mounted) */}
+        <div className="md:hidden flex-1 relative overflow-hidden">
+          <div className={`absolute inset-0 flex flex-col ${mobileTab === "document" ? "" : "hidden"}`}>
+            <DocumentStageViewer {...stageProps} />
+          </div>
+          <div className={`absolute inset-0 flex flex-col ${mobileTab === "clauses" ? "" : "hidden"}`}>
+            <ResultsPanelContent {...panelProps} />
+          </div>
+        </div>
+
+        {/* Desktop split */}
+        <div className="hidden md:flex flex-1 min-h-0">
+          <div className="flex flex-col overflow-hidden border-r border-border/40" style={{ width: "60%" }}>
+            <DocumentStageViewer {...stageProps} />
+          </div>
+          <div className="flex flex-col overflow-hidden" style={{ width: "40%" }}>
+            <ResultsPanelContent
+              {...panelProps}
+              onScrollToDocument={() => setScrollTrigger(t => t + 1)}
+            />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  /* ── Upload / processing / error: existing single-column layout ── */
   const currentFileName =
-    state.stage === "results" ? state.session.fileName
-    : state.stage === "processing" ? state.fileName
-    : null
+    state.stage === "processing" ? state.fileName : null
 
   return (
     <div className="min-h-full">
@@ -758,7 +837,11 @@ export default function ClauseExtractor() {
         <AnimatePresence mode="wait">
           {state.stage === "upload" && (
             <motion.div key="upload" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <UploadView onUploaded={handleUploaded} onUploading={handleUploading} />
+              <UploadView
+                onUploaded={handleUploaded}
+                onUploading={handleUploading}
+                onFileSelected={setPdfFile}
+              />
             </motion.div>
           )}
 
@@ -769,12 +852,6 @@ export default function ClauseExtractor() {
                 onDone={handleDone}
                 onError={(msg) => setState({ stage: "error", message: msg })}
               />
-            </motion.div>
-          )}
-
-          {state.stage === "results" && (
-            <motion.div key="results" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <ResultsPanel session={state.session} onDelete={handleDelete} />
             </motion.div>
           )}
 
