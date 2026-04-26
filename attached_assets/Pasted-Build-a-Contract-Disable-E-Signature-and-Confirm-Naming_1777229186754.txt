@@ -1,0 +1,80 @@
+Build a Contract — Disable E-Signature and Confirm Naming Only
+
+Current issue:
+The Build a Contract compliance report says the "Send for Signature" button is already active because a Dropbox Sign API key is configured.
+
+This conflicts with the current PlainPath product decision:
+- Digital Signature was removed as a standalone user-facing tool.
+- Build a Contract should not expose an active Send for Signature flow right now.
+- E-signature / Dropbox Sign must remain disabled or Coming Soon until we intentionally launch it later.
+
+Scope:
+Small fix only.
+
+Allowed files:
+- artifacts/plainpath/src/pages/ContractBuilder.tsx
+- Navbar/layout file only if needed to change visible “Document Builder” label to “Build a Contract”
+
+Do not touch:
+- API routes
+- Auth
+- Database
+- Migrations
+- Stripe/payment
+- Marketing
+- Other tools
+- Dropbox Sign backend logic
+- Signature routes/components
+
+Required changes:
+
+1. Disable user-facing Send for Signature in Build a Contract
+- Do not remove internal code.
+- Do not delete Dropbox Sign components.
+- Do not delete signature routes.
+- Do not break future e-signature work.
+- Make the button visually disabled or label it clearly as Coming Soon.
+- It must not open the SendForSignatureModal.
+- It must not call Dropbox Sign.
+- It must not route to Digital Signature.
+- Add helper text:
+  “E-signature is coming soon. Export your contract first.”
+
+2. Keep Export separate
+- The section should remain labeled “Export.”
+- Keep Download PDF available.
+- Keep Export JSON if currently present and safe.
+- Do not mix Save, Export, and Signature under one active action group.
+
+3. Naming check
+- Main page title should say “Build a Contract.”
+- If the top navigation still says “Document Builder” as a user-facing link, change only the visible label to “Build a Contract.”
+- Do not rename files/components/routes tonight.
+
+4. Stability
+- Add type="button" to any button touched.
+- Do not change contract generation logic.
+- Do not change template logic.
+- Do not change Save Draft.
+- Do not change export behavior.
+
+Verification:
+1. Open Build a Contract.
+2. Confirm user-facing title says “Build a Contract.”
+3. Confirm any visible nav/tool label does not confuse this with general Document Builder.
+4. Generate or open a draft.
+5. Confirm Download PDF still works.
+6. Confirm Save Draft still works.
+7. Confirm Send for Signature is disabled / Coming Soon.
+8. Confirm clicking it does not open a modal, route, or API call.
+9. Confirm no API/auth/database/migration/Stripe/marketing changes.
+10. Confirm no other tools changed.
+11. Confirm no new TypeScript/runtime errors.
+
+Return only:
+A. Files changed
+B. E-signature disabled confirmation
+C. Export behavior preserved
+D. Naming consistency result
+E. Preserved logic
+F. Safe checkpoint: Yes/No

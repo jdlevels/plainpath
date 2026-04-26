@@ -2413,14 +2413,15 @@ function DraftResultView({ draft, contractType, onBack, onRestart }: {
               <Download className="w-3.5 h-3.5" /> Download PDF
             </Button>
             <Button
+              type="button"
               size="sm"
-              onClick={() => setShowSignatureModal(true)}
-              className="w-full gap-2 bg-violet-600 hover:bg-violet-700 text-white h-9"
+              disabled
+              className="w-full gap-2 h-9 cursor-not-allowed opacity-50"
             >
-              <Lock className="w-3.5 h-3.5" /> Send for Signature
+              <Clock className="w-3.5 h-3.5" /> Send for Signature
             </Button>
             <p className="text-[10px] text-muted-foreground/70 text-center leading-snug pt-0.5">
-              Download to keep your draft — it's not stored on our servers.
+              E-signature is coming soon. Export your contract first.
             </p>
           </div>
 
