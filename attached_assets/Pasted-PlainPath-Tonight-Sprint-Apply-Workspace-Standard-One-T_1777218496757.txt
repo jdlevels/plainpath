@@ -1,0 +1,141 @@
+PlainPath Tonight Sprint — Apply Workspace Standard One Tool at a Time
+
+We need to move quickly tonight, but safely.
+
+Primary goal:
+Apply the approved Ask This Document / Review & Redact workspace standard across the remaining document-heavy tools, one tool at a time.
+
+Approved workspace standard:
+- Left side = actual document/PDF preview whenever possible
+- Right side = tool-specific intelligence/action panel
+- Controlled centered document surface
+- Dark workspace around document
+- Compact premium right panel
+- Clear result cards
+- Source cards connected to findings
+- Minimal wasted space
+- No fake exact highlighting if coordinates are unavailable
+- Use fallback source banners when exact source matching is not available
+
+Critical rules:
+- Do not refactor the whole app.
+- Do not rewrite every tool in one pass.
+- Do not touch database.
+- Do not create or apply migrations.
+- Do not touch Stripe/payment.
+- Do not touch auth.
+- Do not touch API routes unless a specific tool is broken and the issue is isolated.
+- Do not change marketing pages.
+- Do not redesign the public homepage.
+- Do not alter working business logic.
+- Preserve working upload/analyze/export behavior.
+- Checkpoint after each tool.
+
+Tonight order:
+1. Ask This Document final polish
+2. Clause Extractor
+3. Contract Review
+4. Document Trust Check
+5. Analyze a Document
+6. Compare Versions
+7. Redact Sensitive Info
+8. Document Builder only if it clearly needs alignment
+
+Step 1 — Ask This Document final polish:
+Complete only these:
+- Source card/banner is clickable if a source match exists
+- Clicking source attempts to scroll/focus the best matching document area
+- If no exact match, show “No exact source location found”
+- Add compact PDF controls: Fit width, Zoom in, Zoom out, page indicator if available
+- Add Q&A labels: Question, PlainPath Answer, Source
+- Keep answer directly under the question
+- Keep suggested questions below answer/source
+- Confirm no reset after 90 seconds
+
+Step 2 — Clause Extractor:
+Apply the new standard:
+- Left side shows actual PDF/document preview
+- Right side shows extracted clauses/results
+- Header shows document name, clause count, missing/uncertain count
+- Result cards are readable and compact
+- Clicking a clause/source card scrolls/focuses the document when possible
+- Missing/not identified clauses must not fake a source highlight
+- Missing items should show:
+  - why flagged
+  - what was checked
+  - recommended action
+- Preserve existing extraction logic
+
+Step 3 — Contract Review:
+Apply the same standard:
+- Left side actual document preview
+- Right side review findings
+- Risk cards grouped clearly
+- Source cards tied to risk/finding cards
+- Click source/finding scrolls/focuses document when possible
+- Preserve legal-safe wording
+- Preserve existing upload/review logic
+
+Step 4 — Document Trust Check:
+Apply the same standard:
+- Left side actual document preview
+- Right side trust/risk verification panel
+- Trust score remains visible
+- Verification cards are compact and readable
+- Source evidence cards connect to findings
+- Preserve cautious wording
+- Do not claim authenticity as fact
+
+Step 5 — Analyze a Document:
+Carefully align without breaking current approved Action Pack:
+- Keep all 11 tabs
+- Keep Action Pack changes
+- Use document-left / intelligence-right standard only where it improves readability
+- Do not remove current analysis sections
+- Do not break Save/Export
+- Do not break Ask This Document tab
+
+Step 6 — Compare Versions:
+Only align if safe:
+- Preserve original vs revised comparison logic
+- Left/right document preview may need special handling because Compare has two documents
+- Do not force it into a single-document layout if that breaks the purpose
+- Keep comparison summary and change cards readable
+- Source/change cards should scroll to corresponding document area where possible
+
+Step 7 — Redact Sensitive Info:
+Review only unless there is a clear gap:
+- Redact already mostly follows the approved standard
+- Do not break PDF redaction export
+- Do not touch backend export
+- Do not change redaction selection logic
+- Only improve layout consistency if low risk
+
+Step 8 — Document Builder:
+Only touch if clearly needed:
+- Builder is a creation workspace, not a scan tool
+- Keep document/preview left and controls right
+- Do not redesign templates or export logic tonight
+
+After each tool:
+Return a mini-report:
+A. Tool updated
+B. Files changed
+C. What changed visually
+D. What logic was preserved
+E. What was verified
+F. Any blocker
+G. Safe checkpoint: Yes/No
+
+Final tonight QA:
+- Run all 8 tool routes
+- Confirm no blank pages
+- Confirm no new TypeScript/runtime errors
+- Confirm no DB/migration/Stripe/auth changes
+- Confirm Ask This Document still works
+- Confirm Analyze Action Pack still works
+- Confirm Redact export was not touched
+- Confirm Digital Signature remains removed from user-facing surfaces
+
+Important:
+If a tool looks risky to convert tonight, stop and report instead of forcing it.

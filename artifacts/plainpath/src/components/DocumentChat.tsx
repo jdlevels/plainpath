@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react"
-import { Send, Bot, Loader2, MessageSquare } from "lucide-react"
+import { Send, Bot, Loader2, MessageSquare, ArrowUpRight } from "lucide-react"
 import { useAuth } from "@clerk/react"
 import { Button } from "@/components/ui/button"
 import { getApiBaseUrl } from "@/lib/api"
@@ -34,6 +34,7 @@ interface DocumentChatProps {
   sections?: SectionItem[]
   onHighlightSection?: (match: SourceMatch | null) => void
   onMessageSent?: () => void
+  onScrollToSource?: () => void
   fullHeight?: boolean
 }
 
@@ -72,22 +73,39 @@ function findBestSection(reply: string, sections: SectionItem[]): SourceMatch | 
   return { id: bestId, title: bestTitle, snippet }
 }
 
-// ─── Source banner (inline in Q&A card) ───────────────────────────────────────
-function QASourceBanner({ match }: { match: SourceMatch | null }) {
+// ─── Source card ──────────────────────────────────────────────────────────────
+function QASourceBanner({
+  match,
+  onScrollTo,
+}: {
+  match: SourceMatch | null
+  onScrollTo?: () => void
+}) {
   if (match === null) {
     return (
-      <p className="text-[11px] text-muted-foreground/50 italic pl-1 pt-1">
-        No exact source location identified for this answer.
-      </p>
-    )
-  }
-  return (
-    <div className="flex items-start gap-2 pt-1">
-      <div className="w-0.5 self-stretch rounded-full bg-indigo-400/60 shrink-0" />
-      <div className="space-y-0.5">
-        <p className="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
+      <div>
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/40 mb-0.5">
           Source
         </p>
+        <p className="text-[11px] text-muted-foreground/50 italic">
+          No exact source location identified for this answer.
+        </p>
+      </div>
+    )
+  }
+
+  const inner = (
+    <div className="flex items-start gap-2">
+      <div className="w-0.5 self-stretch rounded-full bg-indigo-400/60 shrink-0 mt-0.5" />
+      <div className="space-y-0.5 flex-1 min-w-0">
+        <div className="flex items-center gap-1">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+            Source
+          </p>
+          {onScrollTo && (
+            <ArrowUpRight className="w-2.5 h-2.5 text-indigo-400 shrink-0" />
+          )}
+        </div>
         {match.title && (
           <p className="text-[11px] font-medium text-foreground/80">{match.title}</p>
         )}
@@ -97,6 +115,21 @@ function QASourceBanner({ match }: { match: SourceMatch | null }) {
       </div>
     </div>
   )
+
+  if (onScrollTo) {
+    return (
+      <button
+        type="button"
+        onClick={onScrollTo}
+        className="w-full text-left rounded-lg px-2 py-1.5 -mx-2 hover:bg-indigo-50/60 dark:hover:bg-indigo-950/20 transition-colors"
+        title="Click to jump to this section in the document"
+      >
+        {inner}
+      </button>
+    )
+  }
+
+  return <div className="px-0">{inner}</div>
 }
 
 // ─── Individual Q&A card ───────────────────────────────────────────────────────
@@ -105,45 +138,51 @@ function QACard({
   answer,
   isLoading,
   sourceMatch,
+  onScrollToSource,
 }: {
   question: string
   answer: string | null
   isLoading?: boolean
   sourceMatch?: SourceMatch | null
+  onScrollToSource?: () => void
 }) {
   return (
     <div className="space-y-2">
-      {/* Question row */}
-      <div className="flex items-start gap-2.5">
-        <div className="w-5 h-5 rounded bg-primary/15 flex items-center justify-center shrink-0 mt-[3px]">
-          <span className="text-[9px] font-bold text-primary leading-none">Q</span>
-        </div>
-        <p className="text-sm font-semibold text-foreground flex-1 leading-relaxed">
-          {question}
+      {/* Question */}
+      <div>
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50 mb-1 pl-0.5">
+          Question
         </p>
+        <div className="rounded-xl border border-border/40 bg-background px-3.5 py-2.5">
+          <p className="text-sm font-medium text-foreground leading-relaxed">{question}</p>
+        </div>
       </div>
 
-      {/* Answer card or loading */}
-      <div className="ml-7">
-        {isLoading ? (
-          <div className="rounded-xl border border-border/50 bg-muted/30 px-4 py-3 flex items-center gap-2">
-            <Loader2 className="w-3.5 h-3.5 text-muted-foreground animate-spin shrink-0" />
-            <span className="text-xs text-muted-foreground">Thinking…</span>
-          </div>
-        ) : answer !== null ? (
-          <div className="space-y-2.5">
+      {/* Answer */}
+      {(isLoading || answer !== null) && (
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50 mb-1 pl-0.5">
+            PlainPath Answer
+          </p>
+          {isLoading ? (
+            <div className="rounded-xl border border-border/50 bg-muted/30 px-4 py-3 flex items-center gap-2">
+              <Loader2 className="w-3.5 h-3.5 text-muted-foreground animate-spin shrink-0" />
+              <span className="text-xs text-muted-foreground">Thinking…</span>
+            </div>
+          ) : (
             <div className="rounded-xl border border-border/60 bg-muted/40 px-4 py-3.5">
               <p className="text-sm text-foreground leading-relaxed">{answer}</p>
             </div>
-            {/* Source banner — shown only when sourceMatch is not undefined */}
-            {sourceMatch !== undefined && (
-              <div className="px-1">
-                <QASourceBanner match={sourceMatch} />
-              </div>
-            )}
-          </div>
-        ) : null}
-      </div>
+          )}
+        </div>
+      )}
+
+      {/* Source */}
+      {sourceMatch !== undefined && !isLoading && answer !== null && (
+        <div className="pl-0.5 pt-0.5">
+          <QASourceBanner match={sourceMatch} onScrollTo={sourceMatch ? onScrollToSource : undefined} />
+        </div>
+      )}
     </div>
   )
 }
@@ -166,25 +205,25 @@ function EmptyState({
 }) {
   const questions = suggestedQuestions.length > 0 ? suggestedQuestions : EXAMPLE_QUESTIONS
   return (
-    <div className="px-4 py-6 space-y-5">
-      <div className="flex flex-col items-center gap-3 text-center">
-        <div className="w-12 h-12 rounded-2xl bg-primary/8 flex items-center justify-center">
-          <Bot className="w-6 h-6 text-primary/50" />
+    <div className="px-4 py-5 space-y-4">
+      <div className="flex flex-col items-center gap-2.5 text-center">
+        <div className="w-10 h-10 rounded-xl bg-primary/8 flex items-center justify-center">
+          <Bot className="w-5 h-5 text-primary/50" />
         </div>
         <div>
           <p className="text-sm font-semibold text-foreground">Ask anything about this document</p>
-          <p className="text-xs text-muted-foreground mt-1 leading-relaxed max-w-xs mx-auto">
+          <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed max-w-xs mx-auto">
             Ask about risks, deadlines, obligations, payment terms, or anything confusing.
           </p>
         </div>
       </div>
-      <div className="space-y-1.5">
+      <div className="space-y-1">
         {questions.slice(0, 5).map((q, i) => (
           <button
             key={i}
             type="button"
             onClick={() => onSend(q)}
-            className="w-full text-left px-3.5 py-2.5 rounded-xl border border-border/50 bg-background hover:bg-muted/50 transition-colors text-xs text-foreground/80 font-medium"
+            className="w-full text-left px-3 py-2 rounded-lg border border-border/50 bg-background hover:bg-muted/50 transition-colors text-xs text-foreground/80 font-medium"
           >
             {q}
           </button>
@@ -200,6 +239,7 @@ export function DocumentChat({
   sections,
   onHighlightSection,
   onMessageSent,
+  onScrollToSource,
   fullHeight,
 }: DocumentChatProps) {
   const { getToken } = useAuth()
@@ -298,6 +338,7 @@ export function DocumentChat({
         if (res.status === 401)
           throw new Error("PlainPath could not answer that question. Please try again or paste the document text manually.")
         throw new Error(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (data as any).message ??
             "PlainPath could not answer that question. Please try again or paste the document text manually."
         )
@@ -366,19 +407,19 @@ export function DocumentChat({
     >
       {/* Header */}
       <div className="flex items-center gap-2.5 px-4 py-3 border-b border-border/50 bg-muted/20 shrink-0">
-        <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-          <MessageSquare className="w-4 h-4 text-primary" />
+        <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+          <MessageSquare className="w-3.5 h-3.5 text-primary" />
         </div>
         <div>
           <p className="text-sm font-semibold text-foreground">Ask PlainPath</p>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground leading-tight">
             Questions about this document, answered in plain English
           </p>
         </div>
       </div>
 
       {/* Input — pinned near top */}
-      <div className="px-4 py-3 border-b border-border/40 bg-background/60 shrink-0">
+      <div className="px-4 py-2.5 border-b border-border/40 bg-background/60 shrink-0">
         <div className="flex gap-2 items-end">
           <textarea
             ref={inputRef}
@@ -388,7 +429,7 @@ export function DocumentChat({
             placeholder="Ask about your document…"
             rows={1}
             disabled={loading}
-            className="flex-1 resize-none rounded-xl border border-border/60 bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition-all disabled:opacity-50"
+            className="flex-1 resize-none rounded-xl border border-border/60 bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition-all disabled:opacity-50"
             style={{ maxHeight: "96px" }}
           />
           <Button
@@ -396,13 +437,13 @@ export function DocumentChat({
             size="icon"
             onClick={() => void sendMessage(input)}
             disabled={!input.trim() || loading}
-            className="h-10 w-10 rounded-xl shrink-0"
+            className="h-9 w-9 rounded-xl shrink-0"
           >
-            <Send className="w-4 h-4" />
+            <Send className="w-3.5 h-3.5" />
           </Button>
         </div>
-        <p className="text-[10px] text-muted-foreground/40 mt-1.5 text-center">
-          AI-generated from your document analysis. Not legal advice.
+        <p className="text-[10px] text-muted-foreground/35 mt-1 text-center">
+          AI-generated · not legal advice
         </p>
       </div>
 
@@ -411,7 +452,7 @@ export function DocumentChat({
         {isEmpty ? (
           <EmptyState suggestedQuestions={suggestedQuestions} onSend={sendMessage} />
         ) : (
-          <div className="px-4 py-5 space-y-6">
+          <div className="px-4 py-4 space-y-5">
             {qaPairs.map((pair, idx) => {
               const isLatest = idx === qaPairs.length - 1
               const isLoading = loading && pair.answer === null && isLatest
@@ -423,23 +464,29 @@ export function DocumentChat({
                   answer={pair.answer}
                   isLoading={isLoading}
                   sourceMatch={showSource ? lastSourceMatch : undefined}
+                  onScrollToSource={onScrollToSource}
                 />
               )
             })}
 
-            {/* Follow-up chips */}
+            {/* Follow-up chips — below source, not between Q&A */}
             {!loading && hasAnswers && suggestedQuestions.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 pt-1">
-                {suggestedQuestions.map((q, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => void sendMessage(q)}
-                    className="px-2.5 py-1 rounded-full border border-border/60 bg-background hover:bg-muted/50 transition-colors text-[11px] text-muted-foreground font-medium"
-                  >
-                    {q}
-                  </button>
-                ))}
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/40 mb-1.5 pl-0.5">
+                  Follow-up questions
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {suggestedQuestions.map((q, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => void sendMessage(q)}
+                      className="px-2.5 py-1 rounded-full border border-border/60 bg-background hover:bg-muted/50 transition-colors text-[11px] text-muted-foreground font-medium"
+                    >
+                      {q}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 

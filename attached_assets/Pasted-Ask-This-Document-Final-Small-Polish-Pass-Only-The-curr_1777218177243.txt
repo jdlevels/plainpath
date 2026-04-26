@@ -1,0 +1,102 @@
+Ask This Document — Final Small Polish Pass Only
+
+The current Ask This Document layout is approved directionally. Do not redesign it.
+
+Goal:
+Make the existing Ask This Document workspace feel slightly more premium and usable without changing architecture.
+
+Current approved structure:
+- Left side renders the actual PDF preview.
+- Right side shows Ask PlainPath Q&A.
+- Chat works.
+- Secure Bearer-token auth works.
+- PDF viewer sizing is acceptable.
+- Keep this layout.
+
+Small fixes only:
+
+1. Source card interaction
+- If the AI answer shows a source card/banner, make it clickable.
+- Clicking it should scroll/focus the best matching source area in the PDF/document viewer if available.
+- If exact PDF coordinate matching is not available, scroll to the best matched extracted section/page if possible.
+- If no source match exists, keep the current “No exact source location found” fallback.
+- Do not fake exact highlighting.
+
+2. PDF viewer controls
+Add compact controls above or near the PDF viewer:
+- Fit width
+- Zoom in
+- Zoom out
+- Page indicator if available
+
+Rules:
+- Keep controls small and premium.
+- Do not create a full PDF editor.
+- Do not change Redact.
+- Do not break current PDF rendering.
+
+3. Q&A card hierarchy
+Improve the right panel card labels:
+- Show “Question” above/inside the user question card.
+- Show “PlainPath Answer” above/inside the AI answer card.
+- Show “Source” above/inside the source card/banner.
+- Keep spacing tight.
+- Answer should remain directly under the question.
+
+4. Suggested next questions
+- Keep suggested follow-up questions under the latest answer/source area.
+- Do not place suggestions between the question and answer.
+- Keep them compact.
+
+5. Reduce empty-space feeling
+- Do not push content too far apart vertically.
+- The right panel should feel dense but readable.
+- Keep internal scrolling stable.
+
+Scope:
+Only touch:
+- artifacts/plainpath/src/pages/AskDocument.tsx
+- artifacts/plainpath/src/components/DocumentChat.tsx
+
+Do not touch:
+- API routes
+- Auth
+- Database
+- Migrations
+- Stripe/payment
+- Marketing
+- Analyze Action Pack
+- Redact
+- Contract Review
+- Trust Check
+- Clause Extractor
+- Compare Versions
+- Document Builder
+- Global routing
+
+Verification:
+1. Open /ask-document.
+2. Upload a PDF.
+3. Confirm PDF still renders on the left.
+4. Confirm PDF is not oversized.
+5. Ask: “What are the termination rights?”
+6. Confirm right panel shows:
+   - Question card
+   - PlainPath Answer card directly under it
+   - Source card/banner under answer
+   - Suggested questions below source
+7. Click source card if available and confirm it attempts to focus the document.
+8. Test zoom controls.
+9. Ask a second question.
+10. Wait 90 seconds and confirm no reset.
+11. Test Analyze → Ask This Document tab still works.
+12. Confirm no API/auth/database/migration/Stripe/global route changes.
+13. Confirm no new TypeScript/runtime errors.
+
+Return only:
+A. Files changed
+B. Source click behavior
+C. PDF controls added
+D. Q&A hierarchy changes
+E. Stability verification
+F. Safe to publish: Yes/No

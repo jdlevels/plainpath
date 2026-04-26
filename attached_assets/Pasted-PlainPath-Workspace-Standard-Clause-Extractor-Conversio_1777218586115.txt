@@ -1,0 +1,209 @@
+PlainPath Workspace Standard — Clause Extractor Conversion Only
+
+Goal:
+Convert Clause Extractor to the approved PlainPath document workspace standard.
+
+Approved standard:
+- Left side = actual document/PDF preview whenever possible
+- Right side = structured intelligence/action panel
+- Viewer should resemble Ask This Document / Review & Redact:
+  - actual PDF page surface
+  - centered controlled page width
+  - dark workspace around the page
+  - scrollable document area
+  - file name visible
+  - readable scale
+- Right panel should be compact, premium, and results-first:
+  - clear tool header
+  - summary/result chips
+  - clause cards
+  - missing/not identified cards
+  - source cards tied to extracted clauses
+  - minimal wasted space
+
+Scope:
+Only update Clause Extractor.
+
+Allowed files:
+- artifacts/plainpath/src/pages/ClauseExtractor.tsx
+- Existing shared viewer/header components only if already available and safe to reuse
+- If needed, add small local helper components inside ClauseExtractor.tsx
+
+Do not touch:
+- Ask This Document
+- Analyze.tsx
+- Analyze Action Pack
+- DocumentChat
+- Redact
+- Contract Review
+- Trust Check
+- Compare Versions
+- Document Builder
+- API routes
+- Auth
+- Database
+- Migrations
+- Stripe/payment
+- Marketing
+- Global routing
+
+Critical:
+Preserve existing Clause Extractor extraction logic.
+Do not change backend calls.
+Do not change document parsing.
+Do not change upload behavior.
+Do not fake exact source highlighting.
+
+Required layout:
+
+1. Empty / upload state
+- Keep the upload flow simple.
+- Add/keep a consistent compact tool header.
+- Clearly show:
+  - Clause Extractor
+  - What it does
+  - supported file types
+  - sample/demo options if currently present
+- Do not overbuild the empty state.
+
+2. Processing state
+- Use the shared DocumentScanScreen-style processing animation if already available.
+- Show:
+  - tool name: Clause Extractor
+  - file name
+  - document skeleton / scanning motion
+  - progress/checklist style steps
+- Must match the existing PlainPath PDF loading standard.
+
+3. Completed workspace
+Use a split layout:
+
+LEFT PANEL — Document Viewer
+- Show actual PDF/document preview if PDF was uploaded.
+- Use the same style discipline as Ask This Document:
+  - centered paper page
+  - controlled max width
+  - dark stage
+  - scrollable pages
+- For DOCX/TXT/pasted text, show a paper-style text viewer.
+- Do not dump raw text directly onto dark background.
+- Header should show:
+  - file name
+  - document type
+  - “Clause Extractor” context label
+
+RIGHT PANEL — Clause Intelligence
+Make this results-first.
+
+Top summary should show compact chips/cards:
+- Clauses found
+- Possible missing / not identified clauses
+- Obligations
+- Dates / deadlines
+- Parties
+- Source coverage / confidence
+
+Below summary:
+- Add category/filter chips:
+  - All
+  - Payment
+  - Termination
+  - Obligations
+  - Liability
+  - Confidentiality
+  - Deadlines
+  - Missing / Not identified
+
+Clause cards:
+Each source-backed clause card should show:
+- Clause title
+- Category
+- Short plain-English meaning
+- Confidence level
+- Source snippet or source chip
+- Click action to focus/scroll document when possible
+
+Missing / not identified cards:
+Do not fake source highlights.
+For missing items, show:
+- Clause name
+- Status: Not identified / Possible missing
+- Why flagged
+- What sections were checked
+- Recommended action
+- Message: “No exact source found”
+
+4. Source behavior
+- Clicking a source-backed clause should:
+  - highlight/select the clause card
+  - show a source banner or active state
+  - scroll/focus the matching document area if possible
+- If exact PDF coordinate highlighting is unavailable:
+  - use best-effort section/text matching
+  - show a source banner: “Source used for this clause”
+  - do not pretend the exact PDF text is highlighted
+- Missing/not identified items should not scroll to a fake location.
+
+5. Readability
+- Increase right-panel readability:
+  - fewer badges
+  - stronger text contrast
+  - larger clause titles
+  - better spacing between cards
+  - collapsed lower-priority details where useful
+- Avoid clutter.
+- Make the user able to quickly answer:
+  - What clauses were found?
+  - What is missing?
+  - What obligations exist?
+  - Where did PlainPath find this?
+
+6. Mobile
+- Use tabs:
+  - Clauses
+  - Document
+- Default to Clauses after processing.
+- Document tab must show the viewer.
+- Cards must not overflow or clip behind navigation.
+
+Stability rules:
+- Do not reset uploaded file after processing.
+- Do not clear results when a card is clicked.
+- Do not break source chips.
+- All buttons must use type="button" unless intentionally submitting.
+- Preserve error states.
+- Preserve low-confidence behavior if currently present.
+
+Verification:
+1. Open /clause-extractor.
+2. Upload a PDF agreement.
+3. Confirm processing animation shows tool name and file name.
+4. Confirm completed state shows:
+   - left actual PDF/document viewer
+   - right Clause Intelligence panel
+5. Confirm summary chips/counts are visible.
+6. Click a found clause.
+7. Confirm clause card visibly selects.
+8. Confirm document attempts to scroll/focus to source or shows a source banner.
+9. Click a missing/not identified clause.
+10. Confirm it does not fake document highlighting and instead shows:
+    - why flagged
+    - what was checked
+    - recommended action
+    - no exact source found
+11. Test category filters.
+12. Test mobile at ~390px width.
+13. Confirm no other tools changed.
+14. Confirm no API/auth/database/migration/Stripe/marketing changes.
+15. Confirm no new TypeScript/runtime errors introduced.
+
+Return only:
+A. Files changed
+B. Empty/processing/result state changes
+C. Document viewer implementation
+D. Right-panel Clause Intelligence structure
+E. Source click behavior
+F. Missing/not identified behavior
+G. Mobile behavior
+H. Preserved logic
+I. Safe checkpoint: Yes/No

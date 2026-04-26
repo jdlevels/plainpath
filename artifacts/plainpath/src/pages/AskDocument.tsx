@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import {
   MessageCircle, UploadCloud, Type,
   ArrowLeft, X, AlertCircle, ChevronRight, FileText, Loader2,
+  ZoomIn, ZoomOut, Maximize2,
 } from "lucide-react"
 import { useLocation } from "wouter"
 import * as pdfjsLib from "pdfjs-dist"
@@ -23,6 +24,15 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
 const PDF_SCALE = 1.4
 const PDF_MAX_PAGES = 15
 
+const ZOOM_STEPS = [
+  { scale: 0.65, label: "65%" },
+  { scale: 0.80, label: "80%" },
+  { scale: 1.00, label: "100%" },
+  { scale: 1.20, label: "120%" },
+  { scale: 1.40, label: "140%" },
+]
+const ZOOM_DEFAULT = 2 // index into ZOOM_STEPS (1.00 = 100%)
+
 type SectionItem = { id: string; title?: string; content: string }
 
 // ─── Read-only PDF viewer ─────────────────────────────────────────────────────
@@ -30,9 +40,13 @@ type SectionItem = { id: string; title?: string; content: string }
 function PdfReadViewer({
   file,
   fallbackContent,
+  cssScale = 1,
+  onLoaded,
 }: {
   file: File
   fallbackContent: React.ReactNode
+  cssScale?: number
+  onLoaded?: (rendered: number, total: number) => void
 }) {
   const [pages, setPages] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
@@ -70,6 +84,7 @@ function PdfReadViewer({
         if (!cancelled) {
           setPages(renders)
           setLoading(false)
+          onLoaded?.(renders.length, pdf.numPages)
         }
       } catch {
         if (!cancelled) {
@@ -82,7 +97,7 @@ function PdfReadViewer({
     return () => {
       cancelled = true
     }
-  }, [file])
+  }, [file]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading) {
     return (
@@ -106,14 +121,17 @@ function PdfReadViewer({
     )
   }
 
+  const imgWidth = `${Math.round(cssScale * 100)}%`
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {pages.map((dataUrl, i) => (
         <img
           key={i}
           src={dataUrl}
           alt={`Page ${i + 1}`}
-          className="w-full rounded-md shadow-xl"
+          className="block rounded-md shadow-xl mx-auto"
+          style={{ width: imgWidth }}
           draggable={false}
         />
       ))}
@@ -154,14 +172,26 @@ function DocumentViewer({
   rawText,
   pdfFile,
   sourceMatch,
+  zoomIdx = ZOOM_DEFAULT,
+  onZoomIn,
+  onZoomOut,
+  onZoomFit,
+  scrollTrigger = 0,
 }: {
   analysis: DocumentAnalysis
   fileName: string | null
   rawText?: string
   pdfFile?: File | null
   sourceMatch?: SourceMatch | null
+  zoomIdx?: number
+  onZoomIn?: () => void
+  onZoomOut?: () => void
+  onZoomFit?: () => void
+  scrollTrigger?: number
 }) {
   const sectionRefs = useRef<Map<string, HTMLElement>>(new Map())
+  const stageRef = useRef<HTMLDivElement>(null)
+  const [pdfPageInfo, setPdfPageInfo] = useState<{ rendered: number; total: number } | null>(null)
   const sections = (analysis.sections ?? []) as SectionItem[]
   const plainEnglish = analysis.plainEnglish as Record<string, string> | undefined
 
@@ -179,12 +209,26 @@ function DocumentViewer({
   const showSummary = !hasSections && !hasRawText && !hasPlainEnglish && hasSummary
   const showEmpty = !hasSections && !hasRawText && !hasPlainEnglish && !hasSummary
 
-  // Scroll to highlighted section in text view
+  // Auto-scroll to highlighted section when sourceMatch changes (new answer)
   useEffect(() => {
     if (!sourceMatch?.id) return
     const el = sectionRefs.current.get(sourceMatch.id)
     if (el) el.scrollIntoView({ behavior: "smooth", block: "nearest" })
   }, [sourceMatch])
+
+  // Manual scroll when user clicks source card (scrollTrigger increments)
+  useEffect(() => {
+    if (!scrollTrigger) return
+    if (sourceMatch?.id) {
+      const el = sectionRefs.current.get(sourceMatch.id)
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "nearest" })
+        return
+      }
+    }
+    // PDF view or unmatched — scroll stage to top
+    stageRef.current?.scrollTo({ top: 0, behavior: "smooth" })
+  }, [scrollTrigger]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Text content — zinc colors since it always renders on a white card
   const textContent = (
@@ -257,32 +301,79 @@ function DocumentViewer({
     </div>
   )
 
+  const cssScale = ZOOM_STEPS[zoomIdx]?.scale ?? 1
+
   return (
     <div className="h-full flex flex-col bg-zinc-900 dark:bg-zinc-950">
       {/* Compact dark header strip */}
-      <div className="shrink-0 flex items-center gap-2.5 px-4 py-2.5 border-b border-white/10 bg-zinc-800/60">
+      <div className="shrink-0 flex items-center gap-2.5 px-3 py-2 border-b border-white/10 bg-zinc-800/60">
         <FileText className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
         <div className="flex-1 min-w-0">
           <p className="text-[13px] font-medium text-zinc-200 truncate leading-tight">
             {fileName ?? (analysis as any).title ?? "Document"}
           </p>
           {(analysis as any).documentType && (
-            <p className="text-[11px] text-zinc-500 leading-tight mt-0.5">
+            <p className="text-[11px] text-zinc-500 leading-none mt-0.5">
               {(analysis as any).documentType}
+              {pdfPageInfo && (
+                <span className="ml-2 text-zinc-600">
+                  · {pdfPageInfo.rendered === pdfPageInfo.total
+                    ? `${pdfPageInfo.total} pages`
+                    : `${pdfPageInfo.rendered} of ${pdfPageInfo.total} pages`}
+                </span>
+              )}
             </p>
           )}
         </div>
-        <span className="text-[10px] text-zinc-600 shrink-0 hidden sm:block">
-          Ask This Document
-        </span>
+
+        {/* Zoom controls — only for PDF */}
+        {pdfFile && (
+          <div className="flex items-center gap-0.5 shrink-0">
+            <button
+              type="button"
+              onClick={onZoomOut}
+              disabled={zoomIdx <= 0}
+              title="Zoom out"
+              className="p-1 rounded hover:bg-white/10 text-zinc-400 hover:text-zinc-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            >
+              <ZoomOut className="w-3.5 h-3.5" />
+            </button>
+            <span className="text-[11px] text-zinc-500 font-mono w-8 text-center select-none">
+              {ZOOM_STEPS[zoomIdx]?.label ?? "100%"}
+            </span>
+            <button
+              type="button"
+              onClick={onZoomIn}
+              disabled={zoomIdx >= ZOOM_STEPS.length - 1}
+              title="Zoom in"
+              className="p-1 rounded hover:bg-white/10 text-zinc-400 hover:text-zinc-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            >
+              <ZoomIn className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={onZoomFit}
+              disabled={zoomIdx === ZOOM_DEFAULT}
+              title="Fit width (100%)"
+              className="p-1 rounded hover:bg-white/10 text-zinc-400 hover:text-zinc-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors ml-0.5"
+            >
+              <Maximize2 className="w-3 h-3" />
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Dark stage — scrollable, paper centered */}
-      <div className="flex-1 overflow-y-auto">
+      {/* Dark stage — scrollable both axes, paper centered */}
+      <div ref={stageRef} className="flex-1 overflow-auto">
         <div className="py-8 px-4 sm:px-8 flex justify-center">
           <div className="w-full" style={{ maxWidth: "800px" }}>
             {pdfFile ? (
-              <PdfReadViewer file={pdfFile} fallbackContent={textContent} />
+              <PdfReadViewer
+                file={pdfFile}
+                fallbackContent={textContent}
+                cssScale={cssScale}
+                onLoaded={(rendered, total) => setPdfPageInfo({ rendered, total })}
+              />
             ) : (
               /* Text / DOCX: white paper card on dark stage */
               <div className="bg-white rounded-xl shadow-2xl overflow-hidden">
@@ -310,6 +401,8 @@ export default function AskDocument() {
   const [isDragging, setIsDragging] = useState(false)
   // undefined = no answer yet; null = answer, no source; object = source matched
   const [sourceMatch, setSourceMatch] = useState<SourceMatch | null | undefined>(undefined)
+  const [zoomIdx, setZoomIdx] = useState(ZOOM_DEFAULT)
+  const [scrollTrigger, setScrollTrigger] = useState(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   async function safeParseJson(res: Response): Promise<Record<string, unknown>> {
@@ -412,6 +505,8 @@ export default function AskDocument() {
     setError(null)
     setMobileTab("ask")
     setSourceMatch(undefined)
+    setZoomIdx(ZOOM_DEFAULT)
+    setScrollTrigger(0)
   }
 
   const sections = (analysis?.sections ?? []) as SectionItem[]
@@ -657,6 +752,11 @@ export default function AskDocument() {
                       rawText={rawText}
                       pdfFile={pdfFile}
                       sourceMatch={sourceMatch}
+                      zoomIdx={zoomIdx}
+                      onZoomIn={() => setZoomIdx(i => Math.min(i + 1, ZOOM_STEPS.length - 1))}
+                      onZoomOut={() => setZoomIdx(i => Math.max(i - 1, 0))}
+                      onZoomFit={() => setZoomIdx(ZOOM_DEFAULT)}
+                      scrollTrigger={scrollTrigger}
                     />
                   </div>
                   <div
@@ -669,6 +769,7 @@ export default function AskDocument() {
                       sections={sections}
                       onHighlightSection={setSourceMatch}
                       onMessageSent={() => setSourceMatch(undefined)}
+                      onScrollToSource={() => setScrollTrigger(t => t + 1)}
                       fullHeight
                     />
                   </div>
@@ -684,6 +785,11 @@ export default function AskDocument() {
                       rawText={rawText}
                       pdfFile={pdfFile}
                       sourceMatch={sourceMatch}
+                      zoomIdx={zoomIdx}
+                      onZoomIn={() => setZoomIdx(i => Math.min(i + 1, ZOOM_STEPS.length - 1))}
+                      onZoomOut={() => setZoomIdx(i => Math.max(i - 1, 0))}
+                      onZoomFit={() => setZoomIdx(ZOOM_DEFAULT)}
+                      scrollTrigger={scrollTrigger}
                     />
                   </div>
                   {/* Right: Q&A panel (~40%) */}
@@ -693,6 +799,7 @@ export default function AskDocument() {
                       sections={sections}
                       onHighlightSection={setSourceMatch}
                       onMessageSent={() => setSourceMatch(undefined)}
+                      onScrollToSource={() => setScrollTrigger(t => t + 1)}
                       fullHeight
                     />
                   </div>

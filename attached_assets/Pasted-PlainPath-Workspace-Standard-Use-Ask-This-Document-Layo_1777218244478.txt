@@ -1,0 +1,64 @@
+PlainPath Workspace Standard — Use Ask This Document Layout as the Standard
+
+The current Ask This Document layout is now the approved PlainPath document workspace standard.
+
+Do not redesign the full app right now.
+Do not refactor all tools at once.
+Document this standard and apply it only as the guiding pattern for future tool cleanup.
+
+Approved standard:
+- Left side shows the actual document/PDF preview whenever possible.
+- Right side shows the tool-specific intelligence/action panel.
+- The document preview should resemble the Review & Redact / Ask This Document style:
+  - centered paper/PDF surface
+  - controlled max width
+  - dark workspace background
+  - scrollable pages
+  - file name visible
+  - readable scale
+- The right panel should be compact, premium, and organized:
+  - clear header
+  - result cards or Q&A cards
+  - source cards directly connected to findings
+  - suggested next actions below primary result
+  - no large empty spacing
+- Source cards should scroll/focus the document when possible.
+- Do not fake exact PDF highlighting if exact location is unavailable.
+- Use fallback source banners when exact matching is not available.
+
+Apply this standard going forward to document-heavy tools:
+1. Ask This Document
+2. Analyze a Document
+3. Document Trust Check
+4. Contract Review
+5. Clause Extractor
+6. Compare Versions
+7. Redact Sensitive Info
+
+Document Builder remains a creation workspace, but should still follow the same principle:
+- document/preview on the left
+- controls/builder intelligence on the right
+
+Important:
+This is a standardization note only unless a specific tool is being edited.
+Do not immediately rewrite every tool.
+Do not touch database, migrations, Stripe/payment, auth, API routes, or routing.
+Do not change working tools unless specifically instructed.
+
+Add this as a project note/checkpoint in the codebase if there is an existing local notes/checklist file. If not, create a small internal note file such as:
+
+.local/plainpath-workspace-standard.md
+
+Include:
+A. Approved layout standard
+B. Tools this applies to
+C. Rules for PDF/document preview
+D. Rules for right-side intelligence panels
+E. Source card behavior
+F. Explicit instruction not to redesign all tools at once
+
+Return only:
+A. Where the standard was documented
+B. Exact standard summary
+C. Confirmation no product code was changed
+D. Safe to continue: Yes/No
