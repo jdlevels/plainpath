@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Plus, Trash2, Copy as CopyIcon } from "lucide-react";
+import { Plus, Trash2, Copy as CopyIcon, Sparkles, ChevronDown } from "lucide-react";
 import type {
   BuilderContent,
   BuilderSection,
@@ -8,6 +8,11 @@ import type {
   FreeformField,
 } from "@/lib/builderTypes";
 import { DEFAULT_BRANDING } from "@/lib/builderTypes";
+
+// ─── Snap grid ────────────────────────────────────────────────────────────────
+
+const GRID = 8;
+function snapToGrid(v: number, g = GRID) { return Math.round(v / g) * g; }
 
 // ─── Context ──────────────────────────────────────────────────────────────────
 
@@ -32,6 +37,10 @@ interface Props {
   onBlockSelect?: (sectionId: string, blockId: string) => void;
   branding?: BrandingState | null;
   onBlockInlineEdit?: (sectionId: string, blockId: string, newPayload: Record<string, unknown>) => void;
+  onBlockDuplicate?: (sectionId: string, blockId: string) => void;
+  onBlockDelete?: (sectionId: string, blockId: string) => void;
+  onBlockAiGuide?: (sectionId: string, blockId: string) => void;
+  onAddBlockToSection?: (sectionId: string, type: string) => void;
   freeformFields?: FreeformField[];
   selectedFreeformId?: string | null;
   onFreeformSelect?: (id: string | null) => void;
@@ -166,12 +175,20 @@ function FreeformFieldCard({
     };
     const onUp = () => {
       if (isDraggingRef.current && dragPosLive.current) {
-        onChangeRef.current({ ...fieldRef.current, x: dragPosLive.current.x, y: dragPosLive.current.y });
+        onChangeRef.current({
+          ...fieldRef.current,
+          x: snapToGrid(Math.max(0, dragPosLive.current.x)),
+          y: snapToGrid(Math.max(0, dragPosLive.current.y)),
+        });
         dragPosLive.current = null;
         setDragPos(null);
       }
       if (isResizingRef.current && resizeSizeLive.current) {
-        onChangeRef.current({ ...fieldRef.current, width: resizeSizeLive.current.w, height: resizeSizeLive.current.h });
+        onChangeRef.current({
+          ...fieldRef.current,
+          width: snapToGrid(Math.max(80, resizeSizeLive.current.w)),
+          height: snapToGrid(Math.max(40, resizeSizeLive.current.h)),
+        });
         resizeSizeLive.current = null;
         setResizeSize(null);
       }
@@ -324,6 +341,94 @@ function FreeformFieldCard({
           onClick={(e) => e.stopPropagation()}
         />
       )}
+    </div>
+  );
+}
+
+// ─── Insert block menu ────────────────────────────────────────────────────────
+
+const INSERT_BLOCK_TYPES: Array<{ type: string; label: string }> = [
+  { type: "heading",       label: "Heading"        },
+  { type: "paragraph",     label: "Paragraph"      },
+  { type: "bullet-list",   label: "Bullet List"    },
+  { type: "numbered-list", label: "Numbered List"  },
+  { type: "checklist",     label: "Checklist"      },
+  { type: "note",          label: "Note / Callout" },
+  { type: "table",         label: "Table"          },
+  { type: "key-value",     label: "Key-Value"      },
+  { type: "divider",       label: "Divider"        },
+];
+
+function InsertBlockMenu({
+  sectionId,
+  isOpen,
+  onToggle,
+  onInsert,
+  onInsertFreeform,
+}: {
+  sectionId: string;
+  isOpen: boolean;
+  onToggle: () => void;
+  onInsert: (sectionId: string, type: string) => void;
+  onInsertFreeform?: () => void;
+}) {
+  return (
+    <div
+      className="flex justify-center my-1"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="relative">
+        <button
+          type="button"
+          onClick={onToggle}
+          className={[
+            "flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-medium transition-all select-none",
+            isOpen
+              ? "bg-blue-100 text-blue-700 border border-blue-300 shadow-sm"
+              : "text-neutral-400 border border-dashed border-neutral-300 hover:border-blue-300 hover:text-blue-500 hover:bg-blue-50/50",
+          ].join(" ")}
+        >
+          <Plus className="w-3 h-3" />
+          Add block here
+          <ChevronDown className={`w-3 h-3 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+        </button>
+
+        {isOpen && (
+          <div
+            className="absolute z-30 left-1/2 -translate-x-1/2 mt-1.5 w-44 bg-white rounded-xl border border-neutral-200 shadow-xl overflow-hidden"
+            style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.13)" }}
+          >
+            <div className="px-2.5 py-2 border-b border-neutral-100">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Add to section</p>
+            </div>
+            <div className="py-1 max-h-52 overflow-y-auto">
+              {INSERT_BLOCK_TYPES.map(({ type, label }) => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => onInsert(sectionId, type)}
+                  className="w-full text-left px-3 py-1.5 text-[12px] text-neutral-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                >
+                  {label}
+                </button>
+              ))}
+              {onInsertFreeform && (
+                <>
+                  <div className="my-1 mx-2 border-t border-neutral-100" />
+                  <button
+                    type="button"
+                    onClick={() => { onInsertFreeform(); }}
+                    className="w-full text-left px-3 py-1.5 text-[12px] text-neutral-700 hover:bg-blue-50 hover:text-blue-700 transition-colors flex items-center gap-1.5"
+                  >
+                    <Plus className="w-3 h-3 text-neutral-400" />
+                    Text Box (overlay)
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -551,6 +656,10 @@ export const BuilderPagePreview = React.memo(function BuilderPagePreview({
   onBlockSelect,
   branding,
   onBlockInlineEdit,
+  onBlockDuplicate,
+  onBlockDelete,
+  onBlockAiGuide,
+  onAddBlockToSection,
   freeformFields = [],
   selectedFreeformId,
   onFreeformSelect,
@@ -563,6 +672,7 @@ export const BuilderPagePreview = React.memo(function BuilderPagePreview({
   const sections = [...content.sections].sort((a, b) => a.order - b.order);
 
   const [inlineEdit, setInlineEdit] = useState<InlineEditState | null>(null);
+  const [insertMenuOpenFor, setInsertMenuOpenFor] = useState<string | null>(null);
 
   function handleInlineEditStart(state: InlineEditState) {
     setInlineEdit(state);
@@ -595,11 +705,20 @@ export const BuilderPagePreview = React.memo(function BuilderPagePreview({
     setInlineEdit(null);
   }
 
-  const handlePageClick = (e: React.MouseEvent) => {
-    if (selectedFreeformId && onFreeformSelect) {
-      onFreeformSelect(null);
-    }
+  const handlePageClick = () => {
+    if (selectedFreeformId && onFreeformSelect) onFreeformSelect(null);
+    if (insertMenuOpenFor) setInsertMenuOpenFor(null);
   };
+
+  function handleInsertBlock(sectionId: string, type: string) {
+    setInsertMenuOpenFor(null);
+    onAddBlockToSection?.(sectionId, type);
+  }
+
+  function handleInsertFreeform() {
+    setInsertMenuOpenFor(null);
+    onFreeformAdd?.();
+  }
 
   return (
     <BrandingCtx.Provider value={resolvedBranding}>
@@ -630,17 +749,32 @@ export const BuilderPagePreview = React.memo(function BuilderPagePreview({
         )}
 
         {sections.map((section) => (
-          <PreviewSection
-            key={section.id}
-            section={section}
-            selectedBlockId={selectedBlockId ?? null}
-            onBlockSelect={onBlockSelect ?? null}
-            inlineEdit={inlineEdit}
-            onInlineEditStart={onBlockInlineEdit ? handleInlineEditStart : null}
-            onInlineEditCommit={handleInlineEditCommit}
-            onInlineEditCancel={handleInlineEditCancel}
-            brandColor={resolvedBranding.brandColor || "#1d4ed8"}
-          />
+          <React.Fragment key={section.id}>
+            <PreviewSection
+              section={section}
+              selectedBlockId={selectedBlockId ?? null}
+              onBlockSelect={onBlockSelect ?? null}
+              inlineEdit={inlineEdit}
+              onInlineEditStart={onBlockInlineEdit ? handleInlineEditStart : null}
+              onInlineEditCommit={handleInlineEditCommit}
+              onInlineEditCancel={handleInlineEditCancel}
+              brandColor={resolvedBranding.brandColor || "#1d4ed8"}
+              onBlockDuplicate={onBlockDuplicate ?? null}
+              onBlockDelete={onBlockDelete ?? null}
+              onBlockAiGuide={onBlockAiGuide ?? null}
+            />
+            {onAddBlockToSection && (
+              <InsertBlockMenu
+                sectionId={section.id}
+                isOpen={insertMenuOpenFor === section.id}
+                onToggle={() => setInsertMenuOpenFor(
+                  insertMenuOpenFor === section.id ? null : section.id
+                )}
+                onInsert={handleInsertBlock}
+                onInsertFreeform={onFreeformAdd ? handleInsertFreeform : undefined}
+              />
+            )}
+          </React.Fragment>
         ))}
 
         {/* Freeform fields layer */}
@@ -687,6 +821,9 @@ function PreviewSection({
   onInlineEditCommit,
   onInlineEditCancel,
   brandColor,
+  onBlockDuplicate,
+  onBlockDelete,
+  onBlockAiGuide,
 }: {
   section: BuilderSection;
   selectedBlockId: string | null;
@@ -696,10 +833,14 @@ function PreviewSection({
   onInlineEditCommit: (newText: string) => void;
   onInlineEditCancel: () => void;
   brandColor: string;
+  onBlockDuplicate: ((sectionId: string, blockId: string) => void) | null;
+  onBlockDelete: ((sectionId: string, blockId: string) => void) | null;
+  onBlockAiGuide: ((sectionId: string, blockId: string) => void) | null;
 }) {
   const color = brandColor || "#1d4ed8";
   const blocks = [...section.blocks].sort((a, b) => a.order - b.order);
   const hasContent = blocks.some((b) => hasVisibleContent(b));
+  const hasToolbar = !!(onBlockDuplicate || onBlockDelete || onBlockAiGuide);
 
   return (
     <div className="mb-8">
@@ -727,6 +868,7 @@ function PreviewSection({
             return (
               <div
                 key={block.id}
+                style={{ position: "relative" }}
                 onClick={
                   isClickable && !isCurrentlyEditing
                     ? (e) => { e.stopPropagation(); onBlockSelect!(section.id, block.id); }
@@ -772,6 +914,51 @@ function PreviewSection({
                     : undefined
                 }
               >
+                {/* Floating mini-toolbar (visible when selected, not editing) */}
+                {isSelected && !isCurrentlyEditing && hasToolbar && (
+                  <div
+                    style={{ position: "absolute", top: -34, right: 0, zIndex: 20, whiteSpace: "nowrap" }}
+                    className="flex items-center gap-0.5 bg-neutral-800 rounded-lg px-1.5 py-1 shadow-lg"
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {onBlockAiGuide && (
+                      <button
+                        type="button"
+                        title="AI Guide"
+                        onClick={(e) => { e.stopPropagation(); onBlockAiGuide(section.id, block.id); }}
+                        className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] text-neutral-300 hover:text-white hover:bg-neutral-700 transition-colors"
+                      >
+                        <Sparkles className="w-3 h-3" />
+                        AI
+                      </button>
+                    )}
+                    {onBlockAiGuide && (onBlockDuplicate || onBlockDelete) && (
+                      <div className="w-px h-3 bg-neutral-600 mx-0.5" />
+                    )}
+                    {onBlockDuplicate && (
+                      <button
+                        type="button"
+                        title="Duplicate block"
+                        onClick={(e) => { e.stopPropagation(); onBlockDuplicate(section.id, block.id); }}
+                        className="p-1 rounded text-neutral-300 hover:text-white hover:bg-neutral-700 transition-colors"
+                      >
+                        <CopyIcon className="w-3 h-3" />
+                      </button>
+                    )}
+                    {onBlockDelete && (
+                      <button
+                        type="button"
+                        title="Delete block"
+                        onClick={(e) => { e.stopPropagation(); onBlockDelete(section.id, block.id); }}
+                        className="p-1 rounded text-neutral-300 hover:text-red-400 hover:bg-neutral-700 transition-colors"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+                )}
+
                 {isCurrentlyEditing ? (
                   <InlineTextarea
                     text={inlineEdit!.text}

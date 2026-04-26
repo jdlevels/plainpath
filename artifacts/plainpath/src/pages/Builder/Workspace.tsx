@@ -363,6 +363,20 @@ export default function Workspace({ docId }: WorkspaceProps) {
     updateSection(sectionId, { ...section, blocks: reordered });
   }
 
+  function duplicateBlock(sectionId: string, blockId: string) {
+    const section = content.sections.find((s) => s.id === sectionId);
+    if (!section) return;
+    const block = section.blocks.find((b) => b.id === blockId);
+    if (!block) return;
+    const maxOrder = Math.max(...section.blocks.map((b) => b.order), 0);
+    const newBlock: BuilderBlock = { ...block, id: crypto.randomUUID(), order: maxOrder + 1 };
+    const blocks = [...section.blocks, newBlock].map((b, i) => ({ ...b, order: i }));
+    updateSection(sectionId, { ...section, blocks });
+    setSelectedSectionId(sectionId);
+    setSelectedBlockId(newBlock.id);
+    setActiveTab("edit");
+  }
+
   // ── Block selection (from preview click) ─────────────────────────────────
 
   function handleBlockSelect(sectionId: string, blockId: string) {
@@ -382,14 +396,15 @@ export default function Workspace({ docId }: WorkspaceProps) {
 
   function addFreeformField() {
     const existing = freeformFieldsRef.current;
-    const offset = (existing.length * 30) % 200;
+    const offset = (existing.length * 32) % 192;
+    const snap8 = (v: number) => Math.round(v / 8) * 8;
     const newField: FreeformField = {
       id: crypto.randomUUID(),
       type: "text-box",
-      x: 60,
-      y: 320 + offset,
-      width: 260,
-      height: 80,
+      x: snap8(64),
+      y: snap8(320 + offset),
+      width: snap8(256),
+      height: snap8(80),
       text: "",
     };
     const updated = [...existing, newField];
@@ -696,6 +711,15 @@ export default function Workspace({ docId }: WorkspaceProps) {
                 onBlockSelect={handleBlockSelect}
                 branding={branding}
                 onBlockInlineEdit={handleBlockInlineEdit}
+                onBlockDuplicate={duplicateBlock}
+                onBlockDelete={(sectionId, blockId) => deleteBlock(sectionId, blockId)}
+                onBlockAiGuide={(sectionId, blockId) => {
+                  setSelectedSectionId(sectionId);
+                  setSelectedBlockId(blockId);
+                  setSelectedFreeformId(null);
+                  setActiveTab("guide");
+                }}
+                onAddBlockToSection={(sectionId, type) => addBlock(sectionId, type as KnownBlockType)}
                 freeformFields={freeformFields}
                 selectedFreeformId={selectedFreeformId}
                 onFreeformSelect={(id) => {

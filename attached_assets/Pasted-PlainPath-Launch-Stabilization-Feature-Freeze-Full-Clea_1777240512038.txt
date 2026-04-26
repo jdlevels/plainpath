@@ -1,0 +1,155 @@
+PlainPath Launch Stabilization — Feature Freeze + Full Cleanup Audit
+
+Goal:
+Prepare PlainPath for app store launch by freezing features, finding bugs, fixing user-facing errors, and confirming all active tools are stable.
+
+Feature freeze:
+No new tools.
+No new major features.
+No redesigns.
+No new AI modules.
+No new payment logic unless required for launch compliance.
+No new database schema unless a true blocker exists.
+
+Active tool set:
+1. Analyze a Document
+2. Document Trust Check
+3. Build a Contract
+4. Contract Review
+5. Redact Sensitive Info
+6. Ask This Document
+7. Clause Extractor
+8. Compare Versions
+9. Document Builder
+
+Primary goals:
+- Find and fix runtime crashes
+- Fix route errors
+- Fix broken navigation
+- Fix upload/save/export issues
+- Fix auth redirect issues
+- Fix mobile layout blockers
+- Remove stale Digital Signature references
+- Confirm Document Builder is stable
+- Confirm app-store readiness blockers
+
+Do not add:
+- New tools
+- New dashboard concepts
+- New pricing tiers
+- New subscriptions
+- New marketing sections
+- New AI modules
+- New PDF/DOCX export unless already truly implemented
+- New object storage
+- New database migrations unless a true launch blocker exists
+
+Check these areas:
+
+1. Navigation and routing
+- Dashboard loads
+- All 9 tools visible if Document Builder is enabled
+- Top nav is clean
+- Tools dropdown routes correctly
+- Marketing cards route correctly
+- /app/builder and /builder resolve correctly
+- Build a Contract and Document Builder remain separate
+- Digital Signature is not user-facing
+
+2. Auth and session
+- Sign in works
+- Sign up works
+- Sign out redirects to home/marketing page
+- Protected routes redirect unauthenticated users
+- Reviewer/test account can access required app areas
+- No blank auth screens
+
+3. Tool smoke tests
+For each active tool:
+- Route opens
+- Empty state loads
+- Upload/input path works
+- Processing state does not crash
+- Result/workspace state loads
+- Mobile does not clip major controls
+- Save/export buttons are honest and functional
+
+4. Document Builder specific
+- Phase 2 templates still work
+- Phase 3 branding still works
+- Phase 4 AI actions still work
+- Phase 5A direct canvas works
+- Freeform fields save/reload
+- Invisible grid does not show by default
+- Export tab does not falsely claim PDF/DOCX if not implemented
+- Existing drafts open
+
+5. Upload/document flows
+- PDF upload
+- DOCX upload if supported
+- TXT upload/paste
+- Large-file error handling
+- Unsupported-file error handling
+- Document state does not reset unexpectedly
+
+6. AI/API flows
+- Ask This Document chat works
+- Analyze Ask tab works
+- Builder AI actions work
+- Auth-protected endpoints return clean JSON 401 when unauthenticated
+- No raw HTML returned to JSON parsers
+- No secret keys exposed to frontend
+
+7. Payments/app store readiness
+- Web Stripe flow works on web if active
+- Native iOS build must not expose external Stripe purchase flow unless compliant
+- Native Android build must follow Play billing/payment policy if selling digital subscriptions
+- Paid feature gating is either correctly active or intentionally disabled for testing
+- Free-limit messages remain disabled until payment is production-ready if that is the current product rule
+
+8. Legal/privacy/content
+- Privacy policy exists and matches actual document processing behavior
+- Terms exist
+- AI/legal disclaimer language exists where needed
+- Contract Review does not give legal conclusions as fact
+- Trust Check avoids absolute fake/authentic/fraud claims
+- Redact explains original document remains unchanged
+- Document Builder explains output should be reviewed
+
+9. App store metadata checklist
+Prepare but do not submit:
+- App name
+- Subtitle/short description
+- Full description
+- Keywords
+- Screenshots
+- App icon
+- Privacy policy URL
+- Support URL
+- Content rating
+- Test account credentials
+- Review notes
+- Data safety/privacy declarations
+- Permissions list
+- In-app purchase/payment plan if needed
+
+10. Build/deployment
+- Current web build passes
+- No new TypeScript errors in changed files
+- Existing baseline TypeScript issues are listed separately
+- No new migrations created
+- No DB schema changed
+- No Stripe/auth/API changes unless documented
+- Production environment variables checked
+
+Return only:
+A. Overall launch stabilization result: Pass / Fail
+B. Critical blockers
+C. Non-critical issues to defer
+D. Files changed
+E. Tool-by-tool status
+F. Auth/payment status
+G. Privacy/legal status
+H. App store readiness blockers
+I. Safe to publish web: Yes/No
+J. Safe to prepare native app submission: Yes/No

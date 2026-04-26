@@ -1,13 +1,16 @@
 import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Trash2, Copy as CopyIcon, SquarePen } from "lucide-react";
 import type { FreeformField } from "@/lib/builderTypes";
 
-const NUDGE = 8;
+const GRID = 8;
+const NUDGE = GRID;
 const MAX_X = 560;
 const MAX_Y = 2000;
 const MIN_W = 80;
 const MAX_W = 580;
 const MIN_H = 40;
 const MAX_H = 800;
+
+function snap(v: number) { return Math.round(v / GRID) * GRID; }
 
 interface Props {
   field: FreeformField;
@@ -27,16 +30,16 @@ export function FreeformFieldEditor({ field, onChange, onDelete, onDuplicate, on
   }
 
   function setX(val: number) {
-    onChange({ ...field, x: Math.max(0, Math.min(MAX_X, isNaN(val) ? field.x : val)) });
+    onChange({ ...field, x: snap(Math.max(0, Math.min(MAX_X, isNaN(val) ? field.x : val))) });
   }
   function setY(val: number) {
-    onChange({ ...field, y: Math.max(0, Math.min(MAX_Y, isNaN(val) ? field.y : val)) });
+    onChange({ ...field, y: snap(Math.max(0, Math.min(MAX_Y, isNaN(val) ? field.y : val))) });
   }
   function setW(val: number) {
-    onChange({ ...field, width: Math.max(MIN_W, Math.min(MAX_W, isNaN(val) ? field.width : val)) });
+    onChange({ ...field, width: snap(Math.max(MIN_W, Math.min(MAX_W, isNaN(val) ? field.width : val))) });
   }
   function setH(val: number) {
-    onChange({ ...field, height: Math.max(MIN_H, Math.min(MAX_H, isNaN(val) ? field.height : val)) });
+    onChange({ ...field, height: snap(Math.max(MIN_H, Math.min(MAX_H, isNaN(val) ? field.height : val))) });
   }
 
   const nudgeBtn =
