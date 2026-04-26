@@ -1,0 +1,75 @@
+Analyze a Document — Action Pack Polish Only
+
+Do not redesign the app. Do not change the global layout architecture. Do not touch database, migrations, Stripe, payment logic, auth, other tools, or routing.
+
+Scope:
+Only improve the Analyze a Document Action Pack experience.
+
+Goal:
+Make Action Pack feel like the main step-by-step instruction feature of Analyze a Document.
+
+Keep all existing Analyze tabs:
+Plain English
+Source Sections
+Overview
+What's Missing
+Checklist
+Required Docs
+Deadlines
+Risks & Notes
+Key Terms
+Action Pack
+Ask This Document
+
+Do not remove or rename tabs.
+
+Action Pack improvements only:
+
+1. Make the Action Pack tab more prominent
+- It should be easy for the user to notice after analysis completes.
+- Add or preserve a count badge showing number of action steps.
+- Do not hide it behind confusing scroll behavior.
+
+2. Improve Action Pack readability
+- Each action step should show:
+  - Step number
+  - Plain-English instruction
+  - Why it matters
+  - Source section/reference when available
+  - Priority label: Urgent / Important / Optional
+  - Status control: Not started / In progress / Done
+
+3. Preserve existing behavior
+- Existing local action status cycling must continue to work.
+- Save/export must remain visible.
+- Source chips must continue to scroll/highlight source sections where supported.
+- Ask This Document tab must remain available.
+
+4. Improve empty/partial states
+- If no actions are found, show a useful message explaining that no required next steps were identified.
+- If extraction is partial/low confidence, show that the Action Pack may be incomplete and recommend reviewing Source Sections and Ask This Document.
+
+5. No broad UI changes
+- Do not change Plain English layout.
+- Do not change Source Sections.
+- Do not change Overview.
+- Do not change Redact, Clause Extractor, Trust Check, Contract Review, Compare Versions, Ask This Document, or Document Builder.
+
+6. Verification
+After changes, verify:
+- Analyze upload/sample flow works
+- Completed results load
+- All 11 tabs still appear
+- Action Pack is readable and prominent
+- Action status can be changed
+- Ask This Document tab still works
+- No new TypeScript/runtime errors introduced
+
+Return only:
+
+A. Files changed
+B. What changed in Action Pack
+C. Confirmation all 11 tabs remain
+D. Confirmation no other tools changed
+E. Any pre-existing errors
+F. Whether safe to publish

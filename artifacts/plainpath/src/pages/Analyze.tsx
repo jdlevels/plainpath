@@ -15,7 +15,7 @@ import {
   ArrowRight, ShieldCheck, Clock, TrendingUp, BookOpen,
   HelpCircle, ChevronDown, ChevronLeft, ChevronRight, Lightbulb, Eye, Shield, Zap,
   AlignLeft, MessageSquare, X, Flag, Package, Lock, EyeOff,
-  FolderOpen, Mail, CheckSquare, Copy, Check,
+  FolderOpen, Mail, CheckSquare, Copy, Check, Info,
   Bookmark, BookmarkCheck, Share2, Download, Upload, Bell, BellDot, Link2
 } from "lucide-react"
 import {
@@ -56,7 +56,7 @@ const TABS = [
   { id: "deadlines",       label: "Deadlines",        icon: Calendar,    countKey: "deadlines"         },
   { id: "risks",           label: "Risks & Notes",    icon: AlertTriangle                              },
   { id: "key-terms",       label: "Key Terms",        icon: Flag,          countKey: "keyTerms"         },
-  { id: "action-pack",    label: "Action Pack",      icon: Package                                      },
+  { id: "action-pack",    label: "Action Pack",      icon: Package, countKey: "actionSteps"             },
   { id: "ask",             label: "Ask This Document", icon: MessageSquare                               },
 ]
 
@@ -426,7 +426,7 @@ export default function Analyze() {
                   ? <UpgradeCard title="Risks & Notes — Pro" description="Understand what you're agreeing to and what could go wrong before you sign or submit." />
                   : <RisksTab      analysis={analysis} onOpenGuidedReview={() => setGuidedReviewCtx("risks")} documentType={analysis.documentType} />)}
                 {activeTab === "key-terms"       && <KeyTermsTab   analysis={analysis} />}
-                {activeTab === "action-pack"     && <ActionPackTab analysis={analysis} />}
+                {activeTab === "action-pack"     && <ActionPackTab analysis={analysis} onToggle={handleActionToggle} />}
                 {activeTab === "ask"             && (
                   isSignedIn
                     ? <DocumentChat analysis={analysis} />
@@ -2327,120 +2327,258 @@ function KeyTermsTab({ analysis }: { analysis: DocumentAnalysis }) {
 /* ────────────────────────────────────────────────
    ACTION PACK TAB
 ──────────────────────────────────────────────── */
-function ActionPackTab({ analysis }: { analysis: DocumentAnalysis }) {
-  const pack = analysis.actionPack
-  if (!pack) {
+const ACTION_PACK_PRIORITY: Record<string, { label: string; color: string }> = {
+  high:   { label: "Urgent",    color: "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800/50"     },
+  medium: { label: "Important", color: "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800/50" },
+  low:    { label: "Optional",  color: "text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/40 border-slate-200 dark:border-slate-700/50"   },
+}
+
+const ACTION_PACK_STATUS = {
+  "not-started": { label: "Not started", pillClass: "bg-muted text-muted-foreground hover:bg-muted/70",                                                                                   dot: "bg-muted-foreground/40" },
+  "in-progress":  { label: "In progress",  pillClass: "bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50 hover:bg-blue-100 dark:hover:bg-blue-900/50", dot: "bg-blue-500" },
+  "done":         { label: "Done",          pillClass: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50", dot: "bg-emerald-500" },
+} as const
+
+function ActionPackTab({ analysis, onToggle }: { analysis: DocumentAnalysis; onToggle: (id: string, done: boolean) => void }) {
+  const steps = analysis.actionSteps ?? []
+  const pack  = analysis.actionPack
+
+  const [inProgressSet, setInProgressSet] = useState<Set<string>>(new Set())
+
+  function getStatus(step: DocumentAnalysis["actionSteps"][0]): "not-started" | "in-progress" | "done" {
+    if (step.completed) return "done"
+    if (inProgressSet.has(step.id)) return "in-progress"
+    return "not-started"
+  }
+
+  function cycleStatus(step: DocumentAnalysis["actionSteps"][0]) {
+    const current = getStatus(step)
+    if (current === "not-started") {
+      setInProgressSet(prev => { const s = new Set(prev); s.add(step.id); return s })
+    } else if (current === "in-progress") {
+      setInProgressSet(prev => { const s = new Set(prev); s.delete(step.id); return s })
+      onToggle(step.id, true)
+    } else {
+      onToggle(step.id, false)
+    }
+  }
+
+  const doneCount       = steps.filter(s => s.completed).length
+  const inProgressCount = steps.filter(s => !s.completed && inProgressSet.has(s.id)).length
+  const remaining       = steps.length - doneCount - inProgressCount
+
+  if (steps.length === 0 && !pack) {
     return (
-      <div className="text-center py-16 text-muted-foreground">
-        <Package className="w-10 h-10 mx-auto mb-3 opacity-30" />
-        <p className="text-sm font-medium">Action pack not available for this document.</p>
+      <div className="space-y-6">
+        <div className="flex items-center gap-2.5">
+          <Package className="w-5 h-5 text-foreground" />
+          <h2 className="text-xl font-bold text-foreground">Action Pack</h2>
+        </div>
+        <div className="rounded-2xl border border-border/40 bg-muted/20 px-6 py-12 text-center">
+          <CheckCircle2 className="w-10 h-10 mx-auto mb-3 text-muted-foreground/30" />
+          <p className="text-sm font-semibold text-foreground mb-1">No required next steps identified</p>
+          <p className="text-sm text-muted-foreground max-w-xs mx-auto leading-relaxed">
+            This document doesn't appear to require specific actions. Use <span className="font-semibold text-foreground">Ask This Document</span> if you have questions about it.
+          </p>
+        </div>
       </div>
     )
   }
 
   return (
     <div className="space-y-8">
+
       {/* Header */}
       <div>
         <div className="flex items-center gap-2.5 mb-1.5">
           <Package className="w-5 h-5 text-foreground" />
           <h2 className="text-xl font-bold text-foreground">Action Pack</h2>
+          {steps.length > 0 && (
+            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-foreground/[0.07] text-foreground/55">
+              {steps.length} step{steps.length !== 1 ? "s" : ""}
+            </span>
+          )}
         </div>
         <p className="text-sm text-muted-foreground leading-relaxed">
-          Everything you need to take smart, informed next steps — questions to ask, what to have ready, how to communicate, and what to confirm before you act.
+          Every next step identified in this document — mark each one as you go.
         </p>
+        {steps.length > 0 && (doneCount > 0 || inProgressCount > 0) && (
+          <div className="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
+            {doneCount > 0 && (
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
+                {doneCount} done
+              </span>
+            )}
+            {inProgressCount > 0 && (
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-blue-500 inline-block" />
+                {inProgressCount} in progress
+              </span>
+            )}
+            {remaining > 0 && (
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-muted-foreground/30 inline-block" />
+                {remaining} remaining
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Questions to Ask */}
-      {pack.questionsToAsk && pack.questionsToAsk.length > 0 && (
-        <ActionPackSection
-          icon={<HelpCircle className="w-4 h-4" />}
-          title="Questions to Ask"
-          subtitle={`${pack.questionsToAsk.length} targeted questions for your situation`}
-          color="violet"
-        >
-          <div className="space-y-3">
-            {pack.questionsToAsk.map((q, i) => (
-              <div key={q.id} className="flex gap-3">
-                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-violet-100 dark:bg-violet-950/50 text-violet-700 dark:text-violet-300 flex items-center justify-center text-xs font-bold mt-0.5">
-                  {i + 1}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-foreground leading-snug mb-1">"{q.question}"</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{q.context}</p>
-                </div>
-              </div>
-            ))}
+      {/* Empty steps but pack exists */}
+      {steps.length === 0 && pack && (
+        <div className="rounded-2xl border border-border/30 bg-muted/20 px-5 py-4 flex items-start gap-3">
+          <Info className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-semibold text-foreground mb-0.5">No specific required actions extracted</p>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              The Action Pack may be incomplete. Review the supporting guidance below, check Source Sections, or use Ask This Document with specific questions.
+            </p>
           </div>
-        </ActionPackSection>
+        </div>
       )}
 
-      {/* What to Gather */}
-      {pack.whatToGather && pack.whatToGather.length > 0 && (
-        <ActionPackSection
-          icon={<FolderOpen className="w-4 h-4" />}
-          title="What to Gather"
-          subtitle={`${pack.whatToGather.length} records and documents to have ready`}
-          color="amber"
-        >
-          <div className="space-y-2.5">
-            {pack.whatToGather.map((g) => (
-              <div key={g.id} className="flex gap-3 p-3 rounded-xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/40">
-                <div className="flex-shrink-0 mt-0.5">
-                  <CheckSquare className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2 flex-wrap">
-                    <p className="text-sm font-semibold text-foreground leading-snug">{g.item}</p>
-                    {g.category && (
-                      <span className="text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 shrink-0">
-                        {g.category}
-                      </span>
-                    )}
+      {/* Step-by-step list */}
+      {steps.length > 0 && (
+        <div className="space-y-3">
+          {steps.map((step, i) => {
+            const status    = getStatus(step)
+            const statusCfg = ACTION_PACK_STATUS[status]
+            const priCfg    = ACTION_PACK_PRIORITY[step.priority] ?? ACTION_PACK_PRIORITY.low
+            const isDone    = status === "done"
+
+            return (
+              <div
+                key={step.id}
+                className={`rounded-2xl border transition-all ${isDone ? "border-border/25 bg-muted/15 opacity-65" : "border-border/50 bg-card hover:border-border/70"}`}
+              >
+                <div className="p-4 sm:p-5">
+                  <div className="flex items-start gap-4">
+
+                    {/* Step number / done indicator */}
+                    <div className={`shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold mt-0.5 transition-colors ${
+                      isDone
+                        ? "bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400"
+                        : "bg-foreground/[0.07] text-foreground/55"
+                    }`}>
+                      {isDone ? <Check className="w-3.5 h-3.5" /> : i + 1}
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+
+                      {/* Priority + status row */}
+                      <div className="flex items-center gap-2 mb-2 flex-wrap">
+                        <span className={`text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-md border ${priCfg.color}`}>
+                          {priCfg.label}
+                        </span>
+                        <button
+                          onClick={() => cycleStatus(step)}
+                          style={{ touchAction: "manipulation" }}
+                          className={`flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full transition-colors ${statusCfg.pillClass}`}
+                        >
+                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${statusCfg.dot}`} />
+                          {statusCfg.label}
+                        </button>
+                      </div>
+
+                      {/* Title */}
+                      <p className={`text-sm font-semibold leading-snug mb-1 ${isDone ? "line-through text-muted-foreground" : "text-foreground"}`}>
+                        {step.title}
+                      </p>
+
+                      {/* Why it matters */}
+                      {step.description && (
+                        <p className="text-xs text-muted-foreground leading-relaxed mb-2">{step.description}</p>
+                      )}
+
+                      {/* Source reference */}
+                      {step.sourceEvidence && (
+                        <div className="flex items-start gap-1.5 mt-1.5">
+                          <AlignLeft className="w-3 h-3 text-muted-foreground/50 shrink-0 mt-0.5" />
+                          <p className="text-[11px] text-muted-foreground/60 leading-relaxed italic">{step.sourceEvidence}</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{g.description}</p>
                 </div>
               </div>
-            ))}
-          </div>
-        </ActionPackSection>
+            )
+          })}
+        </div>
       )}
 
-      {/* What to Say */}
-      {pack.whatToSay && pack.whatToSay.length > 0 && (
-        <ActionPackSection
-          icon={<Mail className="w-4 h-4" />}
-          title="What to Say"
-          subtitle="Draft messages you can adapt — not legal advice, just practical starting points"
-          color="blue"
-        >
-          <div className="space-y-4">
-            {pack.whatToSay.map((s) => (
-              <DraftMessageCard key={s.id} label={s.label} draft={s.draft} />
-            ))}
+      {/* Supporting guidance from actionPack */}
+      {pack && (
+        <div className="space-y-8">
+          <div className="flex items-center gap-3 pt-2">
+            <div className="flex-1 h-px bg-border/40" />
+            <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/50">Supporting guidance</span>
+            <div className="flex-1 h-px bg-border/40" />
           </div>
-        </ActionPackSection>
-      )}
 
-      {/* Before You Act Checklist */}
-      {pack.beforeYouActChecklist && pack.beforeYouActChecklist.length > 0 && (
-        <ActionPackSection
-          icon={<CheckSquare className="w-4 h-4" />}
-          title="Before You Act"
-          subtitle="Confirm each of these before signing or submitting"
-          color="green"
-        >
-          <div className="space-y-2">
-            {pack.beforeYouActChecklist.map((item, i) => (
-              <div key={item.id} className="flex gap-3 p-3 rounded-xl bg-green-50/60 dark:bg-green-950/20 border border-green-100 dark:border-green-900/40">
-                <div className="flex-shrink-0 w-5 h-5 rounded border-2 border-green-400 dark:border-green-600 mt-0.5 flex items-center justify-center">
-                  <span className="text-[9px] font-bold text-green-500 dark:text-green-400">{i + 1}</span>
-                </div>
-                <p className="text-sm text-foreground leading-snug">{item.text}</p>
+          {pack.questionsToAsk && pack.questionsToAsk.length > 0 && (
+            <ActionPackSection icon={<HelpCircle className="w-4 h-4" />} title="Questions to Ask" subtitle={`${pack.questionsToAsk.length} targeted questions for your situation`} color="violet">
+              <div className="space-y-3">
+                {pack.questionsToAsk.map((q, i) => (
+                  <div key={q.id} className="flex gap-3">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-violet-100 dark:bg-violet-950/50 text-violet-700 dark:text-violet-300 flex items-center justify-center text-xs font-bold mt-0.5">{i + 1}</div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-foreground leading-snug mb-1">"{q.question}"</p>
+                      <p className="text-xs text-muted-foreground leading-relaxed">{q.context}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </ActionPackSection>
+            </ActionPackSection>
+          )}
+
+          {pack.whatToGather && pack.whatToGather.length > 0 && (
+            <ActionPackSection icon={<FolderOpen className="w-4 h-4" />} title="What to Gather" subtitle={`${pack.whatToGather.length} records and documents to have ready`} color="amber">
+              <div className="space-y-2.5">
+                {pack.whatToGather.map((g) => (
+                  <div key={g.id} className="flex gap-3 p-3 rounded-xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/40">
+                    <div className="flex-shrink-0 mt-0.5"><CheckSquare className="w-4 h-4 text-amber-600 dark:text-amber-400" /></div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2 flex-wrap">
+                        <p className="text-sm font-semibold text-foreground leading-snug">{g.item}</p>
+                        {g.category && (
+                          <span className="text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 shrink-0">{g.category}</span>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{g.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </ActionPackSection>
+          )}
+
+          {pack.whatToSay && pack.whatToSay.length > 0 && (
+            <ActionPackSection icon={<Mail className="w-4 h-4" />} title="What to Say" subtitle="Draft messages you can adapt — not legal advice, just practical starting points" color="blue">
+              <div className="space-y-4">
+                {pack.whatToSay.map((s) => (
+                  <DraftMessageCard key={s.id} label={s.label} draft={s.draft} />
+                ))}
+              </div>
+            </ActionPackSection>
+          )}
+
+          {pack.beforeYouActChecklist && pack.beforeYouActChecklist.length > 0 && (
+            <ActionPackSection icon={<CheckSquare className="w-4 h-4" />} title="Before You Act" subtitle="Confirm each of these before signing or submitting" color="green">
+              <div className="space-y-2">
+                {pack.beforeYouActChecklist.map((item, i) => (
+                  <div key={item.id} className="flex gap-3 p-3 rounded-xl bg-green-50/60 dark:bg-green-950/20 border border-green-100 dark:border-green-900/40">
+                    <div className="flex-shrink-0 w-5 h-5 rounded border-2 border-green-400 dark:border-green-600 mt-0.5 flex items-center justify-center">
+                      <span className="text-[9px] font-bold text-green-500 dark:text-green-400">{i + 1}</span>
+                    </div>
+                    <p className="text-sm text-foreground leading-snug">{item.text}</p>
+                  </div>
+                ))}
+              </div>
+            </ActionPackSection>
+          )}
+        </div>
       )}
     </div>
   )
