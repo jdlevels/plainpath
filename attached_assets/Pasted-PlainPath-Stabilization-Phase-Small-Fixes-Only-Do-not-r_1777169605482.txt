@@ -1,0 +1,88 @@
+PlainPath Stabilization Phase — Small Fixes Only
+
+Do not redesign, refactor broadly, add new features, alter database, apply migrations, touch Stripe/payment logic, or change layout architecture.
+
+Goal:
+Run a controlled stabilization pass from the locked baseline commit:
+
+PlainPath Stable Restore Baseline — 8 Tools + Ask This Document
+Commit: 9561863
+
+Important:
+Skip database migrations during publish. Do not apply migration warnings. Do not touch orphaned production tables. Database Hygiene Cleanup is a later task.
+
+Work only on true stability, routing, copy, and usability issues.
+
+Priority fixes/checks:
+
+1. Live route verification
+- Confirm /app/ask-document opens Ask This Document.
+- Confirm /app/ask-this-document either opens the same page or redirects cleanly to /app/ask-document.
+- Confirm Ask This Document does not redirect to Analyze.
+- Confirm all dashboard tool cards route correctly.
+- Confirm Digital Signature has no user-facing entry point.
+
+2. Analyze a Document stability
+- Confirm Analyze upload/paste/sample flow works.
+- Confirm completed results still show all 11 tabs:
+  Plain English
+  Source Sections
+  Overview
+  What’s Missing
+  Checklist
+  Required Docs
+  Deadlines
+  Risks & Notes
+  Key Terms
+  Action Pack
+  Ask This Document
+- Confirm Action Pack remains the main step-by-step “what to do next” feature.
+- Confirm Action Pack steps are readable and not hidden behind tabs, scroll traps, or layout issues.
+- Do not redesign Analyze.
+
+3. Ask This Document usability
+- Confirm standalone Ask This Document page has:
+  Upload
+  Paste
+  Example questions
+  Same-page chat
+- Confirm uploaded or pasted text stays available while the user asks follow-up questions.
+- Confirm error messages are clear if upload fails.
+- Do not add database history or saved chat history.
+
+4. Redact Sensitive Info stability
+- Confirm Redact page opens.
+- Confirm PDF preview loads.
+- Confirm detected items appear in the right panel.
+- Confirm selected items visibly change state.
+- Confirm export button remains available.
+- Confirm export failure does not reset the uploaded file, selected items, or preview state.
+- If the PDF export works, do not touch it.
+- If PDF export fails, only preserve state and show a clear error message. Do not rebuild the export engine in this pass.
+
+5. Public homepage and dashboard copy
+- Confirm all visible copy says 8 tools.
+- Confirm Digital Signature is not mentioned anywhere user-facing.
+- Confirm Ask This Document appears consistently.
+- Confirm App Store / Google Play buttons open waitlist modal only.
+- Fix only incorrect links or stale labels.
+
+6. Publish/database safety
+- Confirm no destructive migration is applied.
+- Do not run DROP, ALTER, DELETE, DROP INDEX, or CREATE INDEX against production.
+- Do not touch document_overview_sessions or orphaned tables.
+- If Replit shows a migration warning, report it but do not apply it.
+
+7. Build/runtime check
+- Confirm app Vite runs.
+- Confirm marketing Vite runs.
+- Confirm no new TypeScript errors were introduced.
+- If TypeScript errors exist from before rollback, list them as pre-existing and do not fix them unless they block current visible app behavior.
+
+Return a short report only:
+
+A. Passed checks
+B. Any true blockers
+C. Any small fixes made
+D. Any skipped database/migration warnings
+E. Whether this baseline should remain frozen
