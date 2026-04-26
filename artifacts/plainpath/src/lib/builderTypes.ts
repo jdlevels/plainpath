@@ -157,12 +157,33 @@ export const DEFAULT_BRANDING: BrandingState = {
   watermarkEnabled: false,
 };
 
+// ─── Freeform Fields ─────────────────────────────────────────────────────────
+
+export type FreeformFieldType = "text-box";
+
+/**
+ * A freely-positioned overlay field on the document canvas.
+ * Stored in content.freeformFields — backward-compatible (older docs omit it).
+ * x/y are px from the top-left of the page content div (inside padding).
+ */
+export interface FreeformField {
+  id: string;
+  type: FreeformFieldType;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  text: string;
+}
+
 // ─── Content ─────────────────────────────────────────────────────────────────
 
 export interface BuilderContent {
   sections: BuilderSection[];
   /** Optional persisted branding (text fields only; logoDataUrl is never stored here). */
   branding?: BrandingData;
+  /** Optional freeform overlay fields. Omitted in older drafts — always treated as [] if absent. */
+  freeformFields?: FreeformField[];
 }
 
 // ─── Document ────────────────────────────────────────────────────────────────

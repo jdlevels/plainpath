@@ -15,6 +15,7 @@ import type {
   AutosaveStatus,
   KnownBlockType,
   BrandingState,
+  FreeformField,
 } from "@/lib/builderTypes";
 import { BLOCK_TYPE_LABELS, KNOWN_BLOCK_TYPES, DEFAULT_BRANDING } from "@/lib/builderTypes";
 import { CATEGORY_LABELS } from "@/lib/builderConfig";
@@ -90,6 +91,14 @@ export default function Workspace({ docId }: WorkspaceProps) {
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
 
+  // Freeform fields — tracked separately from content so section ops don't drop them
+  const [freeformFields, setFreeformFields] = useState<FreeformField[]>([]);
+  const freeformFieldsRef = useRef<FreeformField[]>([]);
+  const [selectedFreeformId, setSelectedFreeformId] = useState<string | null>(null);
+
+  // Keep freeformFieldsRef in sync
+  useEffect(() => { freeformFieldsRef.current = freeformFields; }, [freeformFields]);
+
   // Branding state — text fields persist in content.branding; logoDataUrl is local only
   const [branding, setBranding] = useState<BrandingState>(DEFAULT_BRANDING);
   const brandingRef = useRef<BrandingState>(DEFAULT_BRANDING);
@@ -124,6 +133,10 @@ export default function Workspace({ docId }: WorkspaceProps) {
         setBranding(loaded);
         brandingRef.current = loaded;
       }
+      // Load persisted freeform fields (backward-compatible — older docs omit this)
+      const fields = d.content.freeformFields ?? [];
+      setFreeformFields(fields);
+      freeformFieldsRef.current = fields;
       setLoading(false);
     }).catch((err) => {
       if (cancelled) return;
@@ -163,10 +176,15 @@ export default function Workspace({ docId }: WorkspaceProps) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, sectionIdKey]);
 
-  // Build content object for saving — strips logoDataUrl, embeds text branding
+  // Build content object for saving — strips logoDataUrl, embeds text branding + freeform fields
   function buildSaveContent(rawContent: BuilderContent): BuilderContent {
     const { logoDataUrl, ...textBranding } = brandingRef.current;
-    return { ...rawContent, branding: textBranding };
+    const fields = freeformFieldsRef.current;
+    return {
+      ...rawContent,
+      branding: textBranding,
+      freeformFields: fields.length > 0 ? fields : undefined,
+    };
   }
 
   const scheduleAutosave = useCallback(
@@ -349,7 +367,68 @@ export default function Workspace({ docId }: WorkspaceProps) {
   function handleBlockSelect(sectionId: string, blockId: string) {
     setSelectedSectionId(sectionId);
     setSelectedBlockId(blockId);
+    setSelectedFreeformId(null);
     setActiveTab("edit");
+  }
+
+  // ── Inline edit commit (from preview double-click) ────────────────────────
+
+  function handleBlockInlineEdit(sectionId: string, blockId: string, newPayload: Record<string, unknown>) {
+    updateBlock(sectionId, blockId, newPayload);
+  }
+
+  // ── Freeform field operations ─────────────────────────────────────────────
+
+  function addFreeformField() {
+    const existing = freeformFieldsRef.current;
+    const offset = (existing.length * 30) % 200;
+    const newField: FreeformField = {
+      id: crypto.randomUUID(),
+      type: "text-box",
+      x: 60,
+      y: 320 + offset,
+      width: 260,
+      height: 80,
+      text: "",
+    };
+    const updated = [...existing, newField];
+    setFreeformFields(updated);
+    freeformFieldsRef.current = updated;
+    setSelectedFreeformId(newField.id);
+    setSelectedBlockId(null);
+    setSelectedSectionId(null);
+    scheduleAutosave(content, title, status);
+  }
+
+  function updateFreeformField(field: FreeformField) {
+    const updated = freeformFieldsRef.current.map((f) => (f.id === field.id ? field : f));
+    setFreeformFields(updated);
+    freeformFieldsRef.current = updated;
+    scheduleAutosave(content, title, status);
+  }
+
+  function deleteFreeformField(id: string) {
+    const updated = freeformFieldsRef.current.filter((f) => f.id !== id);
+    setFreeformFields(updated);
+    freeformFieldsRef.current = updated;
+    if (selectedFreeformId === id) setSelectedFreeformId(null);
+    scheduleAutosave(content, title, status);
+  }
+
+  function duplicateFreeformField(id: string) {
+    const field = freeformFieldsRef.current.find((f) => f.id === id);
+    if (!field) return;
+    const newField: FreeformField = {
+      ...field,
+      id: crypto.randomUUID(),
+      x: field.x + 20,
+      y: field.y + 20,
+    };
+    const updated = [...freeformFieldsRef.current, newField];
+    setFreeformFields(updated);
+    freeformFieldsRef.current = updated;
+    setSelectedFreeformId(newField.id);
+    scheduleAutosave(content, title, status);
   }
 
   // ── AI block apply ────────────────────────────────────────────────────────
@@ -609,6 +688,17 @@ export default function Workspace({ docId }: WorkspaceProps) {
                 selectedBlockId={selectedBlockId}
                 onBlockSelect={handleBlockSelect}
                 branding={branding}
+                onBlockInlineEdit={handleBlockInlineEdit}
+                freeformFields={freeformFields}
+                selectedFreeformId={selectedFreeformId}
+                onFreeformSelect={(id) => {
+                  setSelectedFreeformId(id);
+                  if (id) { setSelectedBlockId(null); setSelectedSectionId(null); }
+                }}
+                onFreeformChange={updateFreeformField}
+                onFreeformAdd={addFreeformField}
+                onFreeformDelete={deleteFreeformField}
+                onFreeformDuplicate={duplicateFreeformField}
               />
             </div>
           </div>

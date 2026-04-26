@@ -1,0 +1,198 @@
+PlainPath Document Builder — Phase 5 Direct Editable Canvas Workflow
+
+Goal:
+Make the left document page the primary work surface. Users should be able to click, edit, add, move, resize, duplicate, and delete document fields directly on the left page, while the right panel supports the selected object.
+
+Important:
+Phase 4 AI actions are technically safe.
+Do not add AI quizzes.
+Do not add LMS/testing features.
+Do not add employee assessments.
+
+Do not touch:
+- Build a Contract
+- Analyze
+- Trust Check
+- Contract Review
+- Redact
+- Ask This Document
+- Clause Extractor
+- Compare Versions
+- Marketing
+- Stripe
+- Auth
+- Database schema
+- Migrations
+- Digital Signature
+- Dropbox Sign
+
+Allowed scope:
+- Document Builder only
+- BuilderPagePreview / document canvas
+- Builder workspace selection/editing state
+- Builder block renderers if needed
+- Builder types only if backward-compatible
+- Right panel tabs only if needed for selected object controls
+
+Core product rule:
+The left document preview must no longer behave like a read-only preview. It must become an active editable canvas.
+
+Build this as a safe first version:
+- direct click selection
+- inline text editing
+- add text box anywhere
+- drag/move text box
+- resize text box if feasible
+- duplicate/delete text box
+- save/reload text box
+- preserve existing structured sections
+
+1. Direct page selection
+- User can click visible blocks and freeform fields on the left document page.
+- Selected item shows a clean premium ring/outline.
+- Right panel updates to the selected item.
+- Selection does not reset when switching tabs.
+
+2. Inline text editing
+Support direct inline editing on the page for:
+- headings
+- paragraphs
+- notes/callouts
+- text boxes
+- checklist item text if feasible
+
+Behavior:
+- Double-click or click edit icon to edit directly on the page.
+- Enter or blur saves the edit into local document state.
+- Escape cancels if feasible.
+- Existing right-panel editing must continue to work.
+- Autosave must trigger through the existing save flow.
+
+3. Add field anywhere
+Add an insert control or mini-toolbar for:
+- Text box
+- Heading
+- Paragraph
+- Checklist
+- Date field
+- Signature line
+- Approval field
+- Logo/image placeholder
+- Callout/note
+- Divider
+
+User flow:
+- User clicks Add Field.
+- User chooses field type.
+- User clicks anywhere inside the page.
+- Field appears at that location.
+- User can immediately edit or move it.
+
+4. Freeform field model
+Add a backward-compatible freeform field layer inside the existing content object.
+
+Use:
+content.freeformFields
+
+Each freeform field should include:
+- id
+- type
+- pageNumber
+- x
+- y
+- width
+- height
+- text/value
+- style if needed
+
+No DB schema changes.
+Older drafts without freeformFields must still open normally.
+
+5. Drag/move
+For freeform fields:
+- User can drag field around the page.
+- Store x/y relative to the page.
+- Keep movement inside page bounds.
+- Show drag feedback.
+- Do not let fields disappear outside the page.
+
+6. Resize
+For text boxes, callouts, logo/image placeholders, and signature fields:
+- Add resize handles if feasible.
+- Store width/height.
+- Keep minimum usable size.
+- Keep inside page bounds.
+
+7. Duplicate/delete
+Selected fields should support:
+- Duplicate
+- Delete
+- Move up/down if part of structured flow
+- Bring forward/send backward if layered freeform fields are implemented
+
+All buttons must use type="button".
+
+8. Keyboard/accessibility fallback
+Because drag interaction should not be the only option:
+- Add x/y/width/height fields in the right panel for selected freeform objects if feasible.
+- Or add small nudge buttons: up, down, left, right.
+- User should be able to reposition without drag-only interaction.
+
+9. Export safety
+Do not claim PDF/DOCX export works unless it truly does.
+Keep .txt export unchanged.
+Export tab should say:
+“Freeform layout export to PDF/DOCX coming soon.”
+
+10. Stability
+- No runtime crash
+- No blank screen
+- No draft reset
+- No lost existing content
+- No broken existing drafts
+- No API/auth/Stripe/migration/marketing changes
+- Build a Contract unchanged
+- Other 8 tools unchanged
+- All new buttons type="button"
+
+Verification:
+1. Open existing Document Builder draft.
+2. Click a paragraph on the left page.
+3. Confirm selected ring appears.
+4. Confirm Edit tab reflects selected item.
+5. Edit text directly on the page.
+6. Confirm preview updates.
+7. Confirm autosave/save works.
+8. Add a text box anywhere on the page.
+9. Type into the text box.
+10. Drag the text box.
+11. Resize the text box if implemented.
+12. Save and refresh.
+13. Confirm the text box reloads in the same location.
+14. Duplicate the field.
+15. Delete a field.
+16. Confirm existing structured sections still work.
+17. Confirm Outline tab still works.
+18. Confirm Style tab still works.
+19. Confirm AI Guide remains stable.
+20. Confirm Export tab still works for .txt and does not falsely claim PDF/DOCX.
+21. Confirm Build a Contract unchanged.
+22. Confirm other 8 tools unchanged.
+23. Confirm no DB/auth/API/Stripe/migration/marketing changes.
+24. Confirm no new TypeScript/runtime errors in changed files.
+
+Return only:
+A. Files changed
+B. Direct page selection result
+C. Inline editing result
+D. Add-field-anywhere result
+E. Drag/move result
+F. Resize result
+G. Duplicate/delete result
+H. Save/reload result
+I. Accessibility fallback result
+J. Existing draft compatibility
+K. Export behavior
+L. Build a Contract unchanged confirmation
+M. Other 8 tools unchanged confirmation
+N. Safe checkpoint: Yes/No

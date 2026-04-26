@@ -1,0 +1,334 @@
+PlainPath Document Builder — Phase 5A Workflow Smoothing + Future Expansion Modules
+
+Goal:
+Make Document Builder feel fast, smooth, and premium by letting users work directly on the left document page instead of relying only on the right panel.
+
+Product rule:
+The left document page is the primary work surface.
+The right panel supports the selected object.
+The user should be able to click, add, edit, move, resize, duplicate, and delete fields directly on the document page.
+
+Important:
+The left page should feel flexible and fast, but still preserve document/page boundaries so content does not disappear, break save behavior, or make future export impossible.
+
+Add now in Phase 5A:
+- Direct canvas selection
+- Inline editing
+- Floating mini-toolbar
+- Add-block-here control
+- Insert-anywhere fields
+- Drag/move
+- Resize where safe
+- Duplicate/delete
+- Invisible alignment grid / snap grid
+- Accessibility fallback controls
+
+Add to the PlainPath Document Builder future roadmap:
+- AI quizzes
+- Employee testing
+- LMS features
+- Training scores
+- Learning assessments
+- Employee knowledge testing
+- Learning paths
+- Full screen recording
+- Browser extension
+- Complex approval routing
+- Conditional automation engine
+- New database schema
+- Database migrations
+- Stripe changes
+- Marketing changes
+- Public pricing changes
+- New subscription logic
+- Object storage
+- Real logo persistence
+- PDF/DOCX export when truly implemented
+- New auth architecture if required later
+- New AI architecture if required later
+- Digital Signature
+- Dropbox Sign
+- Employee scorecards
+- Pass/fail testing
+- Quiz generation
+- Training compliance dashboard
+
+Critical implementation instruction:
+Do not implement the future roadmap items during Phase 5A unless they are already safely required for direct canvas functionality.
+
+For Phase 5A, only implement:
+- Direct editable canvas workflow
+- Invisible snap grid
+- Freeform field layer
+- Save/reload support for freeform fields
+- Basic insert/move/resize/duplicate/delete behavior
+
+Do not touch during Phase 5A:
+- Build a Contract
+- Analyze
+- Trust Check
+- Contract Review
+- Redact
+- Ask This Document
+- Clause Extractor
+- Compare Versions
+- Marketing site
+- Stripe
+- Auth
+- Database schema
+- Migrations
+- Digital Signature
+- Dropbox Sign
+
+Scope:
+Document Builder only.
+
+Allowed files:
+- BuilderPagePreview / document canvas
+- Builder workspace selection/editing state
+- Builder block renderers if needed
+- Builder types only if backward-compatible
+- Right panel tabs only if needed for selected object controls
+- Builder-only utility files if needed
+
+Core requirement:
+The left document preview must no longer behave like a read-only preview. It must become an active editable canvas.
+
+Build this as a safe first version:
+- direct click selection
+- inline text editing
+- add text box anywhere
+- drag/move text box
+- resize text box if feasible
+- duplicate/delete text box
+- save/reload text box
+- preserve existing structured sections
+- invisible alignment/snap grid
+
+1. Direct page selection
+- Clicking any visible block on the left page selects it.
+- Selected block shows a premium outline/ring.
+- Right panel updates to that selected block.
+- Selection persists across tabs.
+
+2. Inline editing
+- Double-click heading, paragraph, note, callout, or text box to edit directly on the page.
+- Blur or Enter saves the change.
+- Escape cancels if feasible.
+- Existing right-panel editing remains working.
+- Autosave is triggered through the current save flow.
+
+3. Floating mini-toolbar
+When a block or freeform field is selected, show a compact floating toolbar near the selected object:
+
+- Edit
+- AI
+- Duplicate
+- Delete
+- Move
+- Style
+
+All buttons must use type="button".
+
+4. Add block here
+When hovering between sections or clicking empty space inside the page, show:
+
+“+ Add block here”
+
+Add block options:
+- Heading
+- Paragraph
+- Step-by-step procedure
+- Checklist
+- Warning / Caution
+- Image / Screenshot placeholder
+- Signature line
+- Date field
+- Approval field
+- Revision history
+- Table
+- FAQ
+- Divider
+- Text box
+- Logo/image placeholder
+- Callout/note
+
+5. Insert anywhere
+- User can click inside the page and insert a block or field at that location.
+- Keep items inside page boundaries.
+- Do not require the user to start from the right panel.
+- Inserted items should appear where the user clicked, adjusted only enough to keep them inside the page.
+
+6. Invisible alignment grid / snap grid
+Add a hidden alignment grid to the document page.
+
+Requirements:
+- Grid helps align text boxes, fields, logos, callouts, signatures, dates, approvals, dividers, and other freeform objects.
+- Grid is not visible by default.
+- Objects snap to the hidden grid when moved or resized.
+- Use a practical grid size, for example 8px or 10px.
+- Snapping should feel helpful, not restrictive.
+- User can still place items freely inside the page; snap only cleans alignment.
+- Grid must never appear in saved document output or future export output unless explicitly designed as editing-only guides.
+
+Recommended behavior:
+- During insert: initial x/y snaps to nearest grid point.
+- During drag: x/y snaps to grid.
+- During resize: width/height snaps to grid.
+- During keyboard/nudge movement: movement follows the same grid step.
+- Keep all fields inside page bounds.
+
+Optional if easy:
+- Add a small “Show guides” toggle.
+- Default is OFF.
+- If enabled, show faint guide lines only while editing.
+- Do not show guide lines in output/export.
+
+7. Freeform field model
+Add a backward-compatible freeform field layer inside the existing content object.
+
+Use:
+
+content.freeformFields
+
+Each freeform field should include:
+- id
+- type
+- pageNumber
+- x
+- y
+- width
+- height
+- text/value
+- style
+- zIndex if layering is implemented
+
+No DB schema changes for this phase.
+Older drafts without freeformFields must still load.
+
+8. Drag/move
+For freeform fields:
+- User can drag the field around the page.
+- Store x/y relative to the page.
+- Snap x/y to the hidden grid.
+- Keep movement inside page bounds.
+- Show visual drag feedback.
+- Do not let fields disappear outside the page.
+
+9. Resize
+For text boxes, callouts, logo/image placeholders, and signature fields:
+- Add resize handles if feasible.
+- Store width/height.
+- Snap width/height to hidden grid.
+- Keep minimum usable size.
+- Keep inside page bounds.
+
+10. Duplicate/delete
+- Duplicate selected block/field.
+- Delete selected block/field.
+- Confirm destructive delete only if needed.
+- No document reset.
+
+11. Accessibility fallback
+Dragging must not be the only way to reposition objects.
+
+Add at least one non-drag fallback:
+- x/y/width/height fields in the right panel
+or
+- nudge buttons: up, down, left, right
+or
+- click-to-place mode where the user selects a field type, then clicks the desired destination.
+
+The fallback should also respect page bounds and grid snapping.
+
+12. Preserve existing features
+Do not break:
+- Phase 2 templates
+- Phase 3 branding
+- Phase 4 AI actions
+- Save/autosave
+- Style tab
+- Guide tab
+- Outline tab
+- Edit tab
+- Export tab
+- Existing drafts
+- Older drafts without freeformFields
+
+13. Export safety
+Do not claim PDF/DOCX export works unless it truly does.
+Keep .txt export unchanged.
+Export tab should say:
+
+“Freeform layout export to PDF/DOCX coming soon.”
+
+14. Visual quality
+The canvas should feel premium:
+- hover state on editable blocks
+- selected ring
+- small floating mini-toolbar near selected object
+- drag cursor
+- subtle resize handles
+- no clutter when nothing is selected
+- no giant controls covering the page
+- invisible snap grid by default
+- optional faint guide overlay only if user turns on guides
+
+15. Stability
+- No runtime crash
+- No blank screen
+- No draft reset
+- No lost existing content
+- No broken existing drafts
+- No API/auth/Stripe/migration/marketing changes during Phase 5A
+- Build a Contract unchanged
+- Other 8 tools unchanged
+- All new buttons type="button"
+
+Verification:
+1. Open existing Document Builder draft.
+2. Click text on the left page.
+3. Confirm selection ring appears.
+4. Double-click text and edit inline.
+5. Confirm save/autosave.
+6. Insert a paragraph from the left page.
+7. Insert a checklist from the left page.
+8. Insert a warning/caution block.
+9. Duplicate a block.
+10. Delete a block.
+11. Add a freeform text box.
+12. Drag it.
+13. Confirm it snaps cleanly to hidden alignment positions.
+14. Resize it.
+15. Confirm resize snaps cleanly to hidden alignment positions.
+16. Confirm no visible grid appears by default.
+17. If Show Guides is added, confirm guides are faint and editing-only.
+18. Confirm nudge/x-y fallback or click-to-place fallback exists.
+19. Save and refresh.
+20. Confirm the field reloads in the same location.
+21. Confirm Guide/Edit/Style/Export tabs still work.
+22. Confirm AI actions still work on selected block.
+23. Confirm Phase 2 templates still generate drafts.
+24. Confirm Phase 3 branding still works.
+25. Confirm Build a Contract unchanged.
+26. Confirm other 8 tools unchanged.
+27. Confirm no DB/auth/API/Stripe/migration/marketing changes were made during Phase 5A.
+28. Confirm no new TypeScript/runtime errors.
+
+Return only:
+A. Files changed
+B. Direct canvas selection result
+C. Inline editing result
+D. Floating toolbar result
+E. Add-block-here result
+F. Insert-anywhere result
+G. Invisible grid/snap result
+H. Drag/move result
+I. Resize result
+J. Duplicate/delete result
+K. Save/reload result
+L. Accessibility fallback result
+M. Export behavior
+N. Future roadmap items captured confirmation
+O. Regression result
+P. Safe checkpoint: Yes/No

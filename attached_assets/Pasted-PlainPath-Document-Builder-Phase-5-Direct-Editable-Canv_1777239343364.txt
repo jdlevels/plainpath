@@ -1,0 +1,234 @@
+PlainPath Document Builder — Phase 5 Direct Editable Canvas Workflow
+
+Goal:
+Make the left document preview an active editable canvas, not a read-only preview.
+
+Product decision:
+Workflow is critical. Users must be able to work directly on the page. The right panel should support the workflow, but the left document surface should be clickable, selectable, editable, and flexible.
+
+Important:
+Do not add AI quizzes.
+Do not add LMS/testing features.
+Do not build employee assessments.
+
+Do not touch:
+- Build a Contract
+- Analyze
+- Trust Check
+- Contract Review
+- Redact
+- Ask This Document
+- Clause Extractor
+- Compare Versions
+- Marketing
+- Stripe
+- Auth
+- Database schema
+- Migrations
+- Digital Signature
+- Dropbox Sign
+
+Allowed scope:
+- Document Builder only
+- BuilderPagePreview / document canvas
+- Builder workspace selection/editing state
+- Builder block renderers if needed
+- Builder types only if backward-compatible
+- Right panel tabs only if needed for selected object controls
+
+Core requirement:
+The left document page must become directly interactive.
+
+1. Click-to-select on page
+- User can click any visible block/field on the left document page.
+- Selected item shows a clean premium ring/outline.
+- Right panel switches to Edit tab or updates the Edit tab with the selected item.
+- Selection must not reset when switching tabs.
+
+2. Inline text editing
+Add direct inline editing for text-based blocks on the page:
+- Heading
+- Paragraph
+- Note/callout
+- Bullet list item if feasible
+- Checklist item if feasible
+
+Behavior:
+- Double-click or click an edit icon to edit text directly on the page.
+- Enter or blur saves the edit to local document state.
+- Escape cancels if feasible.
+- Autosave should trigger through the existing save flow.
+- Do not break existing right-panel editing.
+
+3. Add field anywhere on page
+Add an “Add field” control or insert palette for:
+- Text box
+- Heading
+- Paragraph
+- Checklist
+- Date field
+- Signature line
+- Approval field
+- Logo/image placeholder
+- Callout/note
+- Divider
+
+User should be able to:
+- choose a field type
+- click anywhere inside the page to place it
+- place it at that location
+- then edit it
+
+Use page boundaries only:
+- User can place fields freely inside the page.
+- Do not restrict placement to existing section order only.
+- Do not require using the right panel first.
+
+4. Drag/move fields
+For new freeform fields:
+- User can drag the field around the page.
+- Position should be stored as x/y coordinates relative to the page.
+- Keep movement inside page bounds.
+- Show drag feedback while moving.
+- Do not let fields disappear outside the page.
+
+5. Resize fields
+For text boxes, callouts, logo/image placeholders, and signature fields:
+- Add resize handles if feasible.
+- Store width/height.
+- Keep minimum usable size.
+- Keep inside page bounds.
+
+6. Duplicate/delete
+Selected fields should support:
+- Duplicate
+- Delete
+- Move up/down if part of structured flow
+- Bring forward/send backward if using layered freeform items
+
+All buttons must use type="button".
+
+7. Structured + freeform compatibility
+Do not destroy the existing structured document model.
+
+Keep:
+- section outline
+- generated templates
+- AI Guide
+- Style tab
+- Export tab
+- save/autosave
+
+Add:
+- freeform field layer or freeform object support
+
+If a fully freeform object model requires a larger rewrite, implement a safe first version:
+- direct selection
+- inline editing
+- add text box anywhere
+- drag text box
+- save and reload text box
+
+Do not overbuild if it risks breaking existing drafts.
+
+8. Save/reload
+Freeform field positions and content must persist if stored safely inside the existing content object.
+
+Use a backward-compatible key such as:
+content.freeformFields
+
+Each freeform field should include:
+- id
+- type
+- pageNumber
+- x
+- y
+- width
+- height
+- text/value
+- style if needed
+
+Older drafts without freeformFields must still open normally.
+
+No DB schema change.
+
+9. Export safety
+Do not claim PDF/DOCX export works unless it truly does.
+For now, the preview/canvas can support fields even if final PDF/DOCX export is later.
+Export tab should clearly say:
+“Freeform layout export to PDF/DOCX coming soon.”
+
+Keep .txt export unchanged.
+
+10. User workflow priority
+The workflow should feel fast:
+- Click page
+- Add field
+- Type
+- Move
+- Resize
+- Save
+
+Avoid forcing users to navigate deep menus for basic actions.
+
+11. Visual quality
+The canvas should feel premium:
+- hover state on editable blocks
+- selected ring
+- small floating mini-toolbar near selected object if feasible
+- drag cursor
+- subtle handles
+- no clutter when nothing is selected
+- no giant controls covering the page
+
+12. Stability
+- No runtime crash
+- No blank screen
+- No draft reset
+- No lost existing content
+- No broken existing drafts
+- No API/auth/Stripe/migration/marketing changes
+- Build a Contract unchanged
+- Other 8 tools unchanged
+- All new buttons type="button"
+
+Verification:
+1. Open existing Document Builder draft.
+2. Click a paragraph on the left page.
+3. Confirm selected ring appears.
+4. Confirm Edit tab reflects selected item.
+5. Edit text directly on the page.
+6. Confirm preview updates.
+7. Confirm autosave/save works.
+8. Add a text box anywhere on the page.
+9. Type into the text box.
+10. Drag the text box.
+11. Resize the text box if implemented.
+12. Save and refresh.
+13. Confirm the text box reloads in the same location.
+14. Duplicate the field.
+15. Delete a field.
+16. Confirm existing structured sections still work.
+17. Confirm Outline tab still works.
+18. Confirm Style tab still works.
+19. Confirm AI Guide still works or remains stable.
+20. Confirm Export tab still works for .txt and does not falsely claim PDF/DOCX.
+21. Confirm Build a Contract unchanged.
+22. Confirm other 8 tools unchanged.
+23. Confirm no DB/auth/API/Stripe/migration/marketing changes.
+24. Confirm no new TypeScript/runtime errors in changed files.
+
+Return only:
+A. Files changed
+B. Direct page selection result
+C. Inline editing result
+D. Add-field-anywhere result
+E. Drag/move result
+F. Resize result
+G. Duplicate/delete result
+H. Save/reload result
+I. Existing draft compatibility
+J. Export behavior
+K. Build a Contract unchanged confirmation
+L. Other 8 tools unchanged confirmation
+M. Safe checkpoint: Yes/No

@@ -68,6 +68,15 @@ export function ExportPanel({ onDownloadTxt, documentTitle }: Props) {
             Brand styling — including your logo, company name, brand color, and footer — will apply to PDF/DOCX export when those export formats are enabled.
           </p>
         </div>
+
+        <div className="rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 px-3 py-2.5 mt-2">
+          <p className="text-[11px] text-amber-800 dark:text-amber-300 leading-relaxed font-medium">
+            Freeform layout export to PDF/DOCX coming soon.
+          </p>
+          <p className="text-[10px] text-amber-700 dark:text-amber-400 leading-relaxed mt-0.5">
+            Text boxes placed on the canvas are saved with your document and will be included in PDF/DOCX export in a future update. Plain text (.txt) export includes structured content only.
+          </p>
+        </div>
       </div>
     </div>
   );
