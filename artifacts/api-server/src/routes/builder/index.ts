@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { getAuth } from "@clerk/express";
 import { pool } from "@workspace/db";
+import { openai } from "@workspace/integrations-openai-ai-server";
 import { requireBuilderEnabled } from "../../middlewares/builderFeatureFlag.js";
 import {
   validateCreateDocument,
@@ -311,6 +312,128 @@ router.get("/templates/:id", requireAuth, async (req: any, res) => {
   } catch (err) {
     console.error("[builder] get template error", err);
     res.status(500).json({ error: "server_error" });
+  }
+});
+
+// ─── POST /api/builder/ai/block-action ───────────────────────────────────────
+// Run an AI writing action on the selected block content.
+// No DB writes — read-only inference, returns suggestion for preview-before-apply.
+
+const ACTION_INSTRUCTIONS: Record<string, string> = {
+  "Elaborate":          "Expand the text with more detail and context while keeping the same meaning and professional tone.",
+  "Formalize":          "Rewrite the text in a more formal, professional register appropriate for a business document.",
+  "Simplify":           "Rewrite the text to be clearer and easier to understand, using plain language.",
+  "Shorten":            "Reduce the text to its key points, removing unnecessary words while keeping the core meaning.",
+  "Correct spelling":   "Fix all spelling, grammar, and punctuation errors. Return only the corrected text with no other changes.",
+  "Make professional":  "Refine the vocabulary, tone, and structure to sound polished and professional.",
+  "Add missing details":"Identify and add important missing details that would be expected in this type of document section.",
+  "Expand":             "Expand the content with additional relevant information, examples, or context.",
+};
+
+router.post("/ai/block-action", requireAuth, async (req: any, res) => {
+  const { action, blockType, blockContent, documentTitle, category, sectionTitle } = req.body;
+
+  if (!action || typeof action !== "string") {
+    res.status(422).json({ error: "missing_action" }); return;
+  }
+  if (!blockType || typeof blockType !== "string") {
+    res.status(422).json({ error: "missing_block_type" }); return;
+  }
+  if (typeof blockContent !== "string" || !blockContent.trim()) {
+    res.status(422).json({ error: "missing_block_content" }); return;
+  }
+
+  // Table conversion — not yet supported
+  if (action === "Turn into table") {
+    res.json({ suggestion: "", newBlockType: null, safe: false, message: "Table editing support is coming soon." });
+    return;
+  }
+
+  // Checklist conversion — only for paragraph/list block types
+  const checklistSourceTypes = ["paragraph", "bullet-list", "numbered-list", "note"];
+  if (action === "Turn into checklist" && !checklistSourceTypes.includes(blockType)) {
+    res.json({
+      suggestion: "",
+      newBlockType: null,
+      safe: false,
+      message: "Select a paragraph or list block to convert to a checklist.",
+    });
+    return;
+  }
+
+  const docCtx = `Document: "${documentTitle || "Untitled"}". Category: ${category || "business document"}. Section: "${sectionTitle || "Untitled"}". Block type: ${blockType}.`;
+
+  let systemPrompt: string;
+
+  if (action === "Create next section") {
+    systemPrompt = `You are a professional business document writer. ${docCtx}
+The user wants to draft the next logical section for this document based on the existing content.
+Return a JSON object with exactly two fields:
+{ "sectionTitle": "...", "starterContent": "..." }
+sectionTitle: concise, matching the document style.
+starterContent: 1–3 sentences introducing what will go in that section.
+Return only valid JSON. No markdown fences.`;
+  } else if (action === "Turn into checklist") {
+    systemPrompt = `You are a professional business document writer. ${docCtx}
+Convert the following content into actionable checklist items.
+Return a JSON array of strings, one item per element: ["Item 1", "Item 2"]
+Each item should be a single, concise, actionable task.
+Return only valid JSON. No markdown fences.`;
+  } else {
+    const instruction = ACTION_INSTRUCTIONS[action] ?? `Improve the text with this action: ${action}.`;
+    systemPrompt = `You are a professional business document writer. ${docCtx}
+${instruction}
+Return only the improved text. No preamble, no explanation, no markdown fences.`;
+  }
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o",
+      max_completion_tokens: 1024,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: blockContent },
+      ],
+    });
+
+    const raw = (completion.choices[0]?.message?.content ?? "").trim();
+    if (!raw) {
+      res.status(500).json({ error: "empty_response", message: "AI returned no content. Please try again." });
+      return;
+    }
+
+    if (action === "Create next section") {
+      let parsed: { sectionTitle?: string; starterContent?: string } = {};
+      try {
+        const cleaned = raw.replace(/^```json\s*/i, "").replace(/\s*```$/i, "");
+        parsed = JSON.parse(cleaned);
+      } catch {
+        // Best-effort fallback
+      }
+      const suggestion = `${parsed.sectionTitle || "Next Section"}\n\n${parsed.starterContent || ""}`.trim();
+      res.json({ suggestion, newBlockType: null, safe: true, message: null });
+      return;
+    }
+
+    if (action === "Turn into checklist") {
+      let items: string[] = [];
+      try {
+        const cleaned = raw.replace(/^```json\s*/i, "").replace(/\s*```$/i, "");
+        const parsed = JSON.parse(cleaned);
+        if (Array.isArray(parsed)) {
+          items = parsed.map((x: unknown) => String(x)).filter(Boolean);
+        }
+      } catch {
+        items = raw.split("\n").map((l: string) => l.replace(/^[-*•\d.]+\s*/, "").trim()).filter(Boolean);
+      }
+      res.json({ suggestion: items.join("\n"), newBlockType: "checklist", safe: true, message: null });
+      return;
+    }
+
+    res.json({ suggestion: raw, newBlockType: null, safe: true, message: null });
+  } catch (err: any) {
+    console.error("[builder] ai/block-action error", err?.message);
+    res.status(500).json({ error: "ai_error", message: "AI request failed. Please try again." });
   }
 });
 

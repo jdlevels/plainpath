@@ -352,6 +352,53 @@ export default function Workspace({ docId }: WorkspaceProps) {
     setActiveTab("edit");
   }
 
+  // ── AI block apply ────────────────────────────────────────────────────────
+
+  function handleAiApply(suggestion: string, newBlockType: string | null, _action: string) {
+    if (!selectedSectionId || !selectedBlockId || !selectedBlock) return;
+    const section = content.sections.find((s) => s.id === selectedSectionId);
+    if (!section) return;
+
+    let newPayload: Record<string, unknown>;
+    const finalType: string = newBlockType ?? selectedBlock.type;
+
+    if (newBlockType === "checklist") {
+      const items = suggestion.split("\n").filter(Boolean).map((text) => ({ text: text.trim(), checked: false }));
+      newPayload = { items };
+    } else {
+      const existing = selectedBlock.payload as Record<string, unknown>;
+      switch (selectedBlock.type) {
+        case "heading":
+          newPayload = { ...existing, text: suggestion };
+          break;
+        case "paragraph":
+          newPayload = { text: suggestion, marks: [] };
+          break;
+        case "bullet-list":
+          newPayload = { items: suggestion.split("\n").map((l) => l.replace(/^[•\-*]\s*/, "").trim()).filter(Boolean) };
+          break;
+        case "numbered-list":
+          newPayload = { items: suggestion.split("\n").map((l) => l.replace(/^\d+[.)]\s*/, "").trim()).filter(Boolean), start: 1 };
+          break;
+        case "checklist":
+          newPayload = { items: suggestion.split("\n").filter(Boolean).map((text) => ({ text: text.replace(/^\[ \] /, "").trim(), checked: false })) };
+          break;
+        case "note":
+          newPayload = { ...existing, text: suggestion };
+          break;
+        default:
+          newPayload = { ...existing };
+      }
+    }
+
+    const updatedBlock = { ...selectedBlock, type: finalType as BuilderBlock["type"], payload: newPayload };
+    const updatedSection = {
+      ...section,
+      blocks: section.blocks.map((b) => (b.id === selectedBlockId ? updatedBlock : b)),
+    };
+    updateSection(selectedSectionId, updatedSection);
+  }
+
   // ── Misc ──────────────────────────────────────────────────────────────────
 
   async function handleArchive() {
@@ -569,7 +616,14 @@ export default function Workspace({ docId }: WorkspaceProps) {
           {/* Tab content */}
           <div className="flex-1 overflow-hidden">
             {activeTab === "guide" && (
-              <AiGuidePanel selectedBlock={selectedBlock} category={doc?.category} />
+              <AiGuidePanel
+                selectedBlock={selectedBlock}
+                category={doc?.category}
+                documentTitle={title}
+                sectionTitle={selectedSection?.title}
+                onRunAction={api.aiBlockAction}
+                onApply={handleAiApply}
+              />
             )}
 
             {activeTab === "outline" && (

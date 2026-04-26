@@ -144,4 +144,31 @@ export const builderApi = {
     );
     return handleResponse(res);
   },
+
+  async aiBlockAction(
+    data: {
+      action: string;
+      blockType: string;
+      blockContent: string;
+      documentTitle?: string;
+      category?: string;
+      sectionTitle?: string;
+    },
+    token?: string | null,
+  ): Promise<{
+    suggestion: string;
+    newBlockType: string | null;
+    safe: boolean;
+    message: string | null;
+  }> {
+    const res = await fetch(
+      `${base()}/api/builder/ai/block-action`,
+      authFetchOptions(token, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      }),
+    );
+    return handleResponse(res);
+  },
 };

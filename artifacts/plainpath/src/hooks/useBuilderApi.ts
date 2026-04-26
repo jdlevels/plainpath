@@ -77,5 +77,19 @@ export function useBuilderApi() {
       },
       [token],
     ),
+
+    aiBlockAction: useCallback(
+      async (data: {
+        action: string;
+        blockType: string;
+        blockContent: string;
+        documentTitle?: string;
+        category?: string;
+        sectionTitle?: string;
+      }) => {
+        return builderApi.aiBlockAction(data, await token());
+      },
+      [token],
+    ),
   };
 }
