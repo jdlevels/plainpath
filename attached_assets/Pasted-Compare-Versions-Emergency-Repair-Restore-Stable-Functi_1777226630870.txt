@@ -1,0 +1,96 @@
+Compare Versions Emergency Repair — Restore Stable Function First
+
+Current status:
+Compare Versions failed QA.
+
+Observed issue:
+- /compare-versions or the Compare Versions session route shows a runtime error screen:
+  “Something went wrong”
+  React minified error #310
+- The visual layout is also not consistent with the approved PlainPath workspace standard.
+
+Priority:
+Restore Compare Versions to a stable working state first.
+Do not continue visual redesign until the runtime crash is fixed.
+
+Scope:
+Only work on Compare Versions files.
+
+Allowed files:
+- artifacts/plainpath/src/pages/CompareVersions.tsx
+- artifacts/plainpath/src/pages/CompareVersionsSession.tsx
+- Any Compare-specific local component used only by Compare Versions
+
+Do not touch:
+- Ask This Document
+- Analyze.tsx
+- Action Pack
+- Clause Extractor
+- Contract Review
+- Trust Check
+- Redact
+- Document Builder
+- DocumentChat
+- API routes
+- Auth
+- Database
+- Migrations
+- Stripe/payment
+- Marketing
+- Global routing
+
+Step 1 — Diagnose the crash
+- Inspect the current runtime error on the Compare Versions route/session route.
+- Check for hook-order problems, conditional hooks, undefined state, undefined component references, bad activeTab logic, or conditional returns before hooks.
+- React error #310 commonly points to a hooks/render-order issue. Confirm the actual root cause from the code/logs before editing.
+- Identify exactly which recent Compare Versions change introduced the crash.
+
+Step 2 — Restore stability
+Choose the safest option:
+
+Option A — If the crash is caused by the recent Compare alignment edits:
+- Revert only the Compare Versions changes from this last pass.
+- Restore the last known working Compare Versions implementation.
+- Preserve saved sessions and existing comparison behavior.
+
+Option B — If a small surgical fix is safer:
+- Fix the hook/render/state issue without changing the layout further.
+- Keep all hooks at the top level.
+- Do not conditionally call hooks.
+- Guard undefined arrays/objects safely.
+- Ensure activeTab defaults are valid.
+- Ensure Summary/Changes/Original/Revised views do not reference undefined data.
+
+Step 3 — Verify Compare Versions works before redesign
+- Open Compare Versions upload/start page.
+- Upload or open an existing comparison session.
+- Confirm no runtime error.
+- Confirm original and revised documents/results load.
+- Confirm saved comparison sessions still open.
+- Confirm export/report behavior still works if present.
+- Confirm no blank page.
+- Confirm no new TypeScript/runtime errors.
+
+Step 4 — Minimal visual stabilization only
+After the crash is fixed, do not attempt a full redesign tonight.
+
+Apply only small visual consistency fixes if safe:
+- Keep Compare Versions comparison-first.
+- Original and revised documents must remain visually available.
+- Change/summary panel should remain readable.
+- Do not force Compare into the same single-document layout as Analyze/Trust/Contract.
+- Do not rewrite the workspace.
+- Do not introduce new tabs or major structure tonight unless already stable.
+
+Step 5 — Return report
+Return only:
+
+A. Root cause of crash  
+B. Files changed  
+C. Whether recent Compare changes were reverted or surgically fixed  
+D. Confirmation Compare Versions route/session no longer crashes  
+E. Confirmation original/revised comparison still works  
+F. Confirmation saved sessions/export still work  
+G. Confirmation no other tools changed  
+H. Confirmation no API/auth/database/migration/Stripe/marketing changes  
+I. Safe checkpoint: Yes/No
