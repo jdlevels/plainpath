@@ -6,4 +6,3 @@ export * from "./builder";
 export * from "./pdfEditor";
 export * from "./compareVersions";
 export * from "./clauseExtractor";
-export * from "./documentOverviewSessions";
