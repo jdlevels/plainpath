@@ -1,0 +1,134 @@
+PlainPath E-Signature Removal — Final Verification Pass Only
+
+Do not add features.
+Do not redesign.
+Do not modify database schema.
+Do not create migrations.
+Do not touch Stripe.
+Do not touch auth.
+Do not touch pricing.
+Do not touch active tools unless a broken reference is found.
+
+Verify the completed removal of the e-signature feature.
+
+Product rule:
+PlainPath does not support e-signature, digital signature, Dropbox Sign, send-for-signature, signature routing, signature envelopes, or signature status tracking.
+
+Allowed:
+Document Builder may keep static printable document fields only:
+- Signature line
+- Date line
+- Printed name line
+- Approval/sign-off line
+
+These are document layout fields only. They must not create signing workflows.
+
+Check:
+
+1. Route verification
+- /signature does not resolve to an e-signature page.
+- /demo/signature does not resolve to an e-signature demo.
+- No signature-related route exists in app routing.
+- No signature-related route exists in marketing routing.
+
+2. UI verification
+Confirm no user-facing references to:
+- Digital Signature
+- E-signature
+- Send for Signature
+- Sign document
+- Dropbox Sign
+- Signature workflow
+- Signature envelope
+- Signing status
+
+Check:
+- Navbar
+- Tools dropdown
+- Dashboard
+- My Documents
+- My Analyses
+- Build a Contract
+- Document Builder
+- Export panels
+- Marketing homepage
+- Pricing
+- FAQ
+- Footer
+
+3. API/server verification
+Confirm no active:
+- /api/signatures route
+- /api/contracts/send-for-signature route
+- Dropbox Sign API client
+- HelloSign API client
+- signature webhook
+- signature-specific server mount
+- signature-specific rate limiter
+- signature-specific integration import
+
+4. Privacy/legal verification
+Confirm Privacy pages do not mention:
+- Dropbox Sign
+- e-signature
+- digital signature
+- signature processing
+- third-party signing provider
+
+5. Static signature/date line verification
+Confirm static Document Builder fields still work or remain allowed:
+- Signature line
+- Date line
+- Printed name line
+- Approval/sign-off line
+
+Confirm these fields:
+- are static printable layout elements
+- do not send data to a signing provider
+- do not create signature requests
+- do not verify identity
+- do not track signer status
+
+6. Database/secrets report
+Do not modify DB.
+Report any orphaned DB tables:
+- signature_requests
+- signature_request_events
+
+Report unused secrets that should be manually deleted:
+- DROPBOX_SIGN_API_KEY
+- any HELLOSIGN or SIGNATURE-related secrets
+
+7. Regression
+Confirm active toolset remains exactly:
+1. Analyze a Document
+2. Document Trust Check
+3. Build a Contract
+4. Contract Review
+5. Redact Sensitive Info
+6. Ask This Document
+7. Clause Extractor
+8. Compare Versions
+9. Document Builder
+
+Confirm:
+- app starts
+- marketing starts
+- API starts
+- no new TypeScript/runtime errors
+- no DB/auth/Stripe/payment changes
+- no migrations
+
+Return only:
+A. Overall result: Pass / Fail
+B. Route verification
+C. UI verification
+D. API/server verification
+E. Privacy/legal verification
+F. Static signature/date line status
+G. Remaining references, if any
+H. Orphaned DB tables
+I. Unused secrets to delete manually
+J. Active 9-tool confirmation
+K. Safe to publish web: Yes/No
+L. Safe to continue app-store prep: Yes/No
