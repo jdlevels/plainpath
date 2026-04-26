@@ -226,11 +226,23 @@ export function PdfRedactViewer({
     )
   }
 
-  if (failed || pages.length === 0) return null
+  if (failed || pages.length === 0) {
+    return (
+      <div className={`flex flex-col items-center justify-center gap-3 min-h-[220px] rounded-xl border border-border/30 bg-neutral-100 dark:bg-zinc-900 text-center px-6 py-8 ${className}`}>
+        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+          <Loader2 className="w-5 h-5 text-muted-foreground opacity-40" />
+        </div>
+        <div>
+          <p className="text-sm font-medium text-foreground/70">PDF preview unavailable</p>
+          <p className="text-xs text-muted-foreground/60 mt-0.5">The document will still be correctly redacted on download.</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div
-      className={`space-y-2 min-h-[500px] max-h-[calc(100vh-220px)] overflow-y-auto rounded-xl border border-border/30 bg-muted/5 p-1.5 ${className}`}
+      className={`space-y-3 min-h-[500px] max-h-[calc(100vh-220px)] overflow-y-auto rounded-xl border border-border/30 bg-neutral-100 dark:bg-zinc-900 p-3 ${className}`}
     >
       {pages.map((pg, idx) => {
         const pn = idx + 1

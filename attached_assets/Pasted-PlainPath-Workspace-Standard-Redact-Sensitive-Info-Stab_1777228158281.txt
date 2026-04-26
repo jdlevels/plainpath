@@ -1,0 +1,156 @@
+PlainPath Workspace Standard — Redact Sensitive Info Stabilization Only
+
+Goal:
+Review and lightly align Redact Sensitive Info with the approved PlainPath workspace standard without breaking PDF redaction export.
+
+Important:
+Redact is already close to the approved standard. Do not rebuild it.
+This is a stabilization and consistency pass only.
+
+Approved standard:
+- Left side = actual PDF/document preview
+- Right side = structured redaction/action panel
+- Viewer should resemble Review & Redact / Ask This Document:
+  - actual PDF page surface
+  - centered controlled page width
+  - dark workspace around the page
+  - scrollable document area
+  - file name visible
+  - readable scale
+- Right panel should be compact, readable, and action-focused.
+
+Scope:
+Only update Redact if needed.
+
+Allowed file:
+- artifacts/plainpath/src/pages/Redact.tsx
+
+Allowed supporting file only if directly required:
+- existing redaction helper/export utility, but only if fixing an existing bug
+
+Do not touch:
+- Ask This Document
+- Analyze.tsx
+- Action Pack
+- Clause Extractor
+- Contract Review
+- Trust Check
+- Compare Versions
+- Document Builder
+- DocumentChat
+- API routes unless required to preserve existing redaction export behavior
+- Auth
+- Database
+- Migrations
+- Stripe/payment
+- Marketing
+- Global routing
+
+Critical:
+Do not break PDF redaction export.
+Do not change the redaction API unless there is a confirmed export bug.
+Do not change backend logic unless absolutely necessary.
+Do not remove existing state preservation.
+Do not reset uploaded files after export errors.
+Do not convert PDF export back to TXT.
+Do not weaken black-bar redaction behavior.
+
+Business purpose:
+Redact Sensitive Info should help a normal user:
+1. Upload a document.
+2. See the actual document.
+3. Understand what sensitive items were found.
+4. Select what to redact.
+5. Preview redactions.
+6. Export a redacted PDF safely.
+7. Know the original document remains unchanged.
+
+Required checks/fixes:
+
+1. Left document viewer
+- Confirm actual PDF preview appears on the left.
+- Confirm page size is controlled and not oversized.
+- Confirm document is readable and scrollable.
+- Confirm file name is visible.
+- If PDF preview fails, show a clear fallback message.
+
+2. Right panel
+Make sure the right panel clearly shows:
+- Redaction summary
+- Detected sensitive items
+- Categories
+- Selected count
+- Manual redaction tools if present
+- Primary action: Export Redacted PDF
+
+Improve only if needed:
+- text contrast
+- spacing
+- selected/unselected item clarity
+- button hierarchy
+- error message clarity
+
+3. Selection behavior
+- Selecting a sensitive item should clearly show:
+  - selected card state
+  - selected count update
+  - preview/redaction state update
+- Unselected items should be visually distinct.
+- Select all / deselect all should work.
+
+4. Preview behavior
+- Original view and Redaction Preview should be clearly distinguishable.
+- Redaction Preview should show black bars/blocks where selected items will be redacted.
+- Original document must remain unchanged.
+
+5. Export behavior
+- Export Redacted PDF must remain the primary action.
+- Exported file must have .pdf extension.
+- Export failure must preserve:
+  - uploaded file
+  - detected items
+  - selected items
+  - preview/original mode
+- Error message must be inline and plain-English.
+- Do not reset the tool on export failure.
+
+6. Background flashing/flicker
+- Check for screen/background flicker after Save or Export.
+- If the flicker is caused by unnecessary state reset, rerender, or mode toggle, fix it surgically.
+- Do not introduce a large refactor.
+
+7. Mobile
+- Confirm mobile view remains usable.
+- Document and Redactions tabs should not clip.
+- Primary export button should remain reachable.
+
+Verification:
+1. Open /redact.
+2. Upload a PDF with sensitive information.
+3. Confirm actual PDF preview appears on the left.
+4. Confirm detected items appear on the right.
+5. Select one item.
+6. Confirm selected state is obvious.
+7. Select multiple items.
+8. Toggle Redaction Preview.
+9. Confirm black bars/blocks appear.
+10. Export Redacted PDF.
+11. Confirm the downloaded file is .pdf.
+12. Confirm original document remains unchanged.
+13. Confirm no reset after export.
+14. Confirm no flicker/background flashing after Save or Export.
+15. Confirm no API/auth/database/migration/Stripe/marketing/global route changes.
+16. Confirm no other tools changed.
+17. Confirm no new TypeScript/runtime errors.
+
+Return only:
+A. Files changed
+B. Viewer consistency result
+C. Right-panel readability result
+D. Selection/preview behavior
+E. Export PDF behavior
+F. Export failure preservation
+G. Flicker/background issue status
+H. Mobile behavior
+I. Preserved logic
+J. Safe checkpoint: Yes/No
