@@ -1,0 +1,105 @@
+PlainPath Launch Stabilization — Full 9-Tool QA Pass
+
+Goal:
+Run a full launch-readiness QA pass across PlainPath after e-signature removal.
+
+Feature freeze:
+Do not add new tools.
+Do not add new features.
+Do not redesign.
+Do not change Stripe.
+Do not change auth.
+Do not change database schema.
+Do not create migrations.
+Do not change pricing.
+Do not modify marketing unless a launch blocker is found.
+
+Active toolset:
+1. Analyze a Document
+2. Document Trust Check
+3. Build a Contract
+4. Contract Review
+5. Redact Sensitive Info
+6. Ask This Document
+7. Clause Extractor
+8. Compare Versions
+9. Document Builder
+
+Verify:
+
+1. App startup
+- App starts cleanly
+- API starts cleanly
+- Marketing site starts cleanly
+- No startup crashes
+- No new runtime errors
+
+2. Navigation
+- Dashboard loads
+- Navbar loads
+- Tools dropdown shows exactly the 9 approved tools
+- No Digital Signature / e-signature / Dropbox Sign links
+- Build a Contract and Document Builder remain separate
+- All routes open correctly
+
+3. E-signature removal confirmation
+- /signature does not resolve
+- /demo/signature does not resolve
+- /api/signatures does not exist
+- /api/contracts/send-for-signature does not exist
+- No Send for Signature UI exists
+- Privacy pages contain no Dropbox Sign or e-signature references
+- Static signature/date lines inside Document Builder remain allowed
+
+4. Tool smoke tests
+For each active tool:
+- Empty state loads
+- Upload or input path works
+- Processing state works
+- Results/workspace state loads
+- Mobile layout is usable
+- No blank page
+- No crash
+- No broken buttons
+
+5. Document Builder specific
+- Templates work
+- AI Guide works
+- Direct canvas workflow works if already implemented
+- Static signature/date line fields remain printable layout fields only
+- Save/autosave works
+- Existing drafts open
+- Export tab is honest about PDF/DOCX status
+
+6. Payments / gating
+- Stripe web flow is still intact
+- No payment logic changed during cleanup
+- Free-limit messages remain disabled if that is still the testing rule
+- Admin access still works
+- Pro/Starter gating behavior is not accidentally changed
+
+7. App-store prep checks
+- Privacy policy exists and matches current behavior
+- Terms page exists
+- Support contact exists
+- No hidden unfinished feature is route-accessible
+- Reviewer/test account plan is needed for restricted/login areas
+- Native payment handling still needs separate review before submission
+
+Important:
+Apple review requires clear app functionality and review access for login-gated features. Google Play requires accurate Data Safety and app access information. Do not mark native submission safe until reviewer access and payment handling are confirmed.
+
+Return only:
+A. Overall QA result: Pass / Fail
+B. Critical blockers
+C. Non-critical issues
+D. Files changed, if any
+E. Tool-by-tool status
+F. Navigation status
+G. E-signature removal status
+H. Payment/gating status
+I. Privacy/legal status
+J. App-store prep blockers
+K. Safe to publish web: Yes/No
+L. Safe to continue app-store prep: Yes/No
+M. Safe to submit to Apple/Google today: Yes/No
