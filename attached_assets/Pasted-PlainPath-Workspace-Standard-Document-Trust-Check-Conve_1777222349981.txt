@@ -1,0 +1,235 @@
+PlainPath Workspace Standard — Document Trust Check Conversion Only
+
+Goal:
+Convert Document Trust Check to the approved PlainPath document workspace standard.
+
+Approved standard:
+- Left side = actual document/PDF preview whenever possible
+- Right side = structured intelligence/action panel
+- Viewer should resemble Ask This Document / Review & Redact:
+  - actual PDF page surface
+  - centered controlled page width
+  - dark workspace around the page
+  - scrollable document area
+  - file name visible
+  - readable scale
+- Right panel should be compact, premium, and trust-focused:
+  - clear tool header
+  - trust score / confidence summary
+  - verification findings
+  - risk signals
+  - source/evidence cards
+  - recommended next actions
+  - minimal wasted space
+
+Scope:
+Only update Document Trust Check.
+
+Allowed files:
+- artifacts/plainpath/src/pages/TrustCheck.tsx
+- Existing shared viewer/header components only if already available and safe to reuse
+- If needed, add small local helper components inside TrustCheck.tsx
+
+Do not touch:
+- Ask This Document
+- Analyze.tsx
+- Analyze Action Pack
+- DocumentChat
+- Redact
+- Clause Extractor
+- Contract Review
+- Compare Versions
+- Document Builder
+- API routes
+- Auth
+- Database
+- Migrations
+- Stripe/payment
+- Marketing
+- Global routing
+
+Critical:
+Preserve existing Document Trust Check logic.
+Preserve cautious trust language.
+Do not change backend calls.
+Do not change document parsing.
+Do not change upload behavior.
+Do not claim a document is definitely real, fake, valid, invalid, or fraudulent.
+Do not fake exact source highlighting.
+
+Business purpose:
+Document Trust Check should help a normal user understand:
+1. Does this document show signs of risk?
+2. What looks trustworthy, uncertain, or suspicious?
+3. What evidence supports the finding?
+4. What should the user verify before relying on it?
+
+Required layout:
+
+1. Empty / upload state
+- Keep upload flow simple.
+- Add/keep consistent compact tool header.
+- Clearly show:
+  - Document Trust Check
+  - What it does
+  - supported file types
+  - sample/demo options if currently present
+- Do not overbuild the empty state.
+
+2. Processing state
+- Use the shared DocumentScanScreen-style processing animation if already available.
+- Show:
+  - tool name: Document Trust Check
+  - file name
+  - document skeleton / scanning motion
+  - progress/checklist style steps
+- Must match the PlainPath PDF loading standard.
+
+3. Completed workspace
+Use a split layout:
+
+LEFT PANEL — Document Viewer
+- Show actual PDF/document preview if PDF was uploaded.
+- Use the same style discipline as Ask This Document:
+  - centered paper page
+  - controlled max width
+  - dark stage
+  - scrollable pages
+- For DOCX/TXT/pasted text, show a paper-style text viewer.
+- Do not dump raw extracted text directly onto dark background.
+- Header should show:
+  - file name
+  - document type
+  - “Document Trust Check” context label
+
+RIGHT PANEL — Trust Intelligence
+Make this results-first.
+
+Top summary should show compact chips/cards:
+- Trust score / trust level
+- Suspicious signals
+- Unverified claims
+- Missing verification items
+- Source coverage / confidence
+- Recommended verification action
+
+Trust score wording:
+Use cautious labels:
+- “Looks consistent”
+- “Needs review”
+- “Uncertain”
+- “Potential issue”
+- “Verify before relying”
+
+Avoid absolute claims:
+- Do not say “authentic”
+- Do not say “fake”
+- Do not say “fraud”
+- Do not say “guaranteed”
+- Do not say “verified as real”
+
+Below summary:
+Add filter chips:
+- All
+- Suspicious
+- Unverified
+- Missing info
+- Consistent
+- Source-backed
+- Needs review
+
+Finding cards:
+Each card should show:
+- Finding title
+- Status/severity
+- Plain-English explanation
+- Why it matters
+- Recommended verification step
+- Source snippet or source chip if available
+- Click action to focus/scroll document when possible
+
+Missing/unverified cards:
+Do not fake source highlights.
+For missing/unverified items, show:
+- What is missing or unverified
+- Why it matters
+- What the user should check
+- “No exact source found” when applicable
+
+4. Source behavior
+- Clicking a source-backed finding should:
+  - highlight/select the card
+  - show a source banner or active state
+  - scroll/focus the matching document area if possible
+- If exact PDF coordinate highlighting is unavailable:
+  - use best-effort section/text matching
+  - show a source banner: “Source used for this finding”
+  - do not pretend exact PDF text is highlighted
+- If no source match exists:
+  - show “No exact source found”
+  - do not scroll to a fake location
+
+5. Readability
+- Make the right panel easier to scan:
+  - fewer badges
+  - stronger text contrast
+  - larger finding titles
+  - clear status colors
+  - better spacing between cards
+  - lower-priority details collapsed if useful
+- Avoid clutter.
+- The user should quickly understand:
+  - What looks risky?
+  - What is uncertain?
+  - What should I verify?
+  - Where was this found?
+
+6. Mobile
+- Use tabs:
+  - Trust
+  - Document
+- Default to Trust after processing.
+- Document tab must show the viewer.
+- Cards must not overflow or clip behind navigation.
+
+Stability rules:
+- Do not reset uploaded file after processing.
+- Do not clear results when a card is clicked.
+- Do not break source chips.
+- All buttons must use type="button" unless intentionally submitting.
+- Preserve error states.
+- Preserve low-confidence behavior if currently present.
+
+Verification:
+1. Open /trust-check.
+2. Upload a PDF document.
+3. Confirm processing animation shows tool name and file name.
+4. Confirm completed state shows:
+   - left actual PDF/document viewer
+   - right Trust Intelligence panel
+5. Confirm summary chips/counts are visible.
+6. Click a suspicious/unverified/source-backed finding.
+7. Confirm finding card visibly selects.
+8. Confirm document attempts to scroll/focus to source or shows source banner.
+9. Click a missing/unverified item with no exact source if available.
+10. Confirm it does not fake document highlighting and instead shows:
+    - no exact source found
+    - why it matters
+    - recommended verification step
+11. Test filter chips.
+12. Test mobile at ~390px width.
+13. Confirm no other tools changed.
+14. Confirm no API/auth/database/migration/Stripe/marketing changes.
+15. Confirm no new TypeScript/runtime errors introduced.
+
+Return only:
+A. Files changed
+B. Empty/processing/result state changes
+C. Document viewer implementation
+D. Right-panel Trust Intelligence structure
+E. Source click behavior
+F. No-source/unverified behavior
+G. Trust-safe wording confirmation
+H. Mobile behavior
+I. Preserved logic
+J. Safe checkpoint: Yes/No

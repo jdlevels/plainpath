@@ -151,6 +151,71 @@ function formatAnalyzedAt(iso: string): string {
   }
 }
 
+/* ── Filter chip config ────────────────────────────────────────────────── */
+
+type TrustFilter = "all" | "suspicious" | "consistent" | "verify"
+
+const TRUST_FILTERS: { key: TrustFilter; label: string; activeClass: string; inactiveClass: string }[] = [
+  { key: "all",        label: "All",        activeClass: "bg-foreground text-background border-foreground",                                                                                        inactiveClass: "border-border text-muted-foreground hover:text-foreground hover:border-foreground/40" },
+  { key: "suspicious", label: "Suspicious", activeClass: "bg-red-500 text-white border-red-500",                                                                                                  inactiveClass: "border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30" },
+  { key: "consistent", label: "Consistent", activeClass: "bg-emerald-500 text-white border-emerald-500",                                                                                          inactiveClass: "border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30" },
+  { key: "verify",     label: "Verify",     activeClass: "bg-blue-500 text-white border-blue-500",                                                                                                inactiveClass: "border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30" },
+]
+
+/* ── IndicatorCard ─────────────────────────────────────────────────────── */
+
+function IndicatorCard({
+  indicator,
+  selected,
+  onSelect,
+}: {
+  indicator: { severity: string; indicator: string; sourceEvidence?: string }
+  selected: boolean
+  onSelect: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={`w-full text-left flex items-start gap-3 p-3 rounded-xl border transition-all ${
+        selected
+          ? "border-violet-400 dark:border-violet-500 ring-1 ring-violet-300/60 dark:ring-violet-700/60 bg-violet-50/30 dark:bg-violet-950/20"
+          : "bg-secondary/30 border-border/30 hover:border-border/60 hover:bg-secondary/50"
+      }`}
+    >
+      <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full shrink-0 mt-0.5 ${severityColor(indicator.severity)}`}>
+        {indicator.severity}
+      </span>
+      <div className="flex-1 min-w-0 space-y-2 text-left">
+        <p className="text-sm font-semibold text-foreground leading-snug">{indicator.indicator}</p>
+
+        {selected && (
+          indicator.sourceEvidence ? (
+            <div className="rounded-lg border border-violet-200 dark:border-violet-800 bg-violet-50/80 dark:bg-violet-950/30 px-3 py-2.5">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-violet-500 mb-1">Source used for this finding</p>
+              <p className="text-[11px] text-muted-foreground italic leading-relaxed line-clamp-4">"{indicator.sourceEvidence}"</p>
+            </div>
+          ) : (
+            <div className="rounded-lg border border-border/30 bg-muted/30 px-3 py-2.5">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">No exact source found</p>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">This finding was identified through pattern analysis — no specific text passage is available.</p>
+            </div>
+          )
+        )}
+
+        {!selected && indicator.sourceEvidence && (
+          <div className="flex items-start gap-1.5">
+            <span className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground/50 shrink-0 mt-0.5">Evidence</span>
+            <p className="text-xs text-muted-foreground italic bg-secondary/50 rounded-lg px-2.5 py-1.5 border border-border/30 leading-relaxed">
+              "{indicator.sourceEvidence}"
+            </p>
+          </div>
+        )}
+      </div>
+    </button>
+  )
+}
+
 /* ════════════════════════════════════════════════════════════════════════ */
 /*  Main component                                                         */
 /* ════════════════════════════════════════════════════════════════════════ */
@@ -170,6 +235,9 @@ export default function TrustCheck() {
   const [savedId, setSavedId] = useState<string | null>(null)
   const [justSaved, setJustSaved] = useState(false)
   const [mobileTrustTab, setMobileTrustTab] = useState<"document" | "analysis">("analysis")
+  const [trustFilter, setTrustFilter] = useState<TrustFilter>("all")
+  const [selectedIndicatorIdx, setSelectedIndicatorIdx] = useState<number | null>(null)
+  const [scrollTrigger, setScrollTrigger] = useState(0)
 
   function handleCheckDocument() {
     const hasTrustCheck = entitlements?.toolAccess?.includes("trust-check") ?? false
@@ -280,6 +348,20 @@ export default function TrustCheck() {
 
   const isHighRisk = analysis.verdict === "High scam risk"
   const isSuspicious = analysis.verdict === "Suspicious — verify before acting"
+
+  const showSuspiciousSections = trustFilter === "all" || trustFilter === "suspicious"
+  const showConsistentSections = trustFilter === "all" || trustFilter === "consistent"
+  const showVerifySections     = trustFilter === "all" || trustFilter === "verify"
+
+  const sortedIndicators = [...highIndicators, ...medIndicators, ...lowIndicators]
+
+  function handleIndicatorSelect(idx: number) {
+    const next = selectedIndicatorIdx === idx ? null : idx
+    setSelectedIndicatorIdx(next)
+    if (next !== null && sortedIndicators[idx]?.sourceEvidence) {
+      setScrollTrigger(t => t + 1)
+    }
+  }
 
   /* ── Actions ──────────────────────────────────────────────────────── */
   async function handleSave() {
@@ -412,6 +494,7 @@ export default function TrustCheck() {
             fileName="Uploaded Document"
             fallbackContent={documentClaims}
             contextLabel="Trust Check"
+            scrollTrigger={scrollTrigger}
           />
         </div>
 
@@ -631,7 +714,7 @@ export default function TrustCheck() {
         )}
 
         {/* ── 5. Contract Risk Callout ───────────────────────────────── */}
-        {(analysis.contractRiskNotes || (analysis.contractTermsFound && analysis.contractTermsFound.length > 0)) && (
+        {showSuspiciousSections && (analysis.contractRiskNotes || (analysis.contractTermsFound && analysis.contractTermsFound.length > 0)) && (
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
             <Card className="p-5 border-amber-200/70 dark:border-amber-700/40 bg-amber-50/60 dark:bg-amber-950/20">
               <div className="flex items-start gap-3">
@@ -678,7 +761,33 @@ export default function TrustCheck() {
           </ResultSectionCard>
         )}
 
+        {/* ── Filter chips ───────────────────────────────────────────── */}
+        <div className="flex flex-wrap gap-1.5">
+          {TRUST_FILTERS.map(f => {
+            const count =
+              f.key === "suspicious" ? analysis.scamIndicators.length :
+              f.key === "consistent" ? (analysis.legitimacyIndicators?.length ?? 0) :
+              f.key === "verify"     ? analysis.whatToVerify.length : null
+            return (
+              <button
+                key={f.key}
+                type="button"
+                onClick={() => { setTrustFilter(f.key); setSelectedIndicatorIdx(null) }}
+                className={`inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold border transition-all ${
+                  trustFilter === f.key ? f.activeClass : f.inactiveClass
+                }`}
+              >
+                {f.label}
+                {count !== null && count > 0 && (
+                  <span className="ml-1 opacity-70">({count})</span>
+                )}
+              </button>
+            )
+          })}
+        </div>
+
         {/* ── 8. Scam Indicators — collapsible ──────────────────────── */}
+        {showSuspiciousSections && (
         <ResultSectionCard collapsible={true}
           icon={Shield}
           title="Scam Indicators"
@@ -695,34 +804,25 @@ export default function TrustCheck() {
             ) : null
           }
         >
-          {analysis.scamIndicators.length > 0 ? (
-            <div className="space-y-3">
-              {[...highIndicators, ...medIndicators, ...lowIndicators].map((indicator, i) => (
-                <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-secondary/30 border border-border/30">
-                  <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full shrink-0 mt-0.5 ${severityColor(indicator.severity)}`}>
-                    {indicator.severity}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground leading-snug">{indicator.indicator}</p>
-                    {indicator.sourceEvidence && (
-                      <div className="mt-1.5 flex items-start gap-1.5">
-                        <span className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground/50 shrink-0 mt-0.5">Evidence</span>
-                        <p className="text-xs text-muted-foreground italic bg-secondary/50 rounded-lg px-2.5 py-1.5 border border-border/30 leading-relaxed">
-                          "{indicator.sourceEvidence}"
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
+          {sortedIndicators.length > 0 ? (
+            <div className="space-y-2">
+              {sortedIndicators.map((indicator, i) => (
+                <IndicatorCard
+                  key={i}
+                  indicator={indicator}
+                  selected={selectedIndicatorIdx === i}
+                  onSelect={() => handleIndicatorSelect(i)}
+                />
               ))}
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">No significant scam indicators detected in this document.</p>
           )}
         </ResultSectionCard>
+        )}
 
         {/* ── 9. Legitimacy Signals ──────────────────────────────────── */}
-        {analysis.legitimacyIndicators && analysis.legitimacyIndicators.length > 0 && (
+        {showConsistentSections && analysis.legitimacyIndicators && analysis.legitimacyIndicators.length > 0 && (
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
             <Card className="p-5 border-emerald-200/70 dark:border-emerald-700/40 bg-emerald-50/60 dark:bg-emerald-950/20">
               <div className="flex items-start gap-3">
@@ -753,7 +853,7 @@ export default function TrustCheck() {
         )}
 
         {/* ── 10. Metadata Findings ─────────────────────────────────── */}
-        {hasMetadata && (
+        {showSuspiciousSections && hasMetadata && (
           <ResultSectionCard collapsible={true}
             icon={Info}
             title={`File Metadata Findings (${analysis.metadataFindings!.length})`}
@@ -782,7 +882,7 @@ export default function TrustCheck() {
         )}
 
         {/* ── 11. Structural Observations — collapsible ─────────────── */}
-        {hasStructural && (
+        {showSuspiciousSections && hasStructural && (
           <ResultSectionCard collapsible={true}
             icon={AlertTriangle}
             title={`Structural Observations (${analysis.structuralFindings!.length})`}
@@ -808,7 +908,7 @@ export default function TrustCheck() {
         )}
 
         {/* ── 12. Contact Details — collapsible ─────────────────────── */}
-        {analysis.contactDetails.length > 0 && (
+        {showVerifySections && analysis.contactDetails.length > 0 && (
           <ResultSectionCard collapsible={true}
             icon={Phone}
             title="Contact Details Found"
@@ -857,7 +957,7 @@ export default function TrustCheck() {
         )}
 
         {/* ── 13. Deadlines & Pressure Tactics — collapsible ────────── */}
-        {analysis.deadlines.length > 0 && (
+        {showSuspiciousSections && analysis.deadlines.length > 0 && (
           <ResultSectionCard collapsible={true}
             icon={Clock}
             title="Deadlines & Pressure Tactics"
@@ -902,7 +1002,7 @@ export default function TrustCheck() {
         )}
 
         {/* ── 14. What To Verify ─────────────────────────────────────── */}
-        {analysis.whatToVerify.length > 0 && (
+        {showVerifySections && analysis.whatToVerify.length > 0 && (
           <ResultSectionCard collapsible={false} icon={Eye} title="What To Verify Before Acting">
             <ul className="space-y-2.5">
               {analysis.whatToVerify.map((item, i) => (
@@ -918,7 +1018,7 @@ export default function TrustCheck() {
         )}
 
         {/* ── 15. Safe Next Steps ────────────────────────────────────── */}
-        {analysis.safeNextSteps.length > 0 && (
+        {showVerifySections && analysis.safeNextSteps.length > 0 && (
           <ResultSectionCard collapsible={false} icon={CheckSquare} title="Safe Next Steps">
             <ul className="space-y-2.5">
               {analysis.safeNextSteps.map((step, i) => (
