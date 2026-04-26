@@ -29,6 +29,7 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { WorkspaceShell } from "@/components/WorkspaceShell"
+import { ToolPageHeader } from "@/components/ToolPageHeader"
 import { PiiReview } from "@/components/PiiReview"
 import { PdfRedactViewer } from "@/components/PdfRedactViewer"
 import { getApiBaseUrl } from "@/lib/api"
@@ -822,17 +823,15 @@ export default function Redact() {
   // ─── INPUT PHASE (standalone) ────────────────────────────────────────────
   return (
     <WorkspaceShell>
+      <ToolPageHeader
+        toolName="Redact Sensitive Info"
+        toolIcon={EyeOff}
+        toolIconBg="bg-rose-100 dark:bg-rose-900/40"
+        toolIconColor="text-rose-600 dark:text-rose-400"
+        subtitle="Automatically detect and remove personal information before sharing."
+        backTo="/"
+      />
       <div className="max-w-xl mx-auto py-6 px-4 space-y-6">
-        {/* Header */}
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="w-6 h-6 text-primary" />
-            <h1 className="text-xl font-bold">Redact Sensitive Information</h1>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Automatically detect and permanently remove personal information from a document before sharing, analyzing, or exporting it.
-          </p>
-        </div>
 
         {/* Mode tabs */}
         <div className="flex gap-1 bg-muted/40 rounded-xl p-1">

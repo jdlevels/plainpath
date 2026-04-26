@@ -8,6 +8,7 @@ import {
   ChevronUp, Trash2, ArrowLeft, Loader2, AlertCircle,
   RefreshCw, Copy, Download, Check, FileType2,
 } from "lucide-react"
+import { ToolPageHeader } from "@/components/ToolPageHeader"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -498,7 +499,6 @@ function UploadView({
   return (
     <div className="max-w-2xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-xl font-bold text-foreground mb-1">Clause Extractor</h1>
         <p className="text-sm text-muted-foreground">
           Upload a contract or agreement — key dates, parties, financial terms, legal clauses, and obligations extracted automatically.
         </p>
@@ -739,8 +739,21 @@ export default function ClauseExtractor() {
     return <DocumentScanScreen mode="clause-extractor" fileName={uploadingFileName} />
   }
 
+  const currentFileName =
+    state.stage === "results" ? state.session.fileName
+    : state.stage === "processing" ? state.fileName
+    : null
+
   return (
     <div className="min-h-full">
+      <ToolPageHeader
+        toolName="Clause Extractor"
+        toolIcon={ListChecks}
+        toolIconBg="bg-violet-100 dark:bg-violet-900/40"
+        toolIconColor="text-violet-600 dark:text-violet-400"
+        subtitle={currentFileName}
+        backTo="/"
+      />
       <div className="p-4 sm:p-6 max-w-4xl mx-auto">
         <AnimatePresence mode="wait">
           {state.stage === "upload" && (

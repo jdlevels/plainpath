@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge"
 import { getApiBaseUrl } from "@/lib/api"
 import { useLocation, useSearch } from "wouter"
 import { WorkspaceShell } from "@/components/WorkspaceShell"
+import { ToolPageHeader } from "@/components/ToolPageHeader"
 import { beforeRunContractReview, UsageLimitError } from "@/lib/analysisGate"
 import { useEntitlements } from "@/hooks/useEntitlements"
 import UpgradeModal from "@/components/UpgradeModal"
@@ -1161,6 +1162,14 @@ export default function ContractReview() {
   // Input form
   return (
     <div className="min-h-screen bg-background">
+      <ToolPageHeader
+        toolName="Contract Review"
+        toolIcon={Scale}
+        toolIconBg="bg-amber-100 dark:bg-amber-900/40"
+        toolIconColor="text-amber-600 dark:text-amber-400"
+        subtitle="Spot unfair clauses, red flags, and missing protections before you sign."
+        backTo="/"
+      />
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
         <motion.div
           initial={{ opacity: 0, y: 12 }}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { useLocation, useSearch } from "wouter"
+import { ToolPageHeader } from "@/components/ToolPageHeader"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   ArrowLeft, ShieldCheck, AlertTriangle, XCircle, CheckCircle2,
@@ -211,7 +212,16 @@ export default function TrustCheck() {
       { id: "legitimate-utility-notice", label: "Legitimate Utility Notice", verdict: "Likely legitimate", icon: CheckCircle2, color: "text-green-500 dark:text-green-400", bg: "bg-green-50 dark:bg-green-950/50" },
     ]
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
+      <div className="min-h-screen bg-background">
+        <ToolPageHeader
+          toolName="Document Trust Check"
+          toolIcon={ShieldCheck}
+          toolIconBg="bg-emerald-100 dark:bg-emerald-900/40"
+          toolIconColor="text-emerald-600 dark:text-emerald-400"
+          subtitle="Check if a document is legitimate or a scam."
+          backTo="/"
+        />
+        <div className="flex items-center justify-center px-4 py-12">
         <div className="text-center max-w-sm w-full">
           <div className="w-12 h-12 rounded-2xl bg-primary/8 flex items-center justify-center mx-auto mb-4">
             <ShieldCheck className="w-6 h-6 text-primary/60" />
@@ -249,6 +259,7 @@ export default function TrustCheck() {
               ))}
             </div>
           </div>
+        </div>
         </div>
       </div>
     )
