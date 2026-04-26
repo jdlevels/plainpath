@@ -408,7 +408,17 @@ const REVIEW_DEMOS: Array<{
 
 // ─── ClauseCard ───────────────────────────────────────────────────────────────
 
-function ClauseCard({ clause, defaultOpen = false }: { clause: ClauseResult; defaultOpen?: boolean }) {
+function ClauseCard({
+  clause,
+  defaultOpen = false,
+  selected,
+  onSelect,
+}: {
+  clause: ClauseResult
+  defaultOpen?: boolean
+  selected?: boolean
+  onSelect?: () => void
+}) {
   const [open, setOpen] = useState(defaultOpen)
   const config = RATING_CONFIG[clause.rating]
   const Icon = config.icon
@@ -416,6 +426,15 @@ function ClauseCard({ clause, defaultOpen = false }: { clause: ClauseResult; def
   const [negEmail, setNegEmail] = useState<string | null>(null)
   const [negError, setNegError] = useState<string | null>(null)
   const [negCopied, setNegCopied] = useState(false)
+
+  function handleHeaderClick() {
+    if (onSelect) {
+      onSelect()
+      setOpen(!selected)
+    } else {
+      setOpen(o => !o)
+    }
+  }
 
   async function handleDraftEmail() {
     setNegLoading(true)
@@ -450,14 +469,18 @@ function ClauseCard({ clause, defaultOpen = false }: { clause: ClauseResult; def
   }
 
   return (
-    <Card className={`border ${config.border} transition-all`}>
+    <Card className={`border transition-all ${
+      selected
+        ? "border-violet-400 dark:border-violet-500 ring-1 ring-violet-300/60 dark:ring-violet-700/60"
+        : config.border
+    }`}>
       <CardContent className="p-0">
         <button
-          onClick={() => setOpen(o => !o)}
+          onClick={handleHeaderClick}
           className="w-full flex items-center gap-3 p-4 text-left hover:bg-muted/30 transition-colors rounded-xl"
         >
-          <Icon className={`w-4 h-4 flex-shrink-0 ${config.iconColor}`} />
-          <span className="flex-1 text-sm font-medium leading-snug">{clause.text}</span>
+          <Icon className={`w-4 h-4 flex-shrink-0 ${selected ? "text-violet-500" : config.iconColor}`} />
+          <span className="flex-1 text-sm font-semibold leading-snug">{clause.text}</span>
           <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full flex-shrink-0 ${config.badge}`}>
             {config.label}
           </span>
@@ -474,6 +497,12 @@ function ClauseCard({ clause, defaultOpen = false }: { clause: ClauseResult; def
               className="overflow-hidden"
             >
               <div className="px-4 pb-4 space-y-3 border-t border-border/30 pt-3">
+                {selected && (
+                  <div className="rounded-lg border border-violet-200 dark:border-violet-800 bg-violet-50/80 dark:bg-violet-950/30 px-3 py-2.5">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-violet-500 mb-1">Source used for this finding</p>
+                    <p className="text-[11px] text-muted-foreground italic leading-relaxed line-clamp-4">"{clause.text}"</p>
+                  </div>
+                )}
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">What it means</p>
                   <p className="text-sm text-foreground/85 leading-relaxed">{clause.explanation}</p>
@@ -615,6 +644,17 @@ function SectionBlock({ id, title, badge, children, collapsible = false, default
 
 // ─── Results View ─────────────────────────────────────────────────────────────
 
+type ReviewFilter = "all" | "red-flag" | "watch-out" | "fair" | "missing" | "checklist"
+
+const REVIEW_FILTERS: { key: ReviewFilter; label: string; activeClass: string; inactiveClass: string }[] = [
+  { key: "all",       label: "All",        activeClass: "bg-foreground text-background border-foreground",                                               inactiveClass: "border-border text-muted-foreground hover:text-foreground hover:border-foreground/40" },
+  { key: "red-flag",  label: "Red Flags",  activeClass: "bg-red-500 text-white border-red-500",                                                         inactiveClass: "border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30" },
+  { key: "watch-out", label: "Watch Outs", activeClass: "bg-amber-500 text-white border-amber-500",                                                      inactiveClass: "border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30" },
+  { key: "fair",      label: "Fair",       activeClass: "bg-emerald-500 text-white border-emerald-500",                                                  inactiveClass: "border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30" },
+  { key: "missing",   label: "Missing",    activeClass: "bg-violet-500 text-white border-violet-500",                                                    inactiveClass: "border-violet-200 dark:border-violet-800 text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/30" },
+  { key: "checklist", label: "Checklist",  activeClass: "bg-blue-500 text-white border-blue-500",                                                        inactiveClass: "border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30" },
+]
+
 function buildReviewText(result: ReviewResult): string {
   const lines: string[] = [
     "PLAINPATH — CONTRACT REVIEW",
@@ -645,7 +685,14 @@ function buildReviewText(result: ReviewResult): string {
   return lines.join("\n")
 }
 
-function ResultsView({ result, onReset }: { result: ReviewResult; onReset: () => void }) {
+function ResultsView({ result, onReset, onScrollToDocument }: {
+  result: ReviewResult
+  onReset: () => void
+  onScrollToDocument?: () => void
+}) {
+  const [activeFilter, setActiveFilter] = useState<ReviewFilter>("all")
+  const [selectedClauseId, setSelectedClauseId] = useState<string | null>(null)
+
   const redFlags = result.clauses.filter(c => c.rating === "red-flag")
   const watchOuts = result.clauses.filter(c => c.rating === "watch-out")
   const fair = result.clauses.filter(c => c.rating === "fair")
@@ -653,13 +700,27 @@ function ResultsView({ result, onReset }: { result: ReviewResult; onReset: () =>
   const checklistCount = result.preSigningChecklist?.length ?? 0
   const recommendation = primaryRecommendation(result)
 
-  const navSections: NavSection[] = [
-    { id: "red-flags",          label: "Red Flags",           count: redFlags.length,  color: "border-red-200 bg-red-50 text-red-700 hover:bg-red-100 dark:border-red-800 dark:bg-red-950/30 dark:text-red-300" },
-    { id: "watch-outs",         label: "Watch Outs",          count: watchOuts.length, color: "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-300" },
-    { id: "fair-clauses",       label: "Fair Clauses",        count: fair.length,      color: "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-300" },
-    { id: "missing-protections",label: "Missing Protections", count: missingCount,     color: "border-violet-200 bg-violet-50 text-violet-700 hover:bg-violet-100 dark:border-violet-800 dark:bg-violet-950/30 dark:text-violet-300" },
-    { id: "before-you-sign",    label: "Before You Sign",     count: checklistCount,   color: "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950/30 dark:text-blue-300" },
-  ]
+  function handleClauseSelect(id: string) {
+    const next = selectedClauseId === id ? null : id
+    setSelectedClauseId(next)
+    if (next) onScrollToDocument?.()
+  }
+
+  const showRedFlags   = activeFilter === "all" || activeFilter === "red-flag"
+  const showWatchOuts  = activeFilter === "all" || activeFilter === "watch-out"
+  const showFair       = activeFilter === "all" || activeFilter === "fair"
+  const showMissing    = activeFilter === "all" || activeFilter === "missing"
+  const showChecklist  = activeFilter === "all" || activeFilter === "checklist"
+
+  const visibleFilters = REVIEW_FILTERS.filter(f => {
+    if (f.key === "all") return true
+    if (f.key === "red-flag")  return redFlags.length > 0
+    if (f.key === "watch-out") return watchOuts.length > 0
+    if (f.key === "fair")      return fair.length > 0
+    if (f.key === "missing")   return missingCount > 0
+    if (f.key === "checklist") return checklistCount > 0
+    return true
+  })
 
   return (
     <motion.div
@@ -762,8 +823,30 @@ function ResultsView({ result, onReset }: { result: ReviewResult; onReset: () =>
         ]} />
       )}
 
-      {/* ── Section nav ── */}
-      <SectionNav sections={navSections} />
+      {/* ── Filter chips ── */}
+      <div className="flex flex-wrap gap-1.5">
+        {visibleFilters.map(f => (
+          <button
+            key={f.key}
+            type="button"
+            onClick={() => { setActiveFilter(f.key); setSelectedClauseId(null) }}
+            className={`inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold border transition-all ${
+              activeFilter === f.key ? f.activeClass : f.inactiveClass
+            }`}
+          >
+            {f.label}
+            {f.key !== "all" && (
+              <span className="ml-1 opacity-70">
+                {f.key === "red-flag"  && `(${redFlags.length})`}
+                {f.key === "watch-out" && `(${watchOuts.length})`}
+                {f.key === "fair"      && `(${fair.length})`}
+                {f.key === "missing"   && `(${missingCount})`}
+                {f.key === "checklist" && `(${checklistCount})`}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
 
       {/* ── Legal disclaimer ── */}
       <div className="bg-muted/30 border border-border/30 rounded-xl px-4 py-3 text-xs text-muted-foreground">
@@ -771,7 +854,7 @@ function ResultsView({ result, onReset }: { result: ReviewResult; onReset: () =>
       </div>
 
       {/* ── Red Flags ── */}
-      {redFlags.length > 0 && (
+      {redFlags.length > 0 && showRedFlags && (
         <SectionBlock
           id="red-flags"
           title="Red Flags"
@@ -779,18 +862,22 @@ function ResultsView({ result, onReset }: { result: ReviewResult; onReset: () =>
           badge={<Badge className="bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 border-0 text-[10px]">{redFlags.length}</Badge>}
         >
           <p className="text-xs text-muted-foreground mb-3">These clauses are harmful, exploitative, or potentially unenforceable. Each should be negotiated or removed before you sign.</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
-            {redFlags.map((c, i) => (
-              <div key={c.id} className={redFlags.length % 2 !== 0 && i === redFlags.length - 1 ? "md:col-span-2" : ""}>
-                <ClauseCard clause={c} defaultOpen={true} />
-              </div>
+          <div className="grid grid-cols-1 gap-3">
+            {redFlags.map(c => (
+              <ClauseCard
+                key={c.id}
+                clause={c}
+                defaultOpen={true}
+                selected={selectedClauseId === c.id}
+                onSelect={() => handleClauseSelect(c.id)}
+              />
             ))}
           </div>
         </SectionBlock>
       )}
 
       {/* ── Watch Outs ── */}
-      {watchOuts.length > 0 && (
+      {watchOuts.length > 0 && showWatchOuts && (
         <SectionBlock
           id="watch-outs"
           title="Watch Outs"
@@ -798,18 +885,22 @@ function ResultsView({ result, onReset }: { result: ReviewResult; onReset: () =>
           badge={<Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border-0 text-[10px]">{watchOuts.length}</Badge>}
         >
           <p className="text-xs text-muted-foreground mb-3">These clauses are vague, one-sided, or unusual. You can still sign — but you should understand what you're agreeing to and consider pushing back.</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
-            {watchOuts.map((c, i) => (
-              <div key={c.id} className={watchOuts.length % 2 !== 0 && i === watchOuts.length - 1 ? "md:col-span-2" : ""}>
-                <ClauseCard clause={c} defaultOpen={true} />
-              </div>
+          <div className="grid grid-cols-1 gap-3">
+            {watchOuts.map(c => (
+              <ClauseCard
+                key={c.id}
+                clause={c}
+                defaultOpen={true}
+                selected={selectedClauseId === c.id}
+                onSelect={() => handleClauseSelect(c.id)}
+              />
             ))}
           </div>
         </SectionBlock>
       )}
 
       {/* ── Fair Clauses (collapsible) ── */}
-      {fair.length > 0 && (
+      {fair.length > 0 && showFair && (
         <SectionBlock
           id="fair-clauses"
           title="Fair Clauses"
@@ -819,18 +910,22 @@ function ResultsView({ result, onReset }: { result: ReviewResult; onReset: () =>
           defaultCollapsed={true}
         >
           <p className="text-xs text-muted-foreground mb-3">These clauses appear balanced and reasonable. Expand each to see what it means in plain English.</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
-            {fair.map((c, i) => (
-              <div key={c.id} className={fair.length % 2 !== 0 && i === fair.length - 1 ? "md:col-span-2" : ""}>
-                <ClauseCard clause={c} defaultOpen={false} />
-              </div>
+          <div className="grid grid-cols-1 gap-3">
+            {fair.map(c => (
+              <ClauseCard
+                key={c.id}
+                clause={c}
+                defaultOpen={false}
+                selected={selectedClauseId === c.id}
+                onSelect={() => handleClauseSelect(c.id)}
+              />
             ))}
           </div>
         </SectionBlock>
       )}
 
       {/* ── Missing Protections ── */}
-      {result.missingProtections && result.missingProtections.length > 0 && (
+      {result.missingProtections && result.missingProtections.length > 0 && showMissing && (
         <SectionBlock
           id="missing-protections"
           title="Missing Protections"
@@ -856,7 +951,7 @@ function ResultsView({ result, onReset }: { result: ReviewResult; onReset: () =>
       )}
 
       {/* ── Before You Sign ── */}
-      {result.preSigningChecklist && result.preSigningChecklist.length > 0 && (
+      {result.preSigningChecklist && result.preSigningChecklist.length > 0 && showChecklist && (
         <SectionBlock
           id="before-you-sign"
           title="Before You Sign"
@@ -1170,7 +1265,11 @@ export default function ContractReview() {
         style={{ paddingBottom: "max(4rem, env(safe-area-inset-bottom) + 4rem)" }}
       >
         <div className="px-4 sm:px-5 pt-4 sm:pt-5 space-y-4">
-          <ResultsView result={result} onReset={handleReset} />
+          <ResultsView
+            result={result}
+            onReset={handleReset}
+            onScrollToDocument={() => setScrollTrigger(t => t + 1)}
+          />
         </div>
       </div>
     )

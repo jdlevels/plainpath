@@ -1,0 +1,230 @@
+PlainPath Workspace Standard — Contract Review Conversion Only
+
+Goal:
+Convert Contract Review to the approved PlainPath document workspace standard.
+
+Approved standard:
+- Left side = actual document/PDF preview whenever possible
+- Right side = structured intelligence/action panel
+- Viewer should resemble Ask This Document / Review & Redact:
+  - actual PDF page surface
+  - centered controlled page width
+  - dark workspace around the page
+  - scrollable document area
+  - file name visible
+  - readable scale
+- Right panel should be compact, premium, and results-first:
+  - clear tool header
+  - contract review summary
+  - risk cards
+  - clause/finding cards
+  - source cards tied to findings
+  - recommended next actions
+  - minimal wasted space
+
+Scope:
+Only update Contract Review.
+
+Allowed files:
+- artifacts/plainpath/src/pages/ContractReview.tsx
+- Existing shared viewer/header components only if already available and safe to reuse
+- If needed, add small local helper components inside ContractReview.tsx
+
+Do not touch:
+- Ask This Document
+- Analyze.tsx
+- Analyze Action Pack
+- DocumentChat
+- Redact
+- Clause Extractor
+- Trust Check
+- Compare Versions
+- Document Builder
+- API routes
+- Auth
+- Database
+- Migrations
+- Stripe/payment
+- Marketing
+- Global routing
+
+Critical:
+Preserve existing Contract Review logic.
+Preserve legal-safe wording.
+Do not change backend calls.
+Do not change document parsing.
+Do not change upload behavior.
+Do not make legal conclusions as fact.
+Do not fake exact source highlighting.
+
+Business purpose:
+Contract Review should help a normal user understand:
+1. What contract risks exist?
+2. Which clauses need attention?
+3. What language should they review before signing?
+4. What practical next steps should they take?
+
+Required layout:
+
+1. Empty / upload state
+- Keep the upload flow simple.
+- Add/keep a consistent compact tool header.
+- Clearly show:
+  - Contract Review
+  - What it does
+  - supported file types
+  - sample/demo options if currently present
+- Do not overbuild the empty state.
+
+2. Processing state
+- Use the shared DocumentScanScreen-style processing animation if already available.
+- Show:
+  - tool name: Contract Review
+  - file name
+  - document skeleton / scanning motion
+  - progress/checklist style steps
+- Must match the PlainPath PDF loading standard.
+
+3. Completed workspace
+Use a split layout:
+
+LEFT PANEL — Document Viewer
+- Show actual PDF/document preview if PDF was uploaded.
+- Use the same style discipline as Ask This Document:
+  - centered paper page
+  - controlled max width
+  - dark stage
+  - scrollable pages
+- For DOCX/TXT/pasted text, show a paper-style text viewer.
+- Do not dump raw extracted text directly onto dark background.
+- Header should show:
+  - file name
+  - document type
+  - “Contract Review” context label
+
+RIGHT PANEL — Contract Intelligence
+Make this results-first.
+
+Top summary should show compact chips/cards:
+- Overall review status
+- High-risk findings
+- Medium-risk findings
+- Low-risk findings
+- Key obligations
+- Deadlines / renewal dates
+- Source coverage / confidence
+
+Below summary:
+- Add filter chips:
+  - All
+  - High risk
+  - Medium risk
+  - Low risk
+  - Payment
+  - Termination
+  - Renewal
+  - Liability
+  - Confidentiality
+  - Obligations
+
+Risk/finding cards:
+Each risk card should show:
+- Finding title
+- Risk level
+- Plain-English explanation
+- Why it matters
+- Suggested next step
+- Source snippet or source chip
+- Click action to focus/scroll document when possible
+
+Required wording discipline:
+- Use cautious language:
+  - “May require review”
+  - “Potential risk”
+  - “Consider verifying”
+  - “This may affect…”
+- Avoid:
+  - “This is illegal”
+  - “This contract is invalid”
+  - “You should sue”
+  - “Guaranteed”
+  - “Definitely fraudulent”
+- Include plain disclaimer language where already present.
+
+4. Source behavior
+- Clicking a source-backed risk/finding should:
+  - highlight/select the card
+  - show a source banner or active state
+  - scroll/focus the matching document area if possible
+- If exact PDF coordinate highlighting is unavailable:
+  - use best-effort section/text matching
+  - show a source banner: “Source used for this finding”
+  - do not pretend exact PDF text is highlighted
+- If no source match exists:
+  - show “No exact source found”
+  - do not scroll to a fake location
+
+5. Readability
+- Make the right panel easier to scan:
+  - fewer badges
+  - stronger text contrast
+  - larger finding titles
+  - clear severity colors
+  - better spacing between cards
+  - lower-priority details collapsed if useful
+- Avoid clutter.
+- The user should quickly understand:
+  - What is risky?
+  - Why does it matter?
+  - Where was it found?
+  - What should I do next?
+
+6. Mobile
+- Use tabs:
+  - Review
+  - Document
+- Default to Review after processing.
+- Document tab must show the viewer.
+- Cards must not overflow or clip behind navigation.
+
+Stability rules:
+- Do not reset uploaded file after processing.
+- Do not clear results when a card is clicked.
+- Do not break source chips.
+- All buttons must use type="button" unless intentionally submitting.
+- Preserve error states.
+- Preserve low-confidence behavior if currently present.
+
+Verification:
+1. Open /contract-review.
+2. Upload a PDF contract/agreement.
+3. Confirm processing animation shows tool name and file name.
+4. Confirm completed state shows:
+   - left actual PDF/document viewer
+   - right Contract Intelligence panel
+5. Confirm summary chips/counts are visible.
+6. Click a high-risk finding.
+7. Confirm finding card visibly selects.
+8. Confirm document attempts to scroll/focus to source or shows source banner.
+9. Click a finding with no exact source if available.
+10. Confirm it does not fake document highlighting and instead shows:
+    - no exact source found
+    - why it was flagged
+    - suggested action
+11. Test category/severity filters.
+12. Test mobile at ~390px width.
+13. Confirm no other tools changed.
+14. Confirm no API/auth/database/migration/Stripe/marketing changes.
+15. Confirm no new TypeScript/runtime errors introduced.
+
+Return only:
+A. Files changed
+B. Empty/processing/result state changes
+C. Document viewer implementation
+D. Right-panel Contract Intelligence structure
+E. Source click behavior
+F. No-source behavior
+G. Legal-safe wording confirmation
+H. Mobile behavior
+I. Preserved logic
+J. Safe checkpoint: Yes/No
