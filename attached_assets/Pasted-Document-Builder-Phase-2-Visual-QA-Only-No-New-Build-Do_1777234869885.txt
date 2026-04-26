@@ -1,0 +1,85 @@
+Document Builder Phase 2 Visual QA Only — No New Build
+
+Do not add features.
+Do not redesign.
+Do not refactor.
+Do not touch API/auth/database/migrations/Stripe/marketing.
+Do not touch Build a Contract or the other 8 tools.
+
+Run a visual and functional QA pass on Document Builder Phase 2.
+
+Check:
+
+1. /builder/new template selection
+- Confirm all 8 templates appear:
+  - Standard Operating Procedure
+  - Employee Onboarding Manual
+  - Policy Document
+  - Training Manual
+  - Process Guide
+  - Safety Manual
+  - Incident Report
+  - Checklist
+- Confirm Start from blank still appears.
+- Confirm template cards look premium, clear, and not cramped.
+
+2. Guided questions screen
+- Select SOP and confirm guided questions appear.
+- Confirm question fields are readable.
+- Confirm the user understands they can answer only what they know.
+- Confirm Create Draft is obvious.
+- Confirm Back/Cancel behavior does not break.
+
+3. Draft generation
+- Answer at least 3 SOP questions.
+- Create draft.
+- Confirm workspace opens.
+- Confirm left preview shows a structured SOP, not a blank document.
+- Confirm answers are embedded into the correct sections.
+- Confirm missing answers become useful placeholders, not empty sections.
+
+4. Workspace after draft creation
+- Confirm left page preview renders correctly.
+- Confirm Outline tab shows generated sections.
+- Confirm clicking a block highlights it.
+- Confirm Edit tab opens the correct selected block.
+- Confirm Guide tab shows contextual guidance for the selected template.
+- Confirm Style tab still works.
+- Confirm Export tab still works.
+
+5. Quick template checks
+Create quick drafts for:
+- Policy Document
+- Employee Onboarding Manual
+- Safety Manual
+- Incident Report
+- Checklist
+
+Confirm each creates the expected section structure and does not crash.
+
+6. Persistence
+- Save draft.
+- Refresh.
+- Confirm document still opens.
+- Confirm no draft reset.
+- Confirm existing older drafts still open.
+
+7. Regression
+- Confirm Build a Contract is unchanged.
+- Confirm the other 8 tools are unchanged.
+- Confirm no new runtime errors.
+- Confirm no new TypeScript errors in changed files.
+- Confirm no DB/auth/Stripe/API/migration/marketing changes.
+
+Return only:
+A. Overall visual QA result: Pass / Fail
+B. Template selection result
+C. Guided questions result
+D. Draft generation result
+E. Workspace/preview result
+F. Outline/Edit/Guide tab result
+G. Save/export result
+H. Existing drafts result
+I. Any visual issues
+J. Any true blockers
+K. Safe to lock Phase 2: Yes/No
