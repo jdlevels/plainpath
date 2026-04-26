@@ -1,0 +1,99 @@
+Document Builder Phase 4 Manual QA Verification Only
+
+Do not add features.
+Do not redesign.
+Do not refactor.
+Do not touch API/auth/database/migrations/Stripe/marketing.
+Do not touch Build a Contract or the other 8 tools.
+
+Phase 4 was implemented:
+- AI block-action route
+- Auth-protected backend
+- AI Guide active buttons
+- Preview-before-apply
+- Apply / Cancel / Copy
+- Block-aware update behavior
+- Save/autosave preserved
+
+Run verification only.
+
+Check:
+
+1. Auth behavior
+- Unauthenticated request to /api/builder/ai/block-action returns 401.
+- Authenticated app user can use the AI action from Document Builder.
+- No auth gate was removed.
+
+2. Selected block requirement
+- If no block is selected, AI actions should not run.
+- UI should tell the user to select a block first.
+
+3. Paragraph action test
+- Select paragraph block.
+- Run Correct spelling.
+- Confirm loading state.
+- Confirm suggestion preview appears.
+- Click Cancel.
+- Confirm document unchanged.
+- Run Formalize.
+- Click Apply.
+- Confirm selected paragraph updates only.
+
+4. Heading action test
+- Select heading block.
+- Run Make professional.
+- Confirm heading text updates only after Apply.
+
+5. Checklist conversion test
+- Select paragraph or list block.
+- Run Turn into checklist.
+- Confirm preview clearly states it will convert the block.
+- Apply only if safe.
+- Confirm resulting checklist block renders correctly.
+
+6. Table action test
+- Run Turn into table.
+- If table conversion is not safely supported, confirm it shows “Table editing support is coming soon.”
+- Confirm no broken block or crash.
+
+7. Create next section test
+- Run Create next section.
+- Confirm preview shows proposed section title and starter content.
+- Apply.
+- Confirm new section appears in Outline and preview.
+
+8. Error behavior
+- Simulate failed AI call if possible.
+- Confirm error appears.
+- Confirm Retry appears.
+- Confirm document does not reset.
+- Confirm selected block stays selected if possible.
+
+9. Save/autosave
+- After Apply, confirm draft becomes unsaved.
+- Confirm autosave runs.
+- Refresh and confirm change persists.
+
+10. Regression
+- Phase 2 templates still generate drafts.
+- Phase 3 branding still works.
+- Style tab still updates preview.
+- Export tab still works for .txt.
+- Build a Contract unchanged.
+- Other 8 tools unchanged.
+- No DB/auth/Stripe/migration/marketing changes.
+- No new TypeScript/runtime errors in changed files.
+
+Return only:
+A. Overall QA result: Pass / Fail
+B. Auth result
+C. Selected block result
+D. AI action results
+E. Preview-before-apply result
+F. Apply/cancel/copy result
+G. Checklist/table behavior
+H. Create next section result
+I. Save/autosave result
+J. Regression result
+K. True blockers
+L. Safe to lock Phase 4: Yes/No
