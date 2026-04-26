@@ -56,18 +56,10 @@ function NativeBillingMessage() {
         <div className="bg-primary/10 p-4 rounded-2xl w-fit mx-auto mb-5">
           <CreditCard className="w-8 h-8 text-primary" />
         </div>
-        <h1 className="text-2xl font-display font-bold mb-3">Manage plan on web</h1>
-        <p className="text-sm text-muted-foreground leading-relaxed mb-7">
-          Subscriptions are managed at plainpathapp.com. Open in a browser to view your plan, upgrade, or cancel.
+        <h1 className="text-2xl font-display font-bold mb-3">Manage your subscription</h1>
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          Subscription management is handled on the PlainPath website.
         </p>
-        <a
-          href="https://plainpathapp.com/app/billing"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors"
-        >
-          Open in browser <ExternalLink className="w-4 h-4" />
-        </a>
       </div>
     </div>
   )
