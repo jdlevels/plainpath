@@ -1,23 +1,41 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
 import {
-  ArrowLeft, Plus, AlertCircle, Check,
-  Loader2, RefreshCw, Archive, ChevronRight, Save, Download,
+  ArrowLeft, AlertCircle, Check,
+  Loader2, RefreshCw, Archive, Save,
+  Sparkles, AlignLeft, Pencil, Palette, Download,
 } from "lucide-react";
 import { useBuilderApi } from "@/hooks/useBuilderApi";
 import type {
   BuilderDocumentFull,
   BuilderContent,
   BuilderSection,
+  BuilderBlock,
   BuilderDocStatus,
   AutosaveStatus,
+  KnownBlockType,
 } from "@/lib/builderTypes";
+import { BLOCK_TYPE_LABELS, KNOWN_BLOCK_TYPES } from "@/lib/builderTypes";
 import { CATEGORY_LABELS } from "@/lib/builderConfig";
-import { SectionEditor } from "@/components/builder/SectionEditor";
 import { BuilderPagePreview } from "@/components/builder/BuilderPagePreview";
+import { BlockEditor } from "@/components/builder/BlockEditor";
+import { getDefaultPayload } from "@/components/builder/blockDefaults";
+import { AiGuidePanel } from "@/components/builder/AiGuidePanel";
+import { OutlinePanel } from "@/components/builder/OutlinePanel";
+import { StylePanel } from "@/components/builder/StylePanel";
+import { ExportPanel } from "@/components/builder/ExportPanel";
 
 interface WorkspaceProps {
   docId: string;
+}
+
+type TabId = "guide" | "outline" | "edit" | "style" | "export";
+
+interface BrandingState {
+  companyName: string;
+  brandColor: string;
+  headerStyle: "minimal" | "banner" | "classic";
+  footerText: string;
 }
 
 function AutosaveIndicator({ status }: { status: AutosaveStatus }) {
@@ -37,41 +55,13 @@ function AutosaveIndicator({ status }: { status: AutosaveStatus }) {
   );
 }
 
-function SectionNav({
-  sections,
-  activeId,
-  onSelect,
-}: {
-  sections: BuilderSection[];
-  activeId: string | null;
-  onSelect: (id: string) => void;
-}) {
-  const sorted = [...sections].sort((a, b) => a.order - b.order);
-  if (sorted.length === 0) return null;
-  return (
-    <nav data-testid="section-nav" className="w-52 shrink-0 hidden lg:block">
-      <div className="sticky top-20 space-y-0.5">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 px-2 mb-2">
-          Sections <span className="font-normal normal-case tracking-normal">({sorted.length})</span>
-        </p>
-        {sorted.map((s) => (
-          <button
-            key={s.id}
-            onClick={() => onSelect(s.id)}
-            className={`w-full text-left flex items-center gap-1.5 px-2.5 py-1.5 text-sm rounded-lg transition-colors ${
-              activeId === s.id
-                ? "text-primary bg-primary/8 font-medium"
-                : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-            }`}
-          >
-            <ChevronRight className={`w-3 h-3 shrink-0 transition-opacity ${activeId === s.id ? "opacity-80" : "opacity-30"}`} />
-            <span className="truncate">{s.title || "Untitled section"}</span>
-          </button>
-        ))}
-      </div>
-    </nav>
-  );
-}
+const TABS: Array<{ id: TabId; label: string; icon: React.ComponentType<{ className?: string }> }> = [
+  { id: "guide",   label: "Guide",   icon: Sparkles  },
+  { id: "outline", label: "Outline", icon: AlignLeft },
+  { id: "edit",    label: "Edit",    icon: Pencil    },
+  { id: "style",   label: "Style",   icon: Palette   },
+  { id: "export",  label: "Export",  icon: Download  },
+];
 
 export default function Workspace({ docId }: WorkspaceProps) {
   const [, navigate] = useLocation();
@@ -81,35 +71,40 @@ export default function Workspace({ docId }: WorkspaceProps) {
   const [error, setError] = useState<string | null>(null);
   const [doc, setDoc] = useState<BuilderDocumentFull | null>(null);
 
-  // Editable state
   const [title, setTitle] = useState("");
   const [status] = useState<BuilderDocStatus>("draft");
   const [content, setContent] = useState<BuilderContent>({ sections: [] });
 
-  // Autosave
   const [autosaveStatus, setAutosaveStatus] = useState<AutosaveStatus>("idle");
   const serverVersionRef = useRef<number>(1);
   const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const conflictRef = useRef(false);
 
-  // Section nav active tracking (scroll-spy via IntersectionObserver)
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const intersectingRef = useRef<Set<string>>(new Set());
 
-  // Conflict banner
   const [conflictBanner, setConflictBanner] = useState(false);
-
-  // Archive confirm
   const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
 
-  // Dynamic page title
-  useEffect(() => {
-    document.title = title ? `${title} — Document Builder — PlainPath` : "Document Builder — PlainPath"
-    return () => { document.title = "PlainPath" }
-  }, [title])
+  // Right panel
+  const [activeTab, setActiveTab] = useState<TabId>("outline");
+  const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
+  const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
 
-  // Load document
+  // Local branding state (Phase 1: not persisted)
+  const [branding, setBranding] = useState<BrandingState>({
+    companyName: "",
+    brandColor: "#1d4ed8",
+    headerStyle: "minimal",
+    footerText: "",
+  });
+
+  useEffect(() => {
+    document.title = title ? `${title} — Document Builder — PlainPath` : "Document Builder — PlainPath";
+    return () => { document.title = "PlainPath"; };
+  }, [title]);
+
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
@@ -131,56 +126,36 @@ export default function Workspace({ docId }: WorkspaceProps) {
     return () => { cancelled = true; };
   }, [docId, api.getDocument]);
 
-  // Stable dep: only changes when section IDs or count change — avoids re-connecting
-  // the observer on every block edit.
   const sectionIdKey = content.sections.map((s) => s.id).join(",");
 
-  // IntersectionObserver scroll-spy for section nav
   useEffect(() => {
     if (loading || !content.sections.length) return;
-
     observerRef.current?.disconnect();
     intersectingRef.current = new Set();
-
-    // Snapshot sorted sections at setup time for the callback
     const sortedSnapshot = [...content.sections].sort((a, b) => a.order - b.order);
-
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           const id = entry.target.getAttribute("data-section-id");
           if (!id) return;
-          if (entry.isIntersecting) {
-            intersectingRef.current.add(id);
-          } else {
-            intersectingRef.current.delete(id);
-          }
+          if (entry.isIntersecting) intersectingRef.current.add(id);
+          else intersectingRef.current.delete(id);
         });
-        // Pick the topmost intersecting section
         for (const s of sortedSnapshot) {
-          if (intersectingRef.current.has(s.id)) {
-            setActiveSectionId(s.id);
-            return;
-          }
+          if (intersectingRef.current.has(s.id)) { setActiveSectionId(s.id); return; }
         }
       },
       { rootMargin: "-80px 0px -60% 0px", threshold: 0 },
     );
-
     sortedSnapshot.forEach((s) => {
       const el = document.getElementById(`section-${s.id}`);
-      if (el) {
-        el.setAttribute("data-section-id", s.id);
-        observer.observe(el);
-      }
+      if (el) { el.setAttribute("data-section-id", s.id); observer.observe(el); }
     });
-
     observerRef.current = observer;
     return () => observer.disconnect();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, sectionIdKey]);
 
-  // Autosave
   const scheduleAutosave = useCallback(
     (newContent: BuilderContent, newTitle: string, newStatus: string) => {
       if (conflictRef.current) return;
@@ -190,9 +165,7 @@ export default function Workspace({ docId }: WorkspaceProps) {
         setAutosaveStatus("saving");
         try {
           const result = await api.updateDocument(docId, {
-            content: newContent,
-            title: newTitle,
-            status: newStatus,
+            content: newContent, title: newTitle, status: newStatus,
             server_version: serverVersionRef.current,
           });
           serverVersionRef.current = result.serverVersion;
@@ -214,17 +187,11 @@ export default function Workspace({ docId }: WorkspaceProps) {
 
   const saveNow = useCallback(async () => {
     if (conflictRef.current) return;
-    if (autosaveTimerRef.current) {
-      clearTimeout(autosaveTimerRef.current);
-      autosaveTimerRef.current = null;
-    }
+    if (autosaveTimerRef.current) { clearTimeout(autosaveTimerRef.current); autosaveTimerRef.current = null; }
     setAutosaveStatus("saving");
     try {
       const result = await api.updateDocument(docId, {
-        content,
-        title,
-        status,
-        server_version: serverVersionRef.current,
+        content, title, status, server_version: serverVersionRef.current,
       });
       serverVersionRef.current = result.serverVersion;
       setAutosaveStatus("saved");
@@ -250,24 +217,17 @@ export default function Workspace({ docId }: WorkspaceProps) {
     scheduleAutosave(content, newTitle, status);
   }
 
-  // Section operations
+  // ── Section operations ────────────────────────────────────────────────────
+
   function addSection() {
     const sorted = [...content.sections].sort((a, b) => a.order - b.order);
     const newSection: BuilderSection = {
-      id: crypto.randomUUID(),
-      title: "",
-      order: sorted.length,
-      blocks: [],
+      id: crypto.randomUUID(), title: "", order: sorted.length, blocks: [],
     };
-    const newContent = { sections: [...content.sections, newSection] };
-    handleContentChange(newContent);
-    // Scroll to new section after DOM update
+    handleContentChange({ sections: [...content.sections, newSection] });
     setTimeout(() => {
       const el = document.getElementById(`section-${newSection.id}`);
       el?.scrollIntoView({ behavior: "smooth", block: "center" });
-      // Focus the section title input
-      const titleInput = el?.querySelector("input[type=text]") as HTMLInputElement;
-      titleInput?.focus();
     }, 80);
   }
 
@@ -282,6 +242,7 @@ export default function Workspace({ docId }: WorkspaceProps) {
       .filter((s) => s.id !== sectionId)
       .map((s, i) => ({ ...s, order: i }));
     handleContentChange({ sections: remaining });
+    if (selectedSectionId === sectionId) { setSelectedSectionId(null); setSelectedBlockId(null); }
   }
 
   function moveSection(sectionId: string, direction: "up" | "down") {
@@ -297,6 +258,74 @@ export default function Workspace({ docId }: WorkspaceProps) {
     });
     handleContentChange({ sections: reordered });
   }
+
+  function updateSectionTitle(sectionId: string, newTitle: string) {
+    const section = content.sections.find((s) => s.id === sectionId);
+    if (!section) return;
+    updateSection(sectionId, { ...section, title: newTitle });
+  }
+
+  // ── Block operations ──────────────────────────────────────────────────────
+
+  function addBlock(sectionId: string, type: KnownBlockType) {
+    const section = content.sections.find((s) => s.id === sectionId);
+    if (!section) return;
+    const maxOrder = section.blocks.length > 0 ? Math.max(...section.blocks.map((b) => b.order)) : -1;
+    const newBlock: BuilderBlock = {
+      id: crypto.randomUUID(), type, order: maxOrder + 1, payload: getDefaultPayload(type),
+    };
+    const updated = { ...section, blocks: [...section.blocks, newBlock] };
+    updateSection(sectionId, updated);
+    setSelectedSectionId(sectionId);
+    setSelectedBlockId(newBlock.id);
+    setActiveTab("edit");
+  }
+
+  function updateBlock(sectionId: string, blockId: string, payload: Record<string, unknown>) {
+    const section = content.sections.find((s) => s.id === sectionId);
+    if (!section) return;
+    const updated = {
+      ...section,
+      blocks: section.blocks.map((b) => (b.id === blockId ? { ...b, payload } : b)),
+    };
+    updateSection(sectionId, updated);
+  }
+
+  function deleteBlock(sectionId: string, blockId: string) {
+    const section = content.sections.find((s) => s.id === sectionId);
+    if (!section) return;
+    const remaining = section.blocks
+      .filter((b) => b.id !== blockId)
+      .map((b, i) => ({ ...b, order: i }));
+    updateSection(sectionId, { ...section, blocks: remaining });
+    if (selectedBlockId === blockId) { setSelectedBlockId(null); }
+  }
+
+  function moveBlock(sectionId: string, blockId: string, direction: "up" | "down") {
+    const section = content.sections.find((s) => s.id === sectionId);
+    if (!section) return;
+    const sorted = [...section.blocks].sort((a, b) => a.order - b.order);
+    const idx = sorted.findIndex((b) => b.id === blockId);
+    if (idx === -1) return;
+    const targetIdx = direction === "up" ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= sorted.length) return;
+    const reordered = sorted.map((b, i) => {
+      if (i === idx) return { ...sorted[targetIdx], order: i };
+      if (i === targetIdx) return { ...sorted[idx], order: i };
+      return { ...b, order: i };
+    });
+    updateSection(sectionId, { ...section, blocks: reordered });
+  }
+
+  // ── Block selection (from preview click) ─────────────────────────────────
+
+  function handleBlockSelect(sectionId: string, blockId: string) {
+    setSelectedSectionId(sectionId);
+    setSelectedBlockId(blockId);
+    setActiveTab("edit");
+  }
+
+  // ── Misc ──────────────────────────────────────────────────────────────────
 
   async function handleArchive() {
     setShowArchiveConfirm(false);
@@ -353,7 +382,26 @@ export default function Workspace({ docId }: WorkspaceProps) {
     el?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  // Loading & error states
+  // ── Derived: selected block ───────────────────────────────────────────────
+
+  const selectedSection = selectedSectionId
+    ? content.sections.find((s) => s.id === selectedSectionId) ?? null
+    : null;
+
+  const selectedBlock = selectedSection && selectedBlockId
+    ? selectedSection.blocks.find((b) => b.id === selectedBlockId) ?? null
+    : null;
+
+  const selectedBlockSorted = selectedSection
+    ? [...selectedSection.blocks].sort((a, b) => a.order - b.order)
+    : [];
+
+  const selectedBlockIdx = selectedBlock
+    ? selectedBlockSorted.findIndex((b) => b.id === selectedBlockId)
+    : -1;
+
+  // ── Loading / error ───────────────────────────────────────────────────────
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -367,17 +415,14 @@ export default function Workspace({ docId }: WorkspaceProps) {
       <div className="max-w-xl mx-auto px-4 py-16 text-center">
         <AlertCircle className="w-10 h-10 text-destructive mx-auto mb-4" />
         <p className="text-foreground font-medium mb-2">{error}</p>
-        <button
-          onClick={() => navigate("/builder")}
-          className="text-sm text-muted-foreground hover:text-foreground underline"
-        >
+        <button onClick={() => navigate("/builder")} className="text-sm text-muted-foreground hover:text-foreground underline">
           Back to Builder
         </button>
       </div>
     );
   }
 
-  const sortedSections = [...content.sections].sort((a, b) => a.order - b.order);
+  // ── Render ────────────────────────────────────────────────────────────────
 
   return (
     <div className="min-h-screen bg-background">
@@ -389,20 +434,16 @@ export default function Workspace({ docId }: WorkspaceProps) {
               <AlertCircle className="w-4 h-4 shrink-0" />
               This document was modified in another session. Reload to continue editing.
             </div>
-            <button
-              onClick={() => window.location.reload()}
-              className="flex items-center gap-1.5 text-sm font-medium text-amber-900 dark:text-amber-200 hover:text-amber-700 shrink-0"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-              Reload
+            <button onClick={() => window.location.reload()} className="flex items-center gap-1.5 text-sm font-medium text-amber-900 dark:text-amber-200 hover:text-amber-700 shrink-0">
+              <RefreshCw className="w-3.5 h-3.5" /> Reload
             </button>
           </div>
         </div>
       )}
 
-      {/* Workspace command bar — sticky top-16, sticks below the 4rem navbar */}
+      {/* Command bar */}
       <div className="sticky top-16 z-20 border-b border-border/70 bg-background/98 backdrop-blur-sm shadow-sm">
-        <div className="max-w-5xl mx-auto px-4 py-2.5 flex items-center gap-3">
+        <div className="px-4 py-2.5 flex items-center gap-3">
           <button
             onClick={() => navigate("/builder")}
             className="shrink-0 p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
@@ -434,19 +475,11 @@ export default function Workspace({ docId }: WorkspaceProps) {
                   : "text-muted-foreground hover:text-foreground hover:bg-secondary border border-transparent"
               } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
-              {autosaveStatus === "saving" ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <Save className="w-3.5 h-3.5" />
-              )}
+              {autosaveStatus === "saving" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
               Save
             </button>
 
-            {/* Draft/Final toggle — deferred to Slice 3 (requires snapshot pipeline). Static label only. */}
-            <span
-              className="px-3 py-1 text-xs font-semibold rounded-full border bg-secondary text-muted-foreground border-border select-none"
-              title="Status changes are available in a future update"
-            >
+            <span className="px-3 py-1 text-xs font-semibold rounded-full border bg-secondary text-muted-foreground border-border select-none" title="Status changes are available in a future update">
               Draft
             </span>
 
@@ -456,98 +489,122 @@ export default function Workspace({ docId }: WorkspaceProps) {
               </span>
             )}
 
-            <button
-              onClick={handleDownload}
-              title="Download as .txt"
-              className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-            >
-              <Download className="w-4 h-4" />
-            </button>
-
-            <button
-              onClick={() => setShowArchiveConfirm(true)}
-              title="Archive document"
-              className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-            >
+            <button onClick={() => setShowArchiveConfirm(true)} title="Archive document" className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors">
               <Archive className="w-4 h-4" />
             </button>
           </div>
         </div>
       </div>
 
-      {/* Body — split-screen on lg+, single column below */}
-      <div className="flex">
+      {/* Body — split on lg+ */}
+      <div className="flex" style={{ height: "calc(100vh - 7.5rem)" }}>
 
-        {/* ── LEFT PANE: live document preview (desktop only) ─────────────── */}
-        <div className="hidden lg:block w-[55%] shrink-0">
-          <div
-            className="sticky overflow-y-auto bg-neutral-100 dark:bg-zinc-900/70 border-r border-border"
-            style={{ top: "7.5rem", height: "calc(100vh - 7.5rem)" }}
-          >
-            {/* Stage with centred white page — US Letter proportions */}
-            <div className="py-10 px-8 flex justify-center min-h-full">
-              <div
-                className="w-full max-w-[720px] bg-white rounded-[2px] shadow-md"
-                style={{ minHeight: "932px", padding: "72px 64px 96px" }}
-              >
-                <BuilderPagePreview content={content} title={title} />
-              </div>
+        {/* LEFT: white page preview */}
+        <div className="hidden lg:block w-[58%] shrink-0 overflow-y-auto bg-neutral-100 dark:bg-zinc-900/70 border-r border-border">
+          <div className="py-10 px-8 flex justify-center min-h-full">
+            <div
+              className="w-full max-w-[720px] bg-white rounded-[2px] shadow-md"
+              style={{ minHeight: "932px", padding: "72px 64px 96px" }}
+            >
+              <BuilderPagePreview
+                content={content}
+                title={title}
+                selectedBlockId={selectedBlockId}
+                onBlockSelect={handleBlockSelect}
+              />
             </div>
           </div>
         </div>
 
-        {/* ── RIGHT PANE: editor controls ──────────────────────────────────── */}
-        <div className="flex-1 min-w-0 flex">
+        {/* RIGHT: tabbed panel */}
+        <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
+          {/* Tab bar */}
+          <div className="flex border-b border-border/70 bg-background/95 shrink-0">
+            {TABS.map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                onClick={() => setActiveTab(id)}
+                className={`flex items-center gap-1.5 px-3 py-2.5 text-xs font-medium transition-colors border-b-2 -mb-px ${
+                  activeTab === id
+                    ? "border-primary text-primary"
+                    : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5 shrink-0" />
+                <span className="hidden sm:inline">{label}</span>
+              </button>
+            ))}
+          </div>
 
-          {/* Section nav — shown on lg+ in split mode, sits beside editor */}
-          <SectionNav
-            sections={content.sections}
-            activeId={activeSectionId}
-            onSelect={scrollToSection}
-          />
+          {/* Tab content */}
+          <div className="flex-1 overflow-hidden">
+            {activeTab === "guide" && (
+              <AiGuidePanel selectedBlock={selectedBlock} />
+            )}
 
-          <div data-testid="editor-content" className="flex-1 min-w-0">
-          <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
-            {sortedSections.length === 0 && (
-              <div className="rounded-2xl border-2 border-dashed border-border py-20 text-center">
-                <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mx-auto mb-4">
-                  <Plus className="w-5 h-5 text-muted-foreground/60" />
-                </div>
-                <h3 className="font-medium text-foreground mb-1">No sections yet</h3>
-                <p className="text-sm text-muted-foreground mb-5">
-                  Add your first section to start building your document.
-                </p>
-                <button
-                  onClick={addSection}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors"
-                >
-                  <Plus className="w-4 h-4" /> Add first section
-                </button>
+            {activeTab === "outline" && (
+              <OutlinePanel
+                sections={content.sections}
+                activeSectionId={activeSectionId}
+                selectedBlockId={selectedBlockId}
+                onSectionClick={(sectionId) => { scrollToSection(sectionId); }}
+                onAddSection={addSection}
+                onMoveSection={moveSection}
+                onDeleteSection={deleteSection}
+                onUpdateSectionTitle={updateSectionTitle}
+                onAddBlock={addBlock}
+                onSelectBlock={(sectionId, blockId) => { setSelectedSectionId(sectionId); setSelectedBlockId(blockId); setActiveTab("edit"); }}
+                onDeleteBlock={deleteBlock}
+              />
+            )}
+
+            {activeTab === "edit" && (
+              <div className="flex flex-col h-full overflow-y-auto">
+                {!selectedBlock || !selectedSection ? (
+                  <div className="flex flex-col items-center justify-center h-full px-6 py-12 text-center">
+                    <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mb-4">
+                      <Pencil className="w-5 h-5 text-muted-foreground/60" />
+                    </div>
+                    <p className="text-sm font-medium text-foreground mb-1">No block selected</p>
+                    <p className="text-xs text-muted-foreground">
+                      Click any block on the document page, or use the Outline tab to add and select a block.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="px-4 py-4 space-y-3">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                        Editing: {BLOCK_TYPE_LABELS[selectedBlock.type as keyof typeof BLOCK_TYPE_LABELS] ?? selectedBlock.type}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground/40">in "{selectedSection.title || "Untitled section"}"</span>
+                    </div>
+                    <BlockEditor
+                      block={selectedBlock}
+                      isFirst={selectedBlockIdx === 0}
+                      isLast={selectedBlockIdx === selectedBlockSorted.length - 1}
+                      onChange={(payload) => updateBlock(selectedSectionId!, selectedBlockId!, payload)}
+                      onMoveUp={() => moveBlock(selectedSectionId!, selectedBlockId!, "up")}
+                      onMoveDown={() => moveBlock(selectedSectionId!, selectedBlockId!, "down")}
+                      onDelete={() => { deleteBlock(selectedSectionId!, selectedBlockId!); }}
+                    />
+                    <button
+                      onClick={() => { setSelectedBlockId(null); setSelectedSectionId(null); }}
+                      className="text-xs text-muted-foreground hover:text-foreground underline transition-colors"
+                    >
+                      Deselect block
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
-            {sortedSections.map((section, i) => (
-              <SectionEditor
-                key={section.id}
-                section={section}
-                isFirst={i === 0}
-                isLast={i === sortedSections.length - 1}
-                onChange={(updated) => updateSection(section.id, updated)}
-                onMoveUp={() => moveSection(section.id, "up")}
-                onMoveDown={() => moveSection(section.id, "down")}
-                onDelete={() => deleteSection(section.id)}
-              />
-            ))}
-
-            {sortedSections.length > 0 && (
-              <button
-                onClick={addSection}
-                className="w-full flex items-center justify-center gap-2 py-3.5 border-2 border-dashed border-border hover:border-primary/40 rounded-xl text-muted-foreground hover:text-primary transition-colors text-sm font-medium"
-              >
-                <Plus className="w-4 h-4" /> Add section
-              </button>
+            {activeTab === "style" && (
+              <StylePanel branding={branding} onChange={setBranding} />
             )}
-          </div>
+
+            {activeTab === "export" && (
+              <ExportPanel onDownloadTxt={handleDownload} documentTitle={title} />
+            )}
           </div>
         </div>
       </div>
@@ -564,16 +621,10 @@ export default function Workspace({ docId }: WorkspaceProps) {
               The document will be removed from your active list. This cannot be undone in this version.
             </p>
             <div className="flex gap-2 justify-end">
-              <button
-                onClick={() => setShowArchiveConfirm(false)}
-                className="px-4 py-2 text-sm rounded-lg border border-border text-muted-foreground hover:text-foreground transition-colors"
-              >
+              <button onClick={() => setShowArchiveConfirm(false)} className="px-4 py-2 text-sm rounded-lg border border-border text-muted-foreground hover:text-foreground transition-colors">
                 Cancel
               </button>
-              <button
-                onClick={handleArchive}
-                className="px-4 py-2 text-sm rounded-lg bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors font-medium"
-              >
+              <button onClick={handleArchive} className="px-4 py-2 text-sm rounded-lg bg-destructive text-destructive-foreground font-medium hover:bg-destructive/90 transition-colors">
                 Archive
               </button>
             </div>

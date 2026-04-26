@@ -1,0 +1,93 @@
+PlainPath Navigation Cleanup — Move Document Builder Into Tools
+
+Goal:
+Remove Document Builder as a standalone top navigation item and make it part of the normal PlainPath tools experience.
+
+Product decision:
+Document Builder is becoming a 9th PlainPath tool.
+It should appear with the other tools, not as a separate top-nav item.
+
+Do not redesign Document Builder.
+Do not change the builder workspace.
+Do not change Build a Contract.
+Do not touch API/auth/database/migrations/Stripe.
+
+Required changes:
+
+1. Remove standalone top-nav link
+- Remove “Document Builder” from the main top navigation bar as its own link.
+- Do not delete /builder.
+- Do not delete builder code.
+- Do not remove access to the tool.
+
+2. Add Document Builder to Tools dropdown
+Add Document Builder to the Tools dropdown with:
+Name:
+Document Builder
+
+Description:
+Create SOPs, manuals, policies, onboarding guides, checklists, and internal business documents.
+
+Route:
+Use the existing builder route, likely /builder.
+
+Icon:
+Use a document/layout/editor-style icon consistent with the current visual system.
+
+3. Add Document Builder to authenticated dashboard tool grid
+Add it as a normal tool card with the other tools.
+
+Card title:
+Document Builder
+
+Card description:
+Create SOPs, manuals, policies, onboarding guides, checklists, and internal business documents.
+
+It should visually match the other tool cards.
+
+4. Update count language in authenticated app only
+Where the authenticated app says “8 tools,” update to “9 tools” if that text is inside the app dashboard/nav/tool list.
+
+Do not update marketing homepage pricing or public claim copy yet unless the changed text is directly wrong inside the app.
+Marketing can be updated in a separate pass after the builder is fully approved.
+
+5. Preserve Build a Contract distinction
+Build a Contract remains separate and contract-specific.
+Document Builder is for SOPs/manuals/policies/checklists/internal docs.
+Do not merge them.
+
+6. Feature flag/admin check
+If Document Builder is currently behind BUILDER_ENABLED, confirm whether we are intentionally making it visible now.
+If it remains feature-flagged, update the flag behavior consistently:
+- Admin can see it
+- Normal users only see it if enabled
+If the product decision is to make it live, set visibility consistently through the existing config only. Do not create a new flag system.
+
+7. Stability
+- No API changes
+- No DB changes
+- No auth changes
+- No Stripe changes
+- No migrations
+- No marketing changes unless unavoidable
+- No changes to the other 8 tools
+- No layout redesigns
+
+Verification:
+1. Top nav no longer shows standalone “Document Builder.”
+2. Tools dropdown includes Document Builder.
+3. Dashboard tool grid includes Document Builder as a normal tool.
+4. Build a Contract is still visible and unchanged.
+5. Clicking Document Builder opens /builder.
+6. Clicking Build a Contract still opens the contract builder route.
+7. No other tools changed.
+8. No new TypeScript/runtime errors.
+
+Return only:
+A. Files changed
+B. Top-nav result
+C. Tools dropdown result
+D. Dashboard card result
+E. Tool count result
+F. Build a Contract unchanged confirmation
+G. Safe checkpoint: Yes/No

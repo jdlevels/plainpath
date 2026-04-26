@@ -4,9 +4,16 @@ import type { BuilderContent, BuilderSection, BuilderBlock } from "@/lib/builder
 interface Props {
   content: BuilderContent;
   title: string;
+  selectedBlockId?: string | null;
+  onBlockSelect?: (sectionId: string, blockId: string) => void;
 }
 
-export const BuilderPagePreview = React.memo(function BuilderPagePreview({ content, title }: Props) {
+export const BuilderPagePreview = React.memo(function BuilderPagePreview({
+  content,
+  title,
+  selectedBlockId,
+  onBlockSelect,
+}: Props) {
   const sections = [...content.sections].sort((a, b) => a.order - b.order);
 
   return (
@@ -29,13 +36,26 @@ export const BuilderPagePreview = React.memo(function BuilderPagePreview({ conte
       )}
 
       {sections.map((section) => (
-        <PreviewSection key={section.id} section={section} />
+        <PreviewSection
+          key={section.id}
+          section={section}
+          selectedBlockId={selectedBlockId ?? null}
+          onBlockSelect={onBlockSelect ?? null}
+        />
       ))}
     </div>
   );
 });
 
-function PreviewSection({ section }: { section: BuilderSection }) {
+function PreviewSection({
+  section,
+  selectedBlockId,
+  onBlockSelect,
+}: {
+  section: BuilderSection;
+  selectedBlockId: string | null;
+  onBlockSelect: ((sectionId: string, blockId: string) => void) | null;
+}) {
   const blocks = [...section.blocks].sort((a, b) => a.order - b.order);
   const hasContent = blocks.some((b) => hasVisibleContent(b));
 
@@ -51,9 +71,30 @@ function PreviewSection({ section }: { section: BuilderSection }) {
       )}
       {hasContent ? (
         <div className="space-y-3">
-          {blocks.map((block) => (
-            <PreviewBlock key={block.id} block={block} />
-          ))}
+          {blocks.map((block) => {
+            const isSelected = selectedBlockId === block.id;
+            const isClickable = !!onBlockSelect;
+            return (
+              <div
+                key={block.id}
+                onClick={isClickable ? () => onBlockSelect!(section.id, block.id) : undefined}
+                className={[
+                  "rounded transition-all",
+                  isClickable ? "cursor-pointer" : "",
+                  isSelected
+                    ? "ring-2 ring-blue-500 ring-offset-2 bg-blue-50/40"
+                    : isClickable
+                    ? "hover:ring-1 hover:ring-blue-300 hover:ring-offset-1"
+                    : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                title={isClickable ? "Click to edit this block" : undefined}
+              >
+                <PreviewBlock block={block} />
+              </div>
+            );
+          })}
         </div>
       ) : (
         section.title && <div className="h-2" />

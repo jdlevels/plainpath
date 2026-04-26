@@ -1,0 +1,162 @@
+Proceed with Document Builder Phase 1 only.
+
+Scope:
+Build the safe first slice from the approved plan:
+Right Panel Upgrade + Click-to-Select + AI Guide Stub + Style Tab + Export Tab.
+
+Do not build Phase 2, Phase 3, or Phase 4 yet.
+
+Product decision:
+Document Builder is now intended to become a premium 9th PlainPath tool, separate from Build a Contract.
+
+Do not touch:
+- Build a Contract
+- Analyze
+- Trust Check
+- Contract Review
+- Redact
+- Ask This Document
+- Clause Extractor
+- Compare Versions
+- API routes
+- Auth
+- Database
+- Migrations
+- Stripe
+- Marketing
+- Digital Signature
+- Dropbox Sign
+
+Allowed scope:
+- pages/Builder/Workspace.tsx
+- components/builder/BuilderPagePreview.tsx
+- new builder-only right-panel components:
+  - AiGuidePanel.tsx
+  - OutlinePanel.tsx
+  - StylePanel.tsx
+  - ExportPanel.tsx
+
+Phase 1 requirements:
+
+1. Replace the current right-side editing stack with a premium tabbed panel:
+- Guide
+- Outline
+- Edit
+- Style
+- Export
+
+2. Keep the left live document preview:
+- white document page on dark workspace
+- controlled page width
+- existing document rendering preserved
+- do not break preview rendering
+
+3. Add click-to-select behavior:
+- User can click a block in the left preview
+- Selected block shows a visible ring/highlight
+- The Edit tab opens the existing BlockEditor for that selected block
+- If no block is selected, show a clean empty state:
+  “Select a block on the page or choose a section from the outline.”
+
+4. AI Guide tab:
+Render action buttons only. No real AI calls yet.
+Buttons:
+- Elaborate
+- Formalize
+- Correct spelling
+- Simplify
+- Shorten
+- Expand
+- Make professional
+- Turn into checklist
+- Turn into table
+- Add missing details
+- Create next section
+
+For now, each button should show a clear disabled/coming-soon state:
+“AI Guide actions are coming soon.”
+Do not fake AI output.
+Do not call any API.
+
+5. Outline tab:
+Use existing section navigation logic.
+Show:
+- document title
+- sections list
+- active section
+- add section
+- move section up/down if existing logic supports it
+- delete section if existing logic supports it
+Do not add drag/drop tonight.
+
+6. Edit tab:
+Use the existing SectionEditor / BlockEditor logic.
+Do not rewrite block editing from scratch.
+Preserve all existing block types.
+
+7. Style tab:
+Add local-only style controls:
+- company name
+- brand color
+- header style
+- footer text
+- logo upload placeholder / Coming Soon
+
+Important:
+Do not implement object storage.
+Do not persist logo files.
+Do not add database fields.
+If a logo button is shown, it must be disabled or labeled Coming Soon.
+
+8. Export tab:
+Show current working .txt download.
+Show PDF and DOCX as “Export coming soon” unless already truly working.
+Do not claim PDF/DOCX works if it does not.
+Do not break the existing .txt export.
+
+9. Stability:
+- Do not change builderApi.ts
+- Do not change builderTypes.ts unless absolutely necessary
+- Do not change autosave behavior
+- Do not reset draft on tab switch
+- All new buttons must use type="button"
+- No runtime crash
+- No blank screen
+
+10. Visual standard:
+The builder should feel consistent with PlainPath’s approved split workspace:
+- left document stage
+- right structured intelligence/editor panel
+- dark premium UI
+- clean borders
+- no large unused right-side gaps
+- no prototype-looking controls
+
+Verification:
+1. Open /builder.
+2. Open an existing draft.
+3. Confirm left preview still renders.
+4. Click a block on the left page.
+5. Confirm selected block is highlighted.
+6. Confirm Edit tab shows the selected block editor.
+7. Switch Guide / Outline / Edit / Style / Export tabs.
+8. Confirm no draft reset.
+9. Confirm existing save/autosave behavior still works.
+10. Confirm .txt export still works if it worked before.
+11. Confirm PDF/DOCX are not falsely labeled as working.
+12. Confirm no API/auth/database/migration/Stripe/marketing changes.
+13. Confirm Build a Contract is unchanged.
+14. Confirm the other 8 tools are unchanged.
+15. Confirm no new TypeScript/runtime errors.
+
+Return only:
+A. Files changed
+B. Phase 1 features completed
+C. Click-to-select behavior
+D. AI Guide stub behavior
+E. Style/logo behavior
+F. Export behavior
+G. Save/autosave behavior
+H. Build a Contract unchanged confirmation
+I. Other 8 tools unchanged confirmation
+J. Safe checkpoint: Yes/No
