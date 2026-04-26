@@ -1,0 +1,201 @@
+PlainPath Document Builder — Phase 4 Real AI Writing Actions
+
+Goal:
+Activate the AI Guide actions inside Document Builder so users can improve selected document blocks quickly.
+
+Important:
+Phase 1, Phase 2, and Phase 3 are locked.
+Do not rebuild them.
+
+Product decision:
+Document Builder is a premium 9th PlainPath tool for SOPs, manuals, policies, onboarding guides, checklists, incident reports, training manuals, process guides, safety manuals, and internal business documents.
+
+Build a Contract remains separate and must not be changed.
+
+Do not touch:
+- Build a Contract
+- Analyze
+- Trust Check
+- Contract Review
+- Redact
+- Ask This Document
+- Clause Extractor
+- Compare Versions
+- Marketing
+- Stripe
+- Database schema
+- Migrations
+- Digital Signature
+- Dropbox Sign
+
+Allowed scope:
+- Document Builder AI Guide component
+- Builder workspace state handlers
+- Builder-only AI utility or API route if needed
+- Existing AI server utility only if the app already has one
+- No new database schema
+
+First inspect:
+1. Existing AI API patterns in the app
+2. Existing server-side AI utilities
+3. Existing auth pattern for protected AI calls
+4. Existing builder content/block types
+5. Current AiGuidePanel props and Workspace block update handlers
+
+Use existing patterns only.
+Do not invent a new AI architecture if one already exists.
+
+Phase 4 requirements:
+
+1. Selected block requirement
+AI actions should require a selected block first.
+
+If no block is selected, show:
+“Select a block in the document preview or Outline before using AI actions.”
+
+2. Supported actions
+Enable these actions:
+
+- Elaborate
+- Formalize
+- Correct spelling
+- Simplify
+- Shorten
+- Expand
+- Make professional
+- Turn into checklist
+- Turn into table
+- Add missing details
+- Create next section
+
+3. Safe AI behavior
+AI should work on the selected block or selected section only.
+
+Do not rewrite the entire document unless the user explicitly chooses a future whole-document action.
+
+4. Preview-before-apply flow
+Do not automatically overwrite the document.
+
+When AI returns output, show a preview card with:
+- Original text
+- Suggested replacement
+- Apply button
+- Cancel button
+- Copy suggestion button
+
+Only update the document when the user clicks Apply.
+
+5. Block-aware output
+Respect block type:
+
+Paragraph block:
+- Return improved paragraph text.
+
+Heading block:
+- Return improved heading text.
+
+Checklist block:
+- Return checklist items when action is checklist-related.
+
+Table block:
+- Return table rows/columns only if safe.
+- If table transformation is too complex, show a safe message:
+  “Table editing support is coming soon.”
+
+Turn into checklist:
+- Convert selected paragraph/list into checklist block if supported by existing block types.
+- If conversion is risky, return checklist text preview first.
+
+Turn into table:
+- Convert selected content into a table only if existing table block supports it safely.
+- Otherwise show preview text and label table conversion as Coming Soon.
+
+Create next section:
+- Generate a proposed next section title and starter content based on the current document type and existing sections.
+- Show preview before adding.
+
+6. Context awareness
+The AI call should include:
+- document type/category
+- document title
+- selected section title
+- selected block type
+- selected block content
+- nearby section context if safe
+- user-selected action
+
+Do not send unnecessary full document content if not needed.
+
+7. Loading and error states
+Each AI action needs:
+- loading state
+- disabled state while running
+- clear error message
+- retry option
+- no document reset on failure
+
+8. Security/auth
+Use the same auth pattern as other protected AI calls.
+Do not remove authentication gates.
+Do not expose secret keys to the frontend.
+
+9. Rate/abuse safety
+If existing rate limiting exists, use it.
+If not, do not build a large new rate-limit system tonight, but keep the API server-side and authenticated.
+
+10. Save behavior
+Applying an AI suggestion should mark the draft unsaved and trigger existing save/autosave behavior.
+Do not bypass existing save logic.
+
+11. No fake AI
+If the real AI backend is unavailable, keep the buttons disabled and report what is missing.
+Do not fake production output.
+
+12. Stability
+- No DB schema changes
+- No migrations
+- No Stripe changes
+- No marketing changes
+- No unrelated tool changes
+- All new buttons type="button"
+- No runtime crash
+- No blank screen
+- Existing drafts still open
+- Phase 2 guided templates still work
+- Phase 3 branding still works
+
+Verification:
+1. Open Document Builder.
+2. Select a paragraph block.
+3. Run Correct spelling.
+4. Confirm loading state appears.
+5. Confirm AI suggestion preview appears.
+6. Click Cancel and confirm document unchanged.
+7. Run Formalize.
+8. Click Apply and confirm selected block updates.
+9. Confirm draft becomes unsaved/saves through existing flow.
+10. Select a heading block and run Make professional.
+11. Select paragraph and run Turn into checklist.
+12. Confirm output is safe and block-aware.
+13. Test Create next section.
+14. Confirm no draft reset on failure.
+15. Confirm Style tab still works.
+16. Confirm Export tab still works.
+17. Confirm Build a Contract unchanged.
+18. Confirm other 8 tools unchanged.
+19. Confirm no DB/auth/Stripe/migration/marketing changes.
+20. Confirm no new TypeScript/runtime errors in changed files.
+
+Return only:
+A. Files changed
+B. AI backend pattern used
+C. AI actions enabled
+D. Preview-before-apply behavior
+E. Block update behavior
+F. Error/loading behavior
+G. Save/autosave behavior
+H. Phase 2 templates preserved confirmation
+I. Phase 3 branding preserved confirmation
+J. Build a Contract unchanged confirmation
+K. Other 8 tools unchanged confirmation
+L. Safe checkpoint: Yes/No
