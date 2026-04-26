@@ -1,0 +1,95 @@
+PlainPath Native Launch Prep — Remove Native External Purchase Link + Final Reviewer Account Checklist
+
+Goal:
+Reduce Apple/Google rejection risk before app-store submission.
+
+Do not add features.
+Do not redesign.
+Do not change Stripe.
+Do not change auth.
+Do not change database schema.
+Do not create migrations.
+Do not change pricing.
+Do not change active tools.
+Do not touch web Stripe checkout behavior.
+
+Fix only the native pricing fallback issue and verify reviewer-account requirements.
+
+1. Native payment/link safety
+Find every native-only payment/pricing fallback using isNative() or NativePricingMessage.
+
+Remove any tappable external purchase link from native app surfaces:
+- “View plans at plainpathapp.com”
+- “Manage subscription on web” if clickable
+- Any button/link that opens plainpathapp.com for purchase
+- Any Stripe checkout trigger
+- Any pricing card CTA inside native app
+
+Replace with static non-clickable copy only:
+
+“Subscription management is handled on the PlainPath website.”
+
+Rules:
+- No clickable external purchase link in native.
+- No Stripe checkout inside native.
+- No plan cards inside native.
+- No purchase CTA inside native.
+- Web app behavior must remain unchanged.
+
+2. Check affected surfaces
+Verify native-safe behavior on:
+- /subscribe page
+- PricingSection component
+- UpgradeModal / LockedGate flow
+- Billing page if applicable
+- Any “upgrade” or “pricing” button inside the native wrapper
+
+3. Web behavior preservation
+Confirm web still has:
+- Stripe checkout
+- Pricing cards
+- Subscribe / success / cancel routes
+- Upgrade buttons
+- Paywall behavior
+
+4. Reviewer account checklist
+Do not create the account in code.
+Return the exact reviewer-account setup instructions:
+
+Required reviewer account:
+- Email
+- Password
+- Full Pro or Admin access
+- Access to all 9 tools
+- No payment required for review
+- Works from fresh/incognito login
+
+5. App Review notes draft
+Prepare reviewer note text:
+
+“PlainPath requires sign-in to access document tools. Use the test account below. This account has full access to all 9 active tools. No payment is required for review. To test, sign in, open the dashboard, choose any tool, and upload or paste a sample document. The native app does not process purchases. Subscriptions are managed outside the native app.”
+
+6. Confirm active tools
+Confirm exactly 9 tools remain:
+1. Analyze a Document
+2. Document Trust Check
+3. Build a Contract
+4. Contract Review
+5. Redact Sensitive Info
+6. Ask This Document
+7. Clause Extractor
+8. Compare Versions
+9. Document Builder
+
+7. Final result
+Return only:
+A. Files changed
+B. Native external purchase link status
+C. Web Stripe behavior status
+D. UpgradeModal / LockedGate status
+E. Reviewer account checklist
+F. App Review notes draft
+G. Active 9-tool confirmation
+H. Safe to publish web: Yes/No
+I. Safe to continue app-store prep: Yes/No
+J. Safe to submit Apple/Google today: Yes/No

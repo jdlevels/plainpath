@@ -1,4 +1,4 @@
-import { Check, Sparkles, ExternalLink, Calculator, ChevronDown } from "lucide-react"
+import { Check, Sparkles, Calculator, ChevronDown } from "lucide-react"
 import { useState } from "react"
 import { PRICING_PLANS, type PricingPlan } from "@/data/pricingData"
 import { startStripeCheckout } from "@/lib/stripe"
@@ -97,19 +97,7 @@ function NativePricingMessage() {
           Manage your subscription
         </h2>
         <p className="mt-4 text-base leading-7 text-slate-600 dark:text-slate-300">
-          To view plans, subscribe, or manage your existing subscription, visit PlainPath on the web.
-        </p>
-        <a
-          href="https://plainpathapp.com/app/#pricing"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-8 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
-        >
-          View plans at plainpathapp.com
-          <ExternalLink className="h-4 w-4" />
-        </a>
-        <p className="mt-4 text-xs text-slate-500 dark:text-slate-400">
-          Subscriptions are managed on the web and are not available for purchase in the app.
+          Subscription management is handled on the PlainPath website.
         </p>
       </div>
     </section>
