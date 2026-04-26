@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react"
 import { Send, Bot, User, Loader2, MessageSquare, ArrowRight } from "lucide-react"
+import { useAuth } from "@clerk/react"
 import { Button } from "@/components/ui/button"
 import { getApiBaseUrl } from "@/lib/api"
 import type { DocumentAnalysis } from "@workspace/api-client-react"
@@ -14,6 +15,7 @@ interface DocumentChatProps {
 }
 
 export function DocumentChat({ analysis }: DocumentChatProps) {
+  const { getToken } = useAuth()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
@@ -42,9 +44,12 @@ export function DocumentChat({ analysis }: DocumentChatProps) {
 
   async function fetchInitialSuggestions() {
     try {
+      const token = await getToken().catch(() => null)
+      const headers: Record<string, string> = { "Content-Type": "application/json" }
+      if (token) headers["Authorization"] = `Bearer ${token}`
       const res = await fetch(`${getApiBaseUrl()}/api/documents/chat`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         credentials: "include",
         body: JSON.stringify({ analysisContext, message: "Hello", history: [] }),
       })
@@ -75,9 +80,12 @@ export function DocumentChat({ analysis }: DocumentChatProps) {
     setError(null)
 
     try {
+      const token = await getToken().catch(() => null)
+      const headers: Record<string, string> = { "Content-Type": "application/json" }
+      if (token) headers["Authorization"] = `Bearer ${token}`
       const res = await fetch(`${getApiBaseUrl()}/api/documents/chat`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         credentials: "include",
         body: JSON.stringify({
           analysisContext,
@@ -87,8 +95,10 @@ export function DocumentChat({ analysis }: DocumentChatProps) {
       })
 
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        throw new Error((data as any).message ?? "Something went wrong. Please try again.")
+        const ct = res.headers.get("content-type") ?? ""
+        const data = ct.includes("application/json") ? await res.json().catch(() => ({})) : {}
+        if (res.status === 401) throw new Error("PlainPath could not answer that question. Please try again or paste the document text manually.")
+        throw new Error((data as any).message ?? "PlainPath could not answer that question. Please try again or paste the document text manually.")
       }
 
       const data = await res.json()
@@ -97,7 +107,7 @@ export function DocumentChat({ analysis }: DocumentChatProps) {
         setSuggestedQuestions(data.suggestedQuestions)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to get a response. Please try again.")
+      setError(err instanceof Error ? err.message : "PlainPath could not answer that question. Please try again or paste the document text manually.")
     } finally {
       setLoading(false)
       setTimeout(() => inputRef.current?.focus(), 50)

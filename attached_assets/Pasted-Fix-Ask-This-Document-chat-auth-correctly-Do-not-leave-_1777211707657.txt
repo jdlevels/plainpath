@@ -1,0 +1,61 @@
+Fix Ask This Document chat auth correctly. Do not leave /api/documents/chat unauthenticated.
+
+Current concern:
+The last fix removed the hard auth gate from /api/documents/chat because Clerk cookies were not being forwarded cross-subdomain in production. That may make chat work, but it makes the chat endpoint publicly callable and is not production-safe.
+
+Required correction:
+Keep /api/documents/chat protected.
+
+Frontend fix:
+In AskDocument.tsx, send the Clerk session token with the chat request.
+
+Use Clerk’s frontend auth token pattern:
+- Get the active session token from Clerk.
+- Include it in the chat request header:
+  Authorization: Bearer <token>
+- Preserve the current analysis/document context payload.
+- Keep the user on /ask-document.
+- Do not redirect to Analyze.
+
+Backend fix:
+In the /api/documents/chat endpoint:
+- Restore authentication.
+- Accept Clerk auth from either:
+  1. normal same-origin session/cookie auth, or
+  2. Authorization: Bearer <token> for cross-origin production requests.
+- Verify the bearer token using the project’s existing Clerk backend utilities if already present.
+- If the token is valid, allow the chat request.
+- If invalid/missing, return a controlled 401 JSON error:
+  { error: "Authentication required" }
+- Do not return HTML.
+- Do not expose raw auth errors to the user.
+
+Important:
+- Do not remove auth from the chat endpoint.
+- Do not make /api/documents/chat public.
+- Do not touch database, migrations, Stripe/payment, Analyze Action Pack, Redact, Contract Review, Trust Check, Clause Extractor, Compare Versions, or Document Builder.
+- Only change AskDocument.tsx and the minimum required chat auth code in the API route/auth helper.
+
+Viewer:
+Keep the paper-style document viewer fix from the last pass.
+
+Verification:
+1. /ask-document upload still shows standard scan animation.
+2. Ready state still shows document viewer on the left and Ask PlainPath on the right.
+3. Chat request includes Authorization: Bearer token in production/cross-origin context.
+4. /api/documents/chat rejects missing/invalid auth with JSON 401.
+5. /api/documents/chat answers correctly when called from signed-in /ask-document.
+6. No raw "Something went wrong" unless the backend truly fails.
+7. No raw HTML/JSON parse errors.
+8. No other tools changed.
+9. No database/migration changes.
+10. No new TypeScript/runtime errors introduced.
+
+Return only:
+A. Root cause
+B. Files changed
+C. How frontend sends auth
+D. How backend verifies auth
+E. Viewer status
+F. Chat test result
+G. Whether safe to publish
