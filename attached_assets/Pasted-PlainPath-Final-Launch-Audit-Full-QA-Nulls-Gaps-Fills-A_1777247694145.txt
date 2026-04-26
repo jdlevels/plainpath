@@ -1,0 +1,392 @@
+PlainPath Final Launch Audit — Full QA, Nulls, Gaps/Fills, App Store Readiness, Submission Asset Inventory
+
+Goal:
+Run the final pre-submission audit for PlainPath across the web app, native-wrapper behavior, backend/API, legal pages, payments, tool workflows, null safety, missing states, and app-store submission assets.
+
+Mode:
+Read-only first.
+Only make code changes if a critical launch blocker is found.
+Do not add features.
+Do not redesign.
+Do not change pricing.
+Do not change Stripe unless a launch blocker exists.
+Do not change auth unless a launch blocker exists.
+Do not change database schema.
+Do not create migrations.
+Do not reintroduce e-signature.
+Do not add Dropbox Sign.
+Do not add new tools.
+
+Current approved active toolset:
+1. Analyze a Document
+2. Document Trust Check
+3. Build a Contract
+4. Contract Review
+5. Redact Sensitive Info
+6. Ask This Document
+7. Clause Extractor
+8. Compare Versions
+9. Document Builder
+
+Known locked decisions:
+- E-signature is fully removed.
+- Static signature/date lines inside Document Builder are allowed as printable document fields only.
+- Native app must not show Stripe checkout or tappable external purchase links.
+- Web app Stripe checkout remains active.
+- Document Builder is enabled in production with VITE_BUILDER_ENABLED=true.
+- Submission is blocked only until reviewer account and assets are prepared.
+
+Audit sections:
+
+A. Startup / deployment health
+Check:
+- App service starts cleanly
+- API service starts cleanly
+- Marketing service starts cleanly
+- No startup crashes
+- No new runtime errors
+- Production env exists
+- VITE_BUILDER_ENABLED=true in production
+- VITE_API_BASE_URL points to the correct production API
+- No missing required environment variables
+- No unused critical env vars except known DROPBOX_SIGN_API_KEY cleanup item
+
+Return:
+- PASS / FAIL
+- missing env vars
+- risky env vars
+- unused e-signature env vars to delete manually
+
+B. Navigation / route QA
+Verify:
+- Home page loads
+- App dashboard loads
+- Navbar loads
+- Tools dropdown shows exactly 9 active tools
+- Dashboard tool cards show exactly 9 active tools
+- No Digital Signature / e-signature / Dropbox Sign / Send for Signature route, button, card, or menu item
+- Unknown routes render 404
+- Sign-in and sign-up routes work
+- Sign-out redirects correctly
+- Support, Privacy, Terms pages load
+- Billing/Subscribe pages load correctly on web
+- Native Subscribe/Billing/Pricing surfaces show static message only with no tappable purchase link
+
+Check routes:
+- /
+- /app
+- /dashboard if applicable
+- /analyze
+- /import?mode=trust-check
+- /build-contract
+- /contract-review
+- /redact
+- /ask-document
+- /clause-extractor
+- /compare-versions
+- /builder
+- /documents
+- /my-analyses
+- /billing
+- /subscribe
+- /privacy
+- /terms
+- /support
+- /signature should NOT resolve
+- /demo/signature should NOT resolve
+- /api/signatures should NOT exist
+- /api/contracts/send-for-signature should NOT exist
+
+C. Tool-by-tool QA
+For each of the 9 tools, verify:
+
+1. Empty state
+- route opens
+- no blank screen
+- no console crash
+- clear user instruction
+- upload/paste/create CTA visible
+
+2. Input state
+- PDF upload if supported
+- DOCX upload if supported
+- TXT/paste if supported
+- unsupported file error
+- oversized file error if enforced
+- remove/reset file works where applicable
+
+3. Processing state
+- loading/scan animation appears
+- file/tool identity is visible
+- no page collapse
+- no accidental reset
+
+4. Result state
+- document viewer loads correctly
+- right panel loads correctly
+- source/result cards work
+- source chips or scroll-to-document behavior works where applicable
+- mobile view has usable tabs/panels
+- no clipped primary buttons
+
+5. Save/export state
+- save works if the tool supports saving
+- export buttons are honest
+- PDF/DOCX not claimed unless implemented
+- .txt export works where expected
+- Redact PDF export still works
+- Document Builder .txt export still works
+- Document Builder PDF/DOCX clearly says coming soon if still not implemented
+
+D. Null / undefined / empty-data audit
+Search and inspect high-risk areas for:
+- undefined.map
+- undefined.length
+- object access without guards
+- JSON parse without try/catch
+- fetch response assumed to be JSON
+- missing analysis object
+- missing sections array
+- missing document file
+- missing user role
+- missing subscription plan
+- missing result payload
+- missing PDF file
+- missing Builder content.sections
+- missing content.freeformFields
+- missing selectedBlock
+- missing selectedSection
+- empty array rendering that causes blank panels
+- stale route params
+- stale localStorage/sessionStorage data
+- auth token missing
+- API returns 401/500 with HTML instead of JSON
+
+Required behavior:
+- Every major tool should show a friendly fallback, not crash.
+- Empty arrays should render “No items found” or equivalent.
+- Missing source should render “No exact source found” rather than fake highlighting.
+- API failures should render recoverable error messages.
+
+E. Gaps and fills audit
+Find missing polish or launch gaps, but do not fix unless critical.
+
+Check:
+- inconsistent tool count: 8 vs 9
+- stale Digital Signature wording
+- stale Dropbox Sign wording
+- stale Document Builder beta/coming soon wording
+- stale PDF/DOCX export claims
+- inaccurate “no account required” language if auth/payment now required
+- mismatch between marketing and app tool names
+- mismatch between Pricing and UpgradeModal copy
+- support email consistency
+- privacy policy consistency
+- terms consistency
+- app footer/header consistency
+- mobile responsiveness
+- loading state consistency
+- file upload remove/reset controls
+- visible save controls where editing exists
+- no fake reviews/testimonials
+- no misleading legal advice claims
+- no absolute fraud/authenticity claims
+- no claim that documents are stored if they are not
+- no claim that documents are not processed server-side if they are
+
+F. Payment / gating audit
+Verify:
+- PAYWALL_ENFORCEMENT=true in frontend and backend
+- Admin access bypass works
+- Reviewer/Admin account can access all 9 tools without payment
+- Starter/Pro gating still works on web
+- Stripe checkout works on web
+- Subscribe/success/cancel routes exist
+- Native app has no Stripe checkout
+- Native app has no tappable external purchase link
+- Native app shows only:
+  “Subscription management is handled on the PlainPath website.”
+- No purchase CTA exists inside native wrapper
+
+Important:
+Do not implement StoreKit or Play Billing in this pass.
+Only report whether native payment behavior is submission-safe.
+
+G. Privacy / legal / AI disclaimer audit
+Verify:
+- Privacy Policy exists
+- Terms of Service exists
+- Support page exists
+- Privacy policy accurately lists current subprocessors only
+- No Dropbox Sign/e-signature references remain
+- AI disclaimer exists where needed
+- Contract Review avoids legal-advice wording
+- Trust Check avoids absolute “fake/fraud/authentic” claims
+- Redact explains original file remains unchanged
+- Document Builder explains output should be reviewed before use
+- Any server-side AI processing is accurately disclosed
+- Data Safety answers can be prepared from the actual app behavior
+
+H. App Store readiness audit
+Check readiness for Apple:
+
+Required inventory:
+- Apple Developer account status: manual / not code
+- Bundle ID
+- App name
+- Subtitle
+- Category
+- Age rating inputs
+- Privacy Policy URL
+- Terms URL
+- Support URL
+- App description
+- Promotional text
+- Keywords
+- Screenshots
+- App icon
+- Build number/version
+- Demo/reviewer account
+- App Review notes
+- Privacy Nutrition Label inputs
+- Native payment behavior confirmation
+- No hidden unfinished features
+- No external purchase link inside native
+- No e-signature feature
+- Login-gated review access available
+
+Return:
+- Ready / Missing / Needs manual action for each item.
+
+I. Google Play readiness audit
+Check readiness for Google:
+
+Required inventory:
+- Google Play Developer account status: manual / not code
+- Package name
+- App name
+- Short description
+- Full description
+- Category
+- Tags
+- App icon
+- Feature graphic
+- Phone screenshots
+- 7-inch tablet screenshots if needed
+- 10-inch tablet screenshots if needed
+- Privacy Policy URL
+- Terms URL
+- Support email
+- Data Safety form answers
+- App Access login credentials
+- Content rating questionnaire
+- Target audience
+- Ads declaration
+- App signing status
+- Internal testing / closed testing path
+- Native payment behavior confirmation
+- No restricted feature hidden from review
+
+Return:
+- Ready / Missing / Needs manual action for each item.
+
+J. Submission-ready asset inventory
+Create an asset checklist with these columns:
+
+Asset
+Platform
+Required?
+Current status
+Owner
+Notes
+
+Include:
+- App icon
+- iPhone screenshots
+- iPad screenshots if applicable
+- Android phone screenshots
+- Android tablet screenshots if applicable
+- Feature graphic
+- App preview video optional
+- App name
+- Subtitle
+- Short description
+- Full description
+- Keywords
+- Category
+- Age/content rating answers
+- Privacy Policy URL
+- Terms URL
+- Support URL/email
+- Reviewer account email
+- Reviewer account password
+- Reviewer account role
+- Review notes
+- Data Safety answers
+- Privacy Nutrition Label answers
+- Build number
+- Version number
+- Bundle ID
+- Package name
+- Support contact
+- Marketing website URL
+- Screenshots of all 9 tools
+- Native payment disclaimer screenshot
+- Login flow screenshot
+- Dashboard screenshot
+- Tool result screenshot
+- Document Builder screenshot
+- Redact screenshot
+- Ask This Document screenshot
+
+K. Reviewer account verification
+Confirm what is needed:
+- reviewer email
+- password
+- Admin or Full Pro role
+- no payment required
+- access to all 9 tools
+- works from incognito/fresh browser
+- no MFA/OTP blocker
+- no expired password
+- no magic-link-only login unless reviewer can access email
+
+Prepare exact App Review notes:
+
+PlainPath requires sign-in to access document tools. Use the test account below.
+
+This account has full access to all 9 active tools. No payment is required for review.
+
+To test:
+1. Sign in with the provided credentials.
+2. Open the dashboard — all 9 tools appear in the top navigation.
+3. Select any tool and upload or paste a sample document.
+4. AI analysis runs and results display on screen.
+
+The native app does not process purchases. Subscription management is handled on the PlainPath website.
+
+Test account:
+Email: [insert reviewer email]
+Password: [insert reviewer password]
+
+L. Final output format
+Return only:
+
+A. Overall launch QA result: Pass / Fail
+B. Critical blockers
+C. Non-critical issues
+D. Files changed, if any
+E. Startup/deployment status
+F. Route/navigation status
+G. Tool-by-tool QA table
+H. Null/gaps/fills findings
+I. Payment/gating status
+J. Privacy/legal status
+K. Apple readiness table
+L. Google Play readiness table
+M. Submission-ready asset inventory table
+N. Reviewer account status
+O. Manual tasks remaining
+P. Safe to publish web: Yes/No
+Q. Safe to prepare native submission: Yes/No
+R. Safe to submit Apple/Google today: Yes/No
