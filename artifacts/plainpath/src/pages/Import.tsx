@@ -269,7 +269,7 @@ export default function Import() {
   const [, setLocation] = useLocation()
   const searchString = useSearch()
   const isTrustCheck = new URLSearchParams(searchString).get("mode") === "trust-check"
-  const { setAnalysis, setDocumentTypeHint, setTrustCheckAnalysis } = useAnalysisContext()
+  const { setAnalysis, setDocumentTypeHint, setTrustCheckAnalysis, setUploadedTrustFile } = useAnalysisContext()
 
   useEffect(() => {
     document.title = isTrustCheck
@@ -505,6 +505,7 @@ export default function Import() {
 
       await haptic("success")
       if (isTrustCheck) {
+        setUploadedTrustFile(null)
         setTrustCheckAnalysis(data.analysis)
         setLocation("/trust-check")
       } else {
@@ -594,6 +595,7 @@ export default function Import() {
             return
           }
           await haptic("success")
+          setUploadedTrustFile(null)
           setTrustCheckAnalysis(data.analysis)
           setLocation("/trust-check")
         } catch {
@@ -637,6 +639,7 @@ export default function Import() {
             return
           }
           await haptic("success")
+          setUploadedTrustFile(p.file)
           setTrustCheckAnalysis(data.analysis)
           setLocation("/trust-check")
         } catch {

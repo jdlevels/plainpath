@@ -224,7 +224,7 @@ export default function TrustCheck() {
   const [, setLocation] = useLocation()
   const searchString = useSearch()
   const demoId = new URLSearchParams(searchString).get("demo")
-  const { trustCheckAnalysis } = useAnalysisContext()
+  const { trustCheckAnalysis, uploadedTrustFile, setUploadedTrustFile } = useAnalysisContext()
   const { isSignedIn } = useUser()
   const { entitlements } = useEntitlements()
   const [showUpgrade, setShowUpgrade] = useState(false)
@@ -348,6 +348,8 @@ export default function TrustCheck() {
 
   const isHighRisk = analysis.verdict === "High scam risk"
   const isSuspicious = analysis.verdict === "Suspicious — verify before acting"
+
+  const hasPdf = !demoId && uploadedTrustFile?.name.toLowerCase().endsWith(".pdf") === true
 
   const showSuspiciousSections = trustFilter === "all" || trustFilter === "suspicious"
   const showConsistentSections = trustFilter === "all" || trustFilter === "consistent"
@@ -491,7 +493,8 @@ export default function TrustCheck() {
             ${mobileTrustTab === "document" ? "flex flex-1 md:flex-none" : "hidden md:flex md:flex-none"}`}
         >
           <DocumentStageViewer
-            fileName="Uploaded Document"
+            fileName={uploadedTrustFile?.name ?? (demoId ? "Demo Document" : "Uploaded Document")}
+            pdfFile={hasPdf ? uploadedTrustFile : null}
             fallbackContent={documentClaims}
             contextLabel="Trust Check"
             scrollTrigger={scrollTrigger}

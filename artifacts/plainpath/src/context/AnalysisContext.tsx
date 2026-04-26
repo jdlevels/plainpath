@@ -6,9 +6,11 @@ interface AnalysisContextType {
   analysis: DocumentAnalysis | null;
   documentTypeHint: string | null;
   trustCheckAnalysis: TrustCheckAnalysis | null;
+  uploadedTrustFile: File | null;
   setAnalysis: (analysis: DocumentAnalysis | null) => void;
   setDocumentTypeHint: (hint: string | null) => void;
   setTrustCheckAnalysis: (analysis: TrustCheckAnalysis | null) => void;
+  setUploadedTrustFile: (file: File | null) => void;
   updateActionStep: (id: string, completed: boolean) => void;
   updateRequiredDoc: (id: string, obtained: boolean) => void;
   clearAnalysis: () => void;
@@ -20,6 +22,7 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
   const [analysis, setAnalysisState] = useState<DocumentAnalysis | null>(null);
   const [documentTypeHint, setDocumentTypeHintState] = useState<string | null>(null);
   const [trustCheckAnalysis, setTrustCheckAnalysisState] = useState<TrustCheckAnalysis | null>(null);
+  const [uploadedTrustFile, setUploadedTrustFileState] = useState<File | null>(null);
 
   const setAnalysis = useCallback((newAnalysis: DocumentAnalysis | null) => {
     setAnalysisState(newAnalysis);
@@ -33,10 +36,15 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
     setTrustCheckAnalysisState(newAnalysis);
   }, []);
 
+  const setUploadedTrustFile = useCallback((file: File | null) => {
+    setUploadedTrustFileState(file);
+  }, []);
+
   const clearAnalysis = useCallback(() => {
     setAnalysisState(null);
     setDocumentTypeHintState(null);
     setTrustCheckAnalysisState(null);
+    setUploadedTrustFileState(null);
   }, []);
 
   const updateActionStep = useCallback((id: string, completed: boolean) => {
@@ -69,9 +77,11 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
         analysis,
         documentTypeHint,
         trustCheckAnalysis,
+        uploadedTrustFile,
         setAnalysis,
         setDocumentTypeHint,
         setTrustCheckAnalysis,
+        setUploadedTrustFile,
         updateActionStep,
         updateRequiredDoc,
         clearAnalysis,

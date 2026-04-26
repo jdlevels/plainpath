@@ -1,0 +1,105 @@
+PlainPath Workspace Standard — Trust Check Left Document Viewer Alignment Only
+
+Current issue:
+Document Trust Check right panel is acceptable, but the left side is not consistent with the approved PlainPath workspace standard.
+
+Problem:
+The left side currently shows a small extracted summary/card-style document preview instead of the real PDF/document viewer pattern used by Ask This Document, Review & Redact, and Contract Review.
+
+Goal:
+Make the left side of Document Trust Check match the approved document viewer standard.
+
+Approved left-panel standard:
+- Actual PDF/document preview whenever possible
+- Centered paper/PDF surface
+- Controlled max width
+- Dark workspace background around the document
+- Scrollable multi-page document area
+- File name visible
+- Document type/context visible
+- Text fallback only for DOCX/TXT/paste or PDF preview failure
+- Do not show only a small summary card as the primary document view
+
+Scope:
+Only fix the left document viewer area in Document Trust Check.
+
+Allowed file:
+- artifacts/plainpath/src/pages/TrustCheck.tsx
+
+Allowed reuse:
+- Reuse the same viewer component/pattern already used in Contract Review, Ask This Document, or Review & Redact if available and safe.
+- Use existing DocumentStageViewer if it can render the actual uploaded PDF/document consistently.
+
+Do not touch:
+- Right-side Trust Intelligence panel, except passing necessary viewer props
+- Trust score logic
+- Trust findings logic
+- Filter chips
+- Indicator cards
+- Source banner logic
+- API routes
+- Auth
+- Database
+- Migrations
+- Stripe/payment
+- Marketing
+- Global routing
+- Other tools
+
+Required result:
+
+1. Completed Trust Check workspace
+- Left side should show the actual uploaded PDF/document preview.
+- It should look visually consistent with Contract Review / Ask This Document:
+  - large centered document page
+  - dark stage
+  - readable page width
+  - vertical scroll
+  - file name/context visible
+- It should not show a small extracted summary card as the main document surface.
+
+2. If uploaded file is PDF
+- Render actual PDF pages on the left.
+- Do not replace the PDF with extracted text unless PDF preview fails.
+
+3. If uploaded file is DOCX/TXT/paste
+- Use a paper-style text viewer.
+- Do not dump raw text directly onto the dark background.
+
+4. If PDF preview fails
+Show:
+“PDF preview unavailable. Showing extracted text instead.”
+
+5. Preserve right panel
+- Keep the current Trust Intelligence right panel exactly as-is.
+- Keep filters:
+  - All
+  - Suspicious
+  - Consistent
+  - Verify
+- Keep source/no-source behavior.
+- Keep cautious trust wording.
+
+Verification:
+1. Open /trust-check.
+2. Upload a PDF.
+3. Confirm processing still works.
+4. Confirm completed state shows actual PDF/document preview on the left.
+5. Confirm left viewer visually matches Contract Review / Ask This Document style.
+6. Confirm the small summary/card preview is no longer the primary left-side document view.
+7. Confirm right Trust Intelligence panel is unchanged.
+8. Click a suspicious/consistent/verify card.
+9. Confirm card selection and source/no-source banner still work.
+10. Confirm no reset after clicking cards.
+11. Confirm no API/auth/database/migration/Stripe/marketing/global route changes.
+12. Confirm no other tool files changed.
+13. Confirm no new TypeScript/runtime errors.
+
+Return only:
+A. Root cause of inconsistent left viewer
+B. Files changed
+C. Viewer component/pattern used
+D. PDF behavior
+E. Text fallback behavior
+F. Right panel untouched confirmation
+G. Safe checkpoint: Yes/No
