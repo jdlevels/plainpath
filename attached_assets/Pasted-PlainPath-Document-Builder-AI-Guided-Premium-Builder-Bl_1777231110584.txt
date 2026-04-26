@@ -1,0 +1,179 @@
+PlainPath Document Builder — AI Guided Premium Builder Blueprint
+
+Goal:
+Upgrade the existing /builder Document Builder into a premium AI-guided document creation tool.
+
+Important:
+This is separate from Build a Contract.
+Do not modify Build a Contract.
+Do not modify the other 8 PlainPath tools.
+Do not touch API/auth/database/Stripe/marketing unless explicitly required later.
+
+Product decision:
+Document Builder becomes a 9th PlainPath tool focused on:
+- SOPs
+- manuals
+- policies
+- onboarding documents
+- training guides
+- process guides
+- checklists
+- incident reports
+- internal business documents
+
+It is not for contracts. Contracts stay inside Build a Contract.
+
+Core product concept:
+Document Builder should help users create business documents quickly through an AI Document Guide.
+
+Required experience:
+The user should be able to:
+1. Choose a document type
+2. Answer guided questions
+3. Upload a company logo
+4. Pick a simple brand style
+5. Generate a structured first draft
+6. Edit the document manually
+7. Click sections/blocks on the left preview
+8. Use AI actions to improve selected text
+9. Save/export the document
+
+AI Document Guide:
+Add a right-side guide panel that can help users create and improve content.
+
+AI actions should include:
+- Elaborate
+- Formalize
+- Correct spelling
+- Simplify
+- Shorten
+- Expand
+- Make professional
+- Turn into checklist
+- Turn into table
+- Add missing details
+- Create next section
+
+Document type structure library:
+Create structured templates for:
+1. SOP
+2. Employee onboarding manual
+3. Policy document
+4. Training manual
+5. Process guide
+6. Safety manual
+7. Incident report
+8. Checklist
+
+Each document type should have predefined sections and guided questions.
+
+Suggested SOP structure:
+- Title
+- Purpose
+- Scope
+- Roles and responsibilities
+- Required tools/materials
+- Safety or caution notes
+- Step-by-step procedure
+- Quality checks
+- Records/documentation
+- References
+- Revision history
+
+Suggested Policy structure:
+- Purpose
+- Scope
+- Policy statement
+- Who must follow it
+- Responsibilities
+- Rules/prohibited actions
+- Exceptions
+- Enforcement
+- Review cycle
+
+Suggested Onboarding Manual structure:
+- Welcome
+- Company overview
+- First-day checklist
+- Tools and systems
+- Role expectations
+- Training plan
+- Key contacts
+- Policies to review
+- Completion checklist
+
+Layout:
+Use the approved PlainPath workspace standard.
+
+Desktop:
+- Left: editable live document page
+- Middle: document outline / section list
+- Right: AI Guide and block editor
+
+If three columns are too tight:
+- Left: editable live document page
+- Right: tabbed panel with Guide / Outline / Blocks / Style / Export
+
+Left page requirements:
+- White document page on dark workspace
+- User can click blocks directly on the page
+- Selected block gets a visible outline/ring
+- Editing a block updates the live preview
+- User can add and remove sections
+- User can add blocks:
+  - heading
+  - paragraph
+  - checklist
+  - table
+  - image/logo
+  - callout
+  - divider
+  - footer
+- User can move blocks up/down
+- Full freeform drag-and-drop is optional later. Do not overbuild it in the first pass.
+
+Logo/branding:
+Allow company logo upload.
+Allow:
+- company name
+- logo position
+- brand color
+- header style
+- footer text
+- watermark on/off
+
+Save/export:
+- Visible Save button
+- Unsaved changes indicator
+- Export button/menu
+- Do not claim PDF/DOCX export works unless it actually works
+- If export is not ready, label clearly as Export coming soon
+
+AI behavior:
+If backend AI is not already wired:
+- create the UI and local mock behavior only
+- do not invent a fake production AI call
+- clearly mark AI actions as disabled or coming soon until connected
+
+Safety:
+- No database migrations
+- No Stripe changes
+- No auth changes
+- No unrelated tool changes
+- No full redesign of existing tools
+- No Digital Signature work
+- No Build a Contract changes
+
+Deliverable:
+Create a design/implementation plan first.
+
+Return:
+A. Existing builder file/component structure
+B. Recommended architecture
+C. Required files to change
+D. Whether current builder supports editable blocks already
+E. Whether logo upload already exists
+F. Whether export already exists
+G. Best phased implementation plan
+H. Risk areas
+I. Safe first build slice
