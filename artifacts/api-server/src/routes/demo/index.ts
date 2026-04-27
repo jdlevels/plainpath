@@ -45,12 +45,37 @@ function getIpPrefix(req: Request): string {
   return parts.slice(0, 4).join(":");
 }
 
-function getFingerprintHash(req: Request): string {
-  // Fingerprint is keyed solely on the trusted network address.  User-Agent is
-  // intentionally excluded: it is attacker-controlled and including it would
-  // allow quota bypass by rotating UA strings after dropping the cookie.
+// Derives a per-visitor fingerprint hash from a cookie token.
+// The "cookie:" namespace prefix prevents any collision with the IP-based
+// hashes used by getFingerprintHash() on the read-only /status endpoint.
+function fingerprintHashFromToken(token: string): string {
+  return crypto.createHash("sha256").update(`cookie:${token}`).digest("hex");
+}
+
+// Returns the existing guest cookie token when present, or mints a new random
+// token, sets it as the response cookie, and returns it.  Called at the very
+// start of POST /analyze so that every request — including first-time visitors
+// with no prior cookie — has a per-visitor identity before quota reservation.
+// This eliminates the shared-network lockout: unrelated users behind the same
+// NAT / carrier-grade IP each get their own independent quota slot rather than
+// sharing a single network-prefix slot.
+function getOrMintGuestToken(req: Request, res: Response): string {
+  const existing: string | undefined = req.cookies?.[DEMO_COOKIE_NAME];
+  if (existing) return existing;
+  const token = crypto.randomBytes(32).toString("hex");
+  setGuestCookie(res, token);
+  return token;
+}
+
+// Read-only fingerprint hash used only by the /status endpoint, which must
+// not mint cookies.  Falls back to IP prefix for visitors with no cookie.
+function getFingerprintHashForStatus(req: Request): string {
+  const cookieToken: string | undefined = req.cookies?.[DEMO_COOKIE_NAME];
+  if (cookieToken) {
+    return crypto.createHash("sha256").update(`cookie:${cookieToken}`).digest("hex");
+  }
   const prefix = getIpPrefix(req);
-  return crypto.createHash("sha256").update(prefix).digest("hex");
+  return crypto.createHash("sha256").update(`ip:${prefix}`).digest("hex");
 }
 
 function setGuestCookie(res: Response, token: string): void {
@@ -67,44 +92,45 @@ function setGuestCookie(res: Response, token: string): void {
 // Returns { guest, token, isNew }
 // Side-effects: creates guest if missing, updates last_seen_at + fingerprint.
 // Guest rows are for analytics only; enforcement is done via demo_fingerprint_quotas.
+//
+// preToken: the cookie token provisioned by getOrMintGuestToken() at the start
+// of the analyze handler.  Passing it explicitly avoids re-reading req.cookies,
+// which would not reflect a token that was just minted into the response.
 
 async function resolveGuest(
   req: Request,
   res: Response,
+  preToken: string,
 ): Promise<{ guest: Record<string, unknown>; token: string; isNew: boolean }> {
-  const fingerprintHash = getFingerprintHash(req);
-  const existingToken: string | undefined = req.cookies?.[DEMO_COOKIE_NAME];
+  const fingerprintHash = fingerprintHashFromToken(preToken);
 
-  if (existingToken) {
-    const guestHash = hashToken(existingToken);
-    const result = await db.query(
-      `SELECT * FROM demo_guests WHERE guest_hash = $1`,
-      [guestHash],
+  // Check if this token already maps to a guest row.
+  const guestHash = hashToken(preToken);
+  const result = await db.query(
+    `SELECT * FROM demo_guests WHERE guest_hash = $1`,
+    [guestHash],
+  );
+  if (result.rows.length > 0) {
+    const guest = result.rows[0];
+    await db.query(
+      `UPDATE demo_guests
+       SET last_seen_at = NOW(),
+           fingerprint_hash = COALESCE(fingerprint_hash, $2)
+       WHERE id = $1`,
+      [guest.id, fingerprintHash],
     );
-    if (result.rows.length > 0) {
-      const guest = result.rows[0];
-      await db.query(
-        `UPDATE demo_guests
-         SET last_seen_at = NOW(),
-             fingerprint_hash = COALESCE(fingerprint_hash, $2)
-         WHERE id = $1`,
-        [guest.id, fingerprintHash],
-      );
-      return { guest, token: existingToken, isNew: false };
-    }
+    return { guest, token: preToken, isNew: false };
   }
 
-  // Create a new guest
-  const token = crypto.randomBytes(32).toString("hex");
-  const guestHash = hashToken(token);
+  // Token was freshly minted (first-time visitor) — create the guest row.
+  // The cookie was already set by getOrMintGuestToken().
   const created = await db.query(
     `INSERT INTO demo_guests (guest_hash, fingerprint_hash)
      VALUES ($1, $2)
      RETURNING *`,
     [guestHash, fingerprintHash],
   );
-  setGuestCookie(res, token);
-  return { guest: created.rows[0], token, isNew: true };
+  return { guest: created.rows[0], token: preToken, isNew: true };
 }
 
 // ─── Fingerprint quota (atomic) ───────────────────────────────────────────────
@@ -236,7 +262,7 @@ Rules:
 router.get("/status", async (req: Request, res: Response) => {
   try {
     const existingToken: string | undefined = req.cookies?.[DEMO_COOKIE_NAME];
-    const fingerprintHash = getFingerprintHash(req);
+    const fingerprintHash = getFingerprintHashForStatus(req);
 
     // Check fingerprint quota — this is the enforcement source of truth.
     const fpTotalUses = await getFingerprintTotalUses(fingerprintHash);
@@ -285,8 +311,6 @@ router.post(
   "/analyze",
   upload.single("file"),
   async (req: Request, res: Response) => {
-    const fingerprintHash = getFingerprintHash(req);
-
     // 0. File validation — done BEFORE any DB writes so invalid requests
     //    are rejected without consuming a quota slot or creating guest rows.
     const file = req.file;
@@ -300,13 +324,25 @@ router.post(
       return res.status(400).json({ error: "file_too_large", message: "File must be 10 MB or smaller for the demo." });
     }
 
-    // 1. Atomically reserve a fingerprint slot — this is the primary enforcement
+    // 1. Provision a per-visitor token before any quota check.
+    //    getOrMintGuestToken() returns the existing cookie when present, or
+    //    generates a fresh random token and sets it as a response cookie.
+    //    Doing this before reserveFingerprintSlot() guarantees that every
+    //    request — including first-time visitors with no prior cookie — uses a
+    //    per-visitor quota key rather than a shared IP-prefix key.  This
+    //    prevents one user from exhausting the shared network allowance and
+    //    locking out unrelated users behind the same NAT or shared Wi-Fi.
+    const guestToken = getOrMintGuestToken(req, res);
+    const fingerprintHash = fingerprintHashFromToken(guestToken);
+
+    // 2. Atomically reserve a fingerprint slot — this is the primary enforcement
     //    gate.  A single upsert statement with a conditional WHERE prevents any
     //    TOCTOU race: concurrent requests from the same fingerprint compete for
     //    the same row lock, so only one can increment from N-1 to N while
     //    others see total_uses >= DEMO_MAX_USES and get no RETURNING row.
-    //    Dropping the cookie cannot bypass this because enforcement is keyed on
-    //    the fingerprint (IP), not the guest row.
+    //    Dropping the cookie resets the per-visitor key; that trade-off is
+    //    acceptable because it only affects the individual visitor, not other
+    //    users sharing the network.
     let slotReserved = false;
     let fingerprintTotalUses = 0;
     try {
@@ -326,18 +362,21 @@ router.post(
       return res.status(500).json({ error: "internal_error", message: "Could not establish demo session." });
     }
 
-    // 2. Resolve/create guest row for analytics tracking.
-    //    Safe to create here: slot is already reserved (step 1) and file is valid (step 0).
+    // 3. Resolve/create guest row for analytics tracking.
+    //    Safe to create here: slot is already reserved (step 2) and file is valid (step 0).
+    //    Pass guestToken explicitly so resolveGuest uses the same token that was
+    //    provisioned above (req.cookies would not reflect a token freshly minted
+    //    into the response).
     let guest: Record<string, unknown>;
     try {
-      ({ guest } = await resolveGuest(req, res));
+      ({ guest } = await resolveGuest(req, res, guestToken));
     } catch (err) {
       console.error("demo/analyze guest error", err);
       await releaseFingerprintSlot(fingerprintHash).catch(() => {});
       return res.status(500).json({ error: "internal_error", message: "Could not establish demo session." });
     }
 
-    // 3. Parse PDF — done before the quota increment so that rejected files
+    // 4. Parse PDF — done before the quota increment so that rejected files
     //    (unreadable, too many pages, empty text) do not consume a quota slot.
     //    parsePdfWithLimits aborts the parse mid-stream the moment the page
     //    count exceeds DEMO_MAX_PAGES or extracted text exceeds 500 KB, so a
@@ -353,6 +392,7 @@ router.post(
       pageCount = parsed.numpages ?? 0;
     } catch (err) {
       if (err instanceof ParseResourceLimitError) {
+        await releaseFingerprintSlot(fingerprintHash).catch(() => {});
         return res.status(400).json({ error: "document_too_large", message: err.message });
       }
       console.error("demo/analyze pdf-parse error", err);
@@ -365,8 +405,8 @@ router.post(
       return res.status(422).json({ error: "empty_text", message: "No readable text found in this PDF. Try a text-based PDF." });
     }
 
-    // 4. Update guest analytics row (non-gating increment for tracking purposes).
-    //    Enforcement is fully handled by reserveFingerprintSlot() in step 1.
+    // 5. Update guest analytics row (non-gating increment for tracking purposes).
+    //    Enforcement is fully handled by reserveFingerprintSlot() in step 2.
     await db.query(
       `UPDATE demo_guests
        SET completed_uses = completed_uses + 1,
@@ -376,7 +416,7 @@ router.post(
       [guest.id, DEMO_MAX_USES],
     ).catch((err) => console.error("demo/analyze guest-counter error (non-fatal)", err));
 
-    // 5. Insert demo_run as 'started'
+    // 6. Insert demo_run as 'started'
     let runId: string;
     try {
       const runInsert = await db.query(
@@ -405,7 +445,7 @@ router.post(
       return res.status(500).json({ error: "internal_error", message: "Could not establish demo session." });
     }
 
-    // 6. Run analysis
+    // 7. Run analysis
     let analysisResult: Awaited<ReturnType<typeof runDemoAnalysis>>;
     try {
       analysisResult = await runDemoAnalysis(pdfText, file.originalname);
@@ -432,7 +472,7 @@ router.post(
       return res.status(500).json({ error: "analysis_failed", message: "Analysis failed. Please try again." });
     }
 
-    // 7. Mark run complete.
+    // 8. Mark run complete.
     await db.query(
       `UPDATE demo_runs SET status = 'complete', completed_at = NOW() WHERE id = $1`,
       [runId],
