@@ -106,10 +106,10 @@ export default function ReviewingALease() {
                 Upload or paste your lease and get a complete plain-English breakdown: every required action, deadline, maintenance responsibility, and risk clause. Typically catches 4–7 issues the average renter misses.
               </p>
               <a
-                href="/app/analyze"
+                href="/demo/analyze"
                 className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity"
               >
-                Analyze my lease <ArrowRight className="w-4 h-4" />
+                See demo <ArrowRight className="w-4 h-4" />
               </a>
             </div>
           </div>

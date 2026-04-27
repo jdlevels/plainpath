@@ -92,15 +92,15 @@ function RotatingBadge() {
 
 /* ─── Tool pill data ─────────────────────────────────────── */
 const TOOLS = [
-  { label: "Analyze a Document",    icon: FileScan,       cls: "tool-btn-blue",    href: "/app/analyze",                 comingSoon: false },
-  { label: "Document Trust Check",  icon: ShieldCheck,    cls: "tool-btn-red",     href: "/app/import?mode=trust-check", comingSoon: false },
-  { label: "Build a Contract",      icon: PenLine,        cls: "tool-btn-emerald", href: "/app/build-contract",          comingSoon: false },
-  { label: "Contract Review",       icon: Scale,          cls: "tool-btn-amber",   href: "/app/contract-review",         comingSoon: false },
-  { label: "Redact Sensitive Info", icon: EyeOff,         cls: "tool-btn-violet",  href: "/app/redact",                  comingSoon: false },
-  { label: "Ask This Document",      icon: MessageCircle,  cls: "tool-btn-indigo",  href: "/app/ask-document",            comingSoon: false },
-  { label: "Clause Extractor",       icon: ListChecks,     cls: "tool-btn-fuchsia", href: "/app/clause-extractor",        comingSoon: false },
-  { label: "Compare Versions",      icon: GitCompare,     cls: "tool-btn-sky",     href: "/app/compare-versions",        comingSoon: false },
-  { label: "Document Builder",      icon: LayoutTemplate, cls: "tool-btn-teal",    href: "/app/builder",                 comingSoon: false },
+  { label: "Analyze a Document",    icon: FileScan,       cls: "tool-btn-blue",    href: "/demo/analyze",         comingSoon: false },
+  { label: "Document Trust Check",  icon: ShieldCheck,    cls: "tool-btn-red",     href: "/demo/trust-check",     comingSoon: false },
+  { label: "Build a Contract",      icon: PenLine,        cls: "tool-btn-emerald", href: "/demo/build-contract",  comingSoon: false },
+  { label: "Contract Review",       icon: Scale,          cls: "tool-btn-amber",   href: "/demo/contract-review", comingSoon: false },
+  { label: "Redact Sensitive Info", icon: EyeOff,         cls: "tool-btn-violet",  href: "/demo/redact",          comingSoon: false },
+  { label: "Ask This Document",      icon: MessageCircle,  cls: "tool-btn-indigo",  href: "/demo/ask-document",    comingSoon: false },
+  { label: "Clause Extractor",       icon: ListChecks,     cls: "tool-btn-fuchsia", href: "/demo/clause-extractor",comingSoon: false },
+  { label: "Compare Versions",      icon: GitCompare,     cls: "tool-btn-sky",     href: "/demo/compare",         comingSoon: false },
+  { label: "Document Builder",      icon: LayoutTemplate, cls: "tool-btn-teal",    href: "/demo/builder",         comingSoon: false },
 ];
 
 /* ─── Feature cards ─────────────────────────────────────── */
@@ -323,7 +323,7 @@ const DEMOS = [
     hoverTitle: "group-hover:text-indigo-500 dark:group-hover:text-indigo-400",
     tags: ["3 questions answered", "Sourced from text", "Pre-loaded demo"],
     cta: "See it in action",
-    href: "/app/ask-document",
+    href: "/demo/ask-document",
   },
   {
     id: "compare-nda",
@@ -797,7 +797,7 @@ function ReferFriend() {
 
               <div className="pt-1 border-t border-border/50">
                 <a
-                  href="/app/analyze"
+                  href="/app/sign-in"
                   className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-xl px-4 py-3 text-sm font-semibold hover:bg-primary/90 transition-colors"
                 >
                   Get started to unlock <ArrowRight className="w-3.5 h-3.5" />
@@ -1607,7 +1607,7 @@ export default function Home() {
                   ))}
                 </div>
                 <a
-                  href="/app/analyze"
+                  href="/app/sign-in"
                   className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
                 >
                   Open the web app <ArrowRight className="w-4 h-4" />

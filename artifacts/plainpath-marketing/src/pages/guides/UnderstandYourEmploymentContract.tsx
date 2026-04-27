@@ -137,13 +137,13 @@ export default function UnderstandYourEmploymentContract() {
               </p>
               <div className="flex flex-wrap gap-3">
                 <a
-                  href="/app/analyze"
+                  href="/demo/analyze"
                   className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity"
                 >
-                  Analyze my contract <ArrowRight className="w-4 h-4" />
+                  See demo <ArrowRight className="w-4 h-4" />
                 </a>
                 <a
-                  href="/app/contract-review"
+                  href="/demo/contract-review"
                   className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-card text-foreground font-semibold text-sm hover:bg-muted/50 transition-colors"
                 >
                   Full contract review

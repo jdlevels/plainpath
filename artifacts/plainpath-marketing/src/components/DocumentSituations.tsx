@@ -16,7 +16,7 @@ const SITUATIONS = [
     toolColor: "text-blue-600 dark:text-blue-400",
     toolBg: "bg-blue-50 dark:bg-blue-950/40",
     toolIcon: BookOpen,
-    href: "/app/analyze",
+    href: "/demo/analyze",
     what: "Find every deadline, required document, and landlord obligation buried in the lease — before you sign or respond.",
   },
   {
@@ -28,7 +28,7 @@ const SITUATIONS = [
     toolColor: "text-amber-600 dark:text-amber-400",
     toolBg: "bg-amber-50 dark:bg-amber-950/40",
     toolIcon: Scale,
-    href: "/app/contract-review",
+    href: "/demo/contract-review",
     what: "Spot non-competes, IP clauses, and one-sided terms in the offer you received — and get exact language to push back.",
   },
   {
@@ -40,7 +40,7 @@ const SITUATIONS = [
     toolColor: "text-blue-600 dark:text-blue-400",
     toolBg: "bg-blue-50 dark:bg-blue-950/40",
     toolIcon: BookOpen,
-    href: "/app/analyze",
+    href: "/demo/analyze",
     what: "Break down what you actually owe, what insurance covered, and what to dispute — in plain English.",
   },
   {
@@ -52,7 +52,7 @@ const SITUATIONS = [
     toolColor: "text-blue-600 dark:text-blue-400",
     toolBg: "bg-blue-50 dark:bg-blue-950/40",
     toolIcon: BookOpen,
-    href: "/app/analyze",
+    href: "/demo/analyze",
     what: "Know exactly what the agency is asking you to do, by when, and what happens if you don't respond.",
   },
   {
@@ -64,7 +64,7 @@ const SITUATIONS = [
     toolColor: "text-red-600 dark:text-red-400",
     toolBg: "bg-red-50 dark:bg-red-950/40",
     toolIcon: ShieldCheck,
-    href: "/app/import?mode=trust-check",
+    href: "/demo/trust-check",
     what: "Check whether the demand is legitimate or a scam before you pay or call any number listed in it.",
   },
   {
@@ -76,7 +76,7 @@ const SITUATIONS = [
     toolColor: "text-emerald-600 dark:text-emerald-400",
     toolBg: "bg-emerald-50 dark:bg-emerald-950/40",
     toolIcon: PenLine,
-    href: "/app/build-contract",
+    href: "/demo/build-contract",
     what: "Build a complete, clause-by-clause agreement for your deal in minutes — written to protect you, not the other party.",
   },
   {
@@ -88,7 +88,7 @@ const SITUATIONS = [
     toolColor: "text-red-600 dark:text-red-400",
     toolBg: "bg-red-50 dark:bg-red-950/40",
     toolIcon: ShieldCheck,
-    href: "/app/import?mode=trust-check",
+    href: "/demo/trust-check",
     what: "Verify the notice is real, not a scam — then understand exactly what action you need to take and by when.",
   },
   {
@@ -100,7 +100,7 @@ const SITUATIONS = [
     toolColor: "text-violet-600 dark:text-violet-400",
     toolBg: "bg-violet-50 dark:bg-violet-950/40",
     toolIcon: EyeOff,
-    href: "/app/redact",
+    href: "/demo/redact",
     what: "Remove SSNs, account numbers, names, and other private details before sharing, analyzing, or sending a document.",
   },
 ]

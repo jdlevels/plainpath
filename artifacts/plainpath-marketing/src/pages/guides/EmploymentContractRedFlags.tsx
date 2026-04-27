@@ -126,10 +126,10 @@ export default function EmploymentContractRedFlags() {
                 Upload or paste your job offer or employment contract and get a complete plain-English breakdown: every obligation, restriction, and risk clause — so you know exactly what you're agreeing to before day one.
               </p>
               <a
-                href="/app/analyze"
+                href="/demo/analyze"
                 className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity"
               >
-                Analyze my contract <ArrowRight className="w-4 h-4" />
+                See demo <ArrowRight className="w-4 h-4" />
               </a>
             </div>
           </div>

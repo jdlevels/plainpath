@@ -1,0 +1,143 @@
+PlainPath Post-Launch Roadmap — Document Trust Check v2 Planning Only
+
+Goal:
+Plan the next-generation Document Trust Check system after launch.
+
+Do not build yet.
+Do not create database migrations.
+Do not change current launch flow.
+Do not add e-signature.
+Do not add Dropbox Sign.
+Do not add digital signature workflow.
+Do not connect external vendors.
+Do not change current Trust Check production behavior.
+
+Product decision:
+Document Trust Check v2 should become a layered document-risk signal engine.
+
+It should not claim that a document is fake, authentic, legally valid, or invalid.
+It should identify risk signals, inconsistencies, missing information, metadata concerns, and verification steps.
+
+Plan these layers:
+
+1. PDF forensic pre-scan
+- PDF structure
+- metadata
+- producer software
+- creation date
+- modification date
+- incremental update signals
+- embedded objects
+- fonts
+- hidden text
+- suspicious overlays
+- JavaScript/actions if present
+
+2. Metadata / producer check
+- creator
+- producer
+- creation date
+- modified date
+- timezone if available
+- suspicious editor/converter names
+- mismatch between document claim and producer metadata
+
+3. Text-layer vs OCR comparison
+- embedded text extraction
+- rendered-page OCR extraction
+- compare visible text against embedded text
+- flag mismatch between OCR-visible values and text-layer values
+- flag hidden or overlaid text where detectable
+
+4. Document type classifier
+Support profiles for:
+- invoice
+- bank statement
+- pay stub
+- lease
+- contract
+- legal notice
+- government-style notice
+- policy
+- unknown document
+
+5. Rule-based checks
+Create local versioned files first:
+- trustRules.ts
+- documentTypeProfiles.ts
+- producerRiskList.ts
+- riskSignalWeights.ts
+- trustCheckTestCases.ts
+
+Rules should check:
+- missing sender
+- missing date
+- missing parties
+- inconsistent dates
+- suspicious payment demand
+- unusual payment method
+- pressure/urgency language
+- mismatched contact information
+- incomplete totals/math
+- missing signature/date lines where expected
+- low extraction confidence
+
+6. AI explanation layer
+AI should explain findings in plain English.
+AI should not be the only decision engine.
+AI should reference rule-based and source-backed findings.
+AI should use cautious wording.
+
+7. Confidence scoring
+Break confidence into:
+- extraction confidence
+- metadata confidence
+- structure confidence
+- logic/math confidence
+- source-backed confidence
+- overall review confidence
+
+8. User output
+Trust Check v2 should show:
+- risk summary
+- technical document signals
+- metadata findings
+- content/logic findings
+- source-backed evidence
+- confidence level
+- what to verify next
+- safe next steps
+
+9. Future internal database/API
+Plan only:
+- trust_rules
+- document_type_profiles
+- producer_fingerprints
+- risk_signals
+- trust_rule_versions
+- trust_test_cases
+
+Do not build database yet.
+
+10. Excluded from near-term build
+Do not include:
+- digital signature verification
+- send-for-signature
+- e-signature
+- Dropbox Sign
+- official template database
+- AI-generated text detection
+- external vendor verification
+- customer document storage for training
+
+Return only:
+A. Current Trust Check architecture
+B. Current extraction pipeline
+C. Current metadata capability
+D. Gaps found
+E. Proposed Trust Check v2 architecture
+F. Recommended local rule-library structure
+G. Future database/API design
+H. Safe first build slice
+I. Risks and false-positive controls
+J. Do-not-build-before-launch list

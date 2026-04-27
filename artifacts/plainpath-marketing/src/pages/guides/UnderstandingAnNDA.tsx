@@ -110,10 +110,10 @@ export default function UnderstandingAnNDA() {
                 Paste or upload your NDA and get a plain-English breakdown of every clause, obligation, and risk. See exactly what you're agreeing to before you sign — in under two minutes.
               </p>
               <a
-                href="/app/analyze"
+                href="/demo/analyze"
                 className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity"
               >
-                Analyze my NDA <ArrowRight className="w-4 h-4" />
+                See demo <ArrowRight className="w-4 h-4" />
               </a>
             </div>
           </div>

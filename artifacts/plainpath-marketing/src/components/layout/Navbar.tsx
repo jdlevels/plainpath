@@ -23,15 +23,15 @@ const NAV_LINKS = [
 ];
 
 const TOOL_LINKS = [
-  { label: "Analyze a Document",    href: "/app/analyze",                 icon: FileScan       },
-  { label: "Document Trust Check",  href: "/app/import?mode=trust-check", icon: ShieldCheck    },
-  { label: "Contract Review",       href: "/app/contract-review",         icon: Scale          },
-  { label: "Build a Contract",      href: "/app/build-contract",          icon: PenLine        },
-  { label: "Redact Sensitive Info", href: "/app/redact",                  icon: EyeOff         },
-  { label: "Compare Versions",      href: "/app/compare-versions",        icon: GitCompare     },
-  { label: "Clause Extractor",       href: "/app/clause-extractor",        icon: ListChecks     },
-  { label: "Ask This Document",      href: "/app/ask-document",            icon: MessageCircle  },
-  { label: "Document Builder",       href: "/app/builder",                 icon: LayoutTemplate },
+  { label: "Analyze a Document",    href: "/demo/analyze",         icon: FileScan       },
+  { label: "Document Trust Check",  href: "/demo/trust-check",     icon: ShieldCheck    },
+  { label: "Contract Review",       href: "/demo/contract-review", icon: Scale          },
+  { label: "Build a Contract",      href: "/demo/build-contract",  icon: PenLine        },
+  { label: "Redact Sensitive Info", href: "/demo/redact",          icon: EyeOff         },
+  { label: "Compare Versions",      href: "/demo/compare",         icon: GitCompare     },
+  { label: "Clause Extractor",       href: "/demo/clause-extractor",icon: ListChecks     },
+  { label: "Ask This Document",      href: "/demo/ask-document",    icon: MessageCircle  },
+  { label: "Document Builder",       href: "/demo/builder",         icon: LayoutTemplate },
 ];
 
 const LogoBrand = () => (
@@ -162,7 +162,7 @@ export function Navbar() {
             className="rounded-full px-5 font-medium shadow-sm hidden lg:flex"
             asChild
           >
-            <a href="/app/analyze">Open App</a>
+            <a href="/app/sign-in">Open App</a>
           </Button>
 
           {/* Mobile hamburger */}
@@ -243,7 +243,7 @@ export function Navbar() {
               className="w-full rounded-xl font-medium"
               asChild
             >
-              <a href="/app/analyze">Open App</a>
+              <a href="/app/sign-in">Open App</a>
             </Button>
           </div>
         </div>
