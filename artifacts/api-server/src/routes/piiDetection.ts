@@ -18,6 +18,7 @@
 import { Router } from "express"
 import { v4 as uuidv4 } from "uuid"
 import { openai } from "@workspace/integrations-openai-ai-server"
+import { requireEntitlement } from "../lib/requireEntitlement"
 
 const router = Router()
 
@@ -312,7 +313,7 @@ function mergeSpans(regexSpans: PiiSpan[], aiSpans: PiiSpan[]): PiiSpan[] {
 
 // ─── Route ────────────────────────────────────────────────────────────────────
 
-router.post("/detect-pii", async (req, res) => {
+router.post("/detect-pii", requireEntitlement("redact"), async (req, res) => {
   try {
     const { text } = req.body as { text?: string }
 

@@ -3,6 +3,7 @@ import multer from "multer";
 import { getAuth } from "@clerk/express";
 import { openai } from "@workspace/integrations-openai-ai-server";
 import { logger } from "../../lib/logger";
+import { requireEntitlement } from "../../lib/requireEntitlement";
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
 
@@ -10,7 +11,7 @@ const router = Router();
 
 // POST /api/contracts/insight
 // Returns live AI insights for the current intake step and answers.
-router.post("/insight", async (req: Request, res: Response) => {
+router.post("/insight", requireEntitlement("build-contract"), async (req: Request, res: Response) => {
   const { contractType, step, people, scope, money, protection } = req.body;
 
   if (!contractType) {
@@ -66,7 +67,7 @@ Protection: ${JSON.stringify(protection ?? {})}`;
 
 // POST /api/contracts/generate-draft
 // Returns a structured draft payload from the completed intake answers.
-router.post("/generate-draft", async (req: Request, res: Response) => {
+router.post("/generate-draft", requireEntitlement("build-contract"), async (req: Request, res: Response) => {
   const { contractType, people, scope, money, protection } = req.body;
 
   if (!contractType) {
@@ -139,7 +140,7 @@ Protection: ${JSON.stringify(protection ?? {})}`;
 // POST /api/contracts/review
 // Contract Review — clause-by-clause fairness analysis of a contract the user received.
 // Accepts JSON { text } or multipart { file }.
-router.post("/review", upload.single("file"), async (req: Request, res: Response) => {
+router.post("/review", requireEntitlement("contract-review"), upload.single("file"), async (req: Request, res: Response) => {
   let text = "";
 
   if (req.file) {
@@ -242,7 +243,7 @@ Rules:
 
 // POST /api/contracts/scan-images
 // Camera scan → Contract Review: extract text from images, then run review.
-router.post("/scan-images", async (req: Request, res: Response) => {
+router.post("/scan-images", requireEntitlement("contract-review"), async (req: Request, res: Response) => {
   const { images } = req.body;
 
   if (!Array.isArray(images) || images.length === 0) {
@@ -345,7 +346,7 @@ Rules: clauses 5-20 items, negotiationLanguage must include actual replacement t
 
 // POST /api/contracts/negotiate-clause
 // Generates a polished negotiation email for a specific flagged clause.
-router.post("/negotiate-clause", async (req: Request, res: Response) => {
+router.post("/negotiate-clause", requireEntitlement("contract-review"), async (req: Request, res: Response) => {
   const { clauseText, explanation, whyUnfair, negotiationLanguage, contractType } = req.body;
   if (!clauseText) {
     return res.status(400).json({ error: "clause_required", message: "clauseText is required." });

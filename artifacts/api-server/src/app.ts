@@ -181,6 +181,7 @@ app.use(
     "/api/documents/explain-section",
     "/api/documents/compare",
     "/api/documents/extract-text",
+    "/api/documents/detect-pii",
     "/api/contracts/generate-draft",
     "/api/contracts/review",
     "/api/contracts/insight",
