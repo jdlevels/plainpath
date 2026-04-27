@@ -60,7 +60,8 @@ function setGuestCookie(res: Response, token: string): void {
 
 // ─── Guest resolution ─────────────────────────────────────────────────────────
 // Returns { guest, token, isNew }
-// Side-effects: creates guest if missing, updates last_seen_at + fingerprint
+// Side-effects: creates guest if missing, updates last_seen_at + fingerprint.
+// Guest rows are for analytics only; enforcement is done via demo_fingerprint_quotas.
 
 async function resolveGuest(
   req: Request,
@@ -77,7 +78,6 @@ async function resolveGuest(
     );
     if (result.rows.length > 0) {
       const guest = result.rows[0];
-      // Update last_seen_at and set fingerprint if missing
       await db.query(
         `UPDATE demo_guests
          SET last_seen_at = NOW(),
@@ -102,41 +102,73 @@ async function resolveGuest(
   return { guest: created.rows[0], token, isNew: true };
 }
 
-// ─── Quota check ─────────────────────────────────────────────────────────────
-// Returns true if the guest or fingerprint is exhausted
+// ─── Fingerprint quota (atomic) ───────────────────────────────────────────────
+//
+// demo_fingerprint_quotas is the single source of truth for enforcement.
+// One row per fingerprint; total_uses tracks consumed slots within a rolling
+// FINGERPRINT_BLOCK_DAYS window.  The window resets automatically when the
+// existing row's window_start falls outside the block window.
+//
+// reserveFingerprintSlot() uses a single atomic upsert so concurrent requests
+// from the same fingerprint cannot both pass:
+//   - On first use: INSERT a new row with total_uses = 1.
+//   - On conflict: UPDATE total_uses + 1 only when the WHERE clause passes
+//     (window active AND current total < DEMO_MAX_USES, OR window expired →
+//     reset to 1).  If WHERE fails the update is skipped and RETURNING yields
+//     no rows → quota exhausted.
+//
+// This eliminates the TOCTOU race of the old read-then-check approach.
 
-async function isQuotaExhausted(
-  guest: Record<string, unknown>,
+async function reserveFingerprintSlot(
   fingerprintHash: string,
-): Promise<boolean> {
-  if ((guest.completed_uses as number) >= DEMO_MAX_USES) return true;
-
-  // Fingerprint backstop: check if ANOTHER guest with same fingerprint is exhausted within 7 days
-  const fp = await db.query(
-    `SELECT id FROM demo_guests
-     WHERE fingerprint_hash = $1
-       AND exhausted_at IS NOT NULL
-       AND exhausted_at > NOW() - INTERVAL '${FINGERPRINT_BLOCK_DAYS} days'
-       AND id <> $2
-     LIMIT 1`,
-    [fingerprintHash, guest.id],
+): Promise<{ reserved: boolean; totalUses: number }> {
+  const result = await db.query(
+    `INSERT INTO demo_fingerprint_quotas (fingerprint_hash, total_uses, window_start)
+     VALUES ($1, 1, NOW())
+     ON CONFLICT (fingerprint_hash) DO UPDATE
+       SET total_uses   = CASE
+                            WHEN demo_fingerprint_quotas.window_start < NOW() - INTERVAL '${FINGERPRINT_BLOCK_DAYS} days'
+                            THEN 1
+                            ELSE demo_fingerprint_quotas.total_uses + 1
+                          END,
+           window_start = CASE
+                            WHEN demo_fingerprint_quotas.window_start < NOW() - INTERVAL '${FINGERPRINT_BLOCK_DAYS} days'
+                            THEN NOW()
+                            ELSE demo_fingerprint_quotas.window_start
+                          END
+     WHERE demo_fingerprint_quotas.window_start < NOW() - INTERVAL '${FINGERPRINT_BLOCK_DAYS} days'
+        OR demo_fingerprint_quotas.total_uses < $2
+     RETURNING total_uses`,
+    [fingerprintHash, DEMO_MAX_USES],
   );
-  return fp.rows.length > 0;
+
+  if (result.rows.length === 0) {
+    return { reserved: false, totalUses: DEMO_MAX_USES };
+  }
+  const totalUses = result.rows[0].total_uses as number;
+  return { reserved: true, totalUses };
 }
 
-// Pre-flight fingerprint exhaustion check — does NOT touch the guest table.
-// Used before resolveGuest() so requests from exhausted fingerprints are
-// rejected without creating a new demo_guests row.
-async function isFingerprintBlocked(fingerprintHash: string): Promise<boolean> {
-  const fp = await db.query(
-    `SELECT id FROM demo_guests
-     WHERE fingerprint_hash = $1
-       AND exhausted_at IS NOT NULL
-       AND exhausted_at > NOW() - INTERVAL '${FINGERPRINT_BLOCK_DAYS} days'
-     LIMIT 1`,
+// Releases a previously reserved fingerprint slot on failed/invalid runs.
+// Does not release if total_uses is already at 0 (GREATEST guard).
+async function releaseFingerprintSlot(fingerprintHash: string): Promise<void> {
+  await db.query(
+    `UPDATE demo_fingerprint_quotas
+     SET total_uses = GREATEST(0, total_uses - 1)
+     WHERE fingerprint_hash = $1`,
     [fingerprintHash],
   );
-  return fp.rows.length > 0;
+}
+
+// Read-only fingerprint quota check for the /status endpoint.
+async function getFingerprintTotalUses(fingerprintHash: string): Promise<number> {
+  const result = await db.query(
+    `SELECT total_uses FROM demo_fingerprint_quotas
+     WHERE fingerprint_hash = $1
+       AND window_start > NOW() - INTERVAL '${FINGERPRINT_BLOCK_DAYS} days'`,
+    [fingerprintHash],
+  );
+  return result.rows.length > 0 ? (result.rows[0].total_uses as number) : 0;
 }
 
 // ─── Demo PDF analysis via OpenAI ────────────────────────────────────────────
@@ -194,18 +226,24 @@ Rules:
 
 // ─── GET /api/demo/status ─────────────────────────────────────────────────────
 // Read-only: looks up an existing guest from the cookie but never creates one.
-// This prevents attackers from inflating demo_guests by hitting /status repeatedly.
+// Reports exhaustion based on demo_fingerprint_quotas (the enforcement table).
 
 router.get("/status", async (req: Request, res: Response) => {
   try {
     const existingToken: string | undefined = req.cookies?.[DEMO_COOKIE_NAME];
+    const fingerprintHash = getFingerprintHash(req);
+
+    // Check fingerprint quota — this is the enforcement source of truth.
+    const fpTotalUses = await getFingerprintTotalUses(fingerprintHash);
+    const isExhausted = fpTotalUses >= DEMO_MAX_USES;
+    const remainingUses = Math.max(0, DEMO_MAX_USES - fpTotalUses);
 
     if (!existingToken) {
       return res.json({
         demoGuestPresent: false,
-        completedUses: 0,
-        remainingUses: DEMO_MAX_USES,
-        isExhausted: false,
+        completedUses: fpTotalUses,
+        remainingUses,
+        isExhausted,
       });
     }
 
@@ -218,23 +256,17 @@ router.get("/status", async (req: Request, res: Response) => {
     if (result.rows.length === 0) {
       return res.json({
         demoGuestPresent: false,
-        completedUses: 0,
-        remainingUses: DEMO_MAX_USES,
-        isExhausted: false,
+        completedUses: fpTotalUses,
+        remainingUses,
+        isExhausted,
       });
     }
 
-    const guest = result.rows[0];
-    const fingerprintHash = getFingerprintHash(req);
-    const exhausted = await isQuotaExhausted(guest, fingerprintHash);
-    const completedUses = guest.completed_uses as number;
-    const remainingUses = Math.max(0, DEMO_MAX_USES - completedUses);
-
     return res.json({
       demoGuestPresent: true,
-      completedUses,
+      completedUses: fpTotalUses,
       remainingUses,
-      isExhausted: exhausted,
+      isExhausted,
     });
   } catch (err) {
     console.error("demo/status error", err);
@@ -248,29 +280,10 @@ router.post(
   "/analyze",
   upload.single("file"),
   async (req: Request, res: Response) => {
-    // 0. Pre-flight fingerprint check — reject exhausted fingerprints BEFORE
-    //    calling resolveGuest() so we never create a new demo_guests row for
-    //    an IP that is already blocked.  This closes the unbounded row-creation
-    //    path where dropping the cookie + hitting /analyze would mint a guest
-    //    row even though the fingerprint backstop would immediately reject it.
     const fingerprintHash = getFingerprintHash(req);
-    try {
-      const fpBlocked = await isFingerprintBlocked(fingerprintHash);
-      if (fpBlocked) {
-        return res.status(403).json({
-          error: "quota_exhausted",
-          message: "You have used all 2 free demo analyses. Create a free account to continue.",
-          remainingUses: 0,
-          isExhausted: true,
-        });
-      }
-    } catch (err) {
-      console.error("demo/analyze fingerprint-check error", err);
-      return res.status(500).json({ error: "internal_error", message: "Could not establish demo session." });
-    }
 
-    // 1. File validation — done BEFORE guest creation so invalid requests
-    //    from cookie-less callers are rejected without writing any DB rows.
+    // 0. File validation — done BEFORE any DB writes so invalid requests
+    //    are rejected without consuming a quota slot or creating guest rows.
     const file = req.file;
     if (!file) {
       return res.status(400).json({ error: "no_file", message: "Please upload a PDF file." });
@@ -282,19 +295,46 @@ router.post(
       return res.status(400).json({ error: "file_too_large", message: "File must be 10 MB or smaller for the demo." });
     }
 
-    // 2. Resolve guest (creates + sets cookie if new).
-    //    Safe to create a row here: fingerprint is confirmed not exhausted
-    //    (step 0) and the uploaded file is valid (step 1).
+    // 1. Atomically reserve a fingerprint slot — this is the primary enforcement
+    //    gate.  A single upsert statement with a conditional WHERE prevents any
+    //    TOCTOU race: concurrent requests from the same fingerprint compete for
+    //    the same row lock, so only one can increment from N-1 to N while
+    //    others see total_uses >= DEMO_MAX_USES and get no RETURNING row.
+    //    Dropping the cookie cannot bypass this because enforcement is keyed on
+    //    the fingerprint (IP), not the guest row.
+    let slotReserved = false;
+    let fingerprintTotalUses = 0;
+    try {
+      ({ reserved: slotReserved, totalUses: fingerprintTotalUses } =
+        await reserveFingerprintSlot(fingerprintHash));
+
+      if (!slotReserved) {
+        return res.status(403).json({
+          error: "quota_exhausted",
+          message: "You have used all 2 free demo analyses. Create a free account to continue.",
+          remainingUses: 0,
+          isExhausted: true,
+        });
+      }
+    } catch (err) {
+      console.error("demo/analyze fingerprint-reserve error", err);
+      return res.status(500).json({ error: "internal_error", message: "Could not establish demo session." });
+    }
+
+    // 2. Resolve/create guest row for analytics tracking.
+    //    Safe to create here: slot is already reserved (step 1) and file is valid (step 0).
     let guest: Record<string, unknown>;
     try {
       ({ guest } = await resolveGuest(req, res));
     } catch (err) {
       console.error("demo/analyze guest error", err);
+      await releaseFingerprintSlot(fingerprintHash).catch(() => {});
       return res.status(500).json({ error: "internal_error", message: "Could not establish demo session." });
     }
 
-    // 3. Parse PDF — done before the quota increment so that rejected files
-    //    (unreadable, too many pages, empty text) do not consume a quota slot.
+    // 3. Parse PDF — done after slot reservation but before the OpenAI call.
+    //    If the file is unreadable/too large, release the reserved slot so the
+    //    attempt does not count against the guest's allowance.
     let pdfText = "";
     let pageCount = 0;
     try {
@@ -304,10 +344,12 @@ router.post(
       pageCount = parsed.numpages ?? 0;
     } catch (err) {
       console.error("demo/analyze pdf-parse error", err);
+      await releaseFingerprintSlot(fingerprintHash).catch(() => {});
       return res.status(422).json({ error: "parse_failed", message: "Could not read this PDF. Please try another file." });
     }
 
     if (pageCount > DEMO_MAX_PAGES) {
+      await releaseFingerprintSlot(fingerprintHash).catch(() => {});
       return res.status(400).json({
         error: "too_many_pages",
         message: `Demo analysis is limited to ${DEMO_MAX_PAGES} pages. This file has ${pageCount} pages.`,
@@ -315,63 +357,36 @@ router.post(
     }
 
     if (!pdfText.trim()) {
+      await releaseFingerprintSlot(fingerprintHash).catch(() => {});
       return res.status(422).json({ error: "empty_text", message: "No readable text found in this PDF. Try a text-based PDF." });
     }
 
-    // 4. Atomic quota check-and-increment — placed after PDF validation so
-    //    invalid/unreadable files do not burn a quota slot, but before the
-    //    expensive OpenAI call so the slot is reserved before any cost is incurred.
-    //    The UPDATE only succeeds when completed_uses < DEMO_MAX_USES, so
-    //    concurrent requests that share the same guest row cannot both slip
-    //    through: only one wins the row lock, the others see rowCount === 0.
-    let newCompletedUses: number;
-    try {
-      const quotaResult = await db.query(
-        `UPDATE demo_guests
-         SET completed_uses = completed_uses + 1,
-             exhausted_at = CASE WHEN completed_uses + 1 >= $2 THEN NOW() ELSE exhausted_at END,
-             last_seen_at = NOW()
-         WHERE id = $1 AND completed_uses < $2
-         RETURNING completed_uses`,
-        [guest.id, DEMO_MAX_USES],
-      );
-
-      if (quotaResult.rowCount === 0) {
-        return res.status(403).json({
-          error: "quota_exhausted",
-          message: "You have used all 2 free demo analyses. Create a free account to continue.",
-          remainingUses: 0,
-          isExhausted: true,
-        });
-      }
-
-      newCompletedUses = quotaResult.rows[0].completed_uses as number;
-    } catch (err) {
-      console.error("demo/analyze quota-increment error", err);
-      return res.status(500).json({ error: "internal_error", message: "Could not establish demo session." });
-    }
+    // 4. Update guest analytics row (non-gating increment for tracking purposes).
+    //    Enforcement is fully handled by reserveFingerprintSlot() in step 1.
+    await db.query(
+      `UPDATE demo_guests
+       SET completed_uses = completed_uses + 1,
+           exhausted_at = CASE WHEN completed_uses + 1 >= $2 THEN NOW() ELSE exhausted_at END,
+           last_seen_at = NOW()
+       WHERE id = $1`,
+      [guest.id, DEMO_MAX_USES],
+    ).catch((err) => console.error("demo/analyze guest-counter error (non-fatal)", err));
 
     // 5. Insert demo_run as 'started'
-    const runInsert = await db.query(
-      `INSERT INTO demo_runs (guest_id, tool_key, status, file_name, file_size_bytes, page_count)
-       VALUES ($1, 'analyze', 'started', $2, $3, $4)
-       RETURNING id`,
-      [guest.id, file.originalname, file.size, pageCount],
-    );
-    const runId: string = runInsert.rows[0].id;
-
-    // 6. Run analysis
-    let analysisResult: Awaited<ReturnType<typeof runDemoAnalysis>>;
+    let runId: string;
     try {
-      analysisResult = await runDemoAnalysis(pdfText, file.originalname);
-    } catch (err) {
-      console.error("demo/analyze openai error", err);
-      // Mark run as failed — roll back the quota increment so this failed
-      // attempt does not count against the guest's allowance.
-      await db.query(
-        `UPDATE demo_runs SET status = 'failed', failure_reason = $2, completed_at = NOW() WHERE id = $1`,
-        [runId, "openai_error"],
+      const runInsert = await db.query(
+        `INSERT INTO demo_runs (guest_id, tool_key, status, file_name, file_size_bytes, page_count)
+         VALUES ($1, 'analyze', 'started', $2, $3, $4)
+         RETURNING id`,
+        [guest.id, file.originalname, file.size, pageCount],
       );
+      runId = runInsert.rows[0].id;
+    } catch (err) {
+      console.error("demo/analyze run-insert error", err);
+      // Roll back both the fingerprint slot and the guest analytics counter
+      // so enforcement and analytics stay consistent.
+      await releaseFingerprintSlot(fingerprintHash).catch(() => {});
       await db.query(
         `UPDATE demo_guests
          SET completed_uses = GREATEST(0, completed_uses - 1),
@@ -382,18 +397,45 @@ router.post(
              last_seen_at = NOW()
          WHERE id = $1`,
         [guest.id, DEMO_MAX_USES],
-      );
+      ).catch(() => {});
+      return res.status(500).json({ error: "internal_error", message: "Could not establish demo session." });
+    }
+
+    // 6. Run analysis
+    let analysisResult: Awaited<ReturnType<typeof runDemoAnalysis>>;
+    try {
+      analysisResult = await runDemoAnalysis(pdfText, file.originalname);
+    } catch (err) {
+      console.error("demo/analyze openai error", err);
+      // Mark run as failed and release the reserved slot — OpenAI errors
+      // should not count against the guest's allowance.
+      await db.query(
+        `UPDATE demo_runs SET status = 'failed', failure_reason = $2, completed_at = NOW() WHERE id = $1`,
+        [runId, "openai_error"],
+      ).catch(() => {});
+      await db.query(
+        `UPDATE demo_guests
+         SET completed_uses = GREATEST(0, completed_uses - 1),
+             exhausted_at = CASE
+               WHEN GREATEST(0, completed_uses - 1) < $2 THEN NULL
+               ELSE exhausted_at
+             END,
+             last_seen_at = NOW()
+         WHERE id = $1`,
+        [guest.id, DEMO_MAX_USES],
+      ).catch(() => {});
+      await releaseFingerprintSlot(fingerprintHash).catch(() => {});
       return res.status(500).json({ error: "analysis_failed", message: "Analysis failed. Please try again." });
     }
 
-    // 7. Mark run complete. Quota was already atomically incremented in step 3.
+    // 7. Mark run complete.
     await db.query(
       `UPDATE demo_runs SET status = 'complete', completed_at = NOW() WHERE id = $1`,
       [runId],
-    );
+    ).catch((err) => console.error("demo/analyze run-complete error (non-fatal)", err));
 
-    const nowExhausted = newCompletedUses >= DEMO_MAX_USES;
-    const remainingUses = Math.max(0, DEMO_MAX_USES - newCompletedUses);
+    const nowExhausted = fingerprintTotalUses >= DEMO_MAX_USES;
+    const remainingUses = Math.max(0, DEMO_MAX_USES - fingerprintTotalUses);
 
     return res.json({
       success: true,
@@ -404,7 +446,7 @@ router.post(
       keyRisks: analysisResult.keyRisks,
       nextSteps: analysisResult.nextSteps,
       missingItems: analysisResult.missingItems,
-      completedUses: newCompletedUses,
+      completedUses: fingerprintTotalUses,
       remainingUses,
       isExhausted: nowExhausted,
     });

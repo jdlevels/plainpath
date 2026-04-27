@@ -318,6 +318,21 @@ dbPool.query(
   logger.error({ err }, "[teams] Failed to create unique index on team_members"),
 );
 
+// Atomic fingerprint-level quota table for the public demo.
+// One row per fingerprint (IP-derived hash); total_uses is the single source
+// of truth for enforcement — completely prevents the cookie-drop bypass where
+// clearing demo_guest_id created a fresh guest row with completed_uses = 0.
+// CREATE TABLE IF NOT EXISTS is idempotent.
+dbPool.query(
+  `CREATE TABLE IF NOT EXISTS demo_fingerprint_quotas (
+     fingerprint_hash TEXT PRIMARY KEY,
+     total_uses       INT NOT NULL DEFAULT 0,
+     window_start     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+   )`
+).catch((err) =>
+  logger.error({ err }, "[demo] Failed to create demo_fingerprint_quotas table"),
+);
+
 app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
   if (err instanceof multer.MulterError) {
     if (err.code === "LIMIT_FILE_SIZE") {
