@@ -26,7 +26,7 @@ import pdfUtilitiesRoutes from "./routes/pdf-utilities/index.js";
 import compareVersionsRoutes from "./routes/compare-versions/index.js";
 import demoRoutes from "./routes/demo/index.js";
 import { logger } from "./lib/logger";
-import { initBuilderTemplates } from "@workspace/db";
+import { initBuilderTemplates, pool as dbPool } from "@workspace/db";
 
 const app: Express = express();
 
@@ -287,6 +287,17 @@ app.use("/api/demo", demoRoutes);
 // templates already exist. Only seeds from scratch on a fresh database.
 initBuilderTemplates().catch((err) =>
   logger.error({ err }, "[builder] Failed to initialize system templates"),
+);
+
+// Enforce one-team-per-user at the database level. A user may belong to at
+// most one team; the unique index on user_id makes this invariant impossible
+// to violate even under concurrent requests.
+// CREATE UNIQUE INDEX IF NOT EXISTS is idempotent — a no-op when it exists.
+dbPool.query(
+  `CREATE UNIQUE INDEX IF NOT EXISTS team_members_user_id_idx
+   ON team_members (user_id)`
+).catch((err) =>
+  logger.error({ err }, "[teams] Failed to create unique index on team_members"),
 );
 
 app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {

@@ -257,3 +257,21 @@ export function getSubscriberByClerkUserId(clerkUserId: string) {
     .prepare("SELECT * FROM subscribers WHERE clerkUserId = ?")
     .get(clerkUserId) as SubscriberRecord | undefined
 }
+
+export type BillingTeamRecord = {
+  id: string
+  ownerClerkId: string
+  ownerEmail: string
+  plan: string
+  status: string
+  maxSeats: number
+  stripeSubId: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export function getTeamFromBilling(teamId: string) {
+  return billingDb
+    .prepare("SELECT * FROM teams WHERE id = ?")
+    .get(teamId) as BillingTeamRecord | undefined
+}

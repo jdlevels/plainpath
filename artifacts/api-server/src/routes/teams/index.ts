@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { getAuth, clerkClient } from "@clerk/express";
 import { pool } from "@workspace/db";
-import { getSubscriberByEmail } from "../../lib/billingDb";
+import { getSubscriberByEmail, getTeamFromBilling } from "../../lib/billingDb";
 import crypto from "crypto";
 
 const router = Router();
@@ -48,6 +48,24 @@ async function requireTeamPlan(req: any, res: any, next: any) {
   const sub = getSubscriberByEmail(email);
   if (!sub || sub.plan !== "team" || sub.status !== "active") {
     return res.status(403).json({ error: "team_plan_required", message: "This feature requires a Team plan." });
+  }
+  next();
+}
+
+async function requireTargetTeamPlan(req: any, res: any, next: any) {
+  const email = await getUserEmail(req.userId);
+  if (!email) return res.status(401).json({ error: "could_not_resolve_email" });
+  req.userEmail = email;
+
+  const adminEmails = (process.env.ADMIN_EMAILS ?? "").split(",").map((e: string) => e.trim()).filter(Boolean);
+  if (adminEmails.includes(email)) return next();
+
+  const teamId = req.params.teamId;
+  if (!teamId) return res.status(400).json({ error: "missing_team_id" });
+
+  const billingTeam = getTeamFromBilling(teamId);
+  if (!billingTeam || billingTeam.plan !== "team" || billingTeam.status !== "active") {
+    return res.status(403).json({ error: "team_plan_required", message: "This feature requires an active Team plan for this team." });
   }
   next();
 }
@@ -124,27 +142,42 @@ router.post("/invite/:token/accept", requireAuth, async (req: any, res) => {
       // Lock the team row to serialize concurrent accept calls for the same team.
       await client.query(`SELECT id FROM teams WHERE id = $1 FOR UPDATE`, [invite.team_id]);
 
-      const existing = await client.query(
-        `SELECT id FROM team_members WHERE team_id = $1 AND user_id = $2`,
-        [invite.team_id, req.userId]
+      // Check if the user is already a member of any team (one-team-per-user policy).
+      const anyTeamMembership = await client.query(
+        `SELECT id, team_id FROM team_members WHERE user_id = $1 LIMIT 1`,
+        [req.userId]
       );
-      if (existing.rowCount === 0) {
-        const memberCount = await client.query(
-          `SELECT COUNT(*) as count FROM team_members WHERE team_id = $1`,
-          [invite.team_id]
-        );
-        if (parseInt(memberCount.rows[0].count, 10) >= TEAM_SEAT_LIMIT) {
-          await client.query("ROLLBACK");
-          return res.status(403).json({
-            error: "seat_limit_reached",
-            message: `This team has reached its maximum of ${TEAM_SEAT_LIMIT} members and cannot accept new members.`,
-          });
+      if ((anyTeamMembership.rowCount ?? 0) > 0) {
+        const existingTeamId = anyTeamMembership.rows[0].team_id;
+        if (existingTeamId === invite.team_id) {
+          // Already in this team — idempotent: just mark the invite accepted and return.
+          await client.query(`UPDATE team_invites SET status = 'accepted' WHERE token = $1`, [req.params.token]);
+          await client.query("COMMIT");
+          return res.json({ ok: true, teamId: invite.team_id, teamName: invite.team_name });
         }
-        await client.query(
-          `INSERT INTO team_members (team_id, user_id, email, display_name, role) VALUES ($1, $2, $3, $4, 'member')`,
-          [invite.team_id, req.userId, email, displayName]
-        );
+        // Already in a different team — reject to enforce the one-team-per-user boundary.
+        await client.query("ROLLBACK");
+        return res.status(403).json({
+          error: "already_in_team",
+          message: "You are already a member of a team. Leave your current team before joining another.",
+        });
       }
+
+      const memberCount = await client.query(
+        `SELECT COUNT(*) as count FROM team_members WHERE team_id = $1`,
+        [invite.team_id]
+      );
+      if (parseInt(memberCount.rows[0].count, 10) >= TEAM_SEAT_LIMIT) {
+        await client.query("ROLLBACK");
+        return res.status(403).json({
+          error: "seat_limit_reached",
+          message: `This team has reached its maximum of ${TEAM_SEAT_LIMIT} members and cannot accept new members.`,
+        });
+      }
+      await client.query(
+        `INSERT INTO team_members (team_id, user_id, email, display_name, role) VALUES ($1, $2, $3, $4, 'member')`,
+        [invite.team_id, req.userId, email, displayName]
+      );
 
       await client.query(`UPDATE team_invites SET status = 'accepted' WHERE token = $1`, [req.params.token]);
       await client.query("COMMIT");
@@ -406,13 +439,13 @@ router.post("/:teamId/leave", async (req: any, res) => {
 });
 
 // ─── GET /api/teams/:teamId/analytics ────────────────────────────────────────
-router.get("/:teamId/analytics", requireTeamPlan, async (req: any, res) => {
+router.get("/:teamId/analytics", requireTargetTeamPlan, async (req: any, res) => {
   try {
     const adminCheck = await pool.query(
-      `SELECT id FROM team_members WHERE team_id = $1 AND user_id = $2`,
+      `SELECT id FROM team_members WHERE team_id = $1 AND user_id = $2 AND role = 'admin'`,
       [req.params.teamId, req.userId]
     );
-    if (adminCheck.rowCount === 0) return res.status(403).json({ error: "not_member" });
+    if (adminCheck.rowCount === 0) return res.status(403).json({ error: "not_admin" });
 
     const membersResult = await pool.query(
       `SELECT user_id, email FROM team_members WHERE team_id = $1`,

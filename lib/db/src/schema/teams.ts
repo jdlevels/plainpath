@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 
 export const teamsTable = pgTable("teams", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -17,7 +17,9 @@ export const teamMembersTable = pgTable("team_members", {
   displayName: text("display_name"),
   role: text("role").notNull().default("member"),
   joinedAt: timestamp("joined_at").defaultNow().notNull(),
-});
+}, (table) => [
+  uniqueIndex("team_members_user_id_idx").on(table.userId),
+]);
 
 export const teamInvitesTable = pgTable("team_invites", {
   id: uuid("id").primaryKey().defaultRandom(),
