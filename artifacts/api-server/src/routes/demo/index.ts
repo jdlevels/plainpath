@@ -32,13 +32,17 @@ function getIpPrefix(req: Request): string {
   // req.socket.remoteAddress (which in proxied production would be the load
   // balancer's IP, causing all users behind it to share one fingerprint).
   const raw = req.ip ?? req.socket.remoteAddress ?? "";
-  // IPv4: take first two octets; IPv6: take first two groups
+  // IPv4: take first three octets (/24) so the quota applies to ~254 addresses
+  // rather than a /16 (65,535 addresses).  Using only two octets let a single
+  // attacker exhaust the allowance for entire offices, schools, or ISP blocks.
+  // IPv6: take first four groups (/64) — the standard end-site prefix assigned
+  // by ISPs — instead of two groups (/32) which covers millions of addresses.
   if (raw.includes(".")) {
     const parts = raw.split(".");
-    return `${parts[0] ?? "0"}.${parts[1] ?? "0"}`;
+    return `${parts[0] ?? "0"}.${parts[1] ?? "0"}.${parts[2] ?? "0"}`;
   }
   const parts = raw.split(":");
-  return parts.slice(0, 2).join(":");
+  return parts.slice(0, 4).join(":");
 }
 
 function getFingerprintHash(req: Request): string {
