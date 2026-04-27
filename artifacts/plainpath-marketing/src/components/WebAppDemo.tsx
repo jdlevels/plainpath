@@ -13,7 +13,7 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 import {
   AlertTriangle, CheckCircle2, Shield, ShieldAlert, Scale,
   FileText, EyeOff, MessageCircle, GitCompare, ListChecks,
-  PenLine, Download, Sparkles, Clock,
+  PenLine, Download, Sparkles, Clock, LayoutTemplate,
 } from "lucide-react"
 
 const TOOL_MS = 3500
@@ -33,10 +33,11 @@ const TOOLS = [
   { id: 4, shortName: "Redact",   icon: EyeOff,        hex: "#8b5cf6", iconHex: "#c4b5fd", docName: "Patient Intake Form.pdf",        docMeta: "423 words · 3 pages",    badge: { label: "3 items",       dot: "#8b5cf6" } },
   { id: 5, shortName: "Ask",      icon: MessageCircle, hex: "#6366f1", iconHex: "#a5b4fc", docName: "Residential Lease Agreement.pdf", docMeta: "2,140 words · 8 pages", badge: { label: "3 answered",    dot: "#6366f1" } },
   { id: 6, shortName: "Compare",  icon: GitCompare,    hex: "#14b8a6", iconHex: "#5eead4", docName: "NDA v1.pdf → NDA v2.pdf",       docMeta: "2 versions · 14 changes", badge: { label: "1 critical",    dot: "#ef4444" } },
-  { id: 7, shortName: "Extract",  icon: ListChecks,    hex: "#c026d3", iconHex: "#f0abfc", docName: "Lease Agreement.pdf",           docMeta: "2,840 words · 12 pages", badge: { label: "6 obligations", dot: "#c026d3" } },
+  { id: 7, shortName: "Extract",  icon: ListChecks,      hex: "#c026d3", iconHex: "#f0abfc", docName: "Lease Agreement.pdf",               docMeta: "2,840 words · 12 pages",   badge: { label: "6 obligations", dot: "#c026d3" } },
+  { id: 8, shortName: "Builder",  icon: LayoutTemplate,  hex: "#0d9488", iconHex: "#5eead4", docName: "Employee Onboarding Guide",          docMeta: "New doc · 7 sections",     badge: { label: "Drafting…",     dot: "#0d9488" } },
 ] as const
 
-type ToolId = 0|1|2|3|4|5|6|7
+type ToolId = 0|1|2|3|4|5|6|7|8
 
 /* ─── App nav bar ────────────────────────────────────────────── */
 function MiniNav({
@@ -265,11 +266,11 @@ function DocPane({ toolId }: { toolId: ToolId }) {
   return (
     <div className="relative h-full px-3 pt-3 overflow-hidden border-r border-zinc-800">
       <p className="text-[9px] font-semibold tracking-widest uppercase mb-2.5" style={{ color: "#52525b" }}>
-        {toolId === 2 ? "Contract Fields" : toolId === 6 ? "Version Diff" : "Document Preview"}
+        {toolId === 2 || toolId === 8 ? "Question Flow" : toolId === 6 ? "Version Diff" : "Document Preview"}
       </p>
       <AnimatePresence mode="wait">
         <motion.div key={toolId} variants={slide} initial="hidden" animate="visible" exit="exit">
-          {toolId === 2 ? <WizardDocLines /> :
+          {toolId === 2 || toolId === 8 ? <WizardDocLines /> :
            toolId === 4 ? <RedactedDocLines /> :
            toolId === 6 ? <DiffDocLines /> :
            <DocLines
@@ -543,6 +544,45 @@ function ResultsClauseExtractor() {
   )
 }
 
+function ResultsDocBuilder() {
+  const sections = ["Introduction & Purpose", "Tools & Access", "Day 1 Schedule", "Key Contacts"]
+  return (
+    <div className="space-y-2">
+      <p className="text-[9px] font-semibold tracking-widest uppercase text-zinc-600 mb-2">Document Ready</p>
+      <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.38 }}
+        className="p-2 rounded-lg" style={{ background: "rgba(13,148,136,0.15)", border: "1px solid rgba(13,148,136,0.3)" }}>
+        <div className="flex items-center gap-1.5 mb-1.5">
+          <CheckCircle2 style={{ width: 11, height: 11, color: "#0d9488" }} />
+          <span className="text-[10px] font-bold" style={{ color: "#0d9488" }}>Employee Onboarding Guide</span>
+        </div>
+        <div className="space-y-0.5 ml-4">
+          {["7 sections drafted", "Brand styling applied", "Export-ready"].map((t) => (
+            <p key={t} className="text-[9px] text-zinc-400">{t}</p>
+          ))}
+        </div>
+      </motion.div>
+      <div className="space-y-1.5">
+        {sections.map((s, i) => (
+          <motion.div key={s} initial={{ opacity: 0, x: -4 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 + i * 0.08 }}
+            className="flex items-center gap-1.5 p-1.5 rounded-lg" style={{ background: "#111118", border: "1px solid #27272a" }}>
+            <div className="w-3 h-3 rounded border flex items-center justify-center shrink-0" style={{ background: "#0d9488", borderColor: "#0d9488" }}>
+              <svg viewBox="0 0 12 12" className="w-1.5 h-1.5" fill="none">
+                <path d="M2.5 6L5 8.5L9.5 4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+            <span className="text-[9px] text-zinc-400 leading-tight">{s}</span>
+          </motion.div>
+        ))}
+      </div>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
+        className="flex items-center gap-1.5 p-2 rounded-lg" style={{ background: "rgba(59,130,246,0.12)", border: "1px solid rgba(59,130,246,0.25)" }}>
+        <Download style={{ width: 11, height: 11, color: "#3b82f6" }} />
+        <span className="text-[10px] font-semibold" style={{ color: "#3b82f6" }}>Export as PDF or Word</span>
+      </motion.div>
+    </div>
+  )
+}
+
 function ResultsPane({ toolId }: { toolId: ToolId }) {
   return (
     <div className="h-full px-3 pt-3 overflow-hidden relative">
@@ -556,6 +596,7 @@ function ResultsPane({ toolId }: { toolId: ToolId }) {
           {toolId === 5 && <ResultsAsk />}
           {toolId === 6 && <ResultsCompare />}
           {toolId === 7 && <ResultsClauseExtractor />}
+          {toolId === 8 && <ResultsDocBuilder />}
         </motion.div>
       </AnimatePresence>
       <div className="absolute bottom-0 left-0 right-0 h-8 pointer-events-none" style={{ background: "linear-gradient(to top,#0a0a0f,transparent)" }} />
@@ -578,7 +619,7 @@ export function WebAppDemo({ activeTool, onToolChange }: Props = {}) {
   useEffect(() => {
     if (isControlled) return
     if (shouldReduce) return
-    const id = setInterval(() => setInternalTool(t => ((t + 1) % 8) as ToolId), TOOL_MS)
+    const id = setInterval(() => setInternalTool(t => ((t + 1) % TOOLS.length) as ToolId), TOOL_MS)
     return () => clearInterval(id)
   }, [isControlled, shouldReduce])
 

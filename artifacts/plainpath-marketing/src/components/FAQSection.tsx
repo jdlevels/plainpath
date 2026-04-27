@@ -44,6 +44,11 @@ const TOOL_ROWS: { color: string; name: string; desc: string }[] = [
     name: "Clause Extractor",
     desc: "pulls every obligation, key date, party, and financial term from a contract — and tells you exactly who owes what by when.",
   },
+  {
+    color: "text-teal-600 dark:text-teal-400",
+    name: "Document Builder",
+    desc: "creates SOPs, manuals, policies, checklists, onboarding guides, and internal business documents through a guided question flow — with brand styling and export-ready output.",
+  },
 ]
 
 const TOOLS_ANSWER: React.ReactNode = (
@@ -88,7 +93,15 @@ const FAQS: { q: string; a: React.ReactNode }[] = [
   },
   {
     q: "Which plan do I need for each tool?",
-    a: "Analyze a Document and Redact Sensitive Info are available on Starter and Pro plans. Document Trust Check, Build a Contract, Contract Review, Ask This Document, Compare Versions, and Clause Extractor require a Pro plan. You'll see an upgrade prompt if you try to use them without Pro, and you can switch plans at any time.",
+    a: "Analyze a Document and Redact Sensitive Info are available on Starter and Pro plans. Document Trust Check, Build a Contract, Contract Review, Ask This Document, Compare Versions, Clause Extractor, and Document Builder require a Pro plan. You'll see an upgrade prompt if you try to use them without Pro, and you can switch plans at any time.",
+  },
+  {
+    q: "What is Document Builder?",
+    a: "Document Builder is a tool for creating internal business documents from scratch — SOPs, employee manuals, onboarding guides, policies, checklists, and more. You answer a guided question flow, PlainPath drafts the structure, and you refine it block by block with your brand colors, logo, and headers applied throughout. The final document exports as a ready-to-share file.",
+  },
+  {
+    q: "Does the mobile app handle payments and subscriptions?",
+    a: "No. Subscription management is handled on the PlainPath website. If you are using the iOS or Android app and need to manage your plan, visit plainpathapp.com on any browser.",
   },
 ]
 

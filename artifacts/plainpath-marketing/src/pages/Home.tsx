@@ -209,13 +209,26 @@ const FEATURES = [
     tags: ["Key dates", "Obligations", "Legal clauses", "Party roles"],
     tagCls: "bg-fuchsia-50/80 dark:bg-fuchsia-900/20 text-fuchsia-700 dark:text-fuchsia-300 border border-fuchsia-200/60 dark:border-fuchsia-700/40",
   },
+  {
+    icon: LayoutTemplate,
+    color: "text-teal-600 dark:text-teal-400",
+    bg: "bg-teal-100 dark:bg-teal-900/30",
+    border: "border-l-teal-500 dark:border-l-teal-400",
+    accent: "bg-teal-500 dark:bg-teal-400",
+    glow: "from-teal-50 dark:from-teal-900/10",
+    title: "Document Builder",
+    desc: "Create SOPs, manuals, policies, checklists, onboarding guides, and internal business documents. Answer a guided question flow and refine the result block by block — with your brand applied throughout.",
+    result: { label: "Document Ready", value: "Employee Onboarding Guide · 7 sections · brand styling applied. Export-ready.", icon: CheckCircle2, color: "text-teal-600 dark:text-teal-400", bg: "bg-teal-50 dark:bg-teal-900/20" },
+    tags: ["SOPs", "Onboarding guides", "Policies", "Checklists"],
+    tagCls: "bg-teal-50/80 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300 border border-teal-200/60 dark:border-teal-700/40",
+  },
 ];
 
 /* ─── How it works ───────────────────────────────────────── */
 const HOW = [
-  { icon: Upload,       num: "01", title: "Drop it in",            desc: "PDF, Word file, or paste text — any text-based document." },
-  { icon: Sparkles,     num: "02", title: "AI does the reading",   desc: "PlainPath extracts what matters: risks, obligations, deadlines, and required actions." },
-  { icon: CheckCircle2, num: "03", title: "Get clarity, not confusion", desc: "A plain-English summary, prioritized action checklist, and deadlines — every time." },
+  { icon: Upload,       num: "01", title: "Choose a tool and add your document", desc: "Upload a PDF or Word file, paste text, upload two versions to compare, or start from scratch with a guided question flow — every tool starts with one simple step." },
+  { icon: Sparkles,     num: "02", title: "PlainPath reads, builds, or extracts", desc: "Depending on the tool: it analyzes what your document means, flags what looks suspicious, drafts an agreement, redacts private info, answers your questions, maps changes, or structures your internal doc." },
+  { icon: CheckCircle2, num: "03", title: "Review results and take action",       desc: "Get plain-English results you can act on — summaries, verdicts, clause breakdowns, side-by-side diffs, answers, redacted copies, or a draft document ready to save or export." },
 ];
 
 /* ─── Trust ──────────────────────────────────────────────── */
@@ -310,7 +323,7 @@ const DEMOS = [
     hoverTitle: "group-hover:text-indigo-500 dark:group-hover:text-indigo-400",
     tags: ["3 questions answered", "Sourced from text", "Pre-loaded demo"],
     cta: "See it in action",
-    href: "/app/analyze",
+    href: "/app/ask-document",
   },
   {
     id: "compare-nda",
@@ -392,6 +405,7 @@ const PLANS = [
       { label: "Ask This Document",     included: true,  comingSoon: false },
       { label: "Compare Versions",      included: true,  comingSoon: false },
       { label: "Clause Extractor",      included: true,  comingSoon: false },
+      { label: "Document Builder",      included: true,  comingSoon: false },
     ],
     extras: ["Saved analysis history", "Premium output and workflow tools"],
     cta: "Subscribe to Pro",
@@ -1163,7 +1177,7 @@ export default function Home() {
       </div>
 
       {/* ════════════════════════════════════════════════
-          TOOLS SHOWCASE — 6-card detailed grid
+          TOOLS SHOWCASE — 9-card detailed grid
       ════════════════════════════════════════════════ */}
       <div id="solutions" className="w-full bg-gradient-to-br from-indigo-200/75 via-violet-200/60 to-slate-200/70 dark:from-violet-950/22 dark:via-slate-900 dark:to-slate-900 border-y border-indigo-300/50 dark:border-border/40 py-20">
         <div className="max-w-6xl mx-auto px-5 sm:px-6">

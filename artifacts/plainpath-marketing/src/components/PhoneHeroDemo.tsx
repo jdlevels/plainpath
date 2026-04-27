@@ -1,7 +1,7 @@
 /**
  * PhoneHeroDemo — 9-tool animated phone preview
  *
- * Accepts optional `toolIndex` (0–7) from a parent that owns the
+ * Accepts optional `toolIndex` (0–8) from a parent that owns the
  * shared demo-rotation state.  When omitted it self-rotates.
  *
  * Phone shell: iPhone-16-Pro-Max inspired — Dynamic Island, titanium
@@ -34,6 +34,7 @@ const TOOL_HEADERS = [
   { docName: "Consulting Agreement",    docMeta: "1,820 words · 6 pages",      badgeLabel: "Awaiting",       badgeBg: "rgba(99,102,241,0.15)", badgeBorder: "rgba(99,102,241,0.40)", badgeColor: "#3730a3", badgeDot: "#6366f1" },
   { docName: "NDA v1 → NDA v2",         docMeta: "2 versions · 14 changes",    badgeLabel: "1 critical",     badgeBg: "rgba(239,68,68,0.15)",  badgeBorder: "rgba(239,68,68,0.40)",  badgeColor: "#991b1b", badgeDot: "#ef4444" },
   { docName: "Lease Agreement",         docMeta: "2,840 words · 12 pages",     badgeLabel: "6 obligations",  badgeBg: "rgba(192,38,211,0.15)", badgeBorder: "rgba(192,38,211,0.40)", badgeColor: "#701a75", badgeDot: "#c026d3" },
+  { docName: "Onboarding Guide",        docMeta: "New doc · 7 sections",       badgeLabel: "Drafting…",      badgeBg: "rgba(13,148,136,0.15)", badgeBorder: "rgba(13,148,136,0.40)", badgeColor: "#134e4a", badgeDot: "#0d9488" },
 ]
 
 /* ─── Phone chrome ─────────────────────────────────────────── */
@@ -353,6 +354,39 @@ function ClauseExtractorScreen() {
   )
 }
 
+function DocumentBuilderScreen() {
+  const sections = [
+    { label: "Introduction & Purpose", done: true },
+    { label: "Tools & Equipment Access", done: true },
+    { label: "Day 1 Schedule", done: true },
+    { label: "Key Contacts & Teams", done: false },
+  ]
+  return (
+    <div className="px-3 pt-3 space-y-2">
+      <div className="flex items-center gap-1.5 bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-700/40 rounded-xl px-2.5 py-2">
+        <CheckCircle2 className="w-3 h-3 text-teal-600 shrink-0" />
+        <p className="text-[10px] font-semibold text-teal-700 dark:text-teal-400">7 sections drafted</p>
+      </div>
+      <p className="text-[9px] font-semibold text-zinc-400 uppercase tracking-wider">Sections</p>
+      {sections.map(({ label, done }, i) => (
+        <div key={i} className="flex items-center gap-2">
+          <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${done ? "bg-teal-500 border-teal-500" : "border-zinc-300 dark:border-zinc-600"}`}>
+            {done && (
+              <svg viewBox="0 0 12 12" className="w-2 h-2" fill="none">
+                <path d="M2.5 6L5 8.5L9.5 4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            )}
+          </div>
+          <p className="text-[9px] text-zinc-600 dark:text-zinc-400 leading-tight">{label}</p>
+        </div>
+      ))}
+      <div className="flex items-center gap-1.5 mt-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/40 rounded-xl px-2.5 py-2">
+        <p className="text-[10px] font-semibold text-blue-700 dark:text-blue-400">Export as PDF or Word</p>
+      </div>
+    </div>
+  )
+}
+
 /* ─── Screen router ──────────────────────────────────────── */
 function ToolScreen({ toolId }: { toolId: number }) {
   switch (toolId) {
@@ -364,6 +398,7 @@ function ToolScreen({ toolId }: { toolId: number }) {
     case 5:  return <AskDocumentScreen />
     case 6:  return <CompareScreen />
     case 7:  return <ClauseExtractorScreen />
+    case 8:  return <DocumentBuilderScreen />
     default: return <AnalyzeScreen />
   }
 }
@@ -378,7 +413,7 @@ export function PhoneHeroDemo({ toolIndex }: { toolIndex?: number } = {}) {
   useEffect(() => {
     if (toolIndex !== undefined) return
     if (shouldReduce) return
-    const id = setInterval(() => setInternalIdx(i => (i + 1) % 8), PHASE_MS)
+    const id = setInterval(() => setInternalIdx(i => (i + 1) % TOOL_HEADERS.length), PHASE_MS)
     return () => clearInterval(id)
   }, [toolIndex, shouldReduce])
 

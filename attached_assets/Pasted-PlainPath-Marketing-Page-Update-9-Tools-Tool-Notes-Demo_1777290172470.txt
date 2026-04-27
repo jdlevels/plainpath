@@ -1,0 +1,358 @@
+PlainPath Marketing Page Update — 9 Tools, Tool Notes, Demo Loops, Store-Ready Accuracy
+
+Goal:
+Update the PlainPath marketing site so it accurately reflects the current product before screenshot capture and app-store submission.
+
+Current active tools:
+1. Analyze a Document
+2. Document Trust Check
+3. Build a Contract
+4. Contract Review
+5. Redact Sensitive Info
+6. Ask This Document
+7. Clause Extractor
+8. Compare Versions
+9. Document Builder
+
+Mode:
+Marketing-site update only unless a shared component is required.
+Do not change app tool logic.
+Do not change API routes.
+Do not change Stripe.
+Do not change auth.
+Do not change database schema.
+Do not create migrations.
+Do not reintroduce e-signature.
+Do not add Dropbox Sign.
+Do not change pricing logic.
+Do not alter native payment behavior.
+
+Primary requirement:
+Every public-facing marketing area must clearly reflect all 9 active tools, explain them accurately, and show working demo/preview content where applicable.
+
+====================================================
+A. Full Marketing Site Inventory
+====================================================
+
+Inspect the full marketing codebase:
+
+- artifacts/plainpath-marketing/src/App.tsx
+- artifacts/plainpath-marketing/src/pages/*
+- artifacts/plainpath-marketing/src/components/*
+- artifacts/plainpath-marketing/src/components/layout/*
+- artifacts/plainpath-marketing/src/data/*
+- any demo/preview/mock data files
+- any tool showcase arrays
+- any FAQ arrays
+- any comparison pages
+- any pricing/plan copy
+- any “How it works” sections
+- any footer/nav tool links
+
+Return the full list of files inspected before making changes.
+
+====================================================
+B. Tool Count Accuracy
+====================================================
+
+Search and fix all public-facing stale tool-count copy:
+
+Replace where appropriate:
+- “8 tools” → “9 tools”
+- “all 8 tools” → “all 9 tools”
+- “8 tools live” → “9 tools live”
+- “6 tools” → “9 tools”
+- “all 6 tools” → “all 9 tools”
+- “8 tools on Pro” → “9 tools on Pro”
+
+Important:
+Only change text where it refers to the active PlainPath tool count.
+Do not alter internal comments unless quick and harmless.
+Do not change pricing amounts in this pass unless the sentence becomes inaccurate.
+
+====================================================
+C. Removed Feature Sweep
+====================================================
+
+Confirm there are no user-facing references to:
+- Digital Signature
+- E-signature
+- Send for Signature
+- Dropbox Sign
+- HelloSign
+- Signature request
+- Prepare and Place
+- Sign it as a tool
+- “legally binding e-signature”
+
+Allowed:
+- Normal words like sign, signing, signed, or signature only if they are generic contract/document language.
+- Static printable signature/date line language only if describing a generated document field, not a signing workflow.
+
+Return remaining references and classify:
+A. Removed feature reference — must fix
+B. Normal contract/document language — allowed
+C. Static printable field — allowed
+D. Internal comment — harmless
+
+====================================================
+D. Marketing Hero Update
+====================================================
+
+Verify the hero section:
+
+Must show:
+- PlainPath helps users understand documents in plain English.
+- 9 active tool pills/cards.
+- Tool labels match the app exactly.
+- “Document Builder” appears as a normal tool.
+- “Build a Contract” remains separate from Document Builder.
+- No Digital Signature.
+- No e-signature.
+- No stale 8-tool copy.
+- CTA routes correctly.
+
+Tool buttons/pills should route to the correct app/demo destination:
+- Analyze a Document
+- Document Trust Check
+- Build a Contract
+- Contract Review
+- Redact Sensitive Info
+- Ask This Document
+- Clause Extractor
+- Compare Versions
+- Document Builder
+
+If the hero has a phone/mock preview, update the demo loop so it includes the 9-tool reality or at least does not imply only 8 tools.
+
+====================================================
+E. Tools Showcase Section
+====================================================
+
+Update the main tools showcase so it contains exactly 9 cards.
+
+Each card must include:
+- Tool name
+- Short verb or action phrase
+- Plain-English benefit
+- 3–4 feature notes
+- Correct CTA
+- Correct route
+- Correct color/icon style
+- No “coming soon” unless truly not available
+
+Required cards:
+
+1. Analyze a Document
+Purpose: Understand any document in plain English with actions, deadlines, missing items, and risks.
+
+2. Document Trust Check
+Purpose: Check whether a document looks suspicious, inconsistent, high-risk, or unverifiable before acting.
+
+3. Build a Contract
+Purpose: Answer guided questions and generate a structured contract draft.
+
+4. Contract Review
+Purpose: Review contract clauses, red flags, watch-outs, missing protections, and negotiation notes.
+
+5. Redact Sensitive Info
+Purpose: Find and permanently cover sensitive information before sharing.
+
+6. Ask This Document
+Purpose: Ask questions about a document and receive plain-English answers tied to the file.
+
+7. Clause Extractor
+Purpose: Extract key clauses, dates, obligations, parties, and missing items from contracts or agreements.
+
+8. Compare Versions
+Purpose: Compare two versions of a document and identify additions, deletions, changed terms, and risk shifts.
+
+9. Document Builder
+Purpose: Create SOPs, manuals, policies, checklists, onboarding guides, and internal business documents.
+
+====================================================
+F. Demo System / Live Demo Check
+====================================================
+
+Audit every marketing demo component and demo page.
+
+Check:
+- Hero phone demo
+- Web app demo
+- Video walkthrough component
+- Demo landing page
+- Tool showcase demos
+- “Try demo” buttons
+- Any “See how it works” section
+- Any animated scanner loop
+- Any phone preview loop
+
+Required:
+- Demos must not reference removed e-signature.
+- Demos must not say 8 tools or 6 tools.
+- Demos must not show broken tool names.
+- Demos must not show stale pricing copy.
+- Demos must not imply a feature exists if it was removed.
+- Demo loops must run without console/runtime errors.
+- Tool cards must not route to dead pages.
+- Any demo route should either work or be intentionally hidden.
+
+For each demo:
+Return:
+Demo name | File | Tools represented | Route | Running? | Broken/stale copy? | Fix made?
+
+====================================================
+G. How It Works Section
+====================================================
+
+Update the “How it works” section to reflect the current app flow:
+
+Recommended flow:
+1. Choose a tool
+2. Upload, paste, compare, or create a document
+3. PlainPath scans or builds the document
+4. Review plain-English results, source-backed notes, or editable draft output
+5. Save, export, redact, ask questions, or continue into another tool
+
+Make sure this section supports all tool types:
+- scan tools
+- review tools
+- redaction
+- Ask This Document
+- Compare Versions
+- Build a Contract
+- Document Builder
+
+====================================================
+H. Pricing / Plan Copy Accuracy
+====================================================
+
+Audit marketing pricing copy only.
+
+Check:
+- tool count says 9 where applicable
+- Pro plan references all 9 tools if appropriate
+- no removed Signature feature
+- no stale 6-tool/8-tool count
+- no inaccurate “no account required” if auth is required for actual app use
+- no native app purchase language that violates native-payment decision
+
+Do not change actual pricing amounts unless they are paired with incorrect tool-count copy.
+
+====================================================
+I. FAQ Update
+====================================================
+
+Update FAQ items that reference:
+- “eight tools”
+- “six tools”
+- e-signature
+- removed features
+- unsupported export claims
+- no account required
+- legal advice claims
+- document storage claims
+
+Add or update FAQ entries if missing:
+
+1. How many tools does PlainPath include?
+Answer should state 9 active tools.
+
+2. Does PlainPath replace a lawyer?
+Answer: No. PlainPath helps users understand documents in plain English but is not legal advice.
+
+3. Does PlainPath store my documents?
+Answer must match actual current behavior.
+
+4. Does the native app process payments?
+Answer: No. Subscription management is handled on the PlainPath website.
+
+5. What is Document Builder?
+Answer: A tool for creating SOPs, manuals, policies, checklists, onboarding guides, and internal documents.
+
+====================================================
+J. Footer / Navigation / CTA Audit
+====================================================
+
+Verify:
+- Tools dropdown has all 9 tools if shown publicly.
+- Footer tool list has all 9 tools or no stale partial list.
+- CTA buttons route correctly.
+- Login/Open App buttons route correctly.
+- Try demo buttons route correctly.
+- No dead links.
+- No /signature or /demo/signature links.
+- Support email is support@plainpathapp.com.
+- Privacy, Terms, Support links work.
+
+====================================================
+K. App Store Screenshot Readiness
+====================================================
+
+Because screenshots and previews should communicate the actual app experience, confirm marketing copy is now screenshot-safe.
+
+Check screenshot-critical areas:
+- hero
+- tool pill grid
+- 9-tool section
+- pricing section
+- FAQ
+- demos
+- phone preview
+- comparison section
+- footer
+
+Return:
+- screenshot-safe yes/no
+- any remaining copy risk
+- any visual/demo blocker
+
+====================================================
+L. Verification
+====================================================
+
+Run:
+- marketing TypeScript check
+- marketing build
+- marketing startup
+- browser smoke test
+- homepage load
+- tools section load
+- FAQ load
+- pricing section load
+- demo loops load
+- CTA links check
+
+Confirm:
+- zero new TypeScript errors
+- no runtime crash
+- no stale “8 tools”
+- no stale “6 tools”
+- no user-facing “Digital Signature”
+- no user-facing “Dropbox Sign”
+- no dead demo route
+- all 9 tools represented
+- demo animations still run
+- app routes are not changed
+
+====================================================
+M. Return Format
+====================================================
+
+Return only:
+
+A. Files inspected
+B. Files changed
+C. 9-tool marketing confirmation
+D. Removed feature sweep result
+E. Hero update result
+F. Tools showcase result
+G. Demo/live preview result
+H. How It Works result
+I. Pricing/plan copy result
+J. FAQ result
+K. Footer/nav/CTA result
+L. Remaining references with classification
+M. Build/test result
+N. Screenshot-safe: Yes/No
+O. Safe to continue app-store screenshot capture: Yes/No

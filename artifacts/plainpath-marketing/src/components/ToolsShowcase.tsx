@@ -3,7 +3,7 @@ import {
   FileScan, ShieldCheck, PenLine, Scale, ArrowRight,
   ListTodo, Calendar, AlertTriangle, CheckCircle2,
   Flag, BarChart2, FileCheck, Sparkles, Copy, MessageSquare,
-  EyeOff, Download, ArrowRightLeft, Lock, Clock, MessageCircle, Send, Eye,
+  EyeOff, Download, ArrowRightLeft, Lock, Clock, MessageCircle, Eye,
   GitCompare, ListChecks, CalendarClock, Layers, Users, LayoutTemplate, Palette,
 } from "lucide-react"
 import { Card } from "@/components/ui/card"
@@ -233,7 +233,7 @@ export default function ToolsShowcase() {
           className="text-3xl md:text-4xl font-bold mb-4"
           style={{ fontFamily: "var(--font-display)" }}
         >
-          Read it. Trust it. Build it. Review it. Protect it. Sign it. Compare it. Decode it. Draft it.
+          Read it. Trust it. Build it. Review it. Protect it. Ask it. Compare it. Decode it. Draft it.
         </motion.h2>
         <motion.p
           initial={{ opacity: 0, y: 8 }}

@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import {
   FileScan, ShieldCheck, PenLine, Scale, EyeOff,
-  MessageCircle, GitCompare, ListChecks, ArrowRight,
+  MessageCircle, GitCompare, ListChecks, LayoutTemplate, ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/layout/Navbar";
@@ -78,7 +78,7 @@ const TOOLS = [
     bg: "bg-indigo-50 dark:bg-indigo-950/40",
     border: "border-indigo-200 dark:border-indigo-800",
     ring: "hover:ring-indigo-300 dark:hover:ring-indigo-700",
-    href: "/app/analyze",
+    href: "/app/ask-document",
   },
   {
     key: "compare",
@@ -103,6 +103,18 @@ const TOOLS = [
     border: "border-fuchsia-200 dark:border-fuchsia-800",
     ring: "hover:ring-fuchsia-300 dark:hover:ring-fuchsia-700",
     href: "/demo/clause-extractor",
+  },
+  {
+    key: "document-builder",
+    label: "Document Builder",
+    scenario: "Employee Onboarding Guide — drafted in minutes",
+    desc: "See how PlainPath builds a structured onboarding guide from a guided question flow — with brand colors, headers, and export-ready output.",
+    icon: LayoutTemplate,
+    color: "text-teal-600 dark:text-teal-400",
+    bg: "bg-teal-50 dark:bg-teal-950/40",
+    border: "border-teal-200 dark:border-teal-800",
+    ring: "hover:ring-teal-300 dark:hover:ring-teal-700",
+    href: "/app/builder",
   },
 ];
 
