@@ -6,6 +6,8 @@ import crypto from "crypto";
 
 const router = Router();
 
+const TEAM_SEAT_LIMIT = 3;
+
 function requireAuth(req: any, res: any, next: any) {
   const auth = getAuth(req);
   const userId = auth?.userId;
@@ -113,18 +115,46 @@ router.post("/invite/:token/accept", requireAuth, async (req: any, res) => {
 
     const displayName = await getUserDisplayName(req.userId);
 
-    const existing = await pool.query(
-      `SELECT id FROM team_members WHERE team_id = $1 AND user_id = $2`,
-      [invite.team_id, req.userId]
-    );
-    if (existing.rowCount === 0) {
-      await pool.query(
-        `INSERT INTO team_members (team_id, user_id, email, display_name, role) VALUES ($1, $2, $3, $4, 'member')`,
-        [invite.team_id, req.userId, email, displayName]
+    // Use a transaction with FOR UPDATE on the team row to serialize concurrent
+    // accept requests and prevent TOCTOU races that could exceed the seat limit.
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+
+      // Lock the team row to serialize concurrent accept calls for the same team.
+      await client.query(`SELECT id FROM teams WHERE id = $1 FOR UPDATE`, [invite.team_id]);
+
+      const existing = await client.query(
+        `SELECT id FROM team_members WHERE team_id = $1 AND user_id = $2`,
+        [invite.team_id, req.userId]
       );
+      if (existing.rowCount === 0) {
+        const memberCount = await client.query(
+          `SELECT COUNT(*) as count FROM team_members WHERE team_id = $1`,
+          [invite.team_id]
+        );
+        if (parseInt(memberCount.rows[0].count, 10) >= TEAM_SEAT_LIMIT) {
+          await client.query("ROLLBACK");
+          return res.status(403).json({
+            error: "seat_limit_reached",
+            message: `This team has reached its maximum of ${TEAM_SEAT_LIMIT} members and cannot accept new members.`,
+          });
+        }
+        await client.query(
+          `INSERT INTO team_members (team_id, user_id, email, display_name, role) VALUES ($1, $2, $3, $4, 'member')`,
+          [invite.team_id, req.userId, email, displayName]
+        );
+      }
+
+      await client.query(`UPDATE team_invites SET status = 'accepted' WHERE token = $1`, [req.params.token]);
+      await client.query("COMMIT");
+    } catch (txErr) {
+      await client.query("ROLLBACK");
+      throw txErr;
+    } finally {
+      client.release();
     }
 
-    await pool.query(`UPDATE team_invites SET status = 'accepted' WHERE token = $1`, [req.params.token]);
     res.json({ ok: true, teamId: invite.team_id, teamName: invite.team_name });
   } catch {
     res.status(500).json({ error: "server_error" });
@@ -266,6 +296,17 @@ router.post("/:teamId/invite", requireTeamPlan, async (req: any, res) => {
     );
     if (alreadyMember.rowCount && alreadyMember.rowCount > 0) {
       return res.status(409).json({ error: "already_member" });
+    }
+
+    const memberCount = await pool.query(
+      `SELECT COUNT(*) as count FROM team_members WHERE team_id = $1`,
+      [req.params.teamId]
+    );
+    if (parseInt(memberCount.rows[0].count, 10) >= TEAM_SEAT_LIMIT) {
+      return res.status(403).json({
+        error: "seat_limit_reached",
+        message: `This team has reached its maximum of ${TEAM_SEAT_LIMIT} members.`,
+      });
     }
 
     await pool.query(
