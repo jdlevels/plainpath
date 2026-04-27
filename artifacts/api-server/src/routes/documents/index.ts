@@ -323,7 +323,7 @@ async function runAnalysis(text: string, title?: string, documentTypeHint?: stri
   };
 }
 
-router.post("/analyze", async (req, res) => {
+router.post("/analyze", requireEntitlement("analyze"), async (req, res) => {
   const { text, title, documentTypeHint } = req.body;
 
   if (!text || typeof text !== "string" || text.trim().length < 30) {
@@ -378,7 +378,7 @@ router.post("/analyze", async (req, res) => {
   }
 });
 
-router.post("/upload", upload.single("file"), async (req, res, next) => {
+router.post("/upload", requireEntitlement("analyze"), upload.single("file"), async (req, res, next) => {
   // Top-level safety net: catches anything that escapes inner try/catch blocks
   // so the global handler never fires for upload errors.
   try {
@@ -520,7 +520,7 @@ router.post("/upload", upload.single("file"), async (req, res, next) => {
 });
 
 // ── Scan images (multi-page camera capture) ──────────────────────────────────
-router.post("/scan-images", async (req, res) => {
+router.post("/scan-images", requireEntitlement("analyze"), async (req, res) => {
   const { images, documentTypeHint } = req.body;
 
   if (!Array.isArray(images) || images.length === 0) {
@@ -2237,7 +2237,7 @@ router.get("/trust-check-demo/:demoId", (req, res) => {
   return res.json({ analysis: demo });
 });
 
-router.post("/explain-source-section", async (req, res) => {
+router.post("/explain-source-section", requireEntitlement("compare"), async (req, res) => {
   const { sectionContent, sectionTitle, documentTypeHint } = req.body;
 
   if (!sectionContent || typeof sectionContent !== "string" || sectionContent.trim().length < 10) {
@@ -2291,7 +2291,7 @@ Return ONLY a valid JSON object with this exact structure:
   }
 });
 
-router.post("/explain-section", async (req, res) => {
+router.post("/explain-section", requireEntitlement("compare"), async (req, res) => {
   const { sectionTitle, sectionContent, documentTypeHint } = req.body;
 
   if (!sectionContent || typeof sectionContent !== "string" || sectionContent.trim().length < 5) {
@@ -2641,7 +2641,7 @@ router.post("/redact-pdf", upload.single("file"), async (req, res) => {
 
 // POST /api/documents/compare
 // Compares two versions of a document and returns a structured diff with risk assessment.
-router.post("/compare", async (req, res) => {
+router.post("/compare", requireEntitlement("compare"), async (req, res) => {
   const { original, revised } = req.body;
   if (!original || !revised) {
     return res.status(400).json({ error: "both_required", message: "Both original and revised document text are required." });

@@ -45,6 +45,8 @@ export function requireEntitlement(tool: ToolKey) {
       return;
     }
 
+    req.userId = userId;
+
     if (!BILLING_CONFIG.PAYWALL_ENFORCEMENT) {
       next();
       return;

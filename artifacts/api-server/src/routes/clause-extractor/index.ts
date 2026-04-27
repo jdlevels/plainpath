@@ -10,6 +10,7 @@ import multer from "multer";
 import { getAuth } from "@clerk/express";
 import { pool } from "@workspace/db";
 import { openai } from "@workspace/integrations-openai-ai-server";
+import { requireEntitlement } from "../../lib/requireEntitlement";
 
 const router = Router();
 
@@ -174,7 +175,7 @@ async function runExtraction(text: string): Promise<any> {
 
 router.post(
   "/sessions",
-  requireAuth,
+  requireEntitlement("clause-extractor"),
   upload.single("file"),
   async (req: any, res: any) => {
     if (!req.file) {

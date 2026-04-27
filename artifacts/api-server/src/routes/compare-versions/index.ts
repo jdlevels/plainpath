@@ -6,6 +6,7 @@ import { Router } from "express";
 import multer from "multer";
 import { getAuth } from "@clerk/express";
 import { pool } from "@workspace/db";
+import { requireEntitlement } from "../../lib/requireEntitlement";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import {
   uploadObject,
@@ -73,7 +74,7 @@ function isPdfBuffer(buf: Buffer): boolean {
 
 router.post(
   "/sessions",
-  requireAuth,
+  requireEntitlement("compare-versions"),
   (req: any, res: any, next: any) => {
     upload(req, res, (err: any) => {
       if (err) {
@@ -315,7 +316,7 @@ router.delete("/sessions/:id", requireAuth, async (req: any, res: any) => {
 
 // ─── POST /api/compare-versions/sessions/:id/scan ─────────────────────────────
 
-router.post("/sessions/:id/scan", requireAuth, async (req: any, res: any) => {
+router.post("/sessions/:id/scan", requireEntitlement("compare-versions"), async (req: any, res: any) => {
   try {
     const sessionResult = await pool.query(
       `SELECT id, status, original_storage_key, revised_storage_key
@@ -358,7 +359,7 @@ router.post("/sessions/:id/scan", requireAuth, async (req: any, res: any) => {
 
 // ─── POST /api/compare-versions/sessions/:id/enrich ───────────────────────────
 
-router.post("/sessions/:id/enrich", requireAuth, async (req: any, res: any) => {
+router.post("/sessions/:id/enrich", requireEntitlement("compare-versions"), async (req: any, res: any) => {
   try {
     const sessionResult = await pool.query(
       `SELECT id, status, ai_status FROM compare_versions_sessions WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL`,
@@ -385,7 +386,7 @@ router.post("/sessions/:id/enrich", requireAuth, async (req: any, res: any) => {
 
 // ─── GET /api/compare-versions/sessions/:id/original ──────────────────────────
 
-router.get("/sessions/:id/original", async (req: any, res) => {
+router.get("/sessions/:id/original", requireEntitlement("compare-versions"), async (req: any, res) => {
   const userId = resolveUserId(req);
   if (!userId) return res.status(401).json({ error: "unauthorized" });
   try {
@@ -409,7 +410,7 @@ router.get("/sessions/:id/original", async (req: any, res) => {
 
 // ─── GET /api/compare-versions/sessions/:id/revised ───────────────────────────
 
-router.get("/sessions/:id/revised", async (req: any, res) => {
+router.get("/sessions/:id/revised", requireEntitlement("compare-versions"), async (req: any, res) => {
   const userId = resolveUserId(req);
   if (!userId) return res.status(401).json({ error: "unauthorized" });
   try {
@@ -433,7 +434,7 @@ router.get("/sessions/:id/revised", async (req: any, res) => {
 
 // ─── PATCH /api/compare-versions/sessions/:id/review ──────────────────────────
 
-router.patch("/sessions/:id/review", async (req: any, res) => {
+router.patch("/sessions/:id/review", requireEntitlement("compare-versions"), async (req: any, res) => {
   const userId = resolveUserId(req);
   if (!userId) return res.status(401).json({ error: "unauthorized" });
   try {
@@ -458,7 +459,7 @@ router.patch("/sessions/:id/review", async (req: any, res) => {
 
 // ─── PATCH /api/compare-versions/sessions/:id/notes ───────────────────────────
 
-router.patch("/sessions/:id/notes", async (req: any, res) => {
+router.patch("/sessions/:id/notes", requireEntitlement("compare-versions"), async (req: any, res) => {
   const userId = resolveUserId(req);
   if (!userId) return res.status(401).json({ error: "unauthorized" });
   try {
@@ -498,7 +499,7 @@ router.patch("/sessions/:id/notes", async (req: any, res) => {
 // Responds 409 if status is not 'complete' or 'error'.
 // Returns Content-Disposition: attachment; filename="compare-audit-{8charId}-{yyyy-mm-dd}.pdf"
 
-router.get("/sessions/:id/export", requireAuth, async (req: any, res: any) => {
+router.get("/sessions/:id/export", requireEntitlement("compare-versions"), async (req: any, res: any) => {
   try {
     const result = await pool.query(
       `SELECT id, title, status, original_file_name, revised_file_name,
