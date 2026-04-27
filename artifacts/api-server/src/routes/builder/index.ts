@@ -3,6 +3,7 @@ import { getAuth } from "@clerk/express";
 import { pool } from "@workspace/db";
 import { openai } from "@workspace/integrations-openai-ai-server";
 import { requireBuilderEnabled } from "../../middlewares/builderFeatureFlag.js";
+import { requireEntitlement } from "../../lib/requireEntitlement.js";
 import {
   validateCreateDocument,
   validateUpdateDocument,
@@ -12,6 +13,9 @@ const router = Router();
 
 // Apply feature flag middleware to all builder routes
 router.use(requireBuilderEnabled);
+
+// Require Pro/Team plan entitlement for all builder routes
+router.use(requireEntitlement("builder"));
 
 // ─── Auth middleware ──────────────────────────────────────────────────────────
 

@@ -2557,7 +2557,7 @@ function sanitizePdfContentStream(streamBytes: Buffer, values: string[]): { byte
 // Draws solid black rectangles over matching text items AND removes the underlying
 // text content from the page content streams so it cannot be recovered by extraction tools.
 // Returns the modified PDF binary. The original uploaded file is never mutated.
-router.post("/redact-pdf", upload.single("file"), async (req, res) => {
+router.post("/redact-pdf", requireEntitlement("redact"), upload.single("file"), async (req, res) => {
   const { userId } = getAuth(req);
   if (!userId) {
     return res.status(401).json({ error: "unauthorized", message: "You must be signed in to redact a PDF." });
@@ -3268,7 +3268,7 @@ Focus on substantive changes — skip formatting-only differences. Limit to 15 m
 // POST /api/documents/chat
 // Ask a follow-up question about a document using its analysis as context.
 // Accepts Clerk auth via session cookie OR Authorization: Bearer <token> header.
-router.post("/chat", async (req, res) => {
+router.post("/chat", requireEntitlement("ask-document"), async (req, res) => {
   const { userId } = getAuth(req);
   if (!userId) return res.status(401).json({ error: "Authentication required" });
 
