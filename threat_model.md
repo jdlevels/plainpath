@@ -23,8 +23,9 @@ Production assumptions for this threat model:
 - **API server to PostgreSQL / SQLite state** — the API has broad authority over persisted user data, billing state, invites, collaboration records, and usage telemetry. Query scoping and route-level authz are critical.
 - **API server to third-party services** — the server sends user data to OpenAI, Stripe, Dropbox Sign, Resend, RevenueCat, Clerk, and object storage. Each integration requires origin/authenticity checks and least-privilege handling.
 - **Public / authenticated / admin boundaries** — the marketing site and several API endpoints are intentionally public, while document history, builder persistence, compare versions, clause extraction, team routes, billing state, and reminders are intended to be protected. Admin-only behavior is encoded separately from billing-plan access.
-- **Invite-only product boundary** — the codebase contains an `allowlistEnforcement` middleware, but it is not mounted in the current production app path. For security review purposes, assume any internet user can self-register through the public Clerk sign-up flow and reach routes protected only by Clerk authentication.
+- **Invite-only product boundary** — `allowlistEnforcement()` is mounted globally in `artifacts/api-server/src/app.ts`, but it only evaluates requests that already have a Clerk session and becomes fully permissive when `ALLOWED_EMAILS` is empty. For security review purposes, any route that does not require auth in its own handler is public, and any route protected only by Clerk auth should be treated as reachable by self-registered users unless deployment configuration proves a non-empty allowlist.
 - **Paid-feature boundary** — client-side plan gates exist, but they are not authoritative. Any server route that should be limited to Starter, Pro, Team, or admin users must enforce authentication and entitlements on the server.
+- **Conditional feature boundary** — Document Builder is production-reachable only when `BUILDER_ENABLED=true` on the server and `VITE_BUILDER_ENABLED=true` on the client. Native RevenueCat verification is out of production scope until the activation guard is removed and live keys are configured.
 - **Dev / production boundary** — mockup, pitch, generated artifacts, and skill scripts should normally be excluded from production vulnerability reporting.
 
 ## Scan Anchors
@@ -32,8 +33,8 @@ Production assumptions for this threat model:
 - **Production entry points**: `artifacts/api-server/src/index.ts`, `artifacts/api-server/src/app.ts`, `artifacts/plainpath/src/main.tsx`, `artifacts/plainpath-marketing/src/main.tsx`
 - **Highest-risk server areas**: `artifacts/api-server/src/routes/{documents,contracts,compare-versions,clause-extractor,signatures,stripe,entitlements,teams,reminders}` and `artifacts/api-server/src/lib/{billingDb,pdfObjectStorage,compareVersionsEnrichment}`
 - **Public surfaces**: marketing pages, demo routes, waitlist, shares, health, webhook endpoints, and any API route that does not call `getAuth(req)` or another server-side authorization check
-- **Authenticated surfaces**: builder persistence, user docs/history, signatures, clause extractor, compare versions, team management, entitlement bootstrap/status, reminders, and billing-portal flows
-- **Cross-cutting risk areas**: server-side paywall enforcement, outbound email sending, entitlement identity binding, object-storage access, and invite/team flows
+- **Authenticated surfaces**: builder persistence when enabled, user docs/history, signatures, clause extractor, compare versions, team management, entitlement bootstrap/status, reminders, and billing-portal flows
+- **Cross-cutting risk areas**: server-side paywall enforcement, outbound email sending, entitlement identity binding, object-storage access, invite/team flows, and server-side fetch behavior
 - **Dev-only areas to usually ignore**: `artifacts/mockup-sandbox`, `artifacts/pitch-deck`, `.agents/`, screenshots, docs, and generated/native wrapper artifacts unless production reachability is demonstrated
 
 ## Threat Categories
@@ -48,12 +49,12 @@ Users can upload files, submit document text, update compare-version review meta
 
 ### Information Disclosure
 
-The application processes highly sensitive document contents and exposes sharing, e-signature, collaboration, and billing features. API responses, object-storage fetches, share links, billing status endpoints, entitlement responses, and team invitation flows must not leak document contents, billing state, internal roles, or other users’ data. Logs and error responses must avoid including document text, secrets, or provider credentials.
+The application processes highly sensitive document contents and exposes sharing, e-signature, collaboration, and billing features. API responses, object-storage fetches, share links, billing status endpoints, entitlement responses, team invitation flows, and any server-side URL import feature must not leak document contents, billing state, internal roles, or other users’ data. Logs and error responses must avoid including document text, secrets, or provider credentials.
 
 ### Denial of Service
 
-OpenAI-backed analysis, OCR, PDF parsing, image processing, email delivery, and third-party API calls are all potentially expensive. Public routes need rate limiting, file-size limits, and reasonable request shaping so attackers cannot burn API credits, flood outbound email, or exhaust storage/DB capacity. Timeouts on third-party calls and bounded request sizes are required.
+OpenAI-backed analysis, OCR, PDF parsing, image processing, email delivery, and third-party API calls are all potentially expensive. Public routes need rate limiting, file-size limits, and reasonable request shaping so attackers cannot burn API credits, flood outbound email, or exhaust storage/DB capacity. Timeouts on third-party calls, bounded request sizes, and streaming or disk-backed handling for large files are required.
 
 ### Elevation of Privilege
 
-This codebase has multiple privilege layers: unauthenticated users, authenticated users, intended allowlisted users, admins, paid subscribers, and team members. The core guarantee is that every protected operation enforces server-side authorization against the correct principal and scope. In particular, paid AI routes, team invites, billing portal access, compare-version sessions, saved documents, reminder delivery, and e-signature records must not be accessible or modifiable through public endpoints, guessed identifiers, forwarded invite links, or user-controlled email parameters.
+This codebase has multiple privilege layers: unauthenticated users, authenticated users, intended allowlisted users, admins, paid subscribers, and team members. The core guarantee is that every protected operation enforces server-side authorization against the correct principal and scope. In particular, paid AI routes, team invites, billing portal access, compare-version sessions, saved documents, reminder delivery, and e-signature records must not be accessible or modifiable through public endpoints, guessed identifiers, forwarded invite links, user-controlled email parameters, or client-only plan checks.
