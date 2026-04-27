@@ -20,33 +20,35 @@ Production assumptions for this threat model:
 ## Trust Boundaries
 
 - **Browser / mobile client to API server** — all request bodies, uploaded files, cookies, headers, query parameters, and session state from the client are untrusted.
-- **API server to PostgreSQL / SQLite state** — the API has broad authority over persisted user data, billing state, invites, and collaboration records. Query scoping and route-level authz are critical.
+- **API server to PostgreSQL / SQLite state** — the API has broad authority over persisted user data, billing state, invites, collaboration records, and usage telemetry. Query scoping and route-level authz are critical.
 - **API server to third-party services** — the server sends user data to OpenAI, Stripe, Dropbox Sign, Resend, RevenueCat, Clerk, and object storage. Each integration requires origin/authenticity checks and least-privilege handling.
-- **Public / authenticated / admin boundaries** — the marketing site and several API endpoints are intentionally public, while document history, builder, clause extractor, compare versions, signatures, and team routes are intended to be protected. Admin-only behavior is encoded separately from billing-plan access.
-- **Invite-only product boundary** — allowlist enforcement currently restricts production app access to approved emails, but public endpoints still exist and must not trust caller-supplied identity claims.
+- **Public / authenticated / admin boundaries** — the marketing site and several API endpoints are intentionally public, while document history, builder persistence, compare versions, clause extraction, team routes, billing state, and reminders are intended to be protected. Admin-only behavior is encoded separately from billing-plan access.
+- **Invite-only product boundary** — the codebase contains an `allowlistEnforcement` middleware, but it is not mounted in the current production app path. For security review purposes, assume any internet user can self-register through the public Clerk sign-up flow and reach routes protected only by Clerk authentication.
+- **Paid-feature boundary** — client-side plan gates exist, but they are not authoritative. Any server route that should be limited to Starter, Pro, Team, or admin users must enforce authentication and entitlements on the server.
 - **Dev / production boundary** — mockup, pitch, generated artifacts, and skill scripts should normally be excluded from production vulnerability reporting.
 
 ## Scan Anchors
 
 - **Production entry points**: `artifacts/api-server/src/index.ts`, `artifacts/api-server/src/app.ts`, `artifacts/plainpath/src/main.tsx`, `artifacts/plainpath-marketing/src/main.tsx`
-- **Highest-risk server areas**: `artifacts/api-server/src/routes/{documents,contracts,compare-versions,clause-extractor,signatures,stripe,entitlements,teams}` and `artifacts/api-server/src/lib/{billingDb,pdfObjectStorage,compareVersionsEnrichment}`
-- **Public surfaces**: marketing pages, demo routes, waitlist, reminders, shares, health, some document-analysis routes, Stripe/Dropbox webhook endpoints
-- **Authenticated surfaces**: builder, user docs/history, signatures, clause extractor, compare versions, team management, entitlement bootstrap
+- **Highest-risk server areas**: `artifacts/api-server/src/routes/{documents,contracts,compare-versions,clause-extractor,signatures,stripe,entitlements,teams,reminders}` and `artifacts/api-server/src/lib/{billingDb,pdfObjectStorage,compareVersionsEnrichment}`
+- **Public surfaces**: marketing pages, demo routes, waitlist, shares, health, webhook endpoints, and any API route that does not call `getAuth(req)` or another server-side authorization check
+- **Authenticated surfaces**: builder persistence, user docs/history, signatures, clause extractor, compare versions, team management, entitlement bootstrap/status, reminders, and billing-portal flows
+- **Cross-cutting risk areas**: server-side paywall enforcement, outbound email sending, entitlement identity binding, object-storage access, and invite/team flows
 - **Dev-only areas to usually ignore**: `artifacts/mockup-sandbox`, `artifacts/pitch-deck`, `.agents/`, screenshots, docs, and generated/native wrapper artifacts unless production reachability is demonstrated
 
 ## Threat Categories
 
 ### Spoofing
 
-PlainPath relies on Clerk for user identity, but some billing and entitlement flows accept caller-supplied email addresses or IDs. Production guarantees must ensure that protected billing, subscription-management, team, and document routes derive identity from the authenticated session or a cryptographically strong invite/token flow, never from arbitrary request parameters alone. Webhooks from Stripe and Dropbox Sign must continue to reject unsigned or invalid callbacks.
+PlainPath relies on Clerk for user identity, but some billing and entitlement flows accept caller-supplied email addresses or IDs. Production guarantees must ensure that protected billing, subscription-management, reminder, team, and document routes derive identity from the authenticated session or a cryptographically strong invite/token flow, never from arbitrary request parameters alone. Webhooks from Stripe and Dropbox Sign must continue to reject unsigned or invalid callbacks.
 
 ### Tampering
 
-Users can upload files, submit document text, update compare-version review metadata, create team invites, and trigger external workflows. The server must validate uploaded content, restrict object and record updates to the owning user or authorized team member, and ensure public endpoints cannot alter another user’s billing, usage, or collaboration state.
+Users can upload files, submit document text, update compare-version review metadata, create team invites, trigger external workflows, and mutate usage/account telemetry. The server must validate uploaded content, restrict object and record updates to the owning user or authorized team member, and ensure public endpoints cannot alter another user’s billing, usage, or collaboration state.
 
 ### Information Disclosure
 
-The application processes highly sensitive document contents and exposes sharing, e-signature, and collaboration features. API responses, object-storage fetches, share links, billing status endpoints, and team invitation flows must not leak document contents, billing state, internal roles, or other users’ data. Logs and error responses must avoid including document text, secrets, or provider credentials.
+The application processes highly sensitive document contents and exposes sharing, e-signature, collaboration, and billing features. API responses, object-storage fetches, share links, billing status endpoints, entitlement responses, and team invitation flows must not leak document contents, billing state, internal roles, or other users’ data. Logs and error responses must avoid including document text, secrets, or provider credentials.
 
 ### Denial of Service
 
@@ -54,4 +56,4 @@ OpenAI-backed analysis, OCR, PDF parsing, image processing, email delivery, and 
 
 ### Elevation of Privilege
 
-This codebase has multiple privilege layers: unauthenticated users, authenticated users, allowlisted users, admins, paid subscribers, and team members. The core guarantee is that every protected operation enforces server-side authorization against the correct principal and scope. In particular, team invites, billing portal access, compare-version sessions, saved documents, and e-signature records must not be accessible or modifiable through guessed identifiers, forwarded invite links, or user-controlled email parameters.
+This codebase has multiple privilege layers: unauthenticated users, authenticated users, intended allowlisted users, admins, paid subscribers, and team members. The core guarantee is that every protected operation enforces server-side authorization against the correct principal and scope. In particular, paid AI routes, team invites, billing portal access, compare-version sessions, saved documents, reminder delivery, and e-signature records must not be accessible or modifiable through public endpoints, guessed identifiers, forwarded invite links, or user-controlled email parameters.
