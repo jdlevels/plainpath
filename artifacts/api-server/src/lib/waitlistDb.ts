@@ -23,18 +23,30 @@ waitlistDb.exec(`
 
 // Pending verifications — records created on signup, consumed on verify click.
 // Tokens expire after 24 hours. A single email may have at most one pending
-// row (UNIQUE on email); re-submitting the form refreshes the token.
+// row (UNIQUE on email); re-submitting the form refreshes the token only after
+// the per-recipient cooldown has elapsed.
 waitlistDb.exec(`
   CREATE TABLE IF NOT EXISTS pending_waitlist_verifications (
-    id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    email      TEXT UNIQUE NOT NULL,
-    platform   TEXT NOT NULL DEFAULT 'both',
-    source     TEXT NOT NULL DEFAULT 'marketing',
-    token      TEXT UNIQUE NOT NULL,
-    expires_at TEXT NOT NULL,
-    created_at TEXT NOT NULL
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    email          TEXT UNIQUE NOT NULL,
+    platform       TEXT NOT NULL DEFAULT 'both',
+    source         TEXT NOT NULL DEFAULT 'marketing',
+    token          TEXT UNIQUE NOT NULL,
+    expires_at     TEXT NOT NULL,
+    created_at     TEXT NOT NULL,
+    last_sent_at   TEXT NOT NULL
   )
 `)
+
+// Migrate existing rows that are missing the last_sent_at column (added later).
+try {
+  waitlistDb.exec(`ALTER TABLE pending_waitlist_verifications ADD COLUMN last_sent_at TEXT NOT NULL DEFAULT ''`)
+} catch {
+  // Column already exists — ignore.
+}
+
+// Minimum gap between verification emails sent to the same address (10 minutes).
+const EMAIL_RESEND_COOLDOWN_MS = 10 * 60 * 1000
 
 export function isAlreadyOnWaitlist(email: string): boolean {
   const row = waitlistDb
@@ -45,34 +57,55 @@ export function isAlreadyOnWaitlist(email: string): boolean {
 
 /**
  * Create (or refresh) a pending verification record for the given email.
- * Returns the opaque token that should be embedded in the verification link.
+ *
+ * Returns `{ token, shouldSendEmail }`.  `shouldSendEmail` is false when a
+ * verification email was already dispatched to this address within the
+ * per-recipient cooldown window — the caller should NOT send another email in
+ * that case so the endpoint cannot be used to flood an arbitrary inbox.
  */
 export function createPendingVerification(
   email: string,
   platform: "ios" | "android" | "both",
   source = "marketing",
-): string {
-  const token = crypto.randomBytes(32).toString("hex")
-  const now = new Date()
-  const expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString()
+): { token: string; shouldSendEmail: boolean } {
   const normalised = email.toLowerCase().trim()
+  const now = new Date()
 
-  // INSERT OR REPLACE so re-submits refresh the token rather than error.
+  // Check for an existing pending record still within the cooldown window.
+  const existing = waitlistDb
+    .prepare(
+      "SELECT token, last_sent_at FROM pending_waitlist_verifications WHERE email = ?",
+    )
+    .get(normalised) as { token: string; last_sent_at: string } | undefined
+
+  if (existing) {
+    const lastSent = existing.last_sent_at ? new Date(existing.last_sent_at).getTime() : 0
+    if (now.getTime() - lastSent < EMAIL_RESEND_COOLDOWN_MS) {
+      // Still within cooldown — return the existing token but suppress the email.
+      return { token: existing.token, shouldSendEmail: false }
+    }
+  }
+
+  const token = crypto.randomBytes(32).toString("hex")
+  const expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString()
+  const nowIso = now.toISOString()
+
   waitlistDb
     .prepare(
       `INSERT INTO pending_waitlist_verifications
-         (email, platform, source, token, expires_at, created_at)
-       VALUES (?, ?, ?, ?, ?, ?)
+         (email, platform, source, token, expires_at, created_at, last_sent_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(email) DO UPDATE SET
-         platform   = excluded.platform,
-         source     = excluded.source,
-         token      = excluded.token,
-         expires_at = excluded.expires_at,
-         created_at = excluded.created_at`,
+         platform     = excluded.platform,
+         source       = excluded.source,
+         token        = excluded.token,
+         expires_at   = excluded.expires_at,
+         created_at   = excluded.created_at,
+         last_sent_at = excluded.last_sent_at`,
     )
-    .run(normalised, platform, source, token, expiresAt, now.toISOString())
+    .run(normalised, platform, source, token, expiresAt, nowIso, nowIso)
 
-  return token
+  return { token, shouldSendEmail: true }
 }
 
 /**

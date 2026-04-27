@@ -167,13 +167,15 @@ router.post("/waitlist/join", async (req, res) => {
       return res.json({ ok: true })
     }
 
-    const token = createPendingVerification(
+    const { token, shouldSendEmail } = createPendingVerification(
       email,
       platform as "ios" | "android" | "both",
       source,
     )
 
-    void sendVerificationEmail(email, token)
+    if (shouldSendEmail) {
+      void sendVerificationEmail(email, token)
+    }
 
     logger.info({ platform }, "waitlist: verification email queued")
     return res.json({ ok: true })

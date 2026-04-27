@@ -30,6 +30,12 @@ import { initBuilderTemplates } from "@workspace/db";
 
 const app: Express = express();
 
+// Trust one proxy hop so req.ip resolves to the real client IP from the
+// X-Forwarded-For header set by the edge load balancer, rather than the
+// load balancer's own socket address.  A value of 1 means Express trusts
+// exactly one proxy between the internet and this server.
+app.set("trust proxy", 1);
+
 // Clerk proxy must be mounted before body parsers (streams raw bytes)
 app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
 

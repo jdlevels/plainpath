@@ -23,9 +23,14 @@ function hashToken(token: string): string {
 }
 
 function getIpPrefix(req: Request): string {
-  const raw = (req.headers["x-forwarded-for"] as string | undefined)
-    ?.split(",")[0]
-    ?.trim() ?? req.socket.remoteAddress ?? "";
+  // req.ip is resolved by Express using X-Forwarded-For and the trust proxy
+  // setting ("trust proxy": 1 in app.ts).  The edge load balancer is expected
+  // to overwrite/append X-Forwarded-For, so an attacker cannot inject arbitrary
+  // IPs into the header that Express would trust.  This is safer than reading
+  // X-Forwarded-For directly (fully attacker-controlled) or using
+  // req.socket.remoteAddress (which in proxied production would be the load
+  // balancer's IP, causing all users behind it to share one fingerprint).
+  const raw = req.ip ?? req.socket.remoteAddress ?? "";
   // IPv4: take first two octets; IPv6: take first two groups
   if (raw.includes(".")) {
     const parts = raw.split(".");
@@ -36,9 +41,11 @@ function getIpPrefix(req: Request): string {
 }
 
 function getFingerprintHash(req: Request): string {
+  // Fingerprint is keyed solely on the trusted network address.  User-Agent is
+  // intentionally excluded: it is attacker-controlled and including it would
+  // allow quota bypass by rotating UA strings after dropping the cookie.
   const prefix = getIpPrefix(req);
-  const ua = (req.headers["user-agent"] ?? "").slice(0, 512);
-  return crypto.createHash("sha256").update(`${prefix}:${ua}`).digest("hex");
+  return crypto.createHash("sha256").update(prefix).digest("hex");
 }
 
 function setGuestCookie(res: Response, token: string): void {
@@ -117,6 +124,21 @@ async function isQuotaExhausted(
   return fp.rows.length > 0;
 }
 
+// Pre-flight fingerprint exhaustion check — does NOT touch the guest table.
+// Used before resolveGuest() so requests from exhausted fingerprints are
+// rejected without creating a new demo_guests row.
+async function isFingerprintBlocked(fingerprintHash: string): Promise<boolean> {
+  const fp = await db.query(
+    `SELECT id FROM demo_guests
+     WHERE fingerprint_hash = $1
+       AND exhausted_at IS NOT NULL
+       AND exhausted_at > NOW() - INTERVAL '${FINGERPRINT_BLOCK_DAYS} days'
+     LIMIT 1`,
+    [fingerprintHash],
+  );
+  return fp.rows.length > 0;
+}
+
 // ─── Demo PDF analysis via OpenAI ────────────────────────────────────────────
 
 async function runDemoAnalysis(
@@ -171,16 +193,44 @@ Rules:
 }
 
 // ─── GET /api/demo/status ─────────────────────────────────────────────────────
+// Read-only: looks up an existing guest from the cookie but never creates one.
+// This prevents attackers from inflating demo_guests by hitting /status repeatedly.
 
 router.get("/status", async (req: Request, res: Response) => {
   try {
-    const { guest } = await resolveGuest(req, res);
+    const existingToken: string | undefined = req.cookies?.[DEMO_COOKIE_NAME];
+
+    if (!existingToken) {
+      return res.json({
+        demoGuestPresent: false,
+        completedUses: 0,
+        remainingUses: DEMO_MAX_USES,
+        isExhausted: false,
+      });
+    }
+
+    const guestHash = hashToken(existingToken);
+    const result = await db.query(
+      `SELECT * FROM demo_guests WHERE guest_hash = $1`,
+      [guestHash],
+    );
+
+    if (result.rows.length === 0) {
+      return res.json({
+        demoGuestPresent: false,
+        completedUses: 0,
+        remainingUses: DEMO_MAX_USES,
+        isExhausted: false,
+      });
+    }
+
+    const guest = result.rows[0];
     const fingerprintHash = getFingerprintHash(req);
     const exhausted = await isQuotaExhausted(guest, fingerprintHash);
     const completedUses = guest.completed_uses as number;
     const remainingUses = Math.max(0, DEMO_MAX_USES - completedUses);
 
-    res.json({
+    return res.json({
       demoGuestPresent: true,
       completedUses,
       remainingUses,
@@ -188,7 +238,7 @@ router.get("/status", async (req: Request, res: Response) => {
     });
   } catch (err) {
     console.error("demo/status error", err);
-    res.status(500).json({ error: "internal_error", message: "Failed to load demo status." });
+    return res.status(500).json({ error: "internal_error", message: "Failed to load demo status." });
   }
 });
 
@@ -198,29 +248,29 @@ router.post(
   "/analyze",
   upload.single("file"),
   async (req: Request, res: Response) => {
-    // 1. Resolve guest (creates + sets cookie if new)
-    let guest: Record<string, unknown>;
+    // 0. Pre-flight fingerprint check — reject exhausted fingerprints BEFORE
+    //    calling resolveGuest() so we never create a new demo_guests row for
+    //    an IP that is already blocked.  This closes the unbounded row-creation
+    //    path where dropping the cookie + hitting /analyze would mint a guest
+    //    row even though the fingerprint backstop would immediately reject it.
+    const fingerprintHash = getFingerprintHash(req);
     try {
-      ({ guest } = await resolveGuest(req, res));
+      const fpBlocked = await isFingerprintBlocked(fingerprintHash);
+      if (fpBlocked) {
+        return res.status(403).json({
+          error: "quota_exhausted",
+          message: "You have used all 2 free demo analyses. Create a free account to continue.",
+          remainingUses: 0,
+          isExhausted: true,
+        });
+      }
     } catch (err) {
-      console.error("demo/analyze guest error", err);
+      console.error("demo/analyze fingerprint-check error", err);
       return res.status(500).json({ error: "internal_error", message: "Could not establish demo session." });
     }
 
-    const fingerprintHash = getFingerprintHash(req);
-
-    // 2. Quota check
-    const exhausted = await isQuotaExhausted(guest, fingerprintHash);
-    if (exhausted) {
-      return res.status(403).json({
-        error: "quota_exhausted",
-        message: "You have used all 2 free demo analyses. Create a free account to continue.",
-        remainingUses: 0,
-        isExhausted: true,
-      });
-    }
-
-    // 3. File validation
+    // 1. File validation — done BEFORE guest creation so invalid requests
+    //    from cookie-less callers are rejected without writing any DB rows.
     const file = req.file;
     if (!file) {
       return res.status(400).json({ error: "no_file", message: "Please upload a PDF file." });
@@ -230,6 +280,28 @@ router.post(
     }
     if (file.size > DEMO_MAX_BYTES) {
       return res.status(400).json({ error: "file_too_large", message: "File must be 10 MB or smaller for the demo." });
+    }
+
+    // 2. Resolve guest (creates + sets cookie if new).
+    //    Safe to create a row here: fingerprint is confirmed not exhausted
+    //    (step 0) and the uploaded file is valid (step 1).
+    let guest: Record<string, unknown>;
+    try {
+      ({ guest } = await resolveGuest(req, res));
+    } catch (err) {
+      console.error("demo/analyze guest error", err);
+      return res.status(500).json({ error: "internal_error", message: "Could not establish demo session." });
+    }
+
+    // 3. Quota check (covers the case where the existing guest's own count is exhausted)
+    const exhausted = await isQuotaExhausted(guest, fingerprintHash);
+    if (exhausted) {
+      return res.status(403).json({
+        error: "quota_exhausted",
+        message: "You have used all 2 free demo analyses. Create a free account to continue.",
+        remainingUses: 0,
+        isExhausted: true,
+      });
     }
 
     // 4. Parse PDF
@@ -298,7 +370,7 @@ router.post(
 
     const remainingUses = Math.max(0, DEMO_MAX_USES - newCompletedUses);
 
-    res.json({
+    return res.json({
       success: true,
       fileName: file.originalname,
       pageCount,
