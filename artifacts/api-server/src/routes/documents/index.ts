@@ -7,6 +7,7 @@ import { requireEntitlement } from "../../lib/requireEntitlement";
 import { demoDocuments } from "../../lib/demoData.js";
 import { trustCheckDemoDocuments } from "../../lib/trustCheckDemoData.js";
 import type { DocumentAnalysis, DocumentSection, KeyTerm, ActionPack, TrustCheckAnalysis, TrustCheckVerdict, TrustCheckContactDetail, TrustCheckDeadlineItem, TrustCheckScamIndicator, TrustCheckScores, TrustCheckMetadataFinding } from "../../lib/types.js";
+import type { PDFRef, PDFRawStream, PDFDict, PDFArray } from "pdf-lib";
 
 function extractSections(text: string): DocumentSection[] {
   const normalized = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
@@ -2583,6 +2584,29 @@ router.post("/redact-pdf", upload.single("file"), async (req, res) => {
     // Deduplicate and filter empty values
     redactValues = [...new Set(redactValues.map(v => v?.trim()).filter(v => v && v.length >= 2))];
 
+    // Cap the number of redact values to prevent CPU exhaustion via attacker-controlled
+    // work factors. The nested scan cost grows with both value count and PDF size, so
+    // an unbounded list can monopolize the Node process for an arbitrarily long time.
+    const REDACT_VALUES_LIMIT = 100;
+    if (redactValues.length > REDACT_VALUES_LIMIT) {
+      return res.status(400).json({
+        error: "too_many_redact_values",
+        message: `Too many redaction terms — maximum ${REDACT_VALUES_LIMIT} allowed per request.`,
+      });
+    }
+
+    // Secondary cost-budget guard: cap total character volume across all values.
+    // Even with the per-count cap, 100 very long values can still produce expensive
+    // scans proportional to their combined length × number of text items in the PDF.
+    const REDACT_TOTAL_CHARS_LIMIT = 2000;
+    const totalChars = redactValues.reduce((sum, v) => sum + v.length, 0);
+    if (totalChars > REDACT_TOTAL_CHARS_LIMIT) {
+      return res.status(400).json({
+        error: "redact_values_too_large",
+        message: `Redaction terms too long in total — maximum ${REDACT_TOTAL_CHARS_LIMIT} characters combined.`,
+      });
+    }
+
     // If nothing to redact, return a clean copy of the PDF as-is
     const pdfBuffer = file.buffer;
     if (redactValues.length === 0) {
@@ -2943,6 +2967,197 @@ router.post("/redact-pdf", upload.single("file"), async (req, res) => {
           : namesEntry;
         if (namesDict instanceof PDFDict) {
           namesDict.delete(PDFName.of("EmbeddedFiles"));
+        }
+      }
+
+      // ── Remove XFA XML packet from AcroForm ───────────────────────────────
+      // XFA streams embed the entire form's XML data (including field values)
+      // as a compressed stream inside /AcroForm /XFA. Even after scrubbing
+      // AcroForm field strings above, the XFA packet retains originals.
+      // Removing it is safe: the visual/AcroForm layer is unaffected.
+      {
+        const acroFormRef = pdfLibDoc.catalog.get(PDFName.of("AcroForm"));
+        const acroFormDict = acroFormRef instanceof PDFRef
+          ? pdfLibDoc.context.lookup(acroFormRef)
+          : acroFormRef;
+        if (acroFormDict instanceof PDFDict) {
+          acroFormDict.delete(PDFName.of("XFA"));
+        }
+      }
+    }
+
+    // ── Step 5c: Sanitize annotation appearance streams (/AP) ─────────────
+    // Widget and annotation /AP streams are content streams (just like page
+    // /Contents) that may contain Tj/TJ operators preserving the original
+    // field text even after the visible area is covered by a black box.
+    // We decompress and scrub them with the same sanitizePdfContentStream()
+    // helper used for page streams.
+    //
+    // Fail-closed policy: if any stream in an annotation's /AP sub-tree
+    // cannot be decoded (unsupported filter, inflate failure), the entire
+    // /AP entry is removed from that annotation.  This is safer than
+    // skipping — the page-text verification step does not inspect hidden
+    // stream objects, so silent skips would leave recoverable data in place.
+    //
+    // PDF /AP graph structures handled:
+    //   Annot dict → /AP → PDFRef → PDFRawStream          (indirect stream)
+    //                     PDFRef → PDFDict { /N, /R, /D } (indirect AP dict)
+    //                     PDFDict { /N, /R, /D }           (inline AP dict)
+    //                       where each sub-key may be:
+    //                         • PDFRef → PDFRawStream  (indirect stream)
+    //                         • PDFRawStream           (inline stream)
+    //                         • PDFRef → PDFDict       (state dict: /Off, /Yes, …)
+    //                         • PDFDict                (inline state dict)
+    //   Annots entries may be PDFRef or inline PDFDict.
+    {
+      const zlibMod5c = await import("zlib");
+      const utilMod5c = await import("util");
+      const tryInflate5c = utilMod5c.promisify(zlibMod5c.inflate);
+
+      // Try to scrub a single PDFRawStream.
+      // Returns "ok" when the stream was clean or successfully sanitized.
+      // Returns "unsanitizable" when the stream cannot be decoded — the
+      // caller must then remove the /AP entry (fail-closed).
+      async function scrubApRawStream(
+        streamObj: PDFRawStream,
+        streamRef: PDFRef | null,
+      ): Promise<"ok" | "unsanitizable"> {
+        const dict = streamObj.dict;
+        const filterEntry = dict.get(PDFName.of("Filter"));
+        const filterStr = filterEntry ? filterEntry.toString() : "";
+
+        let bytes: Buffer = Buffer.from(streamObj.contents);
+        const isFlateDecode =
+          filterStr === "/FlateDecode" || filterStr === "/Fl" || filterStr.includes("FlateDecode");
+        if (isFlateDecode) {
+          try {
+            bytes = await tryInflate5c(bytes);
+            dict.delete(PDFName.of("Filter"));
+            dict.delete(PDFName.of("DecodeParms"));
+          } catch {
+            // Cannot decompress — caller must remove /AP to prevent data leak
+            return "unsanitizable";
+          }
+        } else if (filterStr && filterStr !== "null") {
+          // Unsupported filter (e.g. LZW, JBIG2) — caller must remove /AP
+          return "unsanitizable";
+        }
+
+        const { bytes: sanitized, changed } = sanitizePdfContentStream(bytes, redactValues);
+        if (!changed) return "ok";
+
+        dict.set(PDFName.of("Length"), pdfLibDoc.context.obj(sanitized.length));
+        if (streamRef !== null) {
+          // Indirect stream — replace via the public pdf-lib API
+          pdfLibDoc.context.assign(streamRef, PDFRawStream.of(dict, sanitized));
+        } else {
+          // Inline stream — register as a new indirect object and point the
+          // parent to it.  pdf-lib has no public API for mutating an inline
+          // stream's bytes, so we promote it to an indirect object here and
+          // the walkApNode caller is responsible for updating its parent entry.
+          // We store the ref on the streamObj so the parent walk can retrieve it.
+          const newRef = pdfLibDoc.context.register(PDFRawStream.of(dict, sanitized));
+          // Tag the original streamObj so the dict/array walker can replace
+          // the entry with the new indirect ref after we return.
+          (streamObj as unknown as { _replacementRef: PDFRef })._replacementRef = newRef;
+        }
+        return "ok";
+      }
+
+      // Recursively walk an AP graph node.
+      // Returns "ok" if all reachable streams were sanitized (or needed no change).
+      // Returns "unsanitizable" if any stream could not be decoded — caller removes /AP.
+      // `visited` prevents infinite loops in cyclic ref graphs.
+      async function walkApNode(node: unknown, visited: Set<string>): Promise<"ok" | "unsanitizable"> {
+        if (node instanceof PDFRef) {
+          const key = node.toString();
+          if (visited.has(key)) return "ok"; // already processed
+          visited.add(key);
+          let resolved: unknown;
+          try { resolved = pdfLibDoc.context.lookup(node); } catch { return "ok"; }
+          if (resolved instanceof PDFRawStream) {
+            return scrubApRawStream(resolved, node);
+          }
+          // PDFDict (AP sub-dict or state dict) or anything else — descend
+          return walkApNode(resolved, visited);
+        }
+
+        if (node instanceof PDFRawStream) {
+          // Inline stream (no ref) — scrub and let caller apply replacement ref
+          return scrubApRawStream(node, null);
+        }
+
+        if (node instanceof PDFDict) {
+          let result: "ok" | "unsanitizable" = "ok";
+          for (const [entryKey, val] of node.entries()) {
+            const entryResult = await walkApNode(val, visited);
+            if (entryResult === "unsanitizable") {
+              result = "unsanitizable";
+            } else if (val instanceof PDFRawStream) {
+              // Replace inline stream entry with the registered indirect ref if promoted
+              const tagged = val as unknown as { _replacementRef?: PDFRef };
+              if (tagged._replacementRef) {
+                node.set(entryKey, tagged._replacementRef);
+                delete tagged._replacementRef;
+              }
+            }
+          }
+          return result;
+        }
+
+        if (node instanceof PDFArray) {
+          let result: "ok" | "unsanitizable" = "ok";
+          for (let ai = 0; ai < node.size(); ai++) {
+            const val = node.get(ai);
+            const entryResult = await walkApNode(val, visited);
+            if (entryResult === "unsanitizable") {
+              result = "unsanitizable";
+            } else if (val instanceof PDFRawStream) {
+              const tagged = val as unknown as { _replacementRef?: PDFRef };
+              if (tagged._replacementRef) {
+                node.set(ai, tagged._replacementRef);
+                delete tagged._replacementRef;
+              }
+            }
+          }
+          return result;
+        }
+
+        // All other PDF object types (Name, Number, Boolean, etc.) carry no streams.
+        return "ok";
+      }
+
+      // Process /AP for a resolved annotation dict.
+      // If the walk finds any undecodable stream, remove /AP entirely (fail-closed).
+      async function processAnnotDict(annotDict: PDFDict): Promise<void> {
+        const apEntry = annotDict.get(PDFName.of("AP"));
+        if (!apEntry) return;
+        const result = await walkApNode(apEntry, new Set());
+        if (result === "unsanitizable") {
+          // Cannot guarantee the AP sub-tree is clean — remove it.
+          // Black rectangles drawn in step 4 still cover the visible text area.
+          annotDict.delete(PDFName.of("AP"));
+        }
+      }
+
+      // Walk every annotation on every page.
+      // /Annots entries may be PDFRef (most common) or inline PDFDict.
+      for (const pdfPage of pdfLibDoc.getPages()) {
+        const annotsEntry = pdfPage.node.get(PDFName.of("Annots"));
+        if (!annotsEntry) continue;
+        const annotsArr = annotsEntry instanceof PDFRef
+          ? pdfLibDoc.context.lookup(annotsEntry)
+          : annotsEntry;
+        if (!(annotsArr instanceof PDFArray)) continue;
+        for (let ai = 0; ai < annotsArr.size(); ai++) {
+          const el = annotsArr.get(ai);
+          if (el instanceof PDFRef) {
+            let annotObj: unknown;
+            try { annotObj = pdfLibDoc.context.lookup(el); } catch { continue; }
+            if (annotObj instanceof PDFDict) await processAnnotDict(annotObj);
+          } else if (el instanceof PDFDict) {
+            await processAnnotDict(el);
+          }
         }
       }
     }
