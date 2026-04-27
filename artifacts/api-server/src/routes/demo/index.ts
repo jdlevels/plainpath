@@ -293,18 +293,8 @@ router.post(
       return res.status(500).json({ error: "internal_error", message: "Could not establish demo session." });
     }
 
-    // 3. Quota check (covers the case where the existing guest's own count is exhausted)
-    const exhausted = await isQuotaExhausted(guest, fingerprintHash);
-    if (exhausted) {
-      return res.status(403).json({
-        error: "quota_exhausted",
-        message: "You have used all 2 free demo analyses. Create a free account to continue.",
-        remainingUses: 0,
-        isExhausted: true,
-      });
-    }
-
-    // 4. Parse PDF
+    // 3. Parse PDF — done before the quota increment so that rejected files
+    //    (unreadable, too many pages, empty text) do not consume a quota slot.
     let pdfText = "";
     let pageCount = 0;
     try {
@@ -328,6 +318,39 @@ router.post(
       return res.status(422).json({ error: "empty_text", message: "No readable text found in this PDF. Try a text-based PDF." });
     }
 
+    // 4. Atomic quota check-and-increment — placed after PDF validation so
+    //    invalid/unreadable files do not burn a quota slot, but before the
+    //    expensive OpenAI call so the slot is reserved before any cost is incurred.
+    //    The UPDATE only succeeds when completed_uses < DEMO_MAX_USES, so
+    //    concurrent requests that share the same guest row cannot both slip
+    //    through: only one wins the row lock, the others see rowCount === 0.
+    let newCompletedUses: number;
+    try {
+      const quotaResult = await db.query(
+        `UPDATE demo_guests
+         SET completed_uses = completed_uses + 1,
+             exhausted_at = CASE WHEN completed_uses + 1 >= $2 THEN NOW() ELSE exhausted_at END,
+             last_seen_at = NOW()
+         WHERE id = $1 AND completed_uses < $2
+         RETURNING completed_uses`,
+        [guest.id, DEMO_MAX_USES],
+      );
+
+      if (quotaResult.rowCount === 0) {
+        return res.status(403).json({
+          error: "quota_exhausted",
+          message: "You have used all 2 free demo analyses. Create a free account to continue.",
+          remainingUses: 0,
+          isExhausted: true,
+        });
+      }
+
+      newCompletedUses = quotaResult.rows[0].completed_uses as number;
+    } catch (err) {
+      console.error("demo/analyze quota-increment error", err);
+      return res.status(500).json({ error: "internal_error", message: "Could not establish demo session." });
+    }
+
     // 5. Insert demo_run as 'started'
     const runInsert = await db.query(
       `INSERT INTO demo_runs (guest_id, tool_key, status, file_name, file_size_bytes, page_count)
@@ -343,31 +366,33 @@ router.post(
       analysisResult = await runDemoAnalysis(pdfText, file.originalname);
     } catch (err) {
       console.error("demo/analyze openai error", err);
-      // Mark run as failed — do NOT count toward quota
+      // Mark run as failed — roll back the quota increment so this failed
+      // attempt does not count against the guest's allowance.
       await db.query(
         `UPDATE demo_runs SET status = 'failed', failure_reason = $2, completed_at = NOW() WHERE id = $1`,
         [runId, "openai_error"],
       );
+      await db.query(
+        `UPDATE demo_guests
+         SET completed_uses = GREATEST(0, completed_uses - 1),
+             exhausted_at = CASE
+               WHEN GREATEST(0, completed_uses - 1) < $2 THEN NULL
+               ELSE exhausted_at
+             END,
+             last_seen_at = NOW()
+         WHERE id = $1`,
+        [guest.id, DEMO_MAX_USES],
+      );
       return res.status(500).json({ error: "analysis_failed", message: "Analysis failed. Please try again." });
     }
 
-    // 7. Mark run complete + increment quota
+    // 7. Mark run complete. Quota was already atomically incremented in step 3.
     await db.query(
       `UPDATE demo_runs SET status = 'complete', completed_at = NOW() WHERE id = $1`,
       [runId],
     );
 
-    const newCompletedUses = (guest.completed_uses as number) + 1;
     const nowExhausted = newCompletedUses >= DEMO_MAX_USES;
-    await db.query(
-      `UPDATE demo_guests
-       SET completed_uses = $2,
-           exhausted_at = CASE WHEN $3 THEN NOW() ELSE exhausted_at END,
-           last_seen_at = NOW()
-       WHERE id = $1`,
-      [guest.id, newCompletedUses, nowExhausted],
-    );
-
     const remainingUses = Math.max(0, DEMO_MAX_USES - newCompletedUses);
 
     return res.json({

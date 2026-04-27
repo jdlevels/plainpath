@@ -188,13 +188,123 @@ router.post("/waitlist/join", async (req, res) => {
 /**
  * GET /waitlist/verify?token=<hex>
  *
- * Double-opt-in step 2: validate the one-time token, mark the address as
- * confirmed, and send the "you're on the list" email.
+ * Double-opt-in step 2a: return a confirmation page that asks the user to
+ * click a button.  This handler performs NO state changes so that automated
+ * email-scanner GETs cannot consume the one-time token on behalf of the user.
+ *
+ * The confirmation button POSTs the token to POST /waitlist/verify, which is
+ * the only handler that redeems the token and writes to the database.
+ */
+router.get("/waitlist/verify", (req, res) => {
+  const { token } = req.query
+
+  const marketingBase =
+    process.env.PUBLIC_MARKETING_URL ?? "https://plainpathapp.com"
+
+  // Show the same neutral page for missing/invalid-looking tokens to avoid
+  // leaking information about token existence before the POST is attempted.
+  const safeToken =
+    token && typeof token === "string" && /^[0-9a-f]{1,128}$/i.test(token)
+      ? token
+      : ""
+
+  const apiBase =
+    process.env.PUBLIC_API_BASE_URL ?? "https://plainpathapp.com/api"
+  const postAction = `${apiBase}/waitlist/verify`
+
+  res.setHeader("Content-Type", "text/html; charset=utf-8")
+  return res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Confirm your PlainPath waitlist spot</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #F8F7F4;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 24px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 40px 32px;
+      max-width: 480px;
+      width: 100%;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+      text-align: center;
+    }
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 28px;
+    }
+    .logo-icon {
+      width: 36px; height: 36px;
+      background: #4F46E5;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .logo-name {
+      font-weight: 700; font-size: 18px; color: #1a1a1a; letter-spacing: -0.3px;
+    }
+    h1 { font-size: 22px; font-weight: 700; color: #1a1a1a; margin: 0 0 10px; }
+    p { font-size: 15px; color: #555; margin: 0 0 28px; line-height: 1.6; }
+    button {
+      background: #4F46E5; color: #fff;
+      font-size: 15px; font-weight: 600;
+      border: none; border-radius: 8px;
+      padding: 12px 32px;
+      cursor: pointer;
+      width: 100%;
+    }
+    button:hover { background: #4338CA; }
+    .note { font-size: 12px; color: #bbb; margin-top: 20px; }
+    a { color: #bbb; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">
+      <div class="logo-icon">📄</div>
+      <span class="logo-name">PlainPath</span>
+    </div>
+    <h1>Confirm your spot</h1>
+    <p>Click the button below to confirm your email address and reserve your spot on the PlainPath mobile waitlist.</p>
+    <form method="POST" action="${postAction}">
+      <input type="hidden" name="token" value="${safeToken}" />
+      <button type="submit">Confirm my spot →</button>
+    </form>
+    <p class="note">
+      Didn't request this? You can ignore it — your address won't be added unless you click above.<br />
+      Questions? <a href="mailto:support@plainpathapp.com">support@plainpathapp.com</a>
+    </p>
+  </div>
+</body>
+</html>`)
+})
+
+/**
+ * POST /waitlist/verify
+ *
+ * Double-opt-in step 2b: redeem the one-time token submitted from the
+ * confirmation page.  This is the only handler that writes to the database,
+ * ensuring that automated GET-based email scanners cannot complete enrollment
+ * on behalf of the user.
+ *
  * Redirects to the marketing site with a query parameter indicating success
  * or failure so the frontend can show a friendly message.
  */
-router.get("/waitlist/verify", async (req, res) => {
-  const { token } = req.query
+router.post("/waitlist/verify", async (req, res) => {
+  const token = req.body?.token
 
   const marketingBase =
     process.env.PUBLIC_MARKETING_URL ?? "https://plainpathapp.com"
