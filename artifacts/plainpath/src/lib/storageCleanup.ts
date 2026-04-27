@@ -1,3 +1,6 @@
+import { clearRecentWork } from "./recentWork"
+import { clearStoredSubscriberEmail } from "./subscriberEmail"
+
 const LEGACY_KEYS = [
   "plainpath-saved-analyses",
   "plainpath-saved-trust-checks",
@@ -23,6 +26,8 @@ export function purgeUserScopedKeys(userId: string): void {
     localStorage.removeItem(`plainpath-saved-analyses-${userId}`)
     localStorage.removeItem(`plainpath-saved-trust-checks-${userId}`)
     localStorage.removeItem(`plainpath-contract-draft-latest-${userId}`)
+    clearRecentWork()
+    clearStoredSubscriberEmail()
   } catch {
     // Non-critical — fail silently
   }
