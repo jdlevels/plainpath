@@ -391,19 +391,34 @@ router.post("/bootstrap", async (req, res) => {
 // Records a tool usage event. When PAYWALL_ENFORCEMENT is true, this also
 // validates the subscriber has access to the tool and has not exceeded limits.
 // When PAYWALL_ENFORCEMENT is false, usage is recorded but never blocked.
+//
+// Security model:
+//   - Requires a valid Clerk session JWT. Unauthenticated requests receive 401.
+//   - The account email is resolved exclusively from the authenticated Clerk
+//     session — never from a caller-supplied request body field. This prevents
+//     cross-account usage poisoning and subscriber-state enumeration.
 
-router.post("/consume", (req, res) => {
+router.post("/consume", async (req, res) => {
   try {
-    const email = String(req.body?.email || "").trim().toLowerCase()
+    const auth = getAuth(req)
+    if (!auth?.userId) {
+      return res.status(401).json({ error: "Authentication required." })
+    }
+
     const tool = String(req.body?.tool || "") as ToolKey
 
     const validTools: ToolKey[] = ["analyze", "trust-check", "contract-review", "build-contract", "redact"]
 
-    if (!email) {
-      return res.status(400).json({ error: "Missing email" })
-    }
     if (!validTools.includes(tool)) {
       return res.status(400).json({ error: `Invalid tool. Must be one of: ${validTools.join(", ")}` })
+    }
+
+    // Resolve the verified email from the authenticated Clerk session.
+    const clerkUser = await clerkClient.users.getUser(auth.userId)
+    const email = (clerkUser.emailAddresses?.[0]?.emailAddress ?? "").trim().toLowerCase()
+
+    if (!email) {
+      return res.status(400).json({ error: "Unable to resolve account email." })
     }
 
     // Admin bypass: never consume quota
@@ -477,13 +492,25 @@ router.post("/consume", (req, res) => {
 })
 
 // ─── POST /consume-analysis (legacy endpoint, kept for backwards compat) ──────
+//
+// Security model:
+//   - Requires a valid Clerk session JWT. Unauthenticated requests receive 401.
+//   - The account email is resolved exclusively from the authenticated Clerk
+//     session — never from a caller-supplied request body field.
 
-router.post("/consume-analysis", (req, res) => {
+router.post("/consume-analysis", async (req, res) => {
   try {
-    const email = String(req.body?.email || "").trim().toLowerCase()
+    const auth = getAuth(req)
+    if (!auth?.userId) {
+      return res.status(401).json({ error: "Authentication required." })
+    }
+
+    // Resolve the verified email from the authenticated Clerk session.
+    const clerkUser = await clerkClient.users.getUser(auth.userId)
+    const email = (clerkUser.emailAddresses?.[0]?.emailAddress ?? "").trim().toLowerCase()
 
     if (!email) {
-      return res.status(400).json({ error: "Missing email" })
+      return res.status(400).json({ error: "Unable to resolve account email." })
     }
 
     if (isAdminEmail(email)) {

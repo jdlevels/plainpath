@@ -80,15 +80,18 @@ export async function fetchEntitlements(
 // ─── Consume tool usage (fire-and-forget from gate functions) ─────────────────
 // Records server-side usage for analytics and future enforcement.
 // Does not block when PAYWALL_ENFORCEMENT is false.
+// The server resolves the account identity from the authenticated session —
+// the email parameter is accepted for call-site compatibility but is not sent
+// to the server (sending it would have no effect and be misleading).
 
 export async function consumeToolUsage(
-  email: string,
+  _email: string,
   tool: ToolKey
 ): Promise<{ ok: boolean; plan: string; tool: string; enforced: boolean }> {
   const response = await fetch("/api/entitlements/consume", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, tool }),
+    body: JSON.stringify({ tool }),
   })
 
   const data = await response.json()
@@ -101,12 +104,15 @@ export async function consumeToolUsage(
 }
 
 // ─── Legacy: consume analysis (kept for backwards compat) ────────────────────
+// The server resolves the account identity from the authenticated session —
+// the email parameter is accepted for call-site compatibility but is not sent
+// to the server.
 
-export async function consumeAnalysis(email: string) {
+export async function consumeAnalysis(_email: string) {
   const response = await fetch("/api/entitlements/consume-analysis", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email }),
+    body: JSON.stringify({}),
   })
 
   const data = await response.json()
