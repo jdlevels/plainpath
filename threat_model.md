@@ -49,7 +49,7 @@ Users can upload files, submit document text, update compare-version review meta
 
 ### Information Disclosure
 
-The application processes highly sensitive document contents and exposes sharing, e-signature, collaboration, and billing features. API responses, object-storage fetches, share links, billing status endpoints, entitlement responses, team invitation flows, and any server-side URL import feature must not leak document contents, billing state, internal roles, or other users’ data. Logs and error responses must avoid including document text, secrets, or provider credentials.
+The application processes highly sensitive document contents and exposes sharing, e-signature, collaboration, and billing features. API responses, object-storage fetches, share links, billing status endpoints, entitlement responses, team invitation flows, and any server-side URL import feature must not leak document contents, billing state, internal roles, or other users’ data. Document redaction flows must actually remove or irreversibly destroy sensitive content in exported files; visual overlays alone are not an adequate protection boundary. Logs and error responses must avoid including document text, secrets, or provider credentials.
 
 ### Denial of Service
 
@@ -57,4 +57,4 @@ OpenAI-backed analysis, OCR, PDF parsing, image processing, email delivery, and 
 
 ### Elevation of Privilege
 
-This codebase has multiple privilege layers: unauthenticated users, authenticated users, intended allowlisted users, admins, paid subscribers, and team members. The core guarantee is that every protected operation enforces server-side authorization against the correct principal and scope. In particular, paid AI routes, team invites, billing portal access, compare-version sessions, saved documents, reminder delivery, and e-signature records must not be accessible or modifiable through public endpoints, guessed identifiers, forwarded invite links, user-controlled email parameters, or client-only plan checks.
+This codebase has multiple privilege layers: unauthenticated users, authenticated users, intended allowlisted users, admins, paid subscribers, and team members. The core guarantee is that every protected operation enforces server-side authorization against the correct principal and scope. In particular, paid AI routes, team invites, billing portal access, compare-version sessions, saved documents, reminder delivery, and e-signature records must not be accessible or modifiable through public endpoints, guessed identifiers, forwarded invite links, user-controlled email parameters, or client-only plan checks. Document-tool upsells such as negotiation assistance must be enforced on the server, not only hidden in the UI.
