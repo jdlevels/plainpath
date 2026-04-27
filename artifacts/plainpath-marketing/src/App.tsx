@@ -29,6 +29,8 @@ import DemoContractReview from "@/pages/DemoContractReview";
 import DemoRedact from "@/pages/DemoRedact";
 import DemoCompare from "@/pages/DemoCompare";
 import DemoClauseExtractor from "@/pages/DemoClauseExtractor";
+import DemoAskDocument from "@/pages/DemoAskDocument";
+import DemoBuilder from "@/pages/DemoBuilder";
 
 const queryClient = new QueryClient();
 
@@ -51,6 +53,8 @@ function Router() {
       <Route path="/demo/redact" component={DemoRedact} />
       <Route path="/demo/compare" component={DemoCompare} />
       <Route path="/demo/clause-extractor" component={DemoClauseExtractor} />
+      <Route path="/demo/ask-document" component={DemoAskDocument} />
+      <Route path="/demo/builder" component={DemoBuilder} />
 
       <Route path="/guides/reviewing-a-lease" component={ReviewingALease} />
       <Route path="/guides/understanding-an-nda" component={UnderstandingAnNDA} />

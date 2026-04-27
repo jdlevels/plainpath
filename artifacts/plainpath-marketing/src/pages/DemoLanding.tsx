@@ -78,7 +78,7 @@ const TOOLS = [
     bg: "bg-indigo-50 dark:bg-indigo-950/40",
     border: "border-indigo-200 dark:border-indigo-800",
     ring: "hover:ring-indigo-300 dark:hover:ring-indigo-700",
-    href: "/app/ask-document",
+    href: "/demo/ask-document",
   },
   {
     key: "compare",
@@ -114,7 +114,7 @@ const TOOLS = [
     bg: "bg-teal-50 dark:bg-teal-950/40",
     border: "border-teal-200 dark:border-teal-800",
     ring: "hover:ring-teal-300 dark:hover:ring-teal-700",
-    href: "/app/builder",
+    href: "/demo/builder",
   },
 ];
 

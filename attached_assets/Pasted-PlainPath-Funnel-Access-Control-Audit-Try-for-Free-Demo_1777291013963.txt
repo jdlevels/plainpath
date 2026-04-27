@@ -1,0 +1,450 @@
+PlainPath Funnel + Access Control Audit — Try for Free, Demo Cards, Login, Dashboard, Paid Access
+
+Goal:
+Run a comprehensive audit and fix pass for PlainPath’s public funnel, demo access, login flow, dashboard access, and paid-user gating.
+
+This is launch-critical.
+
+Current rule:
+Visitors should NOT access the full dashboard of tools.
+“Try it free” should open a separated demo/try-free experience, not the authenticated dashboard.
+Demo cards should open their own demo pages or demo modal/sandbox.
+Only registered paid users, Admin users, or approved reviewer/admin test accounts should access the real dashboard and full tool routes.
+
+Current active tools:
+1. Analyze a Document
+2. Document Trust Check
+3. Build a Contract
+4. Contract Review
+5. Redact Sensitive Info
+6. Ask This Document
+7. Clause Extractor
+8. Compare Versions
+9. Document Builder
+
+Do not:
+- Add new tools
+- Change pricing
+- Change Stripe checkout behavior on web
+- Add StoreKit
+- Add Google Play Billing
+- Reintroduce e-signature
+- Add Dropbox Sign
+- Change database schema unless a blocker requires it and is reported first
+- Create migrations unless explicitly approved
+- Break the admin reviewer account
+- Break web Stripe checkout
+
+====================================================
+A. Define the Correct Access Model
+====================================================
+
+Implement and verify this access model:
+
+1. Public visitor / not authenticated
+Allowed:
+- Marketing homepage
+- Pricing
+- Support
+- Privacy
+- Terms
+- How it works
+- Demo landing page
+- Individual demo pages/cards
+- Sign in
+- Sign up
+
+Not allowed:
+- /app
+- /dashboard
+- /documents
+- /my-analyses
+- full real tool pages
+- saved work
+- real AI processing behind paid routes unless intentionally demo-limited
+
+Expected behavior:
+- If visitor clicks “Open App,” send to sign-in or sign-up.
+- If visitor clicks “Try it free,” send to a public demo/try-free route, not the dashboard.
+- If visitor clicks a demo card, open a demo page/sandbox for that tool.
+
+2. Authenticated but unpaid user
+Allowed:
+- Account/billing/subscription page
+- Upgrade prompt
+- Possibly limited free trial/demo route if intentionally implemented
+
+Not allowed:
+- Full dashboard with all real tools
+- Full tool execution
+- Saved document library access beyond allowed account area
+- Pro-only tools
+
+Expected behavior:
+- If unpaid user tries /app or /dashboard, show upgrade gate or redirect to /subscribe.
+- Do not show the full operational dashboard as if they are paid.
+- Do not expose full tool routes unless access is allowed.
+
+3. Paid Pro user
+Allowed:
+- Dashboard
+- All paid tools according to plan
+- My Documents
+- My Analyses
+- Save/export where supported
+
+4. Admin / reviewer account
+Allowed:
+- Full dashboard
+- All 9 tools
+- No payment prompt
+- No Stripe required
+- Works from incognito/fresh session
+
+====================================================
+B. Public CTA Audit
+====================================================
+
+Inspect all public marketing CTA buttons and links.
+
+Files to inspect:
+- plainpath-marketing Home.tsx
+- Navbar
+- Hero section
+- ToolsShowcase
+- DemoLanding
+- WebAppDemo
+- PhoneHeroDemo
+- PricingSection
+- FAQSection
+- Footer
+- Any CTA/button component
+
+Audit every CTA:
+- Try it free
+- Try demo
+- Open App
+- Login
+- Sign up
+- Get started
+- Tool card buttons
+- Demo cards
+- Pricing buttons
+- Footer tool links
+- Header tool links
+
+Required routing:
+- “Try it free” → public demo/try-free route, NOT /app dashboard
+- Demo tool cards → their own demo page or demo sandbox route
+- “Open App” → sign-in or authenticated app entry
+- Pricing buttons → sign-in/sign-up/checkout path, depending current auth flow
+- Tool cards on marketing site → demo pages unless explicitly labeled “Open App”
+
+Return:
+CTA label | File | Current route | Correct route | Fixed? | Notes
+
+====================================================
+C. Demo Page Architecture Audit
+====================================================
+
+Confirm or create a clean public demo architecture.
+
+Preferred routes:
+- /demo
+- /demo/analyze
+- /demo/trust-check
+- /demo/build-contract
+- /demo/contract-review
+- /demo/redact
+- /demo/ask-document
+- /demo/clause-extractor
+- /demo/compare-versions
+- /demo/builder
+
+Rules:
+- Demo pages must be public.
+- Demo pages must use static/sample/demo data only.
+- Demo pages must not require payment.
+- Demo pages must not expose real user dashboard data.
+- Demo pages must not save user documents.
+- Demo pages must not show My Documents or My Analyses.
+- Demo pages must not trigger paid-user AI analysis unless intentionally demo-limited.
+- Demo pages must clearly state “Demo” or “Sample preview.”
+- Demo pages must not contain e-signature.
+- Demo pages must not show removed features.
+- Demo pages must not route into full dashboard unless user chooses sign in/open app.
+
+If a full demo page does not exist for a tool:
+- Either create a lightweight demo page using existing static mock/demo content, or route to /demo with the correct tool preview selected.
+- Do not build complex new tool functionality.
+- Do not connect demo pages to real saved documents.
+
+Return:
+Demo route | Tool | Exists? | Uses static data? | Saves data? | Safe? | Fix
+
+====================================================
+D. Dashboard Protection Audit
+====================================================
+
+Audit real app routes:
+
+- /app
+- /
+- /dashboard
+- /documents
+- /my-analyses
+- /analyze
+- /trust-check
+- /import?mode=trust-check
+- /build-contract
+- /contract-review
+- /redact
+- /ask-document
+- /clause-extractor
+- /compare-versions
+- /builder
+- /billing
+- /subscribe
+
+Confirm:
+- Dashboard is protected by auth.
+- Dashboard is protected by entitlement/paywall unless Admin.
+- Unauthenticated users cannot access dashboard by direct URL.
+- Authenticated unpaid users cannot access full dashboard/tools by direct URL.
+- Admin reviewer account can access all 9 tools.
+- Paid Pro users can access full dashboard.
+- Failed access shows friendly upgrade/sign-in page, not blank screen.
+- Browser back button does not expose protected content after sign-out.
+- Sign-out redirects to marketing home or sign-in, not stale dashboard.
+
+Return:
+Route | Visitor result | Unpaid result | Paid result | Admin result | Status
+
+====================================================
+E. Tool Route Entitlement Audit
+====================================================
+
+For each of the 9 tools, verify direct URL access:
+
+1. Analyze a Document
+2. Document Trust Check
+3. Build a Contract
+4. Contract Review
+5. Redact Sensitive Info
+6. Ask This Document
+7. Clause Extractor
+8. Compare Versions
+9. Document Builder
+
+Test access states:
+- logged out
+- logged in unpaid
+- paid Pro
+- Admin/reviewer
+
+Required:
+- logged out → sign-in or public demo only
+- unpaid → upgrade gate unless intentionally free-limited
+- paid/Admin → tool opens
+- no direct route bypass
+- no API call executes before entitlement check
+
+Return:
+Tool | Route | Logged out | Unpaid | Paid | Admin | API protected? | Status
+
+====================================================
+F. API Protection Audit
+====================================================
+
+Confirm public demo pages do not expose paid API endpoints.
+
+Audit backend routes:
+- analysis
+- trust check
+- contract review
+- clause extractor
+- ask document
+- redact
+- compare versions
+- builder AI
+- documents
+- my analyses
+- billing
+- entitlements
+
+Verify:
+- protected APIs require Clerk auth
+- paid APIs require entitlement unless Admin
+- unpaid users cannot call paid APIs directly
+- no frontend-only gate is relied on for paid protection
+- unauthenticated API call returns 401 JSON
+- unauthorized/unpaid API call returns 403/upgrade-required JSON
+- Admin reviewer bypass is server-side
+- no full dashboard data is returned to visitor/unpaid users
+- documents API is protected and fixed
+- demo endpoints, if any, are separated and static/demo-safe
+
+Return:
+API | Auth required | Entitlement required | Visitor result | Unpaid result | Admin result | Status
+
+====================================================
+G. Try-for-Free Flow Definition
+====================================================
+
+Implement/verify this preferred flow:
+
+Visitor clicks “Try it free”
+→ lands on /demo or /try-free
+→ sees 9 demo cards
+→ clicks a demo card
+→ opens that tool’s demo page/sandbox
+→ can view a sample workflow/result
+→ CTA: “Create account to use with your own documents”
+→ sign-up/sign-in
+→ if unpaid after signup, show subscribe/upgrade path
+→ paid/Admin enters full dashboard
+
+Important:
+“Try it free” must not open /app or /dashboard.
+
+Return:
+Step | Expected route | Current route | Fixed? | Status
+
+====================================================
+H. Demo Card Behavior
+====================================================
+
+For every demo card:
+- card opens its own demo page or selected demo state
+- no dead links
+- no dashboard access
+- no paid API call
+- no save action
+- no My Documents access
+- no stale copy
+- no removed tool
+- all 9 active tools represented
+
+Return:
+Card | Route | Opens? | Public? | Static? | Safe? | Status
+
+====================================================
+I. UI Copy / Messaging
+====================================================
+
+Update copy so users clearly understand the split:
+
+Visitor demo page copy:
+- “Preview PlainPath with sample documents.”
+- “Use demos to see how each tool works.”
+- “Create an account to use PlainPath with your own documents.”
+
+Unpaid signed-in user gate:
+- “Choose a plan to unlock PlainPath tools.”
+- “Your account is ready. A subscription is required to analyze, build, redact, compare, and save documents.”
+
+Dashboard copy:
+- Only visible to paid/Admin users.
+
+Avoid:
+- “No account required” on flows that lead to real app tools
+- “Free dashboard”
+- “Free full access”
+- “Try free” implying unpaid users get the full dashboard
+- Any mention of Digital Signature/e-signature
+
+====================================================
+J. Native App Behavior
+====================================================
+
+Verify native wrapper behavior:
+- Try it free opens demo/try-free flow, not paid dashboard.
+- Native does not show Stripe checkout.
+- Native does not show tappable external purchase links.
+- Native payment message remains static:
+  “Subscription management is handled on the PlainPath website.”
+- Admin reviewer account can access dashboard after sign-in.
+- Unpaid user cannot bypass into dashboard/tools.
+
+====================================================
+K. Reviewer Account Exception
+====================================================
+
+Preserve the admin reviewer account path.
+
+Verify:
+- Admin/reviewer account logs in normally.
+- No payment prompt.
+- All 9 tools visible.
+- Full dashboard accessible.
+- Works from incognito.
+- Credentials can be given in App Store Connect / Play Console.
+
+Apple and Google require reviewers to access restricted/login-gated functionality, so this account must remain valid.
+
+====================================================
+L. Security / Abuse Checks
+====================================================
+
+Confirm:
+- public demo does not write to database
+- public demo does not upload private documents
+- public demo does not expose other user data
+- public demo does not return saved docs
+- public demo does not call paid AI endpoint unless intentionally rate-limited and demo-safe
+- unpaid users cannot manipulate route params to access paid sessions
+- direct API calls are blocked
+- localStorage/sessionStorage cannot unlock paid dashboard
+- plan/role cannot be spoofed client-side
+- admin bypass is server-side, not client-only
+
+====================================================
+M. Verification
+====================================================
+
+Run:
+- TypeScript check
+- app startup
+- API startup
+- marketing startup
+- browser tests for visitor
+- browser tests for unpaid account if available
+- browser tests for admin reviewer account
+- route checks
+- API checks
+
+Search after fixes:
+- “Try it free”
+- “no account required”
+- “demo”
+- “dashboard”
+- “8 tools”
+- “6 tools”
+- “Digital Signature”
+- “e-signature”
+- “Send for Signature”
+- “Dropbox Sign”
+
+====================================================
+N. Return Format
+====================================================
+
+Return only:
+
+A. Overall result: PASS / PASS WITH ISSUES / FAIL
+B. Files inspected
+C. Files changed
+D. Public CTA routing table
+E. Demo page architecture result
+F. Dashboard protection result
+G. Tool entitlement matrix
+H. API protection result
+I. Try-for-free flow result
+J. Demo card behavior result
+K. Native behavior result
+L. Reviewer/admin account result
+M. Security/abuse findings
+N. Remaining issues
+O. Safe to capture marketing screenshots: Yes/No
+P. Safe to capture app screenshots: Yes/No
+Q. Safe to continue app-store prep: Yes/No

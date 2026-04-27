@@ -1,0 +1,419 @@
+PlainPath Public Demo System Audit — Built-In Live Example for Each of 9 Tools
+
+Goal:
+Before changing the Try for Free / login / dashboard gating flow, audit and complete the public demo system so every active PlainPath tool has its own built-in demo example.
+
+This pass is about demo readiness only.
+
+Current active tools:
+1. Analyze a Document
+2. Document Trust Check
+3. Build a Contract
+4. Contract Review
+5. Redact Sensitive Info
+6. Ask This Document
+7. Clause Extractor
+8. Compare Versions
+9. Document Builder
+
+Core requirement:
+Each tool must have a public demo experience that lets a visitor see what the tool does before purchasing.
+
+The demo must:
+- Open from the marketing/demo page.
+- Use built-in sample/demo data.
+- Show a realistic live example or realistic static simulation.
+- Clearly label itself as Demo / Sample Preview.
+- Not require payment.
+- Not expose the real dashboard.
+- Not show My Documents or My Analyses.
+- Not save user data.
+- Not use real user documents.
+- Not route into paid app tools unless the user intentionally signs in.
+- Not reintroduce e-signature.
+- Not mention Digital Signature, Dropbox Sign, Send for Signature, or e-signature.
+- Not show stale “8 tools” or “6 tools” copy.
+
+Do not:
+- Change Stripe.
+- Change auth architecture.
+- Change database schema.
+- Create migrations.
+- Add new tools.
+- Change pricing.
+- Add StoreKit.
+- Add Google Play Billing.
+- Reintroduce e-signature.
+- Add Dropbox Sign.
+- Break the admin/reviewer account.
+- Connect public demos to private user data.
+
+====================================================
+A. Inspect Existing Demo Architecture
+====================================================
+
+Inspect the marketing/demo system:
+
+Marketing files:
+- artifacts/plainpath-marketing/src/App.tsx
+- artifacts/plainpath-marketing/src/pages/*
+- artifacts/plainpath-marketing/src/components/*
+- artifacts/plainpath-marketing/src/components/layout/*
+- artifacts/plainpath-marketing/src/data/*
+- DemoLanding
+- WebAppDemo
+- PhoneHeroDemo
+- ToolsShowcase
+- VideoWalkthrough
+- any demo routes/components
+
+App-side demo/mock files if used:
+- artifacts/plainpath/src/data/*
+- artifacts/plainpath/src/pages/*
+- artifacts/plainpath/src/components/*
+- demoData files
+- sample document files
+- mock result files
+
+Return:
+- Existing demo routes
+- Existing demo components
+- Existing demo data files
+- Existing tool cards that already open demos
+- Missing demo routes/components/data
+
+====================================================
+B. Required Demo Routes
+====================================================
+
+Preferred public demo routes:
+
+- /demo
+- /demo/analyze
+- /demo/trust-check
+- /demo/build-contract
+- /demo/contract-review
+- /demo/redact
+- /demo/ask-document
+- /demo/clause-extractor
+- /demo/compare-versions
+- /demo/builder
+
+If the app currently uses another route pattern, keep the existing pattern only if it is clean, consistent, and public.
+
+Every route must:
+- Load without authentication.
+- Show demo/sample content.
+- Show a CTA to create account/open app.
+- Never expose real dashboard routes.
+- Never show saved user documents.
+- Never save data.
+- Never call paid user APIs unless the call is demo-safe/static/rate-limited and explicitly intended.
+
+Return:
+Route | Tool | Exists? | Public? | Demo data? | Safe? | Needs work?
+
+====================================================
+C. Demo Content Requirements by Tool
+====================================================
+
+Verify or create one built-in demo example for each tool.
+
+1. Analyze a Document
+Demo document:
+- Small business permit, lease notice, IRS-style letter, medical bill, or simple agreement.
+Demo must show:
+- Uploaded/sample document preview
+- Plain-English summary
+- action plan
+- deadlines
+- missing items
+- risks
+- source-backed sections
+
+2. Document Trust Check
+Demo document:
+- Suspicious collection letter, fake invoice, fictional credit agreement, or questionable notice.
+Demo must show:
+- Trust/risk score
+- suspicious indicators
+- consistency signals
+- what to verify
+- safe next steps
+- cautious wording, no absolute “fake/authentic” claims
+
+3. Build a Contract
+Demo flow:
+- Built-in guided question example for a freelance/service/lease/NDA-style contract.
+Demo must show:
+- guided questions
+- generated contract preview
+- editable/preview result if available
+- static signature/date line allowed only as document layout field
+
+4. Contract Review
+Demo document:
+- Credit card agreement, service agreement, lease, or employment-style agreement.
+Demo must show:
+- score/summary
+- red flags
+- watch-outs
+- missing protections
+- negotiation suggestions
+- legal-safe disclaimer
+
+5. Redact Sensitive Info
+Demo document:
+- Sample document containing fake name, account number, phone, email, address, or case number.
+Demo must show:
+- detected sensitive items
+- selected redactions
+- black-bar preview
+- original unchanged message
+- redacted PDF/download message if supported
+
+6. Ask This Document
+Demo document:
+- Lease, contract, policy, or notice.
+Demo must show:
+- document preview
+- built-in suggested questions
+- at least 2–3 sample Q&A responses
+- answer tied to source/document section
+
+7. Clause Extractor
+Demo document:
+- Service agreement, lease, vendor contract, or NDA.
+Demo must show:
+- extracted clauses
+- parties
+- dates
+- obligations
+- missing/not identified clauses
+- source-backed findings
+- no fake source highlight for missing clauses
+
+8. Compare Versions
+Demo documents:
+- Original lease/agreement and revised version.
+Demo must show:
+- side-by-side original and revised preview
+- additions
+- deletions
+- modified terms
+- risk/meaning shifts
+- change list/right panel
+- no crash
+
+9. Document Builder
+Demo document:
+- SOP, employee onboarding manual, policy, checklist, or internal manual.
+Demo must show:
+- template selection or prebuilt sample document
+- left live document preview
+- clickable/editable block concept if available
+- AI Guide panel
+- Outline/Edit/Style/Export tabs
+- .txt export if supported
+- PDF/DOCX clearly marked coming soon if not implemented
+
+====================================================
+D. Demo Page Structure Standard
+====================================================
+
+Each individual demo page should follow the same structure:
+
+Header:
+- Tool name
+- Demo / Sample Preview badge
+- One-line explanation
+- CTA: “Use this with your own document”
+
+Main body:
+- Left side: sample document or output preview
+- Right side: demo result/intelligence/action panel
+
+Footer/CTA:
+- “Create account to use with your own documents”
+- “Open PlainPath”
+- Optional: “Back to all demos”
+
+Do not show:
+- My Documents
+- My Analyses
+- Billing
+- Full dashboard
+- Saved real sessions
+- user account data
+- payment prompt inside demo
+- e-signature references
+
+====================================================
+E. Demo Data Safety
+====================================================
+
+All demo data must be fictional.
+
+Verify:
+- No real names except clearly fictional names.
+- No real account numbers.
+- No real addresses.
+- No real phone numbers.
+- No real SSNs.
+- No real legal/medical/financial records.
+- No user-uploaded data.
+- No production database data.
+
+Each sample document should include a small label:
+“Fictional sample for demo purposes.”
+
+====================================================
+F. Demo Card Behavior
+====================================================
+
+On the demo landing page and marketing tool cards:
+
+Each active tool card must:
+- Be visible.
+- Use the correct tool name.
+- Use correct description.
+- Open its own demo route.
+- Not open /app or dashboard.
+- Not require login.
+- Not trigger checkout.
+- Not route to removed feature.
+- Not use stale “8 tools” text.
+- Not use stale “6 tools” text.
+
+Return:
+Card | Tool | Current route | Expected demo route | Fixed? | Status
+
+====================================================
+G. Demo Loop / Live Example Verification
+====================================================
+
+For each demo page, verify the built-in example actually appears.
+
+Check:
+- page loads
+- sample document visible
+- sample result visible
+- no blank panel
+- no infinite spinner
+- no auth wall
+- no payment wall
+- no broken API request
+- no console runtime crash
+- no missing imports
+- no stale copy
+- mobile layout works
+- desktop layout works
+
+Return:
+Tool | Demo page loads | Sample visible | Result visible | Mobile | Desktop | Status
+
+====================================================
+H. Demo vs Real App Separation
+====================================================
+
+Confirm strict separation:
+
+Public demo:
+- static/mock/sample data
+- no saved documents
+- no user dashboard
+- no user sessions
+- no protected API required
+- no paywall required
+
+Real app:
+- authenticated
+- paid/Admin gated
+- real uploads
+- real AI analysis
+- saved documents/sessions where supported
+
+Return:
+Public demo route | Calls protected API? | Saves data? | Shows dashboard? | Safe?
+
+====================================================
+I. Missing Demo Handling
+====================================================
+
+If a tool does not yet have a full demo page:
+
+Create a lightweight demo page using existing sample data and static mock results.
+
+Do not build full backend logic.
+Do not create new paid AI flows.
+Do not connect to database.
+Do not save anything.
+
+Use a static simulated result if needed, but make it look like the real tool’s output style.
+
+====================================================
+J. Store Screenshot Readiness
+====================================================
+
+After demos are verified, identify which demo pages are good candidates for store screenshots.
+
+Recommend:
+- Dashboard with 9 tools
+- Analyze demo/result
+- Ask This Document demo
+- Redact demo
+- Compare Versions demo
+- Document Builder demo
+- Optional: Trust Check demo
+- Optional: Contract Review demo
+- Optional: Clause Extractor demo
+
+Return:
+Screenshot candidate | Route | Why useful | Ready? | Needs polish?
+
+====================================================
+K. Verification
+====================================================
+
+Run:
+- marketing TypeScript check
+- marketing build
+- marketing startup
+- browser check for /demo
+- browser check for all 9 demo routes
+- CTA route check
+- console/runtime check
+- stale copy search
+
+Search after changes:
+- “8 tools”
+- “6 tools”
+- “Digital Signature”
+- “e-signature”
+- “Send for Signature”
+- “Dropbox Sign”
+- “demo”
+- “Try it free”
+- “dashboard”
+
+====================================================
+L. Return Format
+====================================================
+
+Return only:
+
+A. Overall demo readiness result: PASS / PASS WITH ISSUES / FAIL
+B. Files inspected
+C. Files changed
+D. Demo route table for all 9 tools
+E. Demo data/source table
+F. Demo card behavior table
+G. Built-in live example verification table
+H. Demo vs real app separation result
+I. Missing demos created or still missing
+J. Removed feature/stale copy sweep
+K. Store screenshot candidate list
+L. Build/test result
+M. Safe to proceed to Try for Free / access-control funnel audit: Yes/No
+N. Safe to capture marketing screenshots: Yes/No
+O. Safe to continue app-store prep: Yes/No
