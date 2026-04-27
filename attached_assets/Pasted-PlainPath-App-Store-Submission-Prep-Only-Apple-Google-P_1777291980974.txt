@@ -1,0 +1,214 @@
+PlainPath App Store Submission Prep Only — Apple + Google Play
+
+Goal:
+Prepare PlainPath for Apple App Store and Google Play submission after developer accounts are purchased.
+
+Mode:
+Submission preparation only.
+
+Do not add features.
+Do not redesign.
+Do not change pricing.
+Do not change Stripe checkout on web.
+Do not change auth architecture.
+Do not change database schema.
+Do not create migrations.
+Do not touch Trust Check v2 planning.
+Do not touch demo pages unless a store-submission blocker is found.
+Do not reintroduce e-signature.
+Do not add Dropbox Sign.
+Do not change the active 9-tool product set.
+
+Current active tools:
+1. Analyze a Document
+2. Document Trust Check
+3. Build a Contract
+4. Contract Review
+5. Redact Sensitive Info
+6. Ask This Document
+7. Clause Extractor
+8. Compare Versions
+9. Document Builder
+
+Known submission rules:
+- Native app must not show Stripe checkout.
+- Native app must not show tappable external purchase links.
+- Native payment message must remain static:
+  “Subscription management is handled on the PlainPath website.”
+- Web Stripe checkout remains active.
+- Admin reviewer account already exists.
+- E-signature is fully removed.
+- Static signature/date line fields inside Document Builder are allowed.
+
+A. Apple App Store setup checklist
+
+Prepare/check:
+
+1. App identity
+- App name: PlainPath
+- Subtitle
+- Bundle ID
+- SKU
+- Primary category
+- Secondary category if useful
+- Age rating inputs
+- Version number
+- Build number
+
+2. URLs
+- Privacy Policy URL
+- Terms URL
+- Support URL
+- Marketing website URL
+
+3. App Store metadata
+Prepare draft text for:
+- App description
+- Promotional text
+- Keywords
+- What’s New text if needed
+- Review notes
+
+4. App privacy
+Prepare Apple Privacy Nutrition Label answers based on actual app behavior:
+- Account email/login data
+- Uploaded document processing
+- AI processing
+- Payment/subscription handling through Stripe on web
+- Clerk authentication
+- No Dropbox Sign
+- No e-signature
+- No selling user data
+- No native in-app purchase currently processed inside app
+
+5. Screenshots/assets inventory
+Confirm status for:
+- 1024×1024 app icon
+- iPhone screenshots
+- iPad screenshots if required or selected
+- App preview video optional
+- Dashboard screenshot
+- Tool screenshots
+- Native payment static-message screenshot if needed
+
+6. Reviewer account
+Use existing admin test account.
+Prepare App Review notes with placeholders only:
+
+PlainPath requires sign-in to access document tools. Use the test account below.
+
+This account has full Admin access to all 9 active tools. No payment is required for review.
+
+To test:
+1. Sign in with the provided credentials.
+2. Open the dashboard — all 9 tools appear in the top navigation and dashboard.
+3. Select any tool and upload or paste a sample document.
+4. AI analysis runs and results display on screen.
+
+The native app does not process purchases. Subscription management is handled on the PlainPath website.
+
+Test account:
+Email: [insert admin test email]
+Password: [insert admin test password]
+
+B. Google Play setup checklist
+
+Prepare/check:
+
+1. App identity
+- App name: PlainPath
+- Package name
+- App category
+- Tags
+- Default language
+- Free/paid app setting
+- Countries/regions
+- Version code
+- Version name
+
+2. Store listing
+Prepare draft text for:
+- Short description
+- Full description
+- Release notes
+
+3. Required URLs/contact
+- Privacy Policy URL
+- Support email
+- Terms URL if applicable
+- Website URL
+
+4. App content forms
+Prepare:
+- Data Safety answers
+- App Access login credentials
+- Content rating questionnaire notes
+- Target audience
+- Ads declaration
+- Financial features declaration if applicable
+- Data deletion/account deletion disclosure if required
+
+5. Graphic assets
+Confirm status for:
+- 512×512 app icon
+- 1024×500 feature graphic
+- Android phone screenshots
+- Android tablet screenshots if required
+- Optional promo/video asset
+
+6. App access instructions
+Use existing admin test account.
+Confirm:
+- No MFA
+- No OTP
+- No magic-link-only blocker
+- Password login works
+- Account has access to all 9 tools
+- No payment required
+
+C. Native payment compliance check
+
+Verify:
+- No Stripe checkout inside native app.
+- No tappable external purchase link inside native app.
+- No “View plans at plainpathapp.com” button.
+- No external web purchase CTA.
+- Static text only:
+  “Subscription management is handled on the PlainPath website.”
+- Web app Stripe checkout still works.
+
+D. Build readiness
+
+Check:
+- iOS bundle config exists or list missing items.
+- Android package config exists or list missing items.
+- App version/build number ready.
+- Capacitor/native wrapper config ready if used.
+- Production API URL set.
+- Production Clerk settings set.
+- Production app routes working.
+- No e-signature routes.
+- All 9 tools still route.
+- Admin reviewer account still works.
+
+E. Output
+
+Return only:
+
+A. Apple account/setup readiness
+B. Google Play account/setup readiness
+C. Bundle ID / package name status
+D. Required URLs status
+E. Reviewer account status
+F. Apple metadata draft status
+G. Google metadata draft status
+H. Apple Privacy Nutrition Label readiness
+I. Google Data Safety readiness
+J. Screenshot/icon/asset inventory
+K. Native payment compliance status
+L. Build/version readiness
+M. Critical blockers
+N. Manual tasks remaining
+O. Safe to upload Apple build: Yes/No
+P. Safe to upload Google build: Yes/No
+Q. Safe to submit Apple/Google for review tonight: Yes/No
