@@ -64,7 +64,7 @@ export default function JobOffer() {
             <div>
               <h3 className="text-sm font-bold mb-2">Run a Contract Review on your offer</h3>
               <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-                Upload or paste your employment offer and PlainPath will rate every clause Fair, Watch Out, or Red Flag — and provide specific negotiation language for anything problematic. Free to use.
+                Upload or paste your employment offer and PlainPath will rate every clause Fair, Watch Out, or Red Flag — and provide specific negotiation language for anything problematic. Sign in to run this analysis.
               </p>
               <Link href="/contract-review" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity">
                 Review my offer letter <ArrowRight className="w-4 h-4" />

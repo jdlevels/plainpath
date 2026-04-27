@@ -1,7 +1,7 @@
 /* ─────────────────────────────────────────────────────────────
    VideoWalkthrough.tsx
    
-   Animated workflow demo cycling all 8 live PlainPath tools.
+   Animated workflow demo cycling all 9 live PlainPath tools.
    Each tool shows: document loaded → processing → findings.
    Auto-advances every INTERVAL_MS. Clicking a chapter card
    jumps immediately to that tool.
@@ -1059,7 +1059,7 @@ export default function VideoWalkthrough({ activeTool, onToolChange }: VideoWalk
           className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/15 border border-primary/30 mb-5"
         >
           <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-          <span className="text-xs font-semibold uppercase tracking-widest text-primary">8 tools · live demo</span>
+          <span className="text-xs font-semibold uppercase tracking-widest text-primary">9 tools · live demo</span>
         </motion.div>
         <motion.h2
           initial={{ opacity: 0, y: 12 }}

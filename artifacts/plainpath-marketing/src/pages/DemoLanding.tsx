@@ -121,7 +121,7 @@ export default function DemoLanding() {
         <section className="pt-14 pb-10 px-4 text-center bg-gradient-to-b from-blue-50/60 via-background to-background dark:from-slate-900 dark:to-background border-b border-border/40">
           <div className="max-w-2xl mx-auto">
             <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-primary bg-primary/10 rounded-full px-4 py-1.5 mb-5">
-              8 tools · all pre-loaded
+              9 tools · all pre-loaded
             </div>
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4 leading-tight" style={{ fontFamily: "var(--font-display)" }}>
               See PlainPath in action

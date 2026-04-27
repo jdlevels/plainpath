@@ -83,7 +83,7 @@ export default function IrsLetter() {
             <div>
               <h3 className="text-sm font-bold mb-2">Get a plain-English breakdown of your IRS letter</h3>
               <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-                Paste or upload your IRS letter and PlainPath will extract every required action, deadline, document needed, and risk — in plain English. Free to use, no account required.
+                Paste or upload your IRS letter and PlainPath will extract every required action, deadline, document needed, and risk — in plain English. Sign in to run this analysis.
               </p>
               <Link href="/import" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity">
                 Analyze my IRS letter <ArrowRight className="w-4 h-4" />

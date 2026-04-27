@@ -306,7 +306,7 @@ export default function Billing() {
           {isEnforced && plan === "starter" && (
             <div className="mt-4 rounded-xl border border-primary/20 bg-primary/5 p-3 flex items-center justify-between gap-3">
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Upgrade to <span className="font-semibold text-primary">Pro</span> to unlock all 8 tools — including Contract Review, Ask This Document, Compare Versions, and more.
+                Upgrade to <span className="font-semibold text-primary">Pro</span> to unlock all 9 tools — including Contract Review, Ask This Document, Compare Versions, and more.
               </p>
               <Button size="sm" onClick={() => navigate("/subscribe")} className="shrink-0">
                 Upgrade <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
@@ -330,7 +330,7 @@ export default function Billing() {
                 </p>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   Starter at <strong>$4.99/mo</strong> gives you Analyze and Redact.
-                  Pro at <strong>$19.99/mo</strong> unlocks all 8 tools.
+                  Pro at <strong>$19.99/mo</strong> unlocks all 9 tools.
                 </p>
               </div>
               <Button size="sm" onClick={() => navigate("/subscribe")} className="shrink-0">
@@ -353,7 +353,7 @@ export default function Billing() {
                   Upgrade to Pro — $19.99/mo
                 </p>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  Unlock all 8 tools — Trust Check, Contract Review, Signature, Compare Versions, Clause Extractor, and more.
+                  Unlock all 9 tools — Trust Check, Contract Review, Ask This Document, Compare Versions, Clause Extractor, and more.
                 </p>
               </div>
               <Button size="sm" onClick={() => navigate("/subscribe")} className="shrink-0">

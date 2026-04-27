@@ -55,14 +55,14 @@ export default function VsContractCrab() {
             PlainPath vs ContractCrab
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            ContractCrab is a contract-only review tool at $30/month. PlainPath is an 8-tool document suite for everyday people — leases, medical bills, IRS letters, contracts, and more — starting at $4.99/month.
+            ContractCrab is a contract-only review tool at $30/month. PlainPath is a 9-tool document suite for everyday people — leases, medical bills, IRS letters, contracts, and more — starting at $4.99/month.
           </p>
         </div>
 
         <div className="grid grid-cols-3 gap-4 mb-10">
           {[
             { label: "PlainPath Starter", price: "$4.99/mo", highlight: true, note: "2 analyses + core tools" },
-            { label: "PlainPath Pro", price: "$19.99/mo", highlight: false, note: "Unlimited + all 8 tools" },
+            { label: "PlainPath Pro", price: "$19.99/mo", highlight: false, note: "Unlimited + all 9 tools" },
             { label: "ContractCrab", price: "$30/mo", highlight: false, note: "Contracts only" },
           ].map((plan, i) => (
             <div key={i} className={`rounded-2xl p-5 text-center border ${plan.highlight ? "border-primary/40 bg-primary/5" : "border-border/50 bg-card"}`}>

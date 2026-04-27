@@ -71,7 +71,7 @@ const FAQS: { q: string; a: React.ReactNode }[] = [
     a: "PlainPath works with leases, employment contracts, healthcare forms, government applications, grant packets, legal agreements, tax notices, and more. If it's text-based and has requirements, deadlines, or legalese — it works.",
   },
   {
-    q: "What's the difference between the eight tools?",
+    q: "What's the difference between the nine tools?",
     a: TOOLS_ANSWER,
   },
   {

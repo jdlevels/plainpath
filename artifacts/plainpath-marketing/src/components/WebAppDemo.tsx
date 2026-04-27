@@ -1,9 +1,9 @@
 /**
- * WebAppDemo — 8-tool live workspace demo
+ * WebAppDemo — 9-tool live workspace demo
  *
  * Controlled mode: pass activeTool (0–7) + onToolChange from Home.tsx's
  * shared demo rotation state so all surfaces stay in sync.
- * Uncontrolled mode: self-rotates through all 8 tools every 3 500 ms.
+ * Uncontrolled mode: self-rotates through all 9 tools every 3 500 ms.
  *
  * Dark-themed — designed to sit inside the dark "One platform" section.
  */

@@ -1,5 +1,5 @@
 /**
- * PhoneHeroDemo — 8-tool animated phone preview
+ * PhoneHeroDemo — 9-tool animated phone preview
  *
  * Accepts optional `toolIndex` (0–7) from a parent that owns the
  * shared demo-rotation state.  When omitted it self-rotates.

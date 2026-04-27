@@ -158,7 +158,7 @@ export default function ToolsShowcase() {
           viewport={{ once: true }}
           className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3"
         >
-          6 tools live
+          9 tools live
         </motion.p>
         <motion.h2
           initial={{ opacity: 0, y: 12 }}
@@ -166,7 +166,7 @@ export default function ToolsShowcase() {
           viewport={{ once: true }}
           className="text-3xl md:text-4xl font-display font-bold mb-4"
         >
-          Read it. Trust it. Build it. Review it. Protect it. Sign it.
+          Read it. Trust it. Build it. Review it. Protect it.
         </motion.h2>
         <motion.p
           initial={{ opacity: 0, y: 8 }}

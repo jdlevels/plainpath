@@ -1,0 +1,126 @@
+PlainPath Final Copy Cleanup — Tool Count + Removed Signature References
+
+Goal:
+Clean stale launch copy before screenshots and app-store asset capture.
+
+Do not add features.
+Do not redesign.
+Do not change routes.
+Do not change Stripe.
+Do not change auth.
+Do not change database schema.
+Do not create migrations.
+Do not touch core tool logic.
+Do not reintroduce e-signature.
+
+Fix only stale copy and harmless orphan references found in the final audit.
+
+Current active tool count:
+9 tools.
+
+Approved active tools:
+1. Analyze a Document
+2. Document Trust Check
+3. Build a Contract
+4. Contract Review
+5. Redact Sensitive Info
+6. Ask This Document
+7. Clause Extractor
+8. Compare Versions
+9. Document Builder
+
+Fix these stale issues:
+
+1. Tool count copy
+Replace stale references:
+- “8 tools” → “9 tools”
+- “all 8 tools” → “all 9 tools”
+- “6 tools” → “9 tools” where it refers to active PlainPath tools
+- “8 tools live” → “9 tools live”
+- “all 8 tools on Pro” → “all 9 tools on Pro”
+- “Unlock all 8 tools” → “Unlock all 9 tools”
+
+Check files flagged in audit:
+- Billing.tsx
+- UpgradeModal.tsx
+- PricingSection.tsx
+- VideoWalkthrough.tsx
+- WebAppDemo.tsx
+- FAQSection.tsx
+- Marketing Home.tsx
+- DemoLanding.tsx
+- VsContractCrab.tsx
+- billingConfig.ts comment only if quick/safe
+
+2. Removed Signature references
+Remove stale product references to Digital Signature / Signature as a PlainPath tool.
+
+Check:
+- Documents.tsx line 51: remove orphan “signature” category type if it is only a removed tool category and not used for normal document text.
+- changelog.ts line 22: remove or update “New: Digital Signature” historical entry if visible to users.
+- entitlements.ts line 400: remove “signature” from validTools if frontend no longer sends it and backend should no longer accept it.
+
+Important:
+Do not remove generic words like “sign,” “signing,” or “signature” when they are normal contract language, document content, or printable signature/date line fields inside Document Builder.
+
+Allowed:
+- Static printable signature/date line fields inside Document Builder.
+
+Not allowed:
+- Digital Signature tool
+- E-signature
+- Send for Signature
+- Dropbox Sign
+- Signature route/API/workflow
+
+3. Auth copy cleanup
+Fix stale “Free to use, no account required” copy on:
+- IrsLetter.tsx
+- JobOffer.tsx
+
+Replace with:
+“Sign in to analyze this document.”
+
+or:
+“Create an account to run this analysis.”
+
+Do not change auth behavior.
+
+4. Verify after cleanup
+Run a search for:
+- “8 tools”
+- “all 8 tools”
+- “6 tools”
+- “Digital Signature”
+- “Send for Signature”
+- “Dropbox Sign”
+- “e-signature”
+- “signature” as a tool key
+- “Free to use”
+- “no account required”
+
+Return remaining references and classify each as:
+A. Fixed
+B. Normal contract/document language
+C. Static printable field
+D. Internal-only harmless
+E. Needs later cleanup
+
+5. No functional changes
+Confirm:
+- All 9 tools still route
+- Web Stripe unchanged
+- Native payment static message unchanged
+- No e-signature route/API returns
+- No new TypeScript/runtime errors
+- No DB/auth/Stripe changes
+
+Return only:
+A. Files changed
+B. Stale tool-count copy fixed
+C. Removed signature references fixed
+D. Auth copy fixed
+E. Remaining references with classification
+F. Active 9-tool confirmation
+G. Safe to capture app-store screenshots: Yes/No
+H. Safe to continue app-store prep: Yes/No
