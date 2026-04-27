@@ -93,6 +93,16 @@ if (!existingColumns.has("clerkUserId")) {
     `ALTER TABLE subscribers ADD COLUMN clerkUserId TEXT`
   )
 }
+
+// Enforce uniqueness on clerkUserId at the storage level.
+// SQLite partial-index semantics: NULLs are not considered equal so multiple
+// unbound rows (NULL clerkUserId) are still permitted. Once a Clerk user ID is
+// set it cannot be shared across rows, making the lookup deterministic.
+billingDb.exec(`
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_subscribers_clerkUserId
+  ON subscribers (clerkUserId)
+  WHERE clerkUserId IS NOT NULL
+`)
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type SubscriberRecord = {
@@ -129,11 +139,39 @@ export function upsertSubscriber(input: {
 }) {
   const now = new Date().toISOString()
 
-  const existing = billingDb
-    .prepare("SELECT * FROM subscribers WHERE email = ?")
-    .get(input.email) as SubscriberRecord | undefined
+  // Prefer lookup by clerkUserId (immutable identity) when available.
+  // Fall back to email lookup only when no clerkUserId is provided.
+  let existing: SubscriberRecord | undefined
+  if (input.clerkUserId) {
+    existing = billingDb
+      .prepare("SELECT * FROM subscribers WHERE clerkUserId = ?")
+      .get(input.clerkUserId) as SubscriberRecord | undefined
+  }
+  if (!existing) {
+    const byEmail = billingDb
+      .prepare("SELECT * FROM subscribers WHERE email = ?")
+      .get(input.email) as SubscriberRecord | undefined
+    // Only use the email-matched record if it is not already bound to a
+    // different Clerk user. Once a clerkUserId is set on a row, that row
+    // belongs exclusively to that identity.
+    if (
+      byEmail &&
+      (!byEmail.clerkUserId ||
+        !input.clerkUserId ||
+        byEmail.clerkUserId === input.clerkUserId)
+    ) {
+      existing = byEmail
+    }
+  }
 
   if (existing) {
+    // Never overwrite an existing clerkUserId with a different one.
+    // The bound Clerk identity is permanent once set.
+    const safeClerkUserId =
+      existing.clerkUserId && input.clerkUserId && existing.clerkUserId !== input.clerkUserId
+        ? existing.clerkUserId
+        : (input.clerkUserId ?? null)
+
     billingDb
       .prepare(`
         UPDATE subscribers
@@ -150,10 +188,10 @@ export function upsertSubscriber(input: {
           billingMode             = COALESCE(?, billingMode),
           billingProvider         = COALESCE(?, billingProvider),
           updatedAt               = ?
-        WHERE email = ?
+        WHERE id = ?
       `)
       .run(
-        input.clerkUserId ?? null,
+        safeClerkUserId,
         input.stripeCustomerId ?? null,
         input.stripeSubscriptionId ?? null,
         input.stripeCheckoutSessionId ?? null,
@@ -165,7 +203,7 @@ export function upsertSubscriber(input: {
         input.billingMode ?? null,
         input.billingProvider ?? null,
         now,
-        input.email
+        existing.id
       )
   } else {
     billingDb

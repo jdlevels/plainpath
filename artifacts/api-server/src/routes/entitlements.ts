@@ -219,9 +219,16 @@ router.get("/status", async (req, res) => {
     // Cross-email queries are not permitted. Only the authenticated user's own
     // subscriber record (matched by Clerk user ID or session email) is returned.
     // This prevents subscription state enumeration for arbitrary email addresses.
+    const byClerkId = getSubscriberByClerkUserId(sessionUserId);
+    const byEmail = !byClerkId && sessionEmail ? getSubscriberByEmail(sessionEmail) : null;
+    // Only use the email-matched record if it is NOT already bound to a
+    // different Clerk user. Once a clerkUserId is set on a row, that row
+    // belongs exclusively to that identity — email alone is insufficient.
     const subscriber =
-      getSubscriberByClerkUserId(sessionUserId) ??
-      (sessionEmail ? getSubscriberByEmail(sessionEmail) : null)
+      byClerkId ??
+      (byEmail && (!byEmail.clerkUserId || byEmail.clerkUserId === sessionUserId)
+        ? byEmail
+        : null)
 
     // Use the subscriber's canonical email (or session email) for usage tracking —
     // never the caller-supplied query email.

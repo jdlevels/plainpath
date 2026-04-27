@@ -218,11 +218,17 @@ router.post("/billing-portal", async (req, res) => {
     // the caller is authenticated; ownership is verified before it is used.
     const hintEmail = typeof req.body?.email === "string" ? req.body.email.toLowerCase().trim() : null
 
-    // Look up the subscriber by authenticated user identity first — never by an
-    // arbitrary caller-supplied email — to prevent subscriber enumeration.
+    // Look up the subscriber by Clerk user ID first (immutable identity), then
+    // fall back to session email only when no clerkUserId-bound record exists.
+    const byClerkId = getSubscriberByClerkUserId(auth.userId)
+    const byEmail = !byClerkId && sessionEmail ? getSubscriberByEmail(sessionEmail) : null
+    // Only accept the email-matched record when it is not already bound to a
+    // different Clerk user — prevents email-reassignment privilege escalation.
     let subscriber =
-      (sessionEmail ? getSubscriberByEmail(sessionEmail) : null) ??
-      getSubscriberByClerkUserId(auth.userId)
+      byClerkId ??
+      (byEmail && (!byEmail.clerkUserId || byEmail.clerkUserId === auth.userId)
+        ? byEmail
+        : null)
 
     // If not found via authenticated identity, try the hint email only after
     // verifying that the resulting record actually belongs to this user.
@@ -230,7 +236,7 @@ router.post("/billing-portal", async (req, res) => {
       const hintSubscriber = getSubscriberByEmail(hintEmail)
       if (
         hintSubscriber?.stripeCustomerId &&
-        (hintSubscriber.clerkUserId === auth.userId || hintSubscriber.email === sessionEmail)
+        hintSubscriber.clerkUserId === auth.userId
       ) {
         subscriber = hintSubscriber
       }
@@ -244,11 +250,12 @@ router.post("/billing-portal", async (req, res) => {
       })
     }
 
-    // Ownership check: the subscriber must be linked to this Clerk account via
-    // clerkUserId OR the subscriber email must match the authenticated user's email.
-    const ownsRecord =
-      subscriber.clerkUserId === auth.userId ||
-      subscriber.email === sessionEmail
+    // Ownership check: when a clerkUserId is recorded on the subscriber row,
+    // it MUST match the authenticated user. Email alone is not sufficient once
+    // the record has been bound to a specific Clerk identity.
+    const ownsRecord = subscriber.clerkUserId
+      ? subscriber.clerkUserId === auth.userId
+      : subscriber.email === sessionEmail
 
     if (!ownsRecord) {
       // Return the same 404 as "not found" — never reveal that a different
@@ -283,10 +290,15 @@ router.get("/subscriber-status", async (req, res) => {
     const clerkUser = await clerkClient.users.getUser(auth.userId)
     const sessionEmail = clerkUser.emailAddresses?.[0]?.emailAddress?.toLowerCase().trim() ?? null
 
-    // Find subscriber by Clerk user ID first; fall back to session email.
+    // Find subscriber by Clerk user ID first (immutable identity), then fall
+    // back to email only when the record is not already bound to a different user.
+    const byClerkId = getSubscriberByClerkUserId(auth.userId)
+    const byEmail = !byClerkId && sessionEmail ? getSubscriberByEmail(sessionEmail) : null
     const subscriber =
-      getSubscriberByClerkUserId(auth.userId) ??
-      (sessionEmail ? getSubscriberByEmail(sessionEmail) : null)
+      byClerkId ??
+      (byEmail && (!byEmail.clerkUserId || byEmail.clerkUserId === auth.userId)
+        ? byEmail
+        : null)
 
     if (!subscriber) {
       return res.json({ found: false, plan: null, status: "inactive" })

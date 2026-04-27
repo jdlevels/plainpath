@@ -75,9 +75,16 @@ export async function resolveUserPlan(userId: string): Promise<ResolvedPlan> {
       return { plan: "pro", email, source: "manual_pro" };
     }
 
+    const byClerkId = getSubscriberByClerkUserId(userId);
+    const byEmail = !byClerkId && email ? getSubscriberByEmail(email) : null;
+    // Only use the email-matched record if it is NOT already bound to a
+    // different Clerk user. Once a clerkUserId is set on a row, that row
+    // belongs exclusively to that identity — email alone is insufficient.
     const subscriber =
-      getSubscriberByClerkUserId(userId) ??
-      (email ? getSubscriberByEmail(email) : null);
+      byClerkId ??
+      (byEmail && (!byEmail.clerkUserId || byEmail.clerkUserId === userId)
+        ? byEmail
+        : null);
 
     if (subscriber?.status === "active") {
       return { plan: normalizePlan(subscriber.plan), email, source: "stripe" };
