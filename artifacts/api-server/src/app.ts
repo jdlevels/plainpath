@@ -242,6 +242,20 @@ app.use(
   userOutboundLimiter,
 )
 
+// Waitlist join: tight per-IP limiter to prevent bulk email abuse.
+// 5 signups per IP per hour is generous for legitimate use and blocks
+// scripted list-bombing without requiring a CAPTCHA.
+const waitlistLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: { error: "too_many_requests", message: "Too many waitlist requests. Please try again later." },
+  skip: () => process.env.NODE_ENV !== "production",
+})
+
+app.use("/api/waitlist/join", waitlistLimiter)
+
 app.use("/api", eventsRouter)
 app.use("/api", router);
 app.use("/api/stripe", stripeRoutes);
