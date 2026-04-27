@@ -150,6 +150,11 @@ router.post("/create-checkout-session", async (req, res) => {
 // ─── Checkout Session Status ──────────────────────────────────────────────────
 
 router.get("/checkout-session-status", async (req, res) => {
+  const auth = getAuth(req)
+  if (!auth?.userId) {
+    return res.status(401).json({ error: "Authentication required." })
+  }
+
   let stripe: Stripe
   try {
     stripe = await getStripeClient()
@@ -166,6 +171,12 @@ router.get("/checkout-session-status", async (req, res) => {
     const session = await stripe.checkout.sessions.retrieve(sessionId, {
       expand: ["subscription", "customer"],
     })
+
+    // Verify that this checkout session belongs to the authenticated user.
+    // The clerkUserId was written server-side during checkout creation and is trusted.
+    if (session.metadata?.clerkUserId !== auth.userId) {
+      return res.status(403).json({ error: "Access denied." })
+    }
 
     return res.json({
       id: session.id,
@@ -204,15 +215,29 @@ router.post("/billing-portal", async (req, res) => {
 
     // Optional email hint from body (for the subscription-restore flow where the
     // subscription email differs from the Clerk sign-in email). Only accepted when
-    // the caller is authenticated; ownership is verified below.
+    // the caller is authenticated; ownership is verified before it is used.
     const hintEmail = typeof req.body?.email === "string" ? req.body.email.toLowerCase().trim() : null
 
-    // Look up the subscriber: prefer the hint email, then session email, then clerkUserId.
+    // Look up the subscriber by authenticated user identity first — never by an
+    // arbitrary caller-supplied email — to prevent subscriber enumeration.
     let subscriber =
-      (hintEmail ? getSubscriberByEmail(hintEmail) : null) ??
       (sessionEmail ? getSubscriberByEmail(sessionEmail) : null) ??
       getSubscriberByClerkUserId(auth.userId)
 
+    // If not found via authenticated identity, try the hint email only after
+    // verifying that the resulting record actually belongs to this user.
+    if (!subscriber?.stripeCustomerId && hintEmail) {
+      const hintSubscriber = getSubscriberByEmail(hintEmail)
+      if (
+        hintSubscriber?.stripeCustomerId &&
+        (hintSubscriber.clerkUserId === auth.userId || hintSubscriber.email === sessionEmail)
+      ) {
+        subscriber = hintSubscriber
+      }
+    }
+
+    // Use the same generic error for both "not found" and "not owned" cases so
+    // callers cannot distinguish paying subscribers from non-subscribers.
     if (!subscriber?.stripeCustomerId) {
       return res.status(404).json({
         error: "No Stripe customer found. Please subscribe first.",
@@ -226,7 +251,9 @@ router.post("/billing-portal", async (req, res) => {
       subscriber.email === sessionEmail
 
     if (!ownsRecord) {
-      return res.status(403).json({ error: "You do not have access to this billing account." })
+      // Return the same 404 as "not found" — never reveal that a different
+      // subscriber exists at the requested email address.
+      return res.status(404).json({ error: "No Stripe customer found. Please subscribe first." })
     }
 
     const session = await stripe.billingPortal.sessions.create({
