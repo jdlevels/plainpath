@@ -1,14 +1,15 @@
 import {
   pgTable,
   text,
-  uuid,
+  varchar,
   integer,
   jsonb,
   timestamp,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 export const clauseExtractorSessionsTable = pgTable("clause_extractor_sessions", {
-  id: uuid("id").primaryKey().defaultRandom(),
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: text("user_id").notNull(),
   fileName: text("file_name").notNull(),
   fileSizeBytes: integer("file_size_bytes").notNull(),
