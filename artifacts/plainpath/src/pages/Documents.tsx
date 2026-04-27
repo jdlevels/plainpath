@@ -319,7 +319,8 @@ export default function Documents() {
     const analyzeRun = doc.toolRuns.find(r => r.tool === "analyze" && r.outputRef)
     if (analyzeRun?.outputRef) {
       try {
-        const all = await fetchCloudAnalyses()
+        const token = await getToken().catch(() => null)
+        const all = await fetchCloudAnalyses(token)
         const saved = all.find(a => a.id === analyzeRun.outputRef)
         if (saved) {
           setAnalysis(saved.analysis)

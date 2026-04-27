@@ -185,16 +185,17 @@ export default function Analyze() {
     }
     if (isSignedIn) {
       if (savedId) {
-        renameCloudAnalysis(savedId, analysis.title).catch(() => {})
+        getToken().catch(() => null).then(tok => renameCloudAnalysis(savedId, analysis.title, tok)).catch(() => {})
         triggerFeedback()
       } else {
         try {
+          const tok = await getToken().catch(() => null)
           const saved = await saveCloudAnalysis({
             title: analysis.title,
             sourceKind: demoId ? "demo" : "document",
             documentTypeHint,
             analysis,
-          })
+          }, tok)
           setSavedId(saved.id)
           triggerFeedback()
           // Fire-and-forget: create/link a document record in My Documents

@@ -19,7 +19,7 @@ import {
   fetchCloudAnalyses, deleteCloudAnalysis, renameCloudAnalysis,
   fetchCloudTrustChecks, deleteCloudTrustCheck,
 } from "@/lib/cloudHistory"
-import { useUser } from "@clerk/react"
+import { useUser, useAuth } from "@clerk/react"
 import { useAnalysisContext } from "@/context/AnalysisContext"
 import { useEntitlements } from "@/hooks/useEntitlements"
 import PlanStatusBanner from "@/components/PlanStatusBanner"
@@ -45,6 +45,7 @@ export default function MyAnalyses() {
   const { setAnalysis, setDocumentTypeHint, setTrustCheckAnalysis } = useAnalysisContext()
   const { entitlements, reload: reloadEntitlements } = useEntitlements()
   const { isSignedIn, isLoaded: authLoaded } = useUser()
+  const { getToken } = useAuth()
   const [items, setItems] = useState<SavedAnalysis[]>([])
   const [cloudLoading, setCloudLoading] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -85,8 +86,9 @@ export default function MyAnalyses() {
     if (!authLoaded) return
     if (isSignedIn) {
       setCloudLoading(true)
-      Promise.all([fetchCloudAnalyses(), fetchCloudTrustChecks()])
-        .then(([analyses, checks]) => {
+      getToken().catch(() => null).then(tok =>
+        Promise.all([fetchCloudAnalyses(tok), fetchCloudTrustChecks(tok)])
+      ).then(([analyses, checks]) => {
           setItems(analyses)
           setTrustChecks(checks)
         })
@@ -108,7 +110,7 @@ export default function MyAnalyses() {
 
   const handleDeleteTrustCheck = (id: string) => {
     if (isSignedIn) {
-      deleteCloudTrustCheck(id).catch(() => {})
+      getToken().catch(() => null).then(tok => deleteCloudTrustCheck(id, tok)).catch(() => {})
     } else {
       deleteTrustCheck(id)
     }
@@ -139,7 +141,7 @@ export default function MyAnalyses() {
     const trimmed = editValue.trim()
     if (trimmed) {
       if (isSignedIn) {
-        renameCloudAnalysis(id, trimmed).catch(() => {})
+        getToken().catch(() => null).then(tok => renameCloudAnalysis(id, trimmed, tok)).catch(() => {})
       } else {
         renameAnalysis(id, trimmed)
       }
@@ -154,7 +156,7 @@ export default function MyAnalyses() {
 
   const handleDelete = (id: string) => {
     if (isSignedIn) {
-      deleteCloudAnalysis(id).catch(() => {})
+      getToken().catch(() => null).then(tok => deleteCloudAnalysis(id, tok)).catch(() => {})
     } else {
       deleteAnalysis(id)
     }

@@ -212,7 +212,7 @@ export default function Home() {
         const token = await getToken().catch(() => null)
 
         const [cloudAnalyses, clauseSessions, compareSessions, builderDocs] = await Promise.allSettled([
-          fetchCloudAnalyses(),
+          fetchCloudAnalyses(token),
           clauseExtractorApi.listSessions(token),
           compareVersionsApi.listSessions(token, { archived: false }),
           BUILDER_ENABLED ? builderApi.listDocuments(token) : Promise.resolve([]),

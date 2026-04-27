@@ -12,7 +12,7 @@ import {
 } from "lucide-react"
 import { saveTrustCheck } from "@/lib/savedTrustChecks"
 import { saveCloudTrustCheck } from "@/lib/cloudHistory"
-import { useUser } from "@clerk/react"
+import { useUser, useAuth } from "@clerk/react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useAnalysisContext } from "@/context/AnalysisContext"
@@ -226,6 +226,7 @@ export default function TrustCheck() {
   const demoId = new URLSearchParams(searchString).get("demo")
   const { trustCheckAnalysis, uploadedTrustFile, setUploadedTrustFile } = useAnalysisContext()
   const { isSignedIn } = useUser()
+  const { getToken } = useAuth()
   const { entitlements } = useEntitlements()
   const [showUpgrade, setShowUpgrade] = useState(false)
   const [demoAnalysis, setDemoAnalysis] = useState<TrustCheckAnalysis | null>(null)
@@ -371,7 +372,8 @@ export default function TrustCheck() {
     const title = `Trust Check — ${analysis.verdict} (${analysis.riskScore}/100)`
     if (isSignedIn) {
       try {
-        const saved = await saveCloudTrustCheck({ title, analysis })
+        const token = await getToken().catch(() => null)
+        const saved = await saveCloudTrustCheck({ title, analysis }, token)
         setSavedId(saved.id)
       } catch {
         const saved = saveTrustCheck({ title, analysis })
