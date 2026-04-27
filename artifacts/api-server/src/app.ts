@@ -207,6 +207,9 @@ const heavyLimiter = rateLimit({
 app.use(
   [
     "/api/documents/redact-pdf",
+    "/api/pdf-utilities",
+    "/api/compare-versions/sessions",
+    "/api/clause-extractor/sessions",
   ],
   heavyLimiter,
 )

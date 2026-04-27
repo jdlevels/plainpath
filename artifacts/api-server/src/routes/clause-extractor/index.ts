@@ -13,7 +13,7 @@ import { openai } from "@workspace/integrations-openai-ai-server";
 
 const router = Router();
 
-const MAX_BYTES = 20 * 1024 * 1024;
+const MAX_BYTES = 10 * 1024 * 1024;
 
 const upload = multer({
   storage: multer.memoryStorage(),

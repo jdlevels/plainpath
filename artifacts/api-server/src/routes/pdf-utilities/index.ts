@@ -11,8 +11,8 @@ import { PDFDocument, degrees } from "pdf-lib";
 
 const router = Router();
 
-const MAX_BYTES = 40 * 1024 * 1024; // 40 MB (utilities may process larger files)
-const MAX_FILES = 10;               // max files for merge
+const MAX_BYTES = 20 * 1024 * 1024; // 20 MB per file
+const MAX_FILES = 5;                // max files for merge
 
 const upload = multer({
   storage: multer.memoryStorage(),

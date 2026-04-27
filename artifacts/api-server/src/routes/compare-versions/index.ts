@@ -18,7 +18,7 @@ import { runBackgroundEnrich } from "../../lib/compareVersionsEnrichment";
 
 const router = Router();
 
-const MAX_BYTES_PER_FILE = 50 * 1024 * 1024;
+const MAX_BYTES_PER_FILE = 20 * 1024 * 1024;
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: MAX_BYTES_PER_FILE },
@@ -78,7 +78,7 @@ router.post(
     upload(req, res, (err: any) => {
       if (err) {
         if (err.code === "LIMIT_FILE_SIZE") {
-          return res.status(413).json({ error: "file_too_large", message: "Each file must be 50 MB or smaller." });
+          return res.status(413).json({ error: "file_too_large", message: "Each file must be 20 MB or smaller." });
         }
         if (err.code === "LIMIT_UNEXPECTED_FILE") {
           return res.status(400).json({ error: "upload_field_error", message: "Unexpected file field." });
@@ -156,7 +156,7 @@ router.post(
       );
 
       const row = result.rows[0];
-      runBackgroundScan(sessionId, Buffer.from(originalFile.buffer), Buffer.from(revisedFile.buffer)).catch(() => {});
+      runBackgroundScan(sessionId, originalFile.buffer, revisedFile.buffer).catch(() => {});
 
       return res.status(201).json({
         id: row.id, title: row.title, status: row.status,
