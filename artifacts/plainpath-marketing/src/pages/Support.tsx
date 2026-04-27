@@ -1,5 +1,5 @@
 import { useEffect } from "react"
-import { Mail, MessageCircle, FileText, ShieldCheck, CreditCard, HelpCircle } from "lucide-react"
+import { Mail, MessageCircle, FileText, ShieldCheck, CreditCard, HelpCircle, Trash2 } from "lucide-react"
 import { Navbar } from "@/components/layout/Navbar"
 import { Footer } from "@/components/layout/Footer"
 
@@ -77,6 +77,14 @@ export default function Support() {
             AI analysis isn't perfect. If you think something was missed or misread, try pasting a shorter, cleaner section
             of your document for a more focused result. If you're seeing a persistent issue, please email us with details —
             your feedback helps improve the product.
+          </Item>
+
+          <Item icon={Trash2} title="Account and data deletion">
+            You can request deletion of your PlainPath account and all associated data by emailing{" "}
+            <a href="mailto:support@plainpathapp.com" className="text-primary underline underline-offset-2">support@plainpathapp.com</a>{" "}
+            from the email address connected to your account. Include "Account deletion request" in the subject line.
+            We will process your request and confirm deletion within 7 business days. This removes your account,
+            saved analysis results, and any other data associated with your email address.
           </Item>
         </div>
 
