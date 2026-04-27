@@ -400,9 +400,24 @@ router.post("/webhook", async (req: any, res) => {
         const customerId =
           typeof subscription.customer === "string" ? subscription.customer : null
 
+        // clerkUserId is stored in subscription metadata by the checkout
+        // creation route (subscription_data.metadata). Using it here means
+        // identity binding is driven by the authenticated session that started
+        // checkout rather than by the email address on the Stripe customer,
+        // which the buyer could have changed during the hosted checkout flow.
+        const metadataClerkUserId = subscription.metadata?.clerkUserId || null
+
+        // Look up the existing subscriber by Stripe customer ID first
+        // (immutable once the subscription exists). Fall back to Clerk user ID
+        // lookup so a subscription event arriving before
+        // checkout.session.completed can still be matched to the right row.
         let subscriber = customerId
           ? getSubscriberByCustomerId(customerId)
           : undefined
+
+        if (!subscriber && metadataClerkUserId) {
+          subscriber = getSubscriberByClerkUserId(metadataClerkUserId) ?? undefined
+        }
 
         let email = subscriber?.email ?? null
 
@@ -420,9 +435,20 @@ router.post("/webhook", async (req: any, res) => {
 
         const subBillingMode = subscription.metadata?.billingMode || billingMode
 
-        if (email) {
+        // Guard: only write when we can anchor the update to a trusted identity.
+        // - If we found an existing row by stripeCustomerId or clerkUserId, the
+        //   binding is already established — the update is safe.
+        // - If no existing row exists but we have a clerkUserId from metadata,
+        //   we can create/update with a trusted identity anchor.
+        // - If neither applies we have only a Stripe email which the buyer may
+        //   have tampered with — skip rather than risking rebinding.
+        const hasKnownBinding = !!subscriber
+        const hasClerkAnchor = !!metadataClerkUserId
+
+        if (email && (hasKnownBinding || hasClerkAnchor)) {
           upsertSubscriber({
             email,
+            clerkUserId: metadataClerkUserId,
             stripeCustomerId: customerId,
             stripeSubscriptionId: subscription.id,
             plan: isPlanKey(plan) ? plan : "starter",
@@ -437,6 +463,10 @@ router.post("/webhook", async (req: any, res) => {
             billingMode: subBillingMode,
             billingProvider: "stripe",
           })
+        } else if (email) {
+          console.warn(
+            `${event.type}: no trusted identity anchor for customer ${customerId} — skipping upsert to prevent email-based rebinding`
+          )
         }
         break
       }

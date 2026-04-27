@@ -153,11 +153,13 @@ export function upsertSubscriber(input: {
       .get(input.email) as SubscriberRecord | undefined
     // Only use the email-matched record if it is not already bound to a
     // different Clerk user. Once a clerkUserId is set on a row, that row
-    // belongs exclusively to that identity.
+    // belongs exclusively to that identity. Critically, we do NOT accept
+    // the email match when the row is already bound and the incoming write
+    // omits clerkUserId — that would allow an email-only webhook update to
+    // overwrite a row owned by a different account.
     if (
       byEmail &&
       (!byEmail.clerkUserId ||
-        !input.clerkUserId ||
         byEmail.clerkUserId === input.clerkUserId)
     ) {
       existing = byEmail
