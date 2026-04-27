@@ -2982,9 +2982,7 @@ Rules:
 
 // ─── POST /documents/negotiate ────────────────────────────────────────────────
 // Pro feature: returns negotiation strategy + counter-language for a risk item.
-router.post("/negotiate", async (req, res) => {
-  const { userId } = getAuth(req);
-  if (!userId) return res.status(401).json({ message: "unauthenticated" });
+router.post("/negotiate", requireEntitlement("negotiate"), async (req, res) => {
 
   const { riskTitle, riskDescription, severity, documentType, documentSummary } = req.body as {
     riskTitle?: string;
