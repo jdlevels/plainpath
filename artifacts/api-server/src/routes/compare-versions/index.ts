@@ -19,6 +19,29 @@ import { runBackgroundEnrich } from "../../lib/compareVersionsEnrichment";
 
 const router = Router();
 
+// ─── Concurrency guard for background scans ───────────────────────────────────
+// Each background scan runs pdf-parse (CPU-intensive) and a full diff in the
+// same Node.js process.  Without a concurrency cap an attacker can create many
+// sessions in parallel and saturate the event loop or exhaust heap.
+//
+// Strategy: allow up to MAX_CONCURRENT_SCANS active at once.
+// If at capacity, new session requests receive HTTP 503 immediately (backpressure
+// rather than unbounded queuing which would still accumulate memory).
+const MAX_CONCURRENT_SCANS = 3;
+let activeScans = 0;
+
+function tryAcquireScanPermit(): boolean {
+  if (activeScans < MAX_CONCURRENT_SCANS) {
+    activeScans++;
+    return true;
+  }
+  return false;
+}
+
+function releaseScanPermit(): void {
+  if (activeScans > 0) activeScans--;
+}
+
 const MAX_BYTES_PER_FILE = 20 * 1024 * 1024;
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -45,6 +68,9 @@ async function runBackgroundScan(
   originalBuf: Buffer,
   revisedBuf: Buffer,
 ): Promise<void> {
+  // The permit was already acquired by the caller (the /sessions route)
+  // before enqueueing this task.  We release it in the finally block so the
+  // slot becomes available as soon as the scan finishes or fails.
   try {
     console.debug(`[compare-versions] scan starting for session ${sessionId}`);
     const diffResult = await runComparison(originalBuf, revisedBuf);
@@ -63,6 +89,8 @@ async function runBackgroundScan(
     await pool
       .query(`UPDATE compare_versions_sessions SET status = 'error', updated_at = NOW() WHERE id = $1`, [sessionId])
       .catch(() => {});
+  } finally {
+    releaseScanPermit();
   }
 }
 
@@ -125,46 +153,73 @@ router.post(
       if (!isPdfBuffer(revisedFile.buffer))
         return res.status(422).json({ error: "invalid_pdf", message: "Revised document does not appear to be a valid PDF." });
 
-      const title = (req.body?.title as string | undefined)?.trim()
-        || `${originalFile.originalname} vs ${revisedFile.originalname}`;
-
-      let managerNotes: any = { freeform: "", watchlist: [] };
-      if (req.body?.managerNotes) {
-        try { managerNotes = JSON.parse(req.body.managerNotes); } catch { /* ignore */ }
+      // Acquire a scan permit before doing any further work.  If the server is
+      // already running the maximum number of concurrent in-process scans,
+      // reject this request immediately rather than queuing an unbounded number
+      // of CPU-intensive comparison jobs in the same process.
+      if (!tryAcquireScanPermit()) {
+        return res.status(503).json({
+          error: "server_busy",
+          message: "The document comparison service is currently at capacity. Please try again in a moment.",
+        });
       }
 
-      const sessionIdResult = await pool.query("SELECT gen_random_uuid()::text AS id");
-      const sessionId: string = sessionIdResult.rows[0].id;
+      // Flag-based permit lifecycle: the outer catch releases the permit whenever
+      // an unexpected error occurs after acquisition but BEFORE the background
+      // scan has been launched (at which point runBackgroundScan owns the permit
+      // and will release it in its own finally block).
+      let handedOffToBackground = false;
 
-      const originalStorageKey = `compare-versions/${req.userId}/${sessionId}/original.pdf`;
-      const revisedStorageKey  = `compare-versions/${req.userId}/${sessionId}/revised.pdf`;
+      try {
+        const title = (req.body?.title as string | undefined)?.trim()
+          || `${originalFile.originalname} vs ${revisedFile.originalname}`;
 
-      if (isObjectStorageAvailable()) {
-        const uploadedOrig = await uploadObject(originalStorageKey, originalFile.buffer);
-        const uploadedRev  = await uploadObject(revisedStorageKey, revisedFile.buffer);
-        if (!uploadedOrig || !uploadedRev)
-          return res.status(500).json({ error: "storage_error", message: "Failed to upload documents." });
+        let managerNotes: any = { freeform: "", watchlist: [] };
+        if (req.body?.managerNotes) {
+          try { managerNotes = JSON.parse(req.body.managerNotes); } catch { /* ignore */ }
+        }
+
+        const sessionIdResult = await pool.query("SELECT gen_random_uuid()::text AS id");
+        const sessionId: string = sessionIdResult.rows[0].id;
+
+        const originalStorageKey = `compare-versions/${req.userId}/${sessionId}/original.pdf`;
+        const revisedStorageKey  = `compare-versions/${req.userId}/${sessionId}/revised.pdf`;
+
+        if (isObjectStorageAvailable()) {
+          const uploadedOrig = await uploadObject(originalStorageKey, originalFile.buffer);
+          const uploadedRev  = await uploadObject(revisedStorageKey, revisedFile.buffer);
+          if (!uploadedOrig || !uploadedRev) {
+            // Storage failure: return error immediately; outer finally releases permit.
+            return res.status(500).json({ error: "storage_error", message: "Failed to upload documents." });
+          }
+        }
+
+        const result = await pool.query(
+          `INSERT INTO compare_versions_sessions
+             (id, user_id, title, original_storage_key, original_file_name,
+              revised_storage_key, revised_file_name, status, manager_notes)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb)
+           RETURNING id, title, status, original_file_name, revised_file_name, created_at, updated_at`,
+          [sessionId, req.userId, title, originalStorageKey, originalFile.originalname,
+           revisedStorageKey, revisedFile.originalname, "scanning", JSON.stringify(managerNotes)],
+        );
+
+        const row = result.rows[0];
+        // Hand ownership of the permit to the background scan.
+        handedOffToBackground = true;
+        runBackgroundScan(sessionId, originalFile.buffer, revisedFile.buffer).catch(() => {});
+
+        return res.status(201).json({
+          id: row.id, title: row.title, status: row.status,
+          originalFileName: row.original_file_name, revisedFileName: row.revised_file_name,
+          archivedAt: null, deletedAt: null, diffTotal: null, diffHigh: null, diffMedium: null, diffLow: null,
+          createdAt: row.created_at, updatedAt: row.updated_at,
+        });
+      } finally {
+        // Release the permit whenever we exit this block WITHOUT handing off to
+        // the background scan (error returns, unexpected throws, etc.).
+        if (!handedOffToBackground) releaseScanPermit();
       }
-
-      const result = await pool.query(
-        `INSERT INTO compare_versions_sessions
-           (id, user_id, title, original_storage_key, original_file_name,
-            revised_storage_key, revised_file_name, status, manager_notes)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb)
-         RETURNING id, title, status, original_file_name, revised_file_name, created_at, updated_at`,
-        [sessionId, req.userId, title, originalStorageKey, originalFile.originalname,
-         revisedStorageKey, revisedFile.originalname, "scanning", JSON.stringify(managerNotes)],
-      );
-
-      const row = result.rows[0];
-      runBackgroundScan(sessionId, originalFile.buffer, revisedFile.buffer).catch(() => {});
-
-      return res.status(201).json({
-        id: row.id, title: row.title, status: row.status,
-        originalFileName: row.original_file_name, revisedFileName: row.revised_file_name,
-        archivedAt: null, deletedAt: null, diffTotal: null, diffHigh: null, diffMedium: null, diffLow: null,
-        createdAt: row.created_at, updatedAt: row.updated_at,
-      });
     } catch (err) {
       console.error("[compare-versions] create session error", err);
       return res.status(500).json({ error: "server_error", message: "Something went wrong." });
@@ -329,28 +384,52 @@ router.post("/sessions/:id/scan", requireEntitlement("compare-versions"), async 
     if (session.status === "scanning")
       return res.status(409).json({ error: "already_scanning" });
 
-    await pool.query(
-      `UPDATE compare_versions_sessions SET status = 'scanning', ai_status = 'idle', updated_at = NOW() WHERE id = $1`,
-      [req.params.id],
-    );
+    // Enforce the same global concurrency cap as the session-creation route.
+    // This prevents unbounded in-process parallel rescans when many sessions
+    // exist.  503 immediately tells the client to retry rather than queuing.
+    if (!tryAcquireScanPermit()) {
+      return res.status(503).json({
+        error: "server_busy",
+        message: "The document comparison service is currently at capacity. Please try again in a moment.",
+      });
+    }
 
-    (async () => {
-      try {
-        const [origBuf, revBuf] = await Promise.all([
-          downloadPdf(session.original_storage_key),
-          downloadPdf(session.revised_storage_key),
-        ]);
-        await runBackgroundScan(req.params.id, origBuf, revBuf);
-      } catch (err) {
-        console.error("[compare-versions] rescan download error:", err);
-        await pool.query(
-          `UPDATE compare_versions_sessions SET status = 'error', updated_at = NOW() WHERE id = $1`,
-          [req.params.id],
-        ).catch(() => {});
-      }
-    })().catch(() => {});
+    // Flag-based permit lifecycle (same pattern as session creation):
+    // the finally block ensures the permit is always released whenever we exit
+    // this try block without having handed off ownership to the IIFE.
+    let handedOffToBackground = false;
+    try {
+      await pool.query(
+        `UPDATE compare_versions_sessions SET status = 'scanning', ai_status = 'idle', updated_at = NOW() WHERE id = $1`,
+        [req.params.id],
+      );
 
-    return res.status(202).json({ id: req.params.id, status: "scanning" });
+      // Hand permit ownership to the background IIFE before launching it.
+      handedOffToBackground = true;
+      (async () => {
+        try {
+          const [origBuf, revBuf] = await Promise.all([
+            downloadPdf(session.original_storage_key),
+            downloadPdf(session.revised_storage_key),
+          ]);
+          // Permit is held; runBackgroundScan will release it in its finally block.
+          await runBackgroundScan(req.params.id, origBuf, revBuf);
+        } catch (err) {
+          // Download failed before runBackgroundScan was called — release permit here
+          // since runBackgroundScan's finally block will not run.
+          releaseScanPermit();
+          console.error("[compare-versions] rescan download error:", err);
+          await pool.query(
+            `UPDATE compare_versions_sessions SET status = 'error', updated_at = NOW() WHERE id = $1`,
+            [req.params.id],
+          ).catch(() => {});
+        }
+      })().catch(() => {});
+
+      return res.status(202).json({ id: req.params.id, status: "scanning" });
+    } finally {
+      if (!handedOffToBackground) releaseScanPermit();
+    }
   } catch (err) {
     console.error("[compare-versions] rescan error", err);
     return res.status(500).json({ error: "server_error" });

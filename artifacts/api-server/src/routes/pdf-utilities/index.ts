@@ -2,12 +2,17 @@
 // Stateless PDF operations: merge, extract-pages, page-ops, compress, page-count
 // All endpoints accept multipart form data and return a PDF (or JSON for page-count).
 // Auth required — logged-in users only.
+//
+// All pdf-lib work is delegated to an isolated worker_thread (pdfUtilWorker.mjs)
+// so that a parser-bomb PDF cannot stall or crash the main API process.
+// The worker is terminated after TIMEOUT_MS regardless of progress.
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { Router } from "express";
 import multer from "multer";
 import { getAuth } from "@clerk/express";
-import { PDFDocument, degrees } from "pdf-lib";
+import { runPdfUtilInWorker, toTransferableArrayBuffer } from "../../lib/runPdfUtilInWorker.js";
+import { ParseResourceLimitError } from "../../lib/parseWithLimits.js";
 
 const router = Router();
 
@@ -43,6 +48,17 @@ function sendPdf(res: any, buf: Buffer, name: string) {
   res.end(buf);
 }
 
+/** Map worker errors to appropriate HTTP responses. */
+function handleWorkerError(res: any, err: unknown, tag: string): void {
+  if (err instanceof ParseResourceLimitError) {
+    res.status(400).json({ error: "too_many_pages", message: err.message });
+    return;
+  }
+  const msg = err instanceof Error ? err.message : String(err);
+  console.error(`[pdf-utilities] ${tag} error:`, msg);
+  res.status(422).json({ error: `${tag}_failed`, message: msg });
+}
+
 // ─── POST /api/pdf-utilities/page-count ──────────────────────────────────────
 // Returns { pageCount: number } for a given PDF file.
 
@@ -51,14 +67,15 @@ router.post(
   requireAuth,
   upload.single("file"),
   async (req: any, res) => {
+    const file = req.file;
+    if (!file) return res.status(400).json({ error: "No file received" });
+
+    const ab = toTransferableArrayBuffer(file.buffer);
     try {
-      const file = req.file;
-      if (!file) return res.status(400).json({ error: "No file received" });
-      const pdfDoc = await PDFDocument.load(file.buffer, { ignoreEncryption: true });
-      return res.json({ pageCount: pdfDoc.getPageCount() });
+      const { result } = await runPdfUtilInWorker("page-count", { buf: ab }, [ab]);
+      return res.json({ pageCount: result.pageCount });
     } catch (err) {
-      console.error("[pdf-utilities] page-count error", err);
-      return res.status(422).json({ error: "Could not read PDF" });
+      handleWorkerError(res, err, "page-count");
     }
   },
 );
@@ -75,35 +92,27 @@ router.post(
     Array.from({ length: MAX_FILES }, (_, i) => ({ name: `file_${i}`, maxCount: 1 })),
   ),
   async (req: any, res) => {
+    const count = parseInt(req.body?.count ?? "0", 10);
+    if (!count || count < 2) {
+      return res.status(400).json({ error: "At least 2 PDFs are required for merge" });
+    }
+
+    const abs: ArrayBuffer[] = [];
+    for (let i = 0; i < count; i++) {
+      const fileArr = req.files?.[`file_${i}`];
+      const file = Array.isArray(fileArr) ? fileArr[0] : fileArr;
+      if (!file) {
+        return res.status(400).json({ error: `Missing file_${i}` });
+      }
+      abs.push(toTransferableArrayBuffer(file.buffer));
+    }
+
     try {
-      const count = parseInt(req.body?.count ?? "0", 10);
-      if (!count || count < 2) {
-        return res.status(400).json({ error: "At least 2 PDFs are required for merge" });
-      }
-
-      const merged = await PDFDocument.create();
-
-      for (let i = 0; i < count; i++) {
-        const fileArr = req.files?.[`file_${i}`];
-        const file = Array.isArray(fileArr) ? fileArr[0] : fileArr;
-        if (!file) {
-          return res.status(400).json({ error: `Missing file_${i}` });
-        }
-        try {
-          const src = await PDFDocument.load(file.buffer, { ignoreEncryption: true });
-          const pageIndexes = Array.from({ length: src.getPageCount() }, (_, p) => p);
-          const copiedPages = await merged.copyPages(src, pageIndexes);
-          copiedPages.forEach((p) => merged.addPage(p));
-        } catch {
-          return res.status(422).json({ error: `file_${i} could not be read — ensure it is a valid PDF` });
-        }
-      }
-
-      const outBytes = await merged.save();
-      sendPdf(res, Buffer.from(outBytes), "merged.pdf");
+      const { outBuf } = await runPdfUtilInWorker("merge", { bufs: abs, count }, abs);
+      if (!outBuf) return res.status(500).json({ error: "merge_failed" });
+      sendPdf(res, Buffer.from(outBuf), "merged.pdf");
     } catch (err) {
-      console.error("[pdf-utilities] merge error", err);
-      return res.status(500).json({ error: "merge_failed" });
+      handleWorkerError(res, err, "merge");
     }
   },
 );
@@ -118,33 +127,24 @@ router.post(
   requireAuth,
   upload.single("file"),
   async (req: any, res) => {
+    const file = req.file;
+    if (!file) return res.status(400).json({ error: "No file received" });
+
+    const pageRange: string = (req.body?.pageRange ?? "").trim();
+    if (!pageRange) {
+      return res.status(400).json({ error: "pageRange is required (e.g. '1-3,5,7-9')" });
+    }
+
+    const ab = toTransferableArrayBuffer(file.buffer);
     try {
-      const file = req.file;
-      if (!file) return res.status(400).json({ error: "No file received" });
-
-      const rangeStr: string = (req.body?.pageRange ?? "").trim();
-      if (!rangeStr) {
-        return res.status(400).json({ error: "pageRange is required (e.g. '1-3,5,7-9')" });
+      const { outBuf } = await runPdfUtilInWorker("extract-pages", { buf: ab, pageRange }, [ab]);
+      if (!outBuf) return res.status(500).json({ error: "extract_failed" });
+      sendPdf(res, Buffer.from(outBuf), "extracted-pages.pdf");
+    } catch (err) {
+      if (err instanceof Error && err.message.startsWith("No valid pages")) {
+        return res.status(400).json({ error: err.message });
       }
-
-      const src = await PDFDocument.load(file.buffer, { ignoreEncryption: true });
-      const total = src.getPageCount();
-
-      // Parse range string → 0-based indexes
-      const indexes = parsePageRange(rangeStr, total);
-      if (indexes.length === 0) {
-        return res.status(400).json({ error: `No valid pages in range "${rangeStr}" — document has ${total} pages` });
-      }
-
-      const out = await PDFDocument.create();
-      const copied = await out.copyPages(src, indexes);
-      copied.forEach((p) => out.addPage(p));
-
-      const outBytes = await out.save();
-      sendPdf(res, Buffer.from(outBytes), `extracted-pages.pdf`);
-    } catch (err: any) {
-      console.error("[pdf-utilities] extract-pages error", err);
-      return res.status(500).json({ error: "extract_failed" });
+      handleWorkerError(res, err, "extract-pages");
     }
   },
 );
@@ -163,77 +163,26 @@ router.post(
   requireAuth,
   upload.single("file"),
   async (req: any, res) => {
+    const file = req.file;
+    if (!file) return res.status(400).json({ error: "No file received" });
+
+    let ops: unknown[];
     try {
-      const file = req.file;
-      if (!file) return res.status(400).json({ error: "No file received" });
+      ops = JSON.parse(req.body?.ops ?? "[]");
+    } catch {
+      return res.status(400).json({ error: "ops must be a valid JSON array" });
+    }
 
-      let ops: any[] = [];
-      try {
-        ops = JSON.parse(req.body?.ops ?? "[]");
-      } catch {
-        return res.status(400).json({ error: "ops must be a valid JSON array" });
-      }
-
-      const src = await PDFDocument.load(file.buffer, { ignoreEncryption: true });
-      const pageCount = src.getPageCount();
-
-      // ── Apply delete operations first ──────────────────────────────────────
-      // Track which pages to keep using a boolean mask; process from last to first
-      const keepMask = Array.from({ length: pageCount }, () => true);
-      for (const op of ops) {
-        if (op.type === "delete") {
-          for (const idx of (op.pageIndexes as number[])) {
-            if (idx >= 0 && idx < pageCount) keepMask[idx] = false;
-          }
-        }
-      }
-
-      // ── Build ordered page index list ──────────────────────────────────────
-      let order: number[] = [];
-      const reorderOp = ops.find((o: any) => o.type === "reorder");
-      if (reorderOp && Array.isArray(reorderOp.order)) {
-        // Use provided order but only include pages that survive delete
-        order = (reorderOp.order as number[]).filter(
-          (idx: number) => idx >= 0 && idx < pageCount && keepMask[idx],
-        );
-        // Append any surviving pages not in the reorder list
-        for (let i = 0; i < pageCount; i++) {
-          if (keepMask[i] && !order.includes(i)) order.push(i);
-        }
-      } else {
-        order = keepMask.map((keep, i) => (keep ? i : -1)).filter((i) => i >= 0);
-      }
-
-      if (order.length === 0) {
-        return res.status(400).json({ error: "All pages were deleted — at least one page must remain" });
-      }
-
-      // ── Copy pages into new document ───────────────────────────────────────
-      const out = await PDFDocument.create();
-      const copied = await out.copyPages(src, order);
-      copied.forEach((p) => out.addPage(p));
-
-      // ── Apply rotate operations ────────────────────────────────────────────
-      // Map source page indexes to destination positions
-      for (const op of ops) {
-        if (op.type === "rotate") {
-          const rotDeg: number = [90, 180, 270].includes(op.degrees) ? op.degrees : 90;
-          for (const srcIdx of (op.pageIndexes as number[])) {
-            const destPos = order.indexOf(srcIdx);
-            if (destPos >= 0) {
-              const p = out.getPage(destPos);
-              const current = p.getRotation().angle;
-              p.setRotation(degrees((current + rotDeg) % 360));
-            }
-          }
-        }
-      }
-
-      const outBytes = await out.save();
-      sendPdf(res, Buffer.from(outBytes), `modified-pages.pdf`);
+    const ab = toTransferableArrayBuffer(file.buffer);
+    try {
+      const { outBuf } = await runPdfUtilInWorker("page-ops", { buf: ab, ops }, [ab]);
+      if (!outBuf) return res.status(500).json({ error: "page_ops_failed" });
+      sendPdf(res, Buffer.from(outBuf), "modified-pages.pdf");
     } catch (err) {
-      console.error("[pdf-utilities] page-ops error", err);
-      return res.status(500).json({ error: "page_ops_failed" });
+      if (err instanceof Error && err.message.startsWith("All pages were deleted")) {
+        return res.status(400).json({ error: err.message });
+      }
+      handleWorkerError(res, err, "page-ops");
     }
   },
 );
@@ -248,73 +197,31 @@ router.post(
   requireAuth,
   upload.single("file"),
   async (req: any, res) => {
+    const file = req.file;
+    if (!file) return res.status(400).json({ error: "No file received" });
+
+    const ab = toTransferableArrayBuffer(file.buffer);
     try {
-      const file = req.file;
-      if (!file) return res.status(400).json({ error: "No file received" });
-
-      const src = await PDFDocument.load(file.buffer, { ignoreEncryption: true });
-
-      // Remove XMP metadata (reduces size in some PDFs)
-      try {
-        const catalog = src.catalog;
-        if ((catalog as any).has !== undefined) {
-          // best-effort metadata removal
-        }
-      } catch { /* ignore */ }
-
-      // Re-save with useObjectStreams=true which compresses cross-reference table
-      const outBytes = await src.save({ useObjectStreams: true });
-      const outBuffer = Buffer.from(outBytes);
-
-      const originalSize = file.buffer.length;
-      const newSize = outBuffer.length;
-      const savedBytes = originalSize - newSize;
+      const { outBuf, result } = await runPdfUtilInWorker("compress", { buf: ab }, [ab]);
+      if (!outBuf) return res.status(500).json({ error: "compress_failed" });
 
       const safeName = (file.originalname ?? "document").replace(/[^\w.\-]/g, "_");
       const downloadName = safeName.endsWith(".pdf")
         ? safeName.replace(/\.pdf$/, "-compressed.pdf")
         : `${safeName}-compressed.pdf`;
 
+      const outBuffer = Buffer.from(outBuf);
       res.setHeader("Content-Type", "application/pdf");
-      res.setHeader("Content-Length", newSize);
+      res.setHeader("Content-Length", outBuffer.length);
       res.setHeader("Content-Disposition", `attachment; filename="${downloadName}"`);
-      res.setHeader("X-Original-Size", String(originalSize));
-      res.setHeader("X-Compressed-Size", String(newSize));
-      res.setHeader("X-Saved-Bytes", String(savedBytes));
+      res.setHeader("X-Original-Size", String(result.originalSize));
+      res.setHeader("X-Compressed-Size", String(result.newSize));
+      res.setHeader("X-Saved-Bytes", String(result.savedBytes));
       res.end(outBuffer);
     } catch (err) {
-      console.error("[pdf-utilities] compress error", err);
-      return res.status(500).json({ error: "compress_failed" });
+      handleWorkerError(res, err, "compress");
     }
   },
 );
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-/**
- * Parse a page range string like "1-3,5,7-9" into 0-based page indexes.
- * Input page numbers are 1-based. Invalid ranges are silently skipped.
- */
-function parsePageRange(rangeStr: string, totalPages: number): number[] {
-  const indexes = new Set<number>();
-  const parts = rangeStr.split(",");
-  for (const part of parts) {
-    const trimmed = part.trim();
-    const rangeMatch = trimmed.match(/^(\d+)-(\d+)$/);
-    if (rangeMatch) {
-      const from = parseInt(rangeMatch[1], 10);
-      const to = parseInt(rangeMatch[2], 10);
-      for (let p = Math.min(from, to); p <= Math.max(from, to); p++) {
-        if (p >= 1 && p <= totalPages) indexes.add(p - 1);
-      }
-    } else {
-      const single = parseInt(trimmed, 10);
-      if (!isNaN(single) && single >= 1 && single <= totalPages) {
-        indexes.add(single - 1);
-      }
-    }
-  }
-  return Array.from(indexes).sort((a, b) => a - b);
-}
 
 export default router;

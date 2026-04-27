@@ -15,7 +15,12 @@ async function buildAll() {
   await rm(distDir, { recursive: true, force: true });
 
   await esbuild({
-    entryPoints: [path.resolve(artifactDir, "src/index.ts")],
+    entryPoints: [
+      path.resolve(artifactDir, "src/index.ts"),
+      // PDF utility worker — runs pdf-lib operations in an isolated thread so
+      // that parser-bomb documents cannot stall or crash the main API process.
+      path.resolve(artifactDir, "src/lib/pdfUtilWorker.ts"),
+    ],
     platform: "node",
     bundle: true,
     format: "esm",

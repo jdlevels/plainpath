@@ -6,6 +6,7 @@ import { openai } from "@workspace/integrations-openai-ai-server";
 import { requireEntitlement } from "../../lib/requireEntitlement";
 import { demoDocuments } from "../../lib/demoData.js";
 import { trustCheckDemoDocuments } from "../../lib/trustCheckDemoData.js";
+import { parsePdfWithLimits, parseDocxWithLimits, ParseResourceLimitError } from "../../lib/parseWithLimits";
 import type { DocumentAnalysis, DocumentSection, KeyTerm, ActionPack, TrustCheckAnalysis, TrustCheckVerdict, TrustCheckContactDetail, TrustCheckDeadlineItem, TrustCheckScamIndicator, TrustCheckScores, TrustCheckMetadataFinding } from "../../lib/types.js";
 import type { PDFRef, PDFRawStream, PDFDict, PDFArray } from "pdf-lib";
 
@@ -399,12 +400,12 @@ router.post("/upload", requireEntitlement("analyze"), upload.single("file"), asy
       let parseError: string | null = null;
 
       try {
-        const pdfMod = await import("pdf-parse/lib/pdf-parse.js");
-        const pdfParse: (buf: Buffer) => Promise<{ text: string }> =
-          (pdfMod as any).default ?? (pdfMod as any);
-        const pdfResult = await pdfParse(file.buffer);
-        pdfParseText = pdfResult?.text ?? null;
+        const pdfResult = await parsePdfWithLimits(file.buffer);
+        pdfParseText = pdfResult.text ?? null;
       } catch (err) {
+        if (err instanceof ParseResourceLimitError) {
+          return res.status(400).json({ error: "document_too_large", message: err.message });
+        }
         const errMsg = err instanceof Error ? err.message : String(err);
         console.error("[upload] pdf-parse threw:", errMsg, "| file:", file.originalname, "| size:", file.size);
         parseError = errMsg;
@@ -434,10 +435,11 @@ router.post("/upload", requireEntitlement("analyze"), upload.single("file"), asy
       originalName.endsWith(".docx")
     ) {
       try {
-        const mammoth = await import("mammoth");
-        const result = await mammoth.extractRawText({ buffer: file.buffer });
-        extractedText = result.value ?? "";
+        extractedText = await parseDocxWithLimits(file.buffer);
       } catch (err) {
+        if (err instanceof ParseResourceLimitError) {
+          return res.status(400).json({ error: "document_too_large", message: err.message });
+        }
         const errMsg = err instanceof Error ? err.message : String(err);
         console.error("[upload] mammoth threw:", errMsg, "| file:", file.originalname);
         return res.status(422).json({
@@ -2364,12 +2366,12 @@ router.post("/extract-text", requireEntitlement("redact"), upload.single("file")
 
   if (mime === "application/pdf" || originalName.endsWith(".pdf")) {
     try {
-      const pdfMod = await import("pdf-parse/lib/pdf-parse.js");
-      const pdfParse: (buf: Buffer) => Promise<{ text: string }> =
-        (pdfMod as any).default ?? (pdfMod as any);
-      const pdfResult = await pdfParse(file.buffer);
-      extractedText = pdfResult?.text ?? "";
+      const pdfResult = await parsePdfWithLimits(file.buffer);
+      extractedText = pdfResult.text ?? "";
     } catch (err) {
+      if (err instanceof ParseResourceLimitError) {
+        return res.status(400).json({ error: "document_too_large", message: err.message });
+      }
       return res.status(422).json({
         error: "corrupt_pdf",
         message: "This PDF could not be read. It may be corrupted or password-protected. Please paste the text instead.",
@@ -2386,10 +2388,11 @@ router.post("/extract-text", requireEntitlement("redact"), upload.single("file")
     originalName.endsWith(".docx")
   ) {
     try {
-      const mammoth = await import("mammoth");
-      const result = await mammoth.extractRawText({ buffer: file.buffer });
-      extractedText = result.value ?? "";
+      extractedText = await parseDocxWithLimits(file.buffer);
     } catch (err) {
+      if (err instanceof ParseResourceLimitError) {
+        return res.status(400).json({ error: "document_too_large", message: err.message });
+      }
       return res.status(422).json({
         error: "unreadable_docx",
         message: "Could not read this Word document. Please paste the text instead.",
@@ -3678,20 +3681,29 @@ router.post("/import-url", async (req, res) => {
     let extractedText = "";
 
     if (contentType.includes("pdf") || guessedFilename.toLowerCase().endsWith(".pdf")) {
-      const pdfMod = await import("pdf-parse/lib/pdf-parse.js");
-      const pdfParse: (buf: Buffer) => Promise<{ text: string }> =
-        typeof pdfMod.default === "function" ? pdfMod.default : (pdfMod as any);
-      const result = await pdfParse(buffer);
-      extractedText = result.text ?? "";
+      try {
+        const result = await parsePdfWithLimits(buffer);
+        extractedText = result.text ?? "";
+      } catch (err) {
+        if (err instanceof ParseResourceLimitError) {
+          return res.status(400).json({ message: err.message });
+        }
+        return res.status(400).json({ message: "Could not extract readable text from this document. Try downloading the file and uploading it directly." });
+      }
     } else if (
       contentType.includes("wordprocessingml") ||
       contentType.includes("msword") ||
       guessedFilename.toLowerCase().endsWith(".docx") ||
       guessedFilename.toLowerCase().endsWith(".doc")
     ) {
-      const mammoth = await import("mammoth");
-      const result = await mammoth.extractRawText({ buffer });
-      extractedText = result.value ?? "";
+      try {
+        extractedText = await parseDocxWithLimits(buffer);
+      } catch (err) {
+        if (err instanceof ParseResourceLimitError) {
+          return res.status(400).json({ message: err.message });
+        }
+        return res.status(400).json({ message: "Could not extract readable text from this document. Try downloading the file and uploading it directly." });
+      }
     } else {
       // Treat as plain text
       extractedText = buffer.toString("utf-8");

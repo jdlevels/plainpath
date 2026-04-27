@@ -11,6 +11,7 @@ import { getAuth } from "@clerk/express";
 import { pool } from "@workspace/db";
 import { openai } from "@workspace/integrations-openai-ai-server";
 import { requireEntitlement } from "../../lib/requireEntitlement";
+import { parsePdfWithLimits, parseDocxWithLimits, ParseResourceLimitError } from "../../lib/parseWithLimits";
 
 const router = Router();
 
@@ -69,23 +70,14 @@ ensureTable().catch((err: Error) => {
 async function extractText(buffer: Buffer, fileName: string): Promise<string> {
   const name = fileName.toLowerCase();
   if (name.endsWith(".docx") || name.endsWith(".doc")) {
-    try {
-      const mammoth = await import("mammoth");
-      const result = await mammoth.extractRawText({ buffer });
-      return result.value;
-    } catch {
-      return buffer.toString("utf-8").replace(/[^\x20-\x7E\n\r\t]/g, " ");
-    }
+    // parseDocxWithLimits enforces a 10 MB extracted-text ceiling, aborting
+    // mammoth before DOCX ZIP inflation can exhaust available RAM.
+    return parseDocxWithLimits(buffer);
   }
-  try {
-    const pdfMod = await import("pdf-parse/lib/pdf-parse.js");
-    const pdfParse: (buf: Buffer) => Promise<{ text: string }> =
-      (pdfMod as any).default ?? (pdfMod as any);
-    const parsed = await pdfParse(buffer);
-    return parsed.text;
-  } catch {
-    return "";
-  }
+  // parsePdfWithLimits aborts pdf-parse mid-stream if the page count or
+  // accumulated extracted text exceeds configured ceilings.
+  const parsed = await parsePdfWithLimits(buffer);
+  return parsed.text;
 }
 
 // ─── OpenAI extraction ────────────────────────────────────────────────────────
@@ -228,6 +220,15 @@ router.post(
       );
       return res.status(201).json(formatSession(row.rows[0]));
     } catch (err: any) {
+      if (err instanceof ParseResourceLimitError) {
+        // Document is too large to parse safely — mark session as error and
+        // return 400 so the client can surface a clear message.
+        await pool.query(
+          `UPDATE clause_extractor_sessions SET status = 'error', error_message = $1, updated_at = NOW() WHERE id = $2`,
+          [err.message, sessionId],
+        ).catch(() => {});
+        return res.status(400).json({ error: "document_too_large", message: err.message });
+      }
       console.error("[clause-extractor] extraction error:", err.message);
       await pool.query(
         `UPDATE clause_extractor_sessions SET status = 'error', error_message = $1, updated_at = NOW() WHERE id = $2`,

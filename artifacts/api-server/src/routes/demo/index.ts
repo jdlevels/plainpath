@@ -3,6 +3,7 @@ import crypto from "crypto";
 import multer from "multer";
 import { pool as db } from "@workspace/db";
 import { openai } from "@workspace/integrations-openai-ai-server";
+import { parsePdfWithLimits, ParseResourceLimitError } from "../../lib/parseWithLimits";
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
@@ -332,28 +333,27 @@ router.post(
       return res.status(500).json({ error: "internal_error", message: "Could not establish demo session." });
     }
 
-    // 3. Parse PDF — done after slot reservation but before the OpenAI call.
-    //    If the file is unreadable/too large, release the reserved slot so the
-    //    attempt does not count against the guest's allowance.
+    // 3. Parse PDF — done before the quota increment so that rejected files
+    //    (unreadable, too many pages, empty text) do not consume a quota slot.
+    //    parsePdfWithLimits aborts the parse mid-stream the moment the page
+    //    count exceeds DEMO_MAX_PAGES or extracted text exceeds 500 KB, so a
+    //    malicious compressed PDF cannot exhaust CPU / RAM before we reject it.
     let pdfText = "";
     let pageCount = 0;
     try {
-      const pdfParse = (await import("pdf-parse/lib/pdf-parse.js")).default;
-      const parsed = await pdfParse(file.buffer);
+      const parsed = await parsePdfWithLimits(file.buffer, {
+        maxPages: DEMO_MAX_PAGES,
+        maxTextBytes: 500 * 1024, // 500 KB — generous for a 10-page demo doc
+      });
       pdfText = parsed.text ?? "";
       pageCount = parsed.numpages ?? 0;
     } catch (err) {
+      if (err instanceof ParseResourceLimitError) {
+        return res.status(400).json({ error: "document_too_large", message: err.message });
+      }
       console.error("demo/analyze pdf-parse error", err);
       await releaseFingerprintSlot(fingerprintHash).catch(() => {});
       return res.status(422).json({ error: "parse_failed", message: "Could not read this PDF. Please try another file." });
-    }
-
-    if (pageCount > DEMO_MAX_PAGES) {
-      await releaseFingerprintSlot(fingerprintHash).catch(() => {});
-      return res.status(400).json({
-        error: "too_many_pages",
-        message: `Demo analysis is limited to ${DEMO_MAX_PAGES} pages. This file has ${pageCount} pages.`,
-      });
     }
 
     if (!pdfText.trim()) {

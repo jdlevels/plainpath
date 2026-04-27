@@ -10,9 +10,46 @@
 
 // Import the underlying lib directly to avoid pdf-parse's startup file-read test
 // (pdf-parse/index.js reads a test PDF at require() time which fails in production)
-import pdfParse from "pdf-parse/lib/pdf-parse.js";
+// pdf-parse's own type declarations are incomplete, so we declare the subset we
+// need and import via the CommonJS interop path.
+interface PdfParseOptions {
+  pagerender?: (pageData: PdfJsPageProxy) => Promise<string>;
+}
+interface PdfParseResult {
+  numpages: number;
+  text: string;
+}
+// pdfjs TextItem — only the fields we actually access.
+interface PdfJsTextItem {
+  str: string;
+  transform: number[]; // [a, b, c, d, tx, ty]
+  width: number;
+  height: number;
+}
+interface PdfJsTextContent {
+  items: PdfJsTextItem[];
+}
+interface PdfJsViewport {
+  width: number;
+  height: number;
+}
+interface PdfJsPageProxy {
+  getViewport(opts: { scale: number }): PdfJsViewport;
+  getTextContent(): Promise<PdfJsTextContent>;
+}
+type PdfParseFn = (buf: Buffer, opts: PdfParseOptions) => Promise<PdfParseResult>;
+
+import pdfParseModule from "pdf-parse/lib/pdf-parse.js";
+const pdfParse = pdfParseModule as unknown as PdfParseFn;
 import { diffLines } from "diff";
 import { v4 as uuidv4 } from "uuid";
+import { ParseResourceLimitError } from "./parseWithLimits";
+
+// Per-document limits for the compare engine.  Two documents are processed and
+// diffed in memory in the same Node.js process, so budgets are tighter than
+// the single-document parse routes.
+const MAX_CV_PAGES = 200;
+const MAX_CV_TEXT_BYTES = 10 * 1024 * 1024; // 10 MB extracted text per document
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -103,51 +140,68 @@ interface PageData {
 async function extractPages(buffer: Buffer): Promise<PageData[]> {
   const pages: PageData[] = [];
   let pageCounter = 0;
+  let totalTextBytes = 0;
 
-  try {
-    await pdfParse(buffer, {
-      pagerender: async (pageData: any): Promise<string> => {
-        pageCounter++;
-        const pn = pageCounter;
-        let width = 612, height = 792;
-        let items: TextItem[] = [];
+  // pdfParse is called with a custom pagerender so we can abort mid-parse if
+  // the document exceeds the per-document page or text budgets.  Throwing
+  // inside pagerender causes the outer pdfParse promise to reject immediately,
+  // preventing further decompression and allocation work.
+  await pdfParse(buffer, {
+    pagerender: async (pageData: PdfJsPageProxy): Promise<string> => {
+      pageCounter++;
 
-        try {
-          const viewport = pageData.getViewport({ scale: 1 });
-          width = viewport.width || 612;
-          height = viewport.height || 792;
+      if (pageCounter > MAX_CV_PAGES) {
+        throw new ParseResourceLimitError(
+          `PDF exceeds the maximum allowed ${MAX_CV_PAGES} pages for document comparison.`,
+        );
+      }
 
-          const textContent = await pageData.getTextContent();
-          items = (textContent.items as any[])
-            .filter((it) => typeof it.str === "string")
-            .map((it) => {
-              const px = it.transform[4]; // x from left (points)
-              const py = it.transform[5]; // y from bottom (points)
-              const iw = Math.max(it.width || 4, 1);
-              const ih = it.height || 12;
-              return {
-                str: it.str,
-                x: Math.max(0, Math.min(1, px / width)),
-                y: Math.max(0, Math.min(1, 1 - (py + ih) / height)),
-                w: Math.max(0.002, Math.min(1, iw / width)),
-                h: Math.max(0.002, Math.min(1, ih / height)),
-              };
-            });
-        } catch {
-          // Position extraction failed — still capture page with empty items
-        }
+      const pn = pageCounter;
+      let width = 612, height = 792;
+      let items: TextItem[] = [];
 
-        const rawText = items.map((i) => i.str).join(" ");
-        // Build lines by grouping items with similar Y
-        const lines = buildLines(items);
+      try {
+        const viewport = pageData.getViewport({ scale: 1 });
+        width = viewport.width || 612;
+        height = viewport.height || 792;
 
-        pages.push({ pageNum: pn, width, height, items, rawText, lines });
-        return rawText;
-      },
-    });
-  } catch (err) {
-    console.error("[cv-engine] extractPages error:", err);
-  }
+        const textContent = await pageData.getTextContent();
+        items = textContent.items
+          .filter((it) => typeof it.str === "string")
+          .map((it) => {
+            const px = it.transform[4]; // x from left (points)
+            const py = it.transform[5]; // y from bottom (points)
+            const iw = Math.max(it.width || 4, 1);
+            const ih = it.height || 12;
+            return {
+              str: it.str,
+              x: Math.max(0, Math.min(1, px / width)),
+              y: Math.max(0, Math.min(1, 1 - (py + ih) / height)),
+              w: Math.max(0.002, Math.min(1, iw / width)),
+              h: Math.max(0.002, Math.min(1, ih / height)),
+            };
+          });
+      } catch (err) {
+        if (err instanceof ParseResourceLimitError) throw err;
+        // Position extraction failed — still capture page with empty items
+      }
+
+      const rawText = items.map((i) => i.str).join(" ");
+
+      totalTextBytes += Buffer.byteLength(rawText, "utf-8");
+      if (totalTextBytes > MAX_CV_TEXT_BYTES) {
+        throw new ParseResourceLimitError(
+          `PDF extracted text exceeds the maximum allowed ${MAX_CV_TEXT_BYTES / 1024 / 1024} MB for document comparison.`,
+        );
+      }
+
+      // Build lines by grouping items with similar Y
+      const lines = buildLines(items);
+
+      pages.push({ pageNum: pn, width, height, items, rawText, lines });
+      return rawText;
+    },
+  });
 
   return pages.sort((a, b) => a.pageNum - b.pageNum);
 }

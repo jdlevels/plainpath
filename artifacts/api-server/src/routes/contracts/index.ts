@@ -4,6 +4,7 @@ import { getAuth } from "@clerk/express";
 import { openai } from "@workspace/integrations-openai-ai-server";
 import { logger } from "../../lib/logger";
 import { requireEntitlement } from "../../lib/requireEntitlement";
+import { parsePdfWithLimits, parseDocxWithLimits, ParseResourceLimitError } from "../../lib/parseWithLimits";
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
 
@@ -147,20 +148,20 @@ router.post("/review", requireEntitlement("contract-review"), upload.single("fil
     try {
       const mime = req.file.mimetype;
       if (mime === "application/pdf" || req.file.originalname?.endsWith(".pdf")) {
-        const { default: pdfParse } = await import("pdf-parse/lib/pdf-parse.js");
-        const parsed = await pdfParse(req.file.buffer);
+        const parsed = await parsePdfWithLimits(req.file.buffer);
         text = parsed.text ?? "";
       } else if (
         mime === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
         req.file.originalname?.endsWith(".docx")
       ) {
-        const mammoth = await import("mammoth");
-        const result = await mammoth.extractRawText({ buffer: req.file.buffer });
-        text = result.value ?? "";
+        text = await parseDocxWithLimits(req.file.buffer);
       } else {
         text = req.file.buffer.toString("utf-8");
       }
     } catch (err) {
+      if (err instanceof ParseResourceLimitError) {
+        return res.status(400).json({ message: err.message });
+      }
       logger.error({ err }, "contracts/review file extraction failed");
       return res.status(422).json({ message: "Could not read the uploaded file. Try a different format." });
     }
