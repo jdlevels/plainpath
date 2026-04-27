@@ -1,10 +1,10 @@
 // ─── PlainPath Identity Model (server-side) ────────────────────────────────────
 //
 //   role        = internal privilege  ("admin" | "member")
-//   accessTier  = product entitlement ("starter" | "pro")
+//   accessTier  = product entitlement ("free" | "starter" | "pro")
 //
 //   Admin   → { role: "admin",  accessTier: "pro"     }   (ADMIN_EMAILS)
-//   New user→ { role: "member", accessTier: "starter" }   (any new signup)
+//   New user→ { role: "member", accessTier: "free"    }   (any new signup, no subscription)
 //   Paid    → { role: "member", accessTier: "pro"     }   (active Stripe subscription)
 //
 // Sources of truth (in priority order):
@@ -128,7 +128,7 @@ router.get("/status", async (req, res) => {
       if (byClerk) {
         resolvedEmail = byClerk.email
       } else {
-        return res.json({ email: null, found: false, status: "inactive", plan: "starter" })
+        return res.json({ email: null, found: false, status: "inactive", plan: "free" })
       }
     }
 
@@ -317,10 +317,11 @@ router.get("/status", async (req, res) => {
 // Writes role + accessTier to Clerk publicMetadata (merge-safe).
 //
 // Identity rules:
-//   ADMIN_EMAILS  → { role: "admin",  accessTier: "pro"     }
-//   Everyone else → { role: "member", accessTier: "starter" }
+//   ADMIN_EMAILS       → { role: "admin",  accessTier: "pro"     }
+//   MANUAL_PRO_EMAILS  → { role: "member", accessTier: "pro"     }
+//   Everyone else      → { role: "member", accessTier: "free"    }
 //
-// Starter users can upgrade to Pro via Stripe checkout.
+// Free users must subscribe via Stripe checkout to access paid features.
 // Already bootstrapped → returns current values without writing (no-op).
 // Requires a valid Clerk session JWT. Returns 401 if unauthenticated.
 
@@ -361,12 +362,12 @@ router.post("/bootstrap", async (req, res) => {
     // ── Determine role + tier ─────────────────────────────────────────────
     // Admins (ADMIN_EMAILS) get Pro access immediately.
     // Manual pro grant (MANUAL_PRO_EMAILS) get member/pro without Stripe.
-    // Everyone else starts as a Starter member and upgrades via Stripe.
+    // Everyone else is Free until they subscribe via Stripe checkout.
     const newMeta: { role: string; accessTier: string } = isAdminEmail(email)
       ? { role: "admin", accessTier: "pro" }
       : isManualProEmail(email)
       ? { role: "member", accessTier: "pro" }
-      : { role: "member", accessTier: "starter" }
+      : { role: "member", accessTier: "free" }
 
     // Merge-safe: spread existing keys so no other metadata is overwritten.
     await clerkClient.users.updateUser(userId, {

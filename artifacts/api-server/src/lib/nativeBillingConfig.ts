@@ -25,10 +25,14 @@
 
 import type { PlanKey } from "./planEntitlements"
 
+// ─── Purchasable plan keys (excludes "free" and "team" which have no native products) ─
+
+type NativePlanKey = "starter" | "pro"
+
 // ─── RevenueCat Entitlement IDs ───────────────────────────────────────────────
 // These must match exactly what is set in the RevenueCat dashboard.
 
-export const RC_ENTITLEMENT_IDS: Record<PlanKey, string> = {
+export const RC_ENTITLEMENT_IDS: Record<NativePlanKey, string> = {
   starter: "starter",
   pro: "pro",
 }
@@ -38,7 +42,7 @@ export const RC_ENTITLEMENT_IDS: Record<PlanKey, string> = {
 // Type: Auto-Renewable Subscription
 // Subscription Group: "PlainPath" (create one group for both)
 
-export const IOS_PRODUCT_IDS: Record<PlanKey, string> = {
+export const IOS_PRODUCT_IDS: Record<NativePlanKey, string> = {
   starter: "plainpath_starter_monthly",  // $4.99/month — must match App Store Connect
   pro: "plainpath_pro_monthly",           // $19.99/month — must match App Store Connect
 }
@@ -47,7 +51,7 @@ export const IOS_PRODUCT_IDS: Record<PlanKey, string> = {
 // Create these in Google Play Console → Monetize → Subscriptions.
 // Create one base plan per product, monthly billing period.
 
-export const ANDROID_PRODUCT_IDS: Record<PlanKey, string> = {
+export const ANDROID_PRODUCT_IDS: Record<NativePlanKey, string> = {
   starter: "plainpath_starter_monthly",  // $4.99/month — must match Play Console
   pro: "plainpath_pro_monthly",           // $19.99/month — must match Play Console
 }
@@ -62,7 +66,7 @@ export const RC_OFFERING_ID = "default"
 // Within an Offering, packages represent individual purchasable items.
 // RevenueCat uses $rc_monthly for the standard monthly package identifier.
 
-export const RC_PACKAGE_IDS: Record<PlanKey, string> = {
+export const RC_PACKAGE_IDS: Record<NativePlanKey, string> = {
   starter: "$rc_monthly",  // Maps to starter product within the starter offering
   pro: "$rc_monthly",      // Maps to pro product within the pro offering
 }
@@ -87,5 +91,5 @@ export function resolvePlanFromRCEntitlements(
 ): PlanKey {
   if (activeEntitlementIds.includes(RC_ENTITLEMENT_IDS.pro)) return "pro"
   if (activeEntitlementIds.includes(RC_ENTITLEMENT_IDS.starter)) return "starter"
-  return "starter"
+  return "free"
 }

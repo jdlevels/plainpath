@@ -1,15 +1,17 @@
 // ─── Plan Definitions — Single Source of Truth ────────────────────────────────
 //
 // Plans (accessTier = product entitlement):
+//   free    — $0/month     — No paid tools; must subscribe to access any feature
 //   starter — $4.99/month  — Analyze a Document + Redact Sensitive Info
 //   pro     — $19.99/month — All tools (Analyze, Trust Check, Contract Builder,
 //                            Contract Review, Redact, Compare Versions, Clause Extractor, Document Builder)
 //
 // Identity model (see routes/entitlements.ts for full spec):
 //   role        = internal privilege  ("admin" | "member")
-//   accessTier  = product entitlement ("starter" | "pro")
+//   accessTier  = product entitlement ("free" | "starter" | "pro")
 //
 //   Admin   → role:"admin"  + accessTier:"pro"    — internal + full product access
+//   Free    → role:"member" + accessTier:"free"   — no paid tools; upgrade required
 //   Starter → role:"member" + accessTier:"starter" — Starter plan tools only
 //   Pro     → role:"member" + accessTier:"pro"    — all paid tools; NOT admin
 //
@@ -18,7 +20,7 @@
 //
 // ─────────────────────────────────────────────────────────────────────────────
 
-export type PlanKey = "starter" | "pro" | "team"
+export type PlanKey = "free" | "starter" | "pro" | "team"
 
 // ─── Tool Access Map ──────────────────────────────────────────────────────────
 
@@ -37,6 +39,7 @@ export type ToolKey =
 
 /** Which tools each plan can access. This is the canonical feature gate. */
 export const TOOL_ACCESS: Record<PlanKey, ToolKey[]> = {
+  free: [],
   starter: ["analyze", "redact"],
   pro: ["analyze", "trust-check", "contract-review", "build-contract", "redact", "compare", "clause-extractor", "compare-versions", "negotiate", "ask-document", "builder"],
   team: ["analyze", "trust-check", "contract-review", "build-contract", "redact", "compare", "clause-extractor", "compare-versions", "negotiate", "ask-document", "builder"],
@@ -72,6 +75,26 @@ export type PlanEntitlements = {
 }
 
 export const PLAN_ENTITLEMENTS: Record<PlanKey, PlanEntitlements> = {
+  free: {
+    plan: "free",
+    displayName: "Free",
+    priceMonthly: 0,
+    analysesPerMonth: 0,
+    features: {
+      plainEnglish: false,
+      sourceSections: false,
+      sectionExplainer: false,
+      checklist: false,
+      requiredDocs: false,
+      deadlines: false,
+      risks: false,
+      whatsMissing: false,
+      keyTerms: false,
+      actionPack: false,
+      savedAnalyses: false,
+      exportShare: false,
+    },
+  },
   team: {
     plan: "team",
     displayName: "Team",
@@ -134,9 +157,10 @@ export const PLAN_ENTITLEMENTS: Record<PlanKey, PlanEntitlements> = {
   },
 }
 
-/** Normalize any incoming plan string to a valid PlanKey. Defaults to starter. */
+/** Normalize any incoming plan string to a valid PlanKey. Defaults to free. */
 export function normalizePlan(plan?: string | null): PlanKey {
   if (plan === "pro") return "pro"
   if (plan === "team") return "team"
-  return "starter"
+  if (plan === "starter") return "starter"
+  return "free"
 }

@@ -5,7 +5,7 @@
 //   2. MANUAL_PRO_EMAILS env var → "pro"
 //   3. Active Stripe subscriber (by clerkUserId or email) → subscriber plan
 //   4. Active team member whose owner has a "team" subscription → "team"
-//   5. Default → "starter"
+//   5. Default → "free" (no paid access without a verified active subscription)
 //
 // This module is the single source of truth for plan resolution on the server.
 // It is used by:
@@ -58,7 +58,8 @@ export interface ResolvedPlan {
  *
  * Always resolves — never throws. Errors from Clerk, the billing DB, or the
  * team table are caught internally and cause the resolver to fall back to the
- * next source. The final fallback is "starter" (fail-closed).
+ * next source. The final fallback is "free" (fail-closed: no paid access
+ * without a verified active subscription).
  */
 export async function resolveUserPlan(userId: string): Promise<ResolvedPlan> {
   let email: string | null = null;
@@ -121,5 +122,5 @@ export async function resolveUserPlan(userId: string): Promise<ResolvedPlan> {
     // Clerk lookup failure — fall through to default
   }
 
-  return { plan: "starter", email, source: "default" };
+  return { plan: "free", email, source: "default" };
 }
