@@ -479,6 +479,7 @@ router.post("/webhook", async (req: any, res) => {
         if (existing) {
           upsertSubscriber({
             email: existing.email,
+            clerkUserId: existing.clerkUserId ?? undefined,
             stripeCustomerId:
               typeof subscription.customer === "string"
                 ? subscription.customer
