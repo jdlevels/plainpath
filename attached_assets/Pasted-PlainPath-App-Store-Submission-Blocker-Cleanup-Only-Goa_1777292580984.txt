@@ -1,0 +1,73 @@
+PlainPath App Store Submission Blocker Cleanup Only
+
+Goal:
+Resolve only the remaining submission blockers that can be fixed in code before Apple/Google store account setup.
+
+Do not add features.
+Do not redesign.
+Do not change pricing.
+Do not change Stripe web checkout.
+Do not change auth architecture.
+Do not change database schema.
+Do not create migrations.
+Do not touch Trust Check v2.
+Do not touch demo pages.
+Do not reintroduce e-signature.
+Do not add Dropbox Sign.
+Do not change the active 9-tool set.
+
+Current active tools:
+1. Analyze a Document
+2. Document Trust Check
+3. Build a Contract
+4. Contract Review
+5. Redact Sensitive Info
+6. Ask This Document
+7. Clause Extractor
+8. Compare Versions
+9. Document Builder
+
+Task 1 — Support/account deletion path:
+Audit /support in both the app and marketing site.
+Confirm there is clear text explaining how users can request:
+- account deletion
+- associated data deletion
+- document/history deletion if applicable
+
+If missing, add a simple section:
+
+"Account and data deletion"
+Users can request deletion of their PlainPath account and associated data by contacting support@plainpathapp.com from the email address connected to their account. Include "Account deletion request" in the subject line.
+
+Do not build automated deletion.
+Do not create database changes.
+Do not create a new backend endpoint unless one already exists and only needs exposure.
+
+Task 2 — Required URL verification:
+Confirm these pages exist and render:
+- /privacy
+- /terms
+- /support
+
+Confirm they work in:
+- app
+- marketing site
+- production domain route assumptions
+
+Task 3 — Native payment compliance recheck:
+Confirm native app still shows only static text:
+"Subscription management is handled on the PlainPath website."
+
+Confirm:
+- no Stripe checkout in native
+- no tappable external purchase links in native
+- no purchase CTA in native
+- web Stripe checkout unchanged
+
+Task 4 — Output only:
+A. Files changed
+B. Account deletion path status
+C. Privacy / Terms / Support URL status
+D. Native payment compliance status
+E. Any new TypeScript errors
+F. Safe to proceed to store asset capture: Yes/No
