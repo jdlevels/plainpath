@@ -2551,6 +2551,53 @@ function sanitizePdfContentStream(streamBytes: Buffer, values: string[]): { byte
   return { bytes: new Uint8Array(buf), changed };
 }
 
+// Sentinel error used to surface resource-limit violations from inner async
+// functions (e.g. per-stream inflate helpers) back to the top-level handler.
+class PdfResourceLimitError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "PdfResourceLimitError";
+  }
+}
+
+// Hard limits for the redact-pdf route.
+// These cap the work that a single attacker-controlled PDF can force the
+// server to perform, regardless of the on-wire upload size.
+const MAX_PDF_PAGES = 500;
+const MAX_EXTRACTED_TEXT_BYTES = 10 * 1024 * 1024;      // 10 MB of extracted text
+const MAX_DECOMPRESSED_STREAM_BYTES = 50 * 1024 * 1024; // 50 MB per stream (hard abort)
+
+// Bounded streaming inflate — decompression is aborted as soon as the output
+// exceeds `maxBytes`, preventing zip-bomb style exhaustion of CPU and memory.
+// Throws PdfResourceLimitError if the limit is exceeded, otherwise resolves
+// to the fully decompressed Buffer.
+async function boundedInflate(input: Buffer, maxBytes: number): Promise<Buffer> {
+  const zlib = await import("zlib");
+  return new Promise<Buffer>((resolve, reject) => {
+    const inflater = zlib.createInflate();
+    const chunks: Buffer[] = [];
+    let totalBytes = 0;
+
+    inflater.on("data", (chunk: Buffer) => {
+      totalBytes += chunk.length;
+      if (totalBytes > maxBytes) {
+        // Abort decompression immediately — do not accumulate further bytes.
+        inflater.destroy();
+        reject(new PdfResourceLimitError(
+          `PDF stream exceeds the maximum allowed decompressed size of ${maxBytes / 1024 / 1024} MB.`,
+        ));
+        return;
+      }
+      chunks.push(chunk);
+    });
+
+    inflater.on("end", () => resolve(Buffer.concat(chunks)));
+    inflater.on("error", (err: Error) => reject(err));
+
+    inflater.end(input);
+  });
+}
+
 // POST /api/documents/redact-pdf
 // Accepts a PDF + list of string values to redact.
 // Uses pdfjs-dist to locate each value's bounding box on each page.
@@ -2615,6 +2662,21 @@ router.post("/redact-pdf", requireEntitlement("redact"), upload.single("file"), 
       return res.send(pdfBuffer);
     }
 
+    // ── Preflight: load PDF and enforce page-count limit before any iteration ──
+    // PDFDocument.load is done here — before text extraction — so that an
+    // oversized-page-count PDF is rejected before pdfParse iterates any pages.
+    // The loaded doc is reused throughout the rest of the route (step 4+).
+    const { PDFDocument, rgb, PDFName, PDFRawStream, PDFArray, PDFRef, PDFDict, PDFString, PDFHexString } = await import("pdf-lib");
+    const pdfLibDoc = await PDFDocument.load(pdfBuffer);
+    const pages = pdfLibDoc.getPages();
+
+    if (pages.length > MAX_PDF_PAGES) {
+      return res.status(400).json({
+        error: "pdf_too_many_pages",
+        message: `PDF has too many pages — maximum ${MAX_PDF_PAGES} pages allowed per request.`,
+      });
+    }
+
     // ── Step 1: Extract text items with bounding boxes ────────────────────────
     // We piggyback on pdf-parse's bundled pdfjs-dist (v2.x) via its pagerender
     // hook. That version is already configured for Node.js and doesn't require
@@ -2640,6 +2702,7 @@ router.post("/redact-pdf", requireEntitlement("redact"), upload.single("file"), 
       pagerender: async (pageData: { getTextContent: (opts?: Record<string, unknown>) => Promise<{ items: unknown[] }> }) => {
         currentPage++;
         const pageNum = currentPage;
+        if (pageNum > MAX_PDF_PAGES) return "";
         try {
           const content = await pageData.getTextContent();
           for (const item of content.items) {
@@ -2663,6 +2726,18 @@ router.post("/redact-pdf", requireEntitlement("redact"), upload.single("file"), 
         return "";
       },
     });
+
+    // Guard: reject PDFs whose extracted text volume would make the flat-text
+    // scan (step 2-3) disproportionately expensive.
+    {
+      const totalTextBytes = allItems.reduce((sum, item) => sum + item.str.length, 0);
+      if (totalTextBytes > MAX_EXTRACTED_TEXT_BYTES) {
+        return res.status(400).json({
+          error: "pdf_text_too_large",
+          message: `PDF contains too much text — maximum ${MAX_EXTRACTED_TEXT_BYTES / 1024 / 1024} MB of extracted text allowed per request.`,
+        });
+      }
+    }
 
     // ── Step 2: Build two searchable flat-text indexes with item offset maps ──
     // "Spaced": items separated by a synthetic space — catches values stored in a
@@ -2737,11 +2812,8 @@ router.post("/redact-pdf", requireEntitlement("redact"), upload.single("file"), 
       collectBoxesFromSearch(fullTextDense, denseOffsets, value);
     }
 
-    // ── Step 4: Load PDF with pdf-lib, draw solid black rectangles ───────────
-    const { PDFDocument, rgb, PDFName, PDFRawStream, PDFArray, PDFRef, PDFDict, PDFString, PDFHexString } = await import("pdf-lib");
-    const pdfLibDoc = await PDFDocument.load(pdfBuffer);
-    const pages = pdfLibDoc.getPages();
-
+    // ── Step 4: Draw solid black rectangles over matched text ────────────────
+    // pdfLibDoc and pages were loaded in the preflight above and are reused here.
     const PAD_X = 1; // horizontal padding around text box
     const PAD_Y = 2; // vertical padding below text box
 
@@ -2766,10 +2838,6 @@ router.post("/redact-pdf", requireEntitlement("redact"), upload.single("file"), 
     // Replacement uses the public pdf-lib API (context.assign + PDFRawStream.of)
     // to avoid relying on internal mutable state.
     {
-      const zlibMod = await import("zlib");
-      const utilMod = await import("util");
-      const tryInflate = utilMod.promisify(zlibMod.inflate);
-
       for (let pageIdx = 0; pageIdx < pages.length; pageIdx++) {
         const pdfPage = pages[pageIdx];
         if (!pdfPage) continue;
@@ -2805,14 +2873,18 @@ router.post("/redact-pdf", requireEntitlement("redact"), upload.single("file"), 
           const isFlateDecode = filterStr === "/FlateDecode" || filterStr === "/Fl" || filterStr.includes("FlateDecode");
           if (isFlateDecode) {
             try {
-              bytes = await tryInflate(bytes);
-              // Remove compression entries so the new stream is stored uncompressed
-              dict.delete(PDFName.of("Filter"));
-              dict.delete(PDFName.of("DecodeParms"));
-            } catch {
-              // Decompression failed — leave stream unchanged; verification below will catch it
+              // boundedInflate aborts decompression mid-stream and throws
+              // PdfResourceLimitError if output exceeds the ceiling — this is
+              // the primary defence against zip-bomb style attacks.
+              bytes = await boundedInflate(bytes, MAX_DECOMPRESSED_STREAM_BYTES);
+            } catch (inflateErr) {
+              if (inflateErr instanceof PdfResourceLimitError) throw inflateErr;
+              // Other decompression error — leave stream unchanged; verification below will catch it
               continue;
             }
+            // Remove compression entries so the new stream is stored uncompressed
+            dict.delete(PDFName.of("Filter"));
+            dict.delete(PDFName.of("DecodeParms"));
           } else if (filterStr && filterStr !== "null") {
             // Non-FlateDecode filter (e.g. LZWDecode) — skip sanitization for this stream.
             // Verification step will reject the PDF if this stream contains recoverable values.
@@ -3010,10 +3082,6 @@ router.post("/redact-pdf", requireEntitlement("redact"), upload.single("file"), 
     //                         • PDFDict                (inline state dict)
     //   Annots entries may be PDFRef or inline PDFDict.
     {
-      const zlibMod5c = await import("zlib");
-      const utilMod5c = await import("util");
-      const tryInflate5c = utilMod5c.promisify(zlibMod5c.inflate);
-
       // Try to scrub a single PDFRawStream.
       // Returns "ok" when the stream was clean or successfully sanitized.
       // Returns "unsanitizable" when the stream cannot be decoded — the
@@ -3031,13 +3099,16 @@ router.post("/redact-pdf", requireEntitlement("redact"), upload.single("file"), 
           filterStr === "/FlateDecode" || filterStr === "/Fl" || filterStr.includes("FlateDecode");
         if (isFlateDecode) {
           try {
-            bytes = await tryInflate5c(bytes);
-            dict.delete(PDFName.of("Filter"));
-            dict.delete(PDFName.of("DecodeParms"));
-          } catch {
+            // boundedInflate aborts mid-stream and throws PdfResourceLimitError
+            // when decompressed output exceeds MAX_DECOMPRESSED_STREAM_BYTES.
+            bytes = await boundedInflate(bytes, MAX_DECOMPRESSED_STREAM_BYTES);
+          } catch (inflateErr) {
+            if (inflateErr instanceof PdfResourceLimitError) throw inflateErr;
             // Cannot decompress — caller must remove /AP to prevent data leak
             return "unsanitizable";
           }
+          dict.delete(PDFName.of("Filter"));
+          dict.delete(PDFName.of("DecodeParms"));
         } else if (filterStr && filterStr !== "null") {
           // Unsupported filter (e.g. LZW, JBIG2) — caller must remove /AP
           return "unsanitizable";
@@ -3196,6 +3267,9 @@ router.post("/redact-pdf", requireEntitlement("redact"), upload.single("file"), 
     res.set("Content-Disposition", `attachment; filename="${file.originalname.replace(/\.[^.]+$/, "")}_redacted.pdf"`);
     return res.send(Buffer.from(redactedBytes));
   } catch (err) {
+    if (err instanceof PdfResourceLimitError) {
+      return res.status(400).json({ error: "pdf_resource_limit", message: err.message });
+    }
     const msg = err instanceof Error ? err.message : String(err);
     console.error("[documents/redact-pdf]", msg);
     return res.status(500).json({ message: "PDF redaction failed. Please try again." });
