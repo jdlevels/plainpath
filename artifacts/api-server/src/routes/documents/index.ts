@@ -2463,10 +2463,98 @@ router.post("/extract-text", requireEntitlement("redact"), upload.single("file")
   return res.json({ text: extractedText, filename: file.originalname });
 });
 
+// Helper: scrub matching text from within PDF literal strings ( ) and hex strings < >
+// in a raw (already-decompressed) content stream buffer. Returns a new buffer and
+// a flag indicating whether any replacements were made.
+function sanitizePdfContentStream(streamBytes: Buffer, values: string[]): { bytes: Uint8Array; changed: boolean } {
+  const buf = Buffer.from(streamBytes); // mutable copy
+  let changed = false;
+  let i = 0;
+
+  while (i < buf.length) {
+    // ── Literal string: (text …) ─────────────────────────────────────────────
+    if (buf[i] === 0x28 /* ( */) {
+      i++;
+      let depth = 1;
+      const start = i;
+      // Scan to the matching closing ')' respecting backslash escapes and nesting
+      while (i < buf.length && depth > 0) {
+        if (buf[i] === 0x5C /* \ */) { i += 2; continue; }
+        if (buf[i] === 0x28) depth++;
+        else if (buf[i] === 0x29) depth--;
+        if (depth > 0) i++;
+        else break;
+      }
+      const end = i; // buf[end] === ')'
+      for (const value of values) {
+        if (!value) continue;
+        const vb = Buffer.from(value, "latin1");
+        let p = start;
+        while (p <= end - vb.length) {
+          if (buf.slice(p, p + vb.length).equals(vb)) {
+            buf.fill(0x20, p, p + vb.length); // overwrite with spaces
+            changed = true;
+            p += vb.length;
+          } else {
+            p++;
+          }
+        }
+      }
+      i++;
+      continue;
+    }
+
+    // ── Hex string: <hexdigits> (not << which is a dict) ────────────────────
+    if (buf[i] === 0x3C /* < */ && buf[i + 1] !== 0x3C) {
+      const hexStart = i + 1;
+      let j = hexStart;
+      while (j < buf.length && buf[j] !== 0x3E /* > */) j++;
+      const hexEnd = j; // buf[hexEnd] === '>'
+      // Decode hex pairs, ignoring whitespace
+      const hexStr = buf.slice(hexStart, hexEnd).toString("ascii").replace(/\s/g, "");
+      if (hexStr.length > 0 && hexStr.length % 2 === 0) {
+        const decoded = Buffer.from(hexStr, "hex");
+        let hexChanged = false;
+        for (const value of values) {
+          if (!value) continue;
+          const vb = Buffer.from(value, "latin1");
+          let p = 0;
+          while (p <= decoded.length - vb.length) {
+            if (decoded.slice(p, p + vb.length).equals(vb)) {
+              decoded.fill(0x20, p, p + vb.length);
+              hexChanged = true;
+              p += vb.length;
+            } else {
+              p++;
+            }
+          }
+        }
+        if (hexChanged) {
+          // Re-encode to hex and write back into the buffer
+          const newHex = decoded.toString("hex").toUpperCase();
+          const newHexBuf = Buffer.from(newHex, "ascii");
+          // Only safe to write back if the hex segment hasn't changed in length
+          if (newHexBuf.length === hexEnd - hexStart) {
+            newHexBuf.copy(buf, hexStart);
+            changed = true;
+          }
+        }
+      }
+      i = hexEnd + 1;
+      continue;
+    }
+
+    i++;
+  }
+
+  return { bytes: new Uint8Array(buf), changed };
+}
+
 // POST /api/documents/redact-pdf
 // Accepts a PDF + list of string values to redact.
 // Uses pdfjs-dist to locate each value's bounding box on each page.
-// Draws solid black filled rectangles over every matching text item using pdf-lib.
+// Draws solid black rectangles over matching text items AND removes the underlying
+// text content from the page content streams so it cannot be recovered by extraction tools.
 // Returns the modified PDF binary. The original uploaded file is never mutated.
 router.post("/redact-pdf", upload.single("file"), async (req, res) => {
   const { userId } = getAuth(req);
@@ -2552,19 +2640,31 @@ router.post("/redact-pdf", upload.single("file"), async (req, res) => {
       },
     });
 
-    // ── Step 2: Build searchable flat text + character→item offset map ───────
-    let fullText = "";
-    const itemOffsets: Array<{ start: number; end: number; idx: number }> = [];
+    // ── Step 2: Build two searchable flat-text indexes with item offset maps ──
+    // "Spaced": items separated by a synthetic space — catches values stored in a
+    //   single item or that rely on the separator to form a match (e.g. "abc def"
+    //   where "abc" and "def" are adjacent items).
+    // "Dense": items concatenated with no separator — catches values that span item
+    //   boundaries and where one item already carries the whitespace (e.g. "John "
+    //   + "Smith" → "John Smith" only visible without an extra inserted space).
+    // Unioning both result sets with a dedup key gives the most complete coverage.
+    let fullTextSpaced = "";
+    const spacedOffsets: Array<{ start: number; end: number; idx: number }> = [];
+    let fullTextDense = "";
+    const denseOffsets: Array<{ start: number; end: number; idx: number }> = [];
 
     for (let i = 0; i < allItems.length; i++) {
-      const start = fullText.length;
-      fullText += allItems[i].str;
-      itemOffsets.push({ start, end: fullText.length, idx: i });
-      // Add separator (space or newline) between items
-      fullText += " ";
+      const sStart = fullTextSpaced.length;
+      fullTextSpaced += allItems[i].str;
+      spacedOffsets.push({ start: sStart, end: fullTextSpaced.length, idx: i });
+      fullTextSpaced += " ";
+
+      const dStart = fullTextDense.length;
+      fullTextDense += allItems[i].str;
+      denseOffsets.push({ start: dStart, end: fullTextDense.length, idx: i });
     }
 
-    // ── Step 3: Find each value in the flat text, collect bounding boxes ─────
+    // ── Step 3: Find each value in both flat texts, collect bounding boxes ───
     interface RedactBox {
       page: number;
       x: number;
@@ -2576,15 +2676,18 @@ router.post("/redact-pdf", upload.single("file"), async (req, res) => {
     const boxes: RedactBox[] = [];
     const seen = new Set<string>(); // deduplicate identical boxes
 
-    for (const value of redactValues) {
+    function collectBoxesFromSearch(
+      flatText: string,
+      offsets: Array<{ start: number; end: number; idx: number }>,
+      value: string,
+    ) {
       let searchPos = 0;
       while (true) {
-        const found = fullText.indexOf(value, searchPos);
+        const found = flatText.indexOf(value, searchPos);
         if (found === -1) break;
         const foundEnd = found + value.length;
 
-        for (const range of itemOffsets) {
-          // Include any text item that overlaps with [found, foundEnd]
+        for (const range of offsets) {
           if (range.start < foundEnd && range.end > found) {
             const item = allItems[range.idx];
             const key = `${item.page}:${item.x.toFixed(1)}:${item.y.toFixed(1)}:${item.width.toFixed(1)}`;
@@ -2605,8 +2708,13 @@ router.post("/redact-pdf", upload.single("file"), async (req, res) => {
       }
     }
 
+    for (const value of redactValues) {
+      collectBoxesFromSearch(fullTextSpaced, spacedOffsets, value);
+      collectBoxesFromSearch(fullTextDense, denseOffsets, value);
+    }
+
     // ── Step 4: Load PDF with pdf-lib, draw solid black rectangles ───────────
-    const { PDFDocument, rgb } = await import("pdf-lib");
+    const { PDFDocument, rgb, PDFName, PDFRawStream, PDFArray, PDFRef } = await import("pdf-lib");
     const pdfLibDoc = await PDFDocument.load(pdfBuffer);
     const pages = pdfLibDoc.getPages();
 
@@ -2626,8 +2734,106 @@ router.post("/redact-pdf", upload.single("file"), async (req, res) => {
       });
     }
 
-    // Save with no compression to prevent any text-layer recovery
+    // ── Step 5: Remove text content from page content streams (ALL pages) ────
+    // Drawing black rectangles only affects the visual rendering layer.
+    // We scrub the underlying text operators on ALL pages so that even if a
+    // value was missed by the box-matching step above (e.g. due to fragmented
+    // text runs), the content stream no longer contains the raw value.
+    // Replacement uses the public pdf-lib API (context.assign + PDFRawStream.of)
+    // to avoid relying on internal mutable state.
+    {
+      const zlibMod = await import("zlib");
+      const utilMod = await import("util");
+      const tryInflate = utilMod.promisify(zlibMod.inflate);
+
+      for (let pageIdx = 0; pageIdx < pages.length; pageIdx++) {
+        const pdfPage = pages[pageIdx];
+        if (!pdfPage) continue;
+
+        // Content streams may be a single ref or an array of refs
+        const contentsEntry = pdfPage.node.get(PDFName.of("Contents"));
+        const streamsToProcess: { ref: PDFRef; stream: PDFRawStream }[] = [];
+
+        if (contentsEntry instanceof PDFRef) {
+          const obj = pdfLibDoc.context.lookup(contentsEntry);
+          if (obj instanceof PDFRawStream) {
+            streamsToProcess.push({ ref: contentsEntry, stream: obj });
+          }
+        } else if (contentsEntry instanceof PDFArray) {
+          for (let si = 0; si < contentsEntry.size(); si++) {
+            const entry = contentsEntry.get(si);
+            if (entry instanceof PDFRef) {
+              const obj = pdfLibDoc.context.lookup(entry);
+              if (obj instanceof PDFRawStream) {
+                streamsToProcess.push({ ref: entry, stream: obj });
+              }
+            }
+          }
+        }
+
+        for (const { ref, stream } of streamsToProcess) {
+          const dict = stream.dict;
+          const filterEntry = dict.get(PDFName.of("Filter"));
+          const filterStr = filterEntry ? filterEntry.toString() : "";
+
+          let bytes: Buffer = Buffer.from(stream.contents);
+
+          const isFlateDecode = filterStr === "/FlateDecode" || filterStr === "/Fl" || filterStr.includes("FlateDecode");
+          if (isFlateDecode) {
+            try {
+              bytes = await tryInflate(bytes);
+              // Remove compression entries so the new stream is stored uncompressed
+              dict.delete(PDFName.of("Filter"));
+              dict.delete(PDFName.of("DecodeParms"));
+            } catch {
+              // Decompression failed — leave stream unchanged; verification below will catch it
+              continue;
+            }
+          } else if (filterStr && filterStr !== "null") {
+            // Non-FlateDecode filter (e.g. LZWDecode) — skip sanitization for this stream.
+            // Verification step will reject the PDF if this stream contains recoverable values.
+            continue;
+          }
+
+          const { bytes: sanitized, changed } = sanitizePdfContentStream(bytes, redactValues);
+          if (!changed) continue;
+
+          // Replace the stream using the public API — avoids mutating readonly internals
+          dict.set(PDFName.of("Length"), pdfLibDoc.context.obj(sanitized.length));
+          pdfLibDoc.context.assign(ref, PDFRawStream.of(dict, sanitized));
+        }
+      }
+    }
+
     const redactedBytes = await pdfLibDoc.save({ useObjectStreams: false });
+
+    // ── Step 6: Verify redaction — fail closed ─────────────────────────────
+    // Re-extract text from the output PDF (reusing pdfParse already imported above)
+    // and confirm none of the target values remain. Reject with a 422 rather than
+    // silently delivering a PDF that only appears redacted. No sensitive values
+    // are written to logs — only the count is recorded.
+    {
+      let verifyText = "";
+      try {
+        // pdfParse is already in scope from Step 1 — no re-import needed
+        const verifyResult = await pdfParse(Buffer.from(redactedBytes));
+        verifyText = verifyResult?.text ?? "";
+      } catch {
+        // Text extraction of the output PDF failed entirely — return a generic error
+        return res.status(500).json({ message: "PDF redaction failed — could not verify the output. Please try again." });
+      }
+
+      const recoverableCount = redactValues.filter(v => verifyText.includes(v)).length;
+      if (recoverableCount > 0) {
+        console.error(`[redact-pdf] Verification failed — ${recoverableCount} of ${redactValues.length} value(s) still detectable in text layer`);
+        return res.status(422).json({
+          error: "redaction_unverifiable",
+          message:
+            "This PDF's text encoding could not be fully sanitized. The selected values may still be recoverable by text-extraction tools. " +
+            "For maximum security please use a dedicated PDF redaction tool, or export the document to a rasterized image-only PDF before sharing.",
+        });
+      }
+    }
 
     res.set("Content-Type", "application/pdf");
     res.set("Content-Disposition", `attachment; filename="${file.originalname.replace(/\.[^.]+$/, "")}_redacted.pdf"`);

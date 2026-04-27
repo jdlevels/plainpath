@@ -231,7 +231,7 @@ function AppliedView({
           </p>
           {isPdfUpload && (
             <span className="text-[9px] text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-1.5 py-0.5 rounded-full">
-              black boxes = permanently hidden
+              text removed from PDF
             </span>
           )}
         </div>
@@ -325,7 +325,7 @@ function AppliedView({
             </div>
             <div className="flex items-start gap-2 text-xs text-violet-700 dark:text-violet-400">
               <Check className="w-3.5 h-3.5 shrink-0 mt-0.5 text-emerald-500" />
-              <span><span className="font-semibold">Redacted PDF copy ready</span> — solid black boxes permanently cover all selected items</span>
+              <span><span className="font-semibold">Redacted PDF copy ready</span> — selected text removed from PDF and covered with black boxes</span>
             </div>
           </div>
         )}
@@ -376,7 +376,7 @@ function AppliedView({
                 {pdfDownloading ? "Building redacted PDF…" : "Download Redacted PDF"}
               </Button>
               {pdfError && <p className="text-xs text-destructive text-center">{pdfError}</p>}
-              <p className="text-[10px] text-center text-muted-foreground/50">Black boxes permanently cover selected content · original file unchanged</p>
+              <p className="text-[10px] text-center text-muted-foreground/50">Selected text removed from PDF · original file unchanged</p>
             </div>
           )}
 

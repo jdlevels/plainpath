@@ -164,47 +164,66 @@ export function PdfRedactViewer({
   const boxes = useMemo((): Box[] => {
     if (!items.length) return []
 
-    // Build searchable flat-text index from all text items
-    let flat = ""
-    const offsets: { s: number; e: number; i: number }[] = []
+    // Build two flat-text indexes to maximise match coverage:
+    // "Spaced": items separated by a synthetic space (handles adjacent items)
+    // "Dense": no separator (handles values that span items which already carry whitespace)
+    let flatSpaced = ""
+    const spacedOffsets: { s: number; e: number; i: number }[] = []
+    let flatDense = ""
+    const denseOffsets: { s: number; e: number; i: number }[] = []
+
     for (let i = 0; i < items.length; i++) {
-      const s = flat.length
-      flat += items[i].str
-      offsets.push({ s, e: flat.length, i })
-      flat += " "
+      const ss = flatSpaced.length
+      flatSpaced += items[i].str
+      spacedOffsets.push({ s: ss, e: flatSpaced.length, i })
+      flatSpaced += " "
+
+      const ds = flatDense.length
+      flatDense += items[i].str
+      denseOffsets.push({ s: ds, e: flatDense.length, i })
     }
 
     const result: Box[] = []
     const seen = new Set<string>()
 
+    function scanFlat(
+      flat: string,
+      offsets: { s: number; e: number; i: number }[],
+      v: string,
+      kind: "black" | "amber",
+    ) {
+      let pos = 0
+      while (true) {
+        const found = flat.indexOf(v, pos)
+        if (found === -1) break
+        const fe = found + v.length
+        for (const o of offsets) {
+          if (o.s < fe && o.e > found) {
+            const it = items[o.i]
+            const k = `${it.page}:${Math.round(it.x)}:${Math.round(it.y)}`
+            if (!seen.has(k)) {
+              seen.add(k)
+              result.push({
+                page: it.page,
+                x: it.x - PAD,
+                y: it.y - PAD,
+                w: it.w + PAD * 2,
+                h: it.h + PAD * 2,
+                kind,
+              })
+            }
+          }
+        }
+        pos = found + 1
+      }
+    }
+
     function addValues(vals: string[], kind: "black" | "amber") {
       for (const raw of vals) {
         const v = raw.trim()
         if (v.length < 2) continue
-        let pos = 0
-        while (true) {
-          const found = flat.indexOf(v, pos)
-          if (found === -1) break
-          const fe = found + v.length
-          for (const o of offsets) {
-            if (o.s < fe && o.e > found) {
-              const it = items[o.i]
-              const k = `${it.page}:${Math.round(it.x)}:${Math.round(it.y)}`
-              if (!seen.has(k)) {
-                seen.add(k)
-                result.push({
-                  page: it.page,
-                  x: it.x - PAD,
-                  y: it.y - PAD,
-                  w: it.w + PAD * 2,
-                  h: it.h + PAD * 2,
-                  kind,
-                })
-              }
-            }
-          }
-          pos = found + 1
-        }
+        scanFlat(flatSpaced, spacedOffsets, v, kind)
+        scanFlat(flatDense, denseOffsets, v, kind)
       }
     }
 
@@ -234,7 +253,7 @@ export function PdfRedactViewer({
         </div>
         <div>
           <p className="text-sm font-medium text-foreground/70">PDF preview unavailable</p>
-          <p className="text-xs text-muted-foreground/60 mt-0.5">The document will still be correctly redacted on download.</p>
+          <p className="text-xs text-muted-foreground/60 mt-0.5">The document will still have selected text removed when you download it.</p>
         </div>
       </div>
     )
