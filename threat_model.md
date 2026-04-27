@@ -58,3 +58,10 @@ OpenAI-backed analysis, OCR, PDF parsing, image processing, email delivery, and 
 ### Elevation of Privilege
 
 This codebase has multiple privilege layers: unauthenticated users, authenticated users, intended allowlisted users, admins, paid subscribers, and team members. The core guarantee is that every protected operation enforces server-side authorization against the correct principal and scope. In particular, paid AI routes, team invites, billing portal access, compare-version sessions, saved documents, reminder delivery, and e-signature records must not be accessible or modifiable through public endpoints, guessed identifiers, forwarded invite links, user-controlled email parameters, or client-only plan checks. Document-tool upsells such as negotiation assistance must be enforced on the server, not only hidden in the UI.
+
+## Current Scan Notes
+
+- Confirmed on 2026-04-27: `allowlistEnforcement()` remains a real production boundary only when `ALLOWED_EMAILS` is explicitly populated. If that env var is empty, Clerk-authenticated routes must be treated as reachable by self-registered users.
+- Confirmed on 2026-04-27: `/api/documents/redact-pdf` only sanitizes page content streams and verifies via extracted page text. Future scans should continue checking hidden PDF objects such as form fields, annotations, metadata, and embedded objects for residual sensitive data.
+- Confirmed on 2026-04-27: `/api/documents/import-url` is a high-cost server-side fetch/parsing path and should continue to be reviewed for strict rate limiting, request timeouts, and bounded memory use in addition to SSRF policy.
+- Confirmed on 2026-04-27: public email-oriented routes deserve separate abuse review even when they are intentionally public. `POST /waitlist/join` in particular should be treated as an outbound-email and membership-oracle surface, not just a harmless signup form.
