@@ -6,6 +6,7 @@ import type {
   CVManagerNotes,
   CVDiffResult,
 } from "./compareVersionsTypes";
+import { getApiBaseUrl } from "./api";
 
 function authHeaders(token: string | null): HeadersInit {
   return token ? { Authorization: `Bearer ${token}` } : {};
@@ -36,7 +37,7 @@ export const compareVersionsApi = {
     if (managerNotes) {
       form.append("managerNotes", JSON.stringify(managerNotes));
     }
-    const res = await fetch("/api/compare-versions/sessions", {
+    const res = await fetch(`${getApiBaseUrl()}/api/compare-versions/sessions`, {
       method: "POST",
       headers: authHeaders(token),
       body: form,
@@ -49,21 +50,21 @@ export const compareVersionsApi = {
     opts?: { archived?: boolean },
   ): Promise<CVSessionListItem[]> {
     const params = opts?.archived != null ? `?archived=${opts.archived}` : "";
-    const res = await fetch(`/api/compare-versions/sessions${params}`, {
+    const res = await fetch(`${getApiBaseUrl()}/api/compare-versions/sessions${params}`, {
       headers: authHeaders(token),
     });
     return handleResponse<CVSessionListItem[]>(res);
   },
 
   async getSession(id: string, token: string | null): Promise<CVSessionDetail> {
-    const res = await fetch(`/api/compare-versions/sessions/${id}`, {
+    const res = await fetch(`${getApiBaseUrl()}/api/compare-versions/sessions/${id}`, {
       headers: authHeaders(token),
     });
     return handleResponse<CVSessionDetail>(res);
   },
 
   async getOriginalPdf(id: string, token: string | null): Promise<ArrayBuffer> {
-    const res = await fetch(`/api/compare-versions/sessions/${id}/original`, {
+    const res = await fetch(`${getApiBaseUrl()}/api/compare-versions/sessions/${id}/original`, {
       headers: authHeaders(token),
     });
     if (!res.ok) {
@@ -76,7 +77,7 @@ export const compareVersionsApi = {
   },
 
   async getRevisedPdf(id: string, token: string | null): Promise<ArrayBuffer> {
-    const res = await fetch(`/api/compare-versions/sessions/${id}/revised`, {
+    const res = await fetch(`${getApiBaseUrl()}/api/compare-versions/sessions/${id}/revised`, {
       headers: authHeaders(token),
     });
     if (!res.ok) {
@@ -93,7 +94,7 @@ export const compareVersionsApi = {
     managerNotes: CVManagerNotes,
     token: string | null,
   ): Promise<{ id: string; managerNotes: CVManagerNotes; updatedAt: string }> {
-    const res = await fetch(`/api/compare-versions/sessions/${id}/notes`, {
+    const res = await fetch(`${getApiBaseUrl()}/api/compare-versions/sessions/${id}/notes`, {
       method: "PATCH",
       headers: { ...authHeaders(token), "Content-Type": "application/json" },
       body: JSON.stringify({ managerNotes }),
@@ -102,7 +103,7 @@ export const compareVersionsApi = {
   },
 
   async rescanSession(id: string, token: string | null): Promise<{ id: string; status: string }> {
-    const res = await fetch(`/api/compare-versions/sessions/${id}/scan`, {
+    const res = await fetch(`${getApiBaseUrl()}/api/compare-versions/sessions/${id}/scan`, {
       method: "POST",
       headers: authHeaders(token),
     });
@@ -114,7 +115,7 @@ export const compareVersionsApi = {
     diffResult: CVDiffResult,
     token: string | null,
   ): Promise<{ id: string; updatedAt: string }> {
-    const res = await fetch(`/api/compare-versions/sessions/${id}/review`, {
+    const res = await fetch(`${getApiBaseUrl()}/api/compare-versions/sessions/${id}/review`, {
       method: "PATCH",
       headers: { ...authHeaders(token), "Content-Type": "application/json" },
       body: JSON.stringify({ diffResult }),
@@ -127,7 +128,7 @@ export const compareVersionsApi = {
     forceAll: boolean,
     token: string | null,
   ): Promise<{ id: string; aiStatus: string }> {
-    const res = await fetch(`/api/compare-versions/sessions/${id}/enrich`, {
+    const res = await fetch(`${getApiBaseUrl()}/api/compare-versions/sessions/${id}/enrich`, {
       method: "POST",
       headers: { ...authHeaders(token), "Content-Type": "application/json" },
       body: JSON.stringify({ forceAll }),
@@ -142,7 +143,7 @@ export const compareVersionsApi = {
     title: string,
     token: string | null,
   ): Promise<{ id: string; title: string; updatedAt: string }> {
-    const res = await fetch(`/api/compare-versions/sessions/${id}/rename`, {
+    const res = await fetch(`${getApiBaseUrl()}/api/compare-versions/sessions/${id}/rename`, {
       method: "PATCH",
       headers: { ...authHeaders(token), "Content-Type": "application/json" },
       body: JSON.stringify({ title }),
@@ -155,7 +156,7 @@ export const compareVersionsApi = {
     archived: boolean,
     token: string | null,
   ): Promise<{ id: string; archivedAt: string | null; updatedAt: string }> {
-    const res = await fetch(`/api/compare-versions/sessions/${id}/archive`, {
+    const res = await fetch(`${getApiBaseUrl()}/api/compare-versions/sessions/${id}/archive`, {
       method: "PATCH",
       headers: { ...authHeaders(token), "Content-Type": "application/json" },
       body: JSON.stringify({ archived }),
@@ -164,7 +165,7 @@ export const compareVersionsApi = {
   },
 
   async deleteSession(id: string, token: string | null): Promise<{ id: string; deleted: boolean }> {
-    const res = await fetch(`/api/compare-versions/sessions/${id}`, {
+    const res = await fetch(`${getApiBaseUrl()}/api/compare-versions/sessions/${id}`, {
       method: "DELETE",
       headers: authHeaders(token),
     });
@@ -174,6 +175,6 @@ export const compareVersionsApi = {
   // ── Audit report export ──────────────────────────────────────────────────────
 
   exportReportUrl(id: string): string {
-    return `/api/compare-versions/sessions/${id}/export`;
+    return `${getApiBaseUrl()}/api/compare-versions/sessions/${id}/export`;
   },
 };

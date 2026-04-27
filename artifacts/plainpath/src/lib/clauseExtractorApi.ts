@@ -2,6 +2,7 @@ import type {
   ClauseExtractorSessionMeta,
   ClauseExtractorSessionDetail,
 } from "./clauseExtractorTypes"
+import { getApiBaseUrl } from "./api"
 
 function authHeaders(token: string | null): HeadersInit {
   return token ? { Authorization: `Bearer ${token}` } : {}
@@ -24,7 +25,7 @@ export const clauseExtractorApi = {
   ): Promise<ClauseExtractorSessionDetail> {
     const form = new FormData()
     form.append("file", file, file.name)
-    const res = await fetch("/api/clause-extractor/sessions", {
+    const res = await fetch(`${getApiBaseUrl()}/api/clause-extractor/sessions`, {
       method: "POST",
       headers: authHeaders(token),
       body: form,
@@ -35,7 +36,7 @@ export const clauseExtractorApi = {
   async listSessions(
     token: string | null,
   ): Promise<ClauseExtractorSessionMeta[]> {
-    const res = await fetch("/api/clause-extractor/sessions", {
+    const res = await fetch(`${getApiBaseUrl()}/api/clause-extractor/sessions`, {
       headers: authHeaders(token),
     })
     return handleResponse<ClauseExtractorSessionMeta[]>(res)
@@ -45,7 +46,7 @@ export const clauseExtractorApi = {
     id: string,
     token: string | null,
   ): Promise<ClauseExtractorSessionDetail> {
-    const res = await fetch(`/api/clause-extractor/sessions/${id}`, {
+    const res = await fetch(`${getApiBaseUrl()}/api/clause-extractor/sessions/${id}`, {
       headers: authHeaders(token),
     })
     return handleResponse<ClauseExtractorSessionDetail>(res)
@@ -55,7 +56,7 @@ export const clauseExtractorApi = {
     id: string,
     token: string | null,
   ): Promise<void> {
-    const res = await fetch(`/api/clause-extractor/sessions/${id}`, {
+    const res = await fetch(`${getApiBaseUrl()}/api/clause-extractor/sessions/${id}`, {
       method: "DELETE",
       headers: authHeaders(token),
     })

@@ -12,7 +12,7 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 import {
   FileText, ShieldAlert, PenLine, Scale, EyeOff,
   AlertTriangle, CheckCircle2, Lock, Sparkles, Download,
-  MessageCircle, GitCompare, ListChecks, Send, ArrowRightLeft,
+  MessageCircle, GitCompare, ListChecks, ArrowRightLeft,
   CalendarClock, Users, Layers,
 } from "lucide-react"
 
@@ -578,50 +578,41 @@ function RedactOutput({ reduced }: { reduced: boolean }) {
   )
 }
 
-function SignatureOutput({ reduced }: { reduced: boolean }) {
+function AskOutput({ reduced }: { reduced: boolean }) {
   return (
     <div className="space-y-1.5">
-      <p className="text-[8px] font-semibold tracking-widest uppercase mb-2" style={{ color: "#475569" }}>Signature Request</p>
+      <p className="text-[8px] font-semibold tracking-widest uppercase mb-2" style={{ color: "#475569" }}>Answer</p>
       <motion.div
-        initial={reduced ? false : { opacity: 0, scale: 0.96 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: reduced ? 0 : 0.85, duration: 0.35 }}
+        initial={reduced ? false : { opacity: 0, y: 4 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: reduced ? 0 : 0.55, duration: 0.35 }}
         className="rounded-lg border p-2 mb-1.5"
-        style={{ backgroundColor: "rgba(99,102,241,0.10)", borderColor: "rgba(99,102,241,0.28)" }}
+        style={{ backgroundColor: "rgba(99,102,241,0.08)", borderColor: "rgba(99,102,241,0.24)" }}
       >
-        <div className="flex items-center gap-1.5 mb-1">
-          <Send style={{ width: 9, height: 9, color: "#a5b4fc" }} />
-          <span className="text-[8px] font-bold uppercase tracking-wide" style={{ color: "#a5b4fc" }}>Request Sent</span>
-        </div>
-        <p className="text-[8px] leading-snug" style={{ color: "#94a3b8" }}>Secure signing link delivered to sarah@example.com</p>
+        <p className="text-[8px] font-semibold mb-1" style={{ color: "#a5b4fc" }}>Can I sublet the apartment?</p>
+        <p className="text-[8px] leading-snug" style={{ color: "#94a3b8" }}>No. Section 7.2 prohibits subletting without written landlord consent. Violation may result in lease termination.</p>
       </motion.div>
       {[
-        { label: "Sarah Chen", role: "Recipient", status: "Awaiting", active: true },
-        { label: "You",        role: "Sender",    status: "Signed",   active: false },
-      ].map(({ label, role, status, active }, i) => (
-        <motion.div key={label}
+        { q: "What's the notice period to move out?", a: "60 days — Section 9.1" },
+        { q: "Are pets allowed?", a: "Small pets only, with $400 deposit" },
+      ].map(({ q, a }, i) => (
+        <motion.div key={q}
           initial={reduced ? false : { opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: reduced ? 0 : 1.2 + i * 0.2, duration: 0.32 }}
-          className="flex items-center justify-between rounded-lg border p-1.5"
-          style={{ backgroundColor: "rgba(99,102,241,0.06)", borderColor: "rgba(99,102,241,0.2)" }}
+          transition={{ delay: reduced ? 0 : 1.0 + i * 0.22, duration: 0.32 }}
+          className="rounded-lg border p-1.5"
+          style={{ backgroundColor: "rgba(99,102,241,0.05)", borderColor: "rgba(99,102,241,0.18)" }}
         >
-          <div>
-            <p className="text-[8px] font-semibold" style={{ color: "#e2e8f0" }}>{label}</p>
-            <p className="text-[7px]" style={{ color: "#475569" }}>{role}</p>
-          </div>
-          <span className="text-[7px] font-bold px-1.5 py-0.5 rounded-full"
-            style={{ backgroundColor: active ? "rgba(99,102,241,0.2)" : "rgba(16,185,129,0.2)", color: active ? "#a5b4fc" : "#34d399" }}>
-            {status}
-          </span>
+          <p className="text-[8px] font-semibold mb-0.5" style={{ color: "#c7d2fe" }}>{q}</p>
+          <p className="text-[7.5px]" style={{ color: "#64748b" }}>{a}</p>
         </motion.div>
       ))}
       <motion.div
         initial={reduced ? false : { opacity: 0 }} animate={{ opacity: 1 }}
-        transition={{ delay: reduced ? 0 : 1.75, duration: 0.35 }}
+        transition={{ delay: reduced ? 0 : 1.55, duration: 0.35 }}
         className="flex items-center gap-1.5 pt-0.5"
       >
-        <CheckCircle2 style={{ width: 9, height: 9, color: "#6366f1" }} />
-        <span className="text-[8px] font-medium" style={{ color: "#818cf8" }}>Full audit trail recorded</span>
+        <MessageCircle style={{ width: 9, height: 9, color: "#6366f1" }} />
+        <span className="text-[8px] font-medium" style={{ color: "#818cf8" }}>All answers sourced from document text</span>
       </motion.div>
     </div>
   )
@@ -700,7 +691,7 @@ function ToolOutput({ toolId, reduced }: { toolId: ToolId; reduced: boolean }) {
   if (toolId === 2) return <BuildOutput reduced={reduced} />
   if (toolId === 3) return <ReviewOutput reduced={reduced} />
   if (toolId === 4) return <RedactOutput reduced={reduced} />
-  if (toolId === 5) return <SignatureOutput reduced={reduced} />
+  if (toolId === 5) return <AskOutput reduced={reduced} />
   if (toolId === 6) return <CompareOutput reduced={reduced} />
   return <ClauseExtractorOutput reduced={reduced} />
 }
@@ -712,7 +703,7 @@ const PROCESSING_LABELS: Record<number, string> = {
   2: "Building clause structure…",
   3: "Flagging risk clauses…",
   4: "Detecting sensitive data…",
-  5: "Sending signature request…",
+  5: "Searching document text…",
   6: "Mapping document changes…",
   7: "Extracting clauses and obligations…",
 }

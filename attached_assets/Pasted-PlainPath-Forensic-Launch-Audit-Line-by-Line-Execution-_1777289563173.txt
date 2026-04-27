@@ -1,0 +1,821 @@
+PlainPath Forensic Launch Audit — Line-by-Line, Execution-by-Execution, API, Clerk, Nulls, Gaps/Fills, Errors
+
+Goal:
+Run a forensic launch audit across the entire PlainPath system before app-store screenshot capture and submission.
+
+This is deeper than normal QA.
+Audit every page, component, hook, API route, auth flow, null path, error path, and app-store readiness item.
+
+Current active tools:
+1. Analyze a Document
+2. Document Trust Check
+3. Build a Contract
+4. Contract Review
+5. Redact Sensitive Info
+6. Ask This Document
+7. Clause Extractor
+8. Compare Versions
+9. Document Builder
+
+Known current issue:
+- /documents shows “Couldn’t load your documents.”
+- Replit Security Center flags postcss v8.5.8 as Medium unresolved.
+- E-signature must remain fully removed.
+- Static printable signature/date lines inside Document Builder are allowed only as layout fields.
+- Native app must not show Stripe checkout or tappable external purchase links.
+- Web Stripe checkout must remain active.
+- Document Builder is enabled in production.
+
+Audit mode:
+Read-only first.
+Only fix critical launch blockers.
+Do not add features.
+Do not redesign.
+Do not change pricing.
+Do not change Stripe behavior except if a broken route is found.
+Do not change auth architecture.
+Do not change database schema.
+Do not create migrations unless explicitly approved.
+Do not reintroduce e-signature.
+Do not add Dropbox Sign.
+Do not add new tools.
+Do not remove static printable signature/date line fields.
+
+====================================================
+PHASE 1 — COMPLETE FILE INVENTORY
+====================================================
+
+Create a file inventory before editing anything.
+
+Inspect these areas:
+
+App frontend:
+- artifacts/plainpath/src/App.tsx
+- artifacts/plainpath/src/pages/*
+- artifacts/plainpath/src/components/*
+- artifacts/plainpath/src/hooks/*
+- artifacts/plainpath/src/lib/*
+- artifacts/plainpath/src/context/*
+- artifacts/plainpath/src/data/*
+- artifacts/plainpath/src/components/layout/*
+- artifacts/plainpath/src/components/builder/*
+- artifacts/plainpath/src/pages/Builder/*
+- artifacts/plainpath/src/pages/guides/*
+
+API server:
+- artifacts/api-server/src/app.ts
+- artifacts/api-server/src/routes/*
+- artifacts/api-server/src/lib/*
+- artifacts/api-server/src/middleware/*
+- artifacts/api-server/src/db/*
+- artifacts/api-server/src/routes/documents/*
+- artifacts/api-server/src/routes/analysis/*
+- artifacts/api-server/src/routes/contracts/*
+- artifacts/api-server/src/routes/builder/*
+- artifacts/api-server/src/routes/entitlements/*
+- artifacts/api-server/src/routes/billing/*
+- artifacts/api-server/src/routes/stripe/*
+- artifacts/api-server/src/routes/redact/*
+- artifacts/api-server/src/routes/compare/*
+- any remaining route directories
+
+Marketing:
+- artifacts/plainpath-marketing/src/App.tsx
+- artifacts/plainpath-marketing/src/pages/*
+- artifacts/plainpath-marketing/src/components/*
+- artifacts/plainpath-marketing/src/components/layout/*
+
+Native-related:
+- capacitor config
+- native billing guard
+- isNative() usage
+- NativePricingMessage usage
+- all upgrade/pricing/subscribe/billing surfaces
+
+Return:
+- total files inspected
+- files skipped, if any
+- reason skipped
+
+====================================================
+PHASE 2 — ROUTE REGISTRATION AND EXECUTION AUDIT
+====================================================
+
+Build a route table from actual code, not memory.
+
+Verify all registered app routes:
+- /
+- /app
+- /dashboard if applicable
+- /analyze
+- /import
+- /import?mode=trust-check
+- /trust-check
+- /build-contract
+- /contract-review
+- /redact
+- /ask-document
+- /clause-extractor
+- /compare-versions
+- /builder
+- /documents
+- /my-analyses
+- /billing
+- /subscribe
+- /subscribe/success
+- /subscribe/cancel
+- /privacy
+- /terms
+- /support
+- /sign-in
+- /sign-up
+- unknown route /this-should-404
+
+Verify removed routes do NOT resolve:
+- /signature
+- /prepare-and-place
+- /demo/signature
+- /api/signatures
+- /api/contracts/send-for-signature
+
+For each route:
+- route registered?
+- protected or public?
+- expected auth behavior?
+- loads with valid admin account?
+- loads without auth?
+- blank screen?
+- runtime error?
+- console error?
+- API request triggered?
+- API response status?
+- friendly fallback?
+
+Return table:
+Route | Component | Protected? | Auth result | Runtime result | API calls | Status
+
+====================================================
+PHASE 3 — CLERK AUTH FORENSIC AUDIT
+====================================================
+
+Inspect every auth usage.
+
+Check:
+- useAuth()
+- useUser()
+- getToken()
+- requireAuth
+- Clerk middleware
+- Admin bypass
+- ADMIN_EMAILS
+- session-loaded checks
+- user-loaded checks
+- API calls before auth is ready
+- missing Bearer token
+- stale token
+- cross-origin API requests
+- 401 handling
+- 403 handling
+- sign-out redirect
+- incognito fresh login
+- admin test account access
+
+For every frontend API call:
+- identify file and line
+- confirm it waits for Clerk loaded state where needed
+- confirm it calls getToken()
+- confirm it sends Authorization: Bearer token
+- confirm it handles missing token
+- confirm it handles 401 cleanly
+- confirm it does not crash on undefined user
+
+Important:
+Clerk cross-origin protected API calls must include the session token as a Bearer token in the Authorization header. Verify every protected request follows that pattern.
+
+Return:
+- every API client callsite
+- auth pattern used
+- pass/fail
+- fix if broken
+
+====================================================
+PHASE 4 — API ROUTE EXECUTION AUDIT
+====================================================
+
+Inventory every API endpoint.
+
+For each API route, document:
+- method
+- path
+- file
+- auth required?
+- admin required?
+- plan required?
+- request body shape
+- query params
+- path params
+- database calls
+- external service calls
+- expected success status
+- expected error statuses
+- response shape
+- empty-state response
+- null handling
+- malformed input handling
+- unauthorized handling
+- ownership/authorization check
+
+Test each route with:
+1. no token
+2. invalid token if possible
+3. valid admin token
+4. malformed body
+5. missing required fields
+6. empty data
+7. legacy/unknown document/tool type
+8. oversized payload where applicable
+9. normal successful request
+
+Special API security check:
+For every endpoint that accepts a document ID, session ID, comparison ID, builder ID, analysis ID, user ID, file ID, or object ID:
+- verify the API checks ownership or admin access
+- verify user A cannot access user B’s object
+- verify object-level authorization exists
+
+OWASP flags broken object-level authorization as a major API risk because APIs expose object identifiers and must check authorization for every function that accesses user-provided IDs. Use that as the standard for this audit. :contentReference[oaicite:1]{index=1}
+
+Return:
+Endpoint | Auth | Input validation | Ownership check | Null handling | Status
+
+====================================================
+PHASE 5 — MY DOCUMENTS BUG INVESTIGATION
+====================================================
+
+This is a current visible issue and must be fixed.
+
+Issue:
+On /documents, UI shows:
+“Couldn’t load your documents.”
+
+Investigate:
+- Documents.tsx
+- document API client/hook
+- documents route in API
+- database query
+- auth token
+- response.ok handling
+- JSON parse handling
+- DOC_TYPE_CONFIG
+- TOOL_CONFIG
+- removed signature category references
+- unknown/legacy document type handling
+- empty result handling
+
+Required behavior:
+- If documents exist: display them.
+- If no documents exist: show clean empty state, not error.
+- If API returns 401: show session/sign-in message.
+- If API returns 500: show retryable error.
+- If document has unknown legacy type: render generic “Document.”
+- If old type is “signature”: do not display Digital Signature tool; render generic “Document” or hide safely.
+- Retry button re-runs request.
+- No e-signature feature returns.
+
+Return:
+Root cause
+Files changed
+Before status
+After status
+Verification result
+
+====================================================
+PHASE 6 — NULL / UNDEFINED / EMPTY-DATA AUDIT
+====================================================
+
+Search the full codebase for unsafe patterns.
+
+Inspect all instances of:
+- .map(
+- .filter(
+- .reduce(
+- .length
+- JSON.parse
+- response.json()
+- fetch(
+- localStorage.getItem
+- sessionStorage.getItem
+- Object.keys
+- Object.values
+- selectedBlock
+- selectedSection
+- content.sections
+- analysis.
+- result.
+- document.
+- file.
+- user.
+- subscription.
+- plan.
+- role.
+- route params
+- URLSearchParams
+- dangerouslySetInnerHTML
+- optional chaining gaps
+- non-null assertions
+- array access [0]
+- direct nested access without guards
+
+Required behavior:
+- no undefined.map crash
+- no undefined.length crash
+- no unhandled JSON parse crash
+- no empty array renders as blank panel
+- no missing API payload crashes UI
+- no missing selectedBlock crashes Document Builder
+- no missing selectedSection crashes Document Builder
+- no missing content.sections crash
+- no missing analysis crash
+- no missing document/file crash
+- no missing subscription/role crash
+- every high-risk area has fallback
+
+Return:
+File | Line | Risk | Current guard | Fix needed? | Status
+
+====================================================
+PHASE 7 — FETCH / API CLIENT ERROR HANDLING AUDIT
+====================================================
+
+Inspect every fetch wrapper and direct fetch call.
+
+For each:
+- confirm response.ok is checked before success handling
+- confirm non-JSON responses do not crash
+- confirm 401/403/404/500 paths are handled
+- confirm loading state resets in finally
+- confirm abort/unmount is handled if applicable
+- confirm retry behavior if needed
+- confirm no silent failure where user sees blank screen
+
+MDN defines Response.ok as true only for successful HTTP status codes in the 200–299 range, so every important fetch path should check it or equivalent status handling before assuming success.
+
+Return:
+Fetch callsite | response.ok checked? | JSON safe? | Error UI? | Fix needed?
+
+====================================================
+PHASE 8 — TOOL-BY-TOOL PROCEDURE EXECUTION AUDIT
+====================================================
+
+For each active tool, execute every major procedure path.
+
+Tools:
+1. Analyze a Document
+2. Document Trust Check
+3. Build a Contract
+4. Contract Review
+5. Redact Sensitive Info
+6. Ask This Document
+7. Clause Extractor
+8. Compare Versions
+9. Document Builder
+
+For each tool, test:
+
+Empty state:
+- route loads
+- instruction visible
+- CTA visible
+- no stale copy
+- no blank screen
+
+Input state:
+- PDF upload
+- DOCX upload if supported
+- TXT upload if supported
+- paste text if supported
+- unsupported file
+- oversized file
+- remove/reset file
+- camera/photo if supported
+- sample/demo if supported
+
+Processing state:
+- loading animation
+- file name visible
+- tool name visible
+- no reset
+- no collapse
+- no infinite spinner
+
+Result state:
+- document viewer
+- right panel
+- source cards
+- source chips
+- missing source fallback
+- export/save
+- retry/re-run
+- mobile layout
+- desktop layout
+
+Failure state:
+- API failure
+- auth failure
+- empty result
+- malformed result
+- network failure
+- unsupported file
+- user cancels upload
+
+Return a procedure matrix:
+Tool | Procedure | Expected | Actual | Pass/Fail | Fix
+
+====================================================
+PHASE 9 — DOCUMENT BUILDER DEEP AUDIT
+====================================================
+
+Document Builder is a new major launch tool. Audit it deeply.
+
+Inspect:
+- Builder/New.tsx
+- Builder/Workspace.tsx
+- BuilderPagePreview.tsx
+- AiGuidePanel.tsx
+- OutlinePanel.tsx
+- StylePanel.tsx
+- ExportPanel.tsx
+- builderTemplates.ts
+- templateQuestions.ts
+- generateDraftContent
+- useBuilderApi
+- builderApi
+- builderConfig
+- all block renderers
+
+Check:
+- template selection
+- start from blank
+- guided questions
+- draft generation
+- every one of 8 templates
+- section creation
+- block creation
+- block click-to-select
+- block edit
+- block delete
+- section reorder
+- selectedBlock null
+- selectedSection null
+- content.sections empty
+- content malformed
+- autosave
+- explicit save
+- unload/reload draft
+- style settings
+- logo preview-only behavior
+- static signature/date line only
+- no e-signature
+- AI action buttons
+- AI action backend route
+- AI preview-before-apply
+- apply suggestion
+- failed AI suggestion
+- empty block AI action
+- export .txt
+- PDF/DOCX coming-soon honesty
+
+Return:
+- all templates pass/fail
+- all tabs pass/fail
+- save/autosave result
+- AI guide result
+- export result
+- null safety result
+
+====================================================
+PHASE 10 — PAYMENT / GATING / NATIVE PURCHASE AUDIT
+====================================================
+
+Verify:
+- PAYWALL_ENFORCEMENT=true frontend
+- PAYWALL_ENFORCEMENT=true backend
+- BILLLING_ENABLED=true
+- BILLLING_MODE=live
+- Stripe web checkout works
+- Subscribe route works
+- success/cancel routes work
+- billing portal web route works
+- UpgradeModal web path works
+- Admin bypass works
+- reviewer/admin account has all 9 tools
+- Starter gating works
+- Pro gating works
+- free-limit behavior matches current rule
+- native has no Stripe checkout
+- native has no external purchase link
+- native has no “View plans” button
+- native has no tappable plainpathapp.com purchase link
+- native only says:
+  “Subscription management is handled on the PlainPath website.”
+
+Do not implement StoreKit or Google Play Billing in this pass.
+Only verify current native-safe behavior.
+
+Return:
+Payment/gating table.
+
+====================================================
+PHASE 11 — REMOVED FEATURE AUDIT
+====================================================
+
+Confirm e-signature remains gone.
+
+Search:
+- Digital Signature
+- Send for Signature
+- Dropbox Sign
+- HelloSign
+- e-signature
+- esign
+- signature route
+- signature API
+- sign request
+- prepare and place
+- send-for-signature
+- signatureApi
+- DemoSignature
+- PdfSignatureWorkspace
+
+Classify remaining words:
+A. Removed feature reference — must fix
+B. Normal contract/document language — allowed
+C. Static printable signature/date line — allowed
+D. Stripe signature header — allowed
+E. Internal harmless comment — allowed
+
+Confirm:
+- /signature does not resolve
+- /demo/signature does not resolve
+- /api/signatures does not exist
+- /api/contracts/send-for-signature does not exist
+- no UI link exists
+- no privacy reference exists
+- no marketing reference exists
+
+Return:
+Removed feature status.
+
+====================================================
+PHASE 12 — SECURITY / DEPENDENCY AUDIT
+====================================================
+
+Current security issue:
+Replit Security Center found:
+- postcss v8.5.8
+- Medium
+- Unresolved
+
+Investigate:
+- npm ls postcss or equivalent
+- direct or transitive dependency
+- owning workspace
+- package.json
+- lockfile
+
+Fix only if safe:
+- update postcss to latest compatible patched 8.5.x if direct
+- if transitive, update smallest parent dependency
+- avoid major dependency churn
+- avoid framework upgrades
+
+Verify:
+- no postcss v8.5.8 remains if possible
+- no new vulnerabilities
+- app starts
+- API starts
+- marketing starts
+- styles still render
+- Tailwind still renders
+- no visual regression
+
+Also verify secrets:
+- DROPBOX_SIGN_API_KEY should be deleted manually or confirmed unused
+- no OpenAI key exposed client-side
+- no Stripe secret exposed client-side
+- no Clerk secret exposed client-side
+- no service role keys exposed client-side
+- no secrets printed in logs
+
+Return:
+Dependency status
+Secret status
+Security Center status
+
+====================================================
+PHASE 13 — PRIVACY / LEGAL / STORE DISCLOSURE AUDIT
+====================================================
+
+Verify:
+- Privacy page exists
+- Terms page exists
+- Support page exists
+- support@plainpathapp.com consistent
+- privacy accurately mentions OpenAI processing
+- privacy accurately mentions Stripe
+- privacy accurately mentions Clerk
+- privacy accurately mentions Resend only if active
+- no Dropbox Sign/e-signature reference
+- no claim that docs are never processed server-side if they are
+- no claim that docs are stored if they are not
+- no legal advice claims
+- no absolute fraud/authenticity claims
+- Redact explains original file unchanged
+- Document Builder says review output before use
+- Contract Review includes legal-safe language
+- Trust Check uses cautious wording
+
+Return:
+Legal/privacy table.
+
+====================================================
+PHASE 14 — APP STORE / GOOGLE PLAY READINESS AUDIT
+====================================================
+
+Apple readiness:
+- Apple Developer account status
+- Bundle ID
+- App name
+- Subtitle
+- Category
+- Age rating answers
+- Privacy URL
+- Terms URL
+- Support URL
+- App description
+- Promotional text
+- Keywords
+- App icon 1024x1024
+- screenshots
+- build number/version
+- reviewer account
+- review notes
+- privacy nutrition label
+- no hidden unfinished features
+- no native purchase link
+- no e-signature
+- native payment behavior static only
+
+Google readiness:
+- Google Play Developer account
+- package name
+- app name
+- short description
+- full description
+- category
+- tags
+- icon 512x512
+- feature graphic 1024x500
+- screenshots
+- privacy URL
+- support email
+- data safety form
+- app access login credentials
+- content rating
+- target audience
+- ads declaration
+- app signing
+- internal testing
+- native payment behavior
+
+Apple requires complete app review information and valid demo credentials when features require sign-in. Google also requires app access instructions when app functionality is restricted. Verify our admin test account is ready for both.
+
+Return:
+Store readiness table.
+
+====================================================
+PHASE 15 — LOGS / RUNTIME / CONSOLE AUDIT
+====================================================
+
+Check:
+- app logs
+- API logs
+- marketing logs
+- browser console
+- network tab
+- failed requests
+- 401/403/500
+- unhandled promise rejections
+- React errors
+- hydration errors
+- Vite build errors
+- TypeScript error count
+- server startup errors
+- memory errors
+- timeout errors
+- CORS errors
+- Clerk CDN warnings
+- Stripe errors
+- OpenAI errors
+- PDF rendering errors
+
+Return:
+Error log table:
+Source | Error | Current count | New? | Blocking? | Fix
+
+====================================================
+PHASE 16 — FINAL EXECUTION REPORT
+====================================================
+
+Return only this structure:
+
+A. Overall forensic QA result: PASS / PASS WITH ISSUES / FAIL
+
+B. Critical blockers
+- List only issues that block screenshot capture, web launch, or store submission.
+
+C. High-priority non-critical issues
+- Issues to fix before submission but not catastrophic.
+
+D. Files changed
+- If none, say none.
+- If changed, list exact file and reason.
+
+E. My Documents root cause and status
+- Before
+- Root cause
+- Fix
+- After
+- Verified yes/no
+
+F. Clerk/auth status
+- Admin reviewer account
+- getToken / Bearer usage
+- 401/403 handling
+- sign-out behavior
+- incognito behavior
+
+G. API execution table
+- Endpoint
+- Auth
+- Input validation
+- Ownership check
+- Empty/null behavior
+- Status
+
+H. Tool-by-tool execution table
+- Tool
+- Empty
+- Input
+- Processing
+- Result
+- Failure
+- Mobile
+- Status
+
+I. Null/gaps/fills table
+- File
+- Issue
+- Severity
+- Fixed?
+- Remaining risk
+
+J. Fetch/error-handling table
+- Callsite
+- response.ok
+- JSON fallback
+- user-facing error
+- status
+
+K. Payment/gating/native purchase status
+
+L. Removed e-signature status
+
+M. Security/dependency status
+- postcss result
+- secrets result
+- Replit Security Center result
+
+N. Privacy/legal status
+
+O. App Store readiness status
+
+P. Google Play readiness status
+
+Q. Manual tasks remaining
+- screenshots
+- icon
+- feature graphic
+- store descriptions
+- privacy forms
+- data safety forms
+- bundle/package/build numbers
+- reviewer notes
+- delete unused secret
+
+R. Safe to capture screenshots: Yes/No
+
+S. Safe to publish/keep web published: Yes/No
+
+T. Safe to prepare native submission: Yes/No
+
+U. Safe to submit Apple/Google today: Yes/No

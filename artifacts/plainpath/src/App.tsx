@@ -6,13 +6,14 @@ import { getApiBaseUrl } from "@/lib/api";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { startStripeCheckout } from "@/lib/stripe";
 import { PRICING_PLANS } from "@/data/pricingData";
-import { ArrowRight, Check, Zap, BarChart3, LogOut } from "lucide-react";
+import { ArrowRight, Check, Zap, BarChart3, LogOut, CreditCard } from "lucide-react";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AnalysisProvider } from "@/context/AnalysisContext";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { initStatusBar } from "@/lib/native";
 import { captureInboundRef } from "@/lib/referral";
+import { isNative } from "@/lib/platform";
 
 import Home from "@/pages/Home";
 import Import from "@/pages/Import";
@@ -190,21 +191,51 @@ function ClerkQueryClientCacheInvalidator() {
 // a subscription. Initiates Stripe checkout directly — no intermediate page.
 const PLAN_ICONS: Record<string, React.ElementType> = { starter: BarChart3, pro: Zap };
 
+function NativeSubscriptionMessage() {
+  const { signOut } = useClerk();
+  return (
+    <div className="min-h-screen bg-background flex flex-col">
+      <header className="border-b border-border/40 px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <img src="/logo.svg" alt="PlainPath" className="h-6 w-6" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+          <span className="font-bold text-base tracking-tight">PlainPath</span>
+        </div>
+        <button
+          onClick={() => void signOut({ redirectUrl: "/" })}
+          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <LogOut className="w-3.5 h-3.5" />
+          Sign out
+        </button>
+      </header>
+      <div className="flex-1 flex items-center justify-center px-4">
+        <div className="max-w-sm text-center">
+          <div className="bg-primary/10 p-4 rounded-2xl w-fit mx-auto mb-5">
+            <CreditCard className="w-8 h-8 text-primary" />
+          </div>
+          <h1 className="text-2xl font-bold mb-3">Manage your subscription</h1>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Subscription management is handled on the PlainPath website.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ChoosePlanScreen() {
   const { user } = useUser();
   const { signOut } = useClerk();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  if (isNative()) return <NativeSubscriptionMessage />;
+
   async function handleSelectPlan(planKey: "starter" | "pro") {
     setLoadingPlan(planKey);
     setError(null);
     try {
-      await startStripeCheckout(
-        planKey,
-        user?.emailAddresses?.[0]?.emailAddress,
-        user?.id,
-      );
+      await startStripeCheckout(planKey as "starter" | "pro" | "team");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to start checkout. Please try again.");
       setLoadingPlan(null);
