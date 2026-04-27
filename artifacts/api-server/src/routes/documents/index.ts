@@ -2714,7 +2714,7 @@ router.post("/redact-pdf", upload.single("file"), async (req, res) => {
     }
 
     // ── Step 4: Load PDF with pdf-lib, draw solid black rectangles ───────────
-    const { PDFDocument, rgb, PDFName, PDFRawStream, PDFArray, PDFRef } = await import("pdf-lib");
+    const { PDFDocument, rgb, PDFName, PDFRawStream, PDFArray, PDFRef, PDFDict, PDFString, PDFHexString } = await import("pdf-lib");
     const pdfLibDoc = await PDFDocument.load(pdfBuffer);
     const pages = pdfLibDoc.getPages();
 
@@ -2801,6 +2801,148 @@ router.post("/redact-pdf", upload.single("file"), async (req, res) => {
           // Replace the stream using the public API — avoids mutating readonly internals
           dict.set(PDFName.of("Length"), pdfLibDoc.context.obj(sanitized.length));
           pdfLibDoc.context.assign(ref, PDFRawStream.of(dict, sanitized));
+        }
+      }
+    }
+
+    // ── Step 5b: Scrub AcroForm fields, annotations, metadata, embedded files ─
+    // Page content streams only contain rendered text operators.  Sensitive data
+    // can also live in AcroForm field values (/V), annotation /Contents strings,
+    // the document /Info dictionary, XMP metadata streams, and embedded files.
+    // None of these are touched by step 5, so we walk the full object tree here.
+    {
+      // ── Helpers ───────────────────────────────────────────────────────────
+
+      // Replace every occurrence of each redact value inside a decoded string
+      // with spaces of equal byte-length.  Returns null when nothing matched.
+      function scrubText(decoded: string): string | null {
+        let result = decoded;
+        let changed = false;
+        for (const v of redactValues) {
+          if (!v) continue;
+          let idx = result.indexOf(v);
+          while (idx !== -1) {
+            result = result.slice(0, idx) + " ".repeat(v.length) + result.slice(idx + v.length);
+            changed = true;
+            idx = result.indexOf(v, idx + v.length);
+          }
+        }
+        return changed ? result : null;
+      }
+
+      // Scrub a PDFString or PDFHexString in-place if it contains a redact value.
+      // Returns a replacement object or null.
+      function scrubPdfStringEntry(obj: unknown) {
+        if (obj instanceof PDFString) {
+          try {
+            const decoded = obj.decodeText();
+            const scrubbed = scrubText(decoded);
+            if (scrubbed !== null) return PDFString.of(scrubbed);
+          } catch { /* non-text bytes — skip */ }
+        } else if (obj instanceof PDFHexString) {
+          try {
+            const decoded = obj.decodeText();
+            const scrubbed = scrubText(decoded);
+            // fromText encodes the string correctly as hex; .of() expects raw hex content
+            if (scrubbed !== null) return PDFHexString.fromText(scrubbed);
+          } catch { /* non-text bytes — skip */ }
+        }
+        return null;
+      }
+
+      // Recursively scrub all PDFString/PDFHexString values reachable from a
+      // PDFDict or PDFArray, following refs to resolve indirect objects.
+      // `visited` prevents infinite loops in cyclic object graphs.
+      function scrubDictOrArray(obj: unknown, visited: Set<string>): void {
+        if (obj instanceof PDFRef) {
+          const key = obj.toString();
+          if (visited.has(key)) return;
+          visited.add(key);
+          try { scrubDictOrArray(pdfLibDoc.context.lookup(obj), visited); } catch { /* ignore */ }
+          return;
+        }
+
+        if (obj instanceof PDFDict) {
+          for (const [entryKey, val] of obj.entries()) {
+            const replacement = scrubPdfStringEntry(val);
+            if (replacement !== null) {
+              obj.set(entryKey, replacement);
+            } else {
+              scrubDictOrArray(val, visited);
+            }
+          }
+          return;
+        }
+
+        if (obj instanceof PDFArray) {
+          for (let ai = 0; ai < obj.size(); ai++) {
+            const val = obj.get(ai);
+            const replacement = scrubPdfStringEntry(val);
+            if (replacement !== null) {
+              obj.set(ai, replacement);
+            } else {
+              scrubDictOrArray(val, visited);
+            }
+          }
+        }
+      }
+
+      // ── Pass 1: Walk all indirect objects ─────────────────────────────────
+      // This is the broadest net — catches every named object in the file,
+      // including AcroForm fields and annotations stored as indirect refs.
+      for (const [, pdfObj] of pdfLibDoc.context.enumerateIndirectObjects()) {
+        if (!(pdfObj instanceof PDFDict)) continue;
+        // Scrub the specific keys most likely to carry user-visible text
+        for (const key of ["V", "Contents", "TU", "DV", "T", "Subj"]) {
+          const entry = pdfObj.get(PDFName.of(key));
+          if (!entry) continue;
+          const replacement = scrubPdfStringEntry(entry);
+          if (replacement !== null) pdfObj.set(PDFName.of(key), replacement);
+        }
+      }
+
+      // ── Pass 2: Explicit recursive walk of AcroForm field tree ───────────
+      // Belt-and-suspenders in case any field dict is inline (non-indirect).
+      const acroFormEntry = pdfLibDoc.catalog.get(PDFName.of("AcroForm"));
+      if (acroFormEntry) {
+        scrubDictOrArray(acroFormEntry, new Set());
+      }
+
+      // ── Pass 3: Explicit recursive walk of per-page Annots arrays ─────────
+      for (const page of pdfLibDoc.getPages()) {
+        const annotsEntry = page.node.get(PDFName.of("Annots"));
+        if (annotsEntry) scrubDictOrArray(annotsEntry, new Set());
+      }
+
+      // ── Scrub /Info trailer dictionary ────────────────────────────────────
+      // The Info dict holds author, title, subject, keywords, and similar.
+      const trailerInfoRef = pdfLibDoc.context.trailerInfo.Info;
+      if (trailerInfoRef instanceof PDFRef) {
+        const infoDict = pdfLibDoc.context.lookup(trailerInfoRef);
+        if (infoDict instanceof PDFDict) {
+          for (const [key, val] of infoDict.entries()) {
+            const replacement = scrubPdfStringEntry(val);
+            if (replacement !== null) infoDict.set(key, replacement);
+          }
+        }
+      }
+
+      // ── Remove XMP metadata stream unconditionally ────────────────────────
+      // XMP streams are often FlateDecode-compressed, making substring-based
+      // detection unreliable without full decompression.  Removing the /Metadata
+      // entry from the catalog is the fail-safe approach and has no effect on
+      // visual content or form functionality.
+      pdfLibDoc.catalog.delete(PDFName.of("Metadata"));
+
+      // ── Remove embedded files ─────────────────────────────────────────────
+      // Attached files could carry the original unredacted source document.
+      const namesEntry = pdfLibDoc.catalog.get(PDFName.of("Names"));
+      if (namesEntry) {
+        const namesDict = namesEntry instanceof PDFRef
+          ? pdfLibDoc.context.lookup(namesEntry)
+          : namesEntry;
+        if (namesDict instanceof PDFDict) {
+          namesDict.delete(PDFName.of("EmbeddedFiles"));
         }
       }
     }
@@ -3153,6 +3295,7 @@ async function safeFetch(startUrl: string): Promise<{ response: Response; buffer
         Accept: "*/*",
       },
       redirect: "manual", // we handle redirects ourselves
+      signal: AbortSignal.timeout(30_000), // 30 s per hop — prevents indefinite hangs
     });
 
     const status = res.status;
@@ -3274,6 +3417,10 @@ router.post("/import-url", async (req, res) => {
   } catch (err) {
     if (err instanceof ImportUrlError) {
       return res.status(400).json({ message: err.message });
+    }
+    // AbortError is thrown by AbortSignal.timeout when the per-hop deadline fires
+    if (err instanceof Error && err.name === "TimeoutError") {
+      return res.status(504).json({ message: "The remote server took too long to respond. Please try downloading the file and uploading it directly." });
     }
     const msg = err instanceof Error ? err.message : String(err);
     logger.error({ err: msg }, "documents/import-url failed");
