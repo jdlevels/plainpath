@@ -158,7 +158,7 @@ export default function Documents() {
 
     // Parallel fetch all data sources
     const [docsResult, clauseResult, compareResult, builderResult] = await Promise.allSettled([
-      fetchUserDocuments(),
+      fetchUserDocuments(token),
       clauseExtractorApi.listSessions(token),
       compareVersionsApi.listSessions(token, { archived: false }),
       BUILDER_ENABLED ? builderApi.listDocuments(token) : Promise.resolve([]),
@@ -167,7 +167,12 @@ export default function Documents() {
     if (docsResult.status === "fulfilled") {
       setDocs(docsResult.value)
     } else {
-      setDocsError("Couldn't load your documents.")
+      const status = (docsResult.reason as any)?.status
+      if (status === 401) {
+        setDocsError("Your session expired. Please sign in again.")
+      } else {
+        setDocsError("Couldn't load your documents.")
+      }
     }
 
     if (clauseResult.status === "fulfilled") {
@@ -208,10 +213,15 @@ export default function Documents() {
     setLoading(true)
     setDocsError(null)
     try {
-      const result = await fetchUserDocuments()
+      const token = await getToken().catch(() => null)
+      const result = await fetchUserDocuments(token)
       setDocs(result)
-    } catch {
-      setDocsError("Couldn't load your documents.")
+    } catch (err: any) {
+      if (err?.status === 401) {
+        setDocsError("Your session expired. Please sign in again.")
+      } else {
+        setDocsError("Couldn't load your documents.")
+      }
     } finally {
       setLoading(false)
     }
@@ -279,7 +289,8 @@ export default function Documents() {
   async function handleDelete(id: string) {
     setDeleting(true)
     try {
-      await deleteUserDocument(id)
+      const token = await getToken().catch(() => null)
+      await deleteUserDocument(id, token)
       setDocs(prev => prev.filter(d => d.id !== id))
     } catch { /* ignore */ }
     finally {
@@ -297,7 +308,8 @@ export default function Documents() {
     const title = editValue.trim()
     if (!title) return
     try {
-      await renameUserDocument(id, title)
+      const token = await getToken().catch(() => null)
+      await renameUserDocument(id, title, token)
       setDocs(prev => prev.map(d => d.id === id ? { ...d, title } : d))
     } catch { /* ignore */ }
     setEditingId(null)
@@ -486,7 +498,7 @@ export default function Documents() {
               icon={FileText}
               label="Uploaded Documents"
               colorClass="bg-primary/10 text-primary"
-              desc="Files you've imported into PlainPath for analysis, signing, or review."
+              desc="Files you've imported into PlainPath for analysis or review."
             />
             <div className="flex items-center gap-2 p-3 rounded-xl border border-destructive/20 bg-destructive/5 text-destructive text-sm mb-6">
               <AlertTriangle className="w-4 h-4 shrink-0" />
@@ -502,7 +514,7 @@ export default function Documents() {
               label="Uploaded Documents"
               count={docs.length}
               colorClass="bg-primary/10 text-primary"
-              desc="Files you've imported into PlainPath for analysis, signing, or review."
+              desc="Files you've imported into PlainPath for analysis or review."
             />
 
             {/* No search results */}

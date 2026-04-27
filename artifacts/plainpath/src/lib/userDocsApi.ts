@@ -1,13 +1,25 @@
 const base = () =>
   ((import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "").replace(/\/+$/, "");
 
-async function apiFetch(path: string, options?: RequestInit) {
+function authHeaders(token: string | null): HeadersInit {
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
+async function apiFetch(path: string, token: string | null, options?: RequestInit) {
   const res = await fetch(`${base()}${path}`, {
     credentials: "include",
-    headers: { "Content-Type": "application/json", ...(options?.headers ?? {}) },
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeaders(token),
+      ...(options?.headers ?? {}),
+    },
     ...options,
   });
-  if (!res.ok) throw new Error(`API ${res.status}`);
+  if (!res.ok) {
+    const err: any = new Error(`API ${res.status}`);
+    err.status = res.status;
+    throw err;
+  }
   return res.json();
 }
 
@@ -44,30 +56,30 @@ export interface CreateDocumentPayload {
   metadata?: Record<string, unknown>;
 }
 
-export async function fetchUserDocuments(): Promise<UserDocument[]> {
-  return apiFetch("/api/user/documents");
+export async function fetchUserDocuments(token: string | null = null): Promise<UserDocument[]> {
+  return apiFetch("/api/user/documents", token);
 }
 
-export async function fetchUserDocument(id: string): Promise<UserDocument> {
-  return apiFetch(`/api/user/documents/${id}`);
+export async function fetchUserDocument(id: string, token: string | null = null): Promise<UserDocument> {
+  return apiFetch(`/api/user/documents/${id}`, token);
 }
 
-export async function createUserDocument(payload: CreateDocumentPayload): Promise<UserDocument> {
-  return apiFetch("/api/user/documents", {
+export async function createUserDocument(payload: CreateDocumentPayload, token: string | null = null): Promise<UserDocument> {
+  return apiFetch("/api/user/documents", token, {
     method: "POST",
     body: JSON.stringify(payload),
   });
 }
 
-export async function renameUserDocument(id: string, title: string): Promise<void> {
-  await apiFetch(`/api/user/documents/${id}`, {
+export async function renameUserDocument(id: string, title: string, token: string | null = null): Promise<void> {
+  await apiFetch(`/api/user/documents/${id}`, token, {
     method: "PATCH",
     body: JSON.stringify({ title }),
   });
 }
 
-export async function deleteUserDocument(id: string): Promise<void> {
-  await apiFetch(`/api/user/documents/${id}`, { method: "DELETE" });
+export async function deleteUserDocument(id: string, token: string | null = null): Promise<void> {
+  await apiFetch(`/api/user/documents/${id}`, token, { method: "DELETE" });
 }
 
 export interface AttachToolRunPayload {
@@ -80,9 +92,10 @@ export interface AttachToolRunPayload {
 
 export async function attachToolRun(
   documentId: string,
-  payload: AttachToolRunPayload
+  payload: AttachToolRunPayload,
+  token: string | null = null,
 ): Promise<DocumentToolRun> {
-  return apiFetch(`/api/user/documents/${documentId}/tool-run`, {
+  return apiFetch(`/api/user/documents/${documentId}/tool-run`, token, {
     method: "POST",
     body: JSON.stringify(payload),
   });

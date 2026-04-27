@@ -1,0 +1,119 @@
+PlainPath Launch Fix — My Documents Cannot Load
+
+Goal:
+Fix the My Documents page showing “Couldn’t load your documents” before app-store screenshot capture.
+
+Mode:
+Targeted bug fix only.
+
+Do not add features.
+Do not redesign.
+Do not change pricing.
+Do not change Stripe.
+Do not change auth architecture.
+Do not change database schema.
+Do not create migrations.
+Do not reintroduce e-signature.
+Do not add Dropbox Sign.
+Do not touch unrelated tools.
+
+Issue:
+On /app/documents or /documents, the page loads but shows:
+“Couldn’t load your documents.”
+Retry button appears.
+
+This must be fixed before screenshot capture and app-store submission because reviewers may open My Documents.
+
+Investigate:
+
+1. Frontend Documents page
+Inspect:
+- artifacts/plainpath/src/pages/Documents.tsx
+- any document API client/hook used by Documents.tsx
+- DOC_TYPE_CONFIG or TOOL_CONFIG mapping
+- any deleted/removed “signature” category references
+
+Check whether the page fails because:
+- fetch request returns 401/403/500
+- fetch response is not valid JSON
+- response.ok is not checked correctly
+- auth token is missing
+- document type mapping crashes when a legacy type is unknown
+- legacy “signature” document records break rendering
+- API base URL is wrong
+- empty document list is being treated as an error
+
+2. Backend documents route
+Inspect the API route used by My Documents:
+- GET documents/list route
+- auth middleware
+- database query
+- response shape
+
+Confirm:
+- authenticated admin user can request documents
+- empty list returns 200 with [] or expected empty payload
+- old/unknown document types do not cause 500
+- deleted e-signature code is not still referenced
+- no Dropbox Sign/e-signature logic is involved
+
+3. Auth handling
+Confirm Documents.tsx uses the same working token pattern as the other protected pages:
+- waits for Clerk auth loaded state
+- obtains token with getToken()
+- sends Authorization: Bearer token
+- handles 401 with a friendly sign-in/session message
+- does not call API before auth is ready
+
+4. Error handling
+Update My Documents so it never crashes or fails hard from malformed/empty data.
+
+Required behavior:
+- If API returns empty list: show clean empty state, not error.
+- If API returns 401: show “Your session expired. Please sign in again.”
+- If API returns 500: show retryable error.
+- If a document has unknown/legacy type: render as “Document” with a generic file icon.
+- If old type is “signature”: do not show Digital Signature; render it as generic “Document” or hide it safely.
+- Retry button should re-run the request.
+
+5. Legacy removed feature safety
+Do not re-add e-signature.
+Do not re-add Digital Signature.
+Do not re-add Send for Signature.
+Do not re-add Dropbox Sign.
+
+Allowed:
+- Generic static “signature line/date line” document content.
+- Generic document label for old/unknown saved records.
+
+6. Verification
+Run:
+- TypeScript check
+- App startup
+- API startup
+- Browser check for /documents
+- Browser check for dashboard
+- Browser check for all 9 tool routes
+
+Verify:
+- My Documents loads
+- If documents exist, they display
+- If no documents exist, empty state displays
+- Retry no longer immediately fails
+- No stale “signature tool” UI appears
+- No new TypeScript errors
+- Web Stripe unchanged
+- Native payment static message unchanged
+- E-signature routes remain absent
+
+Return only:
+A. Root cause
+B. Files changed
+C. API response status before fix
+D. API response status after fix
+E. Legacy/unknown document type handling
+F. Empty-state behavior
+G. Auth/session behavior
+H. My Documents verification result
+I. Active 9-tool regression result
+J. Safe to capture app-store screenshots: Yes/No

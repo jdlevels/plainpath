@@ -39,7 +39,7 @@ import { getApiBaseUrl } from "@/lib/api"
 import { saveAnalysis, updateSaved } from "@/lib/savedAnalyses"
 import { saveCloudAnalysis, renameCloudAnalysis } from "@/lib/cloudHistory"
 import { createUserDocument, attachToolRun } from "@/lib/userDocsApi"
-import { useUser } from "@clerk/react"
+import { useUser, useAuth } from "@clerk/react"
 import { useEntitlements } from "@/hooks/useEntitlements"
 import UpgradeCard from "@/components/UpgradeCard"
 import { findGlossaryEntry } from "@/lib/legalGlossary"
@@ -97,6 +97,7 @@ export default function Analyze() {
 
   const { entitlements, loading: entitlementsLoading } = useEntitlements()
   const { isSignedIn } = useUser()
+  const { getToken } = useAuth()
   const isPro = entitlements?.plan === "pro" || entitlements?.plan === "team"
   // Tabs locked to Pro plan. Starter plan includes: plain-english, summary, key-terms,
   // action-pack, documents (Required Docs), and deadlines.
@@ -198,18 +199,20 @@ export default function Analyze() {
           triggerFeedback()
           // Fire-and-forget: create/link a document record in My Documents
           if (!documentId && !demoId) {
-            createUserDocument({
-              title: analysis.title,
-              sourceKind: "analyze",
-            }).then(doc => {
-              setDocumentId(doc.id)
-              return attachToolRun(doc.id, {
-                tool: "analyze",
-                outputRef: saved.id,
-                outputKind: "analysis",
-                resultSummary: analysis.title,
+            getToken().catch(() => null).then(tok =>
+              createUserDocument({
+                title: analysis.title,
+                sourceKind: "analyze",
+              }, tok).then(doc => {
+                setDocumentId(doc.id)
+                return attachToolRun(doc.id, {
+                  tool: "analyze",
+                  outputRef: saved.id,
+                  outputKind: "analysis",
+                  resultSummary: analysis.title,
+                }, tok)
               })
-            }).catch(() => {})
+            ).catch(() => {})
           }
         } catch {
           const saved = saveAnalysis({
