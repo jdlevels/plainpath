@@ -38,11 +38,13 @@ const ALLOWED_EMAILS: Set<string> = new Set(
 )
 
 if (ALLOWED_EMAILS.size === 0) {
-  // Warn loudly at startup — an empty allowlist means every user passes.
-  // This prevents a misconfigured env from silently granting open access.
-  logger.warn(
-    "ALLOWED_EMAILS is empty — allowlist enforcement is effectively disabled. " +
-    "Set ALLOWED_EMAILS=<comma-separated emails> to restrict access."
+  // Error loudly at startup — an empty allowlist means enforcement cannot
+  // function. The application will fail closed: all authenticated requests
+  // will be denied until ALLOWED_EMAILS is correctly configured.
+  logger.error(
+    "ALLOWED_EMAILS is empty — allowlist enforcement cannot be disabled. " +
+    "All authenticated requests will be denied. " +
+    "Set ALLOWED_EMAILS=<comma-separated emails> to grant access."
   )
 }
 
@@ -74,10 +76,26 @@ export function allowlistEnforcement() {
       return
     }
 
-    // Empty allowlist → enforcement is disabled (warn already logged at startup).
-    // Explicit allow so the app doesn't break when env var is not yet configured.
+    // Empty allowlist → enforcement is misconfigured; fail closed.
+    // Denying here ensures an attacker cannot bypass the allowlist simply by
+    // leaving ALLOWED_EMAILS unset, blank, or incorrectly templated at deploy time.
     if (ALLOWED_EMAILS.size === 0) {
-      return next()
+      logger.error(
+        {
+          event: "allowlist.denied",
+          email,
+          userId,
+          path: req.path,
+          method: req.method,
+          allowed: false,
+        },
+        "Allowlist: access DENIED — ALLOWED_EMAILS is not configured (fail closed)"
+      )
+      res.status(403).json({
+        error: "access_denied",
+        message: "This application is invite-only and is not currently configured to accept new users. Please contact the administrator.",
+      })
+      return
     }
 
     const allowed = ALLOWED_EMAILS.has(email)
