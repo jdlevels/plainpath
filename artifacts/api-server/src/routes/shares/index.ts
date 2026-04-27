@@ -1,8 +1,24 @@
-import { Router } from "express"
+import { Router, type Request, type Response, type NextFunction } from "express"
 import { pool } from "@workspace/db"
 import { randomBytes } from "crypto"
+import { getAuth } from "@clerk/express"
 
 const router = Router()
+
+interface AuthedRequest extends Request {
+  userId: string
+}
+
+function requireAuth(req: Request, res: Response, next: NextFunction): void {
+  const auth = getAuth(req)
+  const userId = auth?.userId
+  if (!userId) {
+    res.status(401).json({ error: "unauthorized" })
+    return
+  }
+  (req as AuthedRequest).userId = userId
+  next()
+}
 
 async function ensureTable() {
   await pool.query(`
@@ -14,6 +30,17 @@ async function ensureTable() {
       expires_at  TIMESTAMPTZ DEFAULT NOW() + INTERVAL '30 days'
     )
   `)
+}
+
+async function deleteExpiredRows() {
+  try {
+    const result = await pool.query("DELETE FROM shared_analyses WHERE expires_at <= NOW()")
+    if ((result.rowCount ?? 0) > 0) {
+      console.log(`shares cleanup: deleted ${result.rowCount} expired row(s)`)
+    }
+  } catch (err) {
+    console.error("shares cleanup error:", err)
+  }
 }
 
 async function sanitizeExistingRows() {
@@ -69,10 +96,17 @@ function stripDocumentContent(analysis: Record<string, unknown>): Record<string,
 }
 
 ensureTable()
+  .then(() => deleteExpiredRows())
   .then(() => sanitizeExistingRows())
   .catch(console.error)
 
-router.post("/shares", async (req, res) => {
+// Purge expired rows once per hour so storage stays bounded.
+setInterval(() => {
+  deleteExpiredRows().catch(console.error)
+}, 60 * 60 * 1000)
+
+// POST /api/shares — authentication required
+router.post("/shares", requireAuth, async (req, res) => {
   try {
     const { analysis } = req.body as { analysis: unknown }
     if (!analysis || typeof analysis !== "object") {
@@ -92,6 +126,7 @@ router.post("/shares", async (req, res) => {
   }
 })
 
+// GET /api/shares/:token — public read is fine; only creation requires auth
 router.get("/shares/:token", async (req, res) => {
   try {
     const { token } = req.params

@@ -145,6 +145,11 @@ app.use(
   express.raw({ type: "application/json" }),
 );
 
+// Share creation: enforce a 64 KB body-size cap BEFORE the global parser so
+// the limit is actually applied. (A parser mounted after another has already
+// run is effectively a no-op.)
+app.use("/api/shares", express.json({ limit: "64kb" }));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -262,6 +267,19 @@ const waitlistLimiter = rateLimit({
 })
 
 app.use("/api/waitlist/join", waitlistLimiter)
+
+// Share creation: tighter per-IP limiter (10 per 15 min) and capped body size
+// (64 KB) to prevent storage abuse. Reads remain unrestricted.
+const sharesCreateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: { error: "too_many_requests", message: "Too many share requests. Please wait a few minutes and try again." },
+  skip: () => process.env.NODE_ENV !== "production",
+})
+
+app.post("/api/shares", sharesCreateLimiter)
 
 app.use("/api", eventsRouter)
 app.use("/api", router);
