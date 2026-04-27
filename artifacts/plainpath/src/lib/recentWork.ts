@@ -37,11 +37,3 @@ export function saveRecentWork(item: Omit<LocalRecentItem, "id" | "savedAt">) {
 export function getRecentWork(): LocalRecentItem[] {
   return load()
 }
-
-export function clearRecentWork(): void {
-  try {
-    localStorage.removeItem(KEY)
-  } catch {
-    /* non-critical — fail silently */
-  }
-}
