@@ -2845,6 +2845,153 @@ Return ONLY valid JSON in this exact format:
   }
 });
 
+// ─── SSRF helpers for /documents/import-url ───────────────────────────────────
+
+/** Error class for policy / input violations that should surface as HTTP 400. */
+class ImportUrlError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ImportUrlError";
+  }
+}
+
+/** Hostnames that the import-url feature is allowed to contact. */
+const IMPORT_URL_ALLOWED_HOSTS = new Set([
+  "drive.google.com",
+  "docs.google.com",
+  "www.dropbox.com",
+  "dropbox.com",
+  "dl.dropboxusercontent.com",
+]);
+
+/** Maximum response body size (25 MB) before we abort. */
+const IMPORT_URL_MAX_BYTES = 25 * 1024 * 1024;
+
+/** Maximum number of redirects to follow manually. */
+const IMPORT_URL_MAX_REDIRECTS = 5;
+
+/**
+ * Returns true when the hostname resolves to a private / link-local / loopback
+ * address that should never be reachable from outside a trusted network.
+ * We perform a simple string check on the raw hostname before DNS lookup
+ * to catch the most obvious cases quickly.
+ */
+function isPrivateHostname(hostname: string): boolean {
+  const h = hostname.toLowerCase();
+  // Loopback / localhost
+  if (h === "localhost" || h === "localhost.") return true;
+  // IPv6 loopback
+  if (h === "::1" || h === "[::1]") return true;
+  // IPv4 private ranges via regex (not exhaustive but covers common cases)
+  const ipv4 = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(h);
+  if (ipv4) {
+    const [, a, b] = ipv4.map(Number);
+    if (a === 10) return true;                        // 10.0.0.0/8
+    if (a === 127) return true;                       // 127.0.0.0/8
+    if (a === 172 && b >= 16 && b <= 31) return true; // 172.16.0.0/12
+    if (a === 192 && b === 168) return true;           // 192.168.0.0/16
+    if (a === 169 && b === 254) return true;           // 169.254.0.0/16 (link-local / metadata)
+    if (a === 100 && b >= 64 && b <= 127) return true; // 100.64.0.0/10 (shared address space)
+    if (a === 0) return true;                          // 0.x.x.x
+  }
+  // Bare IPv6 private ranges (simplified)
+  if (h.startsWith("fc") || h.startsWith("fd") || h.startsWith("fe80")) return true;
+  return false;
+}
+
+/**
+ * Validates that a URL is safe to fetch:
+ *   - must be https (http is allowed only for Google/Dropbox canonical https forms,
+ *     but we enforce https here to prevent cleartext exfiltration)
+ *   - hostname must be in the allowlist
+ *   - hostname must not map to a private address
+ *
+ * Returns the parsed URL on success, or throws an error with a user-facing message.
+ */
+function validateImportUrl(rawUrl: string): URL {
+  let parsed: URL;
+  try {
+    parsed = new URL(rawUrl);
+  } catch {
+    throw new ImportUrlError("A valid URL is required.");
+  }
+
+  if (parsed.protocol !== "https:") {
+    throw new ImportUrlError("Only HTTPS URLs from supported services (Google Drive, Dropbox) are allowed.");
+  }
+
+  const hostname = parsed.hostname.toLowerCase();
+  if (!IMPORT_URL_ALLOWED_HOSTS.has(hostname)) {
+    throw new ImportUrlError("URL must point to a supported service (Google Drive or Dropbox).");
+  }
+
+  if (isPrivateHostname(hostname)) {
+    throw new ImportUrlError("URL must point to a supported service (Google Drive or Dropbox).");
+  }
+
+  return parsed;
+}
+
+/**
+ * Fetches a URL with manual redirect following so that every hop is
+ * re-validated against the allowlist.  The response body is streamed and
+ * capped at IMPORT_URL_MAX_BYTES to prevent memory exhaustion.
+ */
+async function safeFetch(startUrl: string): Promise<{ response: Response; buffer: Buffer }> {
+  let currentUrl = startUrl;
+
+  for (let hop = 0; hop <= IMPORT_URL_MAX_REDIRECTS; hop++) {
+    validateImportUrl(currentUrl); // throws on policy violation
+
+    const res = await fetch(currentUrl, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (compatible; PlainPath/1.0)",
+        Accept: "*/*",
+      },
+      redirect: "manual", // we handle redirects ourselves
+    });
+
+    const status = res.status;
+
+    // Manual redirect handling
+    if (status >= 300 && status < 400) {
+      const location = res.headers.get("location");
+      if (!location) throw new Error("Redirect with no Location header.");
+      // Resolve relative redirect against the current URL
+      currentUrl = new URL(location, currentUrl).toString();
+      continue;
+    }
+
+    if (!res.ok) {
+      throw new ImportUrlError(`Could not fetch the document. The link may be expired or private. (Status: ${status})`);
+    }
+
+    // Stream and cap the response body
+    if (!res.body) throw new ImportUrlError("Empty response body.");
+
+    const chunks: Buffer[] = [];
+    let totalBytes = 0;
+
+    // Node's fetch returns a web ReadableStream; consume it chunk by chunk
+    const reader = (res.body as ReadableStream<Uint8Array>).getReader();
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      totalBytes += value.byteLength;
+      if (totalBytes > IMPORT_URL_MAX_BYTES) {
+        await reader.cancel();
+        throw new ImportUrlError("Document is too large to import (maximum 25 MB).");
+      }
+      chunks.push(Buffer.from(value));
+    }
+
+    const buffer = Buffer.concat(chunks);
+    return { response: res, buffer };
+  }
+
+  throw new ImportUrlError("Too many redirects.");
+}
+
 // ─── POST /documents/import-url ───────────────────────────────────────────────
 // Fetches a document from a Google Drive or Dropbox share URL, extracts text.
 router.post("/import-url", async (req, res) => {
@@ -2852,8 +2999,16 @@ router.post("/import-url", async (req, res) => {
   if (!userId) return res.status(401).json({ message: "unauthenticated" });
 
   const { url } = req.body as { url?: string };
-  if (!url || !url.startsWith("http")) {
+  if (!url || typeof url !== "string" || !url.trim()) {
     return res.status(400).json({ message: "A valid URL is required." });
+  }
+
+  // Validate before doing anything else (fast fail, no network contact)
+  try {
+    validateImportUrl(url.trim());
+  } catch (validationErr) {
+    const msg = validationErr instanceof Error ? validationErr.message : "A valid URL is required.";
+    return res.status(400).json({ message: msg });
   }
 
   try {
@@ -2877,24 +3032,12 @@ router.post("/import-url", async (req, res) => {
       guessedFilename = "dropbox-document";
     }
 
-    const fetchRes = await fetch(downloadUrl, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; PlainPath/1.0)",
-        "Accept": "*/*",
-      },
-      redirect: "follow",
-    });
-
-    if (!fetchRes.ok) {
-      return res.status(400).json({ message: `Could not fetch the document. The link may be expired or private. (Status: ${fetchRes.status})` });
-    }
+    const { response: fetchRes, buffer } = await safeFetch(downloadUrl);
 
     const contentType = (fetchRes.headers.get("content-type") ?? "").toLowerCase();
     const disposition = fetchRes.headers.get("content-disposition") ?? "";
     const filenameMatch = disposition.match(/filename[^;=\n]*=([^;\n"]*)/);
     if (filenameMatch?.[1]) guessedFilename = filenameMatch[1].trim().replace(/["']/g, "");
-
-    const buffer = Buffer.from(await fetchRes.arrayBuffer());
 
     let extractedText = "";
 
@@ -2925,6 +3068,9 @@ router.post("/import-url", async (req, res) => {
 
     return res.json({ text: extractedText, filename: guessedFilename });
   } catch (err) {
+    if (err instanceof ImportUrlError) {
+      return res.status(400).json({ message: err.message });
+    }
     const msg = err instanceof Error ? err.message : String(err);
     logger.error({ err: msg }, "documents/import-url failed");
     return res.status(500).json({ message: "Failed to import document from URL. Please try uploading the file directly." });
