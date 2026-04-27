@@ -226,7 +226,7 @@ export default function TrustCheck() {
   const demoId = new URLSearchParams(searchString).get("demo")
   const { trustCheckAnalysis, uploadedTrustFile, setUploadedTrustFile } = useAnalysisContext()
   const { isSignedIn } = useUser()
-  const { getToken } = useAuth()
+  const { getToken, userId } = useAuth()
   const { entitlements } = useEntitlements()
   const [showUpgrade, setShowUpgrade] = useState(false)
   const [demoAnalysis, setDemoAnalysis] = useState<TrustCheckAnalysis | null>(null)
@@ -376,7 +376,7 @@ export default function TrustCheck() {
         const saved = await saveCloudTrustCheck({ title, analysis }, token)
         setSavedId(saved.id)
       } catch {
-        const saved = saveTrustCheck({ title, analysis })
+        const saved = saveTrustCheck({ title, analysis }, userId)
         setSavedId(saved.id)
       }
     } else {

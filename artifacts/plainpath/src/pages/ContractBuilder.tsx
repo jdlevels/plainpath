@@ -22,6 +22,7 @@ import { saveRecentWork } from "@/lib/recentWork"
 import { useEntitlements } from "@/hooks/useEntitlements"
 import UpgradeModal from "@/components/UpgradeModal"
 import { WorkspaceShell } from "@/components/WorkspaceShell"
+import { useAuth } from "@clerk/react"
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -2529,15 +2530,21 @@ export default function ContractBuilder() {
   const [draftError, setDraftError] = useState<string | null>(null)
   const [upgradeModal, setUpgradeModal] = useState(false)
   const { entitlements } = useEntitlements()
+  const { userId, isLoaded: authLoaded } = useAuth()
+
+  const draftStorageKey = authLoaded
+    ? (userId ? `plainpath-contract-draft-latest-${userId}` : "plainpath-contract-draft-latest")
+    : null
 
   useEffect(() => {
     document.title = "Contract Builder — PlainPath"
     return () => { document.title = "PlainPath" }
   }, [])
 
-  // Load saved draft on mount
+  // Load saved draft only after auth resolves — keyed by userId to prevent cross-account exposure
   useEffect(() => {
-    const saved = localStorage.getItem("plainpath-contract-draft-latest")
+    if (!draftStorageKey) return
+    const saved = localStorage.getItem(draftStorageKey)
     if (saved) {
       try {
         const data = JSON.parse(saved)
@@ -2550,7 +2557,7 @@ export default function ContractBuilder() {
         // Ignore corrupted draft
       }
     }
-  }, [])
+  }, [draftStorageKey])
 
   const ruleInsights = useMemo(
     () => computeRuleInsights(step, contractType, people, scope, money, protection),
@@ -2587,8 +2594,9 @@ export default function ContractBuilder() {
   }, [contractType, people, scope, money, protection])
 
   function saveDraft() {
+    if (!draftStorageKey) return
     const data = { contractType, people, scope, money, protection }
-    localStorage.setItem("plainpath-contract-draft-latest", JSON.stringify({ ...data, savedAt: new Date().toISOString() }))
+    localStorage.setItem(draftStorageKey, JSON.stringify({ ...data, savedAt: new Date().toISOString() }))
     toast({ title: "Draft saved", description: "Your progress has been saved and will load next time you return." })
   }
 
@@ -2631,9 +2639,9 @@ export default function ContractBuilder() {
     void fetchAIInsights(next)
     window.scrollTo({ top: 0, behavior: "smooth" })
     // Auto-save progress on every step advance so mobile users don't lose work
-    if (contractType) {
+    if (contractType && draftStorageKey) {
       localStorage.setItem(
-        "plainpath-contract-draft-latest",
+        draftStorageKey,
         JSON.stringify({ contractType, people, scope, money, protection, savedAt: new Date().toISOString() })
       )
     }
@@ -2656,7 +2664,7 @@ export default function ContractBuilder() {
     setDraft(null)
     setDraftError(null)
     setAiInsights({ suggestions: [], warnings: [], draftGuidance: [] })
-    localStorage.removeItem("plainpath-contract-draft-latest")
+    if (draftStorageKey) localStorage.removeItem(draftStorageKey)
   }
 
   const canProceed = step === 0 ? !!contractType : true

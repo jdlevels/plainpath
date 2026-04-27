@@ -97,7 +97,7 @@ export default function Analyze() {
 
   const { entitlements, loading: entitlementsLoading } = useEntitlements()
   const { isSignedIn } = useUser()
-  const { getToken } = useAuth()
+  const { getToken, userId } = useAuth()
   const isPro = entitlements?.plan === "pro" || entitlements?.plan === "team"
   // Tabs locked to Pro plan. Starter plan includes: plain-english, summary, key-terms,
   // action-pack, documents (Required Docs), and deadlines.
@@ -221,7 +221,7 @@ export default function Analyze() {
             sourceKind: demoId ? "demo" : "document",
             documentTypeHint,
             analysis,
-          })
+          }, userId)
           setSavedId(saved.id)
           triggerFeedback()
         }

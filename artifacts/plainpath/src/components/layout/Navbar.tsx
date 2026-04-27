@@ -10,6 +10,7 @@ import { ThemeToggle } from "@/components/ui/ThemeToggle"
 import { useUser, useClerk } from "@clerk/react"
 import { useEntitlements } from "@/hooks/useEntitlements"
 import { BUILDER_ENABLED } from "@/lib/builderConfig"
+import { purgeUserScopedKeys } from "@/lib/storageCleanup"
 import { WhatsNew } from "@/components/WhatsNew"
 
 function LogoBrand() {
@@ -128,7 +129,7 @@ function UserMenu() {
           {/* Divider + Sign out */}
           <div className="border-t border-border/40 mt-1 pt-1">
             <button
-              onClick={async () => { setOpen(false); await signOut(); window.location.href = "/"; }}
+              onClick={async () => { setOpen(false); if (user?.id) purgeUserScopedKeys(user.id); await signOut(); window.location.href = "/"; }}
               className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
             >
               <LogOut className="w-3.5 h-3.5" />

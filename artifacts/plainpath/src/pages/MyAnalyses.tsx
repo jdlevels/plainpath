@@ -45,7 +45,7 @@ export default function MyAnalyses() {
   const { setAnalysis, setDocumentTypeHint, setTrustCheckAnalysis } = useAnalysisContext()
   const { entitlements, reload: reloadEntitlements } = useEntitlements()
   const { isSignedIn, isLoaded: authLoaded } = useUser()
-  const { getToken } = useAuth()
+  const { getToken, userId } = useAuth()
   const [items, setItems] = useState<SavedAnalysis[]>([])
   const [cloudLoading, setCloudLoading] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -93,8 +93,8 @@ export default function MyAnalyses() {
           setTrustChecks(checks)
         })
         .catch(() => {
-          setItems(getAll())
-          setTrustChecks(getAllTrustChecks())
+          setItems([])
+          setTrustChecks([])
         })
         .finally(() => setCloudLoading(false))
     } else {

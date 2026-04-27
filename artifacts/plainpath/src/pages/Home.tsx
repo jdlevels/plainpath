@@ -192,8 +192,8 @@ function timeAgo(iso: string): string {
 
 export default function Home() {
   const [, setLocation] = useLocation()
-  const { user } = useUser()
-  const { getToken } = useAuth()
+  const { user, isLoaded: authLoaded } = useUser()
+  const { getToken, userId } = useAuth()
   const { entitlements, isAdmin, loading: entLoading } = useEntitlements()
   const [recentWork, setRecentWork] = useState<RecentItem[]>([])
   const [recentLoading, setRecentLoading] = useState(true)
@@ -204,6 +204,7 @@ export default function Home() {
 
   // Load recent work — analyses + Clause Extractor sessions + Compare sessions + builder docs, merged by date
   useEffect(() => {
+    if (!authLoaded) return
     let cancelled = false
     async function load() {
       setRecentLoading(true)
@@ -226,12 +227,14 @@ export default function Home() {
                 title: a.title,
                 savedAt: a.savedAt,
               }))
-            : getLocalAnalyses().map((a: SavedAnalysis) => ({
-                kind: "analysis" as const,
-                id: a.id,
-                title: a.title,
-                savedAt: a.savedAt,
-              }))
+            : userId
+              ? []
+              : getLocalAnalyses().map((a: SavedAnalysis) => ({
+                  kind: "analysis" as const,
+                  id: a.id,
+                  title: a.title,
+                  savedAt: a.savedAt,
+                }))
 
         const clauses: RecentItem[] =
           clauseSessions.status === "fulfilled"
@@ -291,20 +294,24 @@ export default function Home() {
 
         if (!cancelled) setRecentWork(merged)
       } catch {
-        const local = getLocalAnalyses().slice(0, 4).map((a: SavedAnalysis) => ({
-          kind: "analysis" as const,
-          id: a.id,
-          title: a.title,
-          savedAt: a.savedAt,
-        }))
-        if (!cancelled) setRecentWork(local)
+        if (!userId) {
+          const local = getLocalAnalyses().slice(0, 4).map((a: SavedAnalysis) => ({
+            kind: "analysis" as const,
+            id: a.id,
+            title: a.title,
+            savedAt: a.savedAt,
+          }))
+          if (!cancelled) setRecentWork(local)
+        } else {
+          if (!cancelled) setRecentWork([])
+        }
       } finally {
         if (!cancelled) setRecentLoading(false)
       }
     }
     void load()
     return () => { cancelled = true }
-  }, [])
+  }, [authLoaded, userId])
 
   function canAccessTool(toolKey: string): boolean {
     if (isAdmin) return true

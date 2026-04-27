@@ -14,6 +14,7 @@ import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { initStatusBar } from "@/lib/native";
 import { captureInboundRef } from "@/lib/referral";
 import { isNative } from "@/lib/platform";
+import { purgeLegacyGlobalKeys } from "@/lib/storageCleanup";
 
 import Home from "@/pages/Home";
 import Import from "@/pages/Import";
@@ -567,6 +568,7 @@ function App() {
   useEffect(() => {
     void initStatusBar();
     captureInboundRef();
+    purgeLegacyGlobalKeys();
   }, []);
 
   return (
