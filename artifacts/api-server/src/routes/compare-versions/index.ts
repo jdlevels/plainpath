@@ -81,8 +81,20 @@ async function runBackgroundScan(
       [JSON.stringify(diffResult), sessionId],
     );
     console.debug(`[compare-versions] scan complete for ${sessionId} — ${diffResult.stats.total} items`);
-    runBackgroundEnrich(sessionId, false).catch((err) =>
-      console.error(`[compare-versions] enrichment post-scan error for ${sessionId}:`, err),
+    // Atomically claim the enrichment slot before spawning the background job.
+    // This prevents a race with a concurrent manual /enrich request that may
+    // have observed ai_status = 'idle' just as the scan finished.
+    pool.query(
+      `UPDATE compare_versions_sessions SET ai_status = 'running', updated_at = NOW()
+       WHERE id = $1 AND ai_status != 'running'`,
+      [sessionId],
+    ).then((claimResult) => {
+      if ((claimResult.rowCount ?? 0) === 0) return; // already claimed by another caller
+      runBackgroundEnrich(sessionId, false).catch((err) =>
+        console.error(`[compare-versions] enrichment post-scan error for ${sessionId}:`, err),
+      );
+    }).catch((err) =>
+      console.error(`[compare-versions] enrichment claim error for ${sessionId}:`, err),
     );
   } catch (err) {
     console.error(`[compare-versions] scan error for ${sessionId}:`, err);
@@ -399,10 +411,18 @@ router.post("/sessions/:id/scan", requireEntitlement("compare-versions"), async 
     // this try block without having handed off ownership to the IIFE.
     let handedOffToBackground = false;
     try {
-      await pool.query(
-        `UPDATE compare_versions_sessions SET status = 'scanning', ai_status = 'idle', updated_at = NOW() WHERE id = $1`,
+      // Atomic compare-and-set: only update if status is still not 'scanning'.
+      // This guards against concurrent requests that both passed the read check
+      // above but race to claim the transition — only one UPDATE will match.
+      const updateResult = await pool.query(
+        `UPDATE compare_versions_sessions SET status = 'scanning', ai_status = 'idle', updated_at = NOW()
+         WHERE id = $1 AND status != 'scanning'`,
         [req.params.id],
       );
+      if (updateResult.rowCount === 0) {
+        // Another concurrent request already claimed the scanning state.
+        return res.status(409).json({ error: "already_scanning" });
+      }
 
       // Hand permit ownership to the background IIFE before launching it.
       handedOffToBackground = true;
@@ -452,6 +472,21 @@ router.post("/sessions/:id/enrich", requireEntitlement("compare-versions"), asyn
       return res.status(409).json({ error: "already_enriching" });
 
     const forceAll = req.body?.forceAll === true;
+
+    // Atomically claim the enrichment slot before dispatching the background job.
+    // This prevents concurrent callers (or a concurrent auto-enrich from
+    // runBackgroundScan) from each reading ai_status = 'idle' and all launching
+    // separate OpenAI passes over the same session.
+    const claimResult = await pool.query(
+      `UPDATE compare_versions_sessions SET ai_status = 'running', updated_at = NOW()
+       WHERE id = $1 AND ai_status != 'running'`,
+      [req.params.id],
+    );
+    if (claimResult.rowCount === 0) {
+      // Another concurrent request already claimed enrichment.
+      return res.status(409).json({ error: "already_enriching" });
+    }
+
     runBackgroundEnrich(req.params.id, forceAll).catch((err) =>
       console.error(`[compare-versions] manual enrich error for ${req.params.id}:`, err),
     );

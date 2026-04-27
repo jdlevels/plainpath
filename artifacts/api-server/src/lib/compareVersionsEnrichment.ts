@@ -169,11 +169,9 @@ async function callOpenAiBatch(
 export async function runBackgroundEnrich(sessionId: string, forceAll = false): Promise<void> {
   try {
     console.log(`[compare-versions] enrichment starting for session ${sessionId}`);
-
-    await pool.query(
-      `UPDATE compare_versions_sessions SET ai_status = 'running', updated_at = NOW() WHERE id = $1`,
-      [sessionId],
-    );
+    // NOTE: callers are responsible for atomically claiming ai_status = 'running'
+    // before invoking this function. Do NOT set it here — that would re-introduce
+    // the non-atomic read-then-write race between concurrent callers.
 
     const result = await pool.query(
       `SELECT diff_result FROM compare_versions_sessions WHERE id = $1`,
