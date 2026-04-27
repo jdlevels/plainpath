@@ -39,6 +39,25 @@ app.set("trust proxy", 1);
 // Clerk proxy must be mounted before body parsers (streams raw bytes)
 app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
 
+// Redact bearer-style secrets embedded in path parameters before logging.
+// Routes that use a path token as their only secret material are listed here;
+// the token segment is replaced with "[redacted]" so logs never capture it.
+const REDACTED_PATH_PATTERNS: RegExp[] = [
+  /^(\/api\/shares\/)([^/?#]+)/,
+  /^(\/api\/teams\/invite\/)([^/?#]+)/,
+];
+
+function redactSensitivePath(url: string | undefined): string {
+  if (!url) return "";
+  const path = url.split("?")[0];
+  for (const pattern of REDACTED_PATH_PATTERNS) {
+    if (pattern.test(path)) {
+      return path.replace(pattern, "$1[redacted]");
+    }
+  }
+  return path;
+}
+
 app.use(
   pinoHttp({
     logger,
@@ -47,7 +66,7 @@ app.use(
         return {
           id: req.id,
           method: req.method,
-          url: req.url?.split("?")[0],
+          url: redactSensitivePath(req.url),
         };
       },
       res(res) {
@@ -354,7 +373,7 @@ app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
   }
 
   const errMsg = err instanceof Error ? err.message : String(err);
-  logger.error({ err: errMsg, url: req.url, method: req.method }, "Unhandled error reached global handler");
+  logger.error({ err: errMsg, url: redactSensitivePath(req.url), method: req.method }, "Unhandled error reached global handler");
 
   // Classify common error types that escape route handlers
   if (typeof errMsg === "string") {
