@@ -2087,18 +2087,14 @@ async function extractTextFromBuffer(
 
   if (mime === "application/pdf" || originalName.endsWith(".pdf")) {
     let pdfText: string | null = null;
-    let pdfMeta: Record<string, string> | undefined;
     let parseErr: string | null = null;
     try {
-      const pdfMod = await import("pdf-parse/lib/pdf-parse.js");
-      const pdfParse: (buf: Buffer) => Promise<{ text: string; info?: Record<string, string> }> =
-        (pdfMod as any).default ?? (pdfMod as any);
-      const result = await pdfParse(file.buffer);
-      pdfText = result?.text ?? null;
-      if (result?.info && typeof result.info === "object") {
-        pdfMeta = result.info as Record<string, string>;
-      }
+      const pdfResult = await parsePdfWithLimits(file.buffer);
+      pdfText = pdfResult.text ?? null;
     } catch (err) {
+      if (err instanceof ParseResourceLimitError) {
+        return { text: "", title, error: { status: 400, body: { error: "document_too_large", message: err.message } } };
+      }
       parseErr = err instanceof Error ? err.message : String(err);
     }
     if (parseErr !== null) {
@@ -2107,7 +2103,7 @@ async function extractTextFromBuffer(
     if (!pdfText || !pdfText.trim()) {
       return { text: "", title, error: { status: 422, body: { error: "scanned_pdf", message: "This PDF appears to contain only images (scanned document). PlainPath cannot read image-based PDFs — please copy and paste the text instead." } } };
     }
-    return { text: pdfText, title, pdfMetadata: pdfMeta };
+    return { text: pdfText, title };
   }
 
   if (
@@ -2115,14 +2111,15 @@ async function extractTextFromBuffer(
     originalName.endsWith(".docx")
   ) {
     try {
-      const mammoth = await import("mammoth");
-      const result = await mammoth.extractRawText({ buffer: file.buffer });
-      const text = result.value ?? "";
+      const text = await parseDocxWithLimits(file.buffer);
       if (!text.trim()) {
         return { text: "", title, error: { status: 422, body: { error: "empty_docx", message: "This Word document appears to be empty or contains no readable text. Please paste the text instead." } } };
       }
       return { text, title };
-    } catch {
+    } catch (err) {
+      if (err instanceof ParseResourceLimitError) {
+        return { text: "", title, error: { status: 400, body: { error: "document_too_large", message: (err as Error).message } } };
+      }
       return { text: "", title, error: { status: 422, body: { error: "unreadable_docx", message: "Could not read this Word document. It may be corrupted. Please try re-saving it as a .docx or paste the text instead." } } };
     }
   }
