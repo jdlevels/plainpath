@@ -574,6 +574,9 @@ importers:
       '@sentry/react':
         specifier: ^10.48.0
         version: 10.48.0(react@19.1.0)
+      pdf-lib:
+        specifier: ^1.17.1
+        version: 1.17.1
       pdfjs-dist:
         specifier: ^5.6.205
         version: 5.6.205

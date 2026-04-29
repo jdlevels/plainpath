@@ -34,7 +34,7 @@ import { ToolPageHeader } from "@/components/ToolPageHeader"
 import { PiiReview } from "@/components/PiiReview"
 import { PdfRedactViewer } from "@/components/PdfRedactViewer"
 import { getApiBaseUrl } from "@/lib/api"
-import { downloadRedactedPdf, downloadRedactedText } from "@/lib/piiExport"
+import { downloadRedactedPdfClient, downloadRedactedText } from "@/lib/piiExport"
 import { saveRecentWork } from "@/lib/recentWork"
 import { useEntitlements } from "@/hooks/useEntitlements"
 import UpgradeModal from "@/components/UpgradeModal"
@@ -239,6 +239,7 @@ export default function Redact() {
   const [pdfApprovedValues, setPdfApprovedValues] = useState<string[]>([])
   const [pdfDownloading, setPdfDownloading] = useState(false)
   const [pdfDownloadError, setPdfDownloadError] = useState<string | null>(null)
+  const [pdfProgressText, setPdfProgressText] = useState<string | null>(null)
 
   // On mount: check if we were launched from another tool's "Redact first" flow
   useEffect(() => {
@@ -441,10 +442,13 @@ export default function Redact() {
     if (!uploadedFile || pdfDownloading) return
     setPdfDownloading(true)
     setPdfDownloadError(null)
+    setPdfProgressText(null)
     try {
-      const apiBase = getApiBaseUrl()
-      const redactPdfToken = await getToken().catch(() => null)
-      await downloadRedactedPdf(uploadedFile, pdfApprovedValues, apiBase, redactPdfToken)
+      await downloadRedactedPdfClient(
+        uploadedFile,
+        pdfApprovedValues,
+        (current, total) => setPdfProgressText(`Building page ${current} of ${total}…`),
+      )
       saveRecentWork({
         tool: "redact",
         title: uploadedFile.name.replace(/\.[^.]+$/, ""),
@@ -453,6 +457,7 @@ export default function Redact() {
       setPdfDownloadError(err instanceof Error ? err.message : "PDF download failed. Please try again.")
     } finally {
       setPdfDownloading(false)
+      setPdfProgressText(null)
     }
   }
 
@@ -564,7 +569,7 @@ export default function Redact() {
                   disabled={pdfDownloading}
                 >
                   {pdfDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
-                  {pdfDownloading ? "Building redacted PDF…" : "Download Redacted PDF"}
+                  {pdfDownloading ? (pdfProgressText ?? "Building redacted PDF…") : "Download Redacted PDF"}
                 </Button>
                 {pdfDownloadError && <p className="text-xs text-destructive text-center">{pdfDownloadError}</p>}
                 <p className="text-[10px] text-center text-muted-foreground/40">
