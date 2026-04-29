@@ -1,0 +1,68 @@
+Fix Redact PDF preview page access.
+
+Problem:
+The Redact Sensitive Info preview shows:
+“Showing first 8 of 25 pages — all pages redacted on download”
+but the user has no way to inspect pages 9–25 before exporting. This is unacceptable for a redaction tool because users must be able to review every page and verify redactions before downloading.
+
+Do not redesign the whole tool.
+Do not change pricing, billing, Stripe, auth, marketing, public demos, database schema, or unrelated tools.
+Do not reintroduce e-signature, Digital Signature, Dropbox Sign, or send-for-signature.
+Do not weaken the PDF redaction safety fix.
+Do not remove the rasterized/image-only redaction export requirement.
+
+Required fix:
+1. Remove the hard user-facing limitation that only allows viewing the first 8 pages with no navigation.
+2. The Redact PDF preview must allow users to inspect every page in the PDF before export.
+3. Add page navigation controls to the Redact document preview:
+   - Page X of Y
+   - Previous page
+   - Next page
+   - Jump to page input
+   - Optional: First page / Last page buttons
+4. Keep the current scroll preview if desired, but add a clear way to reach pages beyond the first 8.
+5. If performance requires limiting simultaneous rendering, that is acceptable, but navigation must still allow access to all pages.
+6. Do not render all pages at once if that creates memory/performance risk.
+7. Preserve selected redaction values and page associations when moving between pages.
+8. If a selected value appears on page 12, the user must be able to navigate to page 12 and visually confirm the redaction.
+9. Update the bottom message. Replace:
+   “Showing first 8 of 25 pages — all pages redacted on download”
+   with a clearer message such as:
+   “Previewing page X of Y. Use page controls to review every page before export.”
+10. If a multi-page scroll mode remains, use:
+   “Showing pages 1–8 of 25. Use Load more or page controls to review remaining pages.”
+11. Add a warning if the user exports without reviewing all pages:
+   “You have not reviewed every page. Redactions will still apply to selected matches, but review all pages before sharing.”
+   This should be informational, not blocking.
+12. Keep the export behavior unchanged except for the safety requirement already being fixed:
+   - exported PDF must remain rasterized/image-only
+   - redacted text must not be selectable/searchable/copyable
+   - original PDF must remain unchanged
+13. Mobile must also support page navigation without trapping the user on the first 8 pages.
+
+Testing required:
+1. Upload a PDF with more than 8 pages.
+2. Confirm the preview shows total page count.
+3. Confirm user can navigate to page 9, page 12, and final page.
+4. Confirm jump-to-page works.
+5. Confirm previous/next buttons disable correctly at first and last page.
+6. Confirm selected redactions remain selected after page navigation.
+7. Confirm redaction highlights/black bars appear on later pages when applicable.
+8. Confirm export still redacts all selected values across all pages.
+9. Confirm exported redacted PDF remains safe/rasterized/image-only.
+10. Confirm redacted values cannot be selected, searched, or copied from the exported PDF.
+11. Confirm large PDFs do not freeze the browser.
+12. Confirm TypeScript baseline does not increase.
+13. Confirm app and API server start cleanly.
+
+Return:
+A. Files changed
+B. Root cause of the 8-page preview limit
+C. New page navigation behavior
+D. Updated bottom message
+E. How later-page redactions are preserved
+F. Large-PDF performance protection
+G. Mobile behavior
+H. Redacted export safety confirmation
+I. TypeScript result
+J. Whether Redact multi-page preview is safe to lock
