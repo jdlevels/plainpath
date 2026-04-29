@@ -13,10 +13,21 @@ const port = rawPort ? Number(rawPort) : 3000;
 // to the /app/ subpath — even if BASE_PATH is not injected by the build runner.
 const basePath = process.env.BASE_PATH ?? "/app/";
 
+// ── Clerk publishable key resolution ──────────────────────────────────────────
+// CLERK_PUBLISHABLE_KEY (no VITE_ prefix) is the authoritative key because it
+// is paired with CLERK_SECRET_KEY on the server.  Both must reference the same
+// Clerk instance or JWT verification will fail on every authenticated API call.
+// We prefer CLERK_PUBLISHABLE_KEY and fall back to VITE_CLERK_PUBLISHABLE_KEY
+// so the frontend always uses the same Clerk instance as the API server.
+const clerkPubKeyForFrontend =
+  process.env.CLERK_PUBLISHABLE_KEY ||
+  process.env.VITE_CLERK_PUBLISHABLE_KEY ||
+  "";
+
 export default defineConfig({
   base: basePath,
   define: {
-    "import.meta.env.VITE_CLERK_PUBLISHABLE_KEY": JSON.stringify(process.env.VITE_CLERK_PUBLISHABLE_KEY ?? ""),
+    "import.meta.env.VITE_CLERK_PUBLISHABLE_KEY": JSON.stringify(clerkPubKeyForFrontend),
     "import.meta.env.VITE_CLERK_PROXY_URL": JSON.stringify(process.env.VITE_CLERK_PROXY_URL ?? ""),
     "import.meta.env.VITE_BUILDER_ENABLED": JSON.stringify(process.env.VITE_BUILDER_ENABLED ?? ""),
     // VITE_API_BASE_URL: empty string on web (same-origin); absolute URL required for native Capacitor builds.
