@@ -65,13 +65,19 @@ import { FirstRunOnboarding } from "@/components/FirstRunOnboarding";
 import { OfflineBanner } from "@/components/OfflineBanner";
 
 // VITE_CLERK_PUBLISHABLE_KEY must be just the key value (pk_live_... or pk_test_...).
-// Guard against a common misconfiguration where the entire shell assignment line
-// ("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_...") was pasted as the secret value.
-// In that case we extract everything after the first "=" so Clerk receives a valid key.
+// Guard against misconfigured secrets where the raw value contains extra content such as:
+//   - the full shell assignment  ("VITE_CLERK_PUBLISHABLE_KEY=pk_live_...")
+//   - multiple env-var lines pasted together ("pk_live_XXX CLERK_SECRET_KEY=sk_live_...")
+// We extract only the valid pk_live_/pk_test_ token using a regex, which stops at the
+// first non-base64 character (space, newline, etc.), then fall back to the old slice
+// heuristic, and finally to the raw value as-is.
 const _rawClerkKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY ?? "";
-const clerkPubKey = _rawClerkKey.includes("=")
-  ? _rawClerkKey.slice(_rawClerkKey.indexOf("=") + 1).trim()
-  : _rawClerkKey.trim();
+const _keyMatch = _rawClerkKey.match(/pk_(live|test)_[A-Za-z0-9+/]+=*/);
+const clerkPubKey = _keyMatch
+  ? _keyMatch[0]
+  : (_rawClerkKey.includes("=")
+      ? _rawClerkKey.slice(_rawClerkKey.indexOf("=") + 1).trim()
+      : _rawClerkKey.trim());
 
 const clerkProxyUrl = import.meta.env.VITE_CLERK_PROXY_URL;
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
