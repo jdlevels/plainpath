@@ -2530,7 +2530,7 @@ export default function ContractBuilder() {
   const [draftError, setDraftError] = useState<string | null>(null)
   const [upgradeModal, setUpgradeModal] = useState(false)
   const { entitlements } = useEntitlements()
-  const { userId, isLoaded: authLoaded } = useAuth()
+  const { userId, isLoaded: authLoaded, getToken } = useAuth()
 
   const draftStorageKey = authLoaded
     ? (userId ? `plainpath-contract-draft-latest-${userId}` : "plainpath-contract-draft-latest")
@@ -2575,9 +2575,13 @@ export default function ContractBuilder() {
     setInsightLoading(true)
     try {
       const base = getApiBaseUrl()
+      const tok = await getToken().catch(() => null)
       const r = await fetch(`${base}/api/contracts/insight`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(tok ? { Authorization: `Bearer ${tok}` } : {}),
+        },
         body: JSON.stringify({ contractType, step: nextStep, people, scope, money, protection }),
       })
       const data = await r.json()
@@ -2617,9 +2621,13 @@ export default function ContractBuilder() {
     setDraftError(null)
     try {
       const base = getApiBaseUrl()
+      const tok = await getToken().catch(() => null)
       const r = await fetch(`${base}/api/contracts/generate-draft`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(tok ? { Authorization: `Bearer ${tok}` } : {}),
+        },
         body: JSON.stringify({ contractType, people, scope, money, protection }),
       })
       const data = await r.json()

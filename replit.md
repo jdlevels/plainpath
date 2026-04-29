@@ -68,6 +68,23 @@ PlainPath is a monorepo built with pnpm workspaces, separating frontend and back
   4. **Check API server logs**: Look for `"Stripe managed webhook configured"` on startup, and no 400 webhook-rejected errors around the time of the checkout.
   5. If the subscriber row is missing despite a successful checkout: restart the API server (which re-runs `initStripe()` and reloads the secret from DB), then re-trigger the webhook from the Stripe Dashboard event log using "Resend".
 
+## Mobile Auth Fix (Round 2) — Completed April 2026
+
+**Root causes fixed:**
+1. `lib/entitlements.ts` — all 4 API calls used root-relative `/api/...` URLs (completely broken on native mobile, where there is no implicit origin). Fixed to use `getApiBaseUrl()`. Added optional `token?` param to `fetchEntitlements`, `consumeToolUsage`, `consumeAnalysis`, `openBillingPortal`.
+2. `hooks/useEntitlements.ts` — bootstrap call used root-relative URL + had no auth header (server requires auth). Fixed URL, added `useAuth`/`getToken`, passes token to both bootstrap and `fetchEntitlements`.
+3. `lib/piiExport.ts` — `downloadRedactedPdf` had no token param. Added `token?` param.
+4. **Pages/components fixed** (all now send `Authorization: Bearer <token>` on every API call):
+   - `pages/Compare.tsx` — extract-text (DocumentInput sub-component) + compare
+   - `pages/TeamManage.tsx` — all 5 team management calls (fetch, create, invite, remove member, cancel invite)
+   - `pages/ContractReview.tsx` — negotiate-clause (ClauseCard sub-component), scan-images, review (2 variants)
+   - `pages/ContractBuilder.tsx` — insight, generate-draft
+   - `components/HelpWidget.tsx` — help/chat
+   - `components/PiiReview.tsx` — detect-pii (AppliedView sub-component + PiiReview), downloadRedactedPdf
+   - `pages/Redact.tsx` — downloadRedactedPdf call
+   - `pages/Analyze.tsx` — explain-section (ChecklistTab sub-component), shares POST
+   - `pages/Billing.tsx` — openBillingPortal
+
 ## External Dependencies
 -   **OpenAI**: AI functionalities.
 -   **PostgreSQL**: Primary database (Drizzle ORM).

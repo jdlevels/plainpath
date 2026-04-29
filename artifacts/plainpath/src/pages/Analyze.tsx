@@ -974,6 +974,7 @@ function ChecklistTab({
   documentTypeHint?: string | null
   onOpenGuidedReview?: () => void
 }) {
+  const { getToken } = useAuth()
   const remaining = analysis.actionSteps.filter(s => !s.completed).length
   const [explainId, setExplainId] = useState<string | null>(null)
   const [explainMap, setExplainMap] = useState<Record<string, ExplainResult | "loading">>({})
@@ -985,9 +986,13 @@ function ChecklistTab({
     setExplainMap(prev => ({ ...prev, [step.id]: "loading" }))
     try {
       const base = getApiBaseUrl()
+      const tok = await getToken().catch(() => null)
       const res = await fetch(`${base}/api/documents/explain-section`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(tok ? { Authorization: `Bearer ${tok}` } : {}),
+        },
         body: JSON.stringify({ sectionTitle: step.title, sectionContent: step.description, documentTypeHint }),
       })
       const data = await res.json()
@@ -2806,9 +2811,13 @@ function ExportMenu({ analysis }: { analysis: DocumentAnalysis }) {
     try {
       const base = getApiBaseUrl()
       const sanitized = sanitizeAnalysisForShare(analysis)
+      const shareTok = await getToken().catch(() => null)
       const res = await fetch(`${base}/api/shares`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(shareTok ? { Authorization: `Bearer ${shareTok}` } : {}),
+        },
         body: JSON.stringify({ analysis: sanitized }),
       })
       const data = await res.json() as { token?: string }

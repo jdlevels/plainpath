@@ -443,7 +443,8 @@ export default function Redact() {
     setPdfDownloadError(null)
     try {
       const apiBase = getApiBaseUrl()
-      await downloadRedactedPdf(uploadedFile, pdfApprovedValues, apiBase)
+      const redactPdfToken = await getToken().catch(() => null)
+      await downloadRedactedPdf(uploadedFile, pdfApprovedValues, apiBase, redactPdfToken)
       saveRecentWork({
         tool: "redact",
         title: uploadedFile.name.replace(/\.[^.]+$/, ""),

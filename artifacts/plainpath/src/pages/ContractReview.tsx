@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react"
+import { useAuth } from "@clerk/react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   Scale, UploadCloud, Loader2, AlertCircle, Copy, Check,
@@ -419,6 +420,7 @@ function ClauseCard({
   selected?: boolean
   onSelect?: () => void
 }) {
+  const { getToken } = useAuth()
   const [open, setOpen] = useState(defaultOpen)
   const config = RATING_CONFIG[clause.rating]
   const Icon = config.icon
@@ -441,9 +443,13 @@ function ClauseCard({
     setNegError(null)
     try {
       const base = getApiBaseUrl()
+      const tok = await getToken().catch(() => null)
       const res = await fetch(`${base}/api/contracts/negotiate-clause`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(tok ? { Authorization: `Bearer ${tok}` } : {}),
+        },
         body: JSON.stringify({
           clauseText: clause.text,
           explanation: clause.explanation,
@@ -1052,6 +1058,7 @@ export default function ContractReview() {
   const [copyDone, setCopyDone] = useState(false)
 
   const { entitlements } = useEntitlements()
+  const { getToken } = useAuth()
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const cameraInputRef = useRef<HTMLInputElement>(null)
@@ -1080,9 +1087,13 @@ export default function ContractReview() {
     setError(null)
     try {
       const base = getApiBaseUrl()
+      const tok = await getToken().catch(() => null)
       const response = await fetch(`${base}/api/contracts/scan-images`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(tok ? { Authorization: `Bearer ${tok}` } : {}),
+        },
         body: JSON.stringify({ images: capturedImages }),
       })
       const data = await response.json() as ReviewResult & { message?: string }
@@ -1110,12 +1121,17 @@ export default function ContractReview() {
     setLoading(true)
     try {
       const base = getApiBaseUrl()
+      const tok = await getToken().catch(() => null)
       let response: Response
 
       if (activeTab === "upload" && file) {
         const fd = new FormData()
         fd.append("file", file)
-        response = await fetch(`${base}/api/contracts/review`, { method: "POST", body: fd })
+        response = await fetch(`${base}/api/contracts/review`, {
+          method: "POST",
+          headers: tok ? { Authorization: `Bearer ${tok}` } : undefined,
+          body: fd,
+        })
       } else {
         if (!text.trim() || text.trim().length < 50) {
           setError("Please paste at least 50 characters of contract text.")
@@ -1125,7 +1141,10 @@ export default function ContractReview() {
         }
         response = await fetch(`${base}/api/contracts/review`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(tok ? { Authorization: `Bearer ${tok}` } : {}),
+          },
           body: JSON.stringify({ text: text.trim() }),
         })
       }

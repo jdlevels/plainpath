@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { useAuth } from "@clerk/react"
 import { useLocation } from "wouter"
 import { motion } from "framer-motion"
 import {
@@ -94,6 +95,7 @@ function SubscriptionNotFoundCard() {
 // ─── Main Billing Page ────────────────────────────────────────────────────────
 
 export default function Billing() {
+  const { getToken } = useAuth()
   const [, navigate] = useLocation()
   const [portalLoading, setPortalLoading] = useState(false)
   const [portalError, setPortalError] = useState<string | null>(null)
@@ -120,7 +122,8 @@ export default function Billing() {
     setPortalError(null)
     trackEvent("portal_opened", { plan: plan ?? "unknown" })
     try {
-      await openBillingPortal()
+      const tok = await getToken().catch(() => null)
+      await openBillingPortal(tok)
     } catch (err) {
       setPortalError(err instanceof Error ? err.message : "Unable to open billing portal.")
       setPortalLoading(false)

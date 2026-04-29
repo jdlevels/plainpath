@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react"
+import { useAuth } from "@clerk/react"
 import { useLocation } from "wouter"
 import { MessageCircle, X, Send, Loader2, Bot, ChevronDown, Zap } from "lucide-react"
 import { getApiBaseUrl } from "@/lib/api"
@@ -228,6 +229,7 @@ function renderMarkdown(content: string) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function HelpWidget() {
+  const { getToken } = useAuth()
   const [location] = useLocation()
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
@@ -280,9 +282,13 @@ export function HelpWidget() {
     setError(null)
 
     try {
+      const tok = await getToken().catch(() => null)
       const res = await fetch(`${getApiBaseUrl()}/api/help/chat`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(tok ? { Authorization: `Bearer ${tok}` } : {}),
+        },
         body: JSON.stringify({
           messages: newMessages.filter((m) => m.role !== "assistant" || newMessages.indexOf(m) > 0),
           pageContext: pageContextLabel,

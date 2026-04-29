@@ -5,6 +5,7 @@
 // Layout: two-column on lg+ (left=preview, right=controls), stacked on mobile.
 
 import { useState, useEffect, useMemo, useCallback } from "react"
+import { useAuth } from "@clerk/react"
 import {
   ShieldCheck, ShieldAlert, Check, X, Download, Copy, ChevronRight,
   Loader2, AlertCircle, RotateCcw, ArrowRight, ArrowLeft,
@@ -189,6 +190,7 @@ function AppliedView({
   onAnalyze: () => void
   onReset: () => void
 }) {
+  const { getToken } = useAuth()
   const [copied, setCopied] = useState(false)
   const [showRedacted, setShowRedacted] = useState(false)
   const [pdfDownloading, setPdfDownloading] = useState(false)
@@ -212,7 +214,8 @@ function AppliedView({
     setPdfDownloading(true)
     setPdfError(null)
     try {
-      await downloadRedactedPdf(sourcePdfFile, approvedValues, getApiBaseUrl())
+      const tok = await getToken().catch(() => null)
+      await downloadRedactedPdf(sourcePdfFile, approvedValues, getApiBaseUrl(), tok)
     } catch (err) {
       setPdfError(err instanceof Error ? err.message : "PDF download failed. Please try again.")
     } finally {
@@ -419,6 +422,7 @@ export function PiiReview({
   sourcePdfFile,
   sourceImageFile,
 }: Props) {
+  const { getToken } = useAuth()
   const [status, setStatus] = useState<DetectStatus>("detecting")
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [spans, setSpans] = useState<PiiSpanWithStatus[]>([])
@@ -442,9 +446,13 @@ export function PiiReview({
     ;(async () => {
       try {
         const apiBase = getApiBaseUrl()
+        const tok = await getToken().catch(() => null)
         const res = await fetch(`${apiBase}/api/documents/detect-pii`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(tok ? { Authorization: `Bearer ${tok}` } : {}),
+          },
           body: JSON.stringify({ text }),
         })
         if (!res.ok) throw new Error(`Detection failed (${res.status})`)

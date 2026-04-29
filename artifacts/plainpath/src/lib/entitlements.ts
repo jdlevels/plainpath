@@ -17,6 +17,8 @@
 //
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { getApiBaseUrl } from "./api"
+
 export type PlanKey = "starter" | "pro"
 export type RoleKey = "admin" | "member"
 export type AccessTier = "starter" | "pro"
@@ -62,12 +64,16 @@ export type EntitlementStatus = {
 export async function fetchEntitlements(
   email: string,
   clerkUserId?: string | null,
+  token?: string | null,
 ): Promise<EntitlementStatus> {
   const params = new URLSearchParams()
   if (email) params.set("email", email)
   if (clerkUserId) params.set("clerkUserId", clerkUserId)
 
-  const response = await fetch(`/api/entitlements/status?${params.toString()}`)
+  const headers: Record<string, string> = {}
+  if (token) headers["Authorization"] = `Bearer ${token}`
+
+  const response = await fetch(`${getApiBaseUrl()}/api/entitlements/status?${params.toString()}`, { headers })
   const data = await response.json()
 
   if (!response.ok) {
@@ -86,11 +92,15 @@ export async function fetchEntitlements(
 
 export async function consumeToolUsage(
   _email: string,
-  tool: ToolKey
+  tool: ToolKey,
+  token?: string | null,
 ): Promise<{ ok: boolean; plan: string; tool: string; enforced: boolean }> {
-  const response = await fetch("/api/entitlements/consume", {
+  const response = await fetch(`${getApiBaseUrl()}/api/entitlements/consume`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
     body: JSON.stringify({ tool }),
   })
 
@@ -108,10 +118,13 @@ export async function consumeToolUsage(
 // the email parameter is accepted for call-site compatibility but is not sent
 // to the server.
 
-export async function consumeAnalysis(_email: string) {
-  const response = await fetch("/api/entitlements/consume-analysis", {
+export async function consumeAnalysis(_email: string, token?: string | null) {
+  const response = await fetch(`${getApiBaseUrl()}/api/entitlements/consume-analysis`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
     body: JSON.stringify({}),
   })
 
@@ -134,10 +147,13 @@ export async function consumeAnalysis(_email: string) {
 // Requires an active Clerk session. The server resolves subscriber identity
 // from the authenticated session — no caller-supplied email is needed.
 
-export async function openBillingPortal(): Promise<void> {
-  const response = await fetch("/api/stripe/billing-portal", {
+export async function openBillingPortal(token?: string | null): Promise<void> {
+  const response = await fetch(`${getApiBaseUrl()}/api/stripe/billing-portal`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
     body: JSON.stringify({}),
   })
 

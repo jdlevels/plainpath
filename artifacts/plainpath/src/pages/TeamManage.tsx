@@ -3,7 +3,7 @@ import { motion } from "framer-motion"
 import { Users, Plus, Loader2, Mail, Trash2, Copy, Check, Crown } from "lucide-react"
 import { WorkspaceShell } from "@/components/WorkspaceShell"
 import { getApiBaseUrl } from "@/lib/api"
-import { useUser } from "@clerk/react"
+import { useUser, useAuth } from "@clerk/react"
 import { useEntitlements } from "@/hooks/useEntitlements"
 
 type Team = { id: string; name: string; ownerId: string; inviteCode: string; myRole: string }
@@ -12,6 +12,7 @@ type Invite = { id: string; invitedEmail: string; status: string; createdAt: str
 
 export default function TeamManage() {
   const { user } = useUser()
+  const { getToken } = useAuth()
   const { entitlements } = useEntitlements()
   const [team, setTeam] = useState<Team | null>(null)
   const [members, setMembers] = useState<Member[]>([])
@@ -43,7 +44,10 @@ export default function TeamManage() {
   const fetchTeam = async () => {
     setLoading(true)
     try {
-      const res = await fetch(`${apiBase}/api/teams/mine`)
+      const tok = await getToken().catch(() => null)
+      const res = await fetch(`${apiBase}/api/teams/mine`, {
+        headers: tok ? { Authorization: `Bearer ${tok}` } : undefined,
+      })
       const data = await res.json()
       if (data.team) {
         setTeam(data.team)
@@ -66,9 +70,13 @@ export default function TeamManage() {
     setCreating(true)
     setCreateError(null)
     try {
+      const tok = await getToken().catch(() => null)
       const res = await fetch(`${apiBase}/api/teams`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(tok ? { Authorization: `Bearer ${tok}` } : {}),
+        },
         body: JSON.stringify({ name: teamName.trim() }),
       })
       const data = await res.json()
@@ -88,9 +96,13 @@ export default function TeamManage() {
     setInviteError(null)
     setInviteResult(null)
     try {
+      const tok = await getToken().catch(() => null)
       const res = await fetch(`${apiBase}/api/teams/${team.id}/invite`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(tok ? { Authorization: `Bearer ${tok}` } : {}),
+        },
         body: JSON.stringify({ email: inviteEmail.trim() }),
       })
       const data = await res.json()
@@ -109,7 +121,11 @@ export default function TeamManage() {
     if (!team) return
     setRemovingId(memberId)
     try {
-      await fetch(`${apiBase}/api/teams/${team.id}/members/${memberId}`, { method: "DELETE" })
+      const tok = await getToken().catch(() => null)
+      await fetch(`${apiBase}/api/teams/${team.id}/members/${memberId}`, {
+        method: "DELETE",
+        headers: tok ? { Authorization: `Bearer ${tok}` } : undefined,
+      })
       await fetchTeam()
     } finally {
       setRemovingId(null)
@@ -120,7 +136,11 @@ export default function TeamManage() {
     if (!team) return
     setCancelingId(inviteId)
     try {
-      await fetch(`${apiBase}/api/teams/${team.id}/invites/${inviteId}`, { method: "DELETE" })
+      const tok = await getToken().catch(() => null)
+      await fetch(`${apiBase}/api/teams/${team.id}/invites/${inviteId}`, {
+        method: "DELETE",
+        headers: tok ? { Authorization: `Bearer ${tok}` } : undefined,
+      })
       await fetchTeam()
     } finally {
       setCancelingId(null)

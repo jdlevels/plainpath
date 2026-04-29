@@ -106,6 +106,7 @@ export async function downloadRedactedPdf(
   originalFile: File,
   approvedValues: string[],
   apiBase: string,
+  token?: string | null,
 ): Promise<void> {
   const formData = new FormData()
   formData.append("file", originalFile)
@@ -113,6 +114,7 @@ export async function downloadRedactedPdf(
 
   const res = await fetch(`${apiBase}/api/documents/redact-pdf`, {
     method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     body: formData,
   })
 

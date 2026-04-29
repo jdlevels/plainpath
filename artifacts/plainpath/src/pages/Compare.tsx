@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react"
+import { useAuth } from "@clerk/react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   GitCompare, Loader2, AlertCircle, ArrowRight, Check, X, AlertTriangle, Info,
@@ -132,6 +133,7 @@ interface DocumentInputProps {
 }
 
 function DocumentInput({ label, helperText, value, onChange, side }: DocumentInputProps) {
+  const { getToken } = useAuth()
   const [tab, setTab] = useState<"paste" | "upload">("paste")
   const [isDragging, setIsDragging] = useState(false)
   const [fileName, setFileName] = useState<string | null>(null)
@@ -179,8 +181,10 @@ function DocumentInput({ label, helperText, value, onChange, side }: DocumentInp
       const formData = new FormData()
       formData.append("file", file)
       const base = getApiBaseUrl()
+      const tok = await getToken().catch(() => null)
       const res = await fetch(`${base}/api/documents/extract-text`, {
         method: "POST",
+        headers: tok ? { Authorization: `Bearer ${tok}` } : undefined,
         body: formData,
       })
       const data = await res.json()
@@ -353,6 +357,7 @@ function DocumentInput({ label, helperText, value, onChange, side }: DocumentInp
 /* ─── Page ───────────────────────────────────────────────────────────────── */
 
 export default function Compare() {
+  const { getToken } = useAuth()
   const [original, setOriginal] = useState("")
   const [revised, setRevised] = useState("")
   const [loading, setLoading] = useState(false)
@@ -385,9 +390,13 @@ export default function Compare() {
     setLoading(true)
     try {
       const base = getApiBaseUrl()
+      const tok = await getToken().catch(() => null)
       const res = await fetch(`${base}/api/documents/compare`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(tok ? { Authorization: `Bearer ${tok}` } : {}),
+        },
         body: JSON.stringify({ original: original.trim(), revised: revised.trim() }),
       })
       const data = await res.json()

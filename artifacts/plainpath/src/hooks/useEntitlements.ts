@@ -28,8 +28,9 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useEffect, useState, useCallback, useRef } from "react"
-import { useUser } from "@clerk/react"
+import { useUser, useAuth } from "@clerk/react"
 import { fetchEntitlements, type EntitlementStatus, type RoleKey, type AccessTier, type ToolKey } from "../lib/entitlements"
+import { getApiBaseUrl } from "../lib/api"
 import { getStoredSubscriberEmail, setStoredSubscriberEmail } from "../lib/subscriberStorage"
 
 // Starter tools — used for graceful Pro→Starter downgrade when billing lapses.
@@ -37,6 +38,7 @@ const STARTER_TOOLS: ToolKey[] = ["analyze", "redact"]
 
 export function useEntitlements() {
   const { user, isLoaded: clerkLoaded } = useUser()
+  const { getToken } = useAuth()
   const [data, setData] = useState<EntitlementStatus | null>(null)
   const [loading, setLoading] = useState(true)
   // True only when the API confirms an active Stripe subscription record exists.
@@ -94,7 +96,11 @@ export function useEntitlements() {
     // loading stays true while we wait — the next reload() cycle completes it.
     if (user && (!metaRole || !metaAccessTier)) {
       try {
-        const res = await fetch("/api/entitlements/bootstrap", { method: "POST" })
+        const bootstrapToken = await getToken().catch(() => null)
+        const res = await fetch(`${getApiBaseUrl()}/api/entitlements/bootstrap`, {
+          method: "POST",
+          headers: bootstrapToken ? { Authorization: `Bearer ${bootstrapToken}` } : undefined,
+        })
         if (res.ok) {
           const bootstrapResult = await res.json()
           if (bootstrapResult.bootstrapped) {
@@ -122,7 +128,8 @@ export function useEntitlements() {
 
     // ── Fetch billing details from API ────────────────────────────────────
     try {
-      const result = await fetchEntitlements(email ?? "", clerkUserId)
+      const entToken = await getToken().catch(() => null)
+      const result = await fetchEntitlements(email ?? "", clerkUserId, entToken)
 
       // Resolve role: publicMetadata wins over API response.
       const resolvedRole: RoleKey | undefined =
