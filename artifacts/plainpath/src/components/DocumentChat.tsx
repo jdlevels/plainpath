@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react"
-import { Send, Bot, Loader2, MessageSquare, ArrowUpRight } from "lucide-react"
+import { Send, Bot, Loader2, MessageSquare, FileText, ChevronLeft, ChevronRight } from "lucide-react"
 import { useAuth } from "@clerk/react"
 import { Button } from "@/components/ui/button"
 import { getApiBaseUrl } from "@/lib/api"
@@ -27,6 +27,7 @@ export interface SourceMatch {
 interface QAPair {
   question: string
   answer: string | null
+  sourceMatch?: SourceMatch | null
 }
 
 interface DocumentChatProps {
@@ -68,119 +69,156 @@ function findBestSection(reply: string, sections: SectionItem[]): SourceMatch | 
   if (!bestId) return null
 
   const snippet =
-    bestContent.replace(/\s+/g, " ").slice(0, 140).trimEnd() +
-    (bestContent.length > 140 ? "…" : "")
+    bestContent.replace(/\s+/g, " ").slice(0, 180).trimEnd() +
+    (bestContent.length > 180 ? "…" : "")
   return { id: bestId, title: bestTitle, snippet }
 }
 
-// ─── Source card ──────────────────────────────────────────────────────────────
-function QASourceBanner({
-  match,
-  onScrollTo,
+// ─── Dot pagination ────────────────────────────────────────────────────────────
+function DotPagination({
+  total,
+  active,
+  onDotClick,
 }: {
-  match: SourceMatch | null
-  onScrollTo?: () => void
+  total: number
+  active: number
+  onDotClick: (idx: number) => void
 }) {
-  if (match === null) {
-    return (
-      <div>
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/40 mb-0.5">
-          Source
-        </p>
-        <p className="text-[11px] text-muted-foreground/50 italic">
-          No exact source location identified for this answer.
-        </p>
-      </div>
-    )
-  }
-
-  const inner = (
-    <div className="flex items-start gap-2">
-      <div className="w-0.5 self-stretch rounded-full bg-indigo-400/60 shrink-0 mt-0.5" />
-      <div className="space-y-0.5 flex-1 min-w-0">
-        <div className="flex items-center gap-1">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
-            Source
-          </p>
-          {onScrollTo && (
-            <ArrowUpRight className="w-2.5 h-2.5 text-indigo-400 shrink-0" />
-          )}
-        </div>
-        {match.title && (
-          <p className="text-[11px] font-medium text-foreground/80">{match.title}</p>
-        )}
-        <p className="text-[11px] text-muted-foreground leading-relaxed italic">
-          "{match.snippet}"
-        </p>
-      </div>
+  if (total <= 1) return null
+  return (
+    <div className="flex items-center justify-center gap-1.5 py-1">
+      {Array.from({ length: total }).map((_, i) => (
+        <button
+          key={i}
+          type="button"
+          onClick={() => onDotClick(i)}
+          aria-label={`Answer ${i + 1}`}
+          className={`rounded-full transition-all duration-200 ${
+            i === active
+              ? "w-4 h-2 bg-indigo-500"
+              : "w-2 h-2 bg-border hover:bg-muted-foreground/40"
+          }`}
+        />
+      ))}
     </div>
   )
-
-  if (onScrollTo) {
-    return (
-      <button
-        type="button"
-        onClick={onScrollTo}
-        className="w-full text-left rounded-lg px-2 py-1.5 -mx-2 hover:bg-indigo-50/60 dark:hover:bg-indigo-950/20 transition-colors"
-        title="Click to jump to this section in the document"
-      >
-        {inner}
-      </button>
-    )
-  }
-
-  return <div className="px-0">{inner}</div>
 }
 
-// ─── Individual Q&A card ───────────────────────────────────────────────────────
-function QACard({
-  question,
-  answer,
+// ─── Answer card ───────────────────────────────────────────────────────────────
+function AnswerCard({
+  pair,
   isLoading,
-  sourceMatch,
+  hasAnySections,
   onScrollToSource,
+  onPrev,
+  onNext,
+  hasPrev,
+  hasNext,
+  pairIndex,
+  totalPairs,
 }: {
-  question: string
-  answer: string | null
+  pair: QAPair
   isLoading?: boolean
-  sourceMatch?: SourceMatch | null
+  hasAnySections: boolean
   onScrollToSource?: () => void
+  onPrev?: () => void
+  onNext?: () => void
+  hasPrev: boolean
+  hasNext: boolean
+  pairIndex: number
+  totalPairs: number
 }) {
+  const { question, answer, sourceMatch } = pair
+  const showSource = hasAnySections && !isLoading && answer !== null && sourceMatch !== undefined
+
   return (
-    <div className="space-y-2">
+    <div className="flex flex-col gap-3 px-4 py-4 h-full">
       {/* Question */}
-      <div>
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50 mb-1 pl-0.5">
-          Question
-        </p>
-        <div className="rounded-xl border border-border/40 bg-background px-3.5 py-2.5">
-          <p className="text-sm font-medium text-foreground leading-relaxed">{question}</p>
-        </div>
+      <div className="flex items-start gap-2.5">
+        <span className="mt-[5px] w-2 h-2 rounded-full bg-indigo-500 shrink-0" />
+        <p className="text-[15px] font-semibold text-foreground leading-snug">{question}</p>
       </div>
 
       {/* Answer */}
-      {(isLoading || answer !== null) && (
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50 mb-1 pl-0.5">
-            PlainPath Answer
-          </p>
-          {isLoading ? (
-            <div className="rounded-xl border border-border/50 bg-muted/30 px-4 py-3 flex items-center gap-2">
-              <Loader2 className="w-3.5 h-3.5 text-muted-foreground animate-spin shrink-0" />
-              <span className="text-xs text-muted-foreground">Thinking…</span>
-            </div>
-          ) : (
-            <div className="rounded-xl border border-border/60 bg-muted/40 px-4 py-3.5">
-              <p className="text-sm text-foreground leading-relaxed">{answer}</p>
-            </div>
-          )}
-        </div>
-      )}
+      <div className="flex-1 min-h-0 flex flex-col gap-3">
+        {isLoading ? (
+          <div className="rounded-2xl bg-indigo-700/90 dark:bg-indigo-800 px-5 py-4 flex items-center gap-2.5">
+            <Loader2 className="w-4 h-4 text-indigo-200 animate-spin shrink-0" />
+            <span className="text-sm text-indigo-200">Searching your document…</span>
+          </div>
+        ) : answer !== null ? (
+          <div className="rounded-2xl bg-indigo-700/90 dark:bg-indigo-800 px-5 py-4">
+            <p className="text-sm text-white leading-relaxed">{answer}</p>
+          </div>
+        ) : null}
 
-      {/* Source */}
-      {sourceMatch !== undefined && !isLoading && answer !== null && (
-        <div className="pl-0.5 pt-0.5">
-          <QASourceBanner match={sourceMatch} onScrollTo={sourceMatch ? onScrollToSource : undefined} />
+        {/* Source citation row */}
+        {showSource && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <FileText className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                <span className="text-[12px] text-muted-foreground truncate">
+                  {sourceMatch
+                    ? `Source: ${sourceMatch.title ?? "Document text"}`
+                    : "No exact source identified"}
+                </span>
+              </div>
+              {sourceMatch && onScrollToSource && (
+                <button
+                  type="button"
+                  onClick={onScrollToSource}
+                  className="shrink-0 text-[11px] text-indigo-600 dark:text-indigo-400 border border-indigo-300 dark:border-indigo-700 rounded-full px-2.5 py-0.5 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition-colors font-medium"
+                >
+                  From document text
+                </button>
+              )}
+            </div>
+
+            {/* Referenced passage */}
+            {sourceMatch?.snippet && (
+              <div className="rounded-xl bg-zinc-800 dark:bg-zinc-900 px-4 py-3 border border-zinc-700/50">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">
+                  Referenced Passage
+                </p>
+                <p className="text-[12px] text-zinc-300 leading-relaxed italic">
+                  &ldquo;{sourceMatch.snippet}&rdquo;
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Pagination row */}
+      {totalPairs > 1 && (
+        <div className="flex items-center justify-between pt-1 shrink-0">
+          <button
+            type="button"
+            onClick={onPrev}
+            disabled={!hasPrev}
+            className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            aria-label="Previous question"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <DotPagination
+            total={totalPairs}
+            active={pairIndex}
+            onDotClick={idx => {
+              if (idx < pairIndex && onPrev) onPrev()
+              if (idx > pairIndex && onNext) onNext()
+            }}
+          />
+          <button
+            type="button"
+            onClick={onNext}
+            disabled={!hasNext}
+            className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            aria-label="Next question"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
         </div>
       )}
     </div>
@@ -205,7 +243,7 @@ function EmptyState({
 }) {
   const questions = suggestedQuestions.length > 0 ? suggestedQuestions : EXAMPLE_QUESTIONS
   return (
-    <div className="px-4 py-5 space-y-4">
+    <div className="px-4 py-5 space-y-4 flex-1 overflow-y-auto">
       <div className="flex flex-col items-center gap-2.5 text-center">
         <div className="w-10 h-10 rounded-xl bg-primary/8 flex items-center justify-center">
           <Bot className="w-5 h-5 text-primary/50" />
@@ -248,8 +286,7 @@ export function DocumentChat({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([])
-  const [lastSourceMatch, setLastSourceMatch] = useState<SourceMatch | null | undefined>(undefined)
-  const bottomRef = useRef<HTMLDivElement>(null)
+  const [activePairIdx, setActivePairIdx] = useState(0)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
   const analysisContext = {
@@ -300,16 +337,11 @@ export function DocumentChat({
     }
   }
 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages, loading])
-
   async function sendMessage(text: string) {
     const trimmed = text.trim()
     if (!trimmed || loading) return
 
     onMessageSent?.()
-    setLastSourceMatch(undefined)
 
     const newMessage: ChatMessage = { role: "user", content: trimmed }
     setMessages(prev => [...prev, newMessage])
@@ -335,31 +367,32 @@ export function DocumentChat({
       if (!res.ok) {
         const ct = res.headers.get("content-type") ?? ""
         const data = ct.includes("application/json") ? await res.json().catch(() => ({})) : {}
-        if (res.status === 401)
-          throw new Error("PlainPath could not answer that question. Please try again or paste the document text manually.")
         throw new Error(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (data as any).message ??
-            "PlainPath could not answer that question. Please try again or paste the document text manually."
+            "PlainPath could not answer that question. Please try again."
         )
       }
 
       const data = await res.json()
       const reply: string = data.reply ?? ""
-      setMessages(prev => [...prev, { role: "assistant", content: reply }])
+      setMessages(prev => {
+        const updated = [...prev, { role: "assistant" as const, content: reply }]
+        // Jump to the new answer once appended
+        const newPairs = buildPairs(updated, sections ?? [])
+        setActivePairIdx(newPairs.length - 1)
+        onHighlightSection?.(newPairs[newPairs.length - 1]?.sourceMatch ?? null)
+        return updated
+      })
 
       if (Array.isArray(data.suggestedQuestions) && data.suggestedQuestions.length > 0) {
         setSuggestedQuestions(data.suggestedQuestions)
       }
-
-      const match = findBestSection(reply, sections ?? [])
-      setLastSourceMatch(match)
-      onHighlightSection?.(match)
     } catch (err) {
       setError(
         err instanceof Error
           ? err.message
-          : "PlainPath could not answer that question. Please try again or paste the document text manually."
+          : "PlainPath could not answer that question. Please try again."
       )
     } finally {
       setLoading(false)
@@ -374,27 +407,50 @@ export function DocumentChat({
     }
   }
 
-  // Group flat message array into Q&A pairs
-  const qaPairs: QAPair[] = []
-  let mi = 0
-  while (mi < messages.length) {
-    if (messages[mi].role === "user") {
-      const question = messages[mi].content
-      if (mi + 1 < messages.length && messages[mi + 1].role === "assistant") {
-        qaPairs.push({ question, answer: messages[mi + 1].content })
-        mi += 2
+  // Build Q&A pairs with source matches baked in
+  function buildPairs(msgs: ChatMessage[], sects: SectionItem[]): QAPair[] {
+    const pairs: QAPair[] = []
+    let mi = 0
+    while (mi < msgs.length) {
+      if (msgs[mi].role === "user") {
+        const question = msgs[mi].content
+        if (mi + 1 < msgs.length && msgs[mi + 1].role === "assistant") {
+          const answer = msgs[mi + 1].content
+          const sourceMatch = findBestSection(answer, sects)
+          pairs.push({ question, answer, sourceMatch })
+          mi += 2
+        } else {
+          pairs.push({ question, answer: null, sourceMatch: undefined })
+          mi += 1
+        }
       } else {
-        qaPairs.push({ question, answer: null })
         mi += 1
       }
-    } else {
-      mi += 1
     }
+    return pairs
   }
 
+  const qaPairs = buildPairs(messages, sections ?? [])
   const hasAnySections = (sections ?? []).length > 0
   const isEmpty = qaPairs.length === 0 && !loading
-  const hasAnswers = qaPairs.some(p => p.answer !== null)
+
+  // Clamp active index
+  const clampedIdx = Math.min(activePairIdx, Math.max(0, qaPairs.length - 1))
+
+  // When navigating to a pair, update highlight
+  function goToPair(idx: number) {
+    const clamped = Math.max(0, Math.min(idx, qaPairs.length - 1))
+    setActivePairIdx(clamped)
+    onHighlightSection?.(qaPairs[clamped]?.sourceMatch ?? null)
+  }
+
+  // The "in-progress" pair — last user question without an answer yet
+  const inProgressPair: QAPair | null =
+    loading && qaPairs.length === 0
+      ? { question: messages[messages.length - 1]?.content ?? "…", answer: null }
+      : null
+
+  const activePair = inProgressPair ?? qaPairs[clampedIdx]
 
   return (
     <div
@@ -447,58 +503,55 @@ export function DocumentChat({
         </p>
       </div>
 
-      {/* Scrollable Q&A area */}
-      <div className="flex-1 min-h-0 overflow-y-auto">
+      {/* Main area — empty state or answer card */}
+      <div className="flex-1 min-h-0 overflow-y-auto flex flex-col">
         {isEmpty ? (
           <EmptyState suggestedQuestions={suggestedQuestions} onSend={sendMessage} />
-        ) : (
-          <div className="px-4 py-4 space-y-5">
-            {qaPairs.map((pair, idx) => {
-              const isLatest = idx === qaPairs.length - 1
-              const isLoading = loading && pair.answer === null && isLatest
-              const showSource = isLatest && !isLoading && pair.answer !== null && hasAnySections
-              return (
-                <QACard
-                  key={idx}
-                  question={pair.question}
-                  answer={pair.answer}
-                  isLoading={isLoading}
-                  sourceMatch={showSource ? lastSourceMatch : undefined}
-                  onScrollToSource={onScrollToSource}
-                />
-              )
-            })}
+        ) : activePair ? (
+          <AnswerCard
+            pair={activePair}
+            isLoading={loading && clampedIdx === qaPairs.length - 1 && activePair.answer === null}
+            hasAnySections={hasAnySections}
+            onScrollToSource={() => {
+              onHighlightSection?.(activePair.sourceMatch ?? null)
+              onScrollToSource?.()
+            }}
+            onPrev={() => goToPair(clampedIdx - 1)}
+            onNext={() => goToPair(clampedIdx + 1)}
+            hasPrev={clampedIdx > 0}
+            hasNext={clampedIdx < qaPairs.length - 1}
+            pairIndex={clampedIdx}
+            totalPairs={qaPairs.length}
+          />
+        ) : null}
 
-            {/* Follow-up chips — below source, not between Q&A */}
-            {!loading && hasAnswers && suggestedQuestions.length > 0 && (
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/40 mb-1.5 pl-0.5">
-                  Follow-up questions
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {suggestedQuestions.map((q, i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() => void sendMessage(q)}
-                      className="px-2.5 py-1 rounded-full border border-border/60 bg-background hover:bg-muted/50 transition-colors text-[11px] text-muted-foreground font-medium"
-                    >
-                      {q}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Error */}
-            {error && (
-              <div className="rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-200/60 dark:border-red-800/40 px-4 py-3 text-xs text-red-600 dark:text-red-400">
-                {error}
-              </div>
-            )}
+        {/* Follow-up chips — shown below answer card when on latest */}
+        {!loading && qaPairs.length > 0 && clampedIdx === qaPairs.length - 1 && suggestedQuestions.length > 0 && (
+          <div className="px-4 pb-3 shrink-0">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/40 mb-1.5 pl-0.5">
+              Follow-up questions
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {suggestedQuestions.map((q, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => void sendMessage(q)}
+                  className="px-2.5 py-1 rounded-full border border-border/60 bg-background hover:bg-muted/50 transition-colors text-[11px] text-muted-foreground font-medium"
+                >
+                  {q}
+                </button>
+              ))}
+            </div>
           </div>
         )}
-        <div ref={bottomRef} />
+
+        {/* Error */}
+        {error && (
+          <div className="mx-4 mb-3 rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-200/60 dark:border-red-800/40 px-4 py-3 text-xs text-red-600 dark:text-red-400 shrink-0">
+            {error}
+          </div>
+        )}
       </div>
     </div>
   )
