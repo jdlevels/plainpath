@@ -21,6 +21,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect } from "react"
+import { useAuth } from "@clerk/react"
 import { useLocation } from "wouter"
 import {
   ShieldCheck, ArrowLeft, UploadCloud, Type, Loader2, AlertCircle, File, X,
@@ -199,6 +200,7 @@ Date: April 10, 2024`,
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function Redact() {
+  const { getToken } = useAuth()
   const [, setLocation] = useLocation()
 
   // ── Subscription gate ─────────────────────────────────────────────────────
@@ -305,8 +307,10 @@ export default function Redact() {
       const apiBase = getApiBaseUrl()
       const formData = new FormData()
       formData.append("file", uploadedFile)
+      const redactToken = await getToken().catch(() => null)
       const res = await fetch(`${apiBase}/api/documents/extract-text`, {
         method: "POST",
+        headers: redactToken ? { Authorization: `Bearer ${redactToken}` } : undefined,
         body: formData,
       })
       if (!res.ok) {

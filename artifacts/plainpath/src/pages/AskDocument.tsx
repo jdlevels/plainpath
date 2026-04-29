@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react"
+import { useAuth } from "@clerk/react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   MessageCircle, UploadCloud, Type,
@@ -389,6 +390,7 @@ function DocumentViewer({
 
 // ─── Main page ─────────────────────────────────────────────────────────────────
 export default function AskDocument() {
+  const { getToken } = useAuth()
   const [, setLocation] = useLocation()
   const [phase, setPhase] = useState<Phase>("upload")
   const [mobileTab, setMobileTab] = useState<MobileTab>("ask")
@@ -428,8 +430,10 @@ export default function AskDocument() {
       const form = new FormData()
       form.append("file", file)
       form.append("documentTypeHint", "")
+      const askUploadToken = await getToken().catch(() => null)
       const res = await fetch(`${apiBase}/api/documents/upload`, {
         method: "POST",
+        headers: askUploadToken ? { Authorization: `Bearer ${askUploadToken}` } : undefined,
         body: form,
         credentials: "include",
       })
@@ -462,9 +466,13 @@ export default function AskDocument() {
     setPhase("processing")
     try {
       const apiBase = getApiBaseUrl()
+      const askAnalyzeToken = await getToken().catch(() => null)
       const res = await fetch(`${apiBase}/api/documents/analyze`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(askAnalyzeToken ? { Authorization: `Bearer ${askAnalyzeToken}` } : {}),
+        },
         body: JSON.stringify({ text: trimmed, documentTypeHint: "" }),
         credentials: "include",
       })

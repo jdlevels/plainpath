@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react"
+import { useAuth } from "@clerk/react"
 import { useLocation, useSearch } from "wouter"
 import { motion, AnimatePresence } from "framer-motion"
 import {
@@ -266,6 +267,7 @@ function AnalyzingLoader() {
 const TRUST_CHECK_HINT = "Document Trust Check — analyze for scam indicators, suspicious demands, pressure tactics, suspicious contact details, verification risks, and authenticity concerns"
 
 export default function Import() {
+  const { getToken } = useAuth()
   const [, setLocation] = useLocation()
   const searchString = useSearch()
   const isTrustCheck = new URLSearchParams(searchString).get("mode") === "trust-check"
@@ -323,9 +325,13 @@ export default function Import() {
     setUrlError(null)
     try {
       const apiBase = getApiBaseUrl()
+      const token = await getToken().catch(() => null)
       const res = await fetch(`${apiBase}/api/documents/import-url`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({ url }),
       })
       const data = await res.json()
@@ -472,9 +478,13 @@ export default function Import() {
     try {
       const apiBase = getApiBaseUrl()
       const endpoint = isTrustCheck ? "/api/documents/scan-images-trust" : "/api/documents/scan-images"
+      const scanToken = await getToken().catch(() => null)
       const res = await fetch(`${apiBase}${endpoint}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(scanToken ? { Authorization: `Bearer ${scanToken}` } : {}),
+        },
         body: JSON.stringify({ images: imgs, documentTypeHint: docTypeLabel }),
       })
       let data: any = {}
@@ -609,7 +619,12 @@ export default function Import() {
         formData.append("file", p.file)
         try {
           const apiBase = getApiBaseUrl()
-          const res = await fetch(`${apiBase}/api/documents/trust-check-upload`, { method: "POST", body: formData })
+          const tcToken = await getToken().catch(() => null)
+          const res = await fetch(`${apiBase}/api/documents/trust-check-upload`, {
+            method: "POST",
+            headers: tcToken ? { Authorization: `Bearer ${tcToken}` } : undefined,
+            body: formData,
+          })
           let data: any = {}
           try { data = await res.json() } catch { /* non-JSON */ }
           if (!res.ok) {
@@ -688,7 +703,12 @@ export default function Import() {
       formData.append("documentTypeHint", docTypeLabel)
       try {
         const apiBase = getApiBaseUrl()
-        const res = await fetch(`${apiBase}/api/documents/upload`, { method: "POST", body: formData })
+        const uploadToken = await getToken().catch(() => null)
+        const res = await fetch(`${apiBase}/api/documents/upload`, {
+          method: "POST",
+          headers: uploadToken ? { Authorization: `Bearer ${uploadToken}` } : undefined,
+          body: formData,
+        })
         let data: any = {}
         try { data = await res.json() } catch { /* non-JSON response */ }
 

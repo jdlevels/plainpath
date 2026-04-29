@@ -1227,6 +1227,7 @@ function addToCalendar(dl: DocumentAnalysis["deadlines"][0], docTitle: string) {
 }
 
 function DeadlineCard({ dl, accentRed, docTitle }: { dl: DocumentAnalysis["deadlines"][0]; accentRed: boolean; docTitle: string }) {
+  const { getToken } = useAuth()
   const parsedDate = dl.date ? new Date(dl.date) : null
   const hasCalendarDate = parsedDate && !isNaN(parsedDate.getTime()) && parsedDate.getFullYear() > 2000
   const [reminded, setReminded] = useState(false)
@@ -1252,9 +1253,13 @@ function DeadlineCard({ dl, accentRed, docTitle }: { dl: DocumentAnalysis["deadl
     setEmailSending(true)
     setEmailError(null)
     try {
+      const reminderToken = await getToken().catch(() => null)
       const res = await fetch(`${getApiBaseUrl()}/api/reminders/email`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(reminderToken ? { Authorization: `Bearer ${reminderToken}` } : {}),
+        },
         body: JSON.stringify({
           email: emailInput.trim(),
           deadlineTitle: dl.title,
@@ -1401,6 +1406,7 @@ function DeadlinesTab({ analysis }: { analysis: DocumentAnalysis }) {
 type NegotiationResult = { strategy: string; counterLanguage: string; talkingPoints: string[] }
 
 function RiskCard({ risk, documentType }: { risk: DocumentAnalysis["risks"][0]; documentType?: string }) {
+  const { getToken } = useAuth()
   const isHigh   = risk.severity === "high"
   const isMedium = risk.severity === "medium"
   const cardCls = isHigh
@@ -1425,9 +1431,13 @@ function RiskCard({ risk, documentType }: { risk: DocumentAnalysis["risks"][0]; 
     setNegotiating(true)
     setNegotiateError(null)
     try {
+      const negotiateToken = await getToken().catch(() => null)
       const res = await fetch(`${getApiBaseUrl()}/api/documents/negotiate`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(negotiateToken ? { Authorization: `Bearer ${negotiateToken}` } : {}),
+        },
         body: JSON.stringify({
           riskTitle: risk.title,
           riskDescription: risk.description,
@@ -2057,6 +2067,7 @@ function SectionCard({
 }
 
 function SourceSectionsTab({ analysis, documentTypeHint, onOpenGuidedReview }: { analysis: DocumentAnalysis; documentTypeHint: string | null; onOpenGuidedReview?: () => void }) {
+  const { getToken } = useAuth()
   const sections = analysis.sections ?? []
   const [selectedId, setSelectedId] = React.useState<string | null>(null)
   const [loadingId, setLoadingId] = React.useState<string | null>(null)
@@ -2073,9 +2084,13 @@ function SourceSectionsTab({ analysis, documentTypeHint, onOpenGuidedReview }: {
       const body: Record<string, string> = { sectionContent: content }
       if (title) body.sectionTitle = title
       if (documentTypeHint) body.documentTypeHint = documentTypeHint
+      const explainToken = await getToken().catch(() => null)
       const res = await fetch(`${getApiBaseUrl()}/api/documents/explain-source-section`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(explainToken ? { Authorization: `Bearer ${explainToken}` } : {}),
+        },
         body: JSON.stringify(body),
       })
       if (res.ok) {
