@@ -115,6 +115,21 @@ billingDb.exec(`
   CREATE INDEX IF NOT EXISTS idx_processed_stripe_events_processedAt
   ON processed_stripe_events (processedAt);
 `)
+
+// ─── Canceled subscription tombstones ────────────────────────────────────────
+// Tracks every Stripe subscription ID that has received a
+// customer.subscription.deleted event, keyed purely on the subscription ID.
+// This is populated before any identity resolution in the deletion handler,
+// ensuring that even when email/clerkUserId cannot be resolved at deletion
+// time, later out-of-order activation events (checkout.session.completed,
+// customer.subscription.created/updated) can detect the tombstone and refuse
+// to grant paid access.
+billingDb.exec(`
+  CREATE TABLE IF NOT EXISTS canceled_stripe_subscriptions (
+    subscriptionId TEXT PRIMARY KEY,
+    canceledAt     TEXT NOT NULL
+  );
+`)
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type SubscriberRecord = {
@@ -296,6 +311,36 @@ export function markEventProcessed(eventId: string): void {
       "INSERT OR IGNORE INTO processed_stripe_events (eventId, processedAt) VALUES (?, ?)"
     )
     .run(eventId, now)
+}
+
+// ─── Canceled subscription tombstones ────────────────────────────────────────
+
+/**
+ * Records a Stripe subscription ID as definitively canceled.
+ * Called at the top of the customer.subscription.deleted handler, before any
+ * identity resolution, so the tombstone always exists even when email and
+ * clerkUserId cannot be determined at deletion time.
+ */
+export function markSubscriptionCanceled(subscriptionId: string): void {
+  const now = new Date().toISOString()
+  billingDb
+    .prepare(
+      "INSERT OR IGNORE INTO canceled_stripe_subscriptions (subscriptionId, canceledAt) VALUES (?, ?)"
+    )
+    .run(subscriptionId, now)
+}
+
+/**
+ * Returns true if the given subscription ID has previously received a
+ * customer.subscription.deleted event (i.e., a tombstone exists).
+ * Used by activation handlers to block out-of-order reactivation even
+ * when no local subscriber row was created at deletion time.
+ */
+export function isSubscriptionCanceled(subscriptionId: string): boolean {
+  const row = billingDb
+    .prepare("SELECT 1 FROM canceled_stripe_subscriptions WHERE subscriptionId = ?")
+    .get(subscriptionId)
+  return row !== undefined
 }
 
 export type BillingTeamRecord = {

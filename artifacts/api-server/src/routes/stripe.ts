@@ -9,7 +9,9 @@ import {
   getSubscriberByEmail,
   getSubscriberBySubscriptionId,
   hasProcessedEvent,
+  isSubscriptionCanceled,
   markEventProcessed,
+  markSubscriptionCanceled,
   upsertSubscriber,
 } from "../lib/billingDb"
 import { BILLING_CONFIG } from "../lib/billingConfig"
@@ -394,13 +396,21 @@ router.post("/webhook", async (req: any, res) => {
             typeof session.subscription === "string" ? session.subscription : null
 
           // Guard against out-of-order delivery reactivating a canceled row.
-          // checkout.session.completed can arrive after a cancellation has
-          // already been applied (e.g. immediate cancel after purchase, or a
-          // delayed webhook replay). Verify the subscription's live state at
-          // Stripe before writing "active" when the local row is "canceled".
+          // Two signals are checked:
+          //   1. The local subscriber row already shows "canceled" (prior
+          //      cancellation was persisted before this activation event arrived).
+          //   2. A subscription-ID tombstone exists (customer.subscription.deleted
+          //      fired first but could not create a subscriber row at that time).
+          // In either case, verify the subscription's live state at Stripe before
+          // writing "active" to avoid restoring access to a canceled subscription.
           let checkoutStatus = "active"
           const existingSubscriber = getSubscriberByClerkUserId(clerkUserId)
-          if (existingSubscriber?.status === "canceled") {
+          const hasCanceledRow = existingSubscriber?.status === "canceled"
+          const hasTombstone = checkoutSubscriptionId
+            ? isSubscriptionCanceled(checkoutSubscriptionId)
+            : false
+
+          if (hasCanceledRow || hasTombstone) {
             const subIdToCheck = checkoutSubscriptionId
             if (subIdToCheck) {
               try {
@@ -409,7 +419,7 @@ router.post("/webhook", async (req: any, res) => {
                 if (checkoutStatus !== "active") {
                   console.log(
                     `checkout.session.completed: subscription ${subIdToCheck} is ${checkoutStatus} at Stripe — ` +
-                    `refusing to re-activate canceled local row for ${email}`
+                    `refusing to activate${hasTombstone && !hasCanceledRow ? " (tombstone)" : " canceled local row"} for ${email}`
                   )
                 }
               } catch (err) {
@@ -424,7 +434,7 @@ router.post("/webhook", async (req: any, res) => {
               // No subscription ID available yet — treat conservatively and
               // do not overwrite the canceled state.
               console.warn(
-                `checkout.session.completed: local row is canceled and no subscription ID available — ` +
+                `checkout.session.completed: cancellation detected and no subscription ID available — ` +
                 `preserving canceled state for ${email}`
               )
               checkoutStatus = "canceled"
@@ -499,18 +509,23 @@ router.post("/webhook", async (req: any, res) => {
 
         if (email && (hasKnownBinding || hasClerkAnchor)) {
           // Guard against out-of-order event delivery reactivating a canceled
-          // subscription. If the local row is already "canceled" but this event
-          // carries an "active" status (i.e., the event predates the deletion),
-          // verify the subscription's current state at Stripe before writing.
+          // subscription. Two signals trigger a live Stripe verification:
+          //   1. The local subscriber row is already "canceled" but this event
+          //      carries "active" (i.e., the event predates the deletion).
+          //   2. A subscription-ID tombstone exists — customer.subscription.deleted
+          //      fired first but couldn't persist a subscriber row at that time.
+          // In either case, verify the subscription's current state at Stripe.
           let authorizedStatus: string = subscription.status
-          if (subscriber?.status === "canceled" && subscription.status === "active") {
+          const hasCanceledSubRow = subscriber?.status === "canceled"
+          const hasSubTombstone = isSubscriptionCanceled(subscription.id)
+          if ((hasCanceledSubRow || hasSubTombstone) && subscription.status === "active") {
             try {
               const freshSub = await stripe.subscriptions.retrieve(subscription.id)
               authorizedStatus = freshSub.status
               if (authorizedStatus !== "active") {
                 console.log(
                   `${event.type}: subscription ${subscription.id} is ${authorizedStatus} at Stripe — ` +
-                  `refusing to re-activate canceled local row for ${email}`
+                  `refusing to activate${hasSubTombstone && !hasCanceledSubRow ? " (tombstone)" : " canceled local row"} for ${email}`
                 )
               }
             } catch (err) {
@@ -552,16 +567,29 @@ router.post("/webhook", async (req: any, res) => {
       case "customer.subscription.deleted": {
         const subscription = event.data.object as Stripe.Subscription
 
+        // Record the tombstone immediately — before any identity resolution —
+        // so activation handlers can detect this cancellation even if the
+        // subscriber row lookup below fails entirely (e.g. no email, no
+        // clerkUserId resolvable at deletion time).
+        markSubscriptionCanceled(subscription.id)
+
         const deletedCustomerId =
           typeof subscription.customer === "string" ? subscription.customer : null
 
-        // Look up by subscription ID first (most specific). If the subscription
-        // event that would have stored the ID arrived after this deletion event
-        // (out-of-order delivery), fall back to customer ID so the cancellation
-        // is never silently dropped.
-        const existing =
+        // clerkUserId stored in subscription metadata during checkout creation.
+        const deletedMetaClerkUserId = subscription.metadata?.clerkUserId || null
+
+        // Look up by subscription ID first (most specific), then by customer ID,
+        // then by clerkUserId from metadata — ensures cancellation is applied
+        // even when earlier events haven't yet stored the subscription ID or
+        // customer ID on the local row.
+        let existing =
           getSubscriberBySubscriptionId(subscription.id) ??
           (deletedCustomerId ? getSubscriberByCustomerId(deletedCustomerId) : undefined)
+
+        if (!existing && deletedMetaClerkUserId) {
+          existing = getSubscriberByClerkUserId(deletedMetaClerkUserId) ?? undefined
+        }
 
         if (existing) {
           upsertSubscriber({
@@ -578,6 +606,68 @@ router.post("/webhook", async (req: any, res) => {
             billingMode: existing.billingMode,
             billingProvider: "stripe",
           })
+        } else {
+          // No local row found yet — the deletion event arrived before any
+          // activation event (checkout.session.completed or
+          // customer.subscription.created) had a chance to create the row.
+          // Persist a "canceled" stub so that those later out-of-order events
+          // find it and refuse to reactivate paid access.
+          let stubEmail: string | null = null
+
+          if (deletedMetaClerkUserId) {
+            try {
+              const clerkUser = await clerkClient.users.getUser(deletedMetaClerkUserId)
+              stubEmail = clerkUser.emailAddresses?.[0]?.emailAddress?.toLowerCase().trim() || null
+            } catch (err) {
+              console.warn(
+                `customer.subscription.deleted: Clerk lookup failed for clerkUserId ${deletedMetaClerkUserId}`,
+                err
+              )
+            }
+          }
+
+          if (!stubEmail && deletedCustomerId) {
+            try {
+              const customer = await stripe.customers.retrieve(deletedCustomerId)
+              if (!("deleted" in customer)) {
+                stubEmail = customer.email?.toLowerCase().trim() || null
+              }
+            } catch (err) {
+              console.warn(
+                `customer.subscription.deleted: Stripe customer lookup failed for ${deletedCustomerId}`,
+                err
+              )
+            }
+          }
+
+          if (stubEmail) {
+            const stubPlan =
+              subscription.metadata?.plan && isPlanKey(subscription.metadata.plan)
+                ? subscription.metadata.plan
+                : "starter"
+            console.log(
+              `customer.subscription.deleted: no local row found — persisting canceled stub ` +
+              `for subscription ${subscription.id} to block future out-of-order reactivation`
+            )
+            upsertSubscriber({
+              email: stubEmail,
+              clerkUserId: deletedMetaClerkUserId ?? undefined,
+              stripeCustomerId: deletedCustomerId ?? undefined,
+              stripeSubscriptionId: subscription.id,
+              plan: stubPlan,
+              status: "canceled",
+              currentPeriodEnd: toIsoFromUnix((subscription as any).current_period_end),
+              cancelAtPeriodEnd: Boolean(subscription.cancel_at_period_end),
+              billingMode: subscription.metadata?.billingMode || billingMode,
+              billingProvider: "stripe",
+            })
+          } else {
+            console.warn(
+              `customer.subscription.deleted: could not resolve identity for subscription ` +
+              `${subscription.id} / customer ${deletedCustomerId} — no canceled stub created; ` +
+              `out-of-order reactivation may be possible if activation events arrive later`
+            )
+          }
         }
         break
       }
