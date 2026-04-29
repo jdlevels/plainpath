@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import {
   MessageCircle, UploadCloud, Type,
   ArrowLeft, X, AlertCircle, ChevronRight, FileText, Loader2,
-  ZoomIn, ZoomOut, Maximize2,
+  ZoomIn, ZoomOut, Maximize2, ChevronDown,
 } from "lucide-react"
 import { useLocation } from "wouter"
 import * as pdfjsLib from "pdfjs-dist"
@@ -23,7 +23,8 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
 ).toString()
 
 const PDF_SCALE = 1.4
-const PDF_MAX_PAGES = 15
+const PDF_BATCH_SIZE = 15   // pages loaded per batch
+const PDF_MAX_PAGES = 600   // absolute cap across all tools
 
 const ZOOM_STEPS = [
   { scale: 0.65, label: "65%" },
@@ -50,26 +51,34 @@ function PdfReadViewer({
   onLoaded?: (rendered: number, total: number) => void
 }) {
   const [pages, setPages] = useState<string[]>([])
+  const [totalPages, setTotalPages] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [failed, setFailed] = useState(false)
+  const pdfDocRef = useRef<pdfjsLib.PDFDocumentProxy | null>(null)
+  const cancelRef = useRef(false)
 
   useEffect(() => {
-    let cancelled = false
+    cancelRef.current = false
     setLoading(true)
     setFailed(false)
     setPages([])
+    setTotalPages(0)
+    pdfDocRef.current = null
 
     ;(async () => {
       try {
         const buf = await file.arrayBuffer()
         const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(buf), verbosity: 0 }).promise
-        if (cancelled) return
+        if (cancelRef.current) { pdf.destroy(); return }
+        pdfDocRef.current = pdf
+        setTotalPages(pdf.numPages)
 
         const renders: string[] = []
-        const count = Math.min(pdf.numPages, PDF_MAX_PAGES)
+        const count = Math.min(pdf.numPages, PDF_BATCH_SIZE)
 
         for (let pn = 1; pn <= count; pn++) {
-          if (cancelled) break
+          if (cancelRef.current) break
           const page = await pdf.getPage(pn)
           const viewport = page.getViewport({ scale: PDF_SCALE })
           const canvas = document.createElement("canvas")
@@ -82,13 +91,13 @@ function PdfReadViewer({
           page.cleanup()
         }
 
-        if (!cancelled) {
+        if (!cancelRef.current) {
           setPages(renders)
           setLoading(false)
           onLoaded?.(renders.length, pdf.numPages)
         }
       } catch {
-        if (!cancelled) {
+        if (!cancelRef.current) {
           setFailed(true)
           setLoading(false)
         }
@@ -96,9 +105,41 @@ function PdfReadViewer({
     })()
 
     return () => {
-      cancelled = true
+      cancelRef.current = true
+      pdfDocRef.current?.destroy()
+      pdfDocRef.current = null
     }
   }, [file]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function loadMore() {
+    const pdf = pdfDocRef.current
+    if (!pdf || loadingMore) return
+    setLoadingMore(true)
+    const startPage = pages.length + 1
+    const endPage = Math.min(startPage + PDF_BATCH_SIZE - 1, Math.min(pdf.numPages, PDF_MAX_PAGES))
+    const renders: string[] = []
+    for (let pn = startPage; pn <= endPage; pn++) {
+      if (cancelRef.current) break
+      const page = await pdf.getPage(pn)
+      const viewport = page.getViewport({ scale: PDF_SCALE })
+      const canvas = document.createElement("canvas")
+      canvas.width = Math.floor(viewport.width)
+      canvas.height = Math.floor(viewport.height)
+      const ctx = canvas.getContext("2d")!
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (page.render as any)({ canvasContext: ctx, viewport }).promise
+      renders.push(canvas.toDataURL("image/jpeg", 0.88))
+      page.cleanup()
+    }
+    if (!cancelRef.current) {
+      setPages(prev => {
+        const next = [...prev, ...renders]
+        onLoaded?.(next.length, pdf.numPages)
+        return next
+      })
+    }
+    setLoadingMore(false)
+  }
 
   if (loading) {
     return (
@@ -123,6 +164,8 @@ function PdfReadViewer({
   }
 
   const imgWidth = `${Math.round(cssScale * 100)}%`
+  const cap = Math.min(totalPages, PDF_MAX_PAGES)
+  const hasMore = pages.length < cap
 
   return (
     <div className="space-y-5">
@@ -136,10 +179,21 @@ function PdfReadViewer({
           draggable={false}
         />
       ))}
-      {pages.length === PDF_MAX_PAGES && (
-        <p className="text-[11px] text-zinc-500 text-center pb-2">
-          Showing first {PDF_MAX_PAGES} pages
-        </p>
+      {hasMore && (
+        <div className="text-center pb-2">
+          <button
+            onClick={loadMore}
+            disabled={loadingMore}
+            className="inline-flex items-center gap-1.5 text-[11px] text-zinc-400 hover:text-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors px-3 py-1.5 rounded border border-white/10 hover:border-white/20 bg-zinc-800/60 hover:bg-zinc-700/60"
+          >
+            {loadingMore
+              ? <Loader2 className="w-3 h-3 animate-spin" />
+              : <ChevronDown className="w-3 h-3" />}
+            {loadingMore
+              ? "Loading…"
+              : `Load next ${Math.min(PDF_BATCH_SIZE, cap - pages.length)} pages (${pages.length} of ${cap} shown)`}
+          </button>
+        </div>
       )}
     </div>
   )
