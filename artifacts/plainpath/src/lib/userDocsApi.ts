@@ -1,5 +1,6 @@
-const base = () =>
-  ((import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "").replace(/\/+$/, "");
+import { getApiBaseUrl } from "@/lib/api";
+
+const base = () => getApiBaseUrl();
 
 function authHeaders(token: string | null): HeadersInit {
   return token ? { Authorization: `Bearer ${token}` } : {}

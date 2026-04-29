@@ -1,8 +1,8 @@
 import type { SavedAnalysis } from "./savedAnalyses";
 import type { SavedTrustCheck } from "./savedTrustChecks";
+import { getApiBaseUrl } from "@/lib/api";
 
-const base = () =>
-  ((import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "").replace(/\/+$/, "");
+const base = () => getApiBaseUrl();
 
 function authHeaders(token: string | null): HeadersInit {
   return token ? { Authorization: `Bearer ${token}` } : {}

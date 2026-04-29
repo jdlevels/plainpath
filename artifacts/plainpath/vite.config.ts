@@ -19,6 +19,11 @@ export default defineConfig({
     "import.meta.env.VITE_CLERK_PUBLISHABLE_KEY": JSON.stringify(process.env.VITE_CLERK_PUBLISHABLE_KEY ?? ""),
     "import.meta.env.VITE_CLERK_PROXY_URL": JSON.stringify(process.env.VITE_CLERK_PROXY_URL ?? ""),
     "import.meta.env.VITE_BUILDER_ENABLED": JSON.stringify(process.env.VITE_BUILDER_ENABLED ?? ""),
+    // VITE_API_BASE_URL: empty string on web (same-origin); absolute URL required for native Capacitor builds.
+    // Must be in `define` so it is injected at build time — Vite's automatic VITE_ env loading
+    // is not reliable for Replit secrets injected at the OS level.
+    "import.meta.env.VITE_API_BASE_URL": JSON.stringify(process.env.VITE_API_BASE_URL ?? ""),
+    "import.meta.env.VITE_SENTRY_DSN": JSON.stringify(process.env.VITE_SENTRY_DSN ?? ""),
   },
   plugins: [
     react(),
