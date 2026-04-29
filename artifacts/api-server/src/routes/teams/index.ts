@@ -16,10 +16,15 @@ function requireAuth(req: any, res: any, next: any) {
   next();
 }
 
-async function getUserEmail(userId: string): Promise<string | null> {
+async function getVerifiedUserEmail(userId: string): Promise<string | null> {
   try {
     const user = await clerkClient.users.getUser(userId);
-    return user.emailAddresses?.[0]?.emailAddress ?? null;
+    const primary = user.emailAddresses.find(
+      (e) => e.id === user.primaryEmailAddressId
+    );
+    if (!primary?.emailAddress) return null;
+    if (primary.verification?.status !== "verified") return null;
+    return primary.emailAddress;
   } catch {
     return null;
   }
@@ -38,7 +43,7 @@ async function getUserDisplayName(userId: string): Promise<string | null> {
 }
 
 async function requireTeamPlan(req: any, res: any, next: any) {
-  const email = await getUserEmail(req.userId);
+  const email = await getVerifiedUserEmail(req.userId);
   if (!email) return res.status(401).json({ error: "could_not_resolve_email" });
   req.userEmail = email;
 
@@ -53,7 +58,7 @@ async function requireTeamPlan(req: any, res: any, next: any) {
 }
 
 async function requireTargetTeamPlan(req: any, res: any, next: any) {
-  const email = await getUserEmail(req.userId);
+  const email = await getVerifiedUserEmail(req.userId);
   if (!email) return res.status(401).json({ error: "could_not_resolve_email" });
   req.userEmail = email;
 
@@ -109,7 +114,7 @@ router.get("/invite/:token", async (req, res) => {
 // ─── POST /api/teams/invite/:token/accept ─────────────────────────────────────
 router.post("/invite/:token/accept", requireAuth, async (req: any, res) => {
   try {
-    const email = req.userEmail ?? (await getUserEmail(req.userId));
+    const email = req.userEmail ?? (await getVerifiedUserEmail(req.userId));
     if (!email) return res.status(401).json({ error: "could_not_resolve_email" });
 
     const inviteResult = await pool.query(
@@ -200,7 +205,7 @@ router.use(requireAuth);
 // ─── GET /api/teams/mine ───────────────────────────────────────────────────────
 router.get("/mine", async (req: any, res) => {
   try {
-    const email = await getUserEmail(req.userId);
+    const email = await getVerifiedUserEmail(req.userId);
     if (!email) return res.status(401).json({ error: "could_not_resolve_email" });
     req.userEmail = email;
 
