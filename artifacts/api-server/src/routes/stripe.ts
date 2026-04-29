@@ -8,6 +8,8 @@ import {
   getSubscriberByCustomerId,
   getSubscriberByEmail,
   getSubscriberBySubscriptionId,
+  hasProcessedEvent,
+  markEventProcessed,
   upsertSubscriber,
 } from "../lib/billingDb"
 import { BILLING_CONFIG } from "../lib/billingConfig"
@@ -345,6 +347,14 @@ router.post("/webhook", async (req: any, res) => {
     const event = stripe.webhooks.constructEvent(req.body, signature, webhookSecret)
     const billingMode = BILLING_CONFIG.BILLING_MODE
 
+    // ── Deduplication ───────────────────────────────────────────────────────
+    // Reject events that have already been successfully processed. This prevents
+    // replayed or retried webhook deliveries from mutating billing state.
+    if (hasProcessedEvent(event.id)) {
+      console.log(`Stripe webhook: duplicate event ${event.id} (${event.type}) — skipped`)
+      return res.json({ received: true })
+    }
+
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session
@@ -378,14 +388,56 @@ router.post("/webhook", async (req: any, res) => {
         }
 
         if (email && isPlanKey(plan)) {
+          const checkoutCustomerId =
+            typeof session.customer === "string" ? session.customer : null
+          const checkoutSubscriptionId =
+            typeof session.subscription === "string" ? session.subscription : null
+
+          // Guard against out-of-order delivery reactivating a canceled row.
+          // checkout.session.completed can arrive after a cancellation has
+          // already been applied (e.g. immediate cancel after purchase, or a
+          // delayed webhook replay). Verify the subscription's live state at
+          // Stripe before writing "active" when the local row is "canceled".
+          let checkoutStatus = "active"
+          const existingSubscriber = getSubscriberByClerkUserId(clerkUserId)
+          if (existingSubscriber?.status === "canceled") {
+            const subIdToCheck = checkoutSubscriptionId
+            if (subIdToCheck) {
+              try {
+                const freshSub = await stripe.subscriptions.retrieve(subIdToCheck)
+                checkoutStatus = freshSub.status
+                if (checkoutStatus !== "active") {
+                  console.log(
+                    `checkout.session.completed: subscription ${subIdToCheck} is ${checkoutStatus} at Stripe — ` +
+                    `refusing to re-activate canceled local row for ${email}`
+                  )
+                }
+              } catch (err) {
+                console.warn(
+                  `checkout.session.completed: could not retrieve subscription ${subIdToCheck} from Stripe — ` +
+                  `preserving canceled state for ${email}`,
+                  err
+                )
+                checkoutStatus = "canceled"
+              }
+            } else {
+              // No subscription ID available yet — treat conservatively and
+              // do not overwrite the canceled state.
+              console.warn(
+                `checkout.session.completed: local row is canceled and no subscription ID available — ` +
+                `preserving canceled state for ${email}`
+              )
+              checkoutStatus = "canceled"
+            }
+          }
+
           upsertSubscriber({
             email,
             clerkUserId,
-            stripeCustomerId:
-              typeof session.customer === "string" ? session.customer : null,
+            stripeCustomerId: checkoutCustomerId,
             stripeCheckoutSessionId: session.id,
             plan,
-            status: "active",
+            status: checkoutStatus,
             billingMode: sessionBillingMode,
             billingProvider: "stripe",
           })
@@ -446,13 +498,39 @@ router.post("/webhook", async (req: any, res) => {
         const hasClerkAnchor = !!metadataClerkUserId
 
         if (email && (hasKnownBinding || hasClerkAnchor)) {
+          // Guard against out-of-order event delivery reactivating a canceled
+          // subscription. If the local row is already "canceled" but this event
+          // carries an "active" status (i.e., the event predates the deletion),
+          // verify the subscription's current state at Stripe before writing.
+          let authorizedStatus: string = subscription.status
+          if (subscriber?.status === "canceled" && subscription.status === "active") {
+            try {
+              const freshSub = await stripe.subscriptions.retrieve(subscription.id)
+              authorizedStatus = freshSub.status
+              if (authorizedStatus !== "active") {
+                console.log(
+                  `${event.type}: subscription ${subscription.id} is ${authorizedStatus} at Stripe — ` +
+                  `refusing to re-activate canceled local row for ${email}`
+                )
+              }
+            } catch (err) {
+              // If the subscription is gone entirely, treat it as canceled.
+              console.warn(
+                `${event.type}: could not retrieve subscription ${subscription.id} from Stripe to verify status — ` +
+                `preserving canceled state for ${email}`,
+                err
+              )
+              authorizedStatus = "canceled"
+            }
+          }
+
           upsertSubscriber({
             email,
             clerkUserId: metadataClerkUserId,
             stripeCustomerId: customerId,
             stripeSubscriptionId: subscription.id,
             plan: isPlanKey(plan) ? plan : "starter",
-            status: subscription.status,
+            status: authorizedStatus,
             currentPeriodStart: toIsoFromUnix(
               (subscription as any).current_period_start,
             ),
@@ -474,16 +552,22 @@ router.post("/webhook", async (req: any, res) => {
       case "customer.subscription.deleted": {
         const subscription = event.data.object as Stripe.Subscription
 
-        const existing = getSubscriberBySubscriptionId(subscription.id)
+        const deletedCustomerId =
+          typeof subscription.customer === "string" ? subscription.customer : null
+
+        // Look up by subscription ID first (most specific). If the subscription
+        // event that would have stored the ID arrived after this deletion event
+        // (out-of-order delivery), fall back to customer ID so the cancellation
+        // is never silently dropped.
+        const existing =
+          getSubscriberBySubscriptionId(subscription.id) ??
+          (deletedCustomerId ? getSubscriberByCustomerId(deletedCustomerId) : undefined)
 
         if (existing) {
           upsertSubscriber({
             email: existing.email,
             clerkUserId: existing.clerkUserId ?? undefined,
-            stripeCustomerId:
-              typeof subscription.customer === "string"
-                ? subscription.customer
-                : existing.stripeCustomerId,
+            stripeCustomerId: deletedCustomerId ?? existing.stripeCustomerId,
             stripeSubscriptionId: subscription.id,
             plan: existing.plan,
             status: "canceled",
@@ -514,12 +598,38 @@ router.post("/webhook", async (req: any, res) => {
         }
 
         if (subscriber) {
+          // Do not resurrect a locally-canceled subscription via an invoice.paid
+          // event. This prevents a delayed or replayed payment event from restoring
+          // paid access after a cancellation has already been applied. When the
+          // local row says "canceled", verify the subscription's live status at
+          // Stripe before allowing reactivation.
+          let invoicePaidStatus = "active"
+          if (subscriber.status === "canceled" && subscriptionId) {
+            try {
+              const freshSub = await stripe.subscriptions.retrieve(subscriptionId)
+              invoicePaidStatus = freshSub.status
+              if (invoicePaidStatus !== "active") {
+                console.log(
+                  `invoice.paid: subscription ${subscriptionId} is ${invoicePaidStatus} at Stripe — ` +
+                  `refusing to re-activate canceled local row for ${subscriber.email}`
+                )
+              }
+            } catch (err) {
+              console.warn(
+                `invoice.paid: could not retrieve subscription ${subscriptionId} from Stripe — ` +
+                `preserving canceled state for ${subscriber.email}`,
+                err
+              )
+              invoicePaidStatus = "canceled"
+            }
+          }
+
           upsertSubscriber({
             email: subscriber.email,
             stripeCustomerId: customerId,
             stripeSubscriptionId: subscriptionId,
             plan: subscriber.plan,
-            status: "active",
+            status: invoicePaidStatus,
             billingMode: subscriber.billingMode,
             billingProvider: "stripe",
           })
@@ -560,6 +670,11 @@ router.post("/webhook", async (req: any, res) => {
       default:
         break
     }
+
+    // Record that this event has been handled to guard against replay attacks
+    // and duplicate deliveries. Stored after the switch so only successfully
+    // parsed events are marked; parse/signature failures remain reprocessable.
+    markEventProcessed(event.id)
 
     return res.json({ received: true })
   } catch (error: any) {

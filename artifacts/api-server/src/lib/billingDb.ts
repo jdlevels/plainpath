@@ -103,6 +103,18 @@ billingDb.exec(`
   ON subscribers (clerkUserId)
   WHERE clerkUserId IS NOT NULL
 `)
+
+// ─── Processed webhook event deduplication ───────────────────────────────────
+// Tracks Stripe event IDs that have already been handled so that replayed or
+// out-of-order duplicate deliveries are ignored rather than applied twice.
+billingDb.exec(`
+  CREATE TABLE IF NOT EXISTS processed_stripe_events (
+    eventId    TEXT PRIMARY KEY,
+    processedAt TEXT NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_processed_stripe_events_processedAt
+  ON processed_stripe_events (processedAt);
+`)
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type SubscriberRecord = {
@@ -258,6 +270,32 @@ export function getSubscriberByClerkUserId(clerkUserId: string) {
   return billingDb
     .prepare("SELECT * FROM subscribers WHERE clerkUserId = ?")
     .get(clerkUserId) as SubscriberRecord | undefined
+}
+
+// ─── Webhook event deduplication ─────────────────────────────────────────────
+
+/**
+ * Returns true if the given Stripe event ID has already been processed.
+ * Used to prevent duplicate or replayed webhook deliveries from mutating state.
+ */
+export function hasProcessedEvent(eventId: string): boolean {
+  const row = billingDb
+    .prepare("SELECT 1 FROM processed_stripe_events WHERE eventId = ?")
+    .get(eventId)
+  return row !== undefined
+}
+
+/**
+ * Records a Stripe event ID as processed. Call this after successfully
+ * handling an event to prevent it from being applied again on replay.
+ */
+export function markEventProcessed(eventId: string): void {
+  const now = new Date().toISOString()
+  billingDb
+    .prepare(
+      "INSERT OR IGNORE INTO processed_stripe_events (eventId, processedAt) VALUES (?, ?)"
+    )
+    .run(eventId, now)
 }
 
 export type BillingTeamRecord = {
