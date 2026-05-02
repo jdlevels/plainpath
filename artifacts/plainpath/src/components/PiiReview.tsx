@@ -19,7 +19,7 @@ import {
   applyRedactions,
   buildPreviewSegments,
   downloadRedactedText,
-  downloadRedactedPdf,
+  downloadRedactedPdfClient,
   copyRedactedText,
   buildRedactionStats,
 } from "@/lib/piiExport"
@@ -92,8 +92,8 @@ function DocumentPreview({ text, spans }: { text: string; spans: PiiSpanWithStat
           Document Preview
         </p>
         {approvedCount > 0 && (
-          <span className="text-[11px] bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full">
-            {approvedCount} will be redacted
+          <span className="text-[11px] bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300 px-2 py-0.5 rounded-full">
+            {approvedCount} selected for redaction
           </span>
         )}
       </div>
@@ -106,13 +106,13 @@ function DocumentPreview({ text, spans }: { text: string; spans: PiiSpanWithStat
             const meta = PII_TYPE_META[seg.span.type]
             if (seg.span.approved) {
               return (
-                <span key={i} className="inline-flex items-center gap-0.5 rounded px-1 py-0.5 text-xs font-bold bg-black/85 dark:bg-black/90 text-white/90 not-italic mx-0.5 leading-tight" title={`Will be redacted: ${meta.label}`}>
-                  {meta.redactLabel}
+                <span key={i} className="rounded px-0.5 bg-rose-100 dark:bg-rose-900/40 text-rose-800 dark:text-rose-200 font-semibold ring-1 ring-inset ring-rose-300/60 dark:ring-rose-700/50" title={`Selected for redaction: ${meta.label}`}>
+                  {seg.text}
                 </span>
               )
             }
             return (
-              <span key={i} className={`rounded px-0.5 ${meta.highlightBg} opacity-60`} title={`Not redacting: ${meta.label}`}>
+              <span key={i} className="rounded px-0.5 bg-amber-100 dark:bg-amber-900/40 text-amber-900 dark:text-amber-100" title={`Candidate: ${meta.label}`}>
                 {seg.text}
               </span>
             )
@@ -190,7 +190,6 @@ function AppliedView({
   onAnalyze: () => void
   onReset: () => void
 }) {
-  const { getToken } = useAuth()
   const [copied, setCopied] = useState(false)
   const [showRedacted, setShowRedacted] = useState(false)
   const [pdfDownloading, setPdfDownloading] = useState(false)
@@ -214,8 +213,7 @@ function AppliedView({
     setPdfDownloading(true)
     setPdfError(null)
     try {
-      const tok = await getToken().catch(() => null)
-      await downloadRedactedPdf(sourcePdfFile, approvedValues, getApiBaseUrl(), tok)
+      await downloadRedactedPdfClient(sourcePdfFile, approvedValues)
     } catch (err) {
       setPdfError(err instanceof Error ? err.message : "PDF download failed. Please try again.")
     } finally {
@@ -290,8 +288,8 @@ function AppliedView({
             <div>
               <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
                 {stats.totalRedacted === 0
-                  ? "No items redacted — document unchanged"
-                  : `${stats.uniqueRedacted} value${stats.uniqueRedacted !== 1 ? "s" : ""} permanently removed (${stats.totalRedacted} instance${stats.totalRedacted !== 1 ? "s" : ""})`
+                  ? "No items selected — document unchanged"
+                  : `${stats.uniqueRedacted} value${stats.uniqueRedacted !== 1 ? "s" : ""} selected for redaction (${stats.totalRedacted} instance${stats.totalRedacted !== 1 ? "s" : ""})`
                 }
               </p>
               {stats.totalSkipped > 0 && (
@@ -328,7 +326,7 @@ function AppliedView({
             </div>
             <div className="flex items-start gap-2 text-xs text-violet-700 dark:text-violet-400">
               <Check className="w-3.5 h-3.5 shrink-0 mt-0.5 text-emerald-500" />
-              <span><span className="font-semibold">Redacted PDF copy ready</span> — selected text removed from PDF and covered with black boxes</span>
+              <span><span className="font-semibold">Redacted PDF copy ready</span> — selected values will be permanently blocked in the exported PDF</span>
             </div>
           </div>
         )}
@@ -588,7 +586,7 @@ export function PiiReview({
                 updates as you select
               </span>
               <span className="text-[9px] text-muted-foreground/50">
-                amber = detected · black = will be redacted
+                amber = candidate · black = selected for redaction
               </span>
             </>
           )}

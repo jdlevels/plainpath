@@ -192,30 +192,42 @@ async function runAiDetection(text: string): Promise<PiiSpan[]> {
         content: `You are a PII (Personally Identifiable Information) detection system.
 Extract all personal information from the provided document text.
 Return ONLY values that appear verbatim in the text — do not paraphrase or normalize.
+Return the shortest possible string that identifies the PII — do not include surrounding context, labels, or role words.
 
 Return JSON with this exact structure:
 {
   "entities": [
-    { "type": "NAME", "value": "exact text as it appears" },
+    { "type": "NAME", "value": "exact person name only" },
     { "type": "ADDRESS", "value": "exact address text" },
-    { "type": "MEMBER_ID", "value": "exact ID value" },
+    { "type": "MEMBER_ID", "value": "exact ID value only" },
     { "type": "LICENSE_NUMBER", "value": "exact value" },
-    { "type": "CASE_NUMBER", "value": "exact value" },
+    { "type": "CASE_NUMBER", "value": "exact case number only" },
     { "type": "OTHER_ID", "value": "exact value" }
   ]
 }
 
 Types to detect:
-- NAME: Full person names (first + last, or full name). Not organization names.
-- ADDRESS: Street addresses including number, street, city, state, ZIP. Return the complete address string as it appears.
-- MEMBER_ID: Health insurance member IDs, group numbers, subscriber IDs
-- LICENSE_NUMBER: Professional license, medical license, contractor license numbers  
-- CASE_NUMBER: Court case numbers, claim numbers, docket numbers
-- OTHER_ID: Any other personal identifier (passport number, national ID, voter ID, etc.)
+- NAME: Full person names (first + last, or full name). NOT organization names, court names, law firm names, or generic roles.
+- ADDRESS: Complete street addresses with number, street, city, state, ZIP. Return the exact address string as it appears.
+- MEMBER_ID: Health insurance member IDs, group numbers, subscriber IDs — exact alphanumeric ID only, not the label
+- LICENSE_NUMBER: Professional license, medical license, contractor license numbers — exact number only
+- CASE_NUMBER: Court case numbers, claim numbers, docket numbers — exact code only (e.g. "23CV-00456", "2:23-cv-00123"), not section references
+- OTHER_ID: Other personal identifiers such as passport numbers, national IDs, voter IDs — exact number only
+
+CRITICAL — Do NOT extract any of the following (these are never PII):
+- Legal code citations and statute references: anything containing "§", "U.S.C.", "C.F.R.", "Fed. R.", code abbreviations, or statute numbers — e.g. "Evid. Code § 780(c)", "Pen. Code § 995", "18 U.S.C. § 1341", "Cal. Rules of Court, rule 3.1385", "42 C.F.R. § 440.10", "Fed. R. Civ. P. 26(a)"
+- Document section headings: anything starting with a numbered section pattern like "4A.6 Cross-Examination Module", "Section 3. Definitions", "Article 4.2 Indemnification"
+- Legal role labels: "Plaintiff", "Defendant", "Attorney", "Judge", "Witness", "Petitioner", "Respondent", "Appellant", "Appellee", "Claimant", "Declarant", "Deponent" — even when followed by a personal name, do not include the role word
+- Organization names, company names, court names, agency names
+- Table headers, column labels, or form field labels: "Name", "Date", "Address", "Phone", "Reference", "Description"
+- Exhibit labels: "Exhibit A", "Ex. 1", "Attachment B", "Appendix C"
+- Boilerplate legal phrases or terms of art
 
 Rules:
-- Only extract values that are clearly present in the text
-- Return the exact string as it appears in the document
+- Only extract values clearly present in the text
+- Return the exact shortest string as it appears — do NOT include surrounding words or context
+- If text says "Patient: John Smith", return "John Smith" not "Patient: John Smith"
+- If text says "Witness, Jane Doe", return "Jane Doe" not "Witness, Jane Doe"
 - Do NOT invent or normalize values
 - If unsure, omit rather than guess
 - Return empty entities array if no PII found`,
@@ -277,6 +289,48 @@ Rules:
   return spans
 }
 
+// ─── False Positive Filter ────────────────────────────────────────────────────
+// Drops AI-returned spans that match known non-PII patterns such as legal
+// citations, section headings, exhibit labels, and generic role words.
+// Runs after AI detection, before merging with regex spans.
+
+const LEGAL_CITATION_RE = /\b(?:Evid\.|Evidence\s+Code|Pen\.|Penal\s+Code|Cal\.(?:\s*App\.|Rptr\.|Civ\.|Com\.|Corp\.|Fam\.|Prob\.)?|Fam\.?\s*Code|Gov(?:ernment)?\s+Code|Bus\.?\s*&?\s*Prof\.?\s*Code|Lab\.\s*Code|Welf\.?\s*&?\s*Inst\.?\s*Code|Veh\.\s*Code|Health\s*&?\s*Saf\.?\s*Code|U\.S\.C\.?|C\.F\.R\.?|Fed\.?\s*R\.|A\.L\.R\.|U\.C\.C\.)\b/i
+const CODE_SECTION_RE = /§\s*\d|\b\d+\s*§/
+const SECTION_HEADING_RE = /^\d+[A-Za-z]?\.\d+(\.\d+)?\s+[A-Z]/
+const LEGAL_ROLE_RE = /^(?:plaintiff|defendant|attorney|counsel|judge|witness|petitioner|respondent|appellee|appellant|claimant|complainant|declarant|deponent|court|jury|arbitrator|mediator|trustee|executor|guardian|conservator)s?$/i
+const EXHIBIT_LABEL_RE = /^(?:exhibit|attachment|appendix|schedule|addendum|ex\.)\s+[A-Z0-9]/i
+const TABLE_HEADER_RE = /^(?:date|name|address|phone|email|amount|total|balance|description|notes|comments|reference|type|status|category|id|no\.|number|item|qty|quantity|unit|rate|tax|subtotal)$/i
+const ORG_SUFFIX_RE = /\b(?:llc|llp|inc\.?|corp\.?|ltd\.?|co\.?|pllc|pa|p\.c\.|l\.p\.|associates|group|foundation|institute|university|college|hospital|medical\s+center|department|agency|bureau|division|authority|commission|district)\b/i
+
+function isFalsePositive(span: PiiSpan): boolean {
+  const v = span.value.trim()
+  if (v.length < 2) return true
+
+  // Legal citations and code section references
+  if (LEGAL_CITATION_RE.test(v)) return true
+  if (CODE_SECTION_RE.test(v)) return true
+
+  // Section headings (e.g. "4A.6 Cross-Examination Module")
+  if (SECTION_HEADING_RE.test(v)) return true
+
+  // Generic legal role labels (NAME type only)
+  if (span.type === "NAME" && LEGAL_ROLE_RE.test(v)) return true
+
+  // Exhibit/attachment labels (CASE_NUMBER type)
+  if (span.type === "CASE_NUMBER" && EXHIBIT_LABEL_RE.test(v)) return true
+
+  // Common table headers and form field labels
+  if (TABLE_HEADER_RE.test(v)) return true
+
+  // Organization names in NAME field (has common corporate/org suffix)
+  if (span.type === "NAME" && ORG_SUFFIX_RE.test(v)) return true
+
+  // Single generic placeholder words
+  if (/^(?:yes|no|n\/a|none|unknown|other|see\s+above|see\s+below|same\s+as\s+above|tbd|to\s+be\s+determined)$/i.test(v)) return true
+
+  return false
+}
+
 // ─── Merge + Deduplicate ──────────────────────────────────────────────────────
 // Sort by start position, remove any span that is fully contained within
 // a higher-priority span. Prefer longer spans (more specific).
@@ -325,11 +379,12 @@ router.post("/detect-pii", requireEntitlement("redact"), async (req, res) => {
       return res.json({ spans: [] })
     }
 
-    const [regexSpans, aiSpans] = await Promise.all([
+    const [regexSpans, rawAiSpans] = await Promise.all([
       Promise.resolve(runRegexDetection(text)),
       runAiDetection(text),
     ])
 
+    const aiSpans = rawAiSpans.filter(s => !isFalsePositive(s))
     const merged = mergeSpans(regexSpans, aiSpans)
 
     return res.json({ spans: merged })
