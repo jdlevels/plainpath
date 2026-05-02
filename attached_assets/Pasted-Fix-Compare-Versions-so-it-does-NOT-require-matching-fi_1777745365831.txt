@@ -1,0 +1,74 @@
+Fix Compare Versions so it does NOT require matching file names or matching document titles.
+
+Current issue:
+Compare Versions can fail with “Failed to load session,” and the flow appears too strict around whether the documents are the same. This is blocking launch.
+
+Required behavior:
+1. Compare Versions must allow any two uploaded documents to be compared.
+2. Do not block comparison because filenames differ.
+3. Do not block comparison because detected titles differ.
+4. File name similarity should only be used as a soft warning, never a hard failure.
+
+Add a confirmation step after both documents are uploaded:
+
+Question:
+“Are these two versions of the same document?”
+
+Buttons:
+- “Yes — compare as related versions”
+- “No — compare as separate documents”
+- “Not sure — compare anyway”
+
+Behavior:
+A. If user selects “Yes — compare as related versions”:
+   - Proceed with comparison even if file names differ.
+   - Treat Document A as Original / Version 1.
+   - Treat Document B as Revised / Version 2.
+   - Allow user to rename display labels before or after comparison.
+   - Example labels:
+     - Original document label
+     - Revised document label
+
+B. If user selects “No — compare as separate documents”:
+   - Still proceed with comparison.
+   - Do not call it a revision.
+   - Label the result as “Document comparison,” not “version comparison.”
+   - Show:
+     - shared language
+     - missing sections
+     - added sections
+     - removed language
+     - changed wording
+     - unique clauses or terms
+
+C. If user selects “Not sure — compare anyway”:
+   - Proceed with comparison.
+   - Add a small neutral note:
+     “PlainPath is comparing these documents side by side. Relationship between documents was not confirmed.”
+
+Critical requirements:
+1. Creating a comparison must always create and persist a valid comparison session.
+2. Refreshing the comparison result page must reload the session successfully.
+3. The session ID in the URL must match a saved comparison session.
+4. The current signed-in user must be able to access their own comparison session.
+5. If a session truly cannot be loaded, show a helpful recovery screen:
+   “This comparison could not be loaded. Please create a new comparison.”
+   Include buttons:
+   - “Start new comparison”
+   - “Go to My Comparisons”
+
+Debug and fix:
+- Verify session creation endpoint saves both uploaded document references.
+- Verify frontend redirects only after the session is saved.
+- Verify the session fetch endpoint accepts the current user.
+- Verify Clerk auth token is sent with the fetch request.
+- Verify DB lookup is using the correct session ID.
+- Replace any generic “Failed to load session” message with a recoverable user-facing message.
+
+Do not remove Compare Versions yet unless the core session load cannot be fixed quickly.
+
+No new AI features.
+No billing changes.
+No homepage redesign.
+No unrelated UI changes.
+Focus only on making Compare Versions reliable and allowing any two documents to be compared.
