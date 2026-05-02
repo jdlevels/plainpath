@@ -495,7 +495,7 @@ export function PdfRedactViewer({
           <div className="flex items-start gap-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200/50 dark:border-amber-800/30 px-2.5 py-2">
             <AlertCircle className="w-3 h-3 text-amber-500 mt-0.5 shrink-0" />
             <p className="text-[10px] text-amber-700 dark:text-amber-400 leading-snug">
-              You have not reviewed every page. Redactions will still apply to selected matches, but review all pages before sharing.
+              You have not reviewed every page. Review all pages before sharing.
             </p>
           </div>
         )}

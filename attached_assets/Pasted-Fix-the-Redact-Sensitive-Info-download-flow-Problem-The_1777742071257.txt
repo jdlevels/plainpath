@@ -1,0 +1,77 @@
+Fix the Redact Sensitive Info download flow.
+
+Problem:
+The Redact screen now successfully creates redactions and page navigation works, but the UI allows the user to click “Download Redacted PDF” before clicking “Continue with redacted version.” When the user clicks download first, the app shows a severe warning/error:
+“This PDF’s text encoding could not be fully sanitized...”
+
+After clicking “Continue with redacted version,” the warning goes away and the flow works. This means the UI order/state is wrong.
+
+Do not simply hide real security warnings.
+Do not weaken PDF redaction safety.
+Do not change the rasterized/image-only export requirement.
+Do not change pricing, billing, Stripe, auth, database schema, marketing, public demos, or unrelated tools.
+Do not reintroduce e-signature, Digital Signature, Dropbox Sign, or send-for-signature.
+
+Required UX behavior:
+1. The final “Download Redacted PDF” action must be disabled or hidden until the user clicks “Continue with redacted version.”
+2. Before the user clicks “Continue with redacted version,” show a clear instructional state:
+   “Review all pages first. Then continue with the redacted version to enable download.”
+3. The primary action before confirmation should be:
+   “Continue with redacted version”
+4. After the user clicks “Continue with redacted version,” show:
+   “Redacted PDF ready”
+   “Download Redacted PDF”
+5. The severe warning must only appear if the backend/export actually reports unsafe or incomplete redaction.
+6. Do not show the severe warning merely because the user has not clicked “Continue with redacted version” yet.
+7. Missing/uncertain backend safety headers should still fail closed, but the pre-confirmation state should be treated as “not ready yet,” not as “unsafe export.”
+8. Add a small note under the disabled/hidden download area:
+   “Download is available after you confirm the redacted version.”
+9. Preserve the “You have not reviewed every page” warning, but make it informational:
+   “You have not reviewed every page. Review all pages before sharing.”
+10. If the user tries to download before confirmation, do not run export and do not show the severe safety warning. Instead show:
+   “Please continue with the redacted version before downloading.”
+11. Preserve page navigation.
+12. Preserve all selected redactions.
+13. Preserve safe rasterized/image-only export.
+14. Preserve .txt download/copy behavior if it is intentionally separate, but label it clearly as text-only.
+
+State logic required:
+- hasConfirmedRedactedVersion = false:
+  - show page preview
+  - show page review warning if not all pages reviewed
+  - show “Continue with redacted version”
+  - hide or disable “Download Redacted PDF”
+  - do not show severe sanitization warning unless backend already attempted and failed a confirmed export
+- hasConfirmedRedactedVersion = true:
+  - show “Redacted PDF ready”
+  - enable “Download Redacted PDF”
+  - show success text if backend confirms safe/rasterized output
+  - show severe warning only if confirmed export safety fails
+
+Testing required:
+1. Upload a PDF.
+2. Select redactions.
+3. On the result screen, confirm “Download Redacted PDF” is disabled or hidden before “Continue with redacted version.”
+4. Click the disabled download area if visible and confirm it shows only:
+   “Please continue with the redacted version before downloading.”
+5. Confirm the severe text-encoding/sanitization warning does not appear just because the user has not continued yet.
+6. Click “Continue with redacted version.”
+7. Confirm “Redacted PDF ready” appears.
+8. Confirm “Download Redacted PDF” is enabled.
+9. Download the PDF.
+10. Confirm redacted text cannot be selected, searched, or copied.
+11. Confirm page navigation still works.
+12. Confirm the original PDF remains unchanged.
+13. Confirm TypeScript baseline does not increase.
+14. Confirm app/API server start cleanly.
+
+Return:
+A. Files changed
+B. Root cause of premature warning
+C. New confirmation/download state logic
+D. Exact before-confirmation copy
+E. Exact after-confirmation copy
+F. Safety warning conditions
+G. Manual verification result
+H. TypeScript result
+I. Whether Redact flow is safe to lock

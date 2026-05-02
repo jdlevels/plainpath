@@ -240,6 +240,7 @@ export default function Redact() {
   const [pdfDownloading, setPdfDownloading] = useState(false)
   const [pdfDownloadError, setPdfDownloadError] = useState<string | null>(null)
   const [pdfProgressText, setPdfProgressText] = useState<string | null>(null)
+  const [hasConfirmedRedactedVersion, setHasConfirmedRedactedVersion] = useState(false)
 
   // On mount: check if we were launched from another tool's "Redact first" flow
   useEffect(() => {
@@ -440,6 +441,11 @@ export default function Redact() {
   // ── PDF download helper (used in PDF completion screen) ──────────────────
   async function handleDownloadRedactedPdfFinal() {
     if (!uploadedFile || pdfDownloading) return
+    // Guard: never run export before the user has explicitly confirmed the redacted version
+    if (!hasConfirmedRedactedVersion) {
+      setPdfDownloadError("Please continue with the redacted version before downloading.")
+      return
+    }
     setPdfDownloading(true)
     setPdfDownloadError(null)
     setPdfProgressText(null)
@@ -470,6 +476,7 @@ export default function Redact() {
     setActiveText(null)
     setPastedText("")
     setUploadedFile(null)
+    setHasConfirmedRedactedVersion(false)
   }
 
   // ─── SUBSCRIPTION GATE ────────────────────────────────────────────────────
@@ -527,7 +534,7 @@ export default function Redact() {
           {/* Header with back */}
           <div className="flex items-center gap-3">
             <button
-              onClick={() => { setNextStepText(null); setPdfCompletionActive(false); setActiveText(null) }}
+              onClick={() => { setNextStepText(null); setPdfCompletionActive(false); setActiveText(null); setHasConfirmedRedactedVersion(false) }}
               className="p-1.5 rounded-lg hover:bg-muted/50 text-muted-foreground transition-colors"
               aria-label="Back to review"
             >
@@ -537,7 +544,9 @@ export default function Redact() {
               <ShieldCheck className="w-4 h-4 text-violet-600 dark:text-violet-400" />
             </div>
             <div>
-              <h1 className="text-lg font-bold leading-tight">Redacted PDF ready</h1>
+              <h1 className="text-lg font-bold leading-tight">
+                {hasConfirmedRedactedVersion ? "Redacted PDF ready" : "Review Redacted PDF"}
+              </h1>
               <p className="text-xs text-muted-foreground">
                 {pdfApprovedValues.length} value{pdfApprovedValues.length !== 1 ? "s" : ""} permanently blacked out
                 {uploadedFile.name && <span className="font-mono ml-1">· {uploadedFile.name}</span>}
@@ -557,86 +566,123 @@ export default function Redact() {
               <PdfRedactViewer file={uploadedFile} approvedValues={pdfApprovedValues} />
             </div>
 
-            {/* RIGHT: Actions */}
+            {/* RIGHT: Actions — gated on hasConfirmedRedactedVersion */}
             <div className="flex-1 space-y-4">
 
-              {/* Primary: download PDF */}
-              <div className="space-y-1.5">
-                <Button
-                  size="lg"
-                  className="w-full h-12 text-sm rounded-xl gap-2 bg-violet-600 hover:bg-violet-700 text-white"
-                  onClick={handleDownloadRedactedPdfFinal}
-                  disabled={pdfDownloading}
-                >
-                  {pdfDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
-                  {pdfDownloading ? (pdfProgressText ?? "Building redacted PDF…") : "Download Redacted PDF"}
-                </Button>
-                {pdfDownloadError && <p className="text-xs text-destructive text-center">{pdfDownloadError}</p>}
-                <p className="text-[10px] text-center text-muted-foreground/40">
-                  Solid black boxes · original file unchanged · content unrecoverable
-                </p>
-              </div>
+              {!hasConfirmedRedactedVersion ? (
+                /* ── PRE-CONFIRMATION: review prompt + locked download ─────── */
+                <>
+                  {/* Instructional card + confirm CTA */}
+                  <div className="rounded-xl border border-violet-200/60 dark:border-violet-800/40 bg-violet-50/60 dark:bg-violet-950/20 p-4 space-y-3">
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Review all pages first. Then continue with the redacted version to enable download.
+                    </p>
+                    <Button
+                      size="lg"
+                      className="w-full h-12 text-sm rounded-xl gap-2 bg-violet-600 hover:bg-violet-700 text-white"
+                      onClick={() => { setHasConfirmedRedactedVersion(true); setPdfDownloadError(null) }}
+                    >
+                      <ShieldCheck className="w-4 h-4" />
+                      Continue with redacted version
+                    </Button>
+                  </div>
 
-              {/* Send to another PlainPath tool */}
-              <div className="rounded-xl border border-border/50 bg-card p-4 space-y-3">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Continue with redacted text</p>
-                <div className="space-y-2">
-                  <button onClick={() => sendToTool("analyze")} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-blue-200/60 dark:border-blue-900/40 bg-blue-50/80 dark:bg-blue-950/20 hover:bg-blue-100/80 dark:hover:bg-blue-950/40 transition-colors group text-left">
-                    <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center shrink-0">
-                      <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  {/* Locked download placeholder */}
+                  <div className="rounded-xl border border-dashed border-border/50 p-4 space-y-1.5 opacity-60 select-none">
+                    <div className="flex items-center justify-center gap-2">
+                      <Lock className="w-3.5 h-3.5 text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground">Download Redacted PDF</p>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">Analyze this document</p>
-                      <p className="text-xs text-muted-foreground">Get an action plan from the redacted version</p>
-                    </div>
-                    <ArrowRight className="w-4 h-4 text-blue-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
-                  </button>
+                    <p className="text-[10px] text-center text-muted-foreground/60">
+                      Download is available after you confirm the redacted version.
+                    </p>
+                  </div>
+                </>
+              ) : (
+                /* ── POST-CONFIRMATION: download + tool links ────────────────  */
+                <>
+                  {/* Primary: download PDF */}
+                  <div className="space-y-1.5">
+                    <Button
+                      size="lg"
+                      className="w-full h-12 text-sm rounded-xl gap-2 bg-violet-600 hover:bg-violet-700 text-white"
+                      onClick={handleDownloadRedactedPdfFinal}
+                      disabled={pdfDownloading}
+                    >
+                      {pdfDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
+                      {pdfDownloading ? (pdfProgressText ?? "Building redacted PDF…") : "Download Redacted PDF"}
+                    </Button>
+                    {pdfDownloadError && <p className="text-xs text-destructive text-center">{pdfDownloadError}</p>}
+                    <p className="text-[10px] text-center text-muted-foreground/40">
+                      Solid black boxes · original file unchanged · content unrecoverable
+                    </p>
+                  </div>
 
-                  <button onClick={() => sendToTool("trust-check")} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-red-200/60 dark:border-red-900/40 bg-red-50/80 dark:bg-red-950/20 hover:bg-red-100/80 dark:hover:bg-red-950/40 transition-colors group text-left">
-                    <div className="w-8 h-8 rounded-lg bg-red-100 dark:bg-red-900/40 flex items-center justify-center shrink-0">
-                      <ShieldCheck className="w-4 h-4 text-red-600 dark:text-red-400" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-red-700 dark:text-red-300">Run Trust Check</p>
-                      <p className="text-xs text-muted-foreground">Verify legitimacy on the redacted document</p>
-                    </div>
-                    <ArrowRight className="w-4 h-4 text-red-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
-                  </button>
+                  {/* Send to another PlainPath tool */}
+                  <div className="rounded-xl border border-border/50 bg-card p-4 space-y-3">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Continue with redacted text</p>
+                    <div className="space-y-2">
+                      <button onClick={() => sendToTool("analyze")} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-blue-200/60 dark:border-blue-900/40 bg-blue-50/80 dark:bg-blue-950/20 hover:bg-blue-100/80 dark:hover:bg-blue-950/40 transition-colors group text-left">
+                        <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center shrink-0">
+                          <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">Analyze this document</p>
+                          <p className="text-xs text-muted-foreground">Get an action plan from the redacted version</p>
+                        </div>
+                        <ArrowRight className="w-4 h-4 text-blue-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+                      </button>
 
-                  <button onClick={() => sendToTool("contract-review")} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-amber-200/60 dark:border-amber-900/40 bg-amber-50/80 dark:bg-amber-950/20 hover:bg-amber-100/80 dark:hover:bg-amber-950/40 transition-colors group text-left">
-                    <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center shrink-0">
-                      <Scale className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">Review this contract</p>
-                      <p className="text-xs text-muted-foreground">Clause-by-clause review of the redacted version</p>
-                    </div>
-                    <ArrowRight className="w-4 h-4 text-amber-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
-                  </button>
+                      <button onClick={() => sendToTool("trust-check")} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-red-200/60 dark:border-red-900/40 bg-red-50/80 dark:bg-red-950/20 hover:bg-red-100/80 dark:hover:bg-red-950/40 transition-colors group text-left">
+                        <div className="w-8 h-8 rounded-lg bg-red-100 dark:bg-red-900/40 flex items-center justify-center shrink-0">
+                          <ShieldCheck className="w-4 h-4 text-red-600 dark:text-red-400" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-red-700 dark:text-red-300">Run Trust Check</p>
+                          <p className="text-xs text-muted-foreground">Verify legitimacy on the redacted document</p>
+                        </div>
+                        <ArrowRight className="w-4 h-4 text-red-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+                      </button>
 
-                  <button onClick={sendToAsk} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-indigo-200/60 dark:border-indigo-900/40 bg-indigo-50/80 dark:bg-indigo-950/20 hover:bg-indigo-100/80 dark:hover:bg-indigo-950/40 transition-colors group text-left">
-                    <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center shrink-0">
-                      <MessageCircle className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                      <button onClick={() => sendToTool("contract-review")} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-amber-200/60 dark:border-amber-900/40 bg-amber-50/80 dark:bg-amber-950/20 hover:bg-amber-100/80 dark:hover:bg-amber-950/40 transition-colors group text-left">
+                        <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center shrink-0">
+                          <Scale className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">Review this contract</p>
+                          <p className="text-xs text-muted-foreground">Clause-by-clause review of the redacted version</p>
+                        </div>
+                        <ArrowRight className="w-4 h-4 text-amber-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+                      </button>
+
+                      <button onClick={sendToAsk} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-indigo-200/60 dark:border-indigo-900/40 bg-indigo-50/80 dark:bg-indigo-950/20 hover:bg-indigo-100/80 dark:hover:bg-indigo-950/40 transition-colors group text-left">
+                        <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center shrink-0">
+                          <MessageCircle className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-indigo-700 dark:text-indigo-300">Ask This Document</p>
+                          <p className="text-xs text-muted-foreground">Ask plain-English questions about the redacted document</p>
+                        </div>
+                        <ArrowRight className="w-4 h-4 text-indigo-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+                      </button>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-indigo-700 dark:text-indigo-300">Ask This Document</p>
-                      <p className="text-xs text-muted-foreground">Ask plain-English questions about the redacted document</p>
-                    </div>
-                    <ArrowRight className="w-4 h-4 text-indigo-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
-                  </button>
+                  </div>
+                </>
+              )}
+
+              {/* Secondary: text-only export — always available */}
+              <div className="space-y-1">
+                <p className="text-[10px] text-muted-foreground/50 text-center">Text-only export</p>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" className="flex-1 gap-2 rounded-lg" onClick={handleCopyRedacted}>
+                    {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copied ? "Copied!" : "Copy text"}
+                  </Button>
+                  <Button variant="outline" size="sm" className="flex-1 gap-2 rounded-lg" onClick={handleDownloadRedacted}>
+                    <Download className="w-3.5 h-3.5" />
+                    Download .txt
+                  </Button>
                 </div>
-              </div>
-
-              {/* Secondary: .txt export */}
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="flex-1 gap-2 rounded-lg" onClick={handleCopyRedacted}>
-                  {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-                  {copied ? "Copied!" : "Copy text"}
-                </Button>
-                <Button variant="outline" size="sm" className="flex-1 gap-2 rounded-lg" onClick={handleDownloadRedacted}>
-                  <Download className="w-3.5 h-3.5" />
-                  Download .txt
-                </Button>
               </div>
 
               {/* Start over */}
