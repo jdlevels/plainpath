@@ -926,7 +926,7 @@ export default function Import() {
                   style={{ background: remaining === 0 ? "#dc2626" : "#f59e0b" }}
                 />
                 {remaining === 0
-                  ? "Free limit reached — Starter ($4.99/mo) unlocks unlimited analyses"
+                  ? "Free limit reached — PlainPath Pro unlocks unlimited analyses"
                   : `${used} of 2 free ${used === 1 ? "analysis" : "analyses"} used this month`}
               </span>
             </div>

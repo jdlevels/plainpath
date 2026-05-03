@@ -259,7 +259,7 @@ export default function Home() {
               className="shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-full border border-border/60 bg-card hover:bg-secondary transition-colors text-xs font-semibold text-muted-foreground"
             >
               <span className={`w-1.5 h-1.5 rounded-full ${isAdmin ? "bg-amber-400" : plan === "pro" ? "bg-emerald-400" : "bg-blue-400"}`} />
-              {isAdmin ? "Admin — All tools" : plan === "pro" ? "Pro Plan" : plan === "starter" ? "Starter Plan" : "Free"}
+              {isAdmin ? "Admin — All tools" : plan === "pro" ? "Pro Plan" : plan === "starter" ? "PlainPath Pro" : "Free"}
               <CreditCard className="w-3.5 h-3.5 ml-0.5 opacity-60" />
             </button>
           )}
@@ -560,7 +560,7 @@ export default function Home() {
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">Your Plan</p>
                   <p className="font-bold text-foreground">
-                    {isAdmin ? "Admin — Full Access" : plan === "pro" ? "Pro Plan" : plan === "starter" ? "Starter Plan" : "Free"}
+                    {isAdmin ? "Admin — Full Access" : plan === "pro" ? "Pro Plan" : plan === "starter" ? "PlainPath Pro" : "Free"}
                   </p>
                   {!plan && !isAdmin && (
                     <p className="text-xs text-muted-foreground mt-0.5">2 free analyses included</p>

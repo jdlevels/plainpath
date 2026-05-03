@@ -30,8 +30,8 @@ export default function SubscribeSuccess() {
       .catch(() => {})
   }, [])
 
-  const plan = sessionData?.metadata?.plan ?? "starter"
-  const planLabel = plan === "pro" ? "Pro" : "Starter"
+  const plan = sessionData?.metadata?.plan ?? "pro"
+  const planLabel = plan === "team" ? "Team" : "PlainPath Pro"
 
   // Prefer the signed-in account email; fall back to Stripe session email
   const accountEmail =
@@ -81,7 +81,7 @@ export default function SubscribeSuccess() {
           )}
           <div className="flex justify-between">
             <span className="text-muted-foreground">Plan</span>
-            <span className="font-medium text-foreground">{planLabel} · ${ plan === "pro" ? "19.99" : "4.99" }/mo</span>
+            <span className="font-medium text-foreground">{planLabel} · ${ plan === "team" ? "49.99" : "19.99" }/mo</span>
           </div>
         </div>
 

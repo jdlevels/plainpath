@@ -17,7 +17,7 @@ export default function VsContractCrab() {
   }, [])
 
   const features = [
-    { feature: "Starting price",                    plainpath: "$4.99/mo",  contractcrab: "$30/mo" },
+    { feature: "PlainPath Pro price",               plainpath: "$19.99/mo", contractcrab: "$30/mo" },
     { feature: "Contract analysis",                 plainpath: true,        contractcrab: true },
     { feature: "Lease analysis",                    plainpath: true,        contractcrab: false },
     { feature: "Medical bill analysis",             plainpath: true,        contractcrab: false },
@@ -47,15 +47,14 @@ export default function VsContractCrab() {
             PlainPath vs ContractCrab
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            ContractCrab is a contract-only review tool at $30/month. PlainPath provides document analysis and contract review for everyday people — leases, medical bills, IRS letters, contracts, and more — starting at $4.99/month.
+            ContractCrab is a contract-only review tool at $30/month. PlainPath Pro provides document analysis and contract review for everyday people — leases, medical bills, IRS letters, contracts, and more — at $19.99/month.
           </p>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 mb-10">
+        <div className="grid grid-cols-2 gap-4 mb-10">
           {[
-            { label: "PlainPath Starter", price: "$4.99/mo", highlight: true,  note: "Document analysis" },
-            { label: "PlainPath Pro",     price: "$19.99/mo", highlight: false, note: "Both tools included" },
-            { label: "ContractCrab",      price: "$30/mo",    highlight: false, note: "Contracts only" },
+            { label: "PlainPath Pro", price: "$19.99/mo", highlight: true,  note: "Both tools included" },
+            { label: "ContractCrab",  price: "$30/mo",    highlight: false, note: "Contracts only" },
           ].map((plan, i) => (
             <div key={i} className={`rounded-2xl p-5 text-center border ${plan.highlight ? "border-primary/40 bg-primary/5" : "border-border/50 bg-card"}`}>
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">{plan.label}</p>
@@ -119,9 +118,9 @@ export default function VsContractCrab() {
         </div>
 
         <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 text-center">
-          <h3 className="text-lg font-bold text-foreground mb-2">Try PlainPath free — no credit card required</h3>
+          <h3 className="text-lg font-bold text-foreground mb-2">See it for yourself</h3>
           <p className="text-sm text-muted-foreground mb-5 max-w-lg mx-auto">
-            The demo shows you a real analysis without creating an account. See the difference before you decide.
+            Try PlainPath's demo — a real document, a real analysis. See the difference before you decide.
           </p>
           <div className="flex flex-wrap gap-3 justify-center">
             <a

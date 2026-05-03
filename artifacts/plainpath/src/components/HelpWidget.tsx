@@ -50,7 +50,7 @@ const PAGE_ACTIONS: Record<string, { label: string; message: string }[]> = {
     { label: "How long are they saved?", message: "How long are my analyses stored?" },
   ],
   "/subscribe": [
-    { label: "Plan differences", message: "What's the difference between Free, Starter, and Pro?" },
+    { label: "Plan differences", message: "What tools does PlainPath Pro include?" },
     { label: "Can I cancel?", message: "Can I cancel my subscription at any time?" },
     { label: "What does Pro unlock?", message: "What extra features does the Pro plan unlock?" },
   ],
@@ -88,7 +88,7 @@ const DEFAULT_ACTIONS = [
   { label: "How do I analyze a document?", message: "How do I analyze a document?" },
   { label: "What does Trust Check do?", message: "What does the Document Trust Check feature do?" },
   { label: "How do I save an analysis?", message: "How do I save an analysis?" },
-  { label: "Plan differences", message: "What's the difference between the Free, Starter, and Pro plans?" },
+  { label: "Plan differences", message: "What tools does PlainPath Pro include?" },
 ]
 
 const PAGE_CONTEXT_LABELS: Record<string, string> = {

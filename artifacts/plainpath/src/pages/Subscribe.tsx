@@ -15,8 +15,8 @@ import { getApiBaseUrl } from "@/lib/api"
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "")
 
-function isPlanKey(value: unknown): value is "starter" | "pro" | "team" {
-  return value === "starter" || value === "pro" || value === "team"
+function isPlanKey(value: unknown): value is "pro" | "team" {
+  return value === "pro" || value === "team"
 }
 
 // ─── Native fallback ────────────────────────────────────────────────────────
@@ -44,7 +44,6 @@ export default function Subscribe() {
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [billingAvailable, setBillingAvailable] = useState<boolean | null>(null)
-  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annual">("monthly")
   const autoTriggeredRef = useRef(false)
 
   // Read ?plan= from URL (set by the sign-in redirect flow)
@@ -94,7 +93,7 @@ export default function Subscribe() {
     trackEvent("subscribe_started", { plan: planKey })
 
     try {
-      await startStripeCheckout(planKey as "starter" | "pro" | "team", billingPeriod)
+      await startStripeCheckout(planKey as "pro" | "team")
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to start checkout. Please try again.")
       setLoadingPlan(null)
@@ -121,10 +120,10 @@ export default function Subscribe() {
             Simple, clear pricing
           </div>
           <h1 className="text-3xl sm:text-4xl font-display font-bold tracking-tight mb-3">
-            Choose your PlainPath plan
+            Get PlainPath Pro
           </h1>
           <p className="text-muted-foreground text-base max-w-xl mx-auto leading-relaxed">
-            Start with unlimited document analysis on Starter, or unlock every tool with Pro.
+            Both tools included — Analyze a Document and Contract Review. Cancel anytime.
           </p>
           {isLoaded && isSignedIn && user?.primaryEmailAddress?.emailAddress && (
             <p className="mt-3 text-sm text-muted-foreground/70">
@@ -132,34 +131,6 @@ export default function Subscribe() {
             </p>
           )}
 
-          {/* ── Billing period toggle ── */}
-          <div className="mt-7 inline-flex items-center gap-0 rounded-full border border-border/60 bg-muted/40 p-1 shadow-sm">
-            <button
-              type="button"
-              onClick={() => setBillingPeriod("monthly")}
-              className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${
-                billingPeriod === "monthly"
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Monthly
-            </button>
-            <button
-              type="button"
-              onClick={() => setBillingPeriod("annual")}
-              className={`flex items-center gap-2 px-5 py-2 rounded-full text-sm font-semibold transition-all ${
-                billingPeriod === "annual"
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Annual
-              <span className="px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-[10px] font-bold text-emerald-700 dark:text-emerald-400">
-                Save 17%
-              </span>
-            </button>
-          </div>
         </div>
 
         {/* ── Billing not activated notice ── */}
@@ -182,7 +153,7 @@ export default function Subscribe() {
         )}
 
         {/* ── Plan cards ── */}
-        <div className="grid gap-5 md:grid-cols-3">
+        <div className="grid gap-5 md:grid-cols-2">
           {PRICING_PLANS.map((plan, i) => {
             const isLoading = loadingPlan === plan.planKey
             const billingBlocked = billingAvailable === false || !BILLING_CONFIG.BILLING_ENABLED
@@ -223,15 +194,10 @@ export default function Subscribe() {
 
                   <div className="mt-3 flex items-end gap-1">
                     <span className="text-4xl font-bold tracking-tight">
-                      {billingPeriod === "annual" && plan.annualPrice ? plan.annualPrice : plan.price}
+                      {plan.price}
                     </span>
-                    <span className="pb-1 text-sm text-muted-foreground">/month</span>
+                    <span className="pb-1 text-sm text-muted-foreground">{plan.period}</span>
                   </div>
-                  {billingPeriod === "annual" && plan.annualTotal && (
-                    <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-0.5">
-                      {plan.annualTotal}/year — billed annually
-                    </p>
-                  )}
 
                   <p className="mt-3 text-sm text-muted-foreground leading-relaxed min-h-[60px]">
                     {plan.description}
@@ -321,8 +287,8 @@ export default function Subscribe() {
               a: "No. Documents and analyses are stored only in your browser's local storage, never on our servers.",
             },
             {
-              q: "What's the difference between plans?",
-              a: "Starter covers unlimited document analysis and redacting sensitive info. Pro unlocks every tool: Analysis, Trust Check, Contract Builder, Contract Review, Compare Versions, and Clause Extractor.",
+              q: "What tools are included?",
+              a: "PlainPath Pro gives you access to both Analyze a Document and Contract Review — all in one plan.",
             },
           ].map((item) => (
             <div key={item.q} className="rounded-2xl border border-border/50 bg-card p-4">

@@ -19,15 +19,15 @@ import { trackEvent } from "@/lib/analytics"
 
 const PLAN_META = {
   starter: {
-    label: "Starter",
+    label: "PlainPath Pro",
     price: "$4.99/month",
-    icon: BarChart3,
-    color: "text-blue-500",
-    bg: "bg-blue-500/8",
-    border: "border-blue-500/20",
+    icon: Zap,
+    color: "text-primary",
+    bg: "bg-primary/8",
+    border: "border-primary/20",
   },
   pro: {
-    label: "Pro",
+    label: "PlainPath Pro",
     price: "$19.99/month",
     icon: Zap,
     color: "text-primary",
@@ -38,8 +38,8 @@ const PLAN_META = {
 
 // Source of truth: TOOL_ACCESS in artifacts/api-server/src/lib/planEntitlements.ts
 const TOOLS = [
-  { icon: FileScan,       key: "analyze",          label: "Analyze a Document",   plans: ["starter", "pro"] },
-  { icon: EyeOff,         key: "redact",           label: "Redact Sensitive Info", plans: ["starter", "pro"] },
+  { icon: FileScan,       key: "analyze",          label: "Analyze a Document",   plans: ["pro"] },
+  { icon: EyeOff,         key: "redact",           label: "Redact Sensitive Info", plans: ["pro"] },
   { icon: ShieldCheck,    key: "trust-check",      label: "Document Trust Check", plans: ["pro"] },
   { icon: Scale,          key: "contract-review",  label: "Contract Review",      plans: ["pro"] },
   { icon: PenLine,        key: "build-contract",   label: "Build a Contract",     plans: ["pro"] },
@@ -275,11 +275,8 @@ export default function Billing() {
               const hasAccess = isAdmin || (isEnforced
                 ? Boolean(plan && (tool.plans as readonly string[]).includes(plan))
                 : true)
-              const isStarterTool = (tool.plans as readonly string[]).includes("starter")
-              const planBadge = isStarterTool ? "Starter + Pro" : "Pro"
-              const planBadgeClass = isStarterTool
-                ? "text-blue-600 dark:text-blue-400 bg-blue-500/10"
-                : "text-primary bg-primary/10"
+              const planBadge = "PlainPath Pro"
+              const planBadgeClass = "text-primary bg-primary/10"
 
               return (
                 <div
@@ -306,19 +303,9 @@ export default function Billing() {
             })}
           </div>
 
-          {isEnforced && plan === "starter" && (
-            <div className="mt-4 rounded-xl border border-primary/20 bg-primary/5 p-3 flex items-center justify-between gap-3">
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Upgrade to <span className="font-semibold text-primary">Pro</span> to unlock all 9 tools — including Contract Review, Ask This Document, Compare Versions, and more.
-              </p>
-              <Button size="sm" onClick={() => navigate("/subscribe")} className="shrink-0">
-                Upgrade <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
-              </Button>
-            </div>
-          )}
         </motion.div>
 
-        {/* ── Upgrade CTA (no active plan or on Starter; never for admins) ── */}
+        {/* ── Subscribe CTA (no active plan; never for admins) ── */}
         {!isAdmin && !hasSub && (
           <motion.div
             initial={{ opacity: 0, y: 8 }}
@@ -329,38 +316,14 @@ export default function Billing() {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-sm font-semibold text-foreground mb-1">
-                  Subscribe to PlainPath
+                  Get PlainPath Pro
                 </p>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  Starter at <strong>$4.99/mo</strong> gives you Analyze and Redact.
-                  Pro at <strong>$19.99/mo</strong> unlocks all 9 tools.
+                  <strong>$19.99/mo</strong> — Analyze a Document and Contract Review, both included.
                 </p>
               </div>
               <Button size="sm" onClick={() => navigate("/subscribe")} className="shrink-0">
                 View plans <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
-              </Button>
-            </div>
-          </motion.div>
-        )}
-
-        {hasSub && plan === "starter" && (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.12 }}
-            className="rounded-2xl border border-primary/20 bg-primary/4 p-5 mb-4"
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-sm font-semibold text-foreground mb-1">
-                  Upgrade to Pro — $19.99/mo
-                </p>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  Unlock all 9 tools — Trust Check, Contract Review, Ask This Document, Compare Versions, Clause Extractor, and more.
-                </p>
-              </div>
-              <Button size="sm" onClick={() => navigate("/subscribe")} className="shrink-0">
-                Upgrade <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
               </Button>
             </div>
           </motion.div>

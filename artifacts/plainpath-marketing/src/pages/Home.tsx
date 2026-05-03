@@ -176,7 +176,7 @@ const DEMOS = [
 /* ─── Comparison ─────────────────────────────────────────── */
 const COMPARISON_ROWS = [
   { feature: "Time to get an answer",     lawyer: "Days",              diy: "Hours",           pp: "Under 2 minutes" },
-  { feature: "Cost",                      lawyer: "$150–$500/hour",    diy: "Free (if lucky)", pp: "From $4.99/month" },
+  { feature: "Cost",                      lawyer: "$150–$500/hour",    diy: "Free (if lucky)", pp: "$19.99/month" },
   { feature: "Plain English explanation", lawyer: "Sometimes",         diy: "Rarely",          pp: "Every time" },
   { feature: "Key terms surfaced",        lawyer: "Yes (manual)",      diy: "Not reliably",    pp: "Automatically" },
   { feature: "Contract risks identified", lawyer: "Yes",               diy: "Not reliably",    pp: "Yes" },
@@ -186,33 +186,18 @@ const COMPARISON_ROWS = [
 /* ─── Pricing ────────────────────────────────────────────── */
 const PLANS = [
   {
-    name: "Starter",
-    monthly: { price: "$4.99", period: "/month", sub: null },
-    annual:  { price: "$47.99", period: "/year", sub: "billed annually", eq: "≈ $4.00/mo", savings: "Save about 20%" },
-    desc: "Analyze any document in plain English — your starting tool for understanding documents.",
-    highlight: false,
-    badge: null as string | null,
-    tools: [
-      { label: "Analyze a Document", included: true,  comingSoon: false },
-      { label: "Contract Review",    included: false, comingSoon: false },
-    ],
-    extras: [] as string[],
-    cta: "Subscribe to Starter",
-    href: "/app/subscribe?plan=starter",
-  },
-  {
-    name: "Pro",
-    monthly: { price: "$19.99", period: "/month", sub: null },
-    annual:  { price: "$191.90", period: "/year", sub: "billed annually", eq: "≈ $16.00/mo", savings: "Save 20%" },
-    desc: "Everything in Starter plus Contract Review — clause-by-clause risk analysis and negotiation language before you sign.",
+    name: "PlainPath Pro",
+    price: "$19.99",
+    period: "/month",
+    desc: "Analyze any document in plain English and get a full contract review before you sign — both tools, one plan.",
     highlight: true,
-    badge: "Best Value",
+    badge: "All tools included" as string | null,
     tools: [
       { label: "Analyze a Document", included: true, comingSoon: false },
       { label: "Contract Review",    included: true, comingSoon: false },
     ],
-    extras: ["Saved analysis history"],
-    cta: "Subscribe to Pro",
+    extras: ["Saved analysis history"] as string[],
+    cta: "Get PlainPath Pro",
     href: "/app/subscribe?plan=pro",
   },
 ];
@@ -223,7 +208,7 @@ const ATTORNEY_SCENARIOS = [
     id: "lease",
     label: "Lease agreement",
     attyLow: 300, attyHigh: 600,
-    ppPlan: "Starter", ppPrice: 4.99, ppTool: "Analyze a Document",
+    ppPlan: "Pro", ppPrice: 19.99, ppTool: "Analyze a Document",
     note: "1–2 hrs at typical attorney rates of $150–$350/hr.",
   },
   {
@@ -258,28 +243,28 @@ const ATTORNEY_SCENARIOS = [
     id: "irs",
     label: "IRS notice response",
     attyLow: 200, attyHigh: 600,
-    ppPlan: "Starter", ppPrice: 4.99, ppTool: "Analyze a Document",
+    ppPlan: "Pro", ppPrice: 19.99, ppTool: "Analyze a Document",
     note: "Tax attorney or CPA review, typically 1–3 hrs.",
   },
   {
     id: "eviction",
     label: "Eviction notice",
     attyLow: 150, attyHigh: 400,
-    ppPlan: "Starter", ppPrice: 4.99, ppTool: "Analyze a Document",
+    ppPlan: "Pro", ppPrice: 19.99, ppTool: "Analyze a Document",
     note: "Landlord-tenant attorney review, typically 1–2 hrs.",
   },
   {
     id: "medical",
     label: "Medical bill dispute",
     attyLow: 150, attyHigh: 350,
-    ppPlan: "Starter", ppPrice: 4.99, ppTool: "Analyze a Document",
+    ppPlan: "Pro", ppPrice: 19.99, ppTool: "Analyze a Document",
     note: "Healthcare billing advocate or attorney, 1–2 hrs.",
   },
   {
     id: "general",
     label: "General document review",
     attyLow: 200, attyHigh: 500,
-    ppPlan: "Starter", ppPrice: 4.99, ppTool: "Analyze a Document",
+    ppPlan: "Pro", ppPrice: 19.99, ppTool: "Analyze a Document",
     note: "General attorney document review, typically 1–2 hrs.",
   },
 ] as const;
@@ -623,7 +608,6 @@ export default function Home() {
   const [waitlistOpen, setWaitlistOpen] = useState(false)
   const [waitlistPlatform, setWaitlistPlatform] = useState<"ios" | "android" | "both">("both")
   const [activeDemoTool, setActiveDemoTool] = useState(0)
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly")
 
   useEffect(() => {
     const id = setInterval(() => setActiveDemoTool(prev => (prev + 1) % 2), DEMO_INTERVAL_MS)
@@ -750,7 +734,7 @@ export default function Home() {
                     Review a Contract
                   </a>
                 </div>
-                <p className="text-xs text-muted-foreground/80">Results in under 2 minutes &nbsp;·&nbsp; Cancel anytime &nbsp;·&nbsp; From $4.99/month</p>
+                <p className="text-xs text-muted-foreground/80">Results in under 2 minutes &nbsp;·&nbsp; Cancel anytime &nbsp;·&nbsp; PlainPath Pro — $19.99/month</p>
                 <div className="flex items-center gap-2.5 flex-wrap">
                   <AppStoreBadge onClick={() => openWaitlist("ios")} />
                   <PlayStoreBadge onClick={() => openWaitlist("android")} />
@@ -762,7 +746,7 @@ export default function Home() {
 
               <motion.div custom={5} variants={fadeUp}>
                 <p className="text-xs text-muted-foreground">
-                  From $4.99/month &nbsp;·&nbsp; Contract Review on Pro &nbsp;·&nbsp; Cancel anytime
+                  PlainPath Pro &nbsp;·&nbsp; Both tools included &nbsp;·&nbsp; Cancel anytime
                 </p>
               </motion.div>
             </motion.div>
@@ -1173,9 +1157,9 @@ export default function Home() {
               href="/demo"
               className="inline-flex items-center gap-2 bg-primary text-white rounded-xl px-8 py-3.5 text-sm font-semibold hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-primary/30"
             >
-              Try it free <ArrowRight className="w-4 h-4" />
+              Open App <ArrowRight className="w-4 h-4" />
             </a>
-            <p className="mt-3 text-xs text-white/30">From $4.99/month · Cancel anytime</p>
+            <p className="mt-3 text-xs text-white/30">PlainPath Pro · $19.99/month · Cancel anytime</p>
           </motion.div>
         </div>
       </div>
@@ -1220,39 +1204,15 @@ export default function Home() {
               transition={{ duration: 0.4, delay: 0.08 }}
               className="text-lg text-muted-foreground"
             >
-              Start with document analysis, or unlock both tools with Pro. No commitment — cancel anytime.
+              Both tools included. No commitment — cancel anytime.
             </motion.p>
-          </div>
-
-          {/* ── Billing toggle ── */}
-          <div className="flex items-center justify-center mb-10">
-            <div className="inline-flex items-center gap-1 p-1 rounded-full bg-secondary/70 border border-border/50">
-              <button
-                onClick={() => setBillingCycle("monthly")}
-                className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${billingCycle === "monthly" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-              >
-                Monthly
-              </button>
-              <button
-                onClick={() => setBillingCycle("annual")}
-                className={`flex items-center gap-2 px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${billingCycle === "annual" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-              >
-                Annual
-                <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
-                  Save 20%
-                </span>
-              </button>
-            </div>
           </div>
 
           {/* ── Attorney cost comparison ── */}
           <AttorneyComparison />
 
-          <div className="grid md:grid-cols-2 gap-6 items-stretch max-w-4xl mx-auto">
-            {PLANS.map((plan, i) => {
-              const pr = billingCycle === "annual" ? plan.annual : plan.monthly;
-              const planHref = billingCycle === "annual" ? `${plan.href}&billing=annual` : plan.href;
-              return (
+          <div className="max-w-md mx-auto">
+            {PLANS.map((plan, i) => (
               <motion.div
                 key={plan.name}
                 initial={{ opacity: 0, y: 20 }}
@@ -1276,16 +1236,10 @@ export default function Home() {
                   </div>
                   <div className="flex items-baseline gap-0.5 mb-1">
                     <span className="text-4xl font-bold text-foreground tracking-tight">
-                      {pr.price}
+                      {plan.price}
                     </span>
-                    <span className="text-muted-foreground text-sm ml-0.5">{pr.period}</span>
+                    <span className="text-muted-foreground text-sm ml-0.5">{plan.period}</span>
                   </div>
-                  {billingCycle === "annual" && "eq" in pr && (
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">{pr.eq}</span>
-                      <span className="text-xs text-muted-foreground">{pr.sub}</span>
-                    </div>
-                  )}
                   <div className="mb-2" />
                   <p className="text-sm text-muted-foreground leading-snug">{plan.desc}</p>
                 </div>
@@ -1322,7 +1276,7 @@ export default function Home() {
                 </div>
 
                 <a
-                  href={planHref}
+                  href={plan.href}
                   className={`block w-full py-3 rounded-xl text-sm font-semibold text-center transition-all ${
                     plan.highlight
                       ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
@@ -1332,8 +1286,7 @@ export default function Home() {
                   {plan.cta}
                 </a>
               </motion.div>
-              );
-            })}
+            ))}
           </div>
 
           {/* ── Trust badges ── */}
@@ -1512,7 +1465,7 @@ export default function Home() {
             </a>
           </motion.div>
           <p className="mt-6 text-xs text-white/30">
-            From $4.99/month &nbsp;·&nbsp; Contract Review on Pro ($19.99/mo) &nbsp;·&nbsp; Cancel anytime
+            PlainPath Pro &nbsp;·&nbsp; $19.99/month &nbsp;·&nbsp; Cancel anytime
           </p>
         </div>
       </div>

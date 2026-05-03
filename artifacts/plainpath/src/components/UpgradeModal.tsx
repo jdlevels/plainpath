@@ -15,10 +15,10 @@ interface Props {
 
 const REASON_COPY = {
   analyses: {
-    title: "You've used your 2 free analyses this month",
-    sub: "Upgrade to Starter for unlimited document analyses — or Pro for all 9 tools.",
+    title: "Upgrade to access unlimited analyses",
+    sub: "Get PlainPath Pro for unlimited document analyses and contract reviews.",
     icon: <GitCompare className="w-6 h-6 text-primary" />,
-    planRequired: "starter" as const,
+    planRequired: "pro" as const,
   },
   trustCheck: {
     title: "Document Trust Check requires Pro",
@@ -39,10 +39,10 @@ const REASON_COPY = {
     planRequired: "pro" as const,
   },
   redact: {
-    title: "Redact Sensitive Info requires a subscription",
-    sub: "Upgrade to Starter or Pro to automatically detect and redact PII from any document.",
+    title: "Redact Sensitive Info requires PlainPath Pro",
+    sub: "Get PlainPath Pro to automatically detect and redact PII from any document.",
     icon: <ShieldCheck className="w-6 h-6 text-violet-500" />,
-    planRequired: "starter" as const,
+    planRequired: "pro" as const,
   },
   compare: {
     title: "Compare Document Versions requires Pro",
@@ -54,18 +54,18 @@ const REASON_COPY = {
 
 const PLAN_HIGHLIGHTS = {
   starter: [
-    "Unlimited document analyses",
-    "Redact Sensitive Info (automatic PII removal)",
+    "Analyze a Document — unlimited access",
+    "Contract Review — clause-by-clause analysis",
     "Plain English summary & full Action Pack",
     "Key Terms, Deadlines, Risks",
-    "Shareable analysis links",
+    "Saved analysis history",
   ],
   pro: [
-    "Everything in Starter",
-    "Unlimited Document Trust Checks",
-    "Build a Contract (AI-drafted)",
-    "AI Contract Review",
-    "Compare Versions & Clause Extractor",
+    "Analyze a Document — unlimited access",
+    "Contract Review — clause-by-clause analysis",
+    "Plain English summary & full Action Pack",
+    "Key Terms, Deadlines, Risks",
+    "Saved analysis history",
   ],
 }
 
@@ -116,7 +116,7 @@ export default function UpgradeModal({ open, onClose, reason, used, limit }: Pro
         {/* Plan highlights */}
         <div className="px-6 py-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
-            {copy.planRequired === "starter" ? "Starter includes" : "Pro includes"}
+            PlainPath Pro includes
           </p>
           <ul className="space-y-2">
             {PLAN_HIGHLIGHTS[copy.planRequired].map((f) => (

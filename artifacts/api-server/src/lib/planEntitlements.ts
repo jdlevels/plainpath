@@ -40,7 +40,7 @@ export type ToolKey =
 /** Which tools each plan can access. This is the canonical feature gate. */
 export const TOOL_ACCESS: Record<PlanKey, ToolKey[]> = {
   free: [],
-  starter: ["analyze", "redact"],
+  starter: ["analyze", "contract-review", "redact"],
   pro: ["analyze", "trust-check", "contract-review", "build-contract", "redact", "compare", "clause-extractor", "compare-versions", "negotiate", "ask-document", "builder"],
   team: ["analyze", "trust-check", "contract-review", "build-contract", "redact", "compare", "clause-extractor", "compare-versions", "negotiate", "ask-document", "builder"],
 }

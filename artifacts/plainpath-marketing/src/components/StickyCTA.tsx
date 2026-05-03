@@ -42,14 +42,14 @@ export function StickyCTA() {
                 Understand any document in plain English.
               </p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                From $4.99/month · No credit card
+                PlainPath Pro · $19.99/month · Cancel anytime
               </p>
             </div>
             <a
               href="/demo"
               className="shrink-0 inline-flex items-center gap-1.5 bg-primary text-primary-foreground text-xs font-bold px-4 py-2.5 rounded-xl hover:bg-primary/90 active:scale-95 transition-all shadow-sm whitespace-nowrap"
             >
-              Try free <ArrowRight className="w-3.5 h-3.5" />
+              Open App <ArrowRight className="w-3.5 h-3.5" />
             </a>
             <button
               onClick={dismiss}

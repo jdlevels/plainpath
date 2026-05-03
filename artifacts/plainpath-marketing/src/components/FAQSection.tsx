@@ -57,8 +57,8 @@ const FAQS: { q: string; a: React.ReactNode }[] = [
     a: "Yes — the web app is mobile-friendly. Native iOS and Android apps are on the roadmap.",
   },
   {
-    q: "Which plan do I need for each tool?",
-    a: "Analyze a Document is available on the Starter plan ($4.99/mo). Contract Review requires the Pro plan ($19.99/mo). You'll see an upgrade prompt if you try to use Contract Review without Pro, and you can switch plans at any time.",
+    q: "Which plan includes which tools?",
+    a: "Both tools — Analyze a Document and Contract Review — are available with PlainPath Pro ($19.99/mo). The live demo is available to try before subscribing.",
   },
 ]
 

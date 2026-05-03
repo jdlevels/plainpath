@@ -51,10 +51,8 @@ Users fill in the details and PlainPath generates a complete, plain-English cont
 A saved history of all analyses the user has saved to their device. Users can search, sort, and revisit past results. Analyses are stored in the browser's local storage — not on PlainPath's servers — so they are private to the device.
 
 ### 5. Plans
-- **Free** — limited number of document analyses per month
-- **Starter ($4.99/mo)** — unlimited document analysis
-- **Pro ($24.99/mo)** — unlimited use of all three tools (Analysis, Trust Check, Contract Builder)
-- **Team ($49.99/mo)** — coming soon, multi-user workspace
+- **PlainPath Pro ($19.99/mo)** — Analyze a Document and Contract Review — both tools included
+- **Team ($29.99/mo)** — All PlainPath Pro tools for up to 3 users under one subscription
 
 Subscriptions are managed on the PlainPath website (plainpathapp.com). On the iOS app, subscriptions cannot be purchased in-app — users must visit the website to subscribe.
 

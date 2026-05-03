@@ -33,7 +33,7 @@ const FAQS = [
   },
   {
     q: "Which plan do I need for each tool?",
-    a: "Analyze a Document is available on all plans, including Free (first two analyses). Document Trust Check, Build a Contract, and Contract Review require a Pro plan. You'll see an upgrade prompt if you try to use them on Starter, and you can switch plans at any time.",
+    a: "All tools are available with PlainPath Pro ($19.99/mo). You can try two free analyses before subscribing.",
   },
 ]
 

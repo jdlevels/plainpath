@@ -17,7 +17,7 @@ export default function VsAiLawyer() {
   }, [])
 
   const features = [
-    { feature: "Starting price",                                   plainpath: "$4.99/mo",  ailawyer: "Free / $10–$30/mo" },
+    { feature: "PlainPath Pro price",                              plainpath: "$19.99/mo", ailawyer: "Free / $10–$30/mo" },
     { feature: "Document-grounded analysis",                       plainpath: true,        ailawyer: "partial" },
     { feature: "Upload and paste documents",                       plainpath: true,        ailawyer: true },
     { feature: "Plain English breakdown",                          plainpath: true,        ailawyer: true },
@@ -27,7 +27,7 @@ export default function VsAiLawyer() {
     { feature: "IRS letter analysis",                              plainpath: true,        ailawyer: "partial" },
     { feature: "Contract clause-by-clause review",                 plainpath: true,        ailawyer: false },
     { feature: "Key terms surfaced automatically",                 plainpath: true,        ailawyer: false },
-    { feature: "No-account demo",                                  plainpath: true,        ailawyer: true },
+    { feature: "Free demo available",                              plainpath: true,        ailawyer: true },
   ]
 
   function Cell({ value }: { value: boolean | string }) {
@@ -124,7 +124,7 @@ export default function VsAiLawyer() {
         </div>
 
         <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 text-center">
-          <h3 className="text-lg font-bold text-foreground mb-2">See it for yourself — no sign-up needed</h3>
+          <h3 className="text-lg font-bold text-foreground mb-2">See it for yourself</h3>
           <p className="text-sm text-muted-foreground mb-5 max-w-lg mx-auto">
             Try PlainPath's document analysis demo and see what structured findings look like compared to a chat response.
           </p>

@@ -501,7 +501,7 @@ export default function Redact() {
           <div className="max-w-xs">
             <h2 className="text-lg font-bold mb-1">Redact Sensitive Info</h2>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Automatic PII detection and redaction is available on the Starter plan and above.
+              Automatic PII detection and redaction is available with PlainPath Pro.
             </p>
           </div>
           <Button onClick={() => setUpgradeOpen(true)} className="gap-2 mt-1">

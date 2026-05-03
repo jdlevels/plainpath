@@ -55,7 +55,7 @@ export default function Upgrade() {
             Simple pricing. Powerful tools.
           </h1>
           <p className="text-muted-foreground text-base sm:text-lg max-w-xl mx-auto leading-relaxed">
-            Start with document analysis on Starter, or unlock every tool with Pro. No commitment — cancel anytime.
+            Both tools included — Analyze a Document and Contract Review. No commitment — cancel anytime.
           </p>
         </motion.div>
 
@@ -135,23 +135,22 @@ export default function Upgrade() {
           })}
         </div>
 
-        {/* Tool access comparison */}
+        {/* Tool access list */}
         <div className="mb-14">
-          <h2 className="text-lg font-bold text-foreground mb-1">What's included in each plan</h2>
-          <p className="text-sm text-muted-foreground mb-5">All plans include access to start immediately. Some tools require Pro.</p>
+          <h2 className="text-lg font-bold text-foreground mb-1">What's included in PlainPath Pro</h2>
+          <p className="text-sm text-muted-foreground mb-5">All tools available at $19.99/month — both Analyze a Document and Contract Review included.</p>
 
           <div className="border border-border/50 rounded-2xl overflow-hidden bg-card">
             {/* Header */}
-            <div className="grid grid-cols-[1fr_80px_80px] border-b border-border/50 bg-muted/30">
+            <div className="grid grid-cols-[1fr_100px] border-b border-border/50 bg-muted/30">
               <div className="px-5 py-3 text-xs font-bold uppercase tracking-widest text-muted-foreground">Tool</div>
-              <div className="py-3 text-xs font-bold uppercase tracking-widest text-muted-foreground text-center">Starter</div>
-              <div className="py-3 text-xs font-bold uppercase tracking-widest text-primary text-center">Pro</div>
+              <div className="py-3 text-xs font-bold uppercase tracking-widest text-primary text-center">PlainPath Pro</div>
             </div>
 
             {TOOL_BREAKDOWN.map((tool, i) => (
               <div
                 key={tool.name}
-                className={`grid grid-cols-[1fr_80px_80px] items-center ${i < TOOL_BREAKDOWN.length - 1 ? "border-b border-border/40" : ""}`}
+                className={`grid grid-cols-[1fr_100px] items-center ${i < TOOL_BREAKDOWN.length - 1 ? "border-b border-border/40" : ""}`}
               >
                 <div className="px-5 py-4 flex items-center gap-3">
                   <div className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center shrink-0">
@@ -161,12 +160,6 @@ export default function Upgrade() {
                     <p className="text-sm font-semibold text-foreground">{tool.name}</p>
                     <p className="text-xs text-muted-foreground">{tool.desc}</p>
                   </div>
-                </div>
-                <div className="text-center py-4">
-                  {tool.starter
-                    ? <Check className="w-4 h-4 text-emerald-500 mx-auto" />
-                    : <span className="text-muted-foreground/30 text-lg">—</span>
-                  }
                 </div>
                 <div className="text-center py-4">
                   <Check className="w-4 h-4 text-primary mx-auto" />

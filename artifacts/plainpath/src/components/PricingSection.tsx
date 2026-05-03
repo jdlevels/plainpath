@@ -143,7 +143,7 @@ export default function PricingSection() {
         </h2>
 
         <p className="mt-4 text-base leading-7 text-slate-600 dark:text-slate-300 sm:text-lg">
-          Start with document analysis on Starter, or unlock every tool with Pro. No contracts, cancel anytime.
+          Both tools included. No contracts, cancel anytime.
         </p>
 
       </div>
@@ -152,7 +152,7 @@ export default function PricingSection() {
         <AttorneyCostCalculator />
       </div>
 
-      <div className="mt-4 grid gap-6 lg:grid-cols-2 lg:max-w-3xl lg:mx-auto w-full">
+      <div className="mt-4 grid gap-6 lg:grid-cols-2 lg:max-w-2xl lg:mx-auto w-full">
         {PRICING_PLANS.map((plan) => (
           <div
             key={plan.name}
