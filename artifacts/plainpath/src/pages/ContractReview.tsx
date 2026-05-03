@@ -1355,7 +1355,7 @@ export default function ContractReview() {
         subtitle="Spot unfair clauses, red flags, and missing protections before you sign."
         backTo="/"
       />
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}

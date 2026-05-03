@@ -792,7 +792,7 @@ export default function Import() {
       />
       <div className="absolute top-0 inset-x-0 h-52 bg-gradient-to-b from-primary/[0.04] to-transparent pointer-events-none" />
 
-      <div className="max-w-2xl mx-auto px-4 pt-4 sm:pt-12 relative">
+      <div className="max-w-3xl mx-auto px-4 pt-4 sm:pt-12 relative">
 
         {/* ── Header ─────────────────────────────────── */}
         {isTrustCheck ? (
@@ -926,8 +926,8 @@ export default function Import() {
                   style={{ background: remaining === 0 ? "#dc2626" : "#f59e0b" }}
                 />
                 {remaining === 0
-                  ? "Free limit reached — PlainPath Pro unlocks unlimited analyses"
-                  : `${used} of 2 free ${used === 1 ? "analysis" : "analyses"} used this month`}
+                  ? "Analysis limit reached — PlainPath Pro unlocks unlimited analyses"
+                  : `${used} of 2 preview ${used === 1 ? "analysis" : "analyses"} used this month`}
               </span>
             </div>
           )

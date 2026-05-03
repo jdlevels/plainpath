@@ -193,7 +193,11 @@ export default function Home() {
             tool: lw.tool,
           }))
 
-        const merged = [...clauses, ...compares, ...builders, ...analyses, ...localWork]
+        // Only show launch-tool history (analyses + local analyze/contract-review work)
+        const launchLocalWork = localWork.filter(lw =>
+          lw.tool === "analyze" || lw.tool === "contract-review" || lw.tool === "import"
+        )
+        const merged = [...analyses, ...launchLocalWork]
           .sort((a, b) => new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime())
           .slice(0, 6)
 
@@ -259,7 +263,7 @@ export default function Home() {
               className="shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-full border border-border/60 bg-card hover:bg-secondary transition-colors text-xs font-semibold text-muted-foreground"
             >
               <span className={`w-1.5 h-1.5 rounded-full ${isAdmin ? "bg-amber-400" : plan === "pro" ? "bg-emerald-400" : "bg-blue-400"}`} />
-              {isAdmin ? "Admin — All tools" : plan === "pro" ? "Pro Plan" : plan === "starter" ? "PlainPath Pro" : "Free"}
+              {isAdmin ? "Admin Access" : "PlainPath Pro"}
               <CreditCard className="w-3.5 h-3.5 ml-0.5 opacity-60" />
             </button>
           )}
@@ -560,20 +564,17 @@ export default function Home() {
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">Your Plan</p>
                   <p className="font-bold text-foreground">
-                    {isAdmin ? "Admin — Full Access" : plan === "pro" ? "Pro Plan" : plan === "starter" ? "PlainPath Pro" : "Free"}
+                    {isAdmin ? "Admin Access" : plan ? "PlainPath Pro" : "No active plan"}
                   </p>
-                  {!plan && !isAdmin && (
-                    <p className="text-xs text-muted-foreground mt-0.5">2 free analyses included</p>
-                  )}
                 </div>
                 <div className="flex items-center gap-2">
-                  {!isAdmin && plan !== "pro" && (
+                  {!isAdmin && !plan && (
                     <Button
                       size="sm"
                       className="rounded-xl text-xs h-8"
-                      onClick={(e) => { e.stopPropagation(); setLocation("/upgrade") }}
+                      onClick={(e) => { e.stopPropagation(); setLocation("/subscribe") }}
                     >
-                      Upgrade
+                      Get Pro
                     </Button>
                   )}
                   <ChevronRight className="w-4 h-4 text-muted-foreground/40" />

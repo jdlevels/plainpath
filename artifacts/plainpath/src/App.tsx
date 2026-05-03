@@ -259,19 +259,19 @@ function ChoosePlanScreen() {
           </div>
 
           {/* Plan cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+          <div className="flex justify-center mb-6">
             {PRICING_PLANS.map((plan) => {
-              const planKey = (plan.planKey ?? "starter") as "starter" | "pro";
-              const Icon = PLAN_ICONS[planKey] ?? BarChart3;
+              const planKey = (plan.planKey ?? "pro") as "starter" | "pro";
+              const Icon = PLAN_ICONS[planKey] ?? Zap;
               const isHighlight = plan.highlight;
               const isLoading = loadingPlan === planKey;
 
               return (
                 <div
                   key={planKey}
-                  className={`relative rounded-2xl border p-6 flex flex-col transition-shadow hover:shadow-md ${
+                  className={`relative rounded-3xl border p-10 flex flex-col transition-shadow hover:shadow-xl w-full max-w-sm ${
                     isHighlight
-                      ? "border-primary bg-primary/4 shadow-sm"
+                      ? "border-primary bg-primary/4 shadow-md"
                       : "border-border/60 bg-card"
                   }`}
                 >

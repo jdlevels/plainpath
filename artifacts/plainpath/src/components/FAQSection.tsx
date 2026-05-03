@@ -33,7 +33,7 @@ const FAQS = [
   },
   {
     q: "Which plan do I need for each tool?",
-    a: "All tools are available with PlainPath Pro ($19.99/mo). You can try two free analyses before subscribing.",
+    a: "Both tools — Analyze a Document and Contract Review — are included in PlainPath Pro ($19.99/mo).",
   },
 ]
 

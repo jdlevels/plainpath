@@ -4,9 +4,9 @@ import { useLocation } from "wouter"
 import { motion } from "framer-motion"
 import {
   CreditCard, CheckCircle2, XCircle, Zap, BarChart3,
-  ShieldCheck, PenLine, Scale, ArrowRight, ExternalLink,
-  AlertTriangle, TestTube, Loader2, RefreshCw, Mail, EyeOff,
-  FileScan, MessageCircle, GitCompare, ListChecks,
+  ShieldCheck, Scale, ArrowRight, ExternalLink,
+  AlertTriangle, TestTube, Loader2, RefreshCw, Mail,
+  FileScan,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useEntitlements } from "@/hooks/useEntitlements"
@@ -20,7 +20,7 @@ import { trackEvent } from "@/lib/analytics"
 const PLAN_META = {
   starter: {
     label: "PlainPath Pro",
-    price: "$4.99/month",
+    price: "$19.99/month",
     icon: Zap,
     color: "text-primary",
     bg: "bg-primary/8",
@@ -36,16 +36,11 @@ const PLAN_META = {
   },
 } as const
 
-// Source of truth: TOOL_ACCESS in artifacts/api-server/src/lib/planEntitlements.ts
+// Launch tools only — two focused document tools included in PlainPath Pro
 const TOOLS = [
-  { icon: FileScan,       key: "analyze",          label: "Analyze a Document",   plans: ["pro"] },
-  { icon: EyeOff,         key: "redact",           label: "Redact Sensitive Info", plans: ["pro"] },
-  { icon: ShieldCheck,    key: "trust-check",      label: "Document Trust Check", plans: ["pro"] },
-  { icon: Scale,          key: "contract-review",  label: "Contract Review",      plans: ["pro"] },
-  { icon: PenLine,        key: "build-contract",   label: "Build a Contract",     plans: ["pro"] },
-  { icon: MessageCircle,  key: "ask-document",     label: "Ask This Document",    plans: ["pro"] },
-  { icon: GitCompare,     key: "compare-versions", label: "Compare Versions",     plans: ["pro"] },
-  { icon: ListChecks,     key: "clause-extractor", label: "Clause Extractor",     plans: ["pro"] },
+  { icon: FileScan,    key: "analyze",         label: "Analyze a Document",    plans: ["starter", "pro"] },
+  { icon: Scale,       key: "contract-review", label: "Contract Review",       plans: ["starter", "pro"] },
+  { icon: BarChart3,   key: "history",         label: "Saved analysis history", plans: ["starter", "pro"] },
 ] as const
 
 // ─── Native message ───────────────────────────────────────────────────────────

@@ -169,17 +169,16 @@ export default function Upgrade() {
           </div>
         </div>
 
-        {/* Free tier reminder */}
         <div className="bg-muted/30 border border-border/50 rounded-2xl p-6 text-center mb-10">
-          <p className="text-sm font-semibold text-foreground mb-1">Already have access right now</p>
+          <p className="text-sm font-semibold text-foreground mb-1">Get PlainPath Pro</p>
           <p className="text-sm text-muted-foreground mb-5 max-w-md mx-auto">
-            You can run 2 free document analyses per month — no payment needed. Upgrade when you need more.
+            Both tools included — Analyze a Document and Contract Review. Cancel anytime.
           </p>
           <Button
-            onClick={() => setLocation("/analyze")}
+            onClick={() => setLocation("/subscribe")}
             className="gap-2 rounded-full px-8"
           >
-            Analyze a document
+            Get PlainPath Pro
             <ArrowRight className="w-4 h-4" />
           </Button>
         </div>

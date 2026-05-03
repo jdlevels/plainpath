@@ -14,7 +14,7 @@ const PAGE_ACTIONS: Record<string, { label: string; message: string }[]> = {
   "/": [
     { label: "What can PlainPath do?", message: "What can PlainPath do?" },
     { label: "How do I get started?", message: "How do I analyze my first document?" },
-    { label: "Which plan fits me?", message: "What's the difference between the plans?" },
+    { label: "What's included in Pro?", message: "What tools does PlainPath Pro include?" },
   ],
   "/import": [
     { label: "What file types work?", message: "What file formats does PlainPath support?" },
@@ -33,16 +33,11 @@ const PAGE_ACTIONS: Record<string, { label: string; message: string }[]> = {
     { label: "Risks", message: "What are the biggest risks in my document?" },
     { label: "Summarize", message: "Give me a plain-English summary of what this document means." },
   ],
-  "/trust-check": [
-    { label: "What does this verdict mean?", message: "What does the Trust Check verdict mean?" },
-    { label: "Why is this risky?", message: "Why might a document be flagged as risky by Trust Check?" },
-    { label: "What should I verify?", message: "What steps should I take to verify a suspicious document?" },
-    { label: "Explain the scores", message: "What do the Authenticity Risk, Document Risk, and Verification Confidence scores mean?" },
-  ],
-  "/contract-builder": [
-    { label: "What contracts can I make?", message: "What types of contracts can I create with the Contract Builder?" },
-    { label: "What should I review?", message: "What should I look for before signing a contract?" },
-    { label: "What does each step do?", message: "Can you walk me through the Contract Builder steps?" },
+  "/contract-review": [
+    { label: "What does Contract Review check?", message: "What does the Contract Review tool look for in a contract?" },
+    { label: "What file types work?", message: "What file formats does Contract Review support?" },
+    { label: "What red flags does it find?", message: "What kinds of red flags and risky clauses does Contract Review identify?" },
+    { label: "How do I use negotiation tips?", message: "How do I use the negotiation language suggestions in Contract Review?" },
   ],
   "/my-analyses": [
     { label: "How do I search?", message: "How do I search through my saved analyses?" },
@@ -50,61 +45,32 @@ const PAGE_ACTIONS: Record<string, { label: string; message: string }[]> = {
     { label: "How long are they saved?", message: "How long are my analyses stored?" },
   ],
   "/subscribe": [
-    { label: "Plan differences", message: "What tools does PlainPath Pro include?" },
+    { label: "What's included?", message: "What tools does PlainPath Pro include?" },
     { label: "Can I cancel?", message: "Can I cancel my subscription at any time?" },
-    { label: "What does Pro unlock?", message: "What extra features does the Pro plan unlock?" },
+    { label: "How does billing work?", message: "How does PlainPath billing work?" },
   ],
   "/support": [
     { label: "How do I get help?", message: "What's the fastest way to get support?" },
     { label: "Report a problem", message: "How do I report a bug or problem with PlainPath?" },
   ],
-  "/compare-versions": [
-    { label: "What do I upload?", message: "What should I upload to Compare Versions? What's the difference between the original and revised PDF?" },
-    { label: "What do the colors mean?", message: "What do the red, amber, and grey severity colors mean in Compare Versions?" },
-    { label: "How do I use manager notes?", message: "How do I use the Manager Notes and Watchlist in Compare Versions?" },
-    { label: "How do I open a session?", message: "How do I reopen a previous comparison session?" },
-  ],
-  "/clause-extractor": [
-    { label: "What does it extract?", message: "What does the Clause Extractor pull from a contract? What sections does it identify?" },
-    { label: "What file types work?", message: "What file types does Clause Extractor support? Can I upload a Word document?" },
-    { label: "How do I export results?", message: "How do I copy or export the Clause Extractor results? Is there a CSV export?" },
-    { label: "How does it handle missing fields?", message: "What happens when the Clause Extractor can't find a field like a termination clause or expiration date?" },
-  ],
-  "/redact": [
-    { label: "What gets detected?", message: "What types of personal information does the Redact tool automatically detect?" },
-    { label: "What file types work?", message: "What file types can I upload to Redact Sensitive Info?" },
-    { label: "How do I download the result?", message: "How do I download my redacted document after I'm done?" },
-    { label: "Can I redact a PDF?", message: "Can I redact a PDF file and download a redacted PDF?" },
-  ],
-  "/build-contract": [
-    { label: "What contracts can I build?", message: "What types of contracts can I create with Build a Contract?" },
-    { label: "What does each step do?", message: "Can you walk me through each step of the contract builder?" },
-    { label: "Can I save my progress?", message: "Is my progress saved as I go through the contract builder steps?" },
-    { label: "What happens at the end?", message: "What do I get at the end of the contract builder? Can I download it?" },
-  ],
 }
 
 const DEFAULT_ACTIONS = [
   { label: "How do I analyze a document?", message: "How do I analyze a document?" },
-  { label: "What does Trust Check do?", message: "What does the Document Trust Check feature do?" },
+  { label: "What does Contract Review do?", message: "What does the Contract Review tool do?" },
   { label: "How do I save an analysis?", message: "How do I save an analysis?" },
-  { label: "Plan differences", message: "What tools does PlainPath Pro include?" },
+  { label: "What's included in Pro?", message: "What tools does PlainPath Pro include?" },
 ]
 
 const PAGE_CONTEXT_LABELS: Record<string, string> = {
-  "/": "Home screen — the user is on the landing/home page",
+  "/": "Home screen — the user is on the dashboard home page",
   "/import": "Analyze a Document page — the user is preparing to upload or paste a document for analysis",
   "/analyze": "Analyze a Document page — the user is preparing to upload or paste a document for analysis",
   "/results": "Analysis results page — the user is viewing the results of a completed document analysis",
-  "/trust-check": "Document Trust Check page — the user is analyzing a document for authenticity and scam indicators",
-  "/contract-builder": "Contract Builder page — the user is creating a legal document from a guided template",
+  "/contract-review": "Contract Review page — the user is uploading a contract for clause-by-clause review, red flag detection, and negotiation guidance",
   "/my-analyses": "My Analyses page — the user is browsing their saved analysis history",
-  "/subscribe": "Subscribe / Pricing page — the user is reviewing plan options",
+  "/subscribe": "Subscribe / Pricing page — the user is reviewing PlainPath Pro plan options at $19.99/month",
   "/support": "Support page — the user is looking for help or contact information",
-  "/compare-versions": "Compare Versions page — the user is uploading two PDF versions to compare changes, or reviewing a previous comparison session",
-  "/clause-extractor": "Clause Extractor page — the user is uploading a PDF or DOCX contract to extract key dates, parties, financial terms, legal clauses, and obligations in a structured format",
-  "/redact": "Redact Sensitive Info page — the user is reviewing and removing personally identifiable information from a document before sharing it",
-  "/build-contract": "Build a Contract page — the user is creating a legal document using a multi-step guided wizard covering contract type, parties, scope, payment, and protections",
 }
 
 // ── Lightweight inline markdown renderer ────────────────────────────────────

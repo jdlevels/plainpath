@@ -10,7 +10,6 @@ import DocumentSituations from "@/components/DocumentSituations";
 import FAQSection from "@/components/FAQSection";
 import VideoWalkthrough from "@/components/VideoWalkthrough";
 import { BackToTop } from "@/components/BackToTop";
-import { NewsletterCapture } from "@/components/NewsletterCapture";
 import { Card } from "@/components/ui/card";
 import {
   FileText, ShieldCheck,
@@ -1132,7 +1131,6 @@ export default function Home() {
         </div>
       </div>
 
-      <NewsletterCapture />
 
       {/* ════════════════════════════════════════════════
           APP SHOWCASE — web + mobile

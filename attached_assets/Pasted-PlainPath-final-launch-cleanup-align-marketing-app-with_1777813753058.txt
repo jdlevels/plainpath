@@ -1,0 +1,232 @@
+PlainPath final launch cleanup — align marketing + app with 2-tool launch
+
+Goal:
+Before Apple submission, make the entire public site and logged-in app match the final launch scope:
+
+Only launch tools:
+1. Analyze a Document
+2. Contract Review
+
+Only plan:
+PlainPath Pro — $19.99/month
+
+Do not add new features.
+Do not redesign the brand.
+This is a launch-safety cleanup and sizing pass.
+
+--------------------------------------------------
+1. FIX BILLING PAGE — CRITICAL
+--------------------------------------------------
+
+Update /app/billing so it no longer shows removed tools.
+
+Remove all references to:
+- Redact Sensitive Info
+- Document Trust Check
+- Build a Contract
+- Ask This Document
+- Compare Versions
+- Clause Extractor
+- Document Builder
+- PDF Editor
+- Digital Signature
+
+Tool access section should show ONLY:
+- Analyze a Document — Included
+- Contract Review — Included
+- Saved analysis history — Included
+
+Current plan should show:
+“PlainPath Pro”
+“$19.99/month”
+
+If the user is admin, still do not display removed launch tools in the public-facing billing interface.
+
+Remove “Starter,” “Free,” “Basic,” “Upgrade,” or multi-plan language.
+
+--------------------------------------------------
+2. FIX TOOL NAVIGATION
+--------------------------------------------------
+
+Update all tool dropdowns, app menus, dashboards, and quick links so only these tools appear:
+
+- Analyze a Document
+- Contract Review
+
+If a user manually visits a removed tool route, redirect to /app or show:
+“This tool is not available in the launch version.”
+
+Do not delete old routes unless safe. Hide from UI.
+
+--------------------------------------------------
+3. RESIZE ANALYZE + CONTRACT TOOL PAGES
+--------------------------------------------------
+
+The current tool panels are too narrow on desktop.
+
+For /app/analyze and /app/contract-review:
+
+- Increase main content card width to 620–760px on desktop
+- Keep max-width responsive
+- Center the panel
+- Keep mobile width at 100% minus safe padding
+- Reduce excessive blank space above/below
+- Keep current dark premium styling
+
+Do not change tool logic.
+Do not change upload behavior.
+Do not add new features.
+
+--------------------------------------------------
+4. MARKETING PAGE SECTION CLEANUP
+--------------------------------------------------
+
+Keep the marketing page premium and focused.
+
+Keep these sections:
+- Hero
+- Trust cards
+- Two-tool cards
+- How it works
+- Problem section
+- One live/demo preview section
+- Common situations
+- PlainPath vs old way comparison
+- Pricing
+- FAQ
+- Final CTA
+- Footer
+
+Hide/remove for launch:
+- Referral section
+- Newsletter section
+- Duplicate demo sections
+- Anything mentioning free analyses
+- Anything saying no account required unless technically true
+
+--------------------------------------------------
+5. REMOVE FREE / UNSUPPORTED CLAIMS
+--------------------------------------------------
+
+Search and replace/remove:
+
+- “Try free”
+- “free demo”
+- “free analyses”
+- “2 free analyses”
+- “no account required”
+- “no sign-up required”
+- “no credit card”
+- “Starter”
+- “$4.99”
+- “all tools”
+- “every tool”
+- “full suite”
+
+Use launch-safe copy:
+- “Open App”
+- “Get PlainPath Pro”
+- “Analyze a Document”
+- “Review a Contract”
+- “Two focused document tools”
+- “PlainPath Pro — $19.99/month”
+
+--------------------------------------------------
+6. APP STORE / GOOGLE PLAY BADGES
+--------------------------------------------------
+
+If iOS and Android apps are not live, remove the App Store and Google Play badges from the hero.
+
+Replace with simple text:
+“iOS & Android coming soon.”
+
+Do not link to unavailable store pages.
+
+--------------------------------------------------
+7. PRICING PAGE FINAL STATE
+--------------------------------------------------
+
+Pricing must show one centered plan only:
+
+Plan:
+PlainPath Pro
+
+Price:
+$19.99/month
+
+Features:
+- Analyze a Document
+- Contract Review
+- Saved analysis history
+- Results in under 2 minutes
+- Cancel anytime
+
+CTA:
+“Get PlainPath Pro”
+
+Comparison section should say:
+PlainPath Pro — $19.99/month
+
+No Starter.
+No $4.99.
+No plan toggle.
+No annual toggle unless Stripe annual pricing is fully configured and tested.
+
+--------------------------------------------------
+8. VISUAL WIDTH + CENTERING PASS
+--------------------------------------------------
+
+Ensure all public marketing sections use one consistent inner container:
+
+- max-width: 1120px or 1200px
+- width: 100%
+- margin: 0 auto
+- desktop side padding: 24–32px
+- mobile side padding: 16px
+
+Fix any card/grid drift.
+
+All cards should be:
+- centered
+- evenly spaced
+- equal height when in the same row
+- inside the same visual borders
+
+--------------------------------------------------
+9. REDUCE EXCESSIVE VERTICAL SPACE
+--------------------------------------------------
+
+Some sections feel too stretched vertically.
+
+Reduce top/bottom padding by around 15–20% where there is excessive blank space.
+
+Do not make the page cramped.
+
+--------------------------------------------------
+10. FINAL QA
+--------------------------------------------------
+
+Desktop:
+- Homepage only promotes Analyze + Contract Review
+- Pricing only shows PlainPath Pro $19.99/month
+- Billing page only shows the two launch tools
+- Tool nav only shows the two launch tools
+- Analyze page panel is larger and centered
+- Contract Review page panel is larger and centered
+- No old tools visible anywhere
+- No $4.99 visible anywhere
+- No “no account required” visible unless true
+- No App Store/Google Play badges unless live
+
+Mobile:
+- Hero stacks cleanly
+- Tool cards stack cleanly
+- Pricing card fits screen
+- Upload panels fit screen
+- No horizontal overflow
+- Sticky/header nav works
+
+Do not touch backend analysis logic.
+Do not add new AI features.
+Do not change Stripe keys.
+Only align visibility, copy, sizing, and launch-safe UI.

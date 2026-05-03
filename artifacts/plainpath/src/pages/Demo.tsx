@@ -42,7 +42,7 @@ function DemoBanner() {
           onClick={() => navigate("/sign-up")}
           className="shrink-0 bg-white text-amber-700 hover:bg-amber-50 border-0 font-semibold text-xs h-7 px-3 rounded-full"
         >
-          Try free <ArrowRight className="w-3 h-3 ml-1" />
+          Open App <ArrowRight className="w-3 h-3 ml-1" />
         </Button>
       </div>
     </div>
