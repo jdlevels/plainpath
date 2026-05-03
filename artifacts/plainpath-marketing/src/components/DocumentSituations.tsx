@@ -1,8 +1,8 @@
 import { motion } from "framer-motion"
 import {
-  Home, Briefcase, FileHeart, Mail, AlertCircle,
-  PenLine, ShieldOff, EyeOff, ArrowRight,
-  BookOpen, ShieldCheck, Scale, FileText,
+  Home, Briefcase, FileHeart, Mail,
+  ArrowRight,
+  BookOpen, Scale,
 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 
@@ -55,54 +55,6 @@ const SITUATIONS = [
     href: "/demo/analyze",
     what: "Know exactly what the agency is asking you to do, by when, and what happens if you don't respond.",
   },
-  {
-    icon: AlertCircle,
-    iconBg: "bg-red-50 dark:bg-red-950/40",
-    iconColor: "text-red-600 dark:text-red-400",
-    doc: "Payment demand or collection notice",
-    tool: "Document Trust Check",
-    toolColor: "text-red-600 dark:text-red-400",
-    toolBg: "bg-red-50 dark:bg-red-950/40",
-    toolIcon: ShieldCheck,
-    href: "/demo/trust-check",
-    what: "Check whether the demand is legitimate or a scam before you pay or call any number listed in it.",
-  },
-  {
-    icon: PenLine,
-    iconBg: "bg-emerald-50 dark:bg-emerald-950/40",
-    iconColor: "text-emerald-600 dark:text-emerald-400",
-    doc: "Freelance or service contract",
-    tool: "Build a Contract",
-    toolColor: "text-emerald-600 dark:text-emerald-400",
-    toolBg: "bg-emerald-50 dark:bg-emerald-950/40",
-    toolIcon: PenLine,
-    href: "/demo/build-contract",
-    what: "Build a complete, clause-by-clause agreement for your deal in minutes — written to protect you, not the other party.",
-  },
-  {
-    icon: ShieldOff,
-    iconBg: "bg-red-50 dark:bg-red-950/40",
-    iconColor: "text-red-600 dark:text-red-400",
-    doc: "Utility shutoff or legal threat notice",
-    tool: "Document Trust Check",
-    toolColor: "text-red-600 dark:text-red-400",
-    toolBg: "bg-red-50 dark:bg-red-950/40",
-    toolIcon: ShieldCheck,
-    href: "/demo/trust-check",
-    what: "Verify the notice is real, not a scam — then understand exactly what action you need to take and by when.",
-  },
-  {
-    icon: EyeOff,
-    iconBg: "bg-violet-50 dark:bg-violet-950/40",
-    iconColor: "text-violet-600 dark:text-violet-400",
-    doc: "Document with sensitive personal info",
-    tool: "Redact Sensitive Info",
-    toolColor: "text-violet-600 dark:text-violet-400",
-    toolBg: "bg-violet-50 dark:bg-violet-950/40",
-    toolIcon: EyeOff,
-    href: "/demo/redact",
-    what: "Remove SSNs, account numbers, names, and other private details before sharing, analyzing, or sending a document.",
-  },
 ]
 
 export default function DocumentSituations() {
@@ -133,7 +85,7 @@ export default function DocumentSituations() {
           transition={{ delay: 0.08 }}
           className="text-muted-foreground text-lg max-w-2xl mx-auto"
         >
-          Eight real document types. One recommended tool for each. Here is what PlainPath helps you do with each one.
+          Real document types. One recommended tool for each. Here is what PlainPath helps you do with each one.
         </motion.p>
       </div>
 

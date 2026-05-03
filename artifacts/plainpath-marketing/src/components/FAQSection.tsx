@@ -10,44 +10,9 @@ const TOOL_ROWS: { color: string; name: string; desc: string }[] = [
     desc: "breaks down paperwork you already have — extracting action steps, deadlines, risks, and required items in plain English.",
   },
   {
-    color: "text-red-600 dark:text-red-400",
-    name: "Document Trust Check",
-    desc: "scores whether a document appears legitimate or shows scam and fraud indicators. Get a clear verdict before paying or responding.",
-  },
-  {
-    color: "text-emerald-600 dark:text-emerald-400",
-    name: "Build a Contract",
-    desc: "creates a new agreement from scratch based on your deal terms — with a gap analysis to flag what's missing.",
-  },
-  {
     color: "text-amber-600 dark:text-amber-400",
     name: "Contract Review",
     desc: "reads a contract someone else wrote, flags risky or missing clauses, scores it for fairness, and gives you negotiation language.",
-  },
-  {
-    color: "text-violet-600 dark:text-violet-400",
-    name: "Redact Sensitive Info",
-    desc: "detects and removes personal information — names, SSNs, account numbers, and more — before you share or analyze a document.",
-  },
-  {
-    color: "text-indigo-600 dark:text-indigo-400",
-    name: "Ask This Document",
-    desc: "lets you upload any document and ask plain-English questions about clauses, obligations, deadlines, and risks — getting direct answers sourced from the text.",
-  },
-  {
-    color: "text-sky-600 dark:text-sky-400",
-    name: "Compare Versions",
-    desc: "maps every addition, deletion, and structural change between two document versions — with severity scoring so you see what actually matters.",
-  },
-  {
-    color: "text-fuchsia-600 dark:text-fuchsia-400",
-    name: "Clause Extractor",
-    desc: "pulls every obligation, key date, party, and financial term from a contract — and tells you exactly who owes what by when.",
-  },
-  {
-    color: "text-teal-600 dark:text-teal-400",
-    name: "Document Builder",
-    desc: "creates SOPs, manuals, policies, checklists, onboarding guides, and internal business documents through a guided question flow — with brand styling and export-ready output.",
   },
 ]
 
@@ -76,7 +41,7 @@ const FAQS: { q: string; a: React.ReactNode }[] = [
     a: "PlainPath works with leases, employment contracts, healthcare forms, government applications, grant packets, legal agreements, tax notices, and more. If it's text-based and has requirements, deadlines, or legalese — it works.",
   },
   {
-    q: "What's the difference between the nine tools?",
+    q: "What's the difference between the two tools?",
     a: TOOLS_ANSWER,
   },
   {
@@ -93,15 +58,7 @@ const FAQS: { q: string; a: React.ReactNode }[] = [
   },
   {
     q: "Which plan do I need for each tool?",
-    a: "Analyze a Document and Redact Sensitive Info are available on Starter and Pro plans. Document Trust Check, Build a Contract, Contract Review, Ask This Document, Compare Versions, Clause Extractor, and Document Builder require a Pro plan. You'll see an upgrade prompt if you try to use them without Pro, and you can switch plans at any time.",
-  },
-  {
-    q: "What is Document Builder?",
-    a: "Document Builder is a tool for creating internal business documents from scratch — SOPs, employee manuals, onboarding guides, policies, checklists, and more. You answer a guided question flow, PlainPath drafts the structure, and you refine it block by block with your brand colors, logo, and headers applied throughout. The final document exports as a ready-to-share file.",
-  },
-  {
-    q: "Does the mobile app handle payments and subscriptions?",
-    a: "No. Subscription management is handled on the PlainPath website. If you are using the iOS or Android app and need to manage your plan, visit plainpathapp.com on any browser.",
+    a: "Analyze a Document is available on the Starter plan ($4.99/mo). Contract Review requires the Pro plan ($19.99/mo). You'll see an upgrade prompt if you try to use Contract Review without Pro, and you can switch plans at any time.",
   },
 ]
 

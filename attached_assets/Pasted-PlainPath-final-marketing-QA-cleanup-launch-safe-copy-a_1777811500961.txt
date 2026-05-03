@@ -1,0 +1,126 @@
+PlainPath final marketing QA cleanup — launch-safe copy and alignment
+
+Goal:
+Keep the current page design/layout. Only clean launch-risk copy, inconsistencies, and final polish for the 2-tool launch:
+- Analyze a Document
+- Contract Review
+
+Do not redesign. Do not add new features.
+
+1. Remove account contradictions
+Search the marketing page for:
+- “No account required”
+- “no sign-up required”
+- “Try it free — no account needed”
+- “No account needed to start”
+
+Replace with launch-safe copy:
+- “Try it free”
+- “Start in seconds”
+- “Open PlainPath”
+- “Upload a document and get results in minutes”
+
+Only use “no account required” if the app truly allows upload and results without sign-in.
+
+2. Fix storage/privacy wording
+If files are processed server-side, replace “No document storage” with:
+“Temporary processing only”
+
+Supporting copy:
+“Files are processed to return your results. PlainPath does not sell your data or use your documents to train AI.”
+
+Do not claim files are never stored unless technically guaranteed.
+
+3. Fix section labels
+Replace:
+“Every tool, in detail”
+With:
+“Two tools, in detail”
+
+Replace any remaining:
+- “every tool”
+- “all tools”
+- “tool suite”
+- “full suite”
+With:
+- “two focused tools”
+- “document analysis and contract review”
+
+4. Contract Review scoring cleanup
+Remove or soften any visible “score 28/100,” “fairness score,” or “scored 0–100” language unless scoring is production-ready.
+
+Use instead:
+- “Risk level: High”
+- “Heavily one-sided”
+- “Clauses flagged”
+- “Negotiation language included”
+
+5. Pricing consistency
+Confirm Starter and Pro copy exactly match launch access.
+
+Starter:
+- Analyze a Document only
+
+Pro:
+- Analyze a Document
+- Contract Review
+- Saved analysis history
+
+Remove disabled “Contract Review” row from Starter if it looks visually negative or confusing. If kept, make it subtle and clear as “Available on Pro.”
+
+Confirm “unlimited” is only used if the billing system actually supports unlimited use.
+
+6. Referral section cleanup
+If referral rewards are not fully implemented, hide the referral section before launch.
+
+If keeping it, remove:
+- “2 free analyses”
+- “no account required”
+- “personal link”
+unless all are working.
+
+Safer replacement:
+“Referral rewards are coming soon.”
+
+7. App Store / Google Play badges
+If mobile apps are not live, badges must not imply availability.
+
+Use:
+- “iOS & Android coming soon”
+- badges can remain only if clearly labeled coming soon and not linked to unavailable stores.
+
+8. Final visual polish
+Keep current design. Check:
+- two tool cards equal size
+- pricing cards aligned
+- comparison table centered
+- CTA buttons consistent
+- no awkward empty space from removed tools
+- mobile spacing clean
+
+9. Global final search
+Search and remove/replace:
+- Compare Versions
+- Redact Sensitive Info
+- Document Trust Check
+- Ask This Document
+- Clause Extractor
+- Document Builder
+- PDF Editor
+- Digital Signature
+- all tools
+- every tool
+- 8 tools
+- 9 tools
+- full suite
+- no account required
+- no sign-up required
+- scam detection
+- fraud detection
+
+Final QA:
+- Marketing page only promotes Analyze a Document and Contract Review.
+- No unsupported promises remain.
+- No account/storage/privacy contradictions remain.
+- Pricing matches actual access.
+- Page still looks visually unchanged and premium.

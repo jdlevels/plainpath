@@ -109,10 +109,10 @@ export default function UnderstandYourIrsLetter() {
                   See demo <ArrowRight className="w-4 h-4" />
                 </a>
                 <a
-                  href="/demo/trust-check"
+                  href="/demo/analyze"
                   className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-card text-foreground font-semibold text-sm hover:bg-muted/50 transition-colors"
                 >
-                  Check if it's a scam
+                  Analyze a letter
                 </a>
               </div>
             </div>

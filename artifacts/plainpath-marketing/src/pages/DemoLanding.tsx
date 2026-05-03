@@ -1,7 +1,6 @@
 import { motion } from "framer-motion";
 import {
-  FileScan, ShieldCheck, PenLine, Scale, EyeOff,
-  MessageCircle, GitCompare, ListChecks, LayoutTemplate, ArrowRight,
+  FileScan, Scale, ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/layout/Navbar";
@@ -21,30 +20,6 @@ const TOOLS = [
     href: "/demo/analyze",
   },
   {
-    key: "trust-check",
-    label: "Document Trust Check",
-    scenario: "Fake IRS payment demand — scored 18/100",
-    desc: "See how PlainPath flags a scam letter pretending to be from the IRS, with 4 flags detected — 3 critical, 1 high.",
-    icon: ShieldCheck,
-    color: "text-red-600 dark:text-red-400",
-    bg: "bg-red-50 dark:bg-red-950/40",
-    border: "border-red-200 dark:border-red-800",
-    ring: "hover:ring-red-300 dark:hover:ring-red-700",
-    href: "/demo/trust-check",
-  },
-  {
-    key: "build-contract",
-    label: "Build a Contract",
-    scenario: "Freelance web design — Meridian Coffee Roasters",
-    desc: "A 6-question wizard produced a complete Freelance Services Agreement with IP ownership, payment terms, and revision policy.",
-    icon: PenLine,
-    color: "text-emerald-600 dark:text-emerald-400",
-    bg: "bg-emerald-50 dark:bg-emerald-950/40",
-    border: "border-emerald-200 dark:border-emerald-800",
-    ring: "hover:ring-emerald-300 dark:hover:ring-emerald-700",
-    href: "/demo/build-contract",
-  },
-  {
     key: "contract-review",
     label: "Contract Review",
     scenario: "Employment offer — scored 28/100",
@@ -55,66 +30,6 @@ const TOOLS = [
     border: "border-amber-200 dark:border-amber-800",
     ring: "hover:ring-amber-300 dark:hover:ring-amber-700",
     href: "/demo/contract-review",
-  },
-  {
-    key: "redact",
-    label: "Redact Sensitive Info",
-    scenario: "Medical intake form — 3 PII items found",
-    desc: "PlainPath detects a SSN, insurance ID, and date of birth automatically. Review and approve each redaction before exporting.",
-    icon: EyeOff,
-    color: "text-violet-600 dark:text-violet-400",
-    bg: "bg-violet-50 dark:bg-violet-950/40",
-    border: "border-violet-200 dark:border-violet-800",
-    ring: "hover:ring-violet-300 dark:hover:ring-violet-700",
-    href: "/demo/redact",
-  },
-  {
-    key: "ask",
-    label: "Ask This Document",
-    scenario: "Residential lease — 3 questions answered with sources",
-    desc: "Upload a lease and ask plain-English questions. PlainPath finds exact answers from the document text and shows you where.",
-    icon: MessageCircle,
-    color: "text-indigo-600 dark:text-indigo-400",
-    bg: "bg-indigo-50 dark:bg-indigo-950/40",
-    border: "border-indigo-200 dark:border-indigo-800",
-    ring: "hover:ring-indigo-300 dark:hover:ring-indigo-700",
-    href: "/demo/ask-document",
-  },
-  {
-    key: "compare",
-    label: "Compare Versions",
-    scenario: "NDA v1 vs v2 — 3 changes, 1 critical",
-    desc: "A confidentiality term quietly changed from 2 years to perpetuity. PlainPath surfaces the change and explains why it matters.",
-    icon: GitCompare,
-    color: "text-teal-600 dark:text-teal-400",
-    bg: "bg-teal-50 dark:bg-teal-950/40",
-    border: "border-teal-200 dark:border-teal-800",
-    ring: "hover:ring-teal-300 dark:hover:ring-teal-700",
-    href: "/demo/compare",
-  },
-  {
-    key: "clause-extractor",
-    label: "Clause Extractor",
-    scenario: "Residential lease — 6 obligations extracted",
-    desc: "See how PlainPath structures a 12-page lease into key dates, party roles, financial terms, and a plain-English obligation checklist.",
-    icon: ListChecks,
-    color: "text-fuchsia-600 dark:text-fuchsia-400",
-    bg: "bg-fuchsia-50 dark:bg-fuchsia-950/40",
-    border: "border-fuchsia-200 dark:border-fuchsia-800",
-    ring: "hover:ring-fuchsia-300 dark:hover:ring-fuchsia-700",
-    href: "/demo/clause-extractor",
-  },
-  {
-    key: "document-builder",
-    label: "Document Builder",
-    scenario: "Employee Onboarding Guide — drafted in minutes",
-    desc: "See how PlainPath builds a structured onboarding guide from a guided question flow — with brand colors, headers, and export-ready output.",
-    icon: LayoutTemplate,
-    color: "text-teal-600 dark:text-teal-400",
-    bg: "bg-teal-50 dark:bg-teal-950/40",
-    border: "border-teal-200 dark:border-teal-800",
-    ring: "hover:ring-teal-300 dark:hover:ring-teal-700",
-    href: "/demo/builder",
   },
 ];
 
@@ -133,7 +48,7 @@ export default function DemoLanding() {
         <section className="pt-14 pb-10 px-4 text-center bg-gradient-to-b from-blue-50/60 via-background to-background dark:from-slate-900 dark:to-background border-b border-border/40">
           <div className="max-w-2xl mx-auto">
             <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-primary bg-primary/10 rounded-full px-4 py-1.5 mb-5">
-              9 tools · all pre-loaded
+              2 tools · pre-loaded
             </div>
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4 leading-tight" style={{ fontFamily: "var(--font-display)" }}>
               See PlainPath in action
@@ -157,8 +72,8 @@ export default function DemoLanding() {
 
         {/* Tool cards */}
         <section className="py-14 px-4">
-          <div className="max-w-5xl mx-auto">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="max-w-3xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               {TOOLS.map((tool, i) => {
                 const Icon = tool.icon;
                 return (

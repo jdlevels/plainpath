@@ -175,13 +175,12 @@ const DEMOS = [
 
 /* ─── Comparison ─────────────────────────────────────────── */
 const COMPARISON_ROWS = [
-  { feature: "Time to get an answer",       lawyer: "Days",              diy: "Hours",          pp: "Under 2 minutes" },
-  { feature: "Cost",                        lawyer: "$150–$500/hour",    diy: "Free (if lucky)", pp: "From $4.99/month" },
-  { feature: "Plain English explanation",   lawyer: "Sometimes",         diy: "Rarely",          pp: "Every time" },
-  { feature: "Deadlines surfaced",          lawyer: "Yes (billed/hour)", diy: "If you spot them",pp: "Automatically" },
-  { feature: "Unfair clause detection",     lawyer: "Yes",               diy: "Not reliably",    pp: "Yes + negotiation language" },
-  { feature: "Scam / fraud detection",      lawyer: "Unlikely",          diy: "Not reliably",    pp: "Scored 0–100" },
-  { feature: "Available 24/7",              lawyer: "No",                diy: "Yes",             pp: "Yes" },
+  { feature: "Time to get an answer",     lawyer: "Days",              diy: "Hours",           pp: "Under 2 minutes" },
+  { feature: "Cost",                      lawyer: "$150–$500/hour",    diy: "Free (if lucky)", pp: "From $4.99/month" },
+  { feature: "Plain English explanation", lawyer: "Sometimes",         diy: "Rarely",          pp: "Every time" },
+  { feature: "Key terms surfaced",        lawyer: "Yes (manual)",      diy: "Not reliably",    pp: "Automatically" },
+  { feature: "Contract risks identified", lawyer: "Yes",               diy: "Not reliably",    pp: "Yes" },
+  { feature: "Available 24/7",           lawyer: "No",                diy: "Yes",             pp: "Yes" },
 ]
 
 /* ─── Pricing ────────────────────────────────────────────── */
@@ -212,7 +211,7 @@ const PLANS = [
       { label: "Analyze a Document", included: true, comingSoon: false },
       { label: "Contract Review",    included: true, comingSoon: false },
     ],
-    extras: ["Saved analysis history", "Premium output and workflow tools"],
+    extras: ["Saved analysis history"],
     cta: "Subscribe to Pro",
     href: "/app/subscribe?plan=pro",
   },
@@ -238,8 +237,8 @@ const ATTORNEY_SCENARIOS = [
     id: "freelance",
     label: "Freelance agreement",
     attyLow: 200, attyHigh: 800,
-    ppPlan: "Pro", ppPrice: 19.99, ppTool: "Build a Contract",
-    note: "Simple contract drafting, typically 1–4 attorney hrs.",
+    ppPlan: "Pro", ppPrice: 19.99, ppTool: "Contract Review",
+    note: "Simple contract review, typically 1–4 attorney hrs.",
   },
   {
     id: "nda",
@@ -259,7 +258,7 @@ const ATTORNEY_SCENARIOS = [
     id: "irs",
     label: "IRS notice response",
     attyLow: 200, attyHigh: 600,
-    ppPlan: "Pro", ppPrice: 19.99, ppTool: "Document Trust Check",
+    ppPlan: "Starter", ppPrice: 4.99, ppTool: "Analyze a Document",
     note: "Tax attorney or CPA review, typically 1–3 hrs.",
   },
   {
@@ -627,7 +626,7 @@ export default function Home() {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly")
 
   useEffect(() => {
-    const id = setInterval(() => setActiveDemoTool(prev => (prev + 1) % 8), DEMO_INTERVAL_MS)
+    const id = setInterval(() => setActiveDemoTool(prev => (prev + 1) % 2), DEMO_INTERVAL_MS)
     return () => clearInterval(id)
   }, [])
 
@@ -694,21 +693,20 @@ export default function Home() {
                 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.06] tracking-tight mb-5 text-foreground"
                 style={{ fontFamily: "var(--font-display)" }}
               >
-                Stop guessing what{" "}
+                Understand any document.{" "}
                 <span
                   className="bg-gradient-to-r from-primary via-blue-500 to-violet-500 bg-clip-text text-transparent"
                   style={{ WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}
                 >
-                  your documents
-                </span>{" "}
-                mean.
+                  Review any contract.
+                </span>
               </motion.h1>
 
               <motion.p
                 custom={2} variants={fadeUp}
                 className="text-base md:text-lg text-muted-foreground mb-6 leading-relaxed max-w-lg"
               >
-                Leases, contracts, medical bills, and court notices — PlainPath tells you what any document means, spots problems before you sign, and tells you exactly what to do next. All in plain English.
+                PlainPath breaks down documents into plain English and highlights key terms, risks, and obligations in minutes.
               </motion.p>
 
               {/* Tool pills */}
@@ -738,13 +736,21 @@ export default function Home() {
 
               {/* CTA + App Store badges */}
               <motion.div custom={4} variants={fadeUp} className="flex flex-col gap-3 mb-5" id="download">
-                <a
-                  href="/demo"
-                  className="inline-flex items-center gap-2 bg-primary text-white rounded-xl px-5 h-12 sm:h-14 text-sm font-semibold hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-md shadow-primary/20 w-fit"
-                >
-                  Try it free — no account needed <ArrowRight className="w-4 h-4" />
-                </a>
-                <p className="text-xs text-muted-foreground/80">No account required &nbsp;·&nbsp; No credit card &nbsp;·&nbsp; Start immediately</p>
+                <div className="flex flex-wrap gap-2">
+                  <a
+                    href="/demo/analyze"
+                    className="inline-flex items-center gap-2 bg-primary text-white rounded-xl px-5 h-12 sm:h-14 text-sm font-semibold hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-md shadow-primary/20"
+                  >
+                    Analyze a Document <ArrowRight className="w-4 h-4" />
+                  </a>
+                  <a
+                    href="/demo/contract-review"
+                    className="inline-flex items-center gap-2 bg-background border border-border text-foreground rounded-xl px-5 h-12 sm:h-14 text-sm font-semibold hover:bg-secondary/60 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+                  >
+                    Review a Contract
+                  </a>
+                </div>
+                <p className="text-xs text-muted-foreground/80">Results in under 2 minutes &nbsp;·&nbsp; Cancel anytime &nbsp;·&nbsp; No account required</p>
                 <div className="flex items-center gap-2.5 flex-wrap">
                   <AppStoreBadge onClick={() => openWaitlist("ios")} />
                   <PlayStoreBadge onClick={() => openWaitlist("android")} />
@@ -820,7 +826,7 @@ export default function Home() {
               </span>
             </h2>
             <p className="text-lg text-muted-foreground">
-              Whether you're reading, verifying, building, reviewing, redacting, asking, comparing, or editing — PlainPath has a tool for it.
+              Analyze any document in plain English or get a clause-by-clause contract review — clear answers in minutes.
             </p>
           </div>
 
@@ -1214,7 +1220,7 @@ export default function Home() {
               transition={{ duration: 0.4, delay: 0.08 }}
               className="text-lg text-muted-foreground"
             >
-              Start with document analysis, or unlock every tool with Pro. No commitment — cancel anytime.
+              Start with document analysis, or unlock both tools with Pro. No commitment — cancel anytime.
             </motion.p>
           </div>
 
@@ -1433,9 +1439,7 @@ export default function Home() {
                 Your data is never sold or used for AI training.
               </h2>
               <p className="text-muted-foreground leading-relaxed mb-4">
-                We don't sell your data. We don't train AI on your documents.
-                For standard analyses, documents are processed in memory and discarded after your results are returned.
-                Pro workspaces (Document Builder, Compare Versions, Clause Extractor) store your working data so you can access it across sessions — you can delete it at any time.
+                We don't sell your data. We don't train AI on your documents. Your documents are processed and discarded after your results are returned — we never retain them across sessions.
               </p>
               <div className="flex flex-wrap gap-5 text-sm font-medium text-foreground">
                 {["Not sold", "Not shared", "Not used for training", "Encrypted in transit"].map(item => (
@@ -1476,12 +1480,12 @@ export default function Home() {
             className="text-5xl md:text-6xl font-bold mb-5 text-white"
             style={{ fontFamily: "var(--font-display)" }}
           >
-            Ready for{" "}
+            Stop guessing.{" "}
             <span
               className="bg-gradient-to-r from-primary via-blue-400 to-violet-400 bg-clip-text text-transparent"
               style={{ WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}
             >
-              absolute clarity?
+              Start understanding.
             </span>
           </motion.h2>
           <motion.p
@@ -1491,7 +1495,7 @@ export default function Home() {
             transition={{ duration: 0.45, delay: 0.08 }}
             className="text-xl text-white/60 mb-10 max-w-xl mx-auto leading-relaxed"
           >
-            Never sign something confusing again. PlainPath reads it so you don't have to.
+            Upload your document and get clear answers in minutes.
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -1501,10 +1505,10 @@ export default function Home() {
             className="flex flex-wrap justify-center gap-4 mb-6"
           >
             <a
-              href="/demo"
+              href="/demo/analyze"
               className="inline-flex items-center gap-2 bg-primary text-white rounded-xl px-8 py-4 text-base font-semibold hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-lg shadow-primary/30"
             >
-              Try it free — 2 free analyses <ArrowRight className="w-5 h-5" />
+              Analyze a Document <ArrowRight className="w-5 h-5" />
             </a>
           </motion.div>
           <p className="mt-6 text-xs text-white/30">

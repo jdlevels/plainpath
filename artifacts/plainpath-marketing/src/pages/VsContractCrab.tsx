@@ -8,7 +8,7 @@ export default function VsContractCrab() {
     document.title = "PlainPath vs ContractCrab — Full Comparison"
     const meta = document.createElement("meta")
     meta.name = "description"
-    meta.content = "Compare PlainPath and ContractCrab side-by-side. See why PlainPath offers more tools, more document types, and a lower price for everyday people who need to understand their documents."
+    meta.content = "Compare PlainPath and ContractCrab side-by-side. See why PlainPath offers broader document coverage and a lower price for everyday people who need to understand their documents."
     document.head.appendChild(meta)
     return () => {
       document.title = "PlainPath"
@@ -17,24 +17,16 @@ export default function VsContractCrab() {
   }, [])
 
   const features = [
-    { feature: "Starting price", plainpath: "$4.99/mo", contractcrab: "$30/mo" },
-    { feature: "Contract analysis", plainpath: true, contractcrab: true },
-    { feature: "Lease analysis", plainpath: true, contractcrab: false },
-    { feature: "Medical bill analysis", plainpath: true, contractcrab: false },
-    { feature: "IRS letter analysis", plainpath: true, contractcrab: false },
-    { feature: "Employment contract analysis", plainpath: true, contractcrab: false },
-    { feature: "Document Trust Check (scam detection)", plainpath: true, contractcrab: false },
-    { feature: "PII Redaction", plainpath: true, contractcrab: false },
-    { feature: "Ask This Document (Document Q&A)", plainpath: true, contractcrab: false },
-    { feature: "Contract Builder", plainpath: true, contractcrab: false },
-    { feature: "Clause Extractor", plainpath: true, contractcrab: false },
-    { feature: "Version Comparison", plainpath: true, contractcrab: false },
-    { feature: "Ask questions about your document (AI chat)", plainpath: true, contractcrab: false },
-    { feature: "Document Risk Score", plainpath: true, contractcrab: false },
-    { feature: "Plain English breakdown", plainpath: true, contractcrab: "partial" },
-    { feature: "Deadline reminders (browser + email)", plainpath: true, contractcrab: false },
-    { feature: "No-account demo", plainpath: true, contractcrab: false },
-    { feature: "Shareable analysis link", plainpath: true, contractcrab: false },
+    { feature: "Starting price",                    plainpath: "$4.99/mo",  contractcrab: "$30/mo" },
+    { feature: "Contract analysis",                 plainpath: true,        contractcrab: true },
+    { feature: "Lease analysis",                    plainpath: true,        contractcrab: false },
+    { feature: "Medical bill analysis",             plainpath: true,        contractcrab: false },
+    { feature: "IRS letter analysis",               plainpath: true,        contractcrab: false },
+    { feature: "Employment contract analysis",      plainpath: true,        contractcrab: false },
+    { feature: "Plain English breakdown",           plainpath: true,        contractcrab: "partial" },
+    { feature: "Contract risk identification",      plainpath: true,        contractcrab: true },
+    { feature: "Key terms surfaced automatically",  plainpath: true,        contractcrab: "partial" },
+    { feature: "No-account demo",                   plainpath: true,        contractcrab: false },
   ]
 
   function Cell({ value }: { value: boolean | string }) {
@@ -55,15 +47,15 @@ export default function VsContractCrab() {
             PlainPath vs ContractCrab
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            ContractCrab is a contract-only review tool at $30/month. PlainPath is a 9-tool document suite for everyday people — leases, medical bills, IRS letters, contracts, and more — starting at $4.99/month.
+            ContractCrab is a contract-only review tool at $30/month. PlainPath provides document analysis and contract review for everyday people — leases, medical bills, IRS letters, contracts, and more — starting at $4.99/month.
           </p>
         </div>
 
         <div className="grid grid-cols-3 gap-4 mb-10">
           {[
-            { label: "PlainPath Starter", price: "$4.99/mo", highlight: true, note: "2 analyses + core tools" },
-            { label: "PlainPath Pro", price: "$19.99/mo", highlight: false, note: "Unlimited + all 9 tools" },
-            { label: "ContractCrab", price: "$30/mo", highlight: false, note: "Contracts only" },
+            { label: "PlainPath Starter", price: "$4.99/mo", highlight: true,  note: "Document analysis" },
+            { label: "PlainPath Pro",     price: "$19.99/mo", highlight: false, note: "Unlimited + both tools" },
+            { label: "ContractCrab",      price: "$30/mo",    highlight: false, note: "Contracts only" },
           ].map((plan, i) => (
             <div key={i} className={`rounded-2xl p-5 text-center border ${plan.highlight ? "border-primary/40 bg-primary/5" : "border-border/50 bg-card"}`}>
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">{plan.label}</p>
@@ -113,10 +105,9 @@ export default function VsContractCrab() {
             <ul className="space-y-2">
               {[
                 "You deal with leases, medical bills, IRS letters, or government notices",
-                "You want to check if a suspicious letter is a scam",
+                "You want plain English — not legal jargon",
                 "You want one tool that handles your entire document life",
                 "You're paying out of pocket and want a fair price",
-                "You want to ask follow-up questions about your specific document",
               ].map((item, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm text-foreground/80">
                   <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />

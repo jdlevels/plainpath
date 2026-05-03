@@ -78,9 +78,12 @@ export function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="pt-6 border-t border-border">
+        <div className="pt-6 border-t border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <p className="text-xs text-muted-foreground text-center sm:text-left">
             © {new Date().getFullYear()} PlainPath. All rights reserved.
+          </p>
+          <p className="text-xs text-muted-foreground text-center sm:text-right max-w-sm">
+            PlainPath provides document insights and does not replace legal advice.
           </p>
         </div>
 

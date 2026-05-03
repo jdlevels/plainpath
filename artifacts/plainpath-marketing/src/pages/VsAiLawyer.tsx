@@ -8,7 +8,7 @@ export default function VsAiLawyer() {
     document.title = "PlainPath vs AI Lawyer — Full Comparison"
     const meta = document.createElement("meta")
     meta.name = "description"
-    meta.content = "Compare PlainPath and AI Lawyer (ailawyer.pro). PlainPath is built specifically for document understanding — not generic legal chat — with specialized tools for every document type."
+    meta.content = "Compare PlainPath and AI Lawyer (ailawyer.pro). PlainPath is built specifically for document understanding — not generic legal chat — with focused tools for document analysis and contract review."
     document.head.appendChild(meta)
     return () => {
       document.title = "PlainPath"
@@ -17,26 +17,17 @@ export default function VsAiLawyer() {
   }, [])
 
   const features = [
-    { feature: "Starting price", plainpath: "$4.99/mo", ailawyer: "Free / $10–$30/mo" },
-    { feature: "Document-grounded analysis", plainpath: true, ailawyer: "partial" },
-    { feature: "Upload and paste documents", plainpath: true, ailawyer: true },
-    { feature: "Plain English breakdown", plainpath: true, ailawyer: true },
-    { feature: "Ask questions about your specific document", plainpath: true, ailawyer: true },
-    { feature: "Structured risk identification", plainpath: true, ailawyer: false },
-    { feature: "Hard deadline detection + email reminders", plainpath: true, ailawyer: false },
-    { feature: "Document Risk Score", plainpath: true, ailawyer: false },
-    { feature: "Lease-specific analysis", plainpath: true, ailawyer: "partial" },
-    { feature: "Medical bill analysis", plainpath: true, ailawyer: false },
-    { feature: "IRS letter analysis", plainpath: true, ailawyer: "partial" },
-    { feature: "Document Trust Check (scam detection)", plainpath: true, ailawyer: false },
-    { feature: "PII Redaction", plainpath: true, ailawyer: false },
-    { feature: "Ask This Document (Document Q&A)", plainpath: true, ailawyer: false },
-    { feature: "Contract Builder", plainpath: true, ailawyer: false },
-    { feature: "Version Comparison", plainpath: true, ailawyer: false },
-    { feature: "Clause Extractor", plainpath: true, ailawyer: false },
-    { feature: "Shareable analysis link", plainpath: true, ailawyer: false },
-    { feature: "Action checklist + required documents", plainpath: true, ailawyer: false },
-    { feature: "No-account demo", plainpath: true, ailawyer: true },
+    { feature: "Starting price",                                   plainpath: "$4.99/mo",  ailawyer: "Free / $10–$30/mo" },
+    { feature: "Document-grounded analysis",                       plainpath: true,        ailawyer: "partial" },
+    { feature: "Upload and paste documents",                       plainpath: true,        ailawyer: true },
+    { feature: "Plain English breakdown",                          plainpath: true,        ailawyer: true },
+    { feature: "Structured risk identification",                   plainpath: true,        ailawyer: false },
+    { feature: "Lease-specific analysis",                          plainpath: true,        ailawyer: "partial" },
+    { feature: "Medical bill analysis",                            plainpath: true,        ailawyer: false },
+    { feature: "IRS letter analysis",                              plainpath: true,        ailawyer: "partial" },
+    { feature: "Contract clause-by-clause review",                 plainpath: true,        ailawyer: false },
+    { feature: "Key terms surfaced automatically",                 plainpath: true,        ailawyer: false },
+    { feature: "No-account demo",                                  plainpath: true,        ailawyer: true },
   ]
 
   function Cell({ value }: { value: boolean | string }) {
@@ -57,7 +48,7 @@ export default function VsAiLawyer() {
             PlainPath vs AI Lawyer
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            AI Lawyer is a legal chatbot that can discuss documents. PlainPath is a specialized document analysis suite that gives you structured findings, specific deadlines, risk scores, and 8 purpose-built tools for every document situation.
+            AI Lawyer is a legal chatbot that can discuss documents. PlainPath is a specialized document analysis tool that gives you structured findings, specific deadlines, risk identification, and purpose-built tools for every document situation.
           </p>
         </div>
 
@@ -73,7 +64,7 @@ export default function VsAiLawyer() {
             <div>
               <p className="text-xs font-bold text-primary uppercase tracking-wider mb-2">PlainPath</p>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Document-first. Upload or paste your document and get a structured breakdown: every required action, hard deadline, risk item, and key term — organized by priority, with reminders and a risk score. Then ask follow-up questions to go deeper.
+                Document-first. Upload or paste your document and get a structured breakdown: every required action, hard deadline, risk item, and key term — organized by priority. Then get a full contract review with clause-by-clause analysis and negotiation language.
               </p>
             </div>
           </div>
@@ -119,11 +110,9 @@ export default function VsAiLawyer() {
             <ul className="space-y-2">
               {[
                 "You have a specific document and need to know what it requires of you",
-                "You need to track deadlines and get email reminders",
-                "You want a risk score to gauge how concerning your document is",
-                "You need to redact, sign, or compare documents",
-                "You want a scam check on a suspicious letter",
-                "You want structured findings, not just a chat answer",
+                "You want structured risk findings, not just a chat answer",
+                "You want a contract reviewed clause by clause with negotiation language",
+                "You need plain-English analysis of a lease, medical bill, or IRS letter",
               ].map((item, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm text-foreground/80">
                   <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
