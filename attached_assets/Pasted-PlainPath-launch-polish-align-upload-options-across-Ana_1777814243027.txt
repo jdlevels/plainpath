@@ -1,0 +1,92 @@
+PlainPath launch polish — align upload options across Analyze a Document and Contract Review
+
+Issue:
+Analyze a Document shows more upload/input options than Contract Review. This makes Contract Review look less complete and inconsistent.
+
+Goal:
+Make both launch tools feel equally polished and consistent:
+1. Analyze a Document
+2. Contract Review
+
+Do not change backend analysis logic.
+Do not add new AI features.
+Only align the upload/input UI.
+
+Required changes:
+
+1. Standardize input tabs/options across both tools.
+
+Both tools should show the same supported input options:
+- Paste Text
+- Upload File
+- Scan Photo
+- Import Link
+
+Important:
+Only include “Import Link” if it is fully implemented and tested for both tools.
+If Import Link is not production-ready, hide it from BOTH tools.
+
+2. Match upload panel layout.
+
+For /app/analyze and /app/contract-review:
+- Same card width
+- Same tab row style
+- Same button sizing
+- Same upload area height
+- Same spacing between title, helper text, tabs, input area, sample documents, and CTA
+- Same mobile stacking behavior
+
+3. Adjust labels per tool, but keep structure identical.
+
+Analyze a Document:
+- CTA: “Generate Action Plan”
+- Placeholder: “Paste the full text of your document here...”
+
+Contract Review:
+- CTA: “Review This Contract”
+- Placeholder: “Paste the full contract text here...”
+
+4. Sample document area should match visually.
+
+Analyze:
+- “Try a sample document”
+
+Contract Review:
+- “Try a sample contract”
+
+Both sample areas should:
+- use the same card style
+- same spacing
+- same number of visible sample cards if possible
+- same height and alignment
+
+5. Confirm supported file types.
+
+Both tools should clearly support:
+- PDF
+- Word document
+- pasted text
+
+Only mention image/photo scanning if Scan Photo is actually working.
+
+6. Prevent unsupported options.
+
+If a tab exists but is not fully working, hide it.
+Do not show disabled or broken tabs for launch.
+
+7. Final QA.
+
+Desktop:
+- Analyze and Contract Review upload panels look equally complete.
+- Both have the same input tab count, unless intentionally hidden from both.
+- Both cards are the same width and centered.
+- No visual mismatch makes one tool feel unfinished.
+
+Mobile:
+- Tabs wrap or scroll cleanly.
+- Upload cards fit the screen.
+- CTA buttons remain visible and aligned.
+
+Do not touch billing.
+Do not touch pricing.
+Do not touch marketing copy except if tool input labels need small consistency fixes.
