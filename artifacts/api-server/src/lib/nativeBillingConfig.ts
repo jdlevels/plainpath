@@ -34,7 +34,7 @@ type NativePlanKey = "starter" | "pro"
 
 export const RC_ENTITLEMENT_IDS: Record<NativePlanKey, string> = {
   starter: "starter",
-  pro: "pro",
+  pro: "plainpath_pro",
 }
 
 // ─── Apple App Store Product IDs ──────────────────────────────────────────────

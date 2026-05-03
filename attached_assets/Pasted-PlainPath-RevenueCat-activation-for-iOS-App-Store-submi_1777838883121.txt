@@ -1,0 +1,113 @@
+PlainPath RevenueCat activation for iOS App Store submission
+
+Goal:
+Activate RevenueCat native billing for PlainPath Pro so the iOS app can sell PlainPath Pro through Apple In-App Purchase and unlock the same account on web.
+
+Do not redesign UI.
+Do not add new tools.
+Do not reintroduce Starter or old tools.
+
+Launch scope:
+- One plan: PlainPath Pro
+- Price: $19.99/month
+- Entitlement: plainpath_pro
+- Product ID: plainpath_pro_monthly
+- Included tools:
+  - Analyze a Document
+  - Contract Review
+  - Saved analysis history
+
+1. Install RevenueCat Capacitor SDK
+Install:
+@revenuecat/purchases-capacitor
+
+Run Capacitor sync after install.
+
+2. Add required environment variables
+Use Replit secrets. Do not hardcode keys.
+
+Required:
+REVENUECAT_API_KEY_IOS
+VITE_REVENUECAT_PUBLIC_KEY_IOS
+
+Optional later:
+REVENUECAT_API_KEY_ANDROID
+VITE_REVENUECAT_PUBLIC_KEY_ANDROID
+
+3. Align entitlement IDs
+Change all code references from:
+pro
+
+To:
+plainpath_pro
+
+Update both:
+- artifacts/api-server/src/lib/nativeBillingConfig.ts
+- artifacts/plainpath/src/lib/nativeBilling.ts
+
+4. Require signed-in user before native purchase
+Before showing any native paywall/purchase CTA, require auth.
+
+RevenueCat App User ID must be:
+Clerk user ID or PlainPath internal user ID
+
+Do not use email.
+Do not use anonymous RevenueCat IDs for launch.
+
+5. Configure RevenueCat with user ID
+In nativeBilling.ts:
+- configure Purchases with the public iOS SDK key
+- immediately identify/login with Clerk/internal user ID
+- prevent purchase flow if no signed-in user ID exists
+
+6. Wire native purchase CTA
+In App.tsx / ChoosePlanScreen:
+- replace NativeSubscriptionMessage with real native purchase flow
+- CTA: Get PlainPath Pro
+- purchase product: plainpath_pro_monthly
+- after purchase, refresh entitlements
+- unlock Analyze a Document and Contract Review if plainpath_pro is active
+
+7. Add Restore Purchases UI
+Add a visible button:
+Restore Purchases
+
+Place it in:
+- native paywall
+- billing/account page
+
+Behavior:
+- call RevenueCat restorePurchases()
+- refresh entitlement
+- show success/failure message
+- unlock PlainPath Pro if active
+
+8. Activate server verification
+In nativeEntitlements.ts:
+- use REVENUECAT_API_KEY_IOS
+- verify subscriber using RevenueCat REST API
+- map active plainpath_pro entitlement to PlainPath Pro in billing DB
+- remove/avoid 503 once keys are present
+
+9. Keep Stripe hidden in iOS
+Do not show:
+- Stripe checkout
+- Stripe billing portal
+- subscribe on website
+- external web purchase link
+
+10. Final QA
+Create a verification report after implementation:
+
+A. RevenueCat SDK installed?
+B. iOS keys detected?
+C. Entitlement is plainpath_pro everywhere?
+D. Product ID is plainpath_pro_monthly?
+E. Clerk/internal user ID passed to RevenueCat?
+F. Anonymous purchases prevented?
+G. Purchase flow works in native build?
+H. Restore Purchases works?
+I. Native purchase unlocks both tools?
+J. Web unlock after iOS purchase works?
+K. Stripe remains hidden in iOS?
+L. Billing page shows only PlainPath Pro + two tools?

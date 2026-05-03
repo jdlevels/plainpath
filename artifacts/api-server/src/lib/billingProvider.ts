@@ -36,8 +36,8 @@ export const BILLING_PROVIDERS: Record<BillingProvider, ProviderConfig> = {
   storekit: {
     provider: "storekit",
     displayName: "Apple In-App Purchase",
-    active: false, // TODO: Implement when building iOS native app (RevenueCat recommended)
-    testMode: true,
+    active: true,
+    testMode: false,
   },
   play_billing: {
     provider: "play_billing",

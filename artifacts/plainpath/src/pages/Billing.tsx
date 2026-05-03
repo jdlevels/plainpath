@@ -14,6 +14,7 @@ import { openBillingPortal } from "@/lib/entitlements"
 import { BILLING_CONFIG } from "@/lib/billingConfig"
 import { isNative } from "@/lib/platform"
 import { trackEvent } from "@/lib/analytics"
+import { restoreNativePurchases } from "@/lib/nativeBilling"
 
 // ─── Plan display config ──────────────────────────────────────────────────────
 

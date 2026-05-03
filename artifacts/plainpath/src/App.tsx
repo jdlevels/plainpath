@@ -6,7 +6,7 @@ import { getApiBaseUrl } from "@/lib/api";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { startStripeCheckout } from "@/lib/stripe";
 import { PRICING_PLANS } from "@/data/pricingData";
-import { ArrowRight, Check, Zap, BarChart3, LogOut, CreditCard } from "lucide-react";
+import { ArrowRight, Check, Zap, BarChart3, LogOut, CreditCard, Loader2 } from "lucide-react";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AnalysisProvider } from "@/context/AnalysisContext";
@@ -14,6 +14,7 @@ import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { initStatusBar } from "@/lib/native";
 import { captureInboundRef } from "@/lib/referral";
 import { isNative } from "@/lib/platform";
+import { configureRevenueCat, purchaseNativePlan, restoreNativePurchases } from "@/lib/nativeBilling";
 import { purgeLegacyGlobalKeys } from "@/lib/storageCleanup";
 
 import Home from "@/pages/Home";
