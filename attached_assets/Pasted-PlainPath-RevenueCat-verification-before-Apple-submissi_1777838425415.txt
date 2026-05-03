@@ -1,0 +1,146 @@
+PlainPath RevenueCat verification before Apple submission
+
+Goal:
+Verify whether RevenueCat is fully integrated and correctly connected to PlainPath Pro access.
+
+Do not add new features yet.
+Do not redesign anything.
+Only inspect, verify, and report what exists.
+
+Required verification:
+
+1. Check dependencies
+Confirm whether RevenueCat SDK/package is installed in the project.
+
+Look for packages such as:
+- react-native-purchases
+- purchases-ios
+- @revenuecat/purchases-js
+- revenuecat
+- RevenueCat SDK references
+
+Report:
+- Package found or not found
+- Version
+- Where it is imported
+
+2. Check environment variables/secrets
+Search for RevenueCat-related keys:
+
+- REVENUECAT_API_KEY
+- REVENUECAT_PUBLIC_SDK_KEY
+- REVENUECAT_IOS_API_KEY
+- REVENUECAT_WEBHOOK_SECRET
+- REVENUECAT_PROJECT_ID
+- REVENUECAT_ENTITLEMENT_ID
+
+Do not print secret values.
+Only report whether each exists.
+
+3. Verify entitlement name
+Confirm the entitlement is exactly:
+
+plainpath_pro
+
+This entitlement should unlock:
+- Analyze a Document
+- Contract Review
+- Saved analysis history
+
+Report whether the code checks for plainpath_pro or another name.
+
+4. Verify user identity mapping
+Confirm RevenueCat App User ID is set to the signed-in PlainPath user ID.
+
+Preferred:
+RevenueCat App User ID = Clerk user ID
+
+Check that RevenueCat is NOT using anonymous user IDs for launch purchases.
+
+Report:
+- Which user ID is used
+- Where it is configured
+- Whether sign-in is required before purchase
+
+5. Verify iOS purchase flow
+Confirm the iOS app purchase flow uses:
+- Apple In-App Purchase / StoreKit
+- RevenueCat for entitlement verification
+
+Confirm the iOS app does NOT show:
+- Stripe checkout
+- External subscription links
+- “Subscribe on website”
+- Web billing management links
+
+6. Verify Restore Purchases
+Confirm there is a visible Restore Purchases button or restore flow in the iOS paywall/account area.
+
+Restore should:
+- call RevenueCat restore/sync purchase method
+- refresh entitlement state
+- unlock PlainPath Pro if active
+
+7. Verify web unlock after iOS purchase
+Check whether the web app/backend can verify RevenueCat entitlement for the same user.
+
+There should be a helper similar to:
+
+hasPlainPathPro(userId)
+
+It should return true if:
+- RevenueCat plainpath_pro is active
+OR
+- Stripe/web subscription is active, if web billing remains enabled
+
+Report whether this helper exists.
+
+8. Verify billing page alignment
+The billing page currently must show only:
+
+Plan:
+PlainPath Pro — $19.99/month
+
+Included:
+- Analyze a Document
+- Contract Review
+- Saved analysis history
+
+Remove/hide old tools from billing:
+- Redact Sensitive Info
+- Document Trust Check
+- Build a Contract
+- Ask This Document
+- Compare Versions
+- Clause Extractor
+- Document Builder
+- PDF Editor
+- Digital Signature
+
+9. Verify product IDs
+Check whether App Store product IDs are defined for PlainPath Pro.
+
+Expected one monthly product, such as:
+plainpath_pro_monthly
+
+Report actual product ID names found.
+
+Do not change them unless clearly wrong.
+
+10. Verification report
+Return a concise report with:
+
+A. RevenueCat installed? Yes/No
+B. RevenueCat keys present? Yes/No
+C. Entitlement found? Yes/No
+D. Entitlement name used
+E. App User ID source
+F. Anonymous purchases possible? Yes/No
+G. Restore Purchases implemented? Yes/No
+H. Web unlock after iOS purchase supported? Yes/No
+I. Stripe hidden from iOS? Yes/No
+J. Billing page still showing removed tools? Yes/No
+K. Launch blockers
+L. Exact files that need changes
+
+Do not implement changes until the verification report is complete.
