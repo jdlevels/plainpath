@@ -18,6 +18,7 @@ import { normalizePlan } from "../lib/planEntitlements"
 import {
   resolvePlanFromRCEntitlements,
   getRevenueCatApiKey,
+  RC_ENTITLEMENT_IDS,
 } from "../lib/nativeBillingConfig"
 import { BILLING_CONFIG } from "../lib/billingConfig"
 
@@ -96,8 +97,8 @@ router.post("/native-verify", async (req, res) => {
     const billingProvider = platform === "ios" ? "storekit" : "play_billing"
 
     // Get expiry from the pro or starter entitlement subscription
-    const proEnt = rcData.subscriber.entitlements["pro"]
-    const starterEnt = rcData.subscriber.entitlements["starter"]
+    const proEnt = rcData.subscriber.entitlements[RC_ENTITLEMENT_IDS.pro]
+    const starterEnt = rcData.subscriber.entitlements[RC_ENTITLEMENT_IDS.starter]
     const relevantEnt = plan === "pro" ? proEnt : starterEnt
     const expiresAt = relevantEnt?.expires_date ?? null
 

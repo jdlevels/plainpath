@@ -173,13 +173,63 @@ function ClerkQueryClientCacheInvalidator() {
   return null;
 }
 
-// ─── ChoosePlanScreen ─────────────────────────────────────────────────────────
-// Full-page plan selection shown to signed-in users who have not yet purchased
-// a subscription. Initiates Stripe checkout directly — no intermediate page.
-const PLAN_ICONS: Record<string, React.ElementType> = { starter: BarChart3, pro: Zap };
+// ─── NativePaywallScreen ──────────────────────────────────────────────────────
+// Full-screen paywall shown to signed-in native (iOS/Android) users who have
+// no active subscription. Uses RevenueCat/StoreKit — no Stripe.
 
-function NativeSubscriptionMessage() {
+function NativePaywallScreen() {
+  const { user } = useUser();
   const { signOut } = useClerk();
+  const { reload } = useEntitlements();
+  const [purchasing, setPurchasing] = useState(false);
+  const [restoring, setRestoring] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  const clerkUserId = user?.id ?? null;
+
+  useEffect(() => {
+    if (clerkUserId) void configureRevenueCat(clerkUserId);
+  }, [clerkUserId]);
+
+  async function handlePurchase() {
+    if (!clerkUserId) { setError("Sign in required to purchase."); return; }
+    setPurchasing(true);
+    setError(null);
+    setSuccessMsg(null);
+    try {
+      const result = await purchaseNativePlan("pro");
+      if (result.success) {
+        setSuccessMsg("Welcome to PlainPath Pro!");
+        await reload();
+      } else {
+        setError(result.error ?? "Purchase failed. Please try again.");
+      }
+    } finally {
+      setPurchasing(false);
+    }
+  }
+
+  async function handleRestore() {
+    if (!clerkUserId) { setError("Sign in required to restore purchases."); return; }
+    setRestoring(true);
+    setError(null);
+    setSuccessMsg(null);
+    try {
+      const result = await restoreNativePurchases();
+      if (result.success && result.plan) {
+        setSuccessMsg("Subscription restored. Welcome back!");
+        await reload();
+      } else {
+        setError("No active subscription found for this account.");
+      }
+    } finally {
+      setRestoring(false);
+    }
+  }
+
+  const isWorking = purchasing || restoring;
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <header className="border-b border-border/40 px-6 py-4 flex items-center justify-between">
@@ -195,20 +245,74 @@ function NativeSubscriptionMessage() {
           Sign out
         </button>
       </header>
-      <div className="flex-1 flex items-center justify-center px-4">
-        <div className="max-w-sm text-center">
-          <div className="bg-primary/10 p-4 rounded-2xl w-fit mx-auto mb-5">
-            <CreditCard className="w-8 h-8 text-primary" />
+
+      <div className="flex-1 flex items-center justify-center px-4 py-12">
+        <div className="w-full max-w-sm">
+          <div className="text-center mb-8">
+            <div className="bg-primary/10 p-4 rounded-2xl w-fit mx-auto mb-4">
+              <Zap className="w-8 h-8 text-primary" />
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground mb-1">PlainPath Pro</h1>
+            <div className="mt-3">
+              <span className="text-3xl font-bold text-foreground">$19.99</span>
+              <span className="text-base font-normal text-muted-foreground">/month</span>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Cancel anytime — no commitment</p>
           </div>
-          <h1 className="text-2xl font-bold mb-3">Manage your subscription</h1>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            Subscription management is handled on the PlainPath website.
-          </p>
+
+          <ul className="space-y-2.5 mb-8">
+            {["Analyze a Document", "Contract Review", "Saved analysis history"].map((f) => (
+              <li key={f} className="flex items-center gap-2.5 text-sm text-foreground/80">
+                <Check className="w-4 h-4 text-primary shrink-0" />
+                {f}
+              </li>
+            ))}
+          </ul>
+
+          {error && (
+            <div className="rounded-xl border border-destructive/30 bg-destructive/8 px-4 py-3 mb-4 text-sm text-destructive">
+              {error}
+            </div>
+          )}
+          {successMsg && (
+            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/8 px-4 py-3 mb-4 text-sm text-emerald-700 dark:text-emerald-400">
+              {successMsg}
+            </div>
+          )}
+
+          <button
+            onClick={() => void handlePurchase()}
+            disabled={isWorking}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-all disabled:opacity-60 disabled:cursor-not-allowed shadow-sm mb-3"
+          >
+            {purchasing ? (
+              <><Loader2 className="w-4 h-4 animate-spin" />Processing…</>
+            ) : (
+              <>Get PlainPath Pro<ArrowRight className="w-4 h-4" /></>
+            )}
+          </button>
+
+          <button
+            onClick={() => void handleRestore()}
+            disabled={isWorking}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {restoring ? (
+              <><Loader2 className="w-3.5 h-3.5 animate-spin" />Restoring…</>
+            ) : (
+              "Restore Purchases"
+            )}
+          </button>
         </div>
       </div>
     </div>
   );
 }
+
+// ─── ChoosePlanScreen ─────────────────────────────────────────────────────────
+// Full-page plan selection shown to signed-in users who have not yet purchased
+// a subscription. Initiates Stripe checkout directly — no intermediate page.
+const PLAN_ICONS: Record<string, React.ElementType> = { starter: BarChart3, pro: Zap };
 
 function ChoosePlanScreen() {
   const { user } = useUser();
@@ -216,7 +320,7 @@ function ChoosePlanScreen() {
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  if (isNative()) return <NativeSubscriptionMessage />;
+  if (isNative()) return <NativePaywallScreen />;
 
   async function handleSelectPlan(planKey: "starter" | "pro") {
     setLoadingPlan(planKey);

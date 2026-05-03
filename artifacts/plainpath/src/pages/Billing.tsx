@@ -44,18 +44,104 @@ const TOOLS = [
   { icon: BarChart3,   key: "history",         label: "Saved analysis history", plans: ["starter", "pro"] },
 ] as const
 
-// ─── Native message ───────────────────────────────────────────────────────────
+// ─── Native billing view ──────────────────────────────────────────────────────
+// Shown on the Billing page when running as a native iOS/Android app.
+// Displays current plan status and a Restore Purchases button.
 
-function NativeBillingMessage() {
+function NativeBillingView({
+  entitlements,
+  loading,
+  reload,
+}: {
+  entitlements: ReturnType<typeof useEntitlements>["entitlements"]
+  loading: boolean
+  reload: () => Promise<void>
+}) {
+  const [restoring, setRestoring] = useState(false)
+  const [restoreError, setRestoreError] = useState<string | null>(null)
+  const [restoreSuccess, setRestoreSuccess] = useState<string | null>(null)
+
+  async function handleRestore() {
+    setRestoring(true)
+    setRestoreError(null)
+    setRestoreSuccess(null)
+    try {
+      const result = await restoreNativePurchases()
+      if (result.success && result.plan) {
+        setRestoreSuccess("Subscription restored successfully.")
+        await reload()
+      } else {
+        setRestoreError("No active subscription found for this account.")
+      }
+    } finally {
+      setRestoring(false)
+    }
+  }
+
+  const hasPro = Boolean(entitlements?.status === "active" && entitlements.plan)
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
-      <div className="max-w-sm text-center">
-        <div className="bg-primary/10 p-4 rounded-2xl w-fit mx-auto mb-5">
-          <CreditCard className="w-8 h-8 text-primary" />
+      <div className="w-full max-w-sm space-y-4">
+
+        <div className="text-center mb-2">
+          <div className="bg-primary/10 p-4 rounded-2xl w-fit mx-auto mb-4">
+            <CreditCard className="w-8 h-8 text-primary" />
+          </div>
+          <h1 className="text-2xl font-display font-bold">Plan &amp; Billing</h1>
         </div>
-        <h1 className="text-2xl font-display font-bold mb-3">Manage your subscription</h1>
-        <p className="text-sm text-muted-foreground leading-relaxed">
-          Subscription management is handled on the PlainPath website.
+
+        <div className="rounded-2xl border border-border/60 bg-card p-5">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+            Current plan
+          </p>
+          {loading ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground py-1">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Loading…
+            </div>
+          ) : hasPro ? (
+            <div className="flex items-center gap-2">
+              <Zap className="w-4 h-4 text-primary" />
+              <span className="text-sm font-bold text-primary">PlainPath Pro</span>
+              <span className="text-xs text-muted-foreground">$19.99/month</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <XCircle className="w-4 h-4" />
+              No active subscription
+            </div>
+          )}
+        </div>
+
+        {restoreError && (
+          <div className="rounded-xl border border-destructive/30 bg-destructive/8 px-4 py-3 text-sm text-destructive">
+            {restoreError}
+          </div>
+        )}
+        {restoreSuccess && (
+          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/8 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-400">
+            {restoreSuccess}
+          </div>
+        )}
+
+        <button
+          onClick={() => void handleRestore()}
+          disabled={restoring}
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium border border-border/60 bg-card hover:bg-muted transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          {restoring ? (
+            <><Loader2 className="w-3.5 h-3.5 animate-spin" />Restoring…</>
+          ) : (
+            "Restore Purchases"
+          )}
+        </button>
+
+        <p className="text-center text-xs text-muted-foreground">
+          Questions?{" "}
+          <a href="mailto:support@plainpathapp.com" className="text-primary hover:underline">
+            Contact support
+          </a>
         </p>
       </div>
     </div>
@@ -102,7 +188,7 @@ export default function Billing() {
     return () => { document.title = "PlainPath" }
   }, [])
 
-  if (isNative()) return <NativeBillingMessage />
+  if (isNative()) return <NativeBillingView entitlements={entitlements} loading={loading} reload={reload} />
 
   const isTestMode = BILLING_CONFIG.BILLING_MODE === "test"
   const isEnforced = BILLING_CONFIG.PAYWALL_ENFORCEMENT
