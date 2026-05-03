@@ -94,7 +94,7 @@ export function WaitlistModal({ open, onClose, defaultPlatform = "both" }: Props
               </p>
             </div>
             <p className="text-xs text-muted-foreground/70">
-              Try a free demo to see PlainPath in action — no account needed.
+              Try a free demo to see PlainPath in action.
             </p>
             <div className="flex gap-2 mt-1">
               <Button variant="outline" size="sm" onClick={() => handleOpenChange(false)}>

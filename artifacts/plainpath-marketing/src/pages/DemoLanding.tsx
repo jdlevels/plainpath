@@ -22,7 +22,7 @@ const TOOLS = [
   {
     key: "contract-review",
     label: "Contract Review",
-    scenario: "Employment offer — scored 28/100",
+    scenario: "Employment offer — risk level: High",
     desc: "PlainPath flags a 5-year global non-compete, overly broad IP assignment, and mandatory arbitration — with negotiation language ready.",
     icon: Scale,
     color: "text-amber-600 dark:text-amber-400",

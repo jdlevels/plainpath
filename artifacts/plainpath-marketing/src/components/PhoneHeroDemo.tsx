@@ -26,7 +26,7 @@ const fade = {
 /* ─── Per-tool header config ──────────────────────────────── */
 const TOOL_HEADERS = [
   { docName: "Lease Agreement",         docMeta: "847 words · 12 pages",  badgeLabel: "Review needed",  badgeBg: "rgba(245,158,11,0.15)", badgeBorder: "rgba(245,158,11,0.40)", badgeColor: "#92400e", badgeDot: "#f59e0b" },
-  { docName: "Employment Offer Letter", docMeta: "1,240 words · 8 pages", badgeLabel: "Score: 28/100",  badgeBg: "rgba(245,158,11,0.15)", badgeBorder: "rgba(245,158,11,0.40)", badgeColor: "#92400e", badgeDot: "#f59e0b" },
+  { docName: "Employment Offer Letter", docMeta: "1,240 words · 8 pages", badgeLabel: "Risk level: High",  badgeBg: "rgba(245,158,11,0.15)", badgeBorder: "rgba(245,158,11,0.40)", badgeColor: "#92400e", badgeDot: "#f59e0b" },
 ]
 
 /* ─── Phone chrome ─────────────────────────────────────────── */

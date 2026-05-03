@@ -66,7 +66,7 @@ export default function ToolsShowcase() {
           viewport={{ once: true }}
           className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3"
         >
-          Every tool, in detail
+          Two tools, in detail
         </motion.p>
         <motion.h2
           initial={{ opacity: 0, y: 12 }}

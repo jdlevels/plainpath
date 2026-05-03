@@ -11,8 +11,8 @@ const PILLARS = [
   },
   {
     icon: Shield,
-    label: "No document storage",
-    desc: "Your files are processed in memory and never written to disk or stored in a database.",
+    label: "Temporary processing only",
+    desc: "Files are processed to return your results. PlainPath does not sell your data or use your documents to train AI.",
     color: "text-red-500",
   },
   {
@@ -23,8 +23,8 @@ const PILLARS = [
   },
   {
     icon: CheckCircle2,
-    label: "No account required to start",
-    desc: "Try your first two analyses immediately — no sign-up, no credit card.",
+    label: "Free demo available",
+    desc: "Try the live demo and see PlainPath analyze a real document — no credit card needed.",
     color: "text-emerald-500",
   },
 ]

@@ -222,7 +222,7 @@ export function Navbar() {
               onClick={() => setMobileOpen(false)}
               className="block px-3 py-2.5 rounded-lg text-sm font-semibold text-primary hover:bg-primary/8 transition-colors"
             >
-              Try demo — no account needed
+              Try demo
             </a>
             <a
               href="/app/sign-in"

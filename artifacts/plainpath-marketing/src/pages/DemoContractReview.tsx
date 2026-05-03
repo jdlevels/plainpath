@@ -110,7 +110,7 @@ export default function DemoContractReview() {
     <DemoShell
       toolName="Contract Review"
       subtitle="PlainPath reads the fine print, flags unfair clauses, and gives you negotiation language — before you sign."
-      scenarioLabel="Employment offer · Johnson & Markley · 3 pages · Scored 28/100"
+      scenarioLabel="Employment offer · Johnson & Markley · 3 pages · Risk level: High"
     >
       {/* Score banner */}
       <motion.div
@@ -119,8 +119,8 @@ export default function DemoContractReview() {
       >
         <div className="shrink-0 flex flex-col items-center gap-1">
           <div className="w-20 h-20 rounded-full border-4 border-amber-500 flex flex-col items-center justify-center bg-white dark:bg-amber-950/40">
-            <span className="text-2xl font-black text-amber-600 dark:text-amber-400 leading-none">28</span>
-            <span className="text-[10px] font-semibold text-amber-500">/ 100</span>
+            <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider leading-tight text-center px-1">Risk</span>
+            <span className="text-lg font-black text-amber-600 dark:text-amber-400 leading-none">High</span>
           </div>
           <span className="text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wide">Review carefully</span>
         </div>

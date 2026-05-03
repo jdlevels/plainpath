@@ -1,0 +1,94 @@
+PlainPath marketing page alignment cleanup — centered cards and consistent borders
+
+Goal:
+Fix the marketing page so every card/grid section is centered, evenly spaced, and contained within consistent page borders.
+
+Do not redesign.
+Do not change copy.
+Do not add features.
+Focus only on layout alignment.
+
+Required fixes:
+
+1. Global page container
+- Create/use one consistent marketing container class for major sections.
+- Max width: 1120px or 1200px.
+- Width: 100%.
+- Margin left/right: auto.
+- Padding left/right:
+  - desktop: 24px–32px
+  - tablet: 20px–24px
+  - mobile: 16px
+
+2. Card grids
+For every card row/grid:
+- Center the grid inside the container.
+- Use justify-content: center.
+- Use align-items: stretch.
+- Use consistent gap: 20px–24px desktop.
+- Do not let cards drift left.
+- Do not let rows exceed the section container.
+
+3. Two-tool cards
+For Analyze a Document + Contract Review:
+- Cards must be equal width.
+- Cards must be equal height.
+- Grid should be centered.
+- On desktop: 2 columns centered.
+- On mobile: stack to 1 column.
+- Max card width should prevent oversized cards.
+
+4. Four-card rows
+For trust cards, document-type cards, and why PlainPath cards:
+- All four cards must sit inside the same centered max-width container.
+- Use grid-template-columns: repeat(4, minmax(0, 1fr)) on large screens.
+- Use repeat(2, 1fr) on tablet.
+- Use 1 column on mobile.
+- Ensure first and last card align with section boundaries.
+
+5. Pricing cards
+- Starter and Pro cards must be centered as a two-column grid.
+- Equal width.
+- Equal height.
+- Same top alignment.
+- Same button alignment.
+- No left/right drift.
+
+6. Comparison table
+- Center table inside container.
+- Max width should match pricing/tool sections.
+- Do not allow table to be wider/narrower than surrounding content unless intentional.
+- Header, table, and CTA should share the same center axis.
+
+7. Live demo / screenshot blocks
+- Center demo preview inside same container width.
+- Do not allow screenshot mockups to sit off-center.
+- If paired with a text card, use a balanced two-column grid.
+
+8. Section borders and backgrounds
+- Section backgrounds should span full width.
+- Inner content should remain constrained to the same max-width container.
+- Borders/dividers should align visually across sections.
+- Remove uneven left/right padding that makes sections look shifted.
+
+9. CSS cleanup
+Search for section-specific margin-left, translateX, absolute positioning, or custom widths causing drift.
+Replace with consistent grid/flex layout.
+
+Avoid:
+- hardcoded left margins
+- random max-widths per section
+- manual positioning
+- oversized cards
+- nested containers fighting each other
+
+10. Final QA
+Check desktop and mobile:
+- Every section is centered.
+- Cards align evenly within borders.
+- Tool cards are centered.
+- Four-card rows are symmetrical.
+- Pricing cards align.
+- Comparison table aligns.
+- Footer columns align inside the same page container.
+- No section looks shifted left or right.

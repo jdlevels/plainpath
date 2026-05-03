@@ -128,9 +128,9 @@ const FEATURES = [
 
 /* ─── How it works ───────────────────────────────────────── */
 const HOW = [
-  { icon: Upload,       num: "01", title: "Choose a tool and add your document", desc: "Upload a PDF or Word file, or paste your text — every tool starts with one simple step and no account required." },
-  { icon: Sparkles,     num: "02", title: "PlainPath reads and reviews",          desc: "Depending on the tool: it analyzes what your document means and surfaces risks, deadlines, and action steps — or reviews your contract clause by clause with a fairness score." },
-  { icon: CheckCircle2, num: "03", title: "Review results and take action",       desc: "Get plain-English results you can act on — summaries, risk flags, deadlines, clause breakdowns, and fairness scores with negotiation language." },
+  { icon: Upload,       num: "01", title: "Choose a tool and add your document", desc: "Upload a PDF or Word file, or paste your text — both tools start with one simple step." },
+  { icon: Sparkles,     num: "02", title: "PlainPath reads and reviews",          desc: "Depending on the tool: it analyzes what your document means and surfaces risks, deadlines, and action steps — or reviews your contract clause by clause with risk identification." },
+  { icon: CheckCircle2, num: "03", title: "Review results and take action",       desc: "Get plain-English results you can act on — summaries, risk flags, deadlines, clause breakdowns, and negotiation language." },
 ];
 
 /* ─── Trust ──────────────────────────────────────────────── */
@@ -138,7 +138,7 @@ const TRUST = [
   { icon: FileText,    title: "Results you can act on",   desc: "Every analysis is written in plain English — no jargon. Read it once and know exactly what to do." },
   { icon: Lock,        title: "Your documents stay yours", desc: "Documents are processed to give you answers, then discarded. We don't sell your data or train AI on your files." },
   { icon: ShieldCheck, title: "Built for every document",  desc: "Leases, IRS letters, medical bills, contracts, court notices, NDAs — if it's text-based, PlainPath can analyze it." },
-  { icon: CheckCircle2,title: "Start in seconds",          desc: "No account needed to start. Paste or upload a document and get a plain-English breakdown in under 2 minutes — no sign-up required." },
+  { icon: CheckCircle2,title: "Start in seconds",          desc: "Paste or upload a document and get a plain-English breakdown in under 2 minutes." },
 ];
 
 /* ─── Live demos ─────────────────────────────────────────── */
@@ -161,13 +161,13 @@ const DEMOS = [
     id: "contract-review-employment",
     tool: "Contract Review",
     title: "Employment Offer — Heavily One-Sided",
-    desc: "An offer letter with a 5-year global non-compete, no severance clause, and IP rights stripping. Scored 28/100 with negotiation language ready.",
+    desc: "An offer letter with a 5-year global non-compete, no severance clause, and IP rights stripping. Risk level: High — negotiation language included.",
     icon: Scale,
     color: "text-amber-500 dark:text-amber-400",
     bg: "bg-amber-50 dark:bg-amber-950/50",
     hoverBorder: "hover:border-amber-400/50",
     hoverTitle: "group-hover:text-amber-500 dark:group-hover:text-amber-400",
-    tags: ["Score: 28/100", "4 clauses flagged", "Negotiation language"],
+    tags: ["Risk level: High", "4 clauses flagged", "Negotiation language"],
     cta: "Review a contract",
     href: "/demo/contract-review",
   },
@@ -189,7 +189,7 @@ const PLANS = [
     name: "Starter",
     monthly: { price: "$4.99", period: "/month", sub: null },
     annual:  { price: "$47.99", period: "/year", sub: "billed annually", eq: "≈ $4.00/mo", savings: "Save about 20%" },
-    desc: "Analyze any document in plain English — unlimited access to PlainPath's core analysis tool.",
+    desc: "Analyze any document in plain English — your starting tool for understanding documents.",
     highlight: false,
     badge: null as string | null,
     tools: [
@@ -204,7 +204,7 @@ const PLANS = [
     name: "Pro",
     monthly: { price: "$19.99", period: "/month", sub: null },
     annual:  { price: "$191.90", period: "/year", sub: "billed annually", eq: "≈ $16.00/mo", savings: "Save 20%" },
-    desc: "Everything in Starter plus Contract Review — unlimited clause-by-clause risk analysis before you sign.",
+    desc: "Everything in Starter plus Contract Review — clause-by-clause risk analysis and negotiation language before you sign.",
     highlight: true,
     badge: "Best Value",
     tools: [
@@ -412,7 +412,7 @@ function AttorneyComparison() {
               <p className="text-3xl sm:text-5xl font-bold text-foreground tracking-tight leading-none mb-1">
                 ${s.ppPrice}
               </p>
-              <p className="text-sm text-foreground/50 mb-4">per month · unlimited use</p>
+              <p className="text-sm text-foreground/50 mb-4">per month</p>
               <div className="space-y-2">
                 {[s.ppTool, "Results in under 2 minutes", "Cancel anytime"].map((item) => (
                   <p key={item} className="text-xs text-muted-foreground flex items-start gap-2">
@@ -485,15 +485,15 @@ function ReferFriend() {
             </h3>
             <p className="text-muted-foreground text-base leading-relaxed mb-7">
               Share PlainPath with anyone dealing with a lease, contract, government notice, or medical bill.
-              They can try it immediately — no account required.
+              They can try the demo immediately and get a plain-English breakdown of their document.
             </p>
 
             {/* Value bullets */}
             <div className="space-y-2.5 mb-8">
               {[
-                { text: "No account needed to start", detail: "Two free analyses included — no sign-up" },
                 { text: "Results in under 2 minutes",  detail: "Upload, analyze, done" },
                 { text: "Works on any document type",  detail: "Contracts, bills, notices, and more" },
+                { text: "Free demo available",          detail: "Try it before subscribing" },
               ].map(({ text, detail }) => (
                 <div key={text} className="flex items-start gap-3">
                   <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
@@ -511,7 +511,7 @@ function ReferFriend() {
                 href="/demo"
                 className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-xl px-5 py-3 text-sm font-semibold hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-sm shadow-primary/20"
               >
-                Try free — 2 free analyses <ArrowRight className="w-4 h-4" />
+                Try free <ArrowRight className="w-4 h-4" />
               </a>
 
               {/* Copy link */}
@@ -584,9 +584,9 @@ function ReferFriend() {
               {/* Steps */}
               {[
                 { step: "1", label: "Create your free account",   note: "No credit card required" },
-                { step: "2", label: "Share your personal link",   note: "One click from your dashboard" },
-                { step: "3", label: "Friend tries PlainPath",     note: "They get their first doc free" },
-                { step: "4", label: "Both of you benefit",        note: "Rewards inside your account" },
+                { step: "2", label: "Share PlainPath with a friend", note: "Anyone with a confusing document" },
+                { step: "3", label: "Friend tries PlainPath",     note: "Demo available, no commitment" },
+                { step: "4", label: "Referral rewards coming soon", note: "Details inside your account" },
               ].map(({ step, label, note }) => (
                 <div key={step} className="flex items-start gap-3.5">
                   <div className="w-7 h-7 rounded-full bg-primary/10 border border-primary/25 flex items-center justify-center shrink-0 mt-0.5">
@@ -750,7 +750,7 @@ export default function Home() {
                     Review a Contract
                   </a>
                 </div>
-                <p className="text-xs text-muted-foreground/80">Results in under 2 minutes &nbsp;·&nbsp; Cancel anytime &nbsp;·&nbsp; No account required</p>
+                <p className="text-xs text-muted-foreground/80">Results in under 2 minutes &nbsp;·&nbsp; Cancel anytime &nbsp;·&nbsp; From $4.99/month</p>
                 <div className="flex items-center gap-2.5 flex-wrap">
                   <AppStoreBadge onClick={() => openWaitlist("ios")} />
                   <PlayStoreBadge onClick={() => openWaitlist("android")} />
@@ -1173,7 +1173,7 @@ export default function Home() {
               href="/demo"
               className="inline-flex items-center gap-2 bg-primary text-white rounded-xl px-8 py-3.5 text-sm font-semibold hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-primary/30"
             >
-              Try it free — no account needed <ArrowRight className="w-4 h-4" />
+              Try it free <ArrowRight className="w-4 h-4" />
             </a>
             <p className="mt-3 text-xs text-white/30">From $4.99/month · Cancel anytime</p>
           </motion.div>

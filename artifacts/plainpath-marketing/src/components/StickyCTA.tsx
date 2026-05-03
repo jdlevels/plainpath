@@ -42,7 +42,7 @@ export function StickyCTA() {
                 Understand any document in plain English.
               </p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                No account required · No credit card
+                From $4.99/month · No credit card
               </p>
             </div>
             <a

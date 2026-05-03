@@ -26,7 +26,7 @@ const slide = {
 /* ─── Tool config ────────────────────────────────────────────── */
 const TOOLS = [
   { id: 0, shortName: "Analyze", icon: FileText, hex: "#3b82f6", iconHex: "#93c5fd", docName: "Lease Agreement — Unit 4B.pdf",  docMeta: "847 words · 12 pages",  badge: { label: "3 issues",      dot: "#f59e0b" } },
-  { id: 1, shortName: "Review",  icon: Scale,    hex: "#f59e0b", iconHex: "#fcd34d", docName: "Employment Agreement.pdf",       docMeta: "1,240 words · 8 pages", badge: { label: "Score: 28/100", dot: "#f59e0b" } },
+  { id: 1, shortName: "Review",  icon: Scale,    hex: "#f59e0b", iconHex: "#fcd34d", docName: "Employment Agreement.pdf",       docMeta: "1,240 words · 8 pages", badge: { label: "4 clauses flagged", dot: "#f59e0b" } },
 ] as const
 
 type ToolId = 0|1
@@ -250,9 +250,8 @@ function ResultsReview() {
       <p className="text-[9px] font-semibold tracking-widest uppercase text-zinc-600 mb-2">Contract Review</p>
       <div className="flex items-center gap-3 p-2 rounded-lg mb-1" style={{ background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.25)" }}>
         <div>
-          <p className="text-[9px] text-zinc-500">Fairness score</p>
-          <p className="text-[22px] font-black leading-none" style={{ color: "#f59e0b" }}>28</p>
-          <p className="text-[9px]" style={{ color: "#f59e0b" }}>/100</p>
+          <p className="text-[9px] text-zinc-500">Risk level</p>
+          <p className="text-[14px] font-black leading-none" style={{ color: "#f59e0b" }}>High</p>
         </div>
         <div className="flex-1">
           <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(245,158,11,0.15)" }}>

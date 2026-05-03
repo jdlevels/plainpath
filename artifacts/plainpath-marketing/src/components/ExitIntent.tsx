@@ -93,7 +93,7 @@ export function ExitIntent() {
               </div>
 
               <p className="text-sm text-muted-foreground mb-5 leading-relaxed">
-                Drop any lease, offer letter, or confusing notice and get a plain-English breakdown of every risk and required action. No account needed.
+                Drop any lease, offer letter, or confusing notice and get a plain-English breakdown of every risk and required action.
               </p>
 
               <a

@@ -79,7 +79,7 @@ export default function UnderstandYourIrsLetter() {
             { icon: Calendar, title: "Your exact response deadline", desc: "Every IRS notice has a specific response window — usually 30, 60, or 90 days. Missing it can make an assessment final. PlainPath finds and flags this date." },
             { icon: DollarSign, title: "What you owe (and why)", desc: "If money is owed, PlainPath explains the calculation: the original amount, any penalties, interest accrual, and what happens if it's not paid." },
             { icon: ShieldCheck, title: "Your response options", desc: "You can agree, disagree, request an installment plan, or request a hearing. PlainPath explains each option available to you based on the specific letter type." },
-            { icon: FileText, title: "Whether it might be a scam", desc: "IRS scam letters are common and convincing. PlainPath's Trust Check automatically flags suspicious indicators — wrong phone numbers, wire transfer demands, missing notice numbers." },
+            { icon: FileText, title: "Red flags worth knowing", desc: "IRS scam letters are common and convincing. Look for wrong phone numbers, wire transfer demands, and missing notice numbers. PlainPath will surface anything in the letter that doesn't match standard IRS formatting." },
           ].map((item, i) => (
             <div key={i} className="border border-border/50 rounded-xl p-4 bg-card flex items-start gap-3">
               <div className="w-8 h-8 rounded-xl bg-primary/8 flex items-center justify-center shrink-0">

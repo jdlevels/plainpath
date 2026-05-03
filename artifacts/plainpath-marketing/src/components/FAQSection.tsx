@@ -12,7 +12,7 @@ const TOOL_ROWS: { color: string; name: string; desc: string }[] = [
   {
     color: "text-amber-600 dark:text-amber-400",
     name: "Contract Review",
-    desc: "reads a contract someone else wrote, flags risky or missing clauses, scores it for fairness, and gives you negotiation language.",
+    desc: "reads a contract someone else wrote, flags risky or missing clauses, and gives you negotiation language.",
   },
 ]
 

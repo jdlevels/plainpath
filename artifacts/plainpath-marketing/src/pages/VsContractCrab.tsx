@@ -54,7 +54,7 @@ export default function VsContractCrab() {
         <div className="grid grid-cols-3 gap-4 mb-10">
           {[
             { label: "PlainPath Starter", price: "$4.99/mo", highlight: true,  note: "Document analysis" },
-            { label: "PlainPath Pro",     price: "$19.99/mo", highlight: false, note: "Unlimited + both tools" },
+            { label: "PlainPath Pro",     price: "$19.99/mo", highlight: false, note: "Both tools included" },
             { label: "ContractCrab",      price: "$30/mo",    highlight: false, note: "Contracts only" },
           ].map((plan, i) => (
             <div key={i} className={`rounded-2xl p-5 text-center border ${plan.highlight ? "border-primary/40 bg-primary/5" : "border-border/50 bg-card"}`}>
