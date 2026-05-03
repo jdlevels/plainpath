@@ -830,7 +830,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid sm:grid-cols-2 gap-5 max-w-3xl mx-auto">
             {FEATURES.map((feature, i) => {
               const { icon: Icon, color, bg, border, accent, glow, title, desc, result, tags, tagCls } = feature;
               const isComingSoon = (feature as any).comingSoon === true;
@@ -1012,7 +1012,7 @@ export default function Home() {
               Real documents, real scenarios — one per live tool. Click any card to open a pre-loaded example in the web app.
             </motion.p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-3xl mx-auto">
             {DEMOS.map((demo, i) => (
               <motion.div key={demo.id} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }} transition={{ delay: i * 0.08 }} whileHover={{ y: -5, transition: { duration: 0.2 } }} className="h-full">
