@@ -101,7 +101,7 @@ export function ExitIntent() {
                 onClick={dismiss}
                 className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 active:scale-[0.98] transition-all"
               >
-                Try the free demo <ArrowRight className="w-4 h-4" />
+                Open App <ArrowRight className="w-4 h-4" />
               </a>
               <button
                 onClick={dismiss}

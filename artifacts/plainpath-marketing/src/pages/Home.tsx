@@ -2,9 +2,6 @@ import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { AppStoreBadge } from "@/components/ui/AppStoreBadge";
-import { PlayStoreBadge } from "@/components/ui/PlayStoreBadge";
-import { WaitlistModal } from "@/components/WaitlistModal";
 import { PhoneHeroDemo } from "@/components/PhoneHeroDemo";
 import { WebAppDemo } from "@/components/WebAppDemo";
 import StatsBar from "@/components/StatsBar";
@@ -20,7 +17,7 @@ import {
   ArrowRight, Upload, Sparkles, Scale,
   AlertTriangle, CheckCircle2, Clock, Lock, X as XIcon,
   CalendarX, Eye, FileScan,
-  DollarSign, Copy, Users, ChevronDown, Star,
+  DollarSign, ChevronDown, Star,
 } from "lucide-react";
 
 /* ─── Animation helpers ──────────────────────────────────── */
@@ -432,181 +429,11 @@ function AttorneyComparison() {
   );
 }
 
-/* ─── Refer a friend ─────────────────────────────────────── */
-function ReferFriend() {
-  const [copied, setCopied] = useState(false);
-  const url = "https://plainpathapp.com";
-
-  function handleCopy() {
-    navigator.clipboard.writeText(url).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2400);
-    }).catch(() => {});
-  }
-
-  return (
-    <div className="w-full bg-gradient-to-br from-violet-100/80 via-blue-100/65 to-indigo-100/70 dark:from-violet-950/30 dark:via-blue-950/20 dark:to-zinc-900/60 border-y border-violet-200/55 dark:border-violet-900/30 py-24 md:py-28">
-      <div className="max-w-6xl mx-auto px-5 sm:px-6">
-        <div className="grid md:grid-cols-2 gap-14 lg:gap-20 items-center">
-
-          {/* Left — content */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-          >
-            {/* Eyebrow */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-5">
-              <Users className="w-3.5 h-3.5 text-primary" />
-              <span className="text-xs font-semibold text-primary tracking-wide">Refer a friend</span>
-            </div>
-
-            <h3
-              className="text-3xl md:text-4xl font-bold text-foreground mb-4 leading-snug"
-              style={{ fontFamily: "var(--font-display)" }}
-            >
-              Know someone drowning in confusing paperwork?
-            </h3>
-            <p className="text-muted-foreground text-base leading-relaxed mb-7">
-              Share PlainPath with anyone dealing with a lease, contract, government notice, or medical bill.
-              They can try the demo immediately and get a plain-English breakdown of their document.
-            </p>
-
-            {/* Value bullets */}
-            <div className="space-y-2.5 mb-8">
-              {[
-                { text: "Results in under 2 minutes",  detail: "Upload, analyze, done" },
-                { text: "Works on any document type",  detail: "Contracts, bills, notices, and more" },
-                { text: "Free demo available",          detail: "Try it before subscribing" },
-              ].map(({ text, detail }) => (
-                <div key={text} className="flex items-start gap-3">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                  <div>
-                    <span className="text-sm font-semibold text-foreground">{text}</span>
-                    <span className="text-sm text-muted-foreground"> — {detail}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* CTAs */}
-            <div className="flex flex-col sm:flex-row gap-3">
-              <a
-                href="/demo"
-                className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-xl px-5 py-3 text-sm font-semibold hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-sm shadow-primary/20"
-              >
-                Try free <ArrowRight className="w-4 h-4" />
-              </a>
-
-              {/* Copy link */}
-              <div className="flex items-center gap-0 bg-background border border-border/60 rounded-xl pl-3.5 pr-1 py-1 shadow-sm">
-                <span className="text-sm text-muted-foreground flex-1 truncate font-mono leading-none py-1.5 pr-2 min-w-0">
-                  {url}
-                </span>
-                <button
-                  onClick={handleCopy}
-                  className={`flex items-center gap-1.5 shrink-0 px-3 py-2 rounded-lg text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-                    copied
-                      ? "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400"
-                      : "bg-muted text-foreground hover:bg-muted/80"
-                  }`}
-                >
-                  <AnimatePresence mode="wait" initial={false}>
-                    {copied ? (
-                      <motion.span
-                        key="copied"
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.9 }}
-                        transition={{ duration: 0.15 }}
-                        className="flex items-center gap-1.5 whitespace-nowrap"
-                      >
-                        <CheckCircle2 className="w-3.5 h-3.5" /> Copied!
-                      </motion.span>
-                    ) : (
-                      <motion.span
-                        key="copy"
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.9 }}
-                        transition={{ duration: 0.15 }}
-                        className="flex items-center gap-1.5 whitespace-nowrap"
-                      >
-                        <Copy className="w-3.5 h-3.5" /> Copy
-                      </motion.span>
-                    )}
-                  </AnimatePresence>
-                </button>
-              </div>
-            </div>
-
-            <p className="text-xs text-muted-foreground/55 mt-4">
-              Referral rewards and tracking are available inside your PlainPath account after sign-up.
-            </p>
-          </motion.div>
-
-          {/* Right — visual card */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="hidden md:flex justify-center"
-          >
-            <div className="w-full max-w-sm rounded-2xl border border-border/60 bg-card shadow-md p-7 space-y-5">
-              {/* Header */}
-              <div className="flex items-center gap-3 pb-5 border-b border-border/50">
-                <div className="w-11 h-11 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
-                  <Users className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-foreground leading-tight">PlainPath Referrals</p>
-                  <p className="text-xs text-foreground/50 mt-0.5">Available inside your account</p>
-                </div>
-              </div>
-
-              {/* Steps */}
-              {[
-                { step: "1", label: "Create your free account",   note: "No credit card required" },
-                { step: "2", label: "Share PlainPath with a friend", note: "Anyone with a confusing document" },
-                { step: "3", label: "Friend tries PlainPath",     note: "Demo available, no commitment" },
-                { step: "4", label: "Referral rewards coming soon", note: "Details inside your account" },
-              ].map(({ step, label, note }) => (
-                <div key={step} className="flex items-start gap-3.5">
-                  <div className="w-7 h-7 rounded-full bg-primary/10 border border-primary/25 flex items-center justify-center shrink-0 mt-0.5">
-                    <span className="text-[11px] font-bold text-primary">{step}</span>
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-foreground leading-tight">{label}</p>
-                    <p className="text-xs text-foreground/45 mt-0.5">{note}</p>
-                  </div>
-                </div>
-              ))}
-
-              <div className="pt-1 border-t border-border/50">
-                <a
-                  href="/app/sign-in"
-                  className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-xl px-4 py-3 text-sm font-semibold hover:bg-primary/90 transition-colors"
-                >
-                  Get started to unlock <ArrowRight className="w-3.5 h-3.5" />
-                </a>
-              </div>
-            </div>
-          </motion.div>
-
-        </div>
-      </div>
-    </div>
-  );
-}
 
 /* ─── Component ──────────────────────────────────────────── */
 const DEMO_INTERVAL_MS = 5200
 
 export default function Home() {
-  const [waitlistOpen, setWaitlistOpen] = useState(false)
-  const [waitlistPlatform, setWaitlistPlatform] = useState<"ios" | "android" | "both">("both")
   const [activeDemoTool, setActiveDemoTool] = useState(0)
 
   useEffect(() => {
@@ -622,11 +449,6 @@ export default function Home() {
     }
   }, [])
 
-  function openWaitlist(platform: "ios" | "android" | "both") {
-    setWaitlistPlatform(platform)
-    setWaitlistOpen(true)
-  }
-
   return (
     <div className="min-h-screen bg-background selection:bg-primary/20 selection:text-primary">
       <Navbar />
@@ -634,7 +456,7 @@ export default function Home() {
       {/* ════════════════════════════════════════════════
           HERO
       ════════════════════════════════════════════════ */}
-      <section className="relative pt-28 pb-0 md:pt-40 overflow-hidden">
+      <section className="relative pt-24 pb-0 md:pt-36 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-200/70 via-indigo-200/55 to-violet-200/65 dark:from-blue-950/40 dark:via-indigo-950/30 dark:to-violet-950/20 pointer-events-none" />
         <div className="absolute top-0 right-0 w-[700px] h-[700px] bg-gradient-radial from-violet-200/30 dark:from-violet-900/20 to-transparent rounded-full blur-3xl pointer-events-none -translate-y-1/4 translate-x-1/4" />
         <motion.div
@@ -718,7 +540,7 @@ export default function Home() {
                 ))}
               </motion.div>
 
-              {/* CTA + App Store badges */}
+              {/* CTAs */}
               <motion.div custom={4} variants={fadeUp} className="flex flex-col gap-3 mb-5" id="download">
                 <div className="flex flex-wrap gap-2">
                   <a
@@ -735,13 +557,7 @@ export default function Home() {
                   </a>
                 </div>
                 <p className="text-xs text-muted-foreground/80">Results in under 2 minutes &nbsp;·&nbsp; Cancel anytime &nbsp;·&nbsp; PlainPath Pro — $19.99/month</p>
-                <div className="flex items-center gap-2.5 flex-wrap">
-                  <AppStoreBadge onClick={() => openWaitlist("ios")} />
-                  <PlayStoreBadge onClick={() => openWaitlist("android")} />
-                </div>
-                <p className="text-xs text-muted-foreground/70">
-                  iOS &amp; Android apps coming soon — tap to get notified.
-                </p>
+                <p className="text-xs text-muted-foreground/55">iOS &amp; Android coming soon.</p>
               </motion.div>
 
               <motion.div custom={5} variants={fadeUp}>
@@ -784,7 +600,7 @@ export default function Home() {
       {/* ════════════════════════════════════════════════
           STATS BAR
       ════════════════════════════════════════════════ */}
-      <div className="w-full bg-gradient-to-b from-sky-200/70 via-blue-100/60 to-slate-200/65 dark:from-zinc-900/80 dark:via-blue-950/20 dark:to-zinc-900/60 border-y border-sky-300/50 dark:border-zinc-800/60 py-16">
+      <div className="w-full bg-gradient-to-b from-sky-200/70 via-blue-100/60 to-slate-200/65 dark:from-zinc-900/80 dark:via-blue-950/20 dark:to-zinc-900/60 border-y border-sky-300/50 dark:border-zinc-800/60 py-12">
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
           <StatsBar />
         </div>
@@ -793,9 +609,9 @@ export default function Home() {
       {/* ════════════════════════════════════════════════
           8 TOOLS — premium feature cards
       ════════════════════════════════════════════════ */}
-      <section id="features" className="py-20 md:py-28 bg-gradient-to-b from-background via-white/70 to-background dark:bg-transparent">
+      <section id="features" className="py-16 md:py-24 bg-gradient-to-b from-background via-white/70 to-background dark:bg-transparent">
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
-          <div className="text-center max-w-2xl mx-auto mb-14">
+          <div className="text-center max-w-2xl mx-auto mb-10">
             <p className="text-xs font-semibold tracking-[0.12em] uppercase text-muted-foreground mb-3">2 tools available now</p>
             <h2
               className="text-4xl md:text-5xl font-bold mb-4 text-foreground"
@@ -882,7 +698,7 @@ export default function Home() {
       ════════════════════════════════════════════════ */}
       <div
         id="how-it-works"
-        className="w-full bg-gradient-to-b from-indigo-200/65 via-sky-100/60 to-blue-200/55 dark:from-zinc-900/80 dark:via-blue-950/20 dark:to-zinc-900/60 border-y border-indigo-300/45 dark:border-zinc-800/60 py-16"
+        className="w-full bg-gradient-to-b from-indigo-200/65 via-sky-100/60 to-blue-200/55 dark:from-zinc-900/80 dark:via-blue-950/20 dark:to-zinc-900/60 border-y border-indigo-300/45 dark:border-zinc-800/60 py-12"
       >
         <div className="max-w-5xl mx-auto px-5 sm:px-6">
           <p className="text-center text-xs font-semibold tracking-[0.12em] uppercase text-muted-foreground mb-12">
@@ -915,7 +731,7 @@ export default function Home() {
       {/* ════════════════════════════════════════════════
           THE PROBLEM — dark product story
       ════════════════════════════════════════════════ */}
-      <div className="w-full bg-gradient-to-b from-slate-100/80 via-white to-slate-100/60 dark:bg-gradient-to-br dark:from-slate-950 dark:to-slate-900/90 border-b border-slate-300/50 dark:border-transparent py-20">
+      <div className="w-full bg-gradient-to-b from-slate-100/80 via-white to-slate-100/60 dark:bg-gradient-to-br dark:from-slate-950 dark:to-slate-900/90 border-b border-slate-300/50 dark:border-transparent py-16">
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
           <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true, margin: "-80px" }}>
             <div className="rounded-3xl bg-slate-950 dark:bg-slate-900 text-white px-6 py-16 sm:px-12 sm:py-20 overflow-hidden relative">
@@ -966,7 +782,7 @@ export default function Home() {
       {/* ════════════════════════════════════════════════
           TOOLS SHOWCASE — 9-card detailed grid
       ════════════════════════════════════════════════ */}
-      <div id="solutions" className="w-full bg-gradient-to-br from-indigo-200/75 via-violet-200/60 to-slate-200/70 dark:from-violet-950/22 dark:via-slate-900 dark:to-slate-900 border-y border-indigo-300/50 dark:border-border/40 py-20">
+      <div id="solutions" className="w-full bg-gradient-to-br from-indigo-200/75 via-violet-200/60 to-slate-200/70 dark:from-violet-950/22 dark:via-slate-900 dark:to-slate-900 border-y border-indigo-300/50 dark:border-border/40 py-16">
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
           <ToolsShowcase />
         </div>
@@ -975,7 +791,7 @@ export default function Home() {
       {/* ════════════════════════════════════════════════
           VIDEO WALKTHROUGH — dark cinematic
       ════════════════════════════════════════════════ */}
-      <div id="walkthrough" className="w-full bg-gradient-to-b from-slate-950 via-[#0d1526] to-slate-950 py-20">
+      <div id="walkthrough" className="w-full bg-gradient-to-b from-slate-950 via-[#0d1526] to-slate-950 py-16">
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
           <VideoWalkthrough activeTool={activeDemoTool} onToolChange={setActiveDemoTool} />
         </div>
@@ -984,9 +800,9 @@ export default function Home() {
       {/* ════════════════════════════════════════════════
           LIVE DEMOS — one demo per tool
       ════════════════════════════════════════════════ */}
-      <div id="demos" className="w-full bg-gradient-to-br from-blue-200/75 via-indigo-200/60 to-sky-200/70 dark:from-blue-950/35 dark:via-slate-900 dark:to-slate-900 border-y border-blue-300/50 dark:border-primary/15 py-16 scroll-mt-24">
+      <div id="demos" className="w-full bg-gradient-to-br from-blue-200/75 via-indigo-200/60 to-sky-200/70 dark:from-blue-950/35 dark:via-slate-900 dark:to-slate-900 border-y border-blue-300/50 dark:border-primary/15 py-12 scroll-mt-24">
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
-          <div className="text-center mb-12">
+          <div className="text-center mb-8">
             <motion.p initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
               className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Live demos</motion.p>
             <motion.h2 initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
@@ -1029,7 +845,7 @@ export default function Home() {
       {/* ════════════════════════════════════════════════
           DOCUMENT SITUATIONS
       ════════════════════════════════════════════════ */}
-      <div id="common-documents" className="w-full bg-gradient-to-br from-slate-200/70 via-blue-100/55 to-indigo-200/65 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900 border-y border-slate-300/55 dark:border-border/40 py-16">
+      <div id="common-documents" className="w-full bg-gradient-to-br from-slate-200/70 via-blue-100/55 to-indigo-200/65 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900 border-y border-slate-300/55 dark:border-border/40 py-12">
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
           <DocumentSituations />
         </div>
@@ -1038,9 +854,9 @@ export default function Home() {
       {/* ════════════════════════════════════════════════
           TRUST / CREDIBILITY
       ════════════════════════════════════════════════ */}
-      <section className="py-20 md:py-24 bg-gradient-to-b from-slate-100 via-blue-50/90 to-slate-50 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-900 border-b border-slate-200/80 dark:border-border/40">
+      <section className="py-16 md:py-20 bg-gradient-to-b from-slate-100 via-blue-50/90 to-slate-50 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-900 border-b border-slate-200/80 dark:border-border/40">
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
-          <div className="text-center mb-12">
+          <div className="text-center mb-8">
             <div className="inline-block bg-white/70 dark:bg-card/60 backdrop-blur-sm rounded-2xl px-8 py-6 border border-slate-200/70 dark:border-border/40 shadow-sm mb-4">
               <p className="text-xs font-semibold tracking-[0.12em] uppercase text-foreground/60 dark:text-foreground/55 mb-3">Why PlainPath</p>
               <h2
@@ -1079,7 +895,7 @@ export default function Home() {
       {/* ════════════════════════════════════════════════
           FAQ
       ════════════════════════════════════════════════ */}
-      <div id="faq" className="w-full bg-gradient-to-b from-sky-200/65 via-blue-100/55 to-indigo-200/55 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900 border-y border-sky-300/45 dark:border-border/40 py-16">
+      <div id="faq" className="w-full bg-gradient-to-b from-sky-200/65 via-blue-100/55 to-indigo-200/55 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900 border-y border-sky-300/45 dark:border-border/40 py-12">
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
           <FAQSection />
         </div>
@@ -1088,9 +904,9 @@ export default function Home() {
       {/* ════════════════════════════════════════════════
           COMPARISON — PlainPath vs. alternatives
       ════════════════════════════════════════════════ */}
-      <div className="w-full bg-gradient-to-b from-slate-950 via-[#0c1525] to-slate-950 border-y border-white/5 py-20 md:py-28">
+      <div className="w-full bg-gradient-to-b from-slate-950 via-[#0c1525] to-slate-950 border-y border-white/5 py-16 md:py-24">
         <div className="max-w-5xl mx-auto px-5 sm:px-6">
-          <div className="text-center mb-14">
+          <div className="text-center mb-10">
             <motion.p
               initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
               className="text-xs font-semibold tracking-[0.12em] uppercase text-white/35 mb-3"
@@ -1169,10 +985,10 @@ export default function Home() {
       ════════════════════════════════════════════════ */}
       <div
         id="pricing"
-        className="w-full bg-gradient-to-b from-violet-200/70 via-blue-200/55 to-indigo-200/65 dark:from-zinc-900/80 dark:via-blue-950/10 dark:to-zinc-900/60 border-y border-violet-300/50 dark:border-zinc-800/60 py-24 md:py-32"
+        className="w-full bg-gradient-to-b from-violet-200/70 via-blue-200/55 to-indigo-200/65 dark:from-zinc-900/80 dark:via-blue-950/10 dark:to-zinc-900/60 border-y border-violet-300/50 dark:border-zinc-800/60 py-20 md:py-28"
       >
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
-          <div className="text-center max-w-2xl mx-auto mb-14">
+          <div className="text-center max-w-2xl mx-auto mb-10">
             <motion.p
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
@@ -1211,7 +1027,7 @@ export default function Home() {
           {/* ── Attorney cost comparison ── */}
           <AttorneyComparison />
 
-          <div className="max-w-md mx-auto">
+          <div className="max-w-xl mx-auto">
             {PLANS.map((plan, i) => (
               <motion.div
                 key={plan.name}
@@ -1220,7 +1036,7 @@ export default function Home() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.45, delay: i * 0.08 }}
                 whileHover={{ y: -4 }}
-                className={`relative rounded-2xl border bg-card flex flex-col p-8 shadow-sm transition-shadow hover:shadow-lg ${plan.highlight ? "border-primary shadow-md shadow-primary/10 ring-1 ring-primary/20" : "border-border/60"}`}
+                className={`relative rounded-3xl border bg-card flex flex-col p-10 shadow-sm transition-shadow hover:shadow-xl ${plan.highlight ? "border-primary shadow-lg shadow-primary/10 ring-1 ring-primary/20" : "border-border/60"}`}
               >
                 {plan.badge && (
                   <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-[11px] font-bold px-4 py-1 rounded-full tracking-wide whitespace-nowrap shadow-sm">
@@ -1316,17 +1132,12 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ════════════════════════════════════════════════
-          REFER A FRIEND
-      ════════════════════════════════════════════════ */}
-      <ReferFriend />
-
       <NewsletterCapture />
 
       {/* ════════════════════════════════════════════════
           APP SHOWCASE — web + mobile
       ════════════════════════════════════════════════ */}
-      <section id="app-showcase" className="py-20 md:py-24 bg-gradient-to-b from-slate-950 via-[#0c1525] to-slate-950 border-y border-slate-800/50">
+      <section id="app-showcase" className="py-16 md:py-20 bg-gradient-to-b from-slate-950 via-[#0c1525] to-slate-950 border-y border-slate-800/50">
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
           <div className="grid lg:grid-cols-2 gap-6 lg:gap-8 items-stretch">
 
@@ -1378,7 +1189,7 @@ export default function Home() {
       {/* ════════════════════════════════════════════════
           PRIVACY
       ════════════════════════════════════════════════ */}
-      <div className="w-full bg-gradient-to-br from-indigo-200/75 dark:from-indigo-950/30 via-violet-200/60 dark:via-violet-950/20 to-blue-200/70 dark:to-zinc-900/60 border-y border-indigo-300/50 dark:border-indigo-900/40 py-20">
+      <div className="w-full bg-gradient-to-br from-indigo-200/75 dark:from-indigo-950/30 via-violet-200/60 dark:via-violet-950/20 to-blue-200/70 dark:to-zinc-900/60 border-y border-indigo-300/50 dark:border-indigo-900/40 py-16">
         <div className="max-w-4xl mx-auto px-5 sm:px-6">
           <div className="flex flex-col md:flex-row items-center gap-10">
             <div className="w-16 h-16 bg-foreground rounded-2xl flex items-center justify-center shrink-0">
@@ -1415,7 +1226,7 @@ export default function Home() {
       {/* ════════════════════════════════════════════════
           FINAL CTA — dark, premium
       ════════════════════════════════════════════════ */}
-      <div className="w-full bg-gradient-to-br from-slate-950 via-[#0c1525] to-violet-950/40 border-t border-white/5 py-24 md:py-32">
+      <div className="w-full bg-gradient-to-br from-slate-950 via-[#0c1525] to-violet-950/40 border-t border-white/5 py-20 md:py-28">
         <div className="max-w-3xl mx-auto px-5 sm:px-6 text-center">
           <motion.p
             initial={{ opacity: 0 }}
@@ -1474,11 +1285,6 @@ export default function Home() {
 
       <BackToTop />
 
-      <WaitlistModal
-        open={waitlistOpen}
-        onClose={() => setWaitlistOpen(false)}
-        defaultPlatform={waitlistPlatform}
-      />
     </div>
   );
 }

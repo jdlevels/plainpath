@@ -23,8 +23,8 @@ const PILLARS = [
   },
   {
     icon: CheckCircle2,
-    label: "Free demo available",
-    desc: "Try the live demo and see PlainPath analyze a real document — no credit card needed.",
+    label: "Demo preview available",
+    desc: "Preview the workflow before opening the app.",
     color: "text-emerald-500",
   },
 ]
