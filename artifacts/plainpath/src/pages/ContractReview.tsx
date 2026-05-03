@@ -7,10 +7,9 @@ import {
   ShieldAlert, AlertTriangle, CheckCircle2, X as XIcon,
   Lock, ClipboardList, ChevronRight, Mail, Shield, ShieldCheck,
   Camera, ScanLine, Download, Bookmark, Clock, ArrowRight,
-  CheckSquare,
+  CheckSquare, Type,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { getApiBaseUrl } from "@/lib/api"
@@ -1389,26 +1388,37 @@ export default function ContractReview() {
           />
 
           <WorkspaceShell>
-            <div className="p-5 space-y-4">
-              <div className="flex gap-1 bg-muted/40 p-1 rounded-lg w-fit">
-                {(["paste", "upload", "camera"] as const).map(tab => (
+            {/* ── Tab row ── */}
+            <div className="p-2 border-b border-border/30 bg-muted/30">
+              <div className="grid grid-cols-3 rounded-xl bg-secondary/70 p-1 gap-1">
+                {(["paste", "upload", "camera"] as const).map((tab) => (
                   <button
                     key={tab}
                     onClick={() => { setActiveTab(tab); setError(null); setCameraError(null) }}
-                    className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all flex items-center gap-1.5 ${
+                    style={{ touchAction: "manipulation" }}
+                    className={`flex flex-col items-center justify-center gap-0.5 py-3 rounded-lg transition-all min-h-[56px] ${
                       activeTab === tab
-                        ? "bg-background shadow-sm text-foreground"
+                        ? "bg-card text-foreground shadow-sm shadow-black/[0.06]"
                         : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
-                    {tab === "paste" ? "Paste Text" : tab === "upload" ? "Upload File" : <><Camera className="w-3.5 h-3.5" /> Scan Photo</>}
+                    <div className="flex items-center gap-1.5 text-sm font-semibold">
+                      {tab === "paste" ? <Type className="w-4 h-4" /> : tab === "upload" ? <UploadCloud className="w-4 h-4" /> : <Camera className="w-4 h-4" />}
+                      <span>{tab === "paste" ? "Paste Text" : tab === "upload" ? "Upload File" : "Scan Photo"}</span>
+                    </div>
+                    <span className="text-[10px] font-normal opacity-55">
+                      {tab === "paste" ? "Copy & paste" : tab === "upload" ? "PDF, DOCX, TXT" : "Camera or image"}
+                    </span>
                   </button>
                 ))}
               </div>
+            </div>
 
+            {/* ── Input content ── */}
+            <div className="p-4 sm:p-7">
               <AnimatePresence mode="wait">
                 {activeTab === "paste" ? (
-                  <motion.div key="paste" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-2">
+                  <motion.div key="paste" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.14 }} className="space-y-4">
                     {redactedNotice && (
                       <div className="flex items-start gap-2.5 rounded-lg border border-emerald-200 dark:border-emerald-800/50 bg-emerald-50 dark:bg-emerald-950/30 px-3 py-2.5">
                         <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
@@ -1425,17 +1435,22 @@ export default function ContractReview() {
                         </button>
                       </div>
                     )}
-                    <Textarea
-                      placeholder="Paste the full contract text here…"
-                      value={text}
-                      onChange={e => setText(e.target.value)}
-                      rows={12}
-                      className="resize-none font-mono text-sm"
-                    />
-                    <p className="text-xs text-muted-foreground mt-0.5 text-right">{text.length.toLocaleString()} characters</p>
+                    <div className="relative">
+                      <textarea
+                        value={text}
+                        onChange={(e) => setText(e.target.value)}
+                        placeholder="Paste the full contract text here..."
+                        className="w-full min-h-[140px] sm:min-h-[220px] p-4 rounded-xl border-2 border-border/50 bg-muted/20 focus:border-amber-400/60 focus:ring-4 focus:ring-amber-400/10 resize-none transition-all placeholder:text-muted-foreground/35 text-sm leading-relaxed font-mono outline-none"
+                      />
+                      {text.length > 0 && (
+                        <span className="absolute bottom-3 right-3 text-[10px] text-muted-foreground/40 font-mono select-none">
+                          {text.length.toLocaleString()} chars
+                        </span>
+                      )}
+                    </div>
                   </motion.div>
                 ) : activeTab === "upload" ? (
-                  <motion.div key="upload" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  <motion.div key="upload" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.14 }}>
                     <input
                       ref={fileInputRef}
                       type="file"
@@ -1449,31 +1464,43 @@ export default function ContractReview() {
                     />
                     <button
                       onClick={() => fileInputRef.current?.click()}
-                      className="w-full border-2 border-dashed border-border/50 rounded-xl p-10 text-center hover:border-amber-400/50 hover:bg-amber-50/30 dark:hover:bg-amber-950/10 transition-all group"
+                      style={{ touchAction: "manipulation" }}
+                      className="w-full border-2 border-dashed border-border/50 rounded-xl hover:border-amber-400/50 hover:bg-amber-50/30 dark:hover:bg-amber-950/10 transition-all group min-h-[180px] sm:min-h-[220px] flex flex-col items-center justify-center"
                     >
                       {file ? (
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-center gap-2">
-                            <FileText className="w-5 h-5 text-amber-600" />
-                            <span className="text-sm font-medium text-foreground">{file.name}</span>
-                            <span
-                              role="button"
-                              tabIndex={0}
-                              onClick={e => { e.stopPropagation(); setFile(null) }}
-                              onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.stopPropagation(); setFile(null) } }}
-                              className="p-0.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer"
-                            >
-                              <XIcon className="w-3.5 h-3.5" />
-                            </span>
+                        <div className="text-center space-y-2 p-6">
+                          <FileText className="w-10 h-10 text-amber-600 mx-auto" />
+                          <div>
+                            <p className="font-bold text-foreground text-sm">{file.name}</p>
+                            <p className="text-xs text-muted-foreground mt-1">{(file.size / 1024).toFixed(0)} KB · click to change</p>
                           </div>
-                          <p className="text-xs text-muted-foreground">{(file.size / 1024).toFixed(0)} KB — click to change</p>
+                          <span
+                            role="button"
+                            tabIndex={0}
+                            onClick={e => { e.stopPropagation(); setFile(null) }}
+                            onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.stopPropagation(); setFile(null) } }}
+                            className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground cursor-pointer"
+                          >
+                            <XIcon className="w-3.5 h-3.5" /> Remove
+                          </span>
                         </div>
                       ) : (
-                        <>
-                          <UploadCloud className="w-8 h-8 text-muted-foreground group-hover:text-amber-500 mx-auto mb-2 transition-colors" />
-                          <p className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">Drop a file or click to browse</p>
-                          <p className="text-xs text-muted-foreground mt-1">PDF, Word (.docx), or plain text · Max 20 MB</p>
-                        </>
+                        <div className="text-center space-y-3 p-6 sm:p-8 pointer-events-none">
+                          <div className="w-14 h-14 rounded-2xl bg-card border border-border shadow-md flex items-center justify-center mx-auto">
+                            <UploadCloud className="w-7 h-7 text-amber-500 group-hover:text-amber-600 transition-colors" />
+                          </div>
+                          <div>
+                            <p className="font-bold text-foreground hidden sm:block">Drop a file or click to browse</p>
+                            <p className="font-bold text-foreground sm:hidden text-sm">Tap to choose a file</p>
+                            <p className="text-sm text-muted-foreground mt-1">PDF, Word (.docx), or plain text</p>
+                          </div>
+                          <div className="flex items-center justify-center gap-2">
+                            {["PDF", "DOCX", "TXT"].map(fmt => (
+                              <span key={fmt} className="px-3 py-1.5 rounded-lg bg-card border border-border text-xs font-bold text-muted-foreground shadow-sm">{fmt}</span>
+                            ))}
+                          </div>
+                          <p className="text-[11px] text-muted-foreground/50">Max 20 MB · Text-based PDFs only</p>
+                        </div>
                       )}
                     </button>
                   </motion.div>
@@ -1545,34 +1572,34 @@ export default function ContractReview() {
                   </motion.div>
                 )}
               </AnimatePresence>
+            </div>
 
-              {/* ── Try a sample contract ── inside shell ── */}
-              <div className="pt-4 mt-2 border-t border-border/[0.15] space-y-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 h-px bg-border/40" />
-                  <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Try a sample contract</p>
-                  <div className="flex-1 h-px bg-border/40" />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                  {REVIEW_DEMOS.map((demo) => {
-                    const Icon = demo.icon
-                    return (
-                      <button
-                        key={demo.id}
-                        onClick={() => setResult(demo.data)}
-                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/50 hover:border-amber-400/50 hover:bg-amber-50/40 dark:hover:bg-amber-950/10 transition-all text-left group"
-                      >
-                        <div className={`w-8 h-8 rounded-lg ${demo.bg} flex items-center justify-center shrink-0`}>
-                          <Icon className={`w-4 h-4 ${demo.color}`} />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-xs font-semibold leading-tight group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors truncate">{demo.label}</p>
-                          <p className="text-[10px] text-muted-foreground mt-0.5">{demo.meta}</p>
-                        </div>
-                      </button>
-                    )
-                  })}
-                </div>
+            {/* ── Sample contracts ── */}
+            <div className="px-4 sm:px-7 pb-6 space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="flex-1 h-px bg-border/40" />
+                <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Try a sample contract</p>
+                <div className="flex-1 h-px bg-border/40" />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                {REVIEW_DEMOS.map((demo) => {
+                  const Icon = demo.icon
+                  return (
+                    <button
+                      key={demo.id}
+                      onClick={() => setResult(demo.data)}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border/50 hover:border-amber-400/50 hover:bg-amber-50/40 dark:hover:bg-amber-950/10 transition-all text-left group"
+                    >
+                      <div className={`w-8 h-8 rounded-lg ${demo.bg} flex items-center justify-center shrink-0`}>
+                        <Icon className={`w-4 h-4 ${demo.color}`} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold leading-tight group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors truncate">{demo.label}</p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">{demo.meta}</p>
+                      </div>
+                    </button>
+                  )
+                })}
               </div>
             </div>
 
