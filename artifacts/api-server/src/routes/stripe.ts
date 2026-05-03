@@ -94,7 +94,15 @@ router.post("/create-checkout-session", async (req, res) => {
     const { plan, billingPeriod = "monthly" } = req.body as { plan?: string; billingPeriod?: string }
 
     if (!isPlanKey(plan)) {
-      return res.status(400).json({ error: "Invalid plan. Must be 'starter', 'pro', or 'team'." })
+      return res.status(400).json({ error: "Invalid plan. Must be 'pro'." })
+    }
+
+    // Launch scope: only PlainPath Pro is available for new purchases.
+    // Starter and Team are discontinued — block new checkouts.
+    if (plan !== "pro") {
+      return res.status(410).json({
+        error: "Starter and Team plans have been discontinued. Only PlainPath Pro ($19.99/month) is available.",
+      })
     }
 
     const isAnnual = billingPeriod === "annual"
@@ -361,7 +369,7 @@ router.post("/webhook", async (req: any, res) => {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session
 
-        const plan = session.metadata?.plan || "starter"
+        const plan = session.metadata?.plan || "pro"
         const sessionBillingMode = session.metadata?.billingMode || billingMode
         // clerkUserId in metadata was set server-side during checkout creation
         // (after authenticating the Clerk session) — it is therefore trusted.
@@ -493,7 +501,7 @@ router.post("/webhook", async (req: any, res) => {
         const plan =
           subscription.metadata?.plan ||
           subscription.items.data[0]?.price?.nickname?.toLowerCase() ||
-          "starter"
+          "pro"
 
         const subBillingMode = subscription.metadata?.billingMode || billingMode
 
@@ -544,7 +552,7 @@ router.post("/webhook", async (req: any, res) => {
             clerkUserId: metadataClerkUserId,
             stripeCustomerId: customerId,
             stripeSubscriptionId: subscription.id,
-            plan: isPlanKey(plan) ? plan : "starter",
+            plan: isPlanKey(plan) ? plan : "pro",
             status: authorizedStatus,
             currentPeriodStart: toIsoFromUnix(
               (subscription as any).current_period_start,
@@ -644,7 +652,7 @@ router.post("/webhook", async (req: any, res) => {
             const stubPlan =
               subscription.metadata?.plan && isPlanKey(subscription.metadata.plan)
                 ? subscription.metadata.plan
-                : "starter"
+                : "pro"
             console.log(
               `customer.subscription.deleted: no local row found — persisting canceled stub ` +
               `for subscription ${subscription.id} to block future out-of-order reactivation`

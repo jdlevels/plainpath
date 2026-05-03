@@ -312,7 +312,7 @@ function NativePaywallScreen() {
 // ─── ChoosePlanScreen ─────────────────────────────────────────────────────────
 // Full-page plan selection shown to signed-in users who have not yet purchased
 // a subscription. Initiates Stripe checkout directly — no intermediate page.
-const PLAN_ICONS: Record<string, React.ElementType> = { starter: BarChart3, pro: Zap };
+const PLAN_ICONS: Record<string, React.ElementType> = { pro: Zap };
 
 function ChoosePlanScreen() {
   const { user } = useUser();
@@ -322,11 +322,11 @@ function ChoosePlanScreen() {
 
   if (isNative()) return <NativePaywallScreen />;
 
-  async function handleSelectPlan(planKey: "starter" | "pro") {
+  async function handleSelectPlan(planKey: "pro") {
     setLoadingPlan(planKey);
     setError(null);
     try {
-      await startStripeCheckout(planKey as "starter" | "pro" | "team");
+      await startStripeCheckout(planKey);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to start checkout. Please try again.");
       setLoadingPlan(null);
@@ -366,7 +366,7 @@ function ChoosePlanScreen() {
           {/* Plan cards */}
           <div className="flex justify-center mb-6">
             {PRICING_PLANS.map((plan) => {
-              const planKey = (plan.planKey ?? "pro") as "starter" | "pro";
+              const planKey = (plan.planKey ?? "pro") as "pro";
               const Icon = PLAN_ICONS[planKey] ?? Zap;
               const isHighlight = plan.highlight;
               const isLoading = loadingPlan === planKey;

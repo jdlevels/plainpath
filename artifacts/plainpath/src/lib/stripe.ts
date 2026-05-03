@@ -1,7 +1,7 @@
 import { getApiBaseUrl } from "@/lib/api"
 
 export async function startStripeCheckout(
-  plan: "starter" | "pro" | "team",
+  plan: "pro",
   billingPeriod: "monthly" | "annual" = "monthly",
 ) {
   const apiBase = getApiBaseUrl()

@@ -1,10 +1,14 @@
 // ─── Plan Definitions — Single Source of Truth ────────────────────────────────
 //
-// Plans (accessTier = product entitlement):
-//   free    — $0/month     — No paid tools; must subscribe to access any feature
-//   starter — $4.99/month  — Analyze a Document + Redact Sensitive Info
-//   pro     — $19.99/month — All tools (Analyze, Trust Check, Contract Builder,
-//                            Contract Review, Redact, Compare Versions, Clause Extractor, Document Builder)
+// Launch model (as of App Store submission):
+//   ONE paid plan: PlainPath Pro — $19.99/month
+//   TWO launch tools: Analyze a Document + Contract Review
+//
+// Plans:
+//   free    — $0/month    — No paid tools; must subscribe to access any feature
+//   starter — DISCONTINUED — Legacy plan; no tool access at launch
+//   pro     — $19.99/month — Analyze a Document + Contract Review
+//   team    — NOT AT LAUNCH — No tool access
 //
 // Identity model (see routes/entitlements.ts for full spec):
 //   role        = internal privilege  ("admin" | "member")
@@ -12,8 +16,7 @@
 //
 //   Admin   → role:"admin"  + accessTier:"pro"    — internal + full product access
 //   Free    → role:"member" + accessTier:"free"   — no paid tools; upgrade required
-//   Starter → role:"member" + accessTier:"starter" — Starter plan tools only
-//   Pro     → role:"member" + accessTier:"pro"    — all paid tools; NOT admin
+//   Pro     → role:"member" + accessTier:"pro"    — all launch tools; NOT admin
 //
 // Never duplicate plan or feature logic in pages, routes, or components.
 // All gating must reference TOOL_ACCESS and PLAN_ENTITLEMENTS from here.
@@ -26,23 +29,14 @@ export type PlanKey = "free" | "starter" | "pro" | "team"
 
 export type ToolKey =
   | "analyze"
-  | "trust-check"
   | "contract-review"
-  | "build-contract"
-  | "redact"
-  | "compare"
-  | "clause-extractor"
-  | "compare-versions"
-  | "negotiate"
-  | "ask-document"
-  | "builder"
 
 /** Which tools each plan can access. This is the canonical feature gate. */
 export const TOOL_ACCESS: Record<PlanKey, ToolKey[]> = {
-  free: [],
-  starter: ["analyze", "contract-review", "redact"],
-  pro: ["analyze", "trust-check", "contract-review", "build-contract", "redact", "compare", "clause-extractor", "compare-versions", "negotiate", "ask-document", "builder"],
-  team: ["analyze", "trust-check", "contract-review", "build-contract", "redact", "compare", "clause-extractor", "compare-versions", "negotiate", "ask-document", "builder"],
+  free:    [],
+  starter: [],   // Discontinued — no longer purchasable; no tool access at launch
+  pro:     ["analyze", "contract-review"],
+  team:    [],   // Not available at launch
 }
 
 /** True if the given plan can access the given tool. */
@@ -95,33 +89,13 @@ export const PLAN_ENTITLEMENTS: Record<PlanKey, PlanEntitlements> = {
       exportShare: false,
     },
   },
-  team: {
-    plan: "team",
-    displayName: "Team",
-    priceMonthly: 2999,
-    analysesPerMonth: Infinity,
-    features: {
-      plainEnglish: true,
-      sourceSections: true,
-      sectionExplainer: true,
-      checklist: true,
-      requiredDocs: true,
-      deadlines: true,
-      risks: true,
-      whatsMissing: true,
-      keyTerms: true,
-      actionPack: true,
-      savedAnalyses: true,
-      exportShare: true,
-    },
-  },
   starter: {
     plan: "starter",
-    displayName: "Starter",
-    priceMonthly: 499,
-    analysesPerMonth: Infinity,
+    displayName: "Starter (Legacy)",
+    priceMonthly: 0,   // Discontinued — no new purchases
+    analysesPerMonth: 0,
     features: {
-      plainEnglish: true,
+      plainEnglish: false,
       sourceSections: false,
       sectionExplainer: false,
       checklist: false,
@@ -129,15 +103,35 @@ export const PLAN_ENTITLEMENTS: Record<PlanKey, PlanEntitlements> = {
       deadlines: false,
       risks: false,
       whatsMissing: false,
-      keyTerms: true,
-      actionPack: true,
-      savedAnalyses: true,
-      exportShare: true,
+      keyTerms: false,
+      actionPack: false,
+      savedAnalyses: false,
+      exportShare: false,
+    },
+  },
+  team: {
+    plan: "team",
+    displayName: "Team (Not at launch)",
+    priceMonthly: 0,   // Not available at launch
+    analysesPerMonth: 0,
+    features: {
+      plainEnglish: false,
+      sourceSections: false,
+      sectionExplainer: false,
+      checklist: false,
+      requiredDocs: false,
+      deadlines: false,
+      risks: false,
+      whatsMissing: false,
+      keyTerms: false,
+      actionPack: false,
+      savedAnalyses: false,
+      exportShare: false,
     },
   },
   pro: {
     plan: "pro",
-    displayName: "Pro",
+    displayName: "PlainPath Pro",
     priceMonthly: 1999,
     analysesPerMonth: Infinity,
     features: {

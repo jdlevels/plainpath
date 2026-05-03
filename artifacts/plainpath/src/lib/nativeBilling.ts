@@ -4,32 +4,31 @@
 //
 // ROUTING:
 //   Web     → does nothing (Stripe web checkout handles this path)
-//   iOS     → RevenueCat SDK → Apple StoreKit
-//   Android → RevenueCat SDK → Google Play Billing
+//   iOS     → RevenueCat SDK → Apple StoreKit → plainpath_pro_monthly
 //
 // Identity:
 //   RevenueCat App User ID = Clerk user ID.
 //   configureRevenueCat(userId) must be called after sign-in and before any
 //   purchase or restore call. Anonymous purchases are rejected.
 //
+// Launch model: ONE plan — PlainPath Pro $19.99/month (plainpath_pro entitlement)
+//
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { getPlatform } from "@/lib/platform"
 import { Purchases, LOG_LEVEL } from "@revenuecat/purchases-capacitor"
 
-export type PlanKey = "starter" | "pro"
+export type PlanKey = "pro"
 export type NativePlatform = "ios" | "android"
 
 // ─── Product ID Maps ──────────────────────────────────────────────────────────
-// Must match App Store Connect and Google Play Console exactly.
+// Must match App Store Connect exactly.
 
 export const NATIVE_PRODUCT_IDS: Record<NativePlatform, Record<PlanKey, string>> = {
   ios: {
-    starter: "plainpath_starter_monthly",
     pro: "plainpath_pro_monthly",
   },
   android: {
-    starter: "plainpath_starter_monthly",
     pro: "plainpath_pro_monthly",
   },
 }
@@ -38,7 +37,6 @@ export const NATIVE_PRODUCT_IDS: Record<NativePlatform, Record<PlanKey, string>>
 // Must match the entitlement IDs set in the RevenueCat dashboard exactly.
 
 export const RC_ENTITLEMENT_IDS: Record<PlanKey, string> = {
-  starter: "starter",
   pro: "plainpath_pro",
 }
 
@@ -46,7 +44,7 @@ export const RC_ENTITLEMENT_IDS: Record<PlanKey, string> = {
 
 export type NativeEntitlementResult = {
   platform: NativePlatform | "web"
-  plan: PlanKey
+  plan: PlanKey | null
   isActive: boolean
   expiresAt: string | null
   productId: string | null
@@ -108,21 +106,10 @@ export async function checkNativeEntitlements(): Promise<NativeEntitlementResult
       provider: platform === "ios" ? "storekit" : "play_billing",
     }
   }
-  if (entitlements[RC_ENTITLEMENT_IDS.starter]) {
-    const ent = entitlements[RC_ENTITLEMENT_IDS.starter]
-    return {
-      platform,
-      plan: "starter",
-      isActive: true,
-      expiresAt: ent.expirationDate ?? null,
-      productId: ent.productIdentifier,
-      provider: platform === "ios" ? "storekit" : "play_billing",
-    }
-  }
 
   return {
     platform,
-    plan: "starter",
+    plan: null,
     isActive: false,
     expiresAt: null,
     productId: null,
@@ -131,7 +118,7 @@ export async function checkNativeEntitlements(): Promise<NativeEntitlementResult
 }
 
 // ─── Purchase Native Plan ─────────────────────────────────────────────────────
-// Triggers the native purchase flow for the given plan via RevenueCat/StoreKit.
+// Triggers the native purchase flow for PlainPath Pro via RevenueCat/StoreKit.
 // configureRevenueCat(userId) must be called before this function.
 // On web: no-op.
 
@@ -160,8 +147,6 @@ export async function purchaseNativePlan(plan: PlanKey): Promise<{
     const active = result.customerInfo.entitlements.active
     const resolvedPlan: PlanKey | undefined = active[RC_ENTITLEMENT_IDS.pro]
       ? "pro"
-      : active[RC_ENTITLEMENT_IDS.starter]
-      ? "starter"
       : undefined
 
     return { success: true, plan: resolvedPlan }
@@ -200,8 +185,6 @@ export async function restoreNativePurchases(): Promise<{
     const active = result.customerInfo.entitlements.active
     const plan: PlanKey | undefined = active[RC_ENTITLEMENT_IDS.pro]
       ? "pro"
-      : active[RC_ENTITLEMENT_IDS.starter]
-      ? "starter"
       : undefined
     return { success: true, plan }
   } catch (err: unknown) {

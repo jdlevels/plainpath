@@ -28,7 +28,7 @@ export const BILLING_CONFIG = {
   BILLING_MODE: "live" as "test" | "live",
 
   // When true: tools are gated by the subscriber's active plan.
-  // Free users: 2 analyses/month. Starter: analyze+redact. Pro: all tools.
+  // Free / no subscription: no tool access. Pro: Analyze + Contract Review.
   PAYWALL_ENFORCEMENT: true,
 
   // Explicit live-mode confirmation. Set to true only when using test keys.

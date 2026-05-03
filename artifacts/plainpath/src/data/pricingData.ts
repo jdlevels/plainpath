@@ -5,10 +5,8 @@ export type PricingPlan = {
   description: string;
   features: string[];
   ctaLabel: string;
-  planKey?: "pro" | "team";
+  planKey?: "pro";
   highlight?: boolean;
-  planned?: boolean;
-  seats?: number;
 };
 
 export const PRICING_PLANS: PricingPlan[] = [
@@ -30,21 +28,4 @@ export const PRICING_PLANS: PricingPlan[] = [
     planKey: "pro",
     highlight: true
   },
-  {
-    name: "Team",
-    price: "$29.99",
-    period: "/month",
-    description:
-      "All PlainPath Pro tools for up to 3 users — couples, families, or small business partners.",
-    features: [
-      "Everything in PlainPath Pro",
-      "Up to 3 users on one subscription",
-      "Each member gets full Pro access",
-      "Owner controls team membership",
-      "One invoice, one payment"
-    ],
-    ctaLabel: "Start Team Plan",
-    planKey: "team",
-    seats: 3
-  }
 ];

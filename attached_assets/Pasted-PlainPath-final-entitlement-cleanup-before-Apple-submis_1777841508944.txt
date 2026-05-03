@@ -1,0 +1,236 @@
+PlainPath final entitlement cleanup before Apple submission
+
+Goal:
+Make billing and entitlement logic match the final launch model:
+
+ONE paid plan only:
+PlainPath Pro — $19.99/month
+
+Launch tools only:
+- Analyze a Document
+- Contract Review
+- Saved analysis history
+
+Do not redesign UI.
+Do not add new tools.
+Do not change RevenueCat setup except where needed to align entitlement gates.
+
+--------------------------------------------------
+1. DISABLE STARTER AS A PURCHASABLE PLAN
+--------------------------------------------------
+
+Starter is no longer part of the launch.
+
+Find all Stripe/web checkout logic for:
+- starter
+- $4.99
+- starter price ID
+- subscribe to starter
+- starter checkout route
+
+Disable or remove Starter checkout completely.
+
+If old Stripe Starter code must remain for backward compatibility, mark it as legacy and prevent new purchases.
+
+No public route, button, API endpoint, or checkout payload should create a new Starter subscription.
+
+--------------------------------------------------
+2. DISABLE TEAM AS A PURCHASABLE PLAN
+--------------------------------------------------
+
+Team is not part of launch.
+
+Find all Stripe/web checkout logic for:
+- team
+- $29.99
+- team price ID
+- team checkout route
+
+Disable or remove Team checkout completely.
+
+No public route, button, API endpoint, or checkout payload should create a new Team subscription.
+
+--------------------------------------------------
+3. CLEAN SERVER TOOL ACCESS
+--------------------------------------------------
+
+Update server-side TOOL_ACCESS so only final launch tools are grantable.
+
+Expected final access model:
+
+free:
+[]
+
+pro:
+[
+  "analyze",
+  "contract-review"
+]
+
+starter:
+[] or legacy-denied
+
+team:
+[] or legacy-denied
+
+Removed tools must not be granted by any public plan:
+- redact
+- trust-check
+- build-contract
+- compare
+- clause-extractor
+- compare-versions
+- negotiate
+- ask-document
+- builder
+- pdf-editor
+- digital-signature
+
+Critical:
+Even if old API routes still exist, requireEntitlement() must deny removed tools.
+
+--------------------------------------------------
+4. CLEAN CLIENT TOOL ACCESS
+--------------------------------------------------
+
+Update client-side entitlement/tool constants to match server exactly.
+
+No mismatch between client and server.
+
+Expected client access:
+
+free:
+[]
+
+pro:
+[
+  "analyze",
+  "contract-review"
+]
+
+starter:
+[] or removed entirely
+
+team:
+[] or removed entirely
+
+Remove graceful downgrade logic that maps expired Pro users to Starter tools.
+
+Expired/lapsed users should be treated as:
+free
+
+They should see the PlainPath Pro paywall, not dashboard cards they cannot use.
+
+--------------------------------------------------
+5. FIX LAPSED PRO BEHAVIOR
+--------------------------------------------------
+
+Current issue:
+Lapsed Pro users can pass PlanGate due to old Clerk metadata, then hit 403 on tool API calls.
+
+Fix:
+PlanGate should rely on active billing/entitlement status, not stale Clerk accessTier metadata.
+
+If Stripe/RevenueCat billing record is inactive:
+- user plan resolves to free
+- user sees ChoosePlanScreen / Pro paywall
+- user does not see usable dashboard tool cards
+
+--------------------------------------------------
+6. KEEP ADMIN OVERRIDE INTERNAL ONLY
+--------------------------------------------------
+
+Admin/manual Pro grants may remain only if explicitly internal and not public.
+
+Confirm:
+- ADMIN_EMAILS can grant internal Pro access
+- MANUAL_PRO_EMAILS can grant internal Pro access
+- These are not visible to normal users
+- These do not create public pricing confusion
+
+--------------------------------------------------
+7. REVENUECAT ALIGNMENT
+--------------------------------------------------
+
+RevenueCat should continue using:
+
+Entitlement:
+plainpath_pro
+
+Product:
+plainpath_pro_monthly
+
+Internal resolved plan:
+pro
+
+RevenueCat Pro and Stripe Pro must both resolve to the same internal plan:
+pro
+
+No RevenueCat path should resolve to starter.
+
+--------------------------------------------------
+8. UPDATE BILLING PAGE IF NEEDED
+--------------------------------------------------
+
+Billing page should show only:
+
+PlainPath Pro — $19.99/month
+
+Included:
+- Analyze a Document
+- Contract Review
+- Saved analysis history
+
+No Starter.
+No Team.
+No old tools.
+No $4.99.
+No $29.99.
+
+--------------------------------------------------
+9. REMOVE OLD TOOL API ACCESS
+--------------------------------------------------
+
+Search for removed tool IDs in entitlement/access maps and remove them from paid public plans:
+
+- redact
+- trust-check
+- build-contract
+- compare
+- clause-extractor
+- compare-versions
+- negotiate
+- ask-document
+- builder
+- pdf-editor
+- digital-signature
+
+If old routes remain in code, they must be unreachable by public entitlement checks.
+
+Acceptable behavior for removed tool API calls:
+- 403 “Tool not available in launch version”
+or
+- redirect/block at route level
+
+--------------------------------------------------
+10. FINAL VERIFICATION REPORT
+--------------------------------------------------
+
+After changes, run a final billing gate report answering:
+
+A. Can no-sub user access Analyze? Expected: No
+B. Can no-sub user access Contract Review? Expected: No
+C. Can Starter be purchased? Expected: No
+D. Does Starter grant any launch tools? Expected: No
+E. Does Team remain purchasable? Expected: No
+F. Does Pro grant only Analyze + Contract Review + Saved history? Expected: Yes
+G. Are removed tools denied at API level? Expected: Yes
+H. Do Stripe Pro and RevenueCat Pro both resolve to internal plan “pro”? Expected: Yes
+I. Does lapsed Pro resolve to free/paywall? Expected: Yes
+J. Does billing page show only PlainPath Pro? Expected: Yes
+K. Is PAYWALL_ENFORCEMENT true? Expected: Yes
+L. Is any $4.99 or Starter copy still visible? Expected: No
+
+Do not change UI layout.
+Do not reintroduce hidden tools.
+Do not touch Apple/RevenueCat product IDs except entitlement mapping if necessary.

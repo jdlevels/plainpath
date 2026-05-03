@@ -96,11 +96,9 @@ router.post("/native-verify", async (req, res) => {
     const plan = resolvePlanFromRCEntitlements(activeRCEntitlements)
     const billingProvider = platform === "ios" ? "storekit" : "play_billing"
 
-    // Get expiry from the pro or starter entitlement subscription
+    // Get expiry from the pro entitlement (only paid plan at launch)
     const proEnt = rcData.subscriber.entitlements[RC_ENTITLEMENT_IDS.pro]
-    const starterEnt = rcData.subscriber.entitlements[RC_ENTITLEMENT_IDS.starter]
-    const relevantEnt = plan === "pro" ? proEnt : starterEnt
-    const expiresAt = relevantEnt?.expires_date ?? null
+    const expiresAt = proEnt?.expires_date ?? null
 
     // ── Sync to billing DB ───────────────────────────────────────────────────
     upsertSubscriber({

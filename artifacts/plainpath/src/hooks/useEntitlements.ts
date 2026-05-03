@@ -2,25 +2,24 @@
 //
 // Identity resolution (priority high → low):
 //
-//   1. Clerk publicMetadata.role / publicMetadata.accessTier
-//      Set server-side; authoritative source of truth.
-//      Available client-side via useUser() with no extra round-trip.
+//   1. API /entitlements/status response
+//      Used for billing truth: found + status = "active" means confirmed active
+//      subscription (Stripe or RevenueCat-verified).
 //
-//   2. API /entitlements/status response
-//      Used for billing details (period end, usage, cancel status).
+//   2. Clerk publicMetadata.role / publicMetadata.accessTier
+//      Set server-side; used for role detection (admin) only.
+//      NOT used to grant tool access without confirmed active billing.
 //
 // Bootstrap:
 //   On first sign-in, if publicMetadata is missing, POST /api/entitlements/bootstrap
 //   is called. The server writes { role, accessTier } to Clerk, then user.reload()
-//   is called so the client immediately picks up the fresh metadata before
-//   rendering any gated tool.
+//   is called so the client immediately picks up the fresh metadata.
 //
-// Access rules:
+// Access rules (launch model):
 //   Admin     → always granted; role === "admin"
-//   Starter   → metadata alone grants Starter tools (analyze + redact); no billing required
-//   Pro       → metadata + active Stripe subscription grants all 8 tools
-//   Pro (no billing) → graceful downgrade to Starter tool set
-//   No metadata → null state (locked; safe default)
+//   Pro       → active billing confirmed (Stripe or RC) → full Pro access
+//   Lapsed    → billing inactive → null state (locked; user sees paywall)
+//   No sub    → null state (locked; user sees paywall)
 //
 // isAdmin   = role === "admin"   (internal privilege; NOT a billing/plan tier)
 // accessTier = product entitlement controlling which tools are gated
@@ -33,17 +32,13 @@ import { fetchEntitlements, type EntitlementStatus, type RoleKey, type AccessTie
 import { getApiBaseUrl } from "../lib/api"
 import { getStoredSubscriberEmail, setStoredSubscriberEmail } from "../lib/subscriberStorage"
 
-// Starter tools — used for graceful Pro→Starter downgrade when billing lapses.
-const STARTER_TOOLS: ToolKey[] = ["analyze", "redact"]
-
 export function useEntitlements() {
   const { user, isLoaded: clerkLoaded } = useUser()
   const { getToken } = useAuth()
   const [data, setData] = useState<EntitlementStatus | null>(null)
   const [loading, setLoading] = useState(true)
-  // True only when the API confirms an active Stripe subscription record exists.
-  // This is the raw billing truth BEFORE any client-side overrides (e.g. the
-  // starter/graceful-downgrade paths that set status="active" even without billing).
+  // True only when the API confirms an active billing record exists (Stripe or RC-verified).
+  // Lapsed Pro, starter metadata, and unauthenticated users all resolve to false.
   const [hasPaidSubscription, setHasPaidSubscription] = useState(false)
   // Tracks whether the very first load has completed. After that, re-fetches
   // (triggered by Clerk's ~60-second session token refresh) run silently in the
@@ -69,7 +64,7 @@ export function useEntitlements() {
     const email = storedEmail || clerkEmail
     const clerkUserId = user?.id ?? null
 
-    // Read role and accessTier from Clerk publicMetadata (authoritative source).
+    // Read role from Clerk publicMetadata — used only for admin detection.
     const meta = user?.publicMetadata as { role?: RoleKey; accessTier?: AccessTier } | undefined
     const metaRole = meta?.role
     const metaAccessTier = meta?.accessTier
@@ -82,18 +77,15 @@ export function useEntitlements() {
     }
 
     // Only block the UI with a spinner on the very first entitlements fetch.
-    // Subsequent reloads (e.g. triggered by Clerk's ~60 s token refresh) run
-    // silently so the mounted workspace children are never unmounted.
     if (!loadedOnceRef.current) {
       setLoading(true)
     }
 
     // ── Bootstrap: write metadata for brand-new users ──────────────────────
     // Fires when a signed-in user has no publicMetadata.role or accessTier.
-    // The server determines the correct values (member/starter or admin/pro)
+    // The server determines the correct values (member/free or admin/pro)
     // and writes them to Clerk. We then call user.reload() so the client
     // immediately sees the updated metadata before proceeding.
-    // loading stays true while we wait — the next reload() cycle completes it.
     if (user && (!metaRole || !metaAccessTier)) {
       try {
         const bootstrapToken = await getToken().catch(() => null)
@@ -104,8 +96,6 @@ export function useEntitlements() {
         if (res.ok) {
           const bootstrapResult = await res.json()
           if (bootstrapResult.bootstrapped) {
-            // Metadata was just written. Refresh the Clerk session so
-            // user.publicMetadata reflects the new values immediately.
             let reloaded = false
             try {
               await user.reload()
@@ -114,12 +104,9 @@ export function useEntitlements() {
               // user.reload() failed — fall through to normal fetch below
             }
             if (reloaded) {
-              // The useEffect dependency on `user` will re-trigger reload()
-              // with fresh metadata. Keep loading=true during the transition.
               return
             }
           }
-          // bootstrapped=false: metadata already set; continue with current values.
         }
       } catch {
         // Bootstrap network error — proceed with whatever metadata we have.
@@ -136,9 +123,9 @@ export function useEntitlements() {
         metaRole ??
         (result.role === "admin" ? "admin" : result.role === "member" ? "member" : undefined)
 
-      // Resolve accessTier: publicMetadata wins over API response.
+      // Resolve accessTier from API response (billing is the authority, not metadata).
       const resolvedAccessTier: AccessTier | undefined =
-        metaAccessTier ?? result.accessTier ?? result.plan
+        result.accessTier ?? result.plan
 
       const merged: EntitlementStatus = {
         ...result,
@@ -151,46 +138,27 @@ export function useEntitlements() {
         setStoredSubscriberEmail(email)
       }
 
-      // ── Billing truth: raw API response before any client-side overrides ──
-      // hasPaidSubscription is true when EITHER:
-      //   a) The Stripe DB confirms an active subscription record, OR
-      //   b) The user has Pro publicMetadata (manually granted Pro access).
-      //      This covers accounts like yelevels@gmail.com that were given Pro
-      //      access before Stripe was wired up, without blocking them at the gate.
-      // Admin role is handled separately in PlanGate and never reaches this gate.
+      // ── Billing truth: only confirmed active billing unlocks the gate ──────
+      // hasPaidSubscription is true ONLY when the API confirms an active
+      // subscription record (Stripe or RevenueCat-verified).
+      // Stale Clerk metadata (e.g. lapsed Pro accessTier) is NOT sufficient.
       const hasActiveBilling = Boolean(merged.found && merged.status === "active")
-      const hasManualProGrant = resolvedAccessTier === "pro"
-      setHasPaidSubscription(hasActiveBilling || hasManualProGrant)
+      setHasPaidSubscription(hasActiveBilling)
 
-      // ── Access decision: metadata-first, billing-verified for Pro ─────────
+      // ── Access decision ───────────────────────────────────────────────────
       //
-      // SAFE DEFAULT: missing metadata → null (locked). Never grant access to
-      // an unknown state — the permissive fallback was the source of the 3-tool
-      // access bug.
+      // SAFE DEFAULT: any state without confirmed active billing → null (locked).
+      // Lapsed Pro users see the paywall, not partial dashboard access.
 
       if (resolvedRole === "admin") {
         // Admin: full access regardless of billing.
         setData(merged)
-      } else if (resolvedAccessTier === "starter") {
-        // Starter: publicMetadata grants Starter tools without billing.
-        // Override found/status so tool cards render correctly.
-        setData({ ...merged, found: true, status: "active" })
-      } else if (resolvedAccessTier === "pro" && merged.found && merged.status === "active") {
-        // Pro subscriber: active billing confirmed → full Pro access.
+      } else if (hasActiveBilling) {
+        // Active billing confirmed → grant tool access for their plan.
         setData(merged)
-      } else if (resolvedAccessTier === "pro") {
-        // Pro metadata but no active billing (e.g. subscription lapsed):
-        // gracefully downgrade to Starter tools until billing is restored.
-        setData({
-          ...merged,
-          found: true,
-          status: "active",
-          plan: "starter",
-          toolAccess: STARTER_TOOLS,
-          accessTier: "starter",
-        })
       } else {
-        // No valid metadata — locked state. Do NOT grant partial access.
+        // No confirmed active billing — locked state.
+        // Covers: new users, lapsed Pro, cancelled, starter metadata, etc.
         setData(null)
       }
     } catch {

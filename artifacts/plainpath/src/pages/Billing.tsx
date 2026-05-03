@@ -19,14 +19,6 @@ import { restoreNativePurchases } from "@/lib/nativeBilling"
 // ─── Plan display config ──────────────────────────────────────────────────────
 
 const PLAN_META = {
-  starter: {
-    label: "PlainPath Pro",
-    price: "$19.99/month",
-    icon: Zap,
-    color: "text-primary",
-    bg: "bg-primary/8",
-    border: "border-primary/20",
-  },
   pro: {
     label: "PlainPath Pro",
     price: "$19.99/month",
@@ -39,9 +31,9 @@ const PLAN_META = {
 
 // Launch tools only — two focused document tools included in PlainPath Pro
 const TOOLS = [
-  { icon: FileScan,    key: "analyze",         label: "Analyze a Document",    plans: ["starter", "pro"] },
-  { icon: Scale,       key: "contract-review", label: "Contract Review",       plans: ["starter", "pro"] },
-  { icon: BarChart3,   key: "history",         label: "Saved analysis history", plans: ["starter", "pro"] },
+  { icon: FileScan,    key: "analyze",         label: "Analyze a Document",    plans: ["pro"] },
+  { icon: Scale,       key: "contract-review", label: "Contract Review",       plans: ["pro"] },
+  { icon: BarChart3,   key: "history",         label: "Saved analysis history", plans: ["pro"] },
 ] as const
 
 // ─── Native billing view ──────────────────────────────────────────────────────
@@ -196,7 +188,7 @@ export default function Billing() {
   // Admin is an internal role, not a billing tier. They always have Pro-equivalent access
   // but are NOT shown as having a Stripe subscription.
   const hasSub = !isAdmin && Boolean(entitlements?.found && entitlements.status === "active")
-  const plan = hasSub ? (entitlements!.plan as "starter" | "pro") : null
+  const plan = hasSub ? (entitlements!.plan as "pro") : null
   const meta = plan ? PLAN_META[plan] : null
 
   async function handleManageSubscription() {
