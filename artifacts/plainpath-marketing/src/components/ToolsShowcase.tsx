@@ -1,10 +1,9 @@
 import { motion } from "framer-motion"
 import {
-  FileScan, ShieldCheck, PenLine, Scale, ArrowRight,
+  FileScan, Scale, ArrowRight,
   ListTodo, Calendar, AlertTriangle, CheckCircle2,
-  Flag, BarChart2, FileCheck, Sparkles, Copy, MessageSquare,
-  EyeOff, Download, ArrowRightLeft, Lock, Clock, MessageCircle, Eye,
-  GitCompare, ListChecks, CalendarClock, Layers, Users, LayoutTemplate, Palette,
+  Flag, FileCheck, Copy, MessageSquare,
+  Clock,
 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 
@@ -30,50 +29,7 @@ const TOOLS = [
     iconBg: "bg-blue-100 dark:bg-blue-900/40",
     iconColor: "text-blue-600 dark:text-blue-400",
     verbColor: "text-blue-600 dark:text-blue-400",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Document Trust Check",
-    verb: "Trust it.",
-    tagline: "Know if a document is legitimate before you act",
-    description: "Paste or upload any document that made you uneasy — a job offer, a lease, a prize notice, a payment request. Get a scored verdict with red flags called out explicitly.",
-    features: [
-      { icon: BarChart2, label: "Authenticity + risk scoring" },
-      { icon: AlertTriangle, label: "Red flags surfaced clearly" },
-      { icon: CheckCircle2, label: "Verification action steps" },
-      { icon: FileCheck, label: "Pattern-based fraud detection" },
-    ],
-    cta: "See demo",
-    href: "/demo/trust-check",
-    color: "from-red-50/80 to-red-50 dark:from-red-950/20 dark:to-red-950/20",
-    badge: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
-    badgeLabel: "Pro",
-    border: "border-red-200/60 dark:border-red-900/40",
-    iconBg: "bg-red-100 dark:bg-red-900/40",
-    iconColor: "text-red-600 dark:text-red-400",
-    verbColor: "text-red-600 dark:text-red-400",
-  },
-  {
-    icon: PenLine,
-    title: "Build a Contract",
-    verb: "Build it.",
-    tagline: "Build a real contract from scratch in minutes",
-    description: "Answer six steps about your deal — who, what, how much, when, and how disputes get resolved. Get a complete, clause-by-clause contract draft with gap analysis built in.",
-    features: [
-      { icon: Sparkles, label: "AI-generated clause drafts" },
-      { icon: CheckCircle2, label: "Gap analysis — nothing left out" },
-      { icon: ShieldCheck, label: "5 contract types supported" },
-      { icon: FileCheck, label: "Download-ready PDF output" },
-    ],
-    cta: "See demo",
-    href: "/demo/build-contract",
-    color: "from-emerald-50/80 to-emerald-50 dark:from-emerald-950/20 dark:to-emerald-950/20",
-    badge: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
-    badgeLabel: "Pro",
-    border: "border-emerald-200/60 dark:border-emerald-900/40",
-    iconBg: "bg-emerald-100 dark:bg-emerald-900/40",
-    iconColor: "text-emerald-600 dark:text-emerald-400",
-    verbColor: "text-emerald-600 dark:text-emerald-400",
+    comingSoon: false,
   },
   {
     icon: Scale,
@@ -96,120 +52,6 @@ const TOOLS = [
     iconBg: "bg-amber-100 dark:bg-amber-900/40",
     iconColor: "text-amber-600 dark:text-amber-400",
     verbColor: "text-amber-600 dark:text-amber-400",
-  },
-  {
-    icon: EyeOff,
-    title: "Redact Sensitive Info",
-    verb: "Protect it.",
-    tagline: "Remove private details before sharing, analyzing, or reviewing",
-    description: "Paste or upload a document. PlainPath detects names, SSNs, account numbers, phone numbers, and more. You choose exactly what gets redacted — nothing is removed without your approval.",
-    features: [
-      { icon: Lock, label: "Auto-detection of 14 PII categories" },
-      { icon: CheckCircle2, label: "You approve every redaction" },
-      { icon: Download, label: "Export redacted copy as text" },
-      { icon: ArrowRightLeft, label: "Send directly into any PlainPath tool" },
-    ],
-    cta: "See demo",
-    href: "/demo/redact",
-    color: "from-violet-50/80 to-purple-50 dark:from-violet-950/20 dark:to-purple-950/20",
-    badge: "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300",
-    badgeLabel: "Starter · Pro",
-    border: "border-violet-200/60 dark:border-violet-900/40",
-    iconBg: "bg-violet-100 dark:bg-violet-900/40",
-    iconColor: "text-violet-600 dark:text-violet-400",
-    verbColor: "text-violet-600 dark:text-violet-400",
-    comingSoon: false,
-  },
-  {
-    icon: MessageSquare,
-    title: "Ask This Document",
-    verb: "Ask it.",
-    tagline: "Get plain-English answers from any document",
-    description: "Upload a document and ask questions about clauses, dates, obligations, risks, missing items, or confusing language — and get direct answers sourced from the actual text.",
-    features: [
-      { icon: MessageSquare, label: "\"What does this require me to do?\"" },
-      { icon: Clock, label: "\"What deadlines are listed?\"" },
-      { icon: AlertTriangle, label: "\"What sections should I review first?\"" },
-      { icon: CheckCircle2, label: "\"Are there payment terms?\"" },
-    ],
-    cta: "See demo",
-    href: "/demo/ask-document",
-    color: "from-indigo-50/60 to-indigo-50/40 dark:from-indigo-900/10 dark:to-indigo-900/10",
-    badge: "bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400",
-    badgeLabel: "Pro",
-    border: "border-indigo-200/60 dark:border-indigo-900/40",
-    iconBg: "bg-indigo-100 dark:bg-indigo-900/40",
-    iconColor: "text-indigo-600 dark:text-indigo-400",
-    verbColor: "text-indigo-600 dark:text-indigo-400",
-    comingSoon: false,
-  },
-  {
-    icon: GitCompare,
-    title: "Compare Versions",
-    verb: "Compare it.",
-    tagline: "Spot every change between two document versions",
-    description: "Upload an original and a revised PDF. PlainPath maps every addition, deletion, and structural change — with severity scoring so you see what actually matters.",
-    features: [
-      { icon: ArrowRightLeft, label: "Side-by-side PDF workspace" },
-      { icon: AlertTriangle, label: "Severity-sorted change summary" },
-      { icon: Sparkles, label: "AI enrichment for context" },
-      { icon: FileCheck, label: "Page-by-page zone mapping" },
-    ],
-    cta: "See demo",
-    href: "/demo/compare",
-    color: "from-sky-50/80 to-sky-50 dark:from-sky-950/20 dark:to-sky-950/20",
-    badge: "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300",
-    badgeLabel: "Pro",
-    border: "border-sky-200/60 dark:border-sky-900/40",
-    iconBg: "bg-sky-100 dark:bg-sky-900/40",
-    iconColor: "text-sky-600 dark:text-sky-400",
-    verbColor: "text-sky-600 dark:text-sky-400",
-    comingSoon: false,
-  },
-  {
-    icon: ListChecks,
-    title: "Clause Extractor",
-    verb: "Decode it.",
-    tagline: "Extract key clauses, deadlines, and obligations",
-    description: "Upload any contract or agreement and get a structured breakdown of critical dates, party roles, financial terms, legal clauses, and a plain-English obligation list.",
-    features: [
-      { icon: CalendarClock, label: "Key dates and deadlines extracted" },
-      { icon: Users, label: "Parties and roles identified" },
-      { icon: Layers, label: "Legal clauses mapped and scored" },
-      { icon: CheckCircle2, label: "Obligations assigned by party" },
-    ],
-    cta: "See demo",
-    href: "/demo/clause-extractor",
-    color: "from-fuchsia-50/80 to-fuchsia-50 dark:from-fuchsia-950/20 dark:to-fuchsia-950/20",
-    badge: "bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-900/40 dark:text-fuchsia-300",
-    badgeLabel: "Pro",
-    border: "border-fuchsia-200/60 dark:border-fuchsia-900/40",
-    iconBg: "bg-fuchsia-100 dark:bg-fuchsia-900/40",
-    iconColor: "text-fuchsia-600 dark:text-fuchsia-400",
-    verbColor: "text-fuchsia-600 dark:text-fuchsia-400",
-    comingSoon: false,
-  },
-  {
-    icon: LayoutTemplate,
-    title: "Document Builder",
-    verb: "Draft it.",
-    tagline: "Create SOPs, manuals, policies, onboarding guides, checklists, and internal business documents.",
-    description: "Start from a structured template or a blank page. A guided question flow drafts your document, then you refine it with a block-by-block editor — with your brand, logo, and color applied throughout.",
-    features: [
-      { icon: FileCheck, label: "8 template types — SOP, policy, onboarding, and more" },
-      { icon: Sparkles, label: "AI guide for every document type" },
-      { icon: Palette, label: "Brand color, logo, and header styling" },
-      { icon: Download, label: "Export-ready document output" },
-    ],
-    cta: "See demo",
-    href: "/demo/builder",
-    color: "from-teal-50/80 to-teal-50 dark:from-teal-950/20 dark:to-teal-950/20",
-    badge: "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300",
-    badgeLabel: "Beta",
-    border: "border-teal-200/60 dark:border-teal-900/40",
-    iconBg: "bg-teal-100 dark:bg-teal-900/40",
-    iconColor: "text-teal-600 dark:text-teal-400",
-    verbColor: "text-teal-600 dark:text-teal-400",
     comingSoon: false,
   },
 ]
@@ -233,7 +75,7 @@ export default function ToolsShowcase() {
           className="text-3xl md:text-4xl font-bold mb-4"
           style={{ fontFamily: "var(--font-display)" }}
         >
-          Read it. Trust it. Build it. Review it. Protect it. Ask it. Compare it. Decode it. Draft it.
+          Read it. Review it.
         </motion.h2>
         <motion.p
           initial={{ opacity: 0, y: 8 }}
@@ -242,7 +84,7 @@ export default function ToolsShowcase() {
           transition={{ delay: 0.08 }}
           className="text-muted-foreground text-lg max-w-2xl mx-auto"
         >
-          Whether you are reading a document, questioning its legitimacy, creating an agreement, reviewing one before you sign, redacting private information, asking plain-English questions, comparing versions, extracting clauses, or drafting internal business documents from scratch — PlainPath has a dedicated tool for exactly that.
+          Whether you need to understand what a document means or review a contract before you sign — PlainPath gives you the right tool for the job, in plain English.
         </motion.p>
       </div>
 

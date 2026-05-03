@@ -66,7 +66,7 @@ function AttorneyCostCalculator() {
       </div>
       {cost && (
         <p className="text-xs text-muted-foreground mt-3">
-          One attorney review of a {selected.toLowerCase()} typically costs <strong className="text-foreground">{cost.range}</strong>. PlainPath Pro gives you unlimited access across all 9 tools for <strong className="text-foreground">$19.99/month</strong> — that's a saving of <strong className="text-emerald-600">${cost.low - 20}–${cost.high - 20}</strong> on just the first document.
+          One attorney review of a {selected.toLowerCase()} typically costs <strong className="text-foreground">{cost.range}</strong>. PlainPath Pro gives you unlimited access for <strong className="text-foreground">$19.99/month</strong> — that's a saving of <strong className="text-emerald-600">${cost.low - 20}–${cost.high - 20}</strong> on just the first document.
         </p>
       )}
     </div>
@@ -139,7 +139,7 @@ export default function PricingSection() {
         </div>
 
         <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
-          Honest pricing. All 5 live tools on Pro.
+          Honest pricing. Simple plans.
         </h2>
 
         <p className="mt-4 text-base leading-7 text-slate-600 dark:text-slate-300 sm:text-lg">

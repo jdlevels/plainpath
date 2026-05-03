@@ -21,14 +21,12 @@ export const PRICING_PLANS: PricingPlan[] = [
     annualTotal: "$49",
     period: "/month",
     description:
-      "Analyze and redact documents in plain English — unlimited use of two core tools.",
+      "Analyze any document in plain English — unlimited access to PlainPath's core analysis tool.",
     features: [
       "Analyze a Document (unlimited)",
-      "Redact Sensitive Info (automatic PII removal)",
       "Plain-English document summary",
       "Key terms, deadlines, and required actions",
       "Document Risk Score",
-      "Ask PlainPath — chat with your document",
       "Local saved analyses",
       "Export and share tools"
     ],
@@ -42,15 +40,11 @@ export const PRICING_PLANS: PricingPlan[] = [
     annualTotal: "$199",
     period: "/month",
     description:
-      "Every tool in one plan — unlimited use across every workflow.",
+      "Everything in Starter plus Contract Review — unlimited clause-by-clause risk analysis before you sign.",
     features: [
       "Everything in Starter",
-      "Document Trust Check — verify legitimacy and detect fraud",
       "Contract Review — clause-by-clause risk and negotiation analysis",
       "Negotiate This — AI counter-language for risky clauses",
-      "Build a Contract — guided wizard with professional draft output",
-      "Compare Versions — side-by-side document comparison and audit",
-      "Clause Extractor — obligations, key dates, parties, and legal clauses",
       "Saved analysis history",
       "Premium output and workflow tools"
     ],

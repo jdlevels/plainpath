@@ -47,14 +47,14 @@ function Router() {
       {/* Public demo — pre-loaded read-only snapshots, no auth required */}
       <Route path="/demo" component={DemoLanding} />
       <Route path="/demo/analyze" component={DemoAnalyze} />
-      <Route path="/demo/trust-check" component={DemoTrustCheck} />
-      <Route path="/demo/build-contract" component={DemoBuildContract} />
       <Route path="/demo/contract-review" component={DemoContractReview} />
-      <Route path="/demo/redact" component={DemoRedact} />
-      <Route path="/demo/compare" component={DemoCompare} />
-      <Route path="/demo/clause-extractor" component={DemoClauseExtractor} />
-      <Route path="/demo/ask-document" component={DemoAskDocument} />
-      <Route path="/demo/builder" component={DemoBuilder} />
+      <Route path="/demo/trust-check">{() => { window.location.replace("/demo"); return null; }}</Route>
+      <Route path="/demo/build-contract">{() => { window.location.replace("/demo"); return null; }}</Route>
+      <Route path="/demo/redact">{() => { window.location.replace("/demo"); return null; }}</Route>
+      <Route path="/demo/compare">{() => { window.location.replace("/demo"); return null; }}</Route>
+      <Route path="/demo/clause-extractor">{() => { window.location.replace("/demo"); return null; }}</Route>
+      <Route path="/demo/ask-document">{() => { window.location.replace("/demo"); return null; }}</Route>
+      <Route path="/demo/builder">{() => { window.location.replace("/demo"); return null; }}</Route>
 
       <Route path="/guides/reviewing-a-lease" component={ReviewingALease} />
       <Route path="/guides/understanding-an-nda" component={UnderstandingAnNDA} />

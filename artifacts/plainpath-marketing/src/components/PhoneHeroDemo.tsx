@@ -12,8 +12,7 @@ import React, { useEffect, useState } from "react"
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 import {
   AlertTriangle, CheckCircle2, ChevronLeft, Shield,
-  Wifi, BatteryFull, Signal, EyeOff,
-  GitCompare, ListChecks, Clock,
+  Wifi, BatteryFull, Signal,
 } from "lucide-react"
 
 const PHASE_MS = 5200
@@ -26,15 +25,8 @@ const fade = {
 
 /* ─── Per-tool header config ──────────────────────────────── */
 const TOOL_HEADERS = [
-  { docName: "Lease Agreement",         docMeta: "847 words · 12 pages",      badgeLabel: "Review needed",  badgeBg: "rgba(245,158,11,0.15)", badgeBorder: "rgba(245,158,11,0.40)", badgeColor: "#92400e", badgeDot: "#f59e0b" },
-  { docName: "IRS Notice CP2000",       docMeta: "312 words · 2 pages",        badgeLabel: "High risk",      badgeBg: "rgba(239,68,68,0.15)",  badgeBorder: "rgba(239,68,68,0.40)",  badgeColor: "#991b1b", badgeDot: "#ef4444" },
-  { docName: "Freelance Agreement",     docMeta: "New contract · Step 3/6",    badgeLabel: "Building…",      badgeBg: "rgba(16,185,129,0.15)", badgeBorder: "rgba(16,185,129,0.40)", badgeColor: "#065f46", badgeDot: "#10b981" },
-  { docName: "Employment Offer Letter", docMeta: "1,240 words · 8 pages",      badgeLabel: "Score: 28/100",  badgeBg: "rgba(245,158,11,0.15)", badgeBorder: "rgba(245,158,11,0.40)", badgeColor: "#92400e", badgeDot: "#f59e0b" },
-  { docName: "Patient Intake Form",     docMeta: "423 words · 3 pages",        badgeLabel: "3 items found",  badgeBg: "rgba(139,92,246,0.15)", badgeBorder: "rgba(139,92,246,0.40)", badgeColor: "#5b21b6", badgeDot: "#8b5cf6" },
-  { docName: "Consulting Agreement",    docMeta: "1,820 words · 6 pages",      badgeLabel: "Awaiting",       badgeBg: "rgba(99,102,241,0.15)", badgeBorder: "rgba(99,102,241,0.40)", badgeColor: "#3730a3", badgeDot: "#6366f1" },
-  { docName: "NDA v1 → NDA v2",         docMeta: "2 versions · 14 changes",    badgeLabel: "1 critical",     badgeBg: "rgba(239,68,68,0.15)",  badgeBorder: "rgba(239,68,68,0.40)",  badgeColor: "#991b1b", badgeDot: "#ef4444" },
-  { docName: "Lease Agreement",         docMeta: "2,840 words · 12 pages",     badgeLabel: "6 obligations",  badgeBg: "rgba(192,38,211,0.15)", badgeBorder: "rgba(192,38,211,0.40)", badgeColor: "#701a75", badgeDot: "#c026d3" },
-  { docName: "Onboarding Guide",        docMeta: "New doc · 7 sections",       badgeLabel: "Drafting…",      badgeBg: "rgba(13,148,136,0.15)", badgeBorder: "rgba(13,148,136,0.40)", badgeColor: "#134e4a", badgeDot: "#0d9488" },
+  { docName: "Lease Agreement",         docMeta: "847 words · 12 pages",  badgeLabel: "Review needed",  badgeBg: "rgba(245,158,11,0.15)", badgeBorder: "rgba(245,158,11,0.40)", badgeColor: "#92400e", badgeDot: "#f59e0b" },
+  { docName: "Employment Offer Letter", docMeta: "1,240 words · 8 pages", badgeLabel: "Score: 28/100",  badgeBg: "rgba(245,158,11,0.15)", badgeBorder: "rgba(245,158,11,0.40)", badgeColor: "#92400e", badgeDot: "#f59e0b" },
 ]
 
 /* ─── Phone chrome ─────────────────────────────────────────── */
@@ -131,68 +123,7 @@ function AnalyzeScreen() {
   )
 }
 
-/* ─── Tool 1: Trust Check ────────────────────────────────── */
-function TrustCheckScreen() {
-  return (
-    <div className="px-3 pt-3 space-y-2">
-      <div className="rounded-xl border border-red-200 dark:border-red-800/50 bg-red-50 dark:bg-red-900/20 p-3 text-center">
-        <p className="text-[9px] font-semibold text-red-500 uppercase tracking-wider mb-0.5">Trust Score</p>
-        <p className="text-[30px] font-black text-red-600 leading-none">18</p>
-        <p className="text-[10px] text-red-400 mb-2">/100 — Likely Scam</p>
-        <div className="h-1.5 rounded-full bg-red-100 dark:bg-red-900/40 overflow-hidden">
-          <div className="h-full rounded-full bg-red-500" style={{ width: "18%" }} />
-        </div>
-      </div>
-      <p className="text-[9px] font-semibold text-zinc-400 uppercase tracking-wider">4 Red Flags</p>
-      {["Fake IRS sender domain", "Urgency: 48-hour deadline", "Requests wire transfer", "No case reference #"].map((flag, i) => (
-        <div key={i} className="flex items-start gap-1.5">
-          <AlertTriangle className="w-3 h-3 text-red-500 shrink-0 mt-px" />
-          <p className="text-[9px] text-zinc-600 dark:text-zinc-400 leading-tight">{flag}</p>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-/* ─── Tool 2: Build a Contract ───────────────────────────── */
-function BuildContractScreen() {
-  return (
-    <div className="px-3 pt-3 space-y-2">
-      <div className="flex items-center gap-2">
-        <p className="text-[10px] font-semibold text-zinc-500 shrink-0">Step 3 of 6</p>
-        <div className="flex-1 h-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
-          <div className="h-full rounded-full bg-emerald-500" style={{ width: "50%" }} />
-        </div>
-      </div>
-      <div className="rounded-xl border border-emerald-200 dark:border-emerald-700/40 bg-emerald-50 dark:bg-emerald-900/20 p-2.5">
-        <p className="text-[9px] font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider mb-1.5">Scope of Work</p>
-        {[88, 72, 60].map((w, i) => (
-          <div key={i} className="h-[5px] rounded-full bg-emerald-200 dark:bg-emerald-800/50 mb-1" style={{ width: `${w}%` }} />
-        ))}
-      </div>
-      <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700/40 rounded-xl px-2.5 py-2">
-        <motion.div
-          animate={{ opacity: [1, 0.35, 1] }}
-          transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
-          className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"
-        />
-        <p className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">AI is drafting your contract…</p>
-      </div>
-      {["Parties & roles", "Payment terms"].map((step, i) => (
-        <div key={i} className="flex items-center gap-1.5">
-          <div className="w-3.5 h-3.5 rounded-full bg-emerald-500 flex items-center justify-center shrink-0">
-            <svg viewBox="0 0 12 12" className="w-2 h-2" fill="none">
-              <path d="M2.5 6L5 8.5L9.5 4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
-          <p className="text-[10px] text-zinc-400 line-through">{step}</p>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-/* ─── Tool 3: Contract Review ────────────────────────────── */
+/* ─── Tool 1: Contract Review ────────────────────────────── */
 function ContractReviewScreen() {
   return (
     <div className="px-3 pt-3 space-y-2">
@@ -220,185 +151,11 @@ function ContractReviewScreen() {
   )
 }
 
-/* ─── Tool 4: Redact ─────────────────────────────────────── */
-function RedactScreen() {
-  const rows = [
-    { w: 72, r: false }, { w: 88, r: false }, { w: 55, r: true },
-    { w: 100, r: false }, { w: 90, r: false }, { w: 42, r: true },
-    { w: 100, r: false }, { w: 80, r: false }, { w: 60, r: true },
-    { w: 100, r: false },
-  ]
-  return (
-    <div className="px-3 pt-3 space-y-2">
-      <div className="flex items-center gap-2 bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-700/40 rounded-xl px-2.5 py-2">
-        <EyeOff className="w-3 h-3 text-violet-600 shrink-0" />
-        <p className="text-[10px] font-semibold text-violet-700 dark:text-violet-400">3 items auto-detected</p>
-      </div>
-      <div className="space-y-1.5">
-        {rows.map(({ w, r }, i) => (
-          <div key={i} className={`h-[6px] rounded-full ${r ? "bg-zinc-900 dark:bg-zinc-100" : "bg-zinc-200 dark:bg-zinc-700"}`} style={{ width: `${w}%` }} />
-        ))}
-      </div>
-      <div className="rounded-xl border border-violet-200 dark:border-violet-700/40 p-2.5 space-y-1.5">
-        {["SSN — ███-██-████", "Date of Birth — ██/██/████", "Insurance # — ███████████"].map((item, i) => (
-          <div key={i} className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-sm bg-zinc-900 dark:bg-zinc-100 shrink-0" />
-            <p className="text-[9px] font-mono text-zinc-500 dark:text-zinc-400">{item}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-/* ─── Tool 5: Ask This Document ──────────────────────────── */
-function AskDocumentScreen() {
-  return (
-    <div className="px-3 pt-3 space-y-2">
-      <div className="rounded-xl border border-indigo-200 dark:border-indigo-700/40 bg-indigo-50 dark:bg-indigo-900/20 px-2.5 py-2">
-        <p className="text-[9px] text-indigo-600 dark:text-indigo-400 font-medium italic">"What does this lease require me to do before move-in?"</p>
-      </div>
-      <div className="rounded-xl border border-zinc-200 dark:border-zinc-700/40 bg-white dark:bg-zinc-900/60 px-2.5 py-2 space-y-1.5">
-        <p className="text-[9px] font-semibold text-zinc-500 uppercase tracking-wider">Answer</p>
-        {[
-          "Pay first month's rent + security deposit before keys",
-          "Submit proof of renters insurance by move-in date",
-          "Sign and return lease addendum within 3 days",
-        ].map((item, i) => (
-          <div key={i} className="flex items-start gap-1.5">
-            <div className="w-3.5 h-3.5 rounded-full bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center shrink-0 mt-px">
-              <span className="text-[7px] font-bold text-indigo-600">{i + 1}</span>
-            </div>
-            <p className="text-[9px] text-zinc-600 dark:text-zinc-300 leading-tight">{item}</p>
-          </div>
-        ))}
-      </div>
-      <div className="flex items-center gap-1.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200/80 dark:border-zinc-700/40 px-2.5 py-2">
-        <CheckCircle2 className="w-3 h-3 text-indigo-500 shrink-0" />
-        <p className="text-[9px] text-zinc-500">Sourced from Section 3 &amp; Addendum A</p>
-      </div>
-    </div>
-  )
-}
-
-/* ─── Tool 6: Compare Versions ───────────────────────────── */
-function CompareScreen() {
-  const lines = [
-    { type: "same",    text: "This agreement is binding upon…" },
-    { type: "removed", text: "Period: 2 years from execution" },
-    { type: "added",   text: "Period: Perpetual — no expiration" },
-    { type: "same",    text: "Governed by laws of New York." },
-    { type: "same",    text: "Both parties agree to…" },
-  ]
-  return (
-    <div className="px-3 pt-3 space-y-2">
-      <div className="rounded-xl border border-red-200 dark:border-red-700/40 bg-red-50 dark:bg-red-900/15 px-2.5 py-2 flex items-center gap-1.5">
-        <AlertTriangle className="w-3 h-3 text-red-500 shrink-0" />
-        <p className="text-[10px] font-bold text-red-700 dark:text-red-400">1 Critical Change Found</p>
-      </div>
-      <p className="text-[9px] font-semibold text-zinc-400 uppercase tracking-wider">Section 4 — Duration</p>
-      <div className="rounded-xl border border-zinc-200 dark:border-zinc-700/40 overflow-hidden">
-        {lines.map((line, i) => (
-          <div key={i} className={`px-2 py-1 flex items-start gap-1.5 ${
-            line.type === "removed" ? "bg-red-50 dark:bg-red-900/20" :
-            line.type === "added"   ? "bg-emerald-50 dark:bg-emerald-900/20" :
-            i % 2 === 0 ? "bg-white dark:bg-zinc-900" : "bg-zinc-50/50 dark:bg-zinc-800/30"
-          }`}>
-            <span className={`text-[10px] font-bold mt-px shrink-0 w-2.5 ${
-              line.type === "removed" ? "text-red-500" :
-              line.type === "added"   ? "text-emerald-500" : "text-transparent"
-            }`}>{line.type === "removed" ? "−" : line.type === "added" ? "+" : "·"}</span>
-            <p className={`text-[9px] leading-tight ${
-              line.type === "removed" ? "text-red-700 dark:text-red-300 line-through" :
-              line.type === "added"   ? "text-emerald-700 dark:text-emerald-300 font-semibold" :
-              "text-zinc-500"
-            }`}>{line.text}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-/* ─── Tool 7: Clause Extractor ───────────────────────────── */
-function ClauseExtractorScreen() {
-  const obligations = [
-    { party: "Tenant",   text: "Pay $1,850/mo by 1st of month" },
-    { party: "Tenant",   text: "Provide 60-day notice to vacate" },
-    { party: "Landlord", text: "Enter only with 24-hr notice" },
-  ]
-  return (
-    <div className="px-3 pt-3 space-y-2">
-      <div className="flex items-center gap-1.5 bg-fuchsia-50 dark:bg-fuchsia-900/20 border border-fuchsia-200 dark:border-fuchsia-700/40 rounded-xl px-2.5 py-2">
-        <ListChecks className="w-3 h-3 text-fuchsia-600 shrink-0" />
-        <p className="text-[10px] font-semibold text-fuchsia-700 dark:text-fuchsia-400">6 obligations extracted</p>
-      </div>
-      <p className="text-[9px] font-semibold text-zinc-400 uppercase tracking-wider">Obligations</p>
-      {obligations.map(({ party, text }, i) => (
-        <div key={i} className="flex gap-2">
-          <div className="w-5 h-5 rounded-full bg-fuchsia-100 dark:bg-fuchsia-900/40 text-fuchsia-600 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
-            {i + 1}
-          </div>
-          <div>
-            <p className="text-[9px] font-semibold text-fuchsia-600 dark:text-fuchsia-400 leading-tight">{party}</p>
-            <p className="text-[9px] text-zinc-600 dark:text-zinc-400 leading-tight">{text}</p>
-          </div>
-        </div>
-      ))}
-      <div className="space-y-1 pt-1">
-        {[65, 78, 55, 82].map((w, i) => (
-          <div key={i} className="h-[5px] rounded-full bg-zinc-200 dark:bg-zinc-700" style={{ width: `${w}%` }} />
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function DocumentBuilderScreen() {
-  const sections = [
-    { label: "Introduction & Purpose", done: true },
-    { label: "Tools & Equipment Access", done: true },
-    { label: "Day 1 Schedule", done: true },
-    { label: "Key Contacts & Teams", done: false },
-  ]
-  return (
-    <div className="px-3 pt-3 space-y-2">
-      <div className="flex items-center gap-1.5 bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-700/40 rounded-xl px-2.5 py-2">
-        <CheckCircle2 className="w-3 h-3 text-teal-600 shrink-0" />
-        <p className="text-[10px] font-semibold text-teal-700 dark:text-teal-400">7 sections drafted</p>
-      </div>
-      <p className="text-[9px] font-semibold text-zinc-400 uppercase tracking-wider">Sections</p>
-      {sections.map(({ label, done }, i) => (
-        <div key={i} className="flex items-center gap-2">
-          <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${done ? "bg-teal-500 border-teal-500" : "border-zinc-300 dark:border-zinc-600"}`}>
-            {done && (
-              <svg viewBox="0 0 12 12" className="w-2 h-2" fill="none">
-                <path d="M2.5 6L5 8.5L9.5 4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            )}
-          </div>
-          <p className="text-[9px] text-zinc-600 dark:text-zinc-400 leading-tight">{label}</p>
-        </div>
-      ))}
-      <div className="flex items-center gap-1.5 mt-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/40 rounded-xl px-2.5 py-2">
-        <p className="text-[10px] font-semibold text-blue-700 dark:text-blue-400">Export as PDF or Word</p>
-      </div>
-    </div>
-  )
-}
-
 /* ─── Screen router ──────────────────────────────────────── */
 function ToolScreen({ toolId }: { toolId: number }) {
   switch (toolId) {
     case 0:  return <AnalyzeScreen />
-    case 1:  return <TrustCheckScreen />
-    case 2:  return <BuildContractScreen />
-    case 3:  return <ContractReviewScreen />
-    case 4:  return <RedactScreen />
-    case 5:  return <AskDocumentScreen />
-    case 6:  return <CompareScreen />
-    case 7:  return <ClauseExtractorScreen />
-    case 8:  return <DocumentBuilderScreen />
+    case 1:  return <ContractReviewScreen />
     default: return <AnalyzeScreen />
   }
 }

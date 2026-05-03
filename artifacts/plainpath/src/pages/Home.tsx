@@ -1,7 +1,7 @@
 import { useLocation } from "wouter"
 import { motion } from "framer-motion"
 import {
-  ArrowRight, ShieldCheck, MessageCircle,
+  ArrowRight,
   PenLine, FileScan, Scale, EyeOff,
   BookMarked, Clock, ChevronRight, CreditCard,
   LayoutGrid, GitCompare, ListChecks, LayoutTemplate,
@@ -32,7 +32,7 @@ type RecentItem =
 
 // ─── Tool definitions ─────────────────────────────────────────────────────────
 
-// First-class tools — canonical order and routes (9 when Document Builder is enabled)
+// Launch tools — Analyze a Document and Contract Review
 const TOOLS = [
   {
     key: "analyze" as const,
@@ -46,28 +46,6 @@ const TOOLS = [
     plan: null,
   },
   {
-    key: "trust-check" as const,
-    label: "Document Trust Check",
-    desc: "Detect scams, forgeries, and high-risk patterns before you act.",
-    icon: ShieldCheck,
-    path: "/import?mode=trust-check",
-    color: "text-red-500 dark:text-red-400",
-    bg: "bg-red-50 dark:bg-red-950/50",
-    ring: "hover:border-red-400/50 hover:shadow-red-500/10",
-    plan: "pro" as const,
-  },
-  {
-    key: "build-contract" as const,
-    label: "Build a Contract",
-    desc: "Answer a few questions and get a complete, ready-to-sign contract.",
-    icon: PenLine,
-    path: "/build-contract",
-    color: "text-emerald-500 dark:text-emerald-400",
-    bg: "bg-emerald-50 dark:bg-emerald-950/50",
-    ring: "hover:border-emerald-400/50 hover:shadow-emerald-500/10",
-    plan: "pro" as const,
-  },
-  {
     key: "contract-review" as const,
     label: "Contract Review",
     desc: "Clause-by-clause review of any agreement before you sign.",
@@ -78,61 +56,6 @@ const TOOLS = [
     ring: "hover:border-amber-400/50 hover:shadow-amber-500/10",
     plan: "pro" as const,
   },
-  {
-    key: "redact" as const,
-    label: "Redact Sensitive Info",
-    desc: "Remove personal and private data before sharing any document.",
-    icon: EyeOff,
-    path: "/redact",
-    color: "text-violet-500 dark:text-violet-400",
-    bg: "bg-violet-50 dark:bg-violet-950/50",
-    ring: "hover:border-violet-400/50 hover:shadow-violet-500/10",
-    plan: null,
-  },
-  {
-    key: "ask-document" as const,
-    label: "Ask This Document",
-    desc: "Upload a document and ask plain-English questions about clauses, obligations, deadlines, and risks.",
-    icon: MessageCircle,
-    path: "/ask-document",
-    color: "text-indigo-500 dark:text-indigo-400",
-    bg: "bg-indigo-50 dark:bg-indigo-950/50",
-    ring: "hover:border-indigo-400/50 hover:shadow-indigo-500/10",
-    plan: "pro" as const,
-  },
-  {
-    key: "clause-extractor" as const,
-    label: "Clause Extractor",
-    desc: "Extract key clauses, deadlines, and obligations from contracts and agreements.",
-    icon: ListChecks,
-    path: "/clause-extractor",
-    color: "text-purple-500 dark:text-purple-400",
-    bg: "bg-purple-50 dark:bg-purple-950/50",
-    ring: "hover:border-purple-400/50 hover:shadow-purple-500/10",
-    plan: "pro" as const,
-  },
-  {
-    key: "compare-versions" as const,
-    label: "Compare Versions",
-    desc: "Spot every change between two versions of a document — additions, deletions, and risk shifts.",
-    icon: GitCompare,
-    path: "/compare-versions",
-    color: "text-teal-500 dark:text-teal-400",
-    bg: "bg-teal-50 dark:bg-teal-950/50",
-    ring: "hover:border-teal-400/50 hover:shadow-teal-500/10",
-    plan: "pro" as const,
-  },
-  ...(BUILDER_ENABLED ? [{
-    key: "builder" as const,
-    label: "Document Builder",
-    desc: "Create SOPs, manuals, policies, onboarding guides, checklists, and internal business documents.",
-    icon: LayoutTemplate,
-    path: "/builder",
-    color: "text-cyan-500 dark:text-cyan-400",
-    bg: "bg-cyan-50 dark:bg-cyan-950/50",
-    ring: "hover:border-cyan-400/50 hover:shadow-cyan-500/10",
-    plan: "pro" as const,
-  }] : []),
 ]
 
 // ─── Demo scenarios ───────────────────────────────────────────────────────────
@@ -146,24 +69,6 @@ const DEMOS = [
     color: "text-blue-500 dark:text-blue-400",
     bg: "bg-blue-50 dark:bg-blue-950/50",
     path: "/analyze?demo=event-permit",
-  },
-  {
-    id: "trust-check-irs",
-    tool: "Trust Check",
-    title: "Fake IRS Collection Letter",
-    icon: ShieldCheck,
-    color: "text-red-500 dark:text-red-400",
-    bg: "bg-red-50 dark:bg-red-950/50",
-    path: "/import?mode=trust-check",
-  },
-  {
-    id: "contract-builder-freelance",
-    tool: "Build a Contract",
-    title: "Freelance Services Agreement",
-    icon: PenLine,
-    color: "text-emerald-500 dark:text-emerald-400",
-    bg: "bg-emerald-50 dark:bg-emerald-950/50",
-    path: "/build-contract",
   },
   {
     id: "contract-review-employment",
@@ -461,23 +366,15 @@ export default function Home() {
                 <BookMarked className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
                 <p className="text-sm font-medium text-muted-foreground mb-1">No saved work yet</p>
                 <p className="text-xs text-muted-foreground/60 mb-4 max-w-xs mx-auto">
-                  Saved analyses, Trust Checks, Clause Extractor results, Compare Versions comparisons{BUILDER_ENABLED ? ", and Document Builder drafts" : ""} will appear here once you start working.
+                  Saved analyses and Contract Review sessions will appear here once you start working.
                 </p>
                 <div className="flex flex-wrap gap-2 justify-center">
                   <Button size="sm" variant="outline" onClick={() => setLocation("/analyze")} className="rounded-xl text-xs">
                     <FileScan className="w-3 h-3 mr-1" /> Analyze a Document
                   </Button>
-                  <Button size="sm" variant="outline" onClick={() => setLocation("/clause-extractor")} className="rounded-xl text-xs">
-                    <ListChecks className="w-3 h-3 mr-1" /> Clause Extractor
+                  <Button size="sm" variant="outline" onClick={() => setLocation("/contract-review")} className="rounded-xl text-xs">
+                    <Scale className="w-3 h-3 mr-1" /> Contract Review
                   </Button>
-                  <Button size="sm" variant="outline" onClick={() => setLocation("/compare-versions")} className="rounded-xl text-xs">
-                    <GitCompare className="w-3 h-3 mr-1" /> Compare Versions
-                  </Button>
-                  {BUILDER_ENABLED && (
-                    <Button size="sm" variant="outline" onClick={() => setLocation("/builder")} className="rounded-xl text-xs">
-                      <LayoutTemplate className="w-3 h-3 mr-1" /> Document Builder
-                    </Button>
-                  )}
                 </div>
               </div>
             </Card>
@@ -663,7 +560,7 @@ export default function Home() {
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">Your Plan</p>
                   <p className="font-bold text-foreground">
-                    {isAdmin ? "Admin — Full Access" : plan === "pro" ? `Pro — All ${BUILDER_ENABLED ? "9" : "8"} tools` : plan === "starter" ? "Starter — Analyze + Redact" : "Free"}
+                    {isAdmin ? "Admin — Full Access" : plan === "pro" ? "Pro Plan" : plan === "starter" ? "Starter Plan" : "Free"}
                   </p>
                   {!plan && !isAdmin && (
                     <p className="text-xs text-muted-foreground mt-0.5">2 free analyses included</p>

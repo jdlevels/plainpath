@@ -2,14 +2,13 @@ import { useState, useRef, useEffect } from "react"
 import { Link, useLocation } from "wouter"
 import { Button } from "@/components/ui/button"
 import {
-  FileScan, Plus, BookMarked, GitCompare, LogOut, User, ChevronDown,
-  LayoutGrid, ShieldCheck, PenLine, Scale, Menu, X, LayoutDashboard, CreditCard, EyeOff, MessageCircle, FolderOpen, ListChecks, LayoutTemplate,
+  FileScan, Plus, BookMarked, LogOut, User, ChevronDown,
+  LayoutGrid, ShieldCheck, Scale, Menu, X, LayoutDashboard, CreditCard, MessageCircle, FolderOpen,
 } from "lucide-react"
 
 import { ThemeToggle } from "@/components/ui/ThemeToggle"
 import { useUser, useClerk } from "@clerk/react"
 import { useEntitlements } from "@/hooks/useEntitlements"
-import { BUILDER_ENABLED } from "@/lib/builderConfig"
 import { purgeUserScopedKeys } from "@/lib/storageCleanup"
 import { WhatsNew } from "@/components/WhatsNew"
 
@@ -34,15 +33,8 @@ function LogoBrand() {
 }
 
 const TOOL_NAV = [
-  { label: "Analyze a Document",    href: "/analyze",                 icon: FileScan      },
-  { label: "Document Trust Check",  href: "/import?mode=trust-check", icon: ShieldCheck   },
-  { label: "Contract Review",       href: "/contract-review",         icon: Scale         },
-  { label: "Build a Contract",      href: "/build-contract",          icon: PenLine       },
-  { label: "Redact Sensitive Info", href: "/redact",                  icon: EyeOff        },
-  { label: "Ask This Document",      href: "/ask-document",            icon: MessageCircle },
-  { label: "Clause Extractor",       href: "/clause-extractor",        icon: ListChecks    },
-  { label: "Compare Versions",      href: "/compare-versions",        icon: GitCompare    },
-  ...(BUILDER_ENABLED ? [{ label: "Document Builder", href: "/builder", icon: LayoutTemplate }] : []),
+  { label: "Analyze a Document", href: "/analyze",         icon: FileScan },
+  { label: "Contract Review",    href: "/contract-review", icon: Scale    },
 ]
 
 function UserMenu() {

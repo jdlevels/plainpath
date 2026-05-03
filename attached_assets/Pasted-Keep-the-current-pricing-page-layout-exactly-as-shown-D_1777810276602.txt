@@ -1,0 +1,94 @@
+Keep the current pricing page layout exactly as shown. Do not redesign the page.
+
+Update pricing content to reflect the launch version with ONLY two tools:
+1. Analyze a Document
+2. Contract Review
+
+Required copy updates:
+
+1. Hero subtext:
+Replace:
+“Start with document analysis, or unlock every tool with Pro. No commitment — cancel anytime.”
+
+With:
+“Start with document analysis, or unlock contract review with Pro. No commitment — cancel anytime.”
+
+2. Attorney comparison section:
+Keep the section.
+Update PlainPath Pro comparison bullets to:
+- Analyze documents
+- Review contracts
+- Results in under 2 minutes
+- Cancel anytime
+
+3. Starter plan:
+Keep price: $4.99/month.
+Update description to:
+“Analyze documents in plain English — key terms, deadlines, required actions, and sensitive info reminders.”
+
+Starter includes ONLY:
+- Analyze a Document
+
+Remove all hidden/disabled tool rows from Starter:
+- Redact Sensitive Info
+- Document Trust Check
+- Build a Contract
+- Contract Review
+- Ask This Document
+- Compare Versions
+- Clause Extractor
+
+4. Pro plan:
+Keep price: $19.99/month.
+Replace:
+“All 9 tools in one plan — unlimited use across every workflow.”
+
+With:
+“Analyze documents and review contracts with unlimited use across your workflow.”
+
+Pro includes ONLY:
+- Analyze a Document
+- Contract Review
+- Saved analysis history
+- Priority launch support
+
+Remove from Pro:
+- Document Trust Check
+- Build a Contract
+- Redact Sensitive Info
+- Ask This Document
+- Compare Versions
+- Clause Extractor
+- Document Builder
+- Premium output and workflow tools
+
+5. Update any text that says:
+- “all tools”
+- “every tool”
+- “9 tools”
+- “full suite”
+- “workflow tools”
+
+Replace with launch-safe wording:
+- “two focused document tools”
+- “document analysis and contract review”
+- “launch tools”
+
+6. Keep the visual structure:
+- Monthly/Annual toggle
+- Attorney vs PlainPath comparison
+- Starter card
+- Pro card
+- CTA buttons
+- Dark premium styling
+- Best Value tag on Pro
+
+7. Do not change billing logic unless required for copy alignment.
+8. Do not touch Analyze a Document or Contract Review functionality.
+9. Do not reintroduce hidden tools anywhere on this page.
+
+Final QA:
+- Pricing page mentions only Analyze a Document and Contract Review.
+- No hidden tools appear in pricing.
+- No “9 tools” or “every tool” language remains.
+- Layout remains visually the same.

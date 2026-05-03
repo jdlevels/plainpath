@@ -16,11 +16,11 @@ import { BackToTop } from "@/components/BackToTop";
 import { NewsletterCapture } from "@/components/NewsletterCapture";
 import { Card } from "@/components/ui/card";
 import {
-  FileText, MessageCircle, ShieldCheck,
+  FileText, ShieldCheck,
   ArrowRight, Upload, Sparkles, Scale,
-  AlertTriangle, CheckCircle2, Clock, Lock, X as XIcon, EyeOff,
-  CalendarX, Eye, PenLine, FileScan, ListChecks, GitCompare,
-  DollarSign, Copy, Users, ChevronDown, Star, LayoutTemplate,
+  AlertTriangle, CheckCircle2, Clock, Lock, X as XIcon,
+  CalendarX, Eye, FileScan,
+  DollarSign, Copy, Users, ChevronDown, Star,
 } from "lucide-react";
 
 /* ─── Animation helpers ──────────────────────────────────── */
@@ -92,15 +92,8 @@ function RotatingBadge() {
 
 /* ─── Tool pill data ─────────────────────────────────────── */
 const TOOLS = [
-  { label: "Analyze a Document",    icon: FileScan,       cls: "tool-btn-blue",    href: "/demo/analyze",         comingSoon: false },
-  { label: "Document Trust Check",  icon: ShieldCheck,    cls: "tool-btn-red",     href: "/demo/trust-check",     comingSoon: false },
-  { label: "Build a Contract",      icon: PenLine,        cls: "tool-btn-emerald", href: "/demo/build-contract",  comingSoon: false },
-  { label: "Contract Review",       icon: Scale,          cls: "tool-btn-amber",   href: "/demo/contract-review", comingSoon: false },
-  { label: "Redact Sensitive Info", icon: EyeOff,         cls: "tool-btn-violet",  href: "/demo/redact",          comingSoon: false },
-  { label: "Ask This Document",      icon: MessageCircle,  cls: "tool-btn-indigo",  href: "/demo/ask-document",    comingSoon: false },
-  { label: "Clause Extractor",       icon: ListChecks,     cls: "tool-btn-fuchsia", href: "/demo/clause-extractor",comingSoon: false },
-  { label: "Compare Versions",      icon: GitCompare,     cls: "tool-btn-sky",     href: "/demo/compare",         comingSoon: false },
-  { label: "Document Builder",      icon: LayoutTemplate, cls: "tool-btn-teal",    href: "/demo/builder",         comingSoon: false },
+  { label: "Analyze a Document", icon: FileScan, cls: "tool-btn-blue",  href: "/demo/analyze",         comingSoon: false },
+  { label: "Contract Review",    icon: Scale,    cls: "tool-btn-amber", href: "/demo/contract-review", comingSoon: false },
 ];
 
 /* ─── Feature cards ─────────────────────────────────────── */
@@ -119,19 +112,6 @@ const FEATURES = [
     tagCls: "bg-blue-50/80 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-700/40",
   },
   {
-    icon: ShieldCheck,
-    color: "text-red-600 dark:text-red-400",
-    bg: "bg-red-100 dark:bg-red-900/30",
-    border: "border-l-red-500 dark:border-l-red-400",
-    accent: "bg-red-500 dark:bg-red-400",
-    glow: "from-red-50 dark:from-red-900/10",
-    title: "Document Trust Check",
-    desc: "Think a bill or letter looks suspicious? PlainPath scores it for legitimacy, surfaces red flags, and gives you a clear verdict.",
-    result: { label: "Verdict Issued", value: "High scam risk — 3 fraud signals detected. Do not pay.", icon: AlertTriangle, color: "text-red-600 dark:text-red-400", bg: "bg-red-50 dark:bg-red-900/20" },
-    tags: ["IRS letters", "Debt collectors", "Utility shutoffs", "Legal threats"],
-    tagCls: "bg-red-50/80 dark:bg-red-900/20 text-red-700 dark:text-red-300 border border-red-200/60 dark:border-red-700/40",
-  },
-  {
     icon: Scale,
     color: "text-amber-600 dark:text-amber-400",
     bg: "bg-amber-100 dark:bg-amber-900/30",
@@ -144,91 +124,13 @@ const FEATURES = [
     tags: ["Job offers", "Freelance deals", "NDAs", "Service agreements"],
     tagCls: "bg-amber-50/80 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-700/40",
   },
-  {
-    icon: PenLine,
-    color: "text-emerald-600 dark:text-emerald-400",
-    bg: "bg-emerald-100 dark:bg-emerald-900/30",
-    border: "border-l-emerald-500 dark:border-l-emerald-400",
-    accent: "bg-emerald-500 dark:bg-emerald-400",
-    glow: "from-emerald-50 dark:from-emerald-900/10",
-    title: "Build a Contract",
-    desc: "Answer plain-English questions about your deal. Get a complete, professional agreement with a gap analysis — ready to download and send.",
-    result: { label: "Contract Ready", value: "Freelance Services Agreement · 6 clauses · Gap analysis complete.", icon: CheckCircle2, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-900/20" },
-    tags: ["Freelance work", "NDAs", "Rental agreements", "Payment plans"],
-    tagCls: "bg-emerald-50/80 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-700/40",
-  },
-  {
-    icon: EyeOff,
-    color: "text-violet-600 dark:text-violet-400",
-    bg: "bg-violet-100 dark:bg-violet-900/30",
-    border: "border-l-violet-500 dark:border-l-violet-400",
-    accent: "bg-violet-500 dark:bg-violet-400",
-    glow: "from-violet-50 dark:from-violet-900/10",
-    title: "Redact Sensitive Info",
-    desc: "Paste or upload any document. PlainPath detects names, SSNs, account numbers, phone numbers, and more — then you choose exactly what gets removed before sharing or analyzing.",
-    result: { label: "Redaction Applied", value: "3 names, 2 SSNs, and 1 account number removed. Redacted copy ready to share.", icon: Lock, color: "text-violet-600 dark:text-violet-400", bg: "bg-violet-50 dark:bg-violet-900/20" },
-    tags: ["Medical records", "Legal documents", "Financial statements", "Personal correspondence"],
-    tagCls: "bg-violet-50/80 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300 border border-violet-200/60 dark:border-violet-700/40",
-  },
-  {
-    icon: MessageCircle,
-    color: "text-indigo-600 dark:text-indigo-400",
-    bg: "bg-indigo-100 dark:bg-indigo-900/30",
-    border: "border-l-indigo-500 dark:border-l-indigo-400",
-    accent: "bg-indigo-500 dark:bg-indigo-400",
-    glow: "from-indigo-50 dark:from-indigo-900/10",
-    title: "Ask This Document",
-    desc: "Upload a document and ask plain-English questions about clauses, obligations, deadlines, and risks — get direct answers sourced from the actual text.",
-    result: { label: "Answer Generated", value: "You must return the signed addendum by April 22nd or the lease auto-renews for 12 months.", icon: CheckCircle2, color: "text-indigo-600 dark:text-indigo-400", bg: "bg-indigo-50 dark:bg-indigo-900/20" },
-    tags: ["Contracts", "Leases", "Legal notices", "Agreements"],
-    tagCls: "bg-indigo-50/80 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-700/40",
-  },
-  {
-    icon: GitCompare,
-    color: "text-sky-600 dark:text-sky-400",
-    bg: "bg-sky-100 dark:bg-sky-900/30",
-    border: "border-l-sky-500 dark:border-l-sky-400",
-    accent: "bg-sky-500 dark:bg-sky-400",
-    glow: "from-sky-50 dark:from-sky-900/10",
-    title: "Compare Versions",
-    desc: "Upload an original and a revised document. PlainPath maps every addition, deletion, and structural change — with severity scoring so you see what actually matters.",
-    result: { label: "Changes Found", value: "14 changes detected — 3 high-severity clause deletions identified.", icon: AlertTriangle, color: "text-sky-600 dark:text-sky-400", bg: "bg-sky-50 dark:bg-sky-900/20" },
-    tags: ["Contract revisions", "Lease renewals", "Policy updates", "Legal amendments"],
-    tagCls: "bg-sky-50/80 dark:bg-sky-900/20 text-sky-700 dark:text-sky-300 border border-sky-200/60 dark:border-sky-700/40",
-  },
-  {
-    icon: ListChecks,
-    color: "text-fuchsia-600 dark:text-fuchsia-400",
-    bg: "bg-fuchsia-100 dark:bg-fuchsia-900/30",
-    border: "border-l-fuchsia-500 dark:border-l-fuchsia-400",
-    accent: "bg-fuchsia-500 dark:bg-fuchsia-400",
-    glow: "from-fuchsia-50 dark:from-fuchsia-900/10",
-    title: "Clause Extractor",
-    desc: "Upload any contract or agreement and get a structured breakdown of critical dates, party roles, financial terms, legal clauses, and a plain-English obligation list.",
-    result: { label: "Extraction Complete", value: "6 obligations found, 6 of 8 clauses present. Auto-renewal clause detected.", icon: CheckCircle2, color: "text-fuchsia-600 dark:text-fuchsia-400", bg: "bg-fuchsia-50 dark:bg-fuchsia-900/20" },
-    tags: ["Key dates", "Obligations", "Legal clauses", "Party roles"],
-    tagCls: "bg-fuchsia-50/80 dark:bg-fuchsia-900/20 text-fuchsia-700 dark:text-fuchsia-300 border border-fuchsia-200/60 dark:border-fuchsia-700/40",
-  },
-  {
-    icon: LayoutTemplate,
-    color: "text-teal-600 dark:text-teal-400",
-    bg: "bg-teal-100 dark:bg-teal-900/30",
-    border: "border-l-teal-500 dark:border-l-teal-400",
-    accent: "bg-teal-500 dark:bg-teal-400",
-    glow: "from-teal-50 dark:from-teal-900/10",
-    title: "Document Builder",
-    desc: "Create SOPs, manuals, policies, checklists, onboarding guides, and internal business documents. Answer a guided question flow and refine the result block by block — with your brand applied throughout.",
-    result: { label: "Document Ready", value: "Employee Onboarding Guide · 7 sections · brand styling applied. Export-ready.", icon: CheckCircle2, color: "text-teal-600 dark:text-teal-400", bg: "bg-teal-50 dark:bg-teal-900/20" },
-    tags: ["SOPs", "Onboarding guides", "Policies", "Checklists"],
-    tagCls: "bg-teal-50/80 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300 border border-teal-200/60 dark:border-teal-700/40",
-  },
 ];
 
 /* ─── How it works ───────────────────────────────────────── */
 const HOW = [
-  { icon: Upload,       num: "01", title: "Choose a tool and add your document", desc: "Upload a PDF or Word file, paste text, upload two versions to compare, or start from scratch with a guided question flow — every tool starts with one simple step." },
-  { icon: Sparkles,     num: "02", title: "PlainPath reads, builds, or extracts", desc: "Depending on the tool: it analyzes what your document means, flags what looks suspicious, drafts an agreement, redacts private info, answers your questions, maps changes, or structures your internal doc." },
-  { icon: CheckCircle2, num: "03", title: "Review results and take action",       desc: "Get plain-English results you can act on — summaries, verdicts, clause breakdowns, side-by-side diffs, answers, redacted copies, or a draft document ready to save or export." },
+  { icon: Upload,       num: "01", title: "Choose a tool and add your document", desc: "Upload a PDF or Word file, or paste your text — every tool starts with one simple step and no account required." },
+  { icon: Sparkles,     num: "02", title: "PlainPath reads and reviews",          desc: "Depending on the tool: it analyzes what your document means and surfaces risks, deadlines, and action steps — or reviews your contract clause by clause with a fairness score." },
+  { icon: CheckCircle2, num: "03", title: "Review results and take action",       desc: "Get plain-English results you can act on — summaries, risk flags, deadlines, clause breakdowns, and fairness scores with negotiation language." },
 ];
 
 /* ─── Trust ──────────────────────────────────────────────── */
@@ -256,34 +158,6 @@ const DEMOS = [
     href: "/demo/analyze",
   },
   {
-    id: "trust-check-irs",
-    tool: "Document Trust Check",
-    title: "Fake IRS Payment Demand",
-    desc: "A letter claiming your account is flagged, demanding $892 within 48 hours. Trust Check scores it 18/100 and surfaces 4 critical red flags.",
-    icon: ShieldCheck,
-    color: "text-red-500 dark:text-red-400",
-    bg: "bg-red-50 dark:bg-red-950/50",
-    hoverBorder: "hover:border-red-400/50",
-    hoverTitle: "group-hover:text-red-500 dark:group-hover:text-red-400",
-    tags: ["Score: 18/100", "4 red flags", "Verdict: Likely Scam"],
-    cta: "See trust verdict",
-    href: "/demo/trust-check",
-  },
-  {
-    id: "contract-builder-freelance",
-    tool: "Build a Contract",
-    title: "Freelance Services Agreement",
-    desc: "Answer 6 questions about your deal — scope, payment, and deadline — and get a complete contract with IP, revisions, and termination terms ready.",
-    icon: PenLine,
-    color: "text-emerald-500 dark:text-emerald-400",
-    bg: "bg-emerald-50 dark:bg-emerald-950/50",
-    hoverBorder: "hover:border-emerald-400/50",
-    hoverTitle: "group-hover:text-emerald-500 dark:group-hover:text-emerald-400",
-    tags: ["6-question wizard", "6 contract sections", "PDF ready"],
-    cta: "Build a contract",
-    href: "/demo/build-contract",
-  },
-  {
     id: "contract-review-employment",
     tool: "Contract Review",
     title: "Employment Offer — Heavily One-Sided",
@@ -296,62 +170,6 @@ const DEMOS = [
     tags: ["Score: 28/100", "4 clauses flagged", "Negotiation language"],
     cta: "Review a contract",
     href: "/demo/contract-review",
-  },
-  {
-    id: "redact-medical",
-    tool: "Redact Sensitive Info",
-    title: "Medical Intake Form — Before Sharing",
-    desc: "A patient intake form with SSN, insurance number, and date of birth. PlainPath detects all 3 automatically and lets you approve each redaction before export.",
-    icon: EyeOff,
-    color: "text-violet-500 dark:text-violet-400",
-    bg: "bg-violet-50 dark:bg-violet-950/50",
-    hoverBorder: "hover:border-violet-400/50",
-    hoverTitle: "group-hover:text-violet-500 dark:group-hover:text-violet-400",
-    tags: ["3 PII items found", "You approve each", "Export redacted copy"],
-    cta: "Redact a document",
-    href: "/demo/redact",
-  },
-  {
-    id: "ask-lease",
-    tool: "Ask This Document",
-    title: "Residential Lease — Question Asked",
-    desc: "A lease upload with plain-English questions answered. \"What must I do before move-in?\" gets a sourced, structured reply.",
-    icon: MessageCircle,
-    color: "text-indigo-500 dark:text-indigo-400",
-    bg: "bg-indigo-50 dark:bg-indigo-950/50",
-    hoverBorder: "hover:border-indigo-400/50",
-    hoverTitle: "group-hover:text-indigo-500 dark:group-hover:text-indigo-400",
-    tags: ["3 questions answered", "Sourced from text", "Pre-loaded demo"],
-    cta: "See it in action",
-    href: "/demo/ask-document",
-  },
-  {
-    id: "compare-nda",
-    tool: "Compare Versions",
-    title: "NDA v1 vs v2 — 1 Critical Change",
-    desc: "A 2-year confidentiality term quietly changed to perpetuity between drafts. PlainPath caught it and explains what it means for you.",
-    icon: GitCompare,
-    color: "text-sky-500 dark:text-sky-400",
-    bg: "bg-sky-50 dark:bg-sky-950/50",
-    hoverBorder: "hover:border-sky-400/50",
-    hoverTitle: "group-hover:text-sky-500 dark:group-hover:text-sky-400",
-    tags: ["3 changes found", "1 critical", "Side-by-side diff"],
-    cta: "See what changed",
-    href: "/demo/compare",
-  },
-  {
-    id: "clause-extractor-lease",
-    tool: "Clause Extractor",
-    title: "Residential Lease — 6 Obligations Found",
-    desc: "A 12-page lease broken down into structured fields: key dates, party roles, financial terms, auto-renewal clause, and a plain-English obligation list.",
-    icon: ListChecks,
-    color: "text-fuchsia-600 dark:text-fuchsia-400",
-    bg: "bg-fuchsia-50 dark:bg-fuchsia-950/50",
-    hoverBorder: "hover:border-fuchsia-400/50",
-    hoverTitle: "group-hover:text-fuchsia-600 dark:group-hover:text-fuchsia-400",
-    tags: ["Key dates · Parties", "Obligations", "Legal clauses"],
-    cta: "Extract clauses",
-    href: "/demo/clause-extractor",
   },
 ]
 
@@ -372,18 +190,12 @@ const PLANS = [
     name: "Starter",
     monthly: { price: "$4.99", period: "/month", sub: null },
     annual:  { price: "$47.99", period: "/year", sub: "billed annually", eq: "≈ $4.00/mo", savings: "Save about 20%" },
-    desc: "Analyze and redact documents in plain English — key terms, deadlines, required actions, and sensitive info removal. Unlimited use.",
+    desc: "Analyze any document in plain English — unlimited access to PlainPath's core analysis tool.",
     highlight: false,
     badge: null as string | null,
     tools: [
-      { label: "Analyze a Document",    included: true,  comingSoon: false },
-      { label: "Redact Sensitive Info", included: true,  comingSoon: false },
-      { label: "Document Trust Check",  included: false, comingSoon: false },
-      { label: "Build a Contract",      included: false, comingSoon: false },
-      { label: "Contract Review",       included: false, comingSoon: false },
-      { label: "Ask This Document",     included: false, comingSoon: false },
-      { label: "Compare Versions",      included: false, comingSoon: false },
-      { label: "Clause Extractor",      included: false, comingSoon: false },
+      { label: "Analyze a Document", included: true,  comingSoon: false },
+      { label: "Contract Review",    included: false, comingSoon: false },
     ],
     extras: [] as string[],
     cta: "Subscribe to Starter",
@@ -393,19 +205,12 @@ const PLANS = [
     name: "Pro",
     monthly: { price: "$19.99", period: "/month", sub: null },
     annual:  { price: "$191.90", period: "/year", sub: "billed annually", eq: "≈ $16.00/mo", savings: "Save 20%" },
-    desc: "All 9 tools in one plan — unlimited use across every workflow.",
+    desc: "Everything in Starter plus Contract Review — unlimited clause-by-clause risk analysis before you sign.",
     highlight: true,
     badge: "Best Value",
     tools: [
-      { label: "Analyze a Document",    included: true,  comingSoon: false },
-      { label: "Document Trust Check",  included: true,  comingSoon: false },
-      { label: "Build a Contract",      included: true,  comingSoon: false },
-      { label: "Contract Review",       included: true,  comingSoon: false },
-      { label: "Redact Sensitive Info", included: true,  comingSoon: false },
-      { label: "Ask This Document",     included: true,  comingSoon: false },
-      { label: "Compare Versions",      included: true,  comingSoon: false },
-      { label: "Clause Extractor",      included: true,  comingSoon: false },
-      { label: "Document Builder",      included: true,  comingSoon: false },
+      { label: "Analyze a Document", included: true, comingSoon: false },
+      { label: "Contract Review",    included: true, comingSoon: false },
     ],
     extras: ["Saved analysis history", "Premium output and workflow tools"],
     cta: "Subscribe to Pro",
@@ -903,9 +708,7 @@ export default function Home() {
                 custom={2} variants={fadeUp}
                 className="text-base md:text-lg text-muted-foreground mb-6 leading-relaxed max-w-lg"
               >
-                Leases, contracts, medical bills, and court notices — PlainPath gives you 9 tools to
-                understand what any document means, spot problems before you sign, and know exactly
-                what to do next. All in plain English.
+                Leases, contracts, medical bills, and court notices — PlainPath tells you what any document means, spots problems before you sign, and tells you exactly what to do next. All in plain English.
               </motion.p>
 
               {/* Tool pills */}
@@ -953,7 +756,7 @@ export default function Home() {
 
               <motion.div custom={5} variants={fadeUp}>
                 <p className="text-xs text-muted-foreground">
-                  From $4.99/month &nbsp;·&nbsp; All 9 tools on Pro &nbsp;·&nbsp; Cancel anytime
+                  From $4.99/month &nbsp;·&nbsp; Contract Review on Pro &nbsp;·&nbsp; Cancel anytime
                 </p>
               </motion.div>
             </motion.div>
@@ -1003,7 +806,7 @@ export default function Home() {
       <section id="features" className="py-20 md:py-28 bg-gradient-to-b from-background via-white/70 to-background dark:bg-transparent">
         <div className="max-w-6xl mx-auto px-5 sm:px-6">
           <div className="text-center max-w-2xl mx-auto mb-14">
-            <p className="text-xs font-semibold tracking-[0.12em] uppercase text-muted-foreground mb-3">9 tools live</p>
+            <p className="text-xs font-semibold tracking-[0.12em] uppercase text-muted-foreground mb-3">2 tools available now</p>
             <h2
               className="text-4xl md:text-5xl font-bold mb-4 text-foreground"
               style={{ fontFamily: "var(--font-display)" }}
@@ -1147,14 +950,8 @@ export default function Home() {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {[
-                    { icon: CalendarX,     title: "Deadlines buried in fine print",              desc: "A 30-day window in paragraph 8 that nobody told you about. Once it passes, your options disappear. Analyze a Document surfaces every one.",                                                  tool: "Analyze a Document",    iconBg: "rgba(59,130,246,0.15)",   iconColor: "#60a5fa", badgeBorder: "rgba(59,130,246,0.35)",   badgeColor: "#93c5fd"  },
-                    { icon: FileScan,      title: "Fake notices designed to pressure you",        desc: "Scam notices look identical to real ones. Same formatting, same urgency. Document Trust Check scores legitimacy and flags every red flag.",                                                 tool: "Document Trust Check",  iconBg: "rgba(239,68,68,0.15)",    iconColor: "#f87171", badgeBorder: "rgba(239,68,68,0.35)",    badgeColor: "#fca5a5"  },
-                    { icon: PenLine,       title: "Signing the other party's boilerplate",        desc: "When you don't have your own contract, you sign theirs — and every clause was written to protect them. Build a Contract creates a fair agreement from scratch.",                           tool: "Build a Contract",      iconBg: "rgba(16,185,129,0.15)",   iconColor: "#34d399", badgeBorder: "rgba(16,185,129,0.35)",   badgeColor: "#6ee7b7"  },
-                    { icon: Eye,           title: "Clauses that shift all the risk to you",       desc: "One paragraph waives your right to dispute. Another transfers liability quietly. Contract Review reads it clause by clause and tells you exactly what you're agreeing to.",                 tool: "Contract Review",       iconBg: "rgba(245,158,11,0.15)",   iconColor: "#fbbf24", badgeBorder: "rgba(245,158,11,0.35)",   badgeColor: "#fcd34d"  },
-                    { icon: EyeOff,        title: "Your private details go wherever the doc goes", desc: "Names, SSNs, account numbers — once you share a document they go with it. Redact Sensitive Info lets you strip them before anyone else sees the file.",                                   tool: "Redact Sensitive Info", iconBg: "rgba(139,92,246,0.15)",   iconColor: "#a78bfa", badgeBorder: "rgba(139,92,246,0.35)",   badgeColor: "#c4b5fd"  },
-                    { icon: MessageCircle, title: "Buried language you can't decipher",             desc: "Legal docs use terms and phrasing you've never seen. Ask This Document lets you ask in plain English — \"what does this mean?\" — and get a direct answer from the text.",              tool: "Ask This Document",     iconBg: "rgba(99,102,241,0.15)",   iconColor: "#818cf8", badgeBorder: "rgba(99,102,241,0.35)",   badgeColor: "#a5b4fc"  },
-                    { icon: GitCompare,    title: "New contract version — what actually changed?", desc: "They sent a revised draft. You have no idea what moved. Compare Versions maps every addition, deletion, and structural change with severity scoring.",                                    tool: "Compare Versions",      iconBg: "rgba(20,184,166,0.15)",   iconColor: "#2dd4bf", badgeBorder: "rgba(20,184,166,0.35)",   badgeColor: "#5eead4"  },
-                    { icon: ListChecks,    title: "Obligations buried in the fine print",         desc: "You're about to sign but you don't know who owes what by when. Clause Extractor pulls every obligation, assigns it to a party, and flags any that require action before signing.", tool: "Clause Extractor",      iconBg: "rgba(192,38,211,0.15)",   iconColor: "#f0abfc", badgeBorder: "rgba(192,38,211,0.35)",   badgeColor: "#fae8ff"  },
+                    { icon: CalendarX, title: "Deadlines buried in fine print",        desc: "A 30-day window in paragraph 8 that nobody told you about. Once it passes, your options disappear. Analyze a Document surfaces every one.",                                   tool: "Analyze a Document", iconBg: "rgba(59,130,246,0.15)",  iconColor: "#60a5fa", badgeBorder: "rgba(59,130,246,0.35)",  badgeColor: "#93c5fd" },
+                    { icon: Eye,       title: "Clauses that shift all the risk to you", desc: "One paragraph waives your right to dispute. Another transfers liability quietly. Contract Review reads it clause by clause and tells you exactly what you're agreeing to.", tool: "Contract Review",    iconBg: "rgba(245,158,11,0.15)", iconColor: "#fbbf24", badgeBorder: "rgba(245,158,11,0.35)", badgeColor: "#fcd34d" },
                   ].map((item, i) => (
                     <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true }} transition={{ delay: i * 0.06 }}
@@ -1711,7 +1508,7 @@ export default function Home() {
             </a>
           </motion.div>
           <p className="mt-6 text-xs text-white/30">
-            From $4.99/month &nbsp;·&nbsp; All 9 tools on Pro ($19.99/mo) &nbsp;·&nbsp; Cancel anytime
+            From $4.99/month &nbsp;·&nbsp; Contract Review on Pro ($19.99/mo) &nbsp;·&nbsp; Cancel anytime
           </p>
         </div>
       </div>

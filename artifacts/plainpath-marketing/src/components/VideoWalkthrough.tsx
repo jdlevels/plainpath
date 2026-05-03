@@ -10,10 +10,8 @@
 import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 import {
-  FileText, ShieldAlert, PenLine, Scale, EyeOff,
-  AlertTriangle, CheckCircle2, Lock, Sparkles, Download,
-  MessageCircle, GitCompare, ListChecks, ArrowRightLeft,
-  CalendarClock, Users, Layers,
+  FileText, Scale,
+  AlertTriangle, CheckCircle2, Sparkles,
 } from "lucide-react"
 
 const INTERVAL_MS = 5200
@@ -37,36 +35,6 @@ const TOOLS = [
   },
   {
     id: 1,
-    name: "Document Trust Check",
-    shortName: "Trust Check",
-    desc: "Trust score and red flags before you respond.",
-    icon: ShieldAlert,
-    hex: "#ef4444",
-    iconHex: "#fca5a5",
-    docName: "IRS_Notice_CP2000.pdf",
-    docMeta: "312 words · 2 pages",
-    badgeLabel: "High risk",
-    badgeText: "#ef4444",
-    badgeBg: "rgba(239,68,68,0.12)",
-    badgeBorder: "rgba(239,68,68,0.3)",
-  },
-  {
-    id: 2,
-    name: "Build a Contract",
-    shortName: "Build",
-    desc: "Six questions. One complete agreement.",
-    icon: PenLine,
-    hex: "#10b981",
-    iconHex: "#6ee7b7",
-    docName: "Freelance_Services_Agreement",
-    docMeta: "New contract · 6 fields",
-    badgeLabel: "Building…",
-    badgeText: "#10b981",
-    badgeBg: "rgba(16,185,129,0.12)",
-    badgeBorder: "rgba(16,185,129,0.3)",
-  },
-  {
-    id: 3,
     name: "Contract Review",
     shortName: "Review",
     desc: "Clause-by-clause flags plus negotiation language.",
@@ -80,69 +48,9 @@ const TOOLS = [
     badgeBg: "rgba(245,158,11,0.12)",
     badgeBorder: "rgba(245,158,11,0.3)",
   },
-  {
-    id: 4,
-    name: "Redact Sensitive Info",
-    shortName: "Redact",
-    desc: "Auto-detect sensitive info and approve redactions.",
-    icon: EyeOff,
-    hex: "#8b5cf6",
-    iconHex: "#c4b5fd",
-    docName: "Patient_Intake_Form.pdf",
-    docMeta: "423 words · 3 pages",
-    badgeLabel: "3 items",
-    badgeText: "#8b5cf6",
-    badgeBg: "rgba(139,92,246,0.12)",
-    badgeBorder: "rgba(139,92,246,0.3)",
-  },
-  {
-    id: 5,
-    name: "Ask This Document",
-    shortName: "Ask",
-    desc: "Plain-English answers sourced directly from the text.",
-    icon: MessageCircle,
-    hex: "#6366f1",
-    iconHex: "#a5b4fc",
-    docName: "Residential_Lease_Agreement.pdf",
-    docMeta: "2,140 words · 8 pages",
-    badgeLabel: "Answered",
-    badgeText: "#6366f1",
-    badgeBg: "rgba(99,102,241,0.12)",
-    badgeBorder: "rgba(99,102,241,0.3)",
-  },
-  {
-    id: 6,
-    name: "Compare Versions",
-    shortName: "Compare",
-    desc: "Every addition, deletion, and change mapped.",
-    icon: GitCompare,
-    hex: "#14b8a6",
-    iconHex: "#5eead4",
-    docName: "NDA_v1.pdf → NDA_v2.pdf",
-    docMeta: "2 versions · 14 changes",
-    badgeLabel: "14 changes",
-    badgeText: "#14b8a6",
-    badgeBg: "rgba(20,184,166,0.12)",
-    badgeBorder: "rgba(20,184,166,0.3)",
-  },
-  {
-    id: 7,
-    name: "Clause Extractor",
-    shortName: "Extract",
-    desc: "Pull key clauses, dates, and obligations.",
-    icon: ListChecks,
-    hex: "#c026d3",
-    iconHex: "#f0abfc",
-    docName: "Lease_Agreement.pdf",
-    docMeta: "2,840 words · 12 pages",
-    badgeLabel: "6 obligations",
-    badgeText: "#c026d3",
-    badgeBg: "rgba(192,38,211,0.12)",
-    badgeBorder: "rgba(192,38,211,0.3)",
-  },
 ] as const
 
-type ToolId = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7
+type ToolId = 0 | 1
 
 /* ─── Document line configs ───────────────────────────────── */
 type LineConfig = { w: number; hl?: string; redacted?: boolean; delay: number }
@@ -163,19 +71,6 @@ const DOC_LINES: Record<number, LineConfig[]> = {
   ],
   1: [
     { w: 100, delay: 0 },
-    { w: 80,  delay: 0.04 },
-    { w: 100, delay: 0.08 },
-    { w: 95,  delay: 0.11, hl: "rgba(239,68,68,0.45)" },
-    { w: 78,  delay: 0.14, hl: "rgba(239,68,68,0.45)" },
-    { w: 100, delay: 0.20 },
-    { w: 72,  delay: 0.24, hl: "rgba(239,68,68,0.32)" },
-    { w: 100, delay: 0.29 },
-    { w: 90,  delay: 0.33 },
-    { w: 100, delay: 0.37 },
-  ],
-  2: [],
-  3: [
-    { w: 100, delay: 0 },
     { w: 90,  delay: 0.04 },
     { w: 100, delay: 0.08 },
     { w: 88,  delay: 0.11, hl: "rgba(239,68,68,0.42)" },
@@ -186,51 +81,10 @@ const DOC_LINES: Record<number, LineConfig[]> = {
     { w: 60,  delay: 0.32, hl: "rgba(245,158,11,0.42)" },
     { w: 100, delay: 0.37 },
   ],
-  4: [
-    { w: 100, delay: 0 },
-    { w: 80,  delay: 0.04 },
-    { w: 55,  delay: 0.08, redacted: true },
-    { w: 100, delay: 0.14 },
-    { w: 90,  delay: 0.18 },
-    { w: 42,  delay: 0.22, redacted: true },
-    { w: 100, delay: 0.28 },
-    { w: 85,  delay: 0.32 },
-    { w: 50,  delay: 0.36, redacted: true },
-    { w: 100, delay: 0.42 },
-    { w: 70,  delay: 0.46 },
-  ],
-  5: [
-    { w: 100, delay: 0 },
-    { w: 85,  delay: 0.04 },
-    { w: 100, delay: 0.08 },
-    { w: 72,  delay: 0.12 },
-    { w: 100, delay: 0.16 },
-    { w: 90,  delay: 0.20 },
-    { w: 100, delay: 0.25, hl: "rgba(99,102,241,0.45)" },
-    { w: 65,  delay: 0.28, hl: "rgba(99,102,241,0.45)" },
-    { w: 100, delay: 0.34 },
-    { w: 80,  delay: 0.38 },
-  ],
-  6: [],
-  7: [
-    { w: 100, delay: 0 },
-    { w: 88,  delay: 0.04 },
-    { w: 100, delay: 0.08, hl: "rgba(168,85,247,0.42)" },
-    { w: 75,  delay: 0.11, hl: "rgba(168,85,247,0.42)" },
-    { w: 100, delay: 0.18 },
-    { w: 82,  delay: 0.22 },
-    { w: 100, delay: 0.26 },
-    { w: 60,  delay: 0.30, hl: "rgba(168,85,247,0.32)" },
-    { w: 100, delay: 0.36 },
-    { w: 78,  delay: 0.40 },
-  ],
 }
 
 /* ─── Left panel: document lines ─────────────────────────── */
 function DocLines({ toolId, reduced }: { toolId: ToolId; reduced: boolean }) {
-  if (toolId === 2) return <BuildWizardLeft reduced={reduced} />
-  if (toolId === 6) return <CompareDocLeft reduced={reduced} />
-
   const lines = DOC_LINES[toolId] ?? []
 
   return (
@@ -278,91 +132,7 @@ function DocLines({ toolId, reduced }: { toolId: ToolId; reduced: boolean }) {
   )
 }
 
-/* ─── Build: wizard fields (left panel) ──────────────────── */
-const WIZARD_FIELDS = [
-  { label: "Party A — Freelancer", done: true },
-  { label: "Party B — Client",     done: true },
-  { label: "Scope of work",         done: true },
-  { label: "Payment: $4,200",       done: true },
-  { label: "Delivery deadline",     done: false },
-  { label: "Dispute resolution",    done: false },
-]
-
-function BuildWizardLeft({ reduced }: { reduced: boolean }) {
-  return (
-    <div className="space-y-1">
-      <p className="text-[8px] font-semibold tracking-widest uppercase mb-2" style={{ color: "#475569" }}>Contract Fields</p>
-      {WIZARD_FIELDS.map(({ label, done }, i) => (
-        <motion.div
-          key={label}
-          initial={reduced ? false : { opacity: 0, x: -4 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: reduced ? 0 : i * 0.1, duration: 0.3 }}
-          className="flex items-center gap-2"
-        >
-          <div
-            className="w-3 h-3 rounded border flex items-center justify-center shrink-0"
-            style={{
-              backgroundColor: done ? "#10b981" : "transparent",
-              borderColor: done ? "#10b981" : "#475569",
-            }}
-          >
-            {done && (
-              <svg viewBox="0 0 12 12" className="w-1.5 h-1.5 fill-none">
-                <path d="M2.5 6L5 8.5L9.5 4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            )}
-          </div>
-          <div
-            className="h-[5px] flex-1 rounded-full"
-            style={{ backgroundColor: done ? "rgba(52,211,153,0.3)" : "rgba(71,85,105,0.5)" }}
-          />
-          <span className="text-[7px] shrink-0 w-[66px] truncate text-right" style={{ color: "#475569" }}>{label}</span>
-        </motion.div>
-      ))}
-    </div>
-  )
-}
-
-/* ─── Compare: side-by-side diff left panel ─────────────── */
-function CompareDocLeft({ reduced }: { reduced: boolean }) {
-  const left  = [100, 85, 100, 90, 72, 100, 78, 100]
-  const right = [100, 78, 100, 95, 72, 100, 95, 100]
-  const leftRemoved  = [false, true, false, true, false, false, false, false]
-  const rightAdded   = [false, false, false, true, false, true, true, false]
-  return (
-    <div>
-      <p className="text-[8px] font-semibold tracking-widest uppercase mb-2" style={{ color: "#475569" }}>Document Diff</p>
-      <div className="flex gap-2">
-        <div className="flex-1 space-y-1.5">
-          <p className="text-[7px] uppercase tracking-wide mb-1" style={{ color: "#ef4444" }}>Original</p>
-          {left.map((w, i) => (
-            <motion.div key={i}
-              initial={reduced ? false : { opacity: 0 }} animate={{ opacity: 1 }}
-              transition={{ delay: reduced ? 0 : i * 0.05 }}
-              className="h-[4px] rounded-full"
-              style={{ width: `${w}%`, backgroundColor: leftRemoved[i] ? "rgba(239,68,68,0.5)" : "rgba(71,85,105,0.45)" }}
-            />
-          ))}
-        </div>
-        <div className="w-px" style={{ backgroundColor: "#1e2d45" }} />
-        <div className="flex-1 space-y-1.5">
-          <p className="text-[7px] uppercase tracking-wide mb-1" style={{ color: "#14b8a6" }}>Revised</p>
-          {right.map((w, i) => (
-            <motion.div key={i}
-              initial={reduced ? false : { opacity: 0 }} animate={{ opacity: 1 }}
-              transition={{ delay: reduced ? 0 : 0.35 + i * 0.05 }}
-              className="h-[4px] rounded-full"
-              style={{ width: `${w}%`, backgroundColor: rightAdded[i] ? "rgba(20,184,166,0.55)" : "rgba(71,85,105,0.45)" }}
-            />
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-/* ─── Scan line (Trust Check only) ──────────────────────── */
+/* ─── Scan line (Analyze only) ──────────────────────────── */
 function ScanLine({ reduced }: { reduced: boolean }) {
   if (reduced) return null
   return (
@@ -409,94 +179,6 @@ function AnalyzeOutput({ reduced }: { reduced: boolean }) {
   )
 }
 
-function TrustOutput({ reduced }: { reduced: boolean }) {
-  const flags = [
-    "Requests gift card or wire payment",
-    "Threatening language — act immediately",
-    "Sender domain doesn't match agency",
-  ]
-  return (
-    <div className="space-y-1.5">
-      <p className="text-[8px] font-semibold tracking-widest uppercase mb-2" style={{ color: "#475569" }}>Trust Verdict</p>
-      <motion.div
-        initial={reduced ? false : { opacity: 0, scale: 0.96 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: reduced ? 0 : 1.0, duration: 0.38 }}
-        className="rounded-lg border p-2 mb-2"
-        style={{ backgroundColor: "rgba(239,68,68,0.10)", borderColor: "rgba(239,68,68,0.28)" }}
-      >
-        <div className="flex items-center justify-between mb-1.5">
-          <span className="text-[8px] font-bold uppercase tracking-wide" style={{ color: "#ef4444" }}>Trust Score</span>
-          <span className="text-[10px] font-bold" style={{ color: "#ef4444" }}>18 / 100</span>
-        </div>
-        <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: "rgba(71,85,105,0.5)" }}>
-          <motion.div
-            initial={reduced ? false : { width: "0%" }}
-            animate={{ width: "18%" }}
-            transition={{ delay: reduced ? 0 : 1.15, duration: 1.0, ease: "easeOut" }}
-            className="h-full rounded-full"
-            style={{ backgroundColor: "#ef4444" }}
-          />
-        </div>
-        <p className="text-[8px] font-semibold mt-1.5" style={{ color: "#ef4444" }}>Likely Scam — Do not pay</p>
-      </motion.div>
-      {flags.map((f, i) => (
-        <motion.div
-          key={f}
-          initial={reduced ? false : { opacity: 0, x: 5 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: reduced ? 0 : 1.6 + i * 0.14, duration: 0.3 }}
-          className="flex items-start gap-1.5"
-        >
-          <div className="w-1 h-1 rounded-full shrink-0 mt-1.5" style={{ backgroundColor: "#ef4444" }} />
-          <span className="text-[8px] leading-snug" style={{ color: "#94a3b8" }}>{f}</span>
-        </motion.div>
-      ))}
-    </div>
-  )
-}
-
-function BuildOutput({ reduced }: { reduced: boolean }) {
-  const bullets = ["6 clauses drafted", "Gap analysis complete", "No missing protections"]
-  return (
-    <div className="space-y-1.5">
-      <p className="text-[8px] font-semibold tracking-widest uppercase mb-2" style={{ color: "#475569" }}>Contract Ready</p>
-      <motion.div
-        initial={reduced ? false : { opacity: 0, scale: 0.96 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: reduced ? 0 : 0.75, duration: 0.38 }}
-        className="rounded-lg border p-2.5 mb-1.5"
-        style={{ backgroundColor: "rgba(16,185,129,0.10)", borderColor: "rgba(16,185,129,0.28)" }}
-      >
-        <div className="flex items-center gap-1.5 mb-1.5">
-          <CheckCircle2 style={{ width: 10, height: 10, color: "#34d399" }} />
-          <span className="text-[9px] font-bold" style={{ color: "#34d399" }}>Freelance Agreement</span>
-        </div>
-        {bullets.map((t, i) => (
-          <motion.p
-            key={t}
-            initial={reduced ? false : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: reduced ? 0 : 1.05 + i * 0.15, duration: 0.28 }}
-            className="text-[8px] ml-4"
-            style={{ color: "#6ee7b7" }}
-          >{t}</motion.p>
-        ))}
-      </motion.div>
-      <motion.div
-        initial={reduced ? false : { opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: reduced ? 0 : 1.6, duration: 0.35 }}
-        className="flex items-center gap-1.5 p-2 rounded-lg border"
-        style={{ backgroundColor: "rgba(59,130,246,0.08)", borderColor: "rgba(59,130,246,0.25)" }}
-      >
-        <Download style={{ width: 10, height: 10, color: "#93c5fd" }} />
-        <span className="text-[8px] font-semibold" style={{ color: "#93c5fd" }}>Download PDF / Word</span>
-      </motion.div>
-    </div>
-  )
-}
-
 function ReviewOutput({ reduced }: { reduced: boolean }) {
   const clauses = [
     { label: "5-yr global non-compete", severity: "Unfair",  hex: "#ef4444", bg: "rgba(239,68,68,0.10)", border: "rgba(239,68,68,0.26)" },
@@ -534,178 +216,15 @@ function ReviewOutput({ reduced }: { reduced: boolean }) {
   )
 }
 
-function RedactOutput({ reduced }: { reduced: boolean }) {
-  const items = [
-    { label: "John M. Chen",     type: "Full name" },
-    { label: "SSN: ***-**-4821", type: "Social Security No." },
-    { label: "Acct ****3042",    type: "Account number" },
-  ]
-  return (
-    <div className="space-y-1.5">
-      <p className="text-[8px] font-semibold tracking-widest uppercase mb-2" style={{ color: "#475569" }}>Redaction</p>
-      {items.map(({ label, type }, i) => (
-        <motion.div
-          key={label}
-          initial={reduced ? false : { opacity: 0, x: 8 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: reduced ? 0 : 0.95 + i * 0.22, duration: 0.35 }}
-          className="flex items-center gap-2 rounded-lg border p-2"
-          style={{ backgroundColor: "rgba(139,92,246,0.09)", borderColor: "rgba(139,92,246,0.26)" }}
-        >
-          <div
-            className="w-4 h-4 rounded-full flex items-center justify-center shrink-0"
-            style={{ backgroundColor: "rgba(16,185,129,0.15)", border: "1px solid rgba(16,185,129,0.35)" }}
-          >
-            <CheckCircle2 style={{ width: 8, height: 8, color: "#34d399" }} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-[8px] font-semibold truncate" style={{ color: "#e2e8f0" }}>{label}</p>
-            <p className="text-[7px] leading-tight" style={{ color: "#64748b" }}>{type}</p>
-          </div>
-          <Lock style={{ width: 8, height: 8, color: "#a78bfa" }} className="shrink-0" />
-        </motion.div>
-      ))}
-      <motion.p
-        initial={reduced ? false : { opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: reduced ? 0 : 1.65, duration: 0.35 }}
-        className="text-[8px] font-medium text-center pt-0.5"
-        style={{ color: "#a78bfa" }}
-      >
-        Redacted copy ready to share
-      </motion.p>
-    </div>
-  )
-}
-
-function AskOutput({ reduced }: { reduced: boolean }) {
-  return (
-    <div className="space-y-1.5">
-      <p className="text-[8px] font-semibold tracking-widest uppercase mb-2" style={{ color: "#475569" }}>Answer</p>
-      <motion.div
-        initial={reduced ? false : { opacity: 0, y: 4 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: reduced ? 0 : 0.55, duration: 0.35 }}
-        className="rounded-lg border p-2 mb-1.5"
-        style={{ backgroundColor: "rgba(99,102,241,0.08)", borderColor: "rgba(99,102,241,0.24)" }}
-      >
-        <p className="text-[8px] font-semibold mb-1" style={{ color: "#a5b4fc" }}>Can I sublet the apartment?</p>
-        <p className="text-[8px] leading-snug" style={{ color: "#94a3b8" }}>No. Section 7.2 prohibits subletting without written landlord consent. Violation may result in lease termination.</p>
-      </motion.div>
-      {[
-        { q: "What's the notice period to move out?", a: "60 days — Section 9.1" },
-        { q: "Are pets allowed?", a: "Small pets only, with $400 deposit" },
-      ].map(({ q, a }, i) => (
-        <motion.div key={q}
-          initial={reduced ? false : { opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: reduced ? 0 : 1.0 + i * 0.22, duration: 0.32 }}
-          className="rounded-lg border p-1.5"
-          style={{ backgroundColor: "rgba(99,102,241,0.05)", borderColor: "rgba(99,102,241,0.18)" }}
-        >
-          <p className="text-[8px] font-semibold mb-0.5" style={{ color: "#c7d2fe" }}>{q}</p>
-          <p className="text-[7.5px]" style={{ color: "#64748b" }}>{a}</p>
-        </motion.div>
-      ))}
-      <motion.div
-        initial={reduced ? false : { opacity: 0 }} animate={{ opacity: 1 }}
-        transition={{ delay: reduced ? 0 : 1.55, duration: 0.35 }}
-        className="flex items-center gap-1.5 pt-0.5"
-      >
-        <MessageCircle style={{ width: 9, height: 9, color: "#6366f1" }} />
-        <span className="text-[8px] font-medium" style={{ color: "#818cf8" }}>All answers sourced from document text</span>
-      </motion.div>
-    </div>
-  )
-}
-
-function CompareOutput({ reduced }: { reduced: boolean }) {
-  return (
-    <div className="space-y-1.5">
-      <p className="text-[8px] font-semibold tracking-widest uppercase mb-2" style={{ color: "#475569" }}>Change Summary</p>
-      {[
-        { label: "Non-compete scope extended 2→5 yrs", severity: "High",   hex: "#ef4444", bg: "rgba(239,68,68,0.10)", border: "rgba(239,68,68,0.26)" },
-        { label: "Arbitration clause added",            severity: "Medium", hex: "#f59e0b", bg: "rgba(245,158,11,0.10)", border: "rgba(245,158,11,0.26)" },
-        { label: "Notice period: 14→30 days",           severity: "Low",    hex: "#14b8a6", bg: "rgba(20,184,166,0.10)", border: "rgba(20,184,166,0.26)" },
-      ].map(({ label, severity, hex, bg, border }, i) => (
-        <motion.div key={label}
-          initial={reduced ? false : { opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: reduced ? 0 : 0.90 + i * 0.25, duration: 0.35 }}
-          className="rounded-lg border p-2"
-          style={{ backgroundColor: bg, borderColor: border }}
-        >
-          <div className="flex items-center gap-1 mb-0.5">
-            <ArrowRightLeft style={{ width: 9, height: 9, color: hex }} className="shrink-0" />
-            <span className="text-[8px] font-bold uppercase tracking-wide" style={{ color: hex }}>{severity}</span>
-          </div>
-          <p className="text-[8px] leading-snug ml-[17px]" style={{ color: "#94a3b8" }}>{label}</p>
-        </motion.div>
-      ))}
-      <motion.div
-        initial={reduced ? false : { opacity: 0 }} animate={{ opacity: 1 }}
-        transition={{ delay: reduced ? 0 : 1.72, duration: 0.35 }}
-        className="flex items-center gap-1.5 pt-0.5"
-      >
-        <Sparkles style={{ width: 9, height: 9, color: "#14b8a6" }} />
-        <span className="text-[8px] font-medium" style={{ color: "#2dd4bf" }}>14 total changes · 3 high severity</span>
-      </motion.div>
-    </div>
-  )
-}
-
-function ClauseExtractorOutput({ reduced }: { reduced: boolean }) {
-  return (
-    <div className="space-y-1.5">
-      <p className="text-[8px] font-semibold tracking-widest uppercase mb-2" style={{ color: "#475569" }}>Extracted Fields</p>
-      {[
-        { icon: CalendarClock, label: "Lease start: Jun 1 2025 · End: May 31 2026", color: "#a855f7" },
-        { icon: Users,         label: "Landlord: Park Ave LLC · Tenant: J. Brooks",  color: "#a855f7" },
-        { icon: Layers,        label: "Auto-renewal clause · 60-day notice required", color: "#a855f7" },
-      ].map(({ icon: Icon, label, color }, i) => (
-        <motion.div key={label}
-          initial={reduced ? false : { opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: reduced ? 0 : 0.70 + i * 0.28, duration: 0.35 }}
-          className="rounded-lg border p-2"
-          style={{ backgroundColor: "rgba(168,85,247,0.09)", borderColor: "rgba(168,85,247,0.26)" }}
-        >
-          <div className="flex items-center gap-1 mb-0.5">
-            <Icon style={{ width: 9, height: 9, color }} className="shrink-0" />
-          </div>
-          <p className="text-[8px] leading-snug" style={{ color: "#94a3b8" }}>{label}</p>
-        </motion.div>
-      ))}
-      <motion.div
-        initial={reduced ? false : { opacity: 0 }} animate={{ opacity: 1 }}
-        transition={{ delay: reduced ? 0 : 1.62, duration: 0.35 }}
-        className="flex items-center gap-1.5 pt-0.5"
-      >
-        <Sparkles style={{ width: 9, height: 9, color: "#a855f7" }} />
-        <span className="text-[8px] font-medium" style={{ color: "#c084fc" }}>6 obligations · 3 require action before signing</span>
-      </motion.div>
-    </div>
-  )
-}
-
 function ToolOutput({ toolId, reduced }: { toolId: ToolId; reduced: boolean }) {
   if (toolId === 0) return <AnalyzeOutput reduced={reduced} />
-  if (toolId === 1) return <TrustOutput reduced={reduced} />
-  if (toolId === 2) return <BuildOutput reduced={reduced} />
-  if (toolId === 3) return <ReviewOutput reduced={reduced} />
-  if (toolId === 4) return <RedactOutput reduced={reduced} />
-  if (toolId === 5) return <AskOutput reduced={reduced} />
-  if (toolId === 6) return <CompareOutput reduced={reduced} />
-  return <ClauseExtractorOutput reduced={reduced} />
+  return <ReviewOutput reduced={reduced} />
 }
 
 /* ─── Processing view (brief scan state on tool switch) ───── */
 const PROCESSING_LABELS: Record<number, string> = {
   0: "Extracting action items…",
-  1: "Scoring document legitimacy…",
-  2: "Building clause structure…",
-  3: "Flagging risk clauses…",
-  4: "Detecting sensitive data…",
-  5: "Searching document text…",
-  6: "Mapping document changes…",
-  7: "Extracting clauses and obligations…",
+  1: "Flagging risk clauses…",
 }
 
 function ProcessingView({ tool }: { tool: typeof TOOLS[number] }) {
@@ -845,7 +364,7 @@ function DemoPanel({ toolId, isProcessing, reduced }: { toolId: ToolId; isProces
           style={{ borderColor: "#1e2d45", backgroundColor: "#060d1a" }}
         >
           <DocLines toolId={toolId} reduced={reduced} />
-          {toolId === 1 && <ScanLine reduced={reduced} />}
+          {toolId === 0 && <ScanLine reduced={reduced} />}
           {/* Scan overlay when processing */}
           {isProcessing && !reduced && (
             <motion.div
@@ -1004,7 +523,9 @@ type VideoWalkthroughProps = {
 export default function VideoWalkthrough({ activeTool, onToolChange }: VideoWalkthroughProps = {}) {
   const isControlled = activeTool !== undefined
   const [internalActive, setInternalActive] = useState<ToolId>(0)
-  const active: ToolId = isControlled ? (activeTool as ToolId) : internalActive
+  const active: ToolId = isControlled
+    ? (Math.min(activeTool, TOOLS.length - 1) as ToolId)
+    : internalActive
   const [isProcessing, setIsProcessing] = useState(false)
   const reduced = useReducedMotion() ?? false
   const isFirstRender = useRef(true)
@@ -1015,7 +536,7 @@ export default function VideoWalkthrough({ activeTool, onToolChange }: VideoWalk
     if (isControlled) return
     if (reduced) return
     const id = setInterval(() => {
-      setInternalActive((prev) => ((prev + 1) % 8) as ToolId)
+      setInternalActive((prev) => ((prev + 1) % TOOLS.length) as ToolId)
     }, INTERVAL_MS)
     return () => clearInterval(id)
   }, [reduced, isControlled])
@@ -1050,7 +571,7 @@ export default function VideoWalkthrough({ activeTool, onToolChange }: VideoWalk
           className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/15 border border-primary/30 mb-5"
         >
           <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-          <span className="text-xs font-semibold uppercase tracking-widest text-primary">9 tools · live demo</span>
+          <span className="text-xs font-semibold uppercase tracking-widest text-primary">2 tools · live demo</span>
         </motion.div>
         <motion.h2
           initial={{ opacity: 0, y: 12 }}

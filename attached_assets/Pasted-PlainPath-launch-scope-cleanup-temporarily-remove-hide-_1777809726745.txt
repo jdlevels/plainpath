@@ -1,0 +1,92 @@
+PlainPath launch-scope cleanup: temporarily remove/hide all tools except:
+1. Analyze a Document
+2. Contract Review
+
+Goal:
+Prepare PlainPath for Apple Store submission with only the two strongest, most stable tools visible across the platform.
+
+Required changes:
+1. Hide/remove these tools from all user-facing navigation, dashboards, cards, pricing/tool lists, demos, marketing sections, and app surfaces:
+   - Compare Versions
+   - Redact Sensitive Info
+   - Document Trust Check
+   - Ask This Document
+   - Clause Extractor & Obligation Tracker
+   - Document Creator / Builder
+   - Digital Signature
+   - PDF Editor
+   - Any other non-launch tool
+
+2. Keep only:
+   - Analyze a Document
+   - Contract Review
+
+3. Update marketing homepage copy so it reflects only these two launch tools.
+   Replace “all tools,” “8 tools,” “5 tools,” “suite,” or broad tool claims with language like:
+   - “Analyze documents and review contracts with source-backed guidance.”
+   - “Two focused tools for understanding documents before you act.”
+   - “PlainPath helps you understand documents, identify risks, and review contracts faster.”
+
+4. Update pricing copy:
+   - Do not promise tools that are hidden.
+   - Starter/Pro language must not mention removed tools.
+   - If pricing currently depends on multi-tool access, simplify launch copy to match Analyze + Contract Review only.
+
+5. Update app dashboard:
+   - Show only two cards:
+     - Analyze a Document
+     - Contract Review
+   - Remove empty gaps or disabled cards.
+   - Make layout look intentional, not like tools were removed.
+
+6. Update tool dropdown / header navigation:
+   - Only show Analyze a Document and Contract Review.
+   - Remove hidden tools from menus and quick links.
+
+7. Update demo/live preview areas:
+   - Only show demo loops/cards for Analyze a Document and Contract Review.
+   - Remove screenshots/copy for removed tools.
+
+8. Preserve routes/code if safer, but prevent user access from public UI.
+   - If a user manually visits a hidden tool route, redirect them to /app or show:
+     “This tool is not available in the launch version.”
+   - Do not delete core code unless deletion is safer and low-risk.
+
+9. Confirm auth and billing gates still work for the two launch tools only.
+
+10. Run a final search across the codebase for these terms and remove/replace user-facing references:
+   - Compare Versions
+   - Redact Sensitive Info
+   - Document Trust Check
+   - Ask This Document
+   - Clause Extractor
+   - Obligation Tracker
+   - Document Creator
+   - PDF Editor
+   - Digital Signature
+   - 5 tools
+   - 6 tools
+   - 8 tools
+   - all tools
+   - full suite
+
+Do not:
+- Add new features.
+- Redesign the full app.
+- Change billing logic beyond copy/visibility needed for launch.
+- Change Analyze a Document or Contract Review core behavior.
+- Introduce new routes unless needed for safe redirect.
+- Touch unrelated backend logic.
+
+Final QA checklist:
+- Marketing homepage only references Analyze + Contract Review.
+- App dashboard only shows Analyze + Contract Review.
+- Tool menu only shows Analyze + Contract Review.
+- Pricing does not promise hidden tools.
+- Hidden tool routes are inaccessible or safely redirected.
+- Analyze a Document upload/test works.
+- Contract Review upload/test works.
+- Sign in/sign out flow works.
+- Mobile layout still looks clean.
+- No broken links to hidden tools.
+- No “Failed to load session” or removed-tool errors appear.

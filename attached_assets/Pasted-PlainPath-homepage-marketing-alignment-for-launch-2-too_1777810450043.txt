@@ -1,0 +1,214 @@
+PlainPath homepage + marketing alignment for launch (2 tools only)
+
+Goal:
+Update the entire marketing experience to reflect ONLY:
+1. Analyze a Document
+2. Contract Review
+
+Do NOT redesign layout. Keep current structure, spacing, and styling.
+This is a content + clarity pass only.
+
+--------------------------------------------------
+1. HERO SECTION
+--------------------------------------------------
+
+Replace headline with:
+“Understand any document. Review any contract.”
+
+Replace subtext with:
+“PlainPath breaks down documents into plain English and highlights key terms, risks, and obligations in minutes.”
+
+Primary CTA:
+“Analyze a Document”
+
+Secondary CTA:
+“Review a Contract”
+
+Add small trust line under CTA:
+“Results in under 2 minutes. Cancel anytime.”
+
+IMPORTANT:
+Remove any “all tools”, “AI platform”, or multi-tool language.
+
+--------------------------------------------------
+2. “WHAT YOU GET” SECTION
+--------------------------------------------------
+
+If a feature/tool grid exists, convert it to this:
+
+Section title:
+“What you get in seconds”
+
+Bullets:
+- Plain English breakdown of your document
+- Key terms and obligations surfaced
+- Contract risks and unclear clauses highlighted
+- Clear next steps so you know what to do
+
+--------------------------------------------------
+3. CORE FEATURES (2-PILLAR STRUCTURE)
+--------------------------------------------------
+
+Replace any multi-tool sections with TWO blocks:
+
+Block 1:
+Title: “Analyze a Document”
+Description:
+“Turn complex documents into clear, readable insights.”
+
+Bullets:
+- Plain English summaries
+- Key sections explained
+- Deadlines and responsibilities identified
+- Missing or unclear language flagged
+
+Block 2:
+Title: “Contract Review”
+Description:
+“Know what you’re agreeing to before you sign.”
+
+Bullets:
+- Risky or one-sided clauses highlighted
+- Important terms surfaced instantly
+- Hidden obligations brought forward
+- Clear, actionable insights in minutes
+
+--------------------------------------------------
+4. COMPARISON SECTION (IMPORTANT)
+--------------------------------------------------
+
+Keep layout, update rows to ONLY reflect launch features.
+
+Table should be:
+
+Feature | Hire a Lawyer | Google It | PlainPath
+
+Rows:
+- Time to get an answer → Days | Hours | Under 2 minutes
+- Cost → $150–$500/hour | Free (if lucky) | From $4.99/month
+- Plain English explanation → Sometimes | Rarely | Every time
+- Key terms surfaced → Yes (manual) | Not reliably | Automatically
+- Contract risks identified → Yes | Not reliably | Yes
+- Available 24/7 → No | Yes | Yes
+
+REMOVE rows referencing:
+- Scam detection
+- Redaction
+- Multiple tools
+- Scoring systems
+
+--------------------------------------------------
+5. PRICING ALIGNMENT
+--------------------------------------------------
+
+Ensure pricing reflects ONLY 2 tools.
+
+Starter ($4.99):
+- Analyze a Document
+- Plain English breakdown
+- Key terms and insights
+
+Pro ($19.99):
+- Analyze a Document
+- Contract Review
+- Unlimited use
+- Saved analysis history
+
+Replace any:
+- “all tools”
+- “full suite”
+- “9 tools”
+- “workflow tools”
+
+With:
+- “document analysis and contract review”
+- “two focused document tools”
+
+--------------------------------------------------
+6. GLOBAL CLEANUP (CRITICAL)
+--------------------------------------------------
+
+Search entire codebase and REMOVE or REPLACE user-facing references to:
+
+- Compare Versions
+- Redact Sensitive Info
+- Document Trust Check
+- Ask This Document
+- Clause Extractor
+- Document Builder
+- PDF Editor
+- Digital Signature
+- “all tools”
+- “full suite”
+- “8 tools” / “9 tools”
+
+These should not appear anywhere in:
+- homepage
+- pricing
+- tool cards
+- menus
+- demos
+- footer
+- onboarding
+
+--------------------------------------------------
+7. CTA STANDARDIZATION
+--------------------------------------------------
+
+Across the entire site:
+
+Primary CTA:
+“Analyze a Document”
+
+Secondary CTA:
+“Review a Contract”
+
+Remove generic CTAs like:
+- “Try tools”
+- “Explore platform”
+- “View all tools”
+
+--------------------------------------------------
+8. FINAL CTA SECTION
+--------------------------------------------------
+
+Replace with:
+
+Headline:
+“Stop guessing. Start understanding.”
+
+Subtext:
+“Upload your document and get clear answers in minutes.”
+
+CTA:
+“Analyze a Document”
+
+--------------------------------------------------
+9. TRUST / FOOTER
+--------------------------------------------------
+
+Ensure footer includes:
+
+“PlainPath provides document insights and does not replace legal advice.”
+
+--------------------------------------------------
+10. DO NOT DO
+--------------------------------------------------
+
+- Do not redesign layout
+- Do not add new features
+- Do not modify backend logic
+- Do not reintroduce hidden tools
+- Do not change styling system
+
+--------------------------------------------------
+FINAL QA CHECKLIST
+--------------------------------------------------
+
+- Homepage only references Analyze + Contract Review
+- No hidden tools appear anywhere
+- No “all tools” or “full suite” language remains
+- CTAs are consistent across pages
+- Pricing matches actual available tools
+- Mobile view remains clean
+- No broken links or empty sections

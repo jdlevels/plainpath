@@ -491,32 +491,27 @@ function Router() {
             <Route path="/" component={protect(Home)} />
             <Route path="/import" component={protect(Import)} />
             <Route path="/analyze" component={protect(Import)} />
-            <Route path="/ask-document" component={protect(AskDocument)} />
-            <Route path="/ask-this-document" component={protect(AskDocument)} />
+            <Route path="/ask-document">{() => { window.location.replace(`${basePath}/`); return null; }}</Route>
+            <Route path="/ask-this-document">{() => { window.location.replace(`${basePath}/`); return null; }}</Route>
             <Route path="/results" component={protect(Analyze)} />
-            <Route path="/trust-check" component={protect(TrustCheck)} />
+            <Route path="/trust-check">{() => { window.location.replace(`${basePath}/`); return null; }}</Route>
             <Route path="/my-analyses" component={protect(MyAnalyses)} />
-            <Route path="/contract-builder" component={protect(ContractBuilder)} />
-            <Route path="/build-contract" component={protect(ContractBuilder)} />
+            <Route path="/contract-builder">{() => { window.location.replace(`${basePath}/`); return null; }}</Route>
+            <Route path="/build-contract">{() => { window.location.replace(`${basePath}/`); return null; }}</Route>
             <Route path="/contract-review" component={protect(ContractReview)} />
-            <Route path="/build" component={protect(ContractBuilder)} />
+            <Route path="/build">{() => { window.location.replace(`${basePath}/`); return null; }}</Route>
             <Route path="/review" component={protect(ContractReview)} />
-            <Route path="/compare" component={protect(Compare)} />
-            <Route path="/redact" component={protect(Redact)} />
+            <Route path="/compare">{() => { window.location.replace(`${basePath}/`); return null; }}</Route>
+            <Route path="/redact">{() => { window.location.replace(`${basePath}/`); return null; }}</Route>
             <Route path="/billing" component={protect(Billing)} />
             <Route path="/upgrade" component={protect(Upgrade)} />
             <Route path="/team" component={protect(TeamManage)} />
             <Route path="/documents" component={protect(Documents)} />
             <Route path="/account-security" component={protect(AccountSecurity)} />
-            <Route path="/clause-extractor" component={protect(ClauseExtractor)} />
-            <Route path="/clause-extractor/:id" component={protect(ClauseExtractor)} />
-            <Route path="/compare-versions" component={protect(CompareVersions)} />
-            <Route path="/compare-versions/:id">
-              {(params) => {
-                const C = protect(() => <CompareVersionsSession sessionId={params.id!} />)
-                return <C />
-              }}
-            </Route>
+            <Route path="/clause-extractor">{() => { window.location.replace(`${basePath}/`); return null; }}</Route>
+            <Route path="/clause-extractor/:id">{() => { window.location.replace(`${basePath}/`); return null; }}</Route>
+            <Route path="/compare-versions">{() => { window.location.replace(`${basePath}/`); return null; }}</Route>
+            <Route path="/compare-versions/:id">{() => { window.location.replace(`${basePath}/`); return null; }}</Route>
 
             {BUILDER_ENABLED && (
               <>

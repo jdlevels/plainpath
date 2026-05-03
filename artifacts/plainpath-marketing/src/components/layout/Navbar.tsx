@@ -3,8 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import {
   Menu, X, ChevronDown,
-  FileScan, ShieldCheck, Scale, PenLine, LayoutGrid, EyeOff,
-  GitCompare, ListChecks, MessageCircle, LayoutTemplate,
+  FileScan, Scale, LayoutGrid,
 } from "lucide-react";
 
 function smoothScroll(id: string) {
@@ -23,15 +22,8 @@ const NAV_LINKS = [
 ];
 
 const TOOL_LINKS = [
-  { label: "Analyze a Document",    href: "/demo/analyze",         icon: FileScan       },
-  { label: "Document Trust Check",  href: "/demo/trust-check",     icon: ShieldCheck    },
-  { label: "Contract Review",       href: "/demo/contract-review", icon: Scale          },
-  { label: "Build a Contract",      href: "/demo/build-contract",  icon: PenLine        },
-  { label: "Redact Sensitive Info", href: "/demo/redact",          icon: EyeOff         },
-  { label: "Compare Versions",      href: "/demo/compare",         icon: GitCompare     },
-  { label: "Clause Extractor",       href: "/demo/clause-extractor",icon: ListChecks     },
-  { label: "Ask This Document",      href: "/demo/ask-document",    icon: MessageCircle  },
-  { label: "Document Builder",       href: "/demo/builder",         icon: LayoutTemplate },
+  { label: "Analyze a Document", href: "/demo/analyze",         icon: FileScan },
+  { label: "Contract Review",    href: "/demo/contract-review", icon: Scale    },
 ];
 
 const LogoBrand = () => (
