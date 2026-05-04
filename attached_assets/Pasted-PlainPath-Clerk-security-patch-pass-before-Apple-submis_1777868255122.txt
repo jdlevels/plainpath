@@ -1,0 +1,104 @@
+PlainPath — Clerk security patch pass before Apple submission
+
+Goal:
+Patch the known Clerk authorization-bypass vulnerability before continuing product work.
+
+This is a dependency security patch only.
+
+Do not change:
+- Analyze UI
+- Plan Summary UI
+- feature flags
+- billing logic
+- RevenueCat logic
+- Stripe logic
+- Apple/native billing logic
+- pricing
+- routes
+- export behavior
+- product tools
+- removed tool state
+
+Removed tools must stay removed:
+- Redact Sensitive Info
+- Trust Check
+- Compare Versions
+- Clause Extractor
+- Builder
+- Digital Signature
+- Starter
+- Team
+- annual billing
+
+Context:
+Security scan reported Clerk-related vulnerability:
+CVE-2026-42349 / GHSA-w24r-5266-9c3c
+
+Patch targets:
+- @clerk/express in @workspace/api-server
+- @clerk/react in @workspace/plainpath
+
+Run:
+
+pnpm add @clerk/express@^2.1.12 --filter @workspace/api-server
+pnpm add @clerk/react@^6.5.0 --filter @workspace/plainpath
+
+Then verify:
+
+1. Dependency verification
+- Confirm @clerk/express is no longer in the vulnerable range
+- Confirm @clerk/backend transitive dependency resolves to a patched version
+- Confirm @clerk/react is no longer in the vulnerable range
+- Confirm pnpm lockfile updated correctly
+
+2. Security scan
+Run the same security scan again.
+Report:
+- remaining vulnerabilities
+- whether any Clerk vulnerabilities remain
+- whether remaining vulnerabilities are pre-existing or new
+- severity
+- production vs dev dependency
+
+3. Auth smoke test
+Verify:
+- app boots
+- Clerk provider loads
+- sign-in page still renders
+- signed-in app shell still renders
+- protected Analyze route still requires auth
+- existing admin/pro access still works
+- no auth regression in API server
+
+4. Billing safety
+Verify:
+- Stripe still hidden in native iOS
+- RevenueCat code unchanged
+- native verify route unchanged
+- billing provider logic unchanged
+- Pro-only plan still remains the only active plan
+- no Starter/Team/annual references restored
+
+5. Analyze safety
+Verify:
+- feature flag off still preserves old UI
+- feature flag on still renders four-mode flow
+- Plan Summary still renders in Plan mode
+- completion parser QA still passes 44/44
+
+6. Build checks
+Run:
+- Vite production build
+- API server type/build check if available
+- completion parser QA
+- security scan
+
+Return:
+1. Files changed
+2. Package versions before and after
+3. Security scan before and after
+4. Auth smoke test result
+5. Billing safety result
+6. Analyze feature flag result
+7. Build/QA results
+8. Whether this is safe for Apple submission
