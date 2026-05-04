@@ -1,11 +1,9 @@
-import type { ReactNode } from "react"
+import { useState, type ReactNode } from "react"
 import { motion } from "framer-motion"
 import {
   ChevronRight,
   ArrowLeft,
-  Lock,
   Package,
-  FileText,
   Check,
   AlertTriangle,
   Calendar,
@@ -14,9 +12,11 @@ import {
   HelpCircle,
   ListTodo,
   BookOpen,
+  Printer,
   type LucideIcon,
 } from "lucide-react"
 import type { CompletionObject, CompletionObjectType, CompletionPriority } from "@/lib/completionTypes"
+import { triggerPrint } from "@/lib/print"
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -95,6 +95,7 @@ function PacketSection({
   count,
   emptyMessage,
   note,
+  className = "",
   children,
 }: {
   label: string
@@ -104,11 +105,12 @@ function PacketSection({
   count: number
   emptyMessage?: string
   note?: string
+  className?: string
   children?: ReactNode
 }) {
   return (
-    <div className="rounded-2xl border border-border/40 bg-card overflow-hidden">
-      <div className="flex items-center gap-2.5 px-4 py-3 border-b border-border/20">
+    <div className={`rounded-2xl border border-border/40 bg-card overflow-hidden ${className}`}>
+      <div className="packet-print-section-header flex items-center gap-2.5 px-4 py-3 border-b border-border/20">
         <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${iconBg}`}>
           <Icon className={`w-3.5 h-3.5 ${iconColor}`} />
         </div>
@@ -151,7 +153,7 @@ function PacketRow({
   const TypeIcon = typeIcon(item.type)
 
   return (
-    <div className="flex items-center gap-2.5 px-4 py-3">
+    <div className="packet-print-row flex items-center gap-2.5 px-4 py-3">
       {/* Status dot — read-only indicator */}
       <div
         className={`shrink-0 w-2 h-2 rounded-full mt-0.5 ${done ? "bg-emerald-500" : "bg-border/60"}`}
@@ -194,13 +196,13 @@ function PacketRow({
         </div>
       </div>
 
-      {/* Details button */}
+      {/* Details button — screen only */}
       <button
         type="button"
         onClick={() => onOpenDetails(item)}
         aria-label={`Open details for ${item.title}`}
         style={{ touchAction: "manipulation" }}
-        className="shrink-0 flex items-center gap-0.5 text-[10px] font-semibold text-primary/55 hover:text-primary transition-colors outline-none focus-visible:underline"
+        className="packet-no-print shrink-0 flex items-center gap-0.5 text-[10px] font-semibold text-primary/55 hover:text-primary transition-colors outline-none focus-visible:underline"
       >
         Details <ChevronRight className="w-3 h-3" />
       </button>
@@ -220,7 +222,7 @@ function DeadlineRow({
   onOpenDetails: (item: CompletionObject) => void
 }) {
   return (
-    <div className="flex items-start gap-2.5 px-4 py-3">
+    <div className="packet-print-row flex items-start gap-2.5 px-4 py-3">
       <div
         className={`shrink-0 w-2 h-2 rounded-full mt-1 ${done ? "bg-emerald-500" : "bg-border/60"}`}
         aria-hidden="true"
@@ -262,7 +264,7 @@ function DeadlineRow({
         onClick={() => onOpenDetails(item)}
         aria-label={`Open details for ${item.title}`}
         style={{ touchAction: "manipulation" }}
-        className="shrink-0 flex items-center gap-0.5 text-[10px] font-semibold text-primary/55 hover:text-primary transition-colors outline-none focus-visible:underline mt-0.5"
+        className="packet-no-print shrink-0 flex items-center gap-0.5 text-[10px] font-semibold text-primary/55 hover:text-primary transition-colors outline-none focus-visible:underline mt-0.5"
       >
         Details <ChevronRight className="w-3 h-3" />
       </button>
@@ -280,7 +282,7 @@ function EvidenceRow({
   onOpenDetails: (item: CompletionObject) => void
 }) {
   return (
-    <div className="px-4 py-3 space-y-1.5">
+    <div className="packet-print-row px-4 py-3 space-y-1.5">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5 min-w-0 flex-1">
           <p className="text-xs font-semibold text-foreground truncate">{item.title}</p>
@@ -293,7 +295,7 @@ function EvidenceRow({
           onClick={() => onOpenDetails(item)}
           aria-label={`Open details for ${item.title}`}
           style={{ touchAction: "manipulation" }}
-          className="shrink-0 flex items-center gap-0.5 text-[10px] font-semibold text-primary/55 hover:text-primary transition-colors outline-none focus-visible:underline"
+          className="packet-no-print shrink-0 flex items-center gap-0.5 text-[10px] font-semibold text-primary/55 hover:text-primary transition-colors outline-none focus-visible:underline"
         >
           Details <ChevronRight className="w-3 h-3" />
         </button>
@@ -344,6 +346,8 @@ export function CompileModeView({
   documentType,
   summary,
 }: CompileModeViewProps) {
+  const [printUnavailable, setPrintUnavailable] = useState(false)
+
   // Filter to completable types
   const completable = completionObjects.filter((o) => COMPLETABLE_TYPES.includes(o.type))
   const totalItems  = completable.length
@@ -370,6 +374,28 @@ export function CompileModeView({
     day: "numeric",
   })
 
+  // ─── Print handler ────────────────────────────────────────────────────────
+
+  function handlePrint() {
+    // Gate the packet-specific print CSS and suppress the old PrintReport
+    document.body.classList.add("packet-print-active")
+
+    // Clean up after the print dialog closes
+    const cleanup = () => {
+      document.body.classList.remove("packet-print-active")
+      window.removeEventListener("afterprint", cleanup)
+    }
+    window.addEventListener("afterprint", cleanup)
+
+    const result = triggerPrint()
+    if (!result.success) {
+      // Native — not supported; remove class immediately and show message
+      document.body.classList.remove("packet-print-active")
+      window.removeEventListener("afterprint", cleanup)
+      setPrintUnavailable(true)
+    }
+  }
+
   return (
     <motion.div
       key="compile-mode"
@@ -377,13 +403,41 @@ export function CompileModeView({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -5 }}
       transition={{ duration: 0.14 }}
-      className="no-print mb-6 sm:mb-8 space-y-4"
+      className="packet-print-root mb-6 sm:mb-8 space-y-4"
     >
-      {/* ── Header card ────────────────────────────────── */}
-      <div className="rounded-3xl border border-border/30 bg-card shadow-lg shadow-black/[0.04] dark:shadow-black/20 overflow-hidden p-6 sm:p-8 space-y-5">
+      {/* ── Print-only packet header (hidden on screen) ──────── */}
+      <div className="packet-print-only" aria-hidden="true">
+        <div style={{ borderBottom: "2px solid #4F7CAC", paddingBottom: "12pt", marginBottom: "16pt" }}>
+          <p style={{ fontSize: "9pt", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#4F7CAC", margin: "0 0 4pt 0" }}>
+            PlainPath
+          </p>
+          <p style={{ fontSize: "18pt", fontWeight: 800, color: "#111827", margin: "0 0 6pt 0", lineHeight: 1.2 }}>
+            Document Action Packet
+          </p>
+          <p style={{ fontSize: "12pt", fontWeight: 600, color: "#1f2937", margin: "0 0 8pt 0" }}>
+            {documentTitle}
+          </p>
+          <div style={{ display: "flex", gap: "24pt", flexWrap: "wrap" }}>
+            {documentType && (
+              <span style={{ fontSize: "9pt", color: "#6b7280" }}>
+                <strong style={{ color: "#374151" }}>Type:</strong> {documentType}
+              </span>
+            )}
+            <span style={{ fontSize: "9pt", color: "#6b7280" }}>
+              <strong style={{ color: "#374151" }}>Preview generated:</strong> {previewDate}
+            </span>
+            <span style={{ fontSize: "9pt", color: "#6b7280" }}>
+              <strong style={{ color: "#374151" }}>Completion:</strong> {doneItems}/{totalItems} complete — {progress}%
+            </span>
+          </div>
+        </div>
+      </div>
 
-        {/* Icon + title */}
-        <div className="flex items-start gap-3">
+      {/* ── Header card ────────────────────────────────────────── */}
+      <div className="packet-print-header-card rounded-3xl border border-border/30 bg-card shadow-lg shadow-black/[0.04] dark:shadow-black/20 overflow-hidden p-6 sm:p-8 space-y-5">
+
+        {/* Icon + title — screen only (print has its own header above) */}
+        <div className="packet-no-print flex items-start gap-3">
           <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
             <Package className="w-5 h-5 text-primary" />
           </div>
@@ -397,7 +451,7 @@ export function CompileModeView({
           </div>
         </div>
 
-        {/* ── Section A: Cover / Packet Summary ─────── */}
+        {/* ── Section A: Cover / Packet Summary ─────────────── */}
         <div className="rounded-2xl border border-border/30 bg-secondary/20 p-5 space-y-4">
           <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40">
             Packet Summary
@@ -434,8 +488,8 @@ export function CompileModeView({
           </div>
         </div>
 
-        {/* Navigation buttons */}
-        <div className="flex flex-wrap items-center gap-3 pt-1">
+        {/* Navigation + print buttons — screen only */}
+        <div className="packet-screen-actions flex flex-wrap items-center gap-3 pt-1">
           <button
             type="button"
             onClick={onGoToComplete}
@@ -454,31 +508,32 @@ export function CompileModeView({
             Review Open Items
             <ChevronRight className="w-4 h-4 shrink-0" />
           </button>
-          <div className="flex items-center gap-2">
+          {/* Print / Save as PDF */}
+          {printUnavailable ? (
+            <span className="text-xs text-muted-foreground/50 italic">
+              Printing not available on this device.
+            </span>
+          ) : (
             <button
               type="button"
-              disabled
-              aria-disabled="true"
-              aria-label="Export Packet — PDF export comes in the next phase"
-              className="flex items-center gap-2 px-4 py-2 rounded-xl border border-border/25 bg-secondary/25 text-sm font-semibold text-muted-foreground/35 cursor-not-allowed min-h-[38px]"
+              onClick={handlePrint}
+              aria-label="Print or save Document Action Packet as PDF"
+              style={{ touchAction: "manipulation" }}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/40 min-h-[38px]"
             >
-              <FileText className="w-4 h-4 shrink-0" />
-              Export Packet
+              <Printer className="w-4 h-4 shrink-0" />
+              Print / Save as PDF
             </button>
-            <span className="hidden sm:flex items-center gap-1.5 text-[10px] text-muted-foreground/40">
-              <Lock className="w-3 h-3 shrink-0" aria-hidden="true" />
-              PDF export comes in the next phase.
-            </span>
-          </div>
+          )}
         </div>
       </div>
 
-      {/* ── Packet sections B–M ────────────────────────── */}
+      {/* ── Packet sections B–M ──────────────────────────────── */}
       <div className="space-y-3 sm:space-y-4">
 
         {/* B: Plain-English Summary */}
-        <div className="rounded-2xl border border-border/40 bg-card overflow-hidden">
-          <div className="flex items-center gap-2.5 px-4 py-3 border-b border-border/20">
+        <div className="packet-print-section rounded-2xl border border-border/40 bg-card overflow-hidden">
+          <div className="packet-print-section-header flex items-center gap-2.5 px-4 py-3 border-b border-border/20">
             <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 bg-primary/10">
               <BookOpen className="w-3.5 h-3.5 text-primary/70" />
             </div>
@@ -503,6 +558,7 @@ export function CompileModeView({
           iconBg="bg-emerald-50 dark:bg-emerald-950/40"
           count={completedItems.length}
           emptyMessage="No items have been marked complete yet."
+          className="packet-print-section"
         >
           {completedItems.map((item) => (
             <PacketRow key={item.id} item={item} done={true} onOpenDetails={onOpenDetails} />
@@ -517,6 +573,7 @@ export function CompileModeView({
           iconBg="bg-blue-50 dark:bg-blue-950/40"
           count={openList.length}
           emptyMessage="All items are complete."
+          className="packet-print-section"
         >
           {openList.map((item) => (
             <PacketRow key={item.id} item={item} done={false} onOpenDetails={onOpenDetails} />
@@ -531,6 +588,7 @@ export function CompileModeView({
           iconBg="bg-violet-50 dark:bg-violet-950/40"
           count={docItems.length}
           emptyMessage="No required or missing documents were identified."
+          className="packet-print-section"
         >
           {docItems.map((item) => (
             <PacketRow
@@ -550,6 +608,7 @@ export function CompileModeView({
           iconBg="bg-indigo-50 dark:bg-indigo-950/40"
           count={sigItems.length}
           emptyMessage="No signatures were identified for this document."
+          className="packet-print-section"
         >
           {sigItems.map((item) => (
             <PacketRow
@@ -569,6 +628,7 @@ export function CompileModeView({
           iconBg="bg-orange-50 dark:bg-orange-950/40"
           count={deadlineItems.length}
           emptyMessage="No deadlines were identified for this document."
+          className="packet-print-section"
         >
           {deadlineItems.map((item) => (
             <DeadlineRow
@@ -588,6 +648,7 @@ export function CompileModeView({
           iconBg="bg-red-50 dark:bg-red-950/40"
           count={riskItems.length}
           emptyMessage="No risks were identified for this document."
+          className="packet-print-section"
         >
           {riskItems.map((item) => (
             <PacketRow
@@ -607,6 +668,7 @@ export function CompileModeView({
           iconBg="bg-sky-50 dark:bg-sky-950/40"
           count={questionItems.length}
           emptyMessage="No follow-up questions were identified."
+          className="packet-print-section"
         >
           {questionItems.map((item) => (
             <PacketRow
@@ -626,6 +688,7 @@ export function CompileModeView({
           iconBg="bg-emerald-50 dark:bg-emerald-950/40"
           count={evidenceItems.length}
           emptyMessage="No source evidence was found for any items."
+          className="packet-print-section"
         >
           {evidenceItems.map((item) => (
             <EvidenceRow key={item.id} item={item} onOpenDetails={onOpenDetails} />
@@ -641,6 +704,7 @@ export function CompileModeView({
           count={manualItems.length}
           emptyMessage="All items have source evidence."
           note="These items did not include a direct source quote. Review the uploaded document manually before acting."
+          className="packet-print-section"
         >
           {manualItems.map((item) => (
             <PacketRow
@@ -653,8 +717,8 @@ export function CompileModeView({
         </PacketSection>
 
         {/* L: Final Review Checklist */}
-        <div className="rounded-2xl border border-border/40 bg-card overflow-hidden">
-          <div className="flex items-center gap-2.5 px-4 py-3 border-b border-border/20">
+        <div className="packet-print-section rounded-2xl border border-border/40 bg-card overflow-hidden">
+          <div className="packet-print-section-header flex items-center gap-2.5 px-4 py-3 border-b border-border/20">
             <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 bg-secondary/60">
               <Check className="w-3.5 h-3.5 text-muted-foreground/60" />
             </div>
@@ -675,13 +739,20 @@ export function CompileModeView({
         </div>
 
         {/* M: Disclaimer */}
-        <div className="rounded-2xl border border-border/25 bg-secondary/15 px-5 py-4">
+        <div className="packet-print-section rounded-2xl border border-border/25 bg-secondary/15 px-5 py-4">
           <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 mb-2">
             Disclaimer
           </p>
           <p className="text-xs text-muted-foreground leading-relaxed">
             PlainPath helps organize and explain documents. It does not provide legal, financial, medical, or
             professional advice. Always verify requirements with the issuing organization before acting.
+          </p>
+        </div>
+
+        {/* Print footer — shown only in print, after all sections */}
+        <div className="packet-print-only" aria-hidden="true">
+          <p style={{ fontSize: "8pt", color: "#9ca3af", borderTop: "1px solid #e5e7eb", paddingTop: "8pt", marginTop: "8pt", textAlign: "center" }}>
+            Generated by PlainPath. Verify all requirements with the issuing organization before acting.
           </p>
         </div>
       </div>

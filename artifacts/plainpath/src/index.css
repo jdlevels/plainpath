@@ -454,6 +454,85 @@
   }
 }
 
+/* ─── Packet print classes — Compile mode packet only ───────────
+   Scoped to body.packet-print-active so these rules never fire
+   during Understand / Plan / Complete mode prints, and never
+   affect ContractReview or any other page.
+─────────────────────────────────────────────────────────────── */
+
+/* Hidden on screen; shown only inside packet print body class */
+.packet-print-only { display: none !important; }
+
+@media print {
+  /* ── When the Print / Save as PDF button sets this body class ── */
+  body.packet-print-active .packet-print-only {
+    display: block !important;
+  }
+
+  /* Suppress the old per-tab PrintReport so it doesn't double-print */
+  body.packet-print-active .print-only {
+    display: none !important;
+  }
+
+  /* Hide screen-only interactive elements */
+  body.packet-print-active .packet-no-print,
+  body.packet-print-active .packet-screen-actions {
+    display: none !important;
+  }
+
+  /* Packet root: let it flow naturally across pages */
+  body.packet-print-active .packet-print-root {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    /* Remove screen spacing utilities */
+    row-gap: 0 !important;
+  }
+
+  /* The space-y-4 gap div inside packet-print-root */
+  body.packet-print-active .packet-print-root > div {
+    display: block !important;
+    gap: 0 !important;
+  }
+
+  /* Header card: stays together on first page */
+  body.packet-print-active .packet-print-header-card {
+    border: 1px solid #e5e7eb !important;
+    background: white !important;
+    box-shadow: none !important;
+    border-radius: 8px !important;
+    padding: 14pt 16pt !important;
+    margin-bottom: 12pt !important;
+    overflow: visible !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Section cards: allow natural flow across pages */
+  body.packet-print-active .packet-print-section {
+    border: 1px solid #e5e7eb !important;
+    background: white !important;
+    box-shadow: none !important;
+    border-radius: 8px !important;
+    margin-bottom: 10pt !important;
+    overflow: visible !important;
+    break-inside: auto;
+    page-break-inside: auto;
+  }
+
+  /* Section header stays with its first row */
+  body.packet-print-active .packet-print-section-header {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  /* Individual item rows stay intact */
+  body.packet-print-active .packet-print-row {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
+
 /* ── Grid orphan centering ───────────────────────────────────── */
 @media (min-width: 1280px) {
   .xl-col-start-2 {
