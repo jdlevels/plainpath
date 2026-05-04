@@ -2,7 +2,10 @@ import * as React from "react"
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
 
 import { cn } from "@/lib/utils"
-import { buttonVariants } from "@/components/ui/button"
+
+const btnBase = "inline-flex items-center justify-center whitespace-nowrap text-sm font-semibold ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-11 px-6 py-2 rounded-xl"
+const btnDefault = "bg-primary text-primary-foreground shadow hover:bg-primary/90"
+const btnOutline = "border-2 border-border bg-transparent hover:bg-secondary hover:text-secondary-foreground"
 
 const AlertDialog = AlertDialogPrimitive.Root
 
@@ -102,7 +105,7 @@ const AlertDialogAction = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <AlertDialogPrimitive.Action
     ref={ref}
-    className={cn(buttonVariants(), className)}
+    className={cn(btnBase, btnDefault, className)}
     {...props}
   />
 ))
@@ -114,11 +117,7 @@ const AlertDialogCancel = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <AlertDialogPrimitive.Cancel
     ref={ref}
-    className={cn(
-      buttonVariants({ variant: "outline" }),
-      "mt-2 sm:mt-0",
-      className
-    )}
+    className={cn(btnBase, btnOutline, "mt-2 sm:mt-0", className)}
     {...props}
   />
 ))

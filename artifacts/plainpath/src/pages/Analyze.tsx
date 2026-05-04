@@ -10,6 +10,16 @@ import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import {
   Loader2, FileText, ListTodo, Calendar, AlertTriangle,
   Printer, ArrowLeft, CheckCircle2, AlertCircle, XCircle,
   ArrowRight, ShieldCheck, Clock, TrendingUp, BookOpen,
@@ -123,6 +133,9 @@ export default function Analyze() {
   // Phase 3H.3: brief "Saved" flash after each successful toggle
   const [saveFlashVisible, setSaveFlashVisible] = useState(false)
   const saveFlashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Reset-progress confirmation dialog (replaces window.confirm — iOS-safe)
+  const [resetConfirmOpen, setResetConfirmOpen] = useState(false)
 
   // Phase 3H.2: localStorage availability — checked once on mount
   const storageAvailable = useMemo(() => {
@@ -245,12 +258,12 @@ export default function Analyze() {
     })
   }, [analysis.id, completionObjects])
 
-  // Phase 3H.2: reset progress for current analysis
+  // Phase 3H.2: reset progress for current analysis (iOS-safe — no window.confirm)
   const handleResetProgress = useCallback(() => {
-    const confirmed = window.confirm(
-      "Reset checked progress for this document? This will not delete the analysis or uploaded document."
-    )
-    if (!confirmed) return
+    setResetConfirmOpen(true)
+  }, [])
+
+  const executeResetProgress = useCallback(() => {
     setCompletionStatus({})
     clearCompletionStatus(analysis.id)
   }, [analysis.id])
@@ -726,6 +739,27 @@ export default function Analyze() {
           )}
         </AnimatePresence>
       )}
+
+      {/* ── Reset-progress confirmation (iOS-safe, no window.confirm) ── */}
+      <AlertDialog open={resetConfirmOpen} onOpenChange={setResetConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reset checked progress?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will clear all checked items for this document. Your analysis and uploaded document will not be deleted.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={executeResetProgress}
+            >
+              Reset progress
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
