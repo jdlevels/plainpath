@@ -1,0 +1,151 @@
+Phase 3K — Redesign Document Action Packet PDF into a useful completion packet.
+
+Context:
+The current Packet PDF technically exports, but the saved document is not useful enough. It prints an 11-page extraction-style report with repeated items across Open Items, Required/Missing Documents, Signatures, Deadlines, Risks, Questions, Source Evidence, and Manual Review. The goal is to turn the Packet export into a clean user-facing completion packet, not a data dump.
+
+Important:
+- Do not change billing, RevenueCat, Stripe, auth, routing, pricing, marketing, Contract Review, database schema, backend routes, removed tools, or parser logic unless strictly necessary.
+- Prefer frontend-only changes inside Analyze Packet/Compile mode.
+- Keep the existing completion objects and completionStatus state.
+- Keep source-backed discipline.
+- Do not remove source evidence entirely; move it into a clearly labeled appendix or compact evidence section.
+- Do not add legal advice language.
+- Do not claim the packet is officially submitted, legally reviewed, attorney approved, or guaranteed complete.
+
+Primary goal:
+Redesign the Packet PDF so it reads like a practical Document Action Packet the user can actually use.
+
+New packet structure:
+
+1. Cover / Packet Summary
+   - PlainPath branding
+   - Document title
+   - Document type
+   - Generated date
+   - Completion status
+   - Completed count / open count
+   - Source-backed count
+   - Manual-review count
+   - Short plain-English summary
+
+2. What To Do First
+   - Show only the top priority open items.
+   - Priority order:
+     critical open items first
+     high open items second
+     deadlines/signatures/documents before questions
+   - Maximum 5–7 items.
+   - Each item should show:
+     title
+     type
+     priority
+     what to do
+     where to get this, if available
+     deadline/trigger, if available
+
+3. Documents To Gather
+   - Required and missing documents only.
+   - Deduplicate items that already appeared in “What To Do First” if they are exact same item.
+   - Use a simple table:
+     Document / Why Needed / Where To Get It / Status
+
+4. Signatures Needed
+   - Signature-related items only.
+   - Use plain language:
+     what needs signing
+     who likely needs to sign, if known
+     whether official form/source confirmation is needed
+     status
+
+5. Deadlines & Timing
+   - Only true date/timing items.
+   - Separate:
+     Hard deadlines
+     Reference dates
+   - Each deadline should show:
+     deadline or trigger
+     why it matters
+     related action
+     source-backed/review-source status
+
+6. Questions To Ask
+   - Convert question objects into a clean copy-ready list.
+   - Do not repeat questions already shown in “What To Do First” unless needed.
+   - Format should be user-friendly:
+     “Ask the issuing office/provider: [question]”
+
+7. Risks To Review Before Acting
+   - Show risks only once.
+   - Each risk should include:
+     risk title
+     why it matters
+     practical caution
+     source status
+   - Do not use legal-advice wording.
+
+8. Final Review Checklist
+   - Keep this near the end.
+   - Make it practical:
+     [ ] I reviewed open items
+     [ ] I gathered required documents
+     [ ] I confirmed signatures
+     [ ] I checked deadlines
+     [ ] I asked unresolved questions
+     [ ] I verified source evidence or contacted the issuing organization
+     [ ] I understand PlainPath is not legal, financial, medical, or professional advice
+
+9. Source Evidence Appendix
+   - Move detailed source quotes here.
+   - Label clearly:
+     “Appendix — Source Evidence”
+   - Keep it compact.
+   - Show only source-backed items.
+   - Avoid repeating giant document-section fragments unless they are meaningful.
+   - Long quotes should be clamped or summarized visually, but the actual quote should remain enough to support the item.
+
+10. Disclaimer
+   - Keep final disclaimer:
+     PlainPath helps organize and explain documents. It does not provide legal, financial, medical, or professional advice. Always verify requirements with the issuing organization before acting.
+
+PDF behavior:
+- The packet should look like a finished document, not a browser dashboard.
+- Reduce repeated items.
+- Reduce badge clutter.
+- Use cleaner table-like sections where appropriate.
+- Keep print-friendly white background.
+- Hide app buttons, Details buttons, drawer UI, screen-only controls, mode nav, and browser-like UI from printed output.
+- Keep multi-page export working.
+- Keep @page size letter margin behavior.
+- Do not break Contract Review PDF export.
+
+Screen behavior:
+- Packet mode can still show the detailed preview, but the Print / Save as PDF output must be optimized for the saved packet.
+- If needed, create a dedicated print-only packet component or print-only layout inside CompileModeView.
+- The screen preview does not need to be identical to the printed PDF, but it should represent the same packet sections.
+
+Acceptance criteria:
+1. PDF no longer starts with a long object dump.
+2. First page clearly tells the user what the document is and what to do first.
+3. Repeated items are reduced.
+4. Source evidence is moved to an appendix-style section.
+5. Questions are copy-ready and user-friendly.
+6. Documents, signatures, deadlines, and risks each have distinct purposes.
+7. Print preview spans multiple pages only when needed, not because of bloated repetition.
+8. Browser UI/app controls do not appear inside the packet content.
+9. No removed-tool references.
+10. No Starter/Team/annual references.
+11. No billing, auth, RevenueCat, Stripe, native, route, database, parser, or Contract Review changes unless unavoidable.
+12. Vite build passes.
+13. Completion parser QA still passes.
+
+Manual test notes to include in the final report:
+- Upload or open a real analyzed document.
+- Mark several items complete.
+- Go to Packet mode.
+- Print / Save as PDF.
+- Confirm the first page is useful without needing to read all pages.
+- Confirm “What To Do First” is concise.
+- Confirm documents/signatures/deadlines/questions/risks are not confusingly duplicated.
+- Confirm source evidence appears later as appendix material.
+- Confirm PDF has more than one page only when content requires it.
+- Confirm the packet is something a user could actually print and work from.
