@@ -522,7 +522,7 @@ export default function Home() {
                     href="/demo/contract-review"
                     className="inline-flex items-center gap-2 bg-background border border-border text-foreground rounded-xl px-5 h-12 sm:h-14 text-sm font-semibold hover:bg-secondary/60 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
                   >
-                    Review a Contract
+                    Review a Contract <ArrowRight className="w-4 h-4" />
                   </a>
                 </div>
                 <p className="text-xs text-muted-foreground/70">PlainPath Pro &nbsp;•&nbsp; $19.99/month &nbsp;•&nbsp; Both tools included &nbsp;•&nbsp; Cancel anytime</p>
