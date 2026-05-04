@@ -1,0 +1,151 @@
+PlainPath — App Store Privacy Nutrition Label decision sheet
+
+Goal:
+Create a conservative, owner-review-ready App Store Privacy Nutrition Label decision sheet for PlainPath.
+
+Do not change product code.
+Do not change Analyze.
+Do not change Contract Review.
+Do not change billing, auth, pricing, routes, native, database, parser, or protected files.
+
+Use existing docs:
+- docs/app-store-submission-assets.md
+- docs/app-store-connect-copy-sheet.md
+- current Privacy Policy page/content
+- current Terms page/content
+- current app integrations in codebase
+
+Create:
+
+docs/app-store-privacy-nutrition-labels.md
+
+Important:
+Do not guess beyond what the code and policy support.
+Where owner confirmation is required, mark it clearly as OWNER CONFIRMATION REQUIRED.
+
+Apple privacy label principle:
+The privacy label must account for data collected by the app and third-party partners integrated into the app.
+
+PlainPath launch tools:
+1. Analyze a Document
+2. Contract Review
+
+Known likely data categories to evaluate:
+- Contact Info: email address
+- User ID: Clerk user ID / RevenueCat user ID / subscription identifier
+- Purchases: subscription status / entitlement information
+- User Content: uploaded documents, document text, generated analysis results
+- Diagnostics: crash logs, performance data, logs if collected
+- Usage Data: app interactions / product analytics if collected
+- Identifiers: device ID or app instance ID if collected by SDKs
+- Financial Info: only if Apple/StoreKit handles it directly; do not mark as collected by PlainPath unless app code receives payment card details
+
+For each possible data type, produce a table with:
+1. Data type
+2. Is it collected? Yes / No / Owner confirmation required
+3. Source in app/code/policy
+4. Purpose:
+   - App Functionality
+   - Account Management
+   - Payment / Subscription Access
+   - Analytics
+   - Diagnostics
+   - Other
+5. Linked to user? Yes / No / Owner confirmation required
+6. Used for tracking? Expected No unless confirmed otherwise
+7. Retained? Yes / temporary / not retained / owner confirmation required
+8. Notes
+
+Specific questions to answer:
+
+1. Account data
+Confirm whether Clerk collects:
+- email
+- user ID
+- authentication/session data
+
+2. Subscription data
+Confirm whether RevenueCat / StoreKit collects or processes:
+- subscription status
+- purchase entitlement
+- app user ID
+- transaction metadata
+
+3. Uploaded documents
+Confirm whether uploaded documents/document text are:
+- processed to return results
+- retained after processing
+- stored in user history
+- deleted after processing
+- sent to AI provider
+- used for training
+
+Do not overstate. If history stores analysis text but not original files, state that precisely.
+
+4. AI provider processing
+Confirm:
+- provider identity if visible in code/env/docs
+- whether submitted content is used for training
+- whether data is retained
+- whether business/API no-training terms are in place
+
+Mark owner confirmation required if not fully verifiable from repo/policy.
+
+5. Analytics / diagnostics
+Search for analytics, crash reporting, telemetry, Sentry, PostHog, Google Analytics, Firebase, LogRocket, or similar SDKs.
+If none exist, mark analytics/diagnostics as not found in code.
+If present, identify exactly what may be collected.
+
+6. Tracking
+Search for ad SDKs, cross-app tracking, ATT-related code, advertising identifiers, or third-party tracking SDKs.
+Expected:
+No tracking.
+Confirm by code search.
+
+7. Privacy policy alignment
+Compare the recommended privacy label selections against the actual Privacy Policy.
+Flag mismatches.
+
+8. App Store label recommendation
+
+Produce a final recommended privacy-label table:
+
+Likely “Data Linked to You”:
+- Email Address, if Clerk account email is collected
+- User ID, if Clerk/RevenueCat identifiers are linked to account
+- Purchases, if subscription entitlement/purchase data is linked to account
+- User Content, if uploaded document text or analysis results are processed/stored with account
+
+Likely “Data Not Linked to You”:
+- Diagnostics, only if collected anonymously
+- Usage Data, only if collected anonymously
+
+Likely “Data Used to Track You”:
+- None, unless tracking SDKs are found
+
+But do not finalize these unless evidence supports them.
+
+9. Owner confirmation checklist
+
+Include a checklist for Jeff to confirm:
+- Clerk data handling
+- RevenueCat data handling
+- StoreKit purchase handling
+- AI provider no-training terms
+- Uploaded document retention behavior
+- Whether user analysis history stores generated results
+- Whether original files are stored after processing
+- Whether any analytics/diagnostic SDKs are enabled in production
+
+10. Final output
+
+Return:
+- file created
+- recommended App Store privacy label selections
+- evidence summary
+- owner-confirmation items
+- mismatches found, if any
+- final recommendation
+
+Expected final status:
+PRIVACY LABELS READY FOR OWNER CONFIRMATION
