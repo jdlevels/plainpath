@@ -1,0 +1,85 @@
+PlainPath — App Store screenshot production brief
+
+Goal:
+Create a screenshot production plan for the locked PlainPath two-tool launch.
+
+Do not change product code.
+Do not change Analyze.
+Do not change Contract Review.
+Do not change billing, auth, pricing, routes, native, database, parser, or protected files.
+
+Create:
+
+docs/app-store-screenshot-production-plan.md
+
+Use the existing submission doc:
+docs/app-store-submission-assets.md
+
+Locked launch tools:
+1. Analyze a Document — complete paperwork before submission
+2. Contract Review — understand contract terms before signing
+
+Plan a 6-screenshot iPhone set.
+
+Use iPhone 6.9-inch portrait as the primary screenshot target.
+Use Apple-accepted screenshot dimensions for 6.9-inch iPhone portrait.
+Include notes if additional 6.5-inch screenshots are required or if App Store Connect can scale from the highest-resolution required screenshots.
+
+For each screenshot, include:
+1. Screenshot title
+2. Overlay caption
+3. Exact app screen to capture
+4. Required state/data
+5. What it proves
+6. What not to show
+
+Screenshot set:
+
+1. Start / Upload
+Caption idea:
+“Upload paperwork or a contract.”
+
+2. Analyze — Understand
+Caption idea:
+“See what the document says in plain English.”
+
+3. Analyze — Requirements
+Caption idea:
+“Know what needs to be completed.”
+
+4. Analyze — Complete
+Caption idea:
+“Check off items as you finish them.”
+
+5. Contract Review — Key Clauses
+Caption idea:
+“Review key clauses before signing.”
+
+6. Contract Review — Questions to Ask
+Caption idea:
+“Know what to clarify before you sign.”
+
+Rules:
+- Use fictional/demo documents only
+- No real personal data
+- No attorney-approved claims
+- No guaranteed-safe claims
+- No do-not-sign language
+- No removed tools
+- No Starter / Team / annual pricing
+- No print/export-focused screenshot as a primary screenshot
+- Captions must be short and readable on mobile
+
+Also include:
+- Recommended screenshot order
+- Recommended capture device/simulator
+- Filename naming convention
+- Owner checklist before upload
+- Any missing data/screens needed
+
+Return:
+1. File created
+2. Screenshot list
+3. Caption list
+4. Required owner confirmations
+5. Final recommendation
