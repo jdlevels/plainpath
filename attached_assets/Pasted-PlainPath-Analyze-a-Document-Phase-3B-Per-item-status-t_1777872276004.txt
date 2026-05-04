@@ -1,0 +1,226 @@
+PlainPath — Analyze a Document Phase 3B: Per-item status tracking in Plan mode
+
+Goal:
+Make Plan mode interactive by allowing users to mark completion objects as done / not done. This should update progress in the four-mode navigation without changing backend schema, billing, auth, RevenueCat, Stripe, or native billing.
+
+This is a frontend interaction layer only.
+
+Do not change:
+- billing
+- RevenueCat
+- Stripe
+- Apple/native billing
+- authentication
+- pricing
+- backend entitlement logic
+- Clerk/security dependency versions
+- Contract Review
+- Contract Review PDF export
+- homepage
+- marketing copy
+- routes unless required for existing Analyze navigation
+- Analyze parser logic unless a small type-safe adapter is required
+
+Do not restore removed tools:
+- Redact Sensitive Info
+- Trust Check
+- Compare Versions
+- Clause Extractor
+- Builder
+- Digital Signature
+- Starter
+- Team
+- annual billing
+
+Context:
+Phase 1 created the completion object parser.
+Phase 2A added four modes:
+- Understand
+- Plan
+- Complete
+- Compile
+
+Phase 3A added PlanSummaryView, which groups completion objects into:
+- Immediate Actions
+- Documents to Gather
+- Signatures Needed
+- Deadlines
+- Risks to Review
+- Questions to Ask
+
+Phase 3B should add done / not-done tracking to each item card.
+
+Required behavior:
+
+1. Add item status toggle
+
+Each Plan Summary item should show a clear completion control:
+- unchecked / Not done
+- checked / Done
+
+The control must be obvious and clickable.
+Use hover feedback so users understand it is interactive.
+
+Suggested UI:
+- left-side checkbox or circular check control
+- status chip: “Not done” / “Done”
+- completed cards become visually muted but still readable
+- completed cards remain visible and are not hidden
+
+2. Store status in existing Analyze state
+
+Use existing client-side analysis context/state if already available:
+- updateActionStep
+- updateRequiredDoc
+- any existing action/doc update callbacks already wired in Analyze.tsx
+
+If the existing callbacks only support some item types, create a safe local completionStatus map keyed by completionObject.id inside Analyze.tsx or PlanSummaryView.
+
+Do not add a backend migration.
+Do not add new tables.
+Do not add new server routes.
+Do not require persistence beyond the existing analysis context unless existing state already supports it.
+
+3. Supported item types
+
+The toggle should work for all visible Plan Summary item types:
+
+- action_step
+- required_document
+- missing_document
+- signature_needed
+- deadline
+- risk
+- question_to_ask
+
+If some item types do not have existing update callbacks, store their done/not-done state in the local completion state map.
+
+4. Progress calculation
+
+Update the progress calculation used by AnalyzeModeNav.
+
+Progress should reflect:
+
+completedItems / totalCompletableItems
+
+Rules:
+- totalCompletableItems = all visible completion objects except source_evidence
+- completedItems = all items marked done
+- Plan Summary count chips should still show total items by section
+- Complete mode preview should reflect the same done count
+- Header progress should update immediately after clicking done/not-done
+
+Example:
+If 4 of 27 completion items are checked:
+“4/27 complete”
+
+5. Plan Summary section behavior
+
+Inside each section:
+- show total count
+- show done count if greater than 0
+- completed items stay in place
+- completed items should show a checkmark and muted styling
+- incomplete items should remain visually prominent
+- “Show more / Show less” behavior should continue working
+
+Do not hide completed items by default.
+
+6. Card-level copy
+
+Use clear user-facing labels:
+
+Unchecked:
+“Mark done”
+
+Checked:
+“Done”
+
+Hover title:
+“Mark this item complete”
+or
+“Mark this item not done”
+
+7. Accessibility
+
+Use real buttons or checkbox inputs.
+Must support keyboard activation.
+Add accessible labels:
+- “Mark [item title] complete”
+- “Mark [item title] not done”
+
+8. No broken interaction
+
+Verify:
+- clicking the card itself does not accidentally toggle unless intentionally designed
+- clicking Details / jump buttons still works
+- clicking Show more / Show less still works
+- mode switching preserves checked state during the same page session
+- tab switching preserves checked state during the same page session
+
+9. Feature flag safety
+
+All Phase 3B behavior must remain behind:
+
+VITE_ANALYZE_COMPLETION_FLOW_ENABLED
+
+When the flag is off:
+- old Analyze UI remains unchanged
+- no PlanSummaryView status controls render
+- no mode nav renders
+- no progress behavior changes
+
+10. Complete mode update
+
+Complete mode currently renders a safe preview.
+
+Update it lightly so it reflects:
+- total items
+- completed items
+- remaining items
+- progress percentage
+
+Do not add upload controls yet.
+Do not add packet generation yet.
+Do not add document compilation yet.
+
+This phase is only item status tracking.
+
+11. QA checks
+
+Run and report:
+
+- Vite production build
+- completion parser QA
+- TypeScript check if available
+- security scan if available
+
+Manual/source verification:
+- Feature flag off preserves old UI
+- Feature flag on renders Plan Summary
+- Each item type can be marked done/not done
+- Progress updates immediately
+- Done state persists when switching:
+  - Plan → Understand → Plan
+  - Plan → Complete → Plan
+  - sub-tab clicks inside Plan
+- Show more / Show less still works
+- No billing files changed
+- No RevenueCat files changed
+- No Stripe files changed
+- No native billing files changed
+- No auth files changed
+- No Contract Review files changed
+- No removed tool references added
+
+12. Return report
+
+Return:
+1. Files changed
+2. State model used for item completion
+3. Which item types are toggleable
+4. Progress calculation details
+5. Feature flag behavior
+6. QA/build results
+7. Any known limitations
+8. Recommended next slice
