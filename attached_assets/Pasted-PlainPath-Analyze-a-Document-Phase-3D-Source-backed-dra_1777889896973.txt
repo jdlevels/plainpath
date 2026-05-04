@@ -1,0 +1,274 @@
+PlainPath — Analyze a Document Phase 3D: Source-backed drawer content enrichment
+
+Goal:
+Improve the content quality feeding the Phase 3C item detail drawer so each Plan item feels specific, useful, and source-backed instead of generic.
+
+The drawer already exists.
+Do not redesign the drawer.
+Do not build Compile yet.
+Do not add backend persistence yet.
+Do not add user notes yet.
+
+This phase should enrich the completion objects so the drawer consistently receives:
+- plainEnglishExplanation
+- whatToDo
+- whereToGetThis
+- sourceQuote
+- dueDate / trigger where available
+- stronger item titles/descriptions when possible
+
+Do not change:
+- billing
+- RevenueCat
+- Stripe
+- native billing
+- auth
+- pricing
+- Contract Review
+- Contract Review PDF export
+- homepage
+- marketing
+- routes unless strictly required for Analyze UI state
+- database schema
+- migrations
+- server routes
+
+Do not restore removed tools:
+- Redact Sensitive Info
+- Trust Check
+- Compare Versions
+- Clause Extractor
+- Builder
+- Digital Signature
+- Starter
+- Team
+- annual billing
+
+Feature flag:
+Everything must remain safe behind:
+
+VITE_ANALYZE_COMPLETION_FLOW_ENABLED
+
+When flag is OFF:
+- old Analyze UI remains unchanged
+- no mode nav
+- no Plan Summary
+- no drawer
+- no completion object UI changes
+
+Current state:
+Phase 1 created completion objects.
+Phase 2A added Understand / Plan / Complete / Compile.
+Phase 3A added PlanSummaryView.
+Phase 3B added done/not-done tracking.
+Phase 3C added ItemDetailDrawer.
+
+Phase 3D requirements:
+
+1. Enrich completion object generation
+
+Update the deterministic completion parser so each CompletionObject has stronger fields.
+
+Target fields:
+
+plainEnglishExplanation:
+Explain what the item means in direct plain English.
+
+whatToDo:
+Give the user a concrete next step.
+
+whereToGetThis:
+Tell the user where to get or confirm the item when source data supports it.
+
+sourceQuote:
+Use a direct quote/snippet from the uploaded document when available.
+
+dueDate:
+Use only if the document clearly states an actual date or calculable date.
+
+trigger:
+Use when the document states timing such as:
+- within 15 calendar days
+- before submission
+- upon signing
+- after receipt
+- before start date
+- within 30 days
+- before deadline
+
+2. Keep source discipline strict
+
+Do not fabricate official forms.
+Do not invent exact office names unless present in the document.
+Do not invent URLs.
+Do not invent legal conclusions.
+Do not invent dates.
+
+Use safe guidance language:
+- “Contact the issuing office listed in the document.”
+- “Confirm with the school, employer, provider, agency, or organization that issued this document.”
+- “Use the portal, office, or contact method named in the document if one is provided.”
+- “PlainPath did not find a specific source for this.”
+
+3. Type-specific enrichment rules
+
+For action_step:
+- plainEnglishExplanation: why this action matters
+- whatToDo: concrete user action
+- whereToGetThis: where to confirm or complete the action
+- sourceQuote: supporting clause/sentence
+
+For required_document:
+- plainEnglishExplanation: why the document is needed
+- whatToDo: gather, verify, or upload the document
+- whereToGetThis: likely issuer only if supported by source
+- sourceQuote: supporting source text
+
+For missing_document:
+- plainEnglishExplanation: the document appears referenced or required but was not uploaded
+- whatToDo: request or locate the missing item
+- whereToGetThis: official issuer/contact source if available; otherwise safe fallback
+- sourceQuote: quote that references the missing document
+
+For signature_needed:
+- plainEnglishExplanation: who/what appears to require signature
+- whatToDo: confirm signer, sign location, and submission method
+- whereToGetThis: official form/source guidance only if supported
+- sourceQuote: signature clause or signature block
+
+For deadline:
+- plainEnglishExplanation: what timing requirement exists
+- whatToDo: complete the related item before the timing window
+- trigger: timing phrase from the source
+- dueDate: only if explicit or safely calculable from a known date
+- sourceQuote: deadline sentence
+
+For risk:
+- plainEnglishExplanation: why this risk matters
+- whatToDo: ask for clarification, verify terms, or pause before relying on the document
+- sourceQuote: risk-triggering clause
+- avoid legal advice language
+
+For question_to_ask:
+- plainEnglishExplanation: why this question should be asked
+- whatToDo: ask the issuing party or responsible office
+- whereToGetThis: where to ask if source identifies a contact/entity
+- sourceQuote: source text that made the question necessary
+
+4. Improve copy request messages if needed
+
+The drawer already has deterministic copy messages.
+
+Update copy-message helper only if required so the copied message can use:
+- document title
+- item title
+- whereToGetThis if present
+- trigger/dueDate if present
+
+Keep all messages deterministic.
+No AI call.
+
+5. Add helper functions if useful
+
+Preferred structure:
+- keep parser deterministic
+- add small helper functions in completionParser.ts or a new local helper file if cleaner
+
+Possible helpers:
+- buildPlainEnglishExplanation(item/source/context)
+- buildWhatToDo(...)
+- inferWhereToGetThis(...)
+- extractTrigger(...)
+- selectBestSourceQuote(...)
+
+Do not over-engineer.
+
+6. Preserve existing UI behavior
+
+Do not break:
+- done/not-done toggle
+- Plan Summary
+- drawer open/close
+- copy message button
+- mode navigation
+- tab sync
+- Complete preview
+- feature flag behavior
+
+7. Fixtures and QA
+
+Update or add test fixture coverage for at least these document scenarios:
+
+A. School enrollment-style document
+Should produce:
+- signature_needed
+- required_document
+- missing_document
+- deadline
+- question_to_ask
+
+B. Contract/service agreement-style document
+Should produce:
+- action_step
+- deadline
+- risk
+- signature_needed
+- required_document
+
+C. EOB/medical bill-style document if existing fixture is available
+Should produce:
+- action_step
+- deadline
+- risk
+- question_to_ask
+- required_document
+
+QA assertions should confirm:
+- no completion object has an empty title
+- no visible drawer item lacks both description and plainEnglishExplanation
+- all supported item types have whatToDo fallback or generated value
+- whereToGetThis appears when source supports it
+- fallback whereToGetThis appears safely when not source-supported
+- sourceQuote appears when source text exists
+- dueDate is not fabricated
+- trigger is extracted from timing language
+- no URLs are invented
+- no official forms are fabricated
+- no legal advice wording is introduced
+- IDs remain unique
+- Phase 3B done-status logic remains unaffected
+
+8. Run checks
+
+Run:
+- Vite production build
+- completion parser QA
+- TypeScript check if available
+- security scan if available
+
+Verify no changes to:
+- billing
+- RevenueCat
+- Stripe
+- native billing
+- auth
+- Contract Review
+- Contract Review PDF export
+- homepage
+- marketing
+- routes
+- database schema
+
+9. Return report
+
+Return:
+1. Files changed
+2. Parser/enrichment helpers added
+3. Fields now populated more consistently
+4. Item types enriched
+5. Fixture coverage
+6. QA/build results
+7. Feature flag behavior
+8. Protected files untouched confirmation
+9. Known limitations
+10. Recommended next slice

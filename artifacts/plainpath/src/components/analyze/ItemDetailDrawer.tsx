@@ -101,10 +101,17 @@ function generateCopyMessage(item: CompletionObject, documentTitle: string): str
       return `Hello, I'm reviewing ${doc}. It appears I may need ${item.title}, but it was not included with the documents I received. Can you confirm whether this is required and where I can get the correct version?`
     case "signature_needed":
       return `Hello, I'm reviewing ${doc}. Can you confirm who needs to sign ${item.title}, whether the signature must be on an official form, and where I should submit it?`
-    case "deadline":
-      return `Hello, I'm reviewing ${doc}. Can you confirm the deadline or timing requirement for ${item.title} and what must be completed before that date?`
-    default:
-      return `Hello, I'm reviewing ${doc}. Can you confirm ${item.title} and tell me what I need to provide, where to get the correct form/document, and the deadline if any? Thank you.`
+    case "deadline": {
+      const timing = item.trigger ? ` — specifically the requirement ${item.trigger}` : ""
+      const due    = item.dueDate ? ` (${item.dueDate})` : ""
+      return `Hello, I'm reviewing ${doc}. Can you confirm the deadline or timing for ${item.title}${due}${timing}? What must be completed before that date? Thank you.`
+    }
+    case "risk":
+      return `Hello, I'm reviewing ${doc}. I have a question about a risk identified in the document: ${item.title}. Can you help me understand what this means and whether I need to take any action before proceeding? Thank you.`
+    default: {
+      const source = item.whereToGetThis ? ` The document suggests I may be able to confirm this through: ${item.whereToGetThis}` : ""
+      return `Hello, I'm reviewing ${doc}. Can you confirm ${item.title} and tell me what I need to provide or where to get the correct form/document?${source} Thank you.`
+    }
   }
 }
 

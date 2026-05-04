@@ -16,6 +16,32 @@ import type {
   CompletionPriority,
   CompletionStatus,
 } from "./completionTypes";
+import { extractTrigger, inferWhereToGetThis } from "./completionEnricher";
+
+// ── Local build helpers ────────────────────────────────────────────────────────
+
+function buildActionStepWhatToDo(
+  title: string,
+  deadline?: string,
+  trigger?: string | null,
+): string {
+  const base = `Complete this action: ${title}.`
+  if (trigger && deadline) return `${base} This must be done ${trigger} (by ${deadline}).`
+  if (trigger)             return `${base} This must be done ${trigger}.`
+  if (deadline)            return `${base} Ensure it is completed by ${deadline}.`
+  return base
+}
+
+function buildDeadlineWhatToDo(
+  title: string,
+  date?: string,
+  trigger?: string | null,
+): string {
+  if (date && trigger) return `Complete all required tasks for "${title}" — ${trigger} (by ${date}).`
+  if (date)            return `Complete all required tasks for "${title}" by ${date}.`
+  if (trigger)         return `Complete all required tasks for "${title}" — ${trigger}.`
+  return `Complete all required tasks for "${title}" before the date specified in the document.`
+}
 
 // ── Signature detection ────────────────────────────────────────────────────────
 
@@ -144,6 +170,7 @@ export function analysisResultToCompletionObjects(
     if (isSig) {
       const sigTitle = step.title;
       if (!isDuplicateSignature(result, sigTitle)) {
+        const sigTrigger = extractTrigger(step.description) ?? extractTrigger(step.sourceEvidence)
         result.push({
           id: makeId("sig", step.id),
           type: "signature_needed",
@@ -160,8 +187,8 @@ export function analysisResultToCompletionObjects(
           sourceSection: step.category ?? "Action Steps",
           priority: "critical",
           severity: "critical",
-          dueDate: null,
-          trigger: null,
+          dueDate: step.deadline ?? null,
+          trigger: sigTrigger,
           status: DEFAULT_STATUS,
           userNotes: null,
           uploadedFileId: null,
@@ -172,6 +199,7 @@ export function analysisResultToCompletionObjects(
       continue;
     }
 
+    const actTrigger = extractTrigger(step.description) ?? extractTrigger(step.sourceEvidence)
     result.push({
       id: makeId("act", step.id),
       type: "action_step",
@@ -180,15 +208,15 @@ export function analysisResultToCompletionObjects(
       whyItMatters: step.sourceEvidence
         ? `Based on: "${step.sourceEvidence}"`
         : "This step was identified as a required action from the document.",
-      whatToDo: step.description || step.title,
-      whereToGetThis: null,
+      whatToDo: buildActionStepWhatToDo(step.title, step.deadline, actTrigger),
+      whereToGetThis: inferWhereToGetThis(step.category, analysis.documentType),
       sourceQuote: step.sourceEvidence ?? null,
       sourcePage: null,
       sourceSection: step.category ?? "Action Steps",
       priority: actionStepPriorityToCompletion(step.priority),
       severity: null,
-      dueDate: null,
-      trigger: null,
+      dueDate: step.deadline ?? null,
+      trigger: actTrigger,
       status: DEFAULT_STATUS,
       userNotes: null,
       uploadedFileId: null,
@@ -213,11 +241,13 @@ export function analysisResultToCompletionObjects(
         ? "This document is required. Without it, you may not be able to complete or submit the relevant process."
         : "This document is recommended to support your position or completion of this process.",
       whatToDo: doc.obtained
-        ? "Document already obtained. Confirm it is the correct version before including."
-        : `Locate and gather: ${doc.name}.`,
+        ? `This document is already obtained. Confirm it is the correct version and current before including in your submission.`
+        : isMissing
+          ? `Obtain the missing document: "${doc.name}". Contact the original issuer or sending party to request it.`
+          : `Locate and provide: "${doc.name}". ${doc.description ? "Confirm it matches what the document requires." : ""}`.trim(),
       whereToGetThis: isMissing
         ? "Obtain the referenced document from the original issuer, sending party, or the portal/office it was attached to."
-        : null,
+        : inferWhereToGetThis(null, analysis.documentType),
       sourceQuote: doc.sourceEvidence ?? null,
       sourcePage: null,
       sourceSection: "Required Documents",
@@ -236,6 +266,7 @@ export function analysisResultToCompletionObjects(
   // 3 ── Deadlines → deadline ────────────────────────────────────────────────
   for (const dl of analysis.deadlines) {
     const priority: CompletionPriority = dl.isHard ? "critical" : "high";
+    const dlTrigger = extractTrigger(dl.description) ?? extractTrigger(dl.sourceEvidence)
 
     result.push({
       id: makeId("dl", dl.id),
@@ -245,7 +276,7 @@ export function analysisResultToCompletionObjects(
       whyItMatters: dl.isHard
         ? "This is a hard deadline. Missing it may result in loss of rights, penalties, or rejection of your submission."
         : "This deadline is noted in the document. Aim to complete the related task before this date.",
-      whatToDo: `Complete all related tasks before: ${dl.date || dl.description || "the date specified in the document"}.`,
+      whatToDo: buildDeadlineWhatToDo(dl.title, dl.date, dlTrigger),
       whereToGetThis: null,
       sourceQuote: dl.sourceEvidence ?? null,
       sourcePage: null,
@@ -253,7 +284,7 @@ export function analysisResultToCompletionObjects(
       priority,
       severity: priority,
       dueDate: dl.date ?? null,
-      trigger: null,
+      trigger: dlTrigger,
       status: DEFAULT_STATUS,
       userNotes: null,
       uploadedFileId: null,
@@ -300,13 +331,15 @@ export function analysisResultToCompletionObjects(
       continue;
     }
 
+    const rskTrigger = extractTrigger(risk.description) ?? extractTrigger(risk.sourceEvidence)
     result.push({
       id: makeId("rsk", risk.id),
       type: "risk",
       title: risk.title,
       plainEnglishExplanation: risk.description || risk.title,
       whyItMatters: risk.description || "This risk was identified in the document and should be addressed.",
-      whatToDo: "Review this risk and determine whether action is needed. Consult the relevant party if you are unsure.",
+      whatToDo:
+        "Review this risk carefully and confirm the terms are acceptable before signing, submitting, or relying on this document. If the risk is unclear, consult the relevant party named in the document.",
       whereToGetThis: null,
       sourceQuote: risk.sourceEvidence ?? null,
       sourcePage: null,
@@ -314,7 +347,7 @@ export function analysisResultToCompletionObjects(
       priority: riskSeverityToPriority(risk.severity),
       severity: riskSeverityToPriority(risk.severity),
       dueDate: null,
-      trigger: null,
+      trigger: rskTrigger,
       status: DEFAULT_STATUS,
       userNotes: null,
       uploadedFileId: null,
@@ -333,7 +366,7 @@ export function analysisResultToCompletionObjects(
       whyItMatters:
         "This question should be clarified with the issuing party before finalizing your response or submission.",
       whatToDo: `Ask: "${q.question}"`,
-      whereToGetThis: null,
+      whereToGetThis: inferWhereToGetThis(null, analysis.documentType),
       sourceQuote: null,
       sourcePage: null,
       sourceSection: "Follow-Up Questions",
@@ -360,7 +393,7 @@ export function analysisResultToCompletionObjects(
         whyItMatters:
           "This question was identified in the action pack as something to clarify before proceeding.",
         whatToDo: `Ask: "${q.question}"`,
-        whereToGetThis: null,
+        whereToGetThis: inferWhereToGetThis(null, analysis.documentType),
         sourceQuote: null,
         sourcePage: null,
         sourceSection: "Action Pack — Questions",
