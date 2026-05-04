@@ -1,0 +1,127 @@
+PlainPath — Analyze a Document real-user clarity QA pass
+
+Goal:
+Test the current Analyze a Document flow exactly as a real user would use it.
+
+Core product rule:
+Analyze a Document exists to help users understand what the uploaded document says, what it requires, what deliverables are needed, what is already completed, and what still needs to be completed before submission.
+
+Do not rebuild.
+Do not add new features.
+Do not change parser logic unless a small label/copy fix is clearly necessary.
+Do not touch billing, RevenueCat, Stripe, auth, native billing, Contract Review, homepage, marketing, routes, database, or removed tools.
+
+Feature flag:
+Use the current enabled completion flow.
+
+Test scenario:
+Use the existing service agreement sample first.
+If available, also test with a school enrollment / benefits / notice-style document because those better match the core PlainPath use case.
+
+Main user test:
+A busy user should understand what to do next within 10 seconds.
+
+Review these four modes:
+
+1. Understand
+Question:
+Can the user quickly understand what this document is and what it says?
+
+Check:
+- The title and subtitle are clear.
+- The plain-English cards are understandable.
+- The user can tell what the document is about without reading the original PDF.
+- There is no unnecessary report-style clutter.
+
+2. Requirements
+Question:
+Can the user quickly see what the document requires?
+
+Check:
+- “Actions Required” is visible and understandable.
+- “Documents To Gather” is visible and understandable.
+- “Signatures Needed” is visible and understandable.
+- “Deadlines” are visible and separated from general timing references.
+- “Questions to Ask” are easy to find.
+- “Manual Review / Verify” is not alarming, but still clear.
+- Source-backed/manual-review chips are understandable.
+
+3. Complete
+Question:
+Can the user quickly see what is completed and what is still incomplete?
+
+Check:
+- Completion progress is obvious.
+- Open items appear before completed items.
+- Completed items are not the main focus.
+- “Still Open” or equivalent is easy to find.
+- The user can check items off.
+- The saved-progress indicator works.
+- Reset progress works.
+- Item details drawer opens correctly.
+- Details drawer includes what to do, where to get it, source evidence, timing, and copy message.
+
+4. Summary
+Question:
+Does Summary help the user review what is done and what remains open without feeling like a print report?
+
+Check:
+- It does not push printing as the main goal.
+- It clearly summarizes completed/open state.
+- It does not feel like a long legal/audit report.
+- It supports the completion-before-submission goal.
+
+Mobile test:
+Use responsive/mobile viewport.
+
+Check:
+- Mode nav is usable.
+- Cards are readable.
+- Text is not too small.
+- No horizontal overflow.
+- Checkboxes/toggles are easy to tap.
+- Details drawer behaves like a mobile bottom sheet or readable panel.
+- User can see open items without excessive scrolling.
+- Progress remains visible or easy to find.
+- Save/checkoff behavior survives refresh.
+
+10-second test:
+For each mode, answer this:
+
+- What does this document say?
+- What does it require?
+- What needs to be completed?
+- What is already complete?
+- What is still open?
+- What should I do next?
+
+If any answer is not obvious, identify the exact UI issue and propose the smallest correction.
+
+Important wording check:
+Look for whether the app clearly communicates:
+- what the document is citing/referencing
+- what the document is stating
+- what the document is requiring
+- what deliverables are needed
+- what remains incomplete
+
+Do not add a new tab for “citing/referencing.”
+If needed, recommend a small label or drawer section improvement only.
+
+Regression checks:
+- No removed tools appear.
+- No print/export is presented as the main action.
+- No legal/professional advice claims.
+- No “ready to submit” guarantee.
+- Use “Ready for final review,” not “Ready to submit.”
+- Vite build passes.
+- Completion parser QA passes.
+
+Return:
+1. Screenshots of Understand, Requirements, Complete, Summary on desktop
+2. Screenshots of Complete and Details drawer on mobile
+3. 10-second clarity verdict for each mode
+4. What is confusing, if anything
+5. Smallest recommended fixes only
+6. Build/QA results
+7. Protected files untouched confirmation

@@ -324,7 +324,7 @@ export function PlanSummaryView({
   const sections: SectionDef[] = [
     {
       id: "actions",
-      title: "Immediate Actions",
+      title: "Actions Required",
       shortLabel: "Actions",
       icon: ListTodo,
       items: actions,
@@ -411,11 +411,11 @@ export function PlanSummaryView({
       {/* ── Header ──────────────────────────────────────────────────────── */}
       <div className="mb-4">
         <h2 className="text-lg font-bold text-foreground mb-0.5 tracking-tight">
-          Your Document Plan
+          What This Document Requires
         </h2>
         <p className="text-xs text-muted-foreground leading-relaxed max-w-prose">
-          PlainPath found the actions, documents, deadlines, signatures, risks, and questions
-          needed to complete this paperwork.
+          PlainPath identified the actions, documents, signatures, deadlines, risks, and questions
+          this document requires from you.
         </p>
       </div>
 

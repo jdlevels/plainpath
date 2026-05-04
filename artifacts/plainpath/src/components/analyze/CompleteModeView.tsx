@@ -382,7 +382,7 @@ function OpenSummaryStrip({ openItems }: { openItems: CompletionObject[] }) {
       label: "Actions",
       count: openItems.filter((o) => o.type === "action_step").length,
       color: "text-primary/80",
-      bg:    "bg-primary/8",
+      bg:    "bg-primary/10",
     },
     {
       label: "Risks",
