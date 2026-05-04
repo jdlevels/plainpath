@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useUser } from "@clerk/react"
 import { useLocation } from "wouter"
-import { FileScan, ShieldCheck, EyeOff, ArrowRight, X, Sparkles } from "lucide-react"
+import { FileScan, Scale, ArrowRight, X, Sparkles } from "lucide-react"
 
 const ONBOARD_KEY = "pp-onboarded-v1"
 
@@ -16,20 +16,12 @@ const FIRST_STEPS = [
     href: "/analyze",
   },
   {
-    icon: ShieldCheck,
-    color: "text-emerald-500",
-    bg: "bg-emerald-500/10",
-    title: "Document Trust Check",
-    desc: "Not sure if a letter or notice is legitimate? Run a trust check to spot fraud signals instantly.",
-    href: "/import?mode=trust-check",
-  },
-  {
-    icon: EyeOff,
-    color: "text-orange-500",
-    bg: "bg-orange-500/10",
-    title: "Redact Sensitive Info",
-    desc: "Remove SSNs, account numbers, and personal data before sharing any document.",
-    href: "/redact",
+    icon: Scale,
+    color: "text-amber-500",
+    bg: "bg-amber-500/10",
+    title: "Contract Review",
+    desc: "Get a clause-by-clause review of any agreement before you sign — risks, key terms, and negotiation guidance.",
+    href: "/contract-review",
   },
 ]
 

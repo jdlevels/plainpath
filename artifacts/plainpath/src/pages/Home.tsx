@@ -2,12 +2,12 @@ import { useLocation } from "wouter"
 import { motion } from "framer-motion"
 import {
   ArrowRight,
-  PenLine, FileScan, Scale, EyeOff,
+  FileScan, Scale,
   BookMarked, Clock, ChevronRight, CreditCard,
-  LayoutGrid, GitCompare, ListChecks, LayoutTemplate,
+  LayoutGrid, LayoutTemplate,
 } from "lucide-react"
 import { BUILDER_ENABLED, CATEGORY_LABELS } from "@/lib/builderConfig"
-import { useState, useEffect, type ElementType } from "react"
+import { useState, useEffect } from "react"
 import { useUser, useAuth } from "@clerk/react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -480,31 +480,7 @@ export default function Home() {
                     </Card>
                   ) : (
                     (() => {
-                      const localMeta: Record<string, { icon: ElementType; color: string; href: string; toolLabel: string; cta: string }> = {
-                        "redact":           { icon: EyeOff,     color: "text-violet-400",  href: "/redact",         toolLabel: "Redact Sensitive Info", cta: "Open tool →" },
-                        "contract-builder": { icon: PenLine,    color: "text-emerald-400", href: "/build-contract", toolLabel: "Build a Contract",      cta: "Continue building →" },
-                        "compare":          { icon: GitCompare, color: "text-teal-400",    href: "/compare-versions", toolLabel: "Compare Versions",    cta: "Open comparison →" },
-                      }
-                      const meta = localMeta[item.tool] ?? localMeta["redact"]
-                      const Icon = meta.icon
-                      return (
-                        <Card
-                          className="group border border-border/50 bg-card hover:border-border hover:shadow-md rounded-2xl cursor-pointer transition-all"
-                          onClick={() => setLocation(meta.href)}
-                        >
-                          <div className="p-4 flex flex-col gap-1.5">
-                            <div className="flex items-center gap-1.5 mb-0.5">
-                              <Icon className={`w-3 h-3 ${meta.color} shrink-0`} />
-                              <span className={`text-[10px] font-bold uppercase tracking-widest ${meta.color} opacity-80`}>{meta.toolLabel}</span>
-                              <span className="ml-auto text-[10px] text-muted-foreground">{timeAgo(item.savedAt)}</span>
-                            </div>
-                            <p className="text-sm font-medium text-foreground truncate leading-tight">{item.title}</p>
-                            <div className="flex items-center justify-end mt-0.5">
-                              <span className={`text-[11px] font-semibold ${meta.color} group-hover:underline`}>{meta.cta}</span>
-                            </div>
-                          </div>
-                        </Card>
-                      )
+                      return null
                     })()
                   )}
                 </motion.div>

@@ -2,31 +2,21 @@ import { useEffect } from "react"
 import { useLocation } from "wouter"
 import { motion } from "framer-motion"
 import {
-  Check, Zap, BarChart3, ShieldCheck, PenLine, Scale, EyeOff,
-  ArrowRight, Sparkles, Clock, GitCompare, ListChecks, MessageCircle,
+  Check, Zap, BarChart3, Scale, BookMarked,
+  ArrowRight, Sparkles, Clock,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { PRICING_PLANS } from "@/data/pricingData"
 import { BILLING_CONFIG } from "@/lib/billingConfig"
 
 const PLAN_ICONS: Record<string, React.ElementType> = {
-  starter: BarChart3,
   pro: Zap,
 }
 
-const PLAN_COLORS: Record<string, string> = {
-  starter: "text-blue-500",
-}
-
 const TOOL_BREAKDOWN = [
-  { icon: BarChart3,   name: "Analyze a Document",    starter: true,  pro: true, desc: "Plain-English summary, key terms, deadlines, and required actions" },
-  { icon: EyeOff,      name: "Redact Sensitive Info", starter: true,  pro: true, desc: "Automatically remove sensitive info before sharing or review" },
-  { icon: ShieldCheck, name: "Document Trust Check",  starter: false, pro: true, desc: "Verify legitimacy, surface red flags, and detect fraud" },
-  { icon: PenLine,     name: "Build a Contract",      starter: false, pro: true, desc: "Guided wizard that outputs a professional, ready-to-send draft" },
-  { icon: Scale,       name: "Contract Review",       starter: false, pro: true, desc: "Clause-by-clause risk analysis with negotiation language" },
-  { icon: GitCompare,    name: "Compare Versions",   starter: false, pro: true, desc: "Side-by-side document comparison with AI-powered change audit" },
-  { icon: ListChecks,   name: "Clause Extractor",   starter: false, pro: true, desc: "Extract obligations, key dates, parties, and legal clauses from any contract" },
-  { icon: MessageCircle, name: "Ask This Document", starter: false, pro: true, desc: "Ask plain-English questions about any document and get sourced answers" },
+  { icon: BarChart3,   name: "Analyze a Document",    desc: "Plain-English summary, key terms, deadlines, and required actions" },
+  { icon: Scale,       name: "Contract Review",        desc: "Clause-by-clause risk analysis with plain-English summaries and action steps" },
+  { icon: BookMarked,  name: "Saved analysis history", desc: "Access all your saved analyses any time from your dashboard" },
 ]
 
 export default function Upgrade() {
@@ -62,8 +52,8 @@ export default function Upgrade() {
         {/* Plan cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-14 max-w-2xl mx-auto w-full">
           {PRICING_PLANS.map((plan, i) => {
-            const planKey = plan.planKey ?? "starter"
-            const Icon = PLAN_ICONS[planKey] ?? BarChart3
+            const planKey = plan.planKey ?? "pro"
+            const Icon = PLAN_ICONS[planKey] ?? Zap
             const isHighlight = plan.highlight
 
             return (
@@ -88,7 +78,7 @@ export default function Upgrade() {
 
                 <div className="flex items-center gap-2.5 mb-3">
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isHighlight ? "bg-primary/12" : "bg-secondary"}`}>
-                    <Icon className={`w-4 h-4 ${isHighlight ? "text-primary" : PLAN_COLORS[planKey] ?? "text-muted-foreground"}`} />
+                    <Icon className={`w-4 h-4 ${isHighlight ? "text-primary" : "text-muted-foreground"}`} />
                   </div>
                   <span className="font-bold text-base text-foreground">{plan.name}</span>
                 </div>

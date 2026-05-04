@@ -14,7 +14,7 @@ import {
   Printer, ArrowLeft, CheckCircle2, AlertCircle, XCircle,
   ArrowRight, ShieldCheck, Clock, TrendingUp, BookOpen,
   HelpCircle, ChevronDown, ChevronLeft, ChevronRight, Lightbulb, Eye, Shield, Zap,
-  AlignLeft, MessageSquare, X, Flag, Package, Lock, EyeOff,
+  AlignLeft, MessageSquare, X, Flag, Package, Lock,
   FolderOpen, Mail, CheckSquare, Copy, Check, Info,
   Bookmark, BookmarkCheck, Share2, Download, Upload, Bell, BellDot, Link2
 } from "lucide-react"
@@ -26,7 +26,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu"
-import { buildExportText, downloadTextFile, canNativeShare, nativeShare } from "@/lib/exportAnalysis"
+import { buildExportText, canNativeShare, nativeShare } from "@/lib/exportAnalysis"
 import { PriorityBadge } from "@/components/shared/PriorityBadge"
 import { ConfidenceBadge } from "@/components/shared/ConfidenceBadge"
 import { EvidenceTooltip } from "@/components/shared/EvidenceTooltip"
@@ -2824,11 +2824,6 @@ function sanitizeAnalysisForShare(analysis: DocumentAnalysis): Omit<DocumentAnal
 function ExportMenu({ analysis }: { analysis: DocumentAnalysis }) {
   const [copiedText, setCopiedText] = useState(false)
   const [shareErr, setShareErr] = useState(false)
-  const [, setLocation] = useLocation()
-
-  function handleSendToRedact() {
-    setLocation("/redact")
-  }
   const [printUnavailable, setPrintUnavailable] = useState(false)
   const [shareLink, setShareLink] = useState<string | null>(null)
   const [shareLoading, setShareLoading] = useState(false)
@@ -2918,7 +2913,7 @@ function ExportMenu({ analysis }: { analysis: DocumentAnalysis }) {
           <span className="hidden sm:inline">Export</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-52">
+      <DropdownMenuContent align="end" className="w-60">
         <DropdownMenuLabel className="text-[11px] uppercase tracking-wide text-muted-foreground font-semibold">
           Export / Share
         </DropdownMenuLabel>
@@ -2938,14 +2933,7 @@ function ExportMenu({ analysis }: { analysis: DocumentAnalysis }) {
             ? <Check className="w-3.5 h-3.5 text-green-600" />
             : <Copy className="w-3.5 h-3.5 text-muted-foreground" />
           }
-          <span>{copiedText ? "Copied!" : "Copy as text"}</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          className="gap-2.5 cursor-pointer"
-          onSelect={() => downloadTextFile(analysis)}
-        >
-          <Download className="w-3.5 h-3.5 text-muted-foreground" />
-          <span>Download .txt</span>
+          <span>{copiedText ? "Copied!" : "Copy report text"}</span>
         </DropdownMenuItem>
         <DropdownMenuItem
           className="gap-2.5 cursor-pointer"
@@ -3008,18 +2996,6 @@ function ExportMenu({ analysis }: { analysis: DocumentAnalysis }) {
             </DropdownMenuItem>
           </>
         )}
-        <DropdownMenuSeparator />
-        <DropdownMenuLabel className="text-[11px] uppercase tracking-wide text-muted-foreground font-semibold">
-          Send to tool
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          className="gap-2.5 cursor-pointer"
-          onSelect={(e) => { e.preventDefault(); handleSendToRedact() }}
-        >
-          <EyeOff className="w-3.5 h-3.5 text-amber-500" />
-          <span>Redact Sensitive Info</span>
-        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )
