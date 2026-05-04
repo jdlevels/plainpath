@@ -1,0 +1,137 @@
+PlainPath Phase 3A.1 — Visual and security verification only
+
+Goal:
+Verify the newly added Plan Summary view visually and classify the security scan results before any further implementation.
+
+Do not add new features.
+Do not change UI unless fixing a clear bug.
+Do not change billing.
+Do not change RevenueCat.
+Do not change Stripe.
+Do not change Apple/native billing.
+Do not change pricing.
+Do not change server routes.
+Do not change export behavior.
+Do not reintroduce removed tools.
+
+Removed tools must stay removed:
+- Redact Sensitive Info
+- Trust Check
+- Compare Versions
+- Clause Extractor
+- Builder
+- Digital Signature
+- Starter
+- Team
+- annual billing
+
+Use the feature flag:
+VITE_ANALYZE_COMPLETION_FLOW_ENABLED
+
+Required checks:
+
+1. Confirm feature flag status
+
+Report:
+- Is VITE_ANALYZE_COMPLETION_FLOW_ENABLED set in development?
+- Is it set in production?
+- Confirm production remains safe if the flag is missing.
+- Confirm the old Analyze UI still renders when the flag is off.
+
+2. Visual browser verification
+
+Open an authenticated/demo Analyze result with the feature flag enabled.
+
+Check:
+- Understand mode renders correctly
+- Plan mode renders the new Plan Summary
+- Complete mode renders safe preview only
+- Compile mode renders safe preview only
+- Existing Plan sub-tabs still work
+- Jump buttons from Plan Summary switch to the correct tab
+- No mode/tab drift
+- No broken buttons
+- No upload controls appear in Plan Summary
+- No packet generation appears yet
+- No stale upgrade messages appear
+- No removed tool references appear
+
+Take screenshots or provide a clear visual report for:
+- Plan Summary top area
+- Immediate Actions section
+- Documents to Gather section
+- Signatures Needed section
+- Deadlines section
+- Risks section
+- Questions section
+- Empty state if available
+- Mobile/responsive behavior if possible
+
+3. Premium UI assessment
+
+Evaluate whether Plan Summary looks like a premium app.
+
+Specifically check:
+- spacing
+- card density
+- text hierarchy
+- badge clarity
+- source quote readability
+- color usage
+- whether it feels calmer than the old red-heavy layout
+- whether cards are too crowded
+- whether any section creates a “wall of text”
+- whether the count chips feel useful
+
+Do not redesign yet. Just report exact issues.
+
+4. Completion object quality check
+
+Use at least one real demo analysis and report:
+- total completion objects generated
+- count by type
+- whether any object looks duplicated
+- whether signature_needed is over-triggering
+- whether required_document and missing_document are separated clearly
+- whether whereToGetThis is useful and conservative
+- whether sourceQuote is present only when source-backed
+
+5. Security scan classification
+
+The previous output showed:
+“Security scan completed: 4 new vulnerabilities, 2 existing vulnerabilities.”
+
+Provide a full security report:
+
+For each vulnerability:
+- package name
+- severity
+- direct or transitive dependency
+- production dependency or dev-only dependency
+- affected workspace/package
+- recommended fix
+- whether the fix is safe before Apple submission
+- whether the fix may break the build
+- whether this is newly introduced by Phase 3A or pre-existing
+
+Do not automatically run risky upgrades.
+Do not run force upgrades unless specifically approved.
+Do not change dependencies unless the fix is clearly safe and patch-level.
+
+6. QA checks
+
+Run:
+- Vite production build
+- completion parser QA
+- any existing Analyze QA if available
+- grep for removed tool references in changed files
+- grep for Starter/Team/annual references in changed files
+
+Return:
+1. Feature flag status
+2. Visual verification report
+3. Completion object quality report
+4. Security vulnerability report
+5. QA results
+6. Whether Phase 3A is safe to continue
+7. Recommended next slice
