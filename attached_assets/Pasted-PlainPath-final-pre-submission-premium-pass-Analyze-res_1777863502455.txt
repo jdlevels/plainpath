@@ -1,0 +1,131 @@
+PlainPath final pre-submission premium pass — Analyze results layout density and polish
+
+Goal:
+Make the Analyze results screen feel more premium and easier to read without changing functionality.
+
+Do not redesign the app.
+Do not change billing.
+Do not change RevenueCat.
+Do not change analysis generation.
+Do not add or remove tabs.
+Do not reintroduce removed tools.
+This is a final UI density/readability pass only.
+
+Current screen is much improved, but the right analysis panel still feels compressed and dense compared to the PDF viewer.
+
+Required improvements:
+
+1. Improve desktop split-screen balance
+
+Current issue:
+The PDF viewer has a large amount of unused black margin while the right analysis panel feels squeezed.
+
+Update the desktop layout so the analysis side gets more usable width.
+
+Preferred:
+- PDF viewer: roughly 48–52%
+- Analysis panel: roughly 48–52%
+
+If the split is configurable, default closer to 50/50.
+If not configurable, increase the right panel width.
+
+Do not break mobile.
+
+2. Improve readability inside the right analysis panel
+
+Apply a light premium readability pass to all result tabs:
+- Plain English
+- Source Sections
+- Overview
+- What’s Missing
+- Checklist
+- Required Docs
+- Deadlines
+- Risks & Notes
+- Key Terms
+- Action Pack
+
+Increase slightly:
+- card padding
+- section spacing
+- line height
+- title/body contrast
+- tab padding
+- content max-width where needed
+
+Do not make cards oversized.
+Do not create unnecessary empty space.
+The goal is cleaner and easier to scan.
+
+3. Reduce nested scrollbars where possible
+
+Issue:
+Some panels, especially Source Sections breakdown, show internal scrollbars that make the UI feel less premium.
+
+Preferred:
+- Main right analysis panel scrolls naturally.
+- Avoid small internal scroll containers unless absolutely necessary.
+- Breakdown cards should expand naturally when possible.
+
+Keep long content usable, but avoid cramped scroll boxes.
+
+4. Refine severity color intensity
+
+Keep the severity system, but reduce the “red wall” effect.
+
+Rules:
+- Red only for high/critical consequences
+- Amber/orange for medium review items
+- Blue/gray for reference/context
+- Green for confirmed
+- Purple/blue for missing input unless it blocks a critical action
+
+Do not let every important card become red.
+Deadline and risk pages should feel serious, not visually overwhelming.
+
+5. Polish tab bar readability
+
+The tab bar has many tabs and can feel cramped.
+
+Improve:
+- active tab visibility
+- badge spacing
+- tab height
+- horizontal padding
+- icon/text alignment
+- hover states
+
+Do not remove tabs.
+Do not change tab names.
+Do not introduce a new navigation model.
+
+6. Improve clickable affordances
+
+Ensure clickable pills/buttons visibly behave as clickable:
+- Action Pack status pills
+- “Go” links
+- “Copy issue summary”
+- “Guided Review”
+- any small status/action controls
+
+Required:
+- cursor pointer
+- hover state
+- focus-visible state
+- title or aria-label where useful
+
+7. Final QA
+
+Verify:
+- Desktop result page looks balanced at 1440px and 1920px widths
+- Right analysis panel is easier to read
+- PDF viewer still works and scrolls
+- No horizontal overflow
+- No broken sticky header behavior
+- No tab content jumps
+- No nested scrollbar unless required
+- Mobile still works at 390px and 430px widths
+- No higher-tier messages
+- No Ask This Document references
+- No removed tools
+- Build remains clean

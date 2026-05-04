@@ -343,7 +343,7 @@ export default function Analyze() {
       <div className="flex-1 flex min-h-0 overflow-hidden">
 
         {/* Left: document viewer */}
-        <div className={`flex-col overflow-hidden border-r border-border/40 md:w-[60%] md:flex md:flex-none ${mobileAnalyzeTab === "document" ? "flex flex-1" : "hidden"}`}>
+        <div className={`flex-col overflow-hidden border-r border-border/40 md:w-[52%] md:flex md:flex-none ${mobileAnalyzeTab === "document" ? "flex flex-1" : "hidden"}`}>
           <DocumentStageViewer
             fileName={uploadedAnalyzeFile?.name ?? (demoId ? "Demo Document" : "Analyzed Document")}
             pdfFile={hasPdf ? uploadedAnalyzeFile : null}
@@ -354,7 +354,7 @@ export default function Analyze() {
 
         {/* Right: analysis panel — this div IS the scroll container */}
         <div
-          className={`flex-col overflow-y-auto md:w-[40%] md:flex md:flex-none ${mobileAnalyzeTab === "analysis" ? "flex flex-1" : "hidden"}`}
+          className={`flex-col overflow-y-auto md:w-[48%] md:flex md:flex-none ${mobileAnalyzeTab === "analysis" ? "flex flex-1" : "hidden"}`}
           style={{ paddingBottom: "max(6rem, env(safe-area-inset-bottom) + 6rem)" }}
         >
           <div className="px-4 sm:px-5">
@@ -433,16 +433,16 @@ export default function Analyze() {
                   key={tab.id}
                   value={tab.id}
                   style={{ touchAction: "manipulation", flex: "0 0 auto" }}
-                  className={`relative flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap outline-none min-h-[44px] ${
+                  className={`relative flex items-center gap-1.5 px-3 sm:px-3.5 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap outline-none min-h-[44px] ${
                     activeTab === tab.id
                       ? "bg-foreground text-background shadow-sm"
-                      : "text-foreground/55 dark:text-foreground/50 hover:text-foreground hover:bg-secondary/70"
+                      : "text-foreground/60 dark:text-foreground/50 hover:text-foreground hover:bg-secondary/80"
                   }`}
                 >
                   <tab.icon className="w-3.5 h-3.5 shrink-0" />
                   <span className="whitespace-nowrap">{tab.label}</span>
                   {count != null && count > 0 && (
-                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold leading-none shrink-0 ${activeTab === tab.id ? "bg-background/20 text-background" : "bg-border/50 text-muted-foreground"}`}>
+                    <span className={`ml-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold leading-none shrink-0 ${activeTab === tab.id ? "bg-background/25 text-background" : "bg-border/60 text-muted-foreground"}`}>
                       {count}
                     </span>
                   )}
@@ -477,7 +477,7 @@ export default function Analyze() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -5 }}
                 transition={{ duration: 0.14 }}
-                className="p-4 sm:p-7 md:p-10"
+                className="p-5 sm:p-8 md:p-10"
               >
 
                 {activeTab === "plain-english"   && <PlainEnglishTab analysis={analysis} onTabChange={setActiveTab} />}
@@ -643,7 +643,7 @@ function SummaryTab({ analysis, onTabChange, onOpenGuidedReview }: { analysis: D
   const urgentCount = highPriority.length + hardDeadlines.length + highRisks.length
 
   return (
-    <div className="space-y-5 max-w-4xl">
+    <div className="space-y-6 max-w-4xl">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="text-xl sm:text-2xl font-display font-bold mb-0.5">Document Overview</h2>
@@ -1066,7 +1066,7 @@ function ChecklistTab({
   )
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="text-xl sm:text-2xl font-display font-bold">Action Steps</h2>
@@ -1096,7 +1096,7 @@ function ChecklistTab({
                   <h3 className="text-xs font-bold uppercase tracking-widest text-red-700 dark:text-red-400">High Priority</h3>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-400">{highSteps.length}</span>
                 </div>
-                <div className="p-3 space-y-1">
+                <div className="p-4 space-y-2">
                   {highSteps.map((step, i) => renderStep(step, i + 1))}
                 </div>
               </div>
@@ -1110,7 +1110,7 @@ function ChecklistTab({
                   <h3 className="text-xs font-bold uppercase tracking-widest text-amber-700 dark:text-amber-400">Medium Priority</h3>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400">{medSteps.length}</span>
                 </div>
-                <div className="p-3 space-y-1">
+                <div className="p-4 space-y-2">
                   {medSteps.map((step, i) => renderStep(step, i + 1))}
                 </div>
               </div>
@@ -1124,7 +1124,7 @@ function ChecklistTab({
                   <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Lower Priority</h3>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-secondary text-muted-foreground">{lowSteps.length}</span>
                 </div>
-                <div className="p-3 space-y-1">
+                <div className="p-4 space-y-2">
                   {lowSteps.map((step, i) => renderStep(step, i + 1))}
                 </div>
               </div>
@@ -1138,7 +1138,7 @@ function ChecklistTab({
                   <h3 className="text-xs font-bold uppercase tracking-widest text-emerald-700 dark:text-emerald-400">Completed</h3>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">{doneSteps.length}</span>
                 </div>
-                <div className="p-3 space-y-1">
+                <div className="p-4 space-y-2">
                   {doneSteps.map((step, i) => renderStep(step, i + 1))}
                 </div>
               </div>
@@ -1159,7 +1159,7 @@ function DocumentsTab({ analysis, onToggle, onOpenGuidedReview }: { analysis: Do
   const optionalDocs     = analysis.requiredDocuments.filter(d => !d.required)
   const remaining = requiredPending.length
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="text-xl sm:text-2xl font-display font-bold">Required Documents</h2>
@@ -1432,7 +1432,7 @@ function DeadlinesTab({ analysis }: { analysis: DocumentAnalysis }) {
   const referenceDls = analysis.deadlines.filter(d => classifyDeadline(d) === "reference")
   const docTitle = analysis.title || "Document"
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <div>
         <h2 className="text-xl sm:text-2xl font-display font-bold">Timeline & Deadlines</h2>
         <p className="text-sm text-muted-foreground mt-1">
@@ -1475,7 +1475,7 @@ function DeadlinesTab({ analysis }: { analysis: DocumentAnalysis }) {
                   <h3 className="text-xs font-bold uppercase tracking-widest text-red-700 dark:text-red-400">Hard Deadlines — do not miss</h3>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-400">{hardDls.length}</span>
                 </div>
-                <div className="p-3 space-y-2">
+                <div className="p-4 space-y-2">
                   {hardDls.map(dl => <DeadlineCard key={dl.id} dl={dl} category="hard" docTitle={docTitle} />)}
                 </div>
               </div>
@@ -1489,7 +1489,7 @@ function DeadlinesTab({ analysis }: { analysis: DocumentAnalysis }) {
                   <h3 className="text-xs font-bold uppercase tracking-widest text-amber-700 dark:text-amber-400">Watch Dates — review carefully</h3>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400">{watchDls.length}</span>
                 </div>
-                <div className="p-3 space-y-2">
+                <div className="p-4 space-y-2">
                   {watchDls.map(dl => <DeadlineCard key={dl.id} dl={dl} category="watch" docTitle={docTitle} />)}
                 </div>
               </div>
@@ -1503,7 +1503,7 @@ function DeadlinesTab({ analysis }: { analysis: DocumentAnalysis }) {
                   <h3 className="text-xs font-bold uppercase tracking-widest text-blue-700 dark:text-blue-400">Reference Dates — for context</h3>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400">{referenceDls.length}</span>
                 </div>
-                <div className="p-3 space-y-2">
+                <div className="p-4 space-y-2">
                   {referenceDls.map(dl => <DeadlineCard key={dl.id} dl={dl} category="reference" docTitle={docTitle} />)}
                 </div>
               </div>
@@ -1599,7 +1599,7 @@ function RisksTab({ analysis, onOpenGuidedReview, documentType }: { analysis: Do
   const lowRisks    = analysis.risks.filter(r => r.severity === "low" || (r.severity !== "high" && r.severity !== "medium"))
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="text-xl sm:text-2xl font-display font-bold">Risks & Warnings</h2>
@@ -1620,7 +1620,7 @@ function RisksTab({ analysis, onOpenGuidedReview, documentType }: { analysis: Do
                   <h3 className="text-xs font-bold uppercase tracking-widest text-red-700 dark:text-red-400">High Severity — act now</h3>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-400">{highRisks.length}</span>
                 </div>
-                <div className="p-3 space-y-2">
+                <div className="p-4 space-y-2">
                   {highRisks.map(r => (
                     <div key={r.id} data-review-id={r.id}>
                       <RiskCard risk={r} documentType={documentType} />
@@ -1638,7 +1638,7 @@ function RisksTab({ analysis, onOpenGuidedReview, documentType }: { analysis: Do
                   <h3 className="text-xs font-bold uppercase tracking-widest text-amber-700 dark:text-amber-400">Medium Severity — review carefully</h3>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400">{medRisks.length}</span>
                 </div>
-                <div className="p-3 space-y-2">
+                <div className="p-4 space-y-2">
                   {medRisks.map(r => (
                     <div key={r.id} data-review-id={r.id}>
                       <RiskCard risk={r} documentType={documentType} />
@@ -1656,7 +1656,7 @@ function RisksTab({ analysis, onOpenGuidedReview, documentType }: { analysis: Do
                   <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Lower Severity — for your awareness</h3>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-secondary text-muted-foreground">{lowRisks.length}</span>
                 </div>
-                <div className="p-3 space-y-2">
+                <div className="p-4 space-y-2">
                   {lowRisks.map(r => (
                     <div key={r.id} data-review-id={r.id}>
                       <RiskCard risk={r} documentType={documentType} />
@@ -2205,8 +2205,8 @@ function SourceSectionsTab({ analysis, documentTypeHint, onOpenGuidedReview }: {
       </div>
 
       {/* Desktop: 2-column layout */}
-      <div className="hidden lg:grid lg:grid-cols-[1fr_360px] lg:gap-5">
-        <div className="max-h-[62vh] overflow-y-auto pr-1 space-y-2">
+      <div className="hidden lg:grid lg:grid-cols-[1fr_360px] lg:gap-5 lg:items-start">
+        <div className="space-y-2 pr-1">
           {sections.map((s, i) => (
             <div key={s.id} data-review-id={s.id}>
               <SectionCard
@@ -2225,7 +2225,7 @@ function SourceSectionsTab({ analysis, documentTypeHint, onOpenGuidedReview }: {
             </div>
           ))}
         </div>
-        <div className="max-h-[62vh] overflow-y-auto">
+        <div className="sticky top-0 max-h-[calc(100dvh-9rem)] overflow-y-auto">
           {selectedId ? (
             <SourceExplainPanel
               key={selectedId}
@@ -2393,7 +2393,7 @@ function KeyTermsTab({ analysis }: { analysis: DocumentAnalysis }) {
   }
 
   return (
-    <div className="space-y-5 max-w-4xl">
+    <div className="space-y-6 max-w-4xl">
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
           <h2 className="text-xl sm:text-2xl font-display font-bold">Key Terms & Clauses</h2>
@@ -3448,7 +3448,7 @@ function GuidedReviewOverlay({
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -24 }}
                 transition={{ duration: 0.2 }}
-                className="space-y-5"
+                className="space-y-6"
               >
                 {/* Category badge */}
                 <span className={`inline-flex items-center px-3 py-1 rounded-lg border text-[10px] font-bold uppercase tracking-widest ${styles.badge}`}>

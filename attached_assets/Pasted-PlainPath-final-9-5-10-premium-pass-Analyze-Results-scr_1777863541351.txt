@@ -1,0 +1,436 @@
+PlainPath final 9.5/10 premium pass — Analyze Results screen
+
+Goal:
+Bring the Analyze Results screen from strong MVP/premium direction to polished, App Store-ready, premium product quality.
+
+This is a UI/UX polish pass only.
+
+Do not change billing.
+Do not change RevenueCat.
+Do not change entitlements.
+Do not change analysis generation.
+Do not add removed tools.
+Do not add Ask This Document.
+Do not add higher-tier messaging.
+Do not change the core tab structure unless required for spacing.
+Do not create a new page.
+Do not redesign from scratch.
+
+Launch scope:
+- Analyze a Document
+- Contract Review
+- PlainPath Pro only
+- Saved analysis history
+
+Target:
+The Analyze Results screen should feel like a finished paid SaaS product: calm, readable, premium, source-backed, and action-oriented.
+
+Current issue:
+The screen is functional and much improved, but still feels visually dense. The right intelligence panel is compressed compared to the PDF viewer, some tabs feel crowded, red severity styling is too dominant in places, and some interactive elements do not clearly feel clickable.
+
+--------------------------------------------------
+1. DESKTOP SPLIT-SCREEN BALANCE
+--------------------------------------------------
+
+Current problem:
+The PDF viewer often uses too much horizontal space while the analysis panel feels cramped.
+
+Update desktop layout so both sides feel equally important.
+
+Preferred desktop proportions:
+- PDF/document viewer: 48–50%
+- Intelligence/results panel: 50–52%
+
+If using CSS grid/flex:
+- reduce oversized PDF margin
+- give the right panel more readable width
+- preserve the vertical divider
+- preserve scroll independence
+
+Acceptance:
+At 1440px and 1920px widths:
+- PDF is readable
+- right panel is not cramped
+- tab labels do not feel squeezed
+- cards have enough breathing room
+- no horizontal overflow
+
+--------------------------------------------------
+2. RESULT PANEL PREMIUM CONTAINER
+--------------------------------------------------
+
+Make the right-side analysis area feel more like a premium “intelligence workspace.”
+
+Apply a consistent content shell:
+- max readable content width inside the panel
+- consistent section padding
+- consistent card border radius
+- consistent border color
+- subtle background contrast between page, panel, and cards
+- no harsh or muddy gray blocks
+
+Visual target:
+- dark professional
+- calm
+- high contrast where needed
+- no visual clutter
+
+Avoid:
+- oversized cards
+- huge empty gaps
+- neon colors
+- overly heavy borders
+- cramped text blocks
+
+--------------------------------------------------
+3. TYPOGRAPHY AND READABILITY PASS
+--------------------------------------------------
+
+Improve readability across all tabs:
+
+Tabs:
+- Plain English
+- Source Sections
+- Overview
+- What’s Missing
+- Checklist
+- Required Docs
+- Deadlines
+- Risks & Notes
+- Key Terms
+- Action Pack
+
+Update:
+- line height slightly higher for body copy
+- card titles more prominent
+- subtitles softer but readable
+- source quote text readable but secondary
+- label text consistent
+- avoid tiny gray text that is hard to read
+
+Suggested style:
+- Card title: strong white / near-white
+- Main explanation: readable muted white/gray
+- Source quote: secondary, italic or subdued, but not too faint
+- Metadata labels: uppercase small text, but still legible
+
+Acceptance:
+A user should be able to scan each card without leaning in.
+
+--------------------------------------------------
+4. REDUCE “RED WALL” EFFECT
+--------------------------------------------------
+
+Current problem:
+Red appears too heavily across some tabs, which makes the page feel alarming and less refined.
+
+Enforce severity color rules:
+
+Critical / High:
+- red
+- only for serious consequence, missed deadline, money loss, rights loss, denial, termination, fraud, or major contractual issue
+
+Medium:
+- amber/orange
+- review carefully, possible cost/risk, needs confirmation
+
+Low / Reference:
+- blue/neutral
+- context, general timing, informational notes
+
+Confirmed:
+- green
+
+Missing / Needs Input:
+- blue or purple
+- only red if it blocks a major action or deadline
+
+Refine red cards:
+- use softer red backgrounds
+- keep red border/label visible
+- reduce full-card red saturation
+- make red feel serious but not visually overwhelming
+
+Acceptance:
+High-risk sections should look urgent, but not like an error screen.
+
+--------------------------------------------------
+5. TAB BAR POLISH
+--------------------------------------------------
+
+Current issue:
+The tab bar has many tabs and can feel cramped.
+
+Improve the tab bar without changing tab names or removing tabs.
+
+Update:
+- active tab is clearly selected
+- inactive tabs are readable
+- badge count spacing is cleaner
+- icon/text vertical alignment is consistent
+- hover state is visible
+- focus-visible state exists
+- no clipped labels
+- no awkward wrapping
+
+On smaller widths:
+- allow horizontal scroll with subtle fade/overflow cue
+- do not compress labels into unreadable text
+- keep active tab visible when selected
+
+Acceptance:
+The tab bar should feel intentional, not squeezed.
+
+--------------------------------------------------
+6. SOURCE SECTIONS BREAKDOWN POLISH
+--------------------------------------------------
+
+Current issue:
+The Source Sections page is now useful, but the breakdown panel can feel cramped and has internal scroll behavior.
+
+Improve:
+- selected section card should look clearly selected
+- breakdown panel should align cleanly to the selected section list
+- cards inside breakdown should have consistent spacing
+- avoid tiny nested scrollbars where possible
+- if internal scroll is necessary, style it subtly and avoid cramped text
+
+Breakdown cards should be clear:
+- What it means
+- What it requires
+- Why it matters
+- Risks & implications
+- Questions to ask
+
+Fallback behavior:
+- never blank
+- if no section selected: “Select a section to view the plain-English breakdown.”
+- if no breakdown exists: “No breakdown available for this section.”
+
+Acceptance:
+Source Sections should feel like a premium guided reading mode.
+
+--------------------------------------------------
+7. OVERVIEW TAB POLISH
+--------------------------------------------------
+
+Overview should be the executive summary.
+
+It should feel calm and high-value.
+
+Keep:
+- What this document is
+- key counts
+- top urgent items
+- needs your input
+- suggested next tab/action
+
+Improve:
+- reduce red dominance
+- avoid feeling like duplicate full tabs
+- make the summary card more premium
+- make “Go” actions look clickable and refined
+- keep urgent items compact
+
+Acceptance:
+A first-time user should understand the document in under 20 seconds.
+
+--------------------------------------------------
+8. DEADLINES TAB POLISH
+--------------------------------------------------
+
+Deadlines must feel focused and trustworthy.
+
+Structure:
+- Hard Deadlines — Do Not Miss
+- Watch Dates — Review Carefully
+- Reference Dates — For Context
+
+Each deadline card should show:
+- date/trigger
+- plain-English meaning
+- what user should do
+- what happens if missed
+- source quote/evidence
+- confidence if available
+
+Improve:
+- red only for hard deadlines
+- amber for watch dates
+- blue/neutral for reference dates
+- reduce repeated labels
+- improve spacing and clarity
+
+Acceptance:
+The user should immediately know which dates can hurt them.
+
+--------------------------------------------------
+9. RISKS & NOTES POLISH
+--------------------------------------------------
+
+Risks should explain, not just warn.
+
+Each risk card should clearly include:
+- risk title
+- why it matters
+- potential impact
+- source/evidence
+- suggested next step
+- copy issue summary button
+
+Improve:
+- red high-risk cards should be readable, not visually overwhelming
+- medium risk cards should be amber/orange
+- clarification questions should remain blue/purple
+- source quotes should not be too faint
+- “Copy issue summary” should look like a useful action button
+
+Acceptance:
+The user should understand the consequence, not just see a warning.
+
+--------------------------------------------------
+10. ACTION PACK POLISH
+--------------------------------------------------
+
+Action Pack should feel like a guided checklist.
+
+Improve:
+- task rows need better hierarchy
+- status pills must look clickable
+- checkbox/status controls must have hover/focus states
+- completed items should be visually subdued but still readable
+- urgent/important labels should be consistent with severity colors
+- cards should not look flat or unfinished
+
+Status pill behavior:
+- cursor pointer
+- hover state
+- focus-visible state
+- optional chevron/down icon
+- title/tooltip: “Click to update status”
+- aria-label: “Update task status”
+
+Acceptance:
+Users should immediately understand they can mark items done.
+
+--------------------------------------------------
+11. REQUIRED DOCS + WHAT’S MISSING POLISH
+--------------------------------------------------
+
+These sections should be clean and action-oriented.
+
+What’s Missing:
+- only missing info, missing docs, missing user input, missing signatures, missing required confirmations
+- avoid duplicating risks and deadlines unless the missing item directly blocks the user
+
+Required Docs:
+- group clearly:
+  - Still needed
+  - Optional / supporting
+  - Already confirmed, if applicable
+- make checkboxes clearly interactive
+- use green only for confirmed/present items
+- use amber/blue for optional/supporting
+
+Acceptance:
+The user should know what documents they need to gather next.
+
+--------------------------------------------------
+12. CLICKABLE AFFORDANCE PASS
+--------------------------------------------------
+
+Every clickable small control should visibly behave as clickable.
+
+Apply hover/focus/active states to:
+- status pills
+- copy buttons
+- Go links
+- Guided Review
+- tab buttons
+- close icons
+- evidence/source controls
+- any compact action buttons
+
+Required:
+- cursor pointer
+- hover background/border
+- focus-visible outline/ring
+- aria labels where useful
+- no invisible clickable areas
+
+Acceptance:
+No clickable item should look static.
+
+--------------------------------------------------
+13. REMOVE STALE / UNSUPPORTED COPY
+--------------------------------------------------
+
+Search for and remove or update stale launch-inconsistent copy:
+
+Remove user-facing references to:
+- Starter
+- Team
+- annual billing
+- Clause Extractor
+- Compare Versions
+- Contract Builder
+- Redaction
+- Ask This Document
+- higher-tier
+- upgrade to access
+- methodology reviewed by licensed attorneys, unless the link/page is real and claim is verified
+
+Allowed launch copy:
+- Analyze a Document
+- Contract Review
+- PlainPath Pro
+- $19.99/month
+- saved analysis history
+- source-backed
+- plain-English
+- not legal advice
+
+--------------------------------------------------
+14. MOBILE RESPONSIVE CHECK
+--------------------------------------------------
+
+Verify at:
+- 390px width
+- 430px width
+- tablet width
+- desktop 1440px
+- desktop 1920px
+
+Mobile requirements:
+- no horizontal overflow
+- tab bar scrolls cleanly
+- cards are readable
+- status pills fit
+- source quotes do not crush layout
+- PDF/document viewer and analysis panel remain usable
+- primary actions remain reachable
+
+--------------------------------------------------
+15. FINAL ACCEPTANCE RUBRIC
+--------------------------------------------------
+
+Score the final screen against this rubric:
+
+A. Premium visual feel: 9/10 or higher
+B. Readability: 9/10 or higher
+C. Information hierarchy: 9/10 or higher
+D. Severity/color clarity: 9/10 or higher
+E. Desktop layout balance: 9/10 or higher
+F. Mobile usability: 9/10 or higher
+G. No stale product references: pass
+H. No higher-tier messages: pass
+I. No removed tools: pass
+J. No broken methodology link: pass
+K. Build clean: pass
+
+Return:
+1. Files changed
+2. What visual improvements were made
+3. Any stale references found and removed
+4. Before/after summary
+5. Final QA result
