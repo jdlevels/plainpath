@@ -54,6 +54,7 @@ import {
 } from "@/lib/completionFlowConfig"
 import { AnalyzeModeNav } from "@/components/AnalyzeModeNav"
 import { PlanSummaryView } from "@/components/analyze/PlanSummaryView"
+import { ItemDetailDrawer } from "@/components/analyze/ItemDetailDrawer"
 import { analysisResultToCompletionObjects } from "@/lib/completionParser"
 import type { CompletionObject } from "@/lib/completionTypes"
 
@@ -110,6 +111,9 @@ export default function Analyze() {
 
   // Phase 3B: per-item completion status keyed by CompletionObject.id
   const [completionStatus, setCompletionStatus] = useState<Record<string, boolean>>({})
+
+  // Phase 3C: item selected for detail drawer
+  const [selectedItem, setSelectedItem] = useState<CompletionObject | null>(null)
 
   const checkScroll = useCallback(() => {
     const el = tabListRef.current
@@ -200,6 +204,15 @@ export default function Analyze() {
   const handlePlanItemToggle = useCallback((id: string, done: boolean) => {
     setCompletionStatus(prev => ({ ...prev, [id]: done }))
   }, [])
+
+  // Phase 3C: item detail drawer handlers
+  const handleOpenItemDetail  = useCallback((item: CompletionObject) => { setSelectedItem(item) }, [])
+  const handleCloseItemDetail = useCallback(() => { setSelectedItem(null) }, [])
+
+  // Phase 3C: close drawer when leaving plan mode
+  useEffect(() => {
+    if (activeMode !== "plan") setSelectedItem(null)
+  }, [activeMode])
 
   // Phase 3B: progress covers ALL completable types (not just action steps + required docs)
   const PLAN_COMPLETABLE_TYPES = [
@@ -504,6 +517,7 @@ export default function Analyze() {
             completionObjects={completionObjects}
             completionStatus={completionStatus}
             onToggleItem={handlePlanItemToggle}
+            onOpenDetails={handleOpenItemDetail}
             onTabChange={handleTabChange}
           />
         )}
@@ -629,6 +643,21 @@ export default function Analyze() {
           />
         )}
       </AnimatePresence>
+
+      {/* ── Item Detail Drawer (Phase 3C) ─────────── */}
+      {ANALYZE_COMPLETION_FLOW_ENABLED && (
+        <AnimatePresence>
+          {selectedItem && (
+            <ItemDetailDrawer
+              item={selectedItem}
+              documentTitle={analysis.title}
+              done={completionStatus[selectedItem.id] === true}
+              onToggle={handlePlanItemToggle}
+              onClose={handleCloseItemDetail}
+            />
+          )}
+        </AnimatePresence>
+      )}
     </div>
   )
 }

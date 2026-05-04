@@ -8,6 +8,7 @@ import {
   AlertTriangle,
   HelpCircle,
   ArrowRight,
+  ChevronRight,
   MapPin,
   Clock,
   ChevronDown,
@@ -23,6 +24,7 @@ interface PlanSummaryViewProps {
   completionObjects: CompletionObject[]
   completionStatus: Record<string, boolean>
   onToggleItem: (id: string, done: boolean) => void
+  onOpenDetails: (item: CompletionObject) => void
   onTabChange: (tabId: string) => void
 }
 
@@ -59,10 +61,12 @@ function ItemCard({
   item,
   done,
   onToggle,
+  onOpenDetails,
 }: {
   item: CompletionObject
   done: boolean
   onToggle: (id: string, done: boolean) => void
+  onOpenDetails: (item: CompletionObject) => void
 }) {
   const displayPriority: CompletionPriority =
     item.type === "risk" ? (item.severity ?? item.priority) : item.priority
@@ -165,8 +169,8 @@ function ItemCard({
         )}
       </div>
 
-      {/* Status label */}
-      <div className="pl-8">
+      {/* Status label + Details button */}
+      <div className="pl-8 flex items-center justify-between">
         <span
           role="button"
           tabIndex={-1}
@@ -179,6 +183,15 @@ function ItemCard({
         >
           {done ? "Done" : "Mark done"}
         </span>
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onOpenDetails(item) }}
+          style={{ touchAction: "manipulation" }}
+          aria-label={`Open details for ${item.title}`}
+          className="flex items-center gap-0.5 text-[10px] font-semibold text-primary/55 hover:text-primary transition-colors outline-none focus-visible:underline"
+        >
+          Details <ChevronRight className="w-3 h-3" />
+        </button>
       </div>
     </div>
   )
@@ -192,11 +205,13 @@ function SectionCard({
   section,
   completionStatus,
   onToggleItem,
+  onOpenDetails,
   onTabChange,
 }: {
   section: SectionDef
   completionStatus: Record<string, boolean>
   onToggleItem: (id: string, done: boolean) => void
+  onOpenDetails: (item: CompletionObject) => void
   onTabChange: (tabId: string) => void
 }) {
   const [showAll, setShowAll] = useState(false)
@@ -255,6 +270,7 @@ function SectionCard({
                 item={item}
                 done={completionStatus[item.id] === true}
                 onToggle={onToggleItem}
+                onOpenDetails={onOpenDetails}
               />
             ))}
 
@@ -295,6 +311,7 @@ export function PlanSummaryView({
   completionObjects,
   completionStatus,
   onToggleItem,
+  onOpenDetails,
   onTabChange,
 }: PlanSummaryViewProps) {
   const actions    = completionObjects.filter((o) => o.type === "action_step")
@@ -433,6 +450,7 @@ export function PlanSummaryView({
             section={section}
             completionStatus={completionStatus}
             onToggleItem={onToggleItem}
+            onOpenDetails={onOpenDetails}
             onTabChange={onTabChange}
           />
         ))}

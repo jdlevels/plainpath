@@ -1,0 +1,266 @@
+PlainPath — Analyze a Document Phase 3C: Guided item detail drawer
+
+Goal:
+Add a guided detail drawer/panel for each Plan Summary item so users can understand exactly what to do, where to get the needed document/signature/info, what source text supports it, and what message they can copy.
+
+This builds on Phase 3B.
+Phase 3B status tracking is approved and must remain intact.
+
+Do not change:
+- billing
+- RevenueCat
+- Stripe
+- Apple/native billing
+- authentication
+- pricing
+- backend entitlement logic
+- Clerk/security dependency versions
+- Contract Review
+- Contract Review PDF export
+- homepage
+- marketing copy
+- routes unless required only for Analyze UI state
+- Analyze parser logic unless a tiny type-safe read adapter is required
+
+Do not restore removed tools:
+- Redact Sensitive Info
+- Trust Check
+- Compare Versions
+- Clause Extractor
+- Builder
+- Digital Signature
+- Starter
+- Team
+- annual billing
+
+Feature flag:
+All Phase 3C behavior must remain behind:
+
+VITE_ANALYZE_COMPLETION_FLOW_ENABLED
+
+When flag is OFF:
+- old Analyze UI remains unchanged
+- no mode nav
+- no Plan Summary
+- no guided drawer
+- no status-tracking UI changes
+
+Current state:
+PlanSummaryView groups completion objects into:
+- Immediate Actions
+- Documents to Gather
+- Signatures Needed
+- Deadlines
+- Risks to Review
+- Questions to Ask
+
+Each item already has:
+- done/not done toggle
+- status mutation in Analyze.tsx
+- progress calculation
+- section counts
+
+Phase 3C requirements:
+
+1. Add item detail drawer/panel
+
+When the user clicks “Details” on any Plan Summary item, open a guided detail drawer.
+
+Desktop:
+- right-side drawer or centered side panel
+- should not cover the entire document plan unless viewport is narrow
+- should feel premium, focused, and readable
+
+Mobile:
+- bottom sheet or full-width drawer
+- scrollable content
+- easy close button
+
+Do not navigate away from the Analyze page.
+
+2. Drawer content structure
+
+The drawer should show these sections when data exists:
+
+A. Header
+- item title
+- item type label
+- priority badge
+- Done / Not done control
+- close button
+
+B. What this means
+Use item.plainEnglishExplanation if available.
+Fallback to item.description.
+If neither exists, use:
+“PlainPath identified this as an item to review before submission.”
+
+C. What to do
+Use item.whatToDo if available.
+Fallback by type:
+- action_step: “Complete this action before submitting or relying on the document.”
+- required_document: “Gather or confirm this document before submitting.”
+- missing_document: “This document appears to be needed but was not included in the upload.”
+- signature_needed: “Confirm who must sign and whether the signature must be on the official form.”
+- deadline: “Confirm this date and complete any required step before the deadline.”
+- risk: “Review this risk and decide whether you need clarification before proceeding.”
+- question_to_ask: “Ask this question to the issuing party or responsible office before submitting.”
+
+D. Where to get this
+Show item.whereToGetThis if available.
+If unavailable, show:
+“PlainPath did not find a specific source for where to get this. Contact the issuing office, provider, school, employer, agency, or organization listed in the document.”
+
+E. Source evidence
+Show item.sourceQuote if available.
+Label it:
+“Source found in your document”
+
+If no quote:
+“PlainPath did not find a direct quote for this item. Review the document manually before acting.”
+
+F. Deadline / trigger
+If item.dueDate exists, show:
+“Due date: [date]”
+
+If item.trigger exists, show:
+“Trigger: [trigger]”
+
+If neither exists, omit this section.
+
+G. Copy request message
+Generate a deterministic copy message based on item type.
+Do not call AI.
+
+Example template:
+
+“Hello, I’m reviewing [document title]. Can you confirm [item title] and tell me what I need to provide, where to get the correct form/document, and the deadline if any? Thank you.”
+
+For missing documents:
+“Hello, I’m reviewing [document title]. It appears I may need [item title], but it was not included with the documents I received. Can you confirm whether this is required and where I can get the correct version?”
+
+For signatures:
+“Hello, I’m reviewing [document title]. Can you confirm who needs to sign [item title], whether the signature must be on an official form, and where I should submit it?”
+
+For deadlines:
+“Hello, I’m reviewing [document title]. Can you confirm the deadline or timing requirement for [item title] and what must be completed before that date?”
+
+Add a “Copy message” button with copied confirmation.
+
+H. User note — optional local only
+Add a small note field only if low-risk.
+If added, keep it local state only.
+Do not persist to backend in this phase.
+If this risks scope creep, skip notes for Phase 3C.
+
+3. Interaction behavior
+
+- “Details” opens drawer for the selected item.
+- Clicking a different Details button switches drawer content.
+- Done/not done can be toggled from inside drawer.
+- Toggling in drawer updates the Plan Summary card immediately.
+- Toggling on card updates drawer if same item is open.
+- Closing drawer keeps Plan mode and current scroll position.
+- Show more / show less remains working.
+- Jump buttons remain working.
+- No accidental toggles when clicking Details.
+
+4. Visual design
+
+Use premium PlainPath dark UI:
+- subtle border
+- soft shadow
+- clear section headings
+- readable spacing
+- no heavy red blocks unless item is critical risk
+- priority chip only, not full-card warning color
+- source quote visually subdued but readable
+- copy button clearly visible
+
+Drawer should feel like:
+“Here is how to complete this item.”
+
+Not:
+“Here is another analysis tab.”
+
+5. Accessibility
+
+- drawer has aria-label
+- close button has aria-label
+- copy button has aria-label
+- toggle button has aria-label
+- keyboard users can tab through controls
+- Escape closes drawer if easy to implement safely
+
+6. No persistence requirement
+
+This phase does not need backend persistence.
+
+Do not add:
+- database changes
+- API routes
+- migrations
+- server calls
+- file upload controls
+- packet generation
+- PDF compilation
+- official form generation
+
+7. Complete mode
+
+Complete mode may remain preview-only.
+
+Optional safe update:
+Show:
+“Open Plan mode and use Details on each item to work through the checklist.”
+
+Do not build the full Complete workflow yet.
+
+8. QA checks
+
+Run and report:
+- Vite production build
+- completion parser QA
+- TypeScript check if available
+- security scan if available
+
+Manual/source verification:
+- Feature flag off preserves old UI
+- Feature flag on shows drawer only from Plan Summary
+- Details works for each item type:
+  - action_step
+  - required_document
+  - missing_document
+  - signature_needed
+  - deadline
+  - risk
+  - question_to_ask
+- Done toggle works from drawer and card
+- Copy message works
+- Source quote appears when available
+- Missing source fallback appears when sourceQuote is absent
+- whereToGetThis appears when available
+- fallback guidance appears when whereToGetThis is absent
+- switching modes closes or safely preserves drawer without broken state
+- no billing files changed
+- no RevenueCat files changed
+- no Stripe files changed
+- no native billing files changed
+- no auth files changed
+- no Contract Review files changed
+- no marketing/homepage files changed
+- no removed tool references added
+
+9. Return report
+
+Return:
+1. Files changed
+2. Drawer/panel component name
+3. State model used for selected item
+4. Item types supported
+5. Copy message templates added
+6. Done/not-done sync behavior
+7. Feature flag behavior
+8. Build/QA results
+9. Known limitations
+10. Recommended next slice
