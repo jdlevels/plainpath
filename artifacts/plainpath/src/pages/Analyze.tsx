@@ -252,10 +252,10 @@ export default function Analyze() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-background">
+    <div className="h-screen overflow-hidden flex flex-col bg-background">
 
-      {/* ── Sticky header ───────────────────────────── */}
-      <div className="no-print bg-background/95 backdrop-blur-md border-b border-border/50 sticky top-0 z-30">
+      {/* ── Header ───────────────────────────────────── */}
+      <div className="no-print shrink-0 bg-background/95 backdrop-blur-md border-b border-border/50 z-30">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-2.5 sm:py-4">
           <div className="flex items-center gap-4">
             <button
@@ -352,9 +352,11 @@ export default function Analyze() {
           />
         </div>
 
-        {/* Right: analysis panel */}
-        <div className={`flex-col overflow-hidden md:w-[40%] md:flex md:flex-none ${mobileAnalyzeTab === "analysis" ? "flex flex-1" : "hidden"}`}>
-          <div className="flex-1 overflow-auto" style={{ paddingBottom: "max(6rem, env(safe-area-inset-bottom) + 6rem)" }}>
+        {/* Right: analysis panel — this div IS the scroll container */}
+        <div
+          className={`flex-col overflow-y-auto md:w-[40%] md:flex md:flex-none ${mobileAnalyzeTab === "analysis" ? "flex flex-1" : "hidden"}`}
+          style={{ paddingBottom: "max(6rem, env(safe-area-inset-bottom) + 6rem)" }}
+        >
           <div className="px-4 sm:px-5">
 
         {/* ── At-a-glance strip ───────────────────────── */}
@@ -498,8 +500,7 @@ export default function Analyze() {
         <PrintReport analysis={analysis} documentTypeHint={documentTypeHint} />
 
           </div>{/* end px-4 sm:px-5 */}
-          </div>{/* end overflow-auto */}
-        </div>{/* end right panel */}
+        </div>{/* end right panel / scroll container */}
       </div>{/* end split workspace */}
 
       {/* ── Guided Review Overlay ────────────────────── */}

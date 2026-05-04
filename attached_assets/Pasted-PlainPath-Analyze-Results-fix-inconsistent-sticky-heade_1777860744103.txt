@@ -1,0 +1,100 @@
+PlainPath Analyze Results — fix inconsistent sticky header by tab
+
+Issue:
+The result header/title bar now looks much better, but sticky behavior is inconsistent.
+
+The header stays stationary on most result tabs, but it still moves/scrolls on:
+- Plain English
+- Source Sections
+- Overview
+
+The header should remain sticky/stationary on every Analyze results tab.
+
+Do not redesign the page.
+Do not change result content.
+Do not change billing.
+Do not change RevenueCat.
+Only fix sticky header behavior across tab layouts.
+
+Required fix:
+
+1. Inspect the Analyze results layout wrappers for each tab:
+- Plain English
+- Source Sections
+- Overview
+- What’s Missing
+- Checklist
+- Required Docs
+- Deadlines
+- Risks & Notes
+- Key Terms
+- Action Pack
+
+2. Identify why only Plain English, Source Sections, and Overview allow the header to move.
+
+Likely causes to check:
+- different scroll container
+- nested overflow-auto / overflow-hidden parent
+- transform on parent
+- height: 100vh wrapper mismatch
+- tab content mounted inside a different container
+- sticky header placed inside the wrong wrapper for those tabs
+
+3. Ensure the result header is outside tab-specific scroll containers.
+
+The sticky header containing:
+- back button
+- detected document type
+- document title
+- progress / steps reviewed
+- Save
+- Export
+
+should live in the shared results layout, not inside individual tab panels.
+
+4. Apply one consistent scroll model:
+
+Preferred:
+- main app shell scrolls once
+- result header uses position: sticky
+- tab content scrolls below it
+
+Avoid:
+- separate scroll containers per tab unless the sticky header is outside them
+- tab-specific wrappers that override sticky behavior
+
+5. Required CSS behavior:
+
+Use:
+position: sticky;
+top: [main nav height];
+z-index: high enough;
+background: existing dark surface;
+backdrop/blur if already used;
+
+Make sure parent elements do not break sticky:
+- no transform on sticky ancestors
+- no overflow hidden/auto on sticky ancestors unless intentional
+- no conflicting height constraints
+
+6. Final QA:
+
+Test each tab manually:
+
+- Plain English: header stays fixed
+- Source Sections: header stays fixed
+- Overview: header stays fixed
+- What’s Missing: header stays fixed
+- Checklist: header stays fixed
+- Required Docs: header stays fixed
+- Deadlines: header stays fixed
+- Risks & Notes: header stays fixed
+- Key Terms: header stays fixed
+- Action Pack: header stays fixed
+
+Also verify:
+- mobile layout still works
+- no horizontal overflow
+- Save and Export remain visible
+- Start Here banner does not overlap the sticky header
+- tab bar does not jump when switching tabs

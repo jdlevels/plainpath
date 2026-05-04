@@ -1,0 +1,173 @@
+PlainPath Analyze Results — diagnose intermittent Source Sections breakdown issue
+
+Issue:
+The Source Sections → Plain-English Breakdown panel now loads sometimes, but not consistently.
+
+Observed:
+- Some selected sections show the breakdown correctly.
+- Other times the breakdown panel appears empty or inactive.
+- We need to determine whether this is caused by missing data, data-shape mismatch, selected-section mismatch, cached old sessions, or runtime errors.
+
+Do not redesign.
+Do not change billing.
+Do not change RevenueCat.
+Do not change analysis logic unless a clear bug is found.
+First inspect, log, and report.
+
+--------------------------------------------------
+1. CHECK BROWSER / RUNTIME ERRORS
+--------------------------------------------------
+
+Inspect the Source Sections component and related render path for errors.
+
+Check for:
+- console errors
+- undefined/null property access
+- failed map/filter operations
+- selectedSection undefined
+- breakdown object undefined
+- index mismatch
+- id mismatch
+- stale state after tab switch
+- hydration/render timing issues
+
+Add safe defensive rendering where needed.
+
+No blank panel should render.
+
+--------------------------------------------------
+2. TRACE DATA SHAPE
+--------------------------------------------------
+
+Trace the analysis result object used by Source Sections.
+
+Report the exact available fields for each section, such as:
+- id
+- index
+- text
+- explanation
+- plainEnglish
+- breakdown
+- meaning
+- requires
+- whyItMatters
+- risks
+- questions
+- sourceSectionBreakdown
+- sectionExplanations
+
+Find the real field currently holding:
+- What it means
+- What it requires
+- Why it matters
+- Risks & implications
+- Questions to ask
+
+Then ensure the UI consistently reads from that field.
+
+--------------------------------------------------
+3. CHECK SELECTED SECTION MATCHING
+--------------------------------------------------
+
+Verify selected section matching logic.
+
+Potential issue:
+Section cards may use index numbers 1, 2, 3...
+but breakdown data may use zero-based indexes, ids, or different source anchors.
+
+Confirm:
+- Section 1 maps to the correct breakdown
+- Section 2 maps to the correct breakdown
+- Section 3 maps to the correct breakdown
+- Switching sections updates the right panel every time
+
+If no matching breakdown is found, show fallback instead of blank state.
+
+Fallback:
+“No breakdown available for this section.”
+
+--------------------------------------------------
+4. CHECK OLD/CACHED ANALYSIS SESSIONS
+--------------------------------------------------
+
+Determine whether older saved analysis sessions lack the new breakdown fields.
+
+If yes:
+- Do not crash
+- Do not show blank panel
+- Show fallback:
+  “No breakdown available for this section. Run a new analysis to generate section breakdowns.”
+
+Only show the “Run a new analysis” sentence if the session truly lacks the breakdown structure.
+
+--------------------------------------------------
+5. ADD TEMPORARY DEV DIAGNOSTIC LOGGING
+--------------------------------------------------
+
+In development only, add safe debug logging for Source Sections.
+
+Log:
+- selected section id/index
+- available section count
+- available breakdown count
+- whether breakdown match was found
+- fallback reason
+
+Do not expose debug logs to users in production UI.
+
+Use environment-safe logging only.
+
+--------------------------------------------------
+6. HARDEN UI FALLBACKS
+--------------------------------------------------
+
+The right panel should always show one of these:
+
+A. Selected section breakdown cards:
+- What it means
+- What it requires
+- Why it matters
+- Risks & implications
+- Questions to ask
+
+OR
+
+B. Empty fallback:
+“No breakdown available for this section.”
+
+OR
+
+C. No section selected fallback:
+“Select a section to view the plain-English breakdown.”
+
+Never render an empty panel body.
+
+--------------------------------------------------
+7. FINAL QA
+--------------------------------------------------
+
+Test with at least three analysis sessions/documents:
+
+1. New service agreement sample
+2. EOB/insurance sample
+3. Older saved analysis if available
+
+Verify:
+- Section 1 shows breakdown or fallback
+- Section 2 shows breakdown or fallback
+- Last section shows breakdown or fallback
+- Switching sections updates the panel
+- No console errors
+- No blank right panel
+- No higher-tier messages
+- No Ask This Document tab
+- Build remains clean
+
+Return a report with:
+
+A. Root cause found
+B. Files changed
+C. Whether old sessions lacked breakdown data
+D. Whether section id/index mismatch existed
+E. Whether any console/runtime errors existed
+F. Final QA result
