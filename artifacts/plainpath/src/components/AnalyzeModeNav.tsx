@@ -18,7 +18,7 @@ interface ModeConfig {
 
 const MODES: ModeConfig[] = [
   { id: "understand", label: "Understand", shortLabel: "Read",     icon: BookOpen,    description: "Plain-language explanation" },
-  { id: "plan",       label: "Plan",       shortLabel: "Plan",     icon: ListTodo,    description: "Tasks, docs, deadlines"     },
+  { id: "plan",       label: "Requirements", shortLabel: "Needs",   icon: ListTodo,    description: "What is required to complete" },
   { id: "complete",   label: "Complete",   shortLabel: "Complete", icon: CheckSquare, description: "Work through each item"     },
   { id: "compile",    label: "Summary",    shortLabel: "Summary",  icon: Package,     description: "Review completion summary"  },
 ]

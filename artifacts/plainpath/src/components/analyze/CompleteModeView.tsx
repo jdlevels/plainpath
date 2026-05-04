@@ -75,9 +75,8 @@ function priorityBadgeClass(priority: CompletionPriority): string {
 
 function progressStatusLabel(pct: number): string {
   if (pct === 0)   return "Not started"
-  if (pct < 50)    return "In progress"
-  if (pct < 100)   return "Almost there"
-  return "All items complete"
+  if (pct < 100)   return "Not ready yet"
+  return "Ready for final review"
 }
 
 function progressStatusColor(pct: number): string {
@@ -473,10 +472,10 @@ export function CompleteModeView({
         {/* Title */}
         <div>
           <h2 className="text-xl font-bold text-foreground mb-1 tracking-tight">
-            Your Completion Checklist
+            Complete Before Submission
           </h2>
           <p className="text-sm text-muted-foreground leading-relaxed max-w-prose">
-            Mark items done as you complete them. Tap Details for guidance on any item.
+            Track what is required, what is missing, and what must be verified before you submit or act on this document.
           </p>
         </div>
 
