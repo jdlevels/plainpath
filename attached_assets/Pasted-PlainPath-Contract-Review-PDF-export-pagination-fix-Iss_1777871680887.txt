@@ -1,0 +1,191 @@
+PlainPath — Contract Review PDF export pagination fix
+
+Issue:
+Contract Review export/print/save-as-PDF only produces one page. This is a launch blocker.
+
+Goal:
+Fix Contract Review PDF export so the full contract review report prints across multiple pages when needed. The export must not be limited to the visible viewport, active scroll container, or first screen.
+
+Do not change:
+- billing
+- RevenueCat
+- Stripe
+- Apple/native billing
+- authentication
+- Analyze page
+- Analyze completion flow
+- Plan Summary
+- feature flags
+- pricing
+- backend entitlement logic
+- Clerk/security dependency versions
+
+Do not restore removed tools:
+- Redact Sensitive Info
+- Trust Check
+- Compare Versions
+- Clause Extractor
+- Builder
+- Digital Signature
+- Starter
+- Team
+- annual billing
+
+Required investigation:
+
+1. Locate Contract Review export flow
+Find:
+- Contract Review page/component
+- export menu component used by Contract Review
+- any print/export handlers
+- any print CSS
+- any report component used for contract review export
+
+2. Identify why export is capped to one page
+Check for:
+- window.print() being called on the live app viewport only
+- print container with height: 100vh
+- overflow: hidden
+- overflow-y: auto
+- fixed/sticky containers inside print area
+- transform/scale styles applied during print
+- only active/visible tab being printed
+- @media print hiding content after first section
+- page-break rules missing
+- print body using max-height
+- PDF export pulling only summary data instead of full report data
+
+3. Fix export architecture
+
+Preferred fix:
+Create or repair a dedicated print/report view for Contract Review that renders the full report in normal document flow.
+
+The print/report component should:
+- not use scroll containers
+- not use sticky headers
+- not use fixed height
+- not use viewport height
+- not use transform scaling
+- render all sections in one continuous document
+- allow natural page breaks
+- include print-specific CSS
+
+Required report sections:
+- report cover/header
+- contract title/name
+- upload/review date
+- review confidence if available
+- plain-English contract summary
+- risk score / overall finding if available
+- high-risk findings
+- medium-risk findings
+- key clauses
+- obligations / deadlines if available
+- source evidence / quoted clauses
+- user-facing disclaimer
+
+4. Print CSS requirements
+
+Add or fix print CSS so:
+
+- html, body use auto height for print
+- no overflow hidden on the print report
+- no max-height on report sections
+- no sticky/fixed elements inside the printable report
+- cards can break cleanly between pages where needed
+- section headings avoid being orphaned at the bottom of a page
+- each major section can start cleanly when appropriate
+
+Use CSS patterns like:
+
+@media print {
+  html,
+  body {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .contract-review-print-report {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .print-page-break {
+    break-before: page;
+    page-break-before: always;
+  }
+}
+
+Only use break-inside: avoid where it does not force huge blank spaces.
+
+5. Export menu cleanup
+
+While touching the export menu, confirm Contract Review export menu does not show removed tools.
+
+Allowed export actions:
+- Print / Save as PDF
+- Copy as text
+- Download .txt if still supported
+- Copy share link / Share if currently supported
+
+Not allowed:
+- Redact Sensitive Info
+- Trust Check
+- Compare Versions
+- Clause Extractor
+- Builder
+- Digital Signature
+
+6. QA test document
+
+Use a Contract Review result with enough content to require more than one PDF page.
+
+Verify:
+- print preview shows more than 1 page
+- all major sections appear
+- no content is clipped
+- no section is cut off horizontally
+- no sidebar/app chrome prints
+- no dark app background ruins print readability unless intentionally styled
+- no removed-tool menu items appear
+- export still works from the Contract Review result page
+
+7. Regression checks
+
+Confirm:
+- Analyze export was not changed unless it shares the same safe print helper
+- Analyze page still works
+- Contract Review page still loads
+- billing unchanged
+- RevenueCat unchanged
+- Stripe unchanged
+- native billing unchanged
+- Pro-only plan unchanged
+- completion parser QA still passes 44/44 if run in this workspace
+
+8. Build checks
+
+Run:
+- Vite production build
+- relevant TypeScript check
+- Contract Review export smoke test
+- security scan if available
+
+Return:
+1. Root cause
+2. Files changed
+3. Print/export architecture after fix
+4. Screenshot or description confirming print preview has multiple pages
+5. Export menu cleanup result
+6. Build/QA results
+7. Confirmation that billing/native/auth/security files were not changed

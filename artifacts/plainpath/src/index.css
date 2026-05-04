@@ -333,6 +333,13 @@
     padding-right: 0 !important;
   }
 
+  /* ── Contract Review: expand root so print report flows ── */
+  .cr-results-root {
+    height: auto !important;
+    overflow: visible !important;
+    display: block !important;
+  }
+
   /* ── 2. Remove chrome ── */
   nav,
   header,

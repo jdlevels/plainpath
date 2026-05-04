@@ -25,6 +25,7 @@ import { ResultMetaStrip } from "@/components/result/ResultMetaStrip"
 import { ScoreLegend, CONTRACT_REVIEW_LEGEND } from "@/components/ui/ScoreLegend"
 import { DocumentScanScreen } from "@/components/DocumentScanScreen"
 import { DocumentStageViewer } from "@/components/DocumentStageViewer"
+import { triggerPrint } from "@/lib/print"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -405,6 +406,159 @@ const REVIEW_DEMOS: Array<{
     },
   },
 ]
+
+// ─── ContractReviewPrintReport ────────────────────────────────────────────────
+
+function ContractReviewPrintReport({ result }: { result: ReviewResult }) {
+  const redFlags  = result.clauses.filter(c => c.rating === "red-flag")
+  const watchOuts = result.clauses.filter(c => c.rating === "watch-out")
+  const fair      = result.clauses.filter(c => c.rating === "fair")
+
+  function formatDate(iso: string): string {
+    try { return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" }) }
+    catch { return iso }
+  }
+
+  return (
+    <div className="print-only">
+      {/* Cover */}
+      <div className="print-header">
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
+          <span style={{ fontWeight: 700, fontSize: "11pt", letterSpacing: "0.08em", textTransform: "uppercase", color: "#4F7CAC" }}>PlainPath</span>
+          <span style={{ color: "#aaa", fontSize: "10pt" }}>·</span>
+          <span style={{ fontSize: "9pt", color: "#888" }}>Contract Review Report</span>
+        </div>
+        <h1 style={{ fontSize: "18pt", fontWeight: 800, margin: "0 0 6px 0", lineHeight: 1.2 }}>Contract Review</h1>
+        <div style={{ display: "flex", gap: "18px", fontSize: "9pt", color: "#555", marginBottom: "4px" }}>
+          <span><strong>Fairness Score:</strong> {result.overallScore}/100</span>
+          <span><strong>Rating:</strong> {interpretScore(result.overallScore).split("—")[0].trim()}</span>
+          {result.reviewedAt && <span><strong>Reviewed:</strong> {formatDate(result.reviewedAt)}</span>}
+        </div>
+        <div style={{ borderTop: "2px solid #4F7CAC", marginTop: "12px" }} />
+      </div>
+
+      {/* Overall Verdict + Summary */}
+      <div className="print-section">
+        <h2 className="print-section-title">Overall Verdict</h2>
+        <div className="print-item-title" style={{ fontSize: "11pt", marginBottom: "6px" }}>{result.verdict}</div>
+        <p className="print-body">{result.summary}</p>
+      </div>
+
+      {/* Red Flags */}
+      {redFlags.length > 0 && (
+        <div className="print-section print-break">
+          <h2 className="print-section-title">Red Flags ({redFlags.length})</h2>
+          <p className="print-body" style={{ color: "#7f1d1d", marginBottom: "8px" }}>
+            These clauses are harmful, exploitative, or potentially unenforceable. Each should be negotiated or removed before you sign.
+          </p>
+          {redFlags.map((c, i) => (
+            <div key={c.id} style={{ marginBottom: "12px", paddingBottom: "10px", borderBottom: "1px solid #fee2e2" }}>
+              <div className="print-item-title">
+                {i + 1}. {c.text}
+                <span className="print-badge" style={{ background: "#fef2f2", color: "#dc2626", borderColor: "#fecaca" }}>RED FLAG</span>
+              </div>
+              <p className="print-item-desc"><strong>What it means:</strong> {c.explanation}</p>
+              {c.whyUnfair && (
+                <p className="print-item-desc" style={{ color: "#92400e" }}><strong>Why this is a problem:</strong> {c.whyUnfair}</p>
+              )}
+              {c.negotiationLanguage && (
+                <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: "4px", padding: "6px 8px", margin: "4px 0 0 0" }}>
+                  <p className="print-item-meta" style={{ color: "#1d4ed8", fontStyle: "normal", fontWeight: 600, marginBottom: "2px" }}>Suggested revision:</p>
+                  <p className="print-item-desc" style={{ fontFamily: "monospace", whiteSpace: "pre-wrap" }}>{c.negotiationLanguage}</p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Watch Outs */}
+      {watchOuts.length > 0 && (
+        <div className="print-section">
+          <h2 className="print-section-title">Watch Outs ({watchOuts.length})</h2>
+          <p className="print-body" style={{ color: "#78350f", marginBottom: "8px" }}>
+            These clauses are vague, one-sided, or unusual. Understand what you're agreeing to and consider pushing back.
+          </p>
+          {watchOuts.map((c, i) => (
+            <div key={c.id} style={{ marginBottom: "12px", paddingBottom: "10px", borderBottom: "1px solid #fef3c7" }}>
+              <div className="print-item-title">
+                {i + 1}. {c.text}
+                <span className="print-badge" style={{ background: "#fffbeb", color: "#d97706", borderColor: "#fde68a" }}>WATCH OUT</span>
+              </div>
+              <p className="print-item-desc"><strong>What it means:</strong> {c.explanation}</p>
+              {c.whyUnfair && (
+                <p className="print-item-desc" style={{ color: "#92400e" }}><strong>Why this is a concern:</strong> {c.whyUnfair}</p>
+              )}
+              {c.negotiationLanguage && (
+                <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: "4px", padding: "6px 8px", margin: "4px 0 0 0" }}>
+                  <p className="print-item-meta" style={{ color: "#1d4ed8", fontStyle: "normal", fontWeight: 600, marginBottom: "2px" }}>Suggested revision:</p>
+                  <p className="print-item-desc" style={{ fontFamily: "monospace", whiteSpace: "pre-wrap" }}>{c.negotiationLanguage}</p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Fair Clauses */}
+      {fair.length > 0 && (
+        <div className="print-section">
+          <h2 className="print-section-title">Fair Clauses ({fair.length})</h2>
+          <p className="print-body" style={{ marginBottom: "8px" }}>The following clauses appear balanced and reasonable:</p>
+          {fair.map((c, i) => (
+            <div key={c.id} className="print-check-item">
+              <div>
+                <div className="print-item-title">
+                  {i + 1}. {c.text}
+                  <span className="print-badge" style={{ background: "#f0fdf4", color: "#16a34a", borderColor: "#bbf7d0" }}>FAIR</span>
+                </div>
+                <p className="print-item-desc">{c.explanation}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Missing Protections */}
+      {result.missingProtections && result.missingProtections.length > 0 && (
+        <div className="print-section print-break">
+          <h2 className="print-section-title">Missing Protections ({result.missingProtections.length})</h2>
+          <p className="print-body" style={{ marginBottom: "8px" }}>
+            Standard protections a balanced contract of this type should include — but this one doesn't.
+          </p>
+          {result.missingProtections.map((item, i) => (
+            <div key={i} className="print-check-item">
+              <div className="print-checkbox" />
+              <div className="print-item-title">{item}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Before You Sign */}
+      {result.preSigningChecklist && result.preSigningChecklist.length > 0 && (
+        <div className="print-section">
+          <h2 className="print-section-title">Before You Sign ({result.preSigningChecklist.length})</h2>
+          <p className="print-body" style={{ marginBottom: "8px" }}>
+            Work through each of these before signing. These are specific to the contract you reviewed.
+          </p>
+          {result.preSigningChecklist.map((item, i) => (
+            <div key={i} className="print-check-item">
+              <div className="print-checkbox" />
+              <div className="print-item-title">{i + 1}. {item}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Footer */}
+      <div style={{ borderTop: "1px solid #e5e7eb", marginTop: "20px", paddingTop: "10px", fontSize: "8pt", color: "#888", display: "flex", justifyContent: "space-between" }}>
+        <span>Generated by PlainPath · plainpathapp.com</span>
+        <span>AI-assisted review. Not legal advice — consult a qualified attorney before signing.</span>
+      </div>
+    </div>
+  )
+}
 
 // ─── ClauseCard ───────────────────────────────────────────────────────────────
 
@@ -989,7 +1143,7 @@ function ResultsView({ result, onReset, onScrollToDocument }: {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => window.print()}
+            onClick={() => triggerPrint()}
             className="text-xs gap-1.5 print:hidden"
           >
             <Download className="w-3.5 h-3.5" /> Export PDF
@@ -1248,7 +1402,7 @@ export default function ContractReview() {
               }
             </button>
             <button
-              onClick={() => window.print()}
+              onClick={() => triggerPrint()}
               title="Export as PDF"
               className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors shrink-0 print:hidden"
               aria-label="Export PDF"
@@ -1293,9 +1447,9 @@ export default function ContractReview() {
     )
 
     return (
-      <div className="h-screen flex flex-col">
+      <div className="h-screen flex flex-col cr-results-root">
         {/* Mobile tab bar */}
-        <div className="md:hidden shrink-0 flex border-b border-border/40 bg-background">
+        <div className="md:hidden shrink-0 flex border-b border-border/40 bg-background no-print">
           <button
             onClick={() => setMobileResultTab("document")}
             className={`flex-1 py-2.5 text-xs font-medium transition-colors ${
@@ -1319,7 +1473,7 @@ export default function ContractReview() {
         </div>
 
         {/* Mobile panels (CSS-toggled) */}
-        <div className="md:hidden flex-1 relative overflow-hidden">
+        <div className="md:hidden flex-1 relative overflow-hidden no-print">
           <div className={`absolute inset-0 flex flex-col ${mobileResultTab === "document" ? "" : "hidden"}`}>
             {stageViewer}
           </div>
@@ -1330,7 +1484,7 @@ export default function ContractReview() {
         </div>
 
         {/* Desktop split */}
-        <div className="hidden md:flex flex-1 min-h-0">
+        <div className="hidden md:flex flex-1 min-h-0 no-print">
           <div className="flex flex-col overflow-hidden border-r border-border/40" style={{ width: "60%" }}>
             {stageViewer}
           </div>
@@ -1339,6 +1493,9 @@ export default function ContractReview() {
             {resultsPanel}
           </div>
         </div>
+
+        {/* Print-only report — hidden on screen, replaces the split layout when printing */}
+        <ContractReviewPrintReport result={result} />
       </div>
     )
   }
