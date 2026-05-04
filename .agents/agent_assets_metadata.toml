@@ -311,3 +311,9 @@ id = "wlgqnil0yzcYkVhcWNQMJ"
 uri = "file://docs/document-completion-engine.md"
 type = "text"
 title = "PlainPath — Document Completion Engine Plan"
+
+[[outputs]]
+id = "zTFwdT9OfaV8yXo80pkOS"
+uri = "file://docs/analyze-overhaul-plan.md"
+type = "text"
+title = "PlainPath — Analyze a Document Overhaul Plan"
