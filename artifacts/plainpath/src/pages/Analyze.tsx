@@ -662,16 +662,17 @@ function SummaryTab({ analysis, onTabChange, onOpenGuidedReview }: { analysis: D
       </div>
 
       {/* Stat grid */}
-      <div className="grid grid-cols-3 gap-2 sm:gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
         {[
-          { label: "Action Steps",   value: (analysis.actionSteps ?? []).length,       tab: "checklist", warn: false },
-          { label: "Required Docs",  value: (analysis.requiredDocuments ?? []).length,  tab: "documents", warn: false },
-          { label: "Hard Deadlines", value: hardDeadlines.length,               tab: "deadlines", warn: true  },
+          { label: "Action Steps",   value: (analysis.actionSteps ?? []).length,                                                              tab: "checklist", warn: false },
+          { label: "Required Docs",  value: (analysis.requiredDocuments ?? []).length,                                                        tab: "documents", warn: false },
+          { label: "Hard Deadlines", value: hardDeadlines.length,                                                                             tab: "deadlines", warn: hardDeadlines.length > 0 },
+          { label: "Risks",          value: highRisks.length + (analysis.risks ?? []).filter(r => r.severity === "medium").length,            tab: "risks",     warn: highRisks.length > 0 },
         ].map(({ label, value, tab, warn }) => (
           <button key={tab} onClick={() => onTabChange(tab)} style={{ touchAction: "manipulation" }} className="text-left group">
-            <div className={`p-2.5 sm:p-4 rounded-2xl border transition-all group-hover:shadow-md ${warn ? "bg-red-50/60 dark:bg-red-950/30 border-red-200/50 dark:border-red-900/40 group-hover:border-red-300" : "bg-secondary/30 border-transparent group-hover:border-primary/20"}`}>
-              <p className={`text-[10px] sm:text-xs font-semibold uppercase tracking-wide mb-1 sm:mb-2 ${warn ? "text-red-600/70 dark:text-red-400/80" : "text-muted-foreground"}`}>{label}</p>
-              <p className={`text-2xl sm:text-3xl font-display font-bold ${warn ? "text-red-600 dark:text-red-400" : "text-foreground"}`}>{value}</p>
+            <div className={`p-2.5 sm:p-4 rounded-2xl border transition-all group-hover:shadow-md ${warn && value > 0 ? "bg-red-50/60 dark:bg-red-950/30 border-red-200/50 dark:border-red-900/40 group-hover:border-red-300" : "bg-secondary/30 border-transparent group-hover:border-primary/20"}`}>
+              <p className={`text-[10px] sm:text-xs font-semibold uppercase tracking-wide mb-1 sm:mb-2 ${warn && value > 0 ? "text-red-600/70 dark:text-red-400/80" : "text-muted-foreground"}`}>{label}</p>
+              <p className={`text-2xl sm:text-3xl font-display font-bold ${warn && value > 0 ? "text-red-600 dark:text-red-400" : "text-foreground"}`}>{value}</p>
             </div>
           </button>
         ))}
@@ -837,8 +838,6 @@ function WhatsMissingTab({
   const pendingHigh = analysis.actionSteps.filter(s => s.priority === "high" && !s.completed)
   const pendingMed  = analysis.actionSteps.filter(s => s.priority === "medium" && !s.completed)
   const pendingDocs = analysis.requiredDocuments.filter(d => d.required && !d.obtained)
-  const hardDls     = analysis.deadlines.filter(d => d.isHard)
-  const highRisks   = analysis.risks.filter(r => r.severity === "high")
 
   const totalBlocking = pendingHigh.length + pendingDocs.length
   const allDone = totalBlocking === 0 && pendingMed.length === 0
@@ -925,38 +924,6 @@ function WhatsMissingTab({
             {pendingDocs.map(doc => (
               <div key={doc.id} data-review-id={doc.id}>
                 <DocRow doc={doc} onToggle={onDocToggle} compact />
-              </div>
-            ))}
-          </div>
-        </MissingSection>
-      )}
-
-      {/* ── Hard deadlines ────────────────────────── */}
-      {hardDls.length > 0 && (
-        <MissingSection title="Hard deadlines" sectionColor="red" icon={<Calendar className="w-3.5 h-3.5" />}>
-          <div className="space-y-2">
-            {hardDls.map(dl => (
-              <div key={dl.id} className="flex gap-3 p-3.5 rounded-xl bg-white/70 dark:bg-red-950/30 border border-red-200/40 dark:border-red-900/30">
-                <Clock className="w-4 h-4 text-red-500 dark:text-red-400 mt-0.5 shrink-0" />
-                <div>
-                  <p className="font-bold text-sm text-foreground">{dl.title}</p>
-                  <p className="text-xs font-semibold text-red-600 dark:text-red-400 mt-0.5">{dl.date}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{dl.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </MissingSection>
-      )}
-
-      {/* ── High risks ────────────────────────────── */}
-      {highRisks.length > 0 && (
-        <MissingSection title="High-severity risks" sectionColor="red" icon={<AlertTriangle className="w-3.5 h-3.5" />}>
-          <div className="space-y-2">
-            {highRisks.map(risk => (
-              <div key={risk.id} data-review-id={risk.id} className="p-3.5 rounded-xl bg-white/70 dark:bg-red-950/30 border border-red-200/40 dark:border-red-900/30">
-                <p className="font-bold text-sm text-foreground mb-1">{risk.title}</p>
-                <p className="text-xs text-muted-foreground leading-relaxed">{risk.description}</p>
               </div>
             ))}
           </div>
@@ -1269,6 +1236,20 @@ function DocumentsTab({ analysis, onToggle, onOpenGuidedReview }: { analysis: Do
 /* ────────────────────────────────────────────────
    DEADLINES TAB
 ──────────────────────────────────────────────── */
+
+function classifyDeadline(dl: DocumentAnalysis["deadlines"][0]): "hard" | "watch" | "reference" {
+  if (dl.isHard) return "hard"
+  const text = `${dl.title} ${dl.description}`.toLowerCase()
+  const referenceKeywords = [
+    "term length", "contract term", "agreement term", "survival", "effective date",
+    "commencement", "inception", "initial term", "duration", "base period",
+    "term of this", "term of the", "start date", "start of contract",
+    "start of agreement", "for context", "background", "period of",
+  ]
+  if (referenceKeywords.some(k => text.includes(k))) return "reference"
+  return "watch"
+}
+
 function addToCalendar(dl: DocumentAnalysis["deadlines"][0], docTitle: string) {
   const parsedDate = dl.date ? new Date(dl.date) : null
   const isValidDate = parsedDate && !isNaN(parsedDate.getTime()) && parsedDate.getFullYear() > 2000
@@ -1303,7 +1284,7 @@ function addToCalendar(dl: DocumentAnalysis["deadlines"][0], docTitle: string) {
   URL.revokeObjectURL(url)
 }
 
-function DeadlineCard({ dl, accentRed, docTitle }: { dl: DocumentAnalysis["deadlines"][0]; accentRed: boolean; docTitle: string }) {
+function DeadlineCard({ dl, category, docTitle }: { dl: DocumentAnalysis["deadlines"][0]; category: "hard" | "watch" | "reference"; docTitle: string }) {
   const { getToken } = useAuth()
   const parsedDate = dl.date ? new Date(dl.date) : null
   const hasCalendarDate = parsedDate && !isNaN(parsedDate.getTime()) && parsedDate.getFullYear() > 2000
@@ -1313,6 +1294,13 @@ function DeadlineCard({ dl, accentRed, docTitle }: { dl: DocumentAnalysis["deadl
   const [emailSending, setEmailSending] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
   const [emailError, setEmailError] = useState<string | null>(null)
+
+  const styles = {
+    hard:      { wrap: "bg-white/70 dark:bg-red-950/30 border-red-200/40 dark:border-red-900/30",     dateText: "text-red-700 dark:text-red-400",   label: "text-red-600/60 dark:text-red-400/60"   },
+    watch:     { wrap: "bg-white/70 dark:bg-amber-950/30 border-amber-200/40 dark:border-amber-900/30", dateText: "text-amber-700 dark:text-amber-400", label: "text-amber-600/60 dark:text-amber-400/60" },
+    reference: { wrap: "bg-white/70 dark:bg-blue-950/30 border-blue-200/40 dark:border-blue-900/30",   dateText: "text-blue-700 dark:text-blue-400",   label: "text-blue-600/60 dark:text-blue-400/60"  },
+  }
+  const s = styles[category]
 
   async function handleReminder() {
     const granted = await requestNotificationPermission()
@@ -1360,41 +1348,58 @@ function DeadlineCard({ dl, accentRed, docTitle }: { dl: DocumentAnalysis["deadl
   }
 
   return (
-    <div className={`p-4 rounded-2xl border ${accentRed ? "bg-white/70 dark:bg-red-950/30 border-red-200/40 dark:border-red-900/30" : "bg-white/70 dark:bg-amber-950/30 border-amber-200/40 dark:border-amber-900/30"}`}>
-      <div className="flex items-start justify-between gap-3 mb-1">
-        <div>
-          <p className={`text-sm font-bold ${accentRed ? "text-red-700 dark:text-red-400" : "text-amber-700 dark:text-amber-400"}`}>{dl.date}</p>
-          <h4 className="font-bold text-foreground">{dl.title}</h4>
+    <div className={`p-4 rounded-2xl border ${s.wrap}`}>
+      {/* Header: title + action buttons */}
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div className="flex-1 min-w-0">
+          {category === "hard" && (
+            <span className="inline-block mb-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-400">Hard Deadline</span>
+          )}
+          <h4 className="font-bold text-foreground leading-snug">{dl.title}</h4>
         </div>
         <div className="flex gap-1.5 shrink-0 items-start">
-          {dl.isHard && <Badge variant="destructive" className="text-[10px] uppercase tracking-wider">Hard</Badge>}
           <ConfidenceBadge level={dl.confidence} />
           {hasCalendarDate && (
-            <button
-              onClick={() => addToCalendar(dl, docTitle)}
-              title="Add to calendar (.ics)"
-              className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-            >
+            <button onClick={() => addToCalendar(dl, docTitle)} title="Add to calendar (.ics)" className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
               <Calendar className="w-3.5 h-3.5" />
             </button>
           )}
-          <button
-            onClick={() => void handleReminder()}
-            title={reminded ? "Reminder set" : "Set browser reminder"}
-            className={`p-1 rounded-lg transition-colors ${reminded ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}
-          >
+          <button onClick={() => void handleReminder()} title={reminded ? "Reminder set" : "Set browser reminder"} className={`p-1 rounded-lg transition-colors ${reminded ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>
             {reminded ? <BellDot className="w-3.5 h-3.5" /> : <Bell className="w-3.5 h-3.5" />}
           </button>
-          <button
-            onClick={() => { setEmailOpen(o => !o); setEmailError(null) }}
-            title={emailSent ? "Email reminder sent" : "Email me a reminder"}
-            className={`p-1 rounded-lg transition-colors ${emailSent ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}
-          >
+          <button onClick={() => { setEmailOpen(o => !o); setEmailError(null) }} title={emailSent ? "Email reminder sent" : "Email me a reminder"} className={`p-1 rounded-lg transition-colors ${emailSent ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>
             <Mail className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
-      <p className="text-sm text-muted-foreground mb-2.5">{dl.description}</p>
+
+      {/* Labeled body sections */}
+      <div className="space-y-3">
+        {dl.date && (
+          <div>
+            <p className={`text-[10px] font-bold uppercase tracking-widest mb-0.5 ${s.label}`}>Trigger</p>
+            <p className={`text-sm font-semibold ${s.dateText}`}>{dl.date}</p>
+          </div>
+        )}
+        {dl.description && (
+          <div>
+            <p className={`text-[10px] font-bold uppercase tracking-widest mb-0.5 ${s.label}`}>Plain English</p>
+            <p className="text-sm text-foreground/80 leading-relaxed">{dl.description}</p>
+          </div>
+        )}
+        {category === "hard" && (
+          <div className="flex items-start gap-2 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200/50 dark:border-red-900/30 px-3 py-2.5">
+            <AlertTriangle className="w-3.5 h-3.5 text-red-500 dark:text-red-400 mt-0.5 shrink-0" />
+            <p className="text-xs text-red-700 dark:text-red-400 font-medium leading-relaxed">Missing this deadline may result in loss of rights, late fees, rejection, or termination of the agreement.</p>
+          </div>
+        )}
+        {dl.sourceEvidence && (
+          <div>
+            <p className={`text-[10px] font-bold uppercase tracking-widest mb-0.5 ${s.label}`}>Source</p>
+            <blockquote className="text-xs text-muted-foreground/80 italic border-l-2 border-border/50 pl-3 leading-relaxed">"{dl.sourceEvidence}"</blockquote>
+          </div>
+        )}
+      </div>
 
       {emailOpen && !emailSent && (
         <form onSubmit={(e) => void handleEmailSubmit(e)} className="mt-3 flex gap-2">
@@ -1415,30 +1420,49 @@ function DeadlineCard({ dl, accentRed, docTitle }: { dl: DocumentAnalysis["deadl
           </button>
         </form>
       )}
-      {emailSent && (
-        <p className="mt-2 text-xs text-primary font-medium">✓ Reminder email sent!</p>
-      )}
-      {emailError && (
-        <p className="mt-2 text-xs text-destructive">{emailError}</p>
-      )}
-
-      <EvidenceTooltip text={dl.sourceEvidence} />
+      {emailSent && <p className="mt-2 text-xs text-primary font-medium">✓ Reminder email sent!</p>}
+      {emailError && <p className="mt-2 text-xs text-destructive">{emailError}</p>}
     </div>
   )
 }
 
 function DeadlinesTab({ analysis }: { analysis: DocumentAnalysis }) {
-  const hardDls = analysis.deadlines.filter(d => d.isHard)
-  const softDls = analysis.deadlines.filter(d => !d.isHard)
+  const hardDls      = analysis.deadlines.filter(d => classifyDeadline(d) === "hard")
+  const watchDls     = analysis.deadlines.filter(d => classifyDeadline(d) === "watch")
+  const referenceDls = analysis.deadlines.filter(d => classifyDeadline(d) === "reference")
   const docTitle = analysis.title || "Document"
   return (
     <div className="space-y-5">
       <div>
         <h2 className="text-xl sm:text-2xl font-display font-bold">Timeline & Deadlines</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          {hardDls.length > 0 ? `${hardDls.length} hard deadline${hardDls.length !== 1 ? "s" : ""} — missing these may disqualify your submission` : "No hard deadlines identified — treat all dates as approximate"}
+          {hardDls.length > 0
+            ? `${hardDls.length} hard deadline${hardDls.length !== 1 ? "s" : ""} — missing these may cause loss of rights, fees, or rejection`
+            : "No hard deadlines identified — treat all dates as approximate"}
         </p>
       </div>
+
+      {/* Count summary chips */}
+      {analysis.deadlines.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          {hardDls.length > 0 && (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-red-100 dark:bg-red-950/50 text-red-700 dark:text-red-400 border border-red-200/60 dark:border-red-900/40">
+              <Clock className="w-3 h-3" />{hardDls.length} hard deadline{hardDls.length !== 1 ? "s" : ""}
+            </span>
+          )}
+          {watchDls.length > 0 && (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 border border-amber-200/60 dark:border-amber-900/40">
+              <Calendar className="w-3 h-3" />{watchDls.length} watch date{watchDls.length !== 1 ? "s" : ""}
+            </span>
+          )}
+          {referenceDls.length > 0 && (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400 border border-blue-200/60 dark:border-blue-900/40">
+              <FileText className="w-3 h-3" />{referenceDls.length} reference date{referenceDls.length !== 1 ? "s" : ""}
+            </span>
+          )}
+        </div>
+      )}
+
       {analysis.deadlines.length === 0
         ? <EmptyState icon={Calendar} title="No deadlines found" desc="No specific dates were mentioned in this document." />
         : (
@@ -1452,21 +1476,35 @@ function DeadlinesTab({ analysis }: { analysis: DocumentAnalysis }) {
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-400">{hardDls.length}</span>
                 </div>
                 <div className="p-3 space-y-2">
-                  {hardDls.map(dl => <DeadlineCard key={dl.id} dl={dl} accentRed docTitle={docTitle} />)}
+                  {hardDls.map(dl => <DeadlineCard key={dl.id} dl={dl} category="hard" docTitle={docTitle} />)}
                 </div>
               </div>
             )}
 
-            {/* Amber: Watch dates / soft deadlines */}
-            {softDls.length > 0 && (
+            {/* Amber: Watch dates */}
+            {watchDls.length > 0 && (
               <div className="rounded-2xl border border-amber-200/50 dark:border-amber-900/40 bg-amber-50/30 dark:bg-amber-950/15 overflow-hidden">
                 <div className="flex items-center gap-2 px-4 py-3 border-b border-amber-200/40 dark:border-amber-900/30 bg-amber-50/60 dark:bg-amber-950/30">
                   <Calendar className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
                   <h3 className="text-xs font-bold uppercase tracking-widest text-amber-700 dark:text-amber-400">Watch Dates — review carefully</h3>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400">{softDls.length}</span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400">{watchDls.length}</span>
                 </div>
                 <div className="p-3 space-y-2">
-                  {softDls.map(dl => <DeadlineCard key={dl.id} dl={dl} accentRed={false} docTitle={docTitle} />)}
+                  {watchDls.map(dl => <DeadlineCard key={dl.id} dl={dl} category="watch" docTitle={docTitle} />)}
+                </div>
+              </div>
+            )}
+
+            {/* Blue: Reference dates */}
+            {referenceDls.length > 0 && (
+              <div className="rounded-2xl border border-blue-200/50 dark:border-blue-900/40 bg-blue-50/30 dark:bg-blue-950/15 overflow-hidden">
+                <div className="flex items-center gap-2 px-4 py-3 border-b border-blue-200/40 dark:border-blue-900/30 bg-blue-50/60 dark:bg-blue-950/30">
+                  <FileText className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400" />
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-blue-700 dark:text-blue-400">Reference Dates — for context</h3>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400">{referenceDls.length}</span>
+                </div>
+                <div className="p-3 space-y-2">
+                  {referenceDls.map(dl => <DeadlineCard key={dl.id} dl={dl} category="reference" docTitle={docTitle} />)}
                 </div>
               </div>
             )}
@@ -1488,14 +1526,20 @@ function RiskCard({ risk, documentType: _documentType }: { risk: DocumentAnalysi
     : isMedium
       ? "bg-white/70 dark:bg-amber-950/30 border border-amber-200/40 dark:border-amber-900/30"
       : "bg-card border border-border/50"
-  const iconCls = isHigh ? "bg-red-100 dark:bg-red-950/60" : isMedium ? "bg-amber-50 dark:bg-amber-950/50" : "bg-secondary"
-  const iconColor = isHigh ? "text-red-600 dark:text-red-400" : isMedium ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"
+  const iconCls  = isHigh ? "bg-red-100 dark:bg-red-950/60"      : isMedium ? "bg-amber-50 dark:bg-amber-950/50"   : "bg-secondary"
+  const iconColor = isHigh ? "text-red-600 dark:text-red-400"    : isMedium ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"
+  const labelCls  = isHigh ? "text-red-600/60 dark:text-red-400/60" : isMedium ? "text-amber-600/60 dark:text-amber-400/60" : "text-muted-foreground/60"
 
   const showCopy = isHigh || isMedium
   const [copiedSummary, setCopiedSummary] = useState(false)
 
   function copyIssueSummary() {
-    const parts = [risk.title, risk.description, risk.sourceEvidence ? `Source: "${risk.sourceEvidence}"` : null]
+    const parts: (string | null)[] = [
+      risk.title,
+      risk.description,
+      risk.sourceEvidence ? `Source: "${risk.sourceEvidence}"` : null,
+      showCopy ? "Suggested action: Review this section carefully and consider consulting a professional before agreeing or signing." : null,
+    ]
     navigator.clipboard.writeText(parts.filter(Boolean).join("\n\n")).catch(() => {})
     setCopiedSummary(true)
     setTimeout(() => setCopiedSummary(false), 2000)
@@ -1504,34 +1548,47 @@ function RiskCard({ risk, documentType: _documentType }: { risk: DocumentAnalysi
   return (
     <div className={`rounded-2xl overflow-hidden ${cardCls}`}>
       <div className="p-5">
-        <div className="flex items-start gap-3">
+        {/* Title row */}
+        <div className="flex items-start gap-3 mb-3.5">
           <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${iconCls}`}>
             <AlertTriangle className={`w-4 h-4 ${iconColor}`} />
           </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-foreground leading-snug">{risk.title}</h3>
-            <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{risk.description}</p>
-            {risk.sourceEvidence && (
-              <div className="mt-3">
-                <EvidenceTooltip text={risk.sourceEvidence} />
-              </div>
-            )}
-            {showCopy && (
-              <div className="mt-3">
-                <button
-                  onClick={copyIssueSummary}
-                  style={{ touchAction: "manipulation" }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-border/40 bg-card text-muted-foreground hover:text-foreground hover:bg-secondary transition-all"
-                >
-                  {copiedSummary ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
-                  {copiedSummary ? "Copied" : "Copy issue summary"}
-                </button>
-              </div>
-            )}
+          <h3 className="flex-1 font-bold text-foreground leading-snug pt-1">{risk.title}</h3>
+        </div>
+
+        {/* Labeled body sections */}
+        <div className="space-y-3 ml-11">
+          <div>
+            <p className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${labelCls}`}>Why this matters</p>
+            <p className="text-sm text-muted-foreground leading-relaxed">{risk.description}</p>
           </div>
+
+          {risk.sourceEvidence && (
+            <div>
+              <p className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${labelCls}`}>Source</p>
+              <blockquote className="text-xs text-muted-foreground/80 italic border-l-2 border-border/50 pl-3 leading-relaxed">"{risk.sourceEvidence}"</blockquote>
+            </div>
+          )}
+
+          {showCopy && (
+            <div>
+              <p className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${labelCls}`}>Suggested action</p>
+              <p className="text-xs text-muted-foreground/80 leading-relaxed">Review this section carefully and consider consulting a professional before agreeing or signing.</p>
+            </div>
+          )}
+
+          {showCopy && (
+            <button
+              onClick={copyIssueSummary}
+              style={{ touchAction: "manipulation" }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-border/40 bg-card text-muted-foreground hover:text-foreground hover:bg-secondary transition-all"
+            >
+              {copiedSummary ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+              {copiedSummary ? "Copied" : "Copy issue summary"}
+            </button>
+          )}
         </div>
       </div>
-
     </div>
   )
 }
