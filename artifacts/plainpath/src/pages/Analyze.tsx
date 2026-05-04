@@ -56,6 +56,7 @@ import { AnalyzeModeNav } from "@/components/AnalyzeModeNav"
 import { PlanSummaryView } from "@/components/analyze/PlanSummaryView"
 import { ItemDetailDrawer } from "@/components/analyze/ItemDetailDrawer"
 import { CompleteModeView } from "@/components/analyze/CompleteModeView"
+import { CompileModeView } from "@/components/analyze/CompileModeView"
 import { analysisResultToCompletionObjects } from "@/lib/completionParser"
 import type { CompletionObject } from "@/lib/completionTypes"
 
@@ -210,9 +211,9 @@ export default function Analyze() {
   const handleOpenItemDetail  = useCallback((item: CompletionObject) => { setSelectedItem(item) }, [])
   const handleCloseItemDetail = useCallback(() => { setSelectedItem(null) }, [])
 
-  // Phase 3C/3E: close drawer when leaving plan or complete mode
+  // Phase 3C/3E/3F: close drawer when leaving plan, complete, or compile mode
   useEffect(() => {
-    if (activeMode !== "plan" && activeMode !== "complete") setSelectedItem(null)
+    if (activeMode !== "plan" && activeMode !== "complete" && activeMode !== "compile") setSelectedItem(null)
   }, [activeMode])
 
   // Phase 3B: progress covers ALL completable types (not just action steps + required docs)
@@ -618,13 +619,23 @@ export default function Analyze() {
             onToggleItem={handlePlanItemToggle}
             onOpenDetails={handleOpenItemDetail}
             onGoToPlan={() => handleModeChange("plan")}
+            onGoToCompile={() => handleModeChange("compile")}
             documentTitle={analysis.title}
           />
         )}
 
-        {/* ── Compile mode preview (safe stub) ──────────── */}
+        {/* ── Compile mode view (Phase 3F) ──────────────── */}
         {ANALYZE_COMPLETION_FLOW_ENABLED && activeMode === "compile" && (
-          <CompileModePreview completionObjects={completionObjects} />
+          <CompileModeView
+            completionObjects={completionObjects}
+            completionStatus={completionStatus}
+            onOpenDetails={handleOpenItemDetail}
+            onGoToComplete={() => handleModeChange("complete")}
+            onGoToPlan={() => handleModeChange("plan")}
+            documentTitle={analysis.title}
+            documentType={analysis.documentType}
+            summary={(analysis as any).plainEnglishSections?.summary || analysis.summary}
+          />
         )}
 
         {/* ── Print-only report (hidden in screen, shown in print) ── */}

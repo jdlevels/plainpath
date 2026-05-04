@@ -299,6 +299,7 @@ export interface CompleteModeViewProps {
   onToggleItem: (id: string, done: boolean) => void
   onOpenDetails: (item: CompletionObject) => void
   onGoToPlan: () => void
+  onGoToCompile?: () => void
   documentTitle?: string
 }
 
@@ -308,6 +309,7 @@ export function CompleteModeView({
   onToggleItem,
   onOpenDetails,
   onGoToPlan,
+  onGoToCompile,
 }: CompleteModeViewProps) {
   // All completable items (the 7 types that appear in Plan mode)
   const completable = completionObjects.filter((o) =>
@@ -450,23 +452,18 @@ export function CompleteModeView({
             Back to Plan
           </button>
 
-          {/* Disabled future action */}
-          <div className="flex items-center gap-2">
+          {/* Preview Packet */}
+          {onGoToCompile && (
             <button
               type="button"
-              disabled
-              aria-disabled="true"
-              aria-label="Generate Packet — coming in the next phase"
-              className="flex items-center gap-2 px-4 py-2 rounded-xl border border-border/25 bg-secondary/25 text-sm font-semibold text-muted-foreground/35 cursor-not-allowed min-h-[38px]"
+              onClick={onGoToCompile}
+              style={{ touchAction: "manipulation" }}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl border border-border/60 bg-card text-sm font-semibold text-muted-foreground hover:text-foreground hover:border-border transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/40 min-h-[38px]"
             >
               <Package className="w-4 h-4 shrink-0" />
-              Generate Packet
+              Preview Packet
             </button>
-            <span className="hidden sm:flex items-center gap-1.5 text-[10px] text-muted-foreground/40">
-              <Lock className="w-3 h-3 shrink-0" aria-hidden="true" />
-              Packet compiler coming in the next phase.
-            </span>
-          </div>
+          )}
         </div>
       </div>
 

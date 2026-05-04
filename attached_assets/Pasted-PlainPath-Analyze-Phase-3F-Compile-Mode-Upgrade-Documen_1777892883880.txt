@@ -1,0 +1,340 @@
+PlainPath — Analyze Phase 3F: Compile Mode Upgrade / Document Action Packet Preview
+
+Build Phase 3F all the way through.
+
+Goal:
+Turn Compile mode from a placeholder into a real read-only Document Action Packet preview using existing analysis data, completionObjects, and completionStatus.
+
+This phase creates the packet preview screen only.
+Do not build PDF export yet.
+Do not build print/export wiring yet.
+Do not add backend persistence.
+Do not add database schema.
+Do not add AI calls.
+Do not change billing or subscription behavior.
+
+Current approved state:
+- Phase 1 Completion parser complete
+- Phase 2A Four-mode navigation complete
+- Phase 3A Plan Summary complete
+- Phase 3B done/not-done tracking complete
+- Phase 3C Item Detail Drawer complete
+- Phase 3D source-backed enrichment complete
+- Phase 3D.5 Source Evidence polish complete
+- Phase 3D.6 Source Evidence fallback refinement complete
+- Phase 3E Complete Mode preview complete
+- Build: 2743 modules, 0 errors
+- QA: 55/55 passing
+
+Do not change:
+- billing
+- RevenueCat
+- Stripe
+- native billing
+- auth
+- pricing
+- Contract Review
+- Contract Review PDF export
+- homepage
+- marketing
+- routes
+- database schema
+- migrations
+- backend routes
+- parser logic unless a tiny display helper is required
+
+Do not restore removed tools:
+- Redact Sensitive Info
+- Trust Check
+- Compare Versions
+- Clause Extractor
+- Builder
+- Digital Signature
+- Starter
+- Team
+- annual billing
+
+Feature flag:
+All Phase 3F behavior must remain behind:
+
+VITE_ANALYZE_COMPLETION_FLOW_ENABLED
+
+When flag is OFF:
+- old Analyze UI remains unchanged
+- no mode nav
+- no Plan Summary
+- no drawer
+- no Complete preview
+- no Compile packet preview
+
+Primary files expected:
+- artifacts/plainpath/src/pages/Analyze.tsx
+- new component:
+  artifacts/plainpath/src/components/analyze/CompileModeView.tsx
+
+Optional tiny helper file only if needed:
+- artifacts/plainpath/src/components/analyze/packetSections.ts
+
+Implementation requirements:
+
+1. Replace Compile placeholder with real CompileModeView
+
+When activeMode === "compile", render a read-only Document Action Packet preview.
+
+Title:
+“Document Action Packet”
+
+Subtitle:
+“A structured packet of what PlainPath found, what you completed, and what still needs attention.”
+
+This is a preview only.
+Do not claim it has been officially submitted.
+Do not claim it is legal advice.
+Do not claim it replaces official forms.
+
+2. Packet status header
+
+Show:
+- Document title
+- Document type/category if available
+- Completion count: X/Y complete
+- Completion percentage
+- Packet status label
+
+Status labels:
+- 0%: “Not started”
+- 1–49%: “In progress”
+- 50–99%: “Partially complete”
+- 100%: “Ready for final review”
+
+Do not use “ready to submit.”
+
+3. Packet sections
+
+Render the packet in this order:
+
+A. Cover / Packet Summary
+- document title
+- document type
+- generated/preview date
+- completion status
+- source-backed count
+- manual-review count
+
+B. Plain-English Summary
+Use existing analysis summary/plainEnglish data if available.
+If missing, show:
+“PlainPath could not generate a plain-English summary for this document.”
+
+C. Completed Items
+Items where completionStatus[id] === true.
+
+D. Open Items
+Items not marked complete.
+
+E. Required / Missing Documents
+All required_document and missing_document items.
+
+F. Signatures Needed
+All signature_needed items.
+
+G. Deadlines / Timing
+All deadline items, including dueDate and trigger when available.
+
+H. Risks / Review Before Acting
+All risk items.
+
+I. Questions to Ask
+All question_to_ask items.
+
+J. Source Evidence Index
+List items with sourceQuote.
+Each row should show:
+- item title
+- item type
+- source quote preview
+- source-backed chip
+
+K. Manual Review Needed
+List items without sourceQuote.
+Show a neutral/amber note:
+“These items did not include a direct source quote. Review the uploaded document manually before acting.”
+
+L. Final Review Checklist
+Static checklist:
+- I reviewed open items
+- I verified source evidence
+- I gathered required documents
+- I confirmed signatures
+- I checked deadlines
+- I understand PlainPath is not legal, financial, or professional advice
+
+M. Disclaimer
+Use clear, visible copy:
+“PlainPath helps organize and explain documents. It does not provide legal, financial, medical, or professional advice. Always verify requirements with the issuing organization before acting.”
+
+4. Row behavior
+
+Every packet item row should show:
+- title
+- type label
+- done/open status
+- priority
+- source-backed or manual-review chip
+- Details button
+
+Clicking Details opens the existing ItemDetailDrawer.
+Do not create a second drawer.
+
+5. No edit controls in Compile
+
+Compile mode is read-only.
+
+Do not show:
+- done/not-done toggle
+- checkboxes
+- upload controls
+- notes controls
+- editable fields
+- export PDF button inside this phase
+
+Allowed:
+- Details button
+- Back to Complete
+- Back to Plan
+
+6. Navigation actions
+
+Top actions:
+- “Back to Complete” → switches activeMode to complete
+- “Review Open Items” → switches activeMode to plan and tab to checklist
+- Disabled button: “Export Packet”
+  Helper text:
+  “PDF export comes in the next phase.”
+
+Do not wire actual export.
+
+7. Complete mode handoff
+
+Update CompleteModeView if needed:
+
+The disabled “Generate Packet” button should become a safe button:
+
+Label:
+“Preview Packet”
+
+Behavior:
+- switches activeMode to compile
+
+Do not export.
+Do not print.
+Do not generate a file.
+
+If this requires prop threading, keep it minimal and feature-flagged.
+
+8. Preserve existing behavior
+
+Do not break:
+- Plan Summary
+- Done/not-done tracking
+- Complete mode counts
+- Details drawer
+- Copy message
+- Copy source
+- Source evidence fallback
+- Mode navigation
+- Tab sync
+- Feature flag behavior
+- Old UI when flag is off
+
+9. Visual design
+
+The packet should feel printable and structured, but still match the premium dark UI.
+
+Use:
+- clean section cards
+- strong section headers
+- compact rows
+- clear source/manual review chips
+- restrained color
+- no excessive full red blocks
+- red only for critical/high-risk badges
+- amber for manual review
+- emerald/green for source-backed or completed
+
+10. Accessibility
+
+Verify:
+- all buttons have type="button"
+- Details buttons have aria-label
+- disabled Export Packet has aria-disabled and visible helper text
+- section headings are semantic enough for screen readers
+- status text does not rely only on color
+
+11. Notes to capture during implementation
+
+Please take notes on anything that should be manually tested after this phase, especially:
+
+- Whether Compile mode feels like a real final packet preview
+- Whether the packet sections are too long or too dense
+- Whether Completed Items and Open Items are clearly separated
+- Whether Manual Review items feel cautionary without feeling alarming
+- Whether Source Evidence Index proves where guidance came from
+- Whether Details opens correctly from every section
+- Whether Complete → Preview Packet feels natural
+- Whether disabled Export Packet creates any confusion
+- Whether this should be renamed from “Compile” to “Packet” later
+
+12. QA checks
+
+Run:
+- Vite production build
+- completion parser QA
+- TypeScript check if available
+
+Manual/code verification:
+- Feature flag OFF preserves old UI
+- Feature flag ON shows Compile mode packet preview
+- Compile mode uses completionObjects
+- Compile mode uses completionStatus
+- Completed Items section only shows done items
+- Open Items section only shows not-done items
+- Required/Missing Documents section groups correctly
+- Signatures Needed section groups correctly
+- Deadlines section shows trigger/dueDate when present
+- Risks section groups correctly
+- Questions section groups correctly
+- Source Evidence Index shows sourceQuote items
+- Manual Review section shows no-source items
+- Details opens existing drawer from Compile
+- Compile mode has no toggles/edit controls
+- Complete mode Preview Packet button switches to Compile
+- Export Packet remains disabled
+- no billing files changed
+- no RevenueCat files changed
+- no Stripe files changed
+- no native billing files changed
+- no auth files changed
+- no Contract Review files changed
+- no homepage/marketing files changed
+- no parser behavior changed unless explicitly reported
+- no removed tool references added
+
+13. Return report
+
+Return:
+1. Files changed
+2. CompileModeView component name/location
+3. Packet section behavior
+4. Completion status behavior
+5. Source Evidence Index behavior
+6. Manual Review behavior
+7. Details drawer sync behavior
+8. Complete → Compile handoff behavior
+9. Disabled Export Packet behavior
+10. Feature flag behavior
+11. Build/QA results
+12. Protected files untouched confirmation
+13. Manual test notes
+14. Known limitations
+15. Recommended next slice
