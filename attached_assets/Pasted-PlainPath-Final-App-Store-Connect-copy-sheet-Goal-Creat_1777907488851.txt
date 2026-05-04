@@ -1,0 +1,148 @@
+PlainPath — Final App Store Connect copy sheet
+
+Goal:
+Create a paste-ready App Store Connect copy sheet for PlainPath.
+
+Do not change product code.
+Do not change Analyze.
+Do not change Contract Review.
+Do not change billing, auth, pricing, routes, native, database, parser, or protected files.
+
+Use the existing docs:
+- docs/app-store-submission-assets.md
+- docs/app-store-screenshot-production-plan.md
+
+Create:
+
+docs/app-store-connect-copy-sheet.md
+
+Locked launch tools:
+1. Analyze a Document — complete paperwork before submission
+2. Contract Review — understand contract terms before signing
+
+Write copy for the following App Store Connect fields:
+
+1. App name
+
+PlainPath
+
+2. Subtitle
+
+Use:
+Understand paperwork faster
+
+Confirm it is within Apple's 30-character subtitle limit.
+
+3. Promotional text
+
+Use or refine this within 170 characters:
+Upload any document or contract and get clear answers, required items, risks, and questions to ask — before you submit or sign.
+
+Confirm character count.
+
+4. Description
+
+Write a polished App Store description.
+
+Rules:
+- First sentence must clearly explain the product.
+- Mention both tools:
+  - Analyze a Document
+  - Contract Review
+- Do not mention removed tools.
+- Do not mention unreleased tools.
+- Do not mention specific pricing inside the description.
+- Do not say legal advice.
+- Do not say attorney-approved.
+- Do not say guaranteed safe.
+- Do not say the app replaces a lawyer.
+- Do not tell users whether to sign or submit.
+
+Preferred positioning:
+PlainPath helps people understand confusing paperwork, identify what needs attention, and know what to complete or ask before submitting or signing.
+
+Include:
+- plain-English summaries
+- required documents
+- signatures
+- deadlines
+- risks
+- questions to ask before signing
+- saved progress / checklist if accurate
+- privacy-minded processing
+
+5. Keywords
+
+Create a final comma-separated keyword string under 100 characters.
+
+Start from:
+contract review,document scanner,lease review,PDF review,legal document,paperwork,plain English,checklist,agreement,forms
+
+Optimize it to fit under 100 characters.
+No spaces after commas unless needed inside a phrase.
+No competitor names.
+No overclaiming legal service terms.
+
+6. Screenshot captions
+
+Provide final overlay captions for 6 screenshots:
+
+1. Upload paperwork or a contract.
+2. See what the document says in plain English.
+3. Know what needs to be completed.
+4. Check off items as you finish them.
+5. Review key clauses before signing.
+6. Know what to clarify before you sign.
+
+Confirm each is short enough for screenshot overlays.
+
+7. App Review notes
+
+Draft reviewer notes:
+
+Include:
+- PlainPath is a document understanding tool.
+- The app provides plain-English summaries, requirement checklists, contract clause explanations, and questions to ask.
+- It does not provide legal advice.
+- It does not tell users whether to sign or submit documents.
+- Demo documents are fictional.
+- Stripe/external web checkout is hidden in native iOS.
+- Subscription entitlement uses the native/iOS path configured for the app.
+- Provide placeholder for test account email/password.
+
+8. Privacy summary copy
+
+Draft plain-English privacy copy aligned with current app policy:
+- documents are processed to return results
+- documents are not sold
+- documents are not used to train AI models
+- account/email data may be used for login and subscription access
+- third-party services may process data needed for app functionality
+
+Flag items requiring owner confirmation:
+- Clerk data handling
+- AI provider data handling
+- RevenueCat / StoreKit native purchase path
+- App Store privacy nutrition labels
+
+9. Support / legal URL checklist
+
+Include fields:
+- Marketing URL
+- Support URL
+- Privacy Policy URL
+- Terms of Service URL
+
+Use placeholders if exact URLs are not confirmed.
+
+10. Final output
+
+Return:
+- file created
+- all App Store Connect fields
+- character counts for subtitle, promo text, keywords
+- owner-confirmation items
+- final recommendation
+
+Expected final status:
+APP STORE COPY READY FOR OWNER REVIEW
