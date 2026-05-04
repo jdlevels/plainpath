@@ -11,7 +11,7 @@
 import React, { useEffect, useState } from "react"
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 import {
-  AlertTriangle, CheckCircle2, ChevronLeft, Shield,
+  AlertTriangle, CheckCircle2, ChevronLeft, Clock,
   Wifi, BatteryFull, Signal,
 } from "lucide-react"
 
@@ -25,8 +25,8 @@ const fade = {
 
 /* ─── Per-tool header config ──────────────────────────────── */
 const TOOL_HEADERS = [
-  { docName: "Lease Agreement",         docMeta: "847 words · 12 pages",  badgeLabel: "Review needed",  badgeBg: "rgba(245,158,11,0.15)", badgeBorder: "rgba(245,158,11,0.40)", badgeColor: "#92400e", badgeDot: "#f59e0b" },
-  { docName: "Employment Offer Letter", docMeta: "1,240 words · 8 pages", badgeLabel: "Risk level: High",  badgeBg: "rgba(245,158,11,0.15)", badgeBorder: "rgba(245,158,11,0.40)", badgeColor: "#92400e", badgeDot: "#f59e0b" },
+  { docName: "School Enrollment Packet", docMeta: "7 actions · 4 documents · 2 signatures", badgeLabel: "In progress", badgeBg: "rgba(59,130,246,0.12)", badgeBorder: "rgba(59,130,246,0.40)", badgeColor: "#1d4ed8", badgeDot: "#3b82f6" },
+  { docName: "Employment Offer Letter",  docMeta: "1,240 words · 8 pages",                  badgeLabel: "Risk level: High", badgeBg: "rgba(245,158,11,0.15)", badgeBorder: "rgba(245,158,11,0.40)", badgeColor: "#92400e", badgeDot: "#f59e0b" },
 ]
 
 /* ─── Phone chrome ─────────────────────────────────────────── */
@@ -86,38 +86,40 @@ function AppHeader({ toolId }: { toolId: number }) {
   )
 }
 
-/* ─── Tool 0: Analyze a Document ─────────────────────────── */
-function AnalyzeScreen() {
+/* ─── Tool 0: Enrollment Packet Completion ───────────────── */
+function EnrollmentPacketScreen() {
+  const items = [
+    { label: "Obtain immunization records",   done: true },
+    { label: "Sign enrollment consent form",  done: true },
+    { label: "Gather proof of residency",     done: false },
+    { label: "Provide photo ID",              done: false },
+  ]
   return (
     <div className="px-3 pt-3 space-y-2">
-      <p className="text-[10px] font-semibold tracking-widest uppercase text-zinc-400 dark:text-zinc-600">Document Summary</p>
-      <div className="space-y-1.5">
-        {[72, 88, 60, 82].map((w, i) => (
-          <div key={i} className="h-[6px] rounded-full bg-zinc-200 dark:bg-zinc-700" style={{ width: `${w}%` }} />
-        ))}
+      <p className="text-[10px] font-semibold tracking-widest uppercase text-zinc-400 dark:text-zinc-600">Document Plan</p>
+
+      {/* Next step */}
+      <div className="rounded-xl border border-blue-200 dark:border-blue-700/50 bg-blue-50 dark:bg-blue-900/20 p-2.5">
+        <p className="text-[9px] font-bold text-blue-500 uppercase tracking-wider mb-0.5">Next step</p>
+        <p className="text-[10px] font-semibold text-blue-900 dark:text-blue-200 leading-tight">Gather proof of residency</p>
+        <p className="text-[9px] text-blue-600 dark:text-blue-400 mt-1 leading-tight">Utility bill, lease, mortgage statement, or school district portal</p>
       </div>
-      <div className="rounded-xl border border-amber-200 dark:border-amber-700/50 bg-amber-50 dark:bg-amber-900/20 p-2.5">
-        <div className="flex items-start gap-1.5 mb-1.5">
-          <AlertTriangle className="w-3 h-3 text-amber-600 shrink-0 mt-0.5" />
-          <p className="text-[10px] font-semibold text-amber-800 dark:text-amber-400">Suspicious Clause Detected</p>
-        </div>
-        <div className="space-y-1 ml-[18px]">
-          {[90, 70].map((w, i) => <div key={i} className="h-[5px] rounded-full bg-amber-200 dark:bg-amber-700/50" style={{ width: `${w}%` }} />)}
-        </div>
-      </div>
-      <div className="rounded-xl border border-red-200 dark:border-red-800/50 bg-red-50 dark:bg-red-900/20 p-2.5">
-        <div className="flex items-center gap-1.5 mb-1.5">
-          <div className="w-4 h-4 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center shrink-0">
-            <Shield className="w-2.5 h-2.5 text-red-600 dark:text-red-400" />
+
+      {/* Progress */}
+      <p className="text-[9px] font-semibold text-zinc-400 uppercase tracking-wider">2 of 7 actions complete</p>
+      {items.map((item, i) => (
+        <div key={i} className="flex items-center gap-1.5">
+          <div className={`w-3.5 h-3.5 rounded-full shrink-0 flex items-center justify-center ${item.done ? "bg-emerald-500" : "border border-zinc-300 dark:border-zinc-600"}`}>
+            {item.done && <CheckCircle2 className="w-2.5 h-2.5 text-white" />}
           </div>
-          <p className="text-[10px] font-bold text-red-700 dark:text-red-400">3 Risks Found</p>
+          <p className={`text-[9px] leading-tight ${item.done ? "text-zinc-400 line-through" : "text-zinc-700 dark:text-zinc-300"}`}>{item.label}</p>
         </div>
-        {["No-notice entry clause", "Auto-renew without opt-out"].map((label, i) => (
-          <div key={i} className="flex items-center gap-1.5 mt-1">
-            <div className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
-            <p className="text-[9px] text-red-700 dark:text-red-300 leading-tight">{label}</p>
-          </div>
-        ))}
+      ))}
+
+      {/* Deadline */}
+      <div className="rounded-xl border border-amber-200 dark:border-amber-700/50 bg-amber-50 dark:bg-amber-900/20 p-2 flex items-center gap-1.5">
+        <Clock className="w-3 h-3 text-amber-500 shrink-0" />
+        <p className="text-[9px] text-amber-700 dark:text-amber-300 font-medium leading-tight">Submit before enrollment cutoff</p>
       </div>
     </div>
   )
@@ -154,9 +156,9 @@ function ContractReviewScreen() {
 /* ─── Screen router ──────────────────────────────────────── */
 function ToolScreen({ toolId }: { toolId: number }) {
   switch (toolId) {
-    case 0:  return <AnalyzeScreen />
+    case 0:  return <EnrollmentPacketScreen />
     case 1:  return <ContractReviewScreen />
-    default: return <AnalyzeScreen />
+    default: return <EnrollmentPacketScreen />
   }
 }
 

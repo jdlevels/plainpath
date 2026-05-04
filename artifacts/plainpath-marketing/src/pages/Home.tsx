@@ -86,12 +86,6 @@ function RotatingBadge() {
   )
 }
 
-/* ─── Tool pill data ─────────────────────────────────────── */
-const TOOLS = [
-  { label: "Analyze a Document", icon: FileScan, cls: "tool-btn-blue",  href: "/demo/analyze",         comingSoon: false },
-  { label: "Contract Review",    icon: Scale,    cls: "tool-btn-amber", href: "/demo/contract-review", comingSoon: false },
-];
-
 /* ─── Feature cards ─────────────────────────────────────── */
 const FEATURES = [
   {
@@ -131,10 +125,10 @@ const HOW = [
 
 /* ─── Trust ──────────────────────────────────────────────── */
 const TRUST = [
-  { icon: FileText,    title: "Results you can act on",   desc: "Every analysis is written in plain English — no jargon. Read it once and know exactly what to do." },
-  { icon: Lock,        title: "Your documents stay yours", desc: "Documents are processed to give you answers, then discarded. We don't sell your data or train AI on your files." },
-  { icon: ShieldCheck, title: "Built for every document",  desc: "Leases, IRS letters, medical bills, contracts, court notices, NDAs — if it's text-based, PlainPath can analyze it." },
-  { icon: CheckCircle2,title: "Start in seconds",          desc: "Paste or upload a document and get a plain-English breakdown in under 2 minutes." },
+  { icon: CheckCircle2, title: "Guided action plan",           desc: "PlainPath surfaces deadlines, signatures, missing documents, risks, and next steps." },
+  { icon: Lock,         title: "Temporary processing",         desc: "Files are processed only to return your results." },
+  { icon: ShieldCheck,  title: "Privacy-minded document review", desc: "Your documents are not retained, shared, or used to train AI models." },
+  { icon: FileText,     title: "Ready-to-use packet",          desc: "Compile your summary, checklist, risks, source evidence, and open items." },
 ];
 
 /* ─── Live demos ─────────────────────────────────────────── */
@@ -485,7 +479,7 @@ export default function Home() {
               >
                 <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/25 shadow-sm text-xs font-semibold text-primary tracking-wide uppercase">
                   <span className="flex h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                  Web app — iOS &amp; Android coming soon
+                  Web App — iOS Coming Soon
                 </div>
                 <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-50 dark:bg-red-950/20 border border-red-200/60 dark:border-red-800/50 shadow-sm text-xs font-semibold text-red-700 dark:text-red-400">
                   <Star className="w-3 h-3 text-amber-500" style={{ fill: "currentColor", color: "#f59e0b" }} />
@@ -498,55 +492,31 @@ export default function Home() {
                 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.06] tracking-tight mb-5 text-foreground"
                 style={{ fontFamily: "var(--font-display)" }}
               >
-                Understand any document.{" "}
+                Understand it.{" "}
                 <span
                   className="bg-gradient-to-r from-primary via-blue-500 to-violet-500 bg-clip-text text-transparent"
                   style={{ WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}
                 >
-                  Review any contract.
-                </span>
+                  Complete it.
+                </span>{" "}
+                Submit it.
               </motion.h1>
 
               <motion.p
                 custom={2} variants={fadeUp}
-                className="text-base md:text-lg text-muted-foreground mb-6 leading-relaxed max-w-lg"
+                className="text-base md:text-lg text-muted-foreground mb-8 leading-relaxed max-w-lg"
               >
-                PlainPath breaks down documents into plain English and highlights key terms, risks, and obligations in minutes.
+                PlainPath turns confusing paperwork into a guided action plan with deadlines, required documents, signatures, risks, and a ready-to-use packet.
               </motion.p>
 
-              {/* Tool pills */}
-              <motion.div custom={3} variants={fadeUp} className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-6">
-                {TOOLS.map(({ label, icon: Icon, cls, href, comingSoon }) => (
-                  comingSoon ? (
-                    <span
-                      key={label}
-                      className="relative flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-dashed border-slate-300 dark:border-slate-600 bg-white/60 dark:bg-slate-800/30 text-xs sm:text-sm font-medium w-full pointer-events-none select-none text-slate-400 dark:text-slate-500"
-                    >
-                      <Icon className="w-3.5 h-3.5 shrink-0 opacity-50" />
-                      <span className="leading-tight truncate">{label}</span>
-                      <span className="ml-auto shrink-0 text-[9px] font-bold tracking-wide bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded-full">SOON</span>
-                    </span>
-                  ) : (
-                    <a
-                      key={label}
-                      href={href}
-                      className={`${cls} flex items-center gap-1.5 px-3 py-2.5 rounded-xl border text-xs sm:text-sm font-medium transition-opacity hover:opacity-80 w-full`}
-                    >
-                      <Icon className="w-3.5 h-3.5 shrink-0" />
-                      <span className="leading-tight">{label}</span>
-                    </a>
-                  )
-                ))}
-              </motion.div>
-
               {/* CTAs */}
-              <motion.div custom={4} variants={fadeUp} className="flex flex-col gap-3 mb-5" id="download">
+              <motion.div custom={3} variants={fadeUp} className="flex flex-col gap-3 mb-5" id="download">
                 <div className="flex flex-wrap gap-2">
                   <a
                     href="/demo/analyze"
                     className="inline-flex items-center gap-2 bg-primary text-white rounded-xl px-5 h-12 sm:h-14 text-sm font-semibold hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-md shadow-primary/20"
                   >
-                    Analyze a Document <ArrowRight className="w-4 h-4" />
+                    Start a Document Plan <ArrowRight className="w-4 h-4" />
                   </a>
                   <a
                     href="/demo/contract-review"
@@ -555,14 +525,7 @@ export default function Home() {
                     Review a Contract
                   </a>
                 </div>
-                <p className="text-xs text-muted-foreground/80">Results in under 2 minutes &nbsp;·&nbsp; Cancel anytime &nbsp;·&nbsp; PlainPath Pro — $19.99/month</p>
-                <p className="text-xs text-muted-foreground/55">iOS &amp; Android coming soon.</p>
-              </motion.div>
-
-              <motion.div custom={5} variants={fadeUp}>
-                <p className="text-xs text-muted-foreground">
-                  PlainPath Pro &nbsp;·&nbsp; Both tools included &nbsp;·&nbsp; Cancel anytime
-                </p>
+                <p className="text-xs text-muted-foreground/70">PlainPath Pro &nbsp;•&nbsp; $19.99/month &nbsp;•&nbsp; Both tools included &nbsp;•&nbsp; Cancel anytime</p>
               </motion.div>
             </motion.div>
 
@@ -1120,7 +1083,7 @@ export default function Home() {
           </div>
 
           <p className="text-center text-xs text-muted-foreground mt-5">
-            Web access included on all plans &nbsp;·&nbsp; iOS &amp; Android apps coming soon
+            Web access included on all plans &nbsp;·&nbsp; iOS app coming soon
           </p>
           <p className="text-center text-xs text-muted-foreground mt-2">
             Questions? Email us at{" "}
@@ -1232,7 +1195,7 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-xs font-semibold tracking-[0.12em] uppercase text-white/40 mb-4"
           >
-            Available on Web · iOS &amp; Android coming soon
+            Available on Web · iOS coming soon
           </motion.p>
           <motion.h2
             initial={{ opacity: 0, y: 18 }}
