@@ -1,0 +1,179 @@
+PlainPath product direction — plan the Document Completion Engine
+
+Goal:
+Create a planning document for PlainPath’s next core product layer: the Document Completion Engine.
+
+This is planning only.
+Do not implement code yet.
+Do not change billing.
+Do not change RevenueCat.
+Do not change existing UI.
+Do not add removed tools.
+
+Problem:
+PlainPath currently reads and analyzes documents, but the end goal should be stronger. Users do not only need to understand a document — they need to complete the task the document creates, gather the right supporting documents, meet deadlines, sign where required, and compile a final packet they can print, save, or submit.
+
+Core product loop:
+Read → Analyze → Build Action Plan → Guide Completion → Compile Packet
+
+Create a planning document that defines:
+
+1. Product purpose
+
+PlainPath should become a document completion system, not only a document explanation system.
+
+The Analyze a Document tool should end with a completed, print-ready Document Action Packet.
+
+2. User-facing flow
+
+Suggested flow:
+- Upload document
+- PlainPath reads and analyzes it
+- PlainPath identifies required actions, documents, deadlines, signatures, risks, and missing items
+- User enters Guided Completion mode
+- User completes each step
+- PlainPath compiles a Document Action Packet
+
+3. Core engine objects
+
+Define a unified data model for:
+
+- Action item
+- Required document
+- Missing document
+- Signature needed
+- Deadline
+- Risk
+- Question to ask
+- Source evidence
+- User note
+- Completion status
+- Packet section
+
+Each object should support:
+- title
+- plainEnglishExplanation
+- whyItMatters
+- sourceQuote
+- sourcePage/section if available
+- status
+- priority/severity
+- dueDate/trigger if applicable
+- whereToGetThis if applicable
+- userNotes
+- includedInPacket
+
+4. Completion statuses
+
+Use:
+- Not started
+- In progress
+- Gathered
+- Completed
+- Not applicable
+- Needs help
+
+5. Guided Completion mode
+
+Define a guided UI where the user works through one item at a time.
+
+Each step should show:
+- what is needed
+- why it matters
+- where to get it
+- what happens if ignored/missed
+- source evidence
+- actions:
+  - Mark complete
+  - Upload document
+  - Add note
+  - Copy request message
+  - Mark not applicable
+  - Add to open items
+
+6. School enrollment example
+
+Use this example:
+
+A parent uploads a school enrollment packet. PlainPath should identify:
+- enrollment form
+- birth certificate
+- parent/guardian ID
+- proof of residency
+- immunization record
+- emergency contact form
+- signatures needed
+- submission deadline
+- missing items
+- where to get each item
+- final packet checklist
+
+Make clear:
+PlainPath should identify and guide the user, but official forms must come from the school, agency, court, insurer, employer, landlord, provider, or original issuer unless the user uploaded the form.
+
+7. Document Action Packet
+
+Define the final compiled export.
+
+It should include:
+- cover page
+- document summary
+- completion checklist
+- completed items
+- open items
+- required documents
+- signatures needed
+- deadlines
+- risks
+- questions to ask
+- source evidence
+- user notes
+- disclaimer
+
+The packet must support:
+- incomplete packet export
+- partially complete packet export
+- fully complete final packet export
+
+8. Product rules
+
+Important rules:
+- Do not pretend PlainPath has official documents the user did not upload.
+- Do not generate official forms unless clearly labeled as a draft/supporting document.
+- Always show where the user should get official/signable documents.
+- Always preserve source-backed evidence.
+- Always include unresolved/open items in the final packet.
+- Do not hide uncertainty.
+- Do not provide legal advice.
+
+9. Implementation phases
+
+Plan phased build:
+
+Phase 1:
+Unified completion object model and task aggregation from existing analysis outputs.
+
+Phase 2:
+Guided Completion UI.
+
+Phase 3:
+Document Action Packet compiler/export.
+
+Phase 4:
+Document-type templates for school enrollment, lease, EOB, employment contract, government notice, court notice, and service agreement.
+
+10. Acceptance criteria
+
+The planning document should answer:
+- What is the end goal of Analyze a Document?
+- How does the user move from analysis to action?
+- How does PlainPath guide completion?
+- How does PlainPath handle documents that need signing?
+- Where does the user get official documents?
+- What gets compiled into the final packet?
+- What should be built first?
+
+Return:
+- File created
+- Summary of the proposed engine
+- Recommended first implementation slice

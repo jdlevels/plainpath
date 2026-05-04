@@ -1,0 +1,374 @@
+PlainPath overhaul planning — Document Completion Engine for Analyze a Document
+
+Goal:
+Create a planning document for a controlled overhaul of the Analyze a Document experience.
+
+This is planning only.
+Do not implement code yet.
+Do not change billing.
+Do not change RevenueCat.
+Do not change routing.
+Do not redesign the entire app.
+Do not add removed tools.
+Do not reintroduce Redact, Trust Check, Compare Versions, Clause Extractor, Builder, Digital Signature, Starter, Team, or annual plans.
+
+Current issue:
+Analyze a Document has strong visual polish and useful analysis sections, but the product flow is still too tab-driven. It explains documents, but it does not clearly guide the user from understanding the document to completing the real-world task and compiling a final packet.
+
+New product direction:
+PlainPath should become a document completion system.
+
+Core flow:
+Upload → Understand → Plan → Complete → Compile
+
+User-facing goal:
+After uploading a document, the user should leave with a clear Document Action Packet that can be printed, saved, submitted, or shared.
+
+Create a planning document that defines the full overhaul.
+
+--------------------------------------------------
+1. PRODUCT PURPOSE
+--------------------------------------------------
+
+Define the new end goal of Analyze a Document:
+
+Analyze a Document should not stop at summary/explanation.
+It should:
+- read the document
+- explain the document
+- identify what the user must do
+- guide the user through completion
+- track what is done and what remains open
+- compile everything into a final Document Action Packet
+
+Use this product framing:
+
+“PlainPath turns confusing paperwork into a guided action plan and a print-ready packet.”
+
+--------------------------------------------------
+2. NEW EXPERIENCE STRUCTURE
+--------------------------------------------------
+
+Replace the current tab-first mental model with four major modes:
+
+A. Understand
+Purpose: explain the document.
+
+Includes:
+- Plain English
+- Overview
+- Source Sections
+- Key Terms
+
+B. Plan
+Purpose: identify what must happen.
+
+Includes:
+- Action Steps
+- Required Documents
+- Deadlines
+- Risks & Notes
+- Questions to Ask
+- Signatures Needed
+- Where to Get Documents
+
+C. Complete
+Purpose: guide the user through the work.
+
+Includes:
+- Guided Completion
+- Checklist
+- Upload/gather document status
+- Mark complete
+- Mark not applicable
+- Add note
+- Copy request message
+- Track unresolved items
+
+D. Compile
+Purpose: create the final deliverable.
+
+Includes:
+- Document Action Packet preview
+- Export full packet PDF
+- Print checklist
+- Copy packet summary
+- Show open items clearly
+
+Important:
+The current detailed tabs can still exist, but they should be grouped under these four modes instead of appearing as one long row of unrelated tabs.
+
+--------------------------------------------------
+3. CORE COMPLETION ENGINE OBJECTS
+--------------------------------------------------
+
+Define a unified completion model that can represent:
+
+- action step
+- required document
+- missing document
+- signature needed
+- deadline
+- risk
+- question to ask
+- source evidence
+- user note
+- final packet section
+
+Each object should support:
+
+- id
+- type
+- title
+- plainEnglishExplanation
+- whyItMatters
+- whatToDo
+- whereToGetThis
+- sourceQuote
+- sourcePage
+- sourceSection
+- priority
+- severity
+- dueDate
+- trigger
+- status
+- userNotes
+- includedInPacket
+- createdFromAnalysisSection
+
+Statuses:
+- Not started
+- In progress
+- Gathered
+- Completed
+- Not applicable
+- Needs help
+
+--------------------------------------------------
+4. GUIDED COMPLETION FLOW
+--------------------------------------------------
+
+Define a step-by-step guided experience.
+
+Example step layout:
+
+Step 2 of 6
+Proof of residency required
+
+What you need:
+A current utility bill, lease, mortgage statement, or official mail showing your address.
+
+Why it matters:
+The school may reject enrollment without residency proof.
+
+Where to get it:
+Utility provider, landlord/property portal, mortgage company, or recent official mail.
+
+Source:
+“Parent/guardian must provide proof of residency before enrollment is accepted.”
+
+Actions:
+- Upload document
+- Mark gathered
+- Add note
+- Copy request message
+- I don’t have this
+- Mark not applicable
+
+If user clicks “I don’t have this,” the system should add it to open items and offer a request message.
+
+--------------------------------------------------
+5. DOCUMENTS THAT NEED SIGNING
+--------------------------------------------------
+
+Define how the engine handles signatures.
+
+Rules:
+- PlainPath identifies documents that need signing.
+- PlainPath does not pretend to have official/signable documents unless the user uploaded them.
+- PlainPath tells the user where to get official documents.
+- PlainPath can generate supporting messages or cover letters, but not official forms unless clearly labeled as drafts.
+
+Example output:
+
+Signature Needed:
+Enrollment Application
+
+Who likely signs:
+Parent/guardian
+
+Where to get it:
+School enrollment office, official school website, or enrollment portal.
+
+PlainPath can help you:
+- identify the missing signature
+- prepare a request message
+- add it to your packet
+- track whether it has been completed
+
+--------------------------------------------------
+6. SCHOOL ENROLLMENT EXAMPLE
+--------------------------------------------------
+
+Use this as the primary example.
+
+Scenario:
+A parent uploads a school enrollment packet. The parent already understands that the child needs to be signed up, but needs help completing the paperwork and submitting on time.
+
+PlainPath should identify:
+
+- enrollment form
+- child birth certificate
+- parent/guardian photo ID
+- proof of residency
+- immunization record
+- emergency contact form
+- medical release form
+- technology/device agreement
+- signatures needed
+- submission deadline
+- open questions
+- where each document comes from
+
+The app should guide the user through completing the packet and then compile a final School Enrollment Action Packet.
+
+--------------------------------------------------
+7. DOCUMENT ACTION PACKET
+--------------------------------------------------
+
+Define the final compiled packet.
+
+The packet should include:
+
+- cover page
+- document title/type
+- analysis date
+- completion status
+- confidence
+- plain-English summary
+- completed checklist
+- open items
+- required documents gathered
+- required documents still needed
+- signatures needed
+- deadlines
+- risks
+- questions to ask
+- user notes
+- source evidence
+- final submission checklist
+- disclaimer
+
+The packet must support three states:
+
+A. Incomplete packet
+Shows open items clearly.
+
+B. Partially complete packet
+Shows progress and remaining work.
+
+C. Final completed packet
+Shows all completed items and final submission readiness.
+
+Do not require every item to be completed before export.
+
+--------------------------------------------------
+8. UI RECOMMENDATION
+--------------------------------------------------
+
+Recommend the new top-level layout:
+
+Header:
+Document title
+Detected document type
+Progress: X/Y steps completed
+Primary CTA: Continue Guided Completion or Generate Packet
+
+Mode navigation:
+Understand | Plan | Complete | Compile
+
+Main panel:
+Current mode content
+
+Right side or inline assistant:
+Contextual guidance for the selected item
+
+The current split-screen PDF viewer should remain.
+
+--------------------------------------------------
+9. WHAT TO KEEP
+--------------------------------------------------
+
+Keep:
+- dark premium layout
+- split-screen document viewer + analysis panel
+- confidence chip
+- source-backed language
+- export/save buttons
+- document title header
+- existing analysis outputs as raw material
+
+Do not keep:
+- too many ungrouped tabs
+- stale upgrade/higher-tier messaging
+- removed tool references
+- export menu clutter
+- actions that do not work
+
+--------------------------------------------------
+10. IMPLEMENTATION PHASES
+--------------------------------------------------
+
+Recommend phased implementation:
+
+Phase 1:
+Planning and schema/design only.
+
+Phase 2:
+Create unified completion objects from existing analysis outputs.
+
+Phase 3:
+Add grouped mode navigation:
+Understand / Plan / Complete / Compile.
+
+Phase 4:
+Build Guided Completion UI.
+
+Phase 5:
+Build Document Action Packet compiler/export.
+
+Phase 6:
+Add document-type templates:
+- school enrollment
+- lease/rental notice
+- EOB/medical bill
+- employment contract
+- government notice
+- court notice
+- service agreement
+
+Phase 7:
+Premium visual polish and mobile optimization.
+
+--------------------------------------------------
+11. ACCEPTANCE CRITERIA
+--------------------------------------------------
+
+The plan should answer:
+
+- What is the true end goal of Analyze a Document?
+- How does the user move from reading to action?
+- How does the user complete the document task?
+- How does PlainPath handle missing/signature documents?
+- Where does the user get official documents?
+- How does the app compile a final packet?
+- What should be built first?
+- What should not be changed yet?
+
+Return:
+1. Planning file created
+2. Summary of recommended overhaul
+3. Proposed new Analyze flow
+4. Proposed data model
+5. First safe implementation slice
+6. Risks or blockers

@@ -305,3 +305,9 @@ id = "-lVp2KqR0O7N2fiaYADPV"
 uri = "file://screenshots/asset-pack/MANIFEST.md"
 type = "text"
 title = "Screenshot Asset Pack Manifest"
+
+[[outputs]]
+id = "wlgqnil0yzcYkVhcWNQMJ"
+uri = "file://docs/document-completion-engine.md"
+type = "text"
+title = "PlainPath — Document Completion Engine Plan"
