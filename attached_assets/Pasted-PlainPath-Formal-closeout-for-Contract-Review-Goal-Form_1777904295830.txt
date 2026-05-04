@@ -1,0 +1,163 @@
+PlainPath — Formal closeout for Contract Review
+
+Goal:
+Formally close and document Contract Review as completed/locked.
+
+Do not rebuild.
+Do not add features.
+Do not redesign.
+Do not change product behavior unless a launch-blocking issue is found during verification.
+
+Product lock:
+Contract Review helps users quickly understand:
+- what the contract says
+- what clauses matter
+- what obligations they may be accepting
+- what needs attention
+- what questions to ask before signing
+
+Final approved structure:
+Summary → Key Clauses → Balanced Clauses → Before You Sign
+
+Final clause card structure:
+1. What it says
+2. Why this matters
+3. Questions to Ask Before Signing
+4. Suggested language to discuss
+5. Draft questions email, where applicable
+
+Primary purpose:
+Understand before signing.
+
+Not the primary purpose:
+- legal advice
+- deciding for the user
+- telling the user whether to sign
+- aggressive negotiation
+- contract drafting as a lawyer replacement
+- PDF editing
+- redaction
+- trust scoring
+- comparison
+
+Closeout tasks:
+
+1. Create or update closeout document
+
+Create:
+
+docs/contract-review-closeout.md
+
+Include:
+- final product definition
+- approved section structure
+- final clause card structure
+- final launch QA summary
+- language/safety fixes completed
+- remaining non-blocking polish
+- protected files confirmation
+- launch rule: no more Contract Review expansion before launch
+
+2. Record final QA results
+
+Include these verified results:
+
+- Contract Review opens: PASS
+- Demo Contract Review opens: PASS
+- Summary section: PASS
+- Key Clauses section: PASS
+- Questions to Ask Before Signing: PASS
+- Suggested language to discuss: PASS
+- Balanced Clauses collapsed by default: PASS
+- Before You Sign section: PASS
+- Mobile readability at 390px: PASS
+- No horizontal overflow: PASS
+- Build: PASS
+- TypeScript: PASS
+- Protected files untouched except intended Contract Review/demo files: PASS
+
+3. Document fixed blockers / corrections
+
+Include:
+
+A. Removed all “do not sign” language
+B. Removed “why this is a problem” framing
+C. Removed “Already signed?” section
+D. Added “Questions to Ask Before Signing”
+E. Renamed “Suggested Revision Language” to “Suggested language to discuss”
+F. Renamed “Draft negotiation email” to “Draft questions email”
+G. Reorganized structure into Summary → Key Clauses → Balanced Clauses → Before You Sign
+H. Merged Red Flags + Watch Outs into Key Clauses
+I. Moved Missing Protections into Before You Sign as “Items this contract is missing”
+J. DemoContractReview updated to match real product structure
+
+4. Safety-language verification
+
+Search visible Contract Review surfaces for:
+
+- do not sign
+- why this is a problem
+- Already signed
+- illegal
+- guaranteed safe
+- attorney-approved
+- you should sign
+- you should not sign
+
+Expected:
+0 user-facing matches.
+
+Allowed language:
+- review
+- clarify
+- confirm
+- ask before signing
+- may need attention
+- consider reviewing with a qualified professional if needed
+
+5. Document non-blocking polish only
+
+Include:
+- “Red flags” may still appear as a risk-count phrase if present; acceptable for launch, but may later be softened to “Needs Attention”
+- Suggested language box takes vertical space on mobile but remains readable
+- Print/export is secondary and not the core Contract Review purpose
+
+6. Confirm protected areas untouched
+
+Verify no unintended changes to:
+
+- Analyze a Document
+- billing
+- RevenueCat
+- Stripe
+- native billing
+- auth
+- pricing
+- homepage
+- marketing, except DemoContractReview if already changed
+- routes
+- database
+- parser schema
+- removed tools
+
+7. Final verification commands
+
+Run:
+- production build
+- TypeScript check if available
+- safety-language grep
+- removed-tool reference grep in Contract Review primary flow
+
+8. Final output
+
+Return:
+- files created/updated
+- final Contract Review status
+- final QA table
+- corrections completed
+- non-blocking polish
+- protected files untouched confirmation
+- final recommendation
+
+Expected final status:
+APPROVED / LOCKED — Contract Review completed.
