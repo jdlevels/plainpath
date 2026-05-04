@@ -333,6 +333,7 @@ export interface CompileModeViewProps {
   onGoToPlan: () => void
   onResetProgress?: () => void
   storageAvailable?: boolean
+  saveFlashVisible?: boolean
   documentTitle: string
   documentType?: string
   summary?: string
@@ -343,6 +344,7 @@ export function CompileModeView({
   completionStatus,
   onResetProgress,
   storageAvailable = true,
+  saveFlashVisible = false,
   onOpenDetails,
   onGoToComplete,
   onGoToPlan,
@@ -543,11 +545,15 @@ export function CompileModeView({
             </button>
           )}
 
-          {/* Saved-state indicator */}
-          <span className="text-[10px] text-muted-foreground/40 leading-snug">
-            {storageAvailable
-              ? "Progress saved on this device"
-              : "Progress may reset after refresh"}
+          {/* Saved-state indicator — hidden in print via packet-screen-actions */}
+          <span className="text-[10px] leading-snug transition-colors duration-300">
+            {saveFlashVisible && storageAvailable ? (
+              <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Saved</span>
+            ) : (
+              <span className="text-muted-foreground/40">
+                {storageAvailable ? "Progress saved on this device" : "Progress may reset after refresh"}
+              </span>
+            )}
           </span>
         </div>
       </div>

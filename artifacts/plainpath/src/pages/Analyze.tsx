@@ -120,6 +120,10 @@ export default function Analyze() {
   // Phase 3B: per-item completion status keyed by CompletionObject.id
   const [completionStatus, setCompletionStatus] = useState<Record<string, boolean>>({})
 
+  // Phase 3H.3: brief "Saved" flash after each successful toggle
+  const [saveFlashVisible, setSaveFlashVisible] = useState(false)
+  const saveFlashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   // Phase 3H.2: localStorage availability — checked once on mount
   const storageAvailable = useMemo(() => {
     if (!ANALYZE_COMPLETION_FLOW_ENABLED) return false
@@ -223,14 +227,19 @@ export default function Analyze() {
     setCompletionStatus(stored)
   }, [analysis.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Phase 3B: toggle handler for Plan Summary items; Phase 3H.2: persists on every change
+  // Phase 3B: toggle handler for Plan Summary items; Phase 3H.2: persists; 3H.3: flash
   const handlePlanItemToggle = useCallback((id: string, done: boolean) => {
     setCompletionStatus(prev => {
       const next = { ...prev, [id]: done }
       if (ANALYZE_COMPLETION_FLOW_ENABLED) {
-        // Write only known IDs — saveCompletionStatus handles the filtering
         const knownIds = completionObjects.map(o => o.id)
-        saveCompletionStatus(analysis.id, next, knownIds)
+        const saved = saveCompletionStatus(analysis.id, next, knownIds)
+        // Phase 3H.3: trigger brief "Saved" flash on successful write
+        if (saved) {
+          if (saveFlashTimerRef.current) clearTimeout(saveFlashTimerRef.current)
+          setSaveFlashVisible(true)
+          saveFlashTimerRef.current = setTimeout(() => setSaveFlashVisible(false), 1700)
+        }
       }
       return next
     })
@@ -661,6 +670,7 @@ export default function Analyze() {
             onGoToCompile={() => handleModeChange("compile")}
             onResetProgress={handleResetProgress}
             storageAvailable={storageAvailable}
+            saveFlashVisible={saveFlashVisible}
             documentTitle={analysis.title}
           />
         )}
@@ -675,6 +685,7 @@ export default function Analyze() {
             onGoToPlan={() => handleModeChange("plan")}
             onResetProgress={handleResetProgress}
             storageAvailable={storageAvailable}
+            saveFlashVisible={saveFlashVisible}
             documentTitle={analysis.title}
             documentType={analysis.documentType}
             summary={(analysis as any).plainEnglishSections?.summary || analysis.summary}

@@ -1,0 +1,184 @@
+PlainPath — Analyze Phase 3H.3: Persistence UX Polish
+
+Goal:
+Improve completion-progress feedback now that localStorage persistence is working.
+
+Add:
+1. A brief visual “Saved” confirmation after each completion toggle.
+2. Done/total progress badges on the Complete and Packet mode buttons.
+
+This is a UX polish phase only.
+Do not change persistence storage shape.
+Do not change parser logic.
+Do not change packet content.
+Do not change print/export behavior.
+Do not add backend persistence.
+Do not add database schema.
+Do not add AI calls.
+Do not change billing, RevenueCat, Stripe, native billing, auth, pricing, Contract Review, homepage, marketing, routes, or removed-tool redirects.
+
+Current approved state:
+- Phase 3H.1 renamed Compile to Packet
+- Phase 3H.2 localStorage completion persistence approved
+- Build: 2745 modules, 0 errors
+- QA: 55/55 passing
+- localStorage stores only Record<string, boolean>
+- Protected files untouched
+
+Feature flag:
+All new behavior must stay behind:
+
+VITE_ANALYZE_COMPLETION_FLOW_ENABLED
+
+When flag is OFF:
+- old Analyze UI remains unchanged
+- no saved flash appears
+- no Complete/Packet completion badge appears
+- no localStorage behavior changes
+
+Primary files expected:
+- artifacts/plainpath/src/pages/Analyze.tsx
+- artifacts/plainpath/src/components/AnalyzeModeNav.tsx
+- possibly artifacts/plainpath/src/components/analyze/CompleteModeView.tsx
+- possibly artifacts/plainpath/src/components/analyze/CompileModeView.tsx
+
+Do not touch:
+- completionStorage.ts unless absolutely necessary
+- completionParser.ts
+- billing files
+- RevenueCat files
+- Stripe files
+- native billing files
+- auth files
+- Contract Review files
+- homepage / marketing files
+- route files
+- database files
+- PDF export files
+
+1. Saved confirmation behavior
+
+Replace or supplement the static saved-state label with a brief, non-intrusive save confirmation.
+
+Behavior:
+- When a user toggles any completion item, show:
+  “Saved”
+- Show for approximately 1.5–2 seconds.
+- Then return to the passive label:
+  “Progress saved on this device”
+
+If localStorage is unavailable:
+- Do not show “Saved”
+- Keep passive label:
+  “Progress may reset after refresh”
+
+Implementation:
+- Add local state in Analyze.tsx:
+  saveFlashVisible or similar
+- Trigger it only after successful save path inside handlePlanItemToggle
+- Use clearTimeout cleanup to avoid stale timers
+- Keep it feature-flagged
+- Do not make it modal, toast-heavy, or blocking
+
+Visual guidance:
+- Small text or pill
+- Emerald/green accent when flashing “Saved”
+- Muted gray passive state
+- No large notification
+- No layout jump
+
+2. Mode nav progress badges
+
+Update AnalyzeModeNav so Complete and Packet mode buttons show completion progress at a glance.
+
+Example:
+- Complete: 3/12
+- Packet: 3/12
+
+Rules:
+- Only show when feature flag is ON
+- Only show when totalItems > 0
+- Use doneItems / totalItems
+- Keep badge compact
+- Do not crowd mobile layout
+- Badge should be visually muted until progress > 0
+- Badge can turn emerald/green when doneItems === totalItems
+
+Do not change the mode IDs:
+- internal activeMode === "compile" remains unchanged
+- user-facing label remains “Packet”
+
+3. Complete/Packet header consistency
+
+Complete mode and Packet mode should both show the same saved-state behavior.
+
+Confirm:
+- Complete mode shows “Saved” flash after toggles
+- Packet mode shows passive saved-state label but does not need to flash if Packet is read-only
+- If user toggles from drawer while in Packet/Complete, the status should still update correctly
+
+4. Reset behavior
+
+When user clicks Reset progress:
+- clear completionStatus
+- remove localStorage key
+- saved flash should not say “Saved”
+- passive label should remain:
+  “Progress saved on this device”
+  if storage is available
+- progress badges should immediately return to 0/total
+
+5. Print behavior
+
+Do not print:
+- saved-state label
+- Saved flash
+- reset progress button
+- mode nav badges
+
+Packet PDF should remain clean.
+
+6. QA checks
+
+Run:
+- Vite production build
+- completion parser QA
+- TypeScript check if available
+
+Manual/code verification:
+- Feature flag OFF preserves old UI
+- Feature flag ON shows Complete/Packet done-total badges
+- toggling item updates badge immediately
+- refresh restores checked state and badge count
+- save flash appears after toggle
+- save flash disappears after timeout
+- reset clears progress and badge
+- different analysis does not inherit progress
+- storage unavailable shows “Progress may reset after refresh”
+- no document text/source quotes/raw content stored
+- Packet print still works
+- saved labels/badges do not print
+- no billing files changed
+- no RevenueCat files changed
+- no Stripe files changed
+- no native billing files changed
+- no auth files changed
+- no Contract Review files changed
+- no homepage/marketing files changed
+- no parser behavior changed
+- no removed tool references added
+
+7. Return report
+
+Return:
+1. Files changed
+2. Saved flash behavior
+3. Passive saved-state behavior
+4. Mode nav badge behavior
+5. Reset behavior
+6. Print behavior
+7. Feature flag behavior
+8. Build/QA results
+9. Protected files untouched confirmation
+10. Known limitations
+11. Recommended next slice

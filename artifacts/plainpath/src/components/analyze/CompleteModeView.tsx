@@ -302,6 +302,7 @@ export interface CompleteModeViewProps {
   onGoToCompile?: () => void
   onResetProgress?: () => void
   storageAvailable?: boolean
+  saveFlashVisible?: boolean
   documentTitle?: string
 }
 
@@ -314,6 +315,7 @@ export function CompleteModeView({
   onGoToCompile,
   onResetProgress,
   storageAvailable = true,
+  saveFlashVisible = false,
 }: CompleteModeViewProps) {
   // All completable items (the 7 types that appear in Plan mode)
   const completable = completionObjects.filter((o) =>
@@ -482,11 +484,15 @@ export function CompleteModeView({
             </button>
           )}
 
-          {/* Saved-state indicator — screen only */}
-          <span className="no-print text-[10px] text-muted-foreground/40 leading-snug">
-            {storageAvailable
-              ? "Progress saved on this device"
-              : "Progress may reset after refresh"}
+          {/* Saved-state indicator — screen only, hidden in print */}
+          <span className="no-print text-[10px] leading-snug transition-colors duration-300">
+            {saveFlashVisible && storageAvailable ? (
+              <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Saved</span>
+            ) : (
+              <span className="text-muted-foreground/40">
+                {storageAvailable ? "Progress saved on this device" : "Progress may reset after refresh"}
+              </span>
+            )}
           </span>
         </div>
       </div>

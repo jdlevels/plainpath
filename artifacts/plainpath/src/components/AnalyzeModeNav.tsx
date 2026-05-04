@@ -52,12 +52,14 @@ export function AnalyzeModeNav({ activeMode, onModeChange, totalItems, doneItems
               {/* Full label on sm+, short on xs */}
               <span className="hidden sm:inline whitespace-nowrap">{mode.label}</span>
               <span className="sm:hidden whitespace-nowrap">{mode.shortLabel}</span>
-              {/* Progress badge on Complete */}
-              {mode.id === "complete" && totalItems > 0 && (
+              {/* Progress badge on Complete + Packet */}
+              {(mode.id === "complete" || mode.id === "compile") && totalItems > 0 && (
                 <span
                   className={`hidden sm:inline ml-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold leading-none shrink-0 ${
                     isActive
                       ? "bg-background/25 text-background"
+                      : doneItems === totalItems
+                      ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400"
                       : "bg-border/60 text-muted-foreground"
                   }`}
                 >
