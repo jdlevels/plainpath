@@ -1,0 +1,153 @@
+PlainPath — Analyze Phase 3I: Production Enablement and Final Real-Browser QA Checklist
+
+Goal:
+Prepare the new Analyze completion flow for production use by verifying the feature flag, deployed environment behavior, and real-browser manual QA requirements.
+
+This is primarily a verification and environment-readiness phase.
+Do not build new product features unless a small defect is found during verification.
+Do not change parser logic.
+Do not change PDF export behavior unless the print test fails.
+Do not change billing, RevenueCat, Stripe, native billing, auth, pricing, Contract Review, homepage, marketing, database, or routes.
+
+Current approved state:
+- Phase 3H.1 — Compile renamed to Packet
+- Phase 3H.2 — completion progress persists to localStorage
+- Phase 3H.3 — saved flash + Complete/Packet progress badges approved
+- Build: 2745 modules, 0 errors
+- QA: 55/55 passing
+- Protected files untouched
+
+Feature flag:
+Confirm this exact production/deployment variable exists and is set correctly:
+
+VITE_ANALYZE_COMPLETION_FLOW_ENABLED=true
+
+Do not use a different flag name.
+Do not rename the existing flag.
+Do not remove the feature flag.
+
+1. Environment verification
+
+Check:
+- Replit deployment secrets / env settings include VITE_ANALYZE_COMPLETION_FLOW_ENABLED=true
+- local dev behavior remains unchanged
+- production build includes the enabled completion flow only when the env variable is true
+- flag OFF still preserves old Analyze UI
+
+Return the exact current flag status:
+- local dev
+- production build
+- Replit deployment secrets if visible
+
+2. Real-browser QA checklist document
+
+Create or update a verification document:
+
+docs/analyze-completion-final-qa.md
+
+Include a checklist for manual testing in the deployed browser.
+
+Required sections:
+
+A. Sign-in / access
+- Sign in as Pro/admin
+- Confirm Analyze opens without paywall modal
+- Confirm Contract Review still opens without paywall modal
+- Confirm pricing shows PlainPath Pro only
+
+B. Upload / analyze
+- Upload a real test document
+- Confirm the document viewer loads
+- Confirm Analyze result loads
+- Confirm header stays stationary while switching modes
+- Confirm no removed tools appear in the export dropdown
+
+C. Understand mode
+- Confirm Plain English opens
+- Confirm Source Sections opens
+- Confirm Overview opens
+- Confirm Key Terms opens
+- Confirm Source Sections breakdown panel loads consistently
+
+D. Plan mode
+- Confirm Plan summary appears above the sub-tabs
+- Confirm sections show Actions / Docs / Signatures / Deadlines / Risks / Questions
+- Confirm Details opens the drawer
+- Confirm Source Evidence displays source-backed or manual-review state correctly
+- Confirm “Mark done” works from Plan cards
+
+E. Complete mode
+- Confirm progress badge appears on Complete mode
+- Confirm toggling item updates progress immediately
+- Confirm “Saved” flash appears
+- Confirm passive label returns to “Progress saved on this device”
+- Confirm Reset progress clears all items after confirmation
+
+F. Packet mode
+- Confirm Packet badge appears
+- Confirm Completed/Open sections match checked state
+- Confirm Packet contains all major sections
+- Confirm Details opens drawer from packet rows
+- Confirm Print / Save as PDF opens print preview
+
+G. Persistence
+- Check 2–3 items
+- Refresh page
+- Confirm checked items remain checked
+- Open another document
+- Confirm progress does not carry over incorrectly
+- Return to first document
+- Confirm previous progress returns
+
+H. PDF output
+- In Packet mode, click Print / Save as PDF
+- Confirm print preview has more than one page for a long document
+- Confirm buttons, reset progress, saved label, drawer, and mode nav do not print
+- Confirm packet header appears once
+- Confirm margins look clean
+- Confirm browser URL/footer behavior is acceptable or note that browser headers/footers can be disabled manually
+
+I. iOS / native caution
+- Test Reset progress confirmation on iOS Safari or WKWebView if possible
+- Confirm confirm() dialog appears correctly
+- If confirm() is unreliable, recommend replacing it with inline confirmation UI in a follow-up phase
+
+3. Code verification
+
+Run:
+- Vite production build
+- completion parser QA
+- security scan if available
+- grep for stale removed tool references in Analyze export UI
+- grep for stale Starter / Team / annual references in active app surfaces
+
+4. No-scope-change rules
+
+Do not change:
+- billing
+- RevenueCat
+- Stripe
+- native billing
+- auth
+- pricing
+- Contract Review
+- homepage / marketing
+- routes
+- database
+- parser behavior
+- packet print CSS
+- removed-tool redirects
+
+5. Return report
+
+Return:
+1. Feature flag status
+2. Files changed, if any
+3. Build result
+4. Parser QA result
+5. Security result, if run
+6. Removed-tool reference check
+7. Manual QA checklist location
+8. Items requiring Jeff to manually test in real browser
+9. Any blockers found
+10. Recommendation: proceed to App Store prep or fix specific issue first

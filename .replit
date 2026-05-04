@@ -35,6 +35,7 @@ ADMIN_EMAILS = "support@plainpathapp.com"
 ALLOWED_EMAILS = "support@plainpathapp.com,yelevels@gmail.com"
 ACCESS_MODE = "internal_only"
 MANUAL_PRO_EMAILS = "yelevels@gmail.com"
+VITE_ANALYZE_COMPLETION_FLOW_ENABLED = "true"
 
 [nix]
 channel = "stable-25_05"
