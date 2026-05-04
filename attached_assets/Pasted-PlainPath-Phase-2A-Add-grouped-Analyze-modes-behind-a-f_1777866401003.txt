@@ -1,0 +1,222 @@
+PlainPath Phase 2A — Add grouped Analyze modes behind a feature flag
+
+Use these existing docs:
+- docs/analyze-overhaul-plan.md
+- docs/plainpath-product-course.md
+
+Use the completed parser:
+- artifacts/plainpath/src/lib/completionParser.ts
+- artifacts/plainpath/src/lib/completionTypes.ts
+
+Goal:
+Create the next controlled slice of the Analyze a Document overhaul.
+
+This is a UI organization slice only.
+Do not change billing.
+Do not change RevenueCat.
+Do not change Stripe.
+Do not change Apple/native billing.
+Do not change pricing.
+Do not change authentication.
+Do not change server routes.
+Do not change analysis generation.
+Do not change export behavior.
+Do not reintroduce removed tools.
+
+Removed tools must stay removed:
+- Redact Sensitive Info
+- Trust Check
+- Compare Versions
+- Clause Extractor
+- Builder
+- Digital Signature
+- Starter
+- Team
+- annual billing
+
+--------------------------------------------------
+1. FEATURE FLAG REQUIREMENT
+--------------------------------------------------
+
+Add a feature flag for the new Analyze mode layout.
+
+Suggested name:
+VITE_ANALYZE_COMPLETION_FLOW_ENABLED
+
+Behavior:
+- If false or missing, the current Analyze results UI should render exactly as it does now.
+- If true, render the new grouped mode layout.
+- Default should be safe for production.
+
+Do not break the current Analyze page.
+
+--------------------------------------------------
+2. NEW TOP-LEVEL MODES
+--------------------------------------------------
+
+When the flag is enabled, replace the long flat tab row with four top-level modes:
+
+Understand
+Plan
+Complete
+Compile
+
+Purpose:
+- Understand = explain the document
+- Plan = show what must happen
+- Complete = track completion work
+- Compile = prepare final packet/export path
+
+Use a polished segmented control or premium mode rail.
+
+The mode buttons should feel intentional and clear, not like another cluttered tab row.
+
+--------------------------------------------------
+3. UNDERSTAND MODE
+--------------------------------------------------
+
+Understand mode should contain the existing explanatory sections:
+
+- Plain English
+- Overview
+- Source Sections
+- Key Terms
+
+Use existing components and data.
+Do not rewrite analysis logic.
+
+The user should be able to switch between these sub-sections inside Understand mode.
+
+--------------------------------------------------
+4. PLAN MODE
+--------------------------------------------------
+
+Plan mode should contain task-planning sections:
+
+- Action Steps
+- Required Documents
+- Deadlines
+- Risks & Notes
+- Questions to Ask
+- Signatures Needed if available from completion objects
+- Where to Get Documents if available from completion objects
+
+Use the new completion objects from:
+analysisResultToCompletionObjects()
+
+Plan mode should be read-only for this slice.
+
+Do not add new server calls.
+Do not call AI.
+Do not fabricate missing data.
+
+If completion objects are unavailable, fall back to existing analysis sections.
+
+--------------------------------------------------
+5. COMPLETE MODE — SAFE PREVIEW ONLY
+--------------------------------------------------
+
+Do not build the full guided completion engine yet.
+
+Complete mode may show a safe preview panel using existing checklist/action-step data:
+
+Title:
+Guided Completion
+
+Copy:
+PlainPath will guide you through each item one step at a time. For now, review the checklist and required documents in Plan mode.
+
+Allowed content:
+- current completion progress if already available
+- count of action items
+- count of required documents
+- count of deadlines
+- count of open items
+- link/button back to Plan mode
+
+Do not show broken buttons.
+Do not show upload controls unless they already work.
+Do not show “Generate Packet” here.
+
+--------------------------------------------------
+6. COMPILE MODE — SAFE PREVIEW ONLY
+--------------------------------------------------
+
+Do not build the final packet compiler yet.
+
+Compile mode may show a safe preview panel:
+
+Title:
+Document Action Packet
+
+Copy:
+Your final packet will include the summary, action checklist, required documents, deadlines, risks, source evidence, completed items, and open items.
+
+Allowed actions:
+- Use existing export action only if it already works
+- Otherwise show a disabled “Packet compiler coming next” message only in flagged preview mode
+
+Do not expose incomplete compile behavior in production.
+Do not change the current export menu in this slice.
+
+--------------------------------------------------
+7. HEADER / PRIMARY CTA
+--------------------------------------------------
+
+When the flag is enabled, update the Analyze results header area to support the new flow.
+
+Show:
+- document title
+- detected document type
+- progress count
+- current mode
+- primary CTA based on mode
+
+Suggested CTA behavior:
+- Understand → “Review Plan”
+- Plan → “Start Completion Preview”
+- Complete → “Review Packet Preview”
+- Compile → existing export CTA if available
+
+Do not introduce broken CTAs.
+
+--------------------------------------------------
+8. MOBILE REQUIREMENT
+--------------------------------------------------
+
+The mode navigation must work on mobile.
+
+Rules:
+- no horizontal clipping
+- no tiny unreadable tabs
+- mode selector may wrap or become a dropdown on small screens
+- existing document/result split should not break
+
+--------------------------------------------------
+9. QA REQUIREMENTS
+--------------------------------------------------
+
+Add or update QA to verify:
+
+- feature flag off preserves current UI
+- feature flag on shows four modes
+- Understand mode renders existing plain-English/source/overview/key-term content
+- Plan mode uses completion objects where available
+- Complete mode does not expose broken upload or completion controls
+- Compile mode does not expose broken packet generation
+- no removed tool references appear
+- no Starter/Team/annual references appear
+- no billing files changed
+- no RevenueCat files changed
+- no Stripe files changed
+- no route changes
+- TypeScript/build status checked
+
+Return:
+1. Files changed
+2. Feature flag name and default behavior
+3. Screenshots or description of mode layout
+4. Confirmation current UI remains unchanged when flag is off
+5. QA results
+6. Any known limitations
+7. Recommended next slice

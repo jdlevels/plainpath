@@ -68,6 +68,38 @@ PlainPath is a monorepo built with pnpm workspaces, separating frontend and back
   4. **Check API server logs**: Look for `"Stripe managed webhook configured"` on startup, and no 400 webhook-rejected errors around the time of the checkout.
   5. If the subscriber row is missing despite a successful checkout: restart the API server (which re-runs `initStripe()` and reloads the secret from DB), then re-trigger the webhook from the Stripe Dashboard event log using "Resend".
 
+## Document Completion Engine — Phase Status
+
+### Phase 1 — Completion Object Parser (Complete)
+- `artifacts/plainpath/src/lib/completionTypes.ts` — `CompletionObject`, `AnalysisInput`, and all sub-types
+- `artifacts/plainpath/src/lib/completionParser.ts` — `analysisResultToCompletionObjects()` — deterministic, no AI calls
+- `artifacts/plainpath/src/lib/completionFixture.ts` — fictional school enrollment fixture for QA
+- `artifacts/plainpath/scripts/qa-completion-engine.ts` — 44/44 assertions passing, 27 completion objects from fixture
+
+### Phase 2A — Grouped Analyze Modes (Complete)
+Feature flag: `VITE_ANALYZE_COMPLETION_FLOW_ENABLED`
+- **Production default**: off — requires `VITE_ANALYZE_COMPLETION_FLOW_ENABLED=true` to enable
+- **Dev default**: on (set `VITE_ANALYZE_COMPLETION_FLOW_ENABLED=false` to disable in dev)
+- Flag logic: `artifacts/plainpath/src/lib/completionFlowConfig.ts`
+
+When flag is ON, the Analyze results panel shows 4 top-level modes instead of the flat 10-tab row:
+- **Understand** — Plain English, Source Sections, Overview, Key Terms (existing tab content)
+- **Plan** — Checklist, Required Docs, Deadlines, Risks & Notes, Action Pack, What's Missing (existing tab content, completion objects computed in background)
+- **Complete** — Safe preview stub: item counts from completion objects, progress bar, "Review in Plan mode" link. No upload controls, no broken buttons.
+- **Compile** — Safe preview stub: packet outline, item count, "coming next" disabled message. No export changes.
+
+Mode switching auto-selects a default tab and also auto-switches mode when StatPill/StartHereBanner deep-links to a tab. When flag is OFF, Analyze page is byte-for-byte identical to the pre-Phase-2A behavior.
+
+New files: `src/lib/completionFlowConfig.ts`, `src/components/AnalyzeModeNav.tsx`
+Modified: `src/pages/Analyze.tsx` (imports + handlers + mode nav + tab filtering + preview panels)
+Not touched: billing, RevenueCat, Stripe, auth, server routes, analysis generation, export behavior.
+
+### Phase 3 — Guided Completion UI (Planned)
+Step-by-step completion interface within Complete mode. One item at a time with source evidence, status tracking, upload per item, note per item.
+
+### Phase 4 — Document Action Packet Compiler (Planned)
+Full 15-section packet PDF export with three export states (incomplete/partial/final). Open items always included.
+
 ## Mobile Auth Fix (Round 2) — Completed April 2026
 
 **Root causes fixed:**

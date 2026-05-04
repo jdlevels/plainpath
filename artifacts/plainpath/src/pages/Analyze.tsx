@@ -45,6 +45,16 @@ import { findGlossaryEntry } from "@/lib/legalGlossary"
 import { addReminder, requestNotificationPermission } from "@/lib/reminderStorage"
 import { DocumentChat } from "@/components/DocumentChat"
 import { computeRiskScore, getRiskScoreResult } from "@/lib/riskScore"
+import {
+  ANALYZE_COMPLETION_FLOW_ENABLED,
+  type AnalyzeMode,
+  UNDERSTAND_TAB_IDS,
+  PLAN_TAB_IDS,
+  MODE_DEFAULT_TABS,
+} from "@/lib/completionFlowConfig"
+import { AnalyzeModeNav } from "@/components/AnalyzeModeNav"
+import { analysisResultToCompletionObjects } from "@/lib/completionParser"
+import type { CompletionObject } from "@/lib/completionTypes"
 
 function parseDeadlineDate(dateStr: string | null | undefined): Date | null {
   if (!dateStr) return null
@@ -90,6 +100,7 @@ export default function Analyze() {
   const tabListRef = useRef<HTMLDivElement>(null)
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(true)
+  const [activeMode, setActiveMode] = useState<AnalyzeMode>("understand")
 
   const checkScroll = useCallback(() => {
     const el = tabListRef.current
@@ -162,6 +173,34 @@ export default function Analyze() {
     updateRequiredDoc(id, obtained)
     updateChecklist({ data: { itemId: id, itemType: "requiredDocument", completed: obtained } })
   }
+
+  // ── Completion flow handlers ──────────────────────────────────────────
+  const completionObjects = useMemo<CompletionObject[]>(() => {
+    if (!ANALYZE_COMPLETION_FLOW_ENABLED || !analysis) return []
+    try { return analysisResultToCompletionObjects(analysis as any) } catch { return [] }
+  }, [analysis])
+
+  const handleTabChange = useCallback((tabId: string) => {
+    setActiveTab(tabId)
+    if (ANALYZE_COMPLETION_FLOW_ENABLED) {
+      if ((UNDERSTAND_TAB_IDS as readonly string[]).includes(tabId)) setActiveMode("understand")
+      else if ((PLAN_TAB_IDS as readonly string[]).includes(tabId)) setActiveMode("plan")
+    }
+  }, [])
+
+  const handleModeChange = useCallback((mode: AnalyzeMode) => {
+    setActiveMode(mode)
+    if (mode === "understand" || mode === "plan") {
+      setActiveTab(MODE_DEFAULT_TABS[mode])
+    }
+  }, [])
+
+  const visibleTabs = useMemo(() => {
+    if (!ANALYZE_COMPLETION_FLOW_ENABLED) return TABS
+    if (activeMode === "understand") return TABS.filter(t => (UNDERSTAND_TAB_IDS as readonly string[]).includes(t.id))
+    if (activeMode === "plan")       return TABS.filter(t => (PLAN_TAB_IDS as readonly string[]).includes(t.id))
+    return TABS
+  }, [activeMode])
 
   const hardDeadlines = deadlines.filter(d => d.isHard)
   const highRisks = risks.filter(r => r.severity === "high")
@@ -362,8 +401,8 @@ export default function Analyze() {
         {/* ── At-a-glance strip ───────────────────────── */}
         <div className="no-print mt-4 sm:mt-6 mb-5 sm:mb-7">
           <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar pb-0.5">
-            <StatPill label="Steps" value={actionSteps.length} onClick={() => setActiveTab("checklist")} />
-            <StatPill label="Docs" value={requiredDocuments.length} onClick={() => setActiveTab("documents")} />
+            <StatPill label="Steps" value={actionSteps.length} onClick={() => handleTabChange("checklist")} />
+            <StatPill label="Docs" value={requiredDocuments.length} onClick={() => handleTabChange("documents")} />
             <StatPill
               label="Deadlines"
               value={hardDeadlines.length}
@@ -375,15 +414,15 @@ export default function Analyze() {
                   : null
                   : null
               }
-              onClick={() => setActiveTab("deadlines")}
+              onClick={() => handleTabChange("deadlines")}
             />
-            <StatPill label="Risks" value={highRisks.length} warn={highRisks.length > 0} onClick={() => setActiveTab("risks")} />
+            <StatPill label="Risks" value={highRisks.length} warn={highRisks.length > 0} onClick={() => handleTabChange("risks")} />
             {(() => {
               const score = computeRiskScore({ risks, deadlines, overallConfidence: analysis.overallConfidence })
               const sr = getRiskScoreResult(score)
               return (
                 <button
-                  onClick={() => setActiveTab("risks")}
+                  onClick={() => handleTabChange("risks")}
                   className={`shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-bold transition-colors hover:opacity-80 ${sr.bg} ${sr.color}`}
                   title="Document Risk Score — click to view risks"
                 >
@@ -409,10 +448,21 @@ export default function Analyze() {
         </div>
 
         {/* ── Start Here banner ────────────────────────── */}
-        <StartHereBanner analysis={analysis} onTabChange={setActiveTab} />
+        <StartHereBanner analysis={analysis} onTabChange={handleTabChange} />
 
-        {/* ── Tab bar ──────────────────────────────────── */}
-        <Tabs.Root value={activeTab} onValueChange={setActiveTab}>
+        {/* ── Mode navigation (completion flow only) ────── */}
+        {ANALYZE_COMPLETION_FLOW_ENABLED && (
+          <AnalyzeModeNav
+            activeMode={activeMode}
+            onModeChange={handleModeChange}
+            totalItems={totalItems}
+            doneItems={doneItems}
+          />
+        )}
+
+        {/* ── Tab bar + content (Understand / Plan modes, or flag off) */}
+        {(!ANALYZE_COMPLETION_FLOW_ENABLED || activeMode === "understand" || activeMode === "plan") && (
+        <Tabs.Root value={activeTab} onValueChange={handleTabChange}>
           <div className="no-print flex items-center gap-0 bg-card border border-border/40 rounded-2xl shadow-sm mb-4 sm:mb-6">
             {canScrollLeft && (
               <button
@@ -425,7 +475,7 @@ export default function Analyze() {
             )}
           <div className="flex-1 overflow-hidden rounded-2xl">
           <Tabs.List ref={tabListRef} onScroll={checkScroll} className="flex overflow-x-auto lg:overflow-x-visible lg:flex-wrap hide-scrollbar gap-0.5 px-1 py-1 scroll-smooth">
-            {TABS.map((tab) => {
+            {visibleTabs.map((tab) => {
               const count = (tab as any).countKey ? (analysis as any)[(tab as any).countKey]?.length : null
               const isMissing = tab.id === "missing"
               return (
@@ -480,10 +530,10 @@ export default function Analyze() {
                 className="p-5 sm:p-8 md:p-10"
               >
 
-                {activeTab === "plain-english"   && <PlainEnglishTab analysis={analysis} onTabChange={setActiveTab} />}
+                {activeTab === "plain-english"   && <PlainEnglishTab analysis={analysis} onTabChange={handleTabChange} />}
                 {activeTab === "source-sections" && <SourceSectionsTab analysis={analysis} documentTypeHint={documentTypeHint} onOpenGuidedReview={() => setGuidedReviewCtx("source-sections")} />}
-                {activeTab === "summary"         && <SummaryTab   analysis={analysis} onTabChange={setActiveTab} onOpenGuidedReview={() => setGuidedReviewCtx("summary")} />}
-                {activeTab === "missing"         && <WhatsMissingTab analysis={analysis} onActionToggle={handleActionToggle} onDocToggle={handleDocToggle} onTabChange={setActiveTab} onOpenGuidedReview={() => setGuidedReviewCtx("missing")} />}
+                {activeTab === "summary"         && <SummaryTab   analysis={analysis} onTabChange={handleTabChange} onOpenGuidedReview={() => setGuidedReviewCtx("summary")} />}
+                {activeTab === "missing"         && <WhatsMissingTab analysis={analysis} onActionToggle={handleActionToggle} onDocToggle={handleDocToggle} onTabChange={handleTabChange} onOpenGuidedReview={() => setGuidedReviewCtx("missing")} />}
                 {activeTab === "checklist"       && <ChecklistTab  analysis={analysis} onToggle={handleActionToggle} documentTypeHint={documentTypeHint} onOpenGuidedReview={() => setGuidedReviewCtx("checklist")} />}
                 {activeTab === "documents"       && <DocumentsTab  analysis={analysis} onToggle={handleDocToggle} onOpenGuidedReview={() => setGuidedReviewCtx("documents")} />}
                 {activeTab === "deadlines"       && <DeadlinesTab  analysis={analysis} />}
@@ -495,6 +545,22 @@ export default function Analyze() {
             </AnimatePresence>
           </div>
         </Tabs.Root>
+        )}
+
+        {/* ── Complete mode preview (safe stub) ─────────── */}
+        {ANALYZE_COMPLETION_FLOW_ENABLED && activeMode === "complete" && (
+          <CompleteModePreview
+            completionObjects={completionObjects}
+            totalItems={totalItems}
+            doneItems={doneItems}
+            onGoToPlan={() => handleModeChange("plan")}
+          />
+        )}
+
+        {/* ── Compile mode preview (safe stub) ──────────── */}
+        {ANALYZE_COMPLETION_FLOW_ENABLED && activeMode === "compile" && (
+          <CompileModePreview completionObjects={completionObjects} />
+        )}
 
         {/* ── Print-only report (hidden in screen, shown in print) ── */}
         <PrintReport analysis={analysis} documentTypeHint={documentTypeHint} />
@@ -516,6 +582,178 @@ export default function Analyze() {
         )}
       </AnimatePresence>
     </div>
+  )
+}
+
+/* ────────────────────────────────────────────────
+   COMPLETE MODE PREVIEW (safe stub — Phase 2A)
+──────────────────────────────────────────────── */
+function CompleteModePreview({
+  completionObjects,
+  totalItems,
+  doneItems,
+  onGoToPlan,
+}: {
+  completionObjects: CompletionObject[]
+  totalItems: number
+  doneItems: number
+  onGoToPlan: () => void
+}) {
+  const actionCount   = completionObjects.filter(o => o.type === "action_step").length
+  const docCount      = completionObjects.filter(o => o.type === "required_document" || o.type === "missing_document").length
+  const deadlineCount = completionObjects.filter(o => o.type === "deadline").length
+  const sigCount      = completionObjects.filter(o => o.type === "signature_needed").length
+  const openCount     = completionObjects.filter(o =>
+    o.status === "not_started" || o.status === "in_progress" || o.status === "needs_help"
+  ).length
+
+  return (
+    <motion.div
+      key="complete-mode"
+      initial={{ opacity: 0, y: 5 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -5 }}
+      transition={{ duration: 0.14 }}
+      className="no-print bg-card rounded-3xl border border-border/30 shadow-lg shadow-black/[0.04] dark:shadow-black/20 overflow-hidden min-h-[400px] sm:min-h-[540px] p-6 sm:p-8 md:p-10 space-y-6"
+    >
+      <div className="flex items-start gap-3">
+        <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
+          <CheckSquare className="w-5 h-5 text-primary" />
+        </div>
+        <div>
+          <h2 className="text-xl font-display font-bold mb-0.5">Guided Completion</h2>
+          <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">One step at a time</p>
+        </div>
+      </div>
+
+      <p className="text-sm text-muted-foreground leading-relaxed">
+        PlainPath will guide you through each item one step at a time. For now, review the checklist and required documents in Plan mode.
+      </p>
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[
+          { label: "Action Items",   value: actionCount   },
+          { label: "Documents",      value: docCount      },
+          { label: "Deadlines",      value: deadlineCount },
+          { label: "Signatures",     value: sigCount      },
+        ].map(({ label, value }) => (
+          <div key={label} className="bg-secondary/40 rounded-2xl p-4">
+            <p className="text-2xl font-display font-bold tabular-nums">{value}</p>
+            <p className="text-xs text-muted-foreground font-medium mt-0.5">{label}</p>
+          </div>
+        ))}
+      </div>
+
+      {totalItems > 0 && (
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>{doneItems} of {totalItems} steps reviewed</span>
+            <span className="font-semibold">{Math.round((doneItems / totalItems) * 100)}%</span>
+          </div>
+          <div className="h-1.5 w-full rounded-full bg-secondary overflow-hidden">
+            <div
+              className="h-full rounded-full bg-primary transition-all duration-300"
+              style={{ width: `${Math.round((doneItems / totalItems) * 100)}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      {openCount > 0 && (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <AlertCircle className="w-4 h-4 text-amber-500 shrink-0" />
+          <span>{openCount} item{openCount !== 1 ? "s" : ""} remaining</span>
+        </div>
+      )}
+
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={onGoToPlan}
+        style={{ touchAction: "manipulation" }}
+        className="gap-2"
+      >
+        <ArrowLeft className="w-3.5 h-3.5" />
+        Review in Plan mode
+      </Button>
+    </motion.div>
+  )
+}
+
+/* ────────────────────────────────────────────────
+   COMPILE MODE PREVIEW (safe stub — Phase 2A)
+──────────────────────────────────────────────── */
+function CompileModePreview({
+  completionObjects,
+}: {
+  completionObjects: CompletionObject[]
+}) {
+  const totalObjects = completionObjects.length
+  const doneObjects  = completionObjects.filter(o => o.status === "completed").length
+
+  return (
+    <motion.div
+      key="compile-mode"
+      initial={{ opacity: 0, y: 5 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -5 }}
+      transition={{ duration: 0.14 }}
+      className="no-print bg-card rounded-3xl border border-border/30 shadow-lg shadow-black/[0.04] dark:shadow-black/20 overflow-hidden min-h-[400px] sm:min-h-[540px] p-6 sm:p-8 md:p-10 space-y-6"
+    >
+      <div className="flex items-start gap-3">
+        <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
+          <Package className="w-5 h-5 text-primary" />
+        </div>
+        <div>
+          <h2 className="text-xl font-display font-bold mb-0.5">Document Action Packet</h2>
+          <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">Final compiled export</p>
+        </div>
+      </div>
+
+      <p className="text-sm text-muted-foreground leading-relaxed">
+        Your final packet will include the plain-English summary, action checklist, required documents, deadlines, risks, source evidence, completed items, and open items.
+      </p>
+
+      {totalObjects > 0 && (
+        <div className="flex items-center gap-2 text-sm">
+          <span className="font-semibold tabular-nums text-foreground">{doneObjects}/{totalObjects}</span>
+          <span className="text-muted-foreground">completion items tracked</span>
+        </div>
+      )}
+
+      <div className="rounded-2xl border border-border/40 bg-secondary/20 p-5">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 mb-3">
+          Packet will include
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+          {[
+            "Cover page",
+            "Plain-English summary",
+            "Action checklist",
+            "Required documents",
+            "Signatures needed",
+            "Deadlines",
+            "Risks and penalties",
+            "Questions to ask",
+            "Source evidence",
+            "Open items",
+            "User notes",
+            "Disclaimer",
+          ].map(item => (
+            <div key={item} className="flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-primary/40 shrink-0" />
+              <span className="text-sm text-muted-foreground">{item}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-secondary/30 border border-border/30">
+        <Lock className="w-4 h-4 text-muted-foreground/50 shrink-0" />
+        <p className="text-xs text-muted-foreground">Packet compiler coming in the next phase</p>
+      </div>
+    </motion.div>
   )
 }
 
