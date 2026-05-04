@@ -317,3 +317,9 @@ id = "zTFwdT9OfaV8yXo80pkOS"
 uri = "file://docs/analyze-overhaul-plan.md"
 type = "text"
 title = "PlainPath — Analyze a Document Overhaul Plan"
+
+[[outputs]]
+id = "twfXibqc_cjTZfjn0gbEh"
+uri = "file://docs/plainpath-product-course.md"
+type = "text"
+title = "PlainPath — Official Product Course"
