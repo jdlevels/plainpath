@@ -6,30 +6,24 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
-    date: "Apr 2025",
-    title: "Clause Extractor & Annual billing",
+    date: "May 2026",
+    title: "PlainPath launch-ready cleanup",
     items: [
-      "New: Clause Extractor — pull specific clause types from any document",
-      "New: Compare Versions — diff two document versions side by side",
-      "Annual billing now available — save 20% vs monthly",
-      "30-day money-back guarantee added to all plans",
+      "PlainPath now focuses on two core tools: Analyze a Document and Contract Review",
+      "PlainPath Pro includes both tools and saved analysis history",
+      "Results now include clearer risk scores, deadlines, required documents, source sections, and action steps",
+      "Billing simplified to one plan: PlainPath Pro at $19.99/month",
+      "Removed legacy tools and old plan references from the launch experience",
     ],
   },
   {
-    date: "Mar 2025",
-    title: "Pro plan & billing",
+    date: "April 2026",
+    title: "Analyze + Contract Review polish",
     items: [
-      "Starter and Pro plans now live with Stripe billing",
-      "Subscription management portal — view plan, cancel anytime",
-    ],
-  },
-  {
-    date: "Feb 2025",
-    title: "Contract Builder & Review",
-    items: [
-      "New: Build contracts from templates — employment, NDA, freelance",
-      "New: Contract Review — line-by-line risk and red-flag analysis",
-      "Document history and saved analyses",
+      "Improved document results layout with labeled sections and structured cards",
+      "Added clearer risk and deadline summaries with severity grouping",
+      "Added source-backed section breakdowns with inline evidence",
+      "Improved save, export, and results navigation actions",
     ],
   },
 ]

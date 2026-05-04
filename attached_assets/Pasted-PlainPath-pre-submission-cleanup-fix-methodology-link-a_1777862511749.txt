@@ -1,0 +1,145 @@
+PlainPath pre-submission cleanup — fix methodology link and update What’s New modal
+
+Goal:
+Clean up two launch-facing trust and product-history issues before Apple submission.
+
+Do not redesign the app.
+Do not change billing.
+Do not change RevenueCat.
+Do not add back removed tools.
+Do not change analysis logic.
+
+--------------------------------------------------
+1. FIX “METHODOLOGY REVIEWED BY LICENSED ATTORNEYS” LINK
+--------------------------------------------------
+
+Issue:
+On the Analyze results page, clicking “Methodology reviewed by licensed attorneys” opens an error page.
+
+Fix one of the following ways:
+
+Preferred launch-safe option:
+- Remove the clickable link behavior entirely.
+- Keep it as non-clickable helper text only if the claim is accurate.
+
+If the claim is not fully verified, replace the text with safer wording:
+
+“Source-backed analysis methodology”
+
+or:
+
+“Plain-English document review methodology”
+
+Do not claim “reviewed by licensed attorneys” unless there is a real support page and verified basis for that claim.
+
+If keeping the link:
+- Create a real route/page for the methodology explanation.
+- The page must not error.
+- It must include:
+  - PlainPath explains documents in plain English
+  - outputs are AI-generated and source-backed where possible
+  - PlainPath does not provide legal advice
+  - users should review original document language before acting
+  - attorney review, if claimed, should be described accurately and conservatively
+
+Acceptance:
+- Clicking the methodology text no longer opens an error page.
+- No broken route.
+- No unsupported legal-review claim.
+
+--------------------------------------------------
+2. UPDATE “WHAT’S NEW” MODAL
+--------------------------------------------------
+
+Issue:
+The What’s New modal still mentions removed or non-launch items:
+- Clause Extractor
+- Compare Versions
+- Annual billing
+- Starter plan
+- Contract Builder
+- old Pro plan structure
+
+Update the modal to match the current launch scope only.
+
+Current launch scope:
+- Analyze a Document
+- Contract Review
+- Saved analysis history
+- PlainPath Pro only
+- $19.99/month
+- no Starter
+- no Team
+- no annual billing
+- no Clause Extractor
+- no Compare Versions
+- no Contract Builder
+- no Ask This Document
+- no Redaction
+
+Suggested What’s New content:
+
+LATEST — May 2026
+PlainPath launch-ready cleanup
+
+- PlainPath now focuses on two core tools: Analyze a Document and Contract Review.
+- PlainPath Pro includes both tools and saved analysis history.
+- Results now include clearer risk scores, deadlines, required documents, source sections, and action steps.
+- Billing has been simplified to one plan: PlainPath Pro at $19.99/month.
+- Removed legacy tools and old plan references from the launch experience.
+
+April 2026
+Analyze + Contract Review polish
+
+- Improved document results layout.
+- Added clearer risk and deadline summaries.
+- Added source-backed section breakdowns.
+- Improved save/export actions and results navigation.
+
+Remove all references to:
+- Starter
+- Team
+- annual billing
+- Clause Extractor
+- Compare Versions
+- Contract Builder
+- Redaction
+- Ask This Document
+- any removed launch tool
+
+--------------------------------------------------
+3. FINAL SEARCH CHECK
+--------------------------------------------------
+
+Search user-facing text for stale references:
+
+- Clause Extractor
+- Compare Versions
+- Contract Builder
+- Builder
+- Redact
+- Ask This Document
+- Starter
+- Team
+- Annual billing
+- higher-tier
+- upgrade to access
+- methodology reviewed by licensed attorneys
+
+Report any remaining matches and whether they are:
+- user-facing
+- comments only
+- internal constants only
+
+--------------------------------------------------
+4. FINAL QA
+--------------------------------------------------
+
+Verify:
+A. Methodology text no longer opens an error page
+B. If clickable, it routes to a real page
+C. If not verified, attorney-reviewed claim is removed/reworded
+D. What’s New modal matches current two-tool launch
+E. No removed tools appear in What’s New
+F. No old pricing appears in What’s New
+G. Build remains clean

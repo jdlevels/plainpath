@@ -89,9 +89,9 @@ export default function Methodology() {
                 <CheckCircle2 className="w-5 h-5 text-violet-500" />
               </div>
               <div>
-                <h2 className="text-base font-bold mb-2">5. Attorney methodology review</h2>
+                <h2 className="text-base font-bold mb-2">5. Quality review process</h2>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  PlainPath's analysis prompts, scoring models, and output formats have been reviewed by licensed attorneys to ensure the guidance is directionally sound and not misleading. This review does not constitute legal advice — PlainPath's outputs are informational only. For decisions with significant legal or financial consequences, always consult a qualified attorney.
+                  PlainPath's analysis prompts, scoring models, and output formats are reviewed to ensure guidance is directionally sound, source-backed, and not misleading. PlainPath's outputs are informational only and do not constitute legal advice. For decisions with significant legal or financial consequences, always consult a qualified attorney.
                 </p>
               </div>
             </div>
