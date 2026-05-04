@@ -1,0 +1,148 @@
+PlainPath — Final launch readiness pass
+
+Goal:
+Run one final launch-readiness QA pass across the public site, app shell, auth, pricing, native/iOS safety, and locked tool access.
+
+Do not rebuild.
+Do not add features.
+Do not redesign.
+Do not change Analyze a Document.
+Do not change Contract Review.
+Only fix true launch blockers, critical bugs, or tiny launch polish.
+
+Locked launch tools:
+1. Analyze a Document
+   Purpose: Complete paperwork before submission.
+2. Contract Review
+   Purpose: Understand contract terms before signing.
+
+Both tools are already approved/locked.
+
+Check 1 — Public homepage
+
+Verify:
+- Homepage loads
+- Header links work
+- “Analyze a Document” CTA works
+- “Review a Contract” CTA works
+- “Open App” works
+- Pricing link works
+- Privacy Policy link works
+- Terms link works
+- No removed tools are promoted as active launch tools
+- No Starter / Team / annual plan language appears
+- No outdated “Android coming soon” language appears if the current launch only says iOS coming soon
+- Bottom sticky CTA does not block important footer content on desktop or mobile
+
+Tiny polish allowed:
+If homepage still says “Every document situation, covered,” consider changing to:
+“Two common document situations, covered.”
+This is safer for a two-tool launch.
+
+Check 2 — Pricing
+
+Verify:
+- Only PlainPath Pro is shown
+- Price is correct
+- Analyze a Document included
+- Contract Review included
+- No Starter plan
+- No Team plan
+- No annual billing
+- Checkout path works on web
+- Native/iOS path does not show Stripe checkout UI
+
+Check 3 — Auth and access
+
+Verify:
+- Sign in works
+- Sign up works
+- Sign out redirects correctly
+- Protected app routes require auth
+- Pro/admin account can access Analyze and Contract Review
+- Non-entitled account gets correct upgrade/paywall behavior
+- No removed tool routes are reachable as active products
+
+Check 4 — Analyze locked flow
+
+Verify only, do not change:
+- Understand / Requirements / Complete / Summary modes work
+- Checklist completion works
+- Progress persists after refresh
+- Reset progress uses AlertDialog, not window.confirm
+- Mobile layout is readable
+- No print/export CTA is emphasized as the core outcome
+- Build still passes
+- Completion parser QA still passes 55/55
+
+Check 5 — Contract Review locked flow
+
+Verify only, do not change:
+- Summary → Key Clauses → Balanced Clauses → Before You Sign
+- Clause cards show:
+  - What it says
+  - Why this matters
+  - Questions to Ask Before Signing
+  - Suggested language to discuss
+- No “do not sign”
+- No “why this is a problem”
+- No “Red Flags” / “Watch Outs” user-facing labels
+- Mobile 390px has no horizontal overflow
+- Demo Contract Review matches the real product structure
+
+Check 6 — Native / iOS readiness
+
+Verify:
+- Stripe checkout hidden in native/iOS
+- Native billing / RevenueCat route intact
+- App does not expose external payment links inside native iOS flow
+- Reset dialog works in iOS-safe AlertDialog
+- No unsupported browser APIs block core mobile flow
+- Mobile web and native shell remain readable
+
+Check 7 — Security / safety
+
+Run:
+- production build
+- TypeScript check if available
+- security scan if available
+- grep for prohibited safety language:
+  - do not sign
+  - why this is a problem
+  - guaranteed safe
+  - attorney-approved
+  - you should sign
+  - you should not sign
+- grep for removed active tool references in public nav/app nav
+- grep for Starter / Team / annual user-facing pricing copy
+
+Check 8 — Protected files
+
+Confirm no unintended changes to:
+- billing
+- RevenueCat
+- Stripe
+- native billing
+- auth
+- pricing, unless only verifying
+- database
+- parser schema
+- Analyze
+- Contract Review
+- routes
+
+Return:
+1. Files changed, if any
+2. Public homepage QA result
+3. Pricing QA result
+4. Auth/access QA result
+5. Analyze QA result
+6. Contract Review QA result
+7. Native/iOS readiness result
+8. Security/safety grep result
+9. Protected files confirmation
+10. Launch blockers found
+11. Final recommendation
+
+Expected result:
+READY FOR APP STORE / LAUNCH PREP
