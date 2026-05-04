@@ -149,46 +149,44 @@ function ItemCard({
           </div>
         )}
 
-        {/* Source quote */}
-        {item.sourceQuote && (
-          <blockquote className="pl-2.5 border-l-2 border-border/50">
-            <p className="text-xs text-muted-foreground/55 leading-relaxed italic line-clamp-2">
-              {item.sourceQuote}
-            </p>
-            {(item.sourceSection ?? item.sourcePage) && (
-              <span className="inline-block mt-0.5 text-[9px] font-medium text-muted-foreground/38">
-                {[
-                  item.sourceSection,
-                  item.sourcePage != null && `p.\u00a0${item.sourcePage}`,
-                ]
-                  .filter(Boolean)
-                  .join(" · ")}
-              </span>
-            )}
-          </blockquote>
-        )}
       </div>
 
-      {/* Status label + Details button */}
-      <div className="pl-8 flex items-center justify-between">
-        <span
-          role="button"
-          tabIndex={-1}
-          onClick={() => onToggle(item.id, !done)}
-          className={`text-[10px] font-semibold cursor-pointer select-none transition-colors ${
-            done
-              ? "text-emerald-500 hover:text-emerald-600"
-              : "text-muted-foreground/38 hover:text-muted-foreground/65"
-          }`}
-        >
-          {done ? "Done" : "Mark done"}
-        </span>
+      {/* Status label + trust chip + Details button */}
+      <div className="pl-8 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <span
+            role="button"
+            tabIndex={-1}
+            onClick={() => onToggle(item.id, !done)}
+            className={`text-[10px] font-semibold cursor-pointer select-none transition-colors shrink-0 ${
+              done
+                ? "text-emerald-500 hover:text-emerald-600"
+                : "text-muted-foreground/38 hover:text-muted-foreground/65"
+            }`}
+          >
+            {done ? "Done" : "Mark done"}
+          </span>
+          <span
+            aria-label={
+              item.sourceQuote
+                ? "Source-backed recommendation"
+                : "No direct source quote — review the document manually"
+            }
+            className={`text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full leading-none border shrink-0 ${
+              item.sourceQuote
+                ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border-emerald-200/50 dark:border-emerald-900/40"
+                : "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border-amber-200/50 dark:border-amber-900/40"
+            }`}
+          >
+            {item.sourceQuote ? "Source-backed" : "Review source"}
+          </span>
+        </div>
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onOpenDetails(item) }}
           style={{ touchAction: "manipulation" }}
           aria-label={`Open details for ${item.title}`}
-          className="flex items-center gap-0.5 text-[10px] font-semibold text-primary/55 hover:text-primary transition-colors outline-none focus-visible:underline"
+          className="flex items-center gap-0.5 text-[10px] font-semibold text-primary/55 hover:text-primary transition-colors outline-none focus-visible:underline shrink-0"
         >
           Details <ChevronRight className="w-3 h-3" />
         </button>

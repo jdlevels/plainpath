@@ -13,6 +13,7 @@ import {
   Calendar,
   AlertTriangle,
   HelpCircle,
+  FileText,
   type LucideIcon,
 } from "lucide-react"
 import type {
@@ -142,7 +143,9 @@ export function ItemDetailDrawer({
   onToggle,
   onClose,
 }: ItemDetailDrawerProps) {
-  const [copied, setCopied] = useState(false)
+  const [copied, setCopied]           = useState(false)
+  const [copiedSource, setCopiedSource] = useState(false)
+  const [showFullQuote, setShowFullQuote] = useState(false)
 
   // Escape key closes drawer
   useEffect(() => {
@@ -151,8 +154,12 @@ export function ItemDetailDrawer({
     return () => document.removeEventListener("keydown", handler)
   }, [onClose])
 
-  // Reset copied state when item changes
-  useEffect(() => { setCopied(false) }, [item.id])
+  // Reset all copy / expand state when item changes
+  useEffect(() => {
+    setCopied(false)
+    setCopiedSource(false)
+    setShowFullQuote(false)
+  }, [item.id])
 
   const TypeIcon = typeIcon(item.type)
   const { color: iconColor, bg: iconBg } = typeIconColors(item.type)
@@ -169,6 +176,17 @@ export function ItemDetailDrawer({
       await navigator.clipboard.writeText(copyMessage)
       setCopied(true)
       setTimeout(() => setCopied(false), 2200)
+    } catch {
+      // clipboard unavailable — silently ignore
+    }
+  }
+
+  const handleCopySource = async () => {
+    if (!item.sourceQuote) return
+    try {
+      await navigator.clipboard.writeText(item.sourceQuote)
+      setCopiedSource(true)
+      setTimeout(() => setCopiedSource(false), 2200)
     } catch {
       // clipboard unavailable — silently ignore
     }
@@ -241,7 +259,7 @@ export function ItemDetailDrawer({
         {/* ── Content ───────────────────────────────────────────── */}
         <div className="px-5 sm:px-6 py-5 space-y-6">
 
-          {/* Priority + Done toggle row */}
+          {/* Priority + Done toggle row + source-backed chip */}
           <div className="flex items-center gap-2.5 flex-wrap">
             {displayPriority && displayPriority !== "low" && (
               <span
@@ -268,6 +286,20 @@ export function ItemDetailDrawer({
               )}
               {done ? "Done" : "Mark done"}
             </button>
+            <span
+              aria-label={
+                item.sourceQuote
+                  ? "This recommendation is backed by a source quote from your document"
+                  : "No direct source quote found — review the document manually"
+              }
+              className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full leading-none border ${
+                item.sourceQuote
+                  ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-900/40"
+                  : "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border-amber-200/60 dark:border-amber-900/40"
+              }`}
+            >
+              {item.sourceQuote ? "Source-backed" : "Needs manual review"}
+            </span>
           </div>
 
           {/* What this means */}
@@ -302,17 +334,23 @@ export function ItemDetailDrawer({
           {(item.dueDate || item.trigger) && (
             <section>
               <SectionHeading>Timing</SectionHeading>
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 {item.dueDate && (
                   <div className="flex items-center gap-2">
-                    <Clock className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />
-                    <p className="text-sm text-foreground/85">Due date: {item.dueDate}</p>
+                    <Calendar className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />
+                    <p className="text-sm text-foreground/85">
+                      <span className="font-medium">Date found:</span>{" "}
+                      {item.dueDate}
+                    </p>
                   </div>
                 )}
                 {item.trigger && (
                   <div className="flex items-center gap-2">
                     <Clock className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />
-                    <p className="text-sm text-foreground/85">Trigger: {item.trigger}</p>
+                    <p className="text-sm text-foreground/85">
+                      <span className="font-medium">Timing trigger:</span>{" "}
+                      {item.trigger}
+                    </p>
                   </div>
                 )}
               </div>
@@ -320,19 +358,66 @@ export function ItemDetailDrawer({
           )}
 
           {/* Source evidence */}
-          <section>
-            <SectionHeading>Source</SectionHeading>
+          <section aria-label="Source Evidence">
+            <div className="flex items-center justify-between mb-1">
+              <SectionHeading>Source Evidence</SectionHeading>
+              {item.sourceQuote && (
+                <button
+                  type="button"
+                  onClick={handleCopySource}
+                  aria-label="Copy source quote to clipboard"
+                  style={{ touchAction: "manipulation" }}
+                  className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold border transition-all outline-none focus-visible:ring-2 focus-visible:ring-primary/40 -mt-1 ${
+                    copiedSource
+                      ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200/60 dark:border-emerald-900/40 text-emerald-600 dark:text-emerald-400"
+                      : "bg-card border-border/50 text-muted-foreground hover:border-primary/30 hover:text-foreground"
+                  }`}
+                >
+                  {copiedSource ? (
+                    <Check className="w-2.5 h-2.5 shrink-0" />
+                  ) : (
+                    <Copy className="w-2.5 h-2.5 shrink-0" />
+                  )}
+                  {copiedSource ? "Copied!" : "Copy source"}
+                </button>
+              )}
+            </div>
+            <p className="text-[10px] text-muted-foreground/40 mb-2.5 leading-snug">
+              PlainPath found this guidance in your uploaded document.
+            </p>
             {item.sourceQuote ? (
-              <>
-                <p className="text-[10px] font-semibold text-muted-foreground/45 mb-2">
-                  Source found in your document
-                </p>
-                <blockquote className="pl-3 border-l-2 border-border/50 space-y-1">
-                  <p className="text-xs text-muted-foreground/65 leading-relaxed italic">
-                    &ldquo;{item.sourceQuote}&rdquo;
+              <div className="rounded-xl border border-border/40 bg-secondary/20 overflow-hidden">
+                <div className="flex items-center gap-1.5 px-3 pt-2.5 pb-2 border-b border-border/20">
+                  <FileText className="w-3 h-3 text-muted-foreground/35 shrink-0" />
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/35">
+                    From your document
                   </p>
+                </div>
+                <div className="px-3 py-2.5">
+                  <blockquote>
+                    <p
+                      className={`text-xs text-muted-foreground/65 leading-relaxed italic ${
+                        !showFullQuote && item.sourceQuote.length > 280
+                          ? "line-clamp-5"
+                          : ""
+                      }`}
+                    >
+                      &ldquo;{item.sourceQuote}&rdquo;
+                    </p>
+                  </blockquote>
+                  {item.sourceQuote.length > 280 && (
+                    <button
+                      type="button"
+                      onClick={() => setShowFullQuote((v) => !v)}
+                      aria-label={showFullQuote ? "Hide full source quote" : "Show full source quote"}
+                      style={{ touchAction: "manipulation" }}
+                      className="mt-2 text-[10px] font-semibold text-primary/55 hover:text-primary transition-colors outline-none focus-visible:underline"
+                    >
+                      {showFullQuote ? "Hide quote" : "Show full quote"}
+                    </button>
+                  )}
                   {(item.sourceSection || item.sourcePage != null) && (
-                    <span className="inline-block text-[9px] font-medium text-muted-foreground/38">
+                    <span className="block mt-1.5 text-[9px] font-medium text-muted-foreground/35">
                       {[
                         item.sourceSection,
                         item.sourcePage != null && `p.\u00a0${item.sourcePage}`,
@@ -341,13 +426,15 @@ export function ItemDetailDrawer({
                         .join(" · ")}
                     </span>
                   )}
-                </blockquote>
-              </>
+                </div>
+              </div>
             ) : (
-              <p className="text-xs text-muted-foreground/50 leading-relaxed italic">
-                PlainPath did not find a direct quote for this item. Review the document manually
-                before acting.
-              </p>
+              <div className="rounded-xl border border-amber-200/40 dark:border-amber-900/35 bg-amber-50/50 dark:bg-amber-950/15 px-3 py-3">
+                <p className="text-xs text-amber-700/65 dark:text-amber-400/65 leading-relaxed">
+                  PlainPath did not find a direct quote for this item. Review the uploaded document
+                  manually before acting.
+                </p>
+              </div>
             )}
           </section>
 

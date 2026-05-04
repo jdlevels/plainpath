@@ -1,0 +1,234 @@
+PlainPath — Analyze a Document Phase 3D.5: Source Evidence Visibility Polish
+
+Goal:
+Make the Phase 3C item detail drawer visibly prove why PlainPath is giving each recommendation by surfacing source evidence more clearly, consistently, and professionally.
+
+This is a UI trust-layer polish phase.
+Do not change the parser unless a tiny display-safe adapter is required.
+Do not build Complete mode yet.
+Do not build Compile / packet generation yet.
+Do not add persistence.
+Do not add notes.
+Do not add AI calls.
+
+Current approved state:
+- Phase 3A Plan Summary complete
+- Phase 3B done/not-done tracking complete
+- Phase 3C ItemDetailDrawer complete
+- Phase 3D source-backed enrichment complete
+- Commit: a27559c
+- Build: 2742 modules, 0 errors
+- QA: 55/55 passing
+- Working tree clean
+
+Do not change:
+- billing
+- RevenueCat
+- Stripe
+- native billing
+- auth
+- pricing
+- Contract Review
+- Contract Review PDF export
+- homepage
+- marketing
+- routes
+- database schema
+- migrations
+- backend routes
+
+Do not restore removed tools:
+- Redact Sensitive Info
+- Trust Check
+- Compare Versions
+- Clause Extractor
+- Builder
+- Digital Signature
+- Starter
+- Team
+- annual billing
+
+Feature flag:
+All work must remain behind:
+
+VITE_ANALYZE_COMPLETION_FLOW_ENABLED
+
+When flag is OFF:
+- old Analyze UI unchanged
+- no mode nav
+- no Plan Summary
+- no drawer
+- no source evidence polish visible
+
+Primary file expected:
+- artifacts/plainpath/src/components/analyze/ItemDetailDrawer.tsx
+
+Only touch additional Analyze UI files if required for safe prop passing.
+
+Requirements:
+
+1. Upgrade source evidence section in ItemDetailDrawer
+
+Current drawer has source evidence, but it needs to feel more premium and more obvious.
+
+Replace or enhance the existing Source Evidence area with a dedicated section:
+
+Title:
+“Source Evidence”
+
+Subtitle:
+“PlainPath found this guidance in your uploaded document.”
+
+When item.sourceQuote exists:
+- show source quote in a visually distinct evidence card
+- use quotation styling
+- include a small label: “From your document”
+- include a source icon or document icon
+- keep the quote readable but visually secondary
+- avoid huge red/alert styling
+- allow long quote text to wrap cleanly
+- if quote is very long, clamp to 4–6 lines with a “Show full quote” / “Hide quote” toggle
+
+When item.sourceQuote does not exist:
+- show fallback text:
+“PlainPath did not find a direct quote for this item. Review the uploaded document manually before acting.”
+- style as neutral/amber caution, not an error
+- do not hide the section
+
+2. Add “Copy source quote” button
+
+If sourceQuote exists:
+- add a small button: “Copy source”
+- copies only the source quote
+- show copied confirmation
+- should not interfere with existing “Copy message” button
+- deterministic, no AI
+
+If navigator.clipboard is unavailable:
+- fail gracefully
+- do not crash
+
+3. Make source-backed vs fallback status obvious
+
+In the drawer header or Source Evidence section, add a small status chip:
+
+If sourceQuote exists:
+“Source-backed”
+
+If no sourceQuote:
+“Needs manual review”
+
+Design:
+- Source-backed = calm green/emerald chip
+- Needs manual review = amber/neutral chip
+- Do not use alarming full red treatment for missing source quotes
+
+4. Show trigger/deadline source relationship
+
+If item.trigger exists, show it near the source section as:
+
+“Timing trigger: [trigger]”
+
+If item.dueDate exists, show:
+
+“Date found: [dueDate]”
+
+If both exist, show both.
+
+These should be compact metadata rows, not large cards.
+
+5. Improve section order
+
+Drawer should read in this order:
+
+1. Header
+2. What this means
+3. What to do
+4. Where to get this
+5. Deadline / trigger
+6. Source Evidence
+7. Copy request message
+
+Rationale:
+Users first understand the action, then see proof.
+
+6. Improve card-level trust hint
+
+In PlanSummaryView item cards, do not overcrowd the cards.
+
+Add one small visual hint only:
+
+If item.sourceQuote exists:
+- show tiny “Source-backed” text/chip near the Details button or source quote preview
+
+If no sourceQuote:
+- show tiny “Review source” text/chip
+
+Do not add full source quote to cards.
+The drawer is where source evidence belongs.
+
+7. Preserve existing behavior
+
+Do not break:
+- Details opens drawer
+- Done/not-done toggle from card
+- Done/not-done toggle from drawer
+- Copy message
+- Show more / show less
+- Jump buttons
+- Mode navigation
+- Tab sync
+- Complete preview
+- Compile preview
+- Feature flag behavior
+
+8. Accessibility
+
+Add/verify:
+- Copy source button has aria-label
+- Show full quote toggle has aria-label
+- source/fallback chip is screen-reader understandable
+- buttons have type="button"
+- Escape closes drawer remains intact
+
+9. QA checks
+
+Run:
+- Vite production build
+- completion parser QA
+- TypeScript check if available
+- security scan if available
+
+Manual/source verification:
+- sourceQuote present → Source Evidence section shows quote
+- sourceQuote absent → fallback section appears
+- “Source-backed” chip appears when source exists
+- “Needs manual review” appears when source is missing
+- Copy source works and does not affect Copy message
+- long quote clamp works
+- Show full quote / Hide quote works
+- trigger/dueDate display when present
+- feature flag OFF preserves old UI
+- no billing files changed
+- no RevenueCat files changed
+- no Stripe files changed
+- no native billing files changed
+- no auth files changed
+- no Contract Review files changed
+- no homepage/marketing files changed
+- no removed tool references added
+
+10. Return report
+
+Return:
+1. Files changed
+2. Source Evidence UI behavior
+3. Card-level trust hint behavior
+4. Copy source behavior
+5. Long quote handling
+6. Trigger/date display behavior
+7. Feature flag behavior
+8. Build/QA results
+9. Protected files untouched confirmation
+10. Known limitations
+11. Recommended next slice
