@@ -2053,15 +2053,22 @@ function SourceSectionsTab({ analysis, documentTypeHint, onOpenGuidedReview }: {
   const sections = analysis.sections ?? []
   const [selectedId, setSelectedId] = React.useState<string | null>(null)
   const [loadingId, setLoadingId] = React.useState<string | null>(null)
-  const [explainCache, setExplainCache] = React.useState<Record<string, SourceExplainResult>>({})
+  // value is SourceExplainResult on success, null on failure — key present means already attempted
+  const [explainCache, setExplainCache] = React.useState<Record<string, SourceExplainResult | null>>({})
+  // stable ref so fetchExplain doesn't re-create on every cache update
+  const explainCacheRef = React.useRef(explainCache)
+  explainCacheRef.current = explainCache
 
   const fetchExplain = React.useCallback(async (sectionId: string, content: string, title?: string) => {
-    if (explainCache[sectionId]) {
+    // Cache hit: key present (success or previous failure) — just select, don't refetch
+    if (sectionId in explainCacheRef.current) {
       setSelectedId(sectionId)
+      if (import.meta.env.DEV) console.debug("[SourceSections] cache hit", { sectionId, result: explainCacheRef.current[sectionId] })
       return
     }
     setSelectedId(sectionId)
     setLoadingId(sectionId)
+    if (import.meta.env.DEV) console.debug("[SourceSections] fetching", { sectionId, sectionCount: sections.length, cacheKeys: Object.keys(explainCacheRef.current) })
     try {
       const body: Record<string, string> = { sectionContent: content }
       if (title) body.sectionTitle = title
@@ -2077,19 +2084,33 @@ function SourceSectionsTab({ analysis, documentTypeHint, onOpenGuidedReview }: {
       })
       if (res.ok) {
         const data = await res.json()
-        setExplainCache((prev) => ({ ...prev, [sectionId]: data.explanation }))
+        // Null-guard: if explanation is missing or empty object, store null so fallback renders
+        const explanation: SourceExplainResult | null = data?.explanation ?? null
+        const hasAnyField = explanation && Object.values(explanation).some(v => typeof v === "string" && v.trim().length > 0)
+        if (import.meta.env.DEV) console.debug("[SourceSections] fetch ok", { sectionId, status: res.status, hasAnyField, fields: explanation ? Object.keys(explanation) : [] })
+        setExplainCache(prev => ({ ...prev, [sectionId]: hasAnyField ? explanation : null }))
+      } else {
+        if (import.meta.env.DEV) console.debug("[SourceSections] fetch non-ok", { sectionId, status: res.status })
+        // Store null so subsequent clicks use cache (no repeated failed fetches)
+        setExplainCache(prev => ({ ...prev, [sectionId]: null }))
       }
-    } catch {
+    } catch (err) {
+      if (import.meta.env.DEV) console.debug("[SourceSections] fetch error", { sectionId, err })
+      setExplainCache(prev => ({ ...prev, [sectionId]: null }))
     } finally {
-      setLoadingId(null)
+      // BUG FIX: only clear loadingId if this fetch is still the active one.
+      // Without this, completing fetch A while B is in flight clears B's loading skeleton.
+      setLoadingId(prev => prev === sectionId ? null : prev)
     }
-  }, [explainCache, documentTypeHint])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [documentTypeHint]) // stable — explainCacheRef used instead of explainCache
 
   const handleClose = React.useCallback(() => {
     setSelectedId(null)
   }, [])
 
-  const desktopResult = selectedId ? (explainCache[selectedId] ?? null) : null
+  // Use `in` so null (failed fetch) is treated as "already fetched" and shows fallback
+  const desktopResult = (selectedId !== null && selectedId in explainCache) ? explainCache[selectedId] : undefined
   const desktopLoading = loadingId !== null && loadingId === selectedId
   const desktopTitle = selectedId ? sections.find((s) => s.id === selectedId)?.title : undefined
 
@@ -2152,7 +2173,7 @@ function SourceSectionsTab({ analysis, documentTypeHint, onOpenGuidedReview }: {
             <SourceExplainPanel
               key={selectedId}
               title={desktopTitle}
-              result={desktopResult}
+              result={desktopResult ?? null}
               isLoading={desktopLoading}
               onClose={handleClose}
               showClose={true}

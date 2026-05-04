@@ -1,0 +1,272 @@
+PlainPath Analyze Results — clean up Deadlines, Risks, and overlap between tabs
+
+Goal:
+Improve the Analyze results page information hierarchy so each tab has a clear purpose and the page feels more premium, less repetitive, and easier to trust.
+
+Do not redesign the whole app.
+Do not change billing.
+Do not change RevenueCat.
+Do not reintroduce Ask This Document.
+Do not add higher-tier messaging.
+Do not change the analysis engine unless needed to map fields correctly.
+Focus on presentation, grouping, labels, and clarity.
+
+Launch scope:
+- Analyze a Document
+- Contract Review
+- PlainPath Pro only
+
+--------------------------------------------------
+1. DEADLINES TAB SHOULD FOCUS ONLY ON DATE/TIME OBLIGATIONS
+--------------------------------------------------
+
+Current issue:
+The Deadlines page mixes hard deadlines, watch dates, contract terms, payment timing, and general action items. It feels less clear than before.
+
+Update the Deadlines tab so it is organized into clear deadline-specific groups:
+
+A. Hard Deadlines — Do Not Miss
+Use for:
+- appeal windows
+- payment due dates
+- submission windows
+- cancellation notice windows
+- cure periods
+- response deadlines
+- anything where missing the date causes loss of rights, fees, denial, termination, or invalidation
+
+Color:
+Red only.
+
+B. Watch Dates — Review Carefully
+Use for:
+- effective dates
+- installment dates
+- renewal dates
+- scheduled milestones
+- review dates
+- dates that matter but are not necessarily urgent
+
+Color:
+Amber/orange.
+
+C. Reference Dates — For Context
+Use for:
+- contract term length
+- survival periods
+- general background timing
+- dates that explain the document but do not require immediate action
+
+Color:
+Blue/neutral.
+
+Do not place all date-related items under red.
+
+--------------------------------------------------
+2. EACH DEADLINE CARD SHOULD EXPLAIN THE DEADLINE CLEARLY
+--------------------------------------------------
+
+Each deadline card should show:
+
+- Deadline / date trigger
+- What it means
+- What the user must do
+- What happens if missed
+- Source quote / evidence line
+- Confidence badge if available
+
+Suggested card layout:
+
+Title:
+Invoice payment due date
+
+Trigger:
+Within fifteen (15) calendar days of each invoice date
+
+Plain English:
+You must pay each invoice within 15 calendar days after it is issued.
+
+Why it matters:
+Late payment may trigger interest, service delay, or dispute issues.
+
+Source:
+“Payment is due within fifteen (15) calendar days of invoice date…”
+
+Do not make the user infer the consequence.
+
+--------------------------------------------------
+3. FIX DEADLINE COUNT LABELING
+--------------------------------------------------
+
+Current issue:
+Top chips and tab counts can confuse hard deadlines with watch dates or risk scores.
+
+Rules:
+- Deadlines tab count should represent actual date/timing items.
+- Inside the Deadlines page, show separate counts:
+  - Hard Deadlines: X
+  - Watch Dates: X
+  - Reference Dates: X
+
+If the top chip says “5 Deadlines,” the page should clearly explain whether that means:
+- 5 hard deadlines only
+or
+- 5 total deadline/date items
+
+Preferred:
+Top chip:
+“5 Deadlines”
+
+Inside page:
+“5 hard deadlines”
+“3 watch dates”
+
+No confusing mismatch.
+
+--------------------------------------------------
+4. REDUCE OVERLAP BETWEEN OVERVIEW, WHAT’S MISSING, DEADLINES, RISKS, AND ACTION PACK
+--------------------------------------------------
+
+Each tab should have a distinct job:
+
+Overview:
+- Show a short executive snapshot
+- Show top 3–5 urgent items only
+- Do not duplicate entire Deadlines/Risks/What’s Missing lists
+
+What’s Missing:
+- Only missing info, missing documents, missing clauses, missing user input
+- Do not show normal deadlines here unless a missing deadline date makes the document incomplete
+
+Deadlines:
+- Only dates, timing windows, payment windows, notice windows, expiration/renewal/term timing
+
+Risks & Notes:
+- Only risk explanations and potential consequences
+
+Action Pack:
+- Only recommended next steps/checklist items
+
+If an item appears in multiple places, summarize it in Overview but show the full explanation only in the correct dedicated tab.
+
+--------------------------------------------------
+5. CLEAN COLOR SEVERITY RULES GLOBALLY
+--------------------------------------------------
+
+Apply consistent severity colors across all result tabs:
+
+Critical / High:
+- red
+- use only when there is serious consequence or immediate action needed
+
+Medium / Review Carefully:
+- amber/orange
+- use for important but not immediate issues
+
+Low / Informational:
+- blue/gray
+- use for context or neutral notices
+
+Confirmed / Positive:
+- green
+
+Missing / Needs Input:
+- blue or purple
+- do not use red unless the missing item blocks submission, payment, appeal, filing, or contract execution
+
+Do not overuse red.
+Red should mean “pay attention now.”
+
+--------------------------------------------------
+6. IMPROVE RISKS & NOTES EXPLANATIONS
+--------------------------------------------------
+
+Risk cards should be more explanatory.
+
+Each risk card should include:
+
+- Risk title
+- Why this is risky
+- What could happen
+- What document language triggered it
+- What to verify or do next
+- Source quote / evidence
+
+Example structure:
+
+Risk:
+Limited remedies due to liability cap and damages exclusion
+
+Why this matters:
+If something goes wrong, the provider may limit what you can recover.
+
+Potential impact:
+You may not be able to recover indirect damages or losses beyond the fees paid.
+
+Source:
+“Neither party shall be liable for indirect, incidental, consequential…”
+
+Suggested next step:
+Review whether this limitation is acceptable before signing.
+
+Do not use vague one-line risk explanations when source-backed detail exists.
+
+--------------------------------------------------
+7. COPY ISSUE SUMMARY BUTTON
+--------------------------------------------------
+
+Keep “Copy issue summary” if present.
+
+It should copy:
+- risk title
+- explanation
+- potential consequence
+- source quote
+- suggested next step
+
+No “Negotiate this.”
+No upgrade messaging.
+No higher-tier messaging.
+
+--------------------------------------------------
+8. OVERVIEW PAGE CLEANUP
+--------------------------------------------------
+
+Overview should feel like a premium executive summary.
+
+Recommended sections:
+
+1. What this document is
+2. Top things to review first
+3. Key counts:
+   - Action steps
+   - Required documents
+   - Hard deadlines
+   - Risks
+4. Needs your input
+5. Suggested next tab
+
+Avoid showing too many duplicated full cards from other tabs.
+
+If a user wants full details, they should click the relevant tab.
+
+--------------------------------------------------
+9. FINAL QA
+--------------------------------------------------
+
+Verify:
+
+A. Deadlines tab groups items into Hard Deadlines, Watch Dates, and Reference Dates
+B. Red is used only for high/critical items
+C. Medium items use amber/orange
+D. Deadline cards explain what the deadline means and what happens if missed
+E. Overview does not duplicate entire tab contents
+F. What’s Missing only shows missing/incomplete items
+G. Risks & Notes gives stronger explanations
+H. Risk cards include source/evidence
+I. Copy Issue Summary works
+J. No higher-tier messages appear
+K. No Ask This Document appears
+L. Header remains sticky across all tabs
+M. Mobile layout does not overflow
+N. Build remains clean
