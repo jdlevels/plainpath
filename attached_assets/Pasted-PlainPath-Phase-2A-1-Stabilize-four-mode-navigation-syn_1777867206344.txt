@@ -1,0 +1,75 @@
+PlainPath Phase 2A.1 — Stabilize four-mode navigation sync
+
+Goal:
+Stabilize the new feature-flagged Analyze mode navigation before building Phase 3A.
+
+Do not add new product features.
+Do not change billing.
+Do not change RevenueCat.
+Do not change Stripe.
+Do not change Apple/native billing.
+Do not change pricing.
+Do not change server routes.
+Do not change analysis generation.
+Do not change export behavior.
+Do not reintroduce removed tools.
+
+Removed tools must stay removed:
+- Redact Sensitive Info
+- Trust Check
+- Compare Versions
+- Clause Extractor
+- Builder
+- Digital Signature
+- Starter
+- Team
+- annual billing
+
+Context:
+Phase 2A introduced the feature flag:
+
+VITE_ANALYZE_COMPLETION_FLOW_ENABLED
+
+The new grouped modes are:
+- Understand
+- Plan
+- Complete
+- Compile
+
+Known limitation from Phase 2A:
+visibleTabs uses activeMode, but activeMode defaults to "understand" on initial render. If a user deep-links directly to a Plan tab such as `?tab=deadlines`, the tab can load correctly, but the active mode may still display Understand until the user interacts.
+
+Required fix:
+Make activeMode derive correctly from the active tab on:
+1. initial page load
+2. URL tab param changes
+3. StatPill clicks
+4. StartHereBanner CTA clicks
+5. manual tab clicks
+6. manual mode clicks
+
+Rules:
+- If active tab is Plain English, Source Sections, Overview, or Key Terms, activeMode should be "understand".
+- If active tab is Checklist, Required Docs, Deadlines, Risks & Notes, Action Pack, or What's Missing, activeMode should be "plan".
+- Complete and Compile modes should remain explicit mode selections only for now.
+- If the current tab does not belong to the selected mode, choose the first valid tab for that mode.
+- Do not let mode and tab state drift out of sync.
+
+Also verify:
+- Feature flag off still renders the old UI exactly as before.
+- Feature flag on renders four modes.
+- Deep-linking to each existing tab selects the correct mode.
+- StatPill and StartHereBanner navigation selects the correct mode and tab.
+- No removed tool references appear.
+- No Starter/Team/annual references appear.
+- No billing, RevenueCat, Stripe, route, pricing, or marketing files changed.
+- Vite production build still passes.
+- Completion parser QA still passes 44/44.
+
+Return:
+1. Files changed
+2. Exact mode-sync logic used
+3. Deep-link test results for each tab group
+4. QA results
+5. Confirmation no billing/native/Stripe/RevenueCat/pricing/routes/removed-tool changes occurred
+6. Recommended next slice

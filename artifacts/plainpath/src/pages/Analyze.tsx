@@ -100,7 +100,12 @@ export default function Analyze() {
   const tabListRef = useRef<HTMLDivElement>(null)
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(true)
-  const [activeMode, setActiveMode] = useState<AnalyzeMode>("understand")
+  const [activeMode, setActiveMode] = useState<AnalyzeMode>(() => {
+    if (!ANALYZE_COMPLETION_FLOW_ENABLED) return "understand"
+    const tab = tabParam ?? "plain-english"
+    if ((PLAN_TAB_IDS as readonly string[]).includes(tab)) return "plan"
+    return "understand"
+  })
 
   const checkScroll = useCallback(() => {
     const el = tabListRef.current
@@ -115,6 +120,14 @@ export default function Analyze() {
     window.addEventListener("resize", checkScroll, { passive: true })
     return () => window.removeEventListener("resize", checkScroll)
   }, [analysis, checkScroll])
+
+  // Sync activeTab + activeMode when the URL ?tab= param changes mid-session
+  useEffect(() => {
+    if (!ANALYZE_COMPLETION_FLOW_ENABLED || !tabParam) return
+    setActiveTab(tabParam)
+    if ((PLAN_TAB_IDS as readonly string[]).includes(tabParam))       setActiveMode("plan")
+    else if ((UNDERSTAND_TAB_IDS as readonly string[]).includes(tabParam)) setActiveMode("understand")
+  }, [tabParam])
 
   const scrollTabsLeft  = () => tabListRef.current?.scrollBy({ left: -200, behavior: "smooth" })
   const scrollTabsRight = () => tabListRef.current?.scrollBy({ left:  200, behavior: "smooth" })
