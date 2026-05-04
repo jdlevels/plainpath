@@ -1,0 +1,116 @@
+Proceed with tiny pre-launch polish only.
+
+Contract Review and Analyze a Document are locked. Do not modify either tool unless a launch blocker is found.
+
+Task 1 — Homepage wording polish
+
+Change the homepage section heading:
+
+“Every document situation, covered.”
+
+to:
+
+“Two common document situations, covered.”
+
+Reason:
+PlainPath is launching with two active tools:
+1. Analyze a Document
+2. Contract Review
+
+This wording is more accurate and safer for launch.
+
+Do not change the section structure.
+Do not add tools.
+Do not redesign the homepage.
+
+Task 2 — Final launch QA checklist
+
+Run a final QA pass and verify:
+
+Public site:
+- Homepage loads
+- Header nav works
+- Start a Document Plan CTA works
+- Review a Contract CTA works
+- Open App works
+- Pricing link works
+- Privacy Policy link works
+- Terms link works
+- No removed tools promoted as active launch tools
+- No Starter / Team / annual pricing language
+- No outdated Android coming soon language if launch copy is iOS-only
+- Sticky bottom CTA does not block footer content
+
+Pricing:
+- PlainPath Pro only
+- $19.99/month
+- Analyze a Document included
+- Contract Review included
+- No Starter
+- No Team
+- No annual billing
+- Stripe hidden in native/iOS path
+
+App:
+- Auth-required routes protected
+- Sign-in / sign-up routes work
+- Sign-out redirects correctly
+- Analyze opens
+- Contract Review opens
+- Demo Analyze opens
+- Demo Contract Review opens
+
+Locked tools:
+- Do not change Analyze
+- Do not change Contract Review
+- Confirm both still build clean
+
+Safety grep:
+Search for:
+- do not sign
+- why this is a problem
+- guaranteed safe
+- attorney-approved
+- you should sign
+- you should not sign
+- Red Flags
+- Watch Outs
+- red flag
+- Starter
+- Team plan
+- annual billing
+
+Expected:
+0 user-facing matches, except internal/dev comments if clearly not rendered.
+
+Build:
+- Run production build
+- Run TypeScript check if available
+- Run security scan if available
+
+Protected files:
+Confirm no unintended changes to:
+- Analyze
+- Contract Review
+- billing
+- RevenueCat
+- Stripe
+- native billing
+- auth
+- pricing
+- routes
+- database
+- parser schema
+
+Return:
+1. Files changed
+2. Exact homepage wording change
+3. Build result
+4. Safety grep results
+5. Pricing/auth/native QA result
+6. Protected files confirmation
+7. Launch blockers found
+8. Final recommendation
+
+Expected final result:
+READY FOR APP STORE / LAUNCH PREP

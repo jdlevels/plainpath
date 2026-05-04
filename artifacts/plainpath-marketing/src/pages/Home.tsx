@@ -579,7 +579,7 @@ export default function Home() {
               className="text-4xl md:text-5xl font-bold mb-4 text-foreground"
               style={{ fontFamily: "var(--font-display)" }}
             >
-              Every document situation,{" "}
+              Two common document situations,{" "}
               <span
                 className="bg-gradient-to-r from-primary via-blue-500 to-violet-500 bg-clip-text text-transparent"
                 style={{ WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}
