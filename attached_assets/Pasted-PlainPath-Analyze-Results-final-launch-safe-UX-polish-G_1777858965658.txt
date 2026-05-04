@@ -1,0 +1,135 @@
+PlainPath Analyze Results — final launch-safe UX polish
+
+Goal:
+Improve the Analyze results page so it feels more guided, premium, and easier to understand.
+
+Do not redesign the page.
+Do not change analysis logic.
+Do not add new tools.
+Do not change billing.
+Do not reintroduce Ask This Document.
+Do not change the default tab yet.
+
+Focus only on launch-safe UX improvements.
+
+--------------------------------------------------
+1. ADD “START HERE” POST-ANALYSIS BANNER
+--------------------------------------------------
+
+When analysis results load, show one contextual guidance banner near the top of the results content.
+
+The banner should recommend the most urgent next section based on available findings.
+
+Priority logic:
+1. If risks exist and severity is high/critical:
+   “Start here: High-risk issue found — review Risks & Notes first.”
+2. Else if deadlines exist:
+   “Start here: Deadline found — review Deadlines first.”
+3. Else if required documents exist:
+   “Start here: Required documents found — review Required Docs first.”
+4. Else:
+   “Start here: Review the Overview, then follow the Action Pack.”
+
+The banner should include a CTA button:
+- “Review Risks”
+- “Review Deadlines”
+- “Review Required Docs”
+- “View Overview”
+
+Clicking the CTA should open the correct tab.
+
+Keep styling premium:
+- subtle dark card
+- colored left accent based on urgency
+- small icon
+- not too tall
+- mobile responsive
+
+--------------------------------------------------
+2. ADD PROGRESS INDICATOR TO STICKY RESULT HEADER
+--------------------------------------------------
+
+In the sticky result header, add a compact progress indicator.
+
+Example:
+“0/6 steps reviewed”
+
+or:
+“Progress: 0%”
+
+The current header already shows progress, but make it more useful by tying it to Action Pack/checklist completion if available.
+
+Do not make this visually loud.
+Keep it compact near Save/Export.
+
+--------------------------------------------------
+3. SURFACE DETECTED DOCUMENT TYPE IN HEADER
+--------------------------------------------------
+
+Show detected document type near the title.
+
+Example:
+“Detected: Insurance EOB Notice”
+
+or:
+“Document type: Residential Lease”
+
+Use existing detected metadata if available.
+
+Do not invent document type if not detected.
+If unknown, hide this line.
+
+--------------------------------------------------
+4. DEADLINE URGENCY INDICATOR
+--------------------------------------------------
+
+If deadlines exist, show a small urgency marker on the Deadlines tab and/or top summary chip.
+
+Examples:
+- “1 Deadline”
+- “Due soon” if within 30 days
+- “Urgent” if within 7 days
+
+Do not exaggerate urgency.
+Only show urgency if deadline date is available.
+
+--------------------------------------------------
+5. CONFIDENCE BADGE TOOLTIP
+--------------------------------------------------
+
+The “Confirmed” / overall confidence badge should explain itself on hover/click.
+
+Tooltip copy:
+“Confidence reflects how clearly the document supports these findings. Always review the source text before acting.”
+
+Keep the tooltip short and non-legal-advice.
+
+--------------------------------------------------
+6. DO NOT CHANGE THESE YET
+--------------------------------------------------
+
+Do not:
+- Change default tab
+- Group tabs
+- Add new mobile tab architecture
+- Move Export into a new primary flow
+- Add new AI behavior
+- Bring back Ask This Document
+- Add higher-tier messaging
+- Add locked states
+
+--------------------------------------------------
+7. FINAL QA
+--------------------------------------------------
+
+Verify:
+- Start Here banner appears after analysis
+- Banner CTA opens the correct tab
+- Header remains sticky
+- Header progress text is visible and not crowded
+- Document type appears only when detected
+- Deadline urgency appears only when deadline exists
+- Confidence tooltip works
+- No higher-tier messages appear
+- Ask This Document remains hidden
+- Mobile layout does not overflow

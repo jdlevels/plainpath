@@ -47,6 +47,21 @@ import { addReminder, requestNotificationPermission } from "@/lib/reminderStorag
 import { DocumentChat } from "@/components/DocumentChat"
 import { computeRiskScore, getRiskScoreResult } from "@/lib/riskScore"
 
+function parseDeadlineDate(dateStr: string | null | undefined): Date | null {
+  if (!dateStr) return null
+  const d = new Date(dateStr)
+  return isNaN(d.getTime()) ? null : d
+}
+
+function getDeadlineUrgency(dateStr: string | null | undefined): "urgent" | "due-soon" | null {
+  const d = parseDeadlineDate(dateStr)
+  if (!d) return null
+  const diffDays = Math.ceil((d.getTime() - Date.now()) / 86_400_000)
+  if (diffDays <= 7)  return "urgent"
+  if (diffDays <= 30) return "due-soon"
+  return null
+}
+
 const TABS = [
   { id: "plain-english",   label: "Plain English",   icon: BookOpen                                    },
   { id: "source-sections", label: "Source Sections", icon: AlignLeft                                   },
@@ -259,7 +274,11 @@ export default function Analyze() {
                     {documentTypeHint}
                   </span>
                 )}
-                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">{analysis.documentType}</span>
+                {analysis.documentType && (
+                  <span className="text-[10px] font-medium text-muted-foreground/50">
+                    Detected: {analysis.documentType}
+                  </span>
+                )}
               </div>
               <h1 className="text-base font-bold truncate text-foreground leading-tight">{analysis.title}</h1>
               {getAttorneyCostEstimate(analysis.documentType) && (
@@ -270,20 +289,20 @@ export default function Analyze() {
             </div>
 
             <div className="flex items-center gap-2 sm:gap-4 shrink-0">
-              <div className="hidden sm:block text-right">
-                <div className="flex items-center justify-between gap-3 mb-1.5">
-                  <div className="flex items-center gap-1.5">
-                    <TrendingUp className="w-3 h-3 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground font-medium">Progress</span>
+              {totalItems > 0 && (
+                <>
+                  <div className="hidden sm:block text-right">
+                    <span className="text-xs text-muted-foreground font-medium block mb-1 whitespace-nowrap">
+                      {doneItems}/{totalItems} steps reviewed
+                    </span>
+                    <Progress value={progress} className="h-1.5 w-28" />
                   </div>
-                  <span className="text-xs font-bold text-foreground tabular-nums">{progress}%</span>
-                </div>
-                <Progress value={progress} className="h-1.5 w-32" />
-              </div>
-              <div className="sm:hidden flex items-center gap-1.5">
-                <TrendingUp className="w-3 h-3 text-muted-foreground" />
-                <span className="text-xs font-bold text-foreground tabular-nums">{progress}%</span>
-              </div>
+                  <div className="sm:hidden flex items-center gap-1">
+                    <TrendingUp className="w-3 h-3 text-muted-foreground/60" />
+                    <span className="text-xs font-semibold text-foreground/70 tabular-nums">{doneItems}/{totalItems}</span>
+                  </div>
+                </>
+              )}
               <Button
                 variant="outline"
                 size="sm"
@@ -344,7 +363,19 @@ export default function Analyze() {
           <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar pb-0.5">
             <StatPill label="Steps" value={actionSteps.length} onClick={() => setActiveTab("checklist")} />
             <StatPill label="Docs" value={requiredDocuments.length} onClick={() => setActiveTab("documents")} />
-            <StatPill label="Deadlines" value={hardDeadlines.length} warn={hardDeadlines.length > 0} onClick={() => setActiveTab("deadlines")} />
+            <StatPill
+              label="Deadlines"
+              value={hardDeadlines.length}
+              warn={hardDeadlines.length > 0}
+              urgencyLabel={
+                hardDeadlines.length > 0
+                  ? hardDeadlines.some(d => getDeadlineUrgency(d.date) === "urgent")    ? "urgent"
+                  : hardDeadlines.some(d => getDeadlineUrgency(d.date) === "due-soon")  ? "due-soon"
+                  : null
+                  : null
+              }
+              onClick={() => setActiveTab("deadlines")}
+            />
             <StatPill label="Risks" value={highRisks.length} warn={highRisks.length > 0} onClick={() => setActiveTab("risks")} />
             {(() => {
               const score = computeRiskScore({ risks, deadlines, overallConfidence: analysis.overallConfidence })
@@ -360,7 +391,9 @@ export default function Analyze() {
               )
             })()}
             <div className="flex items-center gap-1.5 shrink-0 ml-auto pl-2">
-              <ConfidenceBadge level={analysis.overallConfidence} />
+              <span title="Confidence reflects how clearly the document supports these findings. Always review the source text before acting.">
+                <ConfidenceBadge level={analysis.overallConfidence} />
+              </span>
               <span className="text-xs text-muted-foreground hidden sm:inline">overall confidence</span>
             </div>
           </div>
@@ -373,6 +406,9 @@ export default function Analyze() {
             Methodology reviewed by licensed attorneys
           </a>
         </div>
+
+        {/* ── Start Here banner ────────────────────────── */}
+        <StartHereBanner analysis={analysis} onTabChange={setActiveTab} />
 
         {/* ── Tab bar ──────────────────────────────────── */}
         <Tabs.Root value={activeTab} onValueChange={setActiveTab}>
@@ -503,7 +539,7 @@ function getAttorneyCostEstimate(docType: string | null | undefined): string | n
   return "$200–600"
 }
 
-function StatPill({ label, value, warn = false, onClick }: { label: string; value: number; warn?: boolean; onClick?: () => void }) {
+function StatPill({ label, value, warn = false, urgencyLabel, onClick }: { label: string; value: number; warn?: boolean; urgencyLabel?: "urgent" | "due-soon" | null; onClick?: () => void }) {
   return (
     <button
       onClick={onClick}
@@ -515,8 +551,85 @@ function StatPill({ label, value, warn = false, onClick }: { label: string; valu
       }`}
     >
       <span className="text-lg font-bold font-display tabular-nums">{value}</span>
-      <span className={`text-xs font-medium ${warn && value > 0 ? "text-red-600/70 dark:text-red-400/80" : "text-muted-foreground"}`}>{label}</span>
+      <div className="flex flex-col items-start">
+        <span className={`text-xs font-medium ${warn && value > 0 ? "text-red-600/70 dark:text-red-400/80" : "text-muted-foreground"}`}>{label}</span>
+        {urgencyLabel && value > 0 && (
+          <span className={`text-[9px] font-bold uppercase tracking-wider leading-none ${urgencyLabel === "urgent" ? "text-red-600 dark:text-red-400" : "text-amber-600 dark:text-amber-400"}`}>
+            {urgencyLabel === "urgent" ? "Urgent" : "Due soon"}
+          </span>
+        )}
+      </div>
     </button>
+  )
+}
+
+/* ────────────────────────────────────────────────
+   START HERE BANNER
+──────────────────────────────────────────────── */
+function StartHereBanner({ analysis, onTabChange }: { analysis: DocumentAnalysis; onTabChange: (t: string) => void }) {
+  const [dismissed, setDismissed] = useState(false)
+  if (dismissed) return null
+
+  const highRisks     = (analysis.risks ?? []).filter(r => r.severity === "high")
+  const hardDeadlines = (analysis.deadlines ?? []).filter(d => d.isHard)
+  const requiredDocs  = (analysis.requiredDocuments ?? []).filter(d => d.required && !d.obtained)
+
+  let accent: string, iconColor: string, message: string, cta: string, tab: string
+  let BannerIcon: React.ElementType
+
+  if (highRisks.length > 0) {
+    accent    = "border-red-400/60 bg-red-50/60 dark:bg-red-950/20"
+    BannerIcon = AlertTriangle
+    iconColor = "text-red-500 dark:text-red-400"
+    message   = `${highRisks.length} high-risk issue${highRisks.length !== 1 ? "s" : ""} found — review Risks & Notes first.`
+    cta       = "Review Risks"
+    tab       = "risks"
+  } else if (hardDeadlines.length > 0) {
+    accent    = "border-amber-400/60 bg-amber-50/60 dark:bg-amber-950/20"
+    BannerIcon = Calendar
+    iconColor = "text-amber-500 dark:text-amber-400"
+    message   = `${hardDeadlines.length} hard deadline${hardDeadlines.length !== 1 ? "s" : ""} found — review Deadlines first.`
+    cta       = "Review Deadlines"
+    tab       = "deadlines"
+  } else if (requiredDocs.length > 0) {
+    accent    = "border-blue-400/60 bg-blue-50/60 dark:bg-blue-950/20"
+    BannerIcon = ShieldCheck
+    iconColor = "text-blue-500 dark:text-blue-400"
+    message   = `${requiredDocs.length} required document${requiredDocs.length !== 1 ? "s" : ""} found — review Required Docs first.`
+    cta       = "Review Required Docs"
+    tab       = "documents"
+  } else {
+    accent    = "border-emerald-400/60 bg-emerald-50/60 dark:bg-emerald-950/20"
+    BannerIcon = CheckCircle2
+    iconColor = "text-emerald-600 dark:text-emerald-400"
+    message   = "Review the Overview, then follow the Action Pack."
+    cta       = "View Overview"
+    tab       = "summary"
+  }
+
+  return (
+    <div className={`no-print flex items-center gap-3 border border-l-[3px] rounded-xl px-4 py-3 mb-4 ${accent}`}>
+      <BannerIcon className={`w-4 h-4 shrink-0 ${iconColor}`} />
+      <div className="flex-1 min-w-0">
+        <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50 block leading-none mb-0.5">Start here</span>
+        <p className="text-sm font-semibold text-foreground leading-snug">{message}</p>
+      </div>
+      <button
+        onClick={() => onTabChange(tab)}
+        style={{ touchAction: "manipulation" }}
+        className="shrink-0 text-xs font-semibold px-3 py-1.5 rounded-lg bg-foreground/[0.07] hover:bg-foreground/[0.11] text-foreground transition-colors whitespace-nowrap"
+      >
+        {cta} →
+      </button>
+      <button
+        onClick={() => setDismissed(true)}
+        style={{ touchAction: "manipulation" }}
+        className="shrink-0 text-muted-foreground/40 hover:text-muted-foreground/70 transition-colors"
+        aria-label="Dismiss"
+      >
+        <X className="w-3.5 h-3.5" />
+      </button>
+    </div>
   )
 }
 
