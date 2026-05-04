@@ -12,7 +12,10 @@
   "pnpm": {
     "onlyBuiltDependencies": [
       "better-sqlite3"
-    ]
+    ],
+    "overrides": {
+      "@clerk/backend": "3.2.14"
+    }
   },
   "devDependencies": {
     "prettier": "^3.8.1",

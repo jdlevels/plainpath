@@ -1,0 +1,132 @@
+PlainPath homepage product-course alignment pass
+
+Goal:
+Update the marketing homepage messaging so PlainPath is positioned as a document completion system, not just a document explainer or contract review tool.
+
+Do not change:
+- billing
+- RevenueCat
+- Stripe
+- Apple/native billing
+- authentication
+- app routes
+- Analyze page
+- Contract Review page
+- feature flags
+- pricing logic
+- backend routes
+
+Do not restore removed tools:
+- Redact Sensitive Info
+- Trust Check
+- Compare Versions
+- Clause Extractor
+- Builder
+- Digital Signature
+- Starter
+- Team
+- annual billing
+
+Required homepage updates:
+
+1. Hero headline
+
+Replace the current hero headline:
+
+“Understand any document. Review any contract.”
+
+With:
+
+“Understand it.
+Complete it.
+Submit it.”
+
+Use the same premium visual treatment and gradient emphasis.
+
+2. Hero subheadline
+
+Replace current subheadline with:
+
+“PlainPath turns confusing paperwork into a guided action plan with deadlines, required documents, signatures, risks, and a ready-to-use packet.”
+
+3. CTA labels
+
+Update primary CTA:
+“Analyze a Document”
+to:
+“Start a Document Plan”
+
+Keep secondary CTA:
+“Review a Contract”
+
+Do not change the destination routes unless the current route is wrong.
+
+4. Small pricing/support copy
+
+Keep:
+- PlainPath Pro
+- $19.99/month
+- Cancel anytime
+
+Remove or avoid any Starter, Team, annual, or removed-tool references.
+
+5. Top badge
+
+Change:
+“WEB APP — IOS & ANDROID COMING SOON”
+
+To:
+“WEB APP — IOS COMING SOON”
+
+Only mention Android if Android submission is actually in scope.
+
+6. Proof cards
+
+Update the four proof cards to:
+
+Card 1:
+Title: “Guided action plan”
+Copy: “PlainPath surfaces deadlines, signatures, missing documents, risks, and next steps.”
+
+Card 2:
+Title: “Temporary processing”
+Copy: “Files are processed only to return your results.”
+
+Card 3:
+Title: “Not used for AI training”
+Copy: “Your documents are not retained, shared, or used to train AI models.”
+Important: only use this wording if it matches the current privacy policy and provider terms. If not verified, use: “Privacy-minded document review” and softer copy.
+
+Card 4:
+Title: “Ready-to-use packet”
+Copy: “Compile your summary, checklist, risks, source evidence, and open items.”
+
+7. Phone mockup
+
+Update the phone mockup so it reflects document completion, not only contract risk scoring.
+
+Suggested mockup:
+- Title: “School Enrollment Packet”
+- Metadata: “7 actions • 4 documents • 2 signatures”
+- Highlight: “Next step: Gather proof of residency”
+- Where to get it: “Utility bill, lease, mortgage statement, or school district portal”
+- Deadline: “Submit before enrollment cutoff”
+
+Keep the visual style premium and dark.
+
+8. QA
+
+Verify:
+- homepage loads
+- mobile hero still looks clean
+- CTAs still route correctly
+- no removed tools appear
+- no Starter/Team/annual copy appears
+- no unsupported privacy/security claim appears
+- no billing/native/Stripe/RevenueCat files changed
+
+Return:
+- files changed
+- before/after copy summary
+- screenshot or visual description
+- QA results
