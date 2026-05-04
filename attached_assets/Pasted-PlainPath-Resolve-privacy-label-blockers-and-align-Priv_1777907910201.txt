@@ -1,0 +1,139 @@
+PlainPath — Resolve privacy label blockers and align Privacy Policy
+
+Goal:
+Resolve the blocking App Store privacy nutrition label items before submission.
+
+Do not change product features.
+Do not change Analyze.
+Do not change Contract Review.
+Do not change billing, RevenueCat, Stripe, auth, pricing, routes, database schema, parser schema, or app behavior.
+
+Allowed changes:
+- Privacy Policy wording only, if needed
+- Documentation only
+
+Use:
+docs/app-store-privacy-nutrition-labels.md
+current Privacy Policy page/content
+current database/schema/code evidence
+
+Tasks:
+
+1. Confirm document retention precisely
+
+Determine whether PlainPath stores:
+- original uploaded document file/binary
+- extracted document text
+- generated analysis results
+- document metadata
+- user analysis history
+
+For each, state:
+- stored or not stored
+- where stored
+- linked to user or not
+- purpose
+- whether it appears in user history
+
+Important:
+If original uploaded files are not stored but extracted text/results are stored, say that clearly.
+
+2. Privacy Policy alignment
+
+If the Privacy Policy currently implies that no document content is retained, update it to be accurate.
+
+Use clear language like:
+
+“PlainPath does not sell your documents or use them to train AI models. Uploaded files are processed to provide your results. PlainPath may store extracted document text, document metadata, and generated analysis results when needed to provide saved analysis history, account access, and app functionality.”
+
+Also include:
+
+“You can contact support to request deletion of account-related analysis data, subject to legal, security, and operational retention requirements.”
+
+Do not overclaim.
+Do not say original uploaded files are deleted unless confirmed.
+Do not say no document content is stored if extracted text/results are stored.
+
+3. Confirm usage events
+
+Inspect `/api/events` and any analytics storage.
+
+Determine:
+- Are events stored?
+- Is Clerk user ID stored with events?
+- Are events linked to a user account?
+- What is the purpose? App functionality, diagnostics, analytics, or security?
+
+Then recommend the App Store privacy label:
+- Usage Data linked to user: Yes/No
+
+4. Confirm Sentry
+
+Check environment/secrets/code paths.
+
+Determine:
+- Is `VITE_SENTRY_DSN` set in production?
+- Is it set in iOS/native build?
+- Is Sentry active or dormant?
+- If active, does it send user identifiers?
+
+Then recommend:
+- Crash Data / Diagnostics collected: Yes/No
+- Linked to user: Yes/No/Unknown
+- Used for tracking: No, unless evidence says otherwise
+
+5. Confirm tracking
+
+Re-run search for:
+- IDFA
+- AppTrackingTransparency
+- ATT
+- advertisingIdentifier
+- ad SDKs
+- tracking SDKs
+- Facebook Pixel
+- Google Ads
+- TikTok Pixel
+- cross-app tracking
+
+Expected:
+Tracking = None.
+
+6. Create/update documentation
+
+Update:
+
+docs/app-store-privacy-nutrition-labels.md
+
+Add final owner-ready App Store Connect selections:
+
+A. Data Linked to You
+B. Data Not Linked to You
+C. Data Not Collected
+D. Data Used to Track You
+
+Include purpose for each:
+- App Functionality
+- Account Management
+- Payment / Subscription Access
+- Analytics
+- Diagnostics
+
+7. If Privacy Policy changes are needed
+
+Update the Privacy Policy page/content only.
+
+Return:
+- files changed
+- whether Privacy Policy was updated
+- exact privacy policy wording changed
+- document retention findings
+- usage event findings
+- Sentry findings
+- final App Store privacy label selections
+- remaining owner confirmations
+- build result if any code/content changed
+- final recommendation
+
+Expected final status:
+PRIVACY LABELS READY FOR APP STORE CONNECT ENTRY

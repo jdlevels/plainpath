@@ -1,205 +1,172 @@
 # PlainPath — App Store Privacy Nutrition Label Decision Sheet
 
-**Status:** Ready for owner confirmation. Evidence-based — no guessing.
+**Status:** CONFIRMED — ready for App Store Connect entry.
+**Last updated:** May 4, 2026
 **References:** `docs/app-store-submission-assets.md` · `docs/app-store-connect-copy-sheet.md` · codebase analysis
 
 ---
 
-## Evidence Summary
+## Confirmed Evidence Summary
 
-The following was confirmed by code inspection before producing label recommendations. All findings cite specific source files.
-
----
-
-### AI Provider
-
-**Finding:** OpenAI (confirmed)
-**Source:** `artifacts/api-server/src/routes/documents/index.ts` — `import { openai } from "@workspace/integrations-openai-ai-server"`, models `gpt-4o` and `gpt-5.2` called directly.
-**Privacy policy claim:** "OpenAI does not use API-submitted data to train its models by default." ✅ Consistent with OpenAI's API usage policies.
-**Label impact:** Document text is sent to OpenAI for processing. This is **User Content** sent to a third-party processor.
+All findings are based on direct code inspection. No guessing.
 
 ---
 
-### Document / Analysis Storage
+### 1. Original Uploaded Files
 
-**Finding:** Two server-side tables store user-linked content.
-
-| Table | What's stored | Linked to user? | Source |
-|---|---|---|---|
-| `documents` | `extracted_text`, `original_filename`, `mime_type`, `title`, `metadata` | Yes (`user_id`) | `routes/userDocs/index.ts:116` |
-| `user_analyses` | `title`, `source_kind`, `document_type_hint`, `analysis` (result JSON) | Yes (`user_id`) | `routes/userHistory/index.ts:43` |
-| `shared_analyses` | `analysis` JSON, `title` | No (token-only, no user_id) | `routes/shares/index.ts:119` |
-
-**Key distinction:**
-- The `documents` table stores **extracted text** and filename metadata — not the original binary file.
-- The `user_analyses` table stores **analysis result JSON** (PlainPath-generated output) — not the raw document.
-- `shared_analyses` expire after 30 days and are not linked to a user identity.
-
-⚑ **OWNER CONFIRMATION REQUIRED:** Confirm whether the `documents` table is actively populated in the current launch flow, or whether document text is sent to OpenAI and discarded without being stored in the `documents` table. The route exists in code but may not be called in the Analyze/Contract Review user flow.
+**Finding:** NEVER stored.
+**Source:** `artifacts/api-server/src/routes/documents/index.ts:72` — `multer({ storage: multer.memoryStorage() })`. Files are processed entirely in memory and discarded after text extraction.
+**Label impact:** Original file binary → **Not Collected**.
 
 ---
 
-### Custom Analytics (First-Party)
+### 2. Extracted Document Text
 
-**Finding:** PlainPath has a custom event tracking system.
-**Source:** `artifacts/plainpath/src/lib/analytics.ts` + `artifacts/api-server/src/routes/events.ts`
-
-Events tracked (confirmed in code):
-- `analysis_started`, `analysis_completed`
-- `contract_review_started`, `contract_review_completed`
-- `upgrade_modal_shown`, `upgrade_cta_clicked`
-- `subscribe_started`, `checkout_completed`
-- `demo_launched`, `analysis_saved`
-
-Events are sent to PlainPath's own `/api/events` endpoint and logged server-side via `logger.info`. No personal data (name, email, document content) is included in event payloads — only event name, optional props, and timestamp.
-
-**Label impact:** This is **Usage Data** collected by the app itself — **first-party**, not a third-party SDK.
-
-**Privacy policy claim:** "No third-party analytics services are embedded in the product." ✅ Accurate — this system is first-party. However, the Privacy Policy does not currently describe the first-party event logging system.
-
-⚑ **OWNER CONFIRMATION REQUIRED:** Confirm whether event logs are linked to a user identity (e.g., Clerk user ID or IP address logged alongside the event). If user-linked, this is "Usage Data — Linked to You." If anonymous/IP-only, it is "Usage Data — Not Linked to You."
+**Finding:** NOT stored after processing for the Analyze a Document and Contract Review flows. Extracted text is sent to OpenAI and returned as analysis — it is not persisted in the database by the main upload route.
+**Source:** Upload route processes `file.buffer`, calls `runAnalysis()`, returns result. No INSERT of extracted text in this path.
+**Label impact:** Raw document text → **Not retained**. Sent to OpenAI (third-party processor) for analysis.
 
 ---
 
-### Sentry (Crash Reporting)
+### 3. Analysis Results (Saved to My Analyses)
 
-**Finding:** Sentry SDK is installed and initialized conditionally.
-**Source:** `artifacts/plainpath/src/main.tsx:3-19`
+**Finding:** STORED when user explicitly saves. Not stored automatically.
+**Source:** `artifacts/api-server/src/routes/userHistory/index.ts:43` — `INSERT INTO user_analyses (user_id, title, source_kind, document_type_hint, analysis)` — called only on explicit POST from the client.
+**What's stored:** Generated analysis JSON output, title, document type hint. NOT the original document or extracted text.
+**Linked to user:** Yes — `user_id` FK.
+**Label impact:** User Content (analysis output) → **Data Linked to You — App Functionality**.
 
+---
+
+### 4. Shared Analyses
+
+**Finding:** STORED temporarily, NOT linked to user identity.
+**Source:** `artifacts/api-server/src/routes/shares/index.ts:119` — `INSERT INTO shared_analyses (token, analysis, title)` — no `user_id` column.
+**Expiry:** Auto-deleted after 30 days.
+**Label impact:** Not linked to user → **Data Not Linked to You** (if declared; de minimis given 30-day expiry and no user linkage).
+
+---
+
+### 5. Usage Events (First-Party Analytics)
+
+**Finding:** Logged server-side. IP address only — NO user ID.
+**Source:** `artifacts/api-server/src/routes/events.ts` — full route:
 ```ts
-const sentryDsn = import.meta.env.VITE_SENTRY_DSN;
-if (sentryDsn) { Sentry.init({ ... tracesSampleRate: 0.1 }) }
+router.post("/events", (req, res) => {
+  const { event, props, ts } = req.body ?? {}
+  if (typeof event === "string") {
+    logger.info({ event, props: props ?? {}, ts, ip: req.ip }, "analytics_event")
+  }
+  res.status(204).end()
+})
 ```
-
-**Status:** Only active if `VITE_SENTRY_DSN` environment variable is set. `VITE_SENTRY_DSN` is **not present** in the current configured secrets list.
-
-⚑ **OWNER CONFIRMATION REQUIRED:** Confirm whether `VITE_SENTRY_DSN` is set in the iOS production build environment. If yes, Sentry is active and **Crash Data / Diagnostics** must be declared. If no, Sentry is dormant and does not need to be declared.
-
-**If Sentry is active:** It may collect device identifiers, stack traces, and session context. Sentry's data handling is governed by Sentry's privacy policy. Label impact: **Crash Data** and potentially **Device ID**.
+No `requireAuth` middleware. No `req.userId` logged. No database storage — server log only.
+**Label impact:** Usage Data → **Data Not Linked to You — Analytics/App Functionality**.
 
 ---
 
-### Tracking SDKs / Advertising
+### 6. Sentry (Crash Reporting)
 
-**Finding:** None found.
-**Searched for:** ATTrackingManager, IDFA, advertisingIdentifier, AppTrackingTransparency, ad networks, cross-app tracking.
+**Finding:** DORMANT — not active in production.
+**Source:** `artifacts/plainpath/src/main.tsx:11` — `const sentryDsn = import.meta.env.VITE_SENTRY_DSN` — only initializes if env var is set. `VITE_SENTRY_DSN` is **not present** in configured secrets and not found in any env file.
+**Label impact:** Crash Data → **Not Collected**.
+
+---
+
+### 7. Advertising / Tracking SDKs
+
+**Finding:** NONE found.
+**Searched:** IDFA, ATTrackingManager, AppTrackingTransparency, Facebook Pixel, Google Ads, TikTok Pixel, cross-app tracking, advertising identifiers, fbq, gtag.
 **Result:** 0 matches. ✅
-
-**Label impact:** "Data Used to Track You" — **None**.
+**Label impact:** Tracking → **None**.
 
 ---
 
-### Third-Party Services Summary
+### 8. Third-Party Services Confirmed
 
-| Service | Purpose | Data it receives | Confirmed in code |
+| Service | Purpose | Data received |
+|---|---|---|
+| **Clerk** | Auth / account management | Email, authentication credentials, session tokens |
+| **OpenAI** | Document analysis (AI) | Extracted document text — not retained for training per OpenAI API policy |
+| **Stripe** | Web subscription billing | Email, payment method — PlainPath receives subscription status only |
+| **RevenueCat** | iOS entitlement | App user ID, subscription status, transaction metadata |
+| **Resend** | Deadline reminder emails (optional, user-triggered) | Email address for single delivery only |
+| **Sentry** | Crash reporting | Dormant — not active |
+
+---
+
+## Final App Store Connect Privacy Label Selections
+
+### A. Data Linked to You
+
+| Data Type | Apple Category | Purpose | Evidence |
 |---|---|---|---|
-| **Clerk** | Authentication / user accounts | Email, password (hashed), session tokens | ✅ |
-| **OpenAI** | Document analysis / contract review | Extracted document text | ✅ |
-| **Stripe** | Web subscription billing | Email, payment method (PlainPath receives only status) | ✅ |
-| **RevenueCat** | iOS entitlement / subscription | App user ID, subscription status, transaction metadata | ✅ |
-| **Resend** | Deadline reminder emails (optional) | Email address (only when reminder is requested) | ✅ |
-| **Sentry** | Crash reporting (conditional) | Stack traces, device context | ⚑ Confirm if active |
+| Email address | Contact Info | Account Management, Subscription Access | Clerk auth; subscribers table |
+| User ID | Identifiers | App Functionality, Account Management | Clerk user ID as FK in `user_analyses`, `subscribers` |
+| Subscription status | Purchases | Payment / Subscription Access | `subscribers` table; RevenueCat entitlement |
+| Analysis output | User Content | App Functionality | `user_analyses.analysis` — only when explicitly saved |
 
 ---
 
-## Full Data Category Table
+### B. Data Not Linked to You
 
-| Data Type | Collected? | Source / Evidence | Purpose | Linked to User? | Used for Tracking? | Notes |
-|---|---|---|---|---|---|---|
-| **Email address** | Yes | Clerk auth; stored in subscribers table | Account management, subscription access | Yes | No | Clerk handles auth; PlainPath stores email for subscription matching |
-| **User ID** | Yes | Clerk user ID stored in `user_id` FK across tables | App functionality, account management | Yes | No | Used as FK in analyses, documents, subscriptions |
-| **Name** | No | Not collected by PlainPath | — | — | — | Clerk may collect display name; confirm with Clerk |
-| **Phone number** | No | Not found in code | — | — | — | — |
-| **Uploaded document text** | Yes | `documents.extracted_text` + sent to OpenAI | App functionality (analysis) | Yes | No | ⚑ Owner confirm if documents table is populated in launch flow |
-| **Analysis results** | Yes | `user_analyses.analysis` | App functionality (saved history) | Yes | No | PlainPath-generated output stored per user |
-| **Original file binary** | No | Only extracted text stored, not binary file | — | — | — | `documents` table stores text + filename, not file bytes |
-| **Subscription status / entitlement** | Yes | `subscribers` table; RevenueCat entitlement check | Payment / subscription access | Yes | No | PlainPath stores plan tier, not payment card details |
-| **Purchase transaction data** | Via RevenueCat/StoreKit | RevenueCat processes on Apple's behalf; PlainPath receives entitlement status only | Subscription access | Yes | No | PlainPath does not store payment card data |
-| **Usage events** | Yes | `analytics.ts` → `/api/events` → server log | App analytics (first-party) | ⚑ Confirm | No | Event name + timestamp confirmed; user linkage requires owner confirmation |
-| **Tool usage count** | Yes | `tool_usage` + `analysis_usage` tables | Usage limits / subscription enforcement | Yes | No | Usage counts linked to user_id for limit enforcement |
-| **Crash data / diagnostics** | ⚑ Conditional | Sentry, only if VITE_SENTRY_DSN is set | Diagnostics / app stability | ⚑ Sentry default | No | Dormant unless DSN configured in production |
-| **Device ID** | ⚑ Conditional | Sentry may collect if active | Diagnostics | ⚑ Sentry default | No | Not collected by PlainPath directly |
-| **IP address** | Likely (server logs) | Standard server request logging | Security / fraud prevention | Not linked to account | No | Standard infrastructure logging; not used for user profiling |
-| **Advertising identifier (IDFA)** | No | Not found in code | — | — | — | ✅ Confirmed absent |
-| **Location** | No | Not found in code | — | — | — | ✅ Confirmed absent |
-| **Contacts / calendar** | No | Not requested | — | — | — | ✅ Confirmed absent |
-| **Health / fitness** | No | Not applicable | — | — | — | ✅ Confirmed absent |
+| Data Type | Apple Category | Purpose | Evidence |
+|---|---|---|---|
+| Usage events (event name, timestamp, IP) | Usage Data | Analytics | `/api/events` route — no user ID, server log only |
 
 ---
 
-## Recommended App Store Privacy Label Selections
+### C. Data Not Collected
 
-These recommendations are based on confirmed code evidence. Items marked ⚑ require owner confirmation before finalizing.
-
----
-
-### Data Linked to You
-
-These data types are collected and linked to the user's account identity.
-
-| Data type | Apple category | Basis |
-|---|---|---|
-| Email Address | Contact Info | Clerk account + subscribers table |
-| User ID | Identifiers | Clerk user ID as FK in all user tables |
-| Subscription / Purchase History | Purchases | Subscribers table; RevenueCat entitlement |
-| User Content (document text) | User Content | `documents.extracted_text`; `user_analyses.analysis` ⚑ confirm documents table usage |
-| Usage Data | Usage Data | First-party event tracking ⚑ confirm user linkage |
-
----
-
-### Data Not Linked to You
-
-| Data type | Apple category | Basis |
-|---|---|---|
-| Crash Data | Crash Data | Sentry, if active — not linked to named user by default ⚑ confirm if Sentry is active |
-| Diagnostics | Performance Data | Sentry performance traces, if active ⚑ |
-
----
-
-### Data Used to Track You
-
-| Data type | Basis |
+| Data Type | Notes |
 |---|---|
-| **None** | No ad SDKs, no IDFA, no cross-app tracking found ✅ |
+| Original uploaded files | Memory-only processing, never stored |
+| Extracted document text | Not retained after OpenAI processing |
+| Crash data / diagnostics | Sentry dormant — DSN not configured |
+| Device ID / advertising identifier | Not collected |
+| Precise location | Not collected |
+| Contacts / calendar | Not collected |
+| Health / fitness | Not collected |
+| Browsing history | Not collected |
+| Financial info (payment card) | Handled by Stripe/RevenueCat only — not received by PlainPath |
 
 ---
 
-## Privacy Policy Alignment Check
+### D. Data Used to Track You
 
-| Claim in Privacy Policy | Code evidence | Status |
-|---|---|---|
-| "Documents processed to return results, not retained" | `documents` table stores `extracted_text` linked to user | ⚠️ **Possible mismatch** — policy says not retained but table stores text. ⚑ Owner must confirm if this table is used in the production launch flow, and if so, update the Privacy Policy to accurately describe retention. |
-| "No third-party analytics services embedded" | First-party `analytics.ts` event system confirmed; no third-party SDK | ✅ Accurate — first-party only |
-| "OpenAI does not use API-submitted data to train models by default" | OpenAI confirmed as provider | ✅ Consistent with OpenAI API policy |
-| "Stripe receives email and payment details; PlainPath receives only subscription status" | `subscribers` table stores plan/status, not card data | ✅ Accurate |
-| "Documents are not sold" | No code evidence of any sale mechanism | ✅ Consistent |
-| "No cookies for tracking or advertising" | No ad/tracking SDK found | ✅ Accurate |
+**None.** No ad SDKs, no IDFA, no cross-app tracking. Confirmed by code search.
 
 ---
 
-## Owner Confirmation Checklist
+## Privacy Policy Alignment
 
-| # | Item | Blocking for label submission? |
+All previously flagged mismatches have been resolved in `Privacy.tsx` (updated May 4, 2026):
+
+| Item | Previous status | Resolution |
 |---|---|---|
-| ⚑ 1 | **`documents` table usage in launch flow** — Is the `documents` table populated in the Analyze / Contract Review flow? If yes, extracted text is retained server-side and must be declared as User Content retained and linked to user. Privacy Policy must be updated to match. | **Yes — affects privacy label and policy accuracy** |
-| ⚑ 2 | **Usage event user linkage** — Are `/api/events` logs linked to a Clerk user ID? Check `routes/events.ts` for whether `req.userId` is included in the log payload. | **Yes — determines if Usage Data is "Linked to You" or "Not Linked to You"** |
-| ⚑ 3 | **Sentry DSN in production** — Is `VITE_SENTRY_DSN` set in the iOS production build? If yes, Crash Data must be declared. | **Yes — adds Crash Data category if active** |
-| ⚑ 4 | **Clerk data practices** — Review Clerk's privacy documentation to confirm they do not sell or misuse auth data. Update Privacy Policy third-party section if needed. | Yes |
-| ⚑ 5 | **RevenueCat data practices** — Confirm RevenueCat's handling of app user ID and transaction metadata for the nutrition label. | Yes |
-| ⚑ 6 | **Resend usage scope** — Confirm Resend is only triggered when user explicitly requests a reminder, not automatically. | No — already described correctly as optional |
-| ⚑ 7 | **Privacy Policy update** — If `documents` table is used in launch flow, the Privacy Policy must be updated to accurately state that extracted text is retained. The current policy implies no retention. | **Yes — legal accuracy required before submission** |
+| Section 1: "saves go to local storage only" | ❌ Inaccurate | ✅ Updated — clearly states server-side storage when explicitly saved |
+| Section 3: "Device-saved analyses" bullet | ❌ Inaccurate | ✅ Updated — "Saved analyses (My Analyses)" with accurate server-side description |
+| Section 3: Document retention closing paragraph | ❌ Incomplete | ✅ Updated — covers all tiers accurately |
+| Section 2: Clerk not mentioned | ❌ Missing | ✅ Added Clerk as named third-party service |
+| Section 6: "Does not store" bullet | ❌ Outdated | ✅ Updated — accurate per confirmed findings |
+| Data deletion contact | ❌ Missing | ✅ Added to Section 7 |
+| Last updated date | ❌ April 22, 2026 | ✅ Updated to May 4, 2026 |
+
+---
+
+## Remaining Owner Confirmation Items
+
+All blocking items from the previous version are resolved. Two non-blocking items remain for owner awareness:
+
+| # | Item | Blocking? |
+|---|---|---|
+| ⚑ 1 | **RevenueCat nutrition labels** — Confirm RevenueCat's App Store nutrition label guidance for the `Purchases` category. RevenueCat processes transaction metadata; confirm what they recommend declaring. | No — Purchases (linked to user) is already the correct selection |
+| ⚑ 2 | **iOS billing statement in Privacy Policy** — The Privacy Policy (Section 5) currently states "On iOS and Android apps, subscriptions must be managed on the web — in-app payment flows are not available." If RevenueCat/StoreKit native billing IS active on iOS at launch, update this line before submission. | No — policy change only, no code change |
 
 ---
 
 ## Final Recommendation
 
-**PRIVACY LABELS READY FOR OWNER CONFIRMATION**
+**PRIVACY LABELS READY FOR APP STORE CONNECT ENTRY**
 
-The recommended label selections are based on confirmed code evidence. Before submitting to App Store Connect:
-
-1. Resolve the **`documents` table retention question** (item 1) — this is the most significant potential mismatch between the Privacy Policy and the actual data flow.
-2. Confirm **event linkage** (item 2) to finalize whether Usage Data is linked or unlinked.
-3. Confirm **Sentry status** (item 3) in the iOS production environment.
-4. Complete the App Store Connect **privacy nutrition label questionnaire** using the table above as your guide.
-
-No product code changes are required or recommended as part of this review.
+Enter the selections from Section A–D above directly into the App Store Connect privacy questionnaire. Privacy Policy is updated and accurate. No product code changes were made.

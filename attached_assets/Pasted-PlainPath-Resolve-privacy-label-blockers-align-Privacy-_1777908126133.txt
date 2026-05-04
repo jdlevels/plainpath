@@ -1,0 +1,179 @@
+PlainPath — Resolve privacy label blockers, align Privacy Policy, and fix Privacy Policy heading contrast
+
+Goal:
+Resolve the blocking App Store privacy nutrition label items before submission and fix one Privacy Policy readability issue.
+
+Do not change product features.
+Do not change Analyze.
+Do not change Contract Review.
+Do not change billing, RevenueCat, Stripe, auth, pricing, routes, database schema, parser schema, or app behavior.
+
+Allowed changes:
+- Privacy Policy wording only, if needed
+- Privacy Policy readability/accessibility styling only
+- Documentation only
+
+Use:
+- docs/app-store-privacy-nutrition-labels.md
+- current Privacy Policy page/content
+- current database/schema/code evidence
+
+Tasks:
+
+1. Fix Privacy Policy heading contrast
+
+Current issue:
+On the Privacy Policy page, numbered section headings such as:
+- “1. What we collect”
+- “2. Third-party services”
+
+are too dark / low contrast against the dark page background.
+
+Fix:
+Update only the Privacy Policy page styling so section headings are clearly readable in dark mode.
+
+Requirements:
+- Do not redesign the page
+- Do not change layout
+- Do not change content unless needed for the privacy-label alignment below
+- Improve heading contrast only
+- Use existing design tokens/classes if possible
+- Confirm headings are readable on desktop and mobile
+
+Suggested direction:
+Use a lighter heading color such as text-foreground, text-white, text-slate-100, or the app’s existing high-contrast heading class instead of muted/dark text.
+
+2. Confirm document retention precisely
+
+Determine whether PlainPath stores:
+- original uploaded document file/binary
+- extracted document text
+- generated analysis results
+- document metadata
+- user analysis history
+
+For each, state:
+- stored or not stored
+- where stored
+- linked to user or not
+- purpose
+- whether it appears in user history
+
+Important:
+If original uploaded files are not stored but extracted text/results are stored, say that clearly.
+
+3. Privacy Policy alignment
+
+If the Privacy Policy currently implies that no document content is retained, update it to be accurate.
+
+Use clear language like:
+
+“PlainPath does not sell your documents or use them to train AI models. Uploaded files are processed to provide your results. PlainPath may store extracted document text, document metadata, and generated analysis results when needed to provide saved analysis history, account access, and app functionality.”
+
+Also include:
+
+“You can contact support to request deletion of account-related analysis data, subject to legal, security, and operational retention requirements.”
+
+Do not overclaim.
+Do not say original uploaded files are deleted unless confirmed.
+Do not say no document content is stored if extracted text/results are stored.
+
+4. Confirm usage events
+
+Inspect /api/events and any analytics storage.
+
+Determine:
+- Are events stored?
+- Is Clerk user ID stored with events?
+- Are events linked to a user account?
+- What is the purpose? App functionality, diagnostics, analytics, or security?
+
+Then recommend the App Store privacy label:
+- Usage Data linked to user: Yes/No
+
+5. Confirm Sentry
+
+Check environment/secrets/code paths.
+
+Determine:
+- Is VITE_SENTRY_DSN set in production?
+- Is it set in iOS/native build?
+- Is Sentry active or dormant?
+- If active, does it send user identifiers?
+
+Then recommend:
+- Crash Data / Diagnostics collected: Yes/No
+- Linked to user: Yes/No/Unknown
+- Used for tracking: No, unless evidence says otherwise
+
+6. Confirm tracking
+
+Re-run search for:
+- IDFA
+- AppTrackingTransparency
+- ATT
+- advertisingIdentifier
+- ad SDKs
+- tracking SDKs
+- Facebook Pixel
+- Google Ads
+- TikTok Pixel
+- cross-app tracking
+
+Expected:
+Tracking = None.
+
+7. Create/update documentation
+
+Update:
+
+docs/app-store-privacy-nutrition-labels.md
+
+Add final owner-ready App Store Connect selections:
+
+A. Data Linked to You
+B. Data Not Linked to You
+C. Data Not Collected
+D. Data Used to Track You
+
+Include purpose for each:
+- App Functionality
+- Account Management
+- Payment / Subscription Access
+- Analytics
+- Diagnostics
+
+8. If Privacy Policy changes are needed
+
+Update the Privacy Policy page/content only.
+
+9. QA
+
+Verify:
+- Privacy Policy page headings are readable
+- Privacy Policy content remains accurate
+- No layout regression
+- No product behavior changed
+- Build passes
+- Protected files untouched
+
+10. Return
+
+Return:
+- files changed
+- whether Privacy Policy styling was updated
+- exact heading contrast fix
+- whether Privacy Policy wording was updated
+- exact privacy wording changed
+- document retention findings
+- usage event findings
+- Sentry findings
+- tracking findings
+- final App Store privacy label selections
+- remaining owner confirmations
+- build result
+- protected files untouched confirmation
+- final recommendation
+
+Expected final status:
+PRIVACY LABELS READY FOR APP STORE CONNECT ENTRY
