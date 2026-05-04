@@ -53,6 +53,7 @@ import {
   MODE_DEFAULT_TABS,
 } from "@/lib/completionFlowConfig"
 import { AnalyzeModeNav } from "@/components/AnalyzeModeNav"
+import { PlanSummaryView } from "@/components/analyze/PlanSummaryView"
 import { analysisResultToCompletionObjects } from "@/lib/completionParser"
 import type { CompletionObject } from "@/lib/completionTypes"
 
@@ -470,6 +471,14 @@ export default function Analyze() {
             onModeChange={handleModeChange}
             totalItems={totalItems}
             doneItems={doneItems}
+          />
+        )}
+
+        {/* ── Plan Summary view (flag on, plan mode only) ─────────── */}
+        {ANALYZE_COMPLETION_FLOW_ENABLED && activeMode === "plan" && (
+          <PlanSummaryView
+            completionObjects={completionObjects}
+            onTabChange={handleTabChange}
           />
         )}
 

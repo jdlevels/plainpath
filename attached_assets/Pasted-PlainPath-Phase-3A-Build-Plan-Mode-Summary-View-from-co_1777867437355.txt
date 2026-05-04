@@ -1,0 +1,308 @@
+PlainPath Phase 3A — Build Plan Mode Summary View from completion objects
+
+Use these existing docs:
+- docs/analyze-overhaul-plan.md
+- docs/plainpath-product-course.md
+
+Use the completed parser:
+- artifacts/plainpath/src/lib/completionParser.ts
+- artifacts/plainpath/src/lib/completionTypes.ts
+
+Use the existing feature flag:
+VITE_ANALYZE_COMPLETION_FLOW_ENABLED
+
+Goal:
+Create the first concrete user-facing output of the new PlainPath completion engine.
+
+When the new Analyze completion flow flag is enabled and activeMode === "plan", show a structured Plan Summary view above the existing Plan sub-tabs.
+
+This is a read-only planning view only.
+
+Do not change:
+- billing
+- RevenueCat
+- Stripe
+- Apple/native billing
+- pricing
+- authentication
+- server routes
+- analysis generation
+- existing export behavior
+- current production UI when the feature flag is off
+
+Do not reintroduce removed tools:
+- Redact Sensitive Info
+- Trust Check
+- Compare Versions
+- Clause Extractor
+- Builder
+- Digital Signature
+- Starter
+- Team
+- annual billing
+
+--------------------------------------------------
+1. FEATURE FLAG SAFETY
+--------------------------------------------------
+
+All new UI must be behind:
+
+VITE_ANALYZE_COMPLETION_FLOW_ENABLED
+
+Behavior:
+- Flag off: old Analyze UI renders exactly as before.
+- Flag on: Plan mode shows the new Plan Summary view.
+- Production should remain safe if the flag is not enabled.
+
+--------------------------------------------------
+2. PLAN SUMMARY PURPOSE
+--------------------------------------------------
+
+The Plan Summary should answer the user’s real questions:
+
+- What do I need to do?
+- What do I need to gather?
+- What needs signing?
+- What deadlines matter?
+- What risks should I review?
+- What questions should I ask?
+- Where do I get missing documents?
+
+This should make PlainPath feel like a document completion system, not just a document explanation dashboard.
+
+--------------------------------------------------
+3. DATA SOURCE
+--------------------------------------------------
+
+Use:
+
+analysisResultToCompletionObjects(analysis)
+
+Group CompletionObject[] by type.
+
+Do not call AI.
+Do not call external APIs.
+Do not mutate the analysis result.
+Do not invent source quotes.
+Do not invent official documents.
+Do not invent page numbers.
+
+If a field is unavailable, show a conservative fallback or hide that field.
+
+--------------------------------------------------
+4. PLAN SUMMARY LAYOUT
+--------------------------------------------------
+
+When activeMode === "plan", render a new top panel before the existing sub-tabs/content.
+
+Suggested title:
+
+Your Document Plan
+
+Subtitle:
+
+PlainPath found the actions, documents, deadlines, signatures, risks, and questions needed to complete this paperwork.
+
+Use premium card layout, not a raw list.
+
+Recommended sections:
+
+A. Immediate Actions
+Source: completion objects where type === "action_step"
+
+B. Documents to Gather
+Source:
+- required_document
+- missing_document
+
+C. Signatures Needed
+Source:
+- signature_needed
+
+D. Deadlines
+Source:
+- deadline
+
+E. Risks to Review
+Source:
+- risk
+
+F. Questions to Ask
+Source:
+- question_to_ask
+
+G. Where to Get Missing Documents
+Source:
+- missing_document
+- required_document
+- signature_needed
+where whereToGetThis exists
+
+--------------------------------------------------
+5. CARD DESIGN
+--------------------------------------------------
+
+Each card should show:
+
+- title
+- priority/severity badge if present
+- short plain-English explanation
+- whatToDo if present
+- whereToGetThis if present
+- dueDate or trigger if present
+- sourceQuote if present
+- source section/page if present
+
+Use source-backed framing.
+
+Example card structure:
+
+Title:
+Signed agreement needed
+
+Why it matters:
+This document may not be complete until the required party signs it.
+
+What to do:
+Request the executed copy or official signature form from the original issuer.
+
+Where to get it:
+Original sender, portal, school, agency, employer, landlord, provider, insurer, court, or document issuer.
+
+Source:
+“Parent/guardian signature required before submission.”
+
+--------------------------------------------------
+6. EMPTY STATES
+--------------------------------------------------
+
+Use useful empty states.
+
+Examples:
+
+No signatures found:
+No signature requirement was clearly found in this document.
+
+No deadlines found:
+No hard deadline was clearly found in this document. Still review the source document before submitting.
+
+No missing documents found:
+PlainPath did not find a clear missing-document requirement.
+
+Do not show scary empty states.
+Do not fabricate items to fill the page.
+
+--------------------------------------------------
+7. SUMMARY COUNTS
+--------------------------------------------------
+
+At the top of the Plan Summary, show concise count chips:
+
+- Actions
+- Documents
+- Signatures
+- Deadlines
+- Risks
+- Questions
+
+These should count completion objects by type.
+
+Do not reuse risk score as a count.
+Do not show raw 0/100 scores as item counts.
+
+--------------------------------------------------
+8. NAVIGATION TO EXISTING DETAILS
+--------------------------------------------------
+
+Each Plan Summary section should allow the user to jump to the existing detailed tab where appropriate:
+
+- Actions → Checklist or Action Pack
+- Documents → Required Docs
+- Deadlines → Deadlines
+- Risks → Risks & Notes
+- Questions → Action Pack or What's Missing
+
+This should call the existing synchronized tab/mode handler so mode and tab do not drift.
+
+Do not create duplicate routing.
+Do not create new URL patterns.
+
+--------------------------------------------------
+9. VISUAL STANDARD
+--------------------------------------------------
+
+Make it feel premium and calm.
+
+Avoid:
+- giant red blocks everywhere
+- cluttered nested cards
+- tiny unreadable text
+- excessive badges
+- full-width warning walls
+- broken buttons
+- “higher tier” or upgrade copy
+
+Use:
+- clear section titles
+- balanced spacing
+- compact source chips
+- severity color only where meaningful
+- calm hierarchy
+- source evidence collapsible or subdued if long
+
+--------------------------------------------------
+10. SAFE READ-ONLY LIMIT
+--------------------------------------------------
+
+Do not add:
+- checkboxes
+- upload buttons
+- mark complete actions
+- packet generation
+- save status persistence
+- user notes
+- document upload per item
+- official form generation
+
+Those are later phases.
+
+This slice only makes the Plan mode useful and readable.
+
+--------------------------------------------------
+11. QA REQUIREMENTS
+--------------------------------------------------
+
+Add or update QA to verify:
+
+- feature flag off preserves current UI
+- feature flag on renders Plan Summary in Plan mode
+- Plan Summary uses analysisResultToCompletionObjects()
+- objects are grouped by type correctly
+- actions render under Immediate Actions
+- required/missing documents render under Documents to Gather
+- signature_needed objects render under Signatures Needed
+- deadlines render under Deadlines
+- risks render under Risks to Review
+- questions render under Questions to Ask
+- whereToGetThis renders only when present
+- empty states render when a group has no objects
+- jump buttons use existing tab/mode sync handler
+- no broken buttons
+- no upload/completion/packet actions exposed yet
+- no removed tool references appear
+- no Starter/Team/annual references appear
+- no billing files changed
+- no RevenueCat files changed
+- no Stripe files changed
+- no server route changes
+- Vite production build passes
+- completion parser QA still passes 44/44
+
+Return:
+1. Files changed
+2. New component names
+3. How Plan Summary groups completion objects
+4. Screenshot/description of the Plan Summary layout
+5. QA results
+6. Confirmation no billing/native/Stripe/RevenueCat/pricing/routes/removed-tool changes occurred
+7. Recommended next slice
