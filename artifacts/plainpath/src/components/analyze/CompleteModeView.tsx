@@ -543,10 +543,10 @@ export function CompleteModeView({
               {needsManualReview.length}
             </p>
             <p className="text-[9px] font-bold uppercase tracking-wider leading-none text-amber-700 dark:text-amber-400 opacity-80">
-              Review
+              Verify
             </p>
             <p className="text-[9px] text-muted-foreground/55 mt-1.5 leading-snug hidden sm:block">
-              Needs manual check
+              Check these items
             </p>
           </div>
         </div>
@@ -560,7 +560,7 @@ export function CompleteModeView({
             className="flex items-center gap-2 px-4 py-2 rounded-xl border border-border/60 bg-card text-sm font-semibold text-muted-foreground hover:text-foreground hover:border-border transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/40 min-h-[38px]"
           >
             <ArrowLeft className="w-4 h-4 shrink-0" />
-            Back to Plan
+            Back to Requirements
           </button>
 
           {onGoToCompile && (
@@ -608,9 +608,9 @@ export function CompleteModeView({
         {/* "Still open" type-count strip */}
         <OpenSummaryStrip openItems={openItems} />
 
-        {/* B: To Do (action_step open items) */}
+        {/* B: Actions Required (action_step open items) */}
         <CheckSection
-          title="To Do"
+          title="Actions Required"
           icon={ListTodo}
           iconColor="text-primary/70"
           iconBg="bg-primary/10"
@@ -620,9 +620,9 @@ export function CompleteModeView({
           onOpenDetails={onOpenDetails}
         />
 
-        {/* C: Documents Needed */}
+        {/* C: Documents To Gather */}
         <CheckSection
-          title="Documents Needed"
+          title="Documents To Gather"
           icon={FolderOpen}
           iconColor="text-violet-600 dark:text-violet-400"
           iconBg="bg-violet-50 dark:bg-violet-950/40"

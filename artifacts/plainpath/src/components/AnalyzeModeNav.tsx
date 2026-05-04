@@ -17,10 +17,10 @@ interface ModeConfig {
 }
 
 const MODES: ModeConfig[] = [
-  { id: "understand", label: "Understand", shortLabel: "Read",     icon: BookOpen,    description: "Plain-language explanation" },
-  { id: "plan",       label: "Requirements", shortLabel: "Needs",   icon: ListTodo,    description: "What is required to complete" },
-  { id: "complete",   label: "Complete",   shortLabel: "Complete", icon: CheckSquare, description: "Work through each item"     },
-  { id: "compile",    label: "Summary",    shortLabel: "Summary",  icon: Package,     description: "Review completion summary"  },
+  { id: "understand", label: "Understand",   shortLabel: "Read",     icon: BookOpen,    description: "What this document is and what it says" },
+  { id: "plan",       label: "Requirements", shortLabel: "Needs",   icon: ListTodo,    description: "What this document requires"            },
+  { id: "complete",   label: "Complete",     shortLabel: "Complete", icon: CheckSquare, description: "What still needs to be completed"       },
+  { id: "compile",    label: "Summary",      shortLabel: "Summary",  icon: Package,     description: "What is done and what remains open"     },
 ]
 
 export function AnalyzeModeNav({ activeMode, onModeChange, totalItems, doneItems }: Props) {

@@ -732,7 +732,7 @@ export function CompileModeView({
               Completion Summary
             </h2>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-prose">
-              A plain-English summary of what is complete, what remains open, and what should be verified before acting.
+              A plain-English summary of what this document says, what is complete, and what remains open.
             </p>
           </div>
         </div>
