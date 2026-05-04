@@ -144,7 +144,7 @@ function DemoClauseCard({ clause }: { clause: typeof CLAUSES[0] }) {
           {/* Suggested revision */}
           {clause.negotiationLanguage && (
             <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-900/40 rounded-lg p-3">
-              <p className="text-xs font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400 mb-1.5">Suggested revision language</p>
+              <p className="text-xs font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400 mb-1.5">Suggested language to discuss</p>
               <p className="text-xs text-blue-900 dark:text-blue-100 leading-relaxed font-mono bg-blue-100/50 dark:bg-blue-900/30 rounded p-2 whitespace-pre-wrap">{clause.negotiationLanguage}</p>
             </div>
           )}

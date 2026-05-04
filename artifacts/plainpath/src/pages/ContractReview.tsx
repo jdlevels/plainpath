@@ -539,7 +539,7 @@ function ContractReviewPrintReport({ result }: { result: ReviewResult }) {
               )}
               {c.negotiationLanguage && (
                 <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: "4px", padding: "6px 8px", margin: "4px 0 0 0" }}>
-                  <p className="print-item-meta" style={{ color: "#1d4ed8", fontStyle: "normal", fontWeight: 600, marginBottom: "2px" }}>Suggested revision:</p>
+                  <p className="print-item-meta" style={{ color: "#1d4ed8", fontStyle: "normal", fontWeight: 600, marginBottom: "2px" }}>Suggested language to discuss:</p>
                   <p className="print-item-desc" style={{ fontFamily: "monospace", whiteSpace: "pre-wrap" }}>{c.negotiationLanguage}</p>
                 </div>
               )}
@@ -567,7 +567,7 @@ function ContractReviewPrintReport({ result }: { result: ReviewResult }) {
               )}
               {c.negotiationLanguage && (
                 <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: "4px", padding: "6px 8px", margin: "4px 0 0 0" }}>
-                  <p className="print-item-meta" style={{ color: "#1d4ed8", fontStyle: "normal", fontWeight: 600, marginBottom: "2px" }}>Suggested revision:</p>
+                  <p className="print-item-meta" style={{ color: "#1d4ed8", fontStyle: "normal", fontWeight: 600, marginBottom: "2px" }}>Suggested language to discuss:</p>
                   <p className="print-item-desc" style={{ fontFamily: "monospace", whiteSpace: "pre-wrap" }}>{c.negotiationLanguage}</p>
                 </div>
               )}
@@ -763,7 +763,7 @@ function ClauseCard({
                 {clause.negotiationLanguage && (
                   <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-900/40 rounded-lg p-3">
                     <div className="flex items-center justify-between mb-1.5">
-                      <p className="text-xs font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">Suggested revision language</p>
+                      <p className="text-xs font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">Suggested language to discuss</p>
                       <CopyButton text={clause.negotiationLanguage} />
                     </div>
                     <p className="text-xs text-blue-900 dark:text-blue-100 leading-relaxed font-mono bg-blue-100/50 dark:bg-blue-900/30 rounded p-2 mt-1 whitespace-pre-wrap">{clause.negotiationLanguage}</p>
@@ -780,13 +780,13 @@ function ClauseCard({
                       >
                         {negLoading
                           ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Drafting email…</>
-                          : <><Mail className="w-3.5 h-3.5" /> Draft negotiation email</>
+                          : <><Mail className="w-3.5 h-3.5" /> Draft questions email</>
                         }
                       </button>
                     ) : (
                       <div className="bg-violet-50 dark:bg-violet-950/20 border border-violet-200/60 dark:border-violet-900/40 rounded-lg p-3 space-y-2">
                         <div className="flex items-center justify-between">
-                          <p className="text-xs font-semibold uppercase tracking-widest text-violet-600 dark:text-violet-400">Negotiation email draft</p>
+                          <p className="text-xs font-semibold uppercase tracking-widest text-violet-600 dark:text-violet-400">Questions email draft</p>
                           <div className="flex items-center gap-2">
                             <button
                               onClick={copyNegEmail}
