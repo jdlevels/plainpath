@@ -169,7 +169,7 @@ const REVIEW_DEMOS: Array<{
   {
     id: "freelance-design",
     label: "Freelance Design Agreement",
-    meta: "3 red flags · Score 32",
+    meta: "3 need attention · Score 32",
     icon: AlertTriangle,
     color: "text-red-500",
     bg: "bg-red-50 dark:bg-red-950/40",
@@ -280,7 +280,7 @@ const REVIEW_DEMOS: Array<{
   {
     id: "apartment-lease",
     label: "Apartment Lease Agreement",
-    meta: "2 red flags · Score 51",
+    meta: "2 need attention · Score 51",
     icon: ShieldAlert,
     color: "text-amber-500",
     bg: "bg-amber-50 dark:bg-amber-950/40",
@@ -390,7 +390,7 @@ const REVIEW_DEMOS: Array<{
   {
     id: "contractor-nda",
     label: "Independent Contractor NDA",
-    meta: "1 red flag · Score 67",
+    meta: "1 needs attention · Score 67",
     icon: Lock,
     color: "text-blue-500",
     bg: "bg-blue-50 dark:bg-blue-950/40",
@@ -523,7 +523,7 @@ function ContractReviewPrintReport({ result }: { result: ReviewResult }) {
       {/* Red Flags */}
       {redFlags.length > 0 && (
         <div className="print-section print-break">
-          <h2 className="print-section-title">Red Flags ({redFlags.length})</h2>
+          <h2 className="print-section-title">Needs Attention ({redFlags.length})</h2>
           <p className="print-body" style={{ color: "#7f1d1d", marginBottom: "8px" }}>
             These clauses may create significant risk or obligation. Review each carefully and consider clarifying with the other party before signing.
           </p>
@@ -531,7 +531,7 @@ function ContractReviewPrintReport({ result }: { result: ReviewResult }) {
             <div key={c.id} style={{ marginBottom: "12px", paddingBottom: "10px", borderBottom: "1px solid #fee2e2" }}>
               <div className="print-item-title">
                 {i + 1}. {c.text}
-                <span className="print-badge" style={{ background: "#fef2f2", color: "#dc2626", borderColor: "#fecaca" }}>RED FLAG</span>
+                <span className="print-badge" style={{ background: "#fef2f2", color: "#dc2626", borderColor: "#fecaca" }}>NEEDS ATTENTION</span>
               </div>
               <p className="print-item-desc"><strong>What it means:</strong> {c.explanation}</p>
               {c.whyUnfair && (
@@ -551,7 +551,7 @@ function ContractReviewPrintReport({ result }: { result: ReviewResult }) {
       {/* Watch Outs */}
       {watchOuts.length > 0 && (
         <div className="print-section">
-          <h2 className="print-section-title">Watch Outs ({watchOuts.length})</h2>
+          <h2 className="print-section-title">Review Carefully ({watchOuts.length})</h2>
           <p className="print-body" style={{ color: "#78350f", marginBottom: "8px" }}>
             These clauses are vague, one-sided, or unusual. Understand what you're agreeing to and consider pushing back.
           </p>
@@ -559,7 +559,7 @@ function ContractReviewPrintReport({ result }: { result: ReviewResult }) {
             <div key={c.id} style={{ marginBottom: "12px", paddingBottom: "10px", borderBottom: "1px solid #fef3c7" }}>
               <div className="print-item-title">
                 {i + 1}. {c.text}
-                <span className="print-badge" style={{ background: "#fffbeb", color: "#d97706", borderColor: "#fde68a" }}>WATCH OUT</span>
+                <span className="print-badge" style={{ background: "#fffbeb", color: "#d97706", borderColor: "#fde68a" }}>REVIEW CAREFULLY</span>
               </div>
               <p className="print-item-desc"><strong>What it means:</strong> {c.explanation}</p>
               {c.whyUnfair && (
@@ -902,11 +902,11 @@ function buildReviewText(result: ReviewResult): string {
   const redFlags = result.clauses.filter(c => c.rating === "red-flag")
   const watchOuts = result.clauses.filter(c => c.rating === "watch-out")
   if (redFlags.length) {
-    lines.push("─── RED FLAGS ───")
+    lines.push("─── NEEDS ATTENTION ───")
     redFlags.forEach(c => lines.push(`• ${c.text}`, `  ${c.explanation}`, ""))
   }
   if (watchOuts.length) {
-    lines.push("─── WATCH OUTS ───")
+    lines.push("─── REVIEW CAREFULLY ───")
     watchOuts.forEach(c => lines.push(`• ${c.text}`, `  ${c.explanation}`, ""))
   }
   if (result.missingProtections.length) {
@@ -984,7 +984,7 @@ function ResultsView({ result, onReset, onScrollToDocument }: {
         <div className="flex flex-wrap gap-2 mb-4">
           {redFlags.length > 0 && (
             <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-red-500/15 text-red-700 dark:text-red-300 border border-red-500/20">
-              <ShieldAlert className="w-3 h-3" /> {redFlags.length} red flag{redFlags.length !== 1 ? "s" : ""}
+              <ShieldAlert className="w-3 h-3" /> {redFlags.length} need{redFlags.length !== 1 ? "" : "s"} attention
             </span>
           )}
           {watchOuts.length > 0 && (
@@ -1554,7 +1554,7 @@ export default function ContractReview() {
         toolIcon={Scale}
         toolIconBg="bg-amber-100 dark:bg-amber-900/40"
         toolIconColor="text-amber-600 dark:text-amber-400"
-        subtitle="Spot unfair clauses, red flags, and missing protections before you sign."
+        subtitle="Spot unfair clauses, clauses that need attention, and missing protections before you sign."
         backTo="/"
       />
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">

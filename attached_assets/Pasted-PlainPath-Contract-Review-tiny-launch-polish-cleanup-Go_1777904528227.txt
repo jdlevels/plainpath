@@ -1,0 +1,80 @@
+PlainPath — Contract Review tiny launch polish cleanup
+
+Goal:
+Clean up the two remaining non-blocking Contract Review polish items before launch.
+
+Do not rebuild.
+Do not add features.
+Do not change Analyze.
+Do not change billing, RevenueCat, Stripe, native billing, auth, pricing, routes, database, homepage, or parser schema.
+Do not change Contract Review structure.
+Do not change clause card logic.
+
+Contract Review is already APPROVED / LOCKED.
+Only make the label cleanup below.
+
+Fix 1 — Print report labels
+
+Current issue:
+The print/PDF report may still use old section headers:
+- Red Flags
+- Watch Outs
+
+Change these user-facing print report labels to match the locked Contract Review structure:
+
+- Red Flags → Needs Attention
+- Watch Outs → Needs Attention
+
+If both sections exist separately in the print report, either:
+A. rename both to “Needs Attention”, or
+B. if safer, use:
+   - “Needs Attention — Higher Priority”
+   - “Needs Attention — Review Carefully”
+
+Do not restructure the print report. Label-only cleanup.
+
+Fix 2 — Demo tab switcher phrase
+
+Current issue:
+The demo tab switcher may show:
+- “3 red flags”
+
+Change to:
+- “3 needs attention”
+
+or, if grammar requires:
+- “3 need attention”
+
+Use the cleanest existing spacing.
+
+Safety rules:
+- Do not use “do not sign”
+- Do not use “why this is a problem”
+- Do not use “attorney-approved”
+- Do not use “guaranteed safe”
+- Do not tell the user whether to sign
+
+Verification:
+Run:
+- production build
+- grep for user-facing “Red Flags”
+- grep for user-facing “Watch Outs”
+- grep for “red flags” in DemoContractReview / ContractReview surfaces
+- safety-language grep from the closeout pass
+
+Expected:
+- Build passes
+- No old user-facing print/demo labels remain except developer comments if unavoidable
+- No prohibited safety language appears
+- No protected files touched
+
+Return:
+1. Files changed
+2. Exact label changes
+3. Build result
+4. Grep results
+5. Protected files untouched confirmation
+6. Final recommendation
+
+Expected final status:
+Tiny polish complete — Contract Review remains locked.
