@@ -520,7 +520,7 @@ export default function Home() {
                   </a>
                   <a
                     href="/demo/contract-review"
-                    className="inline-flex items-center gap-2 bg-foreground text-background rounded-xl px-5 h-12 sm:h-14 text-sm font-semibold hover:bg-foreground/90 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-md"
+                    className="inline-flex items-center gap-2 bg-amber-500 text-white rounded-xl px-5 h-12 sm:h-14 text-sm font-semibold hover:bg-amber-500/90 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-md shadow-amber-500/20"
                   >
                     Review a Contract <ArrowRight className="w-4 h-4" />
                   </a>
