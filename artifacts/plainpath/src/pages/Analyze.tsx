@@ -108,6 +108,9 @@ export default function Analyze() {
     return "understand"
   })
 
+  // Phase 3B: per-item completion status keyed by CompletionObject.id
+  const [completionStatus, setCompletionStatus] = useState<Record<string, boolean>>({})
+
   const checkScroll = useCallback(() => {
     const el = tabListRef.current
     if (!el) return
@@ -175,10 +178,6 @@ export default function Analyze() {
   const risks = analysis.risks ?? []
   const followUpQuestions = analysis.followUpQuestions ?? []
 
-  const totalItems = actionSteps.length + requiredDocuments.length
-  const doneItems = actionSteps.filter(s => s.completed).length + requiredDocuments.filter(d => d.obtained).length
-  const progress = totalItems === 0 ? 100 : Math.round((doneItems / totalItems) * 100)
-
   const handleActionToggle = (id: string, completed: boolean) => {
     updateActionStep(id, completed)
     updateChecklist({ data: { itemId: id, itemType: "actionStep", completed } })
@@ -193,6 +192,31 @@ export default function Analyze() {
     if (!ANALYZE_COMPLETION_FLOW_ENABLED || !analysis) return []
     try { return analysisResultToCompletionObjects(analysis as any) } catch { return [] }
   }, [analysis])
+
+  // Phase 3B: reset completion status whenever a new document is loaded
+  useEffect(() => { setCompletionStatus({}) }, [analysis.id])
+
+  // Phase 3B: toggle handler for Plan Summary items
+  const handlePlanItemToggle = useCallback((id: string, done: boolean) => {
+    setCompletionStatus(prev => ({ ...prev, [id]: done }))
+  }, [])
+
+  // Phase 3B: progress covers ALL completable types (not just action steps + required docs)
+  const PLAN_COMPLETABLE_TYPES = [
+    "action_step", "required_document", "missing_document",
+    "signature_needed", "deadline", "risk", "question_to_ask",
+  ] as const
+
+  const completableObjects = ANALYZE_COMPLETION_FLOW_ENABLED
+    ? completionObjects.filter(o => (PLAN_COMPLETABLE_TYPES as readonly string[]).includes(o.type))
+    : []
+  const totalItems = ANALYZE_COMPLETION_FLOW_ENABLED
+    ? completableObjects.length
+    : actionSteps.length + requiredDocuments.length
+  const doneItems = ANALYZE_COMPLETION_FLOW_ENABLED
+    ? completableObjects.filter(o => completionStatus[o.id] === true).length
+    : actionSteps.filter(s => s.completed).length + requiredDocuments.filter(d => d.obtained).length
+  const progress = totalItems === 0 ? 100 : Math.round((doneItems / totalItems) * 100)
 
   const handleTabChange = useCallback((tabId: string) => {
     setActiveTab(tabId)
@@ -478,6 +502,8 @@ export default function Analyze() {
         {ANALYZE_COMPLETION_FLOW_ENABLED && activeMode === "plan" && (
           <PlanSummaryView
             completionObjects={completionObjects}
+            completionStatus={completionStatus}
+            onToggleItem={handlePlanItemToggle}
             onTabChange={handleTabChange}
           />
         )}
@@ -625,9 +651,7 @@ function CompleteModePreview({
   const docCount      = completionObjects.filter(o => o.type === "required_document" || o.type === "missing_document").length
   const deadlineCount = completionObjects.filter(o => o.type === "deadline").length
   const sigCount      = completionObjects.filter(o => o.type === "signature_needed").length
-  const openCount     = completionObjects.filter(o =>
-    o.status === "not_started" || o.status === "in_progress" || o.status === "needs_help"
-  ).length
+  const openCount     = totalItems - doneItems
 
   return (
     <motion.div

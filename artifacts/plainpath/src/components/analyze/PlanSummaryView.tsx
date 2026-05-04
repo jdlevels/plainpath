@@ -12,6 +12,7 @@ import {
   Clock,
   ChevronDown,
   ChevronUp,
+  Check,
   type LucideIcon,
 } from "lucide-react"
 import type { CompletionObject, CompletionPriority } from "@/lib/completionTypes"
@@ -20,6 +21,8 @@ import type { CompletionObject, CompletionPriority } from "@/lib/completionTypes
 
 interface PlanSummaryViewProps {
   completionObjects: CompletionObject[]
+  completionStatus: Record<string, boolean>
+  onToggleItem: (id: string, done: boolean) => void
   onTabChange: (tabId: string) => void
 }
 
@@ -52,77 +55,131 @@ function priorityBadgeClass(priority: CompletionPriority): string {
 
 // ─── Item card ────────────────────────────────────────────────────────────────
 
-function ItemCard({ item }: { item: CompletionObject }) {
+function ItemCard({
+  item,
+  done,
+  onToggle,
+}: {
+  item: CompletionObject
+  done: boolean
+  onToggle: (id: string, done: boolean) => void
+}) {
   const displayPriority: CompletionPriority =
     item.type === "risk" ? (item.severity ?? item.priority) : item.priority
 
   return (
-    <div className="px-4 sm:px-5 py-3.5 space-y-2">
-      {/* Title + priority badge */}
-      <div className="flex items-start gap-2">
-        <p className="text-sm font-semibold text-foreground leading-snug flex-1 min-w-0">
-          {item.title}
-        </p>
-        {displayPriority && displayPriority !== "low" && (
-          <span
-            className={`shrink-0 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md leading-none ${priorityBadgeClass(displayPriority)}`}
+    <div className={`px-4 sm:px-5 py-3.5 space-y-2 transition-colors ${done ? "bg-secondary/20" : ""}`}>
+      {/* Title row */}
+      <div className="flex items-start gap-3">
+        {/* Circular toggle button */}
+        <button
+          type="button"
+          onClick={() => onToggle(item.id, !done)}
+          title={done ? "Mark this item not done" : "Mark this item complete"}
+          aria-label={done ? `Mark "${item.title}" not done` : `Mark "${item.title}" complete`}
+          style={{ touchAction: "manipulation" }}
+          className={`shrink-0 mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
+            done
+              ? "bg-emerald-500 border-emerald-500 hover:bg-emerald-400 hover:border-emerald-400"
+              : "border-border/60 hover:border-primary/50 hover:bg-primary/5"
+          }`}
+        >
+          {done && <Check className="w-2.5 h-2.5 text-white" />}
+        </button>
+
+        {/* Title + badge */}
+        <div className="flex items-start gap-2 flex-1 min-w-0">
+          <p
+            className={`text-sm font-semibold leading-snug flex-1 min-w-0 transition-colors ${
+              done ? "line-through text-muted-foreground/55" : "text-foreground"
+            }`}
           >
-            {displayPriority}
-          </span>
+            {item.title}
+          </p>
+          {done ? (
+            <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md leading-none bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-900/40">
+              Done
+            </span>
+          ) : displayPriority && displayPriority !== "low" ? (
+            <span
+              className={`shrink-0 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md leading-none ${priorityBadgeClass(displayPriority)}`}
+            >
+              {displayPriority}
+            </span>
+          ) : null}
+        </div>
+      </div>
+
+      {/* Body — muted when done */}
+      <div className={`pl-8 space-y-2 ${done ? "opacity-50" : ""}`}>
+        {/* Plain-English explanation */}
+        {item.plainEnglishExplanation && (
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            {item.plainEnglishExplanation}
+          </p>
+        )}
+
+        {/* What to do */}
+        {item.whatToDo && (
+          <div className="flex items-start gap-2">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 shrink-0 pt-0.5 whitespace-nowrap">
+              What to do
+            </span>
+            <p className="text-xs text-foreground/80 leading-relaxed">{item.whatToDo}</p>
+          </div>
+        )}
+
+        {/* Where to get it */}
+        {item.whereToGetThis && (
+          <div className="flex items-start gap-1.5">
+            <MapPin className="w-3 h-3 text-muted-foreground/40 shrink-0 mt-0.5" />
+            <p className="text-xs text-foreground/70 leading-relaxed">{item.whereToGetThis}</p>
+          </div>
+        )}
+
+        {/* Due date / trigger */}
+        {(item.dueDate ?? item.trigger) && (
+          <div className="flex items-center gap-1.5">
+            <Clock className="w-3 h-3 text-muted-foreground/40 shrink-0" />
+            <p className="text-xs text-foreground/70">{item.dueDate ?? item.trigger}</p>
+          </div>
+        )}
+
+        {/* Source quote */}
+        {item.sourceQuote && (
+          <blockquote className="pl-2.5 border-l-2 border-border/50">
+            <p className="text-xs text-muted-foreground/55 leading-relaxed italic line-clamp-2">
+              {item.sourceQuote}
+            </p>
+            {(item.sourceSection ?? item.sourcePage) && (
+              <span className="inline-block mt-0.5 text-[9px] font-medium text-muted-foreground/38">
+                {[
+                  item.sourceSection,
+                  item.sourcePage != null && `p.\u00a0${item.sourcePage}`,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </span>
+            )}
+          </blockquote>
         )}
       </div>
 
-      {/* Plain-English explanation */}
-      {item.plainEnglishExplanation && (
-        <p className="text-xs text-muted-foreground leading-relaxed">
-          {item.plainEnglishExplanation}
-        </p>
-      )}
-
-      {/* What to do */}
-      {item.whatToDo && (
-        <div className="flex items-start gap-2">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 shrink-0 pt-0.5 whitespace-nowrap">
-            What to do
-          </span>
-          <p className="text-xs text-foreground/80 leading-relaxed">{item.whatToDo}</p>
-        </div>
-      )}
-
-      {/* Where to get it */}
-      {item.whereToGetThis && (
-        <div className="flex items-start gap-1.5">
-          <MapPin className="w-3 h-3 text-muted-foreground/40 shrink-0 mt-0.5" />
-          <p className="text-xs text-foreground/70 leading-relaxed">{item.whereToGetThis}</p>
-        </div>
-      )}
-
-      {/* Due date / trigger */}
-      {(item.dueDate ?? item.trigger) && (
-        <div className="flex items-center gap-1.5">
-          <Clock className="w-3 h-3 text-muted-foreground/40 shrink-0" />
-          <p className="text-xs text-foreground/70">{item.dueDate ?? item.trigger}</p>
-        </div>
-      )}
-
-      {/* Source quote */}
-      {item.sourceQuote && (
-        <blockquote className="pl-2.5 border-l-2 border-border/50">
-          <p className="text-xs text-muted-foreground/55 leading-relaxed italic line-clamp-2">
-            {item.sourceQuote}
-          </p>
-          {(item.sourceSection ?? item.sourcePage) && (
-            <span className="inline-block mt-0.5 text-[9px] font-medium text-muted-foreground/38">
-              {[
-                item.sourceSection,
-                item.sourcePage != null && `p.\u00a0${item.sourcePage}`,
-              ]
-                .filter(Boolean)
-                .join(" · ")}
-            </span>
-          )}
-        </blockquote>
-      )}
+      {/* Status label */}
+      <div className="pl-8">
+        <span
+          role="button"
+          tabIndex={-1}
+          onClick={() => onToggle(item.id, !done)}
+          className={`text-[10px] font-semibold cursor-pointer select-none transition-colors ${
+            done
+              ? "text-emerald-500 hover:text-emerald-600"
+              : "text-muted-foreground/38 hover:text-muted-foreground/65"
+          }`}
+        >
+          {done ? "Done" : "Mark done"}
+        </span>
+      </div>
     </div>
   )
 }
@@ -133,13 +190,18 @@ const COLLAPSE_THRESHOLD = 3
 
 function SectionCard({
   section,
+  completionStatus,
+  onToggleItem,
   onTabChange,
 }: {
   section: SectionDef
+  completionStatus: Record<string, boolean>
+  onToggleItem: (id: string, done: boolean) => void
   onTabChange: (tabId: string) => void
 }) {
   const [showAll, setShowAll] = useState(false)
   const hasItems = section.items.length > 0
+  const doneCount = section.items.filter((item) => completionStatus[item.id] === true).length
   const overflowCount = section.items.length - COLLAPSE_THRESHOLD
   const visibleItems =
     showAll || section.items.length <= COLLAPSE_THRESHOLD
@@ -161,9 +223,15 @@ function SectionCard({
         </h3>
 
         {hasItems && (
-          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-secondary text-muted-foreground shrink-0 leading-none">
-            {section.items.length}
-          </span>
+          doneCount > 0 ? (
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-900/40 shrink-0 leading-none">
+              {doneCount}/{section.items.length}
+            </span>
+          ) : (
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-secondary text-muted-foreground shrink-0 leading-none">
+              {section.items.length}
+            </span>
+          )
         )}
 
         <button
@@ -182,7 +250,12 @@ function SectionCard({
         {hasItems ? (
           <>
             {visibleItems.map((item) => (
-              <ItemCard key={item.id} item={item} />
+              <ItemCard
+                key={item.id}
+                item={item}
+                done={completionStatus[item.id] === true}
+                onToggle={onToggleItem}
+              />
             ))}
 
             {overflowCount > 0 && (
@@ -218,7 +291,12 @@ function SectionCard({
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function PlanSummaryView({ completionObjects, onTabChange }: PlanSummaryViewProps) {
+export function PlanSummaryView({
+  completionObjects,
+  completionStatus,
+  onToggleItem,
+  onTabChange,
+}: PlanSummaryViewProps) {
   const actions    = completionObjects.filter((o) => o.type === "action_step")
   const docs       = completionObjects.filter(
     (o) => o.type === "required_document" || o.type === "missing_document"
@@ -300,12 +378,12 @@ export function PlanSummaryView({ completionObjects, onTabChange }: PlanSummaryV
 
   // Count chips — click jumps to the corresponding tab
   const chips = [
-    { label: "Actions",    count: actions.length,    tabId: "checklist",  icon: ListTodo      },
-    { label: "Docs",       count: docs.length,        tabId: "documents",  icon: FolderOpen    },
-    { label: "Signatures", count: signatures.length,  tabId: "documents",  icon: PenLine       },
-    { label: "Deadlines",  count: deadlines.length,   tabId: "deadlines",  icon: Calendar      },
-    { label: "Risks",      count: risks.length,       tabId: "risks",      icon: AlertTriangle },
-    { label: "Questions",  count: questions.length,   tabId: "action-pack",icon: HelpCircle    },
+    { label: "Actions",    count: actions.length,    tabId: "checklist",   icon: ListTodo      },
+    { label: "Docs",       count: docs.length,        tabId: "documents",   icon: FolderOpen    },
+    { label: "Signatures", count: signatures.length,  tabId: "documents",   icon: PenLine       },
+    { label: "Deadlines",  count: deadlines.length,   tabId: "deadlines",   icon: Calendar      },
+    { label: "Risks",      count: risks.length,       tabId: "risks",       icon: AlertTriangle },
+    { label: "Questions",  count: questions.length,   tabId: "action-pack", icon: HelpCircle    },
   ]
 
   return (
@@ -350,7 +428,13 @@ export function PlanSummaryView({ completionObjects, onTabChange }: PlanSummaryV
       {/* ── Section cards ───────────────────────────────────────────────── */}
       <div className="space-y-3 sm:space-y-4">
         {sections.map((section) => (
-          <SectionCard key={section.id} section={section} onTabChange={onTabChange} />
+          <SectionCard
+            key={section.id}
+            section={section}
+            completionStatus={completionStatus}
+            onToggleItem={onToggleItem}
+            onTabChange={onTabChange}
+          />
         ))}
       </div>
     </motion.div>
