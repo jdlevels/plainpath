@@ -132,6 +132,40 @@ router.post("/invite/:token/accept", requireAuth, async (req: any, res) => {
       return res.status(410).json({ error: "invite_expired" });
     }
 
+    // Re-validate that the team still holds an active Team plan at the moment
+    // of acceptance. Invites are issued while the plan is active, but the
+    // subscription may have lapsed before the invitee redeems the link.
+    // We check the team owner's subscriber record (same source requireTeamPlan uses)
+    // rather than the billing-DB teams table, which has no application write path.
+    const adminEmails = (process.env.ADMIN_EMAILS ?? "").split(",").map((e: string) => e.trim()).filter(Boolean);
+    if (!adminEmails.includes(email)) {
+      const teamRow = await pool.query(`SELECT owner_id FROM teams WHERE id = $1`, [invite.team_id]);
+      const ownerId: string | null = teamRow.rows[0]?.owner_id ?? null;
+      let ownerHasTeamPlan = false;
+      if (ownerId) {
+        try {
+          const ownerUser = await clerkClient.users.getUser(ownerId);
+          const ownerPrimary = ownerUser.emailAddresses.find(
+            (e) => e.id === ownerUser.primaryEmailAddressId
+          );
+          const ownerEmail = ownerPrimary?.emailAddress?.toLowerCase().trim() ?? null;
+          if (ownerEmail) {
+            const ownerSub = getSubscriberByEmail(ownerEmail);
+            ownerHasTeamPlan = ownerSub?.plan === "team" && ownerSub?.status === "active";
+          }
+        } catch {
+          // Could not resolve owner — fail closed
+          ownerHasTeamPlan = false;
+        }
+      }
+      if (!ownerHasTeamPlan) {
+        return res.status(403).json({
+          error: "team_plan_required",
+          message: "This team no longer has an active Team plan. The invite cannot be accepted.",
+        });
+      }
+    }
+
     if (email.toLowerCase() !== invite.invited_email.toLowerCase()) {
       return res.status(403).json({ error: "invite_email_mismatch" });
     }
