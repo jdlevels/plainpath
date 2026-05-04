@@ -1,0 +1,212 @@
+PlainPath results page polish — fix risk score, navigation chips, and blocked premium states
+
+Goal:
+Clean up the Analyze a Document results page so it feels premium, consistent, and launch-ready.
+
+Launch scope:
+- Analyze a Document
+- Contract Review
+- One plan only: PlainPath Pro
+- Admin should have full access
+- No higher-tier messaging should appear because there is no higher tier
+
+Do not redesign the entire app.
+Do not add new tools.
+Focus only on results page UX, risk labeling, and entitlement cleanup.
+
+--------------------------------------------------
+1. FIX RISK SCORE CHIP
+--------------------------------------------------
+
+Current issue:
+The top summary chip says something like:
+“49 High Risk”
+
+This looks like there are 49 high-risk items, but the Risks & Notes tab may only show 1 actual risk.
+
+Replace this chip format with:
+
+“High Risk · 49/100”
+
+or:
+
+“Risk Score: 49/100 · High”
+
+Rules:
+- Risk score should never look like a count.
+- Actual risk count should remain separate, e.g. “1 Risk”.
+- Use consistent language across Analyze results and Contract Review results.
+
+Expected top chips example:
+- 6 Action Steps
+- 4 Required Docs
+- 1 Deadline
+- 1 Risk
+- High Risk · 49/100
+
+--------------------------------------------------
+2. MAKE TOP SUMMARY CHIPS CLICKABLE
+--------------------------------------------------
+
+Every top summary chip should navigate the user to the relevant section.
+
+Click behavior:
+- Action Steps chip → open Action Pack tab
+- Required Docs chip → open Required Docs tab
+- Deadlines chip → open Deadlines tab
+- Risks chip → open Risks & Notes tab
+- Risk Score chip → open Risks & Notes tab and scroll to the top of the risk panel
+
+If a section has zero items, the chip should either:
+- be hidden
+or
+- show a calm empty-state when clicked
+
+Do not leave chips as dead UI.
+
+--------------------------------------------------
+3. FIX TAB COUNTS
+--------------------------------------------------
+
+Make tab counts match actual extracted items.
+
+Rules:
+- Risks & Notes count = number of risk items, not risk score
+- Deadlines count = number of deadline items
+- Action Pack count = number of action steps
+- Required Docs count = number of required document items
+- Key Terms count = number of key terms
+
+Do not mix risk score with item count.
+
+--------------------------------------------------
+4. REMOVE HIGHER-TIER BLOCKED STATES
+--------------------------------------------------
+
+PlainPath now has one paid plan only:
+PlainPath Pro — $19.99/month
+
+Remove all user-facing messages that say:
+- “This feature requires a higher-tier plan”
+- “Please upgrade to access it”
+- “Requires higher tier”
+- “Upgrade required”
+
+If a feature is not part of launch, hide it entirely.
+
+If a user is Admin or PlainPath Pro, they should not see blocked upgrade messaging anywhere.
+
+--------------------------------------------------
+5. HIDE ASK THIS DOCUMENT FOR LAUNCH UNLESS FULLY WORKING
+--------------------------------------------------
+
+Ask This Document is not part of the current two-tool launch unless it is fully working.
+
+If Ask This Document is not production-ready:
+- remove/hide the Ask This Document tab from Analyze results
+- remove/hide it from Contract Review results
+- remove/hide any input boxes or blocked states tied to it
+
+Do not show a blocked premium message.
+
+If keeping it for Admin only:
+- Admin must be able to use it
+- Pro users should not see the tab
+- no higher-tier message should appear
+
+Preferred launch behavior:
+Hide Ask This Document entirely.
+
+--------------------------------------------------
+6. REMOVE OR REPLACE “NEGOTIATE THIS” BUTTONS
+--------------------------------------------------
+
+Current issue:
+Risks & Notes shows buttons like “Negotiate this,” but clicking shows higher-tier messaging.
+
+For launch:
+Either hide these buttons entirely,
+OR replace with a non-gated action:
+
+Button:
+“Copy issue summary”
+
+Behavior:
+Copies the risk title + explanation + source quote to clipboard.
+
+Do not show “Negotiate this” unless negotiation language generation is fully included in PlainPath Pro.
+
+--------------------------------------------------
+7. RESTORE SOURCE SECTION BREAKDOWN
+--------------------------------------------------
+
+Source Sections previously gave a useful plain-English breakdown of the selected extracted section.
+
+Fix:
+- clicking a source section should open/show the plain-English explanation
+- the right-side breakdown panel should populate with useful text
+- no plan gate should block this for Admin or Pro
+- if there is no explanation available, show:
+  “No breakdown available for this section.”
+
+Do not show upgrade messages.
+
+--------------------------------------------------
+8. MAKE RESULT HEADER STICKY
+--------------------------------------------------
+
+The result header containing:
+- back button
+- document title
+- category
+- progress
+- Save
+- Export
+
+should remain sticky/stationary while scrolling.
+
+Use:
+- position: sticky
+- top offset below main nav
+- proper z-index
+- dark background/blur so it remains readable
+
+--------------------------------------------------
+9. PREMIUM ACTION PACK CLEANUP
+--------------------------------------------------
+
+Action Pack should look more premium.
+
+Update action cards to have:
+- clearer spacing
+- stronger card hierarchy
+- priority badge
+- status badge
+- action title
+- explanation
+- source/evidence line
+- optional completion checkbox
+
+Supporting Guidance should be grouped into clean cards or panels.
+
+Do not change generated content logic.
+Only improve layout and readability.
+
+--------------------------------------------------
+10. FINAL QA
+--------------------------------------------------
+
+Verify:
+
+A. Top risk chip says “High Risk · 49/100” or equivalent, not “49 High Risk”
+B. Risk count and risk score are separate
+C. Clicking “1 Risk” opens Risks & Notes
+D. Clicking risk score opens Risks & Notes
+E. Admin sees no higher-tier upgrade messages
+F. Pro sees no higher-tier upgrade messages
+G. Ask This Document is hidden unless fully working
+H. Negotiate buttons are hidden or replaced with Copy Issue Summary
+I. Source Sections breakdown works again
+J. Header remains sticky while scrolling
+K. Action Pack looks cleaner and more premium
+L. No removed tools are reintroduced

@@ -55,10 +55,9 @@ const TABS = [
   { id: "checklist",       label: "Checklist",        icon: ListTodo,    countKey: "actionSteps"       },
   { id: "documents",       label: "Required Docs",    icon: ShieldCheck, countKey: "requiredDocuments" },
   { id: "deadlines",       label: "Deadlines",        icon: Calendar,    countKey: "deadlines"         },
-  { id: "risks",           label: "Risks & Notes",    icon: AlertTriangle                              },
-  { id: "key-terms",       label: "Key Terms",        icon: Flag,          countKey: "keyTerms"         },
-  { id: "action-pack",    label: "Action Pack",      icon: Package, countKey: "actionSteps"             },
-  { id: "ask",             label: "Ask This Document", icon: MessageSquare                               },
+  { id: "risks",           label: "Risks & Notes",    icon: AlertTriangle, countKey: "risks"           },
+  { id: "key-terms",       label: "Key Terms",        icon: Flag,          countKey: "keyTerms"        },
+  { id: "action-pack",     label: "Action Pack",      icon: Package,       countKey: "actionSteps"     },
 ]
 
 export default function Analyze() {
@@ -95,14 +94,9 @@ export default function Analyze() {
   const scrollTabsLeft  = () => tabListRef.current?.scrollBy({ left: -200, behavior: "smooth" })
   const scrollTabsRight = () => tabListRef.current?.scrollBy({ left:  200, behavior: "smooth" })
 
-  const { entitlements, loading: entitlementsLoading } = useEntitlements()
+  const { entitlements } = useEntitlements()
   const { isSignedIn } = useUser()
   const { getToken, userId } = useAuth()
-  const isPro = entitlements?.plan === "pro" || entitlements?.plan === "team"
-  // Tabs locked to Pro plan. Starter plan includes: plain-english, summary, key-terms,
-  // action-pack, documents (Required Docs), and deadlines.
-  const PRO_ONLY_TABS = new Set(["source-sections", "missing", "checklist", "risks"])
-  const isTabLocked = (tabId: string) => PRO_ONLY_TABS.has(tabId) && !isPro && !entitlementsLoading
 
   // Clear stale context whenever demoId changes (including on first mount when context
   // holds a previous demo's analysis — prevDemoIdRef approach misses the mount case).
@@ -361,8 +355,7 @@ export default function Analyze() {
                   className={`shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-bold transition-colors hover:opacity-80 ${sr.bg} ${sr.color}`}
                   title="Document Risk Score — click to view risks"
                 >
-                  <span className="font-mono">{score}</span>
-                  <span className="hidden sm:inline">{sr.label}</span>
+                  <span>{sr.label} · {score}/100</span>
                 </button>
               )
             })()}
@@ -398,7 +391,6 @@ export default function Analyze() {
             {TABS.map((tab) => {
               const count = (tab as any).countKey ? (analysis as any)[(tab as any).countKey]?.length : null
               const isMissing = tab.id === "missing"
-              const isLocked = isTabLocked(tab.id)
               return (
                 <Tabs.Trigger
                   key={tab.id}
@@ -412,15 +404,12 @@ export default function Analyze() {
                 >
                   <tab.icon className="w-3.5 h-3.5 shrink-0" />
                   <span className="whitespace-nowrap">{tab.label}</span>
-                  {isLocked && (
-                    <Lock className="w-3 h-3 text-amber-500 shrink-0" />
-                  )}
-                  {count != null && count > 0 && !isLocked && (
+                  {count != null && count > 0 && (
                     <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold leading-none shrink-0 ${activeTab === tab.id ? "bg-background/20 text-background" : "bg-border/50 text-muted-foreground"}`}>
                       {count}
                     </span>
                   )}
-                  {isMissing && missingCount > 0 && activeTab !== "missing" && !isLocked && (
+                  {isMissing && missingCount > 0 && activeTab !== "missing" && (
                     <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[9px] font-bold text-white flex items-center justify-center shrink-0">
                       {missingCount > 9 ? "9+" : missingCount}
                     </span>
@@ -455,45 +444,15 @@ export default function Analyze() {
               >
 
                 {activeTab === "plain-english"   && <PlainEnglishTab analysis={analysis} onTabChange={setActiveTab} />}
-                {activeTab === "source-sections" && (isTabLocked("source-sections")
-                  ? <UpgradeCard title="Source Sections — Pro" description="See exactly which part of the original document backs every requirement, risk, and deadline." />
-                  : <SourceSectionsTab analysis={analysis} documentTypeHint={documentTypeHint} onOpenGuidedReview={() => setGuidedReviewCtx("source-sections")} />)}
+                {activeTab === "source-sections" && <SourceSectionsTab analysis={analysis} documentTypeHint={documentTypeHint} onOpenGuidedReview={() => setGuidedReviewCtx("source-sections")} />}
                 {activeTab === "summary"         && <SummaryTab   analysis={analysis} onTabChange={setActiveTab} onOpenGuidedReview={() => setGuidedReviewCtx("summary")} />}
-                {activeTab === "missing"         && (isTabLocked("missing")
-                  ? <UpgradeCard title="What's Missing — Pro" description="Instantly spot what's incomplete, ambiguous, or absent so nothing slips through the cracks." />
-                  : <WhatsMissingTab analysis={analysis} onActionToggle={handleActionToggle} onDocToggle={handleDocToggle} onTabChange={setActiveTab} onOpenGuidedReview={() => setGuidedReviewCtx("missing")} />)}
-                {activeTab === "checklist"       && (isTabLocked("checklist")
-                  ? <UpgradeCard title="Checklist — Pro" description="A prioritized to-do list of every action step, ranked high / medium / low." />
-                  : <ChecklistTab  analysis={analysis} onToggle={handleActionToggle} documentTypeHint={documentTypeHint} onOpenGuidedReview={() => setGuidedReviewCtx("checklist")} />)}
-                {activeTab === "documents"       && (isTabLocked("documents")
-                  ? <UpgradeCard title="Required Documents — Pro" description="Track every document you need to gather, with built-in completion tracking." />
-                  : <DocumentsTab  analysis={analysis} onToggle={handleDocToggle} onOpenGuidedReview={() => setGuidedReviewCtx("documents")} />)}
-                {activeTab === "deadlines"       && (isTabLocked("deadlines")
-                  ? <UpgradeCard title="Deadlines — Pro" description="All hard deadlines in one place — formatted for easy calendar entry." />
-                  : <DeadlinesTab  analysis={analysis} />)}
-                {activeTab === "risks"           && (isTabLocked("risks")
-                  ? <UpgradeCard title="Risks & Notes — Pro" description="Understand what you're agreeing to and what could go wrong before you sign or submit." />
-                  : <RisksTab      analysis={analysis} onOpenGuidedReview={() => setGuidedReviewCtx("risks")} documentType={analysis.documentType} />)}
+                {activeTab === "missing"         && <WhatsMissingTab analysis={analysis} onActionToggle={handleActionToggle} onDocToggle={handleDocToggle} onTabChange={setActiveTab} onOpenGuidedReview={() => setGuidedReviewCtx("missing")} />}
+                {activeTab === "checklist"       && <ChecklistTab  analysis={analysis} onToggle={handleActionToggle} documentTypeHint={documentTypeHint} onOpenGuidedReview={() => setGuidedReviewCtx("checklist")} />}
+                {activeTab === "documents"       && <DocumentsTab  analysis={analysis} onToggle={handleDocToggle} onOpenGuidedReview={() => setGuidedReviewCtx("documents")} />}
+                {activeTab === "deadlines"       && <DeadlinesTab  analysis={analysis} />}
+                {activeTab === "risks"           && <RisksTab      analysis={analysis} onOpenGuidedReview={() => setGuidedReviewCtx("risks")} documentType={analysis.documentType} />}
                 {activeTab === "key-terms"       && <KeyTermsTab   analysis={analysis} />}
                 {activeTab === "action-pack"     && <ActionPackTab analysis={analysis} onToggle={handleActionToggle} />}
-                {activeTab === "ask"             && (
-                  isSignedIn
-                    ? <DocumentChat analysis={analysis} />
-                    : <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
-                        <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
-                          <MessageSquare className="w-6 h-6 text-primary/60" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold text-foreground mb-1">Sign in to ask questions</p>
-                          <p className="text-xs text-muted-foreground max-w-xs">
-                            Create a free account to ask PlainPath anything about your document.
-                          </p>
-                        </div>
-                        <a href="/sign-up" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity">
-                          Create free account <ArrowRight className="w-4 h-4" />
-                        </a>
-                      </div>
-                )}
 
               </motion.div>
             </AnimatePresence>
@@ -1423,10 +1382,18 @@ function RiskCard({ risk, documentType }: { risk: DocumentAnalysis["risks"][0]; 
   const iconColor = isHigh ? "text-red-600 dark:text-red-400" : isMedium ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"
 
   const { entitlements } = useEntitlements()
-  const canNegotiate = entitlements?.plan === "pro" || entitlements?.plan === "team"
+  const canNegotiate = Boolean(entitlements?.plan === "pro" || entitlements?.role === "admin")
   const showNegotiate = isHigh || isMedium
 
   const [negotiating, setNegotiating] = useState(false)
+  const [copiedSummary, setCopiedSummary] = useState(false)
+
+  function copyIssueSummary() {
+    const parts = [risk.title, risk.description, risk.sourceEvidence ? `Source: "${risk.sourceEvidence}"` : null]
+    navigator.clipboard.writeText(parts.filter(Boolean).join("\n\n")).catch(() => {})
+    setCopiedSummary(true)
+    setTimeout(() => setCopiedSummary(false), 2000)
+  }
   const [negotiation, setNegotiation] = useState<NegotiationResult | null>(null)
   const [negotiateError, setNegotiateError] = useState<string | null>(null)
   const [open, setOpen] = useState(false)
@@ -1496,13 +1463,13 @@ function RiskCard({ risk, documentType }: { risk: DocumentAnalysis["risks"][0]; 
                     {negotiation && <ChevronDown className={`w-3 h-3 transition-transform ${open ? "rotate-180" : ""}`} />}
                   </button>
                 ) : (
-                  <a
-                    href="subscribe"
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 transition-all"
+                  <button
+                    onClick={copyIssueSummary}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-border/40 bg-card text-muted-foreground hover:text-foreground hover:bg-secondary transition-all"
                   >
-                    <Lock className="w-3 h-3" />
-                    Negotiate this — Pro
-                  </a>
+                    {copiedSummary ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+                    {copiedSummary ? "Copied" : "Copy issue summary"}
+                  </button>
                 )}
                 {negotiateError && <span className="text-xs text-destructive">{negotiateError}</span>}
               </div>
@@ -2450,7 +2417,7 @@ function ActionPackTab({ analysis, onToggle }: { analysis: DocumentAnalysis; onT
           <CheckCircle2 className="w-10 h-10 mx-auto mb-3 text-muted-foreground/30" />
           <p className="text-sm font-semibold text-foreground mb-1">No required next steps identified</p>
           <p className="text-sm text-muted-foreground max-w-xs mx-auto leading-relaxed">
-            This document doesn't appear to require specific actions. Use <span className="font-semibold text-foreground">Ask This Document</span> if you have questions about it.
+            This document doesn't appear to require specific actions. Check the Source Sections tab if you have questions about what this document means.
           </p>
         </div>
       </div>
@@ -2505,7 +2472,7 @@ function ActionPackTab({ analysis, onToggle }: { analysis: DocumentAnalysis; onT
           <div>
             <p className="text-sm font-semibold text-foreground mb-0.5">No specific required actions extracted</p>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              The Action Pack may be incomplete. Review the supporting guidance below, check Source Sections, or use Ask This Document with specific questions.
+              The Action Pack may be incomplete. Review the supporting guidance below or check Source Sections for more context.
             </p>
           </div>
         </div>
