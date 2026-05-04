@@ -1,0 +1,211 @@
+PlainPath product direction — establish the official product course
+
+Goal:
+Create a durable product direction document that defines PlainPath as a document completion system.
+
+This is planning/documentation only.
+Do not implement code.
+Do not change billing.
+Do not change RevenueCat.
+Do not change Apple/native billing.
+Do not change routing.
+Do not redesign UI.
+Do not add or restore removed tools.
+
+Create a new document:
+
+docs/plainpath-product-course.md
+
+Purpose:
+PlainPath should set its own course instead of trying to imitate document parsers, PDF editors, e-signature tools, legal AI tools, or document automation platforms.
+
+PlainPath’s core category:
+Document Completion System
+
+North star:
+PlainPath helps people understand, complete, and organize important paperwork before they submit it.
+
+Core product loop:
+Read → Understand → Plan → Guide → Complete → Compile
+
+Define the official product direction with the following sections:
+
+1. PlainPath’s category
+
+PlainPath is not:
+- a generic parser
+- a PDF editor
+- an e-signature tool
+- a legal AI/lawyer replacement
+- a bulk document automation platform
+- a contract lifecycle management tool
+
+PlainPath is:
+- a guided document completion system
+- a plain-English paperwork assistant
+- a source-backed action planner
+- a completion checklist and packet compiler
+
+2. Core user problem
+
+Users do not only need to know what a document says.
+They need to know:
+- what to do
+- what to gather
+- what to sign
+- what deadline matters
+- what is missing
+- where to get official documents
+- whether they are ready to submit
+- what to print, save, or share
+
+3. Official product loop
+
+Document the core loop:
+
+Upload
+→ PlainPath reads the document
+
+Understand
+→ PlainPath explains what the document is and what it means
+
+Plan
+→ PlainPath identifies tasks, documents, deadlines, risks, signatures, and questions
+
+Guide
+→ PlainPath walks the user through each item
+
+Complete
+→ User marks items complete, uploads/gathers documents, adds notes, and tracks open issues
+
+Compile
+→ PlainPath generates a Document Action Packet
+
+4. Product promise
+
+Use this positioning:
+
+“PlainPath turns confusing paperwork into a guided action plan and a ready-to-use document packet.”
+
+Also include alternate approved positioning lines:
+- “Understand it. Complete it. Submit it.”
+- “From paperwork to action packet.”
+- “Know what to do before you submit.”
+- “Plain-English guidance for important documents.”
+
+5. Primary output
+
+The final output of Analyze a Document should be:
+
+Document Action Packet
+
+The packet should include:
+- cover page
+- plain-English summary
+- action checklist
+- completed items
+- open items
+- required documents
+- signatures needed
+- where to get missing documents
+- deadlines
+- risks
+- questions to ask
+- source evidence
+- user notes
+- final submission checklist
+- disclaimer
+
+6. Product rules
+
+PlainPath must:
+- stay source-backed
+- preserve uncertainty
+- show where official documents come from
+- never pretend to have official forms the user did not upload
+- never provide legal advice
+- clearly label drafts/supporting letters as drafts
+- show open items in the final packet
+- allow incomplete, partial, and complete packet exports
+- avoid stale upgrade messages
+- avoid removed tool references
+- keep the app focused on completion
+
+7. Launch scope
+
+For launch, PlainPath should remain focused on:
+- Analyze a Document
+- Contract Review
+- Saved analysis history
+
+Do not restore removed tools:
+- Redact Sensitive Info
+- Trust Check
+- Compare Versions
+- Clause Extractor
+- Builder
+- Digital Signature
+- Starter
+- Team
+- annual billing
+
+8. Competitive distinction
+
+PlainPath’s edge is not document scanning alone.
+
+PlainPath’s edge is:
+- plain-English comprehension
+- task extraction
+- deadline awareness
+- missing document guidance
+- signature guidance
+- where-to-get-this guidance
+- guided completion
+- final packet compilation
+
+9. Roadmap
+
+Define phased roadmap:
+
+Phase 1:
+Completion object parser
+
+Phase 2:
+Grouped Analyze modes:
+Understand / Plan / Complete / Compile
+
+Phase 3:
+Guided Completion UI
+
+Phase 4:
+Document Action Packet compiler
+
+Phase 5:
+Document-type templates:
+- school enrollment
+- lease/rental notice
+- insurance EOB/medical bill
+- employment contract
+- government notice
+- court notice
+- service agreement
+
+Phase 6:
+Premium polish and mobile optimization
+
+10. Acceptance criteria
+
+The document should clearly answer:
+- What is PlainPath?
+- What is PlainPath not?
+- What is the product loop?
+- What is the final deliverable?
+- What should launch include?
+- What should not be rebuilt?
+- What makes PlainPath different?
+- What implementation phase comes first?
+
+Return:
+- file created
+- concise summary
+- recommended next implementation slice

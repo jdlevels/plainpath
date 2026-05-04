@@ -1,0 +1,162 @@
+Implement Phase 2 of the Analyze a Document overhaul: Completion Object Parser only.
+
+Use the planning file:
+docs/analyze-overhaul-plan.md
+
+Goal:
+Create the internal completion-engine foundation without changing the user-facing UI.
+
+This implementation must be safe, isolated, and non-visual.
+
+Do not change:
+- billing
+- RevenueCat
+- Stripe
+- Apple/native billing
+- app routing
+- existing Analyze page UI
+- export menu
+- PDF export
+- tool list
+- plan gates
+- pricing
+- marketing pages
+- removed tools
+
+Do not reintroduce:
+- Redact Sensitive Info
+- Trust Check
+- Compare Versions
+- Clause Extractor
+- Builder
+- Digital Signature
+- Starter plan
+- Team plan
+- annual plan
+
+Required work:
+
+1. Create a typed CompletionObject model.
+
+It should support these object types:
+- action_step
+- required_document
+- missing_document
+- signature_needed
+- deadline
+- risk
+- question_to_ask
+- source_evidence
+- user_note
+- packet_section
+
+Each CompletionObject should support:
+- id
+- type
+- title
+- plainEnglishExplanation
+- whyItMatters
+- whatToDo
+- whereToGetThis
+- sourceQuote
+- sourcePage
+- sourceSection
+- priority
+- severity
+- dueDate
+- trigger
+- status
+- userNotes
+- includedInPacket
+- createdFromAnalysisSection
+
+Allowed statuses:
+- not_started
+- in_progress
+- gathered
+- completed
+- not_applicable
+- needs_help
+
+2. Create a parser function.
+
+Function name:
+analysisResultToCompletionObjects()
+
+Purpose:
+Convert the existing Analyze result data into CompletionObject[].
+
+The parser should map existing analysis sections into completion objects:
+
+- action steps → action_step
+- required docs → required_document
+- missing docs / unresolved needs → missing_document
+- signature-related findings → signature_needed
+- deadlines → deadline
+- risks / warnings → risk
+- questions to ask → question_to_ask
+- source quotes / section references → source_evidence where applicable
+
+3. Keep parser deterministic.
+
+Rules:
+- Do not call AI.
+- Do not call external APIs.
+- Do not fabricate official forms.
+- Do not invent source quotes.
+- Do not invent page numbers.
+- If a field is unknown, leave it null or empty.
+- whereToGetThis may use conservative guidance only when document type clearly supports it.
+- Signature objects must clearly state that official/signable documents come from the original issuer unless uploaded by the user.
+
+4. Add conservative signature handling.
+
+If the analysis contains a signature requirement, missing signed copy, execution issue, or signature block reference, create a signature_needed object.
+
+Example:
+- title: "Signed agreement needed"
+- whereToGetThis: "Request the official signable or executed copy from the original sender, portal, school, agency, employer, landlord, provider, insurer, court, or document issuer."
+- status: "not_started"
+
+5. Add no UI exposure yet.
+
+The parser may be exported for future use, but do not render completion objects anywhere in the app yet.
+
+6. Add tests or QA script.
+
+Create a focused QA/test script that verifies:
+- CompletionObject type supports all required fields
+- all object types are valid
+- all statuses are valid
+- parser returns an array
+- parser does not mutate the original analysis result
+- action steps map correctly
+- required documents map correctly
+- missing documents map correctly
+- deadlines map correctly
+- risks map correctly
+- questions map correctly
+- signature_needed objects are created only from source-backed/signature-related data
+- removed tools are not referenced
+- no billing/pricing/native files changed
+
+7. Add one fixture example.
+
+Use a fictional service agreement or school enrollment style analysis fixture.
+
+The fixture must be fictional and must not use real personal data.
+
+8. Run checks.
+
+Run:
+- TypeScript check/build for affected workspace
+- existing relevant tests if available
+- the new QA script
+
+Return:
+- files changed
+- parser location
+- type/model location
+- QA results
+- confirmation that no UI, billing, RevenueCat, Stripe, route, pricing, or removed-tool changes occurred
+- recommended next slice
