@@ -68,7 +68,7 @@
     "position": 9,
     "filepath": "src/pages/slides/BusinessModelSlide.tsx",
     "title": "Business Model",
-    "description": "Three pricing tiers: Starter ($4.99/mo), Pro ($14.99/mo), Team ($39.99/mo, waitlist).",
+    "description": "Two plans: Free (demo only) and Pro ($19.99/mo, both tools included).",
     "speakerNotes": ""
   },
   {

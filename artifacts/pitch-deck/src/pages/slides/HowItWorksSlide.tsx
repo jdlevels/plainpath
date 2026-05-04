@@ -2,32 +2,29 @@ export default function HowItWorksSlide() {
   const steps = [
     {
       n: "1",
-      title: "Choose the right tool",
-      body: "Four tools cover every scenario. Need to understand a complex form? Use Analyze. Suspicious offer or IRS notice? Trust Check. Starting a project or renting? Build a Contract. About to sign something? Contract Review.",
+      title: "Choose a tool",
+      body: "Two tools cover every scenario. Need to understand a complex form, lease, or government notice? Use Analyze a Document. About to sign something someone else wrote? Use Contract Review.",
       accent: "#4f7cac",
       tags: [
         { label: "Analyze", color: "#60a5fa", bg: "rgba(59,130,246,0.12)" },
-        { label: "Trust Check", color: "#f87171", bg: "rgba(239,68,68,0.12)" },
-        { label: "Build", color: "#34d399", bg: "rgba(16,185,129,0.12)" },
         { label: "Review", color: "#fbbf24", bg: "rgba(245,158,11,0.12)" },
       ],
     },
     {
       n: "2",
-      title: "Upload, paste, or answer 6 questions",
-      body: "Drop in a PDF, Word document, or paste text directly for Analyze, Trust Check, and Contract Review. For Contract Builder, a plain-English wizard guides you through 6 questions about parties, scope, payment, and terms. No legal knowledge needed.",
+      title: "Upload, paste, or drop a file",
+      body: "Drop in a PDF or Word document, or paste text directly. No account required to get started. Both tools start with one simple step — no forms to fill out, no configuration needed.",
       accent: "#4f7cac",
       tags: [
         { label: "PDF / Word", color: "#8fa3bc", bg: "rgba(143,163,188,0.10)" },
         { label: "Paste text", color: "#8fa3bc", bg: "rgba(143,163,188,0.10)" },
-        { label: "6-step wizard", color: "#8fa3bc", bg: "rgba(143,163,188,0.10)" },
         { label: "No account required", color: "#8fa3bc", bg: "rgba(143,163,188,0.10)" },
       ],
     },
     {
       n: "3",
       title: "Get a structured, actionable result",
-      body: "AI returns a fully structured output — not a paragraph of text. Action plans with priority ratings. Trust scores with red-flag breakdowns. Contract drafts with gap analysis. Fairness scores with per-clause negotiation tips. Every finding linked to its exact source.",
+      body: "AI returns a fully structured output — not a paragraph of text. Action plans with priority ratings and source citations. Fairness scores with per-clause negotiation tips. Every finding linked to its exact source in the document.",
       accent: "#4f7cac",
       tags: [
         { label: "Source citations", color: "#8fa3bc", bg: "rgba(143,163,188,0.10)" },
@@ -39,13 +36,13 @@ export default function HowItWorksSlide() {
     {
       n: "4",
       title: "Act — with deadline reminders",
-      body: "Check off action steps as you complete them. Set email reminders for deadlines surfaced from the document. Save and export your analysis. Share a link with a lawyer, accountant, or family member. Progress tracked in real time across sessions.",
+      body: "Check off action steps as you complete them. Set email reminders for deadlines surfaced from the document. Save and export your analysis. Share a link with a lawyer, accountant, or family member.",
       accent: "#4f7cac",
       tags: [
         { label: "Progress tracking", color: "#8fa3bc", bg: "rgba(143,163,188,0.10)" },
         { label: "Email reminders", color: "#8fa3bc", bg: "rgba(143,163,188,0.10)" },
         { label: "Shareable links", color: "#8fa3bc", bg: "rgba(143,163,188,0.10)" },
-        { label: "iOS + Android", color: "#8fa3bc", bg: "rgba(143,163,188,0.10)" },
+        { label: "Web + iOS", color: "#8fa3bc", bg: "rgba(143,163,188,0.10)" },
       ],
     },
   ]
@@ -91,7 +88,7 @@ export default function HowItWorksSlide() {
 
         <div className="mt-[2.5vh] bg-[#4f7cac]/10 border border-[#4f7cac]/25 rounded-[1vw] px-[2vw] py-[1.4vh] flex items-center gap-[1.2vw]">
           <svg viewBox="0 0 24 24" fill="none" className="w-[1.4vw] h-[1.4vw] shrink-0"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke="#7fb2d9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          <span className="text-[1.2vw] text-[#7fb2d9] font-body">From upload to structured result in <strong>under 60 seconds</strong> — for any of the four tools, on any device.</span>
+          <span className="text-[1.2vw] text-[#7fb2d9] font-body">From upload to structured result in <strong>under 60 seconds</strong> — for either tool, on any device.</span>
         </div>
       </div>
     </div>

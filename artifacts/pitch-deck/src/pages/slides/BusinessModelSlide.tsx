@@ -10,68 +10,34 @@ export default function BusinessModelSlide() {
       accentColor: "#6b7a8d",
       dotColor: "#4f7cac",
       features: [
-        "2 document analyses",
-        "All 10 analysis tabs",
-        "Progress tracking",
+        "Try the live demo",
         "No account required",
-      ],
-      badge: null,
-    },
-    {
-      name: "Starter",
-      price: "4.99",
-      sub: "/month",
-      highlight: false,
-      accentColor: "#7fb2d9",
-      dotColor: "#4f7cac",
-      features: [
-        "Unlimited document analyses",
-        "All 10 analysis tabs",
-        "Save & export analyses",
-        "Shareable analysis links",
-        "Email deadline reminders",
+        "See results before subscribing",
       ],
       badge: null,
     },
     {
       name: "Pro",
-      price: "14.99",
+      price: "19.99",
       sub: "/month",
       highlight: true,
       accentColor: "white",
       dotColor: "rgba(255,255,255,0.9)",
       features: [
-        "Everything in Starter",
-        "Document Trust Check",
-        "Build a Contract (all types)",
-        "Contract Review",
+        "Analyze a Document — unlimited",
+        "Contract Review — unlimited",
+        "Save & export analyses",
+        "Shareable analysis links",
+        "Email deadline reminders",
         "PDF export for all tools",
-        "Priority AI processing",
       ],
-      badge: "Most Popular",
-    },
-    {
-      name: "Team",
-      price: "39.99",
-      sub: "/month",
-      highlight: false,
-      accentColor: "#6b7a8d",
-      dotColor: "#4f7cac",
-      features: [
-        "Everything in Pro",
-        "Up to 10 team members",
-        "Shared workspace",
-        "Admin controls & audit log",
-      ],
-      badge: "Coming Soon",
+      badge: "All tools included",
     },
   ]
 
   const toolRows = [
-    { label: "Analyze a Document", free: true, starter: true, pro: true, team: true, color: "#60a5fa" },
-    { label: "Document Trust Check", free: false, starter: false, pro: true, team: true, color: "#f87171" },
-    { label: "Build a Contract", free: false, starter: false, pro: true, team: true, color: "#34d399" },
-    { label: "Contract Review", free: false, starter: false, pro: true, team: true, color: "#fbbf24" },
+    { label: "Analyze a Document", free: false, pro: true, color: "#60a5fa" },
+    { label: "Contract Review",    free: false, pro: true, color: "#fbbf24" },
   ]
 
   return (
@@ -84,18 +50,18 @@ export default function BusinessModelSlide() {
             Business Model
           </p>
           <h2 className="text-[3.8vw] font-extrabold leading-[1.05] tracking-tight text-[#f0f4f8] font-display">
-            Start free. Upgrade to unlock all four tools.
+            Try free. Subscribe to unlock both tools.
           </h2>
           <p className="mt-[0.8vh] text-[1.5vw] text-[#f0f4f8]/50 font-body">
-            Freemium entry — no account needed. Paid plans via Stripe. Cancel any time.
+            Freemium entry — no account needed for demo. Paid plan via Stripe. Cancel any time.
           </p>
         </div>
 
-        <div className="grid grid-cols-4 gap-[1.8vw] mb-[2.5vh]">
+        <div className="grid grid-cols-2 gap-[2.5vw] mb-[2.5vh] max-w-[55vw]">
           {plans.map((plan) => (
             <div
               key={plan.name}
-              className="rounded-[1.3vw] p-[1.8vw] flex flex-col gap-[1.4vh] relative overflow-hidden"
+              className="rounded-[1.3vw] p-[2vw] flex flex-col gap-[1.4vh] relative overflow-hidden"
               style={plan.highlight
                 ? { background: "#4f7cac", boxShadow: "0 0 4vw rgba(79,124,172,0.3)" }
                 : { background: "#0f1929", border: "1px solid #1e2d44" }
@@ -132,10 +98,10 @@ export default function BusinessModelSlide() {
           ))}
         </div>
 
-        <div className="bg-[#0f1929] border border-[#1e2d44] rounded-[1vw] px-[2vw] py-[1.2vh]">
-          <div className="grid grid-cols-5 gap-[1vw] items-center">
+        <div className="bg-[#0f1929] border border-[#1e2d44] rounded-[1vw] px-[2vw] py-[1.2vh] max-w-[55vw]">
+          <div className="grid grid-cols-3 gap-[1vw] items-center">
             <div className="text-[1vw] font-semibold text-[#6b7a8d] font-body">Tool access</div>
-            {["Free", "Starter", "Pro", "Team"].map(p => (
+            {["Free", "Pro"].map(p => (
               <div key={p} className="text-center text-[1vw] font-bold font-body" style={{ color: p === "Pro" ? "#7fb2d9" : "#6b7a8d" }}>{p}</div>
             ))}
             {toolRows.map((row) => (
@@ -144,10 +110,10 @@ export default function BusinessModelSlide() {
                   <div className="w-[0.6vw] h-[0.6vw] rounded-full" style={{ background: row.color }} />
                   <span className="text-[0.95vw] font-body" style={{ color: row.color }}>{row.label}</span>
                 </div>
-                {[row.free, row.starter, row.pro, row.team].map((has, i) => (
+                {[row.free, row.pro].map((has, i) => (
                   <div key={i} className="flex justify-center">
                     {has
-                      ? <svg viewBox="0 0 16 16" fill="none" className="w-[1.1vw] h-[1.1vw]"><circle cx="8" cy="8" r="7" fill={i === 2 ? "rgba(79,124,172,0.25)" : "rgba(52,211,153,0.15)"}/><path d="M5 8l2 2 4-4" stroke={i === 2 ? "#7fb2d9" : "#34d399"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      ? <svg viewBox="0 0 16 16" fill="none" className="w-[1.1vw] h-[1.1vw]"><circle cx="8" cy="8" r="7" fill={i === 1 ? "rgba(79,124,172,0.25)" : "rgba(52,211,153,0.15)"}/><path d="M5 8l2 2 4-4" stroke={i === 1 ? "#7fb2d9" : "#34d399"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       : <svg viewBox="0 0 16 16" fill="none" className="w-[1.1vw] h-[1.1vw]"><circle cx="8" cy="8" r="7" fill="rgba(255,255,255,0.04)"/><path d="M5.5 5.5l5 5M10.5 5.5l-5 5" stroke="#2d3f55" strokeWidth="1.8" strokeLinecap="round"/></svg>
                     }
                   </div>

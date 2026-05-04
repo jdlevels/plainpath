@@ -3,9 +3,7 @@ const base = import.meta.env.BASE_URL;
 export default function TitleSlide() {
   const tools = [
     { label: "Analyze a Document", color: "#60a5fa", dot: "#3b82f6" },
-    { label: "Document Trust Check", color: "#f87171", dot: "#ef4444" },
-    { label: "Build a Contract", color: "#34d399", dot: "#10b981" },
-    { label: "Contract Review", color: "#fbbf24", dot: "#f59e0b" },
+    { label: "Contract Review",    color: "#fbbf24", dot: "#f59e0b" },
   ]
 
   return (
@@ -39,7 +37,7 @@ export default function TitleSlide() {
             your documents mean.
           </h1>
           <p className="mt-[2.5vh] text-[1.8vw] text-[#f0f4f8]/60 font-body leading-snug max-w-[58vw]">
-            A four-tool platform that reads any paperwork and returns a clear, structured result in plain English — so anyone can understand, verify, and act on any document.
+            A two-tool platform that reads any paperwork and returns a clear, structured result in plain English — so anyone can understand, verify, and act on any document.
           </p>
           <div className="flex items-center gap-[2vw] mt-[3vh]">
             {tools.map((t) => (

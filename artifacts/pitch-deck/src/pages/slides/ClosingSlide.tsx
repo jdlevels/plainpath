@@ -3,9 +3,7 @@ const base = import.meta.env.BASE_URL;
 export default function ClosingSlide() {
   const tools = [
     { label: "Analyze a Document", color: "#60a5fa", dot: "#3b82f6" },
-    { label: "Document Trust Check", color: "#f87171", dot: "#ef4444" },
-    { label: "Build a Contract", color: "#34d399", dot: "#10b981" },
-    { label: "Contract Review", color: "#fbbf24", dot: "#f59e0b" },
+    { label: "Contract Review",    color: "#fbbf24", dot: "#f59e0b" },
   ]
 
   return (
@@ -63,7 +61,7 @@ export default function ClosingSlide() {
           <div className="w-px h-[5vh] bg-[#1e2d44]" />
           <div className="text-center">
             <div className="text-[1.2vw] text-[#6b7a8d] font-body mb-[0.5vh]">Platform</div>
-            <div className="text-[1.5vw] font-semibold text-[#7fb2d9] font-body">Web · iOS · Android</div>
+            <div className="text-[1.5vw] font-semibold text-[#7fb2d9] font-body">Web · iOS</div>
           </div>
         </div>
       </div>

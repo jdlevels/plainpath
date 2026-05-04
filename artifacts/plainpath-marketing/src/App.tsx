@@ -23,14 +23,7 @@ import VsContractCrab from "@/pages/VsContractCrab";
 import VsAiLawyer from "@/pages/VsAiLawyer";
 import DemoLanding from "@/pages/DemoLanding";
 import DemoAnalyze from "@/pages/DemoAnalyze";
-import DemoTrustCheck from "@/pages/DemoTrustCheck";
-import DemoBuildContract from "@/pages/DemoBuildContract";
 import DemoContractReview from "@/pages/DemoContractReview";
-import DemoRedact from "@/pages/DemoRedact";
-import DemoCompare from "@/pages/DemoCompare";
-import DemoClauseExtractor from "@/pages/DemoClauseExtractor";
-import DemoAskDocument from "@/pages/DemoAskDocument";
-import DemoBuilder from "@/pages/DemoBuilder";
 
 const queryClient = new QueryClient();
 
