@@ -2461,9 +2461,21 @@ const ACTION_PACK_PRIORITY: Record<string, { label: string; color: string }> = {
 }
 
 const ACTION_PACK_STATUS = {
-  "not-started": { label: "Not started", pillClass: "bg-muted text-muted-foreground hover:bg-muted/70",                                                                                   dot: "bg-muted-foreground/40" },
-  "in-progress":  { label: "In progress",  pillClass: "bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50 hover:bg-blue-100 dark:hover:bg-blue-900/50", dot: "bg-blue-500" },
-  "done":         { label: "Done",          pillClass: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50", dot: "bg-emerald-500" },
+  "not-started": {
+    label: "Not started",
+    pillClass: "bg-muted/70 text-muted-foreground border border-border/60 hover:bg-muted hover:border-border hover:text-foreground/80 active:scale-95 cursor-pointer focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-primary/50",
+    dot: "bg-muted-foreground/40",
+  },
+  "in-progress": {
+    label: "In progress",
+    pillClass: "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/50 hover:bg-amber-100 dark:hover:bg-amber-900/50 hover:border-amber-300 dark:hover:border-amber-700 active:scale-95 cursor-pointer focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-amber-400/60",
+    dot: "bg-amber-500",
+  },
+  "done": {
+    label: "Done",
+    pillClass: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 hover:border-emerald-300 dark:hover:border-emerald-700 active:scale-95 cursor-pointer focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-emerald-400/60",
+    dot: "bg-emerald-500",
+  },
 } as const
 
 function ActionPackTab({ analysis, onToggle }: { analysis: DocumentAnalysis; onToggle: (id: string, done: boolean) => void }) {
@@ -2602,10 +2614,13 @@ function ActionPackTab({ analysis, onToggle }: { analysis: DocumentAnalysis; onT
                         <button
                           onClick={() => cycleStatus(step)}
                           style={{ touchAction: "manipulation" }}
-                          className={`flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full transition-colors ${statusCfg.pillClass}`}
+                          title="Click to update status"
+                          aria-label="Update task status"
+                          className={`flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full transition-all outline-none ${statusCfg.pillClass}`}
                         >
                           <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${statusCfg.dot}`} />
                           {statusCfg.label}
+                          <ChevronDown className="w-3 h-3 shrink-0 opacity-50" />
                         </button>
                       </div>
 
