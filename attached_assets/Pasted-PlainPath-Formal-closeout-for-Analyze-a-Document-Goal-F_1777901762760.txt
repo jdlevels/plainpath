@@ -1,0 +1,135 @@
+PlainPath — Formal closeout for Analyze a Document
+
+Goal:
+Formally close and document Analyze a Document as completed/locked.
+
+Do not rebuild.
+Do not add features.
+Do not redesign.
+Do not change product behavior unless a launch-blocking issue is found during verification.
+
+Product lock:
+Analyze a Document is a cross-device paperwork completion checklist that helps users understand:
+- what the document says
+- what the document requires
+- what deliverables are needed
+- what is complete
+- what still needs completion before submission
+
+Final approved flow:
+Understand → Requirements → Complete → Summary
+
+Primary purpose:
+Completion before submission.
+
+Not the primary purpose:
+- PDF editing
+- legal advice
+- contract drafting
+- redaction
+- trust scoring
+- comparison
+- print-first packet export
+
+Closeout tasks:
+
+1. Create or update a closeout document
+
+Create:
+
+docs/analyze-document-closeout.md
+
+Include:
+- final product definition
+- approved user flow
+- final launch QA summary
+- blockers fixed
+- remaining non-blocking polish
+- protected files confirmation
+- launch rule: no more Analyze expansion before launch
+
+2. Record final QA results
+
+Include these verified results:
+
+- Mobile Analyze flow: PASS
+- Desktop Analyze flow: PASS
+- Auth / entitlement: PASS
+- Native / iOS readiness: PASS
+- Removed-tool cleanup: PASS
+- Contract Review smoke test: PASS
+- Build: PASS
+- Completion parser QA: 55/55 PASS
+
+3. Document fixed blockers
+
+Include:
+
+A. Reset Progress iOS blocker fixed
+- window.confirm replaced with iOS-safe AlertDialog
+
+B. /demo/analyze fixed
+- demo Analyze page rebuilt to match current 4-mode completion UI
+
+C. alert-dialog.tsx build blocker fixed
+- missing buttonVariants dependency/export issue resolved with inline classes
+
+4. Document non-blocking polish only
+
+Include:
+
+- Priority/source badge text is small but acceptable for launch
+- Historical document/session labels may show old tool names for prior sessions only
+- Print/export is no longer the primary Analyze outcome
+- Summary remains secondary to completion checklist
+
+5. Confirm protected areas untouched
+
+Verify no changes required to:
+
+- billing
+- RevenueCat
+- Stripe
+- native billing
+- auth
+- pricing
+- Contract Review
+- homepage
+- marketing
+- routes
+- database
+- parser schema
+- removed tools
+
+6. Final verification commands
+
+Run:
+
+- production build
+- completion parser QA
+- security scan if available
+- grep for removed-tool references in Analyze primary flow
+- grep for Starter / Team / annual user-facing references in Analyze primary flow
+
+7. Final output
+
+Return:
+
+- files created/updated
+- final Analyze status
+- final QA table
+- blockers fixed
+- non-blocking polish
+- protected files untouched confirmation
+- final recommendation
+
+Final recommendation should be one of:
+
+APPROVED / LOCKED — Analyze a Document completed
+
+or
+
+NOT APPROVED — blocker found
+
+Expected final status:
+APPROVED / LOCKED — Analyze a Document completed.
