@@ -252,7 +252,7 @@ export default function Analyze() {
   }
 
   return (
-    <div className="h-screen overflow-hidden flex flex-col bg-background">
+    <div className="analyze-screen-root h-screen overflow-hidden flex flex-col bg-background">
 
       {/* ── Header ───────────────────────────────────── */}
       <div className="no-print shrink-0 bg-background/95 backdrop-blur-md border-b border-border/50 z-30">
@@ -340,10 +340,10 @@ export default function Analyze() {
       </div>
 
       {/* Split workspace */}
-      <div className="flex-1 flex min-h-0 overflow-hidden">
+      <div className="analyze-workspace-split flex-1 flex min-h-0 overflow-hidden">
 
         {/* Left: document viewer */}
-        <div className={`flex-col overflow-hidden border-r border-border/40 md:w-[52%] md:flex md:flex-none ${mobileAnalyzeTab === "document" ? "flex flex-1" : "hidden"}`}>
+        <div className={`no-print flex-col overflow-hidden border-r border-border/40 md:w-[52%] md:flex md:flex-none ${mobileAnalyzeTab === "document" ? "flex flex-1" : "hidden"}`}>
           <DocumentStageViewer
             fileName={uploadedAnalyzeFile?.name ?? (demoId ? "Demo Document" : "Analyzed Document")}
             pdfFile={hasPdf ? uploadedAnalyzeFile : null}
@@ -354,7 +354,7 @@ export default function Analyze() {
 
         {/* Right: analysis panel — this div IS the scroll container */}
         <div
-          className={`flex-col overflow-y-auto md:w-[48%] md:flex md:flex-none ${mobileAnalyzeTab === "analysis" ? "flex flex-1" : "hidden"}`}
+          className={`analyze-results-panel flex-col overflow-y-auto md:w-[48%] md:flex md:flex-none ${mobileAnalyzeTab === "analysis" ? "flex flex-1" : "hidden"}`}
           style={{ paddingBottom: "max(6rem, env(safe-area-inset-bottom) + 6rem)" }}
         >
           <div className="px-4 sm:px-5">

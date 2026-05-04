@@ -1,0 +1,172 @@
+PlainPath export bug fix — PDF export only prints one page
+
+Issue:
+When clicking Export on the Analyze Results page and choosing Save as PDF, the browser print preview only shows 1 page even though the analysis report is longer than one page.
+
+This is a launch blocker because users expect the full analysis report to export.
+
+Do not change billing.
+Do not change RevenueCat.
+Do not change analysis generation.
+Do not redesign the app.
+Do not add removed tools.
+This is an export/print behavior fix only.
+
+Observed:
+- Browser print preview shows only 1 page.
+- Export appears to print the visible app viewport instead of the full report.
+- The floating help/chat bubble appears in the export preview and should be hidden.
+
+Likely cause:
+The report content is inside a scrollable/fixed-height container, and print CSS is not expanding it for print.
+
+Required fix:
+
+1. Create proper print/export CSS for the analysis report
+
+When printing/exporting:
+- expand all report containers
+- remove fixed heights
+- remove max-heights
+- remove overflow scrolling
+- allow content to flow naturally across multiple pages
+
+Use print CSS similar to:
+
+@media print {
+  html,
+  body {
+    height: auto !important;
+    overflow: visible !important;
+    background: white !important;
+  }
+
+  .print-report,
+  .analysis-report,
+  .results-panel,
+  .report-content {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .no-print,
+  .app-header,
+  .top-nav,
+  .pdf-viewer,
+  .tab-bar,
+  .sticky-header,
+  .floating-help,
+  .chat-widget,
+  button {
+    display: none !important;
+  }
+}
+
+Adjust class names to match the actual codebase.
+
+2. Hide non-report UI from export
+
+The exported PDF should not include:
+- browser/app navigation
+- PDF viewer pane
+- top app header
+- floating help/chat button
+- Save button
+- Export button
+- sticky progress/header controls
+- tab navigation
+- hover-only UI
+- tooltips/popovers
+
+3. Export the full report, not just the active tab
+
+The PDF report should include all major analysis sections in document order:
+
+- Report title/header
+- Document type/category/date/confidence
+- Plain English Summary
+- Overview
+- Source Sections summary or extracted source evidence
+- What’s Missing
+- Action Steps
+- Required Documents
+- Deadlines
+- Risks & Notes
+- Key Terms
+- Saved/export timestamp
+- Disclaimer: PlainPath provides document insights and does not replace legal advice.
+
+If the current export intentionally exports only selected sections, update it so the default Export button exports the full report.
+
+4. Page-break handling
+
+Add print-safe page breaks:
+
+- avoid splitting cards awkwardly where possible
+- allow long sections to continue naturally if needed
+- add spacing between report sections
+- keep headings with the first card/content below them when possible
+
+Suggested CSS:
+
+@media print {
+  .report-section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    margin-bottom: 18px;
+  }
+
+  .report-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .long-section {
+    break-inside: auto;
+    page-break-inside: auto;
+  }
+}
+
+Use avoid only where it does not cause content to disappear. Long sections must be allowed to continue to the next page.
+
+5. Add a dedicated print wrapper if needed
+
+If the current app layout is difficult to print cleanly, create a dedicated hidden export/print component:
+
+AnalysisPrintReport
+
+It should render all analysis sections in a plain document layout and become visible only during print.
+
+Example behavior:
+- Normal screen: hidden
+- Print/export: visible
+- App UI: hidden
+
+This is preferred if the live app layout has too many scroll containers.
+
+6. QA requirements
+
+Test with the current sample Service Agreement analysis.
+
+Verify:
+A. Export preview shows multiple pages when report content exceeds one page.
+B. All report sections appear in the PDF preview.
+C. No floating chat/help bubble appears.
+D. No app header/nav appears.
+E. No PDF viewer pane appears.
+F. No tabs appear.
+G. No content is cut off at the bottom of page 1.
+H. Long sections continue onto page 2/3 as needed.
+I. The report remains readable in portrait layout.
+J. Browser Save as PDF creates a complete report.
+K. Build remains clean.
+
+7. Report back
+
+Return:
+- Files changed
+- Root cause found
+- Whether export uses print CSS or a dedicated print report component
+- Number of pages generated for the sample report
+- Confirmation that chat/help bubble and app chrome are hidden

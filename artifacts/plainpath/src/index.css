@@ -290,30 +290,80 @@
     color-scheme: light;
   }
 
-  /* Remove chrome */
+  /* ── 1. Expand the app shell so content flows across pages ── */
+  html, body {
+    height: auto !important;
+    overflow: visible !important;
+    background: white !important;
+    font-size: 11pt;
+    color: #1a1a1a;
+  }
+
+  /* Root and the outermost h-screen container */
+  #root,
+  #root > div,
+  .analyze-screen-root {
+    height: auto !important;
+    overflow: visible !important;
+    min-height: 0 !important;
+    display: block !important;
+  }
+
+  /* The flex split-workspace wrapper */
+  .analyze-workspace-split {
+    display: block !important;
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  /* The right-panel scroll container */
+  .analyze-results-panel {
+    display: block !important;
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+    padding-bottom: 0 !important;
+    width: 100% !important;
+  }
+
+  /* Inner px wrapper */
+  .analyze-results-panel > div {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  /* ── 2. Remove chrome ── */
   nav,
   header,
   .no-print,
   [data-radix-popper-content-wrapper] { display: none !important; }
 
-  body { background: white !important; font-size: 11pt; color: #1a1a1a; }
-
-  /* Full-width content */
+  /* ── 3. Full-width content ── */
   .max-w-5xl,
   .max-w-3xl { max-width: 100% !important; padding: 0 !important; }
 
-  /* Show print-only report */
+  /* ── 4. Show print-only report ── */
   .print-only { display: block !important; padding: 0 !important; }
 
-  /* Page breaks */
+  /* ── 5. Page breaks ── */
   .print-break { page-break-before: always; break-before: page; }
   .print-avoid-break { page-break-inside: avoid; break-inside: avoid; }
 
   /* ── Print report layout ── */
   .print-header { margin-bottom: 18px; }
 
+  /* Sections: allow long ones to flow naturally across pages */
   .print-section {
     margin-bottom: 18px;
+    break-inside: auto;
+    page-break-inside: auto;
+  }
+
+  /* Short items inside sections should stay together */
+  .print-section > .print-check-item,
+  .print-section > div > .print-check-item {
+    break-inside: avoid;
     page-break-inside: avoid;
   }
 

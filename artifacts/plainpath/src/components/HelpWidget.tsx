@@ -289,7 +289,7 @@ export function HelpWidget() {
         onClick={() => setOpen((v) => !v)}
         aria-label={open ? "Close assistant" : "Open PlainPath Assistant"}
         className={[
-          "fixed bottom-6 right-6 z-50 rounded-full shadow-lg",
+          "no-print fixed bottom-6 right-6 z-50 rounded-full shadow-lg",
           "flex items-center justify-center transition-all duration-200",
           "bg-primary text-primary-foreground hover:bg-primary/90",
           open ? "scale-90 opacity-80" : "scale-100 opacity-100",
@@ -303,7 +303,7 @@ export function HelpWidget() {
       {open && (
         <div
           className={[
-            "fixed bottom-24 right-4 z-50 w-[calc(100vw-2rem)] sm:w-96",
+            "no-print fixed bottom-24 right-4 z-50 w-[calc(100vw-2rem)] sm:w-96",
             "rounded-2xl border border-border/60 bg-background shadow-2xl",
             "flex flex-col overflow-hidden",
           ].join(" ")}

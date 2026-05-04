@@ -1,0 +1,321 @@
+PlainPath launch blocker — full app-wide stale feature cleanup + export dropdown premium fix
+
+Goal:
+Perform a full app-wide launch-scope cleanup and fix the Export dropdown UI.
+
+This is now a pre-submission blocker.
+
+Do not change billing logic unless stale/removed tools are still exposed.
+Do not change RevenueCat.
+Do not change analysis generation.
+Do not add new features.
+Do not reintroduce removed tools.
+
+Launch scope is strictly:
+- Analyze a Document
+- Contract Review
+- Saved analysis history
+- PlainPath Pro only
+- $19.99/month
+
+Removed/non-launch tools must not appear in user-facing UI:
+- Redact Sensitive Info
+- Trust Check
+- Build a Contract
+- Ask This Document
+- Compare Versions
+- Clause Extractor
+- Contract Builder
+- Builder
+- PDF Editor
+- Digital Signature
+- Team plan
+- Starter plan
+- annual billing
+- higher-tier / upgrade messaging
+
+--------------------------------------------------
+1. APP-WIDE USER-FACING STALE REFERENCE AUDIT
+--------------------------------------------------
+
+Search the entire codebase for user-facing references to:
+
+- Redact
+- Redact Sensitive Info
+- Trust Check
+- Build a Contract
+- Ask This Document
+- Compare Versions
+- Clause Extractor
+- Contract Builder
+- Builder
+- PDF Editor
+- Digital Signature
+- Starter
+- Team
+- Annual
+- yearly
+- higher-tier
+- upgrade to access
+- Send to tool
+- methodology reviewed by licensed attorneys
+
+For each match, classify it as:
+A. user-facing UI
+B. route/path only
+C. internal code/comment
+D. test fixture/mock/demo only
+
+Remove or update all user-facing stale references.
+
+Acceptance:
+- No removed tool appears in navigation
+- No removed tool appears in export menus
+- No removed tool appears in billing
+- No removed tool appears in dashboard
+- No removed tool appears in onboarding
+- No removed tool appears in saved analysis/history
+- No removed tool appears in support/help/What’s New/FAQ
+- No removed tool appears in marketing pages
+- No removed tool appears in mobile/native screens
+
+--------------------------------------------------
+2. FIX EXPORT DROPDOWN CONTENT
+--------------------------------------------------
+
+Current issue:
+The Export dropdown still shows “Redact Sensitive Info” under “Send to Tool.”
+This is not launch scope and must be removed.
+
+For launch, simplify the Export dropdown to only real, working actions.
+
+Recommended final dropdown:
+
+EXPORT / SHARE
+
+1. Print / Save as PDF
+2. Download full report PDF
+3. Copy report text
+4. Copy share link
+
+Optional only if already fully working:
+5. Download audit trail
+
+Remove:
+- Download .txt if it creates a weak/plain file experience
+- Send to Tool section
+- Redact Sensitive Info
+- Share... if it opens no polished flow or uses unfinished behavior
+- Any disabled or placeholder action
+
+If “Download full report PDF” is not implemented as a real file download, either:
+- hide it, or
+- label browser print clearly as “Print / Save as PDF”
+
+Do not show actions that do not fully work.
+
+Acceptance:
+- Export dropdown contains only launch-ready actions
+- No removed tools
+- No “Send to Tool”
+- No Redact Sensitive Info
+- No placeholder share action
+- No broken download action
+- All visible actions work
+
+--------------------------------------------------
+3. FIX EXPORT DROPDOWN VISUAL DESIGN
+--------------------------------------------------
+
+Current issue:
+The dropdown looks visually unfinished:
+- translucent/overlapping content
+- poor contrast
+- red banner behind menu bleeds through
+- cramped section spacing
+- weak alignment
+- inconsistent icon spacing
+
+Make the dropdown premium and app-quality.
+
+Required visual changes:
+- solid dark background, not transparent
+- higher z-index than page alerts/tabs/cards
+- subtle border
+- soft shadow
+- rounded corners
+- consistent width
+- clean section headers
+- proper row height
+- icon/text aligned
+- hover state on each row
+- active/pressed state
+- focus-visible state
+- no background content visible through menu
+- no clipping
+- no overlap artifacts
+
+Suggested styling:
+- background: near-black or app surface color
+- border: subtle neutral border
+- shadow: medium soft shadow
+- section label: small uppercase muted text
+- row hover: slightly lighter surface
+- dangerous/removed actions: do not show at all
+
+Acceptance:
+- Dropdown looks like a finished product menu
+- Text is readable
+- Menu floats cleanly above the page
+- Alert banners do not bleed through
+- Icons align with text
+- Menu closes on outside click / Escape
+- Works on desktop and mobile
+
+--------------------------------------------------
+4. EXPORT PDF BUG STILL MUST BE FIXED
+--------------------------------------------------
+
+The Export action previously opened print preview showing only 1 page.
+
+Fix this as part of this pass.
+
+Required:
+- Print / Save as PDF must export the full analysis report
+- Not just the visible viewport
+- Not just the active tab
+- No floating chat/help bubble in print
+- No app header/nav in print
+- No PDF viewer pane in print
+- No tabs in print
+- Report content should flow across multiple pages
+
+Preferred:
+Create or use a dedicated print report component:
+AnalysisPrintReport
+
+It should render all report sections in clean document format:
+- Header/title
+- Document metadata
+- Plain English Summary
+- Overview
+- Source evidence summary
+- What’s Missing
+- Action Steps
+- Required Documents
+- Deadlines
+- Risks & Notes
+- Key Terms
+- Disclaimer
+
+Acceptance:
+- Browser print preview shows more than 1 page when content is long
+- Full report exports
+- Nothing is cut off
+- UI chrome is hidden
+- Floating help bubble is hidden
+
+--------------------------------------------------
+5. ROUTE AND NAVIGATION CLEANUP
+--------------------------------------------------
+
+Check all routes and navigation sources.
+
+Removed routes should either:
+- redirect to the main dashboard/tools page, or
+- show a clean “This tool is no longer available” page only for old bookmarked URLs
+
+But removed tools must not appear in:
+- Tools dropdown
+- app sidebar/top nav
+- dashboard cards
+- marketing cards
+- support pages
+- export menus
+- account/billing pages
+
+Acceptance:
+- user cannot navigate to removed tools through UI
+- direct old routes do not crash
+- no removed tool is advertised
+
+--------------------------------------------------
+6. BILLING / ENTITLEMENT DISPLAY CLEANUP
+--------------------------------------------------
+
+Confirm billing/account pages show only:
+
+PlainPath Pro — $19.99/month
+
+Included:
+- Analyze a Document
+- Contract Review
+- Saved analysis history
+
+Remove all visible:
+- Starter
+- Team
+- annual billing
+- $4.99
+- $29.99
+- legacy tool names
+
+Acceptance:
+- Billing page is consistent with RevenueCat and Stripe Pro plan
+- No stale plan copy remains
+
+--------------------------------------------------
+7. WHAT’S NEW / SUPPORT / FAQ CLEANUP
+--------------------------------------------------
+
+Update any product history/help content so it matches launch scope.
+
+What’s New should only reference:
+- Analyze a Document
+- Contract Review
+- PlainPath Pro
+- saved analysis history
+- export/save improvements
+- source-backed plain-English analysis
+
+Remove:
+- Clause Extractor
+- Compare Versions
+- Contract Builder
+- Starter
+- Team
+- annual billing
+- removed features
+
+Support/FAQ must not mention removed tools as available.
+
+--------------------------------------------------
+8. FINAL QA CHECKLIST
+--------------------------------------------------
+
+Run a final visual + text audit.
+
+Verify:
+A. Export dropdown looks premium
+B. Export dropdown has no Redact Sensitive Info
+C. Export dropdown has no Send to Tool section
+D. Every export action shown works
+E. Full PDF export produces multiple pages when needed
+F. No removed tools appear anywhere user-facing
+G. No Starter/Team/annual billing appears user-facing
+H. Billing page shows only PlainPath Pro
+I. Analyze page has no higher-tier/upgrade messaging
+J. Contract Review has no higher-tier/upgrade messaging
+K. What’s New is current
+L. Support/FAQ is current
+M. Direct old routes do not crash
+N. Mobile menu has no removed tools
+O. Build remains clean
+
+Return:
+1. Files changed
+2. Stale references found and removed
+3. Export dropdown final action list
+4. Export PDF fix confirmation
+5. Any remaining matches and why they are safe
+6. Final QA result
