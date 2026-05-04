@@ -688,27 +688,27 @@ function SummaryTab({ analysis, onTabChange, onOpenGuidedReview }: { analysis: D
           </div>
           <div className="p-4 space-y-2">
             {highPriority.slice(0, 3).map(step => (
-              <div key={step.id} className="flex items-center gap-3 p-3 rounded-xl bg-white/70 dark:bg-red-950/30 border border-red-200/40 dark:border-red-900/30">
+              <div key={step.id} className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/40">
                 <div className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-sm text-foreground truncate">{step.title}</p>
                   <p className="text-xs text-muted-foreground">{step.category}</p>
                 </div>
-                <button onClick={() => onTabChange("checklist")} style={{ touchAction: "manipulation" }} className="text-xs text-primary font-semibold shrink-0 hover:underline">Go →</button>
+                <button onClick={() => onTabChange("checklist")} style={{ touchAction: "manipulation" }} className="flex items-center gap-0.5 text-xs font-semibold px-2.5 py-1 rounded-lg bg-primary/8 hover:bg-primary/14 text-primary transition-colors cursor-pointer shrink-0 whitespace-nowrap">Go →</button>
               </div>
             ))}
             {hardDeadlines.slice(0, 2).map(dl => (
-              <div key={dl.id} className="flex items-center gap-3 p-3 rounded-xl bg-white/70 dark:bg-red-950/30 border border-red-200/40 dark:border-red-900/30">
+              <div key={dl.id} className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/40">
                 <Clock className="w-3.5 h-3.5 text-red-500 dark:text-red-400 shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-sm text-foreground truncate">{dl.title}</p>
                   <p className="text-xs font-semibold text-red-600 dark:text-red-400">{dl.date}</p>
                 </div>
-                <button onClick={() => onTabChange("deadlines")} style={{ touchAction: "manipulation" }} className="text-xs text-primary font-semibold shrink-0 hover:underline">Go →</button>
+                <button onClick={() => onTabChange("deadlines")} style={{ touchAction: "manipulation" }} className="flex items-center gap-0.5 text-xs font-semibold px-2.5 py-1 rounded-lg bg-primary/8 hover:bg-primary/14 text-primary transition-colors cursor-pointer shrink-0 whitespace-nowrap">Go →</button>
               </div>
             ))}
             {highRisks.slice(0, 2).map(risk => (
-              <div key={risk.id} className="flex items-center gap-3 p-3 rounded-xl bg-white/70 dark:bg-red-950/30 border border-red-200/40 dark:border-red-900/30">
+              <div key={risk.id} className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/40">
                 <XCircle className="w-3.5 h-3.5 text-red-500 dark:text-red-400 shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-sm text-foreground truncate">{risk.title}</p>
@@ -718,7 +718,7 @@ function SummaryTab({ analysis, onTabChange, onOpenGuidedReview }: { analysis: D
             ))}
           </div>
           <div className="px-5 pb-4 flex gap-3">
-            <button onClick={() => onTabChange("missing")} style={{ touchAction: "manipulation" }} className="text-xs text-primary font-semibold hover:underline flex items-center gap-1">
+            <button onClick={() => onTabChange("missing")} style={{ touchAction: "manipulation" }} className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-primary/8 hover:bg-primary/14 text-primary transition-colors cursor-pointer">
               View what's missing <ArrowRight className="w-3 h-3" />
             </button>
           </div>
@@ -1181,7 +1181,7 @@ function DocumentsTab({ analysis, onToggle, onOpenGuidedReview }: { analysis: Do
                   <h3 className="text-xs font-bold uppercase tracking-widest text-amber-700 dark:text-amber-400">Still needed</h3>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400">{requiredPending.length}</span>
                 </div>
-                <div className="p-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
                   {requiredPending.map(doc => (
                     <div key={doc.id} data-review-id={doc.id}>
                       <DocRow doc={doc} onToggle={onToggle} />
@@ -1199,7 +1199,7 @@ function DocumentsTab({ analysis, onToggle, onOpenGuidedReview }: { analysis: Do
                   <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Optional / Supporting</h3>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-secondary text-muted-foreground">{optionalDocs.length}</span>
                 </div>
-                <div className="p-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
                   {optionalDocs.map(doc => (
                     <div key={doc.id} data-review-id={doc.id}>
                       <DocRow doc={doc} onToggle={onToggle} />
@@ -1217,7 +1217,7 @@ function DocumentsTab({ analysis, onToggle, onOpenGuidedReview }: { analysis: Do
                   <h3 className="text-xs font-bold uppercase tracking-widest text-emerald-700 dark:text-emerald-400">Gathered & confirmed</h3>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">{requiredObtained.length}</span>
                 </div>
-                <div className="p-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
                   {requiredObtained.map(doc => (
                     <div key={doc.id} data-review-id={doc.id}>
                       <DocRow doc={doc} onToggle={onToggle} />
@@ -1522,9 +1522,9 @@ function RiskCard({ risk, documentType: _documentType }: { risk: DocumentAnalysi
   const isHigh   = risk.severity === "high"
   const isMedium = risk.severity === "medium"
   const cardCls = isHigh
-    ? "bg-white/70 dark:bg-red-950/30 border border-red-200/40 dark:border-red-900/30"
+    ? "bg-card border border-red-200/50 dark:border-red-900/40"
     : isMedium
-      ? "bg-white/70 dark:bg-amber-950/30 border border-amber-200/40 dark:border-amber-900/30"
+      ? "bg-card border border-amber-200/50 dark:border-amber-900/40"
       : "bg-card border border-border/50"
   const iconCls  = isHigh ? "bg-red-100 dark:bg-red-950/60"      : isMedium ? "bg-amber-50 dark:bg-amber-950/50"   : "bg-secondary"
   const iconColor = isHigh ? "text-red-600 dark:text-red-400"    : isMedium ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"
@@ -1787,7 +1787,7 @@ function ActionStepRow({
         </div>
 
         {!compact && (
-          <p className="text-sm text-muted-foreground/80 leading-relaxed mb-2.5">{step.description}</p>
+          <p className="text-sm text-muted-foreground/90 leading-relaxed mb-2.5">{step.description}</p>
         )}
 
         <div className="flex items-center gap-2 flex-wrap">
@@ -2551,7 +2551,7 @@ function ActionPackTab({ analysis, onToggle }: { analysis: DocumentAnalysis; onT
             )}
             {inProgressCount > 0 && (
               <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-blue-500 inline-block" />
+                <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" />
                 {inProgressCount} in progress
               </span>
             )}
@@ -2631,14 +2631,14 @@ function ActionPackTab({ analysis, onToggle }: { analysis: DocumentAnalysis; onT
 
                       {/* Why it matters */}
                       {step.description && (
-                        <p className="text-xs text-muted-foreground leading-relaxed mb-2">{step.description}</p>
+                        <p className="text-sm text-muted-foreground leading-relaxed mb-2">{step.description}</p>
                       )}
 
                       {/* Source reference */}
                       {step.sourceEvidence && (
                         <div className="flex items-start gap-1.5 mt-1.5">
                           <AlignLeft className="w-3 h-3 text-muted-foreground/50 shrink-0 mt-0.5" />
-                          <p className="text-[11px] text-muted-foreground/60 leading-relaxed italic">{step.sourceEvidence}</p>
+                          <p className="text-[11px] text-muted-foreground/70 leading-relaxed italic">{step.sourceEvidence}</p>
                         </div>
                       )}
                     </div>
