@@ -1,0 +1,125 @@
+PlainPath — Contract Review final visual QA and closeout readiness
+
+Goal:
+Verify the restructured Contract Review experience is clean, readable, and ready to lock.
+
+Do not rebuild.
+Do not add features.
+Do not change Analyze.
+Do not touch billing, RevenueCat, Stripe, native billing, auth, pricing, routes, database, homepage, or removed tools.
+
+Contract Review product lock:
+Contract Review helps users quickly understand what a contract says, what clauses matter, what obligations they are accepting, what needs attention, and what questions to ask before signing.
+
+Test the live/published app and demo surfaces.
+
+1. Main Contract Review app QA
+
+Verify:
+- Contract Review opens correctly
+- Uploaded/demo contract renders correctly
+- Summary is short and easy to understand
+- Key Clauses is the main useful section
+- Clause cards show:
+  - What it says
+  - Why this matters
+  - Questions to Ask Before Signing
+  - Suggested revision language
+  - Source quote or clause reference
+- “Questions to Ask Before Signing” is readable and not cluttered
+- “Suggested revision language” is helpful but not aggressive
+- No “do not sign” language appears
+- No “why this is a problem” language appears
+- No “Already signed?” section appears
+
+2. Section structure QA
+
+Verify current structure:
+- Summary
+- Key Clauses
+- Balanced Clauses
+- Before You Sign
+
+Check:
+- Red Flags and Watch Outs are properly merged into Key Clauses
+- Balanced Clauses is collapsed by default
+- Missing Protections appear inside Before You Sign as “Items this contract is missing”
+- Filter chips are simplified:
+  - All
+  - Needs Attention
+  - Balanced
+  - Before You Sign
+
+3. Mobile QA
+
+Verify at mobile width:
+- Summary is readable
+- Clause cards are not cramped
+- Questions to Ask Before Signing is easy to scan
+- Suggested revision language does not dominate the card
+- Buttons/chips are tappable
+- No horizontal overflow
+- No tiny critical text that carries important meaning alone
+
+4. Desktop QA
+
+Verify:
+- Layout feels premium and professional
+- Right-side panel is scannable
+- No wall-of-text sections
+- Clause cards have clear hierarchy
+- Source quotes are visually secondary
+- Before You Sign is easy to find
+
+5. Demo surface QA
+
+Verify DemoContractReview:
+- Uses the same structure as the real app
+- Summary banner renders correctly
+- Key Clauses section shows What it says / Why this matters / Questions to Ask Before Signing / Suggested revision language
+- Before You Sign checklist is visible
+- Missing Items section is visible
+- No stale copy remains
+
+6. Safety language QA
+
+Search the codebase and visible UI for:
+- “do not sign”
+- “why this is a problem”
+- “illegal”
+- “guaranteed safe”
+- “attorney-approved”
+- “you should sign”
+- “you should not sign”
+
+Expected:
+0 user-facing matches.
+
+Allowed language:
+- review
+- clarify
+- confirm
+- ask before signing
+- may need attention
+- consider reviewing with a qualified professional if needed
+
+7. Build / QA
+
+Run:
+- production build
+- TypeScript check if available
+- grep for removed hostile phrases
+- grep for removed tool references in Contract Review primary flow
+
+Return:
+1. Mobile screenshots
+2. Desktop screenshots
+3. Demo screenshots
+4. Pass/fail table
+5. Any launch blockers
+6. Any small polish issues
+7. Protected files untouched confirmation
+8. Final recommendation:
+   APPROVED / LOCKED
+   or
+   FIX BEFORE LOCK

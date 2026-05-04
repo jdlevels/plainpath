@@ -535,7 +535,7 @@ function ContractReviewPrintReport({ result }: { result: ReviewResult }) {
               </div>
               <p className="print-item-desc"><strong>What it means:</strong> {c.explanation}</p>
               {c.whyUnfair && (
-                <p className="print-item-desc" style={{ color: "#92400e" }}><strong>Why this is a problem:</strong> {c.whyUnfair}</p>
+                <p className="print-item-desc" style={{ color: "#92400e" }}><strong>Why this matters:</strong> {c.whyUnfair}</p>
               )}
               {c.negotiationLanguage && (
                 <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: "4px", padding: "6px 8px", margin: "4px 0 0 0" }}>
