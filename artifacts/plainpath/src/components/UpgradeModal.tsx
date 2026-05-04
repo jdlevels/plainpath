@@ -10,7 +10,6 @@ interface Props {
   reason: "analyses" | "trustCheck" | "contractDraft" | "contractReview" | "redact" | "compare"
   used?: number
   limit?: number
-  planRequired?: "starter" | "pro"
 }
 
 const REASON_COPY = {
@@ -52,22 +51,13 @@ const REASON_COPY = {
   },
 }
 
-const PLAN_HIGHLIGHTS = {
-  starter: [
-    "Analyze a Document — unlimited access",
-    "Contract Review — clause-by-clause analysis",
-    "Plain English summary & full Action Pack",
-    "Key Terms, Deadlines, Risks",
-    "Saved analysis history",
-  ],
-  pro: [
-    "Analyze a Document — unlimited access",
-    "Contract Review — clause-by-clause analysis",
-    "Plain English summary & full Action Pack",
-    "Key Terms, Deadlines, Risks",
-    "Saved analysis history",
-  ],
-}
+const PLAN_HIGHLIGHTS = [
+  "Analyze a Document — unlimited access",
+  "Contract Review — clause-by-clause analysis",
+  "Plain English summary & full Action Pack",
+  "Key Terms, Deadlines, Risks",
+  "Saved analysis history",
+]
 
 export default function UpgradeModal({ open, onClose, reason, used, limit }: Props) {
   const [, setLocation] = useLocation()
@@ -119,7 +109,7 @@ export default function UpgradeModal({ open, onClose, reason, used, limit }: Pro
             PlainPath Pro includes
           </p>
           <ul className="space-y-2">
-            {PLAN_HIGHLIGHTS[copy.planRequired].map((f) => (
+            {PLAN_HIGHLIGHTS.map((f) => (
               <li key={f} className="flex items-start gap-2 text-sm text-foreground/80">
                 <div className="mt-0.5 w-4 h-4 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                   <div className="w-1.5 h-1.5 rounded-full bg-primary" />

@@ -16,8 +16,8 @@ const FAQS = [
     a: "PlainPath works with leases, employment contracts, healthcare forms, government applications, grant packets, legal agreements, tax notices, and more. If it's text-based and has requirements, deadlines, or legalese — it works.",
   },
   {
-    q: "What's the difference between the six tools?",
-    a: "Analyze a Document breaks down paperwork you already have — extracting action steps, deadlines, risks, and required documents in plain English. Document Trust Check scores whether a document appears legitimate or shows scam and fraud indicators. Build a Contract creates a new agreement from scratch based on your deal terms, with a gap analysis. Contract Review reads a contract someone else wrote, flags risky or missing clauses, scores it, and gives you negotiation language. Redact Sensitive Info detects and removes personal information — names, SSNs, account numbers, and more — before you share or analyze a document. Ask This Document lets you upload any document and ask plain-English questions about clauses, obligations, deadlines, and risks — getting direct answers sourced from the text.",
+    q: "What can PlainPath do?",
+    a: "PlainPath offers two tools. Analyze a Document breaks down any paperwork you already have — extracting action steps, deadlines, risks, and required documents in plain English, then helps you build a completion plan. Contract Review reads a contract someone else wrote, flags risky or missing clauses, scores it, and gives you negotiation language ready to send back. Both tools are included in PlainPath Pro.",
   },
   {
     q: "Is the output legal advice?",
@@ -29,7 +29,7 @@ const FAQS = [
   },
   {
     q: "Can I use PlainPath on my phone?",
-    a: "Yes — the web app is mobile-friendly. Native iOS and Android apps are on the roadmap.",
+    a: "Yes — the web app is mobile-friendly and works on any smartphone browser. A native iOS app is coming soon.",
   },
   {
     q: "Which plan do I need for each tool?",

@@ -82,19 +82,19 @@ export default function ScamNotice() {
           <div className="flex items-start gap-3">
             <ShieldCheck className="w-5 h-5 text-primary shrink-0 mt-0.5" />
             <div>
-              <h3 className="text-sm font-bold mb-2">Run a Trust Check on any suspicious document</h3>
+              <h3 className="text-sm font-bold mb-2">Analyze this document with PlainPath</h3>
               <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-                Paste or upload any document and PlainPath's Trust Check will score it for scam indicators, pressure tactics, suspicious contact details, and authenticity markers — giving you a clear verdict in under a minute.
+                PlainPath can review the notice, surface risks, deadlines, and next steps — giving you a plain-English breakdown before you act.
               </p>
-              <Link href="/import?mode=trust-check" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity">
-                Check this document <ArrowRight className="w-4 h-4" />
+              <Link href="/analyze" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity">
+                Start a Document Plan <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
           </div>
         </div>
 
         <p className="text-xs text-muted-foreground">
-          PlainPath's Trust Check is AI-assisted and for informational purposes. Always independently verify suspicious documents through official channels.
+          PlainPath's analysis is AI-assisted and for informational purposes. Always independently verify suspicious documents through official channels.
         </p>
       </div>
     </div>

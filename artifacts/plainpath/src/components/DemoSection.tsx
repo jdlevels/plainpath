@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
-  Upload, Loader2, CheckCircle2, AlertTriangle, Clock,
-  FileText, ShieldCheck, Calendar, Flag,
-  ArrowRight, PenLine, BookOpen, XCircle, TriangleAlert,
-  CircleCheck, Download, User, DollarSign, Gavel, MessageSquare,
-  ScanLine, BadgeCheck, Scale, Copy,
+  Upload, Loader2, CheckCircle2, Clock,
+  FileText, Calendar, Flag,
+  ArrowRight, BookOpen, TriangleAlert,
+  CircleCheck, MessageSquare,
+  Scale, Copy,
 } from "lucide-react"
 import { useLocation } from "wouter"
 
@@ -20,28 +20,8 @@ const TOOLS = [
     tagline: "Upload any document, get a full action plan",
     url: "plainpathapp.com/app/analyze",
     frames: 3,
-    cta: { label: "Try it free", path: "/analyze" },
+    cta: { label: "Start a Document Plan", path: "/analyze" },
     description: "Upload any notice, contract, or government form. PlainPath reads every clause and returns prioritized action steps, deadlines, and risks — in plain English.",
-  },
-  {
-    id: "trust",
-    icon: ShieldCheck,
-    label: "Document Trust Check",
-    tagline: "Know if a document is real before you act",
-    url: "plainpathapp.com/app/trust-check",
-    frames: 3,
-    cta: { label: "Run a Trust Check", path: "/import?mode=trust-check" },
-    description: "Paste any document that made you uneasy — a payment demand, prize notice, or official-looking letter. Get an authenticity score and red flags explained.",
-  },
-  {
-    id: "contract",
-    icon: PenLine,
-    label: "Build a Contract",
-    tagline: "Answer 6 questions, get a real contract",
-    url: "plainpathapp.com/app/build",
-    frames: 3,
-    cta: { label: "Build a Contract", path: "/build" },
-    description: "Answer a few plain-English questions about your deal. PlainPath drafts a complete, clause-by-clause contract with gap analysis — ready to download.",
   },
   {
     id: "review",
@@ -50,7 +30,7 @@ const TOOLS = [
     tagline: "Review a contract before you sign",
     url: "plainpathapp.com/app/review",
     frames: 3,
-    cta: { label: "Review a Contract", path: "/review" },
+    cta: { label: "Review a Contract", path: "/contract-review" },
     description: "Someone handed you a contract. Paste it in and get a clause-by-clause review: unfair terms flagged, missing protections identified, and negotiation language ready to send back.",
   },
 ]
@@ -171,217 +151,6 @@ function AnalyzeResultsFrame() {
   )
 }
 
-/* ─────────────────────────────────────────────────────────────
-   TRUST CHECK FRAMES
-───────────────────────────────────────────────────────────── */
-function TrustInputFrame() {
-  const lines = [
-    "URGENT: Your account has been flagged for suspicious",
-    "activity. You must pay $892 within 48 hours to avoid",
-    "legal action. Send payment to the following address…",
-    "",
-    "Failure to comply will result in immediate prosecution.",
-    "Reference: CASE-2026-00482 · IRS Compliance Division",
-  ]
-  return (
-    <div className="flex flex-col h-full gap-3 select-none">
-      <div className="bg-slate-800/70 border border-slate-700/50 rounded-xl px-4 py-3 flex-1">
-        <p className="text-slate-500 text-[11px] font-medium mb-2 uppercase tracking-wide">Paste suspicious document</p>
-        {lines.map((line, i) => (
-          <motion.p key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.12 }}
-            className="text-slate-300 text-xs leading-relaxed font-mono">{line || <span>&nbsp;</span>}</motion.p>
-        ))}
-      </div>
-      <motion.button initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.9 }}
-        className="w-full rounded-xl bg-primary px-4 py-2.5 text-white text-xs font-semibold flex items-center justify-center gap-2">
-        <ScanLine className="w-3.5 h-3.5" /> Run Trust Check
-      </motion.button>
-    </div>
-  )
-}
-
-function TrustScanFrame() {
-  const checks = ["Checking sender legitimacy…", "Scanning for pressure language…", "Verifying agency identity…", "Cross-referencing known scam patterns…"]
-  const [idx, setIdx] = useState(0)
-  useEffect(() => {
-    const t = setInterval(() => setIdx((i) => (i + 1) % checks.length), 620)
-    return () => clearInterval(t)
-  }, [])
-  return (
-    <div className="flex flex-col items-center justify-center h-full gap-4 select-none">
-      <div className="relative w-14 h-14">
-        <div className="absolute inset-0 rounded-full bg-red-500/15 animate-ping" />
-        <div className="relative w-14 h-14 rounded-full bg-red-500/15 flex items-center justify-center">
-          <ShieldCheck className="w-6 h-6 text-red-400 animate-pulse" />
-        </div>
-      </div>
-      <div className="text-center">
-        <p className="text-white font-bold text-sm mb-1">Running Trust Check</p>
-        <AnimatePresence mode="wait">
-          <motion.p key={idx} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.2 }} className="text-slate-400 text-xs">{checks[idx]}</motion.p>
-        </AnimatePresence>
-      </div>
-      <div className="w-full space-y-2">
-        {checks.map((_, i) => (
-          <motion.div key={i} initial={{ opacity: 0 }} animate={{ opacity: i <= idx ? 1 : 0.2 }} transition={{ duration: 0.3 }}
-            className="flex items-center gap-2">
-            {i < idx ? <CircleCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> : i === idx ? <Loader2 className="w-3.5 h-3.5 text-red-400 animate-spin shrink-0" /> : <div className="w-3.5 h-3.5 rounded-full border border-slate-700 shrink-0" />}
-            <div className="flex-1 h-1.5 rounded-full bg-slate-700 overflow-hidden">
-              <motion.div className={i <= idx ? "h-full rounded-full bg-red-500" : "h-full rounded-full bg-slate-700"} initial={{ width: 0 }} animate={{ width: i < idx ? "100%" : i === idx ? "60%" : "0%" }} transition={{ duration: 0.5 }} />
-            </div>
-          </motion.div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-const TRUST_FLAGS = [
-  { icon: TriangleAlert, color: "red",    label: "Urgent payment demand with 48-hr deadline"     },
-  { icon: XCircle,       color: "red",    label: "Sender identity unverifiable — no agency code"  },
-  { icon: TriangleAlert, color: "amber",  label: "Threatening language inconsistent with IRS style" },
-]
-
-function TrustResultsFrame() {
-  return (
-    <div className="flex flex-col h-full gap-3 select-none overflow-hidden">
-      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-        className="flex items-center gap-4 bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3 shrink-0">
-        <div className="w-12 h-12 rounded-xl bg-red-500/15 flex items-center justify-center shrink-0">
-          <span className="text-red-400 font-black text-lg">22</span>
-        </div>
-        <div>
-          <p className="text-red-400 font-bold text-sm">Likely Scam</p>
-          <p className="text-slate-400 text-xs">Trust score 22/100 · Do not pay</p>
-        </div>
-        <XCircle className="w-5 h-5 text-red-400 ml-auto shrink-0" />
-      </motion.div>
-      <p className="text-slate-400 text-[11px] font-semibold uppercase tracking-wide shrink-0">Red flags found</p>
-      <div className="flex flex-col gap-2 flex-1 overflow-hidden">
-        {TRUST_FLAGS.map((flag, i) => (
-          <motion.div key={i} initial={{ opacity: 0, x: 14 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }}
-            className={["flex items-start gap-2.5 rounded-xl px-3 py-2.5 border", flag.color === "red" ? "bg-red-500/8 border-red-500/20" : "bg-amber-500/8 border-amber-500/20"].join(" ")}>
-            <flag.icon className={["w-3.5 h-3.5 mt-0.5 shrink-0", flag.color === "red" ? "text-red-400" : "text-amber-400"].join(" ")} />
-            <p className="text-white text-xs leading-snug">{flag.label}</p>
-          </motion.div>
-        ))}
-      </div>
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
-        className="shrink-0 bg-slate-800/60 border border-slate-700/40 rounded-xl px-3 py-2.5">
-        <p className="text-slate-300 text-[11px] leading-relaxed"><span className="text-emerald-400 font-semibold">Recommendation:</span> Do not pay. Contact the IRS directly at irs.gov to verify.</p>
-      </motion.div>
-    </div>
-  )
-}
-
-/* ─────────────────────────────────────────────────────────────
-   CONTRACT BUILDER FRAMES
-───────────────────────────────────────────────────────────── */
-const CONTRACT_QS = [
-  { icon: User,        label: "Who is providing services?", answer: "Alex Rivera — Freelance Designer" },
-  { icon: FileText,    label: "What will you deliver?",     answer: "Brand identity package, 3 revisions" },
-  { icon: DollarSign,  label: "What is the total fee?",     answer: "$4,500 — 50% upfront, 50% on delivery" },
-  { icon: Calendar,    label: "When is the deadline?",      answer: "June 30, 2026" },
-  { icon: Gavel,       label: "How are disputes handled?",  answer: "Mediation first, then arbitration (CA)" },
-]
-
-function ContractQuestionsFrame() {
-  const [visible, setVisible] = useState(1)
-  useEffect(() => {
-    const t = setInterval(() => setVisible((v) => Math.min(v + 1, CONTRACT_QS.length)), 450)
-    return () => clearInterval(t)
-  }, [])
-  return (
-    <div className="flex flex-col h-full gap-2 select-none overflow-hidden">
-      <p className="text-white font-bold text-sm shrink-0">Tell us about your deal</p>
-      <div className="flex flex-col gap-2 flex-1 overflow-hidden">
-        {CONTRACT_QS.map((q, i) => (
-          <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: i < visible ? 1 : 0, y: i < visible ? 0 : 8 }} transition={{ duration: 0.25 }}
-            className="bg-slate-800/70 border border-slate-700/50 rounded-xl px-3 py-2.5 flex items-start gap-2.5">
-            <div className="w-6 h-6 rounded-lg bg-primary/15 flex items-center justify-center shrink-0 mt-0.5">
-              <q.icon className="w-3 h-3 text-primary" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-slate-400 text-[11px]">{q.label}</p>
-              <p className="text-white text-xs font-medium mt-0.5 truncate">{q.answer}</p>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function ContractGeneratingFrame() {
-  const stages = ["Drafting parties & recitals…", "Writing scope of services…", "Adding payment terms…", "Building dispute resolution…", "Running gap analysis…"]
-  const [idx, setIdx] = useState(0)
-  useEffect(() => {
-    const t = setInterval(() => setIdx((i) => (i + 1) % stages.length), 560)
-    return () => clearInterval(t)
-  }, [])
-  return (
-    <div className="flex flex-col items-center justify-center h-full gap-4 select-none">
-      <div className="relative w-14 h-14">
-        <div className="absolute inset-0 rounded-full bg-emerald-500/10 animate-ping" />
-        <div className="relative w-14 h-14 rounded-full bg-emerald-500/15 flex items-center justify-center">
-          <PenLine className="w-6 h-6 text-emerald-400 animate-pulse" />
-        </div>
-      </div>
-      <div className="text-center">
-        <p className="text-white font-bold text-sm mb-1">Drafting your contract</p>
-        <AnimatePresence mode="wait">
-          <motion.p key={idx} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.2 }} className="text-slate-400 text-xs">{stages[idx]}</motion.p>
-        </AnimatePresence>
-      </div>
-      <div className="w-full space-y-2">
-        {["Parties & Recitals", "Scope of Work", "Payment Terms", "Dispute Resolution", "Gap Analysis"].map((clause, i) => (
-          <motion.div key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.1 }}
-            className="flex items-center gap-2">
-            {i < idx ? <BadgeCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> : i === idx ? <Loader2 className="w-3.5 h-3.5 text-emerald-400 animate-spin shrink-0" /> : <div className="w-3.5 h-3.5 rounded-full border border-slate-700 shrink-0" />}
-            <p className={["text-xs", i <= idx ? "text-white" : "text-slate-600"].join(" ")}>{clause}</p>
-          </motion.div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-const CONTRACT_CLAUSES = [
-  '1. Services. Alex Rivera ("Contractor") shall provide brand identity design services including logo, color palette, and type system with up to 3 revision rounds.',
-  "2. Compensation. Client shall pay $4,500 total: $2,250 due upon signing and $2,250 due upon final delivery.",
-  "3. Deadline. Final deliverables due no later than June 30, 2026. Delays exceeding 14 days trigger a renegotiation clause.",
-]
-
-function ContractReadyFrame() {
-  return (
-    <div className="flex flex-col h-full gap-3 select-none overflow-hidden">
-      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between shrink-0">
-        <div>
-          <p className="text-white font-bold text-sm">Service Agreement</p>
-          <p className="text-slate-400 text-xs">3 pages · gap analysis complete</p>
-        </div>
-        <span className="px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-400 text-[11px] font-bold flex items-center gap-1">
-          <BadgeCheck className="w-3 h-3" /> Ready
-        </span>
-      </motion.div>
-      <div className="flex-1 overflow-hidden bg-slate-800/50 border border-slate-700/40 rounded-xl px-4 py-3">
-        {CONTRACT_CLAUSES.map((clause, i) => (
-          <motion.p key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.15 }}
-            className="text-slate-300 text-[11px] leading-relaxed mb-2 last:mb-0">{clause}</motion.p>
-        ))}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
-          className="mt-3 border-t border-slate-700/50 pt-2">
-          <p className="text-amber-400 text-[11px] font-medium">⚠ Gap found: No intellectual property clause. Consider adding one before signing.</p>
-        </motion.div>
-      </div>
-      <motion.button initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}
-        className="shrink-0 w-full rounded-xl bg-emerald-600 px-4 py-2.5 text-white text-xs font-semibold flex items-center justify-center gap-2">
-        <Download className="w-3.5 h-3.5" /> Download PDF
-      </motion.button>
-    </div>
-  )
-}
 
 /* ─────────────────────────────────────────────────────────────
    CONTRACT REVIEW FRAMES
@@ -500,19 +269,9 @@ function FrameContent({ toolId, frame }: { toolId: string; frame: number }) {
     if (frame === 1) return <AnalyzeLoadingFrame />
     return <AnalyzeResultsFrame />
   }
-  if (toolId === "trust") {
-    if (frame === 0) return <TrustInputFrame />
-    if (frame === 1) return <TrustScanFrame />
-    return <TrustResultsFrame />
-  }
-  if (toolId === "review") {
-    if (frame === 0) return <ContractReviewInputFrame />
-    if (frame === 1) return <ContractReviewScanFrame />
-    return <ContractReviewResultsFrame />
-  }
-  if (frame === 0) return <ContractQuestionsFrame />
-  if (frame === 1) return <ContractGeneratingFrame />
-  return <ContractReadyFrame />
+  if (frame === 0) return <ContractReviewInputFrame />
+  if (frame === 1) return <ContractReviewScanFrame />
+  return <ContractReviewResultsFrame />
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -567,7 +326,7 @@ export default function DemoSection() {
         </motion.h2>
         <motion.p initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
           transition={{ delay: 0.1 }} className="text-muted-foreground text-lg max-w-xl mx-auto">
-          Select any of the six tools to see how it processes a real document scenario — from input to result.
+          Select either tool to see how it processes a real document scenario — from input to result.
         </motion.p>
       </div>
 
@@ -585,8 +344,6 @@ export default function DemoSection() {
                   const isActive = activeTool === idx
                   const palette: Record<string, { border: string; bg: string; iconBg: string; iconColor: string; taglineColor: string }> = {
                     analyze: { border: "#3b82f6", bg: "rgba(59,130,246,0.13)",  iconBg: "rgba(59,130,246,0.18)",  iconColor: "#60a5fa", taglineColor: "#93c5fd" },
-                    trust:   { border: "#ef4444", bg: "rgba(239,68,68,0.13)",   iconBg: "rgba(239,68,68,0.18)",   iconColor: "#f87171", taglineColor: "#fca5a5" },
-                    contract:{ border: "#10b981", bg: "rgba(16,185,129,0.13)",  iconBg: "rgba(16,185,129,0.18)",  iconColor: "#34d399", taglineColor: "#6ee7b7" },
                     review:  { border: "#f59e0b", bg: "rgba(245,158,11,0.13)",  iconBg: "rgba(245,158,11,0.18)",  iconColor: "#fbbf24", taglineColor: "#fcd34d" },
                   }
                   const p = palette[t.id]

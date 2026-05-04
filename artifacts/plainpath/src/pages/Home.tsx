@@ -4,9 +4,8 @@ import {
   ArrowRight,
   FileScan, Scale,
   BookMarked, Clock, ChevronRight, CreditCard,
-  LayoutGrid, LayoutTemplate,
+  LayoutGrid,
 } from "lucide-react"
-import { BUILDER_ENABLED, CATEGORY_LABELS } from "@/lib/builderConfig"
 import { useState, useEffect } from "react"
 import { useUser, useAuth } from "@clerk/react"
 import { Button } from "@/components/ui/button"
@@ -16,19 +15,10 @@ import { getAll as getLocalAnalyses } from "@/lib/savedAnalyses"
 import { fetchCloudAnalyses } from "@/lib/cloudHistory"
 import type { SavedAnalysis } from "@/lib/savedAnalyses"
 import { getRecentWork, type LocalRecentItem } from "@/lib/recentWork"
-import { clauseExtractorApi } from "@/lib/clauseExtractorApi"
-import type { ClauseExtractorSessionMeta } from "@/lib/clauseExtractorTypes"
-import { compareVersionsApi } from "@/lib/compareVersionsApi"
-import type { CVSessionListItem } from "@/lib/compareVersionsTypes"
-import { builderApi } from "@/lib/builderApi"
-import type { BuilderDocumentMeta } from "@/lib/builderTypes"
 
 type RecentItem =
-  | { kind: "analysis";      id: string; title: string; savedAt: string }
-  | { kind: "local";         id: string; title: string; savedAt: string; tool: LocalRecentItem["tool"] }
-  | { kind: "clause-extractor"; id: string; title: string; savedAt: string; fileType?: string; documentType?: string }
-  | { kind: "compare";       id: string; title: string; savedAt: string; status: string; diffTotal?: number; diffHigh?: number; originalFileName?: string; revisedFileName?: string }
-  | { kind: "builder";       id: string; title: string; savedAt: string; category?: string; sectionCount?: number }
+  | { kind: "analysis"; id: string; title: string; savedAt: string }
+  | { kind: "local";    id: string; title: string; savedAt: string; tool: LocalRecentItem["tool"] }
 
 // ─── Tool definitions ─────────────────────────────────────────────────────────
 
@@ -117,11 +107,8 @@ export default function Home() {
         // Need Bearer token for session APIs
         const token = await getToken().catch(() => null)
 
-        const [cloudAnalyses, clauseSessions, compareSessions, builderDocs] = await Promise.allSettled([
+        const [cloudAnalyses] = await Promise.allSettled([
           fetchCloudAnalyses(token),
-          clauseExtractorApi.listSessions(token),
-          compareVersionsApi.listSessions(token, { archived: false }),
-          BUILDER_ENABLED ? builderApi.listDocuments(token) : Promise.resolve([]),
         ])
 
         const analyses: RecentItem[] =
@@ -141,50 +128,8 @@ export default function Home() {
                   savedAt: a.savedAt,
                 }))
 
-        const clauses: RecentItem[] =
-          clauseSessions.status === "fulfilled"
-            ? clauseSessions.value.map((s: ClauseExtractorSessionMeta) => ({
-                kind: "clause-extractor" as const,
-                id: s.id,
-                title: s.fileName,
-                savedAt: s.updatedAt,
-                fileType: s.fileType,
-                documentType: (s as any).results?.documentType ?? undefined,
-              }))
-            : []
-
-        const compares: RecentItem[] =
-          compareSessions.status === "fulfilled"
-            ? compareSessions.value.map((s: CVSessionListItem) => ({
-                kind: "compare" as const,
-                id: s.id,
-                title: s.title,
-                savedAt: s.updatedAt,
-                status: s.status,
-                diffTotal: s.diffTotal ?? undefined,
-                diffHigh: s.diffHigh ?? undefined,
-                originalFileName: s.originalFileName,
-                revisedFileName: s.revisedFileName,
-              }))
-            : []
-
-        const builders: RecentItem[] =
-          BUILDER_ENABLED && builderDocs.status === "fulfilled"
-            ? (builderDocs.value as BuilderDocumentMeta[]).map((d) => ({
-                kind: "builder" as const,
-                id: d.id,
-                title: d.title || "Untitled document",
-                savedAt: d.updatedAt,
-                category: d.category,
-                sectionCount: d.sectionCount,
-              }))
-            : []
-
-        // Local items — keep "redact" and "contract-builder" (ContractBuilder AI wizard at /build-contract)
-        // Skip local "compare" items when real Compare sessions exist (superseded)
-        const hasRealCompareSessions = compares.length > 0
         const localWork: RecentItem[] = getRecentWork()
-          .filter(lw => !(hasRealCompareSessions && lw.tool === "compare"))
+          .filter(lw => lw.tool === "analyze" || lw.tool === "contract-review" || lw.tool === "import")
           .map((lw) => ({
             kind: "local" as const,
             id: lw.id,
@@ -193,11 +138,7 @@ export default function Home() {
             tool: lw.tool,
           }))
 
-        // Only show launch-tool history (analyses + local analyze/contract-review work)
-        const launchLocalWork = localWork.filter(lw =>
-          lw.tool === "analyze" || lw.tool === "contract-review" || lw.tool === "import"
-        )
-        const merged = [...analyses, ...launchLocalWork]
+        const merged = [...analyses, ...localWork]
           .sort((a, b) => new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime())
           .slice(0, 6)
 
@@ -391,77 +332,7 @@ export default function Home() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}
                 >
-                  {item.kind === "clause-extractor" ? (
-                    <Card
-                      className="group border border-border/50 bg-card hover:border-purple-400/40 hover:shadow-md hover:shadow-purple-500/5 rounded-2xl cursor-pointer transition-all"
-                      onClick={() => setLocation(`/clause-extractor/${item.id}`)}
-                    >
-                      <div className="p-4 flex flex-col gap-1.5">
-                        <div className="flex items-center gap-1.5 mb-0.5">
-                          <ListChecks className="w-3 h-3 text-purple-500 shrink-0" />
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-purple-500/80">Clause Extractor</span>
-                          <span className="ml-auto text-[10px] text-muted-foreground">{timeAgo(item.savedAt)}</span>
-                        </div>
-                        <p className="text-sm font-medium text-foreground truncate leading-tight">{item.title}</p>
-                        <div className="flex items-center justify-between mt-0.5">
-                          <p className="text-[11px] text-muted-foreground">
-                            {item.documentType ?? (item.fileType === "docx" ? "Word Document" : "PDF")}
-                          </p>
-                          <span className="text-[11px] font-semibold text-purple-500 group-hover:underline">View results →</span>
-                        </div>
-                      </div>
-                    </Card>
-                  ) : item.kind === "compare" ? (
-                    <Card
-                      className="group border border-border/50 bg-card hover:border-teal-400/40 hover:shadow-md hover:shadow-teal-500/5 rounded-2xl cursor-pointer transition-all"
-                      onClick={() => setLocation(`/compare-versions/${item.id}`)}
-                    >
-                      <div className="p-4 flex flex-col gap-1.5">
-                        <div className="flex items-center gap-1.5 mb-0.5">
-                          <GitCompare className="w-3 h-3 text-teal-500 shrink-0" />
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-teal-500/80">Compare Versions</span>
-                          <span className="ml-auto text-[10px] text-muted-foreground">{timeAgo(item.savedAt)}</span>
-                        </div>
-                        <p className="text-sm font-medium text-foreground truncate leading-tight">{item.title}</p>
-                        <div className="flex items-center justify-between mt-0.5">
-                          <p className="text-[11px] text-muted-foreground">
-                            {item.diffTotal != null ? (
-                              <>
-                                {item.diffTotal} diff{item.diffTotal !== 1 ? "s" : ""}
-                                {item.diffHigh != null && item.diffHigh > 0 && (
-                                  <span className="text-red-500 font-medium"> · {item.diffHigh} high</span>
-                                )}
-                              </>
-                            ) : item.status === "scanning" ? "Scanning…" : "Complete"}
-                          </p>
-                          <span className="text-[11px] font-semibold text-teal-600 group-hover:underline">Open comparison →</span>
-                        </div>
-                      </div>
-                    </Card>
-                  ) : item.kind === "builder" ? (
-                    <Card
-                      className="group border border-border/50 bg-card hover:border-indigo-400/40 hover:shadow-md hover:shadow-indigo-500/5 rounded-2xl cursor-pointer transition-all"
-                      onClick={() => setLocation(`/builder/${item.id}`)}
-                    >
-                      <div className="p-4 flex flex-col gap-1.5">
-                        <div className="flex items-center gap-1.5 mb-0.5">
-                          <LayoutTemplate className="w-3 h-3 text-indigo-500 shrink-0" />
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-500/80">Document Builder</span>
-                          <span className="ml-auto text-[10px] text-muted-foreground">{timeAgo(item.savedAt)}</span>
-                        </div>
-                        <p className="text-sm font-medium text-foreground truncate leading-tight">{item.title}</p>
-                        <div className="flex items-center justify-between mt-0.5">
-                          <p className="text-[11px] text-muted-foreground">
-                            {item.category ? CATEGORY_LABELS[item.category] ?? item.category : "Draft"}
-                            {item.sectionCount != null && item.sectionCount > 0 && (
-                              <> · {item.sectionCount} section{item.sectionCount !== 1 ? "s" : ""}</>
-                            )}
-                          </p>
-                          <span className="text-[11px] font-semibold text-indigo-500 group-hover:underline">Continue building →</span>
-                        </div>
-                      </div>
-                    </Card>
-                  ) : item.kind === "analysis" ? (
+                  {item.kind === "analysis" ? (
                     <Card
                       className="group border border-border/50 bg-card hover:border-blue-400/30 hover:shadow-md rounded-2xl cursor-pointer transition-all"
                       onClick={() => setLocation("/my-analyses")}
