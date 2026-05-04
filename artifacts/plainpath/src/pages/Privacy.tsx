@@ -160,8 +160,8 @@ export default function Privacy() {
 function Section({ icon: Icon, title, children }: { icon: React.ElementType; title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h2 className="text-xl font-display font-bold mb-4 flex items-center gap-2">
-        <Icon className="w-5 h-5 text-primary/60" />
+      <h2 className="text-xl font-display font-bold mb-4 flex items-center gap-2 text-foreground">
+        <Icon className="w-5 h-5 text-primary" />
         {title}
       </h2>
       <div className="space-y-3 text-foreground/75 leading-relaxed [&_strong]:text-foreground [&_strong]:font-semibold [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1.5 [&_a]:underline [&_a]:underline-offset-2 [&_code]:bg-secondary [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs [&_code]:font-mono">

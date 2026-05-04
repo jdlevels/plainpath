@@ -3,7 +3,7 @@ import { Shield, Lock, Eye, Server, RefreshCw, Mail, CreditCard } from "lucide-r
 import { Navbar } from "@/components/layout/Navbar"
 import { Footer } from "@/components/layout/Footer"
 
-const LAST_UPDATED = "April 22, 2026"
+const LAST_UPDATED = "May 4, 2026"
 
 export default function Privacy() {
   useEffect(() => {
@@ -38,7 +38,7 @@ export default function Privacy() {
           <ul className="space-y-2 text-sm text-foreground/80 leading-relaxed">
             <li className="flex items-start gap-2"><span className="text-primary font-bold mt-0.5">✓</span> Free-tier use requires no account and no personal information.</li>
             <li className="flex items-start gap-2"><span className="text-primary font-bold mt-0.5">✓</span> Your document text is sent to OpenAI for analysis and is subject to OpenAI's data policies.</li>
-            <li className="flex items-start gap-2"><span className="text-primary font-bold mt-0.5">✓</span> For free-tier analysis, PlainPath does not store your documents or analysis results. Unsaved analyses exist only in your browser session.</li>
+            <li className="flex items-start gap-2"><span className="text-primary font-bold mt-0.5">✓</span> Uploaded files are never written to disk or stored. Extracted document text is not retained after processing. If you save an analysis to My Analyses, the generated output is stored on PlainPath servers linked to your account — not the original document or its text.</li>
             <li className="flex items-start gap-2"><span className="text-primary font-bold mt-0.5">✓</span> Signed-in users can save analysis results to their account so they can access them across sessions and devices. You can delete saved results at any time.</li>
             <li className="flex items-start gap-2"><span className="text-primary font-bold mt-0.5">✓</span> When you use the Share feature, your analysis output is stored on PlainPath servers for up to 30 days to generate a shareable link. No document text is attached.</li>
             <li className="flex items-start gap-2"><span className="text-primary font-bold mt-0.5">✓</span> If you subscribe to a paid plan, your email address is stored on PlainPath servers and processed by Stripe. Payment details are held by Stripe, not PlainPath.</li>
@@ -55,7 +55,7 @@ export default function Privacy() {
             <ul>
               <li><strong>Uploaded files</strong> are held in server memory only for the duration of processing (typically a few seconds). They are never written to disk, stored in a database, or logged by PlainPath.</li>
               <li><strong>Extracted text</strong> from your document is sent to OpenAI's API to generate your action plan. This text is not stored by PlainPath after the response is returned.</li>
-              <li><strong>Analysis results</strong> are returned to your browser. They exist only in your current session unless you choose to save them locally. Saving an analysis writes it to your browser's local storage on your device — it is not uploaded to PlainPath servers.</li>
+              <li><strong>Analysis results</strong> are returned to your browser. If you do not save them, they exist only in your current session. If you choose to save an analysis to My Analyses, the generated output (not your original document or its extracted text) is stored on PlainPath servers, linked to your account. You can delete saved analyses at any time.</li>
             </ul>
 
             <p><strong>Saved analyses (paid plans)</strong></p>
@@ -86,6 +86,9 @@ export default function Privacy() {
           <Section icon={Server} title="2. Third-party services">
             <p>PlainPath uses the following third-party services that receive or process data on your behalf:</p>
 
+            <p><strong>Clerk</strong> — Authentication and account management</p>
+            <p>When you create an account or sign in, your email address and authentication credentials are handled by Clerk. Clerk manages login sessions and user identity. Clerk's privacy practices are described at <a href="https://clerk.com/legal/privacy" target="_blank" rel="noopener noreferrer" className="text-primary underline">clerk.com/legal/privacy</a>.</p>
+
             <p><strong>OpenAI</strong> — Document analysis</p>
             <p>When you submit a document, the extracted text is sent to OpenAI's API to generate your action plan. OpenAI's data handling is governed by <a href="https://openai.com/policies/" target="_blank" rel="noopener noreferrer" className="text-primary underline">OpenAI's policies</a>. As of the date of this policy, OpenAI does not use API-submitted data to train its models by default.</p>
             <p><strong>We recommend you do not upload documents containing sensitive personal information</strong> such as Social Security Numbers, financial account numbers, medical records, or other highly sensitive data.</p>
@@ -100,13 +103,13 @@ export default function Privacy() {
           <Section icon={RefreshCw} title="3. Data retention">
             <ul>
               <li><strong>Unsaved analyses</strong> — exist only in your browser's memory for the duration of your session. Refreshing the page or closing the tab removes them permanently.</li>
-              <li><strong>Device-saved analyses</strong> — stored in your browser's local storage on your device only. You can delete them at any time from the My Analyses page.</li>
+              <li><strong>Saved analyses (My Analyses)</strong> — when you explicitly save an analysis, the generated analysis output (not your original document or its text) is stored on PlainPath servers, linked to your account. You can delete saved analyses at any time from the My Analyses page.</li>
               <li><strong>Shared analyses</strong> — the structured analysis output (not your document) is stored on PlainPath servers to power the shareable link. Automatically deleted after <strong>30 days</strong>.</li>
               <li><strong>Saved analysis results</strong> (paid plans) — analysis output stored on PlainPath servers linked to your account is retained until you delete it or your account is closed.</li>
               <li><strong>Subscriber records</strong> (paid plans only) — your email address and subscription status are stored on PlainPath servers for as long as your plan is active, plus up to 90 days after cancellation for billing reconciliation. After that period, all subscriber data is permanently deleted.</li>
               <li><strong>Deadline reminder emails</strong> — your email address is passed to Resend for a single delivery. It is not stored in PlainPath's database.</li>
             </ul>
-            <p>For free-tier document analysis, PlainPath does not retain uploaded files or document text after processing is complete.</p>
+            <p>Uploaded document files are never retained by PlainPath at any tier — file processing occurs in memory only. Extracted document text is not stored after processing is complete. If you explicitly save an analysis, only the generated output is stored — not the original file or its text.</p>
           </Section>
 
           <Section icon={Lock} title="4. Cookies and analytics">
@@ -127,7 +130,7 @@ export default function Privacy() {
 
           <Section icon={Shield} title="6. What PlainPath does not do">
             <ul>
-              <li>Does not store uploaded document files after processing is complete. For free-tier analysis, document text is also not retained. Signed-in users on paid plans may save analysis output linked to their account — original document files are never retained.</li>
+              <li>Does not store uploaded document files at any tier — file processing occurs in memory only. Does not retain extracted document text after processing. Does store generated analysis output when you explicitly save it, linked to your account.</li>
               <li>Does not share your documents with third parties other than OpenAI (for AI analysis).</li>
               <li>Does not sell data.</li>
               <li>Does not require an account or email address for free-tier use.</li>
@@ -140,6 +143,7 @@ export default function Privacy() {
 
           <Section icon={Mail} title="7. Contact">
             <p>Questions about this privacy policy? Reach out at <a href="mailto:support@plainpathapp.com" className="text-primary underline underline-offset-2">support@plainpathapp.com</a>.</p>
+            <p>To request deletion of account-related analysis data, contact us at the address above. We will process deletion requests subject to legal, security, and operational retention requirements.</p>
             <p>We will update this policy as the product evolves. The "Last updated" date at the top reflects the most recent revision.</p>
           </Section>
 
@@ -153,8 +157,8 @@ export default function Privacy() {
 function Section({ icon: Icon, title, children }: { icon: React.ElementType; title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h2 className="text-xl font-bold mb-4 flex items-center gap-2" style={{ fontFamily: "var(--font-display)" }}>
-        <Icon className="w-5 h-5 text-primary/60" />
+      <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-foreground" style={{ fontFamily: "var(--font-display)" }}>
+        <Icon className="w-5 h-5 text-primary" />
         {title}
       </h2>
       <div className="space-y-3 text-foreground/75 leading-relaxed [&_strong]:text-foreground [&_strong]:font-semibold [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1.5 [&_a]:underline [&_a]:underline-offset-2 [&_code]:bg-secondary [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs [&_code]:font-mono">
