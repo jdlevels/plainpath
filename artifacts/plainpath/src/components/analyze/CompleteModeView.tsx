@@ -77,7 +77,7 @@ function progressStatusLabel(pct: number): string {
   if (pct === 0)   return "Not started"
   if (pct < 50)    return "In progress"
   if (pct < 100)   return "Almost ready"
-  return "Ready to compile"
+  return "Ready for packet review"
 }
 
 function progressStatusColor(pct: number): string {

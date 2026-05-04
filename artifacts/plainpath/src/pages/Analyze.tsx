@@ -796,7 +796,7 @@ function CompileModePreview({
         </div>
         <div>
           <h2 className="text-xl font-display font-bold mb-0.5">Document Action Packet</h2>
-          <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">Final compiled export</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">Final packet export</p>
         </div>
       </div>
 
@@ -840,7 +840,7 @@ function CompileModePreview({
 
       <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-secondary/30 border border-border/30">
         <Lock className="w-4 h-4 text-muted-foreground/50 shrink-0" />
-        <p className="text-xs text-muted-foreground">Packet compiler coming in the next phase</p>
+        <p className="text-xs text-muted-foreground">Packet export coming in the next phase</p>
       </div>
     </motion.div>
   )

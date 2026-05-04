@@ -20,7 +20,7 @@ const MODES: ModeConfig[] = [
   { id: "understand", label: "Understand", shortLabel: "Read",     icon: BookOpen,    description: "Plain-language explanation" },
   { id: "plan",       label: "Plan",       shortLabel: "Plan",     icon: ListTodo,    description: "Tasks, docs, deadlines"     },
   { id: "complete",   label: "Complete",   shortLabel: "Complete", icon: CheckSquare, description: "Work through each item"     },
-  { id: "compile",    label: "Compile",    shortLabel: "Compile",  icon: Package,     description: "Generate your packet"      },
+  { id: "compile",    label: "Packet",     shortLabel: "Packet",   icon: Package,     description: "Preview your action packet" },
 ]
 
 export function AnalyzeModeNav({ activeMode, onModeChange, totalItems, doneItems }: Props) {

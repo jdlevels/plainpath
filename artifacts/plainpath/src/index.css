@@ -463,7 +463,16 @@
 /* Hidden on screen; shown only inside packet print body class */
 .packet-print-only { display: none !important; }
 
+/* Packet print: browser Save as PDF uses this page setup.
+   @page cannot be scoped by selector, but since this is the only
+   @page rule in the project it applies globally within a print job.
+   Contract Review does not define its own @page rule so this is safe. */
 @media print {
+  @page {
+    size: letter;
+    margin: 0.75in;
+  }
+
   /* ── When the Print / Save as PDF button sets this body class ── */
   body.packet-print-active .packet-print-only {
     display: block !important;

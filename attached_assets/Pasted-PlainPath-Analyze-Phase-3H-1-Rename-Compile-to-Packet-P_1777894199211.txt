@@ -1,0 +1,159 @@
+PlainPath — Analyze Phase 3H.1: Rename Compile to Packet + Print Margin Polish
+
+Goal:
+Improve user clarity by renaming the user-facing “Compile” mode to “Packet” and add explicit print page margins for the Document Action Packet.
+
+This is a small polish/safety phase.
+Do not change packet content structure.
+Do not add localStorage persistence yet.
+Do not add server PDF.
+Do not add backend routes.
+Do not add database schema.
+Do not add AI calls.
+Do not change billing, auth, pricing, RevenueCat, Stripe, native billing, Contract Review, homepage, marketing, routes, or parser behavior.
+
+Current approved state:
+- Phase 3F Document Action Packet preview approved
+- Phase 3G browser Print / Save as PDF approved
+- Build: 2744 modules, 0 errors
+- QA: 55/55 passing
+- Packet print uses body.packet-print-active and packet-print-root
+- Protected files untouched
+
+Feature flag:
+All changes must stay behind:
+
+VITE_ANALYZE_COMPLETION_FLOW_ENABLED
+
+When flag is OFF:
+- old Analyze UI remains unchanged
+- no Packet mode UI appears
+- no packet print behavior appears
+
+Primary files expected:
+- artifacts/plainpath/src/components/AnalyzeModeNav.tsx or wherever the mode labels are defined
+- artifacts/plainpath/src/components/analyze/CompleteModeView.tsx if button copy needs adjustment
+- artifacts/plainpath/src/components/analyze/CompileModeView.tsx if visible copy says Compile
+- artifacts/plainpath/src/index.css for print margin rule
+
+Requirements:
+
+1. Rename user-facing “Compile” to “Packet”
+
+Change only visible UI language.
+
+Use:
+- Mode label: “Packet”
+- Page title remains: “Document Action Packet”
+- Button from Complete mode remains: “Preview Packet”
+- Back button may remain: “Back to Complete”
+- Export button remains: “Print / Save as PDF”
+
+Do not rename internal TypeScript variables unless very low-risk.
+It is acceptable for internal code to keep:
+- activeMode === "compile"
+- CompileModeView
+- onGoToCompile
+- compile-related constants
+
+This keeps the phase low-risk.
+
+2. Update helper/user-facing copy
+
+Find any visible user-facing copy that says:
+- Compile mode
+- Compile
+- compiler
+- generated packet compiler
+- packet compiler coming
+
+Replace with clearer packet language.
+
+Recommended replacements:
+- “Compile mode” → “Packet mode”
+- “Packet compiler” → “Packet export”
+- “Generate Packet” → should already be gone, but if present, replace with “Preview Packet”
+- “Ready to compile” → “Ready for packet review”
+
+Do not alter developer comments unless they are exposed to users.
+
+3. Print margin polish
+
+Add explicit print page sizing/margins for packet print only.
+
+Preferred CSS:
+
+@media print {
+  @page {
+    size: letter;
+    margin: 0.75in;
+  }
+}
+
+If @page cannot be scoped by body class in the current CSS safely, add it near the packet print block with a comment:
+
+/* Packet print: browser Save as PDF uses this page setup. */
+
+Also add or verify:
+- packet print root starts at top cleanly
+- first packet section does not add excessive top margin
+- no forced page break before the first section
+- print still paginates naturally
+
+Do not change Contract Review print CSS.
+
+4. Preserve screen design
+
+Packet mode should still look identical on screen except for the mode label text.
+
+Do not change:
+- card layout
+- section order
+- source evidence
+- manual review notes
+- Details behavior
+- print button behavior
+- drawer behavior
+- Complete mode layout
+
+5. QA checks
+
+Run:
+- Vite production build
+- completion parser QA
+- TypeScript check if available
+
+Manual/code verification:
+- Feature flag OFF preserves old UI
+- Feature flag ON shows mode label “Packet”
+- no visible “Compile” remains in the Analyze UI
+- “Preview Packet” still switches to Packet mode
+- Packet mode still renders Document Action Packet
+- Print / Save as PDF still works through triggerPrint()
+- print output uses explicit letter page margin
+- packet print still spans multiple pages when long
+- no app chrome prints
+- no Details buttons print
+- no drawer prints
+- screen mode remains dark/premium
+- no billing files changed
+- no RevenueCat files changed
+- no Stripe files changed
+- no native billing files changed
+- no auth files changed
+- no Contract Review files changed
+- no homepage/marketing files changed
+- no parser behavior changed
+- no removed tool references added
+
+6. Return report
+
+Return:
+1. Files changed
+2. User-facing rename details
+3. Internal naming intentionally preserved confirmation
+4. Print margin behavior
+5. Build/QA results
+6. Protected files untouched confirmation
+7. Known limitations
+8. Recommended next slice
