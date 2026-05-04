@@ -506,7 +506,7 @@ export default function Home() {
                 custom={2} variants={fadeUp}
                 className="text-base md:text-lg text-muted-foreground mb-8 leading-relaxed max-w-lg"
               >
-                PlainPath turns confusing paperwork into a guided action plan with deadlines, required documents, signatures, risks, and a ready-to-use packet.
+                PlainPath turns confusing paperwork into clear answers, required documents, signatures, risks, and next steps — so you know what to complete or ask before you submit or sign.
               </motion.p>
 
               {/* CTAs */}
