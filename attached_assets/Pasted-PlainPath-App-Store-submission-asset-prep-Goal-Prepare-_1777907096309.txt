@@ -1,0 +1,136 @@
+PlainPath — App Store submission asset prep
+
+Goal:
+Prepare App Store submission assets for the locked two-tool PlainPath launch.
+
+Do not change product code.
+Do not rebuild tools.
+Do not change Analyze a Document.
+Do not change Contract Review.
+Do not change billing, auth, pricing, routes, native, database, parser, or protected files.
+
+Locked launch tools:
+1. Analyze a Document
+   Purpose: Complete paperwork before submission.
+2. Contract Review
+   Purpose: Understand contract terms before signing.
+
+Create a submission prep document:
+
+docs/app-store-submission-assets.md
+
+Include:
+
+1. App identity
+
+App name:
+PlainPath
+
+Recommended subtitle options:
+- Understand paperwork faster
+- Documents made clearer
+- Review documents before acting
+
+Select the strongest option and explain why.
+
+2. App description
+
+Write a clear App Store-ready description.
+
+Core positioning:
+PlainPath helps people understand confusing paperwork, identify what needs attention, and know what to complete or ask before submitting or signing.
+
+Include the two launch tools:
+- Analyze a Document
+- Contract Review
+
+Do not mention removed tools.
+Do not mention unreleased tools.
+Do not overclaim legal advice.
+Do not say attorney-approved.
+Do not say guaranteed safe.
+Do not say the app replaces a lawyer.
+
+3. Promotional text
+
+Write a short promotional text under 170 characters.
+
+Suggested direction:
+“Upload paperwork or a contract and get clear answers, required items, risks, and questions to ask before you submit or sign.”
+
+4. Keywords
+
+Prepare keyword candidates focused on:
+document review, contract review, paperwork, forms, plain English, document scanner, document checklist, lease, agreement, legal document, PDF review
+
+Keep within Apple keyword-style constraints: comma-separated, no phrases that overclaim legal services.
+
+5. Screenshot plan
+
+Create a 6-screenshot set for iPhone.
+
+Use screenshot dimensions from Apple’s current requirements. Prioritize 6.9-inch iPhone portrait screenshots.
+
+Screenshots should show:
+1. Upload or start screen
+2. Analyze — Understand mode
+3. Analyze — Requirements / completion checklist
+4. Contract Review — Summary
+5. Contract Review — Key Clauses with Questions to Ask Before Signing
+6. Before You Sign / final clarity screen
+
+For each screenshot, include:
+- screenshot title
+- short overlay caption
+- screen to capture
+- what it proves
+
+Avoid:
+- fake legal claims
+- private user data
+- “guaranteed safe”
+- “attorney-approved”
+- “do not sign”
+- fear-based wording
+
+6. Privacy summary
+
+Draft a plain-English privacy summary aligned with the current app policy:
+- documents are processed to return results
+- documents are not sold
+- documents are not used to train AI models
+- user account / email may be used for account and subscription access
+- third-party services may process data needed for app functionality
+
+Do not invent technical details.
+Flag anything that requires owner confirmation.
+
+7. Reviewer notes
+
+Draft App Review notes explaining:
+- PlainPath is a document understanding tool
+- It provides plain-English summaries, required items, clause explanations, and questions to ask
+- It does not provide legal advice
+- It does not tell users whether to sign or submit documents
+- Stripe/external payment is hidden in native iOS
+- Subscription access uses native entitlement flow / RevenueCat if configured
+- Demo content is fictional
+
+8. URL checklist
+
+Confirm or list required URLs:
+- Support URL
+- Privacy Policy URL
+- Terms of Service URL
+- Marketing URL
+
+9. Final output
+
+Return:
+- file created
+- recommended app subtitle
+- final app description
+- screenshot list
+- privacy/reviewer notes summary
+- missing owner-confirmation items
+- final recommendation
