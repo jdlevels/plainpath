@@ -55,6 +55,7 @@ import {
 import { AnalyzeModeNav } from "@/components/AnalyzeModeNav"
 import { PlanSummaryView } from "@/components/analyze/PlanSummaryView"
 import { ItemDetailDrawer } from "@/components/analyze/ItemDetailDrawer"
+import { CompleteModeView } from "@/components/analyze/CompleteModeView"
 import { analysisResultToCompletionObjects } from "@/lib/completionParser"
 import type { CompletionObject } from "@/lib/completionTypes"
 
@@ -209,9 +210,9 @@ export default function Analyze() {
   const handleOpenItemDetail  = useCallback((item: CompletionObject) => { setSelectedItem(item) }, [])
   const handleCloseItemDetail = useCallback(() => { setSelectedItem(null) }, [])
 
-  // Phase 3C: close drawer when leaving plan mode
+  // Phase 3C/3E: close drawer when leaving plan or complete mode
   useEffect(() => {
-    if (activeMode !== "plan") setSelectedItem(null)
+    if (activeMode !== "plan" && activeMode !== "complete") setSelectedItem(null)
   }, [activeMode])
 
   // Phase 3B: progress covers ALL completable types (not just action steps + required docs)
@@ -609,13 +610,15 @@ export default function Analyze() {
         </Tabs.Root>
         )}
 
-        {/* ── Complete mode preview (safe stub) ─────────── */}
+        {/* ── Complete mode view (Phase 3E) ─────────────── */}
         {ANALYZE_COMPLETION_FLOW_ENABLED && activeMode === "complete" && (
-          <CompleteModePreview
+          <CompleteModeView
             completionObjects={completionObjects}
-            totalItems={totalItems}
-            doneItems={doneItems}
+            completionStatus={completionStatus}
+            onToggleItem={handlePlanItemToggle}
+            onOpenDetails={handleOpenItemDetail}
             onGoToPlan={() => handleModeChange("plan")}
+            documentTitle={analysis.title}
           />
         )}
 

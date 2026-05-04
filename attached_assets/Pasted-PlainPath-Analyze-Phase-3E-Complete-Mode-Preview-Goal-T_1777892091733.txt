@@ -1,0 +1,295 @@
+PlainPath — Analyze Phase 3E: Complete Mode Preview
+
+Goal:
+Turn Complete mode from a placeholder into a useful completion summary screen that shows the user their current progress, what is done, what remains open, and what must be reviewed before they act on or submit the document.
+
+This is not final packet generation.
+This is not PDF export.
+This is not backend persistence.
+This is the first useful end-state screen for users who have worked through Plan mode.
+
+Current approved state:
+- Phase 1 Completion parser complete
+- Phase 2A Four-mode navigation complete
+- Phase 3A Plan Summary complete
+- Phase 3B done/not-done tracking complete
+- Phase 3C Item Detail Drawer complete
+- Phase 3D source-backed enrichment complete
+- Phase 3D.5 source evidence visibility polish complete
+- Phase 3D.6 no-source fallback refinement complete
+- Build: 2742 modules, 0 errors
+- QA: 55/55 passing
+
+Do not change:
+- billing
+- RevenueCat
+- Stripe
+- native billing
+- auth
+- pricing
+- Contract Review
+- Contract Review PDF export
+- homepage
+- marketing
+- routes
+- database schema
+- migrations
+- backend routes
+- parser logic unless a tiny display-safe helper is required
+
+Do not restore removed tools:
+- Redact Sensitive Info
+- Trust Check
+- Compare Versions
+- Clause Extractor
+- Builder
+- Digital Signature
+- Starter
+- Team
+- annual billing
+
+Feature flag:
+All Phase 3E behavior must remain behind:
+
+VITE_ANALYZE_COMPLETION_FLOW_ENABLED
+
+When flag is OFF:
+- old Analyze UI remains unchanged
+- no mode nav
+- no Plan Summary
+- no drawer
+- no Complete mode preview
+
+Primary files expected:
+- artifacts/plainpath/src/pages/Analyze.tsx
+- optionally new component:
+  artifacts/plainpath/src/components/analyze/CompleteModeView.tsx
+
+Do not touch unrelated files.
+
+Requirements:
+
+1. Replace Complete placeholder with real CompleteModeView
+
+When activeMode === "complete", render a focused Complete mode summary.
+
+The screen should answer:
+
+- How much is complete?
+- What is done?
+- What remains?
+- What requires manual review?
+- What still needs a source check?
+- What is ready for the final packet later?
+
+2. Completion header
+
+At the top show:
+
+Title:
+“Complete Your Document Plan”
+
+Subtitle:
+“Review what is done, what is still open, and what needs manual confirmation before you submit or rely on this document.”
+
+Show progress:
+- X/Y complete
+- percentage
+- progress bar
+- status label
+
+Status labels:
+- 0%: “Not started”
+- 1–49%: “In progress”
+- 50–99%: “Almost ready”
+- 100%: “Ready to compile”
+
+Do not say “ready to submit” because PlainPath does not control official submission.
+
+3. Summary cards
+
+Add 4 compact summary cards:
+
+A. Completed
+- count of done items
+
+B. Still Open
+- count of not-done items
+
+C. Needs Manual Review
+- count of items without sourceQuote
+
+D. Source-backed
+- count of items with sourceQuote
+
+Use calm colors:
+- completed = emerald
+- open = neutral/blue
+- manual review = amber
+- source-backed = green/blue
+No heavy red unless critical risks are still open.
+
+4. Grouped checklist sections
+
+Render grouped sections from completionObjects:
+
+- Completed Items
+- Still Open
+- Needs Manual Review
+- Critical / High Priority Open Items
+
+Each item row should show:
+- done/not done state
+- title
+- type label
+- priority
+- source-backed or needs-review chip
+- Details button
+
+Clicking Details should open the existing ItemDetailDrawer.
+Do not create a second drawer.
+
+5. Empty states
+
+If no items completed:
+“Nothing has been marked complete yet. Go to Plan mode and start working through your document checklist.”
+
+If no open items:
+“All checklist items are marked complete. Review the source evidence and generate your packet in the next step.”
+
+If no manual-review items:
+“All items currently shown have source evidence.”
+
+If no critical/high open items:
+“No critical or high-priority open items remain.”
+
+6. Navigation actions
+
+Add clear actions:
+
+Primary:
+“Review Open Items”
+- switches to Plan mode
+- lands on the most useful Plan tab if possible
+- if there are open critical/high items, go to Risks or Checklist based on first open item type
+- otherwise go to Checklist
+
+Secondary:
+“Back to Plan”
+
+Disabled/future action:
+“Generate Packet”
+- disabled
+- helper text:
+“Packet compiler coming in the next phase.”
+
+Do not wire actual packet generation.
+
+7. State behavior
+
+Use the same completionStatus state from Analyze.tsx.
+
+Do not create a duplicate done state.
+
+CompleteModeView should receive:
+- completionObjects
+- completionStatus
+- onToggleItem
+- onOpenDetails
+- onGoToPlan or onTabChange
+- documentTitle if available
+
+Toggling an item in Complete mode must update:
+- Complete mode counts
+- Plan mode cards
+- drawer state if same item is open
+- AnalyzeModeNav progress
+
+8. Preserve drawer behavior
+
+Existing ItemDetailDrawer must still work:
+- opens from Plan
+- opens from Complete
+- done/not-done syncs
+- copy message works
+- copy source works
+- source evidence fallback works
+- Escape closes
+
+9. Do not change Compile yet
+
+Compile mode should remain a safe preview/placeholder.
+
+Optional copy update:
+“Generate a Document Action Packet in the next phase.”
+
+No packet generation.
+No PDF export.
+No print logic.
+
+10. Visual design
+
+CompleteModeView should feel like a premium dashboard, not another long tab list.
+
+Use:
+- strong header
+- progress block
+- compact summary cards
+- grouped rows
+- readable spacing
+- no excessive full red panels
+- red only for open critical/high rows or small badges
+- sticky or compact layout only if already easy; do not overbuild
+
+11. Accessibility
+
+Verify:
+- buttons have type="button"
+- Details buttons have aria-label
+- toggles have aria-label
+- disabled Generate Packet explains why
+- status text is readable without relying only on color
+
+12. QA checks
+
+Run:
+- Vite production build
+- completion parser QA
+- TypeScript check if available
+
+Manual/code verification:
+- Feature flag OFF preserves old UI
+- Feature flag ON shows Complete mode view
+- Complete mode counts match completionStatus
+- toggling in Complete updates counts
+- toggling in Plan updates Complete counts
+- Details opens drawer from Complete
+- drawer toggle syncs back to Complete
+- Review Open Items returns to Plan
+- Generate Packet is disabled
+- Compile remains safe placeholder
+- no billing files changed
+- no RevenueCat files changed
+- no Stripe files changed
+- no native billing files changed
+- no auth files changed
+- no Contract Review files changed
+- no homepage/marketing files changed
+- no parser behavior changed unless explicitly reported
+- no removed tool references added
+
+13. Return report
+
+Return:
+1. Files changed
+2. CompleteModeView component name/location
+3. Progress calculation behavior
+4. Summary card behavior
+5. Grouped checklist behavior
+6. Drawer sync behavior
+7. Disabled Generate Packet behavior
+8. Feature flag behavior
+9. Build/QA results
+10. Protected files untouched confirmation
+11. Known limitations
+12. Recommended next slice
