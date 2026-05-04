@@ -1,0 +1,93 @@
+PlainPath — Real-world Analyze clarity pass: “What is this document requiring?”
+
+Goal:
+Refine Analyze a Document around the real user need:
+A user uploads paperwork because they do not have time to read everything. PlainPath should tell them exactly what the document is saying, citing, requiring, and what still needs to be completed.
+
+Do not add new features.
+Do not rebuild the flow.
+Do not change billing, RevenueCat, Stripe, native billing, auth, pricing, Contract Review, routes, database, parser schema, or removed tools.
+
+Keep the current completion-before-submission direction.
+
+Primary user question:
+“What does this document require me to complete before I submit, pay, sign, mail, call, or act?”
+
+Update Analyze copy and section labels so the workflow is easier to understand.
+
+1. Requirements-first language
+
+Where appropriate, use clearer labels:
+
+- “Plan” or “Requirements” should focus on:
+  “What this document requires”
+
+- “Complete” should focus on:
+  “What still needs to be completed”
+
+- “Summary” should focus on:
+  “What this document says and what remains open”
+
+2. Add/ensure these concepts appear clearly in Analyze results:
+
+A. What this document is
+B. What it is stating
+C. What it is citing/referencing
+D. What it is requiring
+E. What deliverables/documents are needed
+F. What signatures/fields are needed
+G. What deadlines/timing matter
+H. What questions must be asked
+I. What is complete
+J. What is still open
+
+3. Complete mode priority
+
+Complete mode should make these obvious within 10 seconds:
+
+- total required items
+- completed items
+- open items
+- documents needed
+- signatures needed
+- deadlines
+- questions to ask
+- manual review needed
+
+4. Mobile-first clarity
+
+On mobile, the user should be able to walk into an office, school, clinic, HR department, post office, or agency and quickly see:
+
+- what to ask for
+- what to hand over
+- what to sign
+- what is missing
+- what deadline matters
+- what has already been checked off
+
+5. Avoid print-first framing
+
+Do not make print/export the core purpose.
+Printing is secondary.
+The live checklist is the main product.
+
+6. Keep source-backed trust
+
+For each requirement, preserve:
+- source quote when available
+- manual-review flag when source quote is missing
+- no fabricated forms
+- no invented deadlines
+- no legal/professional advice claim
+
+7. QA
+
+Verify:
+- feature flag OFF preserves old UI
+- feature flag ON keeps the current Understand / Requirements / Complete / Summary flow
+- Complete mode clearly answers what needs to be completed
+- Requirements mode clearly answers what the document requires
+- mobile layout remains readable
+- no removed tools appear
+- build passes
+- parser QA passes

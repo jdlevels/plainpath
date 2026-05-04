@@ -729,10 +729,10 @@ export function CompileModeView({
           </div>
           <div>
             <h2 className="text-xl font-bold text-foreground mb-0.5 tracking-tight">
-              Completion Packet
+              Completion Summary
             </h2>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-prose">
-              A checklist to help you complete, gather, sign, verify, and submit your paperwork.
+              Review what is complete, what is still open, and what needs attention before you act on this document.
             </p>
           </div>
         </div>
@@ -740,7 +740,7 @@ export function CompileModeView({
         {/* Packet Summary */}
         <div className="rounded-2xl border border-border/30 bg-secondary/20 p-5 space-y-4">
           <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40">
-            Packet Summary
+            Completion Summary
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-3">
             <div className="sm:col-span-2">
@@ -791,22 +791,7 @@ export function CompileModeView({
             Review in Plan
             <ChevronRight className="w-4 h-4 shrink-0" />
           </button>
-          {printUnavailable ? (
-            <span className="text-xs text-muted-foreground/50 italic">
-              Printing not available on this device.
-            </span>
-          ) : (
-            <button
-              type="button"
-              onClick={handlePrint}
-              aria-label="Print Completion Checklist"
-              style={{ touchAction: "manipulation" }}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/40 min-h-[38px]"
-            >
-              <Printer className="w-4 h-4 shrink-0" />
-              Print Completion Checklist
-            </button>
-          )}
+          {/* Print access kept in code; not surfaced as primary CTA */}
           {onResetProgress && (
             <button
               type="button"

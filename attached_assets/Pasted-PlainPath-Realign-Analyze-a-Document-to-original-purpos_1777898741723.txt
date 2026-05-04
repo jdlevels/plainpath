@@ -1,0 +1,184 @@
+PlainPath — Realign Analyze a Document to original purpose: completion before submission
+
+Goal:
+Refocus Analyze a Document around its original purpose:
+Help users know what they need to complete before submitting, signing, paying, mailing, calling, or acting on uploaded paperwork.
+
+The main product outcome is a live completion checklist, not a printed report.
+
+Do not change:
+- billing
+- RevenueCat
+- Stripe
+- native billing
+- auth
+- pricing
+- Contract Review
+- homepage
+- marketing
+- routes
+- database
+- parser logic
+- localStorage storage shape
+
+Do not restore removed tools.
+
+Feature flag:
+Keep all behavior behind:
+VITE_ANALYZE_COMPLETION_FLOW_ENABLED
+
+Current flow:
+Understand → Plan → Complete → Packet
+
+New emphasis:
+Understand → Requirements → Complete → Summary
+
+Do not change internal mode IDs if risky.
+User-facing labels may change while internal code can remain the same.
+
+1. Update user-facing mode labels
+
+Change visible labels:
+
+Plan → Requirements
+Packet → Summary
+
+Keep:
+Understand
+Complete
+
+Final visible mode labels:
+Understand | Requirements | Complete | Summary
+
+Internal activeMode values may remain:
+understand | plan | complete | compile
+
+2. Refocus Complete mode as the main workflow
+
+Complete mode should become the strongest screen.
+
+Title:
+“Complete Before Submission”
+
+Subtitle:
+“Track what is required, what is missing, and what must be verified before you submit or act on this document.”
+
+Complete mode should clearly show:
+- completion progress
+- still open items
+- documents needed
+- signatures needed
+- deadlines
+- questions to ask
+- manual review needed
+- completed items
+
+Open items should appear before completed items.
+
+3. Replace print-first language
+
+Remove or demote language that makes printing/exporting feel like the main goal.
+
+Avoid primary copy:
+- Print / Save as PDF
+- Export Packet
+- Generate Packet
+- Packet compiler
+- Ready to compile
+
+Use:
+- Review completion status
+- See what’s left
+- Completion summary
+- Submission readiness
+- Save or print checklist, optional
+
+4. Add submission-readiness status
+
+Add a status label based on completion progress:
+
+0%:
+“Not started”
+
+1–99%:
+“Not ready yet”
+
+100%:
+“Ready for final review”
+
+Do not say:
+“Ready to submit”
+
+Use:
+“Ready for final review”
+
+Because PlainPath cannot guarantee official submission readiness.
+
+5. Summary mode purpose
+
+Summary mode should be secondary.
+
+Title:
+“Completion Summary”
+
+Subtitle:
+“A plain-English summary of what is complete, what remains open, and what should be verified before acting.”
+
+This screen should not push print as the main CTA.
+
+If print remains, it should be secondary:
+“Print checklist”
+or hidden behind “More options.”
+
+6. Mobile-first checklist polish
+
+Complete mode must be easy on mobile:
+- large tappable rows
+- clear checkbox/status
+- clear title
+- short explanation
+- Details button
+- Mark done control
+- no cramped badges
+- no horizontal overflow
+- open items grouped clearly
+
+7. Preserve working features
+
+Keep:
+- done/not-done tracking
+- localStorage persistence
+- Saved flash
+- Reset progress
+- Details drawer
+- source evidence
+- copy request message
+- Summary/Packet preview if still useful
+- print code if already built, but make it secondary
+
+8. QA
+
+Verify:
+- feature flag OFF preserves old UI
+- feature flag ON shows Understand / Requirements / Complete / Summary
+- Complete mode is clearly the main workflow
+- Summary mode is secondary
+- print is no longer the primary end goal
+- progress persistence still works
+- reset progress still works
+- details drawer still works
+- mobile layout is readable and tappable
+- no billing/native/auth/RevenueCat/Stripe changes
+- no Contract Review changes
+- Vite build passes
+- completion parser QA passes
+
+Return:
+- files changed
+- mode label changes
+- Complete mode changes
+- Summary mode changes
+- print CTA change
+- mobile checklist improvements
+- build/QA results
+- protected files untouched confirmation

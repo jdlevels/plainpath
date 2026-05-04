@@ -1,0 +1,293 @@
+PlainPath — Mobile-first completion focus: demote/remove print as primary outcome
+
+Goal:
+Shift Analyze a Document away from print-first behavior and toward a mobile-first completion checklist experience.
+
+PlainPath’s main value is helping users complete the paperwork they uploaded:
+- see what is done
+- see what is still open
+- gather required documents
+- confirm signatures
+- track deadlines
+- ask the right questions
+- mark items complete on mobile
+
+Printing should no longer be the main call-to-action.
+
+Do not change:
+- billing
+- RevenueCat
+- Stripe
+- native billing
+- auth
+- pricing
+- Contract Review
+- homepage
+- marketing
+- routes
+- database
+- parser logic
+- completion object model
+- localStorage persistence
+
+Do not restore removed tools:
+- Redact Sensitive Info
+- Trust Check
+- Compare Versions
+- Clause Extractor
+- Builder
+- Digital Signature
+- Starter
+- Team
+- annual billing
+
+Feature flag:
+Keep all completion-flow behavior behind:
+
+VITE_ANALYZE_COMPLETION_FLOW_ENABLED
+
+When flag is OFF:
+- old Analyze UI remains unchanged
+
+Current approved flow:
+Understand → Plan → Complete → Packet
+
+New product emphasis:
+Complete mode is the primary user workflow.
+Packet/Summary is secondary.
+
+--------------------------------------------------
+1. REMOVE PRINT AS PRIMARY CTA
+--------------------------------------------------
+
+In Packet mode, remove or demote the primary “Print / Save as PDF” button.
+
+Preferred launch behavior:
+- Hide “Print / Save as PDF” from the main Packet header.
+- Keep print code available internally if already built, but do not make it the main CTA.
+
+If keeping access, place it in a subtle secondary overflow/menu:
+“More options”
+→ “Print checklist”
+
+But preferred for now:
+Remove visible print CTA from main flow.
+
+Do not delete print-safe code unless deletion is safer and low-risk.
+
+--------------------------------------------------
+2. UPDATE PACKET MODE LANGUAGE
+--------------------------------------------------
+
+Packet mode should no longer feel like the final purpose is printing.
+
+Update copy:
+
+Title:
+“Completion Summary”
+
+Subtitle:
+“Review what is complete, what is still open, and what needs attention before you act on this document.”
+
+If keeping “Document Action Packet” anywhere, make it secondary.
+
+Avoid:
+- “Print”
+- “Export”
+- “PDF”
+- “Generate packet”
+as the primary action.
+
+--------------------------------------------------
+3. MAKE COMPLETE MODE THE MAIN END STATE
+--------------------------------------------------
+
+Complete mode should feel like the user’s mobile checklist dashboard.
+
+It should clearly show:
+
+- X/Y complete
+- Still open count
+- Documents still needed
+- Signatures still needed
+- Deadlines still open
+- Questions still unresolved
+- Needs manual review count
+
+Add or refine section order:
+
+A. Progress Overview
+B. What’s Still Open
+C. Documents Needed
+D. Signatures Needed
+E. Deadlines
+F. Questions to Ask
+G. Manual Review Needed
+H. Completed Items
+
+The user should know exactly what remains without going to print.
+
+--------------------------------------------------
+4. MOBILE-FIRST CHECKLIST CARDS
+--------------------------------------------------
+
+Improve mobile readability in Complete mode and Plan mode.
+
+Checklist cards should be:
+- large enough to tap comfortably
+- clear title
+- plain-language description
+- status chip
+- source-backed/manual-review chip
+- Details button
+- Mark done / Not done control
+
+Mobile requirements:
+- no tiny text
+- no cramped badges
+- no horizontal overflow
+- buttons stack cleanly
+- enough spacing between items
+- sticky progress header if practical and safe
+
+Recommended mobile card structure:
+
+[Status checkbox] Item title
+Type / priority
+Short explanation
+Where to get it, if available
+[Details] [Mark done]
+
+--------------------------------------------------
+5. IMPROVE “WHAT NEEDS COMPLETING” VISIBILITY
+--------------------------------------------------
+
+Add a focused “Still Open” area in Complete mode.
+
+Show grouped open items:
+
+- To Do
+- Documents
+- Signatures
+- Deadlines
+- Questions
+- Manual Review
+
+Each group should show count and expandable list if long.
+
+Do not bury open items under completed items.
+
+--------------------------------------------------
+6. COMPLETED ITEMS SHOULD BE SECONDARY
+--------------------------------------------------
+
+Completed items should remain visible but lower priority.
+
+Move completed items below open items.
+
+Completed items should be muted and collapsible if there are many.
+
+Default:
+- show open items first
+- completed items later
+
+--------------------------------------------------
+7. KEEP DETAILS DRAWER
+--------------------------------------------------
+
+Keep the guided detail drawer.
+
+Details should still show:
+- what this means
+- what to do
+- where to get this
+- source evidence
+- copy request message
+
+On mobile, drawer should behave as:
+- bottom sheet or full-screen panel
+- easy close
+- readable spacing
+- Mark done available
+
+--------------------------------------------------
+8. PROGRESS PERSISTENCE REMAINS
+--------------------------------------------------
+
+Keep localStorage persistence:
+- item IDs + booleans only
+- no document text
+- no source quotes
+- no uploaded file content
+
+Keep:
+- Saved flash
+- Progress saved on this device
+- Reset progress
+
+--------------------------------------------------
+9. OPTIONAL PRINT ACCESS
+--------------------------------------------------
+
+If print access remains, it must be secondary.
+
+Acceptable:
+- small “More options” menu
+- “Print checklist” inside menu
+
+Not acceptable:
+- primary “Print / Save as PDF” CTA
+- screen copy implying printing is the main goal
+
+--------------------------------------------------
+10. QA
+--------------------------------------------------
+
+Verify:
+
+Desktop:
+- Complete mode clearly shows what is done and what remains
+- Packet/Summary no longer pushes print as the main action
+- Print is hidden or secondary
+- Details drawer still works
+- progress still saves
+- reset progress still works
+
+Mobile:
+- Complete mode is easy to read
+- checklist items are easy to tap
+- Mark done / Details are clear
+- no horizontal overflow
+- progress is visible
+- open items are easier to find than completed items
+
+Regression:
+- feature flag OFF preserves old UI
+- feature flag ON shows mobile-first completion flow
+- localStorage persistence still works
+- Packet/Summary still renders
+- no billing files changed
+- no RevenueCat files changed
+- no Stripe files changed
+- no native billing files changed
+- no auth files changed
+- no Contract Review files changed
+- no homepage/marketing files changed
+- no parser behavior changed
+- no removed tool references added
+
+Run:
+- Vite production build
+- completion parser QA
+- TypeScript check if available
+
+Return:
+1. Files changed
+2. Print CTA change
+3. Complete mode changes
+4. Mobile checklist improvements
+5. Packet/Summary copy changes
+6. QA/build results
+7. Protected files untouched confirmation
+8. Known limitations
+9. Recommended next slice
