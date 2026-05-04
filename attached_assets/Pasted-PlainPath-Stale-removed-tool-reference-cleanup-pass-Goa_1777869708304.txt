@@ -1,0 +1,171 @@
+PlainPath — Stale removed-tool reference cleanup pass
+
+Goal:
+Clean up remaining stale references to removed tools that were found during launch verification.
+
+This is a low-risk cleanup pass only.
+
+Do not change:
+- billing
+- RevenueCat
+- Stripe
+- Apple/native billing
+- authentication
+- app routes except stale removed-tool redirects/copy if explicitly listed below
+- Analyze feature flag behavior
+- Plan Summary behavior
+- pricing
+- backend entitlement logic
+- security dependency versions
+
+Removed tools must stay removed:
+- Redact Sensitive Info
+- Trust Check
+- Compare Versions
+- Clause Extractor
+- Builder
+- Digital Signature
+- Starter
+- Team
+- annual billing
+
+Known findings to clean:
+
+1. ScamNotice guide still links to old Trust Check flow
+
+File:
+artifacts/plainpath/src/pages/guides/ScamNotice.tsx
+
+Current issue:
+CTA links to /import?mode=trust-check, which triggers old trust-check behavior and redirects.
+
+Fix:
+Change the CTA to route to /analyze or the current Analyze document flow.
+
+Suggested copy:
+“Start a Document Plan”
+
+Optional helper text:
+“PlainPath can review the notice, surface risks, deadlines, and next steps.”
+
+Do not mention Trust Check.
+
+2. FAQSection still lists removed tools
+
+File:
+artifacts/plainpath/src/components/FAQSection.tsx
+
+Current issue:
+The answer to “What tools does PlainPath offer?” mentions removed tools.
+
+Fix:
+Update the answer to mention only:
+- Analyze a Document / Start a Document Plan
+- Contract Review
+- Saved analysis history
+
+No Trust Check, Builder, Redact, Compare Versions, Clause Extractor, Digital Signature, Starter, Team, or annual billing.
+
+3. In-app Home Recent Items may surface old removed-tool sessions
+
+File:
+artifacts/plainpath/src/pages/Home.tsx
+
+Current issue:
+Historical sessions from removed tools may still appear in Recent Items and navigate to removed routes.
+
+Fix:
+Filter Recent Items so only current supported session/tool types render:
+- analyze
+- contract-review
+
+If an old session exists, do not show it in the primary Recent Items list.
+
+Do not delete stored user history. Just hide unsupported removed-tool sessions from the current launch UI.
+
+4. UpgradeModal has dead starter highlight key
+
+File:
+artifacts/plainpath/src/components/UpgradeModal.tsx
+
+Current issue:
+PLAN_HIGHLIGHTS.starter exists as dead code.
+
+Fix:
+Remove the starter key and any unreachable starter/team/annual copy.
+
+Confirm UpgradeModal only describes PlainPath Pro.
+
+5. DemoSection and TestimonialsSection reference Trust Check
+
+Files:
+DemoSection.tsx
+TestimonialsSection.tsx
+
+Current issue:
+Trust Check references remain in marketing/demo components.
+
+Fix:
+Replace Trust Check references with current supported product language:
+- Start a Document Plan
+- Contract Review
+- Document Action Packet
+- Guided action plan
+
+Do not restore or link to Trust Check.
+
+Verification required:
+
+1. Grep checks
+Confirm zero user-facing references to removed tools in primary app and marketing UI:
+- Trust Check
+- Redact Sensitive Info
+- Compare Versions
+- Clause Extractor
+- Builder
+- Digital Signature
+- Starter
+- Team
+- annual billing
+
+Do not count historical docs, comments, or archived planning files unless they render in the app.
+
+2. Route safety
+Confirm removed routes still redirect safely home if visited directly.
+
+3. Homepage
+Confirm homepage still says:
+“Understand it. Complete it. Submit it.”
+
+Confirm CTA row still has only:
+- Start a Document Plan
+- Review a Contract
+
+4. Billing safety
+Confirm:
+- PlainPath Pro remains the only paid plan
+- $19.99/month remains
+- RevenueCat unchanged
+- Stripe unchanged
+- native billing unchanged
+
+5. Analyze safety
+Confirm:
+- feature flag behavior unchanged
+- Plan Summary unchanged
+- completion parser QA still passes 44/44
+
+6. Build/security
+Run:
+- Vite production build
+- API server build if available
+- completion parser QA
+- security scan
+
+Return:
+1. Files changed
+2. Removed stale references
+3. Grep results
+4. Build/QA results
+5. Security scan result
+6. Confirmation that no billing/native/auth behavior changed

@@ -5,26 +5,26 @@ import { FileText, Shield, Lock, CheckCircle2 } from "lucide-react"
 const PILLARS = [
   {
     icon: FileText,
-    label: "Plain English output",
-    desc: "Every analysis surfaces action steps, deadlines, and risks — written for real people, not lawyers.",
+    label: "Action plan in minutes",
+    desc: "Deadlines, missing documents, signatures, and risks — all surfaced and organized for you.",
     color: "text-primary",
   },
   {
     icon: Shield,
-    label: "Temporary processing only",
-    desc: "Files are processed to return your results. PlainPath does not sell your data or use your documents to train AI.",
+    label: "Temporary processing",
+    desc: "Files are processed only to return your results. Nothing is stored beyond your session.",
     color: "text-red-500",
   },
   {
     icon: Lock,
-    label: "Never used for AI training",
-    desc: "Your documents are not retained, shared, or used to train any AI model.",
+    label: "Privacy-minded",
+    desc: "Your documents are not retained, shared, or used to train AI models.",
     color: "text-violet-500",
   },
   {
     icon: CheckCircle2,
-    label: "Demo preview available",
-    desc: "Preview the workflow before opening the app.",
+    label: "Two tools, one plan",
+    desc: "Analyze any document. Review any contract. Both included at $19.99/month.",
     color: "text-emerald-500",
   },
 ]
