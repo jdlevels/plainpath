@@ -1,0 +1,165 @@
+PlainPath — Refocus Packet PDF into a Completion Checklist
+
+Goal:
+Change the printed Packet output so it is clearly a checklist for completing the uploaded paperwork, not a full analysis report or source audit.
+
+The purpose of the printout:
+Help the user complete the paperwork they uploaded by showing what they need to do, gather, sign, verify, ask, and track.
+
+Do not change:
+- billing
+- RevenueCat
+- Stripe
+- native billing
+- auth
+- pricing
+- Contract Review
+- homepage
+- marketing
+- routes
+- database
+- parser logic unless a tiny display helper is needed
+
+Do not restore removed tools.
+
+Required changes:
+
+1. Rename printed output
+
+Use:
+“PlainPath Completion Packet”
+
+Subtitle:
+“A checklist generated from your uploaded document to help you complete the paperwork.”
+
+Avoid:
+- Document Action Packet, if it makes the output feel like a full report
+- Export PDF, if it implies exporting the original document
+
+2. Add clear purpose notice near top
+
+Add:
+
+“This is not the original document. This packet is a checklist to help you complete, gather, sign, verify, and submit the paperwork from your uploaded document. Keep the original document with this packet.”
+
+3. Default print should include only practical completion sections
+
+Print sections in this order:
+
+A. Cover / Purpose
+- document title
+- document type
+- generated date
+- completion status
+- completed/open count
+
+B. What To Do First
+- maximum 5–7 priority open items
+- plain language only
+- include what to do and deadline/trigger if available
+
+C. Documents To Gather
+- required_document and missing_document only
+- table columns:
+  Document
+  Why needed
+  Where to get it
+  Status
+
+D. Signatures Needed
+- signature_needed only
+- what needs signing
+- who/where to confirm
+- status
+
+E. Deadlines & Timing
+- deadline items only
+- deadline/trigger
+- related action
+- status
+
+F. Questions To Ask
+- question_to_ask only
+- copy-ready wording
+- “Ask the issuing organization: …”
+
+G. Final Completion Checklist
+- I gathered required documents
+- I confirmed signatures
+- I checked deadlines
+- I asked unresolved questions
+- I reviewed open items
+- I kept the original document with this packet
+- I understand PlainPath is not legal, financial, medical, or professional advice
+
+H. Disclaimer
+- short and clear
+
+4. Remove from default print
+
+Do not include by default:
+- full Source Evidence Index
+- raw document sections
+- long source quotes
+- full Manual Review Needed list
+- repeated Open Items dump
+- repeated Completed Items dump
+- internal source-backed badges everywhere
+- giant appendix unless explicitly added later as “Evidence Report”
+
+5. Keep source evidence in app
+
+Do not remove source evidence from:
+- Plan details drawer
+- Packet screen preview if currently useful
+- source-backed chips
+
+But the printed checklist should be lean.
+
+6. Reduce repetition
+
+If an item appears in What To Do First, do not repeat the exact same wording heavily in later sections.
+
+Documents/signatures/deadlines may still appear in their proper sections, but keep them compact.
+
+7. Print layout
+
+The printed PDF should ideally be 2–4 pages for normal documents, unless the document genuinely has many required items.
+
+It should look like a working checklist, not a dashboard export.
+
+8. Button label
+
+Change Packet print button to:
+
+“Print Completion Checklist”
+
+or:
+
+“Save Completion Checklist”
+
+Preferred:
+“Print Completion Checklist”
+
+9. QA
+
+Verify:
+- print preview no longer includes long source appendix by default
+- first page explains the packet purpose
+- first page is immediately useful
+- checklist sections are practical
+- user understands this is not the original document
+- browser print still spans multiple pages only when needed
+- no app chrome prints
+- no Details buttons print
+- no removed tools appear
+- Vite build passes
+- completion parser QA passes
+
+Return:
+- files changed
+- new printed packet structure
+- what was removed from default print
+- page-count result for EOB sample
+- page-count result for service agreement sample
+- build/QA result

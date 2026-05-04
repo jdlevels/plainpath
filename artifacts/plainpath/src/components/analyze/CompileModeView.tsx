@@ -96,11 +96,11 @@ function packetStatusColor(pct: number): string {
 
 function SourceChip({ item }: { item: CompletionObject }) {
   return item.sourceQuote ? (
-    <span className="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full leading-none border shrink-0 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border-emerald-200/50 dark:border-emerald-900/40">
+    <span className="packet-no-print text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full leading-none border shrink-0 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border-emerald-200/50 dark:border-emerald-900/40">
       Source-backed
     </span>
   ) : (
-    <span className="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full leading-none border shrink-0 bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border-amber-200/50 dark:border-amber-900/40">
+    <span className="packet-no-print text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full leading-none border shrink-0 bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border-amber-200/50 dark:border-amber-900/40">
       Review source
     </span>
   )
@@ -408,7 +408,7 @@ function QuestionRow({
       />
       <div className="flex-1 min-w-0 space-y-1">
         <p className={`text-xs font-medium leading-snug ${done ? "text-muted-foreground/55" : "text-foreground/90"}`}>
-          <span className="text-[10px] font-bold text-muted-foreground/45 mr-1.5 uppercase tracking-wider">Ask:</span>
+          <span className="text-[10px] font-bold text-muted-foreground/45 mr-1 uppercase tracking-wider">Ask the issuing organization:</span>
           {item.title}
         </p>
         {item.whereToGetThis && (
@@ -672,19 +672,22 @@ export function CompileModeView({
       <div className="packet-print-only" aria-hidden="true">
         <div style={{ borderBottom: "2.5px solid #4F7CAC", paddingBottom: "14pt", marginBottom: "18pt" }}>
           <p style={{ fontSize: "8pt", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "#4F7CAC", margin: "0 0 6pt 0" }}>
-            PlainPath — Document Action Packet
+            PlainPath Completion Packet
           </p>
           <p style={{ fontSize: "20pt", fontWeight: 800, color: "#111827", margin: "0 0 4pt 0", lineHeight: 1.15 }}>
             {documentTitle}
           </p>
           {documentType && (
-            <p style={{ fontSize: "11pt", fontWeight: 500, color: "#6b7280", margin: "0 0 10pt 0" }}>
+            <p style={{ fontSize: "11pt", fontWeight: 500, color: "#6b7280", margin: "0 0 6pt 0" }}>
               {documentType}
             </p>
           )}
+          <p style={{ fontSize: "9.5pt", fontWeight: 500, color: "#6b7280", margin: "0 0 10pt 0", fontStyle: "italic" }}>
+            A checklist generated from your uploaded document to help you complete the paperwork.
+          </p>
 
-          {/* Cover stats grid */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8pt", marginTop: "10pt" }}>
+          {/* Cover stats grid — 2 columns */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8pt", marginTop: "10pt" }}>
             <div style={{ background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: "6pt", padding: "8pt 10pt" }}>
               <p style={{ fontSize: "7pt", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#9ca3af", margin: "0 0 3pt 0" }}>Generated</p>
               <p style={{ fontSize: "9pt", fontWeight: 600, color: "#374151", margin: 0 }}>{previewDate}</p>
@@ -692,30 +695,27 @@ export function CompileModeView({
             <div style={{ background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: "6pt", padding: "8pt 10pt" }}>
               <p style={{ fontSize: "7pt", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#9ca3af", margin: "0 0 3pt 0" }}>Completion</p>
               <p style={{ fontSize: "9pt", fontWeight: 700, color: coverStatusColor, margin: 0 }}>
-                {doneItems}/{totalItems} — {statusLabel}
-              </p>
-            </div>
-            <div style={{ background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: "6pt", padding: "8pt 10pt" }}>
-              <p style={{ fontSize: "7pt", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#9ca3af", margin: "0 0 3pt 0" }}>Sources</p>
-              <p style={{ fontSize: "9pt", fontWeight: 600, color: "#374151", margin: 0 }}>
-                {sourceBacked.length} source-backed · {manualCount} for review
+                {doneItems} of {totalItems} items done
               </p>
             </div>
           </div>
 
+          {/* Purpose notice */}
+          <div style={{ marginTop: "12pt", background: "#fefce8", border: "1px solid #fde68a", borderRadius: "6pt", padding: "9pt 12pt" }}>
+            <p style={{ fontSize: "8.5pt", color: "#78350f", lineHeight: 1.55, margin: 0 }}>
+              <strong>This is not the original document.</strong> This packet is a checklist to help you complete, gather, sign, verify, and submit the paperwork from your uploaded document. Keep the original document with this packet.
+            </p>
+          </div>
+
           {/* Cover summary */}
           {summary && (
-            <div style={{ marginTop: "12pt", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "6pt", padding: "10pt 12pt" }}>
+            <div style={{ marginTop: "10pt", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "6pt", padding: "9pt 12pt" }}>
               <p style={{ fontSize: "7pt", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#15803d", margin: "0 0 4pt 0" }}>
                 Plain-English Summary
               </p>
               <p style={{ fontSize: "9pt", color: "#374151", lineHeight: 1.55, margin: 0 }}>{summary}</p>
             </div>
           )}
-
-          <p style={{ fontSize: "7.5pt", color: "#9ca3af", marginTop: "10pt", fontStyle: "italic" }}>
-            PlainPath helps organize and explain documents. It does not provide legal, financial, medical, or professional advice. Always verify requirements with the issuing organization before acting.
-          </p>
         </div>
       </div>
 
@@ -729,10 +729,10 @@ export function CompileModeView({
           </div>
           <div>
             <h2 className="text-xl font-bold text-foreground mb-0.5 tracking-tight">
-              Document Action Packet
+              Completion Packet
             </h2>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-prose">
-              Prioritized actions, documents, signatures, deadlines, and questions — ready to print or save.
+              A checklist to help you complete, gather, sign, verify, and submit your paperwork.
             </p>
           </div>
         </div>
@@ -799,12 +799,12 @@ export function CompileModeView({
             <button
               type="button"
               onClick={handlePrint}
-              aria-label="Print or save Document Action Packet as PDF"
+              aria-label="Print Completion Checklist"
               style={{ touchAction: "manipulation" }}
               className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/40 min-h-[38px]"
             >
               <Printer className="w-4 h-4 shrink-0" />
-              Print / Save as PDF
+              Print Completion Checklist
             </button>
           )}
           {onResetProgress && (
@@ -957,7 +957,7 @@ export function CompileModeView({
           ))}
         </PacketSection>
 
-        {/* 6. Risks To Review */}
+        {/* 6. Risks To Review — screen only (not printed in checklist) */}
         <PacketSection
           label="Risks To Review Before Acting"
           icon={AlertTriangle}
@@ -966,7 +966,7 @@ export function CompileModeView({
           count={riskItems.length}
           emptyMessage="No risks were identified for this document."
           note="Review any risks with a qualified professional as appropriate. PlainPath does not provide legal, financial, or professional advice."
-          className="packet-print-section"
+          className="packet-no-print packet-print-section"
         >
           {riskItems.map((item) => (
             <RiskRow
@@ -1008,13 +1008,12 @@ export function CompileModeView({
           </div>
           <div className="px-4 py-2 divide-y divide-border/15">
             {[
-              "I reviewed open items and know what to do first",
-              "I gathered or started gathering required documents",
+              "I gathered required documents",
               "I confirmed which signatures are needed and who signs",
-              "I checked all hard deadlines and timing triggers",
-              "I noted the questions I still need to ask",
-              "I reviewed risks with the appropriate professional if needed",
-              "I verified source evidence or contacted the issuing organization",
+              "I checked all deadlines and timing triggers",
+              "I asked — or wrote down — my unresolved questions",
+              "I reviewed open items and know what to do first",
+              "I kept the original document with this packet",
               "I understand PlainPath is not legal, financial, medical, or professional advice",
             ].map((text) => (
               <ChecklistItem key={text} text={text} />
@@ -1022,7 +1021,7 @@ export function CompileModeView({
           </div>
         </div>
 
-        {/* 9. Source Evidence Appendix */}
+        {/* 9. Source Evidence Appendix — screen only (not printed in checklist) */}
         <PacketSection
           label="Appendix — Source Evidence"
           icon={BookOpen}
@@ -1030,7 +1029,7 @@ export function CompileModeView({
           iconBg="bg-emerald-50 dark:bg-emerald-950/40"
           count={evidenceItems.length}
           emptyMessage="No source evidence was found for any items."
-          className="packet-print-section"
+          className="packet-no-print packet-print-section"
         >
           {evidenceItems.map((item) => (
             <AppendixRow key={item.id} item={item} onOpenDetails={onOpenDetails} />
