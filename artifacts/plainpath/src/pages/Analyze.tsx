@@ -59,6 +59,12 @@ import { CompleteModeView } from "@/components/analyze/CompleteModeView"
 import { CompileModeView } from "@/components/analyze/CompileModeView"
 import { analysisResultToCompletionObjects } from "@/lib/completionParser"
 import type { CompletionObject } from "@/lib/completionTypes"
+import {
+  isStorageAvailable,
+  loadCompletionStatus,
+  saveCompletionStatus,
+  clearCompletionStatus,
+} from "@/lib/completionStorage"
 
 function parseDeadlineDate(dateStr: string | null | undefined): Date | null {
   if (!dateStr) return null
@@ -113,6 +119,12 @@ export default function Analyze() {
 
   // Phase 3B: per-item completion status keyed by CompletionObject.id
   const [completionStatus, setCompletionStatus] = useState<Record<string, boolean>>({})
+
+  // Phase 3H.2: localStorage availability — checked once on mount
+  const storageAvailable = useMemo(() => {
+    if (!ANALYZE_COMPLETION_FLOW_ENABLED) return false
+    return isStorageAvailable()
+  }, [])
 
   // Phase 3C: item selected for detail drawer
   const [selectedItem, setSelectedItem] = useState<CompletionObject | null>(null)
@@ -199,13 +211,40 @@ export default function Analyze() {
     try { return analysisResultToCompletionObjects(analysis as any) } catch { return [] }
   }, [analysis])
 
-  // Phase 3B: reset completion status whenever a new document is loaded
-  useEffect(() => { setCompletionStatus({}) }, [analysis.id])
+  // Phase 3H.2: load persisted completion status when analysis changes (replaces empty reset)
+  useEffect(() => {
+    if (!ANALYZE_COMPLETION_FLOW_ENABLED) { setCompletionStatus({}); return }
+    // Derive known IDs inline so we don't need completionObjects in the dep array
+    let knownIds: string[] = []
+    try {
+      knownIds = analysisResultToCompletionObjects(analysis as any).map(o => o.id)
+    } catch { /* ignore — start fresh */ }
+    const stored = loadCompletionStatus(analysis.id, knownIds)
+    setCompletionStatus(stored)
+  }, [analysis.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Phase 3B: toggle handler for Plan Summary items
+  // Phase 3B: toggle handler for Plan Summary items; Phase 3H.2: persists on every change
   const handlePlanItemToggle = useCallback((id: string, done: boolean) => {
-    setCompletionStatus(prev => ({ ...prev, [id]: done }))
-  }, [])
+    setCompletionStatus(prev => {
+      const next = { ...prev, [id]: done }
+      if (ANALYZE_COMPLETION_FLOW_ENABLED) {
+        // Write only known IDs — saveCompletionStatus handles the filtering
+        const knownIds = completionObjects.map(o => o.id)
+        saveCompletionStatus(analysis.id, next, knownIds)
+      }
+      return next
+    })
+  }, [analysis.id, completionObjects])
+
+  // Phase 3H.2: reset progress for current analysis
+  const handleResetProgress = useCallback(() => {
+    const confirmed = window.confirm(
+      "Reset checked progress for this document? This will not delete the analysis or uploaded document."
+    )
+    if (!confirmed) return
+    setCompletionStatus({})
+    clearCompletionStatus(analysis.id)
+  }, [analysis.id])
 
   // Phase 3C: item detail drawer handlers
   const handleOpenItemDetail  = useCallback((item: CompletionObject) => { setSelectedItem(item) }, [])
@@ -620,6 +659,8 @@ export default function Analyze() {
             onOpenDetails={handleOpenItemDetail}
             onGoToPlan={() => handleModeChange("plan")}
             onGoToCompile={() => handleModeChange("compile")}
+            onResetProgress={handleResetProgress}
+            storageAvailable={storageAvailable}
             documentTitle={analysis.title}
           />
         )}
@@ -632,6 +673,8 @@ export default function Analyze() {
             onOpenDetails={handleOpenItemDetail}
             onGoToComplete={() => handleModeChange("complete")}
             onGoToPlan={() => handleModeChange("plan")}
+            onResetProgress={handleResetProgress}
+            storageAvailable={storageAvailable}
             documentTitle={analysis.title}
             documentType={analysis.documentType}
             summary={(analysis as any).plainEnglishSections?.summary || analysis.summary}

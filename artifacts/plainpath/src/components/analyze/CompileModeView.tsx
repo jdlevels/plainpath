@@ -331,6 +331,8 @@ export interface CompileModeViewProps {
   onOpenDetails: (item: CompletionObject) => void
   onGoToComplete: () => void
   onGoToPlan: () => void
+  onResetProgress?: () => void
+  storageAvailable?: boolean
   documentTitle: string
   documentType?: string
   summary?: string
@@ -339,6 +341,8 @@ export interface CompileModeViewProps {
 export function CompileModeView({
   completionObjects,
   completionStatus,
+  onResetProgress,
+  storageAvailable = true,
   onOpenDetails,
   onGoToComplete,
   onGoToPlan,
@@ -525,6 +529,26 @@ export function CompileModeView({
               Print / Save as PDF
             </button>
           )}
+
+          {/* Reset progress */}
+          {onResetProgress && (
+            <button
+              type="button"
+              onClick={onResetProgress}
+              style={{ touchAction: "manipulation" }}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[11px] font-semibold text-muted-foreground/50 hover:text-red-500 dark:hover:text-red-400 transition-colors outline-none focus-visible:underline min-h-[38px]"
+              aria-label="Reset all completion progress for this document"
+            >
+              Reset progress
+            </button>
+          )}
+
+          {/* Saved-state indicator */}
+          <span className="text-[10px] text-muted-foreground/40 leading-snug">
+            {storageAvailable
+              ? "Progress saved on this device"
+              : "Progress may reset after refresh"}
+          </span>
         </div>
       </div>
 

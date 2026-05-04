@@ -300,6 +300,8 @@ export interface CompleteModeViewProps {
   onOpenDetails: (item: CompletionObject) => void
   onGoToPlan: () => void
   onGoToCompile?: () => void
+  onResetProgress?: () => void
+  storageAvailable?: boolean
   documentTitle?: string
 }
 
@@ -310,6 +312,8 @@ export function CompleteModeView({
   onOpenDetails,
   onGoToPlan,
   onGoToCompile,
+  onResetProgress,
+  storageAvailable = true,
 }: CompleteModeViewProps) {
   // All completable items (the 7 types that appear in Plan mode)
   const completable = completionObjects.filter((o) =>
@@ -464,6 +468,26 @@ export function CompleteModeView({
               Preview Packet
             </button>
           )}
+
+          {/* Reset progress */}
+          {onResetProgress && (
+            <button
+              type="button"
+              onClick={onResetProgress}
+              style={{ touchAction: "manipulation" }}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[11px] font-semibold text-muted-foreground/50 hover:text-red-500 dark:hover:text-red-400 transition-colors outline-none focus-visible:underline min-h-[38px]"
+              aria-label="Reset all completion progress for this document"
+            >
+              Reset progress
+            </button>
+          )}
+
+          {/* Saved-state indicator — screen only */}
+          <span className="no-print text-[10px] text-muted-foreground/40 leading-snug">
+            {storageAvailable
+              ? "Progress saved on this device"
+              : "Progress may reset after refresh"}
+          </span>
         </div>
       </div>
 

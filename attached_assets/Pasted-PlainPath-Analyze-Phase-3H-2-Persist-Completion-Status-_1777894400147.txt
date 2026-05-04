@@ -1,0 +1,242 @@
+PlainPath — Analyze Phase 3H.2: Persist Completion Status Across Refresh
+
+Goal:
+Persist Analyze completion progress locally so checked Packet/Plan/Complete items survive page refresh and browser return.
+
+This phase should use localStorage only.
+Do not add backend persistence.
+Do not add database schema.
+Do not add migrations.
+Do not add AI calls.
+Do not change billing, RevenueCat, Stripe, native billing, auth, pricing, Contract Review, homepage, marketing, routes, parser logic, or PDF export behavior.
+
+Current approved state:
+- Phase 3F Packet preview approved
+- Phase 3G Packet Print / Save as PDF approved
+- Phase 3H.1 Compile renamed to Packet + print margin approved
+- Build: 2744 modules, 0 errors
+- QA: 55/55 passing
+- Protected files untouched
+
+Feature flag:
+All new persistence behavior must stay behind:
+
+VITE_ANALYZE_COMPLETION_FLOW_ENABLED
+
+When flag is OFF:
+- old Analyze UI remains unchanged
+- no localStorage completion persistence is active
+- old progress behavior remains unchanged
+
+Primary file expected:
+- artifacts/plainpath/src/pages/Analyze.tsx
+
+Optional helper file only if cleaner:
+- artifacts/plainpath/src/lib/completionStorage.ts
+
+Do not touch:
+- billing files
+- RevenueCat files
+- Stripe files
+- native billing files
+- auth files
+- Contract Review files
+- homepage / marketing files
+- parser files
+- route files
+- database files
+- PDF export files unless strictly necessary
+
+1. Storage key
+
+Persist completionStatus using a stable per-analysis key.
+
+Preferred key:
+
+plainpath_completion_${analysis.id}
+
+If analysis.id is unavailable, use a safe fallback based on available stable document fields, but do not store document text.
+
+Acceptable fallback shape:
+plainpath_completion_fallback_${safeHash(documentTitle + documentType)}
+
+Do not store:
+- raw document text
+- source quotes
+- document body content
+- user uploaded file data
+- personal document content
+
+Store only:
+
+Record<string, boolean>
+
+Where key = completionObject.id and value = true/false.
+
+2. Load behavior
+
+When feature flag is ON and an analysis loads:
+
+- compute completionObjects as already done
+- read localStorage for the analysis key
+- merge stored completionStatus into current completionStatus
+- only keep keys that still exist in current completionObjects
+- ignore stale IDs
+- default missing IDs to false
+- if localStorage is unavailable, fail silently and continue with empty state
+
+Important:
+Stored values should win for known IDs.
+New completion objects should start false.
+
+3. Save behavior
+
+Whenever the user toggles an item done/not-done in Plan, Complete, or drawer:
+
+- update React state immediately
+- persist the updated Record<string, boolean> to localStorage
+- write only the cleaned object containing current known completionObject IDs
+- do not write unrelated state
+
+Use either:
+- immediate localStorage.setItem on toggle, or
+- debounced 250–300ms write
+
+Keep it simple and reliable.
+
+4. Reset behavior
+
+Add a small “Reset progress” action in Complete mode and/or Packet mode only.
+
+Recommended placement:
+- Complete mode header/action area
+- Packet mode header/action area
+
+Behavior:
+- clears completionStatus for the current analysis
+- removes the localStorage key for that analysis
+- returns all items to not done
+- does not delete the analysis
+- does not delete the uploaded document
+- does not affect other analyses
+
+Copy:
+“Reset progress”
+
+Confirmation:
+Use a native confirm() or existing confirm pattern if available:
+
+“Reset checked progress for this document? This will not delete the analysis or uploaded document.”
+
+If user confirms:
+- reset completionStatus to {}
+- remove localStorage key
+- progress bar returns to 0%
+
+If user cancels:
+- no change
+
+5. Saved state indicator
+
+Add a small passive status label near Complete/Packet progress:
+
+When localStorage save succeeds:
+“Progress saved on this device”
+
+When localStorage is unavailable:
+“Progress may reset after refresh”
+
+Do not make this alarming.
+Do not show a blocking error.
+
+6. Privacy-safe behavior
+
+Add a short code comment near the storage helper:
+
+“Stores only completion object IDs and booleans. Does not store document text, source quotes, or uploaded file content.”
+
+Do not expose developer wording in the UI unless needed.
+
+7. Cross-mode sync
+
+Verify persistence works with existing shared state:
+
+- Plan Summary item toggle
+- ItemDetailDrawer toggle
+- CompleteModeView toggle
+- Packet mode read-only status display
+
+When one item is toggled:
+- Plan updates
+- Complete updates
+- Packet updates
+- progress count updates
+- persisted state updates
+
+8. New document behavior
+
+When switching to a different analysis.id:
+
+- load that document’s own saved progress
+- do not carry previous document’s checks into the new one
+- if no saved progress exists, start empty
+- stale localStorage from old object IDs should be ignored
+
+9. Packet print behavior
+
+Do not print the saved-state label.
+It is screen-only.
+
+Print output should continue to show current completion status and completed/open sections based on the live completionStatus.
+
+10. QA checks
+
+Run:
+- Vite production build
+- completion parser QA
+- TypeScript check if available
+
+Manual/code verification:
+- Feature flag OFF preserves old UI
+- Feature flag ON enables localStorage persistence
+- completionStatus saves after item toggle
+- refresh restores checked items
+- different analysis does not inherit previous checks
+- stale IDs are ignored
+- reset progress clears localStorage and UI state
+- localStorage unavailable fails gracefully
+- no document text/source quotes/raw content stored
+- Plan mode progress syncs
+- Complete mode progress syncs
+- Packet mode status syncs
+- ItemDetailDrawer toggle syncs
+- print output still works
+- saved-state label does not print
+- no billing files changed
+- no RevenueCat files changed
+- no Stripe files changed
+- no native billing files changed
+- no auth files changed
+- no Contract Review files changed
+- no homepage/marketing files changed
+- no parser behavior changed
+- no removed tool references added
+
+11. Return report
+
+Return:
+1. Files changed
+2. Storage key behavior
+3. Data stored confirmation
+4. Load/merge behavior
+5. Save behavior
+6. Reset progress behavior
+7. Saved-state indicator behavior
+8. Cross-mode sync behavior
+9. New document behavior
+10. Print behavior
+11. Feature flag behavior
+12. Build/QA results
+13. Protected files untouched confirmation
+14. Known limitations
+15. Recommended next slice
