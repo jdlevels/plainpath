@@ -1,0 +1,82 @@
+PlainPath — Final launch QA pass for mobile-first completion flow
+
+Goal:
+Verify the current Analyze a Document experience is launch-ready after the completion-before-submission refocus.
+
+Do not rebuild.
+Do not add features.
+Do not redesign.
+Only identify launch blockers, copy issues, mobile usability issues, or broken flows.
+
+Core product rule:
+Analyze a Document helps users understand what their uploaded paperwork says, what it requires, what deliverables are needed, what is completed, and what still needs completion before submission.
+
+Primary experience:
+Mobile-first live checklist.
+
+Verify:
+
+1. Mobile Analyze flow
+- Upload/open analyzed document
+- Understand mode is readable
+- Requirements mode clearly shows what the document requires
+- Complete mode clearly shows completed vs open items
+- Checkoff works
+- Saved progress flash works
+- Progress persists after refresh
+- Reset progress works
+- Details drawer opens and closes cleanly
+- No horizontal overflow
+- No tiny unreadable text
+- No print/export emphasis
+
+2. Desktop Analyze flow
+- Same four modes render correctly
+- Desktop remains clear and not overbuilt
+- Requirements and Complete are obvious
+- Summary is secondary
+- Print/export is not the main goal
+
+3. Auth and entitlement
+- Signed-out user is routed correctly
+- Signed-in Pro/admin user can access Analyze
+- Non-entitled user sees correct upgrade behavior
+- No Starter/Team/annual references
+
+4. Native/iOS readiness
+- Stripe purchase UI hidden in native iOS
+- RevenueCat/native entitlement path intact
+- Reset confirmation works or is flagged if iOS blocks window.confirm
+- Mobile checklist remains usable inside native shell
+
+5. Removed tool cleanup
+Confirm no primary flow references:
+- Redact Sensitive Info
+- Trust Check
+- Compare Versions
+- Clause Extractor
+- Builder
+- Digital Signature
+- Starter
+- Team
+- annual billing
+
+6. Contract Review smoke test
+- Contract Review still opens
+- Contract Review export fix still works
+- No Analyze changes broke Contract Review
+
+7. Security/build
+- Vite production build passes
+- completion parser QA passes
+- security scan has no new high/critical issues
+- protected files untouched unless explicitly listed
+
+Return:
+1. Pass/fail summary
+2. Any launch blockers
+3. Any non-blocking polish issues
+4. Mobile screenshots if available
+5. Desktop screenshots if available
+6. Build/QA/security results
+7. Final recommendation: proceed or fix first
