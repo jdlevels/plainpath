@@ -1,0 +1,104 @@
+PlainPath — Contract Review final clarity polish before lock
+
+Goal:
+Make Contract Review easier to understand by making “Questions to Ask Before Signing” visible and primary on clause cards, while making suggested revision language secondary.
+
+Do not rebuild.
+Do not change Analyze.
+Do not change billing, RevenueCat, Stripe, native billing, auth, pricing, routes, database, homepage, or parser schema.
+Do not add new features.
+
+Current issue:
+The Contract Review restructure is strong, but clause cards still emphasize “Suggested Revision Language” and “Draft negotiation email” more than the practical questions users should ask before signing.
+
+Fix:
+
+1. Clause card section order
+
+Each Key Clause card should show sections in this order:
+
+- What it says
+- Why this matters
+- Questions to Ask Before Signing
+- Suggested language to discuss
+- Source quote / clause reference if available
+
+“Questions to Ask Before Signing” must be visibly present on every needs-attention clause card when question data exists.
+
+2. Rename “Suggested Revision Language”
+
+Change user-facing label:
+
+“Suggested Revision Language”
+
+to:
+
+“Suggested language to discuss”
+
+or:
+
+“Possible clarification language”
+
+Use the one that fits existing spacing best.
+
+Purpose:
+This avoids making PlainPath sound like it is drafting legal terms or acting as a lawyer.
+
+3. Rename “Draft negotiation email”
+
+Change user-facing button text:
+
+“Draft negotiation email”
+
+to:
+
+“Draft questions email”
+
+or:
+
+“Copy questions to ask”
+
+Use “Draft questions email” if the button generates an email.
+Use “Copy questions to ask” if the button mainly copies text.
+
+4. Make questions more prominent than suggested language
+
+Questions should appear before suggested language.
+
+Question examples should be plain English, such as:
+- “Can this liability cap be increased?”
+- “Are there exceptions for confidentiality breaches or gross negligence?”
+- “What happens if the work is delayed or incomplete?”
+- “Can you provide the missing exhibit before signing?”
+
+5. Keep suggested language secondary
+
+Suggested language should remain available, but visually secondary to:
+- What it says
+- Why this matters
+- Questions to Ask Before Signing
+
+6. Mobile readability
+
+Verify mobile cards do not become too long or cramped.
+If needed, keep suggested language collapsed by default while questions remain visible.
+
+7. QA
+
+Verify:
+- Contract Review opens
+- Key Clause cards show Questions to Ask Before Signing
+- Suggested language label is softened
+- Negotiation email label is softened
+- No “do not sign” language appears
+- No “why this is a problem” language appears
+- No Analyze changes
+- Build passes
+
+Return:
+- files changed
+- exact label changes
+- clause card order
+- mobile readability notes
+- build result
+- final recommendation
