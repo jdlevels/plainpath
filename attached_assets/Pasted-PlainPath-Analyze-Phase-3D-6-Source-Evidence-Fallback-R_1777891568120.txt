@@ -1,0 +1,162 @@
+PlainPath — Analyze Phase 3D.6: Source Evidence Fallback Refinement
+
+Goal:
+Polish the Source Evidence section in the Item Detail Drawer so source-backed items and missing-source items use accurate, trust-safe language.
+
+This is a micro-polish phase after Phase 3D.5.
+Do not redesign the drawer.
+Do not build Complete mode.
+Do not build Compile mode.
+Do not add persistence.
+Do not add notes.
+Do not add AI calls.
+
+Current approved state:
+- Phase 3D.5 complete
+- Source Evidence section exists
+- Source-backed / Review source card chips exist
+- Copy source button exists
+- Long quote show/hide exists
+- Build: 2742 modules, 0 errors
+- QA: 55/55 passing
+
+Only expected files:
+- artifacts/plainpath/src/components/analyze/ItemDetailDrawer.tsx
+
+Touch PlanSummaryView only if absolutely required.
+Do not touch:
+- billing
+- RevenueCat
+- Stripe
+- native billing
+- auth
+- pricing
+- Contract Review
+- Contract Review PDF export
+- homepage
+- marketing
+- routes
+- database schema
+- migrations
+- backend routes
+- parser files unless strictly required for a display-safe type import
+
+Do not restore removed tools:
+- Redact Sensitive Info
+- Trust Check
+- Compare Versions
+- Clause Extractor
+- Builder
+- Digital Signature
+- Starter
+- Team
+- annual billing
+
+Feature flag:
+All behavior remains behind:
+
+VITE_ANALYZE_COMPLETION_FLOW_ENABLED
+
+Requirements:
+
+1. Conditional Source Evidence subtitle
+
+When item.sourceQuote exists, show:
+
+“PlainPath found this guidance in your uploaded document.”
+
+When item.sourceQuote does not exist, do NOT show that sentence.
+
+Instead show:
+
+“PlainPath did not find a direct quote for this item.”
+
+2. Improve no-source fallback card
+
+When sourceQuote is missing, the fallback card should say:
+
+Title:
+“Needs manual review”
+
+Body:
+“PlainPath did not find a direct source quote for this item. Open your uploaded document and confirm the requirement before acting.”
+
+Optional second line:
+“If the document names an issuing office, provider, school, employer, agency, or organization, contact that source for confirmation.”
+
+Style:
+- amber/neutral caution
+- not red
+- not alarming
+- not hidden
+
+3. Disable Copy source when no source exists
+
+If sourceQuote is absent:
+- do not render “Copy source”
+- do not show copied source state
+- no empty clipboard behavior
+
+4. Keep source-backed path unchanged
+
+When sourceQuote exists:
+- Source Evidence title remains
+- source-backed chip remains
+- quote card remains
+- Copy source remains
+- Show full quote / Hide quote remains
+- trigger/date metadata remains
+
+5. Accessibility
+
+Verify:
+- fallback card is readable by screen readers
+- source-backed chip has clear aria-label
+- needs-manual-review chip has clear aria-label
+- all buttons are type="button"
+
+6. Preserve behavior
+
+Do not break:
+- Details opens drawer
+- Done/not-done toggle from card
+- Done/not-done toggle from drawer
+- Copy message
+- Copy source
+- Show full quote / Hide quote
+- Show more / show less
+- Jump buttons
+- mode navigation
+- tab sync
+- Complete preview
+- Compile preview
+- feature flag behavior
+
+7. QA
+
+Run:
+- Vite production build
+- completion parser QA
+- TypeScript check if available
+
+Verify:
+- sourceQuote present → source-backed subtitle appears
+- sourceQuote absent → no false “found this guidance” language appears
+- sourceQuote absent → Needs manual review fallback appears
+- sourceQuote absent → Copy source button hidden
+- sourceQuote present → Copy source still works
+- no protected files changed
+- no billing/RevenueCat/Stripe/native/auth changes
+- no Contract Review changes
+- no homepage/marketing changes
+- no removed tool references added
+
+Return:
+1. Files changed
+2. Source-backed path behavior
+3. No-source fallback behavior
+4. Copy source behavior
+5. Feature flag behavior
+6. Build/QA results
+7. Protected files untouched confirmation
+8. Recommended next slice

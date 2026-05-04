@@ -382,9 +382,15 @@ export function ItemDetailDrawer({
                 </button>
               )}
             </div>
-            <p className="text-[10px] text-muted-foreground/40 mb-2.5 leading-snug">
-              PlainPath found this guidance in your uploaded document.
-            </p>
+            {item.sourceQuote ? (
+              <p className="text-[10px] text-muted-foreground/40 mb-2.5 leading-snug">
+                PlainPath found this guidance in your uploaded document.
+              </p>
+            ) : (
+              <p className="text-[10px] text-muted-foreground/40 mb-2.5 leading-snug">
+                PlainPath did not find a direct quote for this item.
+              </p>
+            )}
             {item.sourceQuote ? (
               <div className="rounded-xl border border-border/40 bg-secondary/20 overflow-hidden">
                 <div className="flex items-center gap-1.5 px-3 pt-2.5 pb-2 border-b border-border/20">
@@ -429,10 +435,21 @@ export function ItemDetailDrawer({
                 </div>
               </div>
             ) : (
-              <div className="rounded-xl border border-amber-200/40 dark:border-amber-900/35 bg-amber-50/50 dark:bg-amber-950/15 px-3 py-3">
-                <p className="text-xs text-amber-700/65 dark:text-amber-400/65 leading-relaxed">
-                  PlainPath did not find a direct quote for this item. Review the uploaded document
-                  manually before acting.
+              <div
+                className="rounded-xl border border-amber-200/40 dark:border-amber-900/35 bg-amber-50/50 dark:bg-amber-950/15 px-3 py-3 space-y-1.5"
+                role="note"
+                aria-label="No source quote found — manual review required"
+              >
+                <p className="text-[10px] font-bold uppercase tracking-wider text-amber-700/70 dark:text-amber-400/70">
+                  Needs manual review
+                </p>
+                <p className="text-xs text-amber-700/60 dark:text-amber-400/60 leading-relaxed">
+                  PlainPath did not find a direct source quote for this item. Open your uploaded
+                  document and confirm the requirement before acting.
+                </p>
+                <p className="text-xs text-amber-700/50 dark:text-amber-400/50 leading-relaxed">
+                  If the document names an issuing office, provider, school, employer, agency, or
+                  organization, contact that source for confirmation.
                 </p>
               </div>
             )}
