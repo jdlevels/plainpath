@@ -414,8 +414,8 @@ export default function ProductPreview() {
                 <span className="text-red-400 font-black text-base leading-none">28</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-red-400 font-bold text-sm leading-tight">Heavily One-Sided</p>
-                <p className="text-slate-500 text-[11px]">Score 28 / 100 · Do not sign as-is</p>
+                <p className="text-red-400 font-bold text-sm leading-tight">Several Clauses Need Revision</p>
+                <p className="text-slate-500 text-[11px]">Score 28 / 100 · Review carefully before signing</p>
               </div>
               <Scale className="w-5 h-5 text-red-400 shrink-0" />
             </motion.div>

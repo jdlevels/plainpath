@@ -1,0 +1,201 @@
+PlainPath — Contract Review purpose lock and clarity restructure
+
+Goal:
+Restructure Contract Review around its correct purpose:
+Help users quickly understand what a contract says, what clauses matter, what obligations they are accepting, what risks exist, and what they should clarify before signing.
+
+This should feel like a clean contract parser and before-you-sign guide — not a legal report, not a generic document analysis, and not a cluttered audit screen.
+
+Do not touch:
+- Analyze a Document
+- billing
+- RevenueCat
+- Stripe
+- native billing
+- auth
+- pricing
+- homepage
+- marketing
+- routes
+- database schema
+- removed tools
+
+Do not rebuild broadly.
+Do not add new product surfaces.
+Do not provide legal advice.
+Do not say whether the user should or should not sign.
+Use “review,” “clarify,” and “confirm” language.
+
+Core Contract Review purpose:
+Contract Review helps users quickly understand:
+1. what the contract is
+2. what it says
+3. what clauses matter
+4. what obligations the user is accepting
+5. what risks may exist
+6. what is missing or unclear
+7. what to clarify before signing
+
+Primary user question:
+“What am I agreeing to, what should I watch for, and what should I clarify before I sign?”
+
+Recommended user-facing structure:
+Summary → Key Clauses → Risks → Before You Sign
+
+1. Summary section
+
+Make this short and scannable.
+
+Show:
+- contract type
+- parties
+- purpose
+- term
+- payment / money terms
+- main obligations
+- top issue to review first
+
+Avoid long paragraphs.
+Avoid repeating all clauses here.
+
+2. Key Clauses section
+
+This is the main parser output.
+
+Display important clauses as clean cards:
+- Payment
+- Term / renewal
+- Termination
+- Confidentiality
+- Liability limit
+- Warranty / disclaimer
+- Intellectual property
+- Indemnity
+- Governing law
+- Dispute resolution
+- Notices
+- Assignment
+- Acceptance / approval terms
+- Signature / execution terms
+
+Each clause card should show:
+- Clause name
+- What it says
+- Why it matters
+- What to check before signing
+- Source quote or clause reference
+- Risk level
+
+Keep source quotes visually secondary or collapsible if long.
+
+3. Risks section
+
+Only show actual risks, not every clause.
+
+Each risk should show:
+- Risk title
+- Why it matters
+- Possible consequence
+- What to clarify
+- Source quote
+
+Avoid red overload.
+Use severity carefully:
+- High
+- Medium
+- Low
+- Needs clarification
+
+No legal conclusions.
+No “do not sign” language.
+Use “consider reviewing with a qualified professional if needed.”
+
+4. Before You Sign section
+
+Create a simple checklist-style section.
+
+Show items like:
+- Confirm payment amount and due dates
+- Confirm renewal/cancellation terms
+- Clarify vague deliverables or acceptance terms
+- Confirm who must sign
+- Ask for missing exhibit/schedule/attachment
+- Confirm liability limits
+- Save a signed copy
+
+If persistence/checkoff is not already built for Contract Review, keep this read-only for now.
+Do not add localStorage or new completion state in this pass.
+
+5. Clutter reduction
+
+Remove or consolidate sections that duplicate each other.
+
+Rules:
+- Summary explains the contract.
+- Key Clauses explains clauses.
+- Risks explains what may hurt the user.
+- Before You Sign explains what to clarify or confirm.
+
+Do not show the same item in three places unless each section adds a distinct purpose.
+
+6. Mobile and desktop readability
+
+Mobile:
+- clause cards must be readable
+- no horizontal overflow
+- important clause/risk labels must be tappable/readable
+- no tiny badge-only meaning
+
+Desktop:
+- maintain professional split view
+- avoid dense wall-of-text cards
+- keep right panel scannable
+
+7. Trust and safety language
+
+Keep:
+- source-backed quotes
+- manual-review language when uncertain
+- no legal advice disclaimer
+- no guarantee that contract is safe
+- no instruction that user should or should not sign
+
+Use:
+- “Review”
+- “Clarify”
+- “Confirm”
+- “Ask before signing”
+- “May need attention”
+
+Avoid:
+- “This is illegal”
+- “You should sign”
+- “Do not sign”
+- “Guaranteed safe”
+- “Attorney-approved”
+
+8. QA
+
+Verify:
+- Contract Review opens
+- Contract Review demo opens
+- Summary is short and clear
+- Key Clauses are easy to scan
+- Risks are not duplicative
+- Before You Sign is actionable
+- Source quotes still appear
+- Mobile layout is readable
+- Desktop layout remains premium
+- No Analyze changes
+- No billing/auth/native/Stripe/RevenueCat changes
+- No removed tool references
+- Build passes
+
+Return:
+1. Files changed
+2. Final Contract Review purpose statement
+3. New section structure
+4. Clutter removed or consolidated
+5. Mobile/desktop readability notes
+6. QA/build results
+7. Protected files untouched confirmation

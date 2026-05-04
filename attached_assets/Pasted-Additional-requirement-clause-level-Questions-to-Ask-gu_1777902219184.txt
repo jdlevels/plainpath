@@ -1,0 +1,80 @@
+Additional requirement — clause-level “Questions to Ask” guidance
+
+Add a practical “Questions to Ask” section to each Key Clause card and each Risk card where appropriate.
+
+Purpose:
+Help the user know what to ask, clarify, or negotiate before signing if a clause appears one-sided, unclear, unfair, missing, suspicious, or risky.
+
+Do not call this section “Rebuttal.”
+Use user-facing language:
+
+“Questions to Ask”
+
+or, if space allows:
+
+“Questions / Changes to Ask For”
+
+Each clause card should show:
+
+- Clause name
+- What it says
+- Why it matters
+- What to check before signing
+- Questions to Ask
+- Source quote or clause reference
+- Risk level
+
+Questions to Ask should be written as plain-English prompts the user can copy or say to the other party.
+
+Examples:
+
+Payment clause:
+- “When exactly is payment due?”
+- “Are there late fees?”
+- “What happens if the work is delayed or incomplete?”
+
+Termination clause:
+- “Can either side terminate early?”
+- “Is written notice required?”
+- “Are there fees or penalties for ending the agreement?”
+
+Liability clause:
+- “Can this liability cap be increased?”
+- “Are there exceptions for confidentiality breaches, fraud, or gross negligence?”
+- “Does this limit apply even if the other party causes major loss?”
+
+Intellectual property clause:
+- “Who owns the final work after payment?”
+- “Do I receive full ownership or only a license?”
+- “Can the provider reuse the work elsewhere?”
+
+Confidentiality clause:
+- “How long does confidentiality last?”
+- “What information is excluded?”
+- “What happens if confidential information is disclosed?”
+
+Missing exhibit/schedule:
+- “Can you provide the missing exhibit before signing?”
+- “Is this attachment part of the agreement?”
+- “Does the contract still apply if the exhibit is missing?”
+
+Rules:
+- Do not tell the user what to decide.
+- Do not say “do not sign.”
+- Do not provide legal conclusions.
+- Do not use aggressive or adversarial language.
+- Use “ask,” “clarify,” “confirm,” and “consider requesting.”
+- Keep questions short and practical.
+- If the contract text does not support a specific question, use a general clarification question only.
+
+Risk cards should also include:
+“Questions to Ask Before Signing”
+
+Each risk card should show:
+- Risk title
+- Why it matters
+- Possible consequence
+- Questions to Ask Before Signing
+- Source quote
+
+Avoid duplicating the exact same questions across every card.

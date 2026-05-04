@@ -37,6 +37,7 @@ interface ClauseResult {
   whyUnfair: string | null
   negotiationLanguage: string | null
   exitGuidance: string | null
+  questionsToAsk?: string[]
 }
 
 interface ReviewResult {
@@ -106,8 +107,8 @@ function scoreBadgeClass(score: number): string {
 function interpretScore(score: number): string {
   if (score >= 80) return "This contract looks generally fair and balanced"
   if (score >= 60) return "Mostly reasonable — some clauses deserve attention before signing"
-  if (score >= 40) return "Mixed — significant issues require negotiation before you sign"
-  return "Heavily one-sided — do not sign without major revisions"
+  if (score >= 40) return "Mixed — some clauses may need clarification before signing"
+  return "Several clauses may need significant revision or clarification before signing"
 }
 
 function formatReviewedAt(iso: string): string {
@@ -125,12 +126,12 @@ function primaryRecommendation(result: ReviewResult): string {
   const redFlags = result.clauses.filter(c => c.rating === "red-flag").length
   const watchOuts = result.clauses.filter(c => c.rating === "watch-out").length
   const missing = result.missingProtections?.length ?? 0
-  if (redFlags >= 3) return `This contract has ${redFlags} red flags — do not sign until these are negotiated or removed.`
-  if (redFlags >= 1) return `${redFlags} clause${redFlags > 1 ? "s" : ""} should be revised before you sign. Use the suggested language below to push back.`
-  if (watchOuts >= 3) return `${watchOuts} clauses deserve attention. Review each watch-out and confirm you understand what you're agreeing to.`
-  if (missing >= 2) return `The contract is missing ${missing} standard protections. Request these additions before signing.`
-  if (result.overallScore >= 80) return "This contract looks fair. Review the before-you-sign checklist and confirm the key terms match your expectations."
-  return "Review the sections below carefully and address any concerns before signing."
+  if (redFlags >= 3) return `This contract has ${redFlags} clauses that may need revision. Review each carefully and consider clarifying with the other party before signing.`
+  if (redFlags >= 1) return `${redFlags} clause${redFlags > 1 ? "s" : ""} may need clarification or revision. Review the questions and suggested language below, then discuss with the other party before signing.`
+  if (watchOuts >= 3) return `${watchOuts} clauses deserve attention. Review each and confirm you understand what you are agreeing to before signing.`
+  if (missing >= 2) return `This contract is missing ${missing} standard items. Consider requesting these additions or clarifications before signing.`
+  if (result.overallScore >= 80) return "This contract looks generally balanced. Review the before-you-sign checklist and confirm key terms match your expectations."
+  return "Review the sections below carefully. Clarify any concerns with the other party before signing."
 }
 
 // ─── CopyButton ───────────────────────────────────────────────────────────────
@@ -174,8 +175,8 @@ const REVIEW_DEMOS: Array<{
     bg: "bg-red-50 dark:bg-red-950/40",
     data: {
       overallScore: 32,
-      verdict: "Do not sign without significant revisions",
-      summary: "This freelance design agreement is heavily weighted in the client's favour. Three clauses pose serious legal and financial risk: perpetual IP assignment before payment, uncapped revision rounds, and a kill-fee waiver. Push back on all three before signing.",
+      verdict: "Several clauses need revision — review carefully before signing",
+      summary: "This freelance design agreement is heavily weighted in the client's favour. Three clauses create significant risk: IP assignment before payment is received, uncapped revision rounds, and no compensation if the client cancels. Consider clarifying or revising all three with the other party before signing.",
       reviewedAt: new Date().toISOString(),
       clauses: [
         {
@@ -185,7 +186,12 @@ const REVIEW_DEMOS: Array<{
           explanation: "IP transfers to the client the moment you create anything — even if they never pay you. You lose all leverage to withhold files until you're paid.",
           whyUnfair: "Industry standard is that IP transfers only upon receipt of full payment. Immediate transfer removes the freelancer's primary leverage.",
           negotiationLanguage: "\"All intellectual property rights in the deliverables shall transfer to Client only upon Client's receipt and clearance of payment in full. Until such time, Freelancer retains full ownership and grants Client a limited, non-exclusive licence to review materials.\"",
-          exitGuidance: "This is a dealbreaker clause. Do not sign without changing the payment-trigger condition.",
+          exitGuidance: "Consider requesting a revision so that IP transfers only upon full payment. A qualified professional can help you negotiate this clause.",
+          questionsToAsk: [
+            "Can we change this so IP transfers only when payment is received in full?",
+            "Who owns work in progress if the project is paused or cancelled before payment?",
+            "Will you agree to a clause that lets me withhold deliverable files until payment clears?",
+          ],
         },
         {
           id: "revisions",
@@ -194,7 +200,12 @@ const REVIEW_DEMOS: Array<{
           explanation: "Unlimited, unpaid revision rounds can turn a fixed-fee project into an indefinite obligation. There is no cap, no definition of what constitutes a revision, and no time limit.",
           whyUnfair: "Without a defined revision scope, clients can keep requesting changes indefinitely. Standard contracts cap revisions at 2–3 rounds.",
           negotiationLanguage: "\"This Agreement includes up to two (2) rounds of minor revisions per deliverable. Additional revision rounds will be billed at Freelancer's standard hourly rate of $[RATE]/hr.\"",
-          exitGuidance: "Negotiate a specific revision limit and define what counts as a revision vs. a new scope of work.",
+          exitGuidance: "Consider requesting a specific revision limit and a clear definition of what counts as a revision versus new scope.",
+          questionsToAsk: [
+            "How many rounds of revisions are included in the fixed fee?",
+            "How do we define a revision versus new scope of work?",
+            "What is the rate for additional revision rounds beyond the included amount?",
+          ],
         },
         {
           id: "kill-fee",
@@ -203,7 +214,12 @@ const REVIEW_DEMOS: Array<{
           explanation: "If the client cancels mid-project, you receive nothing — even for completed work. This is an extreme clause rarely seen in legitimate freelance agreements.",
           whyUnfair: "Standard practice is a kill fee of 25–50% of the remaining project value, plus payment for all work completed. This clause provides zero protection.",
           negotiationLanguage: "\"If Client cancels this Agreement after work has commenced, Client shall pay (a) 100% of fees for all deliverables completed, and (b) a kill fee equal to 25% of the remaining project value to compensate for lost opportunity.\"",
-          exitGuidance: "Do not sign this clause. Walk away or require a kill-fee provision.",
+          exitGuidance: "Consider asking the other party to add a kill-fee provision and payment for completed work before you sign. Consult a professional if needed.",
+          questionsToAsk: [
+            "Can we add a kill fee equal to 25–50% of the remaining project value if you cancel?",
+            "Are completed deliverables paid for at full rate regardless of cancellation?",
+            "What happens to work in progress that is partially complete at the time of cancellation?",
+          ],
         },
         {
           id: "payment-30",
@@ -213,6 +229,11 @@ const REVIEW_DEMOS: Array<{
           whyUnfair: "30-day terms are standard but unfavourable for small freelancers. Many clients push past 30 days without penalty.",
           negotiationLanguage: "\"Payment is due within fourteen (14) days of invoice receipt. Invoices unpaid after 14 days shall accrue interest at 1.5% per month.\"",
           exitGuidance: null,
+          questionsToAsk: [
+            "Can we shorten payment terms to 14 days from invoice receipt?",
+            "Is there a late-payment interest clause if payment is delayed?",
+            "Will you agree to a 30–50% deposit before work begins?",
+          ],
         },
         {
           id: "governing-law",
@@ -222,6 +243,9 @@ const REVIEW_DEMOS: Array<{
           whyUnfair: null,
           negotiationLanguage: null,
           exitGuidance: null,
+          questionsToAsk: [
+            "Is California the most convenient jurisdiction for both parties?",
+          ],
         },
         {
           id: "confidentiality",
@@ -231,6 +255,10 @@ const REVIEW_DEMOS: Array<{
           whyUnfair: null,
           negotiationLanguage: null,
           exitGuidance: null,
+          questionsToAsk: [
+            "Does this apply equally to both parties?",
+            "Are there exceptions for information that becomes publicly available?",
+          ],
         },
       ],
       missingProtections: [
@@ -258,45 +286,64 @@ const REVIEW_DEMOS: Array<{
     bg: "bg-amber-50 dark:bg-amber-950/40",
     data: {
       overallScore: 51,
-      verdict: "Review carefully — some clauses require negotiation",
-      summary: "This residential lease has two clauses that are either uncommon or potentially unlawful in several states: a broad entry-without-notice provision and automatic lease renewal with no written notice. The remaining terms are reasonably standard for a residential tenancy.",
+      verdict: "Review carefully — two clauses may need clarification before signing",
+      summary: "This residential lease has two clauses that are either uncommon or potentially unlawful in several states: a broad entry-without-notice provision and automatic lease renewal with a 90-day notice window. The remaining terms are reasonably standard for a residential tenancy.",
       reviewedAt: new Date().toISOString(),
       clauses: [
         {
           id: "entry-without-notice",
           rating: "red-flag",
           text: "Landlord reserves the right to enter the premises at any time for inspection, repairs, or other purposes without prior notice to Tenant.",
-          explanation: "Most U.S. states require landlords to provide 24–48 hours' written notice before entering (except in true emergencies). A blanket no-notice entry clause may be unenforceable but can still be used to harass tenants.",
-          whyUnfair: "This violates tenant privacy rights in most jurisdictions. Even if unenforceable, a landlord citing it could create a hostile environment.",
+          explanation: "Most U.S. states require landlords to provide 24–48 hours' written notice before entering (except in true emergencies). A blanket no-notice entry clause may be unenforceable but can still be used to pressure tenants.",
+          whyUnfair: "This conflicts with tenant privacy rights in most jurisdictions. Even if technically unenforceable, a landlord citing it could create a difficult living situation.",
           negotiationLanguage: "\"Landlord shall provide Tenant with at least twenty-four (24) hours' written or electronic notice before entering the premises for non-emergency purposes. Emergency entry is permitted without notice only if there is an imminent threat to property or safety.\"",
           exitGuidance: "Check your state's landlord-entry laws. In CA, NY, WA, and most others, 24-hour notice is required by statute regardless of lease language.",
+          questionsToAsk: [
+            "Can we add a requirement for at least 24 hours' written notice before entry?",
+            "What situations would qualify as a genuine emergency allowing entry without notice?",
+            "What recourse is available if entry occurs without adequate notice?",
+          ],
         },
         {
           id: "auto-renewal",
           rating: "red-flag",
           text: "This Lease shall automatically renew for successive one-year terms unless Tenant provides written notice of non-renewal at least ninety (90) days prior to the expiration date.",
           explanation: "A 90-day notice window is unusually long — 30–60 days is standard. Missing this window could lock you into another full year of rent even if your circumstances change.",
-          whyUnfair: "90 days is almost a full season in advance. Most tenants don't track lease end dates that far ahead, making this clause an inadvertent trap.",
+          whyUnfair: "90 days is almost a full season in advance. Most tenants don't track lease end dates that far ahead, making this an easy obligation to miss.",
           negotiationLanguage: "\"This Lease shall automatically renew on a month-to-month basis unless either party provides written notice of non-renewal at least thirty (30) days before the expiration date.\"",
-          exitGuidance: "Negotiate this down to 30 or 60 days, or switch to month-to-month auto-renewal.",
+          exitGuidance: "Consider asking to reduce the notice period to 30–60 days, or switching to month-to-month auto-renewal.",
+          questionsToAsk: [
+            "Can the notice period be reduced to 30 or 60 days?",
+            "Can the lease switch to month-to-month rather than renew for another full year?",
+            "How should non-renewal notice be delivered — email, certified mail, or other?",
+          ],
         },
         {
           id: "security-deposit",
           rating: "watch-out",
           text: "Tenant shall pay a security deposit equal to two (2) months' rent, to be returned within thirty (30) days of Lease termination minus any deductions for damages or unpaid rent.",
-          explanation: "A two-month security deposit is on the high end in many markets, though legal in most states. Confirm your state's security deposit cap (e.g., California limits it to 2 months for unfurnished units).",
-          whyUnfair: "Two months is at the legal maximum in several states. The 30-day return window is standard but confirm your state's specific requirement.",
+          explanation: "A two-month security deposit is on the high end in many markets, though legal in most states. Confirm your state's security deposit cap.",
+          whyUnfair: "Two months is at the legal maximum in several states. Confirm this amount is within your state's statutory limit before paying.",
           negotiationLanguage: null,
           exitGuidance: null,
+          questionsToAsk: [
+            "Is a two-month deposit within the legal maximum for this state?",
+            "Under what specific conditions can deductions be made from the deposit?",
+            "Exactly when after move-out will the deposit be returned?",
+          ],
         },
         {
           id: "pet-clause",
           rating: "watch-out",
           text: "No pets of any kind are permitted on the premises. Violation of this clause may result in immediate termination of the Lease.",
           explanation: "While enforceable in general, this clause cannot override your right to an approved emotional support animal (ESA) under the Fair Housing Act if you have a documented disability.",
-          whyUnfair: "Landlords must make reasonable accommodations for ESAs regardless of a no-pet policy. If this applies to you, request a separate ESA addendum.",
+          whyUnfair: "Landlords must make reasonable accommodations for ESAs regardless of a no-pet policy. If this applies to you, an ESA addendum should be requested separately.",
           negotiationLanguage: null,
           exitGuidance: null,
+          questionsToAsk: [
+            "Does this clause apply to emotional support animals covered by the Fair Housing Act?",
+            "If I have an ESA, can we add a separate addendum to document the accommodation?",
+          ],
         },
         {
           id: "rent-amount",
@@ -306,6 +353,9 @@ const REVIEW_DEMOS: Array<{
           whyUnfair: null,
           negotiationLanguage: null,
           exitGuidance: null,
+          questionsToAsk: [
+            "Are there any circumstances under which rent may be increased mid-lease?",
+          ],
         },
         {
           id: "maintenance",
@@ -315,11 +365,15 @@ const REVIEW_DEMOS: Array<{
           whyUnfair: null,
           negotiationLanguage: null,
           exitGuidance: null,
+          questionsToAsk: [
+            "How should maintenance requests be submitted and what is the expected response time?",
+            "What counts as 'minor maintenance' that falls on the tenant?",
+          ],
         },
       ],
       missingProtections: [
         "Move-in inspection checklist — no documented baseline for damage comparison",
-        "Lease break clause — no defined penalty if you need to exit early",
+        "Lease break clause — no defined process if you need to exit early",
         "Utility responsibility — unclear who pays which utilities",
       ],
       preSigningChecklist: [
@@ -342,27 +396,37 @@ const REVIEW_DEMOS: Array<{
     bg: "bg-blue-50 dark:bg-blue-950/40",
     data: {
       overallScore: 67,
-      verdict: "Mostly fair — one clause needs revision",
-      summary: "This NDA is largely balanced and uses standard confidentiality language. One clause — an indefinite confidentiality term with no sunset date — is overly broad and may hinder your future work. The non-solicitation scope is narrow and reasonable. Overall this is a workable agreement with one targeted fix.",
+      verdict: "Mostly fair — one clause may need revision before signing",
+      summary: "This NDA is largely balanced and uses standard confidentiality language. One clause — an indefinite confidentiality term with no sunset date — is overly broad and may limit your future work. The non-solicitation scope is narrow and reasonable. Consider clarifying the perpetual term before signing.",
       reviewedAt: new Date().toISOString(),
       clauses: [
         {
           id: "indefinite-conf",
           rating: "red-flag",
           text: "Receiving Party's obligations of confidentiality shall survive the termination of this Agreement and shall continue in perpetuity with respect to all Confidential Information.",
-          explanation: "A perpetual confidentiality obligation with no sunset clause is overly broad and, in many jurisdictions, may be unenforceable. More importantly, it can prevent you from discussing industry knowledge you naturally develop over time.",
-          whyUnfair: "Perpetual NDAs are increasingly disfavoured by courts, especially for general know-how. Courts may refuse to enforce them. Standard is 2–5 years for trade secrets; some courts impose a reasonableness cap.",
+          explanation: "A perpetual confidentiality obligation with no sunset clause is overly broad and, in many jurisdictions, may be unenforceable. It can also create ambiguity around industry knowledge you naturally develop over time.",
+          whyUnfair: "Perpetual NDAs are increasingly disfavoured by courts, especially for general know-how. Standard is 2–5 years for trade secrets; open-ended terms can create ongoing uncertainty.",
           negotiationLanguage: "\"Receiving Party's obligations of confidentiality shall continue for three (3) years following termination of this Agreement, except for information that constitutes a trade secret under applicable law, which shall be protected for as long as it qualifies as a trade secret.\"",
-          exitGuidance: "Push for a 2–5 year term with a trade-secret carve-out. A perpetual obligation is a significant career risk.",
+          exitGuidance: "Consider requesting a defined term (2–5 years) with a separate carve-out for genuine trade secrets. A qualified professional can help you assess your options.",
+          questionsToAsk: [
+            "Can we set a specific time limit — such as 3–5 years — rather than a perpetual obligation?",
+            "Is there a separate provision for trade secrets that would survive a time-limited term?",
+            "How would industry knowledge I independently develop over time be treated under this clause?",
+          ],
         },
         {
           id: "definition",
           rating: "watch-out",
           text: "Confidential Information means any information disclosed by Disclosing Party to Receiving Party, whether oral, written, or in any other form, that is designated as confidential or that reasonably should be understood to be confidential given the nature of the information.",
           explanation: "The phrase 'reasonably should be understood to be confidential' is broad. Without clearer boundaries, almost any information you receive could be treated as confidential.",
-          whyUnfair: "Overly broad definitions create ambiguity. Ask for exclusions for information you already knew, independently developed, or that becomes publicly available.",
+          whyUnfair: "Overly broad definitions create ambiguity. Standard exclusions — for information already known, independently developed, or publicly available — are absent here.",
           negotiationLanguage: "\"Confidential Information does not include information that: (a) is or becomes publicly known through no fault of Receiving Party; (b) was already known to Receiving Party at the time of disclosure; or (c) is independently developed by Receiving Party without use of Confidential Information.\"",
           exitGuidance: null,
+          questionsToAsk: [
+            "Can we add standard exclusions for information already in the public domain?",
+            "Does this cover information I already knew before signing this agreement?",
+            "How would knowledge I independently develop without using your confidential information be treated?",
+          ],
         },
         {
           id: "non-solicit",
@@ -372,6 +436,10 @@ const REVIEW_DEMOS: Array<{
           whyUnfair: null,
           negotiationLanguage: null,
           exitGuidance: null,
+          questionsToAsk: [
+            "Does 'direct contact' mean only people I personally worked with?",
+            "Does this apply to people who approach me first rather than me soliciting them?",
+          ],
         },
         {
           id: "return-of-info",
@@ -381,6 +449,10 @@ const REVIEW_DEMOS: Array<{
           whyUnfair: null,
           negotiationLanguage: null,
           exitGuidance: null,
+          questionsToAsk: [
+            "What form should the written certification of destruction take?",
+            "What is the deadline for returning or destroying information after termination?",
+          ],
         },
         {
           id: "governing-law",
@@ -390,6 +462,10 @@ const REVIEW_DEMOS: Array<{
           whyUnfair: null,
           negotiationLanguage: null,
           exitGuidance: null,
+          questionsToAsk: [
+            "Is New York the most convenient jurisdiction for both parties?",
+            "Would mediation be available before any formal court proceedings?",
+          ],
         },
       ],
       missingProtections: [
@@ -449,7 +525,7 @@ function ContractReviewPrintReport({ result }: { result: ReviewResult }) {
         <div className="print-section print-break">
           <h2 className="print-section-title">Red Flags ({redFlags.length})</h2>
           <p className="print-body" style={{ color: "#7f1d1d", marginBottom: "8px" }}>
-            These clauses are harmful, exploitative, or potentially unenforceable. Each should be negotiated or removed before you sign.
+            These clauses may create significant risk or obligation. Review each carefully and consider clarifying with the other party before signing.
           </p>
           {redFlags.map((c, i) => (
             <div key={c.id} style={{ marginBottom: "12px", paddingBottom: "10px", borderBottom: "1px solid #fee2e2" }}>
@@ -656,38 +732,41 @@ function ClauseCard({
               className="overflow-hidden"
             >
               <div className="px-4 pb-4 space-y-3 border-t border-border/30 pt-3">
-                {selected && (
-                  <div className="rounded-lg border border-violet-200 dark:border-violet-800 bg-violet-50/80 dark:bg-violet-950/30 px-3 py-2.5">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-violet-500 mb-1">Source used for this finding</p>
-                    <p className="text-[11px] text-muted-foreground italic leading-relaxed line-clamp-4">"{clause.text}"</p>
-                  </div>
-                )}
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">What it means</p>
-                  <p className="text-sm text-foreground/85 leading-relaxed">{clause.explanation}</p>
+                {/* Source quote — always visible in expanded view */}
+                <div className="rounded-lg border border-border/40 bg-muted/30 px-3 py-2.5">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1">What it says</p>
+                  <p className="text-[11px] text-muted-foreground italic leading-relaxed">"{clause.text}"</p>
                 </div>
 
-                {clause.whyUnfair && (
-                  <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/40 rounded-lg p-3">
-                    <p className="text-xs font-semibold uppercase tracking-widest text-amber-600 dark:text-amber-400 mb-1">Why this is a problem</p>
-                    <p className="text-sm text-amber-800 dark:text-amber-200 leading-relaxed">{clause.whyUnfair}</p>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">Why this matters</p>
+                  <p className="text-sm text-foreground/85 leading-relaxed">{clause.explanation}</p>
+                  {clause.whyUnfair && (
+                    <p className="text-sm text-foreground/70 leading-relaxed mt-1.5">{clause.whyUnfair}</p>
+                  )}
+                </div>
+
+                {clause.questionsToAsk && clause.questionsToAsk.length > 0 && (
+                  <div className="bg-violet-50/60 dark:bg-violet-950/20 border border-violet-200/50 dark:border-violet-900/40 rounded-lg p-3">
+                    <p className="text-xs font-semibold uppercase tracking-widest text-violet-600 dark:text-violet-400 mb-2">Questions to Ask Before Signing</p>
+                    <ul className="space-y-1.5">
+                      {clause.questionsToAsk.map((q, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <span className="text-violet-400 dark:text-violet-500 text-xs font-bold mt-0.5 shrink-0">{i + 1}.</span>
+                          <p className="text-sm text-violet-900 dark:text-violet-100 leading-snug">{q}</p>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 )}
 
                 {clause.negotiationLanguage && (
                   <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-900/40 rounded-lg p-3">
                     <div className="flex items-center justify-between mb-1.5">
-                      <p className="text-xs font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">Suggested revision — copy and send</p>
+                      <p className="text-xs font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">Suggested revision language</p>
                       <CopyButton text={clause.negotiationLanguage} />
                     </div>
                     <p className="text-xs text-blue-900 dark:text-blue-100 leading-relaxed font-mono bg-blue-100/50 dark:bg-blue-900/30 rounded p-2 mt-1 whitespace-pre-wrap">{clause.negotiationLanguage}</p>
-                  </div>
-                )}
-
-                {clause.exitGuidance && (
-                  <div className="bg-muted/40 border border-border/30 rounded-lg p-3">
-                    <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">Already signed?</p>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{clause.exitGuidance}</p>
                   </div>
                 )}
 
@@ -803,15 +882,13 @@ function SectionBlock({ id, title, badge, children, collapsible = false, default
 
 // ─── Results View ─────────────────────────────────────────────────────────────
 
-type ReviewFilter = "all" | "red-flag" | "watch-out" | "fair" | "missing" | "checklist"
+type ReviewFilter = "all" | "attention" | "balanced" | "before-sign"
 
 const REVIEW_FILTERS: { key: ReviewFilter; label: string; activeClass: string; inactiveClass: string }[] = [
-  { key: "all",       label: "All",        activeClass: "bg-foreground text-background border-foreground",                                               inactiveClass: "border-border text-muted-foreground hover:text-foreground hover:border-foreground/40" },
-  { key: "red-flag",  label: "Red Flags",  activeClass: "bg-red-500 text-white border-red-500",                                                         inactiveClass: "border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30" },
-  { key: "watch-out", label: "Watch Outs", activeClass: "bg-amber-500 text-white border-amber-500",                                                      inactiveClass: "border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30" },
-  { key: "fair",      label: "Fair",       activeClass: "bg-emerald-500 text-white border-emerald-500",                                                  inactiveClass: "border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30" },
-  { key: "missing",   label: "Missing",    activeClass: "bg-violet-500 text-white border-violet-500",                                                    inactiveClass: "border-violet-200 dark:border-violet-800 text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-950/30" },
-  { key: "checklist", label: "Checklist",  activeClass: "bg-blue-500 text-white border-blue-500",                                                        inactiveClass: "border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30" },
+  { key: "all",         label: "All",              activeClass: "bg-foreground text-background border-foreground",                                                    inactiveClass: "border-border text-muted-foreground hover:text-foreground hover:border-foreground/40" },
+  { key: "attention",   label: "Needs Attention",  activeClass: "bg-red-500 text-white border-red-500",                                                              inactiveClass: "border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30" },
+  { key: "balanced",    label: "Balanced",         activeClass: "bg-emerald-500 text-white border-emerald-500",                                                      inactiveClass: "border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30" },
+  { key: "before-sign", label: "Before You Sign",  activeClass: "bg-blue-500 text-white border-blue-500",                                                            inactiveClass: "border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30" },
 ]
 
 function buildReviewText(result: ReviewResult): string {
@@ -855,8 +932,10 @@ function ResultsView({ result, onReset, onScrollToDocument }: {
   const redFlags = result.clauses.filter(c => c.rating === "red-flag")
   const watchOuts = result.clauses.filter(c => c.rating === "watch-out")
   const fair = result.clauses.filter(c => c.rating === "fair")
+  const attentionClauses = [...redFlags, ...watchOuts]
   const missingCount = result.missingProtections?.length ?? 0
   const checklistCount = result.preSigningChecklist?.length ?? 0
+  const beforeSignCount = checklistCount + missingCount
   const recommendation = primaryRecommendation(result)
 
   function handleClauseSelect(id: string) {
@@ -865,19 +944,15 @@ function ResultsView({ result, onReset, onScrollToDocument }: {
     if (next) onScrollToDocument?.()
   }
 
-  const showRedFlags   = activeFilter === "all" || activeFilter === "red-flag"
-  const showWatchOuts  = activeFilter === "all" || activeFilter === "watch-out"
-  const showFair       = activeFilter === "all" || activeFilter === "fair"
-  const showMissing    = activeFilter === "all" || activeFilter === "missing"
-  const showChecklist  = activeFilter === "all" || activeFilter === "checklist"
+  const showAttention  = activeFilter === "all" || activeFilter === "attention"
+  const showBalanced   = activeFilter === "all" || activeFilter === "balanced"
+  const showBeforeSign = activeFilter === "all" || activeFilter === "before-sign"
 
   const visibleFilters = REVIEW_FILTERS.filter(f => {
-    if (f.key === "all") return true
-    if (f.key === "red-flag")  return redFlags.length > 0
-    if (f.key === "watch-out") return watchOuts.length > 0
-    if (f.key === "fair")      return fair.length > 0
-    if (f.key === "missing")   return missingCount > 0
-    if (f.key === "checklist") return checklistCount > 0
+    if (f.key === "all")         return true
+    if (f.key === "attention")   return attentionClauses.length > 0
+    if (f.key === "balanced")    return fair.length > 0
+    if (f.key === "before-sign") return beforeSignCount > 0
     return true
   })
 
@@ -996,11 +1071,9 @@ function ResultsView({ result, onReset, onScrollToDocument }: {
             {f.label}
             {f.key !== "all" && (
               <span className="ml-1 opacity-70">
-                {f.key === "red-flag"  && `(${redFlags.length})`}
-                {f.key === "watch-out" && `(${watchOuts.length})`}
-                {f.key === "fair"      && `(${fair.length})`}
-                {f.key === "missing"   && `(${missingCount})`}
-                {f.key === "checklist" && `(${checklistCount})`}
+                {f.key === "attention"   && `(${attentionClauses.length})`}
+                {f.key === "balanced"    && `(${fair.length})`}
+                {f.key === "before-sign" && `(${beforeSignCount})`}
               </span>
             )}
           </button>
@@ -1012,17 +1085,19 @@ function ResultsView({ result, onReset, onScrollToDocument }: {
         AI-assisted contract review. Not legal advice — always consult a qualified attorney before signing any legal agreement.
       </div>
 
-      {/* ── Red Flags ── */}
-      {redFlags.length > 0 && showRedFlags && (
+      {/* ── Key Clauses (Needs Attention: red flags + watch-outs combined) ── */}
+      {attentionClauses.length > 0 && showAttention && (
         <SectionBlock
-          id="red-flags"
-          title="Red Flags"
+          id="key-clauses"
+          title="Key Clauses"
           color="red"
-          badge={<Badge className="bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 border-0 text-[10px]">{redFlags.length}</Badge>}
+          badge={<Badge className="bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 border-0 text-[10px]">{attentionClauses.length} need{attentionClauses.length === 1 ? "s" : ""} attention</Badge>}
         >
-          <p className="text-xs text-muted-foreground mb-3">These clauses are harmful, exploitative, or potentially unenforceable. Each should be negotiated or removed before you sign.</p>
+          <p className="text-xs text-muted-foreground mb-3">
+            These clauses may create significant risk or obligation. Review each carefully and consider clarifying with the other party before signing.
+          </p>
           <div className="grid grid-cols-1 gap-3">
-            {redFlags.map(c => (
+            {attentionClauses.map(c => (
               <ClauseCard
                 key={c.id}
                 clause={c}
@@ -1035,40 +1110,17 @@ function ResultsView({ result, onReset, onScrollToDocument }: {
         </SectionBlock>
       )}
 
-      {/* ── Watch Outs ── */}
-      {watchOuts.length > 0 && showWatchOuts && (
+      {/* ── Balanced Clauses (collapsible) ── */}
+      {fair.length > 0 && showBalanced && (
         <SectionBlock
-          id="watch-outs"
-          title="Watch Outs"
-          color="amber"
-          badge={<Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border-0 text-[10px]">{watchOuts.length}</Badge>}
-        >
-          <p className="text-xs text-muted-foreground mb-3">These clauses are vague, one-sided, or unusual. You can still sign — but you should understand what you're agreeing to and consider pushing back.</p>
-          <div className="grid grid-cols-1 gap-3">
-            {watchOuts.map(c => (
-              <ClauseCard
-                key={c.id}
-                clause={c}
-                defaultOpen={true}
-                selected={selectedClauseId === c.id}
-                onSelect={() => handleClauseSelect(c.id)}
-              />
-            ))}
-          </div>
-        </SectionBlock>
-      )}
-
-      {/* ── Fair Clauses (collapsible) ── */}
-      {fair.length > 0 && showFair && (
-        <SectionBlock
-          id="fair-clauses"
-          title="Fair Clauses"
+          id="balanced-clauses"
+          title="Balanced Clauses"
           color="emerald"
           badge={<Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border-0 text-[10px]">{fair.length}</Badge>}
           collapsible={true}
           defaultCollapsed={true}
         >
-          <p className="text-xs text-muted-foreground mb-3">These clauses appear balanced and reasonable. Expand each to see what it means in plain English.</p>
+          <p className="text-xs text-muted-foreground mb-3">These clauses appear fair and reasonable. Expand each to see what it means in plain English.</p>
           <div className="grid grid-cols-1 gap-3">
             {fair.map(c => (
               <ClauseCard
@@ -1083,55 +1135,49 @@ function ResultsView({ result, onReset, onScrollToDocument }: {
         </SectionBlock>
       )}
 
-      {/* ── Missing Protections ── */}
-      {result.missingProtections && result.missingProtections.length > 0 && showMissing && (
-        <SectionBlock
-          id="missing-protections"
-          title="Missing Protections"
-          color="violet"
-          badge={<Badge className="bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300 border-0 text-[10px]">{result.missingProtections.length}</Badge>}
-        >
-          <Card className="border-violet-200/60 dark:border-violet-900/40">
-            <CardContent className="p-4">
-              <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
-                Standard protections a balanced contract of this type should include — but this one doesn't. Consider requesting these additions before signing.
-              </p>
-              <ul className="space-y-3">
-                {result.missingProtections.map((item, i) => (
-                  <li key={i} className="flex items-start gap-2.5">
-                    <Lock className="w-3.5 h-3.5 text-violet-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-sm text-foreground/85 leading-snug">{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        </SectionBlock>
-      )}
-
-      {/* ── Before You Sign ── */}
-      {result.preSigningChecklist && result.preSigningChecklist.length > 0 && showChecklist && (
+      {/* ── Before You Sign (checklist + missing protections combined) ── */}
+      {showBeforeSign && (result.preSigningChecklist?.length > 0 || result.missingProtections?.length > 0) && (
         <SectionBlock
           id="before-you-sign"
           title="Before You Sign"
           color="blue"
-          badge={<Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border-0 text-[10px]">{result.preSigningChecklist.length}</Badge>}
+          badge={<Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border-0 text-[10px]">{beforeSignCount} item{beforeSignCount !== 1 ? "s" : ""}</Badge>}
         >
-          <Card className="border-blue-200/60 dark:border-blue-900/40 bg-blue-50/30 dark:bg-blue-950/10">
-            <CardContent className="p-4">
-              <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
-                Work through each of these before signing. These are specific to the contract you uploaded.
-              </p>
-              <ul className="space-y-3">
-                {result.preSigningChecklist.map((item, i) => (
-                  <li key={i} className="flex items-start gap-2.5">
-                    <ClipboardList className="w-3.5 h-3.5 text-blue-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-sm text-foreground/85 leading-snug">{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
+          <div className="space-y-4">
+            {result.preSigningChecklist && result.preSigningChecklist.length > 0 && (
+              <Card className="border-blue-200/60 dark:border-blue-900/40 bg-blue-50/30 dark:bg-blue-950/10">
+                <CardContent className="p-4">
+                  <p className="text-xs font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-widest mb-3">Confirm each of these before signing</p>
+                  <ul className="space-y-3">
+                    {result.preSigningChecklist.map((item, i) => (
+                      <li key={i} className="flex items-start gap-2.5">
+                        <ClipboardList className="w-3.5 h-3.5 text-blue-500 flex-shrink-0 mt-0.5" />
+                        <span className="text-sm text-foreground/85 leading-snug">{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            )}
+            {result.missingProtections && result.missingProtections.length > 0 && (
+              <Card className="border-violet-200/60 dark:border-violet-900/40">
+                <CardContent className="p-4">
+                  <p className="text-xs font-semibold text-violet-600 dark:text-violet-400 uppercase tracking-widest mb-3">Items this contract is missing</p>
+                  <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
+                    Standard items a balanced contract of this type should include — consider requesting these additions before signing.
+                  </p>
+                  <ul className="space-y-3">
+                    {result.missingProtections.map((item, i) => (
+                      <li key={i} className="flex items-start gap-2.5">
+                        <Lock className="w-3.5 h-3.5 text-violet-500 flex-shrink-0 mt-0.5" />
+                        <span className="text-sm text-foreground/85 leading-snug">{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </SectionBlock>
       )}
       {/* ── Footer ── */}

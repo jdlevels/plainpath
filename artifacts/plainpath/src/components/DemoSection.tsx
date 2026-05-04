@@ -234,8 +234,8 @@ function ContractReviewResultsFrame() {
           <span className="text-red-400 font-black text-lg">28</span>
         </div>
         <div>
-          <p className="text-red-400 font-bold text-sm">Heavily One-Sided</p>
-          <p className="text-slate-400 text-xs">Score 28/100 · Do not sign as-is</p>
+          <p className="text-red-400 font-bold text-sm">Several Clauses Need Revision</p>
+          <p className="text-slate-400 text-xs">Score 28/100 · Review carefully before signing</p>
         </div>
         <Scale className="w-5 h-5 text-red-400 ml-auto shrink-0" />
       </motion.div>

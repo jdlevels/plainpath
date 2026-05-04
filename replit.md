@@ -26,7 +26,14 @@ PlainPath is a monorepo built with pnpm workspaces, separating frontend and back
 -   **Monorepo Structure**: `artifacts/plainpath` for frontend and `artifacts/api-server` for backend API.
 -   **Shared Libraries**: `lib/api-spec` (OpenAPI), `lib/api-client-react` (React Query hooks), `lib/api-zod` (Zod schemas), `lib/db` (Drizzle ORM with PostgreSQL), and `lib/integrations-openai-ai-server` (OpenAI integration).
 
-### Core Features
+### Core Features (Contract Review — RESTRUCTURED May 2026)
+-   Contract Review UI restructured: Summary → Key Clauses (red+amber merged) → Balanced Clauses (collapsible) → Before You Sign (checklist+missing merged).
+-   All "do not sign" language purged from ContractReview.tsx, DemoSection.tsx, ProductPreview.tsx, and demo data. Replaced with review/clarify/confirm framing.
+-   `ClauseCard` updated: "What it says" source quote always visible, "Why this matters" replaces "Why this is a problem", "Questions to Ask Before Signing" section added, "Already signed?" section removed, "Suggested revision language" renamed.
+-   `ClauseResult` interface now has optional `questionsToAsk?: string[]` field — populated in all 3 demo datasets.
+-   Filter chips simplified to: All | Needs Attention | Balanced | Before You Sign.
+-   `DemoContractReview.tsx` (marketing) fully rewritten: Summary banner + Key Clauses + Before You Sign + Missing Items sections, Questions to Ask on every card.
+
 -   **AI Document Analysis**: Extracts insights, deadlines, risks, and summaries.
 -   **Document Trust Check**: Evaluates authenticity and risk.
 -   **Contract Builder**: Guided contract creation with AI insights.
