@@ -68,7 +68,7 @@ export function requireEntitlement(tool: ToolKey) {
       );
       res.status(403).json({
         error: "plan_required",
-        message: "This feature requires a higher-tier plan. Please upgrade to access it.",
+        message: "This feature is not available on your current plan.",
         tool,
         currentPlan: resolved.plan,
       });

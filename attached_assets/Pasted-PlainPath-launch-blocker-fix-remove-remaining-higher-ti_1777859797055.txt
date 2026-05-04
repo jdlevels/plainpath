@@ -1,0 +1,165 @@
+PlainPath launch blocker fix — remove remaining higher-tier messages and restore Source Section breakdown
+
+Issue:
+Two launch blockers remain on the Analyze results page:
+
+1. Source Sections no longer shows the actual Plain-English Breakdown explanation.
+2. Risks & Notes still shows:
+   “This feature requires a higher-tier plan. Please upgrade to access it.”
+   under “Negotiate this.”
+
+This is not acceptable for launch because PlainPath now has only one plan:
+PlainPath Pro — $19.99/month.
+
+There is no higher tier.
+
+Do not redesign the page.
+Do not change billing.
+Do not add new tools.
+Do not bring back Ask This Document.
+
+--------------------------------------------------
+1. RESTORE SOURCE SECTION BREAKDOWN
+--------------------------------------------------
+
+In the Source Sections tab:
+
+When the user selects/clicks a source section, the right-side panel titled:
+“Plain-English Breakdown”
+
+must populate with the actual explanation for that section.
+
+The explanation should include available fields such as:
+- plain English meaning
+- what this section requires
+- why it matters
+- risks or obligations
+- source/evidence text
+
+If structured explanation data exists, render it.
+
+If the data field name changed, trace the analysis result object and map the correct field back into the UI.
+
+If no explanation exists for a section, show a clean fallback:
+
+“No breakdown available for this section.”
+
+Do not leave the panel empty.
+
+Acceptance check:
+- Click Section 1 → right panel shows a useful explanation.
+- Click Section 2 → right panel updates.
+- No blank right panel unless fallback text appears.
+
+--------------------------------------------------
+2. REMOVE ALL HIGHER-TIER / UPGRADE MESSAGING
+--------------------------------------------------
+
+Search the entire codebase for these exact strings and remove/replace every user-facing instance:
+
+- “This feature requires a higher-tier plan”
+- “Please upgrade to access it”
+- “higher-tier”
+- “upgrade to access”
+- “Requires Pro”
+- “Pro only”
+- “Upgrade required”
+
+PlainPath has only one plan. These messages must not appear anywhere.
+
+If a feature is not included in launch, hide it entirely.
+
+--------------------------------------------------
+3. REMOVE OR REPLACE “NEGOTIATE THIS”
+--------------------------------------------------
+
+Risks & Notes still shows “Negotiate this.”
+
+For launch, negotiation generation is not part of the final two-tool scope unless it works for every PlainPath Pro/Admin user.
+
+Preferred fix:
+Replace every “Negotiate this” button with:
+
+“Copy issue summary”
+
+Behavior:
+- Copy risk title
+- Copy explanation
+- Copy source/evidence quote if available
+- Show small “Copied” confirmation state
+
+Do not show blocked or upgrade messaging after clicking.
+
+Alternative:
+Hide the button entirely.
+
+But do not leave “Negotiate this” if it triggers a blocked state.
+
+--------------------------------------------------
+4. CHECK MULTIPLE RISK CARD COMPONENTS
+--------------------------------------------------
+
+The previous fix may have changed one RiskCard path but not the actual rendered component.
+
+Search for all components/renderers related to:
+- RiskCard
+- risks
+- warnings
+- negotiate
+- UpgradeCard
+- locked feature
+- premium feature
+- ProOnly
+- isTabBlocked
+- PRO_ONLY_TABS
+
+Fix every active render path, not just one file.
+
+--------------------------------------------------
+5. ADMIN / PRO ACCESS EXPECTATION
+--------------------------------------------------
+
+Admin and active PlainPath Pro users should never see:
+- locked feature states
+- higher-tier messaging
+- upgrade prompts
+- disabled launch result sections
+
+Since only one paid plan exists, all visible result sections must either:
+- work
+or
+- be hidden
+
+--------------------------------------------------
+6. FINAL GREP VERIFICATION
+--------------------------------------------------
+
+After changes, run grep/search and report zero user-facing matches for:
+
+- higher-tier
+- upgrade to access
+- This feature requires
+- Negotiate this
+- Pro only
+- Upgrade required
+- locked feature
+- Ask This Document
+
+If any remain in comments only, report that clearly.
+
+--------------------------------------------------
+7. FINAL MANUAL QA
+--------------------------------------------------
+
+Verify:
+
+A. Source Sections → Section 1 shows Plain-English Breakdown
+B. Source Sections → Section 2 updates Plain-English Breakdown
+C. Risks & Notes shows no higher-tier message
+D. Risks & Notes shows no “Negotiate this” blocked button
+E. Copy Issue Summary works if used
+F. Admin sees no upgrade messages
+G. Pro user sees no upgrade messages
+H. Ask This Document remains hidden
+I. No removed tools are reintroduced
+J. Build remains clean

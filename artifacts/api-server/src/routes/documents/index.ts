@@ -2237,7 +2237,7 @@ router.get("/trust-check-demo/:demoId", (req, res) => {
   return res.json({ analysis: demo });
 });
 
-router.post("/explain-source-section", requireEntitlement("compare"), async (req, res) => {
+router.post("/explain-source-section", requireEntitlement("analyze"), async (req, res) => {
   const { sectionContent, sectionTitle, documentTypeHint } = req.body;
 
   if (!sectionContent || typeof sectionContent !== "string" || sectionContent.trim().length < 10) {
@@ -2291,7 +2291,7 @@ Return ONLY a valid JSON object with this exact structure:
   }
 });
 
-router.post("/explain-section", requireEntitlement("compare"), async (req, res) => {
+router.post("/explain-section", requireEntitlement("analyze"), async (req, res) => {
   const { sectionTitle, sectionContent, documentTypeHint } = req.body;
 
   if (!sectionContent || typeof sectionContent !== "string" || sectionContent.trim().length < 5) {
