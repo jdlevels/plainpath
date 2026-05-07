@@ -1,0 +1,89 @@
+We are moving into post-publish launch stabilization for PlainPath.
+
+Do NOT build new product features in this pass.
+
+Goal:
+Add E2E Playwright QA coverage for the two live user-facing tools only:
+1. Analyze a Document
+2. Contract Review
+
+Context:
+PlainPath is published / near-published. The highest priority now is confirming that the live revenue-facing flows work reliably before unlocking additional hidden tools.
+
+Scope:
+- Add Playwright E2E tests for Analyze a Document.
+- Add Playwright E2E tests for Contract Review.
+- Add Playwright E2E tests for demo quota enforcement.
+- Add Playwright E2E tests for authenticated vs guest behavior where applicable.
+- Add Playwright E2E tests for billing/entitlement gates if safely mockable.
+- Add Playwright E2E tests for share link behavior if already implemented.
+- Confirm upload flow, loading state, result rendering, error handling, and final user-visible output.
+- Confirm no hidden tools are accidentally exposed.
+- Confirm mobile-width usability does not break the primary flows.
+
+Hard restrictions:
+- Do NOT unlock Clause Extractor.
+- Do NOT unlock Compare Versions.
+- Do NOT build Completion Engine Phase 3 yet.
+- Do NOT modify database schema.
+- Do NOT change billing logic unless a test exposes a real bug.
+- Do NOT change pricing.
+- Do NOT change protected auth, Stripe, RevenueCat, or Clerk logic unless required to fix a confirmed test failure.
+- Do NOT redesign the UI in this pass.
+
+Required QA coverage:
+1. Analyze a Document
+   - User can access the page.
+   - User can upload a supported PDF.
+   - Loading/scanning state appears.
+   - Results render in the expected structure.
+   - Source/overview/action sections render without layout overflow.
+   - Error state is readable if analysis fails.
+   - Mobile viewport remains usable.
+
+2. Contract Review
+   - User can access the page.
+   - User can upload a supported contract PDF.
+   - Loading/review state appears.
+   - Summary section renders.
+   - Key Clauses section renders.
+   - Balanced Clauses section is collapsed by default if intended.
+   - Before You Sign section renders.
+   - “Questions to Ask” / “Suggested language to discuss” style sections render where expected.
+   - No old “Red Flags” / “Watch Outs” / prohibited safety language appears.
+
+3. Demo and quota behavior
+   - Demo page loads.
+   - Demo content is available without requiring full dashboard access.
+   - Guest/free quota behavior works as designed.
+   - Locked/pro-only states are clear.
+
+4. Entitlement and hidden tools
+   - Hidden tools remain hidden unless explicitly enabled.
+   - Tool grid does not expose unavailable tools.
+   - Direct routes to hidden tools do not accidentally expose usable production flows.
+
+5. Share link, if implemented
+   - Share link can be created or opened if already supported.
+   - Shared view does not expose private dashboard controls.
+   - Shared view does not break on refresh.
+
+Deliverables:
+- New Playwright E2E test file(s).
+- Any needed stable test fixtures or mocks.
+- A short QA report showing:
+  - tests added,
+  - tests passing/failing,
+  - any defects found,
+  - any fixes made,
+  - any remaining launch risks.
+
+Acceptance criteria:
+- Production build passes.
+- TypeScript passes.
+- Existing QA still passes.
+- New E2E tests pass or identify exact confirmed blockers.
+- No new tools are unlocked.
+- No schema changes.
+- No pricing/billing redesign.
+- No UI redesign.
