@@ -1,0 +1,114 @@
+Correction: We are NOT unlocking Clause Extractor yet.
+
+PlainPath launch scope remains limited to two tools only:
+1. Analyze a Document
+2. Contract Review
+
+The prior QA stabilization gate is accepted:
+- 102/102 E2E tests passing in documented shards
+- Production build clean
+- docs/qa-closeout.md completed
+- Hidden tools remain hidden
+- No schema changes
+- No pricing/billing changes
+
+Next task:
+Perform a two-tool launch lock and App Store / production readiness pass.
+
+Goal:
+Confirm the product, dashboard, marketing copy, routing, pricing copy, screenshots/readiness content, and app behavior all reflect the two-tool launch scope only.
+
+Scope:
+
+1. Confirm visible launch tools
+Verify only these production tools are visible:
+- Analyze a Document
+- Contract Review
+
+2. Confirm hidden tools remain hidden
+Verify these stay hidden and inaccessible:
+- Clause Extractor
+- Compare Versions
+- Trust Check
+- Redact Sensitive Info
+- Ask This Document
+- Builder
+- Any other unfinished or inactive tools
+
+3. Confirm dashboard/tool grid
+- Dashboard should only promote the two live tools.
+- No Pro upsell should promise unlocked hidden tools yet unless the copy clearly says coming later.
+- No card should imply Clause Extractor is currently available.
+
+4. Confirm marketing site copy
+Review public-facing pages for any claim that users can currently access more than the two launch tools.
+Fix copy if needed so it accurately reflects the current live product:
+- Analyze a Document
+- Contract Review
+
+5. Confirm pricing/subscription copy
+Make sure pricing does not overpromise access to hidden tools.
+If the plan says full access, clarify full access to current live PlainPath tools or adjust wording to avoid implying unavailable tools are live.
+
+6. Confirm demo pages
+- Demo pages should only showcase launch-approved experiences.
+- Demo content should not imply unavailable tools are currently usable.
+
+7. Confirm App Store readiness
+Check copy/screenshot references for consistency with two-tool launch:
+- App title/subtitle where applicable
+- feature descriptions
+- privacy wording
+- terms references
+- screenshots or screenshot plan
+- onboarding/paywall copy if present
+
+8. Regression
+Run existing E2E suites in shards as needed:
+- marketing-demo.spec.ts
+- hidden-tools.spec.ts
+- auth-plan-gate.spec.ts
+- app-public-routes.spec.ts
+- analyze-tool.spec.ts
+- contract-review-tool.spec.ts
+
+9. Build checks
+Run:
+- production build
+- TypeScript/typecheck if available
+- existing QA scripts if safe
+
+Hard restrictions:
+- Do not unlock Clause Extractor.
+- Do not unlock Compare Versions.
+- Do not unlock Trust Check.
+- Do not unlock Redact.
+- Do not unlock Ask This Document.
+- Do not unlock Builder.
+- Do not add new tools.
+- Do not modify database schema.
+- Do not change pricing amounts.
+- Do not redesign billing.
+- Do not redesign auth.
+- Do not redesign the UI.
+- Do not build Completion Engine Phase 3.
+- Do not build Document Packet Compiler.
+
+Deliverables:
+- Files reviewed
+- Any copy mismatches found
+- Any copy fixes made
+- Confirmation that only Analyze + Contract Review are visible
+- Confirmation that hidden tools remain hidden
+- Final test counts
+- Build result
+- Remaining App Store / launch risks
+
+Acceptance criteria:
+- Product reflects two-tool launch scope
+- Public marketing reflects two-tool launch scope
+- Dashboard reflects two-tool launch scope
+- Pricing copy does not overpromise hidden tools
+- Hidden tools remain inaccessible
+- Existing 102 E2E tests still pass
+- Production build passes

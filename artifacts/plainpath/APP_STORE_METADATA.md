@@ -36,18 +36,15 @@ PlainPath reads confusing paperwork and turns it into a structured, plain-Englis
 ✓ Important deadlines and dates
 ✓ Key risks and things to watch for
 
-**Document Trust Check**
-Not sure if a document is legitimate? Run it through PlainPath's Document Trust Check. It scans for scam indicators, pressure tactics, suspicious payment demands, and red flags — giving you an Authenticity Risk score, Document Risk score, and Verification Confidence score.
-
-**Contract Builder**
-Need a contract? PlainPath guides you through a simple intake wizard and generates a clean, AI-drafted contract in plain English. Choose from five types: Freelance Agreement, NDA, Payment Agreement, Service Agreement, or Lease Agreement. Export as PDF.
+**Analyze a Document**
+Upload a PDF, Word file, or paste any text. PlainPath reads the full document and gives you a structured action plan: prioritized steps, required documents to gather, key deadlines extracted from the fine print, risks flagged by severity, and plain-English explanations of every important term — all sourced from the actual text.
 
 **Contract Review**
-About to sign something? PlainPath reads your contract clause by clause and flags Red Flags, Watch-Outs, and Fair terms — along with an overall score, missing protections, and a plain-English pre-signing checklist. Know exactly what you're agreeing to before you sign.
+About to sign something? PlainPath reads your contract clause by clause and identifies Watch-Outs, and Fair terms — along with an overall fairness score, missing protections, and a plain-English pre-signing checklist. Know exactly what you're agreeing to before you sign.
 
 **Your privacy is protected:**
 - PlainPath never stores your documents
-- No account or email required
+- No account or email required for free use
 - Documents are processed by AI and immediately discarded — never saved by PlainPath
 - Analysis results are stored only on your device
 
@@ -56,7 +53,7 @@ Supported formats: PDF, Word (.docx), plain text (.txt), or paste any text direc
 ---
 
 ## Keywords (Apple — 100 chars max, comma-separated)
-document,paperwork,action plan,PDF reader,contract review,scam checker,lease,IRS notice,AI
+document,paperwork,action plan,PDF reader,contract review,lease,IRS notice,AI,plain English
 
 ## Tags (Google Play — up to 5)
 - Productivity
@@ -97,7 +94,7 @@ support@plainpathapp.com
 ---
 
 ## What's New (Version 1.0)
-Initial release. PlainPath turns complex paperwork into clear, step-by-step action plans. Supports PDF, Word, and plain text documents. Includes Document Trust Check to identify scam indicators in suspicious documents.
+Initial release. PlainPath turns complex paperwork into clear, step-by-step action plans. Supports PDF, Word, and plain text documents. Includes full Contract Review — clause-by-clause analysis with fairness scoring and negotiation guidance.
 
 ---
 
@@ -105,10 +102,10 @@ Initial release. PlainPath turns complex paperwork into clear, step-by-step acti
 
 ### iPhone (6.7" — required)
 Suggested screens to capture:
-1. Home screen — the two mode cards ("Analyze a Document" / "Document Trust Check")
+1. Home screen — the two tool cards ("Analyze a Document" / "Contract Review")
 2. Import screen — paste/upload tabs with format chips
 3. Analysis result — action plan with steps, deadlines, and required documents
-4. Trust Check result — the three-score verdict panel
+4. Contract Review result — fairness score, clause cards with Watch-Out / Fair labels
 5. My Analyses — the saved analyses list
 
 ### iPad (12.9" — required if you support iPad)
@@ -120,22 +117,19 @@ Same 5 screens. Min 2 required, up to 8.
 ---
 
 ## App Store Review Notes (for the reviewer)
-PlainPath is a four-tool document platform powered by AI. No account creation
-is required. No sensitive permissions are requested beyond document file access.
+PlainPath is a two-tool document platform powered by AI. No account creation
+is required for free use. No sensitive permissions are requested beyond document
+file access.
 
-The four tools are:
+The two tools are:
 1. Analyze a Document — action steps, deadlines, required documents, key terms
-2. Document Trust Check — scam/fraud indicator scoring with authenticity verdict
-3. Contract Builder — AI-drafted contracts from a guided intake wizard
-4. Contract Review — clause-by-clause grading of contracts before signing
+2. Contract Review — clause-by-clause grading of contracts before signing
 
 Test the app using the built-in demo documents (no upload required):
 - Tap "Analyze a Document" → select a pre-loaded demo document → tap Analyze
-- Tap "Document Trust Check" → select a demo document → tap Run Trust Check
-- Tap "Build a Contract" → select Service Agreement → complete the wizard → tap Generate
-- Tap "Contract Review" → paste any contract text → tap Review Contract
+- Tap "Contract Review" → paste any contract text → tap Review This Contract
 
-Subscriptions are managed on the web at plain-path.replit.app. There are no
+Subscriptions are managed on the web at plainpathapp.com. There are no
 in-app purchases. The upgrade prompt shown to free users is informational only
 and contains no buy button or external payment link.
 

@@ -1,7 +1,7 @@
 import { useEffect } from "react"
 import { Shield, Lock, Eye, Server, RefreshCw, Mail, CreditCard } from "lucide-react"
 
-const LAST_UPDATED = "May 4, 2026"
+const LAST_UPDATED = "May 7, 2026"
 
 export default function Privacy() {
   useEffect(() => {
@@ -36,7 +36,7 @@ export default function Privacy() {
             <li className="flex items-start gap-2"><span className="text-primary font-bold mt-0.5">✓</span> Free-tier use requires no account and no personal information.</li>
             <li className="flex items-start gap-2"><span className="text-primary font-bold mt-0.5">✓</span> Your document text is sent to OpenAI for analysis and is subject to OpenAI's data policies.</li>
             <li className="flex items-start gap-2"><span className="text-primary font-bold mt-0.5">✓</span> Uploaded files are never written to disk or stored. Extracted document text is not retained after processing. If you save an analysis to My Analyses, the generated output is stored on PlainPath servers linked to your account — not the original document or its text.</li>
-            <li className="flex items-start gap-2"><span className="text-primary font-bold mt-0.5">✓</span> Pro tools (Clause Extractor, Compare Versions, Document Builder) store working data on PlainPath servers so you can access it across sessions and devices. You can delete your data at any time.</li>
+            <li className="flex items-start gap-2"><span className="text-primary font-bold mt-0.5">✓</span> Additional tools (Clause Extractor, Compare Versions, Document Builder — coming in future updates) will store working data on PlainPath servers so you can access it across sessions and devices. You can delete your data at any time.</li>
             <li className="flex items-start gap-2"><span className="text-primary font-bold mt-0.5">✓</span> When you use the Share feature, your analysis output is stored on PlainPath servers for up to 30 days to generate a shareable link. No document text is attached.</li>
             <li className="flex items-start gap-2"><span className="text-primary font-bold mt-0.5">✓</span> If you subscribe to a paid plan, your email address is stored on PlainPath servers and processed by Stripe. Payment details are held by Stripe, not PlainPath.</li>
             <li className="flex items-start gap-2"><span className="text-primary font-bold mt-0.5">✓</span> If you use the deadline email reminder feature, your email address is processed by Resend to deliver the reminder. It is not stored by PlainPath beyond the delivery attempt.</li>
@@ -55,8 +55,8 @@ export default function Privacy() {
               <li><strong>Analysis results</strong> are returned to your browser. If you do not save them, they exist only in your current session. If you choose to save an analysis to My Analyses, the generated output (not your original document or its extracted text) is stored on PlainPath servers, linked to your account. You can delete saved analyses at any time.</li>
             </ul>
 
-            <p><strong>Pro tools (paid plans)</strong></p>
-            <p>The following Pro tools store working data on PlainPath servers so your work persists across sessions and devices. You can delete your data at any time from within each tool.</p>
+            <p><strong>Additional tools (coming in future updates)</strong></p>
+            <p>The following tools are planned for future releases and are not yet available. When available, they will store working data on PlainPath servers so your work persists across sessions and devices. You can delete your data at any time from within each tool.</p>
             <ul>
               <li><strong>Clause Extractor</strong> — Uploaded document text is sent to OpenAI to identify and extract clauses. The extracted clause results are stored on PlainPath servers linked to your account so you can revisit and export them. Original uploaded files are not retained after processing.</li>
               <li><strong>Compare Versions</strong> — Document text from both versions is sent to OpenAI to generate a comparison. Comparison session results are stored on PlainPath servers linked to your account. Original uploaded files are not retained after processing.</li>
@@ -107,9 +107,9 @@ export default function Privacy() {
               <li><strong>Unsaved analyses</strong> — exist only in your browser's memory for the duration of your session. Refreshing the page or closing the tab removes them permanently.</li>
               <li><strong>Saved analyses (My Analyses)</strong> — when you explicitly save an analysis, the generated analysis output (not your original document or its text) is stored on PlainPath servers, linked to your account. You can delete saved analyses at any time from the My Analyses page.</li>
               <li><strong>Shared analyses</strong> — the structured analysis output (not your document) is stored on PlainPath servers to power the shareable link. Automatically deleted after <strong>30 days</strong>.</li>
-              <li><strong>Clause Extractor results</strong> (paid plans) — extracted clause data is stored on PlainPath servers linked to your account until you delete it or your account is closed.</li>
-              <li><strong>Compare Versions sessions</strong> (paid plans) — comparison results are stored on PlainPath servers linked to your account until you delete them or your account is closed.</li>
-              <li><strong>Document Builder drafts</strong> (paid plans) — document content is stored on PlainPath servers linked to your account until you delete it or your account is closed.</li>
+              <li><strong>Clause Extractor results</strong> (coming in future updates) — extracted clause data will be stored on PlainPath servers linked to your account until you delete it or your account is closed.</li>
+              <li><strong>Compare Versions sessions</strong> (coming in future updates) — comparison results will be stored on PlainPath servers linked to your account until you delete them or your account is closed.</li>
+              <li><strong>Document Builder drafts</strong> (coming in future updates) — document content will be stored on PlainPath servers linked to your account until you delete it or your account is closed.</li>
               <li><strong>Subscriber records</strong> (paid plans only) — your email address and subscription status are stored on PlainPath servers for as long as your plan is active, plus up to 90 days after cancellation for billing reconciliation. After that period, all subscriber data is permanently deleted.</li>
               <li><strong>Deadline reminder emails</strong> — your email address is passed to Resend for a single delivery. It is not stored in PlainPath's database.</li>
             </ul>
