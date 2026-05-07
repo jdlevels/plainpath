@@ -1,0 +1,86 @@
+Good progress. The 57/57 green route/demo/auth/hidden-tool tests are accepted as the first stabilization layer.
+
+However, this does not yet fully satisfy the original E2E goal because the current suites appear to cover demos, routes, hidden tools, auth gates, and public pages — but not the real live tool workflows.
+
+Do not unlock any hidden tools yet.
+
+Next task:
+Add true Playwright E2E coverage for the two live production tool flows only:
+
+1. Analyze a Document
+2. Contract Review
+
+Goal:
+Test the actual user workflow inside the app:
+Upload file → loading state → API/mock response → rendered results → error handling.
+
+Important:
+Do not call OpenAI or consume paid API usage during tests. Use deterministic mocks, route interception, local fixtures, or test-mode API responses.
+
+Scope:
+
+A. Analyze a Document E2E
+Add tests proving:
+- The Analyze page loads for an allowed user/test context.
+- A supported PDF fixture can be attached through the upload UI.
+- The loading/scanning state appears.
+- The app receives a mocked successful analysis response.
+- The result screen renders the expected structure:
+  - Plain English / summary-style output
+  - Source Sections or source-backed references if present in UI
+  - Overview / action-plan style content
+  - checklist or next-step style content if supported
+- The result area does not overflow at desktop width.
+- The result area remains usable at mobile width.
+- A mocked API failure shows a readable error state.
+- The error state does not crash the app.
+
+B. Contract Review E2E
+Add tests proving:
+- The Contract Review page loads for an allowed user/test context.
+- A supported contract PDF fixture can be attached through the upload UI.
+- The loading/review state appears.
+- The app receives a mocked successful contract review response.
+- The result screen renders:
+  - Summary
+  - Key Clauses
+  - Balanced Clauses
+  - Before You Sign
+  - Questions to Ask
+  - Suggested language to discuss, where supported
+- Balanced Clauses remains collapsed by default if that is the intended current behavior.
+- No old user-facing labels appear:
+  - “Red Flags”
+  - “Watch Outs”
+  - “red flag”
+  - “Do Not Sign”
+- A mocked API failure shows a readable error state.
+- Mobile width remains usable.
+
+C. Guardrails
+- Do not unlock Clause Extractor.
+- Do not unlock Compare Versions.
+- Do not expose Trust Check, Redact, Ask This Document, Builder, Clause Extractor, Compare Versions, or other hidden tools.
+- Do not modify database schema.
+- Do not change billing logic unless a test exposes a real bug.
+- Do not redesign the UI.
+- Do not change pricing.
+- Do not add new product features.
+
+D. Deliverables
+Provide:
+- New Playwright spec file names.
+- Fixture file names used.
+- Mocking/interception strategy.
+- Final test count.
+- Final pass/fail report.
+- Any confirmed bugs fixed.
+- Any remaining launch risks.
+
+Acceptance criteria:
+- Existing 57 tests still pass.
+- New true app-flow E2E tests pass.
+- Production build passes.
+- TypeScript passes.
+- No hidden tools are unlocked.
+- No schema changes.

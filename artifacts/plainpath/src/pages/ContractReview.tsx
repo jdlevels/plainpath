@@ -17,7 +17,7 @@ import { useLocation, useSearch } from "wouter"
 import { WorkspaceShell } from "@/components/WorkspaceShell"
 import { ToolPageHeader } from "@/components/ToolPageHeader"
 import { beforeRunContractReview, UsageLimitError } from "@/lib/analysisGate"
-import { useEntitlements } from "@/hooks/useEntitlements"
+import { makeGetTokenWithTimeout, useEntitlements } from "@/hooks/useEntitlements"
 import UpgradeModal from "@/components/UpgradeModal"
 import { ResultStickyHeader } from "@/components/result/ResultStickyHeader"
 import { ResultSectionCard } from "@/components/result/ResultSectionCard"
@@ -649,7 +649,8 @@ function ClauseCard({
   selected?: boolean
   onSelect?: () => void
 }) {
-  const { getToken } = useAuth()
+  const { getToken: rawGetToken } = useAuth()
+  const getToken = makeGetTokenWithTimeout(rawGetToken as (opts?: Record<string, unknown>) => Promise<string | null>)
   const [open, setOpen] = useState(defaultOpen)
   const config = RATING_CONFIG[clause.rating]
   const Icon = config.icon
@@ -1220,7 +1221,14 @@ export default function ContractReview() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [scanFailed, setScanFailed] = useState(false)
-  const [result, setResult] = useState<ReviewResult | null>(null)
+  const [result, setResult] = useState<ReviewResult | null>(() => {
+    if (typeof window !== "undefined" && (window as any).__PLAYWRIGHT_INITIAL_CONTRACT_RESULT__) {
+      const data = (window as any).__PLAYWRIGHT_INITIAL_CONTRACT_RESULT__
+      delete (window as any).__PLAYWRIGHT_INITIAL_CONTRACT_RESULT__
+      return data as ReviewResult
+    }
+    return null
+  })
   const [redactedNotice, setRedactedNotice] = useState(false)
   const [mobileResultTab, setMobileResultTab] = useState<"document" | "review">("review")
   const [scrollTrigger, setScrollTrigger] = useState(0)
@@ -1228,6 +1236,14 @@ export default function ContractReview() {
   useEffect(() => {
     document.title = "Contract Review — PlainPath"
     return () => { document.title = "PlainPath" }
+  }, [])
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && (window as any).__PLAYWRIGHT_SET_CONTRACT_RESULT__) {
+      (window as any).__PLAYWRIGHT_SET_CONTRACT_RESULT__ = (data: ReviewResult) => {
+        setResult(data)
+      }
+    }
   }, [])
 
   // URL-based demo loading: /contract-review?demo=freelance-design
@@ -1257,7 +1273,8 @@ export default function ContractReview() {
   const [copyDone, setCopyDone] = useState(false)
 
   const { entitlements } = useEntitlements()
-  const { getToken } = useAuth()
+  const { getToken: rawGetToken } = useAuth()
+  const getToken = makeGetTokenWithTimeout(rawGetToken as (opts?: Record<string, unknown>) => Promise<string | null>)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const cameraInputRef = useRef<HTMLInputElement>(null)

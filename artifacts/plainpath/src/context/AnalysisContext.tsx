@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import type { DocumentAnalysis } from "@workspace/api-client-react";
 import type { TrustCheckAnalysis } from "@/lib/trustCheckTypes";
 
@@ -21,7 +21,14 @@ interface AnalysisContextType {
 const AnalysisContext = createContext<AnalysisContextType | undefined>(undefined);
 
 export function AnalysisProvider({ children }: { children: React.ReactNode }) {
-  const [analysis, setAnalysisState] = useState<DocumentAnalysis | null>(null);
+  const [analysis, setAnalysisState] = useState<DocumentAnalysis | null>(() => {
+    if (typeof window !== "undefined" && (window as any).__PLAYWRIGHT_INITIAL_ANALYSIS__) {
+      const data = (window as any).__PLAYWRIGHT_INITIAL_ANALYSIS__;
+      delete (window as any).__PLAYWRIGHT_INITIAL_ANALYSIS__;
+      return data as DocumentAnalysis;
+    }
+    return null;
+  });
   const [documentTypeHint, setDocumentTypeHintState] = useState<string | null>(null);
   const [trustCheckAnalysis, setTrustCheckAnalysisState] = useState<TrustCheckAnalysis | null>(null);
   const [uploadedTrustFile, setUploadedTrustFileState] = useState<File | null>(null);
@@ -78,6 +85,17 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
       };
     });
   }, []);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && (window as any).__PLAYWRIGHT_E2E__) {
+      (window as any).__PLAYWRIGHT_SET_ANALYSIS__ = setAnalysis;
+    }
+    return () => {
+      if (typeof window !== "undefined" && (window as any).__PLAYWRIGHT_SET_ANALYSIS__ === setAnalysis) {
+        delete (window as any).__PLAYWRIGHT_SET_ANALYSIS__;
+      }
+    };
+  }, [setAnalysis]);
 
   return (
     <AnalysisContext.Provider

@@ -1,0 +1,56 @@
+{
+  "overallScore": 68,
+  "verdict": "Some Concerns",
+  "summary": "This employment contract has several clauses that deserve attention before signing. The non-compete and unilateral amendment provisions are notably one-sided and warrant discussion with the other party.",
+  "clauses": [
+    {
+      "id": "c1",
+      "text": "Non-compete clause restricts employment for 24 months",
+      "rating": "red-flag",
+      "explanation": "Prohibits you from working for any competitor within the same industry for 24 months after leaving, regardless of reason for departure.",
+      "whyUnfair": "The duration and scope are unusually broad. Most enforceable non-competes are limited to 6-12 months and a specific geographic area or role.",
+      "negotiationLanguage": "Consider requesting a reduced term of 6 months, limited to your specific role, and scoped to direct competitors only rather than the entire industry.",
+      "exitGuidance": "Enforceability varies significantly by state. Consult a local employment attorney to understand your actual exposure."
+    },
+    {
+      "id": "c2",
+      "text": "Employer may amend contract terms with 30 days notice",
+      "rating": "watch-out",
+      "explanation": "Allows the employer to change key contract terms — including compensation and duties — with only 30 days written notice.",
+      "whyUnfair": "Material changes to compensation or role should require mutual consent, not unilateral notice.",
+      "negotiationLanguage": "Request that any changes to compensation, title, or core responsibilities require written mutual agreement rather than unilateral notice.",
+      "exitGuidance": "If changes are made that materially reduce your role or pay, you may have grounds to treat this as constructive dismissal in some jurisdictions."
+    },
+    {
+      "id": "c3",
+      "text": "At-will employment with standard notice period",
+      "rating": "fair",
+      "explanation": "Standard at-will employment with 2-week notice period from either party. Typical and reasonable for this type of role.",
+      "whyUnfair": null,
+      "negotiationLanguage": null,
+      "exitGuidance": null
+    },
+    {
+      "id": "c4",
+      "text": "Intellectual property assignment covers work-related inventions",
+      "rating": "fair",
+      "explanation": "Assigns ownership of work-related inventions and creations to the employer. Standard for most employment relationships.",
+      "whyUnfair": null,
+      "negotiationLanguage": null,
+      "exitGuidance": null
+    }
+  ],
+  "missingProtections": [
+    "No severance terms specified for termination without cause",
+    "Missing dispute resolution or arbitration clause",
+    "No clear definition of what constitutes 'cause' for termination"
+  ],
+  "preSigningChecklist": [
+    "Confirm start date, base salary, and bonus structure in writing",
+    "Clarify the exact scope of the non-compete with legal counsel",
+    "Request a list of the direct competitors covered by the non-compete",
+    "Understand your benefits start date and coverage details",
+    "Ask what triggers the unilateral amendment clause in practice"
+  ],
+  "reviewedAt": "2024-06-01T10:00:00.000Z"
+}

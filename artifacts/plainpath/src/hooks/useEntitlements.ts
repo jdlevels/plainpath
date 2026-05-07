@@ -32,9 +32,32 @@ import { fetchEntitlements, type EntitlementStatus, type RoleKey, type AccessTie
 import { getApiBaseUrl } from "../lib/api"
 import { getStoredSubscriberEmail, setStoredSubscriberEmail } from "../lib/subscriberStorage"
 
+// ── getToken with timeout ─────────────────────────────────────────────────────
+// clerkLoaded(isomorphicClerk) in @clerk/react's createGetToken() waits for the
+// "ready" event on Clerk's private internal event bus. In some environments
+// (Playwright E2E tests, certain SSR hydration scenarios) this event may never
+// fire, causing getToken() to hang indefinitely and blocking entitlements fetch.
+//
+// Safety net: race getToken() against a timeout. In production Clerk always
+// resolves in <1 s, so the 10 s timeout is never reached. In E2E tests the
+// __PLAYWRIGHT_E2E__ flag enables a 100 ms timeout and returns the mock token.
+export function makeGetTokenWithTimeout(getToken: (opts?: Record<string, unknown>) => Promise<string | null>) {
+  return (opts?: Record<string, unknown>): Promise<string | null> => {
+    const w = typeof window !== "undefined" ? (window as Record<string, unknown>) : {}
+    const isE2E   = Boolean(w.__PLAYWRIGHT_E2E__)
+    const timeout = isE2E ? 100 : 10_000
+    const fallback = isE2E ? (w.__PLAYWRIGHT_TOKEN__ as string | null ?? null) : null
+    return Promise.race([
+      getToken(opts).catch(() => null),
+      new Promise<string | null>(resolve => setTimeout(() => resolve(fallback), timeout)),
+    ])
+  }
+}
+
 export function useEntitlements() {
   const { user, isLoaded: clerkLoaded } = useUser()
-  const { getToken } = useAuth()
+  const { getToken: rawGetToken } = useAuth()
+  const getToken = makeGetTokenWithTimeout(rawGetToken as (opts?: Record<string, unknown>) => Promise<string | null>)
   const [data, setData] = useState<EntitlementStatus | null>(null)
   const [loading, setLoading] = useState(true)
   // True only when the API confirms an active billing record exists (Stripe or RC-verified).

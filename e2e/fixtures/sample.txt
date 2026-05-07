@@ -1,0 +1,16 @@
+SAMPLE EMPLOYMENT CONTRACT (QA TEST FIXTURE)
+
+This Employment Agreement is entered into between Acme Corp ("Employer") and the undersigned employee ("Employee").
+
+1. POSITION: Employee will serve as Software Engineer.
+2. COMPENSATION: Base salary of $120,000 per year, paid bi-weekly.
+3. START DATE: As mutually agreed in writing.
+4. AT-WILL EMPLOYMENT: Either party may terminate this agreement at any time with two weeks written notice.
+5. BENEFITS: Employee is entitled to standard benefits package as described in the Employee Handbook.
+6. CONFIDENTIALITY: Employee agrees to maintain confidentiality of all proprietary information.
+7. NON-COMPETE: Employee agrees not to work for any competitor in the same industry for 24 months after leaving.
+8. INTELLECTUAL PROPERTY: All work product created during employment belongs to the Employer.
+9. GOVERNING LAW: This agreement shall be governed by the laws of the State of California.
+10. ENTIRE AGREEMENT: This document constitutes the entire agreement between the parties.
+
+Signature: ________________________  Date: ___________

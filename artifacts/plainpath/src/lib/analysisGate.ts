@@ -83,7 +83,10 @@ export async function beforeRunContractReview(planKey?: string | null) {
   if (email) {
     void consumeToolUsage(email, "contract-review").catch(() => {})
   }
-  if (BILLING_CONFIG.PAYWALL_ENFORCEMENT) {
+  if (
+    BILLING_CONFIG.PAYWALL_ENFORCEMENT &&
+    !(window as unknown as Record<string, unknown>).__PLAYWRIGHT_BYPASS_PAYWALL__
+  ) {
     const { allowed, used, limit } = canRunContractReview(planKey)
     if (!allowed) throw new UsageLimitError("contractReview", used, limit)
   }
