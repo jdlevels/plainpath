@@ -1,0 +1,82 @@
+Act as a senior AI product architect, full-stack app planner, and QA strategist.
+
+We are locking the PlainPath v1.0 architecture and launch scope.
+
+Important:
+Do not build new product features in this pass.
+Do not unlock hidden tools.
+
+PlainPath v1.0 launch scope is limited to two tools only:
+1. Analyze a Document
+2. Contract Review
+
+Current accepted QA baseline:
+- 102/102 E2E tests passing in documented shards
+- Production build clean
+- Hidden tools remain hidden
+- No schema changes
+- No pricing/billing changes
+- No UI redesign
+- QA closeout completed at docs/qa-closeout.md
+
+Task:
+Create or update PlainPath planning documentation using the architecture structure below:
+
+1. Problem statement
+2. Target user
+3. Primary user outcome
+4. MVP scope
+5. Out-of-scope list
+6. Main user workflow
+7. Internal system pipeline
+8. Required engines
+9. Required modules and services
+10. Data models, fields, statuses, and relationships
+11. API routes
+12. UI screens and components
+13. Permissions and policy layer
+14. Guardrails
+15. QA plan
+16. Build roadmap by phase
+17. First implementation / launch-lock checklist
+
+Required documents:
+- docs/plainpath-architecture-blueprint.md
+- docs/plainpath-launch-scope.md
+- docs/plainpath-qa-strategy.md
+- docs/plainpath-post-launch-roadmap.md
+
+Documentation requirements:
+- Clearly state that v1.0 launches with only Analyze a Document and Contract Review.
+- Clearly state that Clause Extractor, Compare Versions, Trust Check, Redaction, Ask This Document, Builder, Completion Engine, and Packet Compiler are post-launch only.
+- Clearly state that hidden tools must remain hidden from dashboard, pricing, public demos, marketing claims, and direct usable routes.
+- Clearly state that future tools should only be unlocked after launch ads, customer usage, feedback, E2E coverage, and updated marketing copy.
+- Include the current 102-test QA baseline.
+- Include the current two-tool launch strategy.
+- Include a phase-based roadmap.
+
+Hard restrictions:
+- Do not unlock Clause Extractor.
+- Do not unlock Compare Versions.
+- Do not unlock Trust Check.
+- Do not unlock Redaction.
+- Do not unlock Ask This Document.
+- Do not unlock Builder.
+- Do not add new tools.
+- Do not modify database schema.
+- Do not change pricing amounts.
+- Do not change billing.
+- Do not redesign auth.
+- Do not redesign UI.
+- Do not build Completion Engine.
+- Do not build Packet Compiler.
+- Do not migrate the data model.
+
+Acceptance criteria:
+- PlainPath has a written architecture blueprint.
+- PlainPath has a written two-tool launch scope.
+- PlainPath has a written QA strategy.
+- PlainPath has a written post-launch roadmap.
+- The documents all align around the same v1.0 launch decision:
+  Analyze a Document + Contract Review only.
+- No production feature behavior changes occur.
