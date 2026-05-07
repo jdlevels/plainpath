@@ -1,0 +1,88 @@
+Good. The live-tool E2E gap is now closed.
+
+Before we unlock any hidden tools, perform a final QA closeout and regression verification pass.
+
+Goal:
+Confirm the full PlainPath post-publish stabilization gate is complete.
+
+Known test inventory:
+- Prior route/demo/auth/hidden-tool E2E tests: 57 passing
+- New live-tool workflow E2E tests:
+  - analyze-tool.spec.ts: 21/21 passing
+  - contract-review-tool.spec.ts: 24/24 passing
+- Expected total E2E coverage: 102 tests
+
+Important:
+Do NOT run all tests in one command if the Replit environment OOMs. Run the tests in documented shards/suites and record the results clearly.
+
+Scope:
+
+1. Run and document all E2E suites
+Confirm these pass:
+- marketing-demo.spec.ts
+- hidden-tools.spec.ts
+- auth-plan-gate.spec.ts
+- app-public-routes.spec.ts
+- analyze-tool.spec.ts
+- contract-review-tool.spec.ts
+
+2. Confirm final counts
+Provide a final table showing:
+- suite name
+- test count
+- pass count
+- result
+- command used
+
+3. Confirm build health
+Run:
+- production build
+- TypeScript/typecheck if available
+- existing project QA scripts if available and safe
+
+4. Confirm no scope drift
+Verify:
+- No hidden tools were unlocked
+- Clause Extractor remains hidden
+- Compare Versions remains hidden
+- Trust Check remains hidden
+- Redact remains hidden
+- Ask This Document remains hidden
+- Builder remains hidden
+- No database schema changes
+- No pricing changes
+- No billing redesign
+- No auth redesign
+- No UI redesign beyond test-stability fixes
+
+5. Confirm test-only safeguards
+Verify any Playwright/E2E bypass flags are test-only and cannot affect production behavior.
+
+Specifically confirm:
+- window.__PLAYWRIGHT_E2E__ is only used in test context
+- window.__PLAYWRIGHT_BYPASS_PAYWALL__ is only injected by Playwright tests
+- no production user can trigger the bypass through normal browser behavior
+
+6. Add closeout note
+Create or update a short QA closeout document summarizing:
+- what was tested
+- what bugs were fixed
+- final pass counts
+- known limitation: tests must run in shards due Replit OOM
+- final recommendation: PlainPath is ready for the next controlled expansion gate
+
+Hard restrictions:
+- Do not unlock Clause Extractor yet.
+- Do not unlock any hidden tools.
+- Do not add new product features.
+- Do not change schema.
+- Do not change pricing.
+- Do not redesign UI.
+
+Acceptance criteria:
+- All 102 E2E tests pass in documented shards
+- Build passes
+- TypeScript passes
+- Test-only bypasses are confirmed safe
+- No hidden tools exposed
+- Closeout note completed
