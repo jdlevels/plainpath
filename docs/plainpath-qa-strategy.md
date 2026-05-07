@@ -1,7 +1,7 @@
 # PlainPath — QA Strategy
 **Version:** 1.0  
 **Last updated:** May 7, 2026  
-**Baseline:** 116/116 E2E tests passing (updated from 102 at initial closeout)
+**Baseline:** 102/102 E2E tests passing
 
 ---
 
@@ -54,13 +54,13 @@ pnpm exec playwright test e2e/hidden-tools.spec.ts e2e/auth-plan-gate.spec.ts --
 
 | Suite | File | Tests | Purpose |
 |---|---|---|---|
-| Marketing demo | `e2e/marketing-demo.spec.ts` | 35 | Demo pages render correctly; retired demo routes redirect; no hidden tool UI exposed |
+| Marketing demo | `e2e/marketing-demo.spec.ts` | 23 | Demo pages render correctly; retired demo routes redirect; no hidden tool UI exposed |
 | Hidden tools enforcement | `e2e/hidden-tools.spec.ts` | 15 | All hidden tool routes inaccessible to unauthenticated users; no leaked UI content |
 | Auth & plan gate | `e2e/auth-plan-gate.spec.ts` | 7 | Unauthenticated access blocked; plan gating enforced |
 | App public routes | `e2e/app-public-routes.spec.ts` | 12 | Public pages load without auth; shared links work; privacy/terms accessible |
 | Analyze tool | `e2e/analyze-tool.spec.ts` | 21 | End-to-end analyze flow; tab navigation; error states; API enforcement |
-| Contract review tool | `e2e/contract-review-tool.spec.ts` | 26 | End-to-end contract review flow; clause cards; error states; API enforcement |
-| **Total** | | **116** | **All passing as of May 7, 2026** |
+| Contract review tool | `e2e/contract-review-tool.spec.ts` | 24 | End-to-end contract review flow; clause cards; error states; API enforcement |
+| **Total** | | **102** | **All passing as of May 7, 2026** |
 
 ---
 
@@ -215,6 +215,5 @@ Before any hidden tool can be unlocked, it must pass a new QA gate:
 | Date | Event | Tests |
 |---|---|---|
 | Pre-session | Initial baseline | 0 (no E2E suite) |
-| QA stabilization pass | Suite created | 102 passing |
-| Launch-lock audit | Three bugs fixed; additional tests added | 116 passing |
-| May 7, 2026 | Two-tool launch readiness pass | 116/116 passing |
+| QA stabilization pass | Suite created; three bugs fixed | 102 passing |
+| May 7, 2026 | Two-tool launch readiness pass | 102/102 passing |

@@ -99,10 +99,8 @@ Verified by `hidden-tools.spec.ts` — 15/15 tests pass including "no leaked too
 | `auth-plan-gate.spec.ts` | 7 | ✅ PASS |
 | `app-public-routes.spec.ts` | 12 | ✅ PASS |
 | `analyze-tool.spec.ts` | 21 | ✅ PASS |
-| `contract-review-tool.spec.ts` | 26 | ✅ PASS |
-| **Total** | **116** | **✅ ALL PASS** |
-
-Note: Suite total increased from 102 (prior QA closeout) to 116 — new tests were added to the contract-review suite since the last count. All pass.
+| `contract-review-tool.spec.ts` | 24 | ✅ PASS |
+| **Total** | **102** | **✅ ALL PASS** |
 
 ---
 

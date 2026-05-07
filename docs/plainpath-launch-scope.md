@@ -100,7 +100,7 @@ For a tool to be properly hidden, all of the following must be true:
 - [ ] API route protected by `requireEntitlement` middleware (server-side)
 - [ ] E2E test confirms hidden tool route is inaccessible to unauthenticated users
 
-**Current status:** All hidden tools pass all checks above. Verified by `hidden-tools.spec.ts` (15/15 tests passing).
+**Current status:** All hidden/post-launch tools are confirmed inaccessible and hidden from all user-visible surfaces. They are not production-ready, not launch-approved, and not available to any user. Verified by `hidden-tools.spec.ts` (15/15 tests passing).
 
 ---
 

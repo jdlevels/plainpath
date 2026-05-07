@@ -63,7 +63,7 @@ User uploads or pastes a suspicious document. PlainPath scans for scam indicator
 - [ ] Pricing copy updated to include Trust Check
 - [ ] App Store metadata updated
 - [ ] Privacy policy updated (removes "coming in future updates" qualifier for Trust Check)
-- [ ] All existing 116+ tests still pass after unlock
+- [ ] All existing 102+ tests still pass after unlock
 
 **Codebase status:** Complete (hidden). No implementation work required — only unlock and copy updates.
 

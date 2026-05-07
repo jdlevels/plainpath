@@ -412,7 +412,7 @@ See `docs/plainpath-qa-strategy.md` for full detail.
 ### Summary
 - **Framework:** Playwright (E2E, browser-based)
 - **Test runner:** Node.js, `pnpm exec playwright test`
-- **Current baseline:** 116 tests across 6 suites — all passing
+- **Current baseline:** 102 tests across 6 suites — all passing
 - **Sharding:** Required for suites >15 tests (OOM risk in sandbox)
 - **No live AI calls in tests:** All AI responses mocked or fixture-injected
 - **No real Clerk auth in tests:** Replaced with `clerk-mock.js` via `addInitScript`
@@ -454,7 +454,7 @@ Each phase requires: post-launch gate review, customer usage data, E2E coverage,
 - [x] Terms of service — published
 - [x] App Store metadata — two-tool description only
 - [x] Hidden tools confirmed hidden (dashboard, pricing, marketing, routes, demos)
-- [x] All 116 E2E tests passing
+- [x] All 102 E2E tests passing
 - [x] Production build clean
 - [ ] App Store screenshots captured (two-tool scope)
 - [ ] App Store submission — Apple App Store Connect
