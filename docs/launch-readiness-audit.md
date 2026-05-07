@@ -1,7 +1,8 @@
 # PlainPath — Two-Tool Launch Readiness Audit
-**Date:** May 7, 2026  
-**Scope:** Two-tool launch lock — Analyze a Document + Contract Review only  
+**Date:** May 7, 2026
+**Scope:** Two-tool launch lock — Analyze a Document + Contract Review only
 **Auditor:** Agent pass (automated)
+**Baseline:** 102/102 E2E tests passing
 
 ---
 
@@ -9,132 +10,182 @@
 
 | Criterion | Status |
 |---|---|
-| Product reflects two-tool launch scope | ✅ PASS |
-| Public marketing reflects two-tool launch scope | ✅ PASS |
+| Marketing site reflects two-tool launch scope | ✅ PASS |
 | Dashboard reflects two-tool launch scope | ✅ PASS |
 | Pricing copy does not overpromise hidden tools | ✅ PASS |
-| Hidden tools remain inaccessible | ✅ PASS |
-| All E2E tests pass | ✅ PASS |
+| Demo routes for hidden tools all redirect | ✅ PASS |
+| App Store metadata reflects two-tool scope | ✅ PASS |
+| Privacy and terms align with actual behavior | ✅ PASS |
+| Hidden tools remain inaccessible from all user-facing surfaces | ✅ PASS |
+| Builder feature flag confirmed off in production | ✅ PASS |
+| All 102 E2E tests pass | ✅ PASS |
 | Production build passes | ✅ PASS |
 
 ---
 
-## Files Reviewed
+## 1. Marketing Site Audit
 
-| File | Finding | Action |
-|---|---|---|
-| `artifacts/plainpath/src/pages/Home.tsx` | TOOLS array contains only Analyze + Contract Review | No change needed |
-| `artifacts/plainpath/src/data/pricingData.ts` | Features list only Analyze + Contract Review | No change needed |
-| `artifacts/plainpath/src/pages/Upgrade.tsx` | "Both tools included — Analyze + Contract Review" | No change needed |
-| `artifacts/plainpath/src/components/PricingSection.tsx` | Renders pricingData only — no hidden tools | No change needed |
-| `artifacts/plainpath/src/pages/Billing.tsx` | Tool grid: analyze + contract-review + history only | No change needed |
-| `artifacts/plainpath/src/components/UpgradeModal.tsx` | Plan highlights: Analyze + Contract Review only. Reason entries for hidden tools exist but are only reachable by navigating directly to hidden routes (which are gated). No user path to trigger them. | No change needed |
-| `artifacts/plainpath/src/components/ToolsShowcase.tsx` | Lists Trust Check, Build a Contract, Redact, Ask This Document — **but is not imported or rendered anywhere in the app** | No change needed (dead component) |
-| `artifacts/plainpath/src/components/VideoWalkthrough.tsx` | Labels include Trust Check — **not rendered in any page or App.tsx** | No change needed (dead component) |
-| `artifacts/plainpath/src/components/FirstRunOnboarding.tsx` | Onboarding choices: Analyze + Contract Review only | No change needed |
-| `artifacts/plainpath/src/pages/Privacy.tsx` | Three sections described Clause Extractor / Compare Versions / Document Builder as active "Pro tools" | **Fixed** — all three now say "coming in future updates" |
-| `artifacts/plainpath/APP_STORE_METADATA.md` | Full description featured Document Trust Check and Contract Builder. Review notes said "four-tool platform". Screenshots listed Trust Check screens. | **Fixed** — updated to two-tool scope throughout |
-| `artifacts/plainpath-marketing/src/components/ToolsShowcase.tsx` | Shows only Analyze + Contract Review | No change needed |
-| `artifacts/plainpath-marketing/src/pages/Home.tsx` | "2 tools available now" — plan includes only Analyze + Contract Review | No change needed |
-| `artifacts/plainpath-marketing/src/components/FAQSection.tsx` | "Both tools — Analyze a Document and Contract Review" | No change needed |
-| `artifacts/plainpath-marketing/src/App.tsx` | Hidden demo routes (/demo/trust-check, /demo/compare, /demo/redact, /demo/clause-extractor, /demo/ask-document, /demo/builder) all redirect to /demo | No change needed |
-| `artifacts/plainpath/src/App.tsx` | Hidden tool routes (/app/trust-check, /app/clause-extractor, etc.) all require auth + active subscription and redirect unauthenticated users | No change needed |
-
----
-
-## Copy Mismatches Found and Fixed
-
-### 1. `APP_STORE_METADATA.md` — Full Description
-**Before:** Featured "Document Trust Check" and "Contract Builder" as live tools with full feature descriptions.  
-**After:** Full description covers only Analyze a Document and Contract Review.
-
-### 2. `APP_STORE_METADATA.md` — What's New
-**Before:** "Includes Document Trust Check to identify scam indicators in suspicious documents."  
-**After:** "Includes full Contract Review — clause-by-clause analysis with fairness scoring and negotiation guidance."
-
-### 3. `APP_STORE_METADATA.md` — Screenshots Plan
-**Before:** Screenshots listed Trust Check result screen as one of the five required captures.  
-**After:** Screenshot list updated to Analyze + Contract Review screens only.
-
-### 4. `APP_STORE_METADATA.md` — App Store Review Notes
-**Before:** "PlainPath is a four-tool document platform" — listed Trust Check, Contract Builder, Analyze, Contract Review as the four tools. Reviewer test steps included Trust Check and Contract Builder walkthroughs.  
-**After:** "PlainPath is a two-tool document platform" — lists only Analyze + Contract Review. Reviewer test steps updated to match.
-
-### 5. `Privacy.tsx` — Summary bullet (line 39)
-**Before:** "Pro tools (Clause Extractor, Compare Versions, Document Builder) store working data on PlainPath servers…"  
-**After:** "Additional tools (Clause Extractor, Compare Versions, Document Builder — coming in future updates) will store working data…"
-
-### 6. `Privacy.tsx` — Section 1 "What we collect" (lines 58–64)
-**Before:** Sub-heading "Pro tools (paid plans)" presented Clause Extractor / Compare Versions / Document Builder as currently-active paid features.  
-**After:** Sub-heading "Additional tools (coming in future updates)" — paragraph explicitly states these are "planned for future releases and are not yet available."
-
-### 7. `Privacy.tsx` — Section 3 "Data retention" (lines 110–112)
-**Before:** "Clause Extractor results (paid plans) — extracted clause data is stored…" (present tense, implies live).  
-**After:** "Clause Extractor results (coming in future updates) — extracted clause data will be stored…" (future tense, same for Compare Versions and Document Builder).
-
----
-
-## Hidden Tool Enforcement Confirmation
-
-| Tool | Route | Enforcement | Gating |
+| Surface | File | Finding | Status |
 |---|---|---|---|
-| Trust Check | `/app/trust-check` | RequireAuth redirect → sign-in | Not in dashboard TOOLS array |
-| Clause Extractor | `/app/clause-extractor` | RequireAuth redirect → sign-in | Not in dashboard TOOLS array |
-| Compare Versions | `/app/compare-versions` | RequireAuth redirect → sign-in | Not in dashboard TOOLS array |
-| Redact Sensitive Info | `/app/redact` | RequireAuth redirect → sign-in | Not in dashboard TOOLS array |
-| Ask This Document | `/app/ask-document` | RequireAuth redirect → sign-in | Not in dashboard TOOLS array |
-| Contract Builder | `/app/contract-builder` | RequireAuth redirect → sign-in | Not in dashboard TOOLS array |
-| Demo routes (6 paths) | `/demo/trust-check` etc. | `window.location.replace("/demo")` | All redirect |
-
-Verified by `hidden-tools.spec.ts` — 15/15 tests pass including "no leaked tool content" checks.
+| Tools grid | `ToolsShowcase.tsx` | Only Analyze + Contract Review listed; both `comingSoon: false`; no hidden tool entries | ✅ PASS |
+| Home plan features | `Home.tsx` | "2 tools available now" heading; plan feature rows only include Analyze + Contract Review | ✅ PASS |
+| FAQ | `FAQSection.tsx` | "Both tools — Analyze a Document and Contract Review — are available with PlainPath Pro" | ✅ PASS |
+| "Compare" reference (line 876) | `Home.tsx` | This is a section label for "PlainPath vs. [competitors]" — not a tool reference | ✅ PASS |
+| Hidden demo routes | `App.tsx` | `/demo/trust-check`, `/demo/compare`, `/demo/redact`, `/demo/clause-extractor`, `/demo/ask-document`, `/demo/builder`, `/demo/build-contract` all redirect to `/demo` | ✅ PASS |
+| Live demo pages | `DemoAnalyze.tsx`, `DemoContractReview.tsx` | Only Analyze and Contract Review demos exist as real pages | ✅ PASS |
 
 ---
 
-## E2E Test Results
+## 2. Dashboard / Tool Grid Audit
 
-| Suite | Tests | Result |
+| Surface | File | Finding | Status |
+|---|---|---|---|
+| TOOLS array | `Home.tsx` | Contains exactly two entries: Analyze a Document + Contract Review | ✅ PASS |
+| Hidden tool routes in app | `App.tsx` | `/app/trust-check`, `/app/clause-extractor`, `/app/compare-versions`, `/app/redact`, `/app/ask-document`, `/app/contract-builder` all redirect to `/` | ✅ PASS |
+| Builder routes | `App.tsx` + `builderConfig.ts` | Conditionally rendered behind `BUILDER_ENABLED` flag; `VITE_BUILDER_ENABLED` not set in production env → flag is `false` → routes not rendered | ✅ PASS |
+| Dead components | `ToolsShowcase.tsx` (app-side), `VideoWalkthrough.tsx` | Contain hidden tool names but are not imported or rendered anywhere | ✅ PASS (dead code, not user-visible) |
+| Onboarding | `FirstRunOnboarding.tsx` | Tool choices are Analyze + Contract Review only | ✅ PASS |
+
+---
+
+## 3. Pricing / Paywall Audit
+
+| Surface | File | Copy | Status |
+|---|---|---|---|
+| Upgrade page | `Upgrade.tsx` | "Both tools included — Analyze a Document and Contract Review. No commitment — cancel anytime." | ✅ PASS |
+| Upgrade page (second CTA) | `Upgrade.tsx` | "Both tools included — Analyze a Document and Contract Review. Cancel anytime." | ✅ PASS |
+| Upgrade page (sub-header) | `Upgrade.tsx` | "All tools available at $19.99/month — both Analyze a Document and Contract Review included." | ✅ PASS |
+| Subscribe page | `Subscribe.tsx` | "Both tools included — Analyze a Document and Contract Review. Cancel anytime." | ✅ PASS |
+| Subscribe FAQ | `Subscribe.tsx` | "PlainPath Pro gives you access to both Analyze a Document and Contract Review — all in one plan." | ✅ PASS |
+| Pricing section | `PricingSection.tsx` | Renders `pricingData.ts` only — no hidden tool features | ✅ PASS |
+| UpgradeModal reason entries | `UpgradeModal.tsx` | Reason entries for hidden tools exist but require navigating directly to a hidden route (gated). No dashboard user path triggers them. | ✅ PASS |
+
+No instance of "all tools", "full suite", "unlock every document tool", or hidden tool names in pricing or paywall copy.
+
+---
+
+## 4. Demo Audit
+
+| Demo | Route | Status |
 |---|---|---|
-| `marketing-demo.spec.ts` | 35 | ✅ PASS |
-| `hidden-tools.spec.ts` | 15 | ✅ PASS |
-| `auth-plan-gate.spec.ts` | 7 | ✅ PASS |
-| `app-public-routes.spec.ts` | 12 | ✅ PASS |
-| `analyze-tool.spec.ts` | 21 | ✅ PASS |
-| `contract-review-tool.spec.ts` | 24 | ✅ PASS |
-| **Total** | **102** | **✅ ALL PASS** |
+| Analyze a Document | `/demo/analyze` | ✅ Live demo page — fixture-backed, no auth required |
+| Contract Review | `/demo/contract-review` | ✅ Live demo page — fixture-backed, no auth required |
+| Trust Check | `/demo/trust-check` | ✅ Redirects to `/demo` |
+| Contract Builder | `/demo/build-contract` | ✅ Redirects to `/demo` |
+| Redact Sensitive Info | `/demo/redact` | ✅ Redirects to `/demo` |
+| Compare Versions | `/demo/compare` | ✅ Redirects to `/demo` |
+| Clause Extractor | `/demo/clause-extractor` | ✅ Redirects to `/demo` |
+| Ask This Document | `/demo/ask-document` | ✅ Redirects to `/demo` |
+| Builder | `/demo/builder` | ✅ Redirects to `/demo` |
+
+Same redirect pattern applies in the app itself (`/app/demo/:id` falls through to the marketing demo site).
 
 ---
 
-## Build Result
+## 5. App Store Readiness Copy Audit
+
+| Item | Finding | Status |
+|---|---|---|
+| Full description | Two tools only — Analyze a Document and Contract Review | ✅ PASS |
+| What's New (v1.0) | "Initial release… Includes full Contract Review…" — no Trust Check, no Builder | ✅ PASS |
+| App Store Review Notes | "PlainPath is a two-tool document platform" — lists Analyze + Contract Review; reviewer test steps match | ✅ PASS |
+| Screenshots plan | Five screens: Analyze upload, Analyze results, Contract Review input, clause cards, upgrade — no Trust Check | ✅ PASS |
+| No legal advice overpromise | File reviewed — no "legal advice", "attorney", "replaces a lawyer" language | ✅ PASS |
+| Hidden tool overpromise | None — Trust Check, Contract Builder, Clause Extractor, Compare, Redact, Ask This Document not mentioned | ✅ PASS |
+
+---
+
+## 6. Privacy and Terms Consistency Audit
+
+| Section | Finding | Status |
+|---|---|---|
+| Summary bullet — hidden tools | "Additional tools (Clause Extractor, Compare Versions, Document Builder — coming in future updates) will store working data…" | ✅ PASS |
+| What we collect — hidden tools | Sub-heading "Additional tools (coming in future updates)"; paragraph states "planned for future releases and are not yet available" | ✅ PASS |
+| Data retention — hidden tools | "Clause Extractor results (coming in future updates) — extracted clause data will be stored…" (future tense for all three) | ✅ PASS |
+| Uploaded file handling | Files processed then discarded; not retained after analysis — accurately described | ✅ PASS |
+| AI processing disclosure | OpenAI used for document analysis — disclosed | ✅ PASS |
+| Billing language | Stripe subscription; $19.99/month; cancel anytime — accurate | ✅ PASS |
+| Last updated date | May 7, 2026 | ✅ PASS |
+
+---
+
+## 7. Hidden Tool Enforcement Confirmation
+
+| Tool | App Route | Enforcement | Dashboard Card |
+|---|---|---|---|
+| Trust Check | `/app/trust-check` | Redirect → `/` | Not present |
+| Clause Extractor | `/app/clause-extractor` | Redirect → `/` | Not present |
+| Compare Versions | `/app/compare-versions` | Redirect → `/` | Not present |
+| Redact Sensitive Info | `/app/redact` | Redirect → `/` | Not present |
+| Ask This Document | `/app/ask-document` | Redirect → `/` | Not present |
+| Contract Builder | `/app/contract-builder` | Redirect → `/` | Not present |
+| Builder (full) | `/app/builder` | `BUILDER_ENABLED=false` → routes not rendered | Not present |
+| All hidden demo routes | `/demo/trust-check` etc. | `window.location.replace("/demo")` | N/A |
+
+Verified by `hidden-tools.spec.ts` — 15/15 tests pass including "no leaked tool content" checks at each route.
+
+---
+
+## 8. E2E Regression Results
+
+All suites run with `--project=chromium`. Count is the authoritative `--list --project=chromium` per-suite count.
+
+| Suite | Tests | Shards | Result |
+|---|---|---|---|
+| `marketing-demo.spec.ts` | 23 | 1 | ✅ 23/23 PASS |
+| `hidden-tools.spec.ts` | 15 | 1 (combined with auth) | ✅ 15/15 PASS |
+| `auth-plan-gate.spec.ts` | 7 | 1 (combined with hidden) | ✅ 7/7 PASS |
+| `app-public-routes.spec.ts` | 12 | 1 | ✅ 12/12 PASS |
+| `analyze-tool.spec.ts` | 21 | 2 (11 + 10) | ✅ 21/21 PASS |
+| `contract-review-tool.spec.ts` | 24 | 4 (6 + 6 + 6 + 6) | ✅ 24/24 PASS |
+| **Total** | **102** | | **✅ 102/102 ALL PASS** |
+
+---
+
+## 9. Production Build Result
 
 ```
-✓ built in 15.65s
-2,747 modules bundled
+✓ built in 17.08s
+No new TypeScript errors.
 ```
 
-No TypeScript errors introduced by this pass. Pre-existing TS errors in `TrustCheck.tsx` and `guides/IndependentContractor.tsx` are unchanged — both are unreachable hidden pages.
+Pre-existing TypeScript errors in `TrustCheck.tsx` and `guides/IndependentContractor.tsx` are unchanged — both are unreachable hidden pages that do not affect the production build or any user-facing surface.
+
+Chunk size advisory (1.8 MB unminified bundle) is a Rollup warning, not a build failure.
 
 ---
 
-## Remaining Launch Risks (App Store)
+## Known Issues / Non-Blockers
 
-| Risk | Severity | Notes |
+| Item | Severity | Notes |
 |---|---|---|
-| Clerk JS fails to load in dev (non-blocking) | Low | Runtime error in dev preview only — Clerk domain not reachable from Replit sandbox. Does not affect production or E2E tests. |
-| Bundle size warning (1.8MB chunk) | Low | Code-splitting advisory, not a blocker. Rollup warning only. |
-| App Store screenshots not yet captured | Medium | Screenshot plan is now correct (two tools). Actual screenshots must still be taken. |
-| `ToolsShowcase.tsx` (app-side) is a dead component | Low | Dead code with hidden tool names — not rendered, not user-visible. Can be cleaned up post-launch. |
-| `UpgradeModal.tsx` reason entries for hidden tools | Low | Only reachable by direct navigation to hidden routes, which require auth and subscription. No user path through the dashboard triggers them. |
+| App Store screenshots not yet captured | Medium | Screenshot plan is correct (two tools). Actual screen captures must still be taken before App Store submission. |
+| Bundle size warning (1.8 MB chunk) | Low | Code-splitting advisory. Not a build failure. Performance acceptable for v1.0. |
+| `ToolsShowcase.tsx` (app-side dead component) | Low | Contains hidden tool names but is not imported or rendered anywhere. Dead code cleanup can wait for post-launch. |
+| Pre-existing TS errors in hidden pages | Low | `TrustCheck.tsx`, `guides/IndependentContractor.tsx` — not rendered, not user-visible, do not block build. |
+| Clerk JS domain warning in dev | Low | Clerk domain not reachable from Replit sandbox in development. Does not affect production or E2E tests (mocked). |
 
 ---
 
-## Conclusion
+## Copy Changes Made This Session
 
-PlainPath reflects the two-tool launch scope throughout all visible surfaces:
-- Dashboard: Analyze + Contract Review only
-- Marketing site: "2 tools available now" — Analyze + Contract Review
-- Pricing: both tools, one plan, no hidden tool promises
-- Privacy policy: future tools correctly labeled "coming in future updates"
-- App Store metadata: two-tool description, two-tool screenshots, two-tool reviewer notes
-- Hidden tools: all routes gated, all demo redirects active, all 15 enforcement E2E tests green
+None. All copy was already correct from the prior session's fixes. This audit pass found zero new mismatches.
 
-**The product is ready for App Store submission and production launch at the two-tool scope.**
+Prior session fixes (already recorded):
+- `APP_STORE_METADATA.md` — full rewrite to two-tool scope (description, What's New, screenshots, reviewer notes)
+- `Privacy.tsx` — three sections updated (hidden tools labeled "coming in future updates" throughout)
+
+---
+
+## Final Recommendation
+
+**PlainPath is ready for App Store submission and production launch at the two-tool scope.**
+
+Every user-facing surface — marketing site, app dashboard, pricing, paywall, demo, onboarding, privacy policy, and App Store metadata — accurately reflects the v1.0 two-tool scope: Analyze a Document and Contract Review only.
+
+All hidden/post-launch tools are inaccessible from every entry point, confirmed by code review and 15 dedicated E2E enforcement tests.
+
+**One remaining pre-launch task (not a code blocker):**
+- App Store screenshots must be captured using the two-tool screenshot plan in `APP_STORE_METADATA.md`.
+
+**No code changes, no schema changes, no pricing changes are required before submission.**

@@ -1,0 +1,125 @@
+PlainPath architecture documentation is now locked and accurate.
+
+Current locked baseline:
+- v1.0 launch scope = Analyze a Document + Contract Review only
+- 102/102 E2E tests passing across 6 suites
+- Hidden/post-launch tools are hidden and inaccessible
+- Hidden tools are not production-ready, not launch-approved, and not available to any user
+- No schema changes
+- No pricing/billing changes
+- No UI redesign
+
+Next task:
+Perform a final two-tool launch readiness audit.
+
+Goal:
+Verify every user-facing surface accurately reflects the v1.0 two-tool launch scope.
+
+Scope:
+
+1. Marketing site audit
+Review all public marketing pages and confirm they only market:
+- Analyze a Document
+- Contract Review
+
+Confirm no page implies these tools are currently available:
+- Clause Extractor
+- Compare Versions
+- Trust Check
+- Redact Sensitive Info
+- Ask This Document
+- Builder
+- Completion Engine
+- Packet Compiler
+
+2. Dashboard/tool grid audit
+Confirm the app dashboard only exposes:
+- Analyze a Document
+- Contract Review
+
+Confirm hidden/post-launch tools are not visible, not clickable, and not usable.
+
+3. Pricing/paywall audit
+Confirm pricing and paywall copy does not overpromise access to hidden tools.
+
+Acceptable language:
+- access to current PlainPath tools
+- Analyze a Document and Contract Review
+- future tools coming later only if clearly marked
+
+Unacceptable language:
+- access to all tools
+- full suite available
+- unlock every document tool
+- references implying hidden tools are included now
+
+4. Demo audit
+Confirm demos only showcase launch-approved experiences:
+- Analyze a Document demo
+- Contract Review demo
+
+Confirm demo pages do not imply hidden tools are usable.
+
+5. App Store readiness copy audit
+Review any app store related copy, screenshot plan, privacy copy, terms references, onboarding/paywall wording, and feature descriptions.
+
+Confirm all of it matches:
+- Analyze a Document
+- Contract Review
+- consumer document understanding
+- no legal advice overpromise
+- no hidden tool overpromise
+
+6. Privacy and terms consistency
+Confirm privacy and terms align with actual behavior:
+- uploaded files are not falsely described
+- saved analysis behavior is accurate
+- AI processing is described accurately
+- billing/subscription language is accurate
+- no unsupported claims
+
+7. Regression
+Run existing E2E suites in documented shards as needed:
+- marketing-demo.spec.ts
+- hidden-tools.spec.ts
+- auth-plan-gate.spec.ts
+- app-public-routes.spec.ts
+- analyze-tool.spec.ts
+- contract-review-tool.spec.ts
+
+Expected baseline:
+102/102 passing.
+
+8. Build
+Run production build.
+
+Known note:
+If TypeScript reports the already-known pre-existing hidden/unused errors in TrustCheck.tsx or IndependentContractor.tsx, document them but do not fix unless they block production build.
+
+Hard restrictions:
+- Do not unlock Clause Extractor.
+- Do not unlock Compare Versions.
+- Do not unlock Trust Check.
+- Do not unlock Redact.
+- Do not unlock Ask This Document.
+- Do not unlock Builder.
+- Do not add new tools.
+- Do not modify schema.
+- Do not change pricing amounts.
+- Do not redesign billing.
+- Do not redesign auth.
+- Do not redesign UI.
+- Do not build Completion Engine.
+- Do not build Packet Compiler.
+- Do not migrate the data model.
+
+Deliverables:
+- Files/pages reviewed
+- Any copy mismatches found
+- Any copy corrections made
+- Confirmation that only Analyze + Contract Review are visible
+- Confirmation hidden tools remain hidden/post-launch only
+- Final E2E count
+- Production build result
+- Remaining launch blockers, if any
+- Final recommendation: ready for launch or list exact blockers
