@@ -58,10 +58,11 @@ export default function Support() {
           </Item>
 
           <Item icon={CreditCard} title="How do I manage or cancel my subscription?">
-            Subscriptions are managed through Stripe. To cancel or update your plan, email us at{" "}
+            Subscriptions are managed through the platform where you subscribed. If you subscribed through the App Store,
+            manage your subscription through your Apple account settings. For billing questions or to cancel,
+            contact{" "}
             <a href="mailto:support@plainpathapp.com" className="text-primary underline underline-offset-2">support@plainpathapp.com</a>{" "}
-            and we'll send you a direct link to the billing portal. On iOS and Android, subscriptions are managed on the web
-            at <a href="https://plainpathapp.com" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2">plainpathapp.com</a>.
+            and we'll help you right away.
           </Item>
 
           <Item icon={FileText} title="What file types does PlainPath support?">

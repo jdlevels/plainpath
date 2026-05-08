@@ -33,6 +33,8 @@ export type EntitlementStatus = {
   found: boolean
   status: string
   plan: PlanKey
+  /** "manual" when Pro access is granted without a Stripe subscription (reviewer/test accounts). */
+  grantType?: string
   monthKey: string
   usageCount: number
   usageLimit: number

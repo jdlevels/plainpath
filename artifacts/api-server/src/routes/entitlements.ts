@@ -198,6 +198,7 @@ router.get("/status", async (req, res) => {
         found: true,
         status: "active",
         plan: "pro",
+        grantType: "manual",
         monthKey: getCurrentMonthKey(),
         usageCount,
         usageLimit: proEntitlements.analysesPerMonth,

@@ -188,6 +188,7 @@ export default function Billing() {
   // Admin is an internal role, not a billing tier. They always have Pro-equivalent access
   // but are NOT shown as having a Stripe subscription.
   const hasSub = !isAdmin && Boolean(entitlements?.found && entitlements.status === "active")
+  const isManualGrant = !isAdmin && entitlements?.grantType === "manual"
   const plan = hasSub ? (entitlements!.plan as "pro") : null
   const meta = plan ? PLAN_META[plan] : null
 
@@ -298,26 +299,32 @@ export default function Billing() {
                 </div>
               )}
 
-              {/* Manage button */}
-              <div className="mt-4 flex flex-col gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleManageSubscription}
-                  disabled={portalLoading}
-                  className="w-fit"
-                >
-                  {portalLoading ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" />
-                  ) : (
-                    <ExternalLink className="w-3.5 h-3.5 mr-2" />
+              {/* Manage button — hidden for manual/reviewer grant accounts */}
+              {isManualGrant ? (
+                <p className="mt-4 text-xs text-muted-foreground">
+                  PlainPath Pro access is active for this account. Subscription management is not available here.
+                </p>
+              ) : (
+                <div className="mt-4 flex flex-col gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleManageSubscription}
+                    disabled={portalLoading}
+                    className="w-fit"
+                  >
+                    {portalLoading ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" />
+                    ) : (
+                      <ExternalLink className="w-3.5 h-3.5 mr-2" />
+                    )}
+                    Manage subscription
+                  </Button>
+                  {portalError && (
+                    <p className="text-xs text-destructive">{portalError}</p>
                   )}
-                  Manage subscription
-                </Button>
-                {portalError && (
-                  <p className="text-xs text-destructive">{portalError}</p>
-                )}
-              </div>
+                </div>
+              )}
             </>
           ) : (
             <div className="space-y-4">

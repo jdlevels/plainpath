@@ -476,17 +476,14 @@ export default function Documents() {
             </div>
             <h2 className="text-lg font-semibold text-foreground mb-2">No saved work yet</h2>
             <p className="text-sm text-muted-foreground max-w-sm mx-auto mb-6">
-              Uploaded documents, Clause Extractor sessions, and Compare Versions comparisons all live here. Start a tool below to save your first item.
+              Uploaded documents live here. Start a tool below to save your first item.
             </p>
             <div className="flex flex-wrap gap-2 justify-center">
               <Button onClick={() => navigate("/analyze")} className="gap-1.5">
                 <FileText className="w-4 h-4" /> Analyze a Document
               </Button>
-              <Button variant="outline" onClick={() => navigate("/clause-extractor")} className="gap-1.5">
-                <ListChecks className="w-4 h-4" /> Clause Extractor
-              </Button>
-              <Button variant="outline" onClick={() => navigate("/compare-versions")} className="gap-1.5">
-                <GitCompare className="w-4 h-4" /> Compare Versions
+              <Button variant="outline" onClick={() => navigate("/contract-review")} className="gap-1.5">
+                <Scale className="w-4 h-4" /> Contract Review
               </Button>
             </div>
           </motion.div>

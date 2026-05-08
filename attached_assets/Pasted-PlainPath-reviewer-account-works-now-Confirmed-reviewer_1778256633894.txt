@@ -1,0 +1,120 @@
+PlainPath reviewer account works now.
+
+Confirmed:
+- reviewer@plainpathapp.com can log in
+- Dashboard is accessible
+- Analyze a Document works
+- Contract Review works
+- Reviewer is not blocked by paywall
+
+New issue:
+The account-side pages need cleanup before App Store submission.
+
+Hard launch scope:
+PlainPath v1.0 exposes only:
+1. Analyze a Document
+2. Contract Review
+
+All hidden/post-launch tools must remain hidden:
+- Document Trust Check
+- Clause Extractor
+- Compare Versions
+- Redaction
+- Ask This Document
+- Builder
+- Completion Engine
+- Packet Compiler
+
+Task:
+Clean the account-side user experience for App Store review.
+
+1. My Analyses cleanup
+The My Analyses page currently exposes hidden Trust Check language.
+
+Remove or hide all visible references to:
+- Document Trust Check
+- Saved Trust Checks
+- Run a Document Trust Check
+- Trust Check cards
+- Trust Check empty states
+
+Replace with v1.0-safe language:
+- Saved analyses
+- Saved document reviews
+- Analyze a Document
+- Contract Review
+
+The My Analyses page should only reference:
+- Analyze a Document
+- Contract Review
+- Saved analyses/history
+
+2. Billing page cleanup for reviewer/manual Pro accounts
+The reviewer account has Pro/manual entitlement, but the billing page shows:
+“No Stripe customer found. Please subscribe first.”
+
+This looks broken for App Store review.
+
+Fix behavior:
+- If the user has manual/reviewer Pro access but no Stripe customer, do not show a red error.
+- Hide or disable “Manage subscription” for manual/test reviewer accounts.
+- Show a clean message:
+  “Reviewer access is active. Subscription management is not available for this test account.”
+  or:
+  “PlainPath Pro access is active for this review account.”
+
+Do not change pricing.
+Do not change billing globally.
+Do not remove normal subscription management for real paying Stripe users.
+
+3. Support page subscription wording
+Update support FAQ wording to avoid iOS/App Store risk.
+
+Replace any wording that says iOS users manage subscriptions on the web.
+
+Use safer wording:
+“Subscriptions are managed through the platform where you subscribed. If you subscribed through the App Store, manage your subscription through your Apple account. For billing questions, contact support@plainpathapp.com.”
+
+4. Hidden tool audit
+Search the production user-facing app for these visible strings:
+- Trust Check
+- Document Trust Check
+- Clause Extractor
+- Compare Versions
+- Redact
+- Ask This Document
+- Builder
+- Packet Compiler
+- Completion Engine
+
+They should not appear in v1.0 user-facing pages, except internal documentation or explicitly hidden route tests.
+
+5. Regression
+Run relevant tests:
+- hidden-tools.spec.ts
+- auth-plan-gate.spec.ts
+- app-public-routes.spec.ts
+- analyze-tool.spec.ts if safe
+- contract-review-tool.spec.ts if safe
+
+Also run production build.
+
+Hard restrictions:
+- Do not unlock hidden tools.
+- Do not add new features.
+- Do not change pricing amounts.
+- Do not redesign UI.
+- Do not modify schema.
+- Do not change auth.
+- Do not bypass billing globally.
+- Do not expose hidden tools.
+
+Deliverables:
+- Files changed
+- My Analyses cleanup confirmation
+- Billing reviewer-account cleanup confirmation
+- Support FAQ wording confirmation
+- Hidden tool string audit result
+- Build result
+- Test result
+- Remaining App Store blockers, if any
