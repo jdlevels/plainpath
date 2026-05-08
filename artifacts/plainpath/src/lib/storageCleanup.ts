@@ -27,3 +27,20 @@ export function purgeUserScopedKeys(userId: string): void {
     // Non-critical — fail silently
   }
 }
+
+const SESSION_DOCUMENT_KEYS = [
+  "pii_redact_input",
+  "pii_analyze_text",
+  "pii_contract_review_text",
+  "pii_redact_file_name",
+]
+
+export function purgeSessionDocumentBuffers(): void {
+  try {
+    for (const key of SESSION_DOCUMENT_KEYS) {
+      sessionStorage.removeItem(key)
+    }
+  } catch {
+    // Non-critical — fail silently
+  }
+}

@@ -15,7 +15,7 @@ import { initStatusBar } from "@/lib/native";
 import { captureInboundRef } from "@/lib/referral";
 import { isNative } from "@/lib/platform";
 import { configureRevenueCat, purchaseNativePlan, restoreNativePurchases } from "@/lib/nativeBilling";
-import { purgeLegacyGlobalKeys } from "@/lib/storageCleanup";
+import { purgeLegacyGlobalKeys, purgeSessionDocumentBuffers } from "@/lib/storageCleanup";
 
 import Home from "@/pages/Home";
 import Import from "@/pages/Import";
@@ -238,7 +238,7 @@ function NativePaywallScreen() {
           <span className="font-bold text-base tracking-tight">PlainPath</span>
         </div>
         <button
-          onClick={() => void signOut({ redirectUrl: "/" })}
+          onClick={() => { purgeSessionDocumentBuffers(); void signOut({ redirectUrl: "/" }); }}
           className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
         >
           <LogOut className="w-3.5 h-3.5" />
@@ -342,7 +342,7 @@ function ChoosePlanScreen() {
           <span className="font-bold text-base tracking-tight">PlainPath</span>
         </div>
         <button
-          onClick={() => void signOut({ redirectUrl: "/" })}
+          onClick={() => { purgeSessionDocumentBuffers(); void signOut({ redirectUrl: "/" }); }}
           className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
         >
           <LogOut className="w-3.5 h-3.5" />
