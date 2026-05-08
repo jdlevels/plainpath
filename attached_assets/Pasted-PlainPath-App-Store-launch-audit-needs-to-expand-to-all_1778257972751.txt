@@ -1,0 +1,258 @@
+PlainPath App Store launch audit needs to expand to all actionable buttons and click paths.
+
+Reason:
+We found multiple action blockers:
+1. Sign Up previously did nothing.
+2. Free user paywall works, but clicking “Get PlainPath Pro” shows unauthorized_user.
+3. Reviewer account works, but normal user purchase path is blocked.
+
+Before App Store submission, audit every actionable button/link/CTA in the production app.
+
+Current locked launch scope:
+PlainPath v1.0 only exposes:
+1. Analyze a Document
+2. Contract Review
+
+Hidden tools must remain hidden:
+- Trust Check
+- Document Trust Check
+- Clause Extractor
+- Compare Versions
+- Redaction
+- Ask This Document
+- Builder
+- Completion Engine
+- Packet Compiler
+
+Task:
+Run a full actionable-button and click-path audit across the production app.
+
+Do not build new features.
+Do not unlock hidden tools.
+Do not change pricing.
+Do not redesign UI.
+Do not modify schema.
+
+Audit these areas:
+
+1. Public marketing site
+Check every CTA:
+- Sign Up
+- Sign In
+- Try Demo
+- View Demo
+- Start / Get Started
+- Pricing
+- Contact / Support
+- Privacy
+- Terms
+- Any footer links
+- Any mobile nav links
+
+Expected:
+- No button does nothing.
+- Every CTA either navigates to a valid route, opens a valid modal, or shows a clear disabled/coming-soon state.
+- No hidden tools are linked.
+
+2. Auth flow
+Check:
+- Sign Up from homepage
+- Sign In from homepage
+- /sign-up route
+- /sign-in route
+- Sign out
+- Account menu
+- Reviewer login
+- Free user login
+
+Expected:
+- Sign Up works.
+- Sign In works.
+- Sign Out works.
+- No broken accounts.plainpathapp.com redirect.
+- No no-op click.
+
+3. Paywall / pricing / subscription flow
+Check:
+- Get PlainPath Pro
+- Subscribe
+- Restore subscription
+- Manage subscription
+- Billing support links
+- Upgrade links from dashboard/tool pages
+
+Expected:
+- Normal unpaid users can reach the purchase/subscription flow.
+- Normal unpaid users do not get Pro automatically.
+- reviewer@plainpathapp.com keeps manual Pro access.
+- Reviewer does not see broken subscription errors.
+- No unauthorized_user error on checkout.
+- iOS purchase path is App Store / RevenueCat compliant.
+- Web purchase path, if present, works only where allowed.
+
+4. Dashboard
+Check:
+- Analyze a Document card
+- Contract Review card
+- Start first document
+- My Documents
+- My Analyses
+- Plan/Billing
+- Support
+- Account/profile menu
+- Theme toggle if present
+- Back/navigation controls
+
+Expected:
+- Only Analyze a Document and Contract Review are actionable production tools.
+- No hidden tool cards appear.
+- No broken routes.
+- No empty no-op buttons.
+
+5. Analyze a Document tool
+Check:
+- Upload/select file
+- Remove file
+- Start analysis
+- Cancel/back
+- Save analysis
+- View result
+- Share/export if present
+- Error retry if present
+
+Expected:
+- Every button works or is intentionally hidden.
+- Error states are readable.
+- No hidden tools are referenced.
+
+6. Contract Review tool
+Check:
+- Upload/select contract
+- Remove file
+- Start review
+- Cancel/back
+- Expand/collapse sections
+- Save review
+- View result
+- Share/export if present
+- Error retry if present
+
+Expected:
+- Every action works.
+- Balanced Clauses behavior remains correct.
+- No old “Red Flags,” “Watch Outs,” or “Do Not Sign” language appears.
+
+7. My Analyses / saved results
+Check:
+- Analyze a document button
+- Open saved analysis
+- Delete saved analysis if present
+- Empty state CTA
+- Any saved-history controls
+
+Expected:
+- No Trust Check language.
+- No Document Trust Check language.
+- No hidden-tool routes.
+- Empty state only references Analyze a Document and Contract Review.
+
+8. Support / legal pages
+Check:
+- Support email link
+- Privacy link
+- Terms link
+- Billing help link
+- Account deletion wording
+- Subscription management wording
+
+Expected:
+- Links work.
+- iOS subscription wording is safe:
+  “Subscriptions are managed through the platform where you subscribed. If you subscribed through the App Store, manage your subscription through your Apple account.”
+
+9. Mobile viewport
+Repeat critical click paths at mobile width:
+- Sign Up
+- Sign In
+- Dashboard navigation
+- Analyze card
+- Contract Review card
+- Paywall/subscribe
+- Account menu
+- Support/legal links
+
+Expected:
+- No hidden buttons.
+- No blocked clicks.
+- No offscreen required action.
+- No layout overflow that prevents action.
+
+10. Hidden tool exposure audit
+Search user-facing code and production UI for:
+- Trust Check
+- Document Trust Check
+- Clause Extractor
+- Compare Versions
+- Redact
+- Ask This Document
+- Builder
+- Packet Compiler
+- Completion Engine
+
+Expected:
+- These do not appear in user-facing v1.0 surfaces.
+- Direct routes are blocked or redirected.
+- No hidden tool can be launched by URL.
+
+11. Test coverage
+Add or update smoke/E2E tests proving:
+- All major public CTAs navigate correctly
+- Sign Up is not a no-op
+- Sign In is not a no-op
+- Free user checkout does not return unauthorized_user
+- Reviewer account has Pro access
+- Free user does not have Pro before purchase
+- Hidden tools remain hidden
+- Tool page primary actions are clickable
+- Mobile nav critical paths work
+
+Run existing tests if safe:
+- marketing-demo.spec.ts
+- hidden-tools.spec.ts
+- auth-plan-gate.spec.ts
+- app-public-routes.spec.ts
+- analyze-tool.spec.ts
+- contract-review-tool.spec.ts
+
+12. Report
+Create or update:
+
+docs/actionable-button-clickpath-audit.md
+
+Include:
+- Button/link audited
+- Route or action expected
+- Actual result
+- Pass/fail
+- Fix applied, if any
+- Remaining blockers
+
+Hard restrictions:
+- Do not unlock hidden tools.
+- Do not add new tools.
+- Do not change pricing amount.
+- Do not bypass billing globally.
+- Do not give all users Pro.
+- Do not modify schema.
+- Do not redesign UI.
+- Do not change the two-tool launch scope.
+
+Acceptance criteria:
+- No visible button silently does nothing.
+- No visible button routes to a broken page.
+- Free user can start subscription flow.
+- Reviewer account works.
+- Normal free user remains paywalled.
+- Hidden tools remain hidden.
+- Production build passes.
+- Remaining App Store blockers are listed clearly.

@@ -1,0 +1,85 @@
+PlainPath entitlement test result:
+
+1. reviewer@plainpathapp.com
+- Can sign in
+- Gets PlainPath Pro
+- Can access Analyze a Document and Contract Review
+- This is correct for Apple reviewer access
+
+2. freeuser-test@plainpathapp.com
+- Can sign up and verify email
+- Does NOT get Pro automatically
+- Lands on the paywall/subscription screen
+- This part is correct
+
+Problem:
+When the free user clicks “Get PlainPath Pro,” the app shows a red error:
+
+unauthorized_user
+
+This means the public subscription/checkout path is blocked.
+
+This is a launch blocker because normal users can sign up but cannot purchase.
+
+Task:
+Fix the public paywall/checkout authorization path.
+
+Required outcome:
+- Normal unpaid users can reach the subscription purchase flow.
+- Normal unpaid users do NOT get Pro unless they subscribe.
+- reviewer@plainpathapp.com keeps manual Pro access.
+- Hidden tools remain hidden.
+
+Required diagnosis:
+1. Identify which API route/action fires when clicking “Get PlainPath Pro.”
+2. Find where unauthorized_user is produced.
+3. Check whether ALLOWED_EMAILS middleware blocks the checkout/subscription request.
+4. Check whether the checkout route incorrectly requires the user email to be allowlisted.
+5. Confirm whether the web checkout path is Stripe, RevenueCat, App Store IAP, or mixed.
+6. Confirm the iOS app path does not rely on blocked external Stripe checkout unless intentionally configured and App Store-compliant.
+
+Correct behavior:
+- Authenticated normal user should be allowed to call checkout/subscription-start route.
+- If using Stripe on web, route should create checkout session for authenticated users.
+- If using RevenueCat/App Store on iOS, iOS should route to the correct in-app purchase flow.
+- The allowlist must not block public subscription purchase.
+- ALLOWED_EMAILS should not prevent normal public users from subscribing.
+
+Do not:
+- Give all users Pro
+- Add freeuser-test@plainpathapp.com to MANUAL_PRO_EMAILS
+- Add free users to reviewer access
+- Unlock hidden tools
+- Change pricing amount
+- Bypass billing globally
+- Disable entitlement checks after purchase
+- Redesign the UI
+
+Test cases required:
+1. reviewer@plainpathapp.com:
+   - Pro active
+   - no checkout required
+   - Analyze + Contract Review available
+
+2. freeuser-test@plainpathapp.com:
+   - no Pro before purchase
+   - paywall visible
+   - clicking Get PlainPath Pro starts purchase flow
+   - no unauthorized_user error
+
+3. unauthenticated user:
+   - cannot access production tools
+   - redirected to sign-in/sign-up
+
+4. hidden tools:
+   - remain hidden for reviewer, free user, and paid user
+
+Deliverables:
+- Root cause of unauthorized_user
+- Files changed
+- Whether ALLOWED_EMAILS was involved
+- Confirm free user can reach checkout
+- Confirm reviewer access still works
+- Confirm hidden tools remain hidden
+- Build result
+- Remaining App Store blockers

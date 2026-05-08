@@ -6,7 +6,6 @@ import multer from "multer";
 import rateLimit from "express-rate-limit";
 import { clerkMiddleware, getAuth } from "@clerk/express";
 import { CLERK_PROXY_PATH, clerkProxyMiddleware } from "./middlewares/clerkProxyMiddleware";
-import { allowlistEnforcement } from "./middlewares/allowlistEnforcement";
 import router from "./routes";
 import stripeRoutes from "./routes/stripe";
 import entitlementRoutes from "./routes/entitlements";
@@ -174,7 +173,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.use(clerkMiddleware());
-app.use(allowlistEnforcement());
 
 // ---------------------------------------------------------------------------
 // Rate limiting
