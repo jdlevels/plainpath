@@ -1,0 +1,140 @@
+PlainPath launch blocker found during App Store preparation.
+
+Issue:
+On the live website, clicking Sign Up redirects to:
+
+accounts.plainpathapp.com/sign-up
+
+Chrome shows:
+
+ERR_SSL_VERSION_OR_CIPHER_MISMATCH
+
+This blocks account creation, Apple reviewer login setup, and App Store submission.
+
+Task:
+Run a production launch-blocker audit focused on auth, paywalls, reviewer access, and iOS submission readiness.
+
+Do not build new features.
+Do not unlock hidden tools.
+Do not redesign UI.
+Do not change pricing.
+Do not change schema.
+
+Part 1 — Auth domain diagnosis
+Confirm:
+- What auth provider is being used.
+- Whether accounts.plainpathapp.com is intended to be a Clerk/custom auth domain.
+- Whether accounts.plainpathapp.com has the correct DNS record.
+- Whether the SSL certificate is valid and active.
+- Whether the app redirects to the correct production sign-up/sign-in URL.
+- Whether the issue is DNS, SSL, Clerk custom domain verification, or app config.
+
+Acceptance:
+- Sign Up works from plainpathapp.com.
+- Sign In works from plainpathapp.com.
+- No SSL/cipher mismatch appears.
+- Auth works in incognito/private browser.
+
+Part 2 — Reviewer account readiness
+Set up or confirm reviewer account:
+
+reviewer@plainpathapp.com
+
+Requirements:
+- Account can sign in.
+- Account can reach the dashboard.
+- Account can access Analyze a Document.
+- Account can access Contract Review.
+- Account is not blocked by subscription/paywall.
+- Account does not expose hidden tools.
+
+Do not expose admin tools.
+Do not globally bypass billing.
+Use an existing safe entitlement/test-account mechanism if available.
+
+Part 3 — Paywall and entitlement audit
+Confirm:
+- Guest users cannot access production tools.
+- Unauthenticated users are redirected correctly.
+- Free/non-entitled users see the correct paywall or locked state.
+- Paid/entitled users can use Analyze a Document and Contract Review.
+- reviewer@plainpathapp.com can use the two launch tools without paying.
+- Hidden tools remain hidden and inaccessible.
+- Pricing/paywall copy only promises the two current tools.
+
+Part 4 — iOS billing/subscription readiness
+Confirm:
+- iOS app does not send users to an external Stripe checkout for digital subscription access.
+- RevenueCat/App Store subscription path is configured or clearly identified as a blocker.
+- Subscription product IDs match the app configuration.
+- Paywall copy says only current tools are included:
+  Analyze a Document and Contract Review.
+- No “all tools,” “full suite,” or hidden-tool promise appears.
+
+Part 5 — Production smoke test
+In production or production-like environment, verify:
+- Home page loads.
+- Pricing page loads.
+- Privacy policy loads.
+- Terms page loads.
+- Support/contact URL works.
+- Sign Up works.
+- Sign In works.
+- Dashboard loads.
+- Analyze a Document page loads.
+- Contract Review page loads.
+- Upload state works.
+- Mock/test document result flow works if safe.
+- Error states are readable.
+- Mobile viewport is usable.
+
+Part 6 — Regression
+Run existing E2E shards if safe:
+- marketing-demo.spec.ts
+- hidden-tools.spec.ts
+- auth-plan-gate.spec.ts
+- app-public-routes.spec.ts
+- analyze-tool.spec.ts
+- contract-review-tool.spec.ts
+
+Expected baseline:
+102/102 passing.
+
+Part 7 — Report
+Create or update:
+
+docs/app-store-launch-blocker-audit.md
+
+Include:
+- root cause of accounts.plainpathapp.com SSL issue
+- exact DNS/config fix needed or applied
+- auth status
+- reviewer account status
+- paywall/entitlement status
+- iOS billing/subscription status
+- production smoke test result
+- E2E result
+- remaining blockers
+- final recommendation: submit or do not submit
+
+Hard restrictions:
+- Do not unlock Clause Extractor.
+- Do not unlock Compare Versions.
+- Do not unlock Trust Check.
+- Do not unlock Redaction.
+- Do not unlock Ask This Document.
+- Do not unlock Builder.
+- Do not build Completion Engine.
+- Do not build Packet Compiler.
+- Do not change pricing amounts.
+- Do not redesign auth unless the current config is broken.
+- Do not bypass auth in production.
+- Do not expose secrets.
+
+Acceptance criteria:
+- Sign-up/sign-in works securely.
+- Reviewer account works.
+- Reviewer account bypasses paywall only through a safe controlled entitlement/test-user rule.
+- Two live tools work.
+- Hidden tools remain hidden.
+- App Store blockers are listed clearly.

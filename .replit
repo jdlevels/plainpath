@@ -37,5 +37,8 @@ ACCESS_MODE = "internal_only"
 MANUAL_PRO_EMAILS = "yelevels@gmail.com,reviewer@plainpathapp.com"
 VITE_ANALYZE_COMPLETION_FLOW_ENABLED = "true"
 
+[userenv.production]
+VITE_CLERK_PROXY_URL = "https://plain-path.replit.app/api/__clerk"
+
 [nix]
 channel = "stable-25_05"
