@@ -14,6 +14,45 @@ import { ParseResourceLimitError } from "./parseWithLimits.js";
 
 const TIMEOUT_MS = 30_000; // 30 seconds max per PDF operation
 
+// ─── Concurrency guard ────────────────────────────────────────────────────────
+// Each PDF utility request loads full PDF data into memory and runs cpu-bound
+// pdf-lib operations inside a worker thread. Without a global cap, a single
+// authenticated user can fan out many concurrent requests and exhaust RAM or
+// CPU before any page-count limits are enforced.
+//
+// The permit must be acquired BEFORE multer buffers the upload so that at-
+// capacity requests are rejected before any attacker-controlled bytes are read
+// into memory. The route layer is responsible for calling tryAcquirePdfWorkerPermit
+// in a pre-upload middleware and releasing via releasePdfWorkerPermit on
+// response finish/close.
+//
+// MAX_CONCURRENT_PDF_WORKERS limits the total number of concurrent PDF utility
+// requests (upload buffering + worker execution) across all users.
+const MAX_CONCURRENT_PDF_WORKERS = 3;
+let activePdfWorkers = 0;
+
+/**
+ * Attempt to acquire a concurrency permit.
+ * Returns true if the permit was granted; false if the system is at capacity.
+ * Call this BEFORE multer to reject over-limit requests before upload buffering.
+ */
+export function tryAcquirePdfWorkerPermit(): boolean {
+  if (activePdfWorkers < MAX_CONCURRENT_PDF_WORKERS) {
+    activePdfWorkers++;
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Release a previously acquired concurrency permit.
+ * Must be called exactly once per successful tryAcquirePdfWorkerPermit(),
+ * regardless of whether the request succeeded or failed.
+ */
+export function releasePdfWorkerPermit(): void {
+  if (activePdfWorkers > 0) activePdfWorkers--;
+}
+
 // ─── Message shapes matching pdfUtilWorker.ts ─────────────────────────────────
 interface WorkerSuccess {
   ok: true;
@@ -54,6 +93,10 @@ function workerBundlePath(): string {
 
 /**
  * Runs a pdf-lib operation inside an isolated worker_thread.
+ *
+ * The caller is responsible for holding a concurrency permit (acquired via
+ * tryAcquirePdfWorkerPermit() in a pre-upload middleware) for the full
+ * request lifetime. This function does not acquire or release a permit itself.
  *
  * @param op              Operation name (must match a case in pdfUtilWorker.ts).
  * @param params          Parameters for the operation.  Any ArrayBuffers that

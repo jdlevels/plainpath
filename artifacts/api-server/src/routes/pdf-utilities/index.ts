@@ -6,12 +6,21 @@
 // All pdf-lib work is delegated to an isolated worker_thread (pdfUtilWorker.mjs)
 // so that a parser-bomb PDF cannot stall or crash the main API process.
 // The worker is terminated after TIMEOUT_MS regardless of progress.
+//
+// Availability protection: pdfConcurrencyGate runs BEFORE multer so that
+// at-capacity requests are rejected (HTTP 503) before any upload bytes are
+// buffered in memory, closing the fan-out / OOM attack surface.
 // ──────────────────────────────────────────────────────────────────────────────
 
 import { Router } from "express";
 import multer from "multer";
 import { getAuth } from "@clerk/express";
-import { runPdfUtilInWorker, toTransferableArrayBuffer } from "../../lib/runPdfUtilInWorker.js";
+import {
+  runPdfUtilInWorker,
+  toTransferableArrayBuffer,
+  tryAcquirePdfWorkerPermit,
+  releasePdfWorkerPermit,
+} from "../../lib/runPdfUtilInWorker.js";
 import { ParseResourceLimitError } from "../../lib/parseWithLimits.js";
 
 const router = Router();
@@ -40,6 +49,33 @@ function requireAuth(req: any, res: any, next: any) {
   next();
 }
 
+// ─── Pre-upload concurrency gate ─────────────────────────────────────────────
+// Acquires a concurrency permit BEFORE multer buffers the request body.
+// If the system is at capacity, the request is rejected immediately with
+// HTTP 503 — no upload bytes are read into memory.
+// On response finish/close the permit is released exactly once.
+function pdfConcurrencyGate(req: any, res: any, next: any): void {
+  if (!tryAcquirePdfWorkerPermit()) {
+    res.status(503).json({
+      error: "service_busy",
+      message: "PDF utility service is busy. Please try again in a moment.",
+    });
+    return;
+  }
+
+  let released = false;
+  const release = () => {
+    if (!released) {
+      released = true;
+      releasePdfWorkerPermit();
+    }
+  };
+  res.on("finish", release);
+  res.on("close", release);
+
+  next();
+}
+
 function sendPdf(res: any, buf: Buffer, name: string) {
   const safeName = name.replace(/[^\w.\-]/g, "_");
   res.setHeader("Content-Type", "application/pdf");
@@ -65,6 +101,7 @@ function handleWorkerError(res: any, err: unknown, tag: string): void {
 router.post(
   "/page-count",
   requireAuth,
+  pdfConcurrencyGate,
   upload.single("file"),
   async (req: any, res) => {
     const file = req.file;
@@ -88,6 +125,7 @@ router.post(
 router.post(
   "/merge",
   requireAuth,
+  pdfConcurrencyGate,
   upload.fields(
     Array.from({ length: MAX_FILES }, (_, i) => ({ name: `file_${i}`, maxCount: 1 })),
   ),
@@ -125,6 +163,7 @@ router.post(
 router.post(
   "/extract-pages",
   requireAuth,
+  pdfConcurrencyGate,
   upload.single("file"),
   async (req: any, res) => {
     const file = req.file;
@@ -161,6 +200,7 @@ router.post(
 router.post(
   "/page-ops",
   requireAuth,
+  pdfConcurrencyGate,
   upload.single("file"),
   async (req: any, res) => {
     const file = req.file;
@@ -195,6 +235,7 @@ router.post(
 router.post(
   "/compress",
   requireAuth,
+  pdfConcurrencyGate,
   upload.single("file"),
   async (req: any, res) => {
     const file = req.file;
