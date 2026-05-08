@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { getAuth, clerkClient } from "@clerk/express";
 import { pool } from "@workspace/db";
-import { getSubscriberByEmail, getTeamFromBilling } from "../../lib/billingDb";
+import { getSubscriberByEmail, getSubscriberByClerkUserId, getTeamFromBilling } from "../../lib/billingDb";
 import crypto from "crypto";
 
 const router = Router();
@@ -50,7 +50,18 @@ async function requireTeamPlan(req: any, res: any, next: any) {
   const adminEmails = (process.env.ADMIN_EMAILS ?? "").split(",").map((e: string) => e.trim()).filter(Boolean);
   if (adminEmails.includes(email)) return next();
 
-  const sub = getSubscriberByEmail(email);
+  // Prefer lookup by clerkUserId (immutable identity); fall back to email only
+  // when the email-matched row is unbound or already bound to this same user.
+  // This mirrors the ownership check in resolvePlan.ts and prevents a user
+  // from claiming a Team subscription that belongs to a different Clerk account.
+  const byClerkId = getSubscriberByClerkUserId(req.userId);
+  const byEmail = !byClerkId ? getSubscriberByEmail(email) : null;
+  const sub =
+    byClerkId ??
+    (byEmail && (!byEmail.clerkUserId || byEmail.clerkUserId === req.userId)
+      ? byEmail
+      : null);
+
   if (!sub || sub.plan !== "team" || sub.status !== "active") {
     return res.status(403).json({ error: "team_plan_required", message: "This feature requires a Team plan." });
   }
