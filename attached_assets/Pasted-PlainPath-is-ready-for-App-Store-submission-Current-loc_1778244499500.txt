@@ -1,0 +1,101 @@
+PlainPath is ready for App Store submission.
+
+Current locked state:
+- v1.0 launch scope = Analyze a Document + Contract Review only
+- 102/102 E2E tests passing
+- Production build clean
+- Hidden/post-launch tools remain hidden
+- Apple Developer account is approved
+- No feature expansion before launch
+
+Task:
+Prepare the final App Store submission package and iOS build checklist.
+
+Do not build new features.
+Do not unlock hidden tools.
+Do not change pricing.
+Do not redesign the UI.
+
+Scope:
+
+1. Confirm iOS packaging path
+Identify whether the current app is packaged using:
+- Xcode native project
+- Capacitor
+- Expo/EAS
+- another wrapper/build system
+
+2. Confirm bundle configuration
+Check and report:
+- Bundle ID
+- App display name
+- Version number
+- Build number
+- iOS deployment target
+- Required permissions
+- Any Info.plist privacy strings
+
+3. Confirm App Store metadata
+Prepare final copy for:
+- App name
+- Subtitle
+- Promotional text, if used
+- Description
+- Keywords
+- Support URL
+- Marketing URL, if used
+- Privacy Policy URL
+- Terms URL
+- Reviewer notes
+
+All copy must reflect only two tools:
+- Analyze a Document
+- Contract Review
+
+4. Confirm screenshot checklist
+Prepare the final five-screenshot list:
+- Analyze upload
+- Analyze results
+- Contract Review upload/input
+- Contract Review results/clauses
+- Upgrade/subscription screen
+
+Do not include hidden tools.
+
+5. Confirm subscription/IAP metadata
+Verify subscription copy does not overpromise hidden tools.
+Use language like:
+“Access PlainPath’s current tools: Analyze a Document and Contract Review.”
+
+6. Confirm final launch safeguards
+Verify:
+- Hidden tools remain hidden
+- Dashboard only exposes Analyze + Contract Review
+- Pricing copy does not say “all tools” or “full suite”
+- App Store copy does not mention hidden tools
+- Privacy policy URL works
+- Terms URL works
+
+7. Final build readiness
+Run:
+- production build
+- existing E2E shard checklist if safe
+- any iOS packaging checks available
+
+Deliverables:
+- iOS packaging method
+- bundle ID
+- version/build number
+- App Store metadata draft
+- screenshot checklist
+- reviewer notes draft
+- final build/submission checklist
+- any blockers
+
+Hard restrictions:
+- No new features
+- No hidden tool unlocks
+- No schema changes
+- No billing redesign
+- No pricing changes
+- No UI redesign

@@ -129,9 +129,16 @@ Test the app using the built-in demo documents (no upload required):
 - Tap "Analyze a Document" → select a pre-loaded demo document → tap Analyze
 - Tap "Contract Review" → paste any contract text → tap Review This Contract
 
-Subscriptions are managed on the web at plainpathapp.com. There are no
-in-app purchases. The upgrade prompt shown to free users is informational only
-and contains no buy button or external payment link.
+**Subscription / In-App Purchase:**
+PlainPath Pro is offered as a monthly auto-renewing subscription at $19.99/month,
+managed via StoreKit. Signed-in users without an active subscription are shown
+the native paywall screen where they can subscribe or restore a previous purchase.
+A "Restore Purchases" button is present on the paywall screen as required.
+
+To test the subscription flow, use a Sandbox Apple ID. The subscription unlocks
+both tools (Analyze a Document and Contract Review) and saved analysis history.
+
+Free users may use the app in demo mode without signing in or subscribing.
 
 ---
 
