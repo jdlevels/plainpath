@@ -388,11 +388,12 @@ export default function Documents() {
   // ─── Helpers ──────────────────────────────────────────────────────────────
 
   const hasAnyContent =
-    docs.length > 0 || clauseSessions.length > 0 || compareSessions.length > 0 ||
+    docs.length > 0 ||
     (BUILDER_ENABLED && builderDocs.length > 0)
 
   const totalItemCount =
-    docs.length + clauseSessions.length + compareSessions.length +
+    docs.length +
+    clauseSessions.length + compareSessions.length +
     (BUILDER_ENABLED ? builderDocs.length : 0)
 
   const allSectionsFailed =
@@ -699,7 +700,7 @@ export default function Documents() {
         {/* ── SECTION: Clause Extractor Sessions ───────────────────────────── */}
         {!loading && (
           <>
-            {(clauseSessions.length > 0 || pdfLoading || (!showGlobalBanner && !!pdfError) || (!pdfLoading && !pdfError && clauseSessions.length === 0 && hasAnyContent)) && (
+            {(clauseSessions.length > 0 || pdfLoading || (!showGlobalBanner && !!pdfError)) && (
               <SectionHeader
                 icon={ListChecks}
                 label="Clause Extractor"
@@ -724,18 +725,6 @@ export default function Documents() {
               </div>
             )}
 
-            {!pdfLoading && !pdfError && clauseSessions.length === 0 && hasAnyContent && (
-              <div className="flex items-center gap-3 py-3 px-4 rounded-xl border border-dashed border-border/40 bg-card/60 mb-3">
-                <ListChecks className="w-4 h-4 shrink-0 text-purple-400/50" />
-                <span className="flex-1 text-xs text-muted-foreground">No Clause Extractor sessions yet.</span>
-                <button
-                  onClick={() => navigate("/clause-extractor")}
-                  className="text-xs font-medium text-purple-500 hover:text-purple-600 transition-colors shrink-0"
-                >
-                  Extract Clauses →
-                </button>
-              </div>
-            )}
 
             {!pdfLoading && clauseSessions.length > 0 && (
               <div className="space-y-3">
@@ -849,7 +838,7 @@ export default function Documents() {
         {/* ── SECTION: Compare Versions Sessions ───────────────────────────── */}
         {!loading && (
           <>
-            {(compareSessions.length > 0 || compareLoading || (!showGlobalBanner && !!compareError) || (!compareLoading && !compareError && compareSessions.length === 0 && hasAnyContent)) && (
+            {(compareSessions.length > 0 || compareLoading || (!showGlobalBanner && !!compareError)) && (
               <SectionHeader
                 icon={GitCompare}
                 label="Compare Versions"
@@ -874,18 +863,6 @@ export default function Documents() {
               </div>
             )}
 
-            {!compareLoading && !compareError && compareSessions.length === 0 && hasAnyContent && (
-              <div className="flex items-center gap-3 py-3 px-4 rounded-xl border border-dashed border-border/40 bg-card/60 mb-3">
-                <GitCompare className="w-4 h-4 shrink-0 text-teal-400/50" />
-                <span className="flex-1 text-xs text-muted-foreground">No Compare Versions sessions yet.</span>
-                <button
-                  onClick={() => navigate("/compare-versions")}
-                  className="text-xs font-medium text-teal-500 hover:text-teal-600 transition-colors shrink-0"
-                >
-                  Compare two versions →
-                </button>
-              </div>
-            )}
 
             {!compareLoading && compareSessions.length > 0 && (
               <div className="space-y-3">
