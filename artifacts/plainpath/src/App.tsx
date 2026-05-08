@@ -83,6 +83,16 @@ const clerkPubKey = _keyMatch
 const clerkProxyUrl = import.meta.env.VITE_CLERK_PROXY_URL;
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
+// Load Clerk JS through the proxy when proxyUrl is configured.
+// clerk.plainpathapp.com DNS is not yet pointed at Clerk's CDN, so the
+// default clerkJSUrl (derived from the publishable key's custom domain) fails
+// with a TLS handshake error.  Routing through the proxy hits
+// frontend-api.clerk.dev directly, which does resolve and redirects to the
+// pinned version URL — no DNS changes required.
+const clerkJSUrl = clerkProxyUrl
+  ? `${clerkProxyUrl}/npm/@clerk/clerk-js@6/dist/clerk.browser.js`
+  : undefined;
+
 if (!clerkPubKey || (!clerkPubKey.startsWith("pk_live_") && !clerkPubKey.startsWith("pk_test_"))) {
   throw new Error(
     `VITE_CLERK_PUBLISHABLE_KEY is missing or invalid. ` +
@@ -559,7 +569,7 @@ function Router() {
           <Switch>
             {/* ── Public routes (no auth required) ── */}
             <Route path="/sign-in/*?" component={SignInPage} />
-            <Route path="/sign-up/*?">{() => { window.location.replace(`${basePath}/sign-in`); return null; }}</Route>
+            <Route path="/sign-up/*?">{() => { window.location.replace(`${basePath}/sign-in${window.location.search}`); return null; }}</Route>
             <Route path="/privacy" component={Privacy} />
             <Route path="/terms" component={Terms} />
             <Route path="/support" component={Support} />
@@ -649,6 +659,7 @@ function ClerkProviderWithRoutes() {
     <ClerkProvider
       publishableKey={clerkPubKey}
       proxyUrl={clerkProxyUrl || undefined}
+      clerkJSUrl={clerkJSUrl}
       signInUrl={`${basePath}/sign-in`}
       signUpUrl={`${basePath}/sign-in`}
       routerPush={(to) => setLocation(stripBase(to))}

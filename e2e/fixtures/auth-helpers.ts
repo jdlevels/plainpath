@@ -149,7 +149,7 @@ export async function setupAuthMocks(page: Page): Promise<void> {
         })
     ),
 
-    // npm package requests (clerk-js, etc.) through the proxy
+    // npm package requests (clerk-js, etc.) through the custom domain
     page.route(
       (url) =>
         url.hostname.includes("clerk.plainpathapp.com") &&
@@ -159,6 +159,23 @@ export async function setupAuthMocks(page: Page): Promise<void> {
           status: 200,
           contentType: "application/javascript; charset=utf-8",
           body: "/* mocked npm package */",
+        })
+    ),
+
+    // Clerk JS loaded through the production proxy URL
+    // (plain-path.replit.app/api/__clerk/npm/@clerk/clerk-js@6/...)
+    // In dev VITE_CLERK_PROXY_URL is unset so this URL never appears, but
+    // this intercept future-proofs the fixture if the proxy URL is ever
+    // active in a dev build.
+    page.route(
+      (url) =>
+        url.pathname.includes("/api/__clerk/npm/") &&
+        url.pathname.includes("clerk"),
+      (route) =>
+        route.fulfill({
+          status: 200,
+          contentType: "application/javascript; charset=utf-8",
+          body: "/* clerk mock — proxy npm package intercepted */",
         })
     ),
 

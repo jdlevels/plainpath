@@ -1,0 +1,108 @@
+PlainPath auth blocker continues after the previous SSL fix.
+
+Current user-facing behavior:
+- On https://plainpathapp.com, clicking Sign Up now does nothing.
+- Tested in normal browser and incognito.
+- Previous issue was ERR_SSL_VERSION_OR_CIPHER_MISMATCH on accounts.plainpathapp.com.
+- That SSL redirect issue appears to have been avoided, but now the Sign Up action is non-functional.
+
+This is a hard App Store launch blocker.
+
+Task:
+Diagnose and fix the live production Sign Up / Sign In flow.
+
+Do not build new features.
+Do not unlock hidden tools.
+Do not change pricing.
+Do not redesign UI.
+Do not change schema.
+
+Required investigation:
+
+1. Confirm production deployment state
+- Confirm the latest production deployment includes:
+  - VITE_CLERK_PROXY_URL production fix
+  - VITE_BUILDER_ENABLED=false in production
+  - ALLOWED_EMAILS includes reviewer@plainpathapp.com
+  - MANUAL_PRO_EMAILS includes reviewer@plainpathapp.com
+
+2. Diagnose Sign Up click behavior
+Inspect the production home page and identify:
+- Which component renders the Sign Up button/link
+- Whether it is a Clerk SignUpButton, anchor link, router link, or custom onClick
+- Whether the click handler fires
+- Whether the button is disabled
+- Whether another element is overlaying/capturing the click
+- Whether browser console errors appear on click
+- Whether network requests are attempted on click
+
+3. Diagnose Clerk initialization
+Confirm:
+- Clerk publishable key is present in production
+- ClerkProvider initializes successfully
+- Clerk JS loads successfully
+- Clerk proxy URL is valid
+- No Clerk domain/proxy console errors occur
+- Sign-in/sign-up routes are correctly configured
+
+4. Verify route behavior
+Test these directly in production or production-like mode:
+- /
+- /sign-up
+- /sign-in
+- /app/sign-up
+- /app/sign-in
+- /app
+
+Expected:
+- Sign Up button must navigate to a working secure sign-up page or open a working sign-up modal.
+- Sign In button must navigate to a working secure sign-in page or open a working sign-in modal.
+- No broken accounts.plainpathapp.com redirect.
+- No button no-op behavior.
+
+5. Preferred fix
+Use the safest production-stable auth flow.
+
+If Clerk hosted/custom domain is unreliable, use the existing in-app sign-up/sign-in routes or Clerk default hosted flow that is confirmed working.
+
+Do not point users to accounts.plainpathapp.com unless that domain has valid DNS and SSL.
+
+6. Add smoke/E2E coverage
+Add or update a production-like smoke test proving:
+- Home page loads
+- Sign Up click causes navigation or modal open
+- Sign In click causes navigation or modal open
+- No SSL/cipher mismatch
+- No no-op click
+- Reviewer account can reach auth flow
+
+7. Reviewer account check
+After auth works:
+- Create/sign in with reviewer@plainpathapp.com
+- Confirm dashboard loads
+- Confirm Analyze a Document is visible
+- Confirm Contract Review is visible
+- Confirm no paywall blocks reviewer
+- Confirm hidden tools remain hidden
+
+Hard restrictions:
+- Do not unlock Clause Extractor
+- Do not unlock Compare Versions
+- Do not unlock Trust Check
+- Do not unlock Redaction
+- Do not unlock Ask This Document
+- Do not unlock Builder
+- Do not bypass auth globally
+- Do not expose secrets
+- Do not change pricing or billing globally
+
+Deliverables:
+- Root cause of Sign Up no-op
+- Files changed
+- Env/config changes made
+- Confirmation of production redeploy
+- Confirmation Sign Up works
+- Confirmation Sign In works
+- Confirmation reviewer@plainpathapp.com can access the two live tools
+- Confirmation hidden tools remain hidden
+- Any remaining App Store blockers
