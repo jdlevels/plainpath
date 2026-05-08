@@ -1,0 +1,95 @@
+PlainPath is now inside App Store Connect, and the app record has been created.
+
+We need App Store screenshots for the v1.0 submission.
+
+Current locked launch scope:
+- PlainPath v1.0 includes only:
+  1. Analyze a Document
+  2. Contract Review
+- Hidden/post-launch tools must not appear anywhere:
+  - Clause Extractor
+  - Compare Versions
+  - Trust Check
+  - Redact Sensitive Info
+  - Ask This Document
+  - Builder
+  - Completion Engine
+  - Packet Compiler
+
+Task:
+Prepare App Store-ready screenshot assets for the PlainPath iOS submission.
+
+Goal:
+Create exactly five clean, App Store-ready screenshots that accurately show the current two-tool app experience.
+
+Required screenshot set:
+1. Analyze a Document — upload/input screen
+2. Analyze a Document — results screen
+3. Contract Review — upload/input screen
+4. Contract Review — results / clause review screen
+5. Upgrade / subscription screen
+
+Requirements:
+- Screenshots must reflect only the current v1.0 two-tool scope.
+- Do not show hidden tools.
+- Do not show unfinished routes.
+- Do not show developer tools, browser chrome, localhost, Replit UI, test logs, or debug banners.
+- Do not show fake claims like “all tools,” “full suite,” or unavailable features.
+- Use clean demo/sample document content only.
+- Do not use real user documents or personal information.
+- Use mobile/iPhone layout.
+- Export screenshots as PNG files.
+- Size them to match the App Store Connect 6.5-inch iPhone screenshot slot shown in App Store Connect, preferably portrait:
+  - 1242 × 2688 px, or
+  - 1284 × 2778 px
+- Use consistent light/dark appearance based on the current PlainPath app design.
+- Make sure text is readable.
+- Make sure each screenshot communicates one clear value point.
+
+Preferred output folder:
+- docs/app-store-screenshots/
+or
+- app-store-assets/screenshots/
+
+For each screenshot, provide:
+- filename
+- what screen it captures
+- route used
+- viewport size used
+- whether it is ready to upload to App Store Connect
+
+Suggested filenames:
+1. plainpath-01-analyze-upload.png
+2. plainpath-02-analyze-results.png
+3. plainpath-03-contract-review-upload.png
+4. plainpath-04-contract-review-results.png
+5. plainpath-05-upgrade-subscription.png
+
+Also create a short screenshot checklist document:
+docs/app-store-screenshot-checklist.md
+
+The checklist should include:
+- all five screenshot filenames
+- exact dimensions
+- route/screen captured
+- confirmation that no hidden tools appear
+- confirmation that screenshots match the v1.0 two-tool launch scope
+
+Hard restrictions:
+- Do not unlock any hidden tools.
+- Do not add new features.
+- Do not redesign the app.
+- Do not change pricing.
+- Do not change billing.
+- Do not modify database schema.
+- Do not change auth.
+- Do not change marketing copy unless required only for screenshot accuracy.
+- Do not use real user/private documents.
+
+Acceptance criteria:
+- Five PNG screenshots are created.
+- Screenshots are App Store-ready.
+- Only Analyze a Document and Contract Review appear.
+- Hidden tools do not appear.
+- Screenshot checklist is created.
+- No production behavior changes are made.

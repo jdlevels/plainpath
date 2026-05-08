@@ -323,3 +323,33 @@ id = "twfXibqc_cjTZfjn0gbEh"
 uri = "file://docs/plainpath-product-course.md"
 type = "text"
 title = "PlainPath — Official Product Course"
+
+[[outputs]]
+id = "MCosar8RfF8w-4uv5rEZk"
+uri = "file://docs/app-store-screenshots/plainpath-01-analyze-upload.png"
+type = "image"
+title = "Screenshot 1 — Analyze a Document (upload)"
+
+[[outputs]]
+id = "eNdF2TGtlrg1iiu5YGQll"
+uri = "file://docs/app-store-screenshots/plainpath-02-analyze-results.png"
+type = "image"
+title = "Screenshot 2 — Analyze a Document (results)"
+
+[[outputs]]
+id = "Ea_noK6c5xuUf3pxkH6F9"
+uri = "file://docs/app-store-screenshots/plainpath-03-contract-review-upload.png"
+type = "image"
+title = "Screenshot 3 — Contract Review (upload)"
+
+[[outputs]]
+id = "6ryoF_Oxnt7t9IAG2Gqim"
+uri = "file://docs/app-store-screenshots/plainpath-04-contract-review-results.png"
+type = "image"
+title = "Screenshot 4 — Contract Review (results / clause cards)"
+
+[[outputs]]
+id = "F0y5f0tgbQBtHirTs6r0Y"
+uri = "file://docs/app-store-screenshots/plainpath-05-upgrade-subscription.png"
+type = "image"
+title = "Screenshot 5 — Upgrade / subscription"
