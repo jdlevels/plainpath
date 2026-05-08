@@ -211,7 +211,32 @@ Same 5 screens.
 
 ---
 
-## 9. App Store Review Notes (final — corrected)
+## 9. App Store Reviewer Test Account
+
+| Field | Value |
+|---|---|
+| Email | `reviewer@plainpathapp.com` |
+| Access level | `role: "member"` + `accessTier: "pro"` |
+| Mechanism | `MANUAL_PRO_EMAILS` env var (shared environment) |
+| Paywall bypassed | Yes — no Stripe subscription required |
+| Admin access | No — standard member role, no admin badge or admin UI |
+| Tools available | Analyze a Document + Contract Review |
+| Hidden tools exposed | None — hidden tools are gated by feature flags, not plan tier |
+
+**How it works:** The `MANUAL_PRO_EMAILS` environment variable contains a comma-separated list of email addresses that receive Pro access without a Stripe subscription. The server grants `role: "member"` + `accessTier: "pro"` to any Clerk user whose email matches. This is identical to what a paid subscriber sees — no admin label, no hidden tools, both launch tools fully usable.
+
+**Reviewer sign-in flow:**
+1. Reviewer navigates to `https://plainpathapp.com/app/`
+2. Signs in with `reviewer@plainpathapp.com` via Clerk
+3. Dashboard loads — shows Analyze a Document and Contract Review tool cards
+4. Both tools are usable immediately with no subscription prompt
+5. No hidden tools appear
+
+**To add or remove reviewer emails in the future:** Update `MANUAL_PRO_EMAILS` in the Replit Secrets/Environment panel (comma-separated list) and restart the API server. No code or schema changes required.
+
+---
+
+## 10. App Store Review Notes (final — corrected)
 
 ```
 PlainPath is a two-tool document platform powered by AI. No account creation
