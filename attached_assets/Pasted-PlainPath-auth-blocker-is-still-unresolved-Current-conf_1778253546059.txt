@@ -1,0 +1,99 @@
+PlainPath auth blocker is still unresolved.
+
+Current confirmed production behavior:
+- User visits https://plainpathapp.com
+- User clicks Sign Up
+- Nothing happens
+- Same behavior in normal browser and incognito
+- This blocks Apple reviewer account creation and App Store submission
+
+Do not keep patching the existing Sign Up button.
+Replace the auth entry flow with a direct, deterministic route-based flow.
+
+Goal:
+Make Sign Up and Sign In boring, direct, visible, and testable.
+
+Required implementation:
+
+1. Create or confirm direct auth routes:
+- /sign-up
+- /sign-in
+
+2. These routes must render actual Clerk auth components:
+- /sign-up renders Clerk SignUp
+- /sign-in renders Clerk SignIn
+
+Use route-based Clerk configuration, not a popup/modal-only flow.
+
+3. Replace homepage/header Sign Up and Sign In actions with plain navigation links:
+- Sign Up button/link must navigate directly to /sign-up
+- Sign In button/link must navigate directly to /sign-in
+
+Do not use a Clerk SignUpButton or SignInButton for the homepage CTA if those buttons are causing no-op behavior.
+
+Use a plain anchor or router Link:
+- href="/sign-up"
+- href="/sign-in"
+
+4. Remove dependency on broken custom auth domain behavior for launch.
+Do not route users to accounts.plainpathapp.com unless that domain is fully SSL-valid and verified.
+Do not rely on auth modal behavior.
+Do not rely on a click handler that can silently fail.
+
+5. Add visible failure handling.
+If Clerk fails to initialize on /sign-up or /sign-in, the page must show a readable error state instead of a blank/no-op behavior.
+
+6. Confirm Clerk production env.
+Verify production has:
+- VITE_CLERK_PUBLISHABLE_KEY present
+- correct Clerk frontend API/domain config
+- no stale broken accounts.plainpathapp.com redirect
+- no broken VITE_CLERK_PROXY_URL setting that prevents Clerk from initializing
+
+7. Redeploy production after the fix.
+
+Required production verification:
+- Visit https://plainpathapp.com in incognito
+- Click Sign Up
+- Browser navigates to /sign-up
+- Sign-up form renders
+- Create reviewer@plainpathapp.com account
+- Complete verification if required
+- Dashboard loads
+- Analyze a Document is visible
+- Contract Review is visible
+- No paywall blocks reviewer
+- Hidden tools remain hidden
+- Click Sign In from homepage
+- Browser navigates to /sign-in
+- Sign-in form renders
+- reviewer@plainpathapp.com can sign in
+
+Required test coverage:
+Add or update a smoke test proving:
+- homepage Sign Up link has href="/sign-up"
+- homepage Sign In link has href="/sign-in"
+- /sign-up route renders auth UI
+- /sign-in route renders auth UI
+- Sign Up is not a no-op
+- Sign In is not a no-op
+- no redirect to broken accounts.plainpathapp.com occurs
+
+Hard restrictions:
+- Do not unlock hidden tools
+- Do not change pricing
+- Do not change billing globally
+- Do not bypass auth globally
+- Do not redesign the app
+- Do not modify schema
+- Do not add product features
+
+Deliverables:
+- Root cause of no-op Sign Up
+- Files changed
+- Confirmation homepage buttons are direct links
+- Confirmation /sign-up route works
+- Confirmation /sign-in route works
+- Production redeploy confirmation
+- reviewer@plainpathapp.com test result
+- Remaining App Store blockers, if any

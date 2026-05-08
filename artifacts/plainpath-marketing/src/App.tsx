@@ -64,6 +64,8 @@ function Router() {
       <Route path="/vs-ai-lawyer" component={VsAiLawyer} />
 
       <Route path="/pricing">{() => <ExternalRedirect to="/#pricing" />}</Route>
+      <Route path="/sign-in">{() => { window.location.replace("/app/sign-in"); return null; }}</Route>
+      <Route path="/sign-up">{() => { window.location.replace("/app/sign-up"); return null; }}</Route>
       <Route path="/privacy" component={Privacy} />
       <Route path="/terms" component={Terms} />
       <Route path="/support" component={Support} />

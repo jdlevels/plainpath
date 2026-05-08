@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
-import { ClerkProvider, SignIn, useClerk, useUser } from "@clerk/react";
+import { ClerkProvider, SignIn, SignUp, useClerk, useUser } from "@clerk/react";
 import { getApiBaseUrl } from "@/lib/api";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { startStripeCheckout } from "@/lib/stripe";
@@ -117,11 +117,23 @@ const queryClient = new QueryClient({
   },
 });
 
-function SignInPage() {
-  // To update login providers, app branding, or OAuth settings use the Auth
-  // pane in the workspace toolbar. More information can be found in the Replit docs.
+function AuthPageWrapper({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex justify-center items-start min-h-[calc(100vh-4rem)] pt-12 pb-16 px-4">
+    <div className="flex flex-col items-center justify-start min-h-[calc(100vh-4rem)] pt-12 pb-16 px-4">
+      {children}
+      {/* Visible fallback shown when Clerk JS fails to load (e.g. broken custom domain DNS) */}
+      <noscript>
+        <p className="mt-8 text-sm text-muted-foreground text-center">
+          JavaScript is required to sign in. Please enable it and reload the page.
+        </p>
+      </noscript>
+    </div>
+  );
+}
+
+function SignInPage() {
+  return (
+    <AuthPageWrapper>
       <SignIn
         routing="path"
         path={`${basePath}/sign-in`}
@@ -132,7 +144,25 @@ function SignInPage() {
           },
         }}
       />
-    </div>
+    </AuthPageWrapper>
+  );
+}
+
+function SignUpPage() {
+  return (
+    <AuthPageWrapper>
+      <SignUp
+        routing="path"
+        path={`${basePath}/sign-up`}
+        signInUrl={`${basePath}/sign-in`}
+        appearance={{
+          elements: {
+            rootBox: "w-full max-w-md",
+            card: "shadow-lg rounded-2xl border border-border/50",
+          },
+        }}
+      />
+    </AuthPageWrapper>
   );
 }
 
@@ -569,7 +599,7 @@ function Router() {
           <Switch>
             {/* ── Public routes (no auth required) ── */}
             <Route path="/sign-in/*?" component={SignInPage} />
-            <Route path="/sign-up/*?">{() => { window.location.replace(`${basePath}/sign-in${window.location.search}`); return null; }}</Route>
+            <Route path="/sign-up/*?" component={SignUpPage} />
             <Route path="/privacy" component={Privacy} />
             <Route path="/terms" component={Terms} />
             <Route path="/support" component={Support} />
@@ -661,7 +691,7 @@ function ClerkProviderWithRoutes() {
       proxyUrl={clerkProxyUrl || undefined}
       clerkJSUrl={clerkJSUrl}
       signInUrl={`${basePath}/sign-in`}
-      signUpUrl={`${basePath}/sign-in`}
+      signUpUrl={`${basePath}/sign-up`}
       routerPush={(to) => setLocation(stripBase(to))}
       routerReplace={(to) => setLocation(stripBase(to), { replace: true })}
     >

@@ -34,9 +34,9 @@ ALLOWED_EMAILS = "support@plainpathapp.com,yelevels@gmail.com,reviewer@plainpath
 ACCESS_MODE = "internal_only"
 MANUAL_PRO_EMAILS = "yelevels@gmail.com,reviewer@plainpathapp.com"
 VITE_ANALYZE_COMPLETION_FLOW_ENABLED = "true"
+VITE_CLERK_PROXY_URL = "https://plain-path.replit.app/api/__clerk"
 
 [userenv.production]
-VITE_CLERK_PROXY_URL = "https://plain-path.replit.app/api/__clerk"
 VITE_BUILDER_ENABLED = "false"
 BUILDER_ENABLED = "false"
 
