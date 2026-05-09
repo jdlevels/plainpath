@@ -44,10 +44,12 @@ function NativeBillingView({
   entitlements,
   loading,
   reload,
+  getToken,
 }: {
   entitlements: ReturnType<typeof useEntitlements>["entitlements"]
   loading: boolean
   reload: () => Promise<void>
+  getToken: () => Promise<string | null>
 }) {
   const [restoring, setRestoring] = useState(false)
   const [restoreError, setRestoreError] = useState<string | null>(null)
@@ -58,7 +60,7 @@ function NativeBillingView({
     setRestoreError(null)
     setRestoreSuccess(null)
     try {
-      const result = await restoreNativePurchases()
+      const result = await restoreNativePurchases(getToken)
       if (result.success && result.plan) {
         setRestoreSuccess("Subscription restored successfully.")
         await reload()
@@ -180,7 +182,7 @@ export default function Billing() {
     return () => { document.title = "PlainPath" }
   }, [])
 
-  if (isNative()) return <NativeBillingView entitlements={entitlements} loading={loading} reload={reload} />
+  if (isNative()) return <NativeBillingView entitlements={entitlements} loading={loading} reload={reload} getToken={getToken} />
 
   const isTestMode = BILLING_CONFIG.BILLING_MODE === "test"
   const isEnforced = BILLING_CONFIG.PAYWALL_ENFORCEMENT

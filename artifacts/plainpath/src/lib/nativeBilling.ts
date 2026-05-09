@@ -13,9 +13,16 @@
 //
 // Launch model: ONE plan — PlainPath Pro $19.99/month (plainpath_pro entitlement)
 //
+// Post-purchase sync:
+//   After a successful purchase or restore the client POSTs to
+//   /api/entitlements/native-verify. The server re-verifies with the RevenueCat
+//   REST API and writes an active subscriber row to the billing DB so the
+//   standard useEntitlements hook sees Pro access immediately.
+//
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { getPlatform } from "@/lib/platform"
+import { getApiBaseUrl } from "@/lib/api"
 import { Purchases, LOG_LEVEL } from "@revenuecat/purchases-capacitor"
 
 export type PlanKey = "pro"
@@ -51,6 +58,12 @@ export type NativeEntitlementResult = {
   provider: "storekit" | "play_billing" | "web"
 }
 
+// ─── Module-level identity cache ──────────────────────────────────────────────
+// Set by configureRevenueCat() so purchase/restore can reference it when
+// building the native-verify request body without needing a prop-drilled userId.
+
+let _configuredUserId: string | null = null
+
 // ─── Configure RevenueCat SDK ─────────────────────────────────────────────────
 // Call once on native app startup, after the user is signed in.
 // Passes the Clerk user ID as the RevenueCat App User ID — prevents
@@ -78,6 +91,9 @@ export async function configureRevenueCat(userId: string): Promise<void> {
 
   await Purchases.configure({ apiKey })
   await Purchases.logIn({ appUserID: userId })
+
+  // Cache for use in purchase/restore verify calls
+  _configuredUserId = userId
 
   if (import.meta.env.DEV) {
     await Purchases.setLogLevel({ level: LOG_LEVEL.DEBUG })
@@ -117,12 +133,56 @@ export async function checkNativeEntitlements(): Promise<NativeEntitlementResult
   }
 }
 
+// ─── Internal: Call native-verify endpoint ────────────────────────────────────
+// Fires after a successful purchase or restore. Asks the server to re-verify
+// the subscriber with the RevenueCat REST API and write an active billing row
+// to the DB, so useEntitlements immediately reflects Pro access.
+//
+// Failures are logged but never surface to the user — the purchase or restore
+// already succeeded in RevenueCat's eyes. The DB row will be created on the
+// next successful verification attempt (e.g. next app launch or restore).
+
+async function callNativeVerify(
+  platform: NativePlatform,
+  rcUserId: string,
+  activeEntitlements: string[],
+  getToken: (() => Promise<string | null>) | undefined,
+): Promise<void> {
+  try {
+    const token = getToken ? await getToken().catch(() => null) : null
+    const apiBase = getApiBaseUrl()
+
+    const res = await fetch(`${apiBase}/api/entitlements/native-verify`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ platform, rcUserId, activeEntitlements }),
+    })
+
+    if (!res.ok) {
+      const body = await res.text().catch(() => "")
+      console.warn("[RevenueCat] native-verify non-OK:", res.status, body)
+    } else {
+      console.info("[RevenueCat] native-verify: billing DB synced", await res.json())
+    }
+  } catch (err) {
+    console.warn("[RevenueCat] native-verify network error — DB sync deferred:", err)
+  }
+}
+
 // ─── Purchase Native Plan ─────────────────────────────────────────────────────
 // Triggers the native purchase flow for PlainPath Pro via RevenueCat/StoreKit.
 // configureRevenueCat(userId) must be called before this function.
 // On web: no-op.
+//
+// getToken — pass the Clerk getToken function so the verify call is authenticated.
 
-export async function purchaseNativePlan(plan: PlanKey): Promise<{
+export async function purchaseNativePlan(
+  plan: PlanKey,
+  getToken?: () => Promise<string | null>,
+): Promise<{
   success: boolean
   plan?: PlanKey
   error?: string
@@ -149,6 +209,13 @@ export async function purchaseNativePlan(plan: PlanKey): Promise<{
       ? "pro"
       : undefined
 
+    // Sync purchase to billing DB via server-side RevenueCat verification.
+    // Fire-and-forget — purchase is already confirmed; DB sync is best-effort.
+    if (_configuredUserId) {
+      const activeEntitlementIds = Object.keys(active)
+      void callNativeVerify(platform, _configuredUserId, activeEntitlementIds, getToken)
+    }
+
     return { success: true, plan: resolvedPlan }
   } catch (err: unknown) {
     if (
@@ -169,8 +236,12 @@ export async function purchaseNativePlan(plan: PlanKey): Promise<{
 // Required by Apple App Store guidelines — must be accessible in the UI.
 // configureRevenueCat(userId) must be called before this function.
 // On web: no-op.
+//
+// getToken — pass the Clerk getToken function so the verify call is authenticated.
 
-export async function restoreNativePurchases(): Promise<{
+export async function restoreNativePurchases(
+  getToken?: () => Promise<string | null>,
+): Promise<{
   success: boolean
   plan?: PlanKey
   error?: string
@@ -186,6 +257,13 @@ export async function restoreNativePurchases(): Promise<{
     const plan: PlanKey | undefined = active[RC_ENTITLEMENT_IDS.pro]
       ? "pro"
       : undefined
+
+    // Sync restored subscription to billing DB.
+    if (_configuredUserId) {
+      const activeEntitlementIds = Object.keys(active)
+      void callNativeVerify(platform, _configuredUserId, activeEntitlementIds, getToken)
+    }
+
     return { success: true, plan }
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Restore failed"

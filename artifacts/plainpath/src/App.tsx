@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
-import { ClerkProvider, SignIn, SignUp, useClerk, useUser } from "@clerk/react";
+import { ClerkProvider, SignIn, SignUp, useClerk, useUser, useAuth } from "@clerk/react";
 import { getApiBaseUrl } from "@/lib/api";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { startStripeCheckout } from "@/lib/stripe";
@@ -221,6 +221,7 @@ function ClerkQueryClientCacheInvalidator() {
 function NativePaywallScreen() {
   const { user } = useUser();
   const { signOut } = useClerk();
+  const { getToken } = useAuth();
   const { reload } = useEntitlements();
   const [purchasing, setPurchasing] = useState(false);
   const [restoring, setRestoring] = useState(false);
@@ -239,7 +240,7 @@ function NativePaywallScreen() {
     setError(null);
     setSuccessMsg(null);
     try {
-      const result = await purchaseNativePlan("pro");
+      const result = await purchaseNativePlan("pro", getToken);
       if (result.success) {
         setSuccessMsg("Welcome to PlainPath Pro!");
         await reload();
@@ -257,7 +258,7 @@ function NativePaywallScreen() {
     setError(null);
     setSuccessMsg(null);
     try {
-      const result = await restoreNativePurchases();
+      const result = await restoreNativePurchases(getToken);
       if (result.success && result.plan) {
         setSuccessMsg("Subscription restored. Welcome back!");
         await reload();
