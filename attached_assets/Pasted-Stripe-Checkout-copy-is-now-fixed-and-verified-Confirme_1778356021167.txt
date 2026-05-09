@@ -1,0 +1,83 @@
+Stripe Checkout copy is now fixed and verified.
+
+Confirmed:
+- Free user can reach Stripe Checkout.
+- Checkout copy now says:
+  “PlainPath Pro — Analyze a Document, Contract Review, and saved analysis history.”
+- Hidden/post-launch tools are no longer mentioned.
+- Price remains $19.99/month.
+- Do not complete a real purchase.
+
+Next task:
+Resolve the iOS App Store subscription path.
+
+Goal:
+Keep Stripe for web, but make the iOS native app use RevenueCat / Apple In-App Purchase for PlainPath Pro.
+
+Current desired architecture:
+- Web users subscribe through Stripe.
+- iOS users subscribe through App Store / RevenueCat.
+- reviewer@plainpathapp.com keeps manual Pro access for Apple review.
+- Pro entitlement unlocks only Analyze a Document, Contract Review, and saved analysis history.
+- Hidden tools remain hidden.
+
+Task:
+Create the implementation plan and identify exact code/config work required for the iOS subscription path.
+
+Do not implement yet unless the plan is accepted.
+
+Required output:
+1. Confirm current iOS packaging method.
+2. Confirm whether RevenueCat SDK is already installed.
+3. Confirm current product ID:
+   plainpath_pro_monthly
+4. Confirm current entitlement name:
+   pro
+5. Identify all files that currently handle:
+   - Subscribe page
+   - isNative() detection
+   - RevenueCat config
+   - entitlement checks
+   - billing page
+   - restore subscription
+6. Define exact iOS purchase flow:
+   - Paywall button triggers RevenueCat purchasePackage or equivalent.
+   - Restore button triggers RevenueCat restorePurchases or equivalent.
+   - Successful purchase grants Pro entitlement.
+   - Failed/cancelled purchase shows readable message.
+7. Define App Store Connect setup steps:
+   - Create subscription group
+   - Create monthly subscription product
+   - Product ID: plainpath_pro_monthly
+   - Display name: PlainPath Pro
+   - Description: Analyze a Document and Contract Review
+   - Price: $19.99/month
+   - Submit IAP with app version
+8. Define RevenueCat setup steps:
+   - App Store app connected
+   - Product ID mapped
+   - Offering configured
+   - Entitlement “pro” attached
+   - API keys set in app
+9. Define QA checklist:
+   - iOS sandbox purchase
+   - restore purchase
+   - reviewer manual Pro access
+   - free user paywall
+   - web Stripe checkout remains working
+   - hidden tools remain hidden
+
+Hard restrictions:
+- Do not unlock hidden tools.
+- Do not change pricing.
+- Do not change launch scope.
+- Do not break web Stripe checkout.
+- Do not give all users Pro.
+- Do not redesign UI.
+- Do not modify schema unless explicitly required and documented.
+
+Deliverable:
+Create or update:
+docs/ios-subscription-revenuecat-plan.md
+
+Final recommendation should clearly state whether we are ready to implement the RevenueCat/StoreKit iOS subscription flow or whether more App Store Connect setup is needed first.
