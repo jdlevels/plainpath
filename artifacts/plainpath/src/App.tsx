@@ -57,6 +57,7 @@ import EvictionNotice from "@/pages/guides/EvictionNotice";
 import MedicalBillingDispute from "@/pages/guides/MedicalBillingDispute";
 import NotFound from "@/pages/not-found";
 import TeamManage from "@/pages/TeamManage";
+import PaywallPreview from "@/pages/PaywallPreview";
 import JoinTeam from "@/pages/JoinTeam";
 
 import { Navbar } from "@/components/layout/Navbar";
@@ -343,6 +344,26 @@ function NativePaywallScreen() {
               "Restore Purchases"
             )}
           </button>
+
+          <div className="mt-6 text-center">
+            <p className="text-xs text-muted-foreground/60 leading-relaxed">
+              By subscribing you agree to our{" "}
+              <button
+                onClick={() => window.open("https://plain-path.replit.app/terms", "_blank")}
+                className="underline underline-offset-2 hover:text-muted-foreground transition-colors"
+              >
+                Terms of Service
+              </button>
+              {" "}and{" "}
+              <button
+                onClick={() => window.open("https://plain-path.replit.app/privacy", "_blank")}
+                className="underline underline-offset-2 hover:text-muted-foreground transition-colors"
+              >
+                Privacy Policy
+              </button>
+              . Subscription auto-renews monthly. Cancel anytime in iPhone Settings.
+            </p>
+          </div>
         </div>
       </div>
     </div>
@@ -603,6 +624,7 @@ function Router() {
             <Route path="/privacy" component={Privacy} />
             <Route path="/terms" component={Terms} />
             <Route path="/support" component={Support} />
+            <Route path="/paywall-preview" component={PaywallPreview} />
             <Route path="/methodology" component={Methodology} />
             <Route path="/pricing">{() => { window.location.replace("/#pricing"); return null; }}</Route>
             <Route path="/guides/irs-letter" component={IrsLetter} />
