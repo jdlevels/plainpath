@@ -134,7 +134,7 @@ PlainPath Plans
 
 ### Product 1
 ```
-Product ID:    com.plainpath.app.starter_monthly
+Product ID:    com.plainpathapp.plainpath.starter_monthly
 Type:          Auto-Renewable Subscription
 Display Name:  PlainPath Starter
 Price:         $4.99 / month
@@ -143,7 +143,7 @@ Description:   Analyze any document in plain English — unlimited use.
 
 ### Product 2
 ```
-Product ID:    com.plainpath.app.pro_monthly
+Product ID:    com.plainpathapp.plainpath.pro_monthly
 Type:          Auto-Renewable Subscription
 Display Name:  PlainPath Pro
 Price:         $29.99 / month

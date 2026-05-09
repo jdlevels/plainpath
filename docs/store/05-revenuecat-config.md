@@ -11,8 +11,8 @@ This document defines the product/entitlement structure for RevenueCat and docum
 1. Create account at https://app.revenuecat.com
 2. Create a new Project: **PlainPath**
 3. Add Apps:
-   - iOS — connect to App Store Bundle ID: `com.plainpath.app`
-   - Android — connect to Google Play Package: `com.plainpath.app`
+   - iOS — connect to App Store Bundle ID: `com.plainpathapp.plainpath`
+   - Android — connect to Google Play Package: `com.plainpathapp.plainpath`
    - Web (optional) — connect to Stripe for web subscriptions
 4. Note your **Public API Key** for each platform (used in client code)
 5. Note your **Secret API Key** (server-side only — never in client code)

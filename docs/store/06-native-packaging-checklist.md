@@ -31,7 +31,7 @@ pnpm add @capacitor/ios @capacitor/android @capacitor/status-bar @capacitor/spla
 
 # Init Capacitor inside the plainpath artifact
 cd artifacts/plainpath
-npx cap init PlainPath com.plainpath.app --web-dir=dist/public
+npx cap init PlainPath com.plainpathapp.plainpath --web-dir=dist/public
 npx cap add ios
 npx cap add android
 ```
@@ -40,7 +40,7 @@ npx cap add android
 ```typescript
 import { CapacitorConfig } from '@capacitor/cli'
 const config: CapacitorConfig = {
-  appId: 'com.plainpath.app',
+  appId: 'com.plainpathapp.plainpath',
   appName: 'PlainPath',
   webDir: 'dist/public',
   ios: { backgroundColor: '#F8F7F4', contentInset: 'always' },
@@ -84,7 +84,7 @@ npx cap open ios
 ```
 
 ### Xcode configuration:
-- [ ] Bundle Identifier set to `com.plainpath.app`
+- [ ] Bundle Identifier set to `com.plainpathapp.plainpath`
 - [ ] Display Name set to `PlainPath`
 - [ ] Version: `1.0.0`
 - [ ] Build number: `1`
@@ -100,10 +100,10 @@ npx cap open ios
 
 ### App Store Connect setup:
 - [ ] New app created in App Store Connect
-- [ ] Bundle ID `com.plainpath.app` registered
+- [ ] Bundle ID `com.plainpathapp.plainpath` registered
 - [ ] In-app purchases created:
-  - [ ] `com.plainpath.app.starter_monthly` ($4.99/month)
-  - [ ] `com.plainpath.app.pro_monthly` ($29.99/month)
+  - [ ] `com.plainpathapp.plainpath.starter_monthly` ($4.99/month)
+  - [ ] `com.plainpathapp.plainpath.pro_monthly` ($29.99/month)
 - [ ] Subscription group: "PlainPath Plans"
 - [ ] App metadata filled (name, subtitle, description, keywords, categories)
 - [ ] Screenshots uploaded (6 shots, iPhone 16 Pro Max size)
@@ -137,7 +137,7 @@ npx cap open android
 ```
 
 ### Android configuration:
-- [ ] Package name: `com.plainpath.app`
+- [ ] Package name: `com.plainpathapp.plainpath`
 - [ ] App name: `PlainPath`
 - [ ] Version name: `1.0.0`
 - [ ] Version code: `1`

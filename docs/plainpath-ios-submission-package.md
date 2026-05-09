@@ -28,7 +28,7 @@ npx cap sync ios                                # copies dist/ into Xcode projec
 
 | Field | Value |
 |---|---|
-| Bundle ID | `com.plainpath.app` |
+| Bundle ID | `com.plainpathapp.plainpath` |
 | App display name | `PlainPath` |
 | Version (MARKETING_VERSION) | `1.0` |
 | Build number (CURRENT_PROJECT_VERSION) | `1` |

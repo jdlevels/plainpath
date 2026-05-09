@@ -20,11 +20,11 @@ The web Stripe path is completely unaffected. Do not implement until App Store C
 
 ## 1. Current iOS Packaging
 
-- **Method:** Capacitor (`com.plainpath.app`)
+- **Method:** Capacitor (`com.plainpathapp.plainpath`)
 - **Capacitor version:** `@capacitor/ios` ^8.3.0
 - **Xcode project:** `artifacts/plainpath/ios/App/App.xcodeproj` ✅ (exists)
 - **Android project:** `artifacts/plainpath/android/` (exists but not in launch scope)
-- **App ID:** `com.plainpath.app`
+- **App ID:** `com.plainpathapp.plainpath`
 
 ---
 
@@ -268,7 +268,7 @@ These can be done in parallel with App Store Connect, but the product must exist
 ### Step 2 — Add iOS App
 1. In the project, click **+ Add app → App Store**
 2. **App name:** PlainPath
-3. **Bundle ID:** `com.plainpath.app`
+3. **Bundle ID:** `com.plainpathapp.plainpath`
 4. **App Store Connect API key:** upload a key with App Manager access (generated in App Store Connect → Keys)
 
 ### Step 3 — Create Entitlement
@@ -442,7 +442,7 @@ iOS user (signed in, no sub)
 
 ### Required before implementation begins:
 1. **App Store Connect** — Create subscription product `plainpath_pro_monthly` at $19.99/month in the PlainPath app
-2. **RevenueCat dashboard** — Create project, add iOS app (`com.plainpath.app`), create entitlement `plainpath_pro`, create product `plainpath_pro_monthly`, configure `default` offering with `$rc_monthly` package, retrieve API keys
+2. **RevenueCat dashboard** — Create project, add iOS app (`com.plainpathapp.plainpath`), create entitlement `plainpath_pro`, create product `plainpath_pro_monthly`, configure `default` offering with `$rc_monthly` package, retrieve API keys
 
 ### After dashboard setup:
 3. Set `VITE_REVENUECAT_PUBLIC_KEY_IOS` (client) and `REVENUECAT_API_KEY_IOS` (server) as Replit secrets

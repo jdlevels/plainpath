@@ -10,7 +10,7 @@ Last updated: April 2026 · Pricing: Starter $4.99/mo · Pro $19.99/mo · 8 tool
 | Field | Value |
 |---|---|
 | App Name | PlainPath |
-| Bundle ID | com.plainpath.app |
+| Bundle ID | com.plainpathapp.plainpath |
 | Developer / Publisher | PlainPath Inc. *(update before submission)* |
 | Primary Category | Productivity |
 | Secondary Category | Business |
@@ -126,8 +126,8 @@ Built-in sample documents are available for testing all tools without requiring 
 
 | Product ID | Type | Price | Display Name |
 |---|---|---|---|
-| com.plainpath.app.starter_monthly | Auto-Renewable Subscription | $4.99/month | PlainPath Starter |
-| com.plainpath.app.pro_monthly | Auto-Renewable Subscription | $19.99/month | PlainPath Pro |
+| com.plainpathapp.plainpath.starter_monthly | Auto-Renewable Subscription | $4.99/month | PlainPath Starter |
+| com.plainpathapp.plainpath.pro_monthly | Auto-Renewable Subscription | $19.99/month | PlainPath Pro |
 
 **Subscription Group:** PlainPath Plans
 

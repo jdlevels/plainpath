@@ -100,7 +100,7 @@ legal,contract,document,analyze,review,lease,NDA,plain english,redact,privacy,si
 PlainPath Inc. *(or individual developer name — update before submission)*
 
 ## App Bundle ID
-**com.plainpath.app**
+**com.plainpathapp.plainpath**
 
 ---
 

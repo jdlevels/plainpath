@@ -166,10 +166,10 @@ These Phase B assets are production-quality reference captures. The following mu
 - [ ] RevenueCat account created, PlainPath project configured (see `05-revenuecat-config.md`)
 
 ### App Store Connect
-- [ ] New app created with Bundle ID `com.plainpath.app`
+- [ ] New app created with Bundle ID `com.plainpathapp.plainpath`
 - [ ] Subscription group "PlainPath Plans" created
-- [ ] `com.plainpath.app.starter_monthly` — $4.99/month
-- [ ] `com.plainpath.app.pro_monthly` — $29.99/month
+- [ ] `com.plainpathapp.plainpath.starter_monthly` — $4.99/month
+- [ ] `com.plainpathapp.plainpath.pro_monthly` — $29.99/month
 - [ ] All metadata pasted from `metadata/app-store-metadata.md`
 - [ ] Final 1320×2868 screenshots (×6) uploaded with caption overlays
 - [ ] App icon 1024×1024 PNG (no alpha) uploaded
@@ -178,7 +178,7 @@ These Phase B assets are production-quality reference captures. The following mu
 - [ ] Age rating questionnaire completed (4+)
 
 ### Google Play Console
-- [ ] New app created with Package `com.plainpath.app`
+- [ ] New app created with Package `com.plainpathapp.plainpath`
 - [ ] Subscription products created:
 - [ ] `plainpath_starter_monthly` — $4.99/month
 - [ ] `plainpath_pro_monthly` — $29.99/month

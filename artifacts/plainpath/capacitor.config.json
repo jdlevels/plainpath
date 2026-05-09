@@ -1,5 +1,5 @@
 {
-  "appId": "com.plainpath.app",
+  "appId": "com.plainpathapp.plainpath",
   "appName": "PlainPath",
   "webDir": "dist/public",
   "server": {

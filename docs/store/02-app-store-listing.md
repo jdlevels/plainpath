@@ -110,8 +110,8 @@ Built-in sample documents are available for testing all tools without requiring 
 
 | Product ID | Type | Price | Display Name |
 |---|---|---|---|
-| com.plainpath.app.starter_monthly | Auto-Renewable Subscription | $4.99/month | PlainPath Starter |
-| com.plainpath.app.pro_monthly | Auto-Renewable Subscription | $19.99/month | PlainPath Pro |
+| com.plainpathapp.plainpath.starter_monthly | Auto-Renewable Subscription | $4.99/month | PlainPath Starter |
+| com.plainpathapp.plainpath.pro_monthly | Auto-Renewable Subscription | $19.99/month | PlainPath Pro |
 
 **Subscription Group:** PlainPath Plans
 **Free Trial:** Configure in App Store Connect after account setup (RevenueCat reads trial metadata automatically)
