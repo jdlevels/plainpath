@@ -1,0 +1,109 @@
+PlainPath checkout copy fix is accepted, but we need to resolve the native iOS subscription path before App Store submission.
+
+Current status:
+- Auth works.
+- reviewer@plainpathapp.com works and has manual Pro access.
+- freeuser-test@plainpathapp.com is properly paywalled.
+- Free user can now reach Stripe Checkout on web.
+- Stripe Checkout copy has been fixed in code to:
+  “PlainPath Pro — Analyze a Document, Contract Review, and saved analysis history.”
+- Hidden tools remain hidden.
+- Price remains $19.99/month.
+
+Remaining App Store blocker:
+The native iOS path currently renders NativeMessage and tells users subscription management is handled on the PlainPath website. That is risky for App Store review because PlainPath sells access to digital subscription features.
+
+Task:
+Prepare the safest iOS subscription implementation plan using RevenueCat / StoreKit.
+
+Do not implement yet unless explicitly approved after the plan.
+
+Planning requirements:
+
+1. Identify current native/iOS packaging path
+Confirm whether PlainPath iOS is:
+- Capacitor
+- React Native
+- Expo
+- Tauri/mobile wrapper
+- another native shell
+
+2. Identify current subscription architecture
+Map:
+- Web checkout path
+- Stripe subscription route
+- RevenueCat config
+- App Store Connect IAP product ID
+- current entitlement name
+- current app-side entitlement check
+- current server-side entitlement check
+
+3. Define iOS purchase flow
+Recommended:
+- iOS users use RevenueCat/StoreKit purchase flow.
+- Web users use Stripe Checkout.
+- Reviewer account keeps manual Pro access.
+- Entitlement output normalizes into one Pro access check.
+
+4. Required App Store product
+Confirm or define:
+- Subscription product ID: plainpath_pro_monthly
+- Subscription group name
+- Price: $19.99/month
+- Display name: PlainPath Pro
+- Description: Analyze a Document, Contract Review, and saved analysis history.
+
+5. App behavior
+For iOS native build:
+- Paywall button should open RevenueCat/App Store purchase flow.
+- Restore purchases should call RevenueCat restore.
+- Successful purchase grants Pro entitlement.
+- Failed/cancelled purchase shows readable message.
+- No hidden tools are shown.
+- No Stripe checkout inside native iOS paywall unless explicitly compliant and approved.
+
+6. Server-side verification
+Define how Pro entitlement is verified:
+- RevenueCat entitlement / subscriber info
+- App Store receipt / RevenueCat webhook if currently used
+- Existing manual reviewer access
+- Existing Stripe access for web users
+
+7. QA plan
+Add tests/checks for:
+- reviewer manual Pro access
+- free iOS user sees paywall
+- iOS purchase button invokes native purchase flow
+- restore purchase button works
+- web user still uses Stripe
+- hidden tools remain hidden
+- Analyze + Contract Review unlock after entitlement
+
+8. Implementation scope
+List exact files likely to change.
+List exact env vars/secrets required.
+List exact App Store Connect setup steps required.
+List exact RevenueCat setup steps required.
+List risks.
+
+Hard restrictions:
+- Do not unlock hidden tools.
+- Do not change pricing.
+- Do not redesign UI.
+- Do not change launch scope.
+- Do not break web Stripe checkout.
+- Do not give all users Pro.
+- Do not submit to Apple until this is resolved.
+
+Deliverable:
+Create or update:
+docs/ios-subscription-revenuecat-plan.md
+
+Include:
+- current state
+- recommended architecture
+- exact implementation steps
+- App Store Connect setup checklist
+- RevenueCat setup checklist
+- QA checklist
+- final recommendation
