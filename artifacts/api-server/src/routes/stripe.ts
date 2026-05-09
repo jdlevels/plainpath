@@ -42,8 +42,8 @@ const PLAN_CONFIG: Record<PlanKey, {
     name: "PlainPath Pro",
     amount: 1999,
     annualAmount: 19900,
-    description: "All tools: Analyze, Trust Check, Contract Builder, Contract Review, Redact, Compare Versions, and Clause Extractor.",
-    annualDescription: "All tools included. Billed annually — save 17% vs. monthly.",
+    description: "PlainPath Pro — Analyze a Document, Contract Review, and saved analysis history.",
+    annualDescription: "PlainPath Pro — Analyze a Document, Contract Review, and saved analysis history. Billed annually.",
   },
   team: {
     name: "PlainPath Team",

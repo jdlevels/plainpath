@@ -1,0 +1,93 @@
+PlainPath free-user checkout test result:
+
+Confirmed fixed:
+- freeuser-test@plainpathapp.com can sign in.
+- Free user does not get Pro automatically.
+- Free user lands on the paywall.
+- Clicking “Get PlainPath Pro” now opens Stripe Checkout.
+- The previous unauthorized_user error is gone.
+
+Do not complete a real purchase.
+
+New blocker:
+Stripe Checkout product description overpromises hidden/post-launch tools.
+
+Observed on Stripe Checkout:
+The product description mentions hidden tools such as:
+- Trust Check
+- Contract Builder
+- Redact
+- Compare Versions
+- Clause Extractor
+
+This violates the locked v1.0 launch scope.
+
+PlainPath v1.0 includes only:
+1. Analyze a Document
+2. Contract Review
+
+Allowed checkout copy:
+“Access PlainPath’s current tools: Analyze a Document and Contract Review.”
+or:
+“Includes Analyze a Document, Contract Review, and saved analysis history.”
+
+Disallowed checkout copy:
+- Trust Check
+- Document Trust Check
+- Contract Builder
+- Builder
+- Redact
+- Compare Versions
+- Clause Extractor
+- Ask This Document
+- Completion Engine
+- Packet Compiler
+- all tools
+- full suite
+- every document tool
+
+Task:
+Fix Stripe Checkout product/price description and any checkout metadata/copy so the purchase page only reflects v1.0 live tools.
+
+Required:
+1. Identify where the Stripe Checkout line item/product description is coming from:
+   - Stripe Product dashboard metadata/description
+   - code-created checkout session line item description
+   - price/product nickname
+   - environment variable
+   - seed/config file
+
+2. Update the checkout-facing copy to:
+   “PlainPath Pro — Analyze a Document, Contract Review, and saved analysis history.”
+
+3. Confirm the checkout page no longer mentions any hidden tools.
+
+4. Confirm pricing still remains $19.99/month unless already intentionally changed elsewhere.
+
+5. Confirm web checkout still opens for free user.
+
+6. Confirm reviewer@plainpathapp.com still has manual Pro access and does not need checkout.
+
+7. Confirm iOS path:
+   - If running in iOS/App Store build, the purchase flow must use the configured App Store / RevenueCat subscription path, or be otherwise documented as App Store-compliant.
+   - Do not route iOS users to hidden-tool-overpromising Stripe copy.
+   - Do not change pricing amount.
+
+Hard restrictions:
+- Do not unlock hidden tools.
+- Do not change launch scope.
+- Do not give all users Pro.
+- Do not change pricing amount.
+- Do not redesign UI.
+- Do not modify schema.
+- Do not remove reviewer access.
+- Do not complete a real payment.
+
+Deliverables:
+- Where the bad checkout copy came from
+- Files changed or Stripe dashboard fields changed
+- Final checkout copy
+- Screenshot/check result confirming hidden tools are gone
+- Confirmation free user checkout opens
+- Confirmation reviewer access still works
+- Remaining App Store blockers
