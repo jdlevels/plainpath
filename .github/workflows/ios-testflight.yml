@@ -57,14 +57,11 @@ jobs:
         with:
           version: 9
 
-      # ── 3. Node.js with pnpm cache ───────────────────────────────────────────
-      # cache-dependency-path points to pnpm-lock.yaml at the monorepo root.
+      # ── 3. Node.js ───────────────────────────────────────────────────────────
       - name: Set up Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'pnpm'
-          cache-dependency-path: 'pnpm-lock.yaml'
 
       # ── 4. Install workspace dependencies ───────────────────────────────────
       - name: Install dependencies
