@@ -75,10 +75,10 @@ jobs:
       # ── 5. Sync into iOS project ─────────────────────────────────────────────
       # Copies dist/public/ → ios/App/App/public/ (gitignored, must be generated)
       # Also updates Package.swift with plugin list including RevenueCat 13.0.1
+      # Uses pnpm exec (not npx) to run the workspace-installed @capacitor/cli,
+      # preventing npx from downloading a different version that may require newer Node.
       - name: Capacitor sync iOS
-        run: |
-          cd artifacts/plainpath
-          npx cap sync ios --no-open
+        run: pnpm --filter @workspace/plainpath exec cap sync ios
 
       # ── 6. Bump build number ─────────────────────────────────────────────────
       # Uses the GitHub Actions run number so every build is unique.
