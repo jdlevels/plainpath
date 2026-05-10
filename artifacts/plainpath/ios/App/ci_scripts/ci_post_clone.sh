@@ -68,3 +68,7 @@ cd "$CI_WORKSPACE/artifacts/plainpath"
 npx cap sync ios --no-open
 
 echo "=== ci_post_clone.sh complete ==="
+push
+add xcode cloud ci_post_clone.sh
+commit
+push
