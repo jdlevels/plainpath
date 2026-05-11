@@ -239,15 +239,15 @@ jobs:
 
           # ── Secret presence check (values never printed) ──────────────────
           echo "=== App Store Connect secret presence ==="
-          [ -n "${APP_STORE_CONNECT_API_KEY_ID:-}"      ] \
-            && echo "APP_STORE_CONNECT_API_KEY_ID:      SET" \
-            || { echo "APP_STORE_CONNECT_API_KEY_ID:      MISSING"; exit 1; }
-          [ -n "${APP_STORE_CONNECT_API_ISSUER_ID:-}"   ] \
-            && echo "APP_STORE_CONNECT_API_ISSUER_ID:   SET" \
-            || { echo "APP_STORE_CONNECT_API_ISSUER_ID:   MISSING"; exit 1; }
-          [ -n "${APP_STORE_CONNECT_API_KEY_BASE64:-}"  ] \
-            && echo "APP_STORE_CONNECT_API_KEY_BASE64:  SET" \
-            || { echo "APP_STORE_CONNECT_API_KEY_BASE64:  MISSING"; exit 1; }
+          [ -n "${APP_STORE_CONNECT_API_KEY_ID:-}"     ] \
+            && echo "APP_STORE_CONNECT_API_KEY_ID:     SET" \
+            || { echo "APP_STORE_CONNECT_API_KEY_ID:     MISSING"; exit 1; }
+          [ -n "${APP_STORE_CONNECT_API_ISSUER_ID:-}"  ] \
+            && echo "APP_STORE_CONNECT_API_ISSUER_ID:  SET" \
+            || { echo "APP_STORE_CONNECT_API_ISSUER_ID:  MISSING"; exit 1; }
+          [ -n "${APP_STORE_CONNECT_API_KEY_BASE64:-}" ] \
+            && echo "APP_STORE_CONNECT_API_KEY_BASE64: SET" \
+            || { echo "APP_STORE_CONNECT_API_KEY_BASE64: MISSING"; exit 1; }
 
           # ── Locate IPA (named after scheme: App.ipa, not PlainPath.ipa) ──
           echo "=== IPA search ==="
@@ -255,34 +255,45 @@ jobs:
 
           IPA_PATH=$(find "$RUNNER_TEMP/export" -name "*.ipa" | head -1)
           [ -n "$IPA_PATH" ] || { echo "ERROR: no .ipa found in $RUNNER_TEMP/export"; exit 1; }
-          echo "Uploading: $IPA_PATH"
+          echo "IPA path: $IPA_PATH"
 
           # ── Write .p8 key ─────────────────────────────────────────────────
-          # altool looks for the key in ~/.appstoreconnect/private_keys/ by default.
-          # Using the wrong directory (e.g. ~/.private_keys/) causes 401 NOT_AUTHORIZED
-          # even when the key ID and issuer ID are correct.
-          KEY_DIR=~/.appstoreconnect/private_keys
+          # Use $HOME (not ~) — tilde in a variable assignment is not guaranteed
+          # to expand in all POSIX shells, causing altool to look in the wrong place
+          # and return 401 NOT_AUTHORIZED even when the key ID/issuer are correct.
+          # altool's default key search path is $HOME/.appstoreconnect/private_keys/
+          KEY_DIR="$HOME/.appstoreconnect/private_keys"
           KEY_FILE="$KEY_DIR/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8"
           mkdir -p "$KEY_DIR"
           echo -n "$APP_STORE_CONNECT_API_KEY_BASE64" | base64 --decode > "$KEY_FILE"
           chmod 600 "$KEY_FILE"
 
-          # ── Key file diagnostics (no contents printed) ────────────────────
+          # ── Key file diagnostics (no secret contents printed) ─────────────
           echo "=== Key directory listing ==="
           ls -la "$KEY_DIR"
+
+          echo "=== Key file path ==="
+          echo "$KEY_FILE"
+
           echo "=== Key file non-empty check ==="
           test -s "$KEY_FILE" \
             && echo "AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8: present and non-empty" \
             || { echo "ERROR: key file is missing or empty"; exit 1; }
 
+          echo "=== Key file SHA-256 (verify matches known-good key) ==="
+          shasum -a 256 "$KEY_FILE"
+
+          # ── Exact altool command shape (no secret values) ─────────────────
+          echo "=== altool command ==="
+          echo "xcrun altool --upload-app -f <IPA_PATH> --type ios --apiKey <KEY_ID> --apiIssuer <ISSUER_ID> --verbose"
+
           # ── Upload — exits nonzero on any API / auth error ─────────────
           xcrun altool --upload-app \
             -f "$IPA_PATH" \
             --type ios \
-            --apiKey  "$APP_STORE_CONNECT_API_KEY_ID" \
+            --apiKey "$APP_STORE_CONNECT_API_KEY_ID" \
             --apiIssuer "$APP_STORE_CONNECT_API_ISSUER_ID" \
             --verbose
-          # (no || true — a non-zero exit here fails the job as required)
 
       # ── 15. Cleanup ──────────────────────────────────────────────────────────
       - name: Clean up keychain and profile
