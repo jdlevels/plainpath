@@ -258,9 +258,22 @@ jobs:
           echo "Uploading: $IPA_PATH"
 
           # ── Write .p8 key ─────────────────────────────────────────────────
-          mkdir -p ~/.private_keys
-          echo -n "$APP_STORE_CONNECT_API_KEY_BASE64" | base64 --decode \
-            > ~/.private_keys/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8
+          # altool looks for the key in ~/.appstoreconnect/private_keys/ by default.
+          # Using the wrong directory (e.g. ~/.private_keys/) causes 401 NOT_AUTHORIZED
+          # even when the key ID and issuer ID are correct.
+          KEY_DIR=~/.appstoreconnect/private_keys
+          KEY_FILE="$KEY_DIR/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8"
+          mkdir -p "$KEY_DIR"
+          echo -n "$APP_STORE_CONNECT_API_KEY_BASE64" | base64 --decode > "$KEY_FILE"
+          chmod 600 "$KEY_FILE"
+
+          # ── Key file diagnostics (no contents printed) ────────────────────
+          echo "=== Key directory listing ==="
+          ls -la "$KEY_DIR"
+          echo "=== Key file non-empty check ==="
+          test -s "$KEY_FILE" \
+            && echo "AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8: present and non-empty" \
+            || { echo "ERROR: key file is missing or empty"; exit 1; }
 
           # ── Upload — exits nonzero on any API / auth error ─────────────
           xcrun altool --upload-app \
@@ -277,4 +290,4 @@ jobs:
         run: |
           security delete-keychain $RUNNER_TEMP/app-signing.keychain-db 2>/dev/null || true
           rm -f ~/Library/MobileDevice/Provisioning\ Profiles/build_pp.mobileprovision 2>/dev/null || true
-          rm -f ~/.private_keys/AuthKey_*.p8 2>/dev/null || true
+          rm -f ~/.appstoreconnect/private_keys/AuthKey_*.p8 2>/dev/null || true
