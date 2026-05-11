@@ -170,7 +170,7 @@ jobs:
             CODE_SIGN_STYLE=Manual \
             CODE_SIGN_IDENTITY="Apple Distribution" \
             DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
-            PROVISIONING_PROFILE_SPECIFIER="$PROVISIONING_PROFILE_NAME" \
+            CI_PP_SPECIFIER="$PROVISIONING_PROFILE_NAME" \
             CODE_SIGNING_REQUIRED=YES \
             CODE_SIGNING_ALLOWED=YES \
             | grep -E 'error:|warning:|\*\* ARCHIVE|Build succeeded|Build FAILED' \
