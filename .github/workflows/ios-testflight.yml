@@ -43,7 +43,7 @@ on:
 jobs:
   build-and-upload:
     name: Build & Upload to TestFlight
-    runs-on: macos-14        # Apple Silicon — fastest available macOS runner
+    runs-on: macos-15        # Xcode 16.4 default → Swift 6.2, matches capacitor-swift-pm@8.3.3 binaries
 
     steps:
 
