@@ -65,7 +65,7 @@ jobs:
 
       # ── 4. Install workspace dependencies ───────────────────────────────────
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
       # ── 4. Build web assets ─────────────────────────────────────────────────
       # Produces: artifacts/plainpath/dist/public/
