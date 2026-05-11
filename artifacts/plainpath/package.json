@@ -86,7 +86,7 @@
     "@capacitor/status-bar": "^8.0.2",
     "@capawesome/capacitor-file-picker": "^8.0.2",
     "@clerk/react": "^6.4.3",
-    "@revenuecat/purchases-capacitor": "^13.0.1",
+    "@revenuecat/purchases-capacitor": "^13.1.0",
     "@sentry/react": "^10.48.0",
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^5.6.205"

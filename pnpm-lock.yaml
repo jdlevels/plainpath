@@ -488,8 +488,8 @@ importers:
         specifier: ^6.4.3
         version: 6.4.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@revenuecat/purchases-capacitor':
-        specifier: ^13.0.1
-        version: 13.0.1(@capacitor/core@8.3.0)
+        specifier: ^13.1.0
+        version: 13.1.0(@capacitor/core@8.3.0)
       '@sentry/react':
         specifier: ^10.48.0
         version: 10.48.0(react@19.1.0)
@@ -2295,13 +2295,13 @@ packages:
   '@replit/vite-plugin-runtime-error-modal@0.0.6':
     resolution: {integrity: sha512-53iuzLsrvcUnWxAo0fvNrUhOf7LYJ+3at61dZeTIrkaZD4vGNjTbvE0j50TFcjjTC9UM74uprlnQ4+L2A//Cjg==}
 
-  '@revenuecat/purchases-capacitor@13.0.1':
-    resolution: {integrity: sha512-x24MGsCIsr1pgb6P7R8c1lYNmbdb81osDept8bnq8DJJFXjhUItHXO6Npgo2TjCLJbya0WdF94tPD9Fox+tVBQ==}
+  '@revenuecat/purchases-capacitor@13.1.0':
+    resolution: {integrity: sha512-3dV/RXWx9baqVTplpXsm4yVKRV9mLkaT3k6sp1LlaVwb7bukheeowB639InAzWgzA4BOLZ7lRZFino+/VvRnOw==}
     peerDependencies:
       '@capacitor/core': '>=8.0.0'
 
-  '@revenuecat/purchases-typescript-internal-esm@18.1.0':
-    resolution: {integrity: sha512-lPB5lxZKhaddVDitam0y5LNKLIIIgSmfyrRLtC73ZrsB8TvjXRWetZB4rvGcp/qQ8/FYpu21QcxMRyapenocXw==}
+  '@revenuecat/purchases-typescript-internal-esm@18.4.0':
+    resolution: {integrity: sha512-NYmhZofAaCA2wCJ7kWyDGTSUl4wBFbdbrPOW4bvv5NxfeKj63DhtbnmimliHpJvZrm+Vw9Au41BCUD4zhnT1Bw==}
 
   '@rolldown/pluginutils@1.0.0-rc.3':
     resolution: {integrity: sha512-eybk3TjzzzV97Dlj5c+XrBFW57eTNhzod66y9HrBlzJ6NsCrWCp/2kaPS3K9wJmurBC0Tdw4yPjXKZqlznim3Q==}
@@ -6879,12 +6879,12 @@ snapshots:
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
 
-  '@revenuecat/purchases-capacitor@13.0.1(@capacitor/core@8.3.0)':
+  '@revenuecat/purchases-capacitor@13.1.0(@capacitor/core@8.3.0)':
     dependencies:
       '@capacitor/core': 8.3.0
-      '@revenuecat/purchases-typescript-internal-esm': 18.1.0
+      '@revenuecat/purchases-typescript-internal-esm': 18.4.0
 
-  '@revenuecat/purchases-typescript-internal-esm@18.1.0': {}
+  '@revenuecat/purchases-typescript-internal-esm@18.4.0': {}
 
   '@rolldown/pluginutils@1.0.0-rc.3': {}
 
