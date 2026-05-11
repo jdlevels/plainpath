@@ -45,15 +45,18 @@ jobs:
     name: Build & Upload to TestFlight
     runs-on: macos-15
 
-    # ── Force Xcode 16.4 (Swift 6.2) for every step in this job ─────────────
+    # ── Force Xcode 26.0 (Swift 6.2) for every step in this job ─────────────
     # DEVELOPER_DIR at job level is the canonical way to pin Xcode in GHA.
-    # It is inherited by xcodebuild, swift, swiftc, xcrun, and all Apple tools
-    # without relying on xcode-select symlink state set by the runner image.
-    # capacitor-swift-pm@8.3.3 ships XCFramework binaries compiled with
-    # Swift 6.2; any other Swift version (incl. 6.1.2 on Xcode 16.3) is
-    # binary-incompatible and produces "module was built with Swift X" errors.
+    # It is inherited by xcodebuild, swift, swiftc, xcrun, and all Apple tools.
+    #
+    # Swift version mapping (confirmed by CI diagnostics):
+    #   Xcode 16.4 → Swift 6.1.2  (NOT 6.2 — binary-incompatible)
+    #   Xcode 26.0 → Swift 6.2    ← matches capacitor-swift-pm@8.3.3 binaries
+    #
+    # /Applications/Xcode_26.0.app is the stable symlink for Xcode 26.0.1
+    # on the macos-15 runner image.
     env:
-      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+      DEVELOPER_DIR: /Applications/Xcode_26.0.app/Contents/Developer
 
     steps:
 
