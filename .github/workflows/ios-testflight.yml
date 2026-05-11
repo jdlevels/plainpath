@@ -51,6 +51,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # ── 1b. Pin Xcode 16.4 (Swift 6.2) ──────────────────────────────────────
+      # macos-15 has Xcode 16.4 installed but may not default to it.
+      # capacitor-swift-pm@8.3.3 XCFramework binaries require Swift 6.2 exactly.
+      # Xcode 16.3 ships Swift 6.1.2 → binary-incompatible; 16.4 ships Swift 6.2.
+      - name: Select Xcode 16.4 (Swift 6.2)
+        run: |
+          sudo xcode-select -s /Applications/Xcode_16.4.app/Contents/Developer
+          xcodebuild -version
+          swift --version
+
       # ── 2. pnpm (must come before setup-node so the cache key resolves) ────────
       - name: Install pnpm
         uses: pnpm/action-setup@v4
