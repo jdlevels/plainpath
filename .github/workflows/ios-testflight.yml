@@ -87,22 +87,16 @@ jobs:
 
       # ── 6. Sync into iOS project ─────────────────────────────────────────────
       # Copies dist/public/ → ios/App/App/public/ (gitignored, must be generated)
-      # Also regenerates CapApp-SPM/Package.swift with current plugin list.
-      # Uses pnpm exec (not npx) to run the workspace-installed @capacitor/cli,
-      # preventing npx from downloading a different version that may require newer Node.
+      # Also regenerates CapApp-SPM/Package.swift with current plugin list and
+      # correct pnpm store paths for all installed plugins.
+      # Uses pnpm exec (not npx) to run the workspace-installed @capacitor/cli.
       #
-      # Post-sync: strip the `Cordova` product from CapApp-SPM and all plugin
-      # Package.swift files. capacitor-swift-pm@8.3.x ships a Cordova Swift bridge
-      # wrapper that references CAPBridgeProtocol.textView / .webViewController —
-      # properties that no longer exist — causing compile errors. None of the app's
-      # plugins use Cordova APIs, so the dependency is safe to remove entirely.
-      # pnpm patches (patches/ dir) handle the plugin Package.swift files;
-      # the sed below handles the CapApp-SPM/Package.swift which cap sync regenerates.
+      # capacitor-swift-pm@8.3.3 exports both "Capacitor" and "Cordova" as
+      # pre-compiled XCFramework binaries built with Swift 6.2. With Xcode 26.0
+      # (Swift 6.2) selected above, both products compile correctly — no patching
+      # or post-sync sed stripping is needed.
       - name: Capacitor sync iOS
-        run: |
-          pnpm --filter @workspace/plainpath exec cap sync ios
-          sed -i '' '/\.product(name: "Cordova", package: "capacitor-swift-pm")/d' \
-            artifacts/plainpath/ios/App/CapApp-SPM/Package.swift
+        run: pnpm --filter @workspace/plainpath exec cap sync ios
 
       # ── 7. Bump build number ─────────────────────────────────────────────────
       # Uses the GitHub Actions run number so every build is unique.

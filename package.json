@@ -18,12 +18,6 @@
       "esbuild": "^0.27.3",
       "uuid": "^14.0.0",
       "ip-address": "^10.1.1"
-    },
-    "patchedDependencies": {
-      "@capacitor/status-bar@8.0.2": "patches/@capacitor__status-bar@8.0.2.patch",
-      "@capacitor/haptics@8.0.2": "patches/@capacitor__haptics@8.0.2.patch",
-      "@capawesome/capacitor-file-picker@8.0.2": "patches/@capawesome__capacitor-file-picker@8.0.2.patch",
-      "@revenuecat/purchases-capacitor@13.1.0": "patches/@revenuecat__purchases-capacitor@13.1.0.patch"
     }
   },
   "devDependencies": {
