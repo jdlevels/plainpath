@@ -43,7 +43,17 @@ on:
 jobs:
   build-and-upload:
     name: Build & Upload to TestFlight
-    runs-on: macos-15        # Xcode 16.4 default → Swift 6.2, matches capacitor-swift-pm@8.3.3 binaries
+    runs-on: macos-15
+
+    # ── Force Xcode 16.4 (Swift 6.2) for every step in this job ─────────────
+    # DEVELOPER_DIR at job level is the canonical way to pin Xcode in GHA.
+    # It is inherited by xcodebuild, swift, swiftc, xcrun, and all Apple tools
+    # without relying on xcode-select symlink state set by the runner image.
+    # capacitor-swift-pm@8.3.3 ships XCFramework binaries compiled with
+    # Swift 6.2; any other Swift version (incl. 6.1.2 on Xcode 16.3) is
+    # binary-incompatible and produces "module was built with Swift X" errors.
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
 
     steps:
 
@@ -51,23 +61,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # ── 1b. Pin Xcode 16.4 (Swift 6.2) ──────────────────────────────────────
-      # macos-15 has Xcode 16.4 installed but may not default to it.
-      # capacitor-swift-pm@8.3.3 XCFramework binaries require Swift 6.2 exactly.
-      # Xcode 16.3 ships Swift 6.1.2 → binary-incompatible; 16.4 ships Swift 6.2.
-      - name: Select Xcode 16.4 (Swift 6.2)
-        run: |
-          sudo xcode-select -s /Applications/Xcode_16.4.app/Contents/Developer
-          xcodebuild -version
-          swift --version
-
-      # ── 2. pnpm (must come before setup-node so the cache key resolves) ────────
+      # ── 2. pnpm (must come before setup-node so the cache key resolves) ────
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 9
 
-      # ── 3. Node.js ───────────────────────────────────────────────────────────
+      # ── 3. Node.js ──────────────────────────────────────────────────────────
       - name: Set up Node.js 22
         uses: actions/setup-node@v4
         with:
@@ -77,12 +77,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      # ── 4. Build web assets ─────────────────────────────────────────────────
+      # ── 5. Build web assets ─────────────────────────────────────────────────
       # Produces: artifacts/plainpath/dist/public/
       - name: Build PlainPath web app
         run: pnpm --filter @workspace/plainpath build
 
-      # ── 5. Sync into iOS project ─────────────────────────────────────────────
+      # ── 6. Sync into iOS project ─────────────────────────────────────────────
       # Copies dist/public/ → ios/App/App/public/ (gitignored, must be generated)
       # Also regenerates CapApp-SPM/Package.swift with current plugin list.
       # Uses pnpm exec (not npx) to run the workspace-installed @capacitor/cli,
@@ -101,7 +101,7 @@ jobs:
           sed -i '' '/\.product(name: "Cordova", package: "capacitor-swift-pm")/d' \
             artifacts/plainpath/ios/App/CapApp-SPM/Package.swift
 
-      # ── 6. Bump build number ─────────────────────────────────────────────────
+      # ── 7. Bump build number ─────────────────────────────────────────────────
       # Uses the GitHub Actions run number so every build is unique.
       # App Store Connect rejects builds with duplicate build numbers.
       - name: Bump build number
@@ -112,7 +112,7 @@ jobs:
             -c "Set :CFBundleVersion $BUILD_NUMBER" \
             artifacts/plainpath/ios/App/App/Info.plist
 
-      # ── 7. Import distribution certificate ──────────────────────────────────
+      # ── 8. Import distribution certificate ──────────────────────────────────
       - name: Import distribution certificate
         env:
           BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
@@ -134,7 +134,7 @@ jobs:
             -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
           security list-keychain -d user -s $KEYCHAIN_PATH
 
-      # ── 8. Import provisioning profile ──────────────────────────────────────
+      # ── 9. Import provisioning profile ──────────────────────────────────────
       - name: Import provisioning profile
         env:
           BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
@@ -144,7 +144,7 @@ jobs:
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/
 
-      # ── 9. Write ExportOptions.plist ─────────────────────────────────────────
+      # ── 10. Write ExportOptions.plist ────────────────────────────────────────
       - name: Write ExportOptions.plist
         env:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
@@ -176,7 +176,24 @@ jobs:
           </plist>
           EOF
 
-      # ── 10. Archive ──────────────────────────────────────────────────────────
+      # ── 11. Xcode / Swift diagnostics ────────────────────────────────────────
+      # Printed immediately before the archive so the log shows exactly which
+      # toolchain will be used. If DEVELOPER_DIR is working, all four lines
+      # should report Xcode 16.4 / Swift 6.2 / the 16.4 developer path.
+      - name: Xcode environment diagnostics
+        run: |
+          echo "=== DEVELOPER_DIR ==="
+          echo "$DEVELOPER_DIR"
+          echo "=== xcode-select -p ==="
+          xcode-select -p
+          echo "=== xcodebuild -version ==="
+          xcodebuild -version
+          echo "=== swift --version ==="
+          swift --version
+          echo "=== installed Xcode apps ==="
+          ls /Applications | grep -i xcode
+
+      # ── 12. Archive ──────────────────────────────────────────────────────────
       - name: Build Xcode archive
         env:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
@@ -196,11 +213,11 @@ jobs:
             CODE_SIGNING_ALLOWED=YES \
             | grep -E 'error:|warning:|\*\* ARCHIVE|Build succeeded|Build FAILED' \
             || true
-          
+
           # Fail the step explicitly if archive is missing
           test -d $RUNNER_TEMP/PlainPath.xcarchive || (echo "Archive not found — build failed" && exit 1)
 
-      # ── 11. Export IPA ───────────────────────────────────────────────────────
+      # ── 13. Export IPA ───────────────────────────────────────────────────────
       - name: Export IPA
         run: |
           xcodebuild -exportArchive \
@@ -214,7 +231,7 @@ jobs:
           echo "=== Exported files ==="
           ls -lh $RUNNER_TEMP/export/
 
-      # ── 12. Upload to TestFlight ─────────────────────────────────────────────
+      # ── 14. Upload to TestFlight ─────────────────────────────────────────────
       - name: Upload to TestFlight
         env:
           APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
@@ -232,7 +249,7 @@ jobs:
             --apiIssuer "$APP_STORE_CONNECT_API_ISSUER_ID" \
             --verbose
 
-      # ── 13. Cleanup ──────────────────────────────────────────────────────────
+      # ── 15. Cleanup ──────────────────────────────────────────────────────────
       - name: Clean up keychain and profile
         if: always()
         run: |
