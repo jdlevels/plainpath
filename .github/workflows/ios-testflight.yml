@@ -35,8 +35,9 @@ on:
 #  App Store Connect API (from Users and Access → Integrations → App Store Connect API):
 #    APP_STORE_CONNECT_API_KEY_ID       — Key ID (10 chars, e.g. "ABCD123456")
 #    APP_STORE_CONNECT_API_ISSUER_ID    — Issuer ID (UUID format)
-#    APP_STORE_CONNECT_API_KEY_BASE64   — Contents of the .p8 key file as base64
-#                                         (base64 -i AuthKey_XXXX.p8 | pbcopy)
+#    APP_STORE_CONNECT_API_PRIVATE_KEY  — Raw contents of AuthKey_XXXX.p8 (NOT base64)
+#                                         Open the .p8 file in a text editor, select all,
+#                                         paste directly into the GitHub secret value.
 #
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -228,72 +229,26 @@ jobs:
           echo "=== Exported files ==="
           ls -lh $RUNNER_TEMP/export/
 
-      # ── 14. Upload to TestFlight ─────────────────────────────────────────────
-      - name: Upload to TestFlight
-        env:
-          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
-          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
-          APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+      # ── 14. Locate IPA then upload to TestFlight ────────────────────────────
+      # Split into two steps: find the IPA path first (xcodebuild names it after
+      # the scheme, e.g. "App.ipa"), then pass it to the upload action.
+      - name: Locate exported IPA
+        id: find_ipa
         run: |
           set -euo pipefail
-
-          # ── Secret presence check (values never printed) ──────────────────
-          echo "=== App Store Connect secret presence ==="
-          [ -n "${APP_STORE_CONNECT_API_KEY_ID:-}"     ] \
-            && echo "APP_STORE_CONNECT_API_KEY_ID:     SET" \
-            || { echo "APP_STORE_CONNECT_API_KEY_ID:     MISSING"; exit 1; }
-          [ -n "${APP_STORE_CONNECT_API_ISSUER_ID:-}"  ] \
-            && echo "APP_STORE_CONNECT_API_ISSUER_ID:  SET" \
-            || { echo "APP_STORE_CONNECT_API_ISSUER_ID:  MISSING"; exit 1; }
-          [ -n "${APP_STORE_CONNECT_API_KEY_BASE64:-}" ] \
-            && echo "APP_STORE_CONNECT_API_KEY_BASE64: SET" \
-            || { echo "APP_STORE_CONNECT_API_KEY_BASE64: MISSING"; exit 1; }
-
-          # ── Locate IPA (named after scheme: App.ipa, not PlainPath.ipa) ──
           echo "=== IPA search ==="
           find "$RUNNER_TEMP/export" -name "*.ipa" -print
-
           IPA_PATH=$(find "$RUNNER_TEMP/export" -name "*.ipa" | head -1)
           [ -n "$IPA_PATH" ] || { echo "ERROR: no .ipa found in $RUNNER_TEMP/export"; exit 1; }
-          echo "IPA path: $IPA_PATH"
+          echo "ipa_path=$IPA_PATH" >> "$GITHUB_OUTPUT"
 
-          # ── Write .p8 key ─────────────────────────────────────────────────
-          # Use $HOME (not ~) — tilde in a variable assignment is not guaranteed
-          # to expand in all POSIX shells, causing altool to look in the wrong place
-          # and return 401 NOT_AUTHORIZED even when the key ID/issuer are correct.
-          # altool's default key search path is $HOME/.appstoreconnect/private_keys/
-          KEY_DIR="$HOME/.appstoreconnect/private_keys"
-          KEY_FILE="$KEY_DIR/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8"
-          mkdir -p "$KEY_DIR"
-          echo -n "$APP_STORE_CONNECT_API_KEY_BASE64" | base64 --decode > "$KEY_FILE"
-          chmod 600 "$KEY_FILE"
-
-          # ── Key file diagnostics (no secret contents printed) ─────────────
-          echo "=== Key directory listing ==="
-          ls -la "$KEY_DIR"
-
-          echo "=== Key file path ==="
-          echo "$KEY_FILE"
-
-          echo "=== Key file non-empty check ==="
-          test -s "$KEY_FILE" \
-            && echo "AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8: present and non-empty" \
-            || { echo "ERROR: key file is missing or empty"; exit 1; }
-
-          echo "=== Key file SHA-256 (verify matches known-good key) ==="
-          shasum -a 256 "$KEY_FILE"
-
-          # ── Exact altool command shape (no secret values) ─────────────────
-          echo "=== altool command ==="
-          echo "xcrun altool --upload-app -f <IPA_PATH> --type ios --apiKey <KEY_ID> --apiIssuer <ISSUER_ID> --verbose"
-
-          # ── Upload — exits nonzero on any API / auth error ─────────────
-          xcrun altool --upload-app \
-            -f "$IPA_PATH" \
-            --type ios \
-            --apiKey "$APP_STORE_CONNECT_API_KEY_ID" \
-            --apiIssuer "$APP_STORE_CONNECT_API_ISSUER_ID" \
-            --verbose
+      - name: Upload to TestFlight
+        uses: apple-actions/upload-testflight-build@v1
+        with:
+          app-path: ${{ steps.find_ipa.outputs.ipa_path }}
+          issuer-id: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          api-key-id: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          api-private-key: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY }}
 
       # ── 15. Cleanup ──────────────────────────────────────────────────────────
       - name: Clean up keychain and profile
@@ -301,4 +256,3 @@ jobs:
         run: |
           security delete-keychain $RUNNER_TEMP/app-signing.keychain-db 2>/dev/null || true
           rm -f ~/Library/MobileDevice/Provisioning\ Profiles/build_pp.mobileprovision 2>/dev/null || true
-          rm -f ~/.appstoreconnect/private_keys/AuthKey_*.p8 2>/dev/null || true
