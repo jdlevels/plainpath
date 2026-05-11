@@ -1,0 +1,14 @@
+diff --git a/Package.swift b/Package.swift
+index 69781e066f9bb2179aa3dbaaf47f5b23c90f4880..0254534bb2d27e7e920933642aebf6374bd9e014 100644
+--- a/Package.swift
++++ b/Package.swift
+@@ -16,8 +16,7 @@ let package = Package(
+         .target(
+             name: "HapticsPlugin",
+             dependencies: [
+-                .product(name: "Capacitor", package: "capacitor-swift-pm"),
+-                .product(name: "Cordova", package: "capacitor-swift-pm")
++                .product(name: "Capacitor", package: "capacitor-swift-pm")
+             ],
+             path: "ios/Sources/HapticsPlugin"),
+         .testTarget(
