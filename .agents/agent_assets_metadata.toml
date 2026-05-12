@@ -371,3 +371,21 @@ id = "C3BXkTpSkSbsD_pmatUw3"
 uri = "file://screenshots/03-contract-review-result.png"
 type = "image"
 title = "Screenshot 3 — Contract Review Result"
+
+[[outputs]]
+id = "VcjeWyt9mtePcyStLAGkr"
+uri = "file://screenshots/01-dashboard-appstore.png"
+type = "image"
+title = "1 · Dashboard — 1290×2796 App Store PNG"
+
+[[outputs]]
+id = "YVu877JzpxgVVxg4NpJFJ"
+uri = "file://screenshots/02-analyze-document-appstore.png"
+type = "image"
+title = "2 · Analyze a Document — 1290×2796 App Store PNG"
+
+[[outputs]]
+id = "nyUEk8cYtAWdCGwSXWm_9"
+uri = "file://screenshots/03-contract-review-appstore.png"
+type = "image"
+title = "3 · Contract Review Result — 1290×2796 App Store PNG"

@@ -125,7 +125,7 @@ function ClauseCard({ rating, text, explanation, expanded }: { rating: "needs-at
 
 export function ContractReviewResult() {
   return (
-    <div style={{ width: 390, minHeight: 844, background: BG, fontFamily: "'Inter', sans-serif", overflowX: "hidden" }}>
+    <div style={{ width: 430, height: 932, background: BG, fontFamily: "'Inter', sans-serif", overflowX: "hidden", overflowY: "hidden" }}>
       <StatusBar />
       <NavHeader />
 

@@ -52,7 +52,7 @@ const DOC_TYPES = [
 
 export function AnalyzeDocument() {
   return (
-    <div style={{ width: 390, minHeight: 844, background: BG, fontFamily: "'Inter', sans-serif", overflowX: "hidden" }}>
+    <div style={{ width: 430, height: 932, background: BG, fontFamily: "'Inter', sans-serif", overflowX: "hidden", overflowY: "hidden" }}>
       <StatusBar />
       <NavHeader />
 
