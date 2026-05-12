@@ -353,3 +353,21 @@ id = "F0y5f0tgbQBtHirTs6r0Y"
 uri = "file://docs/app-store-screenshots/plainpath-05-upgrade-subscription.png"
 type = "image"
 title = "Screenshot 5 — Upgrade / subscription"
+
+[[outputs]]
+id = "xLDhmTCVh0JuARMW2XGdq"
+uri = "file://screenshots/01-dashboard.png"
+type = "image"
+title = "Screenshot 1 — Dashboard"
+
+[[outputs]]
+id = "lYC6eqycYDk7TSLVOHVDI"
+uri = "file://screenshots/02-analyze-document.png"
+type = "image"
+title = "Screenshot 2 — Analyze a Document"
+
+[[outputs]]
+id = "C3BXkTpSkSbsD_pmatUw3"
+uri = "file://screenshots/03-contract-review-result.png"
+type = "image"
+title = "Screenshot 3 — Contract Review Result"
