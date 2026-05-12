@@ -82,6 +82,17 @@ export default defineConfig(async ({ mode }) => {
     build: {
       outDir: path.resolve(import.meta.dirname, "dist/public"),
       emptyOutDir: true,
+      // Disable Vite's module-preload wrapper (__vitePreload / __vite__mapDeps).
+      // When the app is served under a sub-path (/app/), Vite 7 generates
+      // relative dep paths (e.g. "assets/index-C6FEnKA1.js") in __vite__mapDeps
+      // and resolves them against window.location.origin — producing
+      // https://domain.com/assets/… instead of https://domain.com/app/assets/….
+      // Those 404s cause "Failed to fetch dynamically imported module" errors
+      // that surface as "Something went wrong" in the ErrorBoundary.
+      // With modulePreload disabled, dynamic imports use native browser ESM
+      // relative-URL resolution (from the importing module's own URL), which
+      // correctly yields /app/assets/… without any wrapper.
+      modulePreload: false,
     },
     server: {
       port,
