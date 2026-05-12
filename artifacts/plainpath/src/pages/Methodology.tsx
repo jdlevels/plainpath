@@ -77,7 +77,7 @@ export default function Methodology() {
               <div>
                 <h2 className="text-base font-bold mb-2">4. Contract review fairness model</h2>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Contract Review evaluates each clause against standard commercial norms for the contract type. Clauses are rated Fair, Watch Out, or Red Flag based on: whether they're one-sided, whether they restrict the non-drafting party disproportionately, whether standard protections are absent, and whether enforcement terms are unusual or abusive.
+                  Contract Review evaluates each clause against standard commercial norms for the contract type. Clauses are rated Fair, Review Carefully, or Needs Attention based on: whether they're one-sided, whether they restrict the non-drafting party disproportionately, whether standard protections are absent, and whether enforcement terms are unusual or abusive.
                 </p>
               </div>
             </div>

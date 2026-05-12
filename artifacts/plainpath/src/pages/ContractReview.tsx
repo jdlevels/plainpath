@@ -61,14 +61,14 @@ const RATING_CONFIG = {
     border: "border-emerald-200/50 dark:border-emerald-900/40",
   },
   "watch-out": {
-    label: "Watch Out",
+    label: "Review Carefully",
     badge: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
     icon: AlertTriangle,
     iconColor: "text-amber-500",
     border: "border-amber-200/50 dark:border-amber-900/40",
   },
   "red-flag": {
-    label: "Red Flag",
+    label: "Needs Attention",
     badge: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
     icon: ShieldAlert,
     iconColor: "text-red-500",
@@ -990,7 +990,7 @@ function ResultsView({ result, onReset, onScrollToDocument }: {
           )}
           {watchOuts.length > 0 && (
             <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/20">
-              <AlertTriangle className="w-3 h-3" /> {watchOuts.length} watch-out{watchOuts.length !== 1 ? "s" : ""}
+              <AlertTriangle className="w-3 h-3" /> {watchOuts.length} caution{watchOuts.length !== 1 ? "s" : ""}
             </span>
           )}
           {fair.length > 0 && (
@@ -1590,8 +1590,8 @@ export default function ContractReview() {
               Review a contract you didn't write. Spot unfair clauses, missing protections, negotiation points, and high-risk terms before you sign.
             </p>
             <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground pt-1 flex-wrap">
-              <span className="flex items-center gap-1.5"><ShieldAlert className="w-3.5 h-3.5 text-red-500" /> Red flags surfaced</span>
-              <span className="flex items-center gap-1.5"><AlertTriangle className="w-3.5 h-3.5 text-amber-500" /> Watch-outs explained</span>
+              <span className="flex items-center gap-1.5"><ShieldAlert className="w-3.5 h-3.5 text-red-500" /> Concerns surfaced</span>
+              <span className="flex items-center gap-1.5"><AlertTriangle className="w-3.5 h-3.5 text-amber-500" /> Cautions explained</span>
               <span className="flex items-center gap-1.5"><Copy className="w-3.5 h-3.5 text-blue-500" /> Negotiation language ready to copy</span>
               <span className="flex items-center gap-1.5"><Lock className="w-3.5 h-3.5 text-violet-500" /> Missing protections identified</span>
             </div>

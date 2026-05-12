@@ -2736,7 +2736,7 @@ function KeyTermCard({ term }: { term: KeyTerm }) {
             <p className="text-sm text-foreground/90 leading-relaxed">{term.whyItMatters}</p>
           </div>
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-400 mb-1">Watch out for</p>
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-400 mb-1">Look out for</p>
             <p className="text-sm text-foreground/90 leading-relaxed">{term.watchOut}</p>
           </div>
           {term.questionToAsk && (
@@ -3546,7 +3546,7 @@ function PrintReport({ analysis, documentTypeHint }: { analysis: DocumentAnalysi
                   {kt.category && <span className="print-badge" style={{ background: "#f0f9ff", color: "#0369a1", borderColor: "#bae6fd" }}>{kt.category}</span>}
                 </div>
                 {kt.explanation && <p className="print-item-desc">{kt.explanation}</p>}
-                {kt.watchOut && <p className="print-item-meta">Watch out: {kt.watchOut}</p>}
+                {kt.watchOut && <p className="print-item-meta">Look out for: {kt.watchOut}</p>}
               </div>
             </div>
           ))}

@@ -124,7 +124,7 @@ export function buildExportText(analysis: DocumentAnalysis): string {
     analysis.keyTerms.forEach((kt) => {
       lines.push(`• ${kt.term}  [${kt.severity.toUpperCase()}]`);
       if (kt.explanation) lines.push(`  ${kt.explanation}`);
-      if (kt.watchOut) lines.push(`  Watch out: ${kt.watchOut}`);
+      if (kt.watchOut) lines.push(`  Look out for: ${kt.watchOut}`);
     });
     lines.push("");
   }

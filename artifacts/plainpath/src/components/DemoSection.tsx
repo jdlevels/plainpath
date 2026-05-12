@@ -184,7 +184,7 @@ function ContractReviewInputFrame() {
 }
 
 function ContractReviewScanFrame() {
-  const checks = ["Reading every clause…", "Identifying red flags…", "Checking fairness balance…", "Finding missing protections…"]
+  const checks = ["Reading every clause…", "Identifying concerns…", "Checking fairness balance…", "Finding missing protections…"]
   const [idx, setIdx] = useState(0)
   useEffect(() => {
     const t = setInterval(() => setIdx((i) => (i + 1) % checks.length), 620)
@@ -239,7 +239,7 @@ function ContractReviewResultsFrame() {
         </div>
         <Scale className="w-5 h-5 text-red-400 ml-auto shrink-0" />
       </motion.div>
-      <p className="text-slate-400 text-[11px] font-semibold uppercase tracking-wide shrink-0">Red flags found</p>
+      <p className="text-slate-400 text-[11px] font-semibold uppercase tracking-wide shrink-0">Concerns found</p>
       <div className="flex flex-col gap-2 flex-1 overflow-hidden">
         {REVIEW_FLAGS.map((flag, i) => (
           <motion.div key={i} initial={{ opacity: 0, x: 14 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }}

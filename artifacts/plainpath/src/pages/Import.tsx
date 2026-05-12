@@ -819,7 +819,7 @@ export default function Import() {
               transition={{ delay: 0.06 }}
               className="text-muted-foreground text-sm sm:text-base max-w-lg mx-auto leading-relaxed"
             >
-              Upload, paste, or scan a document to get a plain-English action plan. PlainPath highlights key obligations, deadlines, red flags, and what to do next.
+              Upload, paste, or scan a document to get a plain-English action plan. PlainPath highlights key obligations, deadlines, concerns, and what to do next.
             </motion.p>
             <motion.div
               initial={{ opacity: 0, y: 8 }}

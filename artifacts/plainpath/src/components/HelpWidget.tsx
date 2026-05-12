@@ -36,7 +36,7 @@ const PAGE_ACTIONS: Record<string, { label: string; message: string }[]> = {
   "/contract-review": [
     { label: "What does Contract Review check?", message: "What does the Contract Review tool look for in a contract?" },
     { label: "What file types work?", message: "What file formats does Contract Review support?" },
-    { label: "What red flags does it find?", message: "What kinds of red flags and risky clauses does Contract Review identify?" },
+    { label: "What issues does it find?", message: "What kinds of problematic clauses does Contract Review identify?" },
     { label: "How do I use negotiation tips?", message: "How do I use the negotiation language suggestions in Contract Review?" },
   ],
   "/my-analyses": [

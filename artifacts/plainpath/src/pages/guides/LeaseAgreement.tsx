@@ -19,7 +19,7 @@ export default function LeaseAgreement() {
             What to check in a lease agreement before you sign
           </h1>
           <p className="text-lg text-muted-foreground leading-relaxed">
-            A lease is one of the most consequential documents most people sign. These are the clauses, terms, and red flags tenant attorneys catch every day — and what to do about them.
+            A lease is one of the most consequential documents most people sign. These are the clauses, terms, and warning signs tenant attorneys catch every day — and what to do about them.
           </p>
         </div>
 
@@ -49,7 +49,7 @@ export default function LeaseAgreement() {
         </div>
 
         <div className="space-y-3 mb-10">
-          <h2 className="text-xl font-bold">Red flags to walk away from</h2>
+          <h2 className="text-xl font-bold">Warning signs to walk away from</h2>
           {[
             "No written lease — a verbal lease is nearly impossible to enforce in your favor",
             "Waiver of habitability or 'as-is' clause — landlords cannot waive their legal duty to maintain livable conditions",

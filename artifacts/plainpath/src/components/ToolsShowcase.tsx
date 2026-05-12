@@ -37,10 +37,10 @@ const TOOLS = [
     title: "Document Trust Check",
     verb: "Trust it.",
     tagline: "Know if a document is legitimate before you act",
-    description: "Paste or upload any document that made you uneasy — a job offer, a lease, a prize notice, a payment request. Get a scored verdict with red flags called out explicitly.",
+    description: "Paste or upload any document that made you uneasy — a job offer, a lease, a prize notice, a payment request. Get a scored verdict with concerns called out explicitly.",
     features: [
       { icon: BarChart2, label: "Authenticity + risk scoring" },
-      { icon: AlertTriangle, label: "Red flags surfaced clearly" },
+      { icon: AlertTriangle, label: "Concerns surfaced clearly" },
       { icon: CheckCircle2, label: "Verification action steps" },
       { icon: FileCheck, label: "Pattern-based fraud detection" },
     ],
@@ -83,7 +83,7 @@ const TOOLS = [
     tagline: "Review a contract you didn't write — before you sign",
     description: "Someone handed you a contract. Paste it in and get a clause-by-clause review: unfair terms flagged, missing protections identified, and exact negotiation language ready to copy and send back.",
     features: [
-      { icon: Flag, label: "Red flags and watch-outs called out" },
+      { icon: Flag, label: "Problem clauses and cautions identified" },
       { icon: Copy, label: "Negotiation language ready to copy" },
       { icon: MessageSquare, label: "Plain English for every clause" },
       { icon: AlertTriangle, label: "Missing protections identified" },

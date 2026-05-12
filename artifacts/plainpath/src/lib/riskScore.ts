@@ -63,6 +63,6 @@ export function getRiskScoreResult(score: number): RiskScoreResult {
     color: "text-red-600 dark:text-red-400",
     bg: "bg-red-50 dark:bg-red-950/30 border-red-200/60 dark:border-red-800/40",
     ring: "ring-red-400/40",
-    description: "Major red flags detected. Strongly consider consulting an attorney.",
+    description: "Major concerns detected. Consider consulting a qualified professional.",
   };
 }

@@ -25,9 +25,9 @@ export default function ScamNotice() {
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
           {[
-            { icon: XCircle, label: "High scam risk", color: "text-red-500", bg: "bg-red-50 dark:bg-red-950/30", desc: "Multiple red flags present. Do not respond or pay." },
+            { icon: XCircle, label: "High scam risk", color: "text-red-500", bg: "bg-red-50 dark:bg-red-950/30", desc: "Multiple concerns present. Do not respond or pay." },
             { icon: AlertTriangle, label: "Suspicious", color: "text-amber-500", bg: "bg-amber-50 dark:bg-amber-950/30", desc: "Verify independently before taking any action." },
-            { icon: CheckCircle2, label: "Likely legitimate", color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-950/30", desc: "No major red flags, but verify contact details." },
+            { icon: CheckCircle2, label: "Likely legitimate", color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-950/30", desc: "No major concerns, but verify contact details." },
           ].map((item) => (
             <div key={item.label} className={`${item.bg} border border-border/30 rounded-2xl p-4 text-center`}>
               <item.icon className={`w-8 h-8 ${item.color} mx-auto mb-2`} />
@@ -38,7 +38,7 @@ export default function ScamNotice() {
         </div>
 
         <div className="space-y-6 mb-10">
-          <h2 className="text-xl font-bold">Red flags that almost always indicate a scam</h2>
+          <h2 className="text-xl font-bold">Warning signs that almost always indicate a scam</h2>
           {[
             { icon: CreditCard, title: "Gift card payment demand", desc: "No legitimate government agency, utility company, or debt collector will ever ask you to pay with iTunes gift cards, Google Play cards, or any other gift card. This is the single most reliable indicator of a scam — full stop." },
             { icon: AlertTriangle, title: "Immediate arrest or legal threats", desc: "Real IRS letters don't threaten immediate arrest. Real utilities give 10–30 days notice before shutoff. Real courts send certified mail. Extreme urgency combined with threats of immediate punishment is a scam tactic designed to prevent you from thinking clearly." },

@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card"
 
 export default function JobOffer() {
   useEffect(() => {
-    document.title = "Job Offer Red Flags to Check Before You Sign — PlainPath Guide"
+    document.title = "Job Offer Warning Signs to Check Before You Sign — PlainPath Guide"
     return () => { document.title = "PlainPath" }
   }, [])
 
@@ -16,7 +16,7 @@ export default function JobOffer() {
         <div className="mb-8">
           <p className="text-xs font-bold uppercase tracking-widest text-primary mb-3">PlainPath Guide</p>
           <h1 className="text-3xl sm:text-4xl font-display font-bold tracking-tight mb-4">
-            Job offer red flags to check before you sign
+            Job offer warning signs to check before you sign
           </h1>
           <p className="text-lg text-muted-foreground leading-relaxed">
             Employment attorneys see the same costly mistakes repeatedly. These are the clauses most people skip — and the ones that limit you most when you leave.
@@ -64,7 +64,7 @@ export default function JobOffer() {
             <div>
               <h3 className="text-sm font-bold mb-2">Run a Contract Review on your offer</h3>
               <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-                Upload or paste your employment offer and PlainPath will rate every clause Fair, Watch Out, or Red Flag — and provide specific negotiation language for anything problematic. Sign in to run this analysis.
+                Upload or paste your employment offer and PlainPath will rate every clause Fair, Review Carefully, or Needs Attention — and provide specific negotiation language for anything problematic. Sign in to run this analysis.
               </p>
               <Link href="/contract-review" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity">
                 Review my offer letter <ArrowRight className="w-4 h-4" />

@@ -323,7 +323,7 @@ export default function ProductPreview() {
               <XCircle className="w-5 h-5 text-red-400 shrink-0" />
             </motion.div>
 
-            <SectionLabel>Red flags found</SectionLabel>
+            <SectionLabel>Concerns found</SectionLabel>
             <div className="space-y-1.5">
               {TRUST_FLAGS.map((flag, i) => (
                 <motion.div key={i} initial={{ opacity: 0, x: 8 }} whileInView={{ opacity: 1, x: 0 }}
@@ -420,7 +420,7 @@ export default function ProductPreview() {
               <Scale className="w-5 h-5 text-red-400 shrink-0" />
             </motion.div>
 
-            <SectionLabel>Red flags found</SectionLabel>
+            <SectionLabel>Concerns found</SectionLabel>
             <div className="space-y-1.5">
               {REVIEW_FLAGS.map((flag, i) => (
                 <motion.div key={i} initial={{ opacity: 0, x: 8 }} whileInView={{ opacity: 1, x: 0 }}
