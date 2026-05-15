@@ -81,13 +81,167 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      # ── 5. Build web assets ─────────────────────────────────────────────────
-      # Produces: artifacts/plainpath/dist/public/
-      - name: Build PlainPath web app
-        run: pnpm --filter @workspace/plainpath build
+      # ── 4b. Verify GitHub Actions secrets ────────────────────────────────────
+      # Checks every secret consumed by this workflow.
+      # Prints only safe information (character length, pk_live_ prefix, set/empty).
+      # Secret values are NEVER printed — GitHub masks them automatically anyway.
+      #
+      # Name mapping note: the user-visible names vs. the names this workflow reads:
+      #   User expected name                Workflow reads
+      #   CLERK_PUBLISHABLE_KEY          →  CLERK_PUBLISHABLE_KEY             (same)
+      #   APP_STORE_CONNECT_API_KEY_ID   →  APP_STORE_CONNECT_API_KEY_ID      (same)
+      #   APP_STORE_CONNECT_API_ISSUER_ID → APP_STORE_CONNECT_API_ISSUER_ID   (same)
+      #   APP_STORE_CONNECT_API_KEY      →  APP_STORE_CONNECT_API_PRIVATE_KEY (DIFFERENT)
+      #   IOS_CERTIFICATE_BASE64         →  BUILD_CERTIFICATE_BASE64          (DIFFERENT)
+      #   IOS_CERTIFICATE_PASSWORD       →  P12_PASSWORD                      (DIFFERENT)
+      #   IOS_PROVISION_PROFILE_BASE64   →  BUILD_PROVISION_PROFILE_BASE64    (DIFFERENT)
+      # If you set secrets under the "user expected" names, the workflow will read
+      # empty strings for the mismatched ones. This step will catch that.
+      - name: Verify GitHub Actions secrets
+        env:
+          S_CLERK:            ${{ secrets.CLERK_PUBLISHABLE_KEY }}
+          S_ASC_KEY_ID:       ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          S_ASC_ISSUER:       ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          S_ASC_PRIVATE_KEY:  ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY }}
+          S_BUILD_CERT:       ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          S_P12_PW:           ${{ secrets.P12_PASSWORD }}
+          S_BUILD_PP:         ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+          S_PP_NAME:          ${{ secrets.PROVISIONING_PROFILE_NAME }}
+          S_TEAM_ID:          ${{ secrets.APPLE_TEAM_ID }}
+          S_KEYCHAIN_PW:      ${{ secrets.KEYCHAIN_PASSWORD }}
+          # Also read under the user's expected alternate names so we can detect
+          # if the secret was set under the wrong name in GitHub Settings.
+          S_ALT_ASC_KEY:      ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+          S_ALT_IOS_CERT:     ${{ secrets.IOS_CERTIFICATE_BASE64 }}
+          S_ALT_IOS_CERT_PW:  ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+          S_ALT_IOS_PP:       ${{ secrets.IOS_PROVISION_PROFILE_BASE64 }}
+        run: |
+          set -euo pipefail
+          FAIL=0
+
+          check() {
+            local label="$1"
+            local value="$2"
+            local len=${#value}
+            if [ "$len" -eq 0 ]; then
+              echo "  ✗ EMPTY   $label"
+              FAIL=$((FAIL + 1))
+            else
+              echo "  ✓ SET     $label  (${len} chars)"
+            fi
+          }
+
+          check_prefix() {
+            local label="$1"
+            local value="$2"
+            local prefix="$3"
+            local len=${#value}
+            if [ "$len" -eq 0 ]; then
+              echo "  ✗ EMPTY   $label"
+              FAIL=$((FAIL + 1))
+            elif [[ "$value" == "${prefix}"* ]]; then
+              echo "  ✓ SET     $label  (${len} chars, starts with ${prefix})"
+            else
+              echo "  ✗ PREFIX  $label  (${len} chars, does NOT start with ${prefix})"
+              FAIL=$((FAIL + 1))
+            fi
+          }
+
+          echo "════════════════════════════════════════════════════════════"
+          echo "  SECRETS CHECK — names as read by this workflow"
+          echo "════════════════════════════════════════════════════════════"
+
+          echo ""
+          echo "── Web build ───────────────────────────────────────────────"
+          check_prefix "CLERK_PUBLISHABLE_KEY" "$S_CLERK" "pk_live_"
+
+          echo ""
+          echo "── Code signing ────────────────────────────────────────────"
+          check "BUILD_CERTIFICATE_BASE64"       "$S_BUILD_CERT"
+          check "P12_PASSWORD"                   "$S_P12_PW"
+          check "BUILD_PROVISION_PROFILE_BASE64" "$S_BUILD_PP"
+          check "PROVISIONING_PROFILE_NAME"      "$S_PP_NAME"
+          check "APPLE_TEAM_ID"                  "$S_TEAM_ID"
+          check "KEYCHAIN_PASSWORD"              "$S_KEYCHAIN_PW"
+
+          echo ""
+          echo "── App Store Connect API ────────────────────────────────────"
+          check "APP_STORE_CONNECT_API_KEY_ID"      "$S_ASC_KEY_ID"
+          check "APP_STORE_CONNECT_API_ISSUER_ID"   "$S_ASC_ISSUER"
+          check "APP_STORE_CONNECT_API_PRIVATE_KEY" "$S_ASC_PRIVATE_KEY"
+
+          echo ""
+          echo "── Alternate-name check (user-expected names vs. workflow names) ─"
+          echo "  If a secret appears SET here but EMPTY above, it was stored"
+          echo "  under the wrong name. Rename it in GitHub → Settings → Secrets."
+          ALT_FAIL=0
+          alt_check() {
+            local user_name="$1"
+            local workflow_name="$2"
+            local alt_val="$3"
+            local len=${#alt_val}
+            if [ "$len" -gt 0 ]; then
+              echo "  ⚠ WARN  $user_name is SET ($len chars) but workflow reads $workflow_name"
+              echo "         → Either rename the GitHub secret or this is a harmless duplicate."
+              ALT_FAIL=$((ALT_FAIL + 1))
+            else
+              echo "  ✓ OK    $user_name is empty — workflow reads $workflow_name (expected)"
+            fi
+          }
+          alt_check "APP_STORE_CONNECT_API_KEY"  "APP_STORE_CONNECT_API_PRIVATE_KEY" "$S_ALT_ASC_KEY"
+          alt_check "IOS_CERTIFICATE_BASE64"     "BUILD_CERTIFICATE_BASE64"          "$S_ALT_IOS_CERT"
+          alt_check "IOS_CERTIFICATE_PASSWORD"   "P12_PASSWORD"                      "$S_ALT_IOS_CERT_PW"
+          alt_check "IOS_PROVISION_PROFILE_BASE64" "BUILD_PROVISION_PROFILE_BASE64"  "$S_ALT_IOS_PP"
+
+          echo ""
+          echo "── Point 5: Clerk vs native diagnostic independence ─────────"
+          echo "  The native diagnostic overlay (AppDelegate.swift) runs in"
+          echo "  UIKit — it is NOT gated on Clerk, React, or any JS loading."
+          echo "  Even if CLERK_PUBLISHABLE_KEY is wrong/empty, the blue overlay"
+          echo "  will still appear for 5 s proving the native shell is alive."
+          echo "  A missing Clerk key causes a JS-level error — it cannot blank"
+          echo "  the screen before the native diagnostic has time to show."
+          if [ "${#S_CLERK}" -gt 0 ] && [[ "$S_CLERK" == pk_live_* ]]; then
+            echo "  STATUS: Clerk key is set and has correct pk_live_ prefix — no issue."
+          else
+            echo "  STATUS: Clerk key issue detected (see above) — JS will error after"
+            echo "          native diagnostic fades, which is expected and diagnosable."
+          fi
+
+          echo ""
+          if [ "$FAIL" -gt 0 ]; then
+            echo "════════════════════════════════════════════════════════════"
+            echo "  SECRETS CHECK FAILED — $FAIL required secret(s) are empty"
+            echo "  Go to: GitHub repo → Settings → Secrets and variables → Actions"
+            echo "  Add or rename the missing secrets listed above."
+            echo "════════════════════════════════════════════════════════════"
+            exit 1
+          else
+            echo "════════════════════════════════════════════════════════════"
+            echo "  SECRETS CHECK PASSED — all required secrets are set"
+            echo "════════════════════════════════════════════════════════════"
+          fi
+
+      # ── 5. Build native iOS web assets ──────────────────────────────────────
+      # MUST use build:native (NATIVE_BUILD=1), NOT the plain `build` script.
+      #
+      # Plain `build` → dist/public/ with base="/app/" → asset URLs like
+      #   /app/assets/index-XXX.js — these 404 inside the Capacitor WebView,
+      #   which serves from capacitor://localhost/ with NO /app/ prefix.
+      #   Result: every JS/CSS file silently 404s → blank white screen.
+      #
+      # build:native → dist/native/ with base="/" → asset URLs like
+      #   /assets/index-XXX.js — correct for capacitor://localhost/assets/…
+      #
+      # capacitor.config.json webDir is "dist/native" — cap sync reads from there.
+      - name: Build PlainPath native iOS assets
+        env:
+          CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
+          VITE_BUILD_NUMBER: ${{ github.run_number }}
+        run: pnpm --filter @workspace/plainpath build:native
 
       # ── 6. Sync into iOS project ─────────────────────────────────────────────
-      # Copies dist/public/ → ios/App/App/public/ (gitignored, must be generated)
+      # Copies dist/native/ → ios/App/App/public/ (gitignored, must be generated)
       # Also regenerates CapApp-SPM/Package.swift with current plugin list and
       # correct pnpm store paths for all installed plugins.
       # Uses pnpm exec (not npx) to run the workspace-installed @capacitor/cli.
@@ -98,6 +252,96 @@ jobs:
       # or post-sync sed stripping is needed.
       - name: Capacitor sync iOS
         run: pnpm --filter @workspace/plainpath exec cap sync ios
+
+      # ── 6a. Verify iOS bundle integrity ─────────────────────────────────────
+      # Fails CI immediately if the synced bundle would produce a blank screen.
+      # Three checks:
+      #   1. No /app/assets refs — these 404 in the native WebView.
+      #   2. PlainPath launch fallback text present — visible before JS loads.
+      #   3. Every JS/CSS file referenced by index.html actually exists on disk.
+      - name: Verify iOS web bundle integrity
+        run: |
+          INDEX="artifacts/plainpath/ios/App/App/public/index.html"
+          ASSETS_DIR="artifacts/plainpath/ios/App/App/public/assets"
+
+          # ── Guard 1: no /app/assets references ───────────────────────────────
+          if grep -q "/app/assets" "$INDEX"; then
+            echo "ERROR: $INDEX contains /app/assets references — web build was"
+            echo "used instead of native build. Assets will 404 in WebView."
+            echo "Use 'pnpm build:native' (NATIVE_BUILD=1), not 'pnpm build'."
+            grep "/app/assets" "$INDEX"
+            exit 1
+          fi
+          echo "✓ No /app/assets references in index.html"
+
+          # ── Guard 2: PlainPath launch fallback present ────────────────────────
+          if ! grep -q "pp-launch-shell" "$INDEX"; then
+            echo "ERROR: PlainPath branded launch shell (pp-launch-shell) not"
+            echo "found in $INDEX — blank screen will appear before React loads."
+            exit 1
+          fi
+          echo "✓ PlainPath launch shell present in index.html"
+
+          # ── Guard 3: referenced JS/CSS assets exist on disk ──────────────────
+          MISSING=0
+          while IFS= read -r ref; do
+            # Strip leading slash, resolve relative to ios/App/App/public/
+            FILE="artifacts/plainpath/ios/App/App/public${ref}"
+            if [ ! -f "$FILE" ]; then
+              echo "ERROR: referenced asset missing: $ref → $FILE"
+              MISSING=$((MISSING + 1))
+            fi
+          done < <(grep -oP '(?<=src="|href=")[^"]+\.(js|css|mjs)' "$INDEX")
+
+          if [ "$MISSING" -gt 0 ]; then
+            echo "ERROR: $MISSING asset(s) referenced in index.html are missing from the bundle."
+            exit 1
+          fi
+          echo "✓ All JS/CSS assets referenced in index.html exist on disk"
+
+          # ── Summary ───────────────────────────────────────────────────────────
+          echo ""
+          echo "=== iOS bundle index.html asset references ==="
+          grep -E 'src=|href=.*\.(js|css)' "$INDEX"
+          echo ""
+          echo "=== Assets in bundle ==="
+          ls "$ASSETS_DIR"
+          echo "✓ iOS web bundle integrity verified — safe to archive"
+
+      # ── 6b. Print full bundle index.html for artifact-level inspection ────────
+      # This step prints the EXACT index.html that will be archived into the IPA.
+      # CI logs are the source of truth — if blank screen recurs, check this step
+      # first to confirm asset paths before looking at Xcode or IPA internals.
+      - name: Print iOS bundle index.html (artifact inspection)
+        run: |
+          INDEX="artifacts/plainpath/ios/App/App/public/index.html"
+          echo "=== FULL ios/App/App/public/index.html ==="
+          cat "$INDEX"
+          echo ""
+          echo "=== All files in ios/App/App/public/assets/ ==="
+          ls -lh artifacts/plainpath/ios/App/App/public/assets/
+          echo ""
+          echo "=== Confirm: no /app/assets in index.html ==="
+          grep -c "/app/assets" "$INDEX" && echo "FAIL: /app/assets found" && exit 1 || echo "PASS: no /app/assets"
+          echo "=== Confirm: base='/' asset references present ==="
+          grep '/assets/' "$INDEX" && echo "PASS: /assets/ references found" || echo "WARN: no /assets/ references"
+
+      # ── 6c. Verify production app icon survived cap sync ─────────────────────
+      # cap sync does NOT touch AppIcon.appiconset, but this step guards against
+      # any future tooling regression that might regenerate icons.
+      # Uses macOS-native sips — no extra deps required.
+      - name: Verify production app icon (1024×1024)
+        run: |
+          ICON="artifacts/plainpath/ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png"
+          W=$(sips --getProperty pixelWidth  "$ICON" | awk '/pixelWidth/{print $2}')
+          H=$(sips --getProperty pixelHeight "$ICON" | awk '/pixelHeight/{print $2}')
+          SIZE=$(stat -f%z "$ICON")
+          echo "Icon: ${W}x${H}, ${SIZE} bytes — path: $ICON"
+          [ "$W" = "1024" ] && [ "$H" = "1024" ] || \
+            (echo "ERROR: wrong icon dimensions ${W}x${H} — expected 1024x1024. Blue placeholder may have been restored." && exit 1)
+          [ "$SIZE" -gt 100000 ] || \
+            (echo "ERROR: icon file is only ${SIZE} bytes — looks like a placeholder, not the production icon." && exit 1)
+          echo "✓ Production app icon verified: ${W}x${H}, ${SIZE} bytes"
 
       # ── 7. Bump build number ─────────────────────────────────────────────────
       # Uses the GitHub Actions run number so every build is unique.
@@ -191,7 +435,88 @@ jobs:
           echo "=== installed Xcode apps ==="
           ls /Applications | grep -i xcode
 
+      # ── 11b. Pre-archive source identity check ───────────────────────────────
+      # Investigation points 1-8 from the blank-screen diagnosis.
+      # Prints the FULL identity chain (project → target → file → string) and
+      # hard-fails CI if the native diagnostic string is absent from the source.
+      # This proves the CORRECT AppDelegate.swift will be compiled BEFORE we
+      # hand anything to xcodebuild.
+      - name: Pre-archive source identity check
+        run: |
+          set -euo pipefail
+
+          echo "════════════════════════════════════════════════════════════"
+          echo "  BUILD IDENTITY REPORT"
+          echo "════════════════════════════════════════════════════════════"
+
+          echo ""
+          echo "── Git / run identity ──────────────────────────────────────"
+          echo "  GitHub run number : ${{ github.run_number }}"
+          echo "  Git commit SHA    : ${{ github.sha }}"
+          echo "  Git ref           : ${{ github.ref }}"
+
+          echo ""
+          echo "── Xcode project identity ──────────────────────────────────"
+          XCPROJ="artifacts/plainpath/ios/App/App.xcodeproj"
+          echo "  Project path      : $(pwd)/$XCPROJ"
+          echo "  Workspace path    : $(pwd)/$XCPROJ/project.xcworkspace  (no separate .xcworkspace — SPM-only)"
+          echo "  Scheme            : App"
+          echo "  Target name       : App"
+          echo "  Bundle identifier : com.plainpathapp.plainpath"
+
+          echo ""
+          echo "── AppDelegate.swift identity ──────────────────────────────"
+          APPDELEGATE="artifacts/plainpath/ios/App/App/AppDelegate.swift"
+          echo "  PBXGroup path=App, sourceTree=<group>"
+          echo "  Resolved on disk  : $(pwd)/$APPDELEGATE"
+          echo "  File size         : $(wc -c < "$APPDELEGATE") bytes"
+          echo "  Last modified     : $(stat -f '%Sm' "$APPDELEGATE" 2>/dev/null || stat -c '%y' "$APPDELEGATE" 2>/dev/null)"
+          echo "  SHA-256           : $(shasum -a 256 "$APPDELEGATE" | awk '{print $1}')"
+
+          echo ""
+          echo "── Info.plist build numbers (post-bump) ────────────────────"
+          INFOPLIST="artifacts/plainpath/ios/App/App/Info.plist"
+          echo "  CFBundleVersion           : $(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$INFOPLIST")"
+          echo "  CFBundleShortVersionString: $(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$INFOPLIST" 2>/dev/null || echo '(key not set directly — uses MARKETING_VERSION)')"
+
+          echo ""
+          echo "── AppDelegate.swift source content ────────────────────────"
+          cat "$APPDELEGATE"
+
+          echo ""
+          echo "── GUARD: diagnostic string present in AppDelegate.swift ───"
+          if grep -q "PlainPath native shell" "$APPDELEGATE"; then
+            echo "  PASS: 'PlainPath native shell' found in AppDelegate.swift"
+          else
+            echo "  FAIL: 'PlainPath native shell' NOT found in AppDelegate.swift"
+            echo "  The native diagnostic was not written to the correct file."
+            echo "  Archive blocked. Fix AppDelegate.swift and re-run."
+            exit 1
+          fi
+
+          echo ""
+          echo "── GUARD: no SceneDelegate present ────────────────────────"
+          if find "$(dirname "$XCPROJ")" -name "SceneDelegate.swift" | grep -q .; then
+            echo "  WARN: SceneDelegate.swift found — window management may differ"
+          else
+            echo "  PASS: no SceneDelegate.swift — classic UIWindow/AppDelegate pattern"
+          fi
+
+          echo ""
+          echo "── GUARD: no duplicate Xcode projects ─────────────────────"
+          DUPE_COUNT=$(find . -name "*.xcodeproj" -not -path "*/node_modules/*" -not -path "*/.git/*" 2>/dev/null | grep -v "project.xcworkspace" | wc -l | tr -d ' ')
+          echo "  Found $DUPE_COUNT .xcodeproj(s):"
+          find . -name "*.xcodeproj" -not -path "*/node_modules/*" -not -path "*/.git/*" 2>/dev/null | grep -v "project.xcworkspace"
+          [ "$DUPE_COUNT" -eq 1 ] && echo "  PASS: exactly one Xcode project" || echo "  WARN: $DUPE_COUNT projects found — verify archive uses the correct one"
+
+          echo ""
+          echo "════════════════════════════════════════════════════════════"
+          echo "  PRE-ARCHIVE SOURCE CHECK PASSED"
+          echo "════════════════════════════════════════════════════════════"
+
       # ── 12. Archive ──────────────────────────────────────────────────────────
+      # NOTE: No output filtering, no || true. Full xcodebuild output is shown
+      # so errors are visible. Step fails if xcodebuild exits non-zero.
       - name: Build Xcode archive
         env:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
@@ -208,26 +533,163 @@ jobs:
             DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
             CI_PP_SPECIFIER="$PROVISIONING_PROFILE_NAME" \
             CODE_SIGNING_REQUIRED=YES \
-            CODE_SIGNING_ALLOWED=YES \
-            | grep -E 'error:|warning:|\*\* ARCHIVE|Build succeeded|Build FAILED' \
-            || true
+            CODE_SIGNING_ALLOWED=YES
 
-          # Fail the step explicitly if archive is missing
-          test -d $RUNNER_TEMP/PlainPath.xcarchive || (echo "Archive not found — build failed" && exit 1)
+      # ── 12a. Inspect xcarchive — artifact-level proof before export ───────────
+      # Verifies the ACTUAL archived .app bundle contains public/index.html.
+      # This is the evidence the user requested: inspection of the real archive,
+      # not the source tree or dist folder. Fails CI if the file is missing.
+      - name: Inspect xcarchive bundle contents
+        run: |
+          APP_DIR="$RUNNER_TEMP/PlainPath.xcarchive/Products/Applications/App.app"
+
+          echo "=== xcarchive App.app top-level contents ==="
+          ls -la "$APP_DIR"
+
+          echo ""
+          echo "=== public/ directory in archived App.app ==="
+          ls -la "$APP_DIR/public/" || (echo "ERROR: public/ not found in xcarchive App.app" && exit 1)
+
+          echo ""
+          echo "=== public/assets/ in xcarchive ==="
+          ls "$APP_DIR/public/assets/" || (echo "ERROR: public/assets/ not found in xcarchive" && exit 1)
+
+          echo ""
+          echo "=== FULL public/index.html from xcarchive ==="
+          cat "$APP_DIR/public/index.html" || (echo "ERROR: public/index.html not found in xcarchive" && exit 1)
+
+          echo ""
+          echo "=== Guard: no /app/assets in xcarchive index.html ==="
+          if grep -q "/app/assets" "$APP_DIR/public/index.html"; then
+            echo "FAIL: /app/assets found in xcarchive index.html — wrong build used"
+            exit 1
+          fi
+          echo "PASS: no /app/assets in xcarchive index.html"
+
+          echo ""
+          echo "=== Guard: pp-launch-shell in xcarchive index.html ==="
+          if ! grep -q "pp-launch-shell" "$APP_DIR/public/index.html"; then
+            echo "FAIL: pp-launch-shell not found in xcarchive index.html"
+            exit 1
+          fi
+          echo "PASS: pp-launch-shell found in xcarchive index.html"
+
+          echo "✓ xcarchive bundle integrity verified"
+
+      # ── 12b. Binary string check — native diagnostic in compiled App binary ──
+      # Point 5 from the blank-screen investigation.
+      # Uses `strings` to search the compiled Mach-O binary inside the xcarchive
+      # for "PlainPath native shell". This is the definitive proof the Swift code
+      # was compiled into the binary, not just present in the source file.
+      # Fails CI if the string is absent — blocks upload of a broken build.
+      - name: Binary string check — diagnostic in compiled App binary
+        run: |
+          set -euo pipefail
+          APP_BIN="$RUNNER_TEMP/PlainPath.xcarchive/Products/Applications/App.app/App"
+
+          echo "Searching compiled binary for 'PlainPath native shell'…"
+          echo "Binary path: $APP_BIN"
+          echo "Binary size: $(wc -c < "$APP_BIN") bytes"
+          echo ""
+
+          # `strings` extracts printable character sequences from binary files.
+          # Swift string literals are stored as UTF-8 in the __TEXT segment and
+          # are extractable by `strings` even in Release builds.
+          if strings "$APP_BIN" | grep -q "PlainPath native shell"; then
+            echo "PASS: 'PlainPath native shell' found in compiled binary"
+            echo "Matching lines:"
+            strings "$APP_BIN" | grep "PlainPath"
+          else
+            echo "FAIL: 'PlainPath native shell' NOT found in compiled App binary"
+            echo ""
+            echo "This means one of:"
+            echo "  1. The wrong AppDelegate.swift was compiled (check pre-archive identity report)"
+            echo "  2. The Swift compiler removed the string (unlikely for UILabel.text assignments)"
+            echo "  3. The archive used a stale derived-data cache (re-run to test)"
+            echo ""
+            echo "Blocking upload. Investigate the pre-archive identity report above."
+            exit 1
+          fi
+
+          echo ""
+          echo "════════════════════════════════════════════════════════════"
+          echo "  POST-ARCHIVE BINARY CHECK PASSED"
+          echo "════════════════════════════════════════════════════════════"
 
       # ── 13. Export IPA ───────────────────────────────────────────────────────
+      # NOTE: No output filtering, no || true. Full output shown, step fails on error.
       - name: Export IPA
         run: |
           xcodebuild -exportArchive \
             -archivePath $RUNNER_TEMP/PlainPath.xcarchive \
             -exportOptionsPlist $RUNNER_TEMP/ExportOptions.plist \
-            -exportPath $RUNNER_TEMP/export \
-            | grep -E 'error:|** EXPORT|Export succeeded|Export FAILED' \
-            || true
+            -exportPath $RUNNER_TEMP/export
 
-          # List what was exported for verification
           echo "=== Exported files ==="
           ls -lh $RUNNER_TEMP/export/
+
+      # ── 13a. Inspect IPA — artifact-level proof before upload ─────────────────
+      # Unzips the IPA and inspects the actual Payload/App.app/public/ directory.
+      # This is the final artifact that TestFlight distributes. Fails if missing.
+      - name: Inspect IPA bundle contents
+        run: |
+          set -euo pipefail
+          IPA_PATH=$(find "$RUNNER_TEMP/export" -name "*.ipa" | head -1)
+          [ -n "$IPA_PATH" ] || { echo "ERROR: no .ipa found to inspect"; exit 1; }
+
+          echo "IPA path: $IPA_PATH"
+          INSPECT_DIR="$RUNNER_TEMP/ipa-inspect"
+          mkdir -p "$INSPECT_DIR"
+          cp "$IPA_PATH" "$INSPECT_DIR/app.zip"
+          cd "$INSPECT_DIR" && unzip -q app.zip
+
+          APP_DIR=$(find "$INSPECT_DIR/Payload" -name "*.app" -maxdepth 1 | head -1)
+          echo "App bundle: $APP_DIR"
+
+          echo ""
+          echo "=== Payload/App.app top-level ==="
+          ls "$APP_DIR"
+
+          echo ""
+          echo "=== Payload/App.app/public/ ==="
+          ls -la "$APP_DIR/public/" || (echo "ERROR: public/ not found in IPA Payload" && exit 1)
+
+          echo ""
+          echo "=== Payload/App.app/public/assets/ ==="
+          ls "$APP_DIR/public/assets/" || (echo "ERROR: public/assets/ not found in IPA" && exit 1)
+
+          echo ""
+          echo "=== FULL Payload/App.app/public/index.html ==="
+          cat "$APP_DIR/public/index.html" || (echo "ERROR: public/index.html not found in IPA" && exit 1)
+
+          echo ""
+          echo "=== Guard: no /app/assets in IPA index.html ==="
+          if grep -q "/app/assets" "$APP_DIR/public/index.html"; then
+            echo "FAIL: /app/assets paths in IPA — wrong build was bundled"
+            exit 1
+          fi
+          echo "PASS: IPA index.html has no /app/assets references"
+
+          echo ""
+          echo "=== Guard: pp-launch-shell present ==="
+          grep -q "pp-launch-shell" "$APP_DIR/public/index.html" \
+            && echo "PASS: pp-launch-shell found in IPA index.html" \
+            || { echo "FAIL: pp-launch-shell missing from IPA index.html"; exit 1; }
+
+          echo ""
+          echo "=== Guard: JS/CSS assets referenced in IPA index.html exist in bundle ==="
+          MISSING=0
+          while IFS= read -r ref; do
+            FILE="$APP_DIR/public${ref}"
+            if [ ! -f "$FILE" ]; then
+              echo "MISSING: $ref → $FILE"
+              MISSING=$((MISSING + 1))
+            fi
+          done < <(grep -oP '(?<=src="|href=")[^"]+\.(js|css|mjs)' "$APP_DIR/public/index.html")
+          [ "$MISSING" -eq 0 ] && echo "PASS: all referenced assets exist in IPA" || { echo "FAIL: $MISSING asset(s) missing"; exit 1; }
+
+          echo ""
+          echo "✓ IPA bundle integrity verified — safe to upload"
 
       # ── 14. Locate IPA then upload to TestFlight ────────────────────────────
       # Split into two steps: find the IPA path first (xcodebuild names it after
