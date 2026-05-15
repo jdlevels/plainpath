@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
+import { Switch, Route, Router as WouterRouter, useLocation, Link } from "wouter";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { ClerkProvider, SignIn, SignUp, useClerk, useUser, useAuth } from "@clerk/react";
+import { useSignIn, useSignUp } from "@clerk/react/legacy";
 import { getApiBaseUrl } from "@/lib/api";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { startStripeCheckout } from "@/lib/stripe";
@@ -185,12 +186,290 @@ function AuthPageWrapper({ children }: { children: React.ReactNode }) {
   );
 }
 
-// After a successful sign-in or sign-up, send the user to the app dashboard.
-// Using an explicit afterSignInUrl prevents Clerk from generating an absolute
-// redirect URL that wouter/WKWebView cannot handle on native.
+// After a successful sign-in or sign-up on WEB, send the user to the app dashboard.
 const afterAuthUrl = `${basePath}/import`;
 
+// ─── Native custom sign-in ────────────────────────────────────────────────────
+// The prebuilt Clerk <SignIn> component constructs redirect/callback URLs using
+// window.location.origin.  On Capacitor that origin is "capacitor://localhost",
+// which Clerk's servers reject with "invalid_url_scheme".
+// We use the raw useSignIn() hook instead: it never constructs redirect URLs,
+// so it works correctly on any URL scheme.
+function NativeSignInForm() {
+  const { isLoaded, signIn, setActive } = useSignIn();
+  const [, setLocation] = useLocation();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [err, setErr] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  if (!isLoaded) return <div className="flex items-center justify-center min-h-screen"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!signIn) return;
+    setLoading(true);
+    setErr(null);
+    try {
+      const result = await signIn.create({ identifier: email, password });
+      if (result.status === "complete") {
+        await setActive({ session: result.createdSessionId });
+        setLocation("/import");
+      } else {
+        setErr("Additional verification required. Please try again or use another sign-in method.");
+      }
+    } catch (e: unknown) {
+      const msg = (e as { errors?: Array<{ longMessage?: string; message?: string }> })
+        ?.errors?.[0]?.longMessage
+        ?? (e as { errors?: Array<{ message?: string }> })?.errors?.[0]?.message
+        ?? "Sign-in failed. Please check your credentials and try again.";
+      setErr(msg);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-col items-center justify-start min-h-[calc(100vh-4rem)] pt-12 pb-16 px-4">
+      <div className="w-full max-w-sm">
+        <div className="shadow-lg rounded-2xl border border-border/50 bg-card p-8 space-y-5">
+          <div>
+            <h1 className="text-xl font-bold text-foreground mb-1">Sign in to PlainPath</h1>
+            <p className="text-sm text-muted-foreground">
+              Don&apos;t have an account?{" "}
+              <Link href="/sign-up" className="text-primary hover:underline font-medium">Sign up</Link>
+            </p>
+          </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium text-foreground">Email</label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                autoCapitalize="none"
+                autoCorrect="off"
+                autoComplete="email"
+                disabled={loading}
+                className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-60"
+                placeholder="you@example.com"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium text-foreground">Password</label>
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                autoComplete="current-password"
+                disabled={loading}
+                className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-60"
+                placeholder="••••••••"
+              />
+            </div>
+            {err && (
+              <div className="bg-destructive/10 border border-destructive/20 rounded-lg px-3 py-2.5 text-sm text-destructive">
+                {err}
+              </div>
+            )}
+            <button
+              type="submit"
+              disabled={loading || !email || !password}
+              className="w-full bg-primary text-primary-foreground font-medium text-sm rounded-lg px-4 py-2.5 hover:bg-primary/90 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+            >
+              {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+              {loading ? "Signing in…" : "Sign in"}
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Native custom sign-up ────────────────────────────────────────────────────
+// Same rationale as NativeSignInForm — no prebuilt component, no redirect URL.
+function NativeSignUpForm() {
+  const { isLoaded, signUp, setActive } = useSignUp();
+  const [, setLocation] = useLocation();
+  const [stage, setStage] = useState<"form" | "verify">("form");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
+  const [err, setErr] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  if (!isLoaded) return <div className="flex items-center justify-center min-h-screen"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
+
+  function clerkMsg(e: unknown) {
+    return (e as { errors?: Array<{ longMessage?: string; message?: string }> })
+      ?.errors?.[0]?.longMessage
+      ?? (e as { errors?: Array<{ message?: string }> })?.errors?.[0]?.message
+      ?? "Something went wrong. Please try again.";
+  }
+
+  async function handleCreate(e: React.FormEvent) {
+    e.preventDefault();
+    if (!signUp) return;
+    setLoading(true);
+    setErr(null);
+    try {
+      const result = await signUp.create({ emailAddress: email, password });
+      if (result.status === "complete") {
+        await setActive({ session: result.createdSessionId });
+        setLocation("/import");
+      } else {
+        // Email verification required — request the OTP code
+        await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+        setStage("verify");
+      }
+    } catch (e: unknown) {
+      setErr(clerkMsg(e));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleVerify(e: React.FormEvent) {
+    e.preventDefault();
+    if (!signUp) return;
+    setLoading(true);
+    setErr(null);
+    try {
+      const result = await signUp.attemptEmailAddressVerification({ code });
+      if (result.status === "complete") {
+        await setActive({ session: result.createdSessionId });
+        setLocation("/import");
+      } else {
+        setErr("Verification failed. Please check the code and try again.");
+      }
+    } catch (e: unknown) {
+      setErr(clerkMsg(e));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-col items-center justify-start min-h-[calc(100vh-4rem)] pt-12 pb-16 px-4">
+      <div className="w-full max-w-sm">
+        <div className="shadow-lg rounded-2xl border border-border/50 bg-card p-8 space-y-5">
+          {stage === "form" ? (
+            <>
+              <div>
+                <h1 className="text-xl font-bold text-foreground mb-1">Create your account</h1>
+                <p className="text-sm text-muted-foreground">
+                  Already have an account?{" "}
+                  <Link href="/sign-in" className="text-primary hover:underline font-medium">Sign in</Link>
+                </p>
+              </div>
+              <form onSubmit={handleCreate} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="block text-sm font-medium text-foreground">Email</label>
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    autoComplete="email"
+                    disabled={loading}
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-60"
+                    placeholder="you@example.com"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="block text-sm font-medium text-foreground">Password</label>
+                  <input
+                    type="password"
+                    required
+                    minLength={8}
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    autoComplete="new-password"
+                    disabled={loading}
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-60"
+                    placeholder="At least 8 characters"
+                  />
+                </div>
+                {err && (
+                  <div className="bg-destructive/10 border border-destructive/20 rounded-lg px-3 py-2.5 text-sm text-destructive">
+                    {err}
+                  </div>
+                )}
+                <button
+                  type="submit"
+                  disabled={loading || !email || !password}
+                  className="w-full bg-primary text-primary-foreground font-medium text-sm rounded-lg px-4 py-2.5 hover:bg-primary/90 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+                >
+                  {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+                  {loading ? "Creating account…" : "Create account"}
+                </button>
+              </form>
+            </>
+          ) : (
+            <>
+              <div>
+                <h1 className="text-xl font-bold text-foreground mb-1">Check your email</h1>
+                <p className="text-sm text-muted-foreground">
+                  We sent a 6-digit code to <strong className="text-foreground">{email}</strong>
+                </p>
+              </div>
+              <form onSubmit={handleVerify} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="block text-sm font-medium text-foreground">Verification code</label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    required
+                    value={code}
+                    onChange={e => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    maxLength={6}
+                    autoComplete="one-time-code"
+                    disabled={loading}
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm text-center tracking-[0.35em] text-lg font-mono focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-60"
+                    placeholder="000000"
+                  />
+                </div>
+                {err && (
+                  <div className="bg-destructive/10 border border-destructive/20 rounded-lg px-3 py-2.5 text-sm text-destructive">
+                    {err}
+                  </div>
+                )}
+                <button
+                  type="submit"
+                  disabled={loading || code.length < 6}
+                  className="w-full bg-primary text-primary-foreground font-medium text-sm rounded-lg px-4 py-2.5 hover:bg-primary/90 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+                >
+                  {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+                  {loading ? "Verifying…" : "Verify email"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStage("form")}
+                  disabled={loading}
+                  className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors py-1"
+                >
+                  ← Back
+                </button>
+              </form>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SignInPage() {
+  // On native (capacitor://localhost), the prebuilt <SignIn> component builds
+  // OAuth callback URLs from window.location.origin — "capacitor://localhost"
+  // is rejected by Clerk's servers with "invalid_url_scheme".
+  // Use the raw hook-based form instead; it never touches redirect URLs.
+  if (isNative()) return <NativeSignInForm />;
   return (
     <AuthPageWrapper>
       <SignIn
@@ -209,6 +488,7 @@ function SignInPage() {
 }
 
 function SignUpPage() {
+  if (isNative()) return <NativeSignUpForm />;
   return (
     <AuthPageWrapper>
       <SignUp
