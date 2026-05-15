@@ -592,24 +592,36 @@ jobs:
           echo "Binary size: $(wc -c < "$APP_BIN") bytes"
           echo ""
 
-          # `strings` extracts printable character sequences from binary files.
-          # Swift string literals are stored as UTF-8 in the __TEXT segment and
-          # are extractable by `strings` even in Release builds.
-          if strings "$APP_BIN" | grep -q "PlainPath native shell"; then
-            echo "PASS: 'PlainPath native shell' found in compiled binary"
-            echo "Matching lines:"
-            strings "$APP_BIN" | grep "PlainPath"
+          # Use grep -a (binary grep, all bytes) instead of `strings | grep`.
+          # macOS strings(1) only scans __TEXT segment by default; Swift 6 / WMO
+          # stores interpolated string literals in __TEXT,__const or __DATA,__const
+          # which strings(1) misses. grep -a treats the binary as text and finds
+          # the UTF-8 bytes regardless of which Mach-O section they live in.
+          #
+          # We search for "pp-native-diag-v1" — a plain ASCII StaticString anchor
+          # added to AppDelegate.swift that survives all Swift optimizations and is
+          # guaranteed to land in __TEXT,__cstring (findable by both grep -a and strings).
+          echo "Method 1: grep -a (binary grep — all sections)"
+          if grep -a "pp-native-diag-v1" "$APP_BIN" > /dev/null 2>&1; then
+            echo "PASS: 'pp-native-diag-v1' anchor found via grep -a"
           else
-            echo "FAIL: 'PlainPath native shell' NOT found in compiled App binary"
+            echo "FAIL: 'pp-native-diag-v1' NOT found via grep -a"
             echo ""
-            echo "This means one of:"
-            echo "  1. The wrong AppDelegate.swift was compiled (check pre-archive identity report)"
-            echo "  2. The Swift compiler removed the string (unlikely for UILabel.text assignments)"
-            echo "  3. The archive used a stale derived-data cache (re-run to test)"
+            echo "Method 2: strings (fallback — __TEXT segment only)"
+            strings "$APP_BIN" | grep "PlainPath" || true
             echo ""
-            echo "Blocking upload. Investigate the pre-archive identity report above."
+            echo "This means the wrong AppDelegate.swift was compiled, or the"
+            echo "static anchor was removed. Check pre-archive identity report."
+            echo "Blocking upload."
             exit 1
           fi
+
+          echo ""
+          echo "All PlainPath strings found via grep -a:"
+          grep -ao "PlainPath[^[:cntrl:]]*" "$APP_BIN" | head -20 || true
+          echo ""
+          echo "All strings found via strings(1) containing 'PlainPath':"
+          strings "$APP_BIN" | grep "PlainPath" || echo "(none found by strings — expected with Swift 6 WMO)"
 
           echo ""
           echo "════════════════════════════════════════════════════════════"
