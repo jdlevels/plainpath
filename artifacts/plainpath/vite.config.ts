@@ -8,10 +8,15 @@ import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 const rawPort = process.env.PORT;
 const port = rawPort ? Number(rawPort) : 3000;
 
-// BASE_PATH drives the Vite `base` option.
+// NATIVE_BUILD=1 produces a Capacitor-ready bundle:
+//   base = "/"        — asset URLs must be root-relative inside the WebView
+//   outDir = dist/native — kept separate from the web build (dist/public)
+//
+// Without NATIVE_BUILD, BASE_PATH drives the Vite `base` option.
 // Hard-code the fallback to "/app/" so the SPA router is always scoped
 // to the /app/ subpath — even if BASE_PATH is not injected by the build runner.
-const basePath = process.env.BASE_PATH ?? "/app/";
+const isNativeBuild = process.env.NATIVE_BUILD === "1";
+const basePath = isNativeBuild ? "/" : (process.env.BASE_PATH ?? "/app/");
 
 // ── Clerk publishable key resolution ──────────────────────────────────────────
 // CLERK_PUBLISHABLE_KEY (no VITE_ prefix) is the authoritative key because it
@@ -19,22 +24,26 @@ const basePath = process.env.BASE_PATH ?? "/app/";
 // Clerk instance or JWT verification will fail on every authenticated API call.
 // We prefer CLERK_PUBLISHABLE_KEY and fall back to VITE_CLERK_PUBLISHABLE_KEY
 // so the frontend always uses the same Clerk instance as the API server.
+// The Clerk publishable key is intentionally committed as a fallback here.
+// It is a PUBLIC key — it ships verbatim inside the JS bundle delivered to every
+// user's device. Committing it prevents native/CI builds from producing a blank
+// screen when the CLERK_PUBLISHABLE_KEY environment secret is unavailable.
+// The corresponding SECRET key (CLERK_SECRET_KEY) is never committed.
+const CLERK_PUB_KEY_FALLBACK = "pk_live_Y2xlcmsucGxhaW5wYXRoYXBwLmNvbSQ";
+
 const clerkPubKeyForFrontend =
   process.env.CLERK_PUBLISHABLE_KEY ||
   process.env.VITE_CLERK_PUBLISHABLE_KEY ||
-  "";
+  CLERK_PUB_KEY_FALLBACK;
 
 export default defineConfig(async ({ mode }) => {
-  // VITE_CLERK_PROXY_URL is NOT a Replit secret (it is not injected into the
-  // OS env), so process.env.VITE_CLERK_PROXY_URL is undefined at build time.
   // loadEnv reads .env.<mode> files before the define block runs, giving us
-  // the value from .env.production without touching any other variable.
+  // values from .env.production without relying on OS-level process.env.
   //
-  // IMPORTANT: We do NOT apply this to VITE_BUILDER_ENABLED because Replit
-  // injects VITE_BUILDER_ENABLED=true into the OS dev env, which would
-  // override .env.production's "false" value and accidentally expose the
-  // builder in production. All other define entries keep using process.env
-  // (the original pattern) to avoid regressions.
+  // VITE_BUILDER_ENABLED must be read from fileEnv (NOT process.env) because
+  // Replit injects VITE_BUILDER_ENABLED=true into the OS workspace env.
+  // Reading process.env would bake "true" into every production build, exposing
+  // unfinished tooling. fileEnv reads .env.production where the value is "false".
   const fileEnv = loadEnv(mode, process.cwd(), "");
   const clerkProxyUrl =
     process.env.VITE_CLERK_PROXY_URL ?? fileEnv.VITE_CLERK_PROXY_URL ?? "";
@@ -46,12 +55,26 @@ export default defineConfig(async ({ mode }) => {
       // Uses loadEnv to read .env.production — process.env is empty for this
       // key at build time because it is not a Replit-injected OS-level secret.
       "import.meta.env.VITE_CLERK_PROXY_URL": JSON.stringify(clerkProxyUrl),
-      "import.meta.env.VITE_BUILDER_ENABLED": JSON.stringify(process.env.VITE_BUILDER_ENABLED ?? ""),
+      // VITE_BUILDER_ENABLED: use mode-based logic, NOT process.env or fileEnv.
+      // Replit injects VITE_BUILDER_ENABLED=true into the OS workspace env, and
+      // loadEnv() merges that on top of .env.production, so both process.env and
+      // fileEnv resolve to "true" in the Replit environment regardless of what
+      // .env.production says. The only safe approach is to enforce the value
+      // directly by mode: production always bakes "false"; development uses the
+      // OS env so the builder remains available during local development.
+      "import.meta.env.VITE_BUILDER_ENABLED": JSON.stringify(
+        mode === "production" ? "false" : (process.env.VITE_BUILDER_ENABLED ?? "")
+      ),
       // VITE_API_BASE_URL: empty string on web (same-origin); absolute URL required for native Capacitor builds.
       // Must be in `define` so it is injected at build time — Vite's automatic VITE_ env loading
       // is not reliable for Replit secrets injected at the OS level.
       "import.meta.env.VITE_API_BASE_URL": JSON.stringify(process.env.VITE_API_BASE_URL ?? ""),
       "import.meta.env.VITE_SENTRY_DSN": JSON.stringify(process.env.VITE_SENTRY_DSN ?? ""),
+      // Bake the CI build number into the bundle so it appears in the startup
+      // diagnostic overlay. Set by CI via: VITE_BUILD_NUMBER=$GITHUB_RUN_NUMBER
+      "import.meta.env.VITE_BUILD_NUMBER": JSON.stringify(process.env.VITE_BUILD_NUMBER ?? ""),
+      // Bake the asset mode so the diagnostic overlay can confirm native vs web build.
+      "import.meta.env.VITE_ASSET_MODE": JSON.stringify(isNativeBuild ? "native" : "web"),
     },
     plugins: [
       react(),
@@ -80,7 +103,7 @@ export default defineConfig(async ({ mode }) => {
     },
     root: path.resolve(import.meta.dirname),
     build: {
-      outDir: path.resolve(import.meta.dirname, "dist/public"),
+      outDir: path.resolve(import.meta.dirname, isNativeBuild ? "dist/native" : "dist/public"),
       emptyOutDir: true,
       // Disable Vite's module-preload wrapper (__vitePreload / __vite__mapDeps).
       // When the app is served under a sub-path (/app/), Vite 7 generates
