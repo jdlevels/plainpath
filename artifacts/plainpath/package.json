@@ -8,9 +8,10 @@
     "build": "vite build --config vite.config.ts",
     "serve": "vite preview --config vite.config.ts --host 0.0.0.0",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "cap:sync": "pnpm build && npx cap sync",
-    "cap:ios": "pnpm build && npx cap sync ios && npx cap open ios",
-    "cap:android": "pnpm build && npx cap sync android && npx cap open android"
+    "cap:sync": "pnpm build:native && npx cap sync",
+    "cap:ios": "pnpm build:native && npx cap sync ios && npx cap open ios",
+    "cap:android": "pnpm build:native && npx cap sync android && npx cap open android",
+    "build:native": "NATIVE_BUILD=1 vite build --config vite.config.ts"
   },
   "devDependencies": {
     "@hookform/resolvers": "^3.10.0",
