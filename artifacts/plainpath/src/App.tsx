@@ -81,25 +81,56 @@ const clerkPubKey = _keyMatch
       ? _rawClerkKey.slice(_rawClerkKey.indexOf("=") + 1).trim()
       : _rawClerkKey.trim());
 
-const clerkProxyUrl = import.meta.env.VITE_CLERK_PROXY_URL;
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-// Load Clerk JS through the proxy when proxyUrl is configured.
-// clerk.plainpathapp.com DNS is not yet pointed at Clerk's CDN, so the
-// default clerkJSUrl (derived from the publishable key's custom domain) fails
-// with a TLS handshake error.  Routing through the proxy hits
-// frontend-api.clerk.dev directly, which does resolve and redirects to the
-// pinned version URL — no DNS changes required.
-const clerkJSUrl = clerkProxyUrl
-  ? `${clerkProxyUrl}/npm/@clerk/clerk-js@6/dist/clerk.browser.js`
-  : undefined;
+// ─── Clerk proxy URL ──────────────────────────────────────────────────────────
+//
+// PROBLEM: VITE_CLERK_PROXY_URL is baked into the bundle as a static string
+// (https://plain-path.replit.app/api/__clerk). When users access the app from
+// plainpathapp.com, all Clerk API calls go cross-origin to plain-path.replit.app.
+// The Clerk proxy is mounted in app.ts BEFORE the CORS middleware, so those
+// cross-origin requests never receive CORS headers — the browser blocks them.
+// Clerk's /v1/client call fails silently, isLoaded stays false forever, and
+// ClerkLoadingScreen shows "Unable to connect" after 10 s.
+//
+// FIX: In a web browser, derive the proxy URL from window.location.origin so
+// Clerk API calls are always same-origin — no CORS preflight is triggered at all.
+// In Capacitor native (iOS/Android), the origin is "capacitor://localhost" or
+// "http://localhost" which has no backend, so we fall back to the configured
+// env var (the native shell is in the CORS allowlist, so cross-origin works).
+//
+// Result:
+//   plainpathapp.com  → https://plainpathapp.com/api/__clerk   (same-origin)
+//   plain-path.replit.app → https://plain-path.replit.app/api/__clerk  (same-origin)
+//   Capacitor iOS     → https://plain-path.replit.app/api/__clerk  (env var, CORS ok)
+const _configuredProxyUrl = import.meta.env.VITE_CLERK_PROXY_URL as string | undefined;
+const _nativeOrigins = ["capacitor://localhost", "http://localhost", "https://localhost"];
+const clerkProxyUrl: string | undefined = (() => {
+  if (typeof window === "undefined") return _configuredProxyUrl;
+  if (_nativeOrigins.includes(window.location.origin)) return _configuredProxyUrl;
+  // Web browser — use same origin to avoid cross-origin Clerk API calls
+  return `${window.location.origin}/api/__clerk`;
+})();
 
-if (!clerkPubKey || (!clerkPubKey.startsWith("pk_live_") && !clerkPubKey.startsWith("pk_test_"))) {
-  throw new Error(
-    `VITE_CLERK_PUBLISHABLE_KEY is missing or invalid. ` +
-    `Expected a value starting with pk_live_ or pk_test_, got: "${_rawClerkKey.slice(0, 20)}..."`
-  );
-}
+// ─── Clerk JS bundle URL ──────────────────────────────────────────────────────
+//
+// Do NOT override __internal_clerkJSUrl. Clerk's default behavior when proxyUrl
+// is set: loads its JS bundle from ${proxyUrl}/npm/@clerk/clerk-js@VERSION/dist/clerk.browser.js.
+// Our proxy forwards that to frontend-api.clerk.dev, which works correctly and
+// has been verified to return HTTP 307 → actual bundle.
+//
+// npm.clerk.dev (previously used) does NOT resolve (DNS NXDOMAIN) — setting
+// __internal_clerkJSUrl to that URL caused Clerk JS to never load, keeping
+// isLoaded=false and showing "Unable to connect" after 10 s on plainpathapp.com.
+
+// DO NOT throw at module level here. A module-level throw crashes the entire
+// JS bundle — createRoot().render() in main.tsx never runs, React never mounts,
+// and the device shows a blank screen even though the static launch shell HTML
+// is present. Instead, record the error and render it as a visible UI component.
+const clerkKeyError: string | null =
+  (!clerkPubKey || (!clerkPubKey.startsWith("pk_live_") && !clerkPubKey.startsWith("pk_test_")))
+    ? `VITE_CLERK_PUBLISHABLE_KEY is missing or invalid. Got: "${_rawClerkKey.slice(0, 20)}..."`
+    : null;
 
 // Clerk passes full paths but wouter's setLocation prepends the base — strip it
 function stripBase(path: string): string {
@@ -519,6 +550,57 @@ function ChoosePlanScreen() {
   );
 }
 
+// ─── ClerkLoadingScreen ───────────────────────────────────────────────────────
+// Shown while Clerk is initializing (isLoaded === false).
+//
+// Replaces the previous blank-screen approach that caused Apple Guideline 2.1
+// rejection: the app appeared to load no content on launch.
+//
+// Behavior:
+//   0–10 s  → spinner on the app background color (visually indicates activity)
+//   > 10 s  → "Unable to connect" screen with a Reload button
+//             (covers the case where Clerk JS itself failed to load, e.g. cold
+//              network timeout in the review environment)
+
+function ClerkLoadingScreen() {
+  const [timedOut, setTimedOut] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setTimedOut(true), 10000);
+    return () => clearTimeout(t);
+  }, []);
+
+  if (timedOut) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-6">
+        <div className="text-center max-w-xs">
+          <div className="bg-muted p-4 rounded-2xl w-fit mx-auto mb-5">
+            <svg className="w-8 h-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+            </svg>
+          </div>
+          <p className="text-sm font-semibold text-foreground mb-1">Unable to connect</p>
+          <p className="text-xs text-muted-foreground leading-relaxed mb-5">
+            Check your internet connection and try again.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold"
+          >
+            Reload
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="w-7 h-7 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+    </div>
+  );
+}
+
 // ─── PlanGate ──────────────────────────────────────────────────────────────────
 // Sits between ClerkProvider and the Router. For any signed-in user without an
 // active Stripe subscription, the entire dashboard is replaced by ChoosePlanScreen.
@@ -530,7 +612,7 @@ function ChoosePlanScreen() {
 // set to "admin" at bootstrap and they never need a subscription.
 //
 // State matrix:
-//   Clerk loading              → blank screen
+//   Clerk loading              → spinner (ClerkLoadingScreen, max 10 s then retry UI)
 //   Not signed in              → pass through (Router handles public routes)
 //   Bypass path                → pass through
 //   Signed in, loading         → "Loading…" spinner
@@ -550,9 +632,9 @@ function PlanGate({ children }: { children: React.ReactNode }) {
   ];
   const isBypassPath = BYPASS_PREFIXES.some((p) => location.startsWith(p));
 
-  // Clerk still initializing — show nothing to prevent UI flash
+  // Clerk still initializing — show spinner (not blank) to satisfy App Store Guideline 2.1
   if (!isLoaded) {
-    return <div className="min-h-screen bg-background" />;
+    return <ClerkLoadingScreen />;
   }
 
   // Not signed in or on a bypass path — let the Router handle it
@@ -584,13 +666,13 @@ function PlanGate({ children }: { children: React.ReactNode }) {
 }
 
 // Global auth guard — redirects unauthenticated users to the public marketing site.
-// Renders nothing (blank screen) while Clerk is still resolving auth state to
-// prevent any flash of protected content.
+// Shows a spinner while Clerk is initializing instead of a blank screen
+// (blank screen caused Apple Guideline 2.1 rejection).
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { isLoaded, isSignedIn } = useUser();
 
   if (!isLoaded) {
-    return <div className="min-h-screen bg-background" />;
+    return <ClerkLoadingScreen />;
   }
 
   if (!isSignedIn) {
@@ -708,11 +790,29 @@ function Router() {
 function ClerkProviderWithRoutes() {
   const [, setLocation] = useLocation();
 
+  // If the Clerk key is invalid, render a visible error instead of crashing.
+  // This surfaces as a readable screen on device rather than a blank white screen.
+  if (clerkKeyError) {
+    return (
+      <div style={{
+        position: "fixed", inset: 0, background: "#F8F7F4",
+        display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
+        fontFamily: "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif",
+        padding: "24px", textAlign: "center", gap: "12px",
+      }}>
+        <div style={{ fontSize: 40 }}>⚠️</div>
+        <p style={{ fontWeight: 700, fontSize: 18, color: "#1a1a1a", margin: 0 }}>PlainPath — Config Error</p>
+        <p style={{ fontSize: 13, color: "#666", margin: 0, maxWidth: 320 }}>{clerkKeyError}</p>
+        <p style={{ fontSize: 11, color: "#999", margin: 0 }}>Build: {import.meta.env.VITE_BUILD_NUMBER ?? "dev"}</p>
+      </div>
+    );
+  }
+
   return (
     <ClerkProvider
       publishableKey={clerkPubKey}
       proxyUrl={clerkProxyUrl || undefined}
-      clerkJSUrl={clerkJSUrl}
       signInUrl={`${basePath}/sign-in`}
       signUpUrl={`${basePath}/sign-up`}
       routerPush={(to) => setLocation(stripBase(to))}
@@ -741,6 +841,20 @@ function App() {
     void initStatusBar();
     captureInboundRef();
     purgeLegacyGlobalKeys();
+
+    // ── Startup diagnostic ────────────────────────────────────────────────────
+    // Marks the "React mounted" state in the static launch shell so that on a
+    // real device with a blank screen we can tell whether JS loaded at all.
+    // Also removes the launch shell so it cannot block the React UI.
+    const shell = document.getElementById("pp-launch-shell");
+    const reactMarker = document.getElementById("pp-react-marker");
+    const buildNum = (import.meta.env.VITE_BUILD_NUMBER as string | undefined) || "dev";
+    const assetMode = (import.meta.env.VITE_ASSET_MODE as string | undefined) || "web";
+    if (reactMarker) reactMarker.textContent = `✓ React mounted · Build: ${buildNum} · Mode: ${assetMode}`;
+    // Give React one frame to paint its own UI before removing the shell
+    requestAnimationFrame(() => {
+      if (shell) shell.style.display = "none";
+    });
   }, []);
 
   return (
