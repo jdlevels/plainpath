@@ -25,9 +25,24 @@ function getCapacitorGlobal(): CapacitorGlobal | undefined {
 /**
  * Returns true when running inside a Capacitor native shell (iOS or Android).
  * Returns false in all browser contexts.
+ *
+ * Two checks in priority order:
+ *   1. Capacitor bridge: window.Capacitor.isNative (set by the native bridge
+ *      before any JS runs in a true Capacitor WebView).
+ *   2. Origin fallback: capacitor:// and bare http/https localhost schemes are
+ *      exclusive to Capacitor/simulator — no production web server ever runs
+ *      there.  This catches the case where the bridge hasn't been injected yet
+ *      or the platform detection is called at module-evaluation time.
  */
 export function isNative(): boolean {
-  return getCapacitorGlobal()?.isNative === true;
+  if (getCapacitorGlobal()?.isNative === true) return true;
+  if (typeof window !== "undefined") {
+    const o = window.location.origin;
+    if (o === "capacitor://localhost" || o === "http://localhost" || o === "https://localhost") {
+      return true;
+    }
+  }
+  return false;
 }
 
 /**
