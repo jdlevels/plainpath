@@ -1,7 +1,7 @@
 {
   "appId": "com.plainpathapp.plainpath",
   "appName": "PlainPath",
-  "webDir": "dist/public",
+  "webDir": "dist/native",
   "server": {
     "androidScheme": "https"
   },
