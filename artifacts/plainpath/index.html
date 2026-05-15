@@ -40,12 +40,91 @@
 
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="manifest" href="/manifest.json" />
+    <!-- Static launch shell — visible immediately before JS/CSS loads.
+         React replaces #root content on mount, so this is never seen after boot.
+         Prevents a blank white screen if JS is slow or fails to load (native + web).
+         Diagnostic markers (pp-js-marker, pp-react-marker) are updated by JS at
+         runtime so that on a device showing a blank screen we can see exactly how
+         far the boot sequence got. -->
+    <style id="pp-launch-style">
+      #pp-launch-shell {
+        position: fixed; inset: 0;
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        background: #F8F7F4;
+        font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+        gap: 20px; z-index: 9999;
+      }
+      .dark #pp-launch-shell { background: #171717; }
+      #pp-launch-icon {
+        width: 72px; height: 72px;
+        background: #4F7CAC;
+        border-radius: 20px;
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 4px 24px rgba(79,124,172,0.30);
+      }
+      #pp-launch-wordmark { font-size: 22px; font-weight: 700; color: #1a1a1a; margin: 0 0 4px; }
+      .dark #pp-launch-wordmark { color: #f2f2f2; }
+      #pp-launch-tag { font-size: 13px; color: #777; margin: 0; }
+      .dark #pp-launch-tag { color: #999; }
+      @keyframes pp-spin { to { transform: rotate(360deg); } }
+      #pp-launch-spinner {
+        width: 28px; height: 28px;
+        border: 3px solid rgba(79,124,172,0.18);
+        border-top-color: #4F7CAC;
+        border-radius: 50%;
+        animation: pp-spin 0.75s linear infinite;
+      }
+      #pp-launch-diag {
+        font-size: 10px; color: #aaa; text-align: center;
+        line-height: 1.7; margin-top: 8px;
+      }
+      .dark #pp-launch-diag { color: #666; }
+    </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Non-render-blocking font load: media="print" loads async, onload switches to "all".
+         Prevents a slow or unreachable Google Fonts CDN from delaying initial paint
+         on native iOS (Capacitor WebView has no browser font cache on first launch). -->
+    <link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Sans:wght@400;500;600;700&display=swap">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Sans:wght@400;500;600;700&display=swap"></noscript>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Static branded launch shell — replaced by React on mount -->
+      <div id="pp-launch-shell" role="status" aria-label="PlainPath loading">
+        <div id="pp-launch-icon">
+          <svg width="38" height="38" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect x="9" y="5" width="20" height="28" rx="3" fill="white" fill-opacity="0.92"/>
+            <path d="M22 5v8h7" fill="none" stroke="rgba(79,124,172,0.45)" stroke-width="1.6" stroke-linejoin="round"/>
+            <line x1="13" y1="17" x2="25" y2="17" stroke="#4F7CAC" stroke-width="1.8" stroke-linecap="round"/>
+            <line x1="13" y1="21" x2="25" y2="21" stroke="#4F7CAC" stroke-width="1.8" stroke-linecap="round"/>
+            <line x1="13" y1="25" x2="20" y2="25" stroke="#4F7CAC" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div style="text-align:center">
+          <p id="pp-launch-wordmark">PlainPath</p>
+          <p id="pp-launch-tag">Your documents, made clear</p>
+        </div>
+        <div id="pp-launch-spinner"></div>
+        <!-- Startup diagnostic — updated by JS as the boot sequence progresses.
+             If the app shows a blank screen on device, take a screenshot or note
+             which markers are visible to identify exactly where boot stopped:
+               No markers visible     → HTML not loading (cap sync / webDir issue)
+               "JS loaded" only       → JS executes but React never mounts (crash in App)
+               "React mounted"        → React mounted but something covers the UI -->
+        <div id="pp-launch-diag">
+          <span id="pp-js-marker">⏳ JS loading…</span><br>
+          <span id="pp-react-marker">⏳ React loading…</span>
+        </div>
+      </div>
+    </div>
+    <!-- Mark JS as loaded immediately when this module script begins executing.
+         Runs before React mounts so the marker is visible if React crashes. -->
+    <script type="module">
+      var m = document.getElementById("pp-js-marker");
+      if (m) m.textContent = "✓ JS loaded";
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
