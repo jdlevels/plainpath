@@ -561,14 +561,34 @@ function ChoosePlanScreen() {
 //   > 10 s  → "Unable to connect" screen with a Reload button
 //             (covers the case where Clerk JS itself failed to load, e.g. cold
 //              network timeout in the review environment)
+//
+// On native: a diagnostic bar is pinned to the bottom of the screen showing
+// origin, pathname, mode, and build number so device logs are readable without
+// attaching a debugger.
 
 function ClerkLoadingScreen() {
   const [timedOut, setTimedOut] = useState(false);
+  const native = isNative();
+  const origin = typeof window !== "undefined" ? window.location.origin : "—";
+  const pathname = typeof window !== "undefined" ? window.location.pathname : "—";
+  const buildNum = (import.meta.env.VITE_BUILD_NUMBER as string | undefined) || "dev";
 
   useEffect(() => {
     const t = setTimeout(() => setTimedOut(true), 10000);
     return () => clearTimeout(t);
   }, []);
+
+  const diagnosticBar = native ? (
+    <div style={{
+      position: "fixed", bottom: 0, left: 0, right: 0,
+      background: "rgba(0,0,0,0.80)", color: "#fff",
+      fontSize: 10, fontFamily: "monospace",
+      padding: "6px 12px 10px", lineHeight: 1.6,
+      zIndex: 9999,
+    }}>
+      mode: native · origin: {origin} · path: {pathname} · build: {buildNum} · auth: pending
+    </div>
+  ) : null;
 
   if (timedOut) {
     return (
@@ -590,6 +610,7 @@ function ClerkLoadingScreen() {
             Reload
           </button>
         </div>
+        {diagnosticBar}
       </div>
     );
   }
@@ -597,6 +618,7 @@ function ClerkLoadingScreen() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center">
       <div className="w-7 h-7 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+      {diagnosticBar}
     </div>
   );
 }
@@ -665,22 +687,53 @@ function PlanGate({ children }: { children: React.ReactNode }) {
   return <ChoosePlanScreen />;
 }
 
-// Global auth guard — redirects unauthenticated users to the public marketing site.
-// Shows a spinner while Clerk is initializing instead of a blank screen
-// (blank screen caused Apple Guideline 2.1 rejection).
+// Global auth guard — redirects unauthenticated users to the public marketing site
+// on web, or to /sign-in inside the SPA on native.
+//
+// CRITICAL NATIVE FIX: window.location.replace("/") on native navigates to
+// capacitor://localhost/ — which is the same protected route "/" — causing an
+// infinite WebView reload loop. On native we must use wouter's setLocation so
+// the redirect stays inside the SPA without reloading the WebView.
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { isLoaded, isSignedIn } = useUser();
+  const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    if (!isSignedIn) {
+      if (isNative()) {
+        // Stay inside the SPA — no WebView reload, no loop.
+        setLocation("/sign-in", { replace: true });
+      } else {
+        window.location.replace("/");
+      }
+    }
+  }, [isLoaded, isSignedIn]);
 
   if (!isLoaded) {
     return <ClerkLoadingScreen />;
   }
 
   if (!isSignedIn) {
-    window.location.replace("/");
     return <div className="min-h-screen bg-background" />;
   }
 
   return <>{children}</>;
+}
+
+// Redirects that work correctly on both web and native.
+// On web: uses window.location.replace (may navigate outside the SPA).
+// On native: uses wouter setLocation (stays inside the SPA, no WebView reload).
+function NativeSafeRedirect({ nativeTo, webHref }: { nativeTo: string; webHref: string }) {
+  const [, setLocation] = useLocation();
+  useEffect(() => {
+    if (isNative()) {
+      setLocation(nativeTo, { replace: true });
+    } else {
+      window.location.replace(webHref);
+    }
+  }, []);
+  return null;
 }
 
 // Convenience wrapper so Route's component prop works with RequireAuth
@@ -709,7 +762,7 @@ function Router() {
             <Route path="/support" component={Support} />
             <Route path="/paywall-preview" component={PaywallPreview} />
             <Route path="/methodology" component={Methodology} />
-            <Route path="/pricing">{() => { window.location.replace("/#pricing"); return null; }}</Route>
+            <Route path="/pricing">{() => <NativeSafeRedirect nativeTo="/subscribe" webHref="/#pricing" />}</Route>
             <Route path="/guides/irs-letter" component={IrsLetter} />
             <Route path="/guides/lease-agreement" component={LeaseAgreement} />
             <Route path="/guides/job-offer-red-flags" component={JobOffer} />
@@ -724,8 +777,8 @@ function Router() {
             </Route>
             {/* Public free-trial demo — canonical route is /demo on the marketing site.
                 Redirect any /app/demo and /app/demo/analyze visitors there. */}
-            <Route path="/demo/analyze">{() => { window.location.replace("/demo/analyze"); return null; }}</Route>
-            <Route path="/demo">{() => { window.location.replace("/demo"); return null; }}</Route>
+            <Route path="/demo/analyze">{() => <NativeSafeRedirect nativeTo="/sign-in" webHref="/demo/analyze" />}</Route>
+            <Route path="/demo">{() => <NativeSafeRedirect nativeTo="/sign-in" webHref="/demo" />}</Route>
             {/* Shared product demo documents — accessible at /app/demo/:id */}
             <Route path="/demo/:id">
               {(params) => <Demo id={(params as { id: string }).id} />}
