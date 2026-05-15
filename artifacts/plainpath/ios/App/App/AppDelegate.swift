@@ -1,13 +1,6 @@
 import UIKit
 import Capacitor
 
-// ── CI binary presence anchor ──────────────────────────────────────────────────
-// StaticString is stored as a direct UTF-8 pointer in __TEXT,__cstring.
-// It survives all Swift optimizations (WMO, -Osize) and is detectable by
-// both `grep -a` and `strings` in CI's binary string check step.
-// The @_used attribute prevents dead-code elimination.
-@_used private let _ppNativeDiagAnchor: StaticString = "pp-native-diag-v1"
-
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
