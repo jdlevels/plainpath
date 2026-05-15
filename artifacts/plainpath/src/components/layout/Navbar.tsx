@@ -11,6 +11,7 @@ import { useUser, useClerk } from "@clerk/react"
 import { useEntitlements } from "@/hooks/useEntitlements"
 import { purgeUserScopedKeys, purgeSessionDocumentBuffers } from "@/lib/storageCleanup"
 import { WhatsNew } from "@/components/WhatsNew"
+import { isNative } from "@/lib/platform"
 
 function LogoBrand() {
   return (
@@ -121,7 +122,7 @@ function UserMenu() {
           {/* Divider + Sign out */}
           <div className="border-t border-border/40 mt-1 pt-1">
             <button
-              onClick={async () => { setOpen(false); if (user?.id) purgeUserScopedKeys(user.id); purgeSessionDocumentBuffers(); await signOut(); window.location.href = "/"; }}
+              onClick={async () => { setOpen(false); if (user?.id) purgeUserScopedKeys(user.id); purgeSessionDocumentBuffers(); await signOut({ redirectUrl: "/sign-in" }); }}
               className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
             >
               <LogOut className="w-3.5 h-3.5" />
@@ -165,14 +166,26 @@ export function Navbar() {
     <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-background/90 border-b border-border/50 transition-all duration-300 safe-top">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
 
-        {/* Logo → dashboard home */}
-        <a
-          href="/app/"
-          aria-label="PlainPath — go to dashboard"
-          className="flex items-center shrink-0 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2"
-        >
-          <LogoBrand />
-        </a>
+        {/* Logo → dashboard home.
+            On native, hard <a> tags cause a full WebView reload — use a
+            button + wouter navigate() instead so we stay inside the SPA. */}
+        {isNative() ? (
+          <button
+            onClick={() => navigate("/import")}
+            aria-label="PlainPath — go to dashboard"
+            className="flex items-center shrink-0 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 bg-transparent border-0 p-0 cursor-pointer"
+          >
+            <LogoBrand />
+          </button>
+        ) : (
+          <a
+            href="/app/"
+            aria-label="PlainPath — go to dashboard"
+            className="flex items-center shrink-0 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2"
+          >
+            <LogoBrand />
+          </a>
+        )}
 
         {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-0.5">
@@ -249,13 +262,15 @@ export function Navbar() {
           <WhatsNew />
           <ThemeToggle />
 
-          <a
-            href="/"
-            className="hidden md:flex items-center gap-1 text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors px-2 py-1.5 rounded-lg"
-          >
-            <LayoutDashboard className="w-3 h-3" />
-            Website
-          </a>
+          {!isNative() && (
+            <a
+              href="/"
+              className="hidden md:flex items-center gap-1 text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors px-2 py-1.5 rounded-lg"
+            >
+              <LayoutDashboard className="w-3 h-3" />
+              Website
+            </a>
+          )}
 
           {isLoaded && (
             isSignedIn
@@ -319,13 +334,15 @@ export function Navbar() {
                 <BookMarked className="w-4 h-4 shrink-0" />
                 My Analyses
               </button>
-              <a
-                href="/"
-                className="w-full flex items-center gap-2.5 px-2.5 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors"
-              >
-                <LayoutDashboard className="w-4 h-4 shrink-0" />
-                Website
-              </a>
+              {!isNative() && (
+                <a
+                  href="/"
+                  className="w-full flex items-center gap-2.5 px-2.5 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors"
+                >
+                  <LayoutDashboard className="w-4 h-4 shrink-0" />
+                  Website
+                </a>
+              )}
             </div>
           </div>
         </div>
