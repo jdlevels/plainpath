@@ -139,6 +139,28 @@ function stripBase(path: string): string {
     : path;
 }
 
+// Normalise any URL Clerk hands to routerPush/routerReplace.
+//
+// On native, Clerk occasionally produces an absolute URL derived from the
+// proxy origin (e.g. "https://plain-path.replit.app/") rather than a bare
+// path.  Passing a full URL to wouter's setLocation triggers
+// history.replaceState with a cross-origin URL which is blocked by WKWebView
+// and leaves the user stuck on native.  We extract just the pathname + query
+// + hash so the navigation always stays inside the SPA regardless of what
+// Clerk generates.
+function toSpaPath(rawTo: string): string {
+  try {
+    if (rawTo.startsWith("http://") || rawTo.startsWith("https://")) {
+      const u = new URL(rawTo);
+      const rel = u.pathname + u.search + u.hash;
+      return stripBase(rel) || "/";
+    }
+  } catch {
+    // malformed URL — fall through to stripBase
+  }
+  return stripBase(rawTo);
+}
+
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -163,12 +185,18 @@ function AuthPageWrapper({ children }: { children: React.ReactNode }) {
   );
 }
 
+// After a successful sign-in or sign-up, send the user to the app dashboard.
+// Using an explicit afterSignInUrl prevents Clerk from generating an absolute
+// redirect URL that wouter/WKWebView cannot handle on native.
+const afterAuthUrl = `${basePath}/import`;
+
 function SignInPage() {
   return (
     <AuthPageWrapper>
       <SignIn
         routing="path"
         path={`${basePath}/sign-in`}
+        forceRedirectUrl={afterAuthUrl}
         appearance={{
           elements: {
             rootBox: "w-full max-w-md",
@@ -187,6 +215,7 @@ function SignUpPage() {
         routing="path"
         path={`${basePath}/sign-up`}
         signInUrl={`${basePath}/sign-in`}
+        forceRedirectUrl={afterAuthUrl}
         appearance={{
           elements: {
             rootBox: "w-full max-w-md",
@@ -311,7 +340,7 @@ function NativePaywallScreen() {
           <span className="font-bold text-base tracking-tight">PlainPath</span>
         </div>
         <button
-          onClick={() => { purgeSessionDocumentBuffers(); void signOut({ redirectUrl: "/" }); }}
+          onClick={() => { purgeSessionDocumentBuffers(); void signOut({ redirectUrl: `${basePath}/sign-in` }); }}
           className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
         >
           <LogOut className="w-3.5 h-3.5" />
@@ -435,7 +464,7 @@ function ChoosePlanScreen() {
           <span className="font-bold text-base tracking-tight">PlainPath</span>
         </div>
         <button
-          onClick={() => { purgeSessionDocumentBuffers(); void signOut({ redirectUrl: "/" }); }}
+          onClick={() => { purgeSessionDocumentBuffers(); void signOut({ redirectUrl: `${basePath}/sign-in` }); }}
           className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
         >
           <LogOut className="w-3.5 h-3.5" />
@@ -902,8 +931,8 @@ function ClerkProviderWithRoutes() {
       proxyUrl={clerkProxyUrl || undefined}
       signInUrl={`${basePath}/sign-in`}
       signUpUrl={`${basePath}/sign-up`}
-      routerPush={(to) => setLocation(stripBase(to))}
-      routerReplace={(to) => setLocation(stripBase(to), { replace: true })}
+      routerPush={(to) => setLocation(toSpaPath(to))}
+      routerReplace={(to) => setLocation(toSpaPath(to), { replace: true })}
     >
       <QueryClientProvider client={queryClient}>
         <ClerkQueryClientCacheInvalidator />
