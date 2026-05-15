@@ -690,32 +690,24 @@ function PlanGate({ children }: { children: React.ReactNode }) {
 // Global auth guard — redirects unauthenticated users to the public marketing site
 // on web, or to /sign-in inside the SPA on native.
 //
-// CRITICAL NATIVE FIX: window.location.replace("/") on native navigates to
-// capacitor://localhost/ — which is the same protected route "/" — causing an
-// infinite WebView reload loop. On native we must use wouter's setLocation so
-// the redirect stays inside the SPA without reloading the WebView.
+// On native: uses wouter setLocation (synchronous, no WebView reload, no loop).
+// On web: uses window.location.replace to the marketing site root.
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { isLoaded, isSignedIn } = useUser();
   const [, setLocation] = useLocation();
-
-  useEffect(() => {
-    if (!isLoaded) return;
-    if (!isSignedIn) {
-      if (isNative()) {
-        // Stay inside the SPA — no WebView reload, no loop.
-        setLocation("/sign-in", { replace: true });
-      } else {
-        window.location.replace("/");
-      }
-    }
-  }, [isLoaded, isSignedIn]);
 
   if (!isLoaded) {
     return <ClerkLoadingScreen />;
   }
 
   if (!isSignedIn) {
-    return <div className="min-h-screen bg-background" />;
+    if (isNative()) {
+      // Synchronous wouter navigation — stays inside the SPA, no WebView reload.
+      setLocation("/sign-in", { replace: true });
+      return null;
+    }
+    window.location.replace("/");
+    return null;
   }
 
   return <>{children}</>;
@@ -734,6 +726,48 @@ function NativeSafeRedirect({ nativeTo, webHref }: { nativeTo: string; webHref: 
     }
   }, []);
   return null;
+}
+
+// ─── NativeRootGate ───────────────────────────────────────────────────────────
+// Top-level guard placed BEFORE PlanGate and Router so it runs before any route,
+// Navbar, or Footer can render on native.
+//
+// On native, paths that belong to the marketing site (/, /demo, /pricing, etc.)
+// must never render — they have no equivalent in the native bundle and any
+// window.location call on these paths causes an infinite WebView reload loop.
+//
+// Behavior:
+//   • non-native          → pass through immediately, no-op
+//   • native + app path   → pass through to PlanGate / Router
+//   • native + mktg path + Clerk loading → show ClerkLoadingScreen (spinner)
+//   • native + mktg path + signed in     → navigate to /import (dashboard)
+//   • native + mktg path + not signed in → navigate to /sign-in
+//
+// Navigation is done via useEffect (not synchronously in render) so React's
+// rendering rules are respected. ClerkLoadingScreen is shown during the one
+// render cycle before the effect fires, so the user never sees marketing content.
+
+const NATIVE_MARKETING_PATHS = ["/", "/app", "/app/", "/demo", "/demo/analyze", "/pricing", "/website"];
+
+function NativeRootGate({ children }: { children: React.ReactNode }) {
+  const [location, setLocation] = useLocation();
+  const { isLoaded, isSignedIn } = useUser();
+
+  const native = isNative();
+  const isMarketingPath = native && NATIVE_MARKETING_PATHS.includes(location);
+
+  useEffect(() => {
+    if (!isMarketingPath || !isLoaded) return;
+    setLocation(isSignedIn ? "/import" : "/sign-in", { replace: true });
+  }, [isMarketingPath, isLoaded, isSignedIn]);
+
+  // On a marketing path on native: block everything below and show loading
+  // screen until the useEffect redirect fires.
+  if (isMarketingPath) {
+    return <ClerkLoadingScreen />;
+  }
+
+  return <>{children}</>;
 }
 
 // Convenience wrapper so Route's component prop works with RequireAuth
@@ -794,27 +828,27 @@ function Router() {
             <Route path="/" component={protect(Home)} />
             <Route path="/import" component={protect(Import)} />
             <Route path="/analyze" component={protect(Import)} />
-            <Route path="/ask-document">{() => { window.location.replace(`${basePath}/`); return null; }}</Route>
-            <Route path="/ask-this-document">{() => { window.location.replace(`${basePath}/`); return null; }}</Route>
+            <Route path="/ask-document">{() => <NativeSafeRedirect nativeTo="/import" webHref={`${basePath}/`} />}</Route>
+            <Route path="/ask-this-document">{() => <NativeSafeRedirect nativeTo="/import" webHref={`${basePath}/`} />}</Route>
             <Route path="/results" component={protect(Analyze)} />
-            <Route path="/trust-check">{() => { window.location.replace(`${basePath}/`); return null; }}</Route>
+            <Route path="/trust-check">{() => <NativeSafeRedirect nativeTo="/import" webHref={`${basePath}/`} />}</Route>
             <Route path="/my-analyses" component={protect(MyAnalyses)} />
-            <Route path="/contract-builder">{() => { window.location.replace(`${basePath}/`); return null; }}</Route>
-            <Route path="/build-contract">{() => { window.location.replace(`${basePath}/`); return null; }}</Route>
+            <Route path="/contract-builder">{() => <NativeSafeRedirect nativeTo="/import" webHref={`${basePath}/`} />}</Route>
+            <Route path="/build-contract">{() => <NativeSafeRedirect nativeTo="/import" webHref={`${basePath}/`} />}</Route>
             <Route path="/contract-review" component={protect(ContractReview)} />
-            <Route path="/build">{() => { window.location.replace(`${basePath}/`); return null; }}</Route>
+            <Route path="/build">{() => <NativeSafeRedirect nativeTo="/import" webHref={`${basePath}/`} />}</Route>
             <Route path="/review" component={protect(ContractReview)} />
-            <Route path="/compare">{() => { window.location.replace(`${basePath}/`); return null; }}</Route>
-            <Route path="/redact">{() => { window.location.replace(`${basePath}/`); return null; }}</Route>
+            <Route path="/compare">{() => <NativeSafeRedirect nativeTo="/import" webHref={`${basePath}/`} />}</Route>
+            <Route path="/redact">{() => <NativeSafeRedirect nativeTo="/import" webHref={`${basePath}/`} />}</Route>
             <Route path="/billing" component={protect(Billing)} />
             <Route path="/upgrade" component={protect(Upgrade)} />
             <Route path="/team" component={protect(TeamManage)} />
             <Route path="/documents" component={protect(Documents)} />
             <Route path="/account-security" component={protect(AccountSecurity)} />
-            <Route path="/clause-extractor">{() => { window.location.replace(`${basePath}/`); return null; }}</Route>
-            <Route path="/clause-extractor/:id">{() => { window.location.replace(`${basePath}/`); return null; }}</Route>
-            <Route path="/compare-versions">{() => { window.location.replace(`${basePath}/`); return null; }}</Route>
-            <Route path="/compare-versions/:id">{() => { window.location.replace(`${basePath}/`); return null; }}</Route>
+            <Route path="/clause-extractor">{() => <NativeSafeRedirect nativeTo="/import" webHref={`${basePath}/`} />}</Route>
+            <Route path="/clause-extractor/:id">{() => <NativeSafeRedirect nativeTo="/import" webHref={`${basePath}/`} />}</Route>
+            <Route path="/compare-versions">{() => <NativeSafeRedirect nativeTo="/import" webHref={`${basePath}/`} />}</Route>
+            <Route path="/compare-versions/:id">{() => <NativeSafeRedirect nativeTo="/import" webHref={`${basePath}/`} />}</Route>
 
             {BUILDER_ENABLED && (
               <>
@@ -878,9 +912,11 @@ function ClerkProviderWithRoutes() {
         <OfflineBanner />
         <TooltipProvider>
           <AnalysisProvider>
-            <PlanGate>
-              <Router />
-            </PlanGate>
+            <NativeRootGate>
+              <PlanGate>
+                <Router />
+              </PlanGate>
+            </NativeRootGate>
             <Toaster />
           </AnalysisProvider>
         </TooltipProvider>
