@@ -15,6 +15,7 @@ import {
   type UserDocument,
 } from "@/lib/userDocsApi"
 import { useUser, useAuth } from "@clerk/react"
+import { waitForToken } from "@/lib/auth"
 import { useAnalysisContext } from "@/context/AnalysisContext"
 import { fetchCloudAnalyses } from "@/lib/cloudHistory"
 import { clauseExtractorApi } from "@/lib/clauseExtractorApi"
@@ -153,8 +154,8 @@ export default function Documents() {
     setCompareError(null)
     if (BUILDER_ENABLED) setBuilderError(null)
 
-    // Fetch Clerk token for session APIs
-    const token = await getToken().catch(() => null)
+    // Fetch Clerk token — retries up to 5 s for WKWebView session race
+    const token = await waitForToken(getToken)
 
     // Parallel fetch all data sources
     const [docsResult, clauseResult, compareResult, builderResult] = await Promise.allSettled([

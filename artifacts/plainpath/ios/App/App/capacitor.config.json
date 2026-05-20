@@ -1,0 +1,38 @@
+{
+        "appId": "com.plainpathapp.plainpath",
+        "appName": "PlainPath",
+        "webDir": "dist/native",
+        "server": {
+                "androidScheme": "https"
+        },
+        "ios": {
+                "overrideUserAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1"
+        },
+        "plugins": {
+                "SplashScreen": {
+                        "launchShowDuration": 800,
+                        "backgroundColor": "#F8F7F4",
+                        "showSpinner": false,
+                        "androidSplashResourceName": "splash",
+                        "iosSplashResourceName": "Splash"
+                },
+                "StatusBar": {
+                        "style": "Light",
+                        "backgroundColor": "#F8F7F4",
+                        "overlaysWebView": true
+                },
+                "Keyboard": {
+                        "resize": "body",
+                        "resizeOnFullScreen": true
+                },
+                "CapacitorHttp": {
+                        "enabled": false
+                }
+        },
+        "packageClassList": [
+                "HapticsPlugin",
+                "StatusBarPlugin",
+                "FilePickerPlugin",
+                "PurchasesPlugin"
+        ]
+}

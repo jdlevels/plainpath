@@ -20,6 +20,7 @@ import { useEntitlements } from "@/hooks/useEntitlements"
 import UpgradeModal from "@/components/UpgradeModal"
 import { isNative } from "@/lib/platform"
 import { haptic, pickFileNative } from "@/lib/native"
+import { waitForToken } from "@/lib/auth"
 import { DocumentScanScreen } from "@/components/DocumentScanScreen"
 
 const DEMOS = [
@@ -671,7 +672,7 @@ export default function Import() {
       formData.append("documentTypeHint", docTypeLabel)
       try {
         const apiBase = getApiBaseUrl()
-        const uploadToken = await getToken().catch(() => null)
+        const uploadToken = await waitForToken(getToken)
         const res = await fetch(`${apiBase}/api/documents/upload`, {
           method: "POST",
           headers: uploadToken ? { Authorization: `Bearer ${uploadToken}` } : undefined,

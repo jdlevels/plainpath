@@ -18,6 +18,7 @@ import { WorkspaceShell } from "@/components/WorkspaceShell"
 import { ToolPageHeader } from "@/components/ToolPageHeader"
 import { beforeRunContractReview, UsageLimitError } from "@/lib/analysisGate"
 import { makeGetTokenWithTimeout, useEntitlements } from "@/hooks/useEntitlements"
+import { waitForToken } from "@/lib/auth"
 import UpgradeModal from "@/components/UpgradeModal"
 import { ResultStickyHeader } from "@/components/result/ResultStickyHeader"
 import { ResultSectionCard } from "@/components/result/ResultSectionCard"
@@ -673,7 +674,7 @@ function ClauseCard({
     setNegError(null)
     try {
       const base = getApiBaseUrl()
-      const tok = await getToken().catch(() => null)
+      const tok = await waitForToken(getToken)
       const res = await fetch(`${base}/api/contracts/negotiate-clause`, {
         method: "POST",
         headers: {
@@ -1303,7 +1304,7 @@ export default function ContractReview() {
     setError(null)
     try {
       const base = getApiBaseUrl()
-      const tok = await getToken().catch(() => null)
+      const tok = await waitForToken(getToken)
       const response = await fetch(`${base}/api/contracts/scan-images`, {
         method: "POST",
         headers: {
@@ -1337,7 +1338,7 @@ export default function ContractReview() {
     setLoading(true)
     try {
       const base = getApiBaseUrl()
-      const tok = await getToken().catch(() => null)
+      const tok = await waitForToken(getToken)
       let response: Response
 
       if (activeTab === "upload" && file) {
