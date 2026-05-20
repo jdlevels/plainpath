@@ -639,11 +639,14 @@ jobs:
           APP_BIN=$(find "$APP_DIR" -maxdepth 1 -name "App" -type f | head -1)
           [ -n "$APP_BIN" ] || { echo "ERROR: App binary not found in xcarchive at $APP_DIR"; exit 1; }
           echo "Binary: $APP_BIN ($(wc -c < "$APP_BIN") bytes)"
-          if strings "$APP_BIN" | grep -q "PlainPath native shell"; then
+          # Use /usr/bin/strings (macOS system strings) — it handles fat ARM64 binaries
+          # without requiring -arch. Xcode's toolchain strings (first in PATH when
+          # DEVELOPER_DIR is set) rejects fat binaries and exits non-zero.
+          if /usr/bin/strings "$APP_BIN" | grep -q "PlainPath native shell"; then
             echo "PASS: 'PlainPath native shell' found in compiled binary"
           else
             echo "FAIL: 'PlainPath native shell' missing from compiled binary"
-            echo "      Expected _ppBuildTag from AppDelegate.swift to be compiled in."
+            echo "      Expected NSLog format string from AppDelegate.swift to be compiled in."
             exit 1
           fi
 

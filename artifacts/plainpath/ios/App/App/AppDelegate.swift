@@ -6,11 +6,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
 
-    // CI binary guard: "PlainPath native shell" must be present in the compiled binary.
-    // The `Binary string check` CI step verifies this string via `strings` to confirm
-    // the correct AppDelegate was compiled (not the stock Capacitor scaffold).
-    private let _ppBuildTag = "PlainPath native shell"
-
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override the WKWebView user-agent to remove the "Capacitor/X.Y" identifier.
         //
@@ -27,6 +22,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // takes effect on the very first page load.
         let safariUA = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1"
         UserDefaults.standard.set(safariUA, forKey: "UserAgent")
+        // CI binary guard: NSLog embeds "PlainPath native shell" as a format-string literal
+        // in the compiled binary. Unlike unused constants, NSLog calls survive Swift Release
+        // optimization because they have observable I/O side effects. The `Binary string check`
+        // CI step verifies this string via /usr/bin/strings to confirm the correct AppDelegate
+        // was compiled (not the stock Capacitor scaffold).
+        NSLog("[PlainPath native shell] UA override applied, build %@",
+              Bundle.main.object(forInfoDictionaryKey: kCFBundleVersionKey as String) as? String ?? "?")
         return true
     }
 
