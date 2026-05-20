@@ -111,7 +111,12 @@ export function useEntitlements() {
     // immediately sees the updated metadata before proceeding.
     if (user && (!metaRole || !metaAccessTier)) {
       try {
-        const bootstrapToken = await getToken().catch(() => null)
+        // WKWebView race: retry getToken once before sending bootstrap request.
+        let bootstrapToken = await getToken().catch(() => null)
+        if (!bootstrapToken) {
+          await new Promise<void>(r => setTimeout(r, 2000))
+          bootstrapToken = await getToken().catch(() => null)
+        }
         const res = await fetch(`${getApiBaseUrl()}/api/entitlements/bootstrap`, {
           method: "POST",
           headers: bootstrapToken ? { Authorization: `Bearer ${bootstrapToken}` } : undefined,
@@ -140,9 +145,13 @@ export function useEntitlements() {
     try {
       let entToken = await getToken().catch(() => null)
       // WKWebView race: session token may not be cached immediately after sign-in.
-      // Retry once after a short delay before giving up and hitting the server unauthenticated.
+      // Retry up to two more times with increasing delays before giving up.
       if (!entToken) {
-        await new Promise<void>(r => setTimeout(r, 1500))
+        await new Promise<void>(r => setTimeout(r, 2000))
+        entToken = await getToken().catch(() => null)
+      }
+      if (!entToken) {
+        await new Promise<void>(r => setTimeout(r, 3000))
         entToken = await getToken().catch(() => null)
       }
       const result = await fetchEntitlements(email ?? "", clerkUserId, entToken)
@@ -191,8 +200,60 @@ export function useEntitlements() {
         setData(null)
       }
     } catch {
-      setData(null)
-      setHasPaidSubscription(false)
+      // ── Metadata fallback ────────────────────────────────────────────────
+      // If the API call fails (e.g. WKWebView token race → 401) but Clerk
+      // publicMetadata already records this user as admin or pro — meaning the
+      // server previously wrote that metadata via /bootstrap — use it as an
+      // offline fallback so the user is not stuck on the paywall while the
+      // session token is still initialising.
+      //
+      // Security: metadata is server-written (never user-controlled) and is
+      // only trusted here when the network call itself fails, not as an
+      // override of a successful 200 response.
+      //
+      // Note: usageCount/usageRemaining are best-effort (0) in this fallback;
+      // they are corrected on the next successful API call (e.g. next reload
+      // triggered by Clerk's ~60 s token refresh).
+      if (metaRole === "admin" || metaAccessTier === "pro") {
+        const allProTools: import("../lib/entitlements").ToolKey[] = [
+          "analyze", "trust-check", "contract-review", "build-contract",
+          "redact", "compare", "clause-extractor", "compare-versions",
+        ]
+        const fallbackData: import("../lib/entitlements").EntitlementStatus = {
+          email: email ?? "",
+          role: metaRole,
+          accessTier: (metaRole === "admin" ? "pro" : metaAccessTier) as import("../lib/entitlements").AccessTier | undefined,
+          found: true,
+          status: "active",
+          plan: "pro",
+          grantType: "metadata_fallback",
+          monthKey: new Date().toISOString().slice(0, 7),
+          usageCount: 0,
+          usageLimit: 50,
+          usageRemaining: 50,
+          toolAccess: allProTools,
+          toolUsage: {
+            analyze: 0, "trust-check": 0, "contract-review": 0,
+            "build-contract": 0, redact: 0, compare: 0,
+            "clause-extractor": 0, "compare-versions": 0,
+          },
+          currentPeriodEnd: null,
+          cancelAtPeriodEnd: false,
+          billingMode: "live",
+          paywallEnforcement: false,
+          features: {
+            plainEnglish: true, sourceSections: true, sectionExplainer: true,
+            checklist: true, requiredDocs: true, deadlines: true, risks: true,
+            whatsMissing: true, keyTerms: true, actionPack: true,
+            savedAnalyses: true, exportShare: true,
+          },
+        }
+        setData(fallbackData)
+        setHasPaidSubscription(true)
+      } else {
+        setData(null)
+        setHasPaidSubscription(false)
+      }
     } finally {
       setLoading(false)
       loadedOnceRef.current = true
