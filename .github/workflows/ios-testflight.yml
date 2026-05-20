@@ -639,10 +639,23 @@ jobs:
           APP_BIN=$(find "$APP_DIR" -maxdepth 1 -name "App" -type f | head -1)
           [ -n "$APP_BIN" ] || { echo "ERROR: App binary not found in xcarchive at $APP_DIR"; exit 1; }
           echo "Binary: $APP_BIN ($(wc -c < "$APP_BIN") bytes)"
-          # Use /usr/bin/strings (macOS system strings) — it handles fat ARM64 binaries
-          # without requiring -arch. Xcode's toolchain strings (first in PATH when
-          # DEVELOPER_DIR is set) rejects fat binaries and exits non-zero.
-          if /usr/bin/strings "$APP_BIN" | grep -q "PlainPath native shell"; then
+
+          echo "--- strings diagnostics ---"
+          which strings
+          /usr/bin/strings --version || true
+
+          # Root cause of previous failures: set -euo pipefail + grep -q exits on first
+          # match, sending SIGPIPE to strings, which exits non-zero ("failed to flush
+          # output"). pipefail then treats the whole command as failed even when the
+          # string WAS found. Fix: disable pipefail only for this check, suppress
+          # strings stderr, then restore pipefail.
+          echo "Executing: /usr/bin/strings \"$APP_BIN\" 2>/dev/null | grep -q 'PlainPath native shell'"
+          set +o pipefail
+          /usr/bin/strings "$APP_BIN" 2>/dev/null | grep -q "PlainPath native shell"
+          FOUND=$?
+          set -o pipefail
+
+          if [ "$FOUND" -eq 0 ]; then
             echo "PASS: 'PlainPath native shell' found in compiled binary"
           else
             echo "FAIL: 'PlainPath native shell' missing from compiled binary"
