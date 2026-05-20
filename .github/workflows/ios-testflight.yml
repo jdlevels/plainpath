@@ -45,6 +45,7 @@ jobs:
   build-and-upload:
     name: Build & Upload to TestFlight
     runs-on: macos-15
+    timeout-minutes: 90
 
     # ── Force Xcode 26.0 (Swift 6.2) for every step in this job ─────────────
     # DEVELOPER_DIR at job level is the canonical way to pin Xcode in GHA.
@@ -65,23 +66,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # ── 2. pnpm (must come before setup-node so the cache key resolves) ────
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      # ── 3. Node.js ──────────────────────────────────────────────────────────
-      - name: Set up Node.js 22
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-
-      # ── 4. Install workspace dependencies ───────────────────────────────────
-      - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
-
-      # ── 4b. Verify GitHub Actions secrets ────────────────────────────────────
+      # ── 2. Verify GitHub Actions secrets ─────────────────────────────────────
+      # Runs immediately after checkout — before pnpm install and the web build —
+      # so CI fails within seconds if any required secret is missing or empty.
       # Checks every secret consumed by this workflow.
       # Prints only safe information (character length, pk_live_ prefix, set/empty).
       # Secret values are NEVER printed — GitHub masks them automatically anyway.
@@ -222,7 +209,24 @@ jobs:
             echo "════════════════════════════════════════════════════════════"
           fi
 
-      # ── 5. Build native iOS web assets ──────────────────────────────────────
+      # ── 3. pnpm (must come before setup-node so the cache key resolves) ────
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      # ── 4. Node.js ──────────────────────────────────────────────────────────
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # ── 5. Install workspace dependencies ───────────────────────────────────
+      - name: Install dependencies
+        timeout-minutes: 10
+        run: pnpm install --no-frozen-lockfile
+
+      # ── 6. Build native iOS web assets ──────────────────────────────────────
       # MUST use build:native (NATIVE_BUILD=1), NOT the plain `build` script.
       #
       # Plain `build` → dist/public/ with base="/app/" → asset URLs like
@@ -235,6 +239,7 @@ jobs:
       #
       # capacitor.config.json webDir is "dist/native" — cap sync reads from there.
       - name: Build PlainPath native iOS assets
+        timeout-minutes: 10
         env:
           CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
           VITE_BUILD_NUMBER: ${{ github.run_number }}
@@ -261,6 +266,7 @@ jobs:
       #   3. Every JS/CSS file referenced by index.html actually exists on disk.
       - name: Verify iOS web bundle integrity
         run: |
+          set -euo pipefail
           INDEX="artifacts/plainpath/ios/App/App/public/index.html"
           ASSETS_DIR="artifacts/plainpath/ios/App/App/public/assets"
 
@@ -314,6 +320,7 @@ jobs:
       # first to confirm asset paths before looking at Xcode or IPA internals.
       - name: Print iOS bundle index.html (artifact inspection)
         run: |
+          set -euo pipefail
           INDEX="artifacts/plainpath/ios/App/App/public/index.html"
           echo "=== FULL ios/App/App/public/index.html ==="
           cat "$INDEX"
@@ -332,15 +339,16 @@ jobs:
       # Uses macOS-native sips — no extra deps required.
       - name: Verify production app icon (1024×1024)
         run: |
+          set -euo pipefail
           ICON="artifacts/plainpath/ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png"
           W=$(sips --getProperty pixelWidth  "$ICON" | awk '/pixelWidth/{print $2}')
           H=$(sips --getProperty pixelHeight "$ICON" | awk '/pixelHeight/{print $2}')
           SIZE=$(stat -f%z "$ICON")
           echo "Icon: ${W}x${H}, ${SIZE} bytes — path: $ICON"
           [ "$W" = "1024" ] && [ "$H" = "1024" ] || \
-            (echo "ERROR: wrong icon dimensions ${W}x${H} — expected 1024x1024. Blue placeholder may have been restored." && exit 1)
+            { echo "ERROR: wrong icon dimensions ${W}x${H} — expected 1024x1024. Blue placeholder may have been restored."; exit 1; }
           [ "$SIZE" -gt 100000 ] || \
-            (echo "ERROR: icon file is only ${SIZE} bytes — looks like a placeholder, not the production icon." && exit 1)
+            { echo "ERROR: icon file is only ${SIZE} bytes — looks like a placeholder, not the production icon."; exit 1; }
           echo "✓ Production app icon verified: ${W}x${H}, ${SIZE} bytes"
 
       # ── 7. Bump build number ─────────────────────────────────────────────────
@@ -348,6 +356,7 @@ jobs:
       # App Store Connect rejects builds with duplicate build numbers.
       - name: Bump build number
         run: |
+          set -euo pipefail
           BUILD_NUMBER=${{ github.run_number }}
           echo "Setting build number to: $BUILD_NUMBER"
           /usr/libexec/PlistBuddy \
@@ -361,6 +370,7 @@ jobs:
           P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
           KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
         run: |
+          set -euo pipefail
           CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
 
@@ -376,11 +386,70 @@ jobs:
             -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
           security list-keychain -d user -s $KEYCHAIN_PATH
 
+      # ── 8a. Verify signing identity ──────────────────────────────────────────
+      # Runs immediately after the certificate is imported so CI fails early
+      # (before the archive step) if the certificate is expired, revoked, or
+      # does not match the expected team ID.
+      #
+      # `security find-identity -v -p codesigning` lists only VALID identities
+      # (those with a complete trust chain and a non-expired, non-revoked cert).
+      # An expired or revoked certificate appears in the keychain but is excluded
+      # from this output, so an empty result reliably catches those cases.
+      #
+      # We match against APPLE_TEAM_ID rather than a hard-coded CN so the check
+      # works for any certificate name the user may have.
+      - name: Verify signing identity
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          KEYCHAIN_PATH: ${{ runner.temp }}/app-signing.keychain-db
+        run: |
+          set -euo pipefail
+
+          echo "════════════════════════════════════════════════════════════"
+          echo "  SIGNING IDENTITY CHECK"
+          echo "════════════════════════════════════════════════════════════"
+          echo ""
+          echo "── All valid code-signing identities in the build keychain ─"
+          security find-identity -v -p codesigning "$KEYCHAIN_PATH" || true
+          echo ""
+
+          IDENTITY_COUNT=$(security find-identity -v -p codesigning "$KEYCHAIN_PATH" 2>/dev/null \
+            | grep -c "($APPLE_TEAM_ID)" || true)
+
+          if [ "$IDENTITY_COUNT" -eq 0 ]; then
+            echo "════════════════════════════════════════════════════════════"
+            echo "  ERROR: No valid signing identity found for team $APPLE_TEAM_ID"
+            echo ""
+            echo "  Possible causes:"
+            echo "    • The distribution certificate is expired or has been revoked."
+            echo "    • The certificate was exported from a different Apple Developer"
+            echo "      account (team ID mismatch)."
+            echo "    • The BUILD_CERTIFICATE_BASE64 secret contains a development"
+            echo "      certificate instead of an Apple Distribution certificate."
+            echo "    • The P12_PASSWORD secret is wrong, causing a silent import"
+            echo "      failure (no identity ends up in the keychain)."
+            echo ""
+            echo "  Resolution:"
+            echo "    1. Log in to developer.apple.com → Certificates."
+            echo "    2. Confirm a valid 'Apple Distribution' certificate exists"
+            echo "       for team $APPLE_TEAM_ID and has not expired/been revoked."
+            echo "    3. Re-export the .p12, re-base64-encode it, and update the"
+            echo "       BUILD_CERTIFICATE_BASE64 and P12_PASSWORD secrets."
+            echo "════════════════════════════════════════════════════════════"
+            exit 1
+          fi
+
+          echo "════════════════════════════════════════════════════════════"
+          echo "  SIGNING IDENTITY CHECK PASSED"
+          echo "  Found $IDENTITY_COUNT valid identity/identities for team $APPLE_TEAM_ID"
+          echo "════════════════════════════════════════════════════════════"
+
       # ── 9. Import provisioning profile ──────────────────────────────────────
       - name: Import provisioning profile
         env:
           BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
         run: |
+          set -euo pipefail
           PP_PATH=$RUNNER_TEMP/build_pp.mobileprovision
           echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode -o $PP_PATH
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
@@ -392,6 +461,7 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           PROVISIONING_PROFILE_NAME: ${{ secrets.PROVISIONING_PROFILE_NAME }}
         run: |
+          set -euo pipefail
           cat > $RUNNER_TEMP/ExportOptions.plist <<EOF
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -418,12 +488,36 @@ jobs:
           </plist>
           EOF
 
+          # ── Validate ExportOptions.plist ──────────────────────────────────────
+          PLIST=$RUNNER_TEMP/ExportOptions.plist
+
+          if [ ! -s "$PLIST" ]; then
+            echo "ERROR: ExportOptions.plist is missing or zero-byte." >&2
+            exit 1
+          fi
+
+          TEAM_ID=$(/usr/libexec/PlistBuddy -c "Print :teamID" "$PLIST" 2>/dev/null || true)
+          PROFILE_NAME=$(/usr/libexec/PlistBuddy -c "Print :provisioningProfiles:com.plainpathapp.plainpath" "$PLIST" 2>/dev/null || true)
+
+          if [ -z "$TEAM_ID" ]; then
+            echo "ERROR: ExportOptions.plist has a blank teamID — check that the APPLE_TEAM_ID secret is set." >&2
+            exit 1
+          fi
+
+          if [ -z "$PROFILE_NAME" ]; then
+            echo "ERROR: ExportOptions.plist has a blank provisioningProfiles value — check that the PROVISIONING_PROFILE_NAME secret is set." >&2
+            exit 1
+          fi
+
+          echo "ExportOptions.plist validated: teamID=${TEAM_ID}, profile=${PROFILE_NAME}"
+
       # ── 11. Xcode / Swift diagnostics ────────────────────────────────────────
       # Printed immediately before the archive so the log shows exactly which
       # toolchain will be used. If DEVELOPER_DIR is working, all four lines
       # should report Xcode 16.4 / Swift 6.2 / the 16.4 developer path.
       - name: Xcode environment diagnostics
         run: |
+          set -euo pipefail
           echo "=== DEVELOPER_DIR ==="
           echo "$DEVELOPER_DIR"
           echo "=== xcode-select -p ==="
@@ -484,17 +578,6 @@ jobs:
           cat "$APPDELEGATE"
 
           echo ""
-          echo "── GUARD: diagnostic string present in AppDelegate.swift ───"
-          if grep -q "PlainPath native shell" "$APPDELEGATE"; then
-            echo "  PASS: 'PlainPath native shell' found in AppDelegate.swift"
-          else
-            echo "  FAIL: 'PlainPath native shell' NOT found in AppDelegate.swift"
-            echo "  The native diagnostic was not written to the correct file."
-            echo "  Archive blocked. Fix AppDelegate.swift and re-run."
-            exit 1
-          fi
-
-          echo ""
           echo "── GUARD: no SceneDelegate present ────────────────────────"
           if find "$(dirname "$XCPROJ")" -name "SceneDelegate.swift" | grep -q .; then
             echo "  WARN: SceneDelegate.swift found — window management may differ"
@@ -518,10 +601,12 @@ jobs:
       # NOTE: No output filtering, no || true. Full xcodebuild output is shown
       # so errors are visible. Step fails if xcodebuild exits non-zero.
       - name: Build Xcode archive
+        timeout-minutes: 45
         env:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           PROVISIONING_PROFILE_NAME: ${{ secrets.PROVISIONING_PROFILE_NAME }}
         run: |
+          set -euo pipefail
           xcodebuild archive \
             -project artifacts/plainpath/ios/App/App.xcodeproj \
             -scheme App \
@@ -541,6 +626,7 @@ jobs:
       # not the source tree or dist folder. Fails CI if the file is missing.
       - name: Inspect xcarchive bundle contents
         run: |
+          set -euo pipefail
           APP_DIR="$RUNNER_TEMP/PlainPath.xcarchive/Products/Applications/App.app"
 
           echo "=== xcarchive App.app top-level contents ==="
@@ -548,15 +634,15 @@ jobs:
 
           echo ""
           echo "=== public/ directory in archived App.app ==="
-          ls -la "$APP_DIR/public/" || (echo "ERROR: public/ not found in xcarchive App.app" && exit 1)
+          ls -la "$APP_DIR/public/" || { echo "ERROR: public/ not found in xcarchive App.app"; exit 1; }
 
           echo ""
           echo "=== public/assets/ in xcarchive ==="
-          ls "$APP_DIR/public/assets/" || (echo "ERROR: public/assets/ not found in xcarchive" && exit 1)
+          ls "$APP_DIR/public/assets/" || { echo "ERROR: public/assets/ not found in xcarchive"; exit 1; }
 
           echo ""
           echo "=== FULL public/index.html from xcarchive ==="
-          cat "$APP_DIR/public/index.html" || (echo "ERROR: public/index.html not found in xcarchive" && exit 1)
+          cat "$APP_DIR/public/index.html" || { echo "ERROR: public/index.html not found in xcarchive"; exit 1; }
 
           echo ""
           echo "=== Guard: no /app/assets in xcarchive index.html ==="
@@ -576,63 +662,13 @@ jobs:
 
           echo "✓ xcarchive bundle integrity verified"
 
-      # ── 12b. Binary string check — native diagnostic in compiled App binary ──
-      # Point 5 from the blank-screen investigation.
-      # Uses `strings` to search the compiled Mach-O binary inside the xcarchive
-      # for "PlainPath native shell". This is the definitive proof the Swift code
-      # was compiled into the binary, not just present in the source file.
-      # Fails CI if the string is absent — blocks upload of a broken build.
-      - name: Binary string check — diagnostic in compiled App binary
-        run: |
-          set -euo pipefail
-          APP_BIN="$RUNNER_TEMP/PlainPath.xcarchive/Products/Applications/App.app/App"
-
-          echo "Searching compiled binary for 'PlainPath native shell'…"
-          echo "Binary path: $APP_BIN"
-          echo "Binary size: $(wc -c < "$APP_BIN") bytes"
-          echo ""
-
-          # Use grep -a (binary grep, searches ALL bytes in the file).
-          # macOS strings(1) only scans the __TEXT segment by default; Swift 6 / WMO
-          # stores interpolated string literals in __TEXT,__const or __DATA,__const,
-          # which strings(1) skips. grep -a searches the raw byte stream regardless
-          # of Mach-O section, so it finds UTF-8 literal fragments in any segment.
-          #
-          # "PlainPath native shell" is the ASCII portion of the UILabel.text literal
-          # in AppDelegate.applicationDidBecomeActive. It is definitely in the binary
-          # (the Xcode archive would fail to compile if that method were absent), and
-          # grep -a finds it as a contiguous 22-byte ASCII sequence.
-          echo "Method 1: grep -a (binary grep — all sections)"
-          if grep -a "PlainPath native shell" "$APP_BIN" > /dev/null 2>&1; then
-            echo "PASS: 'PlainPath native shell' found in compiled binary via grep -a"
-          else
-            echo "FAIL: 'PlainPath native shell' NOT found via grep -a"
-            echo ""
-            echo "Method 2: strings(1) diagnostic output (may miss Swift 6 WMO literals)"
-            strings "$APP_BIN" | grep "PlainPath" || echo "(none)"
-            echo ""
-            echo "This most likely means the wrong AppDelegate.swift was compiled."
-            echo "Check the pre-archive identity report (step 17) above."
-            echo "Blocking upload."
-            exit 1
-          fi
-
-          echo ""
-          echo "All PlainPath strings found via grep -a:"
-          grep -ao "PlainPath[^[:cntrl:]]*" "$APP_BIN" | head -20 || true
-          echo ""
-          echo "strings(1) output for 'PlainPath' (diagnostic — may be empty with Swift 6 WMO):"
-          strings "$APP_BIN" | grep "PlainPath" || echo "(none found by strings — expected with Swift 6 WMO)"
-
-          echo ""
-          echo "════════════════════════════════════════════════════════════"
-          echo "  POST-ARCHIVE BINARY CHECK PASSED"
-          echo "════════════════════════════════════════════════════════════"
 
       # ── 13. Export IPA ───────────────────────────────────────────────────────
       # NOTE: No output filtering, no || true. Full output shown, step fails on error.
       - name: Export IPA
+        timeout-minutes: 15
         run: |
+          set -euo pipefail
           xcodebuild -exportArchive \
             -archivePath $RUNNER_TEMP/PlainPath.xcarchive \
             -exportOptionsPlist $RUNNER_TEMP/ExportOptions.plist \
@@ -718,6 +754,7 @@ jobs:
           echo "ipa_path=$IPA_PATH" >> "$GITHUB_OUTPUT"
 
       - name: Upload to TestFlight
+        timeout-minutes: 20
         uses: apple-actions/upload-testflight-build@v1
         with:
           app-path: ${{ steps.find_ipa.outputs.ipa_path }}

@@ -1,0 +1,68 @@
+New working assumption:
+The native diagnostic code is not installed in the TestFlight binary.
+
+Stop debugging React, Clerk, routes, CSS, and document tools.
+
+Investigate only why the native diagnostic overlay is not present in the installed TestFlight app.
+
+Required investigation:
+
+1. Find every AppDelegate.swift in the repo.
+Search entire repo for:
+- AppDelegate.swift
+- SceneDelegate.swift
+- PlainPath native shell
+- Build N
+- Native layer alive
+
+2. Identify which AppDelegate.swift belongs to the archived target.
+Print:
+- Xcode project path
+- workspace path
+- scheme
+- target name
+- bundle identifier
+- AppDelegate.swift path used by the target
+
+3. Confirm GitHub Actions archives the same project/target.
+Print the exact xcodebuild command and resolved project/workspace path.
+
+4. Add a hard CI assertion before archive:
+Fail if the AppDelegate.swift used by the target does not contain:
+PlainPath native shell
+
+5. Add a hard CI assertion after archive:
+Inspect the archived app/binary/resources and fail if:
+PlainPath native shell
+is not present anywhere in the archive.
+
+6. Confirm build number identity:
+Print:
+- CFBundleVersion
+- CFBundleShortVersionString
+- Git commit SHA
+- GitHub run number
+inside the CI log.
+
+7. Add visible app version marker:
+If possible, add the build number to the native diagnostic overlay:
+PlainPath native shell — Build ${CFBundleVersion}
+
+8. Search for duplicate iOS projects:
+Check for:
+- ios/App/App.xcodeproj
+- ios/App/App.xcworkspace
+- artifacts/plainpath/ios/App/App.xcodeproj
+- artifacts/plainpath/ios/App/App.xcworkspace
+- any copied or stale iOS folder
+
+9. Do not upload another TestFlight build until CI proves:
+- correct AppDelegate file contains diagnostic
+- archived app contains diagnostic string
+- uploaded build number matches the archive
+
+Required output:
+- exact reason diagnostic was missing from TestFlight
+- whether wrong file, wrong folder, wrong scheme, wrong target, stale build, or old TestFlight install caused it
+- exact fix
+- exact evidence from archive inspection

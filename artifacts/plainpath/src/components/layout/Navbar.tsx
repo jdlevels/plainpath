@@ -15,17 +15,25 @@ import { isNative } from "@/lib/platform"
 
 function LogoBrand() {
   return (
-    <div className="flex items-center gap-2">
-      <img
-        src="/images/logo-icon.png"
-        alt=""
-        aria-hidden="true"
-        className="h-8 w-8 shrink-0 object-contain"
-        draggable={false}
-      />
+    <div className="flex items-center gap-2.5">
+      <div
+        className="w-[30px] h-[30px] rounded-[8px] shrink-0 overflow-hidden flex items-center justify-center"
+        style={{
+          background: "linear-gradient(135deg, #2C4A7C 0%, #3A5E9A 100%)",
+          boxShadow: "0 2px 8px rgba(44,74,124,0.38)",
+        }}
+      >
+        <img
+          src="/images/logo-icon.png"
+          alt=""
+          aria-hidden="true"
+          className="h-[18px] w-[18px] shrink-0 object-contain brightness-0 invert"
+          draggable={false}
+        />
+      </div>
       <span
-        className="font-display font-bold text-[1.2rem] leading-none tracking-tight text-foreground"
-        style={{ fontFamily: "var(--font-display)" }}
+        className="font-display font-bold text-[1.15rem] leading-none tracking-tight text-foreground"
+        style={{ fontFamily: "var(--font-display)", letterSpacing: "-0.3px" }}
       >
         PlainPath
       </span>
@@ -202,22 +210,32 @@ export function Navbar() {
             </button>
 
             {toolsOpen && (
-              <div className="absolute left-0 top-full mt-1.5 w-56 rounded-xl border border-border/60 bg-background shadow-lg z-50 py-1 overflow-hidden">
+              <div
+                className="absolute left-0 top-full mt-1.5 w-60 rounded-xl border border-border/60 bg-background z-50 py-1 overflow-hidden"
+                style={{ boxShadow: "0 8px 28px rgba(44,74,124,0.13), 0 2px 8px rgba(0,0,0,0.06)" }}
+              >
                 {TOOL_NAV.map(({ label, href, icon: Icon }) => (
                   <button
                     key={href}
                     onClick={() => { navigate(href); setToolsOpen(false) }}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm transition-colors text-left ${
+                    className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-sm transition-colors text-left relative ${
                       isToolActive(href)
-                        ? "text-primary bg-primary/6 font-medium"
+                        ? "font-semibold"
                         : "text-muted-foreground hover:text-foreground hover:bg-secondary"
                     }`}
+                    style={isToolActive(href) ? {
+                      background: "linear-gradient(to right, #EBF1FF, #F5F8FF)",
+                      color: "#2C4A7C",
+                    } : undefined}
                   >
+                    {isToolActive(href) && (
+                      <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full" style={{ background: "#2C4A7C" }} />
+                    )}
                     <Icon className="w-3.5 h-3.5 shrink-0" />
                     {label}
                   </button>
                 ))}
-                </div>
+              </div>
             )}
           </div>
 
@@ -226,9 +244,10 @@ export function Navbar() {
             href="/documents"
             className={`flex items-center gap-1.5 text-sm font-medium transition-colors px-2.5 py-1.5 rounded-lg ${
               isDocuments
-                ? "text-primary bg-primary/8"
+                ? "font-semibold"
                 : "text-muted-foreground hover:text-foreground hover:bg-secondary"
             }`}
+            style={isDocuments ? { background: "#EBF1FF", color: "#2C4A7C" } : undefined}
           >
             <FolderOpen className="w-3.5 h-3.5" />
             My Documents
@@ -239,9 +258,10 @@ export function Navbar() {
             href="/my-analyses"
             className={`flex items-center gap-1.5 text-sm font-medium transition-colors px-2.5 py-1.5 rounded-lg ${
               isMyAnalyses
-                ? "text-primary bg-primary/8"
+                ? "font-semibold"
                 : "text-muted-foreground hover:text-foreground hover:bg-secondary"
             }`}
+            style={isMyAnalyses ? { background: "#EBF1FF", color: "#2C4A7C" } : undefined}
           >
             <BookMarked className="w-3.5 h-3.5" />
             My Analyses

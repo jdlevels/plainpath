@@ -1,0 +1,103 @@
+CRITICAL: Build 54 TestFlight still opens to a completely blank white screen.
+
+Important observation:
+No diagnostic text appears.
+No “JS loading.”
+No “React loading.”
+No PlainPath branded fallback.
+Nothing visible at all.
+
+This means the issue is likely before JavaScript and before React:
+
+* index.html may not be loading
+* Capacitor may be pointing to the wrong bundled path
+* iOS bundle may not contain the expected public files
+* native splash/white screen may be covering the WebView
+* GitHub Actions may still be archiving a stale or wrong iOS project/bundle
+
+Do not inspect source only.
+Inspect the actual CI-produced archive/IPA.
+
+Required artifact-level checks:
+
+1. Confirm Build 54 GitHub Actions run
+
+* commit SHA
+* workflow run number
+* build number 54
+* exact commands executed
+
+2. Inspect actual archived app contents
+   Before upload, or from exported IPA if available, inspect:
+
+* Payload/App.app/public/index.html
+  or the actual Capacitor web asset location
+* confirm index.html exists
+* confirm pp-launch-shell text exists
+* confirm diagnostic text exists
+* confirm /assets/*.js and /assets/*.css references exist
+* confirm referenced files exist in same app bundle
+
+3. Confirm Xcode archive source path
+   Verify whether GitHub Actions archives:
+
+* ios/App/App.xcworkspace
+  or
+* ios/App/App.xcodeproj
+
+Confirm the archived project is the same one that cap sync modifies.
+
+4. Confirm Capacitor iOS asset location
+   Check actual iOS project structure:
+
+* ios/App/App/public/
+* ios/App/App/App/public/
+* any alternate public folder
+
+Find which folder is actually copied into the app bundle.
+
+5. Confirm native app is loading local assets
+   Check:
+
+* capacitor.config.json
+* ios/App/App/capacitor.config.json
+* ios/App/App/Info.plist
+* AppDelegate / SceneDelegate
+* any server.url setting
+* any custom WKWebView config
+
+There must be no remote server.url and no stale webDir mismatch.
+
+6. Check native splash screen behavior
+   If index.html exists but nothing shows:
+
+* inspect LaunchScreen.storyboard
+* inspect Capacitor splash screen plugin config
+* confirm splash screen is not staying on top forever
+* temporarily disable/hide splash after launch if needed
+
+7. Add native-level visible proof if needed
+   If WebView/index.html cannot be proven visually, add a native iOS launch label or background marker temporarily:
+   “PlainPath native shell loaded — Build 55”
+   This proves whether native shell is alive before WebView.
+
+8. Add CI hard failure
+   CI must fail if:
+
+* archived app does not contain public/index.html
+* archived app does not contain pp-launch-shell
+* archived app does not contain referenced JS/CSS assets
+* archived app contains /app/assets paths
+
+Required output:
+
+* exact reason Build 54 is still blank
+* exact artifact path inspected
+* whether index.html is missing, not loaded, or covered
+* exact fix
+* artifact-level evidence from the archived app, not source/dist only
+
+No redesign.
+No feature work.
+No document workflow changes.
+Fix only native TestFlight blank screen.

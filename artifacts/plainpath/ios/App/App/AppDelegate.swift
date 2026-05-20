@@ -7,54 +7,22 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        // Override the WKWebView user-agent to remove the "Capacitor/X.Y" identifier.
+        //
+        // Clerk uses Cloudflare Turnstile for bot protection during sign-up (and
+        // optionally sign-in).  Turnstile inspects the UA string and rejects embedded
+        // webviews whose UA contains non-browser tokens such as "Capacitor", returning:
+        //   "Authentication unsuccessful due to failed security validations.
+        //    Please try using a different browser or disabling browser extensions."
+        //
+        // Setting the "UserAgent" key in UserDefaults.standard BEFORE the first
+        // WKWebView is created propagates the custom UA to every WKWebView in this
+        // process (documented Apple behaviour since iOS 9 / WKWebView introduction).
+        // Capacitor reads this key when it initialises its bridge view, so the override
+        // takes effect on the very first page load.
+        let safariUA = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1"
+        UserDefaults.standard.set(safariUA, forKey: "UserAgent")
         return true
-    }
-
-    // ── Native startup diagnostic ──────────────────────────────────────────────
-    // Shows a PlainPath-blue overlay for 5 s when the app first becomes active.
-    // Purpose: prove that the native layer (UIKit / Capacitor bridge) is alive
-    //          independently of whether WKWebView loads index.html.
-    //
-    // Diagnostic guide:
-    //   Blue overlay visible  → native shell is alive; blank = WebView problem
-    //   Nothing visible       → native shell itself is not rendering (UIKit issue)
-    //
-    // Remove this block once the blank screen is confirmed resolved.
-    func applicationDidBecomeActive(_ application: UIApplication) {
-        guard let window = window else { return }
-        guard window.viewWithTag(9_998) == nil else { return }
-
-        let buildNum = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?"
-
-        let overlay = UIView(frame: window.bounds)
-        overlay.tag = 9_998
-        overlay.backgroundColor = UIColor(red: 0.31, green: 0.49, blue: 0.67, alpha: 1.0)
-        overlay.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-
-        let label = UILabel()
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.numberOfLines = 0
-        label.textAlignment = .center
-        label.textColor = .white
-        label.font = UIFont.boldSystemFont(ofSize: 20)
-        label.text = "PlainPath native shell ✓\nBuild \(buildNum)\nNative layer alive\nWebView loading…"
-
-        overlay.addSubview(label)
-        NSLayoutConstraint.activate([
-            label.leadingAnchor.constraint(equalTo: overlay.leadingAnchor, constant: 24),
-            label.trailingAnchor.constraint(equalTo: overlay.trailingAnchor, constant: -24),
-            label.centerYAnchor.constraint(equalTo: overlay.centerYAnchor),
-        ])
-
-        window.addSubview(overlay)
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
-            UIView.animate(withDuration: 0.4, animations: {
-                overlay.alpha = 0
-            }, completion: { _ in
-                overlay.removeFromSuperview()
-            })
-        }
     }
 
     func applicationWillResignActive(_ application: UIApplication) {

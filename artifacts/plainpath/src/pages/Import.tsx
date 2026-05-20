@@ -359,7 +359,12 @@ export default function Import() {
     if (err) { setUploadError(err); return }
     setUploadedFile(file)
     setUploadError(null)
-    goToDocType({ kind: "file", file })
+    // Trust Check: skip the staged step and advance immediately (single-step flow).
+    // Analyze a Document: stay on the input step so the user sees the file staged
+    // and must press "Analyze This Document" explicitly to continue.
+    if (isTrustCheck) {
+      goToDocType({ kind: "file", file })
+    }
   }
 
   // Native-only: open the system file picker via Capacitor plugin
@@ -1207,7 +1212,7 @@ export default function Import() {
                                 style={{ touchAction: "manipulation" }}
                                 className="w-full h-14 text-base rounded-xl"
                               >
-                                Continue <ArrowRight className="ml-2 w-4 h-4" />
+                                {isTrustCheck ? "Continue" : "Analyze This Document"} <ArrowRight className="ml-2 w-4 h-4" />
                               </Button>
                               <button
                                 type="button"

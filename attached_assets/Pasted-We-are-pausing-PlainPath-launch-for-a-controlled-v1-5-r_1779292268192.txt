@@ -1,0 +1,109 @@
+We are pausing PlainPath launch for a controlled v1.5 redesign before App Store release.
+
+Objective:
+Redesign PlainPath from a generic AI document tool app into a premium “Document Intelligence Workspace.”
+
+IMPORTANT:
+This is a CANVAS/DESIGN-FIRST pass only.
+Do not modify production routes, auth, billing, RevenueCat, Stripe, database, OpenAI logic, file processing, privacy logic, or backend services.
+Do not implement into the live app yet.
+Do not approve or mark complete unless the requested screens are visibly redesigned and reviewable.
+
+Product identity:
+PlainPath
+Document Intelligence Workspace
+
+Core positioning:
+PlainPath helps users upload important documents, understand them in plain English, identify missing items, review key risks or obligations, and generate a clear action plan.
+
+Launch scope remains limited to:
+1. Analyze a Document
+2. Contract Review
+
+Do not add new production tools.
+
+Design goal:
+Make PlainPath feel like a modern operational intelligence workspace, closer in quality to our newer apps. It should no longer feel like a generic SaaS upload tool.
+
+Create a redesigned Canvas prototype for:
+
+1. New Dashboard / Workspace Home
+- Command-center style layout
+- Primary CTA: Start Document Review
+- Secondary CTA: Review a Contract
+- Recent analyses section
+- Saved reports section
+- Workflow status cards
+- Usage/plan card if already present in the app
+- Clear mobile-first responsive structure
+- Premium but simple visual design
+
+2. Unified Document Review Workspace
+For Analyze a Document:
+- Left side: document/upload/viewer area
+- Right side: intelligence panel
+- Visible workflow stages:
+  Upload → Scan → Understand → Missing Items → Action Plan → Save/Export
+- Plain English summary
+- Source-backed sections
+- What’s missing
+- Checklist
+- Required documents
+- Deadlines
+- Next actions
+- Export/save area
+
+3. Contract Review Workspace
+- Same visual system as Analyze a Document
+- Left side: contract viewer/upload area
+- Right side: contract intelligence panel
+- Sections:
+  Summary
+  Key Clauses
+  Needs Attention
+  Balanced Clauses
+  Questions to Ask
+  Suggested language to discuss
+  Before You Sign
+- Avoid scary legal language.
+- Do not use “red flags” or “watch outs.”
+- Keep user-facing wording calm and practical.
+
+4. Loading / Scanning Experience
+Design a premium scanning state that shows:
+- Reading document
+- Extracting key sections
+- Finding missing information
+- Building plain-English summary
+- Preparing action plan
+
+5. Mobile Screens
+Include mobile layouts for:
+- Dashboard
+- Analyze a Document workspace
+- Contract Review workspace
+
+Visual direction:
+- Premium, clean, modern
+- Stronger structure and hierarchy
+- Less generic SaaS
+- Better cards, tabs, section headers, spacing, borders
+- Clear document-first experience
+- Calm professional tone
+- App Store screenshot quality
+
+Guardrails:
+- Do not touch authentication.
+- Do not touch signup/login logic.
+- Do not touch billing.
+- Do not touch payment UI.
+- Do not touch App Store compliance logic.
+- Do not touch backend routes.
+- Do not touch database schema.
+- Do not touch OpenAI prompts yet.
+- Do not add new tools.
+- Do not remove working functionality.
+- Do not implement into production until we approve Canvas screenshots.
+
+Deliverable:
+A reviewable Canvas redesign prototype with the screens above and a short summary of what changed.

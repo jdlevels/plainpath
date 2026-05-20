@@ -1,0 +1,107 @@
+Final PlainPath Apple resubmission verification pass.
+
+Purpose:
+Before creating the next App Store/TestFlight build, recheck the entire release-critical path to confirm the native iOS blank-screen issue is truly fixed and no new blocker was introduced.
+
+Do not add features.
+Do not redesign.
+Do not refactor unrelated code.
+Do not make polish changes.
+Only report findings unless a confirmed launch blocker exists.
+
+Required verification areas:
+
+1. Native iOS asset path verification
+   Confirm the native build output uses:
+
+* /assets/...
+  not:
+* /app/assets/...
+
+Verify:
+
+* dist/native/index.html
+* ios/App/App/public/index.html
+* all JS/CSS references
+* asset files actually exist in ios/App/App/public/assets
+
+2. Capacitor config verification
+   Confirm:
+
+* capacitor.config.json webDir points to dist/native
+* cap sync ios copies the native build
+* no stale dist/public web build is being copied into iOS
+
+3. Static launch fallback verification
+   Confirm:
+
+* index.html contains visible PlainPath branded fallback inside root
+* fallback is visible before React loads
+* fallback is replaced only after React mounts
+* fallback works without JS/CSS
+
+4. Web build separation verification
+   Confirm:
+
+* web deployment still uses dist/public with /app base if needed
+* native iOS uses dist/native with / base
+* the two build paths do not overwrite each other
+
+5. Auth/login verification
+   Confirm:
+
+* Clerk/auth initialization does not cause blank screen
+* if auth is delayed, visible loading/retry state appears
+* no npm.clerk.dev references remain
+* no invalid __internal_clerkJSUrl override remains
+* Clerk proxy path works as expected
+
+6. Route verification
+   Confirm these routes do not crash:
+
+* launch/root
+* login/sign-in
+* Analyze a Document
+* Contract Review
+* My Documents
+* My Analyses
+* Account/Security settings
+
+7. Tool workflow verification
+   Confirm:
+
+* Analyze a Document upload stages file and waits for “Analyze This Document”
+* Contract Review upload stages file and waits for “Review This Contract”
+* both tools can complete a simple test
+* blocked PDFs show graceful error, not crash/blank screen
+
+8. iOS bundle artifact verification
+   Inspect the actual synced iOS bundle, not only source:
+
+* ios/App/App/public/index.html
+* ios/App/App/public/assets/*
+* no /app/assets references
+* app icon present
+* PlainPath fallback present
+
+9. Build verification
+   Run:
+
+* native build
+* cap sync ios
+* production/web build if applicable
+* TypeScript/build checks available in project
+
+10. Final report
+    Return:
+
+* PASS/FAIL for each section
+* exact files checked
+* exact commands run
+* whether any blocker remains
+* whether it is safe to push/build next TestFlight/App Store submission
+
+Important:
+If any blocker is found, stop and report before making broad changes.
+If all checks pass, say clearly:
+“Safe to push and create the next TestFlight/App Store build.”

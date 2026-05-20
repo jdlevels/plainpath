@@ -389,3 +389,15 @@ id = "nyUEk8cYtAWdCGwSXWm_9"
 uri = "file://screenshots/03-contract-review-appstore.png"
 type = "image"
 title = "3 · Contract Review Result — 1290×2796 App Store PNG"
+
+[[outputs]]
+id = "mGgH3--dFG6IGwJeUxCaJ"
+uri = "file://Reusable-App-Building-Process-PlainPath-Lessons-Learned.md"
+type = "text"
+title = "Reusable App Building Process — PlainPath Lessons Learned"
+
+[[outputs]]
+id = "noSs3qn3mIE-HKK1Mya5v"
+uri = "file://Reusable-App-Building-Process-PlainPath-Lessons-Learned.pdf"
+type = "pdf"
+title = "PlainPath Lessons Learned — Reusable App Building Process"

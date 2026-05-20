@@ -1,0 +1,132 @@
+Thread topic: PlainPath — Review Handling Runbook + Production Verification
+
+PlainPath is currently in:
+Submitted / Review
+
+The current App Store build is already submitted and in review.
+
+IMPORTANT:
+Do NOT trigger a new publish, new submission, replacement build, or republish workflow unless a confirmed launch-blocking issue is discovered.
+
+At this time:
+
+* We are protecting the submitted build
+* We are NOT expanding the app
+* We are NOT redesigning the app
+* We are NOT rebuilding architecture
+* We are preparing operational stabilization infrastructure only
+
+Current active lifecycle gates:
+
+* Gate 14 — Final Submission Audit
+* Gate 15 — Review / Launch Handling
+* Gate 16 — Stabilization
+
+We are NOT entering Gate 17 Expansion Planning yet.
+
+Operational Objective:
+Prepare PlainPath for App Review response handling, launch stabilization, operational monitoring, and rapid hotfix readiness WITHOUT destabilizing the submitted production build.
+
+Tasks:
+
+1. Build PlainPath Review & Stabilization Runbook
+   Include:
+
+* reviewer credentials section
+* support URL
+* privacy URL
+* escalation flow
+* known-risk section
+* hotfix process
+* rollback process
+* stabilization rules
+* reviewer-response procedures
+
+2. Build Production Verification Matrix
+   Verify:
+
+* app launch behavior
+* login/logout
+* auth persistence
+* upload flow
+* Analyze a Document flow
+* Contract Review flow
+* subscription/paywall behavior
+* mobile responsiveness
+* route integrity
+* no hidden pilot/test tooling exposed
+* no dead routes
+* no broken navigation
+
+3. Build App Review Response Library
+   Prepare reusable responses for:
+
+* unclear functionality
+* AI processing concerns
+* privacy concerns
+* subscription clarification
+* uploaded document handling
+* saved vs unsaved user data
+
+4. Build Stabilization Ruleset
+   Rules:
+
+* no expansion work
+* no redesigns
+* no experimental features
+* no dependency overhauls
+* no hidden feature activation
+* no schema rewrites
+* only review blockers or critical fixes allowed
+
+5. Build Launch-Day Smoke-Test Checklist
+   Include:
+
+* install test
+* login test
+* upload test
+* analysis generation test
+* save-analysis test
+* logout/login persistence
+* subscription restore test
+* mobile UI verification
+* production API verification
+
+6. Build Operational Monitoring Checklist
+   Verify:
+
+* analytics integrity
+* upload failure logging
+* runtime error visibility
+* payment/subscription visibility
+* crash/error monitoring
+* production environment variables
+
+7. Build Hotfix / Rollback Operational Flow
+   Include:
+
+* emergency patch procedure
+* rollback decision tree
+* release discipline rules
+* stabilization patch policy
+
+Critical Rules:
+
+* Do NOT publish a new build
+* Do NOT replace the submitted build
+* Do NOT expand features
+* Do NOT redesign workflows
+* Do NOT introduce unfinished tooling
+* Do NOT destabilize the current review candidate
+
+Allowed work only:
+
+* operational readiness
+* reviewer preparation
+* production verification
+* documentation
+* stabilization planning
+* launch safety preparation
+
+Goal:
+Move PlainPath safely through App Store review and into disciplined stabilization before any future expansion or redesign work begins.

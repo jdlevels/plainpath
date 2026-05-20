@@ -1,0 +1,79 @@
+Create a full PlainPath App-Building Postmortem and Process Improvement Report.
+
+Context:
+PlainPath has now been submitted to Apple App Review. I want a clear, honest analysis of how the app-building process went from idea to App Store submission, including what slowed us down, what worked, what should be repeated, and what should be improved for future apps.
+
+Goal:
+Produce a reusable “App Building Process” framework so future apps can be built faster, cleaner, and with fewer last-minute issues.
+
+Please analyze:
+
+1. Original product direction
+- What PlainPath started as
+- How the product scope changed
+- Why the final 2-tool MVP was stronger than the broader toolset
+
+2. Design and UX process
+- What worked well in the design/canvas stage
+- What should have been locked earlier
+- How mobile screenshots, App Store visual quality, icon consistency, and layout polish affected submission readiness
+
+3. Engineering process
+- What parts of the implementation were efficient
+- What caused rework
+- Where file paths, duplicate app folders, Capacitor/iOS assets, build scripts, and App Store icon handling created friction
+- How build verification should be improved next time
+
+4. Compliance and App Store readiness
+- Privacy labels
+- App privacy page
+- subscription/IAP visibility
+- external purchase risk
+- screenshots by device type
+- TestFlight/App Store Connect workflow
+- app icon validation
+- review notes and metadata
+
+5. Biggest bottlenecks
+List the top 10 bottlenecks that slowed the project down.
+
+6. Best decisions
+List the top 10 decisions that improved the app and made launch possible.
+
+7. New recommended app-building framework
+Create a step-by-step reusable framework with gates:
+
+Gate 1: Product definition
+Gate 2: MVP scope lock
+Gate 3: UX/canvas approval
+Gate 4: Design system lock
+Gate 5: Core feature implementation
+Gate 6: Mobile/responsive QA
+Gate 7: Compliance and privacy QA
+Gate 8: App Store asset preparation
+Gate 9: iOS build/TestFlight pipeline
+Gate 10: Final submission audit
+Gate 11: App Review response handling
+Gate 12: Post-launch monitoring
+
+For each gate include:
+- purpose
+- required deliverables
+- required screenshots or evidence
+- what must not be changed after that gate
+- pass/fail criteria
+
+8. Build rule recommendations
+Create rules for future apps:
+- no new features after launch freeze
+- always verify final archive assets, not only source files
+- always confirm screenshots at Apple-required dimensions
+- always confirm app icon inside App Store Connect build
+- always keep app metadata, privacy, subscriptions, and screenshots synchronized
+
+9. Final output
+Provide a clean, structured report that can be copied into a permanent document called:
+
+“Reusable App Building Process — PlainPath Lessons Learned”
+
+Do not write code unless needed for examples. Focus on process, architecture, launch readiness, and prevention of repeated mistakes.

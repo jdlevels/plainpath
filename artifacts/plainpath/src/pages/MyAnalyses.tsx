@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import {
   BookMarked, ArrowRight, Trash2, Pencil, Check, X,
   FileText, HardDrive, AlertTriangle, Folders, CreditCard,
-  Search, SortAsc, SortDesc, ArrowUpDown, Loader2,
+  Search, SortAsc, SortDesc, ArrowUpDown, Loader2, Clock,
 } from "lucide-react"
 import {
   getAll, deleteAnalysis, renameAnalysis,
@@ -238,8 +238,8 @@ export default function MyAnalyses() {
           </span>
         </div>
 
-        {/* ── Empty state ── */}
-        {items.length === 0 && (
+        {/* ── Empty state — only shown after cloud fetch completes ── */}
+        {items.length === 0 && !cloudLoading && (
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -425,9 +425,9 @@ export default function MyAnalyses() {
 
                       {/* Stats row */}
                       <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-[11px] text-muted-foreground mb-3.5">
-                        <span>{saved.analysis.actionSteps.length} steps</span>
-                        <span>{saved.analysis.requiredDocuments.length} docs</span>
-                        <span>{saved.analysis.deadlines.length} deadlines</span>
+                        <span>{saved.analysis.actionSteps?.length ?? 0} steps</span>
+                        <span>{saved.analysis.requiredDocuments?.length ?? 0} docs</span>
+                        <span>{saved.analysis.deadlines?.length ?? 0} deadlines</span>
                         {(saved.analysis.keyTerms?.length ?? 0) > 0 && (
                           <span>{saved.analysis.keyTerms!.length} key terms</span>
                         )}

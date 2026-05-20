@@ -14,42 +14,82 @@ export default function AccountSecurity() {
     return () => { document.title = "PlainPath" }
   }, [])
 
+  // Dark mode colors are derived from the app's CSS variables:
+  //   --background:       0 0% 9%   (near-black)
+  //   --card:             0 0% 13%  (dark gray card surface)
+  //   --foreground:       40 20% 97% (near-white)
+  //   --muted-foreground: 0 0% 65%  (medium gray — secondary text)
+  //   --border:           0 0% 20%  (subtle border)
+  //
+  // Clerk's `variables` drive inline styles on its internal elements.
+  // Matching colorBackground to --card (not darker) prevents dark-on-dark.
+  // colorTextSecondary at 68% lightness gives readable secondary labels.
   const appearance = useMemo(() => ({
     variables: {
-      colorPrimary: isDark ? "#818cf8" : "#4f46e5",
-      colorBackground: isDark ? "hsl(222 14% 9%)" : "hsl(0 0% 100%)",
-      colorText: isDark ? "hsl(210 40% 98%)" : "hsl(222 47% 11%)",
-      colorTextSecondary: isDark ? "hsl(215 20% 60%)" : "hsl(215 20% 45%)",
-      colorInputBackground: isDark ? "hsl(222 14% 12%)" : "hsl(0 0% 100%)",
-      colorInputText: isDark ? "hsl(210 40% 98%)" : "hsl(222 47% 11%)",
-      colorNeutral: isDark ? "hsl(215 20% 60%)" : "hsl(215 20% 45%)",
+      colorPrimary:         isDark ? "#818cf8" : "#4f46e5",
+      // Match bg-card exactly so Clerk's sections sit ON the surface, not under it
+      colorBackground:      isDark ? "hsl(0 0% 13%)"   : "hsl(0 0% 100%)",
+      colorText:            isDark ? "hsl(40 20% 97%)"  : "hsl(0 0% 11%)",
+      // 68% lightness gives clearly readable secondary labels on dark bg
+      colorTextSecondary:   isDark ? "hsl(0 0% 68%)"   : "hsl(215 20% 45%)",
+      // Input fields slightly lighter than the card surface
+      colorInputBackground: isDark ? "hsl(0 0% 18%)"   : "hsl(0 0% 100%)",
+      colorInputText:       isDark ? "hsl(40 20% 97%)"  : "hsl(0 0% 11%)",
+      // Neutral drives borders/separators — match --border value
+      colorNeutral:         isDark ? "hsl(0 0% 50%)"   : "hsl(215 20% 45%)",
       borderRadius: "0.75rem",
       fontFamily: "inherit",
       fontSize: "0.9rem",
     },
     elements: {
       rootBox: "w-full",
+      // Transparent card — the outer container provides the bg-card surface
       card: "w-full shadow-none border-0 bg-transparent",
-      navbar: "border-r border-border/40 bg-background",
-      navbarButton: "text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-colors",
-      navbarButton__active: "text-primary bg-primary/8 font-semibold rounded-lg",
-      navbarMobileMenuButton: "text-muted-foreground",
+
+      // Sidebar / nav
+      navbar: "border-r border-border/50 bg-transparent",
+      // Inactive nav items: foreground at 75% opacity — clearly readable on dark bg
+      navbarButton:
+        "text-foreground/75 hover:text-foreground hover:bg-muted/70 rounded-lg transition-colors",
+      // Active nav item: more opaque background, full-brightness text
+      navbarButton__active:
+        "text-primary bg-primary/15 font-semibold rounded-lg",
+      navbarMobileMenuButton: "text-foreground/75",
+
       pageScrollBox: "px-0 pt-0",
-      headerTitle: "text-foreground font-bold text-lg",
-      headerSubtitle: "text-muted-foreground text-sm",
-      profileSectionTitle: "text-foreground font-semibold border-b border-border/40 pb-2 mb-3",
-      profileSectionContent: "text-muted-foreground",
-      profileSectionPrimaryButton: "text-primary hover:text-primary/80 font-medium text-sm",
-      formFieldLabel: "text-foreground text-sm font-medium mb-1",
+
+      // Section headings and body
+      headerTitle:           "text-foreground font-bold text-lg",
+      headerSubtitle:        "text-foreground/65 text-sm",
+      profileSectionTitle:
+        "text-foreground font-semibold border-b border-border/50 pb-2 mb-3",
+      // Use foreground/70 instead of muted-foreground — more legible on dark cards
+      profileSectionContent: "text-foreground/70",
+      profileSectionPrimaryButton:
+        "text-primary hover:text-primary/80 font-medium text-sm",
+
+      // Form elements
+      formFieldLabel:
+        "text-foreground text-sm font-medium mb-1",
       formFieldInput:
-        "bg-background border border-border text-foreground placeholder:text-muted-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/40",
+        "bg-background border border-border text-foreground placeholder:text-foreground/40 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/40",
       formButtonPrimary:
         "bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-lg px-4 py-2 text-sm",
-      formButtonReset: "text-muted-foreground hover:text-foreground text-sm",
+      formButtonReset:
+        "text-foreground/60 hover:text-foreground text-sm",
       formResendCodeLink: "text-primary hover:text-primary/80",
+
+      // Accordion (e.g. password change, active device details)
       accordionTriggerButton: "text-foreground font-medium",
+
+      // Hide the Clerk beta badge — it's cosmetic clutter
       badge: "hidden",
-      dangerSection: "hidden",
+
+      // Danger zone: show it, but keep it visually calm —
+      // a subtle destructive tint without being alarming
+      dangerSection:
+        "border border-destructive/25 rounded-xl p-4 mt-4 bg-destructive/5",
+
       profilePage__security: "",
     },
   }), [isDark])

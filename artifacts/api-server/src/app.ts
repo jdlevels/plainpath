@@ -35,6 +35,33 @@ const app: Express = express();
 // exactly one proxy between the internet and this server.
 app.set("trust proxy", 1);
 
+// Clerk proxy CORS — must be applied BEFORE the proxy middleware so that
+// cross-origin preflight (OPTIONS) requests from Capacitor native builds
+// (capacitor://localhost, http://localhost) receive CORS headers.
+// Web browsers use same-origin proxy URLs (see App.tsx clerkProxyUrl), so
+// they never trigger preflight; this handler is the safety net for native.
+app.use(CLERK_PROXY_PATH, (req, res, next) => {
+  const origin = req.headers.origin;
+  const allowedNativeOrigins = [
+    "capacitor://localhost",
+    "http://localhost",
+    "https://localhost",
+  ];
+  if (origin && allowedNativeOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
+    res.setHeader(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Authorization, Clerk-Backend-Api-Key, Clerk-Proxy-Url, x-clerk-auth-status, x-clerk-auth-reason, x-clerk-auth-message"
+    );
+    if (req.method === "OPTIONS") {
+      return res.status(204).end();
+    }
+  }
+  next();
+});
+
 // Clerk proxy must be mounted before body parsers (streams raw bytes)
 app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
 

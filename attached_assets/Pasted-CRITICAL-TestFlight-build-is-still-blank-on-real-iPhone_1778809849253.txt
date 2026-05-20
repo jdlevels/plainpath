@@ -1,0 +1,90 @@
+CRITICAL: TestFlight build is still blank on real iPhone.
+
+Do not make assumptions from source, Replit preview, or dist folders.
+
+The real TestFlight-installed app still opens to a blank screen.
+
+We need artifact-level diagnosis from the actual CI-produced IPA/TestFlight build path.
+
+Investigate only the native iOS/TestFlight artifact.
+
+Required checks:
+
+1. Confirm the new GitHub Actions run actually executed after the latest commit.
+
+* Show commit SHA used by the workflow.
+* Show build number produced.
+* Confirm it is newer than the last failed TestFlight build.
+
+2. Confirm the workflow used the corrected native command.
+
+* It must run:
+  pnpm --filter @workspace/plainpath build:native
+* It must NOT only run:
+  pnpm --filter @workspace/plainpath build
+
+3. Confirm CI verification guards actually ran and passed.
+   Show output for:
+
+* no /app/assets in ios/App/App/public/index.html
+* PlainPath fallback exists in ios/App/App/public/index.html
+* JS/CSS files referenced by index.html exist on disk
+
+4. Inspect the archive or IPA artifact, not only ios/App/App/public before archive.
+   Required:
+
+* unzip/export the .ipa if available
+* inspect Payload/App.app/public/index.html or equivalent bundled web assets
+* confirm no /app/assets
+* confirm /assets references exist
+* confirm actual asset files exist inside the app bundle
+* confirm PlainPath launch fallback text exists inside bundled index.html
+
+5. Confirm Capacitor app path and bundle layout.
+   Check whether iOS app expects:
+
+* public/index.html
+* App/public/index.html
+* capacitor://localhost/index.html
+  or another path.
+
+Confirm the files are located exactly where WKWebView loads them.
+
+6. Add a native startup diagnostic if needed.
+   If the app can still blank even with correct assets, add a temporary visible diagnostic/fallback that appears before React:
+
+* PlainPath
+* Build number
+* Asset mode: native
+* JS loaded marker
+* React mounted marker
+
+This must be visible without external network.
+
+7. Check native iOS permissions/config/runtime.
+   Verify:
+
+* capacitor.config.json
+* ios/App/App/capacitor.config.json
+* Info.plist
+* AppDelegate / SceneDelegate if present
+* no server.url points to a remote web app
+* no splash screen remains on top of app forever
+* no white background hiding content
+
+8. Confirm GitHub secrets/env are not causing a JS crash.
+   Missing Clerk key should not blank the app. The static fallback must still show.
+   If runtime JS crashes, fallback should still show before React replaces it.
+
+Required output:
+
+* exact reason the TestFlight app is still blank
+* exact CI run/build number inspected
+* exact files inside the IPA inspected
+* exact fix
+* artifact-level evidence after fix
+
+Do not redesign.
+Do not add features.
+Do not touch document workflows.
+Fix only native TestFlight blank screen.

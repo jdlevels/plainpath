@@ -198,12 +198,23 @@ const afterAuthUrl = `${basePath}/import`;
 function NativeSignInForm() {
   const { isLoaded, signIn, setActive } = useSignIn();
   const [, setLocation] = useLocation();
+  const [stage, setStage] = useState<"credentials" | "mfa">("credentials");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [mfaCode, setMfaCode] = useState("");
+  const [mfaStrategy, setMfaStrategy] = useState<string>("totp");
+  const [mfaLabel, setMfaLabel] = useState<string>("authenticator app");
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   if (!isLoaded) return <div className="flex items-center justify-center min-h-screen"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
+
+  function clerkMsg(e: unknown) {
+    return (e as { errors?: Array<{ longMessage?: string; message?: string }> })
+      ?.errors?.[0]?.longMessage
+      ?? (e as { errors?: Array<{ message?: string }> })?.errors?.[0]?.message
+      ?? "Sign-in failed. Please try again.";
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -215,18 +226,110 @@ function NativeSignInForm() {
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
         setLocation("/import");
+      } else if (result.status === "needs_second_factor") {
+        // Account has MFA enabled — determine the available strategy and prompt.
+        // Priority: totp (no network round-trip) → phone_code → email_code
+        const factors: Array<{ strategy: string }> = (result as any).supportedSecondFactors ?? [];
+        const strategy =
+          factors.find(f => f.strategy === "totp")?.strategy ??
+          factors.find(f => f.strategy === "phone_code")?.strategy ??
+          factors.find(f => f.strategy === "email_code")?.strategy ??
+          "totp";
+        const label =
+          strategy === "totp" ? "authenticator app" :
+          strategy === "phone_code" ? "SMS text message" : "email";
+        setMfaStrategy(strategy);
+        setMfaLabel(label);
+        // phone_code / email_code require the server to send the OTP first
+        if (strategy === "phone_code" || strategy === "email_code") {
+          await signIn.prepareSecondFactor({ strategy: strategy as any });
+        }
+        setMfaCode("");
+        setStage("mfa");
       } else {
-        setErr("Additional verification required. Please try again or use another sign-in method.");
+        setErr(`Sign-in could not be completed (status: ${result.status}). Please contact support.`);
       }
     } catch (e: unknown) {
-      const msg = (e as { errors?: Array<{ longMessage?: string; message?: string }> })
-        ?.errors?.[0]?.longMessage
-        ?? (e as { errors?: Array<{ message?: string }> })?.errors?.[0]?.message
-        ?? "Sign-in failed. Please check your credentials and try again.";
-      setErr(msg);
+      setErr(clerkMsg(e));
     } finally {
       setLoading(false);
     }
+  }
+
+  async function handleMfa(e: React.FormEvent) {
+    e.preventDefault();
+    if (!signIn) return;
+    setLoading(true);
+    setErr(null);
+    try {
+      const result = await signIn.attemptSecondFactor({ strategy: mfaStrategy as any, code: mfaCode });
+      if (result.status === "complete") {
+        await setActive({ session: result.createdSessionId });
+        setLocation("/import");
+      } else {
+        setErr("Verification failed. Please check the code and try again.");
+      }
+    } catch (e: unknown) {
+      setErr(clerkMsg(e));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (stage === "mfa") {
+    return (
+      <div className="flex flex-col items-center justify-start min-h-[calc(100vh-4rem)] pt-12 pb-16 px-4">
+        <div className="w-full max-w-sm">
+          <div className="shadow-lg rounded-2xl border border-border/50 bg-card p-8 space-y-5">
+            <div>
+              <h1 className="text-xl font-bold text-foreground mb-1">Two-step verification</h1>
+              <p className="text-sm text-muted-foreground">
+                Enter the code from your {mfaLabel}.
+              </p>
+            </div>
+            <form onSubmit={handleMfa} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="block text-sm font-medium text-foreground">Verification code</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  required
+                  value={mfaCode}
+                  onChange={e => setMfaCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  maxLength={6}
+                  autoComplete="one-time-code"
+                  autoFocus
+                  disabled={loading}
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm text-center tracking-[0.35em] text-lg font-mono focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-60"
+                  placeholder="000000"
+                />
+              </div>
+              {err && (
+                <div className="bg-destructive/10 border border-destructive/20 rounded-lg px-3 py-2.5 text-sm text-destructive">
+                  {err}
+                </div>
+              )}
+              <button
+                type="submit"
+                disabled={loading || mfaCode.length < 6}
+                className="w-full bg-primary text-primary-foreground font-medium text-sm rounded-lg px-4 py-2.5 hover:bg-primary/90 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+              >
+                {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+                {loading ? "Verifying…" : "Verify"}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setStage("credentials"); setErr(null); setMfaCode(""); }}
+                disabled={loading}
+                className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors py-1"
+              >
+                ← Back to sign in
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

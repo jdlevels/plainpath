@@ -1685,14 +1685,23 @@ export default function ContractReview() {
                     <button
                       onClick={() => fileInputRef.current?.click()}
                       style={{ touchAction: "manipulation" }}
-                      className="w-full border-2 border-dashed border-border/50 rounded-xl hover:border-amber-400/50 hover:bg-amber-50/30 dark:hover:bg-amber-950/10 transition-all group min-h-[180px] sm:min-h-[220px] flex flex-col items-center justify-center"
+                      className={`w-full border-2 border-dashed rounded-xl transition-all group min-h-[180px] sm:min-h-[220px] flex flex-col items-center justify-center ${
+                        file
+                          ? "border-emerald-400 dark:border-emerald-600 bg-emerald-50/40 dark:bg-emerald-950/30"
+                          : "border-border/50 hover:border-amber-400/50 hover:bg-amber-50/30 dark:hover:bg-amber-950/10"
+                      }`}
                     >
                       {file ? (
-                        <div className="text-center space-y-2 p-6">
-                          <FileText className="w-10 h-10 text-amber-600 mx-auto" />
+                        <div className="text-center space-y-3 p-6 sm:p-8 relative">
+                          <CheckCircle2 className="w-12 h-12 text-emerald-500 dark:text-emerald-400 mx-auto" />
                           <div>
-                            <p className="font-bold text-foreground text-sm">{file.name}</p>
-                            <p className="text-xs text-muted-foreground mt-1">{(file.size / 1024).toFixed(0)} KB · click to change</p>
+                            <p className="font-bold text-foreground text-sm">File ready</p>
+                            <p className="text-xs text-muted-foreground mt-1">{file.name}</p>
+                            <p className="text-xs text-muted-foreground/60 mt-0.5">
+                              {file.size < 1024 * 1024
+                                ? `${Math.round(file.size / 1024)} KB`
+                                : `${(file.size / 1024 / 1024).toFixed(1)} MB`}
+                            </p>
                           </div>
                           <span
                             role="button"
