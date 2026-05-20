@@ -181,18 +181,16 @@ jobs:
           alt_check "IOS_PROVISION_PROFILE_BASE64" "BUILD_PROVISION_PROFILE_BASE64"  "$S_ALT_IOS_PP"
 
           echo ""
-          echo "── Point 5: Clerk vs native diagnostic independence ─────────"
-          echo "  The native diagnostic overlay (AppDelegate.swift) runs in"
-          echo "  UIKit — it is NOT gated on Clerk, React, or any JS loading."
-          echo "  Even if CLERK_PUBLISHABLE_KEY is wrong/empty, the blue overlay"
-          echo "  will still appear for 5 s proving the native shell is alive."
-          echo "  A missing Clerk key causes a JS-level error — it cannot blank"
-          echo "  the screen before the native diagnostic has time to show."
+          echo "── Point 5: Clerk vs native shell independence ──────────────"
+          echo "  AppDelegate.swift overrides the WKWebView User-Agent (UA fix)"
+          echo "  and embeds the 'PlainPath native shell' binary marker compiled"
+          echo "  in via _ppBuildTag. The Binary string check CI step (post-archive)"
+          echo "  verifies this string is present in the compiled binary."
           if [ "${#S_CLERK}" -gt 0 ] && [[ "$S_CLERK" == pk_live_* ]]; then
             echo "  STATUS: Clerk key is set and has correct pk_live_ prefix — no issue."
           else
             echo "  STATUS: Clerk key issue detected (see above) — JS will error after"
-            echo "          native diagnostic fades, which is expected and diagnosable."
+            echo "          WebView load, which is diagnosable from TestFlight logs."
           fi
 
           echo ""
@@ -578,6 +576,16 @@ jobs:
           cat "$APPDELEGATE"
 
           echo ""
+          echo "── GUARD: PlainPath native shell marker in AppDelegate.swift ──"
+          if grep -q "PlainPath native shell" "$APPDELEGATE"; then
+            echo "  PASS: 'PlainPath native shell' found in AppDelegate.swift source"
+          else
+            echo "  FAIL: 'PlainPath native shell' missing from AppDelegate.swift"
+            echo "        This string must be present as the binary identity marker."
+            exit 1
+          fi
+
+          echo ""
           echo "── GUARD: no SceneDelegate present ────────────────────────"
           if find "$(dirname "$XCPROJ")" -name "SceneDelegate.swift" | grep -q .; then
             echo "  WARN: SceneDelegate.swift found — window management may differ"
@@ -620,7 +628,26 @@ jobs:
             CODE_SIGNING_REQUIRED=YES \
             CODE_SIGNING_ALLOWED=YES
 
-      # ── 12a. Inspect xcarchive — artifact-level proof before export ───────────
+      # ── 12a. Binary string check ──────────────────────────────────────────────
+      # Verifies the compiled binary contains "PlainPath native shell" — proving
+      # our AppDelegate.swift (with UA override + _ppBuildTag marker) was compiled,
+      # not the stock Capacitor scaffold. Fails CI if the marker is absent.
+      - name: Binary string check
+        run: |
+          set -euo pipefail
+          APP_DIR="$RUNNER_TEMP/PlainPath.xcarchive/Products/Applications/App.app"
+          APP_BIN=$(find "$APP_DIR" -maxdepth 1 -name "App" -type f | head -1)
+          [ -n "$APP_BIN" ] || { echo "ERROR: App binary not found in xcarchive at $APP_DIR"; exit 1; }
+          echo "Binary: $APP_BIN ($(wc -c < "$APP_BIN") bytes)"
+          if strings "$APP_BIN" | grep -q "PlainPath native shell"; then
+            echo "PASS: 'PlainPath native shell' found in compiled binary"
+          else
+            echo "FAIL: 'PlainPath native shell' missing from compiled binary"
+            echo "      Expected _ppBuildTag from AppDelegate.swift to be compiled in."
+            exit 1
+          fi
+
+      # ── 12b. Inspect xcarchive — artifact-level proof before export ──────────
       # Verifies the ACTUAL archived .app bundle contains public/index.html.
       # This is the evidence the user requested: inspection of the real archive,
       # not the source tree or dist folder. Fails CI if the file is missing.

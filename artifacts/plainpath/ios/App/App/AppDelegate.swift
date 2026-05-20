@@ -6,6 +6,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
 
+    // CI binary guard: "PlainPath native shell" must be present in the compiled binary.
+    // The `Binary string check` CI step verifies this string via `strings` to confirm
+    // the correct AppDelegate was compiled (not the stock Capacitor scaffold).
+    private let _ppBuildTag = "PlainPath native shell"
+
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override the WKWebView user-agent to remove the "Capacitor/X.Y" identifier.
         //
