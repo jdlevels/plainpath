@@ -138,7 +138,13 @@ export function useEntitlements() {
 
     // ── Fetch billing details from API ────────────────────────────────────
     try {
-      const entToken = await getToken().catch(() => null)
+      let entToken = await getToken().catch(() => null)
+      // WKWebView race: session token may not be cached immediately after sign-in.
+      // Retry once after a short delay before giving up and hitting the server unauthenticated.
+      if (!entToken) {
+        await new Promise<void>(r => setTimeout(r, 1500))
+        entToken = await getToken().catch(() => null)
+      }
       const result = await fetchEntitlements(email ?? "", clerkUserId, entToken)
 
       // Resolve role: publicMetadata wins over API response.
