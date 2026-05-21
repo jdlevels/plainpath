@@ -308,6 +308,30 @@
 .dark .tool-btn-amber:hover   { border-color: #fbbf24; background-color: rgba(245, 158,  11, 0.25); box-shadow: 0 4px 20px rgba(245, 158,  11, 0.3); }
 .dark .tool-btn-violet:hover  { border-color: #a78bfa; background-color: rgba(139,  92, 246, 0.25); box-shadow: 0 4px 20px rgba(139,  92, 246, 0.3); }
 
+/* ── Native mobile shell containment ──────────────────────────────────────────
+   All rules scoped to html.native-mode (set in main.tsx when isNative()).
+   The web app (desktop/browser) is completely unaffected.
+────────────────────────────────────────────────────────────────────────────── */
+html.native-mode,
+html.native-mode body,
+html.native-mode #root {
+  height: 100%;
+  overflow: hidden;
+}
+html.native-mode {
+  overscroll-behavior: none;
+}
+html.native-mode main {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+/* Analyze page uses h-screen — on native override to h-full so it fills the
+   <main> scroll container exactly rather than extending 100dvh (which would
+   be taller than available space by the navbar height). */
+html.native-mode .analyze-screen-root {
+  height: 100%;
+}
+
 /* ─── Print-only: hidden on screen ─────────────── */
 .print-only { display: none !important; }
 

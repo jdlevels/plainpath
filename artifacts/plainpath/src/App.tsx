@@ -278,7 +278,7 @@ function NativeSignInForm() {
 
   if (stage === "mfa") {
     return (
-      <div className="flex flex-col items-center justify-start min-h-[calc(100vh-4rem)] pt-12 pb-16 px-4">
+      <div className="flex flex-col items-center justify-center flex-1 min-h-0 py-8 px-4">
         <div className="w-full max-w-sm">
           <div className="shadow-lg rounded-2xl border border-border/50 bg-card p-8 space-y-5">
             <div>
@@ -333,7 +333,7 @@ function NativeSignInForm() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-start min-h-[calc(100vh-4rem)] pt-12 pb-16 px-4">
+    <div className="flex flex-col items-center justify-center flex-1 min-h-0 py-8 px-4">
       <div className="w-full max-w-sm">
         <div className="shadow-lg rounded-2xl border border-border/50 bg-card p-8 space-y-5">
           <div>
@@ -456,7 +456,7 @@ function NativeSignUpForm() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-start min-h-[calc(100vh-4rem)] pt-12 pb-16 px-4">
+    <div className="flex flex-col items-center justify-center flex-1 min-h-0 py-8 px-4">
       <div className="w-full max-w-sm">
         <div className="shadow-lg rounded-2xl border border-border/50 bg-card p-8 space-y-5">
           {stage === "form" ? (
@@ -716,8 +716,8 @@ function NativePaywallScreen() {
   const isWorking = purchasing || restoring;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <header className="border-b border-border/40 px-6 py-4 flex items-center justify-between">
+    <div className="h-full bg-background flex flex-col">
+      <header className="border-b border-border/40 px-6 py-4 flex items-center justify-between safe-top">
         <div className="flex items-center gap-2">
           <img src="/logo.svg" alt="PlainPath" className="h-6 w-6" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
           <span className="font-bold text-base tracking-tight">PlainPath</span>
@@ -1004,7 +1004,7 @@ function ClerkLoadingScreen() {
 
   if (timedOut) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-6">
+      <div className="h-full bg-background flex items-center justify-center px-6">
         <div className="text-center max-w-xs">
           <div className="bg-muted p-4 rounded-2xl w-fit mx-auto mb-5">
             <svg className="w-8 h-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -1028,7 +1028,7 @@ function ClerkLoadingScreen() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
+    <div className="h-full bg-background flex items-center justify-center">
       <div className="w-7 h-7 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
       {diagnosticBar}
     </div>
@@ -1079,7 +1079,7 @@ function PlanGate({ children }: { children: React.ReactNode }) {
   // Signed in but entitlements still loading
   if (entLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="h-full bg-background flex items-center justify-center">
         <div className="w-7 h-7 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
       </div>
     );
@@ -1194,10 +1194,11 @@ function protect(Component: React.ComponentType) {
 }
 
 function Router() {
+  const native = isNative();
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className={native ? "flex flex-col h-full" : "flex flex-col min-h-screen"}>
       <Navbar />
-      <main className="flex-1">
+      <main className={native ? "flex-1 min-h-0 overflow-y-auto overscroll-y-contain flex flex-col" : "flex-1"}>
         <ErrorBoundary>
           <Switch>
             {/* ── Public routes (no auth required) ── */}
@@ -1280,7 +1281,7 @@ function Router() {
           </Switch>
         </ErrorBoundary>
       </main>
-      <Footer />
+      {!native && <Footer />}
       <HelpWidget />
     </div>
   );

@@ -5,8 +5,15 @@ import App from "./App";
 import "./index.css";
 import { setBaseUrl } from "@workspace/api-client-react";
 import { getApiBaseUrl } from "@/lib/api";
+import { isNative } from "@/lib/platform";
 
 setBaseUrl(getApiBaseUrl());
+
+// Apply native-mode class BEFORE React renders so containment CSS takes effect
+// on the first paint — eliminates the one frame where body scroll is active.
+if (isNative()) {
+  document.documentElement.classList.add("native-mode");
+}
 
 const sentryDsn = import.meta.env.VITE_SENTRY_DSN as string | undefined;
 if (sentryDsn) {
