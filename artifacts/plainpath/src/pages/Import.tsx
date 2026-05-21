@@ -667,17 +667,47 @@ export default function Import() {
         }
       )
     } else {
-      const formData = new FormData()
-      formData.append("file", p.file)
-      formData.append("documentTypeHint", docTypeLabel)
+      // On iOS/Capacitor with CapacitorHttp enabled, fetch() + FormData + File
+      // has a known issue: the native bridge may not correctly set the
+      // Content-Type boundary, causing multer to reject the file. We bypass
+      // this by reading the file as base64 and sending JSON instead.
       try {
         const apiBase = getApiBaseUrl()
         const uploadToken = await waitForToken(getToken)
-        const res = await fetch(`${apiBase}/api/documents/upload`, {
-          method: "POST",
-          headers: uploadToken ? { Authorization: `Bearer ${uploadToken}` } : undefined,
-          body: formData,
-        })
+        let res: Response
+        if (isNative()) {
+          const base64 = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader()
+            reader.onload = () => {
+              const dataUrl = reader.result as string
+              resolve(dataUrl.split(",")[1] ?? dataUrl)
+            }
+            reader.onerror = reject
+            reader.readAsDataURL(p.file)
+          })
+          res = await fetch(`${apiBase}/api/documents/upload-base64`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(uploadToken ? { Authorization: `Bearer ${uploadToken}` } : {}),
+            },
+            body: JSON.stringify({
+              fileBase64: base64,
+              fileName: p.file.name,
+              mimeType: p.file.type || "",
+              documentTypeHint: docTypeLabel,
+            }),
+          })
+        } else {
+          const formData = new FormData()
+          formData.append("file", p.file)
+          formData.append("documentTypeHint", docTypeLabel)
+          res = await fetch(`${apiBase}/api/documents/upload`, {
+            method: "POST",
+            headers: uploadToken ? { Authorization: `Bearer ${uploadToken}` } : undefined,
+            body: formData,
+          })
+        }
         let data: any = {}
         try { data = await res.json() } catch { /* non-JSON response */ }
 

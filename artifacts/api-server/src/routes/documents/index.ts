@@ -522,6 +522,158 @@ router.post("/upload", requireEntitlement("analyze"), upload.single("file"), asy
   }
 });
 
+// ── Native base64 upload (Capacitor iOS) ─────────────────────────────────────
+// Identical pipeline to /upload but accepts JSON { fileBase64, fileName,
+// mimeType, documentTypeHint } so the iOS native layer does not need to
+// serialize a FormData/multipart request (CapacitorHttp has a known issue
+// where the multipart Content-Type boundary is dropped when custom headers
+// are present, causing multer to reject the file).
+router.post("/upload-base64", requireEntitlement("analyze"), async (req, res) => {
+  try {
+    const { fileBase64, fileName, mimeType: rawMime, documentTypeHint } = req.body ?? {};
+
+    if (!fileBase64 || typeof fileBase64 !== "string") {
+      return res.status(400).json({ error: "no_file", message: "No file data was provided." });
+    }
+    if (!fileName || typeof fileName !== "string") {
+      return res.status(400).json({ error: "no_filename", message: "File name is required." });
+    }
+
+    const buffer = Buffer.from(fileBase64, "base64");
+    if (buffer.length === 0) {
+      return res.status(400).json({ error: "empty_file", message: "The uploaded file appears to be empty." });
+    }
+    if (buffer.length > 20 * 1024 * 1024) {
+      return res.status(413).json({ error: "file_too_large", message: "File is too large. Maximum allowed size is 20 MB." });
+    }
+
+    const mime: string = rawMime ?? "";
+    const originalName = fileName.toLowerCase();
+    const detectedTitle = fileName.replace(/\.[^.]+$/, "");
+    let extractedText = "";
+
+    // ── Text extraction (same logic as /upload) ─────────────────────────────
+    if (mime === "application/pdf" || originalName.endsWith(".pdf")) {
+      let pdfParseText: string | null = null;
+      let parseError: string | null = null;
+
+      try {
+        const pdfResult = await parsePdfWithLimits(buffer);
+        pdfParseText = pdfResult.text ?? null;
+      } catch (err) {
+        if (err instanceof ParseResourceLimitError) {
+          return res.status(400).json({ error: "document_too_large", message: err.message });
+        }
+        const errMsg = err instanceof Error ? err.message : String(err);
+        console.error("[upload-base64] pdf-parse threw:", errMsg, "| file:", fileName);
+        parseError = errMsg;
+      }
+
+      if (parseError !== null) {
+        return res.status(422).json({
+          error: "corrupt_pdf",
+          message: "This PDF could not be read. It may be corrupted or password-protected. Please try a different file, or copy and paste the text instead.",
+        });
+      }
+      if (!pdfParseText || !pdfParseText.trim()) {
+        return res.status(422).json({
+          error: "scanned_pdf",
+          message: "This PDF appears to contain only images (scanned document). PlainPath cannot read image-based PDFs — please copy and paste the text instead.",
+        });
+      }
+      extractedText = pdfParseText;
+
+    } else if (
+      mime === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+      originalName.endsWith(".docx")
+    ) {
+      try {
+        extractedText = await parseDocxWithLimits(buffer);
+      } catch (err) {
+        if (err instanceof ParseResourceLimitError) {
+          return res.status(400).json({ error: "document_too_large", message: err.message });
+        }
+        const errMsg = err instanceof Error ? err.message : String(err);
+        console.error("[upload-base64] mammoth threw:", errMsg, "| file:", fileName);
+        return res.status(422).json({
+          error: "unreadable_docx",
+          message: "Could not read this Word document. It may be corrupted. Please try re-saving it as a .docx or paste the text instead.",
+        });
+      }
+      if (!extractedText.trim()) {
+        return res.status(422).json({
+          error: "empty_docx",
+          message: "This Word document appears to be empty or contains no readable text. Please paste the text instead.",
+        });
+      }
+
+    } else if (mime === "text/plain" || originalName.endsWith(".txt")) {
+      extractedText = buffer.toString("utf-8");
+      if (!extractedText.trim()) {
+        return res.status(422).json({
+          error: "empty_txt",
+          message: "This text file appears to be empty. Please check the file and try again.",
+        });
+      }
+
+    } else {
+      return res.status(400).json({
+        error: "unsupported_type",
+        message: "Unsupported file type. Please upload a PDF (.pdf), Word document (.docx), or plain text (.txt) file.",
+      });
+    }
+
+    // ── Analysis ─────────────────────────────────────────────────────────────
+    const rawTextForSections = extractedText;
+    if (extractedText.length > 60000) {
+      extractedText = extractedText.slice(0, 60000);
+    }
+
+    console.debug("[upload-base64] extracted", extractedText.length, "chars from", fileName, "— starting analysis");
+
+    const hint = typeof documentTypeHint === "string" ? documentTypeHint : undefined;
+
+    try {
+      const analysis = await runAnalysis(extractedText, detectedTitle, hint, rawTextForSections);
+      return res.json({ analysis });
+    } catch (analysisError) {
+      const msg = analysisError instanceof Error ? analysisError.message : String(analysisError);
+      console.error("[upload-base64] runAnalysis threw:", msg, "| file:", fileName);
+
+      const isTimeout = analysisError instanceof Error && (
+        analysisError.name === "AbortError" ||
+        msg.toLowerCase().includes("timeout") ||
+        msg.toLowerCase().includes("timed out")
+      );
+      if (isTimeout) {
+        return res.status(504).json({
+          error: "analysis_timeout",
+          message: "Analysis is taking too long. Please try again — shorter documents process faster.",
+        });
+      }
+      const isServiceError = msg.toLowerCase().includes("rate limit") || msg.toLowerCase().includes("quota") || msg.toLowerCase().includes("overloaded");
+      if (isServiceError) {
+        return res.status(503).json({
+          error: "service_unavailable",
+          message: "The analysis service is temporarily busy. Please wait a moment and try again.",
+        });
+      }
+      return res.status(500).json({
+        error: "analysis_failed",
+        message: "Analysis failed. Please try again. If the problem continues, try pasting the document text instead.",
+      });
+    }
+
+  } catch (outerError) {
+    const msg = outerError instanceof Error ? outerError.message : String(outerError);
+    console.error("[upload-base64] unhandled error:", msg);
+    return res.status(500).json({
+      error: "upload_failed",
+      message: "Upload failed. Please try again. If the problem continues, try pasting the document text instead.",
+    });
+  }
+});
+
 // ── Scan images (multi-page camera capture) ──────────────────────────────────
 router.post("/scan-images", requireEntitlement("analyze"), async (req, res) => {
   const { images, documentTypeHint } = req.body;
