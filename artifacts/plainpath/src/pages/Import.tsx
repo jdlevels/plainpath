@@ -674,8 +674,11 @@ export default function Import() {
       try {
         const apiBase = getApiBaseUrl()
         const uploadToken = await waitForToken(getToken)
+        const native = isNative()
+        console.info("[PlainPath][upload] path:", native ? "native-base64" : "web-formdata",
+          "| file:", p.file.name, "| size:", p.file.size, "| type:", p.file.type || "(none)")
         let res: Response
-        if (isNative()) {
+        if (native) {
           const base64 = await new Promise<string>((resolve, reject) => {
             const reader = new FileReader()
             reader.onload = () => {
@@ -685,6 +688,7 @@ export default function Import() {
             reader.onerror = reject
             reader.readAsDataURL(p.file)
           })
+          console.info("[PlainPath][upload] base64 length:", base64.length, "| posting to upload-base64")
           res = await fetch(`${apiBase}/api/documents/upload-base64`, {
             method: "POST",
             headers: {
@@ -710,16 +714,26 @@ export default function Import() {
         }
         let data: any = {}
         try { data = await res.json() } catch { /* non-JSON response */ }
+        console.info("[PlainPath][upload] status:", res.status, "| ok:", res.ok,
+          "| hasAnalysis:", !!data?.analysis, "| error:", data?.error ?? "(none)",
+          "| message:", data?.message ?? "(none)")
 
-        if (!res.ok) {
-          const msg = data?.message || (res.status === 413
+        // Defensive: CapacitorHttp has a bug where response.ok can evaluate
+        // true even for non-2xx responses. Check for a server-side error field
+        // in the body as a secondary signal when res.ok is unexpectedly true.
+        const serverReportedError = !res.ok || (data?.error && !data?.analysis)
+        if (serverReportedError) {
+          const status = res.status || (data?.status as number | undefined) || 0
+          const msg = data?.message || (status === 413
             ? "File is too large. Maximum allowed size is 20 MB."
-            : res.status === 422
-            ? "Could not extract text from this file. If it's a scanned PDF, please copy and paste the text instead."
-            : res.status === 503
+            : status === 422
+            ? "We couldn't extract readable text from this file. Try a text-based PDF, DOCX, or paste the text instead."
+            : status === 503
             ? "The analysis service is temporarily busy. Please wait a moment and try again."
-            : res.status === 504
+            : status === 504
             ? "Analysis is taking too long. Please try again — shorter documents process faster."
+            : data?.error === "no_file" || data?.error === "empty_file"
+            ? "The file could not be read. Please try again or paste the document text instead."
             : "Upload failed. Please try again. If the problem continues, try pasting the document text instead.")
           setUploadError(msg)
           setUploadedFile(null)
@@ -730,6 +744,7 @@ export default function Import() {
           return
         }
         if (!data?.analysis) {
+          console.error("[PlainPath][upload] unexpected result — full data:", JSON.stringify(data).slice(0, 500))
           setUploadError("Analysis returned an unexpected result. Please try again.")
           setUploadedFile(null)
           if (fileInputRef.current) fileInputRef.current.value = ""

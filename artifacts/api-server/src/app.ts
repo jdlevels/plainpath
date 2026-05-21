@@ -195,6 +195,12 @@ app.use(
 // run is effectively a no-op.)
 app.use("/api/shares", express.json({ limit: "64kb" }));
 
+// Native base64 upload: the iOS Capacitor client sends the file as a
+// base64-encoded JSON body instead of multipart (to avoid a CapacitorHttp
+// FormData boundary bug). A 20 MB file encodes to ~27 MB of base64, so this
+// path needs a large body limit applied BEFORE the global 100 kb parser runs.
+app.use("/api/documents/upload-base64", express.json({ limit: "28mb" }));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -230,6 +236,7 @@ app.use(
   [
     "/api/documents/analyze",
     "/api/documents/upload",
+    "/api/documents/upload-base64",
     "/api/documents/scan-images",
     "/api/documents/scan-images-trust",
     "/api/documents/trust-check",
