@@ -21,18 +21,20 @@ import { isNative } from "./platform";
  * applied consistently.
  */
 export function getApiBaseUrl(): string {
+  // In native (Capacitor) builds the WKWebView origin is capacitor://localhost.
+  // We must use an absolute production URL so all /api/* calls reach the server.
+  // Hardcoded here (not from env) so the native base URL is always correct
+  // regardless of which .env file the CI build reads, and so .env.production
+  // (used by the web build) is never affected by native-specific changes.
+  if (isNative()) {
+    return "https://plainpathapp.com";
+  }
+
+  // Web browser: VITE_API_BASE_URL is empty in dev (same-origin proxy) and
+  // set to the deployed origin in production. Never touch this for native.
   const envUrl = ((import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "")
     .trim()
     .replace(/\/+$/, "");
-
-  if (isNative() && !envUrl) {
-    const msg =
-      "[PlainPath] VITE_API_BASE_URL is required for native (Capacitor) builds " +
-      "but was not provided. All API calls will fail. " +
-      "Set it to your deployed API URL, e.g. https://api.plainpath.app";
-    // Log at error level so it surfaces in crash reporters and Xcode/Android Studio consoles.
-    console.error(msg);
-  }
 
   return envUrl;
 }
